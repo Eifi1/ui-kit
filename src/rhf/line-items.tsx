@@ -11,7 +11,7 @@
  *       <RhfSelect name={`${name}.type`} options={TYPES} aria-label={label} />
  *     ) },
  *     { key: "amount", header: "Amount", width: "8rem", align: "end", render: ({ name, label }) => (
- *       <RhfMoneyField name={`${name}.amount`} ariaLabel={label} />
+ *       <RhfMoneyField name={`${name}.amount`} aria-label={label} />
  *     ) },
  *   ]}
  *   totals={{ amount: formatMoney(total) }}

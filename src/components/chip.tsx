@@ -6,10 +6,9 @@ import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID, FIELD_TOUCH_TEXT, TOUCH_TARGET_LARGE } from "./ui";
 import { FOCUS_RING } from "./focus-ring";
-import { DisabledReasonLine, useDisabledReasonLine, type DisabledReasonDisplay } from "./field-parts";
+import { LockedReason, type DisabledReasonDisplay } from "./field-parts";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
-import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
 import { DEFAULT_CHIP_INPUT_LABELS } from "./chip-labels";
 
@@ -1007,9 +1006,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     const shaped = remove ? pill(button) : button;
     if (!locked) return shaped;
     return (
-      <ChipReasonFrame reason={disabledReason} reasonId={reasonId} display={disabledReasonDisplay}>
+      <LockedReason lock={{ reason: disabledReason, reasonId }} display={disabledReasonDisplay}>
         {shaped}
-      </ChipReasonFrame>
+      </LockedReason>
     );
   }
 
@@ -1031,47 +1030,6 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     </span>
   );
 });
-
-/**
- * A locked chip and its reason (0.32, docs/text-size-harmonization.md §4): a line under
- * the chip at Large and on touch, else the kit {@link Tooltip} — Button's `ReasonFrame`,
- * see {@link DisabledReasonDisplay}. A component of its own so only a LOCKED chip asks
- * the text size and the pointer; the unlocked chips of a filter row subscribe to nothing.
- *
- * Tooltip form: the chip in a FRAGMENT, as a locked Button is — the bubble is visual, and
- * the hidden copy beside it is what the chip (and its ×) is described by. Line form: the
- * line is that description, under the chip, and no bubble repeats it.
- */
-function ChipReasonFrame({
-  reason,
-  reasonId,
-  display,
-  children,
-}: {
-  reason: ReactNode;
-  reasonId: string;
-  display: DisabledReasonDisplay | undefined;
-  children: ReactNode;
-}) {
-  const line = useDisabledReasonLine(display);
-  if (line) {
-    return (
-      <DisabledReasonLine id={reasonId} reason={reason}>
-        {children}
-      </DisabledReasonLine>
-    );
-  }
-  return (
-    <Tooltip label={reason}>
-      <>
-        {children}
-        <span id={reasonId} hidden>
-          {reason}
-        </span>
-      </>
-    </Tooltip>
-  );
-}
 
 /** `null`, `false` and `""` are what a `cond && reason` gives on the happy path — no
  *  reason, so no lock. */

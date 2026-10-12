@@ -57,7 +57,15 @@ import {
   type FieldValues,
 } from "react-hook-form";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, useFormField } from "./form";
-import { Input, Select, Textarea, type InputProps, type SelectProps, type TextareaProps } from "../components/ui";
+import {
+  Input,
+  Select,
+  Textarea,
+  type DisabledReasonDisplay,
+  type InputProps,
+  type SelectProps,
+  type TextareaProps,
+} from "../components/ui";
 import { NumberField, type NumberFieldProps } from "../components/number-field";
 import { AmountInput } from "../components/amount-input";
 import {
@@ -410,12 +418,15 @@ export type RhfNumberFieldProps<
     | "placeholder"
     | "inputClassName"
     | "locale"
+    | "aria-label"
+    // Deprecated 0.34 (API-1), removed in 0.35: `aria-label` above.
     | "ariaLabel"
     | "autoFocus"
     // 0.34: the write lock NumberField has had since 0.33.1 (Kurvenschmiede's F80) —
     // the 0.33.1 notes said the Rhf twins pass it on, and this list did not pick it.
     | "commit"
     | "disabledReason"
+    | "disabledReasonDisplay"
   > & {
     /** What an emptied field stores. Default `null`; `""` for a schema written
      *  against a native number input (`z.coerce.number()` over `""`). */
@@ -566,6 +577,10 @@ export type RhfMoneyFieldProps<
   /** Colours the figure for the direction of money. */
   tone?: "neutral" | "outflow" | "inflow";
   align?: "start" | "center";
+  /** Names the amount when the field has no `label`. */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the amount only when `aria-label` is absent. */
   ariaLabel?: string;
   autoFocus?: boolean;
   /**
@@ -593,6 +608,9 @@ export type RhfMoneyFieldProps<
   /** {@link AmountInput}'s write lock (0.34, round 0.34 C2): why the amount cannot be
    *  changed — focusable, `readOnly`, nothing reaches the form. Wins over `disabled`. */
   disabledReason?: ReactNode;
+  /** {@link AmountInput}'s `disabledReasonDisplay`: a line under the amount at Large and
+   *  on a touch screen by default, the tooltip otherwise. */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /** {@link AmountInput}'s `commit`: locked the `disabledReason` way under a locked
    *  `WriteLockProvider`, for an amount whose change saves itself. A field that only
    *  reaches the server through the form's Save leaves it off. */
@@ -623,7 +641,7 @@ function MoneyControl({
   describedBy: string | undefined;
   props: Omit<RhfMoneyFieldProps, keyof RhfFieldBaseProps>;
 }) {
-  const { valueAs = "number", emptyValue = null, ariaLabel, ...amountProps } = props;
+  const { valueAs = "number", emptyValue = null, ...amountProps } = props;
   const value: unknown = field.value;
   const external = value === null || value === undefined ? "" : String(value);
   // The text being typed. A stored NUMBER cannot hold "12." or "12+5", so the draft
@@ -651,7 +669,6 @@ function MoneyControl({
     <div>
       <AmountInput
         {...amountProps}
-        ariaLabel={ariaLabel}
         id={id}
         aria-describedby={describedBy}
         aria-required={required || undefined}
@@ -1794,6 +1811,7 @@ export type RhfComboboxProps<
     | "createCommit"
     | "commit"
     | "disabledReason"
+    | "disabledReasonDisplay"
     | "filter"
     | "minChars"
     | "debounceMs"
@@ -2062,6 +2080,7 @@ export type RhfTextComboboxProps<
     | "closeLabel"
     | "commit"
     | "disabledReason"
+    | "disabledReasonDisplay"
   > & {
     /** Classes for the combobox. */
     comboClassName?: string;

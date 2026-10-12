@@ -134,7 +134,7 @@ function AppearanceSwitches() {
     <>
       <OptionSwitcherMenu<TextSize>
         icon={<ALargeSmall className="size-4" />}
-        ariaLabel={labels.textSize}
+        aria-label={labels.textSize}
         title={labels.textSize}
         heading={labels.textSize}
         options={TEXT_SIZES.map((value) => ({ value, label: labels.textSizes[value] }))}
@@ -143,7 +143,7 @@ function AppearanceSwitches() {
       />
       <OptionSwitcherMenu<ContrastMode>
         icon={<Contrast className="size-4" />}
-        ariaLabel={labels.contrast}
+        aria-label={labels.contrast}
         title={labels.contrast}
         heading={labels.contrast}
         options={CONTRAST_MODES.map((value) => ({ value, label: labels.contrastModes[value] }))}
@@ -237,7 +237,7 @@ function AppearanceMenu() {
   return (
     <TopBarActionMenu
       icon={<SlidersHorizontal className="size-5" />}
-      ariaLabel={settings.groups.appearance.title}
+      aria-label={settings.groups.appearance.title}
       entries={entries}
       panelClassName="max-h-[calc(100dvh-5rem)] overflow-y-auto"
     />
@@ -262,7 +262,7 @@ function TopBarAppearance() {
         activeId={paletteId}
         mode={mode}
         onSelect={setPaletteId}
-        ariaLabel={t.chrome.palette}
+        aria-label={t.chrome.palette}
         heading={t.chrome.palette}
       />
       <AppearanceSwitches />
@@ -270,7 +270,7 @@ function TopBarAppearance() {
           it here. Each entry is labelled with its ENDONYM — a reader looking for
           Arabic is looking for العربية, not for the English word "Arabic" they
           cannot read. */}
-      <LanguageMenu options={LOCALE_OPTIONS} current={code} onChange={setCode} ariaLabel={t.chrome.language} />
+      <LanguageMenu options={LOCALE_OPTIONS} current={code} onChange={setCode} aria-label={t.chrome.language} />
     </>
   );
 }
@@ -359,7 +359,7 @@ export function Showcase() {
               <ThemeToggle
                 mode={mode}
                 onToggle={toggle}
-                ariaLabel={t.chrome.toggleTheme}
+                aria-label={t.chrome.toggleTheme}
                 // Was "Dark"/"Light" — the current mode, which the sun/moon glyph already
                 // says. The tooltip now names the ACTION, which is the half a translator
                 // has words for and the half a screen-reader user needs.
@@ -382,7 +382,7 @@ export function Showcase() {
               <span className="hidden xl:contents">
                 <OptionSwitcherMenu
                   icon={contentsPosition === "start" ? <PanelLeft className="size-4" /> : <PanelRight className="size-4" />}
-                  ariaLabel={t.chrome.contentsPosition}
+                  aria-label={t.chrome.contentsPosition}
                   title={t.chrome.contentsPosition}
                   heading={t.chrome.contentsPosition}
                   options={[

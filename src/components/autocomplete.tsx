@@ -31,6 +31,7 @@ import {
   StaticLabelRow,
   useFieldHint,
   useLockReason,
+  type DisabledReasonDisplay,
 } from "./field-parts";
 import { mergeDescribedBy } from "./choice-parts";
 import type { CommitScope } from "./write-lock";
@@ -163,6 +164,9 @@ export interface AutocompleteProps<V extends string | number = string>
    * stays live under the lock. No provider, or an unlocked one: no effect.
    */
   commit?: CommitScope;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise (DUP-3). */
+  disabledReasonDisplay?: DisabledReasonDisplay;
 }
 
 function AutocompleteInner<V extends string | number = string>(
@@ -196,6 +200,7 @@ function AutocompleteInner<V extends string | number = string>(
     id,
     disabled,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     onKeyDown,
     onFocus,
@@ -293,7 +298,7 @@ function AutocompleteInner<V extends string | number = string>(
   // copy of the reason, Button's anatomy; `block` so a full-width field stays full width.
   const withLock = (box: ReactNode) =>
     locked ? (
-      <LockedReason lock={lock} className="block">
+      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
         {box}
       </LockedReason>
     ) : (

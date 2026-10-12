@@ -232,7 +232,7 @@ export function RhfFieldsDemo() {
                   render: ({ name, label }) => (
                     <RhfMoneyField<Lease>
                       name={`${name}.amount`}
-                      ariaLabel={label}
+                      aria-label={label}
                       currency="CHF"
                       rules={{ validate: (v) => (typeof v === "number" && v > 0) || "Amount?" }}
                     />
@@ -424,7 +424,7 @@ function LineItemsDemo() {
       width: "5rem",
       align: "end",
       render: ({ item, index, label }) => (
-        <NumberField ariaLabel={label} value={item.qty} digits={0} min={0} nullable onCommit={(qty) => update(index, { qty })} />
+        <NumberField aria-label={label} value={item.qty} digits={0} min={0} nullable onCommit={(qty) => update(index, { qty })} />
       ),
     },
     {
@@ -433,7 +433,7 @@ function LineItemsDemo() {
       width: "7rem",
       align: "end",
       render: ({ item, index, label }) => (
-        <NumberField ariaLabel={label} value={item.price} digits={2} min={0} nullable onCommit={(price) => update(index, { price })} />
+        <NumberField aria-label={label} value={item.price} digits={2} min={0} nullable onCommit={(price) => update(index, { price })} />
       ),
     },
     {

@@ -5,6 +5,7 @@ import { CURRENCIES, CurrencyFlag, currencyName, getCurrency } from "./currency-
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { cn } from "../lib/cn";
 import { currencyMinorDigits } from "../lib/format";
+import { roundHalfAway } from "../lib/round";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
@@ -27,7 +28,13 @@ import {
 } from "../lib/calc";
 import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
-import { LockedReason, useInlineHint, useLockReason, type LockReason } from "./field-parts";
+import {
+  LockedReason,
+  useInlineHint,
+  useLockReason,
+  type DisabledReasonDisplay,
+  type LockReason,
+} from "./field-parts";
 import type { CommitScope } from "./write-lock";
 
 interface AmountInputProps {
@@ -85,6 +92,10 @@ interface AmountInputProps {
    */
   inputClassName?: string;
   id?: string;
+  /** Names the field when it has no visible `label` (a table cell, the display shape). */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the field only when `aria-label` is absent. */
   ariaLabel?: string;
   /**
    * Set on the `<input>`, with `id` above. Declared so `Field`'s render-prop spread —
@@ -263,11 +274,18 @@ interface AmountInputProps {
    * currency chip is a read-out rather than a picker, and neither blur nor Enter
    * settles — so `onChange`, `onCommit`, `onNegativeChange` and `onCurrencyChange` are
    * never called. Enter is swallowed, so the field does not submit the form around it.
-   * The reason is in the kit {@link Tooltip} and on the input's `aria-describedby`,
+   * The reason is a line under the field at Large and on a touch screen, else in the kit
+   * {@link Tooltip} (`disabledReasonDisplay`), and on the input's `aria-describedby`,
    * between the caption and the error. Wins over `disabled`. {@link MoneyField} and
    * `RhfMoneyField` take it too.
    */
   disabledReason?: ReactNode;
+  /**
+   * Where the reason shows — {@link Button}'s `disabledReasonDisplay`: by default a line
+   * under the field at Large and on a touch screen, the tooltip otherwise (§4 "No fact
+   * only in a tooltip"; DUP-3, refactor audit 2026-10).
+   */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /**
    * This amount COMMITS — {@link Button}'s `commit`, NumberInput's: under a locked
    * {@link WriteLockProvider} it is locked the `disabledReason` way with the lock's reason
@@ -282,18 +300,15 @@ interface AmountInputProps {
 /**
  * A settled figure, rounded to `digits` (half away from zero) and clamped to
  * `min`/`max`. Only a plain number is touched. A half-typed draft or an expression
- * comes back as it was. Rounding works in decimal exponent notation, because
- * `Math.round(1.005 * 100)` is 100 (1.005 is 1.00499… in binary).
+ * comes back as it was. Rounding is `lib/round.ts`'s, shared with `roundToCurrency`
+ * (BUG-11: this copy blanked "0.0000001" and a 22-digit figure on blur).
  */
 function settleAmount(text: string, digits: number | undefined, min?: number, max?: number): string {
   const t = text.trim();
   if (!/^-?\d*\.?\d*$/.test(t) || !/\d/.test(t)) return text;
   let n = Number(t);
   if (!Number.isFinite(n)) return text;
-  if (digits !== undefined) {
-    const magnitude = Number(`${Math.round(Number(`${Math.abs(n)}e${digits}`))}e-${digits}`);
-    n = n < 0 ? -magnitude : magnitude;
-  }
+  if (digits !== undefined) n = roundHalfAway(n, digits);
   if (min !== undefined && n < min) n = min;
   if (max !== undefined && n > max) n = max;
   const out = formatResult(n);
@@ -349,7 +364,7 @@ function isResultOf(previous: string, text: string, settle: (text: string) => st
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, error, calculator = true, className, inputClassName, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, hint: hintProp, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit, disabledReason, commit: commitScope }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, error, calculator = true, className, inputClassName, id, "aria-label": ariaLabelAttr, ariaLabel: ariaLabelProp, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, hint: hintProp, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit, disabledReason, disabledReasonDisplay, commit: commitScope }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const hintId = useId();
@@ -501,11 +516,13 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
       setDraft(raw);
       handleText(readTyped(raw, mark));
     };
-    const { open, setOpen, wrapperRef, panelRef, query, setQuery, inputRef } = useDropdownSearch();
+    const { open, setOpen, wrapperRef, panelRef, triggerRef, query, setQuery, inputRef } = useDropdownSearch();
     // The chip the currency list hangs off (Keksdose dev#548). It is portalled now, so
     // the panel needs a real trigger rect rather than a relative parent — see
-    // `DropdownPanel`'s note for what an `overflow` ancestor did to it before.
-    const chipRef = useRef<HTMLButtonElement>(null);
+    // `DropdownPanel`'s note for what an `overflow` ancestor did to it before. It is
+    // also the dropdown's `triggerRef`, where Escape hands focus back (round 0.34 BUG-1):
+    // Safari does not focus a clicked button, so "whatever held focus" is not the chip.
+    const chipRef = triggerRef;
 
     // The currency chip's strings are the `currency` namespace — the same two
     // `CurrencySelect` resolves, under this component's older key names. The
@@ -546,9 +563,10 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             the kit's FloatingField, which draws the label — floating, or sr-only in
             the display shape — and puts a FieldHint on the label's line, as it does
             for NumberInput. */}
-        {/* Locked, the field sits in the reason's Tooltip (LockedReason), as NumberInput
-            does; the root above keeps `className`, so nothing reflows. */}
-        <LockedOrNot lock={lock}>
+        {/* Locked, the field sits in the reason's frame (LockedReason: the line, or the
+            Tooltip), as NumberInput does; the root above keeps `className`, so nothing
+            reflows. */}
+        <LockedOrNot lock={lock} display={disabledReasonDisplay}>
         <FloatingField
           className="w-full"
           htmlFor={fieldId}
@@ -559,7 +577,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         <input
           ref={setRefs}
           id={fieldId}
-          aria-label={ariaLabel}
+          // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
+          aria-label={ariaLabelAttr ?? ariaLabelProp}
           type="text"
           // eslint-disable-next-line jsx-a11y/no-autofocus -- opt-in per call site (feedback #70)
           autoFocus={autoFocus}
@@ -630,7 +649,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             reads the input through `peer-*`). The display shape drops it VISUALLY,
             not from the accessibility tree: a 36px tinted figure at the top of a
             transaction form is legibly the amount, but a screen reader still needs
-            the name, and callers that pass `label` without `ariaLabel` would
+            the name, and callers that pass `label` without `aria-label` would
             otherwise be left with none. */}
         {/* Trailing controls share one flex track so the calculator icon and the
             currency suffix/picker sit side by side without overlapping. */}
@@ -658,7 +677,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
                 onCommit?.(settled);
               }}
               className="px-1.5"
-              ariaLabel={labels?.calculatorTrigger}
+              aria-label={labels?.calculatorTrigger}
               labels={labels?.calculator}
             />
           )}
@@ -778,11 +797,19 @@ AmountInput.displayName = "AmountInput";
 
 /** The field in its lock's {@link LockedReason} while locked, as it is otherwise. A
  *  component rather than a ternary so the field's JSX is written once. `block w-full`:
- *  the Tooltip's box stands where the field's own did. */
-function LockedOrNot({ lock, children }: { lock: LockReason; children: ReactNode }) {
+ *  the frame's box stands where the field's own did. */
+function LockedOrNot({
+  lock,
+  display,
+  children,
+}: {
+  lock: LockReason;
+  display: DisabledReasonDisplay | undefined;
+  children: ReactNode;
+}) {
   if (!lock.locked) return <>{children}</>;
   return (
-    <LockedReason lock={lock} className="block w-full">
+    <LockedReason lock={lock} display={display} className="block w-full">
       {children}
     </LockedReason>
   );

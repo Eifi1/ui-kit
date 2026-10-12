@@ -172,7 +172,7 @@ export function ShellSection() {
           <Row>
             <TopBarActionMenu
               icon={<Compass className="size-5" />}
-              ariaLabel="Guided tours"
+              aria-label="Guided tours"
               heading="Tours"
               href="/shell"
               entries={[
@@ -298,7 +298,7 @@ function TopBarSpecimen() {
             <ThemeToggle
               mode={mode}
               onToggle={toggle}
-              ariaLabel="Toggle theme"
+              aria-label="Toggle theme"
               title={mode === "dark" ? "Dark" : "Light"}
             />
           </>
@@ -338,7 +338,7 @@ function ThemeAndPalette() {
         <ThemeToggle
           mode={mode}
           onToggle={toggle}
-          ariaLabel="Toggle theme (specimen)"
+          aria-label="Toggle theme (specimen)"
           title={mode === "dark" ? "Dark" : "Light"}
         />
         <PaletteMenu
@@ -346,7 +346,7 @@ function ThemeAndPalette() {
           activeId={paletteId}
           mode={mode}
           onSelect={setPaletteId}
-          ariaLabel="Appearance preset (specimen)"
+          aria-label="Appearance preset (specimen)"
           heading="Palette"
         />
         {/* `toggle` only ever produces an explicit light or dark, so nothing in the
@@ -395,7 +395,7 @@ function Languages() {
           options={LANGUAGES}
           current={lang}
           onChange={setLang}
-          ariaLabel="Language"
+          aria-label="Language"
           heading={withHeading ? "Language" : undefined}
         />
         <Switch label="heading" checked={withHeading} onCheckedChange={setWithHeading} />
@@ -434,7 +434,7 @@ function Environments() {
       <Row>
         <OptionSwitcherMenu<Env>
           icon={<Server className="size-5" />}
-          ariaLabel="Environment"
+          aria-label="Environment"
           title={`Environment: ${env}`}
           heading="Environment"
           options={ENVIRONMENTS}
@@ -517,7 +517,7 @@ function ActionMenu() {
       <Row>
         <TopBarActionMenu
           icon={<LifeBuoy className="size-5" />}
-          ariaLabel="Help and feedback"
+          aria-label="Help and feedback"
           heading="Help"
           entries={entries}
           panelClassName="w-64"

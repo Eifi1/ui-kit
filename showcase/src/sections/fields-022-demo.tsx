@@ -222,7 +222,8 @@ export function CommitControls022Demo() {
         </WriteLockProvider>
       </div>
       <Note>
-        Under a lock each control is {code("aria-disabled")} but stays focusable, says why in the kit tooltip and its
+        Under a lock each control is {code("aria-disabled")} but stays focusable, says why in the kit tooltip — a
+        line under it at Large and on a touch screen, as on Button ({code("disabledReasonDisplay")}) — and in its
         description, and fires no change. Without a provider (or unlocked) {code("commit")} does nothing;{" "}
         {code("disabledReason")} does the same for a reason of the control&apos;s own. A field that saves itself is{" "}
         {code("readOnly")} besides — it shows its value, and reports no change, no blur and no Enter; the amount

@@ -108,7 +108,7 @@ export function CompanySwitcher<Id extends string | number>({
         </button>
       ) : (
         <OptionSwitcherMenu<string>
-          ariaLabel={labels.switchCompany}
+          aria-label={labels.switchCompany}
           title={current ? labels.current(current.name) : undefined}
           heading={labels.heading}
           icon={icon ?? <Building2 className="size-5" />}

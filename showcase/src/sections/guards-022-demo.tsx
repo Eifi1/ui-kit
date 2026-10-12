@@ -294,7 +294,7 @@ function EnvelopeTable() {
                     editor={(p) => (
                       <NumberInput
                         calculator={false}
-                        ariaLabel={p.label}
+                        aria-label={p.label}
                         value={p.value}
                         onChange={p.onChange}
                         onCommit={p.commit}

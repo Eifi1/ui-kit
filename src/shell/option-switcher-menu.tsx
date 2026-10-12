@@ -10,6 +10,23 @@ export interface OptionSwitcherOption<T extends string> {
 }
 
 /**
+ * Names the trigger and the menu: one of the two spellings is required (API-1, refactor
+ * audit 2026-10). `aria-label` wins when both are given. TopBarActionMenu has the same
+ * type; both become a plain required `aria-label` when `ariaLabel` goes in 0.35.
+ */
+type RequiredMenuName =
+  | {
+      "aria-label": string;
+      /** @deprecated 0.34 — use `aria-label`; removed in 0.35. */
+      ariaLabel?: string;
+    }
+  | {
+      "aria-label"?: string;
+      /** @deprecated 0.34 — use `aria-label`; removed in 0.35. */
+      ariaLabel: string;
+    };
+
+/**
  * A top-bar hover menu that switches between a small set of options, with a
  * check on the active one and an optional heading. Generic glue over
  * {@link HoverMenu} — e.g. a dev role/impersonation switcher, an environment
@@ -17,7 +34,8 @@ export interface OptionSwitcherOption<T extends string> {
  */
 export function OptionSwitcherMenu<T extends string>({
   icon,
-  ariaLabel,
+  "aria-label": ariaLabelAttr,
+  ariaLabel: ariaLabelProp,
   title,
   heading,
   options,
@@ -25,13 +43,14 @@ export function OptionSwitcherMenu<T extends string>({
   onSelect,
 }: {
   icon: ReactNode;
-  ariaLabel: string;
   title?: string;
   heading?: string;
   options: OptionSwitcherOption<T>[];
   value: T;
   onSelect: (value: T) => void;
-}) {
+} & RequiredMenuName) {
+  // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
+  const ariaLabel = ariaLabelAttr ?? ariaLabelProp;
   return (
     <HoverMenu
       aria-label={ariaLabel}

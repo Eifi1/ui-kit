@@ -24,6 +24,7 @@ import {
   StaticLabelRow,
   useFieldHint,
   useLockReason,
+  type DisabledReasonDisplay,
 } from "./field-parts";
 import { assignRef, mergeDescribedBy } from "./choice-parts";
 import { useCommitReason, type CommitScope } from "./write-lock";
@@ -66,6 +67,9 @@ export interface MultiEntityComboboxProps<V extends string | number>
   /** This picker COMMITS — toggling saves. Locked the `disabledReason` way under a
    *  locked {@link WriteLockProvider}. See {@link EntityCombobox}'s `commit`. */
   commit?: CommitScope;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise (DUP-3). */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /** When set, a "create" row appears for a non-empty query with no exact match.
    *  The panel stays open (adding the new entity to `value` is the caller's job). */
   onCreate?: (query: string) => void;
@@ -128,6 +132,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
     closeLabel,
     disabled,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     onCreate,
     createLabel,
@@ -220,7 +225,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
   // While locked the trigger sits in the reason's Tooltip, as on EntityCombobox.
   const withLock = (trigger: ReactNode) =>
     lock.locked ? (
-      <LockedReason lock={lock} className="block">
+      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
         {trigger}
       </LockedReason>
     ) : (

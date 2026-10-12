@@ -254,9 +254,9 @@ export function Numbers() {
             variant="display"
             suffix="€"
           />
-          {/* No label: `ariaLabel` names it, for a table cell or an inline editor. */}
+          {/* No label: `aria-label` names it, for a table cell or an inline editor. */}
           <NumberInput
-            ariaLabel="Quantity"
+            aria-label="Quantity"
             value={bare}
             onChange={setBare}
             calculator={false}
@@ -567,14 +567,14 @@ export function Numbers() {
               <CalculatorButton
                 value={deCalcButton}
                 onChange={(next) => setDeCalcButton(next)}
-                ariaLabel="Rechner"
+                aria-label="Rechner"
                 labels={{ panel: "Rechner", equals: "Ergebnis", plus: "plus", minus: "minus" }}
               />
             </div>
-            {/* No `label` on this one: `ariaLabel` names an amount field that sits in
+            {/* No `label` on this one: `aria-label` names an amount field that sits in
                 a table cell, and `placeholder` is what it shows while empty. */}
             <AmountInput
-              ariaLabel="Amount for row 3"
+              aria-label="Amount for row 3"
               placeholder="0.00"
               value={unlabelledAmount}
               onChange={setUnlabelledAmount}
@@ -586,7 +586,7 @@ export function Numbers() {
           Open the currency list on the first two and search &quot;Franken&quot;: the filter matches
           the <em>shown</em>, translated name. The calculator names are screen-reader names — inspect
           the trigger&apos;s <code className="font-mono">aria-label</code>, or open the popover. The
-          last field is unlabelled: <code className="font-mono">ariaLabel</code> names it and{" "}
+          last field is unlabelled: <code className="font-mono">aria-label</code> names it and{" "}
           <code className="font-mono">placeholder</code> fills it while empty.
         </Note>
       </Example>

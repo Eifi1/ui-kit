@@ -317,7 +317,7 @@ export function Choices() {
                 // chase every keystroke of "12.5".
                 <NumberInput
                   className="w-24"
-                  ariaLabel="Proportional gain value"
+                  aria-label="Proportional gain value"
                   calculator={false}
                   value={gainText}
                   onChange={setGainText}

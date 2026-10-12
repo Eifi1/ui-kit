@@ -122,7 +122,7 @@ export function FeedbackMenu({
     <TopBarActionMenu
       icon={<MessageSquare className="size-5" />}
       iconBadge={iconBadge}
-      ariaLabel={labels.trigger}
+      aria-label={labels.trigger}
       entries={entries}
       align={align}
     />

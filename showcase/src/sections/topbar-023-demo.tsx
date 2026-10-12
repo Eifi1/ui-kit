@@ -78,7 +78,7 @@ export function TopBarMenuHeadingsDemo() {
         <div className="flex justify-end rounded-md border border-subtle bg-surface-2 p-2">
           <TopBarActionMenu
             icon={<Compass className="size-5" />}
-            ariaLabel="Guided tours"
+            aria-label="Guided tours"
             panelClassName="w-72 max-h-[70vh] overflow-y-auto"
             entries={entries}
           />

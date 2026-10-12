@@ -60,7 +60,7 @@ function parseSettled(text: string): number | null | undefined {
  * price's finer scale (kastlan 5).
  *
  * ```tsx
- * <MoneyField ariaLabel="Amount" currency="CHF" value={row.amount}
+ * <MoneyField aria-label="Amount" currency="CHF" value={row.amount}
  *   onCommit={(amount) => updateRow(row.id, { amount })} />
  * ```
  */

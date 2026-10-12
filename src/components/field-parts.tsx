@@ -326,36 +326,62 @@ export function useLockReason(commit: CommitScope | undefined, disabledReason: R
 }
 
 /**
- * The kit {@link Tooltip} around a locked control, with a `hidden` copy of the reason for
- * the control's `aria-describedby` — Button's anatomy. The control goes in a FRAGMENT so
- * the Tooltip does not also clone its bubble's id into the description: the hidden copy
- * already describes it, and the same sentence twice would be read on every focus.
+ * A locked control and its reason — the kit's ONE frame for it, used by Button,
+ * IconButton, Chip, Checkbox, Switch and every field that locks (DUP-3, refactor audit
+ * 2026-10: Button's `ReasonFrame` and Chip's `ChipReasonFrame` were copies of it, and
+ * only those two drew the line, so a field locked through `commit` kept its reason in a
+ * tooltip on a phone while the Save beside it said it in words). Where it shows is
+ * {@link DisabledReasonDisplay}'s: by default a LINE under the control at Large and on a
+ * touch screen ({@link DisabledReasonLine}), the kit {@link Tooltip} otherwise.
+ *
+ * A component of its own so only a LOCKED control asks the text size and the pointer;
+ * the hundreds of unlocked controls on a page subscribe to nothing.
+ *
+ * Tooltip form: the control in a FRAGMENT with a `hidden` copy of the reason for its
+ * `aria-describedby`, so the Tooltip does not also clone its bubble's id into the
+ * description — the same sentence twice would be read on every focus. Line form: the
+ * line IS the description (it carries `reasonId`), and no bubble repeats what is on
+ * screen.
  *
  * `className` is the wrapper's, which becomes the outermost element while locked — a
  * control moves its own layout classes here so a lock does not reflow the form.
  */
 export function LockedReason({
   lock,
-  line = false,
+  display,
+  line: lineProp,
+  side,
+  portal,
   className,
+  lineClassName,
   children,
 }: {
-  lock: LockReason;
-  /** Draw the reason as a line under the control instead (0.32, §4) — see
-   *  {@link DisabledReasonLine}; the caller decides with {@link useDisabledReasonLine}. */
+  /** The reason, and the id the control's `aria-describedby` names. */
+  lock: Pick<LockReason, "reason" | "reasonId">;
+  /** Where the reason shows — the control's `disabledReasonDisplay`. Default `"auto"`. */
+  display?: DisabledReasonDisplay;
+  /** The answer of a caller that asked {@link useDisabledReasonLine} for its own layout
+   *  already (Checkbox, Switch); wins over `display`. */
   line?: boolean;
+  /** The bubble's side and portal — IconButton's `tooltipSide` / `tooltipPortal`. */
+  side?: TooltipSide;
+  portal?: boolean;
   className?: string;
+  /** Classes for the line itself — a list row's padding, so the words line up with the
+   *  row's. */
+  lineClassName?: string;
   children: ReactNode;
 }) {
-  if (line) {
+  const asked = useDisabledReasonLine(display);
+  if (lineProp ?? asked) {
     return (
-      <DisabledReasonLine id={lock.reasonId} reason={lock.reason} className={className}>
+      <DisabledReasonLine id={lock.reasonId} reason={lock.reason} className={className} lineClassName={lineClassName}>
         {children}
       </DisabledReasonLine>
     );
   }
   return (
-    <Tooltip label={lock.reason} className={className}>
+    <Tooltip label={lock.reason} side={side} portal={portal} className={className}>
       <>
         {children}
         <span id={lock.reasonId} hidden>
@@ -430,17 +456,21 @@ export function DisabledReasonLine({
   id,
   reason,
   className,
+  lineClassName,
   children,
 }: {
   id: string;
   reason: ReactNode;
   className?: string;
+  /** Classes for the line itself (0.34) — a list row's padding, so its words start
+   *  where the row's do. */
+  lineClassName?: string;
   children: ReactNode;
 }) {
   return (
     <span data-slot="disabled-reason" className={cn("inline-flex max-w-full flex-col items-start", className)}>
       {children}
-      <span id={id} className={DISABLED_REASON_LINE_CLASS}>
+      <span id={id} className={cn(DISABLED_REASON_LINE_CLASS, lineClassName)}>
         {reason}
       </span>
     </span>

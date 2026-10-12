@@ -40,7 +40,9 @@ export function decimalMark(locale: string | undefined): "," | "." {
  * - both marks present: the one that is not the locale's is grouping, and goes;
  * - in a "," locale, only "." present: grouping when it cannot be a decimal as a
  *   German reader writes it — twice ("1.234.567"), or in thousands shape ("1.234",
- *   "12.500") — otherwise a decimal ("1.5", typed by a dot-decimal habit);
+ *   "12.500") — otherwise a decimal ("1.5", typed by a dot-decimal habit). A first
+ *   group that starts with 0 is never thousands: "0.500" is a half, not five hundred
+ *   (BUG-6, refactor audit 2026-10);
  * - in a "." locale, only "," present: grouping when it appears twice ("1,234,567");
  *   once it stays a decimal, because Swiss and German typists write "1,5" in a
  *   de-CH form (kastlan 40) and a unit price "1,789" is a decimal.
@@ -56,7 +58,7 @@ export function normalizeTypedMarks(raw: string, mark: "," | "."): string {
     if (count === 0) return operand;
     const grouping = hasMark
       ? true
-      : count > 1 || (mark === "," && /^\d{1,3}(\.\d{3})+$/.test(operand));
+      : count > 1 || (mark === "," && /^[1-9]\d{0,2}(\.\d{3})+$/.test(operand));
     return grouping ? operand.split(other).join("") : operand;
   });
 }

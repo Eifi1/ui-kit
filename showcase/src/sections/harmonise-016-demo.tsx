@@ -177,10 +177,10 @@ export function Numbers016Demo() {
       </div>
       <Row>
         <div className="w-24">
-          <NumberInput ariaLabel="VAT rate" value={rate} onChange={setRate} suffix="%" calculator={false} />
+          <NumberInput aria-label="VAT rate" value={rate} onChange={setRate} suffix="%" calculator={false} />
         </div>
         <div className="w-28">
-          <NumberInput ariaLabel="Speed" value="88" onChange={() => {}} suffix="km/h" calculator={false} />
+          <NumberInput aria-label="Speed" value="88" onChange={() => {}} suffix="km/h" calculator={false} />
         </div>
         <span className={CAPTION}>a unit in a narrow cell: ~8px of end padding, not 12</span>
       </Row>

@@ -68,7 +68,7 @@ export type TopBarMenuEntry =
        *
        * The menu-wide `heading` prop is the panel's title, drawn once above everything;
        * with group headings it is usually redundant (two stacked caps lines read as one),
-       * and the trigger's `ariaLabel` already names the menu.
+       * and the trigger's `aria-label` already names the menu.
        */
       kind: "heading";
       key: string;
@@ -180,6 +180,23 @@ function keepTabInsidePanel(e: ReactKeyboardEvent<HTMLUListElement>) {
 }
 
 /**
+ * Names the trigger and the menu: one of the two spellings is required (API-1, refactor
+ * audit 2026-10). `aria-label` wins when both are given. OptionSwitcherMenu has the same
+ * type; both become a plain required `aria-label` when `ariaLabel` goes in 0.35.
+ */
+type RequiredMenuName =
+  | {
+      "aria-label": string;
+      /** @deprecated 0.34 — use `aria-label`; removed in 0.35. */
+      ariaLabel?: string;
+    }
+  | {
+      "aria-label"?: string;
+      /** @deprecated 0.34 — use `aria-label`; removed in 0.35. */
+      ariaLabel: string;
+    };
+
+/**
  * A top-bar icon button that opens a {@link HoverMenu} of actions and/or links,
  * with an optional uppercase heading and divider rules. Generic glue over the
  * shared top-bar chrome — e.g. the feedback launcher or the guided-tours menu —
@@ -202,7 +219,8 @@ export function TopBarActionMenu({
   trigger,
   triggerClassName,
   href,
-  ariaLabel,
+  "aria-label": ariaLabelAttr,
+  ariaLabel: ariaLabelProp,
   heading,
   header,
   entries,
@@ -226,11 +244,11 @@ export function TopBarActionMenu({
    * INSIDE the kit's button, which keeps the wiring: `aria-haspopup`, `aria-expanded`,
    * the toggle, the keyboard. `open` is there for a chevron that turns.
    *
-   * The button is named by `ariaLabel` followed by any readable text in the face — a
+   * The button is named by `aria-label` followed by any readable text in the face — a
    * `UserAvatar` `badge` label reaches a screen reader that way ("Account menu 3
    * unread"), where an `aria-label` on the button would have hidden it. A
    * `UserAvatar`'s initials are `aria-hidden`, so the person's name is only in the
-   * name if `ariaLabel` carries it ("Marcel Eifert, account menu").
+   * name if `aria-label` carries it ("Marcel Eifert, account menu").
    */
   trigger?: (state: { open: boolean }) => ReactNode;
   /** Extra classes for the trigger button — `rounded-full` round an avatar. */
@@ -243,12 +261,10 @@ export function TopBarActionMenu({
    * row, so the rows stay reachable by keyboard. A tap on a touch screen follows the
    * link — so use it where the destination offers everything the menu does. Rendered as
    * an `<a>` (the router's `Link`) with `aria-haspopup="menu"` and `aria-expanded`,
-   * named by `ariaLabel`: a link inside the kit's button would be interactive content
+   * named by `aria-label`: a link inside the kit's button would be interactive content
    * inside interactive content.
    */
   href?: string;
-  /** Names the trigger and the menu. */
-  ariaLabel: string;
   heading?: string;
   /** A non-interactive identity block above the rows. */
   header?: TopBarMenuHeader;
@@ -270,7 +286,9 @@ export function TopBarActionMenu({
   /** Which edge of the trigger the panel lines up with (see `HoverMenu`). Default `end`. */
   align?: "start" | "end" | "left" | "right";
   panelClassName?: string;
-}) {
+} & RequiredMenuName) {
+  // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
+  const ariaLabel = ariaLabelAttr ?? ariaLabelProp;
   // Names the groups' headings for `aria-labelledby`. Positional rather than from the
   // entry's `key`, which is the caller's text and may hold a space — and a space in
   // `aria-labelledby` is a list separator.

@@ -127,7 +127,7 @@ type EditorRender<T> = (props: InlineEditorProps<T>) => ReactNode;
  *
  * ```tsx
  * editor={(p) => (
- *   <NumberInput calculator={false} ariaLabel={p.label} value={p.value} onChange={p.onChange}
+ *   <NumberInput calculator={false} aria-label={p.label} value={p.value} onChange={p.onChange}
  *     onCommit={p.commit} aria-invalid={p.invalid || undefined} aria-describedby={p.describedBy} />
  * )}
  * ```

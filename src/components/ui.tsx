@@ -16,11 +16,9 @@ import type { CommitScope } from "./write-lock";
 import { mergeDescribedBy } from "./choice-parts";
 import {
   CompactControlsContext,
-  DisabledReasonLine,
   EndHintRow,
   FieldCaption,
   LockedReason,
-  useDisabledReasonLine,
   type DisabledReasonDisplay,
   useFieldHint,
   useInlineHint,
@@ -578,63 +576,13 @@ function ButtonElement({
   );
   if (!locked) return button;
   return (
-    <ReasonFrame
-      reason={disabledReason}
-      reasonId={reasonId}
+    <LockedReason
+      lock={{ reason: disabledReason, reasonId }}
       display={disabledReasonDisplay}
       className={stretch ? "self-stretch" : undefined}
     >
       {button}
-    </ReasonFrame>
-  );
-}
-
-/**
- * A locked control and its reason: the line under it, or the kit {@link Tooltip} with a
- * hidden copy for `aria-describedby` — see {@link DisabledReasonDisplay}. A component of
- * its own so only a LOCKED control asks the text size and the pointer; the hundreds of
- * unlocked buttons on a page subscribe to nothing.
- *
- * Tooltip form: the control in a FRAGMENT so Tooltip does not clone its bubble into the
- * description as well — the hidden copy already describes it, and the same sentence
- * twice would be read on every focus. Line form: the line is the description, and no
- * bubble repeats what is on screen. Either way `className` (the control's `stretch`)
- * moves to the wrapper, which is now the flex item.
- */
-function ReasonFrame({
-  reason,
-  reasonId,
-  display,
-  className,
-  side,
-  portal,
-  children,
-}: {
-  reason: ReactNode;
-  reasonId: string;
-  display: DisabledReasonDisplay | undefined;
-  className?: string;
-  side?: TooltipSide;
-  portal?: boolean;
-  children: ReactNode;
-}) {
-  const line = useDisabledReasonLine(display);
-  if (line) {
-    return (
-      <DisabledReasonLine id={reasonId} reason={reason} className={className}>
-        {children}
-      </DisabledReasonLine>
-    );
-  }
-  return (
-    <Tooltip label={reason} side={side} portal={portal} className={className}>
-      <>
-        {children}
-        <span id={reasonId} hidden>
-          {reason}
-        </span>
-      </>
-    </Tooltip>
+    </LockedReason>
   );
 }
 
@@ -1532,17 +1480,16 @@ function IconButtonElement(
   if (locked) {
     return (
       // Button's shape: the reason as a line under it, or the bubble with a hidden copy
-      // for the description (see ReasonFrame).
-      <ReasonFrame
-        reason={disabledReason}
-        reasonId={reasonId}
+      // for the description (see LockedReason).
+      <LockedReason
+        lock={{ reason: disabledReason, reasonId }}
         display={disabledReasonDisplay}
         side={tooltipSide}
         portal={tooltipPortal}
         className={stretch ? "self-stretch" : undefined}
       >
         {control}
-      </ReasonFrame>
+      </LockedReason>
     );
   }
   // The words are on the button at Large: a bubble would only repeat them.
@@ -2257,10 +2204,17 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
    * lock (0.33.1), Autocomplete's. Nothing a save listens to is reported: not `onChange`,
    * not `onBlur` (on a field that saves itself, blur IS the save), and not Enter, which is
    * swallowed so the field does not submit the form around it; the caller's `onKeyDown`
-   * still hears every other key. The reason is in the kit {@link Tooltip} and on the
+   * still hears every other key. The reason is a line under the field at Large and on a
+   * touch screen, else in the kit {@link Tooltip} (`disabledReasonDisplay`), and on the
    * input's `aria-describedby`, between the caption and the error. Wins over `disabled`.
    */
   disabledReason?: ReactNode;
+  /**
+   * Where the reason shows — {@link Button}'s `disabledReasonDisplay`: by default a line
+   * under the field at Large and on a touch screen, the tooltip otherwise (§4 "No fact
+   * only in a tooltip"; DUP-3, refactor audit 2026-10).
+   */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /**
    * This field COMMITS — {@link Button}'s `commit`: under a locked
    * {@link WriteLockProvider} it is locked the `disabledReason` way with the lock's reason
@@ -2304,6 +2258,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     countLabels,
     passwordLabels,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     ...rest
   } = props;
@@ -2360,13 +2315,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
         onKeyDown: swallowEnter(rest.onKeyDown),
       }
     : undefined;
-  // While locked the field sits in the reason's Tooltip, which becomes its outermost box
-  // — so `className` (a width, a flex or grid cell) moves onto that, as on Select, and
-  // the form keeps its layout. `block` so a full-width field stays full width in it.
+  // While locked the field sits in the reason's frame (the line, or the Tooltip), which
+  // becomes its outermost box — so `className` (a width, a flex or grid cell) moves onto
+  // that, as on Select, and the form keeps its layout. `block` so a full-width field
+  // stays full width in it.
   const boxClass = locked ? undefined : className;
   const withReason = (box: ReactNode) =>
     locked ? (
-      <LockedReason lock={lock} className={cn("block", className)}>
+      <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block", className)}>
         {box}
       </LockedReason>
     ) : (
@@ -2561,7 +2517,8 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
    *
    * With a reason the select is `aria-disabled` instead — still focusable, still showing
    * its value — its list does not open (pointer and keys are swallowed, Tab and Escape
-   * excepted), `onChange` is never called, and the reason is in the kit {@link Tooltip}
+   * excepted), `onChange` is never called, and the reason is a line under the field at
+   * Large and on a touch screen, else in the kit {@link Tooltip} (`disabledReasonDisplay`),
    * and on `aria-describedby`. It wears the settled look of a disabled field and drops
    * its chevron, as a disabled Select does (dev#474). It wins over `disabled`.
    *
@@ -2570,6 +2527,12 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
    * is kept or reported.
    */
   disabledReason?: ReactNode;
+  /**
+   * Where the reason shows — {@link Button}'s `disabledReasonDisplay`: by default a line
+   * under the field at Large and on a touch screen, the tooltip otherwise (§4 "No fact
+   * only in a tooltip"; DUP-3, refactor audit 2026-10).
+   */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /**
    * This select COMMITS — choosing saves. Under a locked {@link WriteLockProvider} it is
    * locked the `disabledReason` way with the lock's reason (which wins over its own).
@@ -2604,6 +2567,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     size,
     selectClassName,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     onMouseDown,
     onKeyDown,
@@ -2686,13 +2650,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         onChange: () => {},
       }
     : { onMouseDown, onKeyDown, onChange };
-  // While locked the field sits in the reason's Tooltip, which becomes the outermost
-  // box — so `className` (a width, a grid cell) moves onto it, and the form keeps its
-  // layout. `block` so a full-width field stays full width inside it.
+  // While locked the field sits in the reason's frame (the line, or the Tooltip), which
+  // becomes the outermost box — so `className` (a width, a grid cell) moves onto it, and
+  // the form keeps its layout. `block` so a full-width field stays full width inside it.
   const boxClass = locked ? undefined : className;
   const withReason = (box: ReactNode) =>
     locked ? (
-      <LockedReason lock={lock} className={cn("block", className)}>
+      <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block", className)}>
         {box}
       </LockedReason>
     ) : (

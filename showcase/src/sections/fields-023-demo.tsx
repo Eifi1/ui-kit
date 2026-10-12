@@ -147,13 +147,13 @@ export function AmountClass023Demo() {
     >
       <div className="grid max-w-md grid-cols-2 gap-3">
         <AmountInput
-          ariaLabel="Gross"
+          aria-label="Gross"
           value={gross}
           onChange={setGross}
           calculator={false}
           inputClassName="text-end tabular-nums"
         />
-        <MoneyField ariaLabel="VAT" value={vat} onCommit={setVat} calculator={false} inputClassName="text-end tabular-nums" />
+        <MoneyField aria-label="VAT" value={vat} onCommit={setVat} calculator={false} inputClassName="text-end tabular-nums" />
       </div>
       <Note>
         A money column right-aligns its figures so the decimal points line up (keksdose G7, the VAT cell). It used to

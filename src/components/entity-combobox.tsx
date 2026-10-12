@@ -21,6 +21,7 @@ import {
   StaticLabelRow,
   useFieldHint,
   useLockReason,
+  type DisabledReasonDisplay,
 } from "./field-parts";
 import { assignRef, mergeDescribedBy } from "./choice-parts";
 import { useCommitReason, type CommitScope } from "./write-lock";
@@ -90,6 +91,9 @@ export interface EntityComboboxProps<V extends string | number, C extends ComboC
    * off there and put `commit` on the Save. No provider, or an unlocked one: no effect.
    */
   commit?: CommitScope;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise (DUP-3). */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /** When set, a "create" row appears for a non-empty query with no exact match. */
   onCreate?: (query: string) => void;
   createLabel?: (query: string) => string;
@@ -166,6 +170,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
     sheetTitle,
     disabled,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     onCreate,
     createLabel,
@@ -256,7 +261,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
   // copy of the reason, Button's anatomy — `block` so a full-width field stays full width.
   const withLock = (trigger: ReactNode) =>
     lock.locked ? (
-      <LockedReason lock={lock} className="block">
+      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
         {trigger}
       </LockedReason>
     ) : (

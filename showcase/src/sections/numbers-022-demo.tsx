@@ -108,13 +108,13 @@ function InlineCell() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="min-w-0 truncate-until-large text-sm text-secondary">Groceries — assigned</span>
           <div className="w-36 shrink-0">
-            <MoneyField ariaLabel="Assigned" currency="EUR" calculator={false} value={assigned} onCommit={setAssigned} />
+            <MoneyField aria-label="Assigned" currency="EUR" calculator={false} value={assigned} onCommit={setAssigned} />
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="min-w-0 truncate-until-large text-sm text-secondary">With the calculator (default)</span>
           <div className="w-36 shrink-0">
-            <MoneyField ariaLabel="VAT" currency="EUR" value={vat} onCommit={setVat} />
+            <MoneyField aria-label="VAT" currency="EUR" value={vat} onCommit={setVat} />
           </div>
         </div>
       </div>

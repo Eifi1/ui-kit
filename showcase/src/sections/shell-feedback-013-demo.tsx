@@ -22,7 +22,7 @@ export function AccountHeaderLinkDemo() {
     >
       <div className="flex justify-end rounded-md border border-subtle bg-surface-2 p-2">
         <TopBarActionMenu
-          ariaLabel="Account menu"
+          aria-label="Account menu"
           triggerClassName="rounded-full"
           trigger={() => <UserAvatar name="Marcel Eifert" email="marcel@example.com" />}
           header={{

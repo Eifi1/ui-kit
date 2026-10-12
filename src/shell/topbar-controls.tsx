@@ -29,6 +29,7 @@ function MenuHeading({ children }: { children: string }) {
 export function ThemeToggle({
   mode,
   onToggle,
+  "aria-label": ariaLabelAttr,
   ariaLabel,
   title,
   className,
@@ -36,13 +37,16 @@ export function ThemeToggle({
   mode: ThemeMode;
   onToggle: () => void;
   /** Default: `topBar.theme` from the {@link UiKitProvider}, else English. */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the control only when `aria-label` is absent. */
   ariaLabel?: string;
   title?: string;
   className?: string;
 }) {
-  // This had no default at all, so a toggle rendered without `ariaLabel` was an
+  // This had no default at all, so a toggle rendered without `aria-label` was an
   // icon button with no name — a reader heard "button" and nothing else.
-  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { theme: ariaLabel });
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { theme: ariaLabelAttr ?? ariaLabel });
   const Icon = mode === "dark" ? Moon : Sun;
   return (
     <Tooltip label={title} portal>
@@ -65,6 +69,7 @@ export function PaletteMenu({
   activeId,
   mode,
   onSelect,
+  "aria-label": ariaLabelAttr,
   ariaLabel,
   heading,
 }: {
@@ -73,11 +78,14 @@ export function PaletteMenu({
   mode: ThemeMode;
   onSelect: (id: string) => void;
   /** Default: `topBar.palette` from the {@link UiKitProvider}, else English. */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the control only when `aria-label` is absent. */
   ariaLabel?: string;
   /** Optional small heading row above the list. */
   heading?: string;
 }) {
-  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { palette: ariaLabel });
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { palette: ariaLabelAttr ?? ariaLabel });
   const activeName = palettes.find((p) => p.id === activeId)?.name ?? activeId;
   return (
     <HoverMenu
@@ -169,6 +177,7 @@ export function LanguageMenu({
   options,
   current,
   onChange,
+  "aria-label": ariaLabelAttr,
   ariaLabel,
   heading,
 }: {
@@ -176,12 +185,15 @@ export function LanguageMenu({
   current: string | undefined;
   onChange: (code: string) => void;
   /** Default: `topBar.language` from the {@link UiKitProvider}, else English. */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the control only when `aria-label` is absent. */
   ariaLabel?: string;
   /** Optional small heading row above the list — as on `TopBarActionMenu`,
    *  `OptionSwitcherMenu` and `PaletteMenu`. */
   heading?: string;
 }) {
-  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { language: ariaLabel });
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { language: ariaLabelAttr ?? ariaLabel });
   const active = options.find((o) => o.code === current);
   return (
     <HoverMenu

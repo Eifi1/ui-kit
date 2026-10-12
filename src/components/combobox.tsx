@@ -32,6 +32,7 @@ import {
   StaticLabelRow,
   useFieldHint,
   useLockReason,
+  type DisabledReasonDisplay,
 } from "./field-parts";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
 import { useCommitReason, type CommitScope } from "./write-lock";
@@ -210,6 +211,9 @@ export interface ComboboxProps
    *  `disabledReason` way with the lock's reason; inside a form with its own Save, leave
    *  it off and put `commit` on the Save. No provider, or an unlocked one: no effect. */
   commit?: CommitScope;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise (DUP-3). */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /** Heading an option belongs under. Supplying it makes this list read exactly
    *  like {@link InlineEntityCombobox}'s — one heading per group with its rows
    *  indented beneath — instead of a flat list (feedback #136 rework: the payee
@@ -311,6 +315,7 @@ export function Combobox(props: ComboboxProps) {
     hint,
     disabled,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     optionAdornment,
     autoFocus,
@@ -461,7 +466,7 @@ export function Combobox(props: ComboboxProps) {
   // copy of the reason, Button's anatomy; `block` so a full-width field stays full width.
   const withLock = (box: ReactNode) =>
     locked ? (
-      <LockedReason lock={lock} className="block">
+      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
         {box}
       </LockedReason>
     ) : (
@@ -585,6 +590,14 @@ export function Combobox(props: ComboboxProps) {
                     onSubmit?.();
                   }
                 } else if (e.key === "Escape") {
+                  // Closing a list that is SHOWING is the list's Escape, and stops here,
+                  // as Autocomplete's does: a Modal or FullBleedDialog around the field
+                  // otherwise closed with it, form and all (round 0.34 BUG-1). With no
+                  // list on screen the key goes on to whoever wants it.
+                  if (open && (matches.length > 0 || createRow)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
                   setOpen(false);
                   setActive(-1);
                 } else if (e.key === "Tab") {
@@ -854,6 +867,9 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
    * off there and put `commit` on the Save. No provider, or an unlocked one: no effect.
    */
   commit?: CommitScope;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise (DUP-3). */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /**
    * A last row that makes a new record from what was typed — keksdose G9, whose "Create
    * cash account" had to become a separate button because this picker had no such row.
@@ -950,6 +966,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     clearable,
     clearLabel,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     onCreate,
     createLabel,
@@ -1160,7 +1177,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   // While locked the field sits in the reason's Tooltip — see Combobox.
   const withLock = (box: ReactNode) =>
     locked ? (
-      <LockedReason lock={lock} className="block">
+      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
         {box}
       </LockedReason>
     ) : (
@@ -1265,6 +1282,12 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                     reconcile();
                   }
                 } else if (e.key === "Escape") {
+                  // A showing list takes the key and stops it — see the twin in
+                  // {@link Combobox} (round 0.34 BUG-1).
+                  if (open && (matches.length > 0 || showCreate)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
                   setText(null);
                   close();
                 } else if (e.key === "Tab") {

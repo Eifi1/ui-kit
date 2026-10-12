@@ -11,7 +11,7 @@ import type { TextTone } from "./signed-amount";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 import { mergeDescribedBy } from "./choice-parts";
-import { LockedReason, useLockReason } from "./field-parts";
+import { LockedReason, useLockReason, type DisabledReasonDisplay } from "./field-parts";
 import type { CommitScope } from "./write-lock";
 import { DEFAULT_LIST_LABELS } from "./list-labels";
 
@@ -331,11 +331,16 @@ export type ListItemProps = ListItemBaseProps &
          * explain it but not keep the row reachable.
          *
          * With a reason the row's button is `aria-disabled` instead: still focusable, a
-         * click does nothing, the reason is in the kit {@link Tooltip} over the row and on
-         * its `aria-describedby`, and the row wears the disabled look. It wins over
+         * click does nothing, the reason is a line under the row at Large and on a touch
+         * screen, else in the kit {@link Tooltip} over the row (`disabledReasonDisplay`),
+         * and on its `aria-describedby`, and the row wears the disabled look. It wins over
          * `disabled`. The row's `actions` are untouched — each control there is its own.
          */
         disabledReason?: ReactNode;
+        /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`. A long list
+         *  of locked rows under a banner that already says why can keep it to the
+         *  tooltip with `"tooltip"` (DUP-3). */
+        disabledReasonDisplay?: DisabledReasonDisplay;
         /**
          * The row's click COMMITS. Under a locked {@link WriteLockProvider} it is locked
          * the `disabledReason` way with the lock's reason (which wins over its own). No
@@ -371,6 +376,7 @@ export type ListItemProps = ListItemBaseProps &
          *  stay unread. */
         onAuxClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
         disabledReason?: never;
+        disabledReasonDisplay?: never;
         commit?: never;
       } & NotExpandable)
     | ({
@@ -380,6 +386,7 @@ export type ListItemProps = ListItemBaseProps &
         external?: never;
         onAuxClick?: never;
         disabledReason?: never;
+        disabledReasonDisplay?: never;
         commit?: never;
       } & NotExpandable)
     | {
@@ -407,6 +414,7 @@ export type ListItemProps = ListItemBaseProps &
         external?: never;
         onAuxClick?: never;
         disabledReason?: never;
+        disabledReasonDisplay?: never;
         commit?: never;
       }
   );
@@ -472,6 +480,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     onClick,
     onAuxClick,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     expandedContent,
     expanded: expandedProp,
@@ -684,10 +693,16 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       </button>
     );
     if (locked) {
-      // The Tooltip takes the target's place in the row, so it takes its flex sizing
-      // too; the button fills it.
+      // The frame takes the target's place in the row, so it takes its flex sizing too;
+      // the button fills it (`items-stretch` in the line's column). The line takes the
+      // row's body padding, so its words start where the title's do.
       main = (
-        <LockedReason lock={lock} className="flex min-w-0 flex-1">
+        <LockedReason
+          lock={lock}
+          display={disabledReasonDisplay}
+          className="flex min-w-0 flex-1 items-stretch"
+          lineClassName={pad.body}
+        >
           {main}
         </LockedReason>
       );

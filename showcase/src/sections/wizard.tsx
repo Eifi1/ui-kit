@@ -250,7 +250,7 @@ export function Wizard() {
         hint="components/wizard-stepper: an indicator, nothing else. No engine, no data, no gates."
       >
         <div className="space-y-4">
-          <WizardStepper steps={IMPORT_STEPS} current={importStep} ariaLabel="Import steps" />
+          <WizardStepper steps={IMPORT_STEPS} current={importStep} aria-label="Import steps" />
           <Row>
             <Button
               type="button"

@@ -40,7 +40,7 @@ export function LineItemsJournal017Demo() {
     width: "9rem",
     align: "end",
     render: ({ item, index, label }) => (
-      <MoneyField ariaLabel={label} currency="CHF" value={item[key]} onCommit={(v) => update(index, { [key]: v })} />
+      <MoneyField aria-label={label} currency="CHF" value={item[key]} onCommit={(v) => update(index, { [key]: v })} />
     ),
   });
   const columns: LineItemsColumn<Entry>[] = [
@@ -146,7 +146,7 @@ export function LineItemsSplit017Demo() {
       render: ({ item, index, label, fieldLabel }) => (
         <MoneyField
           label={fieldLabel}
-          ariaLabel={label}
+          aria-label={label}
           currency="CHF"
           value={item.amount}
           onCommit={(amount) => update(index, { amount })}

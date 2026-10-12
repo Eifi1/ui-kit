@@ -58,7 +58,7 @@ export function LineItems016Demo() {
       render: ({ item, index, label, fieldLabel }) => (
         <MoneyField
           label={fieldLabel}
-          ariaLabel={label}
+          aria-label={label}
           currency="CHF"
           value={item.amount}
           onCommit={(amount) => update(index, { amount })}

@@ -178,3 +178,43 @@ describe("AmountInput reads grouping marks (keksdose G1)", () => {
     expect(input()).toHaveValue("7,5");
   });
 });
+
+/**
+ * BUG-6 (refactor audit 2026-10): in a "," locale "0.500" read as five hundred — the
+ * thousands shape took a leading 0 for a group. keksdose's provider locale is German.
+ */
+describe("AmountInput reads a leading-zero dot as a decimal (BUG-6)", () => {
+  it("reads '0.500' as a half in de-DE", () => {
+    render(<Harness locale="de-DE" currency="EUR" />);
+    fireEvent.focus(input());
+    fireEvent.change(input(), { target: { value: "0.500" } });
+    fireEvent.blur(input());
+    // The settle keeps the typist's own spelling of an unchanged figure.
+    expect(Number(state())).toBe(0.5);
+  });
+});
+
+/**
+ * BUG-11 (refactor audit 2026-10): the settle rounded through `${n}e${d}`, and
+ * `String(n)` is exponent form below 1e-6 and from 1e21 — NaN, so the field blanked a
+ * typed "0.0000001" or a 22-digit figure on blur.
+ */
+describe("AmountInput settles a figure of any size (BUG-11)", () => {
+  const typeAndBlur = (text: string) => {
+    fireEvent.focus(input());
+    fireEvent.change(input(), { target: { value: text } });
+    fireEvent.blur(input());
+  };
+
+  it("rounds a figure below a millionth to 0 rather than blanking it", () => {
+    render(<Harness locale="en-US" currency="EUR" />);
+    typeAndBlur("0.0000001");
+    expect(state()).toBe("0");
+  });
+
+  it("keeps a 22-digit figure", () => {
+    render(<Harness locale="en-US" currency="EUR" />);
+    typeAndBlur("1000000000000000000000");
+    expect(state()).toBe("1000000000000000000000");
+  });
+});

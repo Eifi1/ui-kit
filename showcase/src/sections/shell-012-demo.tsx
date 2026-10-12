@@ -130,7 +130,7 @@ function IconBadgeSpecimen() {
         <TopBarActionMenu
           icon={<Bell className="size-5" />}
           iconBadge={unread ? { label: `${unread} unread`, tone } : null}
-          ariaLabel="Feedback"
+          aria-label="Feedback"
           heading="Feedback"
           entries={feedbackEntries}
           panelClassName="w-56"
@@ -138,7 +138,7 @@ function IconBadgeSpecimen() {
         <TopBarActionMenu
           icon={<CloudOff className="size-5" />}
           iconBadge={offline ? { label: "sync failed", tone: "warning" } : undefined}
-          ariaLabel="Sync status"
+          aria-label="Sync status"
           heading="Sync"
           entries={syncEntries}
           panelClassName="w-56"
@@ -171,7 +171,7 @@ function IconBadgeSpecimen() {
       </Row>
       <div className="mt-3">
         <Note>
-          With a badge the trigger is named by its content — {code("ariaLabel")} and the badge&apos;s {code("label")}{" "}
+          With a badge the trigger is named by its content — {code("aria-label")} and the badge&apos;s {code("label")}{" "}
           as {code("sr-only")} text — so it is read &ldquo;Feedback 2 unread&rdquo;; an {code("aria-label")} would
           have hidden the count. {code("tone")} defaults to {code("danger")}. {code("null")} or {code("undefined")}{" "}
           draws the plain trigger. Choose the menu&apos;s row to clear each dot.

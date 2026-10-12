@@ -5,7 +5,7 @@ import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { CURRENCIES } from "./currency-select";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
-import { LockedReason, useInlineHint, useLockReason } from "./field-parts";
+import { LockedReason, useInlineHint, useLockReason, type DisabledReasonDisplay } from "./field-parts";
 import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
 import { commitExpression, formatResult } from "../lib/calc";
@@ -27,6 +27,11 @@ interface NumberInputProps {
    * fields so the save always sees the resolved number, never "10+5". */
   onCommit?: (value: string) => void;
   label?: ReactNode;
+  /** Names the field when it has no visible `label` (a table cell, a phone's display
+   *  shape). */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the field only when `aria-label` is absent. */
   ariaLabel?: string;
   /** Names for the calculator this field renders — its trigger, and the controls
    *  inside the popover — and for the numpad sheet it opens on a phone. Overrides
@@ -148,11 +153,18 @@ interface NumberInputProps {
    * Combobox family's lock is. Nothing changes the value: the step keys do nothing, the
    * calculator and the phone's numpad are not offered, and neither blur nor Enter
    * commits — so `onChange` and `onCommit` are never called. Enter is swallowed, so the
-   * field does not submit the form around it. The reason is in the kit {@link Tooltip}
+   * field does not submit the form around it. The reason is a line under the field at
+   * Large and on a touch screen, else in the kit {@link Tooltip} (`disabledReasonDisplay`),
    * and on the input's `aria-describedby`, between the caption and the error. Wins over
    * `disabled`.
    */
   disabledReason?: ReactNode;
+  /**
+   * Where the reason shows — {@link Button}'s `disabledReasonDisplay`: by default a line
+   * under the field at Large and on a touch screen, the tooltip otherwise (§4 "No fact
+   * only in a tooltip"; DUP-3, refactor audit 2026-10).
+   */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /**
    * This field COMMITS — {@link Button}'s `commit`: under a locked
    * {@link WriteLockProvider} it is locked the `disabledReason` way with the lock's reason
@@ -232,7 +244,7 @@ function namesMoney(node: ReactNode): boolean {
 
 /**
  * Is this field being used for MONEY? A currency in the unit (`suffix="CHF"`), or in
- * the label, `ariaLabel` or placeholder of a field with no unit at all ("Estimated
+ * the label, `aria-label` or placeholder of a field with no unit at all ("Estimated
  * cost (CHF)"). Any other suffix is a unit — "%", "mm", "N·m" — and says what the
  * digits are, whatever the label says. `digits` plays no part: NumberInput has none,
  * and Kurvenschmiede's engineering fields at 2 and 3 decimals are exactly what this
@@ -295,7 +307,8 @@ export function NumberInput(props: NumberInputProps) {
     onChange,
     onCommit,
     label,
-    ariaLabel,
+    "aria-label": ariaLabelAttr,
+    ariaLabel: ariaLabelProp,
     labels,
     placeholder,
     disabled,
@@ -317,8 +330,11 @@ export function NumberInput(props: NumberInputProps) {
     min,
     max,
     disabledReason,
+    disabledReasonDisplay,
     commit: commitScope,
   } = props;
+  // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
+  const ariaLabel = ariaLabelAttr ?? ariaLabelProp;
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   const hintId = useId();
@@ -448,7 +464,7 @@ export function NumberInput(props: NumberInputProps) {
     stepBy(count);
   };
 
-  // While locked the field sits in the reason's Tooltip, which becomes its outermost
+  // While locked the field sits in the reason's frame (line or Tooltip), its outermost
   // box — so `className` (a width, a flex or grid cell) moves onto that, and the form
   // keeps its layout, as on Select.
   const field = (
@@ -533,7 +549,7 @@ export function NumberInput(props: NumberInputProps) {
               value={derived}
               onChange={result}
               className="self-stretch px-2.5"
-              ariaLabel={labels?.calculatorTrigger}
+              aria-label={labels?.calculatorTrigger}
               labels={labels?.calculator}
             />
           )}
@@ -565,7 +581,7 @@ export function NumberInput(props: NumberInputProps) {
     </FloatingField>
   );
   const box = locked ? (
-    <LockedReason lock={lock} className={cn("block w-full", className)}>
+    <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block w-full", className)}>
       {field}
     </LockedReason>
   ) : (

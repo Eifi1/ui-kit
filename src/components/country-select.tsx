@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { COUNTRY_CODES, countryName, normalizeCountryCode } from "../lib/countries";
 import { FieldChevron, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, FloatingField } from "./ui";
-import { Tooltip } from "./tooltip";
+import { LockedReason, type DisabledReasonDisplay } from "./field-parts";
 import { CurrencyFlag } from "./currency-select";
 import {
   ComboboxPanel,
@@ -135,10 +135,14 @@ export interface CountrySelectProps<Clearable extends boolean = false>
   /**
    * Why the country cannot be changed — {@link Button}'s `disabledReason`, for a field
    * that saves itself. The trigger stays focusable and `aria-disabled`, the list does
-   * not open and `onChange` never fires; the reason is in the kit {@link Tooltip} and
+   * not open and `onChange` never fires; the reason is a line under the field at Large
+   * and on a touch screen, else in the kit {@link Tooltip} (`disabledReasonDisplay`), and
    * on the trigger's `aria-describedby`. Wins over `disabled`.
    */
   disabledReason?: ReactNode;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise (DUP-3). */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /**
    * This select SAVES on change (a settings row with no Save button). Under a locked
    * {@link WriteLockProvider} it is locked the `disabledReason` way, with the lock's
@@ -253,6 +257,7 @@ export function CountrySelect<Clearable extends boolean = false>({
   placeholder,
   disabled,
   disabledReason: ownReason,
+  disabledReasonDisplay,
   commit,
   clearable,
   clearLabel,
@@ -494,16 +499,12 @@ export function CountrySelect<Clearable extends boolean = false>({
   );
 
   const control = locked ? (
-    // In a FRAGMENT, as Button does, so the Tooltip does not clone its bubble into the
-    // description as well — the hidden copy is what `aria-describedby` points at.
-    <Tooltip label={reason} className="flex w-full">
-      <>
-        {trigger}
-        <span id={reasonId} hidden>
-          {reason}
-        </span>
-      </>
-    </Tooltip>
+    // Button's frame: the line under the trigger, or the Tooltip with a hidden copy for
+    // `aria-describedby`. `items-stretch`: in the line's column the trigger keeps the
+    // field's full width.
+    <LockedReason lock={{ reason, reasonId }} display={disabledReasonDisplay} className="flex w-full items-stretch">
+      {trigger}
+    </LockedReason>
   ) : (
     trigger
   );

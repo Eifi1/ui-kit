@@ -34,7 +34,7 @@ export function Forms0142Demo() {
             <div key={row.id} className="grid grid-cols-[8rem_1fr] items-center gap-3 large:max-sm:grid-cols-1 large:max-sm:gap-1">
               <span className="text-sm">{row.name}</span>
               <MoneyField
-                ariaLabel={`${row.name} amount`}
+                aria-label={`${row.name} amount`}
                 currency="CHF"
                 min={0}
                 value={row.amount}
