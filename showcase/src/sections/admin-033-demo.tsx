@@ -152,7 +152,8 @@ export function PlanChange033Demo() {
             target={{ id: changing.id, first: changing.name.split(" ")[0], last: changing.name.split(" ")[1], email: changing.email }}
             plans={PLANS}
             current={changing.plan}
-            usage={`${changing.beds} of ${limitOf(changing.plan?.toLowerCase() ?? null) ?? "unlimited"} beds`}
+            // The column's shape (0.34): the same sentence as its tooltip, "1 of 1 bed" on a plan of one.
+            usage={usage(changing)}
             grantEnd={billingOn}
             onConfirm={async (change) => {
               const res = await send(changing, change);
@@ -183,7 +184,8 @@ export function PlanChange033Demo() {
         `onSortsChange` and the server sorts — and filters over `filterPlans`. The usage&apos;s `label` may give
         the word&apos;s plural forms (`one` &ldquo;bed&rdquo;, `other` &ldquo;beds&rdquo;), and the tooltip
         takes the limit&apos;s. `PlanChangeConfirm` is `AdminActionConfirm` at `acknowledge`: the current
-        plan and the app&apos;s usage sentence, a plan select, and — with `grantEnd`, only while billing is on —
+        plan and the usage — the column&apos;s `used`, `limit` and `label` in the column&apos;s sentence since 0.34,
+        or the app&apos;s own — a plan select, and — with `grantEnd`, only while billing is on —
         &ldquo;Free until&rdquo;, sent as the END of the picked day in the operator&apos;s time zone. The confirm
         is held while nothing would change, and it stays live under your own lapsed plan (`COMMIT_EXCEPT_BILLING`,
         built in); a demo lock still holds it. `usePlanChangeResult` turns the answer into lines with a tone each —

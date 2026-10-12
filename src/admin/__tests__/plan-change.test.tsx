@@ -182,6 +182,51 @@ describe("PlanChangeConfirm (§14.12)", () => {
     await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
   });
 
+  it("spells out the column's usage shape in the column's sentence (round 0.34 C15, keksdose N1)", async () => {
+    // A plain word, used whatever the count.
+    const plain = render(<Harness usage={{ used: 3, limit: 5, label: "budgets" }} />);
+    let dialog = await screen.findByRole("alertdialog", { name: "Change plan" });
+    expect(within(dialog).getByText("3 of 5 budgets")).toBeInTheDocument();
+    plain.unmount();
+    // The plural forms: the word takes the limit's — keksdose hand-built "1 of 1 budgets".
+    const forms = { one: "budget", other: "budgets" };
+    const single = render(<Harness usage={{ used: 1, limit: 1, label: forms }} />);
+    dialog = await screen.findByRole("alertdialog", { name: "Change plan" });
+    expect(within(dialog).getByText("1 of 1 budget")).toBeInTheDocument();
+    single.unmount();
+    const five = render(<Harness usage={{ used: 1, limit: 5, label: forms }} />);
+    dialog = await screen.findByRole("alertdialog", { name: "Change plan" });
+    expect(within(dialog).getByText("1 of 5 budgets")).toBeInTheDocument();
+    five.unmount();
+    // The app's own node still goes in as it is.
+    render(<Harness usage={<strong>3 budgets, no limit</strong>} />);
+    dialog = await screen.findByRole("alertdialog", { name: "Change plan" });
+    expect(within(dialog).getByText("3 budgets, no limit").tagName).toBe("STRONG");
+  });
+
+  it("reads the shape in the provider's language, and a null limit gives no line", async () => {
+    const inGerman = (node: ReactNode) => (
+      <UiKitProvider locale="de-CH" labels={UI_KIT_LABELS_DE_CH}>
+        {node}
+      </UiKitProvider>
+    );
+    // German heads the line with the word, in the limit's form, as the column's tooltip.
+    const forms = { one: "Budget", other: "Budgets" };
+    const five = render(<Harness wrap={inGerman} usage={{ used: 1, limit: 5, label: forms }} />);
+    let dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByText("Budgets: 1 von 5")).toBeInTheDocument();
+    five.unmount();
+    const single = render(<Harness wrap={inGerman} usage={{ used: 1, limit: 1, label: forms }} />);
+    dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByText("Budget: 1 von 1")).toBeInTheDocument();
+    single.unmount();
+    // Unlimited (or no limit known): no usage line, as the column draws none.
+    render(<Harness usage={{ used: 9, limit: null, label: forms }} />);
+    dialog = await screen.findByRole("alertdialog", { name: "Change plan" });
+    expect(dialog).toHaveTextContent("Current plan: Free");
+    expect(dialog).not.toHaveTextContent("9");
+  });
+
   it("offers Free until with grantEnd, sent as the END of the picked day", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn(async () => undefined);

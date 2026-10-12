@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { isValidElement, useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
@@ -70,7 +70,8 @@ export interface PlanChangeLabels {
    * in the form the LIMIT takes when the label gives its plural forms ("1 of 1 budget",
    * "1 of 5 budgets"): in every shipped language the word follows the limit, or heads
    * the line in German, whose `von` would want a dative plural no app form carries
-   * ("Budgets: 1 von 5"). An override of yours gets the same word.
+   * ("Budgets: 1 von 5"). An override of yours gets the same word. Since 0.34 the grant
+   * dialog's usage line too, when `usage` comes as the column's shape.
    */
   usageOf: (used: string, limit: string, dimension: string) => string;
 }
@@ -87,7 +88,8 @@ function codeOf(raw: string | null | undefined): string | null {
 
 /* ── The column ────────────────────────────────────────────────────────────── */
 
-/** What a row's usage is, for the line under its plan: "1/5". */
+/** What a row's usage is, for the line under its plan: "1/5" — and since 0.34 what
+ *  {@link PlanChangeConfirm}'s `usage` takes, for the same sentence in the dialog. */
 export interface PlanColumnUsage {
   used: number;
   /** The plan's limit for it; `null` (unlimited, or none known): no line. */
@@ -137,6 +139,21 @@ export interface PlanColumnOptions<T> {
   labels?: Partial<PlanChangeLabels>;
 }
 
+/**
+ * A usage spelled out — `planChange.usageOf` with the figures in `locale` and the word in
+ * the form the limit takes: "1 of 1 budget", "Budgets: 1 von 5". The column's tooltip
+ * and the grant dialog's line both read it, so the rule lives once (round 0.34 C15).
+ */
+function usageSentence(
+  usage: PlanColumnUsage & { limit: number },
+  usageOf: PlanChangeLabels["usageOf"],
+  locale: string | undefined,
+): string {
+  const figure = (value: number) => formatNumber(value, { locale });
+  const word = typeof usage.label === "string" ? usage.label : pluralForm(usage.limit, usage.label, locale);
+  return usageOf(figure(usage.used), figure(usage.limit), word);
+}
+
 /** The cell: a component, so the figures follow the provider's locale. */
 function PlanCell({
   code,
@@ -153,20 +170,18 @@ function PlanCell({
 }) {
   const locale = useKitLocale();
   const figure = (value: number) => formatNumber(value, { locale });
-  const word = (label: PlanColumnUsage["label"], limit: number) =>
-    typeof label === "string" ? label : pluralForm(limit, label, locale);
   return (
     <div className="whitespace-nowrap" data-plan={code ?? undefined}>
       <div className="flex items-center gap-1.5">
-        <span className={code ? "font-medium" : "text-[var(--text-muted)]"}>{name}</span>
+        <span className={code ? "font-medium" : "text-muted"}>{name}</span>
         {/* The standing at a glance (§6): the kit's word and tone, never colour alone. */}
         {status !== undefined && <SubscriptionStatusChip status={status} size="xs" />}
       </div>
       {usage && usage.limit !== null && (
         // "1/5" under the plan, "1 of 5 budgets" in the tooltip: the sentence spelled out
         // inline was the widest thing in keksdose's table.
-        <Tooltip label={usageOf(figure(usage.used), figure(usage.limit), word(usage.label, usage.limit))}>
-          <span className="block text-xs tabular-nums text-[var(--text-muted)]">
+        <Tooltip label={usageSentence({ ...usage, limit: usage.limit }, usageOf, locale)}>
+          <span className="block text-xs tabular-nums text-muted">
             {figure(usage.used)}/{figure(usage.limit)}
           </span>
         </Tooltip>
@@ -265,8 +280,13 @@ export interface PlanChangeConfirmProps {
   plans: readonly { code: string; name: string }[];
   /** The account's plan now; null for none. The select opens on it. */
   current: string | null;
-  /** What the account uses, in the app's sentence: "3 of 5 budgets". */
-  usage?: ReactNode;
+  /**
+   * What the account uses. The column's shape (0.34, keksdose N1) — `{ used, limit, label }`,
+   * the label a word or its plural forms — is spelled out as the column's tooltip is
+   * (`planChange.usageOf`, the word in the limit's form: "1 of 1 budget"); a `null` limit
+   * gives no line. Or the app's own sentence, as it is: "3 of 5 budgets".
+   */
+  usage?: PlanColumnUsage | ReactNode;
   /** Offer "Free until" — only meaningful while billing is on, where a grant's end
    *  means something to the payer. */
   grantEnd?: boolean;
@@ -282,6 +302,18 @@ export interface PlanChangeConfirmProps {
   /** The app's words for a failure the kit has no code for. */
   describeError?: (error: unknown) => ReactNode | undefined;
   labels?: Partial<PlanChangeLabels>;
+}
+
+/** The column's usage shape, told from a node: a plain object with the three fields. */
+function isPlanUsage(value: PlanChangeConfirmProps["usage"]): value is PlanColumnUsage {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !isValidElement(value) &&
+    "used" in value &&
+    "limit" in value &&
+    "label" in value
+  );
 }
 
 /** The end of the day `date` (YYYY-MM-DD) names, in this device's time zone, as ISO
@@ -326,6 +358,12 @@ export function PlanChangeConfirm({
   const unchanged = plan === "" || (plan === current && !until);
   // A company has no address: the dialog says its name in the address's place.
   const who = { ...target, email: target.email || personLabel(target, locale) };
+  // The column's shape in the column's sentence; the app's own sentence as it is.
+  const usageLine: ReactNode | undefined = isPlanUsage(usage)
+    ? usage.limit === null
+      ? undefined
+      : usageSentence({ ...usage, limit: usage.limit }, labels.usageOf, locale)
+    : usage;
 
   return (
     <AdminActionConfirm
@@ -340,10 +378,10 @@ export function PlanChangeConfirm({
       onConfirm={(values) => onConfirm({ plan, ...(until ? { comped_until: endOfDay(until) } : {}) }, values)}
       onClose={onClose}
     >
-      {(current !== null || usage !== undefined) && (
-        <div className="space-y-0.5 text-xs text-[var(--text-muted)]" data-plan-current={current ?? undefined}>
+      {(current !== null || usageLine !== undefined) && (
+        <div className="space-y-0.5 text-xs text-muted" data-plan-current={current ?? undefined}>
           {current !== null && <p>{labels.current(nameOf(current))}</p>}
-          {usage !== undefined && <p>{usage}</p>}
+          {usageLine !== undefined && <p>{usageLine}</p>}
         </div>
       )}
       <Select label={labels.plan} hint={labels.keepsItems} value={plan} onChange={(e) => setPlan(e.target.value)}>
