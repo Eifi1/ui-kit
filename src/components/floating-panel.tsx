@@ -17,6 +17,8 @@ import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { dirOf, type Direction } from "../lib/direction";
 import { registerFloating } from "../lib/floating-stack";
+import { isComposing } from "../lib/ime";
+import { takeEscape } from "../hooks/use-dismiss";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { assignRef } from "./field-parts";
 import { pickLinkRenderer } from "./text-link";
@@ -352,7 +354,8 @@ export interface FloatingPanelProps {
  * closed from the page (a controlled owner) never pulls focus out of the field the
  * user is typing in. Escape closes it while focus is inside, and only then: on the
  * panel element, not the document, so Escape in the page keeps meaning whatever the
- * page means by it.
+ * page means by it. A layer of the kit's Escape stack open over it — a tooltip, a list —
+ * is handed the key first.
  *
  * ## Layout
  *
@@ -426,7 +429,16 @@ export function FloatingPanel({
   }, [open]);
 
   const onPanelKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== "Escape" || e.defaultPrevented) return;
+    if (e.key !== "Escape") return;
+    // The kit's one Escape stack first (round 0.34 Wave 2, DUP-1): a layer open above the
+    // panel without focus — a tooltip, the numpad, a hover menu — is the topmost thing on
+    // screen and is handed the key. This took it for itself and stopped it, so the
+    // tooltip never heard it and one press closed the whole panel instead.
+    if (takeEscape(e)) return;
+    // Not a layer itself: it answers only while focus is inside it, and a layer would
+    // also be handed an Escape pressed in the page. Kept by a child's claim (ChipInput
+    // clearing its draft, `claimEscape`), and by an IME composition, as a layer is.
+    if (e.defaultPrevented || isComposing(e)) return;
     // Stopped here, so an overlay underneath with a document-level Escape listener does
     // not close too — the innermost thing that has focus is the one that closes.
     e.stopPropagation();

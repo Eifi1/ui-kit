@@ -16,8 +16,10 @@ import { FOCUS_RING } from "./focus-ring";
 import { useAnchorDir } from "./use-anchor-dir";
 
 /**
- * Open state + close-on-outside-click for the custom dropdowns (MultiSelect,
- * CurrencySelect, AmountInput's currency picker, Combobox). Attach `wrapperRef`
+ * Open state + close-on-outside-click for a custom dropdown — the two input-shaped
+ * comboboxes, and an app's own panel. (MultiSelect, CurrencySelect, GroupedPicker and
+ * AmountInput's currency picker moved onto `useComboboxCore` + `ComboboxPanel` in round
+ * 0.34, Wave 2 DUP-4, for the phone sheet and the portal.) Attach `wrapperRef`
  * to the relatively-positioned container; the popover lives inside it so a click
  * anywhere else closes it.
  *

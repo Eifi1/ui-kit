@@ -1,6 +1,7 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
+import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
 import { FIELD_TOUCH_TEXT } from "./ui";
 import { FOCUS_RING } from "./focus-ring";
 import { MiniCalendar } from "./mini-calendar";
@@ -65,6 +66,10 @@ export function FilterPopover<T>({
     },
     [autoFocus],
   );
+  // The number bounds' marks, and what the typist wrote in each box — see the number
+  // section below (BUG-10).
+  const mark = decimalMark(locale);
+  const [typed, setTyped] = useState<{ min: string | null; max: string | null }>({ min: null, max: null });
   const filter = resolveFilter(column);
   if (!filter) return null;
 
@@ -228,28 +233,48 @@ export function FilterPopover<T>({
 
   // number
   const v = state.type === "number" ? state : { type: "number" as const, min: "", max: "", abs: false };
+  // The bounds were native `type="number"` inputs, the one numeric entry in the kit that
+  // bypassed decimal-marks (BUG-10, refactor audit 2026-10): where the browser refuses a
+  // comma, a German "12,50" read as empty and the filter silently stayed off while the box
+  // showed the text. A text box with the decimal keyboard now, read as NumberInput reads
+  // (`readTyped`): the state holds the dot-decimal figure, and the box keeps the typist's
+  // own text while it says the same (`showsTyped`), else the bound in the locale's mark.
+  const shown = (bound: "min" | "max") => {
+    const own = typed[bound];
+    return own !== null && showsTyped(own, mark, v[bound]) ? own : localizeMark(v[bound], mark);
+  };
+  const setBound = (bound: "min" | "max", raw: string) => {
+    setTyped((t) => ({ ...t, [bound]: raw }));
+    const read = readTyped(raw, mark);
+    onChange({
+      type: "number",
+      min: bound === "min" ? read : v.min,
+      max: bound === "max" ? read : v.max,
+      abs: v.abs,
+    });
+  };
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <label className="text-xs text-muted">
           {labels.numberMin} (≥)
           <input
-            type="number"
+            type="text"
             inputMode="decimal"
-            value={v.min}
-            onChange={(e) => onChange({ type: "number", min: e.target.value, max: v.max, abs: v.abs })}
-            onWheel={(e) => e.currentTarget.blur()}
+            autoComplete="off"
+            value={shown("min")}
+            onChange={(e) => setBound("min", e.target.value)}
             className={cn("mt-0.5", inputBase)}
           />
         </label>
         <label className="text-xs text-muted">
           {labels.numberMax} (≤)
           <input
-            type="number"
+            type="text"
             inputMode="decimal"
-            value={v.max}
-            onChange={(e) => onChange({ type: "number", min: v.min, max: e.target.value, abs: v.abs })}
-            onWheel={(e) => e.currentTarget.blur()}
+            autoComplete="off"
+            value={shown("max")}
+            onChange={(e) => setBound("max", e.target.value)}
             className={cn("mt-0.5", inputBase)}
           />
         </label>

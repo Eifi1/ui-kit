@@ -177,9 +177,9 @@ const PICKERS: [string, PickerCase][] = [
           filterPlaceholder="Filter"
         />
       ),
-      trigger: () => screen.getByRole("button", { name: "Category" }),
+      trigger: () => screen.getByRole("combobox", { name: "Category" }),
       keyboardAt: searchBox("Filter"),
-      isOpen: expanded(() => screen.getByRole("button", { name: "Category" })),
+      isOpen: expanded(() => screen.getByRole("combobox", { name: "Category" })),
     },
   ],
   [
@@ -222,12 +222,14 @@ describe("Escape on an open picker list inside a dialog (BUG-1)", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  // Three of the lists have rows that are tab stops, so focus can be on a ROW when the
-  // key comes — the panel takes it there too, not only the search box.
+  // Three of the lists had rows that were tab stops, so focus could be on a ROW when the
+  // key came. On the shared panel (round 0.34 Wave 2, DUP-4) they are options that focus
+  // never reaches by Tab, but a script still can — and the panel takes the key there too,
+  // not only in the search box.
   const ROW_CASES: [string, string, (c: PickerCase) => HTMLElement][] = [
-    ["CurrencySelect", "Modal", () => screen.getByRole("button", { name: /CHF/ })],
-    ["GroupedPicker", "FullBleedDialog", () => screen.getByRole("button", { name: "Bread" })],
-    ["AmountInput's currency chip", "DialogFrame", () => screen.getByRole("button", { name: /CHF/ })],
+    ["CurrencySelect", "Modal", () => screen.getByRole("option", { name: /CHF/ })],
+    ["GroupedPicker", "FullBleedDialog", () => screen.getByRole("option", { name: "Bread" })],
+    ["AmountInput's currency chip", "DialogFrame", () => screen.getByRole("option", { name: /CHF/ })],
   ];
   it.each(ROW_CASES)("%s in a %s: Escape on a row closes only the list", async (picker, host, row) => {
     const user = userEvent.setup();

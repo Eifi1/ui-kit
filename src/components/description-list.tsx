@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { FieldHint } from "./ui";
+import { useInlineHint } from "./field-parts";
 import { DEFAULT_DESCRIPTION_LIST_LABELS } from "./description-list-labels";
 
 /** The words a {@link DescriptionList} renders on its own behalf. */
@@ -215,7 +216,8 @@ export interface DescriptionItemProps extends Omit<ComponentPropsWithoutRef<"div
   /** The description itself. */
   children?: ReactNode;
   /** The explanation behind a "?" beside the term (a {@link FieldHint}) — the same
-   *  meaning `hint` has on `StatTile` and the labelled fields. */
+   *  meaning `hint` has on `StatTile` and the labelled fields. At Large and on a touch
+   *  screen it is the term's caption instead, in words (§4 "No fact only in a tooltip"). */
   hint?: string;
   /** This detail is a figure (see {@link DescriptionListProps.numeric}); overrides
    *  the list's setting either way. */
@@ -288,6 +290,12 @@ export function DescriptionItem({
   const prose = proseProp ?? listProse;
   const cards = layout === "cards";
   const stacked = layout === "stacked";
+  // A hint is a fact: on a touch screen and at Large it is words under the term, not a
+  // 14 px "?" nobody can hover open — the fields' rule (DUP-2, refactor audit 2026-10),
+  // which this string hint had been left out of. Elsewhere the "?" as before.
+  const shownHint = useInlineHint(
+    hint ? <FieldHint label={hint} side="top" className="shrink-0" /> : undefined,
+  );
   const spanClass =
     span === "full"
       ? "col-span-full"
@@ -298,7 +306,7 @@ export function DescriptionItem({
   const termNode = (
     <dt
       className={cn(
-        "flex min-w-0 items-center gap-1 text-muted",
+        "flex min-w-0 flex-wrap items-center gap-x-1 text-muted",
         cards && (density === "tight" ? "text-micro uppercase tracking-wide" : "text-xs uppercase tracking-wide"),
         // Stacked terms are a step smaller than the detail, as kastlan's dialogs set
         // them; in a list that is already small they stay the list's own size.
@@ -306,7 +314,15 @@ export function DescriptionItem({
       )}
     >
       <span className="min-w-0 break-words">{term}</span>
-      {hint && <FieldHint label={hint} side="top" className="shrink-0" />}
+      {typeof shownHint === "string" ? (
+        // Its own line under the term, in the reading case of a sentence rather than a
+        // card term's capitals — StatTile's inline hint.
+        <span data-slot="description-hint" className="basis-full text-caption leading-tight normal-case tracking-normal">
+          {shownHint}
+        </span>
+      ) : (
+        shownHint
+      )}
     </dt>
   );
   const detail = (

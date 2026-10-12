@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { COUNTRY_CODES, countryName, normalizeCountryCode } from "../lib/countries";
+import { rankMatch } from "../lib/text-match";
 import { FieldChevron, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, FloatingField } from "./ui";
 import {
   assignRef,
@@ -169,32 +170,19 @@ export interface CountrySelectProps<Clearable extends boolean = false>
   "aria-labelledby"?: string;
 }
 
-/** Fold a name for search: no case, no accents — "osterreich" finds Österreich, "cote"
- *  finds Côte d'Ivoire. A keyboard without the letter must still reach the country. */
-function fold(s: string): string {
-  return s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-}
-
 interface Entry {
   code: string;
   name: string;
-  folded: string;
-}
-
-/** How well `e` answers `q` (already folded): the code itself (a two-letter query
- *  "ch" means Switzerland before it means Chad), then the start of the name, then
- *  anywhere in it. `-1` for no match. */
-function rank(e: Entry, q: string): number {
-  if (e.code.toLowerCase() === q) return 0;
-  if (e.folded.startsWith(q)) return 1;
-  return e.folded.includes(q) ? 2 : -1;
 }
 
 /** Best rank first; a stable sort, so equal ranks keep the collated (or preferred)
- *  order they came in. */
-function search(entries: Entry[], q: string): Entry[] {
+ *  order they came in. The rank is the kit's one (`rankMatch`, DUP-5 — written here
+ *  first): the code itself (a two-letter query "ch" means Switzerland before it means
+ *  Chad), then the start of the name, then anywhere in it, with accents and case folded
+ *  — "osterreich" finds Österreich, "cote" Côte d'Ivoire. */
+function search(entries: Entry[], q: string, locale: string): Entry[] {
   return entries
-    .map((e) => ({ e, r: rank(e, q) }))
+    .map((e) => ({ e, r: rankMatch(e.name, q, { code: e.code, locale }) }))
     .filter((x) => x.r >= 0)
     .sort((a, b) => a.r - b.r)
     .map((x) => x.e);
@@ -235,10 +223,10 @@ function collator(locale: string): Intl.Collator {
  * is where the write lock lives: `EntityCombobox`'s is a native `disabled` button,
  * and a locked field has to stay focusable to say why.
  *
- * The search is this component's own too: it folds accents and case ("osterreich"
+ * The ranking is this component's own too: it folds accents and case ("osterreich"
  * finds Österreich), matches the code ("ch" ranks Switzerland first), and ranks
- * name-starts above name-contains. The panel is handed those rows in place of the
- * core's plain substring filter.
+ * name-starts above name-contains — the kit's `rankMatch`, which began here. The panel
+ * is handed those rows in place of the core's filter, which does not rank.
  *
  * Field anatomy as on every field: floating `label`, `hint`, `error`, `invalid`; the
  * trigger is named "label: value" as the other trigger pickers are.
@@ -299,10 +287,7 @@ export function CountrySelect<Clearable extends boolean = false>({
         pool.push(code);
       }
     }
-    const entry = (code: string): Entry => {
-      const name = countryName(code, locale);
-      return { code, name, folded: fold(name) };
-    };
+    const entry = (code: string): Entry => ({ code, name: countryName(code, locale) });
     const firsts: Entry[] = [];
     const picked = new Set<string>();
     for (const raw of preferredKey ? preferredKey.split(",") : []) {
@@ -339,15 +324,15 @@ export function CountrySelect<Clearable extends boolean = false>({
     [ref, triggerRef],
   );
 
-  const q = fold(query.trim());
+  const q = query.trim();
   const results = useMemo(() => {
-    const firsts = q ? search(top, q) : top;
-    const below = q ? search(others, q) : others;
+    const firsts = q ? search(top, q, locale) : top;
+    const below = q ? search(others, q, locale) : others;
     // The heading only where it separates something: with no preferred country in
     // view it would head the whole list and divide nothing.
     const heading = firsts.length > 0 ? text.others : undefined;
     return [...firsts.map((e) => toOption(e, flags)), ...below.map((e) => toOption(e, flags, heading))];
-  }, [top, others, q, text.others, flags]);
+  }, [top, others, q, text.others, flags, locale]);
 
   // ── The lock ──────────────────────────────────────────────────────────────
   const lock = useLockReason(commit, ownReason);

@@ -24,7 +24,8 @@ import {
   type ComboClearValue,
   type ComboOption,
 } from "./combobox-core";
-import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { foldForSearch, rankMatch } from "../lib/text-match";
 import {
   EndHintRow,
   FieldCaption,
@@ -388,7 +389,9 @@ export function Combobox(props: ComboboxProps) {
    */
   const [typing, setTyping] = useState(false);
 
-  const query = typing ? value.trim().toLowerCase() : "";
+  const query = typing ? value.trim() : "";
+  // Folded as every kit list folds (DUP-5): "zurich" finds Zürich, by the locale's case.
+  const locale = useKitLocale();
   const matches = useMemo(() => {
     const seen = new Set<string>();
     const uniq = options.filter((o) => o && !seen.has(o) && seen.add(o));
@@ -397,12 +400,14 @@ export function Combobox(props: ComboboxProps) {
     if (!query) {
       ranked = uniq.slice(0, cap);
     } else {
-      // Prefix matches first, then substring matches — most relevant on top.
-      const starts = uniq.filter((o) => o.toLowerCase().startsWith(query));
-      const contains = uniq.filter(
-        (o) => !o.toLowerCase().startsWith(query) && o.toLowerCase().includes(query),
-      );
-      ranked = [...starts, ...contains].slice(0, cap);
+      // The whole name, then prefix matches, then substring matches — most relevant on
+      // top (`rankMatch`; a stable sort keeps the pool's order within a rank).
+      ranked = uniq
+        .map((o) => ({ o, rank: rankMatch(o, query, { locale }) }))
+        .filter((x) => x.rank >= 0)
+        .sort((a, b) => a.rank - b.rank)
+        .map((x) => x.o)
+        .slice(0, cap);
     }
     if (!groupBy) return ranked;
     // Keep each group contiguous so a heading appears once instead of every time
@@ -416,7 +421,7 @@ export function Combobox(props: ComboboxProps) {
       byGroup.get(key)!.push(o);
     }
     return [...byGroup.values()].flat();
-  }, [options, query, groupBy, maxSuggestions, isPhone]);
+  }, [options, query, groupBy, maxSuggestions, isPhone, locale]);
 
   /**
    * Which rows OPEN a group, and with what heading — computed once for both lists.
@@ -1054,19 +1059,24 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   // Focusing select-alls the current label; filtering only kicks in once the
   // text actually differs from it, so an already-filled field still opens on
   // the FULL list instead of a single-row "filter" of its own value.
-  const typedQuery =
-    text !== null && text !== (selected?.label ?? "") ? text.trim().toLowerCase() : "";
-  const query = isPhone ? sheetQuery.trim().toLowerCase() : typedQuery;
+  const typedQuery = text !== null && text !== (selected?.label ?? "") ? text.trim() : "";
+  const query = isPhone ? sheetQuery.trim() : typedQuery;
+  // Folded as every kit list folds (DUP-5): accents off and the locale's case, so
+  // "zurich" finds Zürich and, in Turkish, "ı" finds "IRMAK".
+  const locale = useKitLocale();
   const matches = useMemo(() => {
     let ranked = options;
     if (query) {
-      const hit = (s: string | undefined) => s?.toLowerCase().includes(query) ?? false;
-      const starts = options.filter((o) => o.label.toLowerCase().startsWith(query));
-      const rest = options.filter(
-        (o) =>
-          !o.label.toLowerCase().startsWith(query) &&
-          (hit(o.label) || hit(o.sublabel) || hit(o.group)),
-      );
+      const q = foldForSearch(query, locale);
+      const hit = (s: string | undefined) => s !== undefined && foldForSearch(s, locale).includes(q);
+      // The label's whole name or its start first (`rankMatch` 0 and 1), then a match
+      // anywhere in the label, the sublabel or the group.
+      const leads = (o: ComboOption<V>) => {
+        const rank = rankMatch(o.label, query, { locale });
+        return rank === 0 || rank === 1;
+      };
+      const starts = options.filter(leads);
+      const rest = options.filter((o) => !leads(o) && (hit(o.label) || hit(o.sublabel) || hit(o.group)));
       ranked = [...starts, ...rest];
     }
     if (!ranked.some((o) => o.group)) return ranked;
@@ -1081,7 +1091,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       blocks.get(key)!.push(o);
     }
     return [...blocks.values()].flat();
-  }, [options, query]);
+  }, [options, query, locale]);
 
   // The create row (`onCreate`), on the query as typed — not lowercased: it becomes a
   // name. Compared against EVERY option, not `matches`: an exact hit anywhere is a

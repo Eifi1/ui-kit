@@ -19,6 +19,8 @@ import {
   endHintRowProps,
   isOptionEnabled,
   stepEnabled,
+  SUGGESTION_LIST_CLASS,
+  suggestionRowClass,
   useActiveOptionScroll,
   useOptionSource,
   type ComboOption,
@@ -490,7 +492,9 @@ function AutocompleteInner<V extends string | number = string>(
             // exactly the field's width, so `left` places it in either direction.
             dir={dir}
             onMouseDown={(e) => e.preventDefault()}
-            className="fixed z-50 flex flex-col overflow-hidden rounded-md border border-subtle bg-surface shadow-lg"
+            // The family's suggestion box (DUP-4), as a column: the list scrolls inside
+            // it and the status line stays under the rows.
+            className={cn(SUGGESTION_LIST_CLASS, "fixed z-50 flex flex-col overflow-hidden py-0")}
             // Flipped above, the list hangs from its bottom edge: three rows under a
             // 256 px cap, placed by `top`, floated ~176 px above the field (keksdose K1),
             // and the rows come and go as the user types.
@@ -536,13 +540,14 @@ function AutocompleteInner<V extends string | number = string>(
                             if (!o.disabled) setActive(i);
                           }}
                           className={cn(
-                            "flex w-full items-center gap-2 px-3 text-start",
-                            small ? "py-1 text-xs" : "py-1.5 text-sm",
-                            o.disabled
-                              ? DISABLED_ROW_CLASS
-                              : i === active
-                                ? "bg-active"
-                                : "hover:bg-hover",
+                            // The family's suggestion row (DUP-4): it hand-rolled its
+                            // own with a plain `truncate`, so a long address was cut at
+                            // Large, where Combobox's rows wrap (text size §10.17, T1).
+                            // A flex row here, for the icon and the two lines.
+                            suggestionRowClass(i === active && !o.disabled),
+                            "flex items-center gap-2",
+                            small && "py-1 text-xs",
+                            o.disabled && DISABLED_ROW_CLASS,
                             o.group != null && "ps-6",
                           )}
                         >
@@ -552,13 +557,13 @@ function AutocompleteInner<V extends string | number = string>(
                             </span>
                           )}
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-primary">
+                            <span className="block truncate-until-large text-primary">
                               {o.label}
                             </span>
                             {o.sublabel && (
                               <span
                                 className={cn(
-                                  "block truncate text-placeholder",
+                                  "block truncate-until-large text-placeholder",
                                   small ? "text-caption" : "text-xs",
                                 )}
                               >

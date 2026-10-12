@@ -438,13 +438,17 @@ describe("CurrencySelect error and hint (keksdose K4)", () => {
 
   it("opens its list under the trigger, not under the messages", async () => {
     const user = userEvent.setup();
-    render(<CurrencySelect label="Currency" value="EUR" onChange={vi.fn()} hint="Caption" error="Wrong" />);
+    const { container } = render(
+      <CurrencySelect label="Currency" value="EUR" onChange={vi.fn()} hint="Caption" error="Wrong" />,
+    );
     await user.click(trigger());
     const list = document.getElementById(trigger().getAttribute("aria-controls")!)!;
     expect(list).toBeInTheDocument();
-    const caption = screen.getByText("Caption");
-    // The panel precedes the caption in the flow, so its static position is the trigger's.
-    expect(list.compareDocumentPosition(caption) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The absolute panel had to precede the caption in the flow to open at the trigger.
+    // Since round 0.34 Wave 2 (DUP-4) it is portalled and placed against the trigger's
+    // own rect, so nothing in the field's flow can move it.
+    expect(container).not.toContainElement(list);
+    expect(container).toContainElement(screen.getByText("Caption"));
   });
 
   it("puts a FieldHint on the label line, and at the end edge without a label", () => {

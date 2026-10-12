@@ -248,7 +248,8 @@ describe("GroupedPicker passes DOM props through", () => {
         aria-label="Category"
       />,
     );
-    expect(screen.getByRole("button", { name: "Category" })).toBeInTheDocument();
+    // A combobox over its listbox since round 0.34 Wave 2 (BUG-12); the name is the same.
+    expect(screen.getByRole("combobox", { name: "Category" })).toBeInTheDocument();
   });
 
   it("takes no other spelling: the deprecated ariaLabel went in 0.34", () => {

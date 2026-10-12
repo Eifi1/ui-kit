@@ -2,8 +2,9 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Trash2, UserPlus, UsersRound } from "lucide-react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
+import { foldForSearch } from "../lib/text-match";
 import { AlertBanner } from "./alert-banner";
 import { Autocomplete } from "./autocomplete";
 import type { ComboOption } from "./combobox-core";
@@ -287,6 +288,7 @@ export function SharePanel({
 }: SharePanelProps) {
   // The `shareCard` namespace: prop > `<UiKitProvider labels>` > English.
   const labels = useKitLabels("shareCard", DEFAULT_SHARE_CARD_LABELS, labelsProp);
+  const locale = useKitLocale();
   const confirm = useConfirm();
   // Every commit below opts into the surrounding WriteLockProvider with `commit`; the
   // role choices save on change, cannot take it, and read the lock themselves. Adding
@@ -362,11 +364,12 @@ export function SharePanel({
 
   // The completion is a convenience, not a search: an address that matches nobody is
   // the ordinary case (somebody new), so no "No results" box opens over the field —
-  // and over its error. The same narrowing Autocomplete applies, asked first.
-  const needle = (target ? "" : email).trim().toLowerCase();
+  // and over its error. The same narrowing Autocomplete applies, asked first — folded as
+  // every kit list folds (DUP-5).
+  const needle = foldForSearch((target ? "" : email).trim(), locale);
   const offers =
     needle !== "" &&
-    options.some((o) => o.label.toLowerCase().includes(needle) || (o.sublabel ?? "").toLowerCase().includes(needle));
+    options.some((o) => [o.label, o.sublabel ?? ""].some((s) => foldForSearch(s, locale).includes(needle)));
 
   const captionNode = typeof caption === "function" ? caption(target) : caption;
   const shownError = error ?? failure;

@@ -128,14 +128,14 @@ describe("FilterPopover", () => {
     expect(screen.getByRole("button", { name: "Last month" }).className).toContain("bg-brand-soft");
   });
 
-  it("number: min, max and the abs toggle each keep the other two; a wheel over a bound blurs it", async () => {
+  it("number: min, max and the abs toggle each keep the other two", async () => {
     const user = userEvent.setup();
     const { last } = renderFilter(
       { type: "number", getValue: (r) => r.amount },
       { type: "number", min: "", max: "", abs: false },
     );
-    const min = screen.getByRole("spinbutton", { name: "Min (≥)" });
-    const max = screen.getByRole("spinbutton", { name: "Max (≤)" });
+    const min = screen.getByRole("textbox", { name: "Min (≥)" });
+    const max = screen.getByRole("textbox", { name: "Max (≤)" });
     await user.type(min, "-5");
     expect(last()).toEqual({ type: "number", min: "-5", max: "", abs: false });
     await user.type(max, "20");
@@ -144,10 +144,56 @@ describe("FilterPopover", () => {
     expect(last()).toEqual({ type: "number", min: "-5", max: "20", abs: true });
     await user.clear(min);
     expect(last()).toEqual({ type: "number", min: "", max: "20", abs: true });
-    // A wheel turned over a focused number input steps its value in most browsers; the
-    // filter drops focus instead, so scrolling the panel cannot rewrite a bound.
-    max.focus();
-    fireEvent.wheel(max);
-    expect(max).not.toHaveFocus();
+  });
+
+  // BUG-10 (refactor audit 2026-10): the bounds were native `type="number"` inputs, the
+  // one numeric entry in the kit that bypassed decimal-marks. Where the browser refuses a
+  // comma, a German "12,50" read as empty and the filter silently stayed off while the
+  // box showed the text. Now a text box with the decimal keyboard, read as NumberInput
+  // reads (`readTyped`): the state holds the dot-decimal figure, the box the typist's.
+  it("number: a bound is read by the locale's marks, as NumberInput reads it (BUG-10)", async () => {
+    const user = userEvent.setup();
+    const changes: FilterValue[] = [];
+    function Host() {
+      const [state, setState] = useState<FilterValue>({ type: "number", min: "", max: "", abs: false });
+      return (
+        <FilterPopover
+          column={columnWith({ type: "number", getValue: (r) => r.amount })}
+          state={state}
+          onChange={(next) => {
+            changes.push(next);
+            setState(next);
+          }}
+          onClear={() => {}}
+          selectOptions={[]}
+          locale="de-DE"
+        />
+      );
+    }
+    render(<Host />);
+    const min = screen.getByRole("textbox", { name: "Min (≥)" });
+    expect(min).toHaveAttribute("type", "text");
+    expect(min).toHaveAttribute("inputmode", "decimal");
+    await user.type(min, "12,50");
+    expect(changes[changes.length - 1]).toEqual({ type: "number", min: "12.50", max: "", abs: false });
+    // The typist's own text stays on screen.
+    expect(min).toHaveValue("12,50");
+    const max = screen.getByRole("textbox", { name: "Max (≤)" });
+    await user.type(max, "1.234,5");
+    expect(changes[changes.length - 1]).toEqual({ type: "number", min: "12.50", max: "1234.5", abs: false });
+  });
+
+  it("number: a bound handed in shows in the locale's mark", () => {
+    render(
+      <FilterPopover
+        column={columnWith({ type: "number", getValue: (r) => r.amount })}
+        state={{ type: "number", min: "-2.5", max: "", abs: false }}
+        onChange={() => {}}
+        onClear={() => {}}
+        selectOptions={[]}
+        locale="de-DE"
+      />,
+    );
+    expect(screen.getByRole("textbox", { name: "Min (≥)" })).toHaveValue("-2,5");
   });
 });

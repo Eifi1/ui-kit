@@ -6,6 +6,7 @@ import { SearchField } from "./search-field";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
 import { hasContent } from "../lib/presence";
+import { foldForSearch } from "../lib/text-match";
 import { LabelStrip, useFieldMessages } from "./field-parts";
 import { DEFAULT_ICON_PICKER_LABELS } from "./icon-picker-labels";
 
@@ -97,11 +98,6 @@ export interface IconPickerProps<T extends string>
   hint?: ReactNode;
 }
 
-/** Case- and accent-insensitive, so "cafe" finds "Café". */
-function fold(text: string, locale: string | undefined): string {
-  return text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase(locale);
-}
-
 /**
  * A grid of symbols that is one radio group, with an optional search.
  *
@@ -145,13 +141,14 @@ export function IconPicker<T extends string>({
     reasonId: mixed && mixedId,
   });
   const [query, setQuery] = useState("");
-  const needle = fold(query.trim(), locale);
+  // Case- and accent-insensitive, so "cafe" finds "Café" — every kit list's fold (DUP-5).
+  const needle = foldForSearch(query.trim(), locale);
 
   const visible = useMemo(
     () =>
       needle
         ? options.filter((o) =>
-            [o.label, ...(o.keywords ?? [])].some((w) => fold(w, locale).includes(needle)),
+            [o.label, ...(o.keywords ?? [])].some((w) => foldForSearch(w, locale).includes(needle)),
           )
         : options,
     [options, needle, locale],

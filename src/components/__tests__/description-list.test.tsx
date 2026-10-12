@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DescriptionItem, DescriptionList } from "../description-list";
 
 describe("DescriptionList", () => {
@@ -85,6 +85,33 @@ describe("DescriptionList", () => {
     );
     const term = screen.getByRole("term");
     expect(within(term).getByRole("button", { name: "Annual percentage rate" })).toBeInTheDocument();
+  });
+
+  // DUP-2's rule, for the one hint left out of it (refactor audit 2026-10, Wave 2): a
+  // hint is a FACT, and on a touch screen a 14 px "?" is a fact nobody can hover open.
+  // There, and at Large, the term carries the words instead, as the fields' captions do.
+  it("hint is the term's caption on a touch screen, not a '?'", () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: /pointer:\s*coarse/.test(query),
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+    }));
+    try {
+      render(
+        <DescriptionList>
+          <DescriptionItem term="APR" hint="Annual percentage rate">
+            4.1%
+          </DescriptionItem>
+        </DescriptionList>,
+      );
+      const term = screen.getByRole("term");
+      expect(within(term).queryByRole("button")).toBeNull();
+      expect(within(term).getByText("Annual percentage rate")).toBeVisible();
+      expect(term).toHaveTextContent("APRAnnual percentage rate");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("uses logical alignment only, so RTL needs no class change", () => {

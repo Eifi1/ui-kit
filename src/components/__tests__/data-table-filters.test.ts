@@ -176,3 +176,57 @@ describe("rowMatches on a date column (BUG-2)", () => {
     expect(rowMatches(col, { at: null }, { type: "date", from: "", to: "" })).toBe(true);
   });
 });
+
+// BUG-10 (refactor audit 2026-10): a bound that is not a number — `f.amount=abc..` in a
+// shared link — decoded to NaN, every comparison with NaN is false, and the filter
+// matched every row while its column showed it as active.
+describe("a number filter's bound that is not a number (BUG-10)", () => {
+  const amount: DataTableColumn<{ n: number }> = {
+    key: "amount",
+    header: "Amount",
+    cell: (r) => String(r.n),
+    filter: { type: "number", getValue: (r) => r.n },
+  };
+
+  it("is dropped by the URL decoder, so the filter is not active", () => {
+    const decoded = decodeFilterValueOfType("number", "abc..");
+    expect(decoded).toEqual({ type: "number", min: "", max: "", abs: false });
+    expect(isFilterActive(decoded)).toBe(false);
+    // The finite half of a half-broken range is kept.
+    expect(decodeFilterValueOfType("number", "abc..20!")).toEqual({ type: "number", min: "", max: "20", abs: true });
+    expect(decodeFilterValueOfType("number", "-5..1e3")).toEqual({ type: "number", min: "-5", max: "1e3", abs: false });
+  });
+
+  it("does not count as narrowing, and rowMatches ignores it rather than comparing with NaN or 0", () => {
+    expect(isFilterActive({ type: "number", min: "abc", max: "", abs: false })).toBe(false);
+    // `Number(" ")` is 0: a blank bound used to keep every negative row out.
+    const blank: FilterValue = { type: "number", min: " ", max: "", abs: false };
+    expect(isFilterActive(blank)).toBe(false);
+    expect(rowMatches(amount, { n: -5 }, blank)).toBe(true);
+    // A real bound beside a broken one still narrows.
+    const half: FilterValue = { type: "number", min: "Infinity", max: "10", abs: false };
+    expect(rowMatches(amount, { n: -5 }, half)).toBe(true);
+    expect(rowMatches(amount, { n: 20 }, half)).toBe(false);
+  });
+});
+
+// DUP-5: the text filter folds as every kit list does — accents off, the locale's case.
+describe("rowMatches on a text column folds for search (DUP-5)", () => {
+  const city: DataTableColumn<{ city: string }> = {
+    key: "city",
+    header: "City",
+    cell: (r) => r.city,
+    filter: { type: "text", getValue: (r) => r.city },
+  };
+
+  it('"zurich" finds Zürich, and "ZÜRICH" finds Zurich', () => {
+    expect(rowMatches(city, { city: "Zürich" }, { type: "text", q: "zurich" })).toBe(true);
+    expect(rowMatches(city, { city: "Zurich" }, { type: "text", q: "ZÜRICH" })).toBe(true);
+    expect(rowMatches(city, { city: "Basel" }, { type: "text", q: "zurich" })).toBe(false);
+  });
+
+  it("folds the case by the table's locale", () => {
+    expect(rowMatches(city, { city: "IRMAK" }, { type: "text", q: "ırmak" }, "tr")).toBe(true);
+    expect(rowMatches(city, { city: "İSTANBUL" }, { type: "text", q: "istanbul" }, "tr")).toBe(true);
+  });
+});

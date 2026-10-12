@@ -401,6 +401,9 @@ export * from "./tour/tour";
 export * from "./search/command-palette";
 export * from "./search/search-index";
 export * from "./search/global-search";
+// One fold and one ranking for every list's search box (DUP-5), for an app's own lists.
+export { foldForSearch, rankMatch } from "./lib/text-match";
+export type { MatchRank } from "./lib/text-match";
 
 // ── i18n: one label tree, one optional provider ──────────────────────────────
 // `UiKitLabels` names every string the kit renders; `<UiKitProvider labels locale>`

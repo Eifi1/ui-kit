@@ -91,20 +91,16 @@ export function DropdownParts() {
             <MultiSelect
               label="Markets"
               options={MARKETS}
-              values={markets}
+              value={markets}
               onChange={setMarkets}
               // Nothing selected is not "nothing": a filter with no markets ticked
               // matches every market, so the closed trigger has to say "All" rather
-              // than sit empty. Defaults to the literal "All" — pass a translation.
-              allLabel="All markets"
+              // than sit empty. `labels.all` defaults to the catalogue's "All".
+              labels={{ all: "All markets", search: "Search markets", selectAll: "Select all", clear: "Clear" }}
               itemLabel={(n) => `${n} of ${MARKETS.length}`}
-              searchLabel="Search markets"
-              selectAllLabel="Select all"
-              clearLabel="Clear"
-              // The rows here carry a postcode and a distance beside the label;
-              // `panelClassName` is the supported way to widen past the 16rem default
-              // rather than reaching into the panel with a descendant selector.
-              panelClassName="w-72"
+              // The rows here carry a postcode and a distance beside the label: the
+              // panel is at least the trigger's width and 16rem, and grows with its
+              // rows up to 32rem, so nothing has to widen it.
             />
           </div>
           <div className="w-64 max-w-full">

@@ -113,14 +113,14 @@ export function PickerHints022Demo() {
         <Autocomplete label="Address" value={address} onChange={setAddress} hint="Street and number" />
         <MultiSelect
           label="Accounts"
-          values={filter}
+          value={filter}
           onChange={setFilter}
           options={ACCOUNTS}
           hint="Leave empty for all"
         />
         <MultiSelect
           aria-label="Accounts (no label)"
-          values={filter}
+          value={filter}
           onChange={setFilter}
           options={ACCOUNTS}
           hint={<FieldHint label="Leave empty for all" />}

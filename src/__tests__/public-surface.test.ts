@@ -211,7 +211,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `useKitTableStorageKeyPrefix`; session refresh, `createSessionRefresh`,
   // `attachSessionRefresh`, `isTransientRefreshFailure`, `isSignedOutStep`; and
   // `PHONE_QUERY` removed (deprecated since 0.32).
-  ["@eifi1/ui-kit", barrel, 886],
+  // and later in 0.34 `foldForSearch`, `rankMatch` (lib/text-match: one search fold for every list).
+  ["@eifi1/ui-kit", barrel, 888],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

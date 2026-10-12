@@ -1,51 +1,88 @@
-import { useId, useMemo, useState } from "react";
-import type {
-  ComponentPropsWithoutRef,
-  KeyboardEvent as ReactKeyboardEvent,
-  ReactNode,
-} from "react";
-import { Check } from "lucide-react";
+import { useCallback, useId, useMemo } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
 import { cn } from "../lib/cn";
-import { isImeEnter } from "../lib/ime";
-import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
-import { useActiveOptionScroll } from "./combobox-core";
-import { EndHintRow, FieldCaption, LABEL_IN_ROW, StaticLabelRow, useFieldError, useFieldHint } from "./field-parts";
+import { ComboboxPanel, useComboboxCore, type ComboOption } from "./combobox-core";
+import {
+  assignRef,
+  EndHintRow,
+  LABEL_IN_ROW,
+  LockedReason,
+  StaticLabelRow,
+  useFieldMessages,
+  useLockReason,
+  type DisabledReasonDisplay,
+} from "./field-parts";
+import type { CommitScope } from "./write-lock";
 import {
   DEFAULT_COMMON_LABELS,
   DEFAULT_MULTI_SELECT_LABELS,
   useKitLabels,
+  type MultiSelectLabels,
 } from "../i18n/kit-labels";
 
-export interface MultiSelectOption {
-  value: string | number;
+/**
+ * One row of a {@link MultiSelect}. Generic over its value since 0.34 (API-4), so a list of
+ * number ids hands `onChange` numbers — `MultiSelectOption` alone is the old
+ * `string | number` row.
+ */
+export interface MultiSelectOption<V extends string | number = string | number> {
+  value: V;
   label: string;
+  /** A second line under the label — a postcode, a count (keksdose #147). Searchable. */
   hint?: string;
+  /**
+   * Shown but not takeable — {@link ComboOption.disabled}: dimmed, `aria-disabled`, passed
+   * over by the arrow keys, and a press does nothing. A chosen disabled row stays chosen:
+   * "Select all" and "Clear" leave it as it is. Say why in `hint`.
+   */
+  disabled?: boolean;
 }
 
 /** `onChange` is the kit's — "the selection changed", carrying the new values —
- *  rather than the div's form event. */
-export interface MultiSelectProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
-  options: MultiSelectOption[];
-  values: (string | number)[];
-  onChange: (next: (string | number)[]) => void;
-  /** Displayed when no value is selected (i.e. "all"). Defaults to `placeholder`,
-   * then to `multiSelect.all` from the {@link UiKitProvider}, then "All". */
+ *  rather than the div's form event. Generic over the option value (API-4): `V` is
+ *  inferred from `options` and `value`, so `onChange` hands back `number[]` for number
+ *  ids and `string[]` for string ones, and no call site casts. */
+export interface MultiSelectProps<V extends string | number = string | number>
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
+  options: MultiSelectOption<V>[];
+  /** The chosen values — the select family's `value` (API-4). */
+  value?: V[];
+  /** @deprecated 0.34 — use `value`; removed in 0.35 (refactor audit 2026-10, API-4). */
+  values?: V[];
+  onChange: (next: V[]) => void;
+  /** @deprecated 0.34 — use `labels.all`; removed in 0.35 (API-4). Displayed when no
+   *  value is selected (i.e. "all"); wins over `placeholder`, as `labels.all` does. */
   allLabel?: string;
   /** Singular/plural countable label, used when 1+ items are selected. Default:
-   *  `multiSelect.selectedCount` from the provider — the bare count in English. */
+   *  `labels.selectedCount`, else `multiSelect.selectedCount` from the provider — the
+   *  bare count in English. */
   itemLabel?: (count: number) => string;
+  /** Shown when nothing is picked, unless `labels.all` (or `allLabel`) says otherwise —
+   *  it has always doubled as the "nothing picked" text. */
   placeholder?: string;
   /** Embedded top-boundary label, matching the native Input/Select fields. */
   label?: ReactNode;
-  /** Search-box placeholder. Default: `multiSelect.search` from the provider, else "Search". */
+  /** @deprecated 0.34 — use `labels.search`; removed in 0.35 (API-4). */
   searchLabel?: string;
-  /** "Select all" action label. Default: `multiSelect.selectAll`, else "Select all". */
+  /** @deprecated 0.34 — use `labels.selectAll`; removed in 0.35 (API-4). */
   selectAllLabel?: string;
-  /** "Clear" action label. Default: `multiSelect.clear`, else "Clear". */
+  /** @deprecated 0.34 — use `labels.clear`; removed in 0.35 (API-4). */
   clearLabel?: string;
-  /** Extra classes for the open dropdown PANEL — the way to widen it past its
-   *  16rem default when the rows carry more than a label (Keksdose feedback #147). */
+  /**
+   * Per-instance overrides of the provider's `multiSelect` namespace, over English — the
+   * kit's `labels` shape, where this took four string props (API-4). `all` is the trigger
+   * when nothing is picked: `labels.all`, then `allLabel`, then `placeholder`, then the
+   * provider's.
+   */
+  labels?: Partial<MultiSelectLabels>;
+  /**
+   * Extra classes for the open PANEL. The panel is portalled now (dev#548) and sizes
+   * itself: as wide as the trigger and at least 16rem, growing with its rows up to 32rem
+   * (or the trigger) — what this prop was asked for (keksdose feedback #147: the market
+   * picker's postcode, distance and receipt-count hints were cut at 16rem). A `w-*` class
+   * here no longer sets the width.
+   */
   panelClassName?: string;
   /** Required and unanswered — {@link FIELD_INVALID}, the same rose border the
    *  native `Select` has worn since feedback #235. Every field-styled control in
@@ -67,308 +104,275 @@ export interface MultiSelectProps extends Omit<ComponentPropsWithoutRef<"div">, 
   /** The trigger cannot be opened: FIELD_BASE's settled grey, no chevron (as a
    *  disabled {@link Select} drops its own), and a dimmed label. */
   disabled?: boolean;
+  /**
+   * Why the selection cannot be changed — {@link EntityCombobox}'s `disabledReason`: the
+   * trigger stays focusable and `aria-disabled`, the list does not open and `onChange`
+   * never fires; the reason is a line under the field at Large and on a touch screen,
+   * else in the kit {@link Tooltip} (`disabledReasonDisplay`), and on the trigger's
+   * `aria-describedby`. Wins over `disabled`.
+   */
+  disabledReason?: ReactNode;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise. */
+  disabledReasonDisplay?: DisabledReasonDisplay;
+  /** This picker COMMITS — toggling saves (a filter persisted per user, a settings row).
+   *  Locked the `disabledReason` way under a locked {@link WriteLockProvider}, with the
+   *  lock's reason. Leave it off inside a form that has its own Save. */
+  commit?: CommitScope;
+  /** The TRIGGER — the focusable `<button>` — as a React 19 ref prop, as on
+   *  {@link MultiEntityCombobox} (react-hook-form's focus-on-error). Not the wrapper. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
-export function MultiSelect({
-  options,
-  values,
-  onChange,
-  allLabel,
-  itemLabel,
-  placeholder,
-  label,
-  searchLabel,
-  selectAllLabel,
-  clearLabel,
-  className,
-  panelClassName,
-  invalid,
-  error,
-  hint,
-  disabled,
-  id,
-  "aria-label": ariaLabel,
-  // Off `rest` and onto the trigger, which is the combobox a reader meets: `Field`'s
-  // render-prop spreads `{ id, aria-describedby, aria-invalid, aria-required }`, and on
-  // the wrapper div the label named nothing and the required state described nothing
-  // (DUP-8, refactor audit 2026-10 — Combobox's rule).
-  "aria-describedby": ariaDescribedBy,
-  "aria-invalid": ariaInvalid,
-  "aria-required": ariaRequired,
-  ...rest
-}: MultiSelectProps) {
-  const { open, setOpen, wrapperRef, panelRef, triggerRef, closeToTrigger, query, setQuery, inputRef } =
-    useDropdownSearch();
-  // `allLabel` is deliberately NOT folded in here: between it and the provider's
-  // `all` sits `placeholder`, which has always doubled as the "nothing picked" text,
-  // and a caller who set it must keep seeing it.
-  const labels = useKitLabels("multiSelect", DEFAULT_MULTI_SELECT_LABELS, {
-    search: searchLabel,
-    selectAll: selectAllLabel,
-    clear: clearLabel,
-    selectedCount: itemLabel,
+/**
+ * Pick several of a fixed list — a filter's accounts, a comparison's data sets — with a
+ * search box, "Select all" and "Clear"; nothing picked reads as "all".
+ *
+ * Built on the picker family's foundation since round 0.34 (Wave 2, DUP-4):
+ * `useComboboxCore` + `ComboboxPanel`, as {@link MultiEntityCombobox} is. It was an
+ * absolute `DropdownPanel`, which an `overflow` ancestor clipped (dev#548) and which on a
+ * phone was a 16rem panel between the field and the keyboard; it now has the full-screen
+ * sheet (live #200), the portal, the live result count, disabled rows and the search
+ * that folds accents ("zurich" finds Zürich, DUP-5).
+ */
+export function MultiSelect<V extends string | number = string | number>(props: MultiSelectProps<V>) {
+  const {
+    options,
+    value: valueProp,
+    values,
+    onChange,
+    allLabel,
+    itemLabel,
+    placeholder,
+    label,
+    searchLabel,
+    selectAllLabel,
+    clearLabel,
+    labels: labelsProp,
+    className,
+    panelClassName,
+    invalid,
+    error,
+    hint,
+    disabled,
+    disabledReason,
+    disabledReasonDisplay,
+    commit,
+    ref,
+    id,
+    "aria-label": ariaLabel,
+    // Off `rest` and onto the trigger, which is the combobox a reader meets: `Field`'s
+    // render-prop spreads `{ id, aria-describedby, aria-invalid, aria-required }`, and on
+    // the wrapper div the label named nothing and the required state described nothing
+    // (DUP-8, refactor audit 2026-10 — Combobox's rule).
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+    "aria-required": ariaRequired,
+    ...rest
+  } = props;
+  const value = useMemo<V[]>(() => valueProp ?? values ?? [], [valueProp, values]);
+  // The rows as the family's options — the hint is the sublabel, searched like the label.
+  const comboOptions = useMemo(
+    () => options.map((o): ComboOption<V> => ({ value: o.value, label: o.label, sublabel: o.hint, disabled: o.disabled })),
+    [options],
+  );
+  // Back closes the open list, as it did on `useDropdown` (keksdose live #309).
+  const core = useComboboxCore<V>({ options: comboOptions, backCloses: true });
+  const { open, setOpen, triggerRef } = core;
+  // The core anchors the panel to the trigger and hands focus back to it; the caller's
+  // `ref` wants the same element. One callback feeds both.
+  const setTrigger = useCallback(
+    (el: HTMLButtonElement | null) => {
+      triggerRef.current = el;
+      assignRef(ref, el);
+    },
+    [ref, triggerRef],
+  );
+  // `labels` > the deprecated string props > the provider's `multiSelect` > English. `all`
+  // is resolved apart below: between the instance's and the provider's sits `placeholder`,
+  // which has always doubled as the "nothing picked" text, and a caller who set it must
+  // keep seeing it.
+  const text = useKitLabels("multiSelect", DEFAULT_MULTI_SELECT_LABELS, {
+    search: labelsProp?.search ?? searchLabel,
+    selectAll: labelsProp?.selectAll ?? selectAllLabel,
+    clear: labelsProp?.clear ?? clearLabel,
+    selectedCount: labelsProp?.selectedCount ?? itemLabel,
   });
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-  const hintParts = useFieldHint(hint, ariaDescribedBy);
-  const field = useFieldError(error, invalid, hintParts.describedBy, ariaInvalid);
+
+  // The lock — EntityCombobox's: the trigger stays reachable and says why.
+  const lock = useLockReason(commit, disabledReason);
+  const inert = lock.locked || Boolean(disabled);
+  // A lock (or `disabled`) arriving while the list is up closes it — adjusted while
+  // rendering, as CountrySelect does, so no frame shows a list that can no longer be used.
+  if (inert && open) setOpen(false);
+
+  // The caller's ids, the caption, a lock's reason, the error — Select's order.
+  const field = useFieldMessages({
+    hint,
+    error,
+    invalid,
+    describedBy: ariaDescribedBy,
+    ariaInvalid,
+    reasonId: lock.locked && lock.reasonId,
+  });
   // One id per instance: `aria-controls` on the trigger names the list while the
   // list is still closed.
-  const uid = useId();
-  const listboxId = `${uid}-listbox`;
-  const optionId = (index: number) => `${uid}-option-${index}`;
-  // Which row the arrow keys are on. Reset from the handlers that change what the
-  // list contains rather than from an effect — a render pass is not where this
-  // decision belongs, and the two callers that move the list are right here.
-  const [active, setActive] = useState(0);
+  const listboxId = `${useId()}-listbox`;
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter(
-      (o) =>
-        o.label.toLowerCase().includes(q) ||
-        (o.hint ?? "").toLowerCase().includes(q),
-    );
-  }, [options, query]);
-
-  const valueSet = useMemo(() => new Set(values), [values]);
+  const valueSet = useMemo(() => new Set<V>(value), [value]);
   const allChecked = options.length > 0 && options.every((o) => valueSet.has(o.value));
-  const anyChecked = values.length > 0;
-  const selectedSummary = (() => {
-    if (!anyChecked || allChecked) return allLabel ?? placeholder ?? labels.all;
-    return labels.selectedCount(values.length);
-  })();
+  const selectedSummary =
+    value.length === 0 || allChecked
+      ? (labelsProp?.all ?? allLabel ?? placeholder ?? text.all)
+      : text.selectedCount(value.length);
 
-  const toggle = (val: string | number) => {
-    if (valueSet.has(val)) onChange(values.filter((v) => v !== val));
-    else onChange([...values, val]);
+  const toggle = (o: ComboOption<V>) => {
+    if (lock.locked) return;
+    if (valueSet.has(o.value)) onChange(value.filter((v) => v !== o.value));
+    else onChange([...value, o.value]);
+    // Stays open, as a pressed row always has: this control answers "which of these",
+    // which is rarely one of them.
   };
+  // A chosen disabled row stays chosen, an unchosen one stays out — the row refuses to be
+  // toggled, by a press or by the two actions.
+  const selectAll = () => onChange(options.filter((o) => !o.disabled || valueSet.has(o.value)).map((o) => o.value));
+  const clearAll = () => onChange(options.filter((o) => o.disabled && valueSet.has(o.value)).map((o) => o.value));
+  const canSelectAll = options.some((o) => !o.disabled && !valueSet.has(o.value));
+  const canClear = options.some((o) => !o.disabled && valueSet.has(o.value));
 
-  const selectAll = () => onChange(options.map((o) => o.value));
-  const clearAll = () => onChange([]);
-
-  const activeId = active >= 0 && active < filtered.length ? optionId(active) : undefined;
-  useActiveOptionScroll(activeId);
-
-  // The WAI-ARIA APG's listbox keyboard, handled on the search box because that is
-  // where focus is while the panel is up. Escape is the dropdown's own: the search box
-  // and the panel take it before a dialog around the field can (round 0.34 BUG-1).
-  const onListKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActive((i) => Math.min(i + 1, filtered.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActive((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Home") {
-      e.preventDefault();
-      setActive(0);
-    } else if (e.key === "End") {
-      e.preventDefault();
-      setActive(filtered.length - 1);
-    } else if (e.key === "Enter") {
-      // The Enter that confirms an IME composition is the IME's (BUG-9).
-      if (isImeEnter(e)) return;
-      e.preventDefault();
-      // Toggling keeps the panel open, exactly as clicking a row does: this control
-      // exists to answer "which of these", which is rarely one of them.
-      if (filtered[active]) toggle(filtered[active].value);
-    } else if (e.key === "Tab") {
-      e.preventDefault();
-      closeToTrigger();
-    }
-  };
+  const trigger = (
+    <button
+      ref={setTrigger}
+      id={id}
+      type="button"
+      // The focusable kind of disabled while locked (Button's rule): native `disabled`
+      // would take the field out of the tab order, and the reason with it.
+      disabled={lock.locked ? undefined : disabled}
+      aria-disabled={lock.locked || undefined}
+      // A combobox, not a bare button: this trigger carried `aria-invalid`, which
+      // `button` does not support, so a required-and-empty filter painted its rose
+      // border and announced nothing (ESLint's `role-supports-aria-props`, the
+      // audit's §a11y). The role that describes it is the one that also supports
+      // the attribute.
+      role="combobox"
+      aria-expanded={open}
+      aria-controls={listboxId}
+      aria-haspopup="listbox"
+      // The label is a floating <span>, not a <label for>, so without this the
+      // trigger announces only its summary — "3 selected", with nothing saying
+      // three of WHAT. The label AND the summary, because `aria-label` replaces
+      // the content rather than adding to it; the same composition its two
+      // siblings use, so a form row of pickers reads the same way throughout.
+      // A caller's own name wins: two filters labelled "Accounts" on one screen have
+      // to be told apart, and only the caller knows by what.
+      aria-label={
+        ariaLabel ?? (typeof label === "string" ? common.fieldValue(label, selectedSummary) : undefined)
+      }
+      onClick={() => {
+        if (!inert) setOpen((v) => !v);
+      }}
+      // Down/Up opens the list from the closed trigger, per the APG; Enter and
+      // Space already do through the button's own click.
+      onKeyDown={(e) => {
+        if (inert) return;
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          setOpen(true);
+        }
+      }}
+      aria-invalid={field.isInvalid || undefined}
+      aria-required={ariaRequired}
+      // On the TRIGGER, where focus lands — the `aria-describedby` a caller put on
+      // the component is taken off the wrapper for the same reason.
+      aria-describedby={field.describedBy}
+      className={cn(
+        FIELD_TRIGGER,
+        "pe-9",
+        label !== undefined && FIELD_FLOATING_PAD,
+        // FIELD_TRIGGER's hover would still light a trigger nothing can open.
+        "disabled:hover:bg-surface-2",
+        // Dimmed like EntityCombobox's and MultiEntityCombobox's disabled triggers;
+        // only the label was, so a disabled MultiSelect read as live (showcase audit).
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        lock.locked && "cursor-not-allowed opacity-50",
+        field.isInvalid && FIELD_INVALID,
+      )}
+    >
+      {/* The summary IS the field's value, so it inherits FIELD_BASE's ink rather
+          than restating a lighter one (Keksdose dev#477). An ellipsis at Normal; from
+          Large up it wraps and the trigger grows, as DatePicker's value does (text
+          size §10.17, round 0.34 T1). */}
+      <span className="truncate-until-large">{selectedSummary}</span>
+      {!inert && <FieldChevron />}
+    </button>
+  );
 
   return (
     // `rest` dresses the wrapper; the name belongs to the trigger below it, which is
     // the thing with a role. Spread FIRST so the ARIA the trigger composes, and the
     // handlers that open the list, cannot be replaced by accident from outside.
-    <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
-      {label !== undefined && hintParts.labelHint === undefined && (
-        <FieldLabel className={disabled ? "opacity-50" : undefined}>{label}</FieldLabel>
+    <div {...rest} className={cn("relative", className)}>
+      {label !== undefined && field.labelHint === undefined && (
+        <FieldLabel className={inert ? "opacity-50" : undefined}>{label}</FieldLabel>
       )}
-      <EndHintRow hint={label === undefined ? hintParts.labelHint : undefined}>
-        <button
-          ref={triggerRef}
-          id={id}
-          type="button"
-          disabled={disabled}
-          // A combobox, not a bare button: this trigger carried `aria-invalid`, which
-          // `button` does not support, so a required-and-empty filter painted its rose
-          // border and announced nothing (ESLint's `role-supports-aria-props`, the
-          // audit's §a11y). The role that describes it is the one that also supports
-          // the attribute.
-          role="combobox"
-          aria-expanded={open}
-          aria-controls={listboxId}
-          aria-haspopup="listbox"
-          // The label is a floating <span>, not a <label for>, so without this the
-          // trigger announces only its summary — "3 selected", with nothing saying
-          // three of WHAT. The label AND the summary, because `aria-label` replaces
-          // the content rather than adding to it; the same composition its two
-          // siblings use, so a form row of pickers reads the same way throughout.
-          // A caller's own name wins: two filters labelled "Accounts" on one screen have
-          // to be told apart, and only the caller knows by what.
-          aria-label={
-            ariaLabel ?? (typeof label === "string" ? common.fieldValue(label, selectedSummary) : undefined)
-          }
-          onClick={() => {
-            setOpen((v) => !v);
-            setActive(0);
-          }}
-          // Down/Up opens the list from the closed trigger, per the APG; Enter and
-          // Space already do through the button's own click.
-          onKeyDown={(e) => {
-            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-              e.preventDefault();
-              setOpen(true);
-              setActive(0);
-            }
-          }}
-          aria-invalid={field.isInvalid || undefined}
-          aria-required={ariaRequired}
-          // On the TRIGGER, where focus lands — the `aria-describedby` a caller put on
-          // the component is taken off the wrapper for the same reason.
-          aria-describedby={field.describedBy}
-          className={cn(
-            FIELD_TRIGGER,
-            "pe-9",
-            label !== undefined && FIELD_FLOATING_PAD,
-            // FIELD_TRIGGER's hover would still light a trigger nothing can open.
-            "disabled:hover:bg-surface-2",
-            // Dimmed like EntityCombobox's and MultiEntityCombobox's disabled triggers;
-            // only the label was, so a disabled MultiSelect read as live (showcase audit).
-            "disabled:cursor-not-allowed disabled:opacity-50",
-            field.isInvalid && FIELD_INVALID,
-          )}
-        >
-          {/* The summary IS the field's value, so it inherits FIELD_BASE's ink rather
-              than restating a lighter one (Keksdose dev#477). An ellipsis at Normal; from
-              Large up it wraps and the trigger grows, as DatePicker's value does (text
-              size §10.17, round 0.34 T1). */}
-          <span className="truncate-until-large">{selectedSummary}</span>
-          {!disabled && <FieldChevron />}
-        </button>
+      <EndHintRow hint={label === undefined ? field.labelHint : undefined}>
+        {lock.locked ? (
+          // Button's frame: the line under the trigger, or the Tooltip with a hidden copy
+          // for `aria-describedby`.
+          <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
+            {trigger}
+          </LockedReason>
+        ) : (
+          trigger
+        )}
       </EndHintRow>
       {/* With a "?" the label shares the top strip with it — after the trigger, so the
           "?" follows the control in the tab order, as on Input and Select. */}
-      {label !== undefined && hintParts.labelHint !== undefined && (
-        <StaticLabelRow hint={hintParts.labelHint}>
-          <FieldLabel className={cn(LABEL_IN_ROW, disabled && "opacity-50")}>{label}</FieldLabel>
+      {label !== undefined && field.labelHint !== undefined && (
+        <StaticLabelRow hint={field.labelHint}>
+          <FieldLabel className={cn(LABEL_IN_ROW, inert && "opacity-50")}>{label}</FieldLabel>
         </StaticLabelRow>
       )}
-      {open && !disabled && (
-        <DropdownPanel
-          // 16rem by default; `panelClassName` is how a caller widens it (Keksdose
-          // feedback #147: the market picker's rows carry a postcode, a town, a
-          // distance and a receipt count, all of which were being truncated). The
-          // override used to be applied from the OUTSIDE with a
-          // `[&>div]:w-full` descendant selector, which worked and was a hack —
-          // "change the package" was the right call.
-          className={cn("w-64", panelClassName)}
-          // So Escape on "Select all" or "Clear" closes the list too, not a dialog
-          // around it — see `useDropdown` (BUG-1).
-          panelRef={panelRef}
-          empty={filtered.length === 0}
-          // The rows below are options, so the list around them has to be a listbox
-          // — and one that says several answers are allowed, which is the only thing
-          // that made the trigger's "3 selected" make sense to a reader.
-          listProps={{ id: listboxId, role: "listbox", "aria-multiselectable": true }}
-          header={
-            <>
-              <DropdownSearchHeader
-                query={query}
-                onQueryChange={(v) => {
-                  setQuery(v);
-                  // The list under the highlight just changed; keeping the old index
-                  // would point `aria-activedescendant` at a different option than
-                  // the one the user was on.
-                  setActive(0);
-                }}
-                inputRef={inputRef}
-                placeholder={labels.search}
-                listboxId={listboxId}
-                activeId={activeId}
-                onKeyDown={onListKeyDown}
-              />
-              <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-xs">
-                <button
-                  type="button"
-                  onClick={selectAll}
-                  disabled={allChecked}
-                  className="rounded px-2 py-0.5 text-secondary hover:bg-hover disabled:opacity-40"
-                >
-                  {labels.selectAll}
-                </button>
-                <button
-                  type="button"
-                  onClick={clearAll}
-                  disabled={!anyChecked}
-                  className="rounded px-2 py-0.5 text-secondary hover:bg-hover disabled:opacity-40"
-                >
-                  {labels.clear}
-                </button>
-              </div>
-            </>
-          }
-        >
-          {filtered.map((o, i) => {
-              const checked = valueSet.has(o.value);
-              return (
-                <li key={o.value} role="presentation">
-                  <button
-                    type="button"
-                    id={optionId(i)}
-                    // The checked state used to exist ONLY as the decorative span
-                    // below (the audit's §a11y): the row said its label and nothing
-                    // else, so "selected" was imperceptible without sight. This is
-                    // the same state, in the one place a reader looks for it.
-                    role="option"
-                    aria-selected={checked}
-                    // Focus stays in the search box — that is what
-                    // `aria-activedescendant` is for — so the rows are not tab stops.
-                    tabIndex={-1}
-                    onClick={() => toggle(o.value)}
-                    onMouseEnter={() => setActive(i)}
-                    className={cn(
-                      "flex w-full items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-hover",
-                      checked && "bg-active",
-                      i === active && "bg-hover",
-                    )}
-                  >
-                    <span className="flex items-center gap-2 min-w-0">
-                      <span
-                        // A picture of `aria-selected` above; a reader that met both
-                        // would be told twice.
-                        aria-hidden
-                        className={cn(
-                          "flex size-4 shrink-0 items-center justify-center rounded border",
-                          checked
-                            ? "border-[var(--bg-inverse)] bg-inverse text-inverse"
-                            : "border-strong bg-surface",
-                        )}
-                      >
-                        {checked && <Check className="size-3" />}
-                      </span>
-                      {/* Label and hint wrap from Large up (round 0.34 T1). */}
-                      <span className="truncate-until-large text-primary">{o.label}</span>
-                      {o.hint && (
-                        <span className="truncate-until-large text-xs text-placeholder">
-                          {o.hint}
-                        </span>
-                      )}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-        </DropdownPanel>
-      )}
-      {/* After the panel, not before it: the panel is `absolute` with no `top`, so it
-          opens at its place in the flow — under the message, had the message come
-          first. */}
-      <FieldCaption parts={hintParts} />
-      {field.errorEl}
+      {field.below}
+      <ComboboxPanel
+        core={core}
+        listboxId={listboxId}
+        multi
+        // On a phone the list is a full-screen sheet, which needs the field's own name
+        // to say what it asks for (live #200).
+        sheetTitle={label ?? placeholder}
+        searchPlaceholder={text.search}
+        isSelected={(v) => valueSet.has(v)}
+        onChoose={toggle}
+        showCreate={false}
+        onCreate={() => {}}
+        createContent={null}
+        // At least the trigger's width and 16rem, growing with the rows to 32rem: the
+        // hints are why it was widened at all (keksdose #147).
+        width={{ minRem: 16, fit: true, maxRem: 32 }}
+        className={panelClassName}
+        toolbar={
+          <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-xs">
+            <button
+              type="button"
+              onClick={selectAll}
+              disabled={!canSelectAll}
+              className="rounded px-2 py-0.5 text-secondary hover:bg-hover disabled:opacity-40"
+            >
+              {text.selectAll}
+            </button>
+            <button
+              type="button"
+              onClick={clearAll}
+              disabled={!canClear}
+              className="rounded px-2 py-0.5 text-secondary hover:bg-hover disabled:opacity-40"
+            >
+              {text.clear}
+            </button>
+          </div>
+        }
+      />
     </div>
   );
 }

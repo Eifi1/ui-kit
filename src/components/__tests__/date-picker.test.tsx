@@ -184,13 +184,14 @@ describe("the step row's focus frame (keksdose live #394)", () => {
       expect(tokens, name).not.toContain("focus:ring-2");
       expect(tokens, name).not.toContain("focus:border-2");
     }
-    // The trigger sits inside DateField; the row reaches it, as it squares its corners.
+    // The trigger sits inside DateField and is FIELD_BASE (through FIELD_TRIGGER), whose
+    // focus ring is this very inset ring since the K5 follow-up — the row's own copy of it
+    // went in Wave 2.
     const trigger = screen.getByRole("combobox");
     const row = trigger.closest<HTMLElement>(".items-stretch")!.className.split(/\s+/);
-    expect(row).toEqual(
-      expect.arrayContaining(["[&_[role=combobox]:focus]:ring-1", "[&_[role=combobox]:focus]:ring-inset"]),
+    expect(trigger.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(["focus:border-brand", "focus:ring-brand", "focus:ring-1", "focus:ring-inset"]),
     );
-    expect(trigger.className.split(/\s+/)).toEqual(expect.arrayContaining(["focus:border-brand", "focus:ring-brand"]));
     // Not every button in the row: the label's "?" keeps its own 2px focus frame.
     expect(row.some((t) => t.includes("[&_button"))).toBe(false);
     const hint = screen.getByRole("button", { name: "The day the bank booked it" });

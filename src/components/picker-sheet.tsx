@@ -28,6 +28,9 @@ export interface PickerSheetProps
   query: string;
   onQueryChange: (value: string) => void;
   searchPlaceholder?: string;
+  /** The search box's accessible name. Default: `searchPlaceholder` — a placeholder is
+   *  gone the moment a character is typed, and is no name to many readers at all. */
+  searchLabel?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
   /** Default: `pickerSheet.close` from the {@link UiKitProvider}, else "Close". */
   closeLabel?: string;
@@ -74,6 +77,7 @@ export function PickerSheet({
   query,
   onQueryChange,
   searchPlaceholder,
+  searchLabel,
   inputRef,
   closeLabel,
   onSearchKeyDown,
@@ -251,6 +255,7 @@ export function PickerSheet({
         onQueryChange={onQueryChange}
         inputRef={searchRef}
         placeholder={searchPlaceholder}
+        aria-label={searchLabel ?? searchPlaceholder}
         // Focus is in this box while the sheet is up, so this is where the list's keys
         // land and what has to name the list and the row the arrows are on (BUG-5).
         onKeyDown={onSearchKeyDown}

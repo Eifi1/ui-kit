@@ -1,14 +1,14 @@
 import { forwardRef, useId, useMemo, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
-import { CURRENCIES, CurrencyFlag, currencyName, getCurrency } from "./currency-select";
+import { CurrencyOptionList, getCurrency } from "./currency-option-list";
+import { useComboboxCore } from "./combobox-core";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 import { cn } from "../lib/cn";
 import { currencyMinorDigits } from "../lib/format";
 import { roundHalfAway } from "../lib/round";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
-import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 import {
   DEFAULT_COMMON_LABELS,
   DEFAULT_CURRENCY_LABELS,
@@ -146,6 +146,10 @@ interface AmountInputProps {
    *  rather than by a fixed set of slots, and an app passes the same map to both
    *  pickers. */
   currencyNames?: Record<string, string>;
+  /** Offer only these ISO codes in the chip's list, in this order — `CurrencySelect`'s
+   *  `options`, since the chip renders CurrencySelect's list (round 0.34 Wave 2, DUP-4).
+   *  Default every currency the kit knows. */
+  currencyOptions?: string[];
   /** Focus the field on mount — on mobile this also opens the numpad sheet, so a
    *  new-transaction form can jump straight to amount entry (feedback #70). */
   autoFocus?: boolean;
@@ -367,7 +371,7 @@ function isResultOf(previous: string, text: string, settle: (text: string) => st
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) => {
-    const { value, onChange, currency, onCurrencyChange, placeholder, label, className, inputClassName, id, "aria-label": ariaLabelAttr, ariaLabel: ariaLabelProp, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit, disabledReasonDisplay } = props;
+    const { value, onChange, currency, onCurrencyChange, placeholder, label, className, inputClassName, id, "aria-label": ariaLabelAttr, ariaLabel: ariaLabelProp, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, align = "start", labels, currencyNames, currencyOptions, digits: digitsProp, min, max, onCommit, disabledReasonDisplay } = props;
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     // The sign is DISPLAYED, not stored (live #201 rework). `value` is the
@@ -485,13 +489,20 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>((props
       onCommit?.(settled);
     };
     const typed = (raw: string) => handleText(numeric.read(raw));
-    const { open, setOpen, wrapperRef, panelRef, triggerRef, query, setQuery, inputRef } = useDropdownSearch();
-    // The chip the currency list hangs off (Keksdose dev#548). It is portalled now, so
-    // the panel needs a real trigger rect rather than a relative parent — see
-    // `DropdownPanel`'s note for what an `overflow` ancestor did to it before. It is
-    // also the dropdown's `triggerRef`, where Escape hands focus back (round 0.34 BUG-1):
-    // Safari does not focus a clicked button, so "whatever held focus" is not the chip.
-    const chipRef = triggerRef;
+    // The currency list is CurrencySelect's (round 0.34 Wave 2, DUP-4) on the picker
+    // family's core: the chip was a hand copy of it and had drifted (no wrap at Large, no
+    // `options` subset, no check mark, no listbox id, no #308 width), and both were plain
+    // buttons under a listbox promise. `filter: false`: the list filters its own rows.
+    const core = useComboboxCore<string>({ filter: false, backCloses: true });
+    // `chipRef`: the chip the currency list hangs off (Keksdose dev#548: portalled, so the
+    // panel needs a real trigger rect rather than a relative parent). It is also where
+    // Escape and a pick hand focus back (round 0.34 BUG-1): Safari does not focus a
+    // clicked button, so "whatever held focus" is not the chip.
+    const { open, setOpen, closeToTrigger, triggerRef: chipRef } = core;
+    const listboxId = `${generatedId}-currencies`;
+    // A lock arriving while the list is up closes it, as on CountrySelect — adjusted
+    // while rendering, so no frame shows a list that can no longer be used.
+    if (!editable && open) setOpen(false);
 
     // The currency chip's strings are the `currency` namespace — the same two
     // `CurrencySelect` resolves, under this component's older key names. The
@@ -511,21 +522,9 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>((props
     const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
 
     const selected = getCurrency(currency);
-    const filtered = useMemo(() => {
-      const q = query.trim().toLocaleLowerCase(locale);
-      if (!q) return CURRENCIES;
-      return CURRENCIES.filter(
-        (c) =>
-          c.code.toLowerCase().includes(q) ||
-          // The name the row SHOWS, so a translated list is searchable in the
-          // language it is written in.
-          currencyName(c, currencyNames, locale).toLocaleLowerCase(locale).includes(q) ||
-          c.symbol.toLowerCase().includes(q),
-      );
-    }, [query, currencyNames, locale]);
 
     return (
-      <div ref={wrapperRef} className={cn("w-full", className)}>
+      <div className={cn("w-full", className)}>
         {/* Inner relative box holds the input + its absolutely-positioned
             trailing controls (calculator / currency), so those stay anchored to
             the INPUT even when the mobile math bar is rendered below (#334). It is
@@ -673,6 +672,11 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>((props
               ref={chipRef}
               type="button"
               onClick={() => setOpen((v) => !v)}
+              // A button that opens a listbox, and says so: the chip is a control inside
+              // a text field, not a field of its own, so not a combobox.
+              aria-haspopup="listbox"
+              aria-expanded={open}
+              aria-controls={listboxId}
               aria-label={
                 // "Currency: EUR" through `common.fieldValue`, not a template literal:
                 // the colon-and-space is punctuation a translation has to own.
@@ -688,46 +692,22 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>((props
             </button>
           )}
         </div>
-        {editable && open && (
-          <DropdownPanel
-            anchorRef={chipRef}
-            panelRef={panelRef}
-            empty={filtered.length === 0}
-            header={
-              <DropdownSearchHeader
-                query={query}
-                onQueryChange={setQuery}
-                inputRef={inputRef}
-                placeholder={currencyText.search}
-              />
-            }
-          >
-            {filtered.map((c) => {
-                const active = c.code === selected?.code;
-                return (
-                  <li key={c.code}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onCurrencyChange?.(c.code);
-                        setOpen(false);
-                      }}
-                      className={cn(
-                        "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-start hover:bg-hover",
-                        active && "bg-active",
-                      )}
-                    >
-                      <CurrencyFlag country={c.country} />
-                      <span className="font-mono text-muted w-8 shrink-0 text-xs">
-                        {c.symbol}
-                      </span>
-                      <span className="font-medium text-primary">{c.code}</span>
-                      <span className="text-muted truncate text-xs">{currencyName(c, currencyNames, locale)}</span>
-                    </button>
-                  </li>
-                );
-              })}
-          </DropdownPanel>
+        {editable && (
+          <CurrencyOptionList
+            core={core}
+            listboxId={listboxId}
+            value={currency}
+            codes={currencyOptions}
+            currencyNames={currencyNames}
+            locale={locale}
+            searchPlaceholder={currencyText.search}
+            // The phone sheet's title: what the chip is for.
+            sheetTitle={currencyText.currency}
+            onChoose={(code) => {
+              onCurrencyChange?.(code);
+              closeToTrigger();
+            }}
+          />
         )}
         </FloatingField>
         </LockedOrNot>

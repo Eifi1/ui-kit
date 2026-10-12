@@ -583,31 +583,27 @@ const STEP_ROW_STACK_AT_LARGE = cn(
   "large:max-sm:[&>span]:flex-1 large:max-sm:[&>span>button]:w-full",
 );
 
-/**
- * The focused part of the ‹ date › (today) row framed 2px wide, not 1 (keksdose live
- * #394, fourth round; kk K5). The row raises the focused part over the neighbour it
- * overlaps (`[&>*:focus-within]:z-20`), so all four of its sides are its own brand
- * border — but at a fractional device-pixel ratio a 1px line covers 1.25 device pixels
- * (at 125 %), and on whichever sides fall across a pixel boundary it is spread over two
- * pixels at partial strength: ‹'s left side and the date field's right read grey beside
- * the crisp ones (dark theme, measured: 82,87,146 against 139,147,248).
- *
- * FIELD_BASE already gives each part the ring COLOUR on focus (`focus:ring-brand`), with
- * no width; a 1px INSET ring beside the 1px border doubles the line inward, so every side
- * keeps at least one fully covered device pixel at any scale — FIELD_INVALID's
- * border-plus-ring, for the same reason (live #295). A box-shadow, and inset: nothing
- * outside the part moves or is covered. `focus`, not `focus-visible`, as the row's
- * raise: a tap focuses too.
- *
- * On the parts, not on every button in the row: keksdose's local fix
- * (`[&_button:focus]:ring-1 [&_button:focus]:ring-inset` on the row) also reached the
- * label's "?" and thinned its 2px focus frame to 1.
- */
-const JOINED_PART_FOCUS = "focus:ring-1 focus:ring-inset";
-
-/** The same, for the date field's trigger, from the row: the trigger is inside
- *  DateField, so the row reaches it as it squares its corners (`[role=combobox]`). */
-const JOINED_TRIGGER_FOCUS = "[&_[role=combobox]:focus]:ring-1 [&_[role=combobox]:focus]:ring-inset";
+// The focused part of the ‹ date › (today) row framed 2px wide, not 1 (keksdose live
+// #394, fourth round; kk K5). The row raises the focused part over the neighbour it
+// overlaps (`[&>*:focus-within]:z-20`), so all four of its sides are its own brand
+// border — but at a fractional device-pixel ratio a 1px line covers 1.25 device pixels
+// (at 125 %), and on whichever sides fall across a pixel boundary it is spread over two
+// pixels at partial strength: ‹'s left side and the date field's right read grey beside
+// the crisp ones (dark theme, measured: 82,87,146 against 139,147,248).
+//
+// A 1px INSET ring in the focus colour beside the 1px border doubles the line inward, so
+// every side keeps at least one fully covered device pixel at any scale — FIELD_INVALID's
+// border-plus-ring, for the same reason (live #295). A box-shadow, and inset: nothing
+// outside the part moves or is covered. `focus`, not `focus-visible`, as the row's
+// raise: a tap focuses too.
+//
+// 0.34 drew it here, on the parts — `focus:ring-1 focus:ring-inset` on each step and
+// `[&_[role=combobox]:focus]:…` from the row — and the K5 follow-up then moved that very
+// ring into FIELD_BASE for every field (keksdose run 78). Each part of this row is
+// FIELD_BASE, the steps directly and the trigger through FIELD_TRIGGER, so the copies went
+// (round 0.34 Wave 2). Not on every button in the row: keksdose's local fix
+// (`[&_button:focus]:ring-1 [&_button:focus]:ring-inset` on the row) also reached the
+// label's "?" and thinned its 2px focus frame to 1.
 
 /** One ‹ / › day-step button, sized to sit flush beside the field. */
 function StepButton({
@@ -644,8 +640,8 @@ function StepButton({
           // Dimmed ICON, not a dimmed box: at 40% opacity the whole button — border
           // included — faded out of the group and read as a broken, detached control.
           "disabled:cursor-not-allowed disabled:text-placeholder disabled:opacity-60 disabled:hover:bg-surface",
-          // A part of a joined row: a 2px focus line, whole at 125 % (JOINED_PART_FOCUS).
-          JOINED_PART_FOCUS,
+          // A part of a joined row: FIELD_BASE's 2px focus line, whole at 125 % (K5, the
+          // note above this function).
           className,
         )}
       >
@@ -1230,9 +1226,8 @@ export function DatePicker(props: DatePickerProps) {
         // the trigger, which raising the trigger alone covered. Hover raises nothing: it
         // changes no border, and would let a hovered › cover a focused field's edge.
         "[&>*:focus-within]:z-20 [&>*:active]:z-20 [&>*:has([aria-invalid=true])]:z-10",
-        // …and its line is 2px, so no side of it reads half-strength at 125 %
-        // (live #394, fourth round — JOINED_PART_FOCUS; the steps carry it themselves).
-        JOINED_TRIGGER_FOCUS,
+        // …and its line is 2px, so no side of it reads half-strength at 125 % (live #394,
+        // fourth round): FIELD_BASE's inset ring, which every part of the row carries.
         STEP_ROW_STACK_AT_LARGE,
         className,
       )}
