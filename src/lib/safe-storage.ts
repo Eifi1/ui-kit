@@ -13,25 +13,49 @@
  * So the guard lives here, once, and the next storage-backed preference cannot
  * forget it. A read that cannot happen is indistinguishable from a key that was
  * never set, which is the right answer for every caller: the default.
+ *
+ * Since 0.34 (DUP-11, refactor audit 2026-10) it also removes, and guards
+ * `sessionStorage` the same way: `landing/routing`, `billing/checkout-processing` and
+ * the demo banner each wrote that guard again by hand. `removeStored` and the session
+ * pair are package-private — the barrel exports `readStored` / `writeStored` only.
  */
+
+/** `access` on the storage area, or `fallback` where there is none (SSR) or it throws. */
+function guarded<T>(area: "localStorage" | "sessionStorage", fallback: T, access: (storage: Storage) => T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    return access(window[area]);
+  } catch {
+    // private mode, quota, partitioned or blocked storage
+    return fallback;
+  }
+}
 
 /** The stored string for `key`, or null when absent, unreadable, or blocked. */
 export function readStored(key: string): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
+  return guarded("localStorage", null, (storage) => storage.getItem(key));
 }
 
 /** Store `value` under `key`, silently doing nothing when storage is unavailable
  *  or full. A preference that cannot be persisted is not worth an exception. */
 export function writeStored(key: string, value: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(key, value);
-  } catch {
-    // ignore (private mode, quota, partitioned storage)
-  }
+  guarded("localStorage", undefined, (storage) => storage.setItem(key, value));
+}
+
+/** Forget `key`, silently doing nothing when storage is blocked — there is nothing to
+ *  forget then. */
+export function removeStored(key: string): void {
+  guarded("localStorage", undefined, (storage) => storage.removeItem(key));
+}
+
+/** {@link readStored} for `sessionStorage`: this tab's value, or null. */
+export function readSessionStored(key: string): string | null {
+  return guarded("sessionStorage", null, (storage) => storage.getItem(key));
+}
+
+/** {@link writeStored} for `sessionStorage`; `null` removes the key. */
+export function writeSessionStored(key: string, value: string | null): void {
+  guarded("sessionStorage", undefined, (storage) =>
+    value === null ? storage.removeItem(key) : storage.setItem(key, value),
+  );
 }

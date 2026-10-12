@@ -10,7 +10,8 @@ import { ModalCloseContext } from "../components/modal";
 import { Button } from "../components/ui";
 import { authErrorCode } from "../auth/auth-errors";
 import type { KitErrorCode } from "../auth/auth-errors";
-import { hasMessage, usePersonLabel } from "./admin-parts";
+import { usePersonLabel } from "./admin-parts";
+import { hasContent } from "../lib/presence";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
 import { isGroupTarget } from "./admin-action-log";
 import type { AdminGroupTarget } from "./admin-action-log";
@@ -190,7 +191,7 @@ function refusalOf(
   if (!present) return null;
   const code = authErrorCode(error);
   const own = describeError?.(error);
-  if (hasMessage(own)) return { text: own, code };
+  if (hasContent(own)) return { text: own, code };
   const text =
     code === "last_admin"
       ? labels.lastAdmin
@@ -393,7 +394,7 @@ export function AdminActionConfirm({
   const askTyped = level === "type_email" && !group;
   const typedOk = !askTyped || typedMatches(typed, email, "caseless");
   const tickOk = askTyped || ticked;
-  const guardReason: ReactNode = hasMessage(confirmDisabledReason)
+  const guardReason: ReactNode = hasContent(confirmDisabledReason)
     ? confirmDisabledReason
     : !tickOk
       ? guardLabels.needsAcknowledge
@@ -466,11 +467,11 @@ export function AdminActionConfirm({
             ))}
           </ul>
         ) : (
-          hasMessage(consequence as ReactNode) && (
+          hasContent(consequence as ReactNode) && (
             <p className="text-sm text-secondary">{consequence as ReactNode}</p>
           )
         )}
-        {Children.toArray(children).some(hasMessage) && (
+        {Children.toArray(children).some(hasContent) && (
           <div ref={slotRef} className="space-y-3">
             {children}
           </div>

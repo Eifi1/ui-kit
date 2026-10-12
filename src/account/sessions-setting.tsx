@@ -8,7 +8,7 @@ import { formatRelativeTime, toDate } from "../lib/format";
 import type { DateInput } from "../lib/format";
 import { AlertBanner } from "../components/alert-banner";
 import { Chip } from "../components/chip";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import { DangerConfirm } from "../components/danger-confirm";
 import { Skeleton } from "../components/skeleton";
 import { Button, Card } from "../components/ui";
@@ -156,7 +156,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
 
   const describe = (error: unknown, action: SessionsAction): ReactNode => {
     const own = describeError?.(error, action);
-    return hasMessage(own) ? own : labels.failed;
+    return hasContent(own) ? own : labels.failed;
   };
 
   const lastActive = (value: DateInput): string | null => {
@@ -264,7 +264,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
         confirmLabel={labels.confirmSignOutEverywhere}
         onConfirm={signOutEverywhere}
       />
-      {hasMessage(failure) && (
+      {hasContent(failure) && (
         <AlertBanner tone="danger" size="sm" role="alert">
           {failure}
         </AlertBanner>

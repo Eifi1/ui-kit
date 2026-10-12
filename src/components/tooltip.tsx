@@ -16,8 +16,9 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
-import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
+import { useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
+import { viewportSize } from "../hooks/use-anchored-panel";
 import { dirOf, type Direction } from "../lib/direction";
 import { hasClippingAncestor } from "../lib/clipping";
 
@@ -565,7 +566,10 @@ function useTooltipTrigger(
     setFocused(false);
     setTapped(false);
   };
-  useEscapeKey(() => setDismissed(true), open);
+  // A layer on the Escape stack while up (Wave 2, DUP-1): over a dialog, the first
+  // Escape dismisses the bubble — WCAG 1.4.13, without moving focus — and the next one
+  // the dialog. Inside a Modal the bubble used to be beyond reach of the key.
+  useDismissLayer(open, () => setDismissed(true));
   // A press anywhere else closes it — the case a blur does not cover: Safari moves no
   // focus on a tap, and a tap on plain text moves it nowhere.
   useOutsideClick(triggerRef, close, open);
@@ -804,24 +808,9 @@ function slideInto(low: number, high: number, extent: number, keepHigh = false):
   return 0;
 }
 
-/**
- * The glass a bubble has to stay on, in CSS pixels — `window.innerWidth` is the wrong
- * width on a phone (keksdose run 72, live #381). There it is the LAYOUT viewport, and
- * that grows to the page's width as soon as anything sticks out past the screen: 430 on
- * a 406px screen in Chromium's mobile emulation, with `position: fixed` layers laid out
- * against the 430. A bubble that had widened the page then measured itself as inside it.
- * The root element's client width is the initial containing block instead — the screen,
- * the width `100vw` and the media queries see — whatever overflows, and on a desktop it
- * also leaves a classic scrollbar out. It is 0 where nothing is laid out (jsdom), and the
- * window is the answer there. The height stays the window's: nothing measured grows it,
- * and a phone's collapsing toolbar makes the window the truer of the two.
- */
-function viewportSize(): TooltipViewport {
-  return {
-    width: document.documentElement.clientWidth || window.innerWidth,
-    height: window.innerHeight,
-  };
-}
+// The glass a bubble has to stay on — the root's client width, not `innerWidth` (keksdose
+// run 72, live #381) — is `viewportSize` in use-anchored-panel.ts since 0.34 (Wave 2,
+// DUP-7), where every anchored panel now reads it.
 
 /**
  * The in-place bubble's viewport clamp (keksdose G7): while `active`, measure the bubble

@@ -5,10 +5,11 @@ import { horizontalStep } from "../lib/direction";
 import { FIELD_INVALID, FloatingField, Label } from "./ui";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
+import { hasContent } from "../lib/presence";
 import {
   DISABLED_REASON_LINE_CLASS,
   FIELD_CAPTION_CLASS,
-  hasContent,
+  FIELD_ERROR_CLASS,
   isTextHint,
   LabelStrip,
   useDisabledReasonLine,
@@ -603,7 +604,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       </p>
     ) : null;
   const errorEl = hasError ? (
-    <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
+    <p id={errorId} className={FIELD_ERROR_CLASS}>
       {error}
     </p>
   ) : null;

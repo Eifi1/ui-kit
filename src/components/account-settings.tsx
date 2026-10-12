@@ -24,7 +24,7 @@ import type {
 } from "./account-settings-labels";
 import { COMMIT_EXCEPT_BILLING } from "./write-lock";
 import { AlertBanner } from "./alert-banner";
-import { hasMessage } from "./choice-parts";
+import { hasContent } from "../lib/presence";
 import { authErrorCode } from "../auth/auth-errors";
 
 // The label types moved beside the namespace's defaults (0.12.0); re-exported here so
@@ -407,7 +407,7 @@ export function PasswordSetting({
 
   const present = (error: unknown) => {
     const own = describeError?.(error);
-    if (hasMessage(own)) {
+    if (hasContent(own)) {
       setFailure(own);
       return;
     }
@@ -501,7 +501,7 @@ export function PasswordSetting({
         onChange={edit("confirm", setConfirm)}
         error={errorOf("confirm")}
       />
-      {hasMessage(failure) && (
+      {hasContent(failure) && (
         <AlertBanner tone="danger" size="sm" role="alert">
           {failure}
         </AlertBanner>

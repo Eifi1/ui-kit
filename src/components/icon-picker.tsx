@@ -5,7 +5,8 @@ import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-l
 import { SearchField } from "./search-field";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
-import { hasContent, LabelStrip } from "./field-parts";
+import { hasContent } from "../lib/presence";
+import { LabelStrip, useFieldMessages } from "./field-parts";
 import { DEFAULT_ICON_PICKER_LABELS } from "./icon-picker-labels";
 
 export interface IconPickerLabels {
@@ -90,7 +91,9 @@ export interface IconPickerProps<T extends string>
    * styles the wrapper.
    */
   label?: ReactNode;
-  /** A {@link FieldHint} beside the label. Only with `label`. */
+  /** A {@link FieldHint} beside the label. Only with `label`. {@link Select}'s rule since
+   *  0.34 (DUP-2, refactor audit 2026-10): plain TEXT, and a FieldHint at Large and on a
+   *  touch screen (§4), is a caption under the grid, describing it. */
   hint?: ReactNode;
 }
 
@@ -135,6 +138,12 @@ export function IconPicker<T extends string>({
   const mixedId = useId();
   const labelId = useId();
   const labelled = hasContent(label);
+  // The label line's "?", or the caption under the grid (DUP-2). Only with a label.
+  const messages = useFieldMessages({
+    hint: labelled ? hint : undefined,
+    describedBy: ariaDescribedBy,
+    reasonId: mixed && mixedId,
+  });
   const [query, setQuery] = useState("");
   const needle = fold(query.trim(), locale);
 
@@ -177,7 +186,7 @@ export function IconPicker<T extends string>({
         aria-label={ariaLabel}
         // The strip's label names the GRID, unless the caller named it already.
         aria-labelledby={labelled && ariaLabel === undefined && ariaLabelledBy === undefined ? labelId : ariaLabelledBy}
-        aria-describedby={[ariaDescribedBy, mixed && mixedId].filter(Boolean).join(" ") || undefined}
+        aria-describedby={messages.describedBy}
         aria-disabled={disabled || undefined}
         className="flex flex-wrap items-center gap-1.5"
       >
@@ -224,8 +233,9 @@ export function IconPicker<T extends string>({
   );
   if (!labelled) return picker;
   return (
-    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled} className={className}>
+    <LabelStrip labelId={labelId} label={label} hint={messages.labelHint} disabled={disabled} className={className}>
       {picker}
+      {messages.below}
     </LabelStrip>
   );
 }

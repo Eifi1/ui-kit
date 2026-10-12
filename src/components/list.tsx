@@ -10,8 +10,7 @@ import { toneTextClass } from "./signed-amount";
 import type { TextTone } from "./signed-amount";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
-import { mergeDescribedBy } from "./choice-parts";
-import { LockedReason, useLockReason, type DisabledReasonDisplay } from "./field-parts";
+import { LockedReason, mergeDescribedBy, useLockReason, type DisabledReasonDisplay } from "./field-parts";
 import type { CommitScope } from "./write-lock";
 import { DEFAULT_LIST_LABELS } from "./list-labels";
 

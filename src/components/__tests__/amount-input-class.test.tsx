@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AmountInput } from "../amount-input";
 import { MoneyField } from "../money-field";
 import { FIELD_INVALID } from "../ui";
@@ -99,5 +99,36 @@ describe("MoneyField inputClassName", () => {
     const input = screen.getByRole("textbox", { name: "VAT" });
     expect(input).toHaveClass("text-end");
     expect(input).toHaveClass("tabular-nums");
+  });
+});
+
+/**
+ * keksdose live #367, DUP-10 (refactor audit 2026-10): NumberInput reserves its end
+ * controls' MEASURED width; AmountInput kept a `pe-*` ladder guessed per combination
+ * (calculator, chip, picker), which a translated chip name or a wider font outgrew. One
+ * engine now: the ladder is only the pre-measure fallback (jsdom, the first paint).
+ */
+describe("AmountInput reserves its trailing controls' measured width (0.34)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("pads by the controls' width, plus their inset and the gap, once measured", () => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private readonly callback: () => void) {}
+        // A browser calls back once on `observe`.
+        observe() {
+          this.callback();
+        }
+        disconnect() {}
+      },
+    );
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ width: 61.2 } as DOMRect);
+    render(<AmountInput ariaLabel="Gross" value="1" onChange={noop} currency="CHF" onCurrencyChange={noop} />);
+    // ceil(61.2) = 62, the track's `end-1` (4px) and the 4px gap NumberInput keeps.
+    expect(screen.getByRole("textbox", { name: "Gross" }).style.paddingInlineEnd).toBe("70px");
   });
 });

@@ -319,6 +319,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Spalten (${n(visible)}/${n(total)})`,
+      filterColumn: (column, active) => (active ? `${column} filtern (aktiv)` : `${column} filtern`),
       empty: "Keine Einträge",
       actions: "Aktionen",
       edit: "Bearbeiten",

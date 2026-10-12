@@ -9,6 +9,7 @@ import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useCloseTransition } from "../hooks/use-close-transition";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { runOwnKeyDown, takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 
 /**
  * The padding around the dialog's scrolling body, as a CSS length (0.32,
@@ -162,25 +163,20 @@ export function FullBleedDialog({
   // (live #402). Closing still hands focus back to whatever opened the dialog.
   useFocusTrap(dialogRef, { active: open });
 
+  // A layer on the Escape stack while open (Wave 2, DUP-1). This dialog is what a
+  // `PickerSheet`, a list or the numpad opens on top of, and the stack hands the key
+  // to whichever of them is topmost — one press dismissing the sheet AND the edit
+  // behind it was Keksdose live #309 (*"Mouse Back does not only close the select but
+  // also the whole edit or create dialog"*) on a different key.
+  useDismissLayer(open, requestClose);
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // The caller's handler first (keksdose's transaction-search keeps its list keys on
-    // the dialog); a `preventDefault()` IN THAT HANDLER claims the key, Escape included.
-    // Only there: a descendant's preventDefault does not count. A SearchField in the
-    // header prevents Escape to stop Chromium clearing a type=search input, and in
-    // 0.8.0 that silently stopped Escape from closing the dialog (keksdose).
-    const preventedBefore = e.defaultPrevented;
-    onKeyDown?.(e);
-    const claimedByCaller = !preventedBefore && e.defaultPrevented;
-    if (claimedByCaller || e.key !== "Escape") return;
-    // On the panel, the way `Modal` does it, and NOT through `useEscapeKey`: this
-    // dialog is the thing a `PickerSheet` opens on top of, and a document-level
-    // listener cannot tell which of the two the user meant. One press would dismiss
-    // the sheet AND throw away the edit behind it — Keksdose live #309 (*"Mouse Back
-    // does not only close the select but also the whole edit or create dialog"*) on a
-    // different key. The sheet's own handler stops the event here, so the innermost
-    // overlay is the one that closes, which is only true because focus is now in it.
-    e.stopPropagation();
-    requestClose();
+    // the dialog); a `preventDefault()` IN THAT HANDLER claims Escape. Only there: a
+    // descendant's does not count. A SearchField in the header prevents Escape to stop
+    // Chromium clearing a type=search input, and in 0.8.0 that silently stopped Escape
+    // from closing the dialog (keksdose). The one rule `Modal` now shares.
+    runOwnKeyDown(e, onKeyDown);
+    takeEscape(e);
   };
 
   if (!open || typeof document === "undefined") return null;

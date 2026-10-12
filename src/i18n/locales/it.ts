@@ -310,6 +310,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Colonne (${n(visible)}/${n(total)})`,
+      filterColumn: (column, active) => (active ? `Filtra ${column} (attivo)` : `Filtra ${column}`),
       empty: "Nessuna voce",
       actions: "Azioni",
       edit: "Modifica",

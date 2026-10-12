@@ -18,7 +18,7 @@ import { FOCUS_RING } from "./focus-ring";
 import { dirOf, type Direction } from "../lib/direction";
 import { registerFloating } from "../lib/floating-stack";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
-import { assignRef } from "./choice-parts";
+import { assignRef } from "./field-parts";
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_FLOATING_PANEL_LABELS } from "./floating-panel-labels";

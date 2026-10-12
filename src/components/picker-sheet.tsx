@@ -8,6 +8,7 @@ import { DropdownSearchHeader } from "./dropdown";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { useVisualViewport } from "../hooks/use-anchored-panel";
 import { DEFAULT_PICKER_SHEET_LABELS, useKitLabels } from "../i18n/kit-labels";
 
@@ -30,6 +31,16 @@ export interface PickerSheetProps
   inputRef?: RefObject<HTMLInputElement | null>;
   /** Default: `pickerSheet.close` from the {@link UiKitProvider}, else "Close". */
   closeLabel?: string;
+  /**
+   * The list's keyboard, on the search box — where focus is while the sheet is up:
+   * Up/Down/Home/End/Enter (round 0.34 Wave 2, BUG-5). `ComboboxPanel` passes its own;
+   * without it arrows and Enter in the sheet did nothing at all.
+   */
+  onSearchKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+  /** The `role="listbox"` the search box filters, for its `aria-controls`. */
+  listboxId?: string;
+  /** The option the arrow keys are on, for the search box's `aria-activedescendant`. */
+  activeId?: string;
   children: ReactNode;
 }
 
@@ -65,6 +76,9 @@ export function PickerSheet({
   searchPlaceholder,
   inputRef,
   closeLabel,
+  onSearchKeyDown,
+  listboxId,
+  activeId,
   children,
   "aria-label": ariaLabel,
   className,
@@ -139,17 +153,16 @@ export function PickerSheet({
     initialFocus: () => searchRef.current,
   });
 
+  // The sheet is almost always the INNERMOST overlay — it opens from a field inside a
+  // `Modal` or a `FullBleedDialog`. It is a layer on the Escape stack (Wave 2, DUP-1),
+  // above the dialog, and takes the key on its own element: one press dismissing this
+  // list and the dialog underneath with it was Keksdose live #309 (*"Mouse Back does
+  // not only close the select but also the whole edit or create dialog which is
+  // cumbersome"*), which the Back gesture already learned, on the key a desktop user
+  // reaches for instead.
+  useDismissLayer(open, onClose);
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== "Escape") return;
-    // The sheet is almost always the INNERMOST overlay — it opens from a field inside a
-    // `Modal` or a `FullBleedDialog`, both of which take Escape on their own panel. A
-    // React portal's events still travel up the React tree, so without stopping it here
-    // one press would dismiss this list and the dialog underneath with it: Keksdose
-    // live #309 (*"Mouse Back does not only close the select but also the whole edit or
-    // create dialog which is cumbersome"*), which the Back gesture already learned, on
-    // the key a desktop user reaches for instead.
-    e.stopPropagation();
-    onClose();
+    takeEscape(e);
   };
 
   if (!open || typeof document === "undefined") return null;
@@ -238,6 +251,11 @@ export function PickerSheet({
         onQueryChange={onQueryChange}
         inputRef={searchRef}
         placeholder={searchPlaceholder}
+        // Focus is in this box while the sheet is up, so this is where the list's keys
+        // land and what has to name the list and the row the arrows are on (BUG-5).
+        onKeyDown={onSearchKeyDown}
+        listboxId={listboxId}
+        activeId={activeId}
       />
       {/* min-h-0 so the LIST scrolls rather than the dialog growing past the
           viewport — a flex child defaults to min-height:auto. */}

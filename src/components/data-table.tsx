@@ -1701,6 +1701,8 @@ export function DataTable<T>({
   // `edgeFade` (0.25) on the desktop scroller; the phone list never scrolls sideways.
   const desktopScroller = useRef<HTMLDivElement | null>(null);
   const edgeFadeProps = useEdgeFade(desktopScroller, edgeFade && isMdUp);
+  // The "Columns" rail button — where the drawer's X hands focus back (BUG-7a).
+  const columnsRail = useRef<HTMLButtonElement | null>(null);
 
   // ---- Mobile card list (md:hidden) ----
   // Renders the same paged/filtered/sorted slice but as stacked cards instead
@@ -2401,15 +2403,20 @@ export function DataTable<T>({
                           // 420 px at Normal, in rem so the calendar grows with its
                           // text (§3.2); Popover caps it at the viewport.
                           width={filter.type === "date" ? "26.25rem" : undefined}
-                          // The panel is the column's filter, and says so. Unnamed it
-                          // was announced as the kit-wide fallback, "Popover".
-                          labels={{ panel: labels.filter }}
-                          trigger={({ toggle, ref }) => (
+                          // The panel is THIS column's filter, and says so. Unnamed it was
+                          // announced as the kit-wide fallback, "Popover"; then as "Filter"
+                          // in every column alike (round 0.34 Wave 2, BUG-7c).
+                          labels={{ panel: labels.filterColumn(columnLabel(col, labels), false) }}
+                          trigger={({ open, toggle, ref }) => (
                             <button
                               type="button"
                               ref={ref}
                               onClick={toggle}
-                              aria-label={labels.filter}
+                              // Named for its column, and for being filtered: the tint
+                              // alone said that to nobody who cannot see it (BUG-7c).
+                              aria-label={labels.filterColumn(columnLabel(col, labels), Boolean(filterActive))}
+                              aria-haspopup="dialog"
+                              aria-expanded={open}
                               className={cn(
                                 "rounded p-1 transition-colors",
                                 filterActive
@@ -2754,6 +2761,7 @@ export function DataTable<T>({
         <>
         <Tooltip label={columnsCountLabel} portal>
           <button
+            ref={columnsRail}
             type="button"
             onClick={() => setShowSettings(true)}
             aria-label={columnsCountLabel}
@@ -2775,6 +2783,10 @@ export function DataTable<T>({
           </button>
         </Tooltip>
         <div
+          // Closed, the drawer is only `w-0`: without `inert` its X, Auto-size and one
+          // checkbox per column stayed tab stops and in the accessibility tree, and Tab
+          // after the last cell walked into controls nobody could see (BUG-7a).
+          inert={!showSettings || undefined}
           className={cn(
             "shrink-0 overflow-hidden transition-[width] duration-200 ease-out",
             showSettings ? "w-56" : "w-0",
@@ -2788,7 +2800,12 @@ export function DataTable<T>({
               <Tooltip label={labels.close} portal>
                 <button
                   type="button"
-                  onClick={() => setShowSettings(false)}
+                  onClick={() => {
+                    setShowSettings(false);
+                    // Back to the rail that opened it: the X is about to go inert, and
+                    // focus would fall to <body> with it (BUG-7a).
+                    columnsRail.current?.focus();
+                  }}
                   aria-label={labels.close}
                   className="rounded p-0.5 text-placeholder hover:bg-hover hover:text-secondary"
                 >

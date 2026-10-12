@@ -1,8 +1,9 @@
-import { forwardRef, useRef } from "react";
+import { forwardRef, useMemo, useRef } from "react";
 import type { InputHTMLAttributes } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FIELD_BASE, FIELD_TOUCH_TEXT } from "./ui";
+import { mergeRefs } from "./field-parts";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 interface SearchFieldOwnProps
@@ -110,6 +111,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
   ref,
 ) {
   const innerRef = useRef<HTMLInputElement>(null);
+  const setRef = useMemo(() => mergeRefs(innerRef, ref), [ref]);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const clearLabel = clearable ? (clearLabelProp ?? common.clear) : undefined;
   // The accessible name AND the placeholder fallback, so the box says what it is
@@ -128,11 +130,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
         )}
       />
       <input
-        ref={(node) => {
-          innerRef.current = node;
-          if (typeof ref === "function") ref(node);
-          else if (ref) ref.current = node;
-        }}
+        ref={setRef}
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}

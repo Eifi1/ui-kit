@@ -2,7 +2,7 @@ import { Children, createContext, useCallback, useContext, useId, useLayoutEffec
 import type { ComponentPropsWithRef, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useEdgeFade } from "../lib/strip-fade";
-import { assignRef } from "./choice-parts";
+import { assignRef } from "./field-parts";
 import { THIN_SCROLLBAR_CLASS, useScrollOverflow } from "./scroll-area";
 
 /** `none` (0.10.0): no cell padding at all — keksdose's VAT summary, a table set

@@ -12,7 +12,8 @@ import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useDialogParam, type DialogParam } from "../hooks/use-search-param-state";
-import { OVERLAY_EXIT_MS, prefersReducedMotion, useCloseTransition } from "../hooks/use-close-transition";
+import { OVERLAY_EXIT_MS, skipsExitAnimation, useCloseTransition } from "../hooks/use-close-transition";
+import { runOwnKeyDown, takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 
 /**
  * Drag the panel by its top strip, in pointer space (dev#460).
@@ -180,9 +181,11 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
   /** id of the heading element, wired to `aria-labelledby`. */
   labelledBy?: string;
   /**
-   * Extra key handling on the panel (e.g. Ctrl/Cmd+Enter to submit). Runs first;
-   * if it calls `preventDefault()` the built-in Escape/Tab handling is skipped
-   * for that event.
+   * Extra key handling on the panel (e.g. Ctrl/Cmd+Enter to submit). Runs first; a
+   * `preventDefault()` on Escape HERE keeps the dialog open — the owner's claim (see
+   * `use-dismiss.ts`). One a field inside makes does not, since 0.34: the rule
+   * `FullBleedDialog` already had, so a search box keeping Chromium from clearing itself
+   * no longer holds the dialog open (Wave 2, DUP-1).
    */
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
   /**
@@ -306,7 +309,7 @@ function ModalPanel({
   if (open !== prevOpen) {
     setPrevOpen(open);
     setDismissed(false);
-    setExiting(open === false && prevOpen === true && !dismissed && !prefersReducedMotion());
+    setExiting(open === false && prevOpen === true && !dismissed && !skipsExitAnimation());
     if (open) drag.reset();
   }
   useEffect(() => {
@@ -351,15 +354,15 @@ function ModalPanel({
   useFocusTrap(panelRef, { active, initialFocus: "container" });
   const leaving = closing || exiting;
 
+  // One layer on the Escape stack while open (Wave 2, DUP-1): a list, a popover or a
+  // tooltip opened inside takes the key before the dialog does, wherever focus is —
+  // and the dialog gets it even when focus is not in the panel.
+  useDismissLayer(active, requestClose);
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    onKeyDown?.(e);
-    if (e.defaultPrevented) return;
-    if (e.key === "Escape") {
-      e.stopPropagation();
-      if (active) requestClose();
-      return;
-    }
-    // Tab containment lives in useFocusTrap, which listens on the panel itself.
+    runOwnKeyDown(e, onKeyDown);
+    // To whatever is on top — this dialog, unless something opened over it — and
+    // stopped here. Tab containment lives in useFocusTrap, which listens on the panel.
+    takeEscape(e);
   };
 
   // Portal to <body> so the `fixed inset-0 z-50` overlay escapes whatever stacking

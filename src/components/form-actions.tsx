@@ -1,5 +1,5 @@
-import { isValidElement, useCallback, useEffect, useRef } from "react";
-import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
+import { isValidElement, useEffect, useMemo, useRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
@@ -7,6 +7,7 @@ import { useBreakpoint, usePhoneLayout } from "../hooks/use-breakpoint";
 import { useLargeText } from "../hooks/use-large-text";
 import { isApplePlatform } from "../hooks/use-hotkey";
 import { Button, Spinner, type ButtonProps, type ButtonSize, type ButtonVariant } from "./ui";
+import { mergeRefs } from "./field-parts";
 import { useWriteLock } from "./write-lock";
 import type { CommitScope } from "./write-lock";
 import { DEFAULT_FORM_ACTIONS_LABELS } from "./form-actions-labels";
@@ -321,11 +322,6 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   children?: ReactNode;
 }
 
-/** Hand `el` to a caller's ref, whichever kind it is. */
-function assignRef<E>(ref: Ref<E> | undefined, el: E | null): void {
-  if (typeof ref === "function") ref(el);
-  else if (ref) (ref as { current: E | null }).current = el;
-}
 
 /**
  * Where {@link FormActionsProps.submitShortcut} listens: the form Save submits (named
@@ -401,13 +397,7 @@ export function FormActions({
   const saveRef = useRef<HTMLButtonElement | null>(null);
   // The caller's own `submitProps.ref` still gets the element.
   const callerSaveRef = submitProps?.ref;
-  const setSaveRef = useCallback(
-    (el: HTMLButtonElement | null) => {
-      saveRef.current = el;
-      assignRef(callerSaveRef, el);
-    },
-    [callerSaveRef],
-  );
+  const setSaveRef = useMemo(() => mergeRefs(saveRef, callerSaveRef), [callerSaveRef]);
   // The save settled and the form is still here — it failed, and the user retries. The
   // button was natively disabled while it ran, and a focused button that turns disabled
   // drops the focus to <body> (DangerConfirm's 0.24 fix, keksdose). Only after a press

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useSyn
 
 import { toDate } from "../lib/format";
 import type { DateInput } from "../lib/format";
-import { readStored, writeStored } from "../lib/safe-storage";
+import { readStored, removeStored, writeStored } from "../lib/safe-storage";
 import type { BillingStanding } from "./billing-standing";
 
 /**
@@ -133,16 +133,6 @@ function readPending(key: string): PendingCheckout | null {
   return null;
 }
 
-/** Drop the browser entry. lib/safe-storage reads and writes; removing needs the same
- *  guard (a blocked storage throws on access). */
-function forget(key: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(key);
-  } catch {
-    // ignore (private mode, partitioned storage)
-  }
-}
 
 function storeOf(key: string): CheckoutStore {
   let store = stores.get(key);
@@ -166,7 +156,7 @@ function storeOf(key: string): CheckoutStore {
 function setPending(store: CheckoutStore, next: PendingCheckout | null): void {
   store.pending = next;
   if (next) writeStored(store.key, JSON.stringify(next));
-  else forget(store.key);
+  else removeStored(store.key);
   for (const listener of store.listeners) listener();
   sync(store);
 }

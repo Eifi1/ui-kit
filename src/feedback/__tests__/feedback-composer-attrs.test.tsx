@@ -29,6 +29,17 @@ describe("FeedbackComposer root attributes (keksdose K17)", () => {
     expect(line).toHaveAttribute("id", "ask");
   });
 
+  // DUP-11 (refactor audit 2026-10): its own `!= null && !== false` took `""` — what a
+  // `closed && reason` gives with an empty reason — for a reason, and replaced the box
+  // with an empty line. The kit's one presence rule: `""` says nothing.
+  it("keeps the box for an empty reason, as every other `disabledReason` does", () => {
+    for (const nothing of ["", null, false, undefined]) {
+      const { unmount } = render(<FeedbackComposer onSend={() => {}} disabledReason={nothing} />);
+      expect(screen.getByRole("textbox")).toBeInTheDocument();
+      unmount();
+    }
+  });
+
   it("passes on data-* only, nothing else a caller spreads in", () => {
     const props = { onSend: () => {}, "data-x": "1", onClick: vi.fn() } as unknown as ChatComposerProps;
     const { container } = render(<FeedbackComposer {...props} />);

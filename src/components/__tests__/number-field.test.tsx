@@ -95,6 +95,28 @@ describe("NumberField", () => {
     expect(input).toHaveValue("0.3");
   });
 
+  // BUG-11 follow-up (refactor audit 2026-10): its own `toFixed` rounding was a third
+  // copy — 1.005 → 1.00 (1.005 is 1.00499… in binary) and −0.004 → −0. lib/round's
+  // `roundHalfAway` rounds the figure as written, and never answers −0.
+  it("rounds half away from zero as written, and never to −0", async () => {
+    const shown = setup({ digits: 2, value: 1.005 });
+    expect(shown.input).toHaveValue("1.01");
+    shown.view.unmount();
+
+    const user = userEvent.setup();
+    const { onCommit, input } = setup({ digits: 2, value: 1 });
+    await user.clear(input);
+    await user.type(input, "2.675");
+    await user.tab();
+    expect(onCommit).toHaveBeenLastCalledWith(2.68);
+    expect(input).toHaveValue("2.68");
+    await user.clear(input);
+    await user.type(input, "-0.004");
+    await user.tab();
+    expect(Object.is(onCommit.mock.lastCall?.[0], 0)).toBe(true);
+    expect(input).toHaveValue("0");
+  });
+
   it("clamps into [min, max] and shows the clamped number", async () => {
     const user = userEvent.setup();
     const { onCommit, input } = setup({ min: 0, max: 100, value: 50 });

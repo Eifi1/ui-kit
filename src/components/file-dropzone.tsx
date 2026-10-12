@@ -2,7 +2,9 @@ import { useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
 import { Upload, X } from "lucide-react";
 import { Button, IconButton, Spinner } from "./ui";
+import { FIELD_ERROR_CLASS } from "./field-parts";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import {
@@ -214,7 +216,7 @@ export function FileDropzone({
 }: FileDropzoneProps) {
   const [error, setError] = useState<string | null>(null);
   const disabledReason = useCommitReason(commit, ownDisabledReason);
-  const locked = hasReason(disabledReason);
+  const locked = hasContent(disabledReason);
   // Locked counts as inert for every file path (drop, click, Browse, remove); only the
   // LOOK and the native `disabled` keep it apart, so its controls stay focusable.
   const inert = Boolean(disabled || busy) || locked;
@@ -507,7 +509,9 @@ export function FileDropzone({
           )}
         </div>
         {showError && (
-          <p id={errorId} className="text-xs text-danger">
+          // Every field's error type (DUP-8: this was `text-xs`); the zone's `gap-2`
+          // spaces it, so not the class's own `mt-1` as well.
+          <p id={errorId} className={cn(FIELD_ERROR_CLASS, "mt-0")}>
             {error}
           </p>
         )}
@@ -545,11 +549,6 @@ export function FileDropzone({
       <span {...alert.regionProps} />
     </>
   );
-}
-
-/** A reason that is really there — `null`, `false` and `""` are no reason. */
-function hasReason(reason: ReactNode): boolean {
-  return reason !== undefined && reason !== null && reason !== false && reason !== "";
 }
 
 /** A click that landed on a control inside the zone (a custom body's own button, a

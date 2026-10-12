@@ -13,15 +13,16 @@ import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
 import { useCommitReason } from "./write-lock";
 import type { CommitScope } from "./write-lock";
-import { mergeDescribedBy } from "./choice-parts";
+import { hasContent } from "../lib/presence";
 import {
   CompactControlsContext,
   EndHintRow,
   FieldCaption,
   LockedReason,
+  mergeDescribedBy,
   type DisabledReasonDisplay,
+  useFieldError,
   useFieldHint,
-  useInlineHint,
   useLockReason,
   FLOATING_LABEL_STATIC,
   LABEL_ABOVE_AT_LARGE,
@@ -372,10 +373,6 @@ export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   disabledReason?: never;
   disabledReasonDisplay?: never;
   commit?: never;
-}
-
-function hasContent(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
 }
 
 // No fact only in a tooltip (§4): the reason line and the compact region live in
@@ -1524,7 +1521,14 @@ function IconButtonElement(
 export const FIELD_TOUCH_TEXT = "pointer-coarse:text-[length:max(0.875rem,16px)]";
 
 export const FIELD_BASE =
-  "block w-full rounded-md border border-subtle bg-surface px-3 py-2 text-sm text-primary shadow-sm placeholder:text-placeholder focus:border-brand focus:ring-brand " +
+  "block w-full rounded-md border border-subtle bg-surface px-3 py-2 text-sm text-primary shadow-sm placeholder:text-placeholder focus:border-brand " +
+  // The focus line, whole at fractional display scaling (K5 follow-up, keksdose run 78):
+  // at 125 % a 1px border covers 1.25 device pixels, and the sides that fall across a
+  // pixel boundary read half-strength. A 1px INSET ring in the focus colour beside it
+  // doubles the line inward — FIELD_INVALID's border-plus-ring (live #295), and the
+  // DatePicker stepper's fix (0.34) — so every side keeps one fully covered device
+  // pixel. Inset: nothing outside the field moves or is covered.
+  "focus:ring-1 focus:ring-inset focus:ring-brand " +
   // §10.1: at least 16 px on a touch screen, or iOS zooms the page on focus.
   FIELD_TOUCH_TEXT +
   " " +
@@ -1605,7 +1609,10 @@ export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer pla
  *  - A hairline baseline. With the box gone something still has to say "you can
  *    type here"; it takes the brand colour on focus, where a bordered field would
  *    light its whole outline. Each edge is set exactly once (`border-x-0
- *    border-t-0 border-b`) so the rule can't hinge on utility order.
+ *    border-t-0 border-b`) so the rule can't hinge on utility order. On focus the
+ *    line is doubled inward by an inset shadow on that edge alone — FIELD_BASE's
+ *    inset ring, for the same reason (K5 follow-up: a 1px line reads half-strength at
+ *    125 %) — where a ring would draw a box round the figure.
  *  - The muted placeholder colour, because a display field is usually empty at
  *    the moment it matters most and has nothing else to show.
  *  - The label, moved to `sr-only` rather than dropped: display type is legible
@@ -1615,7 +1622,7 @@ export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer pla
  * wants a heading — so each control adds its own on top.
  */
 export const FIELD_DISPLAY =
-  "block w-full border-x-0 border-t-0 border-b border-subtle bg-transparent px-0 pt-0 pb-1 text-primary shadow-none placeholder:text-placeholder focus:border-brand focus:outline-none focus:ring-0 disabled:opacity-60";
+  "block w-full border-x-0 border-t-0 border-b border-subtle bg-transparent px-0 pt-0 pb-1 text-primary shadow-none placeholder:text-placeholder focus:border-brand focus:shadow-[inset_0_-1px_0_var(--brand)] focus:outline-none focus:ring-0 disabled:opacity-60";
 
 // A field-styled button trigger for the custom dropdown controls (MultiSelect,
 // CurrencySelect) — the field look (border/bg) as a flex row for the value + chevron,
@@ -1859,58 +1866,8 @@ export function Label({ required, size = "md", disabled, className, children, ..
   );
 }
 
-/**
- * The message under a field that is wrong, and the wiring that attaches it.
- *
- * `invalid` paints the field ({@link FIELD_INVALID}) and sets `aria-invalid`, and
- * there it stopped: a field that announces "invalid" and nothing else has told a
- * screen-reader user only that they are stuck. The message was always on screen —
- * a sibling `<p>` beside the field — and never in the accessibility tree, because
- * attaching it needs an id on the message and an `aria-describedby` on the control,
- * and no caller was going to mint one by hand for every field on a form.
- *
- * Two rules the wiring has to keep:
- *
- *  - **Merge, never replace.** A field may already point at a hint ("at least twelve
- *    characters"). Overwriting that reference to say the field is wrong trades one
- *    half of the answer for the other — and it keeps the half the user has already
- *    read. The hint stays first: it is the standing advice, the error is the news.
- *  - **`invalid` keeps working alone**, for the forms whose message lives somewhere
- *    else entirely (a summary at the top of a dialog). There is nothing to point at
- *    then, and a dangling id describes the field as nothing at all.
- *
- * Deliberately NOT `role="alert"`. `aria-describedby` is read when focus reaches the
- * control, which is where a field's own error is wanted; an alert would also interrupt
- * whatever is being read at the time, on every keystroke of a form that re-validates
- * as you type.
- */
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
-
-function useFieldError(
-  error: ReactNode,
-  invalid: boolean | undefined,
-  describedBy: string | undefined,
-  /** The caller's own `aria-invalid`. A form library sets THIS (see `@eifi1/ui-kit/rhf`
-   *  `FormControl`), not our `invalid` prop — and a field that announces invalid should
-   *  look it too, as NumberField and the pickers already did. */
-  ariaInvalid?: unknown,
-) {
-  const errorId = useId();
-  // `null`, `false` and `""` are what a caller's `touched && errors.iban` evaluates to
-  // on the happy path. None of them is a message, and pointing the control at one
-  // would describe it with an empty node.
-  const hasError = error !== undefined && error !== null && error !== false && error !== "";
-  return {
-    /** A field carrying a message that says what is wrong with it IS wrong. */
-    isInvalid: Boolean(invalid) || hasError || ariaInvalid === true || ariaInvalid === "true",
-    describedBy: hasError ? (describedBy ? `${describedBy} ${errorId}` : errorId) : describedBy,
-    errorEl: hasError ? (
-      <p id={errorId} className={FIELD_ERROR_CLASS}>
-        {error}
-      </p>
-    ) : null,
-  };
-}
+// The message under a field that is wrong, and the wiring that attaches it — `useFieldError`
+// — lives in field-parts since 0.34, every field's (DUP-8, refactor audit 2026-10).
 
 /**
  * A field and its message as one box.
@@ -2589,34 +2546,22 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const listBox = (nativeSize !== undefined && nativeSize > 1) || Boolean(rest.multiple);
   const small = size === "sm" && label === undefined;
   const fieldId = id ?? generated;
-  const hintId = useId();
-  // §4 "No fact only in a tooltip": at Large and on a touch screen a FieldHint is its
-  // words, a caption like any text (0.34 — Select had been missed in 0.32; a
-  // HelpPopover stays on the label line, §10.23).
-  const hint = useInlineHint(hintProp);
-  // Text is a caption under the field; anything else (a FieldHint) rides the label
-  // line. See `hint` above. An empty string is no caption at all.
-  const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
+  // Text is a caption under the field; a FieldHint rides the label line — and at Large
+  // and on a touch screen is its words, a caption like any text (§4; a HelpPopover stays
+  // on the label line, §10.23). See `hint` above. Through useFieldHint since 0.34, not a
+  // copy of its rule (DUP-2, refactor audit 2026-10).
+  const hintParts = useFieldHint(hintProp, rest["aria-describedby"]);
+  const hint = hintParts.labelHint;
   const { isInvalid, describedBy, errorEl } = useFieldError(
     error,
     invalid,
     // The caption goes in BEFORE the error — the standing advice first, the news
     // second, the order useFieldError keeps for a caller's own description. A lock's
     // reason sits between the two.
-    mergeDescribedBy(rest["aria-describedby"], textHint && hintId, locked && lock.reasonId),
+    mergeDescribedBy(hintParts.describedBy, locked && lock.reasonId),
     rest["aria-invalid"],
   );
-  const below =
-    textHint || errorEl !== null ? (
-      <>
-        {textHint && (
-          <p id={hintId} className="mt-1 text-caption leading-tight text-muted">
-            {hint}
-          </p>
-        )}
-        {errorEl}
-      </>
-    ) : null;
+  const below = fieldBelow(hintParts, null, errorEl);
   // Custom chevron (native arrow hidden via appearance-none) so it sits a touch
   // in from the end border and matches both themes — feedback #223. A DISABLED
   // select has no menu to drop, so it drops the chevron too: the arrow is the one
@@ -2701,7 +2646,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     // without a trace, so the "?" a caller passed never rendered and a test looking
     // for its button found none. It goes at the end of the field instead, outside the
     // box, as the label line's own hint goes at the end of the label.
-    if (hasContent(hint) && !textHint) {
+    if (hint !== undefined) {
       return (
         <FieldGroup errorEl={below} reserve={reserve}>
           {withReason(
@@ -2735,7 +2680,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           htmlFor={fieldId}
           label={label}
           staticLabel
-          hint={textHint ? undefined : hint}
+          hint={hint}
         >
           <select
             ref={ref}

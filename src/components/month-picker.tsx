@@ -10,7 +10,8 @@ import { Popover } from "./popover";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { FieldBox, FieldLabelLine, hasContent, LABEL_ABOVE_BOX, useFieldMessages } from "./field-parts";
+import { hasContent } from "../lib/presence";
+import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, useFieldMessages } from "./field-parts";
 import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker-labels";
 
 /**

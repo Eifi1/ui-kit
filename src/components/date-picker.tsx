@@ -3,7 +3,7 @@ import type { ComponentPropsWithoutRef, ComponentType, KeyboardEvent, ReactNode,
 import { Calendar, CalendarClock, ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
-import { addDaysIso, monthKey, pad, parseIsoDate } from "../lib/dates";
+import { addDaysIso, formatIsoDate, monthKey, pad, parseIsoDate } from "../lib/dates";
 import {
   DEFAULT_DATE_PICKER_LABELS,
   DEFAULT_PICKER_SHEET_LABELS,
@@ -23,6 +23,7 @@ import { usePhoneLayout, type RemLength } from "../hooks/use-breakpoint";
 import { DEFAULT_MINI_CALENDAR_LABELS, MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
 import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker";
 import { Popover } from "./popover";
+import { claimEscape } from "../hooks/use-dismiss";
 import { Tooltip } from "./tooltip";
 
 /**
@@ -128,13 +129,6 @@ interface DatePickerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "onC
   monthJump?: boolean;
 }
 
-/** Format an ISO date for the trigger. `lib/dates`' `formatIsoDate` insists on a
- *  locale, and here there may be none — no prop and no provider — which `Intl` reads
- *  as "the runtime's default", as every other kit formatter does. */
-function formatDate(iso: string, locale: string | undefined, options?: Intl.DateTimeFormatOptions) {
-  return parseIsoDate(iso)?.toLocaleDateString(locale, options) ?? "";
-}
-
 /**
  * The trigger's date renderer, in the kit's order of precedence: the picker's own
  * `formatValue`, then its `formatOptions` (an explicit `Intl` look for this field),
@@ -155,7 +149,8 @@ function useTriggerFormat(
       const text = fromProvider(iso, { unit: "day", source, locale, weekday: source === "datePicker" });
       if (text) return text;
     }
-    return formatDate(iso, locale, formatOptions);
+    // No prop and no provider leaves `locale` undefined: the runtime's default (DUP-11).
+    return formatIsoDate(iso, locale, formatOptions);
   };
 }
 
@@ -823,10 +818,11 @@ function JumpCalendar({
   const inDays = view === "days";
   // Escape in the month grid is "back", not "close": the month grid is a step INSIDE the
   // panel, and losing the half-made range to a key meant to undo that step would be the
-  // worse surprise. Stopped here, so neither the popover nor the phone sheet sees it.
+  // worse surprise. Claimed on the kit's Escape stack (Wave 2, DUP-1) and stopped here,
+  // so neither the popover nor the phone sheet nor a dialog around them closes.
   const escapeToDays = (e: KeyboardEvent<HTMLElement>) => {
     if (e.key !== "Escape" || inDays) return;
-    e.preventDefault();
+    claimEscape(e);
     e.stopPropagation();
     closeMonths(true);
   };

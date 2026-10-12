@@ -1,6 +1,7 @@
 import { Children, forwardRef, useCallback, useEffect, useId, useRef, useState } from "react";
 import type { ChangeEvent, ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Button, Input, Label, Spinner } from "./ui";
 import type { ButtonVariant, InputProps } from "./ui";
@@ -71,11 +72,6 @@ export function usePromisePending() {
   return { pending, run };
 }
 
-/** A label that is really there — `null`, `false` and `""` are what a caller's
- *  `cond && reason` evaluates to on the path where there is none. */
-function hasContent(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
-}
 
 /** The one word {@link CurrentPasswordInput} says on its own behalf — the
  *  `dangerConfirm.password` label, shared with DangerConfirm's password field, so an

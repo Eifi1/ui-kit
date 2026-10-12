@@ -11,7 +11,8 @@ import type {
 } from "react";
 import { Check, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
-import { assignRef, hasMessage, mergeDescribedBy } from "./choice-parts";
+import { hasContent } from "../lib/presence";
+import { assignRef, FIELD_ERROR_CLASS, mergeDescribedBy, useFieldError } from "./field-parts";
 import { useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 
@@ -142,8 +143,8 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
   const titleId = `${inputId}-title`;
   const descriptionId = `${inputId}-description`;
   const errorId = `${inputId}-error`;
-  const showDescription = hasMessage(description);
-  const showError = hasMessage(error);
+  const showDescription = hasContent(description);
+  const showError = hasContent(error);
   const isInvalid = Boolean(invalid) || showError;
   const mixed = type === "checkbox" && indeterminate;
 
@@ -223,7 +224,7 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
           </span>
         )}
         {showError && (
-          <span id={errorId} className="mt-1 block text-caption leading-tight text-danger">
+          <span id={errorId} className={cn("block", FIELD_ERROR_CLASS)}>
             {error}
           </span>
         )}
@@ -342,8 +343,8 @@ export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(functio
   const titleId = `${baseId}-title`;
   const descriptionId = `${baseId}-description`;
   const metaId = `${baseId}-meta`;
-  const showDescription = hasMessage(description);
-  const showMeta = hasMessage(meta);
+  const showDescription = hasContent(description);
+  const showMeta = hasContent(meta);
   const look = cn(
     "flex w-full items-start gap-3 rounded-lg border border-subtle bg-surface p-3 text-start shadow-sm transition-colors",
     "hover:border-brand hover:bg-hover",
@@ -501,8 +502,9 @@ export function ChoiceCardGroup<T extends string>(props: ChoiceCardGroupProps<T>
   const { options, legend, name, className, cardClassName, disabled, error, required } = props;
   const generated = useId();
   const groupName = name ?? generated;
-  const errorId = `${generated}-error`;
-  const showError = hasMessage(error);
+  // Every field's error wiring (DUP-8): the message under the cards, the group's
+  // description, and every card painted.
+  const field = useFieldError(error, false, undefined);
 
   const isChecked = (v: T) => (props.multiple ? props.value.includes(v) : props.value === v);
   const toggle = (v: T, on: boolean) => {
@@ -520,7 +522,7 @@ export function ChoiceCardGroup<T extends string>(props: ChoiceCardGroupProps<T>
     <InGroupContext.Provider value={true}>
       <fieldset
         aria-label={props["aria-label"]}
-        aria-describedby={showError ? errorId : undefined}
+        aria-describedby={field.describedBy}
         disabled={disabled}
         className="min-w-0"
       >
@@ -541,7 +543,7 @@ export function ChoiceCardGroup<T extends string>(props: ChoiceCardGroupProps<T>
               description={o.description}
               icon={o.icon}
               disabled={o.disabled}
-              invalid={showError}
+              invalid={field.isInvalid}
               required={required && (!props.multiple || props.value.length === 0) ? true : undefined}
               checked={isChecked(o.value)}
               onCheckedChange={(on) => toggle(o.value, on)}
@@ -549,11 +551,7 @@ export function ChoiceCardGroup<T extends string>(props: ChoiceCardGroupProps<T>
             />
           ))}
         </div>
-        {showError && (
-          <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
-            {error}
-          </p>
-        )}
+        {field.errorEl}
       </fieldset>
     </InGroupContext.Provider>
   );

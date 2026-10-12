@@ -3,6 +3,9 @@ import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { ClipboardPaste, Eraser, Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
+// The locale's mark as far as a cell can hold it — the fields' answer, the same reason
+// (DUP-11, refactor audit 2026-10: a verbatim copy lived here).
+import { decimalMark } from "../lib/decimal-marks";
 // The cell pair reads ONE cell, where a comma has no columns to separate and so is
 // always a decimal mark; `splitRow` and `parseRows` read a pasted table, where it may
 // be either and the line decides. See the three named rules at the top of table-text.
@@ -92,19 +95,6 @@ const BLANK = "";
 const DEFAULT_ROW_HEIGHT = 28;
 
 const ALL_VIEWS: readonly MeasuredGridView[] = ["cells", "text"];
-
-/** The locale's decimal mark, as far as a cell can hold it: "," or ".". A mark outside
- *  those two (Arabic's "٫") is not one `cellNumber` reads, so those locales keep the
- *  dot. The same answer `NumberField` gives, for the same reason. */
-function decimalMark(locale: string | undefined): "," | "." {
-  try {
-    const part = new Intl.NumberFormat(locale).formatToParts(1.5).find((p) => p.type === "decimal");
-    return part?.value === "," ? "," : ".";
-  } catch {
-    // An invalid tag throws a RangeError; a typo in a locale must not take the grid down.
-    return ".";
-  }
-}
 
 /** A number-shaped cell written with the locale's mark. The lexer hands back points;
  *  a German user typed commas and should read commas back. Anything that is not a

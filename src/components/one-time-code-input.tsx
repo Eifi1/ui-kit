@@ -1,7 +1,7 @@
 import { forwardRef, useId, useState } from "react";
 import type { ChangeEvent, ClipboardEvent, FocusEvent, InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { EndHintRow, FieldCaption, useFieldError, useFieldHint } from "./field-parts";
 import { FIELD_BASE, FIELD_INVALID, FIELD_WRITABLE_LOOK, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
 
 /**
@@ -103,11 +103,6 @@ export interface OneTimeCodeInputProps
   readOnlyUntilFocus?: boolean;
 }
 
-// The error line under a field — the type of `ui.tsx`'s (module-private) one, so this
-// field's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
-const FIELD_CAPTION_CLASS = "mt-1 text-caption leading-tight text-muted";
-
 // Equal-width digits, spaced a little apart, so a code reads — and compares against the
 // authenticator's screen — digit by digit.
 const CODE_TYPE = "tabular-nums tracking-widest";
@@ -144,17 +139,19 @@ export const OneTimeCodeInput = forwardRef<HTMLInputElement, OneTimeCodeInputPro
     const size = Math.max(1, Math.floor(length) || 1);
     const generatedId = useId();
     const fieldId = id ?? generatedId;
-    const hintId = useId();
-    const errorId = useId();
-    // Text is a caption under the field; a FieldHint rides the label line. See `hint`.
-    const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
-    const hasError = hasMessage(error);
+    // Text is a caption under the field; a FieldHint rides the label line, and is that
+    // caption at Large and on touch (§4). See `hint`. Through useFieldHint and
+    // useFieldError since 0.34, not copies of their rules (DUP-2, DUP-8).
+    const hintParts = useFieldHint(hint, ariaDescribedBy);
+    const {
+      isInvalid: invalid,
+      describedBy,
+      errorEl,
+    } = useFieldError(error, invalidProp, hintParts.describedBy, ariaInvalid);
     // Passed at all — even as `undefined` — the field keeps its box, so the `<input>` is
     // never re-parented (and never loses focus) when a message comes or goes. See
     // `FieldGroup` in ui.tsx.
     const reserve = "error" in props || "hint" in props;
-    const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
-    const invalid = Boolean(invalidProp) || hasError || ariaInvalid === true || ariaInvalid === "true";
     const labelled = label !== undefined;
 
     // Focused once = in use; the guard is down for good from then on (see the prop).
@@ -246,41 +243,22 @@ export const OneTimeCodeInput = forwardRef<HTMLInputElement, OneTimeCodeInputPro
       />
     );
 
-    const nonTextHint = hasMessage(hint) && !textHint;
-    let field: ReactNode;
-    if (labelled) {
-      field = (
-        <FloatingField className={className} htmlFor={fieldId} label={label} hint={nonTextHint ? hint : undefined}>
-          {input}
-        </FloatingField>
-      );
-    } else if (nonTextHint) {
-      // No label line to ride: the "?" goes at the field's end edge, outside the box —
+    const field: ReactNode = labelled ? (
+      <FloatingField className={className} htmlFor={fieldId} label={label} hint={hintParts.labelHint}>
+        {input}
+      </FloatingField>
+    ) : (
+      // No label line to ride: a "?" goes at the field's end edge, outside the box —
       // where an unlabelled Select puts it.
-      field = (
-        <div className="flex items-center gap-1.5">
-          <div className="min-w-0 flex-1">{input}</div>
-          <span className="flex shrink-0 items-center">{hint}</span>
-        </div>
-      );
-    } else {
-      field = input;
-    }
+      <EndHintRow hint={hintParts.labelHint}>{input}</EndHintRow>
+    );
 
-    if (!textHint && !hasError && !reserve) return field;
+    if (hintParts.captionText === undefined && errorEl === null && !reserve) return field;
     return (
       <div>
         {field}
-        {textHint && (
-          <p id={hintId} className={FIELD_CAPTION_CLASS}>
-            {hint}
-          </p>
-        )}
-        {hasError && (
-          <p id={errorId} className={FIELD_ERROR_CLASS}>
-            {error}
-          </p>
-        )}
+        <FieldCaption parts={hintParts} />
+        {errorEl}
       </div>
     );
   },

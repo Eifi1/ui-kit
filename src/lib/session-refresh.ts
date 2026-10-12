@@ -36,6 +36,7 @@
  */
 
 import type { AxiosLikeInstance, ServerWakeAxiosConfig } from "./server-wake";
+import { httpStatusOf } from "../auth/auth-errors";
 
 /** What the app's `refresh` resolves: the new access token, plus whatever its `store`
  *  needs (its refresh token, the user). */
@@ -220,17 +221,12 @@ function isOffline(): boolean {
   return typeof navigator !== "undefined" && navigator.onLine === false;
 }
 
-/** An HTTP status as a number, or undefined. */
-function statusOf(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isInteger(value) ? value : undefined;
-}
-
-/** A refresh's throw, classified (§11.4). */
+/** A refresh's throw, classified (§11.4). The status is read where `isRateLimited` reads
+ *  it — `httpStatusOf`, one probe for axios, ofetch and Node errors (DUP-11). */
 function classify(error: unknown): "definitive" | "retry" | "transient" {
   if (error === TIMED_OUT) return "retry";
   if (typeof error !== "object" || error === null) return "transient";
-  const bag = error as { response?: { status?: unknown } | null; status?: unknown; statusCode?: unknown };
-  const status = statusOf(bag.response?.status) ?? statusOf(bag.status) ?? statusOf(bag.statusCode);
+  const status = httpStatusOf(error);
   if (status === undefined) {
     // No answer: axios marks its own errors, and one without a response never reached a
     // server (offline, DNS, CORS, its own timeout). Anything else is a bug in `refresh`.

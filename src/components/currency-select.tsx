@@ -2,7 +2,7 @@ import { useMemo, useId } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Check } from "lucide-react";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { EndHintRow, useFieldMessages } from "./field-parts";
 import { cn } from "../lib/cn";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
 import {
@@ -207,18 +207,14 @@ export function CurrencySelect({
   }, [query, pool, currencyNames, locale]);
 
   const listboxId = `${useId()}-listbox`;
-  const hintId = useId();
-  const errorId = useId();
   // Text is a caption under the field; anything else (a FieldHint) rides the label
-  // line. See `hint`.
-  const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
-  const labelHint = !textHint && hasMessage(hint) ? hint : undefined;
-  const hasError = hasMessage(error);
-  // On the TRIGGER, which is the control with a role: a caller's description used to
-  // land on the wrapper `<div>` through the spread, where nothing reads it. The
-  // caller's ids first, then the caption, then the error — Select's order.
-  const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
-  const isInvalid = Boolean(invalid) || hasError || ariaInvalid === true || ariaInvalid === "true";
+  // line — and a FieldHint is that caption at Large and on touch (§4). See `hint`. On
+  // the TRIGGER, which is the control with a role: a caller's description used to land
+  // on the wrapper `<div>` through the spread, where nothing reads it. The caller's ids
+  // first, then the caption, then the error — Select's order, through useFieldMessages
+  // since 0.34 (DUP-2, DUP-8).
+  const field = useFieldMessages({ hint, error, invalid, describedBy: ariaDescribedBy, ariaInvalid });
+  const { labelHint, describedBy, isInvalid } = field;
 
   // The trigger's NAME. A combobox does not take its name from its content, and the
   // floating label is a <span>, not a <label for> — so without `aria-label` from the
@@ -284,16 +280,9 @@ export function CurrencySelect({
             <span className="pointer-events-auto flex shrink-0 items-center">{labelHint}</span>
           </div>
         ))}
-      {label === undefined && labelHint !== undefined ? (
-        // No label line to ride: at the field's end edge, outside the box, as an
-        // unlabelled Select places its FieldHint.
-        <div className="flex items-center gap-1.5">
-          <div className="min-w-0 flex-1">{trigger}</div>
-          <span className="flex shrink-0 items-center">{labelHint}</span>
-        </div>
-      ) : (
-        trigger
-      )}
+      {/* No label line to ride: at the field's end edge, outside the box, as an
+          unlabelled Select places its FieldHint. */}
+      <EndHintRow hint={label === undefined ? labelHint : undefined}>{trigger}</EndHintRow>
       {open && (
         <DropdownPanel
           // At least as wide as the trigger, but grows to fit the full currency
@@ -347,20 +336,7 @@ export function CurrencySelect({
       {/* After the panel, not before it, as MultiSelect places its message: the panel
           is `absolute` with no `top`, so it opens at its place in the flow — under the
           caption, had the caption come first. */}
-      {textHint && (
-        <p id={hintId} className="mt-1 text-caption leading-tight text-muted">
-          {hint}
-        </p>
-      )}
-      {hasError && (
-        <p id={errorId} className={FIELD_ERROR_CLASS}>
-          {error}
-        </p>
-      )}
+      {field.below}
     </div>
   );
 }
-
-// The error line under a field — the type of `ui.tsx`'s (module-private) one, so a
-// CurrencySelect's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";

@@ -13,6 +13,7 @@ import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Button } from "../components/ui";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { sameRect } from "../hooks/use-anchored-rect";
 import { dirOf, horizontalStep } from "../lib/direction";
 import type { Direction } from "../lib/direction";
 import { DEFAULT_TOUR_LABELS } from "./tour-labels";
@@ -248,12 +249,6 @@ function queryVisibleTarget(selector: string): Element | null {
     if (isVisible(el)) return el;
   }
   return null;
-}
-
-function sameRect(a: Rect | null, b: Rect | null): boolean {
-  if (a === b) return true;
-  if (!a || !b) return false;
-  return a.top === b.top && a.left === b.left && a.width === b.width && a.height === b.height;
 }
 
 function rectOf(el: Element): Rect {

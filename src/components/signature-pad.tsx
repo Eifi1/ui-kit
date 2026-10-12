@@ -2,10 +2,12 @@ import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayo
 import type { ComponentPropsWithoutRef, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { Eraser, Keyboard, PenLine, Undo2 } from "lucide-react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useTextSize } from "../theme/text-size";
 import { Button, FIELD_INVALID, Input } from "./ui";
+import { FIELD_ERROR_CLASS } from "./field-parts";
 import { DEFAULT_SIGNATURE_PAD_LABELS } from "./signature-pad-labels";
 
 /**
@@ -511,7 +513,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
     if (png) onSave?.(png, detail());
   };
 
-  const hasError = error !== undefined && error !== null && error !== false && error !== "";
+  const hasError = hasContent(error);
   const isInvalid = Boolean(invalid) || hasError;
   const describedBy = [descId, statusId, hasError ? errorId : null].filter(Boolean).join(" ");
 
@@ -618,7 +620,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
       </div>
 
       {hasError && (
-        <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
+        <p id={errorId} className={FIELD_ERROR_CLASS}>
           {error}
         </p>
       )}

@@ -8,6 +8,8 @@ import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
+import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
+import { isImeEnter } from "../lib/ime";
 import { useKitLabels } from "../i18n/kit-labels";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "./command-palette-labels";
 
@@ -382,19 +384,21 @@ export function CommandPalette({
       e.preventDefault();
       setActive((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
+      // The Enter that confirms an IME composition is the IME's (BUG-9).
+      if (isImeEnter(e)) return;
       e.preventDefault();
       if (dirty) commit(draft);
       else choose(flat[active]);
     }
   };
 
-  // Escape on the whole dialog, not only the field: once Tab has moved focus to a row
-  // (or a footer control), Escape used to do nothing at all.
+  // A layer on the kit's Escape stack while open (Wave 2, DUP-1), taken on the whole
+  // dialog, not only the field: once Tab has moved focus to a row (or a footer
+  // control), Escape used to do nothing at all. It closed without stopping the key, so
+  // a dialog the palette was opened from closed with it.
+  useDismissLayer(open, onClose);
   const onDialogKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
-    }
+    takeEscape(e);
   };
 
   // Keep the active row scrolled into view.

@@ -1,6 +1,7 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, Ref, RefObject } from "react";
 import { cn } from "../lib/cn";
+import { mergeRefs } from "./field-parts";
 
 /**
  * Whether `ref`'s element currently overflows its box — the one fact a scroll
@@ -93,14 +94,7 @@ export function ScrollArea({
 }: ScrollAreaProps) {
   const inner = useRef<HTMLDivElement | null>(null);
   const overflowing = useScrollOverflow(inner);
-  const setRef = useCallback(
-    (el: HTMLDivElement | null) => {
-      inner.current = el;
-      if (typeof ref === "function") ref(el);
-      else if (ref) ref.current = el;
-    },
-    [ref],
-  );
+  const setRef = useMemo(() => mergeRefs(inner, ref), [ref]);
   const named = label !== undefined || labelledBy !== undefined;
 
   return (

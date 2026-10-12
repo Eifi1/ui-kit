@@ -6,7 +6,7 @@ import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 // Read at the moment of closing, as `useCloseTransition` does: the setting can change
 // under a long-lived page.
-import { prefersReducedMotion } from "../hooks/use-close-transition";
+import { skipsExitAnimation } from "../hooks/use-close-transition";
 
 /** How long the fold takes, in ms. The same number as the `duration-200` below and as
  *  the unmount timer, because they are the same movement. */
@@ -63,7 +63,7 @@ export function Collapse({ open, keepMounted = false, children, className, style
   const [prevOpen, setPrevOpen] = useState(open);
   if (open !== prevOpen) {
     setPrevOpen(open);
-    setLingering(!open && !prefersReducedMotion());
+    setLingering(!open && !skipsExitAnimation());
   }
   useEffect(() => {
     if (!lingering) return;

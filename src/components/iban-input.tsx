@@ -4,7 +4,8 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { IBAN_LENGTHS, compactIban, formatIban, ibanProblem } from "../lib/iban";
 import type { IbanKind, IbanProblem } from "../lib/iban";
-import { assignRef, hasMessage } from "./choice-parts";
+import { hasContent } from "../lib/presence";
+import { assignRef } from "./field-parts";
 import { Input, type InputProps } from "./ui";
 import { DEFAULT_IBAN_INPUT_LABELS } from "./iban-input-labels";
 
@@ -216,7 +217,7 @@ export const IbanInput = forwardRef<HTMLInputElement, IbanInputProps>(function I
       // ALWAYS passed, even while there is no message: a field that takes `error`
       // keeps its box, so the message coming and going under the caret never remounts
       // the input (see Input's FieldGroup) — this one comes and goes as you type.
-      error={hasMessage(error) ? error : problem ? messageFor(problem, compact, text) : undefined}
+      error={hasContent(error) ? error : problem ? messageFor(problem, compact, text) : undefined}
       // Groups of four line up only when every digit is the same width.
       inputClassName={cn("tabular-nums", inputClassName)}
     />

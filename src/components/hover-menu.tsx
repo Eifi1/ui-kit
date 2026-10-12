@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
+import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
+import { anchoredInline } from "../hooks/use-anchored-panel";
+import { dirOf } from "../lib/direction";
 
 /**
  * Exported and `<div>`-shaped: the top bar composes several of these side by side, and
@@ -167,14 +169,16 @@ export function HoverMenu({
     ) ?? null;
   const items = () => (menuRef.current ? applyMenuSemantics(menuRef.current) : []);
 
-  // Escape closes, from anywhere — it did nothing at all before. Focus goes back to the
-  // trigger only when it was inside the menu: a panel opened by hover while the user is
-  // typing elsewhere must not yank the caret over here on the way out.
-  useEscapeKey(() => {
+  // Escape closes, from anywhere — it did nothing at all before — as a layer on the kit's
+  // Escape stack, so inside a dialog it closes the menu and not the dialog (Wave 2,
+  // DUP-1). Focus goes back to the trigger only when it was inside the menu: a panel
+  // opened by hover while the user is typing elsewhere must not yank the caret over
+  // here on the way out.
+  useDismissLayer(open, () => {
     const hadFocus = wrapperRef.current?.contains(document.activeElement) ?? false;
     close();
     if (hadFocus) triggerEl()?.focus();
-  }, open);
+  });
 
   // Upgrade the markup every render while open (the caller's rows can change), then
   // honour a pending keyboard open.
@@ -241,8 +245,11 @@ export function HoverMenu({
   // Keep the panel inside the viewport (feedback #85): a wide panel anchored to a
   // trigger near a screen edge would otherwise spill off it (on mobile the guided-
   // tours menu ran off the left). Once open, measure and translate it horizontally
-  // just enough to sit within an 8px margin. Recomputed on each open; `shiftX` is
-  // subtracted first so the measurement is against the natural position.
+  // just enough to sit within an 8px margin of the GLASS — `anchoredInline` against
+  // the panel's own natural box, as every anchored panel clamps (Wave 2, DUP-7; it
+  // measured against `innerWidth`, which on a phone is the grown layout viewport).
+  // Recomputed on each open; `shiftX` is subtracted first so the measurement is
+  // against the natural position.
   const panelRef = useRef<HTMLDivElement>(null);
   const [shiftX, setShiftX] = useState(0);
   // Back to 0 on close, adjusted while rendering against the previous `open`.
@@ -257,13 +264,9 @@ export function HoverMenu({
     if (!el) return;
     const rect = el.getBoundingClientRect();
     if (rect.width === 0) return; // unmeasured (e.g. jsdom) — leave as-is
-    const margin = 8;
-    const naturalLeft = rect.left - shiftX;
-    const naturalRight = rect.right - shiftX;
-    let next = 0;
-    if (naturalRight > window.innerWidth - margin) next = window.innerWidth - margin - naturalRight;
-    if (naturalLeft + next < margin) next = margin - naturalLeft;
-    setShiftX(next);
+    const natural = { left: rect.left - shiftX, right: rect.right - shiftX };
+    const { left } = anchoredInline(natural, rect.width, { dir: dirOf(el), align: "left" });
+    setShiftX(left - natural.left);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute only on open/close
   }, [open]);
 
@@ -281,7 +284,10 @@ export function HoverMenu({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onKeyDown={(e) => {
-        rest.onKeyDown?.(e);
+        runOwnKeyDown(e, rest.onKeyDown);
+        // Focus on the trigger or in the menu: the key stops here, so a panel around
+        // the menu does not close with it.
+        if (open) takeEscape(e);
         onKeyDown(e);
       }}
     >

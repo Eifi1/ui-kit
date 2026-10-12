@@ -4,9 +4,12 @@ import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
+import { isImeEnter } from "../lib/ime";
+import { claimEscape } from "../hooks/use-dismiss";
 import { FIELD_INVALID, FIELD_TOUCH_TEXT, TOUCH_TARGET_LARGE } from "./ui";
 import { FOCUS_RING } from "./focus-ring";
-import { LockedReason, type DisabledReasonDisplay } from "./field-parts";
+import { assignRef, FIELD_ERROR_CLASS, LockedReason, type DisabledReasonDisplay } from "./field-parts";
+import { hasContent } from "../lib/presence";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
 import { useCommitReason, type CommitScope } from "./write-lock";
@@ -497,11 +500,6 @@ function useSnapEdges(on: boolean) {
   return ref;
 }
 
-function assignRef<T>(target: Ref<T> | undefined, value: T | null) {
-  if (typeof target === "function") target(value);
-  else if (target) (target as { current: T | null }).current = value;
-}
-
 const CHIP_PILL = "inline-flex max-w-full items-center rounded-full border transition-colors";
 
 // `focus-visible`, not `focus`: a chip commonly receives focus programmatically (the
@@ -772,7 +770,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   const reasonId = useId();
   const disabledReason = useCommitReason(commit, ownDisabledReason);
   // Only the BUTTON shape commits: a link navigates, an inert chip does nothing.
-  const locked = Boolean(onClick) && !href && hasReason(disabledReason);
+  const locked = Boolean(onClick) && !href && hasContent(disabledReason);
   const kitLink = useKitLink();
   const s = SIZE[size];
   const interactive = !!href || !!onClick;
@@ -1031,12 +1029,6 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   );
 });
 
-/** `null`, `false` and `""` are what a `cond && reason` gives on the happy path — no
- *  reason, so no lock. */
-function hasReason(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
-}
-
 /** Calls a chip's `renderLink` with the props it was given — see its call site. */
 function RenderedLink({
   render,
@@ -1223,6 +1215,9 @@ export function ChipInput({
 
   const onInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
+      // The Enter that confirms an IME composition is the IME's: it commits no chip
+      // and submits no form (BUG-9).
+      if (isImeEnter(e)) return;
       // Only when there is something to commit: an empty Enter belongs to the form.
       if (draft.trim()) {
         e.preventDefault();
@@ -1235,8 +1230,11 @@ export function ChipInput({
       if (commit(draft)) setDraft("");
       return;
     }
+    // Clearing the draft is this field's Escape, not a dialog's around it: claimed, so
+    // the dialog stays — the same in a Modal and a FullBleedDialog, which read it
+    // differently until 0.34 (Wave 2, DUP-1). With nothing typed the key goes on.
     if (e.key === "Escape" && draft) {
-      e.preventDefault();
+      claimEscape(e);
       setDraft("");
       return;
     }
@@ -1265,8 +1263,9 @@ export function ChipInput({
       focusChip(index === value.length - 1 ? null : index + 1);
       return;
     }
+    // Back to the input, a step inside the field: claimed like the draft's (DUP-1).
     if (e.key === "Escape") {
-      e.preventDefault();
+      claimEscape(e);
       focusChip(null);
     }
   };
@@ -1374,13 +1373,15 @@ export function ChipInput({
           {message}
         </span>
       </div>
+      {/* Every field's error type (DUP-8: these were `text-xs`); the root's `space-y-1`
+          spaces them, so not the class's own `mt-1` as well. */}
       {error && (
-        <p id={errorId} className="text-xs text-danger">
+        <p id={errorId} className={cn(FIELD_ERROR_CLASS, "mt-0")}>
           {error}
         </p>
       )}
       {rejected && (
-        <p id={rejectedId} className="text-xs text-danger" data-chip-input-rejected="">
+        <p id={rejectedId} className={cn(FIELD_ERROR_CLASS, "mt-0")} data-chip-input-rejected="">
           {rejected}
         </p>
       )}

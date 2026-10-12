@@ -7,38 +7,13 @@ import type {
 } from "react";
 import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
-import { useAnchoredPanel } from "../hooks/use-anchored-panel";
-import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
+import { anchoredInline, useAnchoredPanel } from "../hooks/use-anchored-panel";
+import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
 import { FIELD_TOUCH_TEXT } from "./ui";
 import { FOCUS_RING } from "./focus-ring";
 import { useAnchorDir } from "./use-anchor-dir";
-
-/**
- * The keyboard close of each open dropdown, keyed by the refs its hook handed out:
- * {@link useDropdown}'s `panelRef` and {@link useDropdownSearch}'s `inputRef`. The parts
- * a caller renders with those refs ({@link DropdownPanel}, {@link DropdownSearchHeader})
- * look the close up here to take Escape themselves (BUG-1) — so no caller has to wire
- * a handler, and one that never will (an app's own panel) is covered as well. Weak, so
- * an entry goes with the component that owns the ref.
- */
-const keyboardClose = new WeakMap<object, () => void>();
-
-/**
- * Escape on an open list: closes it, back to its trigger, and stops the key there, so a
- * dialog the list sits in does not close with it. Left alone when nothing registered
- * `ref`, and when a handler before this one already claimed the key with
- * `preventDefault()` (a caller whose Escape first clears its query).
- */
-function takeEscape(e: ReactKeyboardEvent, ref: object | undefined): void {
-  if (e.key !== "Escape" || e.defaultPrevented || !ref) return;
-  const close = keyboardClose.get(ref);
-  if (!close) return;
-  e.preventDefault();
-  e.stopPropagation();
-  close();
-}
 
 /**
  * Open state + close-on-outside-click for the custom dropdowns (MultiSelect,
@@ -88,9 +63,9 @@ function takeEscape(e: ReactKeyboardEvent, ref: object | undefined): void {
  * This hook had no Escape at all (the audit's §a11y): Back closed these lists, an
  * outside press closed them, and the one key every other dismissible surface in the
  * package answers to did nothing — so a keyboard user who opened a list had no way
- * out of it that did not also choose something. {@link useEscapeKey} is the listener
- * `Modal`, `Popover` and `useComboboxCore` already dismiss through, so the package
- * keeps one answer to "what does Escape do" rather than growing a fifth.
+ * out of it that did not also choose something. An open list is a layer on the kit's
+ * one Escape stack ({@link useDismissLayer}), as `Modal`, `Popover` and
+ * `useComboboxCore` are, so the package keeps one answer to "what does Escape do".
  *
  * Escape RESTORES FOCUS; an outside press does not. A press has already put focus
  * where the user pointed, and dragging it back from there would be the bug. Attach
@@ -98,23 +73,25 @@ function takeEscape(e: ReactKeyboardEvent, ref: object | undefined): void {
  * Tab, a commit — hand focus back to it; leave it unattached and they hand it back to
  * whatever held focus when the list opened, which is the control that was pressed.
  *
- * ## Escape inside a dialog (round 0.34 BUG-1)
+ * ## Escape inside a dialog (round 0.34 BUG-1, Wave 2 DUP-1)
  *
- * {@link useEscapeKey} listens on the DOCUMENT, and inside a `Modal` or a
- * `FullBleedDialog` the key never gets there: the dialog closes on Escape in its own
- * `onKeyDown` and stops the event — and a portalled panel's events still travel up the
- * React tree through it. One press closed the dialog and the form in it, and left the
- * list open. So the panel takes Escape itself, where focus is: {@link DropdownPanel}
- * (given this hook's `panelRef`) and {@link DropdownSearchHeader} (given
- * {@link useDropdownSearch}'s `inputRef`) close the list and stop the key, and the
- * dialog sees nothing. They find the close through those refs, so a caller passes
- * nothing new — AmountInput's currency chip included. The document listener stays,
- * as the fallback for a press made with focus somewhere else.
+ * One press in an open list inside a `Modal` or a `FullBleedDialog` used to close the
+ * DIALOG, form and all, and leave the list open: the dialog took Escape in its own
+ * `onKeyDown` before a document listener could. On the stack the list is above the
+ * dialog, so the list closes and the dialog stays. {@link DropdownPanel} and
+ * {@link DropdownSearchHeader} take the key on their own elements, where focus is,
+ * and stop it there — so a caller passes nothing new, AmountInput's currency chip
+ * included.
+ *
+ * `escapeLayer: false` is for a caller that registers its own layer: the editable
+ * comboboxes, whose list can be "open" with nothing in it to show — an Escape there
+ * belongs to the dialog.
  */
 export function useDropdown<T extends HTMLElement = HTMLDivElement>({
   backCloses = true,
   panelIsSheet = !backCloses,
-}: { backCloses?: boolean; panelIsSheet?: boolean } = {}) {
+  escapeLayer = true,
+}: { backCloses?: boolean; panelIsSheet?: boolean; escapeLayer?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<T>(null);
   // The control that opens the panel — see the note above on why only the keyboard
@@ -145,12 +122,9 @@ export function useDropdown<T extends HTMLElement = HTMLDivElement>({
     const back = triggerRef.current ?? openerRef.current;
     if (back?.isConnected) back.focus();
   }, []);
-  useEffect(() => {
-    keyboardClose.set(panelRef, closeToTrigger);
-  }, [closeToTrigger]);
   useOutsideClick([wrapperRef, panelRef], close, open && !panelIsSheet);
-  // The fallback — see "Escape inside a dialog" above.
-  useEscapeKey(closeToTrigger, open);
+  // See "Escape inside a dialog" above.
+  useDismissLayer(open && escapeLayer, closeToTrigger);
   // Same close path Escape and an outside click take, so a list dismissed by Back
   // cannot end up in a different state from one dismissed any other way.
   useOverlayHistory(open && backCloses, close);
@@ -166,10 +140,6 @@ export function useDropdownSearch<T extends HTMLElement = HTMLDivElement>() {
     useDropdown<T>();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  // How {@link DropdownSearchHeader} closes the list on Escape (BUG-1).
-  useEffect(() => {
-    keyboardClose.set(inputRef, closeToTrigger);
-  }, [closeToTrigger]);
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the query on open
@@ -204,8 +174,8 @@ export interface DropdownSearchHeaderProps
   /** The id of the option the arrow keys are currently on, if any. */
   activeId?: string;
   /** Arrow/Home/End/Enter/Tab — the list's keyboard, handled where the focus is.
-   *  Escape is the box's own when `inputRef` is {@link useDropdownSearch}'s; call
-   *  `preventDefault()` here to keep it. */
+   *  Escape closes the list (the topmost layer on the kit's Escape stack); call
+   *  `preventDefault()` on it here to keep it. */
   onKeyDown?: (e: ReactKeyboardEvent<HTMLInputElement>) => void;
 }
 
@@ -262,10 +232,10 @@ export function DropdownSearchHeader({
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         onKeyDown={(e) => {
-          onKeyDown?.(e);
+          runOwnKeyDown(e, onKeyDown);
           // Focus is in this box while the list is up, so this is where Escape lands
           // first — see "Escape inside a dialog" on {@link useDropdown}.
-          takeEscape(e, inputRef);
+          takeEscape(e);
         }}
         placeholder={placeholder}
         aria-label={ariaLabel}
@@ -294,9 +264,9 @@ export interface DropdownPanelProps extends ComponentPropsWithoutRef<"div"> {
   listProps?: ComponentPropsWithoutRef<"ul">;
   /** The trigger to hang off. Given, the panel portals and goes `fixed`. */
   anchorRef?: RefObject<HTMLElement | null>;
-  /** {@link useDropdown}'s `panelRef`, so an outside-click sees this as inside — and so
-   *  Escape anywhere in the panel, on a row as in the search box, closes the list
-   *  rather than a dialog around it. */
+  /** {@link useDropdown}'s `panelRef`, so an outside-click sees this as inside. Escape
+   *  anywhere in the panel, on a row as in the search box, closes the list rather than
+   *  a dialog around it. */
   panelRef?: RefObject<HTMLDivElement | null>;
   /** Panel width in px, for the anchored form (the CSS `w-*` cannot be measured). */
   width?: number;
@@ -356,8 +326,8 @@ export function DropdownPanel({
   // A row the keyboard reached by Tab holds focus too, and its Escape has to close the
   // list as the search box's does (BUG-1). The caller's handler first, as everywhere.
   const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
-    onKeyDown?.(e);
-    takeEscape(e, panelRef);
+    runOwnKeyDown(e, onKeyDown);
+    takeEscape(e);
   };
   const body = (
     <>
@@ -400,15 +370,12 @@ export function DropdownPanel({
 
   const rect = anchored.rect;
   if (!rect) return null;
-  // Clamped exactly as `Popover` clamps: the panel may leave the trigger's edge to
-  // stay on screen, because a list half off the viewport is the bug this exists for.
-  // The portal leaves the subtree the trigger's `dir` came from, so it is read off
-  // the trigger — for the alignment here, and for the panel's own `dir` below,
-  // without which a right-to-left form got a left-to-right list.
-  const physical =
-    align === "start" ? (dir === "rtl" ? "right" : "left") : align === "end" ? (dir === "rtl" ? "left" : "right") : align;
-  const wanted = physical === "right" ? rect.right - width : rect.left;
-  const left = Math.min(Math.max(8, wanted), window.innerWidth - width - 8);
+  // Clamped to the glass as `Popover` is (Wave 2, DUP-7): the panel may leave the
+  // trigger's edge to stay on screen, because a list half off the viewport is the bug
+  // this exists for. The portal leaves the subtree the trigger's `dir` came from, so it
+  // is read off the trigger — for the alignment here, and for the panel's own `dir`
+  // below, without which a right-to-left form got a left-to-right list.
+  const { left } = anchoredInline(rect, width, { dir, align });
   return createPortal(
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused itself: it catches Escape bubbling from the search box or a row inside it.
     <div

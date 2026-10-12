@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useKitLabels } from "../i18n/kit-labels";
+import { hasContent } from "../lib/presence";
 import type { RoleVocabulary } from "../components/account-chips";
 import { CheckboxGroup } from "../components/checkbox-group";
 import type { CheckboxGroupOption } from "../components/checkbox-group";
@@ -74,10 +75,6 @@ function optionReasonText(reason: string, labels: RoleSelectLabels): string {
   if (reason === "last_admin") return labels.notForLastAdmin;
   if (reason === "self" || reason === "self_action") return labels.notForSelf;
   return reason;
-}
-
-function present(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
 }
 
 /** The vocabulary's keys, in its own order. */
@@ -156,7 +153,7 @@ export function RoleSelect<R extends string = string>({
       label={label}
       aria-label={ariaLabel}
       value={held ?? ""}
-      disabledReason={present(disabledReason) ? lockText(disabledReason, labels) : undefined}
+      disabledReason={hasContent(disabledReason) ? lockText(disabledReason, labels) : undefined}
       onChange={(event) => {
         const next = event.target.value as R;
         if (next && next !== held) onChange(next);
@@ -168,7 +165,7 @@ export function RoleSelect<R extends string = string>({
         .map((role) => {
           const word = roles[role].label;
           const reason = role === held ? undefined : optionDisabledReason?.(role);
-          const unavailable = !choosable.has(role) || present(reason);
+          const unavailable = !choosable.has(role) || hasContent(reason);
           return (
             <option key={role} value={role} disabled={unavailable && role !== held}>
               {reason ? labels.unavailable(word, optionReasonText(reason, labels)) : word}
@@ -253,7 +250,7 @@ export function RolesEditor<R extends string = string>({
     .filter((role) => choosable.has(role) || held.has(role))
     .map((role) => {
       const reason = optionDisabledReason?.(role);
-      const locked = present(reason);
+      const locked = hasContent(reason);
       return {
         value: role,
         label: roles[role].label,
@@ -273,7 +270,7 @@ export function RolesEditor<R extends string = string>({
       error={error}
       columns={columns}
       commit={commit}
-      disabledReason={present(disabledReason) ? lockText(disabledReason, labels) : undefined}
+      disabledReason={hasContent(disabledReason) ? lockText(disabledReason, labels) : undefined}
       className={className}
     />
   );

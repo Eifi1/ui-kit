@@ -7,9 +7,10 @@ import type {
 import { Check } from "lucide-react";
 import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
 import { cn } from "../lib/cn";
+import { isImeEnter } from "../lib/ime";
 import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
-import { useActiveOptionScroll, useComboboxFieldError } from "./combobox-core";
-import { EndHintRow, FieldCaption, LABEL_IN_ROW, StaticLabelRow, useFieldHint } from "./field-parts";
+import { useActiveOptionScroll } from "./combobox-core";
+import { EndHintRow, FieldCaption, LABEL_IN_ROW, StaticLabelRow, useFieldError, useFieldHint } from "./field-parts";
 import {
   DEFAULT_COMMON_LABELS,
   DEFAULT_MULTI_SELECT_LABELS,
@@ -85,8 +86,15 @@ export function MultiSelect({
   error,
   hint,
   disabled,
+  id,
   "aria-label": ariaLabel,
+  // Off `rest` and onto the trigger, which is the combobox a reader meets: `Field`'s
+  // render-prop spreads `{ id, aria-describedby, aria-invalid, aria-required }`, and on
+  // the wrapper div the label named nothing and the required state described nothing
+  // (DUP-8, refactor audit 2026-10 — Combobox's rule).
   "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
+  "aria-required": ariaRequired,
   ...rest
 }: MultiSelectProps) {
   const { open, setOpen, wrapperRef, panelRef, triggerRef, closeToTrigger, query, setQuery, inputRef } =
@@ -102,7 +110,7 @@ export function MultiSelect({
   });
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const hintParts = useFieldHint(hint, ariaDescribedBy);
-  const field = useComboboxFieldError(error, invalid, hintParts.describedBy);
+  const field = useFieldError(error, invalid, hintParts.describedBy, ariaInvalid);
   // One id per instance: `aria-controls` on the trigger names the list while the
   // list is still closed.
   const uid = useId();
@@ -159,6 +167,8 @@ export function MultiSelect({
       e.preventDefault();
       setActive(filtered.length - 1);
     } else if (e.key === "Enter") {
+      // The Enter that confirms an IME composition is the IME's (BUG-9).
+      if (isImeEnter(e)) return;
       e.preventDefault();
       // Toggling keeps the panel open, exactly as clicking a row does: this control
       // exists to answer "which of these", which is rarely one of them.
@@ -180,6 +190,7 @@ export function MultiSelect({
       <EndHintRow hint={label === undefined ? hintParts.labelHint : undefined}>
         <button
           ref={triggerRef}
+          id={id}
           type="button"
           disabled={disabled}
           // A combobox, not a bare button: this trigger carried `aria-invalid`, which
@@ -215,6 +226,7 @@ export function MultiSelect({
             }
           }}
           aria-invalid={field.isInvalid || undefined}
+          aria-required={ariaRequired}
           // On the TRIGGER, where focus lands — the `aria-describedby` a caller put on
           // the component is taken off the wrapper for the same reason.
           aria-describedby={field.describedBy}

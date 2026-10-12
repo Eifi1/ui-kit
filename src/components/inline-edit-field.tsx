@@ -1,9 +1,13 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { FocusEvent, InputHTMLAttributes, KeyboardEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useAnnounce } from "../hooks/use-announce";
+import { claimEscape } from "../hooks/use-dismiss";
+import { isImeEnter } from "../lib/ime";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Input, Spinner } from "./ui";
+import { FIELD_ERROR_CLASS } from "./field-parts";
 import { FOCUS_RING } from "./focus-ring";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
@@ -140,10 +144,6 @@ type EditorRender<T> = (props: InlineEditorProps<T>) => ReactNode;
  */
 export type InlineEditFieldProps<T = string> = InlineEditFieldBaseProps<T> &
   ([T] extends [string] ? { editor?: EditorRender<T> } : { editor: EditorRender<T> });
-
-function hasContent(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
-}
 
 /** Calls the `editor` render prop as a component of its own: the props it is handed
  *  close over the field's refs, and a render prop called in the field's own render
@@ -386,14 +386,16 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.defaultPrevented) return;
     if (e.key === "Escape") {
-      // Ours, not the dialog's or the popover's around the field.
-      e.preventDefault();
+      // Ours, not the dialog's or the popover's around the field: claimed on the kit's
+      // Escape stack (Wave 2, DUP-1), and stopped for anything else listening.
+      claimEscape(e);
       e.stopPropagation();
       cancel();
       return;
     }
-    // Not mid-composition: Enter there picks the IME's candidate (Japanese, Chinese).
-    if (e.key === "Enter" && !e.nativeEvent.isComposing && !e.shiftKey) {
+    // Not mid-composition: Enter there picks the IME's candidate (Japanese, Chinese) —
+    // and Safari reports the Enter that ended one as keyCode 229 (`isImeEnter`).
+    if (e.key === "Enter" && !isImeEnter(e) && !e.shiftKey) {
       e.preventDefault();
       save();
     }
@@ -483,7 +485,7 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
           {pending && <Spinner label={null} className="size-4 shrink-0" />}
         </div>
         {failed && (
-          <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
+          <p id={errorId} className={FIELD_ERROR_CLASS}>
             {failure}
           </p>
         )}

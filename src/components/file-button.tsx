@@ -1,6 +1,7 @@
 import { forwardRef, useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, DragEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useAnnounce } from "../hooks/use-announce";
 import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
 import { Button, Spinner } from "./ui";
@@ -428,10 +429,6 @@ export interface FileButtonProps
   commit?: CommitScope;
 }
 
-/** A reason that is really there — `null`, `false` and `""` are no reason. */
-function hasReason(reason: ReactNode): boolean {
-  return reason !== undefined && reason !== null && reason !== false && reason !== "";
-}
 
 /**
  * {@link useFilePicker} behind a {@link Button}: `variant` and every other button prop
@@ -476,7 +473,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
   ref,
 ) {
   const disabledReason = useCommitReason(commit, ownDisabledReason);
-  const locked = hasReason(disabledReason);
+  const locked = hasContent(disabledReason);
   const inert = Boolean(disabled || pending);
   // What takes no files: busy, disabled, or locked with a reason. Kept apart from
   // `inert`, which is what reaches the button's NATIVE `disabled` — a locked button

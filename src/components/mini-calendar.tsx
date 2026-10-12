@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { horizontalStep } from "../lib/direction";
 import { useAnnounce } from "../hooks/use-announce";
@@ -670,7 +671,7 @@ export function MiniCalendar({
                 active: isActive,
                 size,
               });
-              const hasContent = content != null && content !== false && content !== "";
+              const filled = hasContent(content);
               const contentId = `${id}-day-${iso}`;
               // The band behind the day: full width between the ends, half width at an
               // end (so the round endpoint sits ON the band's tip), rounded where a row
@@ -713,7 +714,7 @@ export function MiniCalendar({
                   // The custom content is the day's DESCRIPTION: `aria-label` replaces
                   // the button's text as its name, so without this link a screen
                   // reader would hear the date and never the events drawn under it.
-                  aria-describedby={hasContent ? contentId : undefined}
+                  aria-describedby={filled ? contentId : undefined}
                   aria-selected={isSelected}
                   aria-disabled={disabled || undefined}
                   aria-current={isToday ? "date" : undefined}
@@ -776,7 +777,7 @@ export function MiniCalendar({
                       >
                         {label}
                       </span>
-                      {hasContent && (
+                      {filled && (
                         <span id={contentId} className="flex min-w-0 flex-col gap-0.5">
                           {content}
                         </span>
@@ -786,7 +787,7 @@ export function MiniCalendar({
                     <>
                       {label}
                       {/* Under the number, inside the circle: room for a dot or two. */}
-                      {hasContent && (
+                      {filled && (
                         <span
                           id={contentId}
                           className="pointer-events-none absolute inset-x-0 bottom-0.5 flex justify-center gap-px leading-none"

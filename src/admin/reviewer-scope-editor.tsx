@@ -8,7 +8,7 @@ import { CheckboxGroup } from "../components/checkbox-group";
 import type { CheckboxGroupOption } from "../components/checkbox-group";
 import { FormActions } from "../components/form-actions";
 import { Caption } from "../components/text";
-import { hasMessage } from "./admin-parts";
+import { hasContent } from "../lib/presence";
 import type { MaybePromise } from "./admin-parts";
 import type { CommitScope } from "../components/write-lock";
 import { DEFAULT_REVIEWER_SCOPE_LABELS } from "./reviewer-scope-editor-labels";
@@ -148,7 +148,7 @@ export function ReviewerScopeEditor({
   const [areas, setAreas] = useState<string[]>(savedAreas);
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<ReactNode>(null);
-  const locked = hasMessage(disabledReason);
+  const locked = hasContent(disabledReason);
 
   const nextAreas = locales.length === 0 ? [] : areas;
   const dirty = !sameSet(locales, savedLocales) || !sameSet(nextAreas, locales.length === 0 ? [] : savedAreas);
@@ -174,7 +174,7 @@ export function ReviewerScopeEditor({
       (error: unknown) => {
         setPending(false);
         const own = describeError?.(error);
-        setFailure(hasMessage(own) ? own : labels.failed);
+        setFailure(hasContent(own) ? own : labels.failed);
       },
     );
   };

@@ -5,7 +5,7 @@ import { MailCheck } from "lucide-react";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import { CurrentPasswordInput } from "../components/danger-confirm";
 import { Button, Card, Input } from "../components/ui";
 import { authErrorCode, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
@@ -217,7 +217,7 @@ export function EmailChangeSetting({
 
   const messageFor = (error: unknown, action: EmailChangeAction): ReactNode => {
     const own = describeError?.(error, action);
-    if (hasMessage(own)) return own;
+    if (hasContent(own)) return own;
     return isRateLimited(error) ? labels.rateLimited(retryAfterSeconds(error)) : labels.failed;
   };
 
@@ -336,7 +336,7 @@ export function EmailChangeSetting({
         if (!mounted.current) return;
         setBusy(null);
         const own = describeError?.(error, "request");
-        if (hasMessage(own)) {
+        if (hasContent(own)) {
           setFailure({ action: "request", message: own });
           return;
         }

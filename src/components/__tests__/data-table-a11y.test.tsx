@@ -151,7 +151,7 @@ describe("DataTable announcements", () => {
     // table re-filters, so this is the path that proves the announcement is made from
     // the render that produced the new number rather than from the click.
     renderTable();
-    fireEvent.click(screen.getByRole("button", { name: "Filter" }));
+    fireEvent.click(screen.getByRole("button", { name: "Filter Name" }));
     fireEvent.change(screen.getByPlaceholderText("Filter…"), { target: { value: "Row 7" } });
     await settleAnnouncement();
     expect(screen.getByRole("status")).toHaveTextContent("1 of 25 rows");

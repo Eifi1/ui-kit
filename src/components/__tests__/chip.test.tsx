@@ -387,6 +387,16 @@ describe("ChipInput — visible rejections and RTL (0.7.0)", () => {
     expect(input).toHaveAccessibleDescription(/Pick wisely.*already in the list/);
   });
 
+  it("prints its error and its refusal in every field's error type (DUP-8)", () => {
+    render(<Harness value={["a"]} error="Pick wisely" />);
+    fireEvent.keyDown(type("a"), { key: "Enter" });
+    for (const message of [screen.getByText("Pick wisely"), document.querySelector("[data-chip-input-rejected]")!]) {
+      // FIELD_ERROR_CLASS's type, not `text-xs`; the field's `space-y-1` spaces it.
+      expect(message).toHaveClass("text-caption", "leading-tight", "text-danger");
+      expect(message).not.toHaveClass("text-xs");
+    }
+  });
+
   it("mirrors ← → between chips in RTL", () => {
     render(
       <div dir="rtl">

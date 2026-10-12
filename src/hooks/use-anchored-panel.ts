@@ -2,6 +2,7 @@ import { useLayoutEffect, useState } from "react";
 import type { RefObject } from "react";
 import { useAnchoredRect, type AnchorRect } from "./use-anchored-rect";
 import { useTextSize } from "../theme/text-size";
+import type { Direction } from "../lib/direction";
 
 /**
  * Vertical placement for a portalled, `position: fixed` panel anchored to a trigger.
@@ -192,6 +193,104 @@ export function anchoredPanelPlacement(
 }
 
 /**
+ * The glass a panel has to stay on, in CSS pixels — `window.innerWidth` is the wrong
+ * width on a phone (keksdose run 72, live #381). There it is the LAYOUT viewport, and
+ * that grows to the page's width as soon as anything sticks out past the screen: 430 on
+ * a 406px screen in Chromium's mobile emulation, with `position: fixed` layers laid out
+ * against the 430. A panel that had widened the page then measured itself as inside it.
+ * The root element's client width is the initial containing block instead — the screen,
+ * the width `100vw` and the media queries see — whatever overflows, and on a desktop it
+ * also leaves a classic scrollbar out, which is where a fixed box's `right` is measured
+ * from. It is 0 where nothing is laid out (jsdom), and the window is the answer there.
+ * The height stays the window's: nothing measured grows it, and a phone's collapsing
+ * toolbar makes the window the truer of the two.
+ *
+ * Tooltip's lesson, moved here so every anchored panel reads the same width (round 0.34
+ * Wave 2, DUP-7).
+ */
+export function viewportSize(): { width: number; height: number } {
+  return {
+    width: document.documentElement.clientWidth || window.innerWidth,
+    height: window.innerHeight,
+  };
+}
+
+export interface AnchoredInlineOptions {
+  /** The trigger's reading direction, which `start`, `end` and `after` follow. Default
+   *  `ltr`. A portalled panel has left the subtree it would inherit `dir` from, so read
+   *  it off the trigger (`dirOf`). */
+  dir?: Direction;
+  /**
+   * Which of the panel's edges lines up with which of the trigger's:
+   * - `start` / `end` — the panel's start (end) edge on the trigger's start (end) edge,
+   *   by reading direction: a picker hangs from its field's start, a popover from its
+   *   button's end;
+   * - `left` / `right` — the same, physically;
+   * - `after` — the panel's start edge on the trigger's END edge: beside it, as the
+   *   sidebar's flyout opens.
+   *
+   * Default `start`.
+   */
+  align?: "start" | "end" | "left" | "right" | "after";
+  /** The room kept from either edge of the glass, in px. Default 8. */
+  edge?: number;
+  /** The glass's width. Default {@link viewportSize}'s. */
+  viewportWidth?: number;
+}
+
+/** The horizontal place of a `position: fixed` panel: its `left`, and the `right` of the
+ *  same box for a panel hung from its right edge (both in px, from the glass's edges). */
+export interface InlinePlacement {
+  left: number;
+  right: number;
+}
+
+/**
+ * The horizontal half of an anchored panel, beside {@link anchoredPanelPlacement}'s
+ * vertical one (round 0.34 Wave 2, DUP-7): where a panel `panelWidth` wide goes against
+ * the trigger's `rect`, kept `edge` px inside the glass ({@link viewportSize}).
+ *
+ * Popover, DropdownPanel, ComboboxPanel, HoverMenu and the AppShell flyout each wrote
+ * this themselves, against three different widths: `innerWidth`, which on a phone is
+ * the grown layout viewport and on a desktop counts the scrollbar; the root's client
+ * width; and, for the entity picker's panel in a left-to-right form, no clamp at all.
+ *
+ * A panel wider than the room keeps its START on the glass — its left edge in a
+ * left-to-right form, its right in a right-to-left one — as Tooltip's slide does: the
+ * start of a row of text is the half worth keeping.
+ */
+export function anchoredInline(
+  rect: Pick<AnchorRect, "left" | "right">,
+  panelWidth: number,
+  { dir = "ltr", align = "start", edge = 8, viewportWidth = viewportSize().width }: AnchoredInlineOptions = {},
+): InlinePlacement {
+  const rtl = dir === "rtl";
+  // Where the panel's LEFT edge goes, before the clamp.
+  let wanted: number;
+  switch (align) {
+    case "left":
+      wanted = rect.left;
+      break;
+    case "right":
+      wanted = rect.right - panelWidth;
+      break;
+    case "start":
+      wanted = rtl ? rect.right - panelWidth : rect.left;
+      break;
+    case "end":
+      wanted = rtl ? rect.left : rect.right - panelWidth;
+      break;
+    case "after":
+      wanted = rtl ? rect.left - panelWidth : rect.right;
+      break;
+  }
+  const min = edge;
+  const max = viewportWidth - edge - panelWidth;
+  const left = max < min ? (rtl ? max : min) : Math.min(Math.max(wanted, min), max);
+  return { left, right: viewportWidth - left - panelWidth };
+}
+
+/**
  * The region actually on screen, tracked while `active` (Keksdose live #328).
  *
  * The same measurement {@link useAnchoredPanel} caps a dropdown with, for the callers
@@ -245,8 +344,9 @@ export function useVisualViewport(active: boolean): ViewportBox | null {
 /**
  * Where to put a panel anchored under `ref`, tracking the visible viewport.
  *
- * Callers own horizontal placement — the pickers align to the trigger's left edge, the
- * popovers to its right — and must apply `maxHeight` with an internal `overflow-y`.
+ * Callers own horizontal placement, through {@link anchoredInline} — the pickers align
+ * to the trigger's start edge, the popovers to its end — and must apply `maxHeight` with
+ * an internal `overflow-y`.
  * Vertically, apply `top` while the panel is below and `bottom` (with no `top`) once it
  * is `above`; see {@link AnchoredPanel}.
  */

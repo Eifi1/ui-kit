@@ -6,7 +6,8 @@ import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
-import { hasContent, LabelStrip } from "./field-parts";
+import { hasContent } from "../lib/presence";
+import { LabelStrip, mergeDescribedBy, useFieldMessages } from "./field-parts";
 import { DEFAULT_SWATCH_PICKER_LABELS } from "./swatch-picker-labels";
 
 export interface SwatchPickerLabels {
@@ -100,7 +101,9 @@ export interface SwatchPickerProps<T extends string>
    * explicit `aria-label` / `aria-labelledby` still names the group instead.
    */
   label?: ReactNode;
-  /** A {@link FieldHint} beside the label. Only with `label`. */
+  /** A {@link FieldHint} beside the label. Only with `label`. {@link Select}'s rule since
+   *  0.34 (DUP-2, refactor audit 2026-10): plain TEXT, and a FieldHint at Large and on a
+   *  touch screen (§4), is a caption under the swatches, describing the group. */
   hint?: ReactNode;
   /**
    * Why the colour cannot be changed right now — {@link Button}'s `disabledReason`, for
@@ -154,6 +157,13 @@ export function SwatchPicker<T extends string>({
   const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
   const labelled = hasContent(label);
+  // The label line's "?", or the caption under the swatches (DUP-2). Only with a label.
+  // The caller's ids, the caption, then the group's state: mixed, locked.
+  const messages = useFieldMessages({
+    hint: labelled ? hint : undefined,
+    describedBy: rest["aria-describedby"],
+    reasonId: mergeDescribedBy(mixed && mixedId, locked && reasonId),
+  });
   const byValue = useMemo(() => new Map(options.map((o) => [o.value, o])), [options]);
   const items: TileItem<T>[] = [
     ...(allowNone ? [{ key: null, label: text.none }] : []),
@@ -221,10 +231,7 @@ export function SwatchPicker<T extends string>({
           : rest["aria-labelledby"]
       }
       aria-disabled={disabled || locked || undefined}
-      aria-describedby={
-        [rest["aria-describedby"], mixed && mixedId, locked && reasonId].filter(Boolean).join(" ") ||
-        undefined
-      }
+      aria-describedby={messages.describedBy}
       className={cn("flex flex-wrap items-center gap-1.5", !labelled && className)}
     >
       {locked ? (
@@ -258,8 +265,9 @@ export function SwatchPicker<T extends string>({
   );
   if (!labelled) return group;
   return (
-    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled || locked} className={className}>
+    <LabelStrip labelId={labelId} label={label} hint={messages.labelHint} disabled={disabled || locked} className={className}>
       {group}
+      {messages.below}
     </LabelStrip>
   );
 }

@@ -9,7 +9,7 @@ import { EntityCombobox } from "../entity-combobox";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
 import { MultiSelect } from "../multi-select";
 import { NumberInput } from "../number-input";
-import { FIELD_INVALID, Input, Select, Textarea } from "../ui";
+import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, Input, Select, Textarea } from "../ui";
 
 /**
  * One `invalid`, on every control that is shaped like a field.
@@ -261,5 +261,31 @@ describe("aria-invalid from a form library paints the field (0.6.0)", () => {
     for (const name of ["a", "b", "c"]) {
       expect(screen.getByLabelText(name).className).toContain("border-danger-strong");
     }
+  });
+});
+
+/**
+ * K5 follow-up (keksdose run 78, refactor plan 2026-10): at 125 % a 1px focus border
+ * covers 1.25 device pixels and reads half-strength on the sides that fall across a
+ * pixel boundary. 0.34 fixed DatePicker's stepper; every field's focus has the same
+ * line. FIELD_INVALID's answer (border plus `ring-1`, live #295), inward: an INSET 1px
+ * ring in the focus colour beside the border, so no side is less than one whole device
+ * pixel, and nothing outside the field moves or is covered. The display shape's bottom
+ * line doubles the same way, with an inset shadow on that edge alone.
+ */
+describe("the focus line keeps full strength at fractional display scaling (K5)", () => {
+  it("FIELD_BASE: a 1px inset ring in the focus colour beside the 1px border", () => {
+    for (const token of ["focus:border-brand", "focus:ring-1", "focus:ring-inset", "focus:ring-brand"]) {
+      expect(FIELD_BASE.split(/\s+/)).toContain(token);
+    }
+    render(<Input label="Name" />);
+    expect(screen.getByLabelText("Name")).toHaveClass("focus:ring-1", "focus:ring-inset", "focus:ring-brand");
+  });
+
+  it("FIELD_DISPLAY: the bottom line doubled inward on focus, no ring round the figure", () => {
+    const tokens = FIELD_DISPLAY.split(/\s+/);
+    expect(tokens).toContain("focus:border-brand");
+    expect(tokens).toContain("focus:shadow-[inset_0_-1px_0_var(--brand)]");
+    expect(tokens).toContain("focus:ring-0");
   });
 });

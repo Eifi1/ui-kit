@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   ComponentPropsWithoutRef,
@@ -13,14 +13,15 @@ import { cn } from "../lib/cn";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
-import { usePhoneLayout } from "../hooks/use-breakpoint";
+import { usePhoneLayout, useRemPx } from "../hooks/use-breakpoint";
 import { FLOATING_LABEL_STATIC, Spinner } from "./ui";
 import { useAnchorDir } from "./use-anchor-dir";
 import { type AnchorRect } from "../hooks/use-anchored-rect";
-import { useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
-import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
+import { anchoredInline, useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
+import { takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
+import { isImeEnter } from "../lib/ime";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { hasContent } from "../lib/presence";
 
 /**
  * What an entity picker hands `onChange` when it is cleared — `clearValue` on
@@ -366,9 +367,10 @@ export function useComboboxCore<V extends string | number>({
   // `useDropdown`'s listener and never covered this hook.
   const isPhone = usePhoneLayout();
   useOutsideClick([triggerRef, panelRef], close, open && !isPhone);
-  // The fallback only: an Escape pressed in the panel is taken by `ComboboxPanel`'s own
-  // key handler, which a dialog around the picker would otherwise beat to it (BUG-1).
-  useEscapeKey(closeToTrigger, open);
+  // A layer on the Escape stack while the anchored panel is open (Wave 2, DUP-1), so a
+  // dialog around the picker closes only after it (BUG-1). `ComboboxPanel` takes the key
+  // where focus is. On a phone the `PickerSheet` is the layer, as it is the outside.
+  useDismissLayer(open && !isPhone, closeToTrigger);
 
   // Reset the query each time the panel opens, and the highlighted row whenever the
   // visible set changes (a new query, or the panel opening or closing). Adjusted while
@@ -437,33 +439,8 @@ export function useComboboxCore<V extends string | number>({
   };
 }
 
-/** The error line under a field — the same type as `ui.tsx`'s (module-private) one,
- *  so a combobox's message is indistinguishable from an Input's. */
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
-
-/**
- * {@link Input}'s `error` for the combobox family: the message under the field, its
- * id on the control's `aria-describedby` (merged, never replacing — the hint the
- * caller pointed at stays first), and `invalid` implied. ui.tsx's `useFieldError` is
- * module-private, so this restates it on the same rules `choice-parts.ts` does.
- */
-export function useComboboxFieldError(
-  error: ReactNode,
-  invalid: boolean | undefined,
-  describedBy?: string,
-) {
-  const errorId = useId();
-  const has = hasMessage(error);
-  return {
-    isInvalid: Boolean(invalid) || has,
-    describedBy: mergeDescribedBy(describedBy, has && errorId),
-    errorEl: has ? (
-      <p id={errorId} className={FIELD_ERROR_CLASS}>
-        {error}
-      </p>
-    ) : null,
-  };
-}
+// The family's `error` is every field's `useFieldError` (field-parts) since 0.34 — the
+// restatement that stood here ignored a form library's `aria-invalid` (DUP-8).
 
 /** The anchored suggestion list's box and rows — one look for {@link Combobox},
  *  {@link InlineEntityCombobox} and {@link Autocomplete}. */
@@ -496,6 +473,9 @@ export function useActiveOptionScroll(activeId: string | undefined): void {
     document.getElementById(activeId)?.scrollIntoView?.({ block: "nearest" });
   }, [activeId]);
 }
+
+/** The anchored panel's least width, in rem: 220 px at Normal (§3.2). */
+const PANEL_MIN_REM = 13.75;
 
 export interface ComboboxPanelProps<V extends string | number>
   extends ComponentPropsWithoutRef<"div"> {
@@ -574,7 +554,7 @@ export function ComboboxPanel<V extends string | number>({
   style,
   ...rest
 }: ComboboxPanelProps<V>) {
-  const createLocked = hasMessage(createDisabledReason);
+  const createLocked = hasContent(createDisabledReason);
   const {
     rect,
     placement,
@@ -614,23 +594,19 @@ export function ComboboxPanel<V extends string | number>({
   // Portalled to <body>, the panel leaves the subtree its `dir` came from — so the
   // direction is read off the trigger and put back on the panel below.
   const dir = useAnchorDir(core.triggerRef, core.open);
+  const remPx = useRemPx();
 
   // The WAI-ARIA APG's listbox keyboard, in full: Up/Down step, Home/End jump, Enter
-  // commits, Tab leaves, Escape closes.
+  // commits, Tab leaves, Escape closes. On the panel's search box — in the anchored
+  // panel and, through `onSearchKeyDown`, in the phone sheet's header (BUG-5).
   const onKeyDown = (e: ReactKeyboardEvent) => {
-    // Escape is taken HERE, and stopped, before a dialog the picker sits in can see it
-    // (round 0.34 BUG-1). It used to be left to `useComboboxCore`'s document listener,
-    // which a Modal or FullBleedDialog never lets the key reach: they close on Escape
-    // in their own `onKeyDown` and stop it there — and the panel's events travel up
-    // the React tree through the dialog, portal or not. So one press closed the dialog
-    // and threw away the form, with the list still open. The document listener stays
-    // as the fallback for a press made with focus somewhere else.
-    if (e.key === "Escape") {
-      e.preventDefault();
-      e.stopPropagation();
-      closeToTrigger();
-      return;
-    }
+    // Escape goes to the top of the kit's Escape stack — this list, which opened over
+    // any dialog it sits in — and stops HERE (round 0.34 BUG-1, Wave 2 DUP-1). The
+    // panel's events travel up the React tree through that dialog, portal or not, and
+    // one press used to close the dialog and throw the form away, list still open.
+    if (takeEscape(e)) return;
+    // The Enter that confirms an IME composition is the IME's (BUG-9).
+    if (isImeEnter(e)) return;
     // Disabled rows are passed over (`stepEnabled`), and each step starts from the
     // SETTLED highlight, not the raw index, so the first Down from a disabled row 0
     // goes to the row after the one already shown as highlighted.
@@ -651,11 +627,11 @@ export function ComboboxPanel<V extends string | number>({
       if (current < 0) return;
       if (current < results.length) onChoose(results[current]);
       else if (showCreate && !createLocked) onCreate();
-    } else if (e.key === "Tab") {
+    } else if (e.key === "Tab" && !isPhone) {
       // The panel is PORTALLED to <body>, so the browser's own Tab would move from
       // here to whatever follows the portal — i.e. off the end of the document. The
       // trade is one extra Tab (trigger, then onward) against never stranding focus
-      // at the bottom of the page.
+      // at the bottom of the page. The phone sheet is a dialog, and its trap keeps Tab.
       e.preventDefault();
       closeToTrigger();
     }
@@ -773,9 +749,11 @@ export function ComboboxPanel<V extends string | number>({
                 isPhone
                   ? SHEET_ROW_CLASS
                   : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
+                // The row the arrows are on shows it on a phone too: the sheet takes
+                // the keyboard (BUG-5), and a tablet or a desktop at Large has one.
                 o.disabled
                   ? DISABLED_ROW_CLASS
-                  : i === current && !isPhone
+                  : i === current
                     ? "bg-active"
                     : !isPhone && "hover:bg-hover",
                 // After SHEET_ROW_CLASS, so its hover is the one cancelled.
@@ -839,7 +817,7 @@ export function ComboboxPanel<V extends string | number>({
               "text-secondary",
               createLocked
                 ? DISABLED_ROW_CLASS
-                : current === results.length && !isPhone
+                : current === results.length
                   ? "bg-active"
                   : !isPhone && "hover:bg-hover",
               // After SHEET_ROW_CLASS, so its hover is the one cancelled.
@@ -879,11 +857,14 @@ export function ComboboxPanel<V extends string | number>({
         searchPlaceholder={searchPlaceholder ?? labels.search}
         inputRef={inputRef}
         closeLabel={closeLabel}
+        // The sheet's search box is in its HEADER, outside the list: the keys go to it
+        // there, and it names the list and the active row (BUG-5). A div around the list
+        // used to catch them, and never did — focus is in the box, not in the list.
+        onSearchKeyDown={onKeyDown}
+        listboxId={listboxId}
+        activeId={activeId}
       >
-        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused
-            itself: it catches the listbox keys bubbling from the sheet's search <input>,
-            which holds focus while the list is up. */}
-        <div onKeyDown={onKeyDown} className="relative">
+        <div className="relative">
           {list}
           {announcement}
         </div>
@@ -893,13 +874,14 @@ export function ComboboxPanel<V extends string | number>({
 
   if (!rect) return null;
   // The panel hangs from the trigger's START edge: its left in a left-to-right form,
-  // its right in a right-to-left one (it may be wider than the trigger, `minWidth`).
-  // `clientWidth` rather than `innerWidth`, because a fixed box's `right` is measured
-  // from the edge of the viewport inside any scrollbar.
-  const inline =
-    dir === "rtl"
-      ? { right: (document.documentElement.clientWidth || window.innerWidth) - rect.right }
-      : { left: rect.left };
+  // its right in a right-to-left one, at least 13.75rem wide (220 px at Normal, in rem
+  // so its text keeps its room at Large, §3.2) — and clamped to the glass, which in a
+  // left-to-right form it never was (Wave 2, DUP-7). Right-to-left it keeps hanging by
+  // its `right`, which a fixed box measures from inside any scrollbar, as the glass's
+  // width does.
+  const panelWidth = Math.max(rect.width, PANEL_MIN_REM * remPx);
+  const at = anchoredInline(rect, panelWidth, { dir, align: "start" });
+  const inline = dir === "rtl" ? { right: at.right } : { left: at.left };
 
   return createPortal(
     /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused
@@ -925,9 +907,7 @@ export function ComboboxPanel<V extends string | number>({
         top: placement.above ? undefined : placement.top,
         bottom: placement.above ? placement.bottom : undefined,
         ...inline,
-        width: rect.width,
-        // 220 px at Normal, in rem so the panel's text keeps its room at Large (§3.2).
-        minWidth: "13.75rem",
+        width: panelWidth,
         maxHeight: placement.maxHeight,
       }}
       className={cn(

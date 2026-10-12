@@ -17,7 +17,8 @@ import { SectionLabel, Caption } from "../components/text";
 import { RowActions } from "../components/row-actions";
 import { Button, Input, Select, Spinner } from "../components/ui";
 import { COMMIT_EXCEPT_BILLING, useWriteLock } from "../components/write-lock";
-import { hasMessage, settle, useDayText, usePersonLabel } from "./admin-parts";
+import { settle, useDayText, usePersonLabel } from "./admin-parts";
+import { hasContent } from "../lib/presence";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
 import { RoleSelect } from "./role-select";
 import { DEFAULT_INVITATIONS_LABELS } from "./invitations-panel-labels";
@@ -258,7 +259,7 @@ export function InvitationsPanel<R extends string = string>({
       return await settle(call);
     } catch (error) {
       const own = describeError?.(error);
-      setFailure(hasMessage(own) ? own : labels.failed);
+      setFailure(hasContent(own) ? own : labels.failed);
       return FAILED;
     } finally {
       setBusy(null);

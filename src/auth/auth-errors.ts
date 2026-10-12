@@ -276,18 +276,32 @@ function statusOf(value: unknown): number | undefined {
 }
 
 /**
+ * The HTTP status a thrown error carries, wherever the apps' HTTP clients put it —
+ * without depending on any of them:
+ *
+ *  1. `err.response.status` — axios (all three apps' clients);
+ *  2. `err.status` — ofetch's `FetchError`, the generated OpenAPI clients' `ApiError`, and
+ *     a `Response` thrown as it came;
+ *  3. `err.statusCode` — ofetch's alias, and Node-style errors.
+ *
+ * `undefined` when none is a whole number. Package-private — not re-exported from the
+ * barrel; {@link isRateLimited} and the session refresh's classifier read it (DUP-11,
+ * refactor audit 2026-10: the refresh carried its own copy of this probe).
+ */
+export function httpStatusOf(err: unknown): number | undefined {
+  if (!isBag(err)) return undefined;
+  const response = err.response;
+  return (isBag(response) ? statusOf(response.status) : undefined) ?? statusOf(err.status) ?? statusOf(err.statusCode);
+}
+
+/**
  * Whether `err` is a throttled request — HTTP `429 Too Many Requests` (0.30.0, from the
  * apps' 0.29 adoption: every app answered a throttled sign-in, sign-up or reset through
  * its own `describeError`, with three wordings of one sentence).
  *
  * A throttle carries no `code` in the contract — the STATUS is the answer, set by the
  * apps' limiters (server-kit's `AuthLimiters`, keksdose's per-IP limit) — so this reads
- * the status, wherever the apps' HTTP clients put it, without depending on any of them:
- *
- *  1. `err.response.status` — axios (all three apps' clients);
- *  2. `err.status` — ofetch's `FetchError`, the generated OpenAPI clients' `ApiError`, and
- *     a `Response` thrown as it came;
- *  3. `err.statusCode` — ofetch's alias, and Node-style errors.
+ * the status, wherever the apps' HTTP clients put it ({@link httpStatusOf}).
  *
  * There is no `rate_limited` code: keksdose answers its 429s uncoded, with a
  * `Retry-After` header, and the status is the one signal every limiter gives.
@@ -298,11 +312,7 @@ function statusOf(value: unknown): number | undefined {
  * {@link retryAfterSeconds}) or "… Wait a moment and try again." needs no app code.
  */
 export function isRateLimited(err: unknown): boolean {
-  if (!isBag(err)) return false;
-  const response = err.response;
-  const status =
-    (isBag(response) ? statusOf(response.status) : undefined) ?? statusOf(err.status) ?? statusOf(err.statusCode);
-  return status === 429;
+  return httpStatusOf(err) === 429;
 }
 
 /** A header's value from a `Headers` (fetch, ofetch's `response`), axios' `AxiosHeaders`

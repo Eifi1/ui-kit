@@ -218,3 +218,29 @@ describe("AmountInput settles a figure of any size (BUG-11)", () => {
     expect(state()).toBe("1000000000000000000000");
   });
 });
+
+// DUP-10 (refactor audit 2026-10): NumberInput took a `locale` prop and AmountInput read
+// only the provider's — one field engine now, and the prop is AmountInput's too.
+describe("AmountInput's own `locale` (0.34)", () => {
+  it("decides the mark over the provider's, and the value stays dot-decimal", () => {
+    let reported = "";
+    render(
+      <UiKitProvider locale="en-US">
+        <AmountInput
+          ariaLabel="Amount"
+          value="1.5"
+          onChange={(v) => (reported = v)}
+          locale="de-CH"
+          calculator={false}
+        />
+        <AmountInput ariaLabel="Price" value="1.5" onChange={() => {}} locale="fr-CH" calculator={false} />
+      </UiKitProvider>,
+    );
+    // de-CH writes "." (CLDR), fr-CH ",".
+    expect(screen.getByRole("textbox", { name: "Amount" })).toHaveValue("1.5");
+    const price = screen.getByRole("textbox", { name: "Price" });
+    expect(price).toHaveValue("1,5");
+    fireEvent.change(screen.getByRole("textbox", { name: "Amount" }), { target: { value: "2.25" } });
+    expect(reported).toBe("2.25");
+  });
+});

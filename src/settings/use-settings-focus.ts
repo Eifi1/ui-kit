@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { prefersReducedMotion } from "../lib/reduced-motion";
 
 /**
  * The ring a `?focus=` target wears for {@link SETTINGS_FOCUS_MS} — keksdose's
@@ -18,10 +19,6 @@ export const SETTINGS_FOCUS_MS = 1800;
 const WAIT_MS = 5000;
 
 const HEADING = "[data-settings-heading], h1, h2, h3, h4, h5, h6";
-
-function prefersReducedMotion(): boolean {
-  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 /**
  * `?focus=<anchor>` (docs/settings-harmonization.md §3.5): scroll the card into view, ring

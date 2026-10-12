@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
-import { useEscapeKey } from "../hooks/use-dismiss";
+import { useDismissLayer } from "../hooks/use-dismiss";
 import { evaluateExpression, formatResult, sanitizeLive } from "../lib/calc";
 import {
   DEFAULT_CALCULATOR_LABELS,
@@ -179,17 +179,17 @@ export function NumberPadSheet({
   // `role="group"`, not a dialog. A keyboard does not trap focus; it is what you type
   // WITH.
   //
-  // What was genuinely missing is a way OUT that is not a tap. `useEscapeKey` and not
-  // a handler on the sheet, because the sheet never has the focus a keydown would
-  // bubble from — the host does, and the host is not this component. Escape does what
-  // the Done key does rather than cancelling, because committing on blur is the
-  // host's contract and a cancel would have to be the host's to offer.
+  // What was genuinely missing is a way OUT that is not a tap. A layer on the kit's
+  // Escape stack and not a handler on the sheet, because the sheet never has the focus
+  // a keydown would bubble from — the host does, and the host is not this component.
+  // Escape does what the Done key does rather than cancelling, because committing on
+  // blur is the host's contract and a cancel would have to be the host's to offer.
   //
-  // The limit, since it is better written down than discovered: inside a `Modal` the
-  // dialog's own Escape handler sits on the focus path and stops the event before a
-  // document listener sees it, so there the press closes the dialog — which it did
-  // before this line existed too, and which takes the pad with it either way.
-  useEscapeKey(onDone);
+  // Inside a `Modal` the pad opened over the dialog, so the stack hands the first
+  // Escape to the pad and the next to the dialog (Wave 2, DUP-1). It used to be the
+  // other way round, written down here as the limit: the dialog's own handler stopped
+  // the key before a document listener saw it, and the press closed the dialog.
+  useDismissLayer(true, onDone);
 
   const result = evaluateExpression(value);
   const preview = result !== null && formatResult(result) !== value.trim() ? `= ${formatResult(result)}` : "";

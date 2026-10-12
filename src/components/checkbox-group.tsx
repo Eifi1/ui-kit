@@ -2,9 +2,9 @@ import { useId } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { Checkbox } from "./checkbox";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { hasContent } from "../lib/presence";
 import { useCommitReason, type CommitScope } from "./write-lock";
-import { RequiredStarOnLegend } from "./field-parts";
+import { FIELD_ERROR_CLASS, mergeDescribedBy, RequiredStarOnLegend, useInlineHint } from "./field-parts";
 
 /** One box of a {@link CheckboxGroup}. */
 export interface CheckboxGroupOption<T extends string = string> {
@@ -140,15 +140,18 @@ export function CheckboxGroup<T extends string = string>({
   const generated = useId();
   const hintId = `${generated}-hint`;
   const errorId = `${generated}-error`;
-  const showHint = hasMessage(hint);
-  const showError = hasMessage(error);
+  // §4: a FieldHint under the group is its words at Large and on a touch screen, not a
+  // lone "?" (DUP-2, refactor audit 2026-10). A HelpPopover stays a "?".
+  const shownHint = useInlineHint(hint);
+  const showHint = hasContent(shownHint);
+  const showError = hasContent(error);
   const isInvalid = Boolean(invalid) || showError;
   const ticked = new Set(value);
   // Resolved here rather than per box: a reason has to keep the fieldset from being
   // natively `disabled` too, or it would take every box out of the tab order — the
   // thing a reason exists to prevent.
   const reason = useCommitReason(commit, disabledReason);
-  const locked = hasMessage(reason);
+  const locked = hasContent(reason);
 
   const toggle = (v: T, on: boolean) => {
     const next = new Set(value);
@@ -216,11 +219,11 @@ export function CheckboxGroup<T extends string = string>({
       {showHint && (
         // A `div`, not a `p`: a hint may be a node with a link in it.
         <div id={hintId} className="mt-1.5 text-caption leading-tight text-muted">
-          {hint}
+          {shownHint}
         </div>
       )}
       {showError && (
-        <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
+        <p id={errorId} className={FIELD_ERROR_CLASS}>
           {error}
         </p>
       )}

@@ -1,5 +1,6 @@
-import { useState, type ComponentProps, type Ref } from "react";
+import type { ComponentProps, Ref } from "react";
 import { AmountInput } from "./amount-input";
+import { useMoneyDraft } from "./money-draft";
 
 type AmountInputProps = ComponentProps<typeof AmountInput>;
 
@@ -16,15 +17,6 @@ export interface MoneyFieldProps
    */
   onCommit: (value: number | null) => void;
   ref?: Ref<HTMLInputElement>;
-}
-
-/** The number a settled text reads as: `null` for empty, `undefined` for no number
- *  (a lone "-" or "."). */
-function parseSettled(text: string): number | null | undefined {
-  const t = text.trim();
-  if (t === "") return null;
-  const n = Number(t);
-  return Number.isFinite(n) ? n : undefined;
 }
 
 /**
@@ -65,30 +57,17 @@ function parseSettled(text: string): number | null | undefined {
  * ```
  */
 export function MoneyField({ value, onCommit, ref, ...props }: MoneyFieldProps) {
-  const external = value === null ? "" : String(value);
-  // The draft is re-read from `value` only when `value` moves away from what the draft
-  // already says (a reset, another row's save), so a commit's own echo keeps the
-  // typist's spelling ("12.50" stays "12.50" when 12.5 comes back).
-  const [draft, setDraft] = useState(external);
-  const [seen, setSeen] = useState(value);
-  if (seen !== value) {
-    setSeen(value);
-    if (parseSettled(draft) !== value) setDraft(external);
-  }
+  const money = useMoneyDraft(value);
   return (
     <AmountInput
       {...props}
       ref={ref}
-      value={draft}
-      onChange={setDraft}
+      value={money.draft}
+      onChange={money.change}
       onCommit={(text) => {
-        const next = parseSettled(text);
-        // No number ("-" alone): back to the stored amount rather than a guess.
-        if (next === undefined) {
-          setDraft(external);
-          return;
-        }
-        if (next !== value) onCommit(next);
+        // No number ("-" alone): the draft is back on the stored amount, nothing commits.
+        const next = money.settle(text);
+        if (next !== undefined && next !== value) onCommit(next);
       }}
     />
   );

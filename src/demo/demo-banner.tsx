@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import { ChevronDown, ChevronUp, Timer } from "lucide-react";
 
 import { cn } from "../lib/cn";
+import { readSessionStored, writeSessionStored } from "../lib/safe-storage";
 import { AlertBanner } from "../components/alert-banner";
 import { Button, IconButton } from "../components/ui";
 import { useAccessAction } from "../landing/access";
@@ -17,27 +18,6 @@ import type { DemoModel } from "./demo-session";
 
 /** The default `sessionStorage` key of the collapsed state. */
 const COLLAPSE_KEY = "kit.demoBanner.collapsed";
-
-/** `sessionStorage`, guarded like `lib/safe-storage`'s `localStorage`: blocked storage
- *  reads as "not set" and writes nothing. */
-function readSession(key: string): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.sessionStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function writeSession(key: string, value: string | null): void {
-  if (typeof window === "undefined") return;
-  try {
-    if (value === null) window.sessionStorage.removeItem(key);
-    else window.sessionStorage.setItem(key, value);
-  } catch {
-    // storage blocked: the banner just opens again next time
-  }
-}
 
 /** "Demo · 23 h 12 min left", "Demo · 50 min left", the end, or plain "Demo". */
 function timeText(countdown: DemoCountdown, labels: DemoLabels): string {
@@ -106,12 +86,14 @@ export function DemoBanner({
   const landing = useLandingLabels(landingLabels);
   const accessLink = useAccessAction(access, landingLabels);
   const countdown = useDemoCountdown(expiresAt, { now, onEnded });
-  const [collapsed, setCollapsed] = useState(() => readSession(collapseKey) === "1");
+  // `sessionStorage`, guarded (lib/safe-storage): blocked storage reads as "not set",
+  // and the banner just opens again next time.
+  const [collapsed, setCollapsed] = useState(() => readSessionStored(collapseKey) === "1");
 
   const toggle = () => {
     const next = !collapsed;
     setCollapsed(next);
-    writeSession(collapseKey, next ? "1" : null);
+    writeSessionStored(collapseKey, next ? "1" : null);
   };
 
   return (

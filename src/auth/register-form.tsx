@@ -6,7 +6,7 @@ import { KIT_LANGUAGES, resolveLanguage } from "../i18n/languages";
 import type { KitLanguageCode } from "../i18n/languages";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import { LanguageSelect } from "../components/language-select";
 import { LegalAcceptCheckbox } from "../components/legal-page";
 import { TextLink } from "../components/text-link";
@@ -299,13 +299,13 @@ export function RegisterForm({
         setBusy(null);
         const own = describeError?.(error);
         const code = authErrorCode(error);
-        if (code === "email_taken" && !hasMessage(own)) {
+        if (code === "email_taken" && !hasContent(own)) {
           setTaken(values.email);
           emailRef.current?.focus();
           return;
         }
         setFailure(
-          hasMessage(own)
+          hasContent(own)
             ? own
             : isRateLimited(error)
               ? (labels.rateLimited ?? DEFAULT_REGISTER_LABELS.rateLimited)(retryAfterSeconds(error))
@@ -433,7 +433,7 @@ export function RegisterForm({
           disabled={working}
         />
 
-        {hasMessage(failure) && (
+        {hasContent(failure) && (
           <AlertBanner tone="danger" size="sm" role="alert">
             {failure}
           </AlertBanner>

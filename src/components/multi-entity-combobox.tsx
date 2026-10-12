@@ -7,7 +7,6 @@ import {
   endHintRowProps,
   offersCreate,
   useComboboxCore,
-  useComboboxFieldError,
   type ComboOption,
 } from "./combobox-core";
 import {
@@ -17,16 +16,18 @@ import {
   useKitLocale,
 } from "../i18n/kit-labels";
 import {
+  assignRef,
   EndHintRow,
   FieldCaption,
   LABEL_IN_ROW,
   LockedReason,
+  mergeDescribedBy,
   StaticLabelRow,
+  useFieldError,
   useFieldHint,
   useLockReason,
   type DisabledReasonDisplay,
 } from "./field-parts";
-import { assignRef, mergeDescribedBy } from "./choice-parts";
 import { useCommitReason, type CommitScope } from "./write-lock";
 
 /** `onChange` is the kit's — "a selection was made", carrying values — rather
@@ -168,11 +169,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
     debounceMs,
   });
   const hintParts = useFieldHint(hint, ariaDescribedBy);
-  const field = useComboboxFieldError(
-    error,
-    invalid || ariaInvalid === true || ariaInvalid === "true",
-    hintParts.describedBy,
-  );
+  const field = useFieldError(error, invalid, hintParts.describedBy, ariaInvalid);
   // The props are the per-instance overrides, the provider the app-wide ones; a
   // prop left `undefined` falls through to the provider rather than masking it.
   const labels = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS, {

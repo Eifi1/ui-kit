@@ -308,6 +308,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Columnas (${n(visible)}/${n(total)})`,
+      filterColumn: (column, active) => (active ? `Filtrar ${column} (activo)` : `Filtrar ${column}`),
       empty: "No hay entradas",
       actions: "Acciones",
       edit: "Editar",

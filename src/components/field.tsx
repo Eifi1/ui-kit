@@ -39,6 +39,8 @@
  */
 import { useId, type ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
+import { useInlineHint } from "./field-parts";
 import { Label } from "./ui";
 
 /** What a `Field` hands its render-prop children, to spread on the control. */
@@ -117,13 +119,10 @@ export interface FieldProps {
   children: ReactNode | ((control: FieldControlProps, meta: FieldRenderMeta) => ReactNode);
 }
 
-const isShown = (node: ReactNode) =>
-  node !== undefined && node !== null && node !== false && node !== "";
-
 export function Field({
   label,
   required,
-  hint,
+  hint: hintProp,
   error,
   htmlFor,
   disabled,
@@ -137,8 +136,11 @@ export function Field({
   const hintId = `${generated}-hint`;
   const errorId = `${generated}-error`;
   const labelId = `${generated}-label`;
-  const hasHint = isShown(hint);
-  const hasError = isShown(error);
+  // §4: a FieldHint under the control is its words at Large and on a touch screen, not
+  // a lone "?" (DUP-2, refactor audit 2026-10). A HelpPopover stays a "?".
+  const hint = useInlineHint(hintProp);
+  const hasHint = hasContent(hint);
+  const hasError = hasContent(error);
   const describedBy = [hasHint && hintId, hasError && errorId].filter(Boolean).join(" ");
   const control: FieldControlProps = {
     id,

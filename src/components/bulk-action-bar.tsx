@@ -7,7 +7,7 @@ import { horizontalStep } from "../lib/direction";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { useBreakpoint } from "../hooks/use-breakpoint";
-import { OVERLAY_EXIT_MS, prefersReducedMotion } from "../hooks/use-close-transition";
+import { OVERLAY_EXIT_MS, skipsExitAnimation } from "../hooks/use-close-transition";
 import { Button, IconButton } from "./ui";
 import { DEFAULT_BULK_ACTION_BAR_LABELS } from "./bulk-action-bar-labels";
 
@@ -215,7 +215,7 @@ export function BulkActionBar({
       setShownCount(count);
       setLeaving(false);
     } else if (prev.shown) {
-      setLeaving(!prefersReducedMotion());
+      setLeaving(!skipsExitAnimation());
     }
   }
   useEffect(() => {

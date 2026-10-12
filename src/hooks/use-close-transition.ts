@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { prefersReducedMotion } from "../lib/reduced-motion";
 
 /** How long the exit animation runs, in ms. Mirrors `.animate-sheet-out` in
  *  tokens.css — the sheet is the slower of the two, so it is what the unmount waits
@@ -7,16 +8,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export const OVERLAY_EXIT_MS = 220;
 
 /**
- * Whether the user has asked for no motion, read NOW. `true` where `matchMedia` is
- * absent (jsdom, SSR): nothing is painting there, so "no animation" is the only
- * correct answer. Shared by every exit timer in the package, so they agree.
+ * Whether an exit animation is skipped, read NOW: the user asked for no motion, or there
+ * is no `matchMedia` (jsdom, SSR) — nothing is painting there, so "no animation" is the
+ * only correct answer, and a closed overlay is gone at once in every test suite. Shared
+ * by every exit timer in the package, so they agree. The kit's one `prefersReducedMotion`
+ * (lib/reduced-motion), asked with that answer for the unknown case (DUP-11).
  */
-export function prefersReducedMotion(): boolean {
-  return (
-    typeof window === "undefined" ||
-    typeof window.matchMedia !== "function" ||
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
+export function skipsExitAnimation(): boolean {
+  return prefersReducedMotion(true);
 }
 
 /**
@@ -79,7 +78,7 @@ export function useCloseTransition(
     // Read at close time, not at mount: the setting can change under a long-lived
     // page, and `matchMedia` is absent in jsdom and in SSR — where "no animation" is
     // also the only correct answer, since nothing is painting.
-    if (prefersReducedMotion() || ms <= 0) {
+    if (skipsExitAnimation() || ms <= 0) {
       latest.current();
       return;
     }

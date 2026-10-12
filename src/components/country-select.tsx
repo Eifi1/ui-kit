@@ -4,16 +4,18 @@ import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { COUNTRY_CODES, countryName, normalizeCountryCode } from "../lib/countries";
 import { FieldChevron, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, FloatingField } from "./ui";
-import { LockedReason, type DisabledReasonDisplay } from "./field-parts";
-import { CurrencyFlag } from "./currency-select";
 import {
-  ComboboxPanel,
-  useComboboxCore,
-  useComboboxFieldError,
-  type ComboOption,
-} from "./combobox-core";
-import { assignRef, hasMessage, mergeDescribedBy } from "./choice-parts";
-import { useCommitReason, type CommitScope } from "./write-lock";
+  assignRef,
+  EndHintRow,
+  LockedReason,
+  mergeDescribedBy,
+  useFieldMessages,
+  useLockReason,
+  type DisabledReasonDisplay,
+} from "./field-parts";
+import { CurrencyFlag } from "./currency-select";
+import { ComboboxPanel, useComboboxCore, type ComboOption } from "./combobox-core";
+import type { CommitScope } from "./write-lock";
 import {
   DEFAULT_COMBOBOX_LABELS,
   DEFAULT_COMMON_LABELS,
@@ -348,8 +350,8 @@ export function CountrySelect<Clearable extends boolean = false>({
   }, [top, others, q, text.others, flags]);
 
   // ── The lock ──────────────────────────────────────────────────────────────
-  const reason = useCommitReason(commit, ownReason);
-  const locked = hasMessage(reason);
+  const lock = useLockReason(commit, ownReason);
+  const locked = lock.locked;
   const inert = locked || Boolean(disabled);
   // A lock (or `disabled`) arriving while the list is up closes it — adjusted while
   // rendering, as the core adjusts its own query, so no frame shows a list that can
@@ -360,17 +362,17 @@ export function CountrySelect<Clearable extends boolean = false>({
   const generated = useId();
   const triggerId = id ?? generated;
   const listboxId = `${generated}-listbox`;
-  const hintId = useId();
-  const reasonId = useId();
-  // Text is a caption under the field; a FieldHint rides the label line. See `hint`.
-  const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
-  const field = useComboboxFieldError(
+  // Text is a caption under the field; a FieldHint rides the label line, and is that
+  // caption at Large and on touch (§4). The caller's ids, the caption, a lock's reason,
+  // the error — Select's order. Through useFieldMessages since 0.34 (DUP-2, DUP-8).
+  const field = useFieldMessages({
+    hint,
     error,
-    invalid || ariaInvalid === true || ariaInvalid === "true",
-    // The caller's, then the standing advice, then (inside) the error — the order every
-    // field keeps — and the lock's reason last, while there is one.
-    mergeDescribedBy(ariaDescribedBy, textHint && hintId),
-  );
+    invalid,
+    describedBy: ariaDescribedBy,
+    ariaInvalid,
+    reasonId: locked && lock.reasonId,
+  });
 
   const code = normalizeCountryCode(value);
   const selectedName = code ? countryName(code, locale) : undefined;
@@ -429,7 +431,7 @@ export function CountrySelect<Clearable extends boolean = false>({
       aria-labelledby={labelledBy}
       aria-invalid={field.isInvalid || undefined}
       aria-required={ariaRequired}
-      aria-describedby={mergeDescribedBy(field.describedBy, locked && reasonId)}
+      aria-describedby={field.describedBy}
       // The focusable kind of disabled while locked (Button's rule): native `disabled`
       // would take the field out of the tab order, and the reason with it.
       disabled={locked ? undefined : disabled}
@@ -502,28 +504,24 @@ export function CountrySelect<Clearable extends boolean = false>({
     // Button's frame: the line under the trigger, or the Tooltip with a hidden copy for
     // `aria-describedby`. `items-stretch`: in the line's column the trigger keeps the
     // field's full width.
-    <LockedReason lock={{ reason, reasonId }} display={disabledReasonDisplay} className="flex w-full items-stretch">
+    <LockedReason lock={lock} display={disabledReasonDisplay} className="flex w-full items-stretch">
       {trigger}
     </LockedReason>
   ) : (
     trigger
   );
 
-  const labelHint = textHint ? undefined : hasMessage(hint) ? hint : undefined;
   const box =
     label !== undefined ? (
-      <FloatingField htmlFor={triggerId} label={label} staticLabel hint={labelHint}>
+      <FloatingField htmlFor={triggerId} label={label} staticLabel hint={field.labelHint}>
         {control}
       </FloatingField>
-    ) : labelHint !== undefined ? (
-      // No label line to ride: the "?" goes at the field's end, outside the box, as on
-      // an unlabelled Select.
-      <div className="flex items-center gap-1.5">
-        <div className="relative min-w-0 flex-1">{control}</div>
-        <span className="flex shrink-0 items-center">{labelHint}</span>
-      </div>
     ) : (
-      <div className="relative">{control}</div>
+      // No label line to ride: a "?" goes at the field's end, outside the box, as on an
+      // unlabelled Select.
+      <EndHintRow hint={field.labelHint}>
+        <div className="relative">{control}</div>
+      </EndHintRow>
     );
 
   return (
@@ -531,12 +529,7 @@ export function CountrySelect<Clearable extends boolean = false>({
     // description and the invalid state are on the trigger above.
     <div {...rest} className={className}>
       {box}
-      {textHint && (
-        <p id={hintId} className="mt-1 text-caption leading-tight text-muted">
-          {hint}
-        </p>
-      )}
-      {field.errorEl}
+      {field.below}
       <ComboboxPanel
         // The core with the rows ranked above in place of its own filter's.
         core={{ ...core, results }}

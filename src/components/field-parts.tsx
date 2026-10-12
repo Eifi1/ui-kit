@@ -1,19 +1,20 @@
 import { createContext, isValidElement, useContext, useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref, RefCallback } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useInlineFacts } from "../hooks/use-large-text";
 import { FOCUS_RING } from "./focus-ring";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
 
 /**
  * The pieces of a field's anatomy the kit's fields share — the static label, the hint
  * (caption or "?"), the caption and the error under a field, the label strip over a
- * bare group, the write lock on a control that saves itself. Private to the package —
- * not re-exported from the barrel, except `FieldLabel` and `FLOATING_LABEL_STATIC`,
- * which ui.tsx re-exports as it always has.
+ * bare group, the write lock on a control that saves itself, and the wiring under them
+ * (`aria-describedby`, refs). Private to the package — not re-exported from the barrel,
+ * except `FieldLabel` and `FLOATING_LABEL_STATIC`, which ui.tsx re-exports as it always
+ * has.
  *
  * One file since 0.23: until then the pickers' half (`field-anatomy.tsx`: the date and
  * month pickers, whose trigger is a button in a wrapper of their own, and the groups
@@ -23,6 +24,40 @@ import { hasMessage, mergeDescribedBy } from "./choice-parts";
  * Nothing here imports `ui.tsx`: `ui.tsx` imports this, and so do the combobox family,
  * the pickers and the native choice controls — the lint's no-cycle rule holds it.
  */
+
+/* ── the wiring: descriptions and refs ─────────────────────────────────────── */
+
+/**
+ * Ids to describe a control by, merged in reading order: whatever the caller already
+ * pointed at (standing advice), then the caption or description, then the error (the
+ * news). Merge, never replace — see {@link useFieldError}. An empty list is `undefined`,
+ * never `""`: a dangling attribute describes the control as nothing at all.
+ *
+ * Here since 0.34 (DUP-11, refactor audit 2026-10); `choice-parts.ts` held it, beside a
+ * copy of the presence rule, for the native choice controls alone.
+ */
+export function mergeDescribedBy(...ids: Array<string | false | null | undefined>): string | undefined {
+  const list = ids.filter(Boolean);
+  return list.length ? list.join(" ") : undefined;
+}
+
+/** Point a ref — a callback or an object — at `node`. `undefined` and `null` are no ref. */
+export function assignRef<T>(ref: Ref<T> | undefined, node: T | null): void {
+  if (typeof ref === "function") ref(node);
+  else if (ref) (ref as { current: T | null }).current = node;
+}
+
+/**
+ * One callback ref feeding several — the caller's forwarded `ref` and a field's own
+ * (DUP-11: AmountInput, FormActions, ScrollArea and SearchField each wrote this by hand).
+ * Wrap it in `useCallback` (or `useMemo`) over the same refs where a new callback every
+ * render would detach and re-attach the node.
+ */
+export function mergeRefs<T>(...refs: Array<Ref<T> | undefined>): RefCallback<T> {
+  return (node) => {
+    for (const ref of refs) assignRef(ref, node);
+  };
+}
 
 /* ── the static label ─────────────────────────────────────────────────────── */
 
@@ -234,7 +269,64 @@ export function useFieldHint(hintProp: ReactNode, describedBy: string | undefine
     describedBy: text ? mergeDescribedBy(describedBy, captionId) : describedBy,
     captionId: text ? captionId : undefined,
     captionText: text ? hint : undefined,
-    labelHint: !text && hasMessage(hint) ? hint : undefined,
+    labelHint: !text && hasContent(hint) ? hint : undefined,
+  };
+}
+
+/** The error line under a field — one type for every field's message (DUP-8, refactor
+ *  audit 2026-10: ChipInput and FileDropzone printed theirs in `text-xs`). */
+export const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
+
+/**
+ * The message under a field that is wrong, and the wiring that attaches it.
+ *
+ * `invalid` paints the field (`FIELD_INVALID`) and sets `aria-invalid`, and there it
+ * stopped: a field that announces "invalid" and nothing else has told a screen-reader
+ * user only that they are stuck. The message was always on screen — a sibling `<p>`
+ * beside the field — and never in the accessibility tree, because attaching it needs an
+ * id on the message and an `aria-describedby` on the control, and no caller was going to
+ * mint one by hand for every field on a form.
+ *
+ * Two rules the wiring has to keep:
+ *
+ *  - **Merge, never replace.** A field may already point at a hint ("at least twelve
+ *    characters"). Overwriting that reference to say the field is wrong trades one half
+ *    of the answer for the other — and it keeps the half the user has already read. The
+ *    hint stays first: it is the standing advice, the error is the news.
+ *  - **`invalid` keeps working alone**, for the forms whose message lives somewhere else
+ *    entirely (a summary at the top of a dialog). There is nothing to point at then, and
+ *    a dangling id describes the field as nothing at all.
+ *
+ * Deliberately NOT `role="alert"`. `aria-describedby` is read when focus reaches the
+ * control, which is where a field's own error is wanted; an alert would also interrupt
+ * whatever is being read at the time, on every keystroke of a form that re-validates as
+ * you type.
+ *
+ * Every field's since 0.34 (DUP-8, refactor audit 2026-10): it was ui.tsx's own, so the
+ * combobox family restated it as `useComboboxFieldError` — without the fourth argument,
+ * so Autocomplete announced a form library's `aria-invalid` and did not paint it — and
+ * ten fields restated it inline.
+ */
+export function useFieldError(
+  error: ReactNode,
+  invalid: boolean | undefined,
+  describedBy: string | undefined,
+  /** The caller's own `aria-invalid`. A form library sets THIS (see `@eifi1/ui-kit/rhf`
+   *  `FormControl`), not our `invalid` prop — and a field that announces invalid should
+   *  look it too. */
+  ariaInvalid?: unknown,
+): { isInvalid: boolean; describedBy: string | undefined; errorEl: ReactNode } {
+  const errorId = useId();
+  const hasError = hasContent(error);
+  return {
+    /** A field carrying a message that says what is wrong with it IS wrong. */
+    isInvalid: Boolean(invalid) || hasError || ariaInvalid === true || ariaInvalid === "true",
+    describedBy: mergeDescribedBy(describedBy, hasError && errorId),
+    errorEl: hasError ? (
+      <p id={errorId} className={FIELD_ERROR_CLASS}>
+        {error}
+      </p>
+    ) : null,
   };
 }
 
@@ -322,7 +414,7 @@ export interface LockReason {
 export function useLockReason(commit: CommitScope | undefined, disabledReason: ReactNode): LockReason {
   const reason = useCommitReason(commit, disabledReason);
   const reasonId = useId();
-  return { reason, locked: hasMessage(reason), reasonId };
+  return { reason, locked: hasContent(reason), reasonId };
 }
 
 /**
@@ -489,19 +581,11 @@ export const RequiredStarOnLegend = createContext(false);
 
 /* ── fields not built on FloatingField: pickers and bare groups ──────────── */
 
-/** `undefined`, `null`, `false` and `""` are what a caller's `cond && "…"` evaluates to
- *  when there is nothing to say; none of them is content. A numeric `0` is. */
-export function hasContent(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
-}
-
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
-
 export interface FieldMessages {
   /** `invalid`, a message, or an `aria-invalid` from outside (a form library). */
   isInvalid: boolean;
-  /** The caller's description, then the caption, then the error — the standing
-   *  advice before the news, as `useFieldError` in ui.tsx orders them. */
+  /** The caller's description, then the caption, then a lock's reason, then the error —
+   *  the standing advice before the news, as {@link useFieldError} orders them. */
   describedBy: string | undefined;
   /** The caption and the error, for under the field; `null` when there is neither. */
   below: ReactNode;
@@ -510,45 +594,41 @@ export interface FieldMessages {
   labelHint: ReactNode;
 }
 
-/** `hint` / `error` / `invalid` resolved the way `Select` resolves them. */
+/**
+ * `hint` / `error` / `invalid` resolved the way `Select` resolves them —
+ * {@link useFieldHint} and {@link useFieldError} together, for a field that draws what
+ * goes under it in one place (a picker, a group, a field built on another).
+ */
 export function useFieldMessages({
-  hint: hintProp,
+  hint,
   error,
   invalid,
   describedBy,
   ariaInvalid,
+  reasonId,
 }: {
   hint?: ReactNode;
   error?: ReactNode;
   invalid?: boolean;
   describedBy?: string;
   ariaInvalid?: unknown;
+  /** A lock's reason (`useLockReason`'s `reasonId`, while locked): described after the
+   *  caption and before the error, as on Select. */
+  reasonId?: string | false;
 }): FieldMessages {
-  const hint = useInlineHint(hintProp);
-  const hintId = useId();
-  const errorId = useId();
-  const textHint = isTextHint(hint);
-  const hasError = hasContent(error);
+  const hintParts = useFieldHint(hint, describedBy);
+  const field = useFieldError(error, invalid, mergeDescribedBy(hintParts.describedBy, reasonId), ariaInvalid);
   return {
-    isInvalid: Boolean(invalid) || hasError || ariaInvalid === true || ariaInvalid === "true",
-    describedBy:
-      [describedBy, textHint && hintId, hasError && errorId].filter(Boolean).join(" ") || undefined,
+    isInvalid: field.isInvalid,
+    describedBy: field.describedBy,
     below:
-      textHint || hasError ? (
+      hintParts.captionText !== undefined || field.errorEl !== null ? (
         <>
-          {textHint && (
-            <p id={hintId} className={FIELD_CAPTION_CLASS}>
-              {hint}
-            </p>
-          )}
-          {hasError && (
-            <p id={errorId} className={FIELD_ERROR_CLASS}>
-              {error}
-            </p>
-          )}
+          <FieldCaption parts={hintParts} />
+          {field.errorEl}
         </>
       ) : null,
-    labelHint: !textHint && hasContent(hint) ? hint : undefined,
+    labelHint: hintParts.labelHint,
   };
 }
 
@@ -652,6 +732,9 @@ export function LabelStrip({
 }: Omit<ComponentPropsWithoutRef<"div">, "children"> & {
   labelId: string;
   label: ReactNode;
+  /** What rides the label line beside the label — a resolved `labelHint`
+   *  ({@link useFieldMessages}), never a raw `hint`: a FieldHint is the caption at Large
+   *  and on touch, and the caller draws that under its group. */
   hint?: ReactNode;
   /** Dim the label with its group, as `peer-disabled:` dims a field's own. */
   disabled?: boolean;

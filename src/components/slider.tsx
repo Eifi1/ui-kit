@@ -1,6 +1,7 @@
 import { forwardRef, useId } from "react";
 import type { CSSProperties, ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { useFieldMessages } from "./field-parts";
 
 /**
  * A range control on a native `<input type="range">`.
@@ -161,7 +162,13 @@ export interface SliderProps
   label?: ReactNode;
   /** Something that belongs to the label rather than the value — in practice a
    *  `FieldHint` "?". Rendered beside the label, outside the `<label>` element, so it
-   *  never becomes part of the slider's accessible name. */
+   *  never becomes part of the slider's accessible name.
+   *
+   *  {@link Select}'s rule since 0.34 (DUP-2, refactor audit 2026-10): plain TEXT is a
+   *  caption under the track, on the slider's `aria-describedby`, and so is a FieldHint
+   *  at Large and on a touch screen, where a "?" cannot be hovered open (§4) — the
+   *  Kurvenschmiede controller panel's Kp/Ki/Kd facts were a lone "?" on a phone. A
+   *  `HelpPopover` stays beside the label at every size. */
   hint?: ReactNode;
   /** The value as the reader sees it, at the end of the label line — a formatted
    *  number, or a `NumberInput` for typing one. Rendered as given. */
@@ -245,7 +252,10 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
     .filter((m) => m.value >= min && m.value <= max);
   const hasMarkLabels = normalizedMarks.some((m) => m.label !== undefined);
 
-  const hasHeader = label !== undefined || hint !== undefined || readout !== undefined;
+  // The label line's "?", or the caption under the track (DUP-2).
+  const messages = useFieldMessages({ hint, describedBy: rest["aria-describedby"] });
+  const labelHint = messages.labelHint;
+  const hasHeader = label !== undefined || labelHint !== undefined || readout !== undefined;
   const plainReadout = typeof readout === "string" || typeof readout === "number";
 
   return (
@@ -269,7 +279,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
               {label}
             </label>
           )}
-          {hint !== undefined && <span className="flex shrink-0 items-center">{hint}</span>}
+          {labelHint !== undefined && <span className="flex shrink-0 items-center">{labelHint}</span>}
           {readout !== undefined && (
             <span
               className={cn(
@@ -293,6 +303,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
         step={log ? LOG_STEP : step}
         value={current}
         aria-valuetext={valueText}
+        aria-describedby={messages.describedBy}
         onChange={handleChange}
         // The fill's break point, merged under the caller's own style.
         style={{ ...style, "--slider-fill": `${share(current) * 100}%` } as CSSProperties}
@@ -324,6 +335,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
           ))}
         </div>
       )}
+      {messages.below}
     </div>
   );
 });

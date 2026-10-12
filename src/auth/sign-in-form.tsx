@@ -5,7 +5,7 @@ import { KeyRound } from "lucide-react";
 import { useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import { CurrentPasswordInput } from "../components/danger-confirm";
 import { OneTimeCodeInput } from "../components/one-time-code-input";
 import { TextLink } from "../components/text-link";
@@ -489,7 +489,7 @@ export function SignInForm({
     recoveryUsed: boolean,
   ): ReactNode => {
     const own = describeError?.(error, action);
-    if (hasMessage(own)) return own;
+    if (hasContent(own)) return own;
     // After the app's words, before the kit's generic ones (0.30.0): a throttle is
     // neither a wrong password nor a wrong code, and saying so sends the person to try
     // another one — which the limiter counts too.
@@ -767,7 +767,7 @@ export function SignInForm({
   const refused = failure?.code === "invalid_credentials";
   const tagged =
     refused && failure?.action === "password" && emailTag && failure.email ? taggedEmail(failure.email, emailTag) : null;
-  const showDeactivated = refused && hasMessage(deactivatedContact);
+  const showDeactivated = refused && hasContent(deactivatedContact);
 
   return (
     <div {...rest} data-step="credentials" className={rootClass}>

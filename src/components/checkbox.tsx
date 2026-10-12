@@ -2,10 +2,13 @@ import { forwardRef, useCallback, useContext, useEffect, useId, useRef } from "r
 import { Check, Minus } from "lucide-react";
 import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { assignRef, hasMessage, mergeDescribedBy } from "./choice-parts";
+import { hasContent } from "../lib/presence";
 import {
+  assignRef,
   DISABLED_REASON_LINE_CLASS,
+  FIELD_ERROR_CLASS,
   LockedReason,
+  mergeDescribedBy,
   RequiredStarOnLegend,
   useDisabledReasonLine,
   useLockReason,
@@ -65,8 +68,6 @@ const BOX_MIXED = "border-brand bg-brand";
 // focus ring turns danger too, so focusing a wrong box does not repaint it as fine.
 const BOX_INVALID =
   "border-danger-strong ring-1 ring-danger-strong checked:border-danger-strong focus-visible:ring-[var(--danger)]";
-
-const ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
 
 export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   /**
@@ -182,8 +183,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
   const starOnLegend = useContext(RequiredStarOnLegend);
   const descriptionId = `${inputId}-description`;
   const errorId = `${inputId}-error`;
-  const showError = hasMessage(error);
-  const showDescription = hasMessage(description);
+  const showError = hasContent(error);
+  const showDescription = hasContent(description);
   const isInvalid = Boolean(invalid) || showError;
   // Nothing to lay out beside the box: render the box alone, as the raw input was.
   const bare = label === undefined && !showDescription && !showError;
@@ -334,7 +335,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           </span>
         )}
         {showError && (
-          <span id={errorId} className={cn("block", ERROR_CLASS)}>
+          <span id={errorId} className={cn("block", FIELD_ERROR_CLASS)}>
             {error}
           </span>
         )}

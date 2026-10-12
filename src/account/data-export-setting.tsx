@@ -6,7 +6,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { clickDownload } from "../lib/download";
 import { AlertBanner } from "../components/alert-banner";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import { TextLink } from "../components/text-link";
 import { Button, Card } from "../components/ui";
 import { isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
@@ -158,7 +158,7 @@ export function DataExportSetting({
         setBusy(false);
         const own = describeError?.(error);
         setFailure(
-          hasMessage(own) ? own : isRateLimited(error) ? labels.rateLimited(retryAfterSeconds(error)) : labels.failed,
+          hasContent(own) ? own : isRateLimited(error) ? labels.rateLimited(retryAfterSeconds(error)) : labels.failed,
         );
       },
     );
@@ -169,7 +169,7 @@ export function DataExportSetting({
       <div className="space-y-1">
         <SettingsCardTitle>{labels.title}</SettingsCardTitle>
         <div className={CARD_DESCRIPTION_CLASS}>{labels.description}</div>
-        {hasMessage(description) && <div className={CARD_DESCRIPTION_CLASS}>{description}</div>}
+        {hasContent(description) && <div className={CARD_DESCRIPTION_CLASS}>{description}</div>}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Button type="button" variant="secondary" pending={busy} onClick={run}>
@@ -189,7 +189,7 @@ export function DataExportSetting({
           )}
         </span>
       </div>
-      {hasMessage(failure) && (
+      {hasContent(failure) && (
         <AlertBanner tone="danger" size="sm" role="alert">
           {failure}
         </AlertBanner>

@@ -314,6 +314,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Colonnes (${n(visible)}/${n(total)})`,
+      filterColumn: (column, active) => (active ? `Filtrer ${column} (actif)` : `Filtrer ${column}`),
       empty: "Aucune entrée",
       actions: "Actions",
       edit: "Modifier",

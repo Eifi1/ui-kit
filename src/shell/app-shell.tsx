@@ -13,7 +13,8 @@ import { pickLinkRenderer } from "../components/text-link";
 import { DialogFrame } from "../components/dialog-frame";
 import { CompactControls } from "../components/ui";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
-import { useEscapeKey } from "../hooks/use-dismiss";
+import { anchoredInline } from "../hooks/use-anchored-panel";
+import { useDismissLayer } from "../hooks/use-dismiss";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useTextSize } from "../theme/text-size";
 import type { TextSize } from "../theme/text-size";
@@ -1158,14 +1159,20 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
   const [dir, setDir] = useState<Direction>("ltr");
 
   // Anchor the flyout to the item's END edge — its right, or its left in RTL, where
-  // the sidebar sits on the right of the window. The hook re-measures on
-  // scroll/resize (the nav list can scroll).
+  // the sidebar sits on the right of the window — and keep it on the glass (Wave 2,
+  // DUP-7). Right to left it hangs by its `right`, which a fixed box measures from
+  // inside the scrollbar: `innerWidth` counted the bar and put the flyout a bar's width
+  // off its item. The hook re-measures on scroll/resize (the nav list can scroll); the
+  // panel's own width is measured once it is up, before paint.
   const rect = useAnchoredRect(wrapperRef, open);
-  const pos = rect
-    ? dir === "rtl"
-      ? { top: rect.top, right: window.innerWidth - rect.left }
-      : { top: rect.top, left: rect.right }
-    : null;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panelWidth, setPanelWidth] = useState(0);
+  const placed = rect !== null;
+  useLayoutEffect(() => {
+    if (open && placed) setPanelWidth(panelRef.current?.offsetWidth ?? 0);
+  }, [open, placed]);
+  const at = rect ? anchoredInline(rect, panelWidth, { dir, align: "after" }) : null;
+  const pos = rect && at ? { top: rect.top, ...(dir === "rtl" ? { right: at.right } : { left: at.left }) } : null;
 
   const cancelClose = useCallback(() => {
     if (closeTimer.current) {
@@ -1194,8 +1201,8 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
     }, 140);
   }, [cancelClose, closeNow]);
 
-  // Close on Escape while open.
-  useEscapeKey(() => setOpen(false), open);
+  // Close on Escape while open — a layer on the kit's Escape stack (Wave 2, DUP-1).
+  useDismissLayer(open, () => setOpen(false));
 
   useEffect(
     () => () => {
@@ -1225,6 +1232,7 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
           // reach it by focus, which the wrapper above already handles.
           // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- pointer-only hover bridge
           <div
+            ref={panelRef}
             dir={dir}
             style={{ position: "fixed", ...pos }}
             className="z-40 ps-1"

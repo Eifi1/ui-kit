@@ -306,6 +306,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Oszlopok (${n(visible)}/${n(total)})`,
+      filterColumn: (column, active) => (active ? `${column} szűrése (aktív)` : `${column} szűrése`),
       empty: "Nincsenek bejegyzések",
       actions: "Műveletek",
       edit: "Szerkesztés",

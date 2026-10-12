@@ -83,6 +83,17 @@ describe("FileDropzone 0.6", () => {
     await screen.findByText("“small.pdf” selected");
   });
 
+  it("prints the refusal in every field's error type (DUP-8)", () => {
+    zone({ rejectionFeedback: "inline" });
+    drop(screen.getByRole("group", { name: LABELS.dropLabel }), png());
+    const message = document.getElementById(
+      screen.getByRole("group", { name: LABELS.dropLabel }).getAttribute("aria-describedby")!,
+    )!;
+    // FIELD_ERROR_CLASS's type, not `text-xs`; the zone's gap spaces it.
+    expect(message).toHaveClass("text-caption", "leading-tight", "text-danger");
+    expect(message).not.toHaveClass("text-xs");
+  });
+
   it("keeps a caller's aria-describedby next to its own", () => {
     zone({ rejectionFeedback: "inline", "aria-describedby": "outside-hint" });
     const root = screen.getByRole("group", { name: LABELS.dropLabel });

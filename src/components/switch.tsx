@@ -1,10 +1,11 @@
 import { forwardRef, useId } from "react";
 import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { hasContent } from "../lib/presence";
 import {
   DISABLED_REASON_LINE_CLASS,
   LockedReason,
+  mergeDescribedBy,
   useDisabledReasonLine,
   useLockReason,
   type DisabledReasonDisplay,
@@ -158,7 +159,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   // click, as for `disabled`.
   const looksDisabled = Boolean(disabled) || locked;
   const descriptionId = `${inputId}-description`;
-  const showDescription = hasMessage(description);
+  const showDescription = hasContent(description);
   const bare = label === undefined && !showDescription;
   const geometry = SIZES[size];
 

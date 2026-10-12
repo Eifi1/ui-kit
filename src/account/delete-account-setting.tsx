@@ -5,7 +5,7 @@ import { UserX } from "lucide-react";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import {
   CurrentPasswordInput,
   DangerConfirm,
@@ -217,7 +217,7 @@ export function DeleteAccountSetting({
 
   const present = (error: unknown) => {
     const own = describeError?.(error);
-    if (hasMessage(own)) {
+    if (hasContent(own)) {
       setFailure(own);
       return;
     }
@@ -334,7 +334,7 @@ export function DeleteAccountSetting({
               busy={busy}
             />
           </DangerConfirm>
-          {hasMessage(failure) && (
+          {hasContent(failure) && (
             <AlertBanner tone="danger" size="sm" role="alert">
               {failure}
             </AlertBanner>

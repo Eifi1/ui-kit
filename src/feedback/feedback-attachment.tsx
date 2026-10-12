@@ -1,4 +1,5 @@
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import {
   useEffect,
   useLayoutEffect,
@@ -750,7 +751,7 @@ function RefsField({
   // take the focusable `aria-disabled` path and say why — Button's and IconButton's
   // `disabledReason`, handed down as is.
   const disabledReason = useCommitReason(commits, ownDisabledReason);
-  const locked = hasReason(disabledReason);
+  const locked = hasContent(disabledReason);
   const reason = locked ? disabledReason : undefined;
   const inert = disabled || locked;
 
@@ -1058,10 +1059,6 @@ function RemoveButton({
   );
 }
 
-/** A reason worth showing: `null`, `false` and `""` are a caller's "no reason". */
-function hasReason(reason: ReactNode): boolean {
-  return reason !== undefined && reason !== null && reason !== false && reason !== "";
-}
 
 /**
  * The {@link FeedbackAttachmentErrorInfo} builder of one field: its limits, and the

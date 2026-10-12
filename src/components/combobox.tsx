@@ -5,6 +5,8 @@ import { ChevronDown, Plus, X } from "lucide-react";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
+import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
+import { isImeEnter } from "../lib/ime";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { useAnchorDir } from "./use-anchor-dir";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
@@ -19,7 +21,6 @@ import {
   SUGGESTION_LIST_CLASS,
   suggestionRowClass,
   useActiveOptionScroll,
-  useComboboxFieldError,
   type ComboClearValue,
   type ComboOption,
 } from "./combobox-core";
@@ -29,12 +30,14 @@ import {
   FieldCaption,
   LABEL_IN_ROW,
   LockedReason,
+  mergeDescribedBy,
   StaticLabelRow,
+  useFieldError,
   useFieldHint,
   useLockReason,
   type DisabledReasonDisplay,
 } from "./field-parts";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { hasContent } from "../lib/presence";
 import { useCommitReason, type CommitScope } from "./write-lock";
 
 // One look for both combobox flavors below — the suggestion list and its rows
@@ -332,11 +335,7 @@ export function Combobox(props: ComboboxProps) {
     ...rest
   } = props;
   const hintParts = useFieldHint(hint, ariaDescribedBy);
-  const field = useComboboxFieldError(
-    error,
-    invalid || ariaInvalid === true || ariaInvalid === "true",
-    hintParts.describedBy,
-  );
+  const field = useFieldError(error, invalid, hintParts.describedBy, ariaInvalid);
   const generated = useId();
   const fieldId = id ?? generated;
   // Derived from the GENERATED id, never from `id`: a caller's id is theirs to
@@ -345,9 +344,10 @@ export function Combobox(props: ComboboxProps) {
   const optionId = (index: number) => `${generated}-option-${index}`;
   // `backCloses` is the desktop half of live #309: the phone's list IS a
   // {@link PickerSheet}, which registers its own history entry, so registering a
-  // second one here would cost two Back presses to dismiss one sheet.
+  // second one here would cost two Back presses to dismiss one sheet. Its Escape
+  // layer is this field's own, below — the list can be open with nothing to show.
   const isPhone = usePhoneLayout();
-  const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone });
+  const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone, escapeLayer: false });
   const primaryOnly = usePrimaryPressOnly();
   const [active, setActive] = useState(-1);
   // The lock (see `lockedKeyDown`): a lock arriving while the list is up closes it,
@@ -479,6 +479,15 @@ export function Combobox(props: ComboboxProps) {
       ? createLabel(typed)
       : null;
 
+  // The list is a layer on the Escape stack while it SHOWS (Wave 2, DUP-1): an Escape
+  // over an empty "open" list is the dialog's, as it always was. On a phone the sheet
+  // is the layer.
+  const showing = !isPhone && open && !inert && (matches.length > 0 || Boolean(createRow));
+  useDismissLayer(showing, () => {
+    setOpen(false);
+    setActive(-1);
+  });
+
   return (
     // `rest` dresses the outer box — a `data-tour` anchor, a test id. Not the NAME,
     // description, invalid or required state: those belong on the <input> below,
@@ -578,6 +587,9 @@ export function Combobox(props: ComboboxProps) {
                   e.preventDefault();
                   setActive((i) => Math.max(i - 1, 0));
                 } else if (e.key === "Enter") {
+                  // The Enter that confirms an IME composition is the IME's: it picks no
+                  // row and submits nothing (BUG-9).
+                  if (isImeEnter(e)) return;
                   if (open && active >= 0 && active < matches.length) {
                     e.preventDefault();
                     take(matches[active]);
@@ -590,14 +602,11 @@ export function Combobox(props: ComboboxProps) {
                     onSubmit?.();
                   }
                 } else if (e.key === "Escape") {
-                  // Closing a list that is SHOWING is the list's Escape, and stops here,
-                  // as Autocomplete's does: a Modal or FullBleedDialog around the field
+                  // A list that is SHOWING is the top of the Escape stack, and the key
+                  // closes it and stops here: a Modal or FullBleedDialog around the field
                   // otherwise closed with it, form and all (round 0.34 BUG-1). With no
                   // list on screen the key goes on to whoever wants it.
-                  if (open && (matches.length > 0 || createRow)) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
+                  if (showing && takeEscape(e)) return;
                   setOpen(false);
                   setActive(-1);
                 } else if (e.key === "Tab") {
@@ -714,7 +723,7 @@ export function Combobox(props: ComboboxProps) {
           </ul>
         </PickerSheet>
       )}
-      {!isPhone && open && !inert && (matches.length > 0 || createRow) && (
+      {showing && (
         <SuggestionList id={listboxId} anchorRef={fieldRef} panelRef={panelRef}>
           {createRow && (
             <li role="presentation">
@@ -989,19 +998,16 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   // so from here down `value` is the id or `null`, as it always was.
   const value: V | null = rawValue == null || rawValue === clearValue ? null : (rawValue as V);
   const hintParts = useFieldHint(hint, ariaDescribedBy);
-  const field = useComboboxFieldError(
-    error,
-    invalid || ariaInvalid === true || ariaInvalid === "true",
-    hintParts.describedBy,
-  );
+  const field = useFieldError(error, invalid, hintParts.describedBy, ariaInvalid);
   const generated = useId();
   const fieldId = id ?? generated;
   // See the twin above on why these hang off the generated id.
   const listboxId = `${generated}-listbox`;
   const optionId = (index: number) => `${generated}-option-${index}`;
   const isPhone = usePhoneLayout();
-  // See the twin above: the phone sheet owns its own Back entry (live #309).
-  const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone });
+  // See the twin above: the phone sheet owns its own Back entry (live #309), and the
+  // Escape layer is this field's own.
+  const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone, escapeLayer: false });
   const primaryOnly = usePrimaryPressOnly();
   const [active, setActive] = useState(-1);
   // null = not editing → the input shows the selected option's label.
@@ -1034,7 +1040,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   }
   // The create row's own lock (`createCommit`): the list stays live, the row does not.
   const createReason = useCommitReason(createCommit, undefined);
-  const createLocked = hasMessage(createReason);
+  const createLocked = hasContent(createReason);
 
   const selected = useMemo(
     () => (value == null ? null : (options.find((o) => o.value === value) ?? null)),
@@ -1113,6 +1119,12 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     setActive(-1);
     setSheetQuery("");
   };
+  // See the twin above: a layer while the list SHOWS, and Escape puts the label back.
+  const showing = !isPhone && open && !inert && (matches.length > 0 || showCreate);
+  useDismissLayer(showing, () => {
+    setText(null);
+    close();
+  });
   const take = (o: ComboOption<V>) => {
     // A `disabled` option is listed, never taken — by any path; nor is anything while
     // the field is locked.
@@ -1274,6 +1286,8 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                   e.preventDefault();
                   setActive((i) => (i < 0 ? stepEnabled(rows, -1, 1) : stepEnabled(rows, i, -1)));
                 } else if (e.key === "Enter") {
+                  // An IME's Enter takes nothing, and judges no loose text (BUG-9).
+                  if (isImeEnter(e)) return;
                   if (open && isOptionEnabled(rows[active])) {
                     e.preventDefault();
                     if (active === createIndex && showCreate) create();
@@ -1284,10 +1298,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                 } else if (e.key === "Escape") {
                   // A showing list takes the key and stops it — see the twin in
                   // {@link Combobox} (round 0.34 BUG-1).
-                  if (open && (matches.length > 0 || showCreate)) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
+                  if (showing && takeEscape(e)) return;
                   setText(null);
                   close();
                 } else if (e.key === "Tab") {
@@ -1436,7 +1447,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
           </ul>
         </PickerSheet>
       )}
-      {!isPhone && open && !inert && (matches.length > 0 || showCreate) && (
+      {showing && (
         <SuggestionList id={listboxId} anchorRef={fieldRef} panelRef={panelRef}>
           {matches.map((o, i) => (
             // A group heading is emitted at each group boundary rather than repeating

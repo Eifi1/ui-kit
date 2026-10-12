@@ -2,6 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties, HTMLAttributes, KeyboardEvent, Key, ReactNode } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useKitLabels } from "../i18n/kit-labels";
 import { Button, IconButton } from "./ui";
 import { DEFAULT_LINE_ITEMS_LABELS } from "./line-items-labels";
@@ -215,10 +216,6 @@ function defaultKey(item: unknown, index: number): Key {
     if (typeof id === "string" || typeof id === "number") return id;
   }
   return index;
-}
-
-function hasContent(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
 }
 
 type PendingFocus = { kind: "added" } | { kind: "removed"; index: number };

@@ -10,6 +10,8 @@ import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, Spinner } from "./ui";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
+import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
+import { isImeEnter } from "../lib/ime";
 import { useAnchorDir } from "./use-anchor-dir";
 import {
   ComboboxFieldLabel,
@@ -18,7 +20,6 @@ import {
   isOptionEnabled,
   stepEnabled,
   useActiveOptionScroll,
-  useComboboxFieldError,
   useOptionSource,
   type ComboOption,
 } from "./combobox-core";
@@ -28,12 +29,13 @@ import {
   FieldCaption,
   LABEL_IN_ROW,
   LockedReason,
+  mergeDescribedBy,
   StaticLabelRow,
+  useFieldError,
   useFieldHint,
   useLockReason,
   type DisabledReasonDisplay,
 } from "./field-parts";
-import { mergeDescribedBy } from "./choice-parts";
 import type { CommitScope } from "./write-lock";
 
 /**
@@ -222,7 +224,9 @@ function AutocompleteInner<V extends string | number = string>(
     loadError: loadErrorLabel,
   });
   const hintParts = useFieldHint(hint, ariaDescribedBy);
-  const field = useComboboxFieldError(error, invalid, hintParts.describedBy);
+  // A form library's `aria-invalid` paints as well as announces (DUP-8: it only
+  // announced, through the spread below).
+  const field = useFieldError(error, invalid, hintParts.describedBy, rest["aria-invalid"]);
 
   /** The user's intent: the field is focused and the list has not been dismissed.
    *  Whether anything SHOWS is decided below, from what there is to show. */
@@ -278,6 +282,8 @@ function AutocompleteInner<V extends string | number = string>(
     setOpen(false);
     setActive(-1);
   };
+  // The list is a layer on the kit's Escape stack while it shows (Wave 2, DUP-1).
+  useDismissLayer(expanded, close);
   const take = (o: ComboOption<V>) => {
     if (o.disabled || locked) return;
     if (fillOnSelect) onChange(o.label);
@@ -397,12 +403,7 @@ function AutocompleteInner<V extends string | number = string>(
                 // the caller sees it. A caller whose Escape means "close the panel" (keksdose's
                 // address search) otherwise closed the whole panel when the user only meant
                 // to dismiss the suggestions — the opposite of what the docs promised.
-                if (e.key === "Escape" && expanded) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  close();
-                  return;
-                }
+                if (e.key === "Escape" && expanded && takeEscape(e)) return;
                 onKeyDown?.(e);
                 if (e.defaultPrevented) return;
                 // Disabled rows are passed over; at either end the highlight stays put.
@@ -417,8 +418,9 @@ function AutocompleteInner<V extends string | number = string>(
                   else setActive((i) => stepEnabled(results, i < 0 ? results.length : i, -1));
                 } else if (e.key === "Enter") {
                   // No row highlighted: the text is the answer, and a form's own submit
-                  // is left alone.
-                  if (expanded && activeId) {
+                  // is left alone. Nor is a row taken by the Enter that confirms an IME
+                  // composition, which is the IME's (BUG-9).
+                  if (expanded && activeId && !isImeEnter(e)) {
                     e.preventDefault();
                     take(results[active]);
                   }

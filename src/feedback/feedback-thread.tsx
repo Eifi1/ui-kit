@@ -3,6 +3,7 @@ import type { ReactNode, Ref, RefObject } from "react";
 import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime } from "../lib/format";
+import { hasContent } from "../lib/presence";
 import { Button, EmptyState, Spinner, Textarea } from "../components/ui";
 import type { CharacterCountLabels } from "../components/ui";
 import { Skeleton } from "../components/skeleton";
@@ -754,7 +755,8 @@ export function FeedbackComposer({
     () => "Ctrl",
   );
 
-  if (disabledReason != null && disabledReason !== false) {
+  // The kit's one presence rule (DUP-11): `""` is no reason either, so it keeps the box.
+  if (hasContent(disabledReason)) {
     return (
       <p {...rootAttributes} className={cn("text-xs text-muted", className)}>
         {disabledReason}

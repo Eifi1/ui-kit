@@ -76,6 +76,13 @@ export interface DataTableLabels extends DataTableSortLabels {
   rowCount: (total: number) => string;
   /** The column-settings rail and its heading: "Columns (4/9)". */
   columnsCount: (visible: number, total: number) => string;
+  /**
+   * A column's filter button and panel: "Filter Amount", and "Filter Amount (active)"
+   * while the column is filtered (round 0.34 Wave 2, BUG-7c). Every column's used to be
+   * "Filter" alike, and "filtered" was a colour. An app that translated only `filter`
+   * gets `"<filter>: <column>"` from it — see {@link resolveDataTableLabels}.
+   */
+  filterColumn: (column: string, active: boolean) => string;
 
   // ---- Empty state, row actions, boolean cells (0.12.0) ----
 
@@ -143,6 +150,7 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
   pageRange: (from, to, total) => `${from}–${to} / ${total}`,
   rowCount: (total) => `${total}`,
   columnsCount: (visible, total) => `Columns (${visible}/${total})`,
+  filterColumn: (column, active) => (active ? `Filter ${column} (active)` : `Filter ${column}`),
   empty: "No entries",
   actions: "Actions",
   edit: "Edit",
@@ -188,6 +196,11 @@ export function resolveDataTableLabels(partial?: Partial<DataTableLabels>): Data
   if (partial.columns !== undefined && partial.columnsCount === undefined) {
     merged.columnsCount = (visible, total) => `${merged.columns} (${visible}/${total})`;
   }
+  // The same for `filterColumn` (0.34), from a translated `filter`: the app's own word
+  // with the column, rather than English for having translated the key that existed.
+  if (partial.filter !== undefined && partial.filterColumn === undefined) {
+    merged.filterColumn = (column) => `${merged.filter}: ${column}`;
+  }
   return merged;
 }
 
@@ -219,6 +232,7 @@ export function missingDataTableLabels(labels?: Partial<DataTableLabels>): strin
     // send them to translate a key they have already covered, and an `toEqual([])`
     // assertion built on this would never go green.
     if (key === "columnsCount" && labels?.columns !== undefined) continue;
+    if (key === "filterColumn" && labels?.filter !== undefined) continue;
     missing.push(key);
   }
   for (const preset of Object.keys(DEFAULT_DATA_TABLE_LABELS.presets)) {
