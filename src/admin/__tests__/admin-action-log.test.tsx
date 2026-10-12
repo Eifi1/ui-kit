@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, onTestFinished } from "vitest";
 
 import { DEFAULT_UI_KIT_LABELS } from "../../i18n/defaults";
 import { UiKitProvider } from "../../i18n/kit-labels";
@@ -34,6 +34,13 @@ const rows = () => within(screen.getByRole("list", { name: "Admin actions" })).g
 
 describe("AdminActionLog", () => {
   it("says who did what to whom, with the detail", () => {
+    // The relative words ("… ago") need the entries to be recent: pin the clock a day after
+    // the newest fixture, or the test turns red a week after the fixtures were written.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-07T12:00:00Z"));
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     render(<AdminActionLog entries={ENTRIES} labels={{ actions: { plan: "Plan changed" } }} />);
     const [deactivated, requested, erased, role, plan] = rows();
     expect(deactivated).toHaveTextContent("Deactivated");
