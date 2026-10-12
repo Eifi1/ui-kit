@@ -134,7 +134,8 @@ matter: a caller passing three of eleven must get English for the other eight, n
 The `DEFAULT_*` constant lives in a `<component>-labels.ts` beside the component, with no
 component code (type imports only); the component imports and re-exports it. That keeps
 the English catalogue one chunk like the other languages (0.34);
-`english-catalogue-graph.test.ts` and `check:graph` enforce it.
+`english-catalogue-graph.test.ts` and `check:graph` enforce it. The provider's own
+namespaces live in `src/i18n/shared-labels.ts`.
 
 **A label that interpolates a value is a function of that value, never a template
 literal.** Word order, pluralisation and where the number lands are the translator's
@@ -324,6 +325,9 @@ A split page leaves its old slug in `RETIRED_SLUGS`.
 **Adding a component to the kit means adding it to a page:** a section on its family's page,
 and its name in that page's `components[]`. That is the only thing keeping the showcase
 true, and it is also the broadest test the package has:
+- `showcase/src/__tests__/component-index.test.ts` fails when an exported component is on
+  no page's `components[]` (or on `NOT_ON_A_PAGE` with a reason), or a listed name is not an
+  export;
 - `showcase/src/__tests__/pages-shard-1…4.test.tsx` mount every page once under jsdom
   (`page-shard.tsx`), so a section that throws on mount fails CI, and each page's rendered
   `h3` anchors must equal the search index;
@@ -346,7 +350,7 @@ for one maintainer. Revisit it if a second maintainer appears.
 every one blocks:
 
 - `check:static`: typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
-- `check:build`: build · check:graph · check:package · the export inventory (`gen-export-inventory.mjs --check`) · build:showcase · check:tailwind
+- `check:build`: build · check:graph · check:package · the export and styling inventories (`--check`) · build:showcase · check:tailwind
 - `check:test`: test:coverage
 
 **Serial, and it stops at the first failing group** (since 0.34, TST-1), naming the groups it
@@ -400,6 +404,7 @@ by hand:
 | `check:graph` | That the build stayed unbundled. A bundling build fuses the modules into one chunk and `sideEffects` can no longer let a consumer drop what it does not use — the regression that dragged ~433 KB of recharts into a consumer's entry chunk. It asserts the graph, not a string: every source module has its own `dist/` module, and no runtime import cycle. And what that regression would cost (MOD-6): Rollup bundles `{ Button }`, `{ Spinner }`, `{ cn }` and the apps' shell set from `dist/`, prints the minified size and fails above a ceiling (the `BUDGETS` in `scripts/check-module-graph.mjs`). When a change makes one smaller, lower its ceiling in the same commit. Which modules may import recharts at all is `packaging-contract.test.ts`'s rule. |
 | `check:package` | The **publish artifact**, not the working tree. It packs the real tarball, installs it with only the declared required peers, and imports every entry point *by package name* — the only way the `exports` map is ever exercised. Both defects that reached consumers in 0.4.x were invisible to every other check, because every other check ran against `src/` or against `dist/` by relative path. It also checks that every module ships its own `.d.ts`. |
 | export inventory | `node scripts/gen-export-inventory.mjs --check`: the README's export inventory is what `dist/index.d.ts` exports, read through TypeScript's checker. Stale, it names the exports the README misses; rewrite it with the same script without `--check`. |
+| styling inventory | `node scripts/gen-styling-inventory.mjs --check`: the README's role-utility list is what `tokens.css`'s `@theme inline` block defines. Stale, it names what is missing; rewrite it without `--check`. |
 | `build:showcase` | The only place the kit is *rendered* outside jsdom. |
 | `check:tailwind` | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. |
 | `check:security` | `npm audit --audit-level=high`. |
@@ -458,8 +463,9 @@ just the symptom, because a reader upgrading needs to know whether it could have
 ### Cutting a release
 
 1. On the release branch: `npm run check` — clean.
-2. The README inventory is current: `check:build` fails when it is not, and
-   `npm run build && node scripts/gen-export-inventory.mjs` regenerates it.
+2. The README's export and styling inventories are current: `check:build` fails when
+   they are not; `npm run build && node scripts/gen-export-inventory.mjs` and
+   `node scripts/gen-styling-inventory.mjs` regenerate them.
 3. `npm run release:dry` to read the version and the entry; then `npm run release`. It bumps
    `package.json` and the lockfile, writes `CHANGELOG.md` and commits
    `chore(release): X.Y.Z`. It does NOT tag (`skip.tag`). Force a version with

@@ -5,7 +5,7 @@
   // "native"` (its planned default) and Node 24's type stripping import them as-is,
   // and Node resolves a relative specifier only with its extension. So these files
   // write `./alias.ts`, which tsc accepts only under `allowImportingTsExtensions` —
-  // and that flag must NOT reach tsconfig.json: tsup's declaration build reads it,
+  // and that flag must NOT reach tsconfig.json: the declaration build (tsconfig.build.json) reads it,
   // and a `.ts` specifier in src/ would ship verbatim into dist/ and break every
   // consumer. Here nothing is emitted, so it is safe.
   //
