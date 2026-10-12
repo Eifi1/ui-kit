@@ -1,4 +1,5 @@
 import type { DataTableColumn } from "./data-table";
+import { toLocalIso } from "../lib/dates";
 
 /** How a column is filtered. `text`/`select`/`date`/`number` each read a value
  *  off the row and compare it against the user's {@link FilterValue}. */
@@ -38,6 +39,23 @@ export function isFilterActive(v: FilterValue | undefined): boolean {
 }
 
 /**
+ * The calendar day a date filter compares, as "YYYY-MM-DD" — the LOCAL day, the one
+ * the cell, the DatePicker and the presets show (round 0.34 BUG-2).
+ *
+ * A bare "YYYY-MM-DD" is a calendar day already and is kept as it is. Anything with a
+ * time part is an instant: its first ten characters were the UTC day for a server
+ * timestamp ("…Z", "+00:00"), so in Berlin a report filed at 00:30 showed as the 12th
+ * and was filtered as the 11th. It is read as the instant it names and put on the
+ * local calendar. A string `Date` cannot read keeps the old first-ten-characters
+ * answer rather than matching nothing.
+ */
+function localDay(raw: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? raw.slice(0, 10) : toLocalIso(d);
+}
+
+/**
  * Whether `row` passes column `col`'s filter given the user's `state`.
  *
  * `locale` is for the text filter's case folding. Plain `toLowerCase` folds by the
@@ -68,7 +86,7 @@ export function rowMatches<T>(
       if (state.type !== "date") return true;
       const raw = filter.getValue(row);
       if (!raw) return !state.from && !state.to;
-      const v = raw.slice(0, 10);
+      const v = localDay(raw);
       if (state.from && v < state.from) return false;
       if (state.to && v > state.to) return false;
       return true;

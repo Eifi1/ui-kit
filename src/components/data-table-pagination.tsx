@@ -110,7 +110,8 @@ export function Pagination({
     >
       <div className="flex items-center gap-2">
         <span>
-          {pageSize === Infinity
+          {/* No rows is a count, not a range: the range read "1–0 / 0" (round 0.34 BUG-14). */}
+          {pageSize === Infinity || total === 0
             ? labels.rowCount(total)
             : labels.pageRange(page * pageSize + 1, Math.min(total, (page + 1) * pageSize), total)}
         </span>

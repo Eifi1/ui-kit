@@ -182,7 +182,8 @@ export function CurrencySelect({
   "aria-invalid": ariaInvalid,
   ...rest
 }: CurrencySelectProps) {
-  const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
+  const { open, setOpen, wrapperRef, panelRef, triggerRef, query, setQuery, inputRef } =
+    useDropdownSearch();
   // `labels` > `currency` from the provider > English.
   const text = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, labels);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
@@ -229,6 +230,8 @@ export function CurrencySelect({
 
   const trigger = (
     <button
+      // Where Escape on the open list hands focus back to (round 0.34 BUG-1).
+      ref={triggerRef}
       type="button"
       aria-label={name}
       onClick={() => setOpen((v) => !v)}
@@ -298,6 +301,8 @@ export function CurrencySelect({
           // toward the start instead of pushing the page width when there's content
           // after the field (feedback #308).
           className="end-0 min-w-full w-max max-w-[min(20rem,calc(100vw-2rem))]"
+          // So Escape on a row closes the list, not a dialog around it (BUG-1).
+          panelRef={panelRef}
           empty={filtered.length === 0}
           listProps={{ id: listboxId }}
           header={

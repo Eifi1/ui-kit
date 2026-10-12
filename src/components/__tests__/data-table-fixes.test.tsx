@@ -334,6 +334,23 @@ describe("standalone Pagination", () => {
     render(<Pagination page={0} totalPages={3} pageSize={10} total={30} onPage={() => {}} />);
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
+
+  // Round 0.34 BUG-14: a paged table filtered down to nothing said "1–0 / 0" — a range
+  // that starts after it ends. No rows is a count, not a range.
+  it("says the count, not a range, when there are no rows", () => {
+    const { container } = render(
+      <Pagination
+        page={0}
+        totalPages={0}
+        pageSize={25}
+        total={0}
+        onPage={() => {}}
+        labels={{ rowCount: (n) => `${n} rows` }}
+      />,
+    );
+    expect(screen.getByText("0 rows")).toBeInTheDocument();
+    expect(container.textContent).not.toContain("1–0");
+  });
 });
 
 describe("server mode page-size select", () => {

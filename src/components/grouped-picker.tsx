@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -46,16 +46,12 @@ export function GroupedPicker({
   className,
   ...rest
 }: GroupedPickerProps) {
-  const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, setOpen]);
+  // Escape is `useDropdownSearch`'s: the search box takes it while it holds focus, the
+  // panel below while a row does, and the hook's document listener otherwise. This
+  // added a second document listener of its own, which closed the list without giving
+  // focus back — and inside a dialog never ran at all (round 0.34 BUG-1).
+  const { open, setOpen, wrapperRef, triggerRef, closeToTrigger, query, setQuery, inputRef } =
+    useDropdownSearch();
 
   // Case folding in the provider's locale — see `rowMatches` for the Turkish "İ"
   // that plain `toLowerCase` gets wrong.
@@ -82,6 +78,7 @@ export function GroupedPicker({
     // incident behind it, cannot be clobbered from outside.
     <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -95,7 +92,18 @@ export function GroupedPicker({
         <ChevronDown className="size-4 shrink-0 text-placeholder" />
       </button>
       {open && (
-        <div className="absolute start-0 z-30 mt-1 flex max-h-96 w-[min(56rem,85vw)] flex-col overflow-hidden rounded-md border border-subtle bg-surface shadow-lg">
+        /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused
+           itself: it catches Escape from a row the keyboard reached by Tab, which would
+           otherwise close a dialog around the picker rather than the list (BUG-1). */
+        <div
+          onKeyDown={(e) => {
+            if (e.key !== "Escape" || e.defaultPrevented) return;
+            e.preventDefault();
+            e.stopPropagation();
+            closeToTrigger();
+          }}
+          className="absolute start-0 z-30 mt-1 flex max-h-96 w-[min(56rem,85vw)] flex-col overflow-hidden rounded-md border border-subtle bg-surface shadow-lg"
+        >
           <DropdownSearchHeader
             query={query}
             onQueryChange={setQuery}

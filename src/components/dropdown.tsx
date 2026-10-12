@@ -16,6 +16,31 @@ import { FOCUS_RING } from "./focus-ring";
 import { useAnchorDir } from "./use-anchor-dir";
 
 /**
+ * The keyboard close of each open dropdown, keyed by the refs its hook handed out:
+ * {@link useDropdown}'s `panelRef` and {@link useDropdownSearch}'s `inputRef`. The parts
+ * a caller renders with those refs ({@link DropdownPanel}, {@link DropdownSearchHeader})
+ * look the close up here to take Escape themselves (BUG-1) — so no caller has to wire
+ * a handler, and one that never will (an app's own panel) is covered as well. Weak, so
+ * an entry goes with the component that owns the ref.
+ */
+const keyboardClose = new WeakMap<object, () => void>();
+
+/**
+ * Escape on an open list: closes it, back to its trigger, and stops the key there, so a
+ * dialog the list sits in does not close with it. Left alone when nothing registered
+ * `ref`, and when a handler before this one already claimed the key with
+ * `preventDefault()` (a caller whose Escape first clears its query).
+ */
+function takeEscape(e: ReactKeyboardEvent, ref: object | undefined): void {
+  if (e.key !== "Escape" || e.defaultPrevented || !ref) return;
+  const close = keyboardClose.get(ref);
+  if (!close) return;
+  e.preventDefault();
+  e.stopPropagation();
+  close();
+}
+
+/**
  * Open state + close-on-outside-click for the custom dropdowns (MultiSelect,
  * CurrencySelect, AmountInput's currency picker, Combobox). Attach `wrapperRef`
  * to the relatively-positioned container; the popover lives inside it so a click
@@ -70,8 +95,21 @@ import { useAnchorDir } from "./use-anchor-dir";
  * Escape RESTORES FOCUS; an outside press does not. A press has already put focus
  * where the user pointed, and dragging it back from there would be the bug. Attach
  * `triggerRef` to the control that opens the panel and the keyboard paths — Escape,
- * Tab, a commit — hand focus back to it; leave it unattached and they simply close,
- * which is what the callers written before this get.
+ * Tab, a commit — hand focus back to it; leave it unattached and they hand it back to
+ * whatever held focus when the list opened, which is the control that was pressed.
+ *
+ * ## Escape inside a dialog (round 0.34 BUG-1)
+ *
+ * {@link useEscapeKey} listens on the DOCUMENT, and inside a `Modal` or a
+ * `FullBleedDialog` the key never gets there: the dialog closes on Escape in its own
+ * `onKeyDown` and stops the event — and a portalled panel's events still travel up the
+ * React tree through it. One press closed the dialog and the form in it, and left the
+ * list open. So the panel takes Escape itself, where focus is: {@link DropdownPanel}
+ * (given this hook's `panelRef`) and {@link DropdownSearchHeader} (given
+ * {@link useDropdownSearch}'s `inputRef`) close the list and stop the key, and the
+ * dialog sees nothing. They find the close through those refs, so a caller passes
+ * nothing new — AmountInput's currency chip included. The document listener stays,
+ * as the fallback for a press made with focus somewhere else.
  */
 export function useDropdown<T extends HTMLElement = HTMLDivElement>({
   backCloses = true,
@@ -87,16 +125,31 @@ export function useDropdown<T extends HTMLElement = HTMLDivElement>({
   // the wrapper" answers no for every click on the list itself and the first option a
   // user picked closed the dropdown without picking anything.
   const panelRef = useRef<HTMLDivElement>(null);
+  // Where focus was as the list opened — the trigger focus goes back to when the
+  // caller attached none. Read in an effect, before `useDropdownSearch`'s frame moves
+  // focus into the search box.
+  const openerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const el = document.activeElement;
+    openerRef.current = el instanceof HTMLElement && el !== document.body ? el : null;
+  }, [open]);
   const close = useCallback(() => setOpen(false), []);
   // Closing unmounts whatever held focus — the search box, the row the keyboard was
   // on — and the browser then drops focus on <body>: the caret vanishes and the next
-  // Tab restarts at the top of the document. Whoever closed the list with a key gets
-  // it handed back to the trigger they opened it from.
+  // Tab restarts at the top of the document, and inside a dialog the next Escape goes
+  // nowhere. Whoever closed the list with a key gets focus handed back to the trigger
+  // they opened it from.
   const closeToTrigger = useCallback(() => {
     setOpen(false);
-    triggerRef.current?.focus();
+    const back = triggerRef.current ?? openerRef.current;
+    if (back?.isConnected) back.focus();
   }, []);
+  useEffect(() => {
+    keyboardClose.set(panelRef, closeToTrigger);
+  }, [closeToTrigger]);
   useOutsideClick([wrapperRef, panelRef], close, open && !panelIsSheet);
+  // The fallback — see "Escape inside a dialog" above.
   useEscapeKey(closeToTrigger, open);
   // Same close path Escape and an outside click take, so a list dismissed by Back
   // cannot end up in a different state from one dismissed any other way.
@@ -113,6 +166,10 @@ export function useDropdownSearch<T extends HTMLElement = HTMLDivElement>() {
     useDropdown<T>();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  // How {@link DropdownSearchHeader} closes the list on Escape (BUG-1).
+  useEffect(() => {
+    keyboardClose.set(inputRef, closeToTrigger);
+  }, [closeToTrigger]);
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the query on open
@@ -146,7 +203,9 @@ export interface DropdownSearchHeaderProps
   listboxId?: string;
   /** The id of the option the arrow keys are currently on, if any. */
   activeId?: string;
-  /** Arrow/Home/End/Enter/Tab — the list's keyboard, handled where the focus is. */
+  /** Arrow/Home/End/Enter/Tab — the list's keyboard, handled where the focus is.
+   *  Escape is the box's own when `inputRef` is {@link useDropdownSearch}'s; call
+   *  `preventDefault()` here to keep it. */
   onKeyDown?: (e: ReactKeyboardEvent<HTMLInputElement>) => void;
 }
 
@@ -202,7 +261,12 @@ export function DropdownSearchHeader({
         type="text"
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
-        onKeyDown={onKeyDown}
+        onKeyDown={(e) => {
+          onKeyDown?.(e);
+          // Focus is in this box while the list is up, so this is where Escape lands
+          // first — see "Escape inside a dialog" on {@link useDropdown}.
+          takeEscape(e, inputRef);
+        }}
         placeholder={placeholder}
         aria-label={ariaLabel}
         aria-controls={listboxId}
@@ -230,7 +294,9 @@ export interface DropdownPanelProps extends ComponentPropsWithoutRef<"div"> {
   listProps?: ComponentPropsWithoutRef<"ul">;
   /** The trigger to hang off. Given, the panel portals and goes `fixed`. */
   anchorRef?: RefObject<HTMLElement | null>;
-  /** {@link useDropdown}'s `panelRef`, so an outside-click sees this as inside. */
+  /** {@link useDropdown}'s `panelRef`, so an outside-click sees this as inside — and so
+   *  Escape anywhere in the panel, on a row as in the search box, closes the list
+   *  rather than a dialog around it. */
   panelRef?: RefObject<HTMLDivElement | null>;
   /** Panel width in px, for the anchored form (the CSS `w-*` cannot be measured). */
   width?: number;
@@ -282,10 +348,17 @@ export function DropdownPanel({
   align = "end",
   children,
   style,
+  onKeyDown,
   ...rest
 }: DropdownPanelProps) {
   const anchored = useAnchoredPanel(anchorRef ?? EMPTY_REF, Boolean(anchorRef));
   const dir = useAnchorDir(anchorRef ?? EMPTY_REF, Boolean(anchorRef));
+  // A row the keyboard reached by Tab holds focus too, and its Escape has to close the
+  // list as the search box's does (BUG-1). The caller's handler first, as everywhere.
+  const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    onKeyDown?.(e);
+    takeEscape(e, panelRef);
+  };
   const body = (
     <>
       {header}
@@ -308,10 +381,12 @@ export function DropdownPanel({
 
   if (!anchorRef) {
     return (
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused itself: it catches Escape bubbling from the search box or a row inside it.
       <div
         {...rest}
         style={style}
         ref={panelRef}
+        onKeyDown={handleKeyDown}
         className={cn(
           "absolute z-30 mt-1 rounded-md border border-subtle bg-surface shadow-lg",
           "[&>ul]:max-h-64",
@@ -335,10 +410,12 @@ export function DropdownPanel({
   const wanted = physical === "right" ? rect.right - width : rect.left;
   const left = Math.min(Math.max(8, wanted), window.innerWidth - width - 8);
   return createPortal(
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused itself: it catches Escape bubbling from the search box or a row inside it.
     <div
       {...rest}
       ref={panelRef}
       dir={dir}
+      onKeyDown={handleKeyDown}
       // The caller's `style` is kept underneath, but the placement is measured rather
       // than chosen (dev#548: an `overflow` ancestor clipped a third of this panel
       // away), so these values are the panel's own. Flipped above, it hangs from its

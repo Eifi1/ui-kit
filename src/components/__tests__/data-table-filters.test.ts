@@ -3,8 +3,10 @@ import {
   defaultFilterState,
   encodeFilterValue,
   isFilterActive,
+  rowMatches,
 } from "../data-table-filters";
 import type { FilterValue } from "../data-table-filters";
+import type { DataTableColumn } from "../data-table";
 
 /**
  * Characterisation suite for the data-table filter codec (refactor plan
@@ -117,5 +119,60 @@ describe("encode/decode", () => {
     });
     expect(decodeFilterValueOfType("select", "12")).toEqual({ type: "select", values: ["12"] });
     expect(decodeFilterValueOfType("select", "")).toEqual({ type: "select", values: [] });
+  });
+});
+
+/**
+ * Round 0.34 BUG-2: the date filter compared `raw.slice(0, 10)` — for a server
+ * timestamp ("…Z", "+00:00") the UTC day — while the cell, the DatePicker and the
+ * presets all use the local day. In Berlin a report filed at 00:30 shows as the 12th
+ * and was filtered as the 11th: "Today" dropped everything from 00:00 to 02:00 and
+ * picked up yesterday's late rows instead.
+ */
+describe("rowMatches on a date column (BUG-2)", () => {
+  type Row = { at: string | null };
+  const col: DataTableColumn<Row> = {
+    key: "created",
+    header: "Created",
+    cell: (r) => r.at,
+    filter: { type: "date", getValue: (r) => r.at },
+  };
+  const the12th: FilterValue = { type: "date", from: "2026-10-12", to: "2026-10-12" };
+
+  // The suite's zone is pinned for the whole process (vitest.config.ts) and cannot be
+  // moved per test under vmThreads, so each test here checks it stands where the
+  // local day and the UTC day differ — on a UTC runner both agree, and the old slice
+  // would pass.
+  const inBerlin = () => expect(new Date("2026-10-11T22:30:00Z").getDate()).toBe(12);
+
+  it("files a timestamp under the local day the cell shows", () => {
+    inBerlin();
+    // 00:30 on the 12th in Berlin, 22:30 on the 11th in UTC.
+    expect(rowMatches(col, { at: "2026-10-11T22:30:00Z" }, the12th)).toBe(true);
+    expect(rowMatches(col, { at: "2026-10-11T22:30:00+00:00" }, the12th)).toBe(true);
+    // 00:30 on the 13th in Berlin, still the 12th in UTC.
+    expect(rowMatches(col, { at: "2026-10-12T22:30:00Z" }, the12th)).toBe(false);
+    // An offset of its own is read as the instant it names, then shown locally.
+    expect(rowMatches(col, { at: "2026-10-12T00:30:00+02:00" }, the12th)).toBe(true);
+  });
+
+  it("bounds a range by the local day at both ends", () => {
+    inBerlin();
+    const range: FilterValue = { type: "date", from: "2026-10-12", to: "2026-10-13" };
+    expect(rowMatches(col, { at: "2026-10-11T21:59:59Z" }, range)).toBe(false); // 23:59 on the 11th
+    expect(rowMatches(col, { at: "2026-10-11T22:00:00Z" }, range)).toBe(true); // 00:00 on the 12th
+    expect(rowMatches(col, { at: "2026-10-13T21:59:59Z" }, range)).toBe(true); // 23:59 on the 13th
+    expect(rowMatches(col, { at: "2026-10-13T22:00:00Z" }, range)).toBe(false); // 00:00 on the 14th
+  });
+
+  it("keeps a bare calendar day, which has no zone to move it", () => {
+    inBerlin();
+    expect(rowMatches(col, { at: "2026-10-12" }, the12th)).toBe(true);
+    expect(rowMatches(col, { at: "2026-10-11" }, the12th)).toBe(false);
+  });
+
+  it("still keeps a row with no date out of a set filter, and in an empty one", () => {
+    expect(rowMatches(col, { at: null }, the12th)).toBe(false);
+    expect(rowMatches(col, { at: null }, { type: "date", from: "", to: "" })).toBe(true);
   });
 });

@@ -1,6 +1,5 @@
 import { Fragment, isValidElement, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
-import { createPortal } from "react-dom";
 import {
   ArrowDown,
   ArrowDownWideNarrow,
@@ -30,9 +29,7 @@ import type { SortCycle, SortDir, SortState } from "./data-table-sort";
 import { FilterPopover } from "./data-table-filter-popover";
 import { Pagination } from "./data-table-pagination";
 import { SwipeableRow, type SwipeAction } from "./swipeable-row";
-import { useBackdropClose } from "./modal";
-import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
-import { useOverlayHistory } from "../hooks/use-overlay-history";
+import { DialogFrame } from "./dialog-frame";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { Popover } from "./popover";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
@@ -2885,6 +2882,13 @@ function LoadingText({ label }: { label: string }) {
  * that opens a bottom sheet listing each filterable column as a collapsible
  * section, reusing the very same {@link FilterPopover} and filter state the
  * desktop table drives — so it filters identically and stays URL-synced.
+ *
+ * The sheet is a {@link DialogFrame} (round 0.34 BUG-7b = DUP-6). It was the last
+ * hand-rolled modal in the kit: `role="dialog" aria-modal="true"` on the backdrop, with
+ * copies of the scroll lock, the backdrop close and the Back entry — and no name, no
+ * focus moved in, no trap and no Escape, so a reader was told the page was hidden while
+ * focus stayed on it. On a phone `Modal` is a bottom sheet already; it now brings all
+ * of that, and the exit motion, from the one place every other dialog gets it.
  */
 function MobileFilters<T>({
   columns,
@@ -2915,12 +2919,6 @@ function MobileFilters<T>({
   // from the element the user actually pressed.
   const [dir, setDir] = useState<Direction>("ltr");
   const [expanded, setExpanded] = useState<string | null>(null);
-  const backdropClose = useBackdropClose(() => setOpen(false));
-  useBodyScrollLock(open);
-  // Back dismisses the filter sheet too (Keksdose feedback #172) — it is the same
-  // full-screen surface, and the filters it sets are already in the URL, so closing
-  // it never loses anything.
-  useOverlayHistory(open, () => setOpen(false));
 
   const filterable = useMemo(
     () =>
@@ -2964,89 +2962,84 @@ function MobileFilters<T>({
           {labels.clearAll}
         </button>
       )}
-      {open &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
-            role="dialog"
-            aria-modal="true"
-            dir={dir}
-            {...backdropClose}
-          >
-            <div className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface shadow-xl">
-              <div className="flex items-center justify-between gap-2 border-b border-subtle px-4 py-3">
-                <div className="font-medium">{labels.filters}</div>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  aria-label={labels.close}
-                  className="-me-1 rounded p-1.5 text-muted hover:bg-hover hover:text-secondary"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-              <div className="flex-1 divide-y divide-subtle overflow-y-auto overscroll-contain">
-                {filterable.map(({ col, filter }) => {
-                  const state = filters[col.key];
-                  const active = !!state && isFilterActive(state);
-                  const isItemOpen = expanded === col.key;
-                  return (
-                    <div key={col.key}>
-                      <button
-                        type="button"
-                        onClick={() => setExpanded(isItemOpen ? null : col.key)}
-                        aria-expanded={isItemOpen}
-                        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-start"
-                      >
-                        <span className="flex items-center gap-2 text-sm font-medium text-secondary">
-                          {col.header}
-                          {active && <span className="size-1.5 rounded-full bg-brand" />}
-                        </span>
-                        <ChevronDown
-                          className={cn(
-                            "size-4 shrink-0 text-placeholder transition-transform",
-                            isItemOpen && "rotate-180",
-                          )}
-                        />
-                      </button>
-                      {isItemOpen && (
-                        <div className="px-4 pb-3">
-                          <FilterPopover
-                            column={col}
-                            state={state ?? defaultFilterState(filter)}
-                            onChange={(next) => onSetFilter(col.key, next)}
-                            onClear={() => onClearFilter(col.key)}
-                            selectOptions={selectOptionsByKey[col.key] ?? []}
-                            labels={labels}
-                            locale={locale}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex items-center justify-between gap-2 border-t border-subtle px-4 py-3">
-                <button
-                  type="button"
-                  onClick={onClearAll}
-                  disabled={activeCount === 0}
-                  className="text-sm text-muted hover:text-secondary disabled:opacity-40"
-                >
-                  {labels.clearAll}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded-md bg-inverse px-4 py-2 text-sm font-medium text-inverse"
-                >
-                  {labels.done}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
+      {/* Escape, the backdrop, Back (Keksdose feedback #172: the filters are already
+          in the URL, so closing never loses anything), the scroll lock, focus in and
+          back to this bar's button — all `Modal`'s. `fullBleed` lets the sheet meet the
+          screen's edges on a phone, as it always did. */}
+      <DialogFrame
+        open={open}
+        onClose={() => setOpen(false)}
+        title={labels.filters}
+        closeButton
+        closeLabel={labels.close}
+        headerDivider
+        fullBleed
+        // Portalled to <body>, so the direction read from the button goes with it.
+        dir={dir}
+        className="max-h-[85vh] rounded-b-none md:rounded-b-lg"
+        // The sections run edge to edge with a rule between them, as before.
+        bodyClassName="space-y-0 divide-y divide-subtle px-0 pt-0 pb-0"
+        actions={(close) => (
+          <>
+            <button
+              type="button"
+              onClick={onClearAll}
+              disabled={activeCount === 0}
+              // `me-auto` keeps Clear all at the start and Done at the end.
+              className="me-auto text-sm text-muted hover:text-secondary disabled:opacity-40"
+            >
+              {labels.clearAll}
+            </button>
+            <button
+              type="button"
+              onClick={close}
+              className="rounded-md bg-inverse px-4 py-2 text-sm font-medium text-inverse"
+            >
+              {labels.done}
+            </button>
+          </>
         )}
+      >
+        {filterable.map(({ col, filter }) => {
+          const state = filters[col.key];
+          const active = !!state && isFilterActive(state);
+          const isItemOpen = expanded === col.key;
+          return (
+            <div key={col.key}>
+              <button
+                type="button"
+                onClick={() => setExpanded(isItemOpen ? null : col.key)}
+                aria-expanded={isItemOpen}
+                className="flex w-full items-center justify-between gap-2 px-4 py-3 text-start"
+              >
+                <span className="flex items-center gap-2 text-sm font-medium text-secondary">
+                  {col.header}
+                  {active && <span className="size-1.5 rounded-full bg-brand" />}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "size-4 shrink-0 text-placeholder transition-transform",
+                    isItemOpen && "rotate-180",
+                  )}
+                />
+              </button>
+              {isItemOpen && (
+                <div className="px-4 pb-3">
+                  <FilterPopover
+                    column={col}
+                    state={state ?? defaultFilterState(filter)}
+                    onChange={(next) => onSetFilter(col.key, next)}
+                    onClear={() => onClearFilter(col.key)}
+                    selectOptions={selectOptionsByKey[col.key] ?? []}
+                    labels={labels}
+                    locale={locale}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </DialogFrame>
     </div>
   );
 }

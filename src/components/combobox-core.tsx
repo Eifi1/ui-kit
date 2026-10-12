@@ -366,6 +366,8 @@ export function useComboboxCore<V extends string | number>({
   // `useDropdown`'s listener and never covered this hook.
   const isPhone = usePhoneLayout();
   useOutsideClick([triggerRef, panelRef], close, open && !isPhone);
+  // The fallback only: an Escape pressed in the panel is taken by `ComboboxPanel`'s own
+  // key handler, which a dialog around the picker would otherwise beat to it (BUG-1).
   useEscapeKey(closeToTrigger, open);
 
   // Reset the query each time the panel opens, and the highlighted row whenever the
@@ -614,9 +616,21 @@ export function ComboboxPanel<V extends string | number>({
   const dir = useAnchorDir(core.triggerRef, core.open);
 
   // The WAI-ARIA APG's listbox keyboard, in full: Up/Down step, Home/End jump, Enter
-  // commits, Tab leaves. Escape is the one key handled elsewhere — `useComboboxCore`
-  // registers it on the document, so it answers wherever focus has ended up.
+  // commits, Tab leaves, Escape closes.
   const onKeyDown = (e: ReactKeyboardEvent) => {
+    // Escape is taken HERE, and stopped, before a dialog the picker sits in can see it
+    // (round 0.34 BUG-1). It used to be left to `useComboboxCore`'s document listener,
+    // which a Modal or FullBleedDialog never lets the key reach: they close on Escape
+    // in their own `onKeyDown` and stop it there — and the panel's events travel up
+    // the React tree through the dialog, portal or not. So one press closed the dialog
+    // and threw away the form, with the list still open. The document listener stays
+    // as the fallback for a press made with focus somewhere else.
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      closeToTrigger();
+      return;
+    }
     // Disabled rows are passed over (`stepEnabled`), and each step starts from the
     // SETTLED highlight, not the raw index, so the first Down from a disabled row 0
     // goes to the row after the one already shown as highlighted.

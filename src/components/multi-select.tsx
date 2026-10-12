@@ -89,7 +89,7 @@ export function MultiSelect({
   "aria-describedby": ariaDescribedBy,
   ...rest
 }: MultiSelectProps) {
-  const { open, setOpen, wrapperRef, triggerRef, closeToTrigger, query, setQuery, inputRef } =
+  const { open, setOpen, wrapperRef, panelRef, triggerRef, closeToTrigger, query, setQuery, inputRef } =
     useDropdownSearch();
   // `allLabel` is deliberately NOT folded in here: between it and the provider's
   // `all` sits `placeholder`, which has always doubled as the "nothing picked" text,
@@ -143,7 +143,8 @@ export function MultiSelect({
   useActiveOptionScroll(activeId);
 
   // The WAI-ARIA APG's listbox keyboard, handled on the search box because that is
-  // where focus is while the panel is up. Escape is `useDropdown`'s, on the document.
+  // where focus is while the panel is up. Escape is the dropdown's own: the search box
+  // and the panel take it before a dialog around the field can (round 0.34 BUG-1).
   const onListKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -253,6 +254,9 @@ export function MultiSelect({
           // `[&>div]:w-full` descendant selector, which worked and was a hack —
           // "change the package" was the right call.
           className={cn("w-64", panelClassName)}
+          // So Escape on "Select all" or "Clear" closes the list too, not a dialog
+          // around it — see `useDropdown` (BUG-1).
+          panelRef={panelRef}
           empty={filtered.length === 0}
           // The rows below are options, so the list around them has to be a listbox
           // — and one that says several answers are allowed, which is the only thing

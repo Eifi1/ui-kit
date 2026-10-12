@@ -379,11 +379,15 @@ export function dateColumn<T>({
     filter: filter
       ? {
           type: "date",
-          // The filter compares the first ten characters, so hand it an ISO string.
+          // A string goes as it is: the filter reads a timestamp's local day itself.
+          // A Date or epoch value goes as its LOCAL day, the one the cell shows —
+          // `toISOString()` handed over the UTC day, and in Berlin a 00:30 row was
+          // filtered under the day before (round 0.34 BUG-2).
           getValue: (row) => {
             const raw = value(row);
             if (typeof raw === "string") return raw;
-            return toDate(raw)?.toISOString() ?? null;
+            const date = toDate(raw);
+            return date ? toLocalIso(date) : null;
           },
         }
       : undefined,
