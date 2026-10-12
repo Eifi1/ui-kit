@@ -473,7 +473,7 @@ describe("the phone card's keyboard frame (keksdose live #394)", () => {
     // kit's FOCUS_RING (§5, `--focus-ring-width`), drawn inset.
     const card = document.querySelector('[role="button"].w-full, a.w-full') as HTMLElement;
     expect(card.className).toContain("focus-visible:ring-inset");
-    expect(card.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(card).toHaveClass("focus-visible:ring-focus");
     expect(card.className).toContain("[-webkit-tap-highlight-color:transparent]");
   });
 });

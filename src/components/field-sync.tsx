@@ -320,7 +320,7 @@ export function FieldSyncIndicator({
           onClick={onRetry}
           // The kit's focus frame (0.32, §5), stood off the word.
           className={cn(
-            "rounded underline underline-offset-2 hover:no-underline focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]",
+            "rounded underline underline-offset-2 hover:no-underline focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
             FOCUS_RING,
           )}
           style={{ color }}
@@ -472,7 +472,7 @@ export function FieldSyncRow<T>({
               onClick={retry}
               aria-label={l.retry}
               className={cn(
-                "pointer-events-auto flex rounded-full text-[var(--status-error)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]",
+                "pointer-events-auto flex rounded-full text-[var(--status-error)] focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
                 FOCUS_RING,
               )}
             >

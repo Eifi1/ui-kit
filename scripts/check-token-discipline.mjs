@@ -18,8 +18,11 @@
  * `bg-surface-2`, `border-subtle` …). 0.33 left the kit's ~1,750 `text-[var(--text-muted)]`-style
  * classes under a falling count; 0.34 moved them all (round 0.34 Q1, a codemod), so the
  * count is zero and stays there. A `[var(--…)]` class is still right where no role
- * utility of the same token and property exists (the money and chart colours, a ring in
- * `--brand-contrast` …) — this counts only the ones that have one.
+ * utility of the same token and property exists (the chart colours, `--status-*`,
+ * `bg-[var(--border)]` as a divider …) — this counts only the ones that have one. Since
+ * DOC-7 (refactor audit 2026-10) that includes the money colours, a ring in
+ * `--brand-contrast`, the ring offsets (`ring-offset-surface`) and the focus frame's
+ * width (`ring-[length:var(--focus-ring-width)]` → `ring-focus`).
  *
  * Run: `npm run check:tokens`
  */
@@ -134,8 +137,10 @@ perFile.sort((a, b) => b[1] - a[1]);
  * Which tokens have a utility, per property, read from `tokens.css`'s `@theme inline`
  * block — so a role that gains a utility starts counting the day it does. `divide-*` and
  * the side borders (`border-t-*`, `border-x-*` …) read `--border-color-*`, as Tailwind does.
- * The money classes are plain and take no variants, so `text-[var(--money-income)]` is not
- * counted: a site that needs `hover:` has no other way to write it (§12.4).
+ * The money colours are theme names since 0.34 (`text-money-income`, with variants), so
+ * `text-[var(--money-income)]` counts like any role. A width typed `length:` —
+ * `ring-[length:var(--focus-ring-width)]` — is read against the WIDTH namespaces, where
+ * `ring-focus` lives.
  */
 const THEME = /@theme inline\s*\{([^}]*)\}/.exec(
   readFileSync(resolve(import.meta.dirname, "..", "tokens.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, ""),
@@ -149,9 +154,13 @@ const NAMESPACE = {
   bg: "background-color",
   border: "border-color",
   ring: "ring-color",
+  "ring-offset": "ring-offset-color",
   outline: "outline-color",
   fill: "fill",
   stroke: "stroke",
+  // `ring-[length:var(--x)]` / `outline-[length:var(--x)]`: a width, not a colour.
+  "ring-width": "ring-width",
+  "outline-width": "outline-width",
 };
 const withUtility = {};
 for (const [prop, ns] of Object.entries(NAMESPACE)) {
@@ -162,17 +171,20 @@ for (const [prop, ns] of Object.entries(NAMESPACE)) {
 withUtility.divide = withUtility.border;
 
 // `text-[var(--text-muted)]`, `hover:bg-[var(--bg-hover)]`, `border-t-[var(--border)]`,
-// `focus-visible:ring-[var(--brand)]/40`. Preceded by a start, a space, a quote or a
-// variant's colon, so `ring-offset-[var(--bg-surface)]` is not read as a `ring-`.
+// `focus-visible:ring-[var(--brand)]/40`, `ring-offset-[var(--bg-surface)]`,
+// `focus-visible:ring-[length:var(--focus-ring-width)]`. Preceded by a start, a space, a
+// quote or a variant's colon.
 const ROLE_CLASS =
-  /(?:^|[\s"'`:])(text|bg|border(?:-[xytrblse])?|divide|ring|outline|fill|stroke)-\[var\((--[a-zA-Z0-9-]+)\)\]/g;
+  /(?:^|[\s"'`:])(text|bg|border(?:-[xytrblse])?|divide|ring-offset|ring|outline|fill|stroke)-\[(length:)?var\((--[a-zA-Z0-9-]+)\)\]/g;
 
 const rolePerFile = [];
 let roleTotal = 0;
 for (const file of walk(SRC)) {
   let n = 0;
-  for (const [, prop, token] of stripComments(readFileSync(file, "utf8")).matchAll(ROLE_CLASS)) {
-    if (withUtility[prop.split("-")[0]]?.has(token)) n++;
+  for (const [, prop, length, token] of stripComments(readFileSync(file, "utf8")).matchAll(ROLE_CLASS)) {
+    // `border-t` reads `border`'s set; a `length:` hint reads the property's widths.
+    const key = length ? `${prop}-width` : prop.startsWith("border-") ? "border" : prop;
+    if (withUtility[key]?.has(token)) n++;
   }
   if (n) {
     rolePerFile.push([file.slice(SRC.length + 1), n]);
@@ -205,7 +217,8 @@ if (roleTotal > ROLE_BUDGET) {
   console.error(
     `\n::error::${roleTotal - ROLE_BUDGET} new [var(--role)] class${roleTotal - ROLE_BUDGET === 1 ? "" : "es"}.\n` +
       `Use the role utility instead: text-[var(--text-muted)] → text-muted, bg-[var(--bg-surface-2)] →\n` +
-      `bg-surface-2, border-[var(--border)] → border-subtle, bg-[var(--danger-bg)] → bg-danger-soft …\n` +
+      `bg-surface-2, border-[var(--border)] → border-subtle, bg-[var(--danger-bg)] → bg-danger-soft,\n` +
+      `ring-offset-[var(--bg-surface)] → ring-offset-surface, ring-[length:var(--focus-ring-width)] → ring-focus …\n` +
       `(tokens.css, the @theme inline block). Never raise this budget.`,
   );
   failed = true;

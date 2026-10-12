@@ -43,7 +43,7 @@ import type { CommitScope } from "./write-lock";
 const BOX =
   "peer size-4 shrink-0 cursor-pointer appearance-none rounded border border-strong bg-surface shadow-sm transition-colors " +
   "checked:border-brand checked:bg-brand " +
-  `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)] ` +
+  `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-surface ` +
   "disabled:cursor-not-allowed";
 
 /**

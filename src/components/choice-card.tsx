@@ -100,7 +100,7 @@ const CARD =
   // order, and the loser would be the focus mark. Offset, so the two never merge. Its
   // width is the kit's focus frame (0.32, §5: `--focus-ring-width`, 3 px under More
   // contrast) — `FOCUS_RING` itself is a ring, which this mark cannot be.
-  "has-[:focus-visible]:outline-[length:var(--focus-ring-width)] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand " +
+  "has-[:focus-visible]:outline-focus has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand " +
   // Read from the input too, so a card disabled by its `<fieldset>` fades as well.
   "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60";
 
@@ -351,7 +351,7 @@ export function ActionCard({
     "hover:border-brand hover:bg-hover",
     // The outline, as on ChoiceCard: the card is what the eye is on — the focus frame's
     // width (§5).
-    "focus:outline-none focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-brand",
+    "focus:outline-none focus-visible:outline-focus focus-visible:outline-offset-2 focus-visible:outline-brand",
     "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-subtle disabled:hover:bg-surface",
     className,
   );

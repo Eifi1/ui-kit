@@ -98,10 +98,10 @@ describe("MeasuredGrid's type and rings (§3.2, §5)", () => {
   it("rings a cell and a remove button with the kit's focus frame", () => {
     grid();
     const input = screen.getByRole("textbox", { name: "x, row 1" });
-    expect(input.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(input).toHaveClass("focus-visible:ring-focus");
     expect(input.className).toContain("focus-visible:ring-inset");
     expect(input.className).not.toContain("ring-2");
     const remove = screen.getByRole("button", { name: "Remove row 1" });
-    expect(remove.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(remove).toHaveClass("focus-visible:ring-focus");
   });
 });

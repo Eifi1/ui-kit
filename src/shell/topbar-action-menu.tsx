@@ -345,7 +345,7 @@ export function TopBarActionMenu({
         const footerBody = typeof footer === "function" ? footer(close) : footer;
         const headerExtra = typeof header?.extra === "function" ? header.extra(close) : header?.extra;
         const footerClass =
-          "flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted [&_a:hover]:text-primary [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-[length:var(--focus-ring-width)] [&_a:focus-visible]:ring-brand";
+          "flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted [&_a:hover]:text-primary [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-focus [&_a:focus-visible]:ring-brand";
         /** One action or link row — loose, or inside a heading's group. */
         const row = (entry: RowEntry) => (
           <li key={entry.key}>

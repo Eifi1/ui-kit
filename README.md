@@ -236,7 +236,7 @@ An app guards the other direction — a `var(--x)` that nothing declares paints 
 
 <!-- BEGIN GENERATED: styling — node scripts/gen-styling-inventory.mjs -->
 
-**102 role utilities over 67 tokens.** Find the token, then take the utility in
+**116 role utilities over 72 tokens.** Find the token, then take the utility in
 the column of the property you set. An empty cell is deliberate: the namespaces are
 property-scoped, so `bg-muted` and `text-surface` do not exist.
 
@@ -244,77 +244,82 @@ Generated from `tokens.css` (its `@theme inline` block, variants and utilities) 
 `node scripts/gen-styling-inventory.mjs`; `--check` fails on a stale block. Do not edit
 between the markers.
 
-| Token | `text-*` | `bg-*` | `border-*` `divide-*` | `ring-*` | `outline-*` | `fill-*` | `stroke-*` |
-|---|---|---|---|---|---|---|---|
-| `--bg-page` |  | `bg-page` |  |  |  |  |  |
-| `--bg-surface` |  | `bg-surface` |  |  |  | `fill-surface` | `stroke-surface` |
-| `--bg-surface-2` |  | `bg-surface-2` |  |  |  |  |  |
-| `--border` |  |  | `border-subtle` | `ring-subtle` | `outline-subtle` | `fill-subtle` | `stroke-subtle` |
-| `--text-primary` | `text-primary` |  |  |  |  | `fill-primary` | `stroke-primary` |
-| `--text-secondary` | `text-secondary` |  |  |  |  | `fill-secondary` | `stroke-secondary` |
-| `--text-muted` | `text-muted` |  |  |  |  | `fill-muted` | `stroke-muted` |
-| `--brand` | `text-brand` | `bg-brand` | `border-brand` | `ring-brand` | `outline-brand` |  |  |
-| `--brand-hover` |  | `bg-brand-hover` |  |  |  |  |  |
-| `--brand-contrast` | `text-brand-contrast` |  |  |  |  |  |  |
-| `--text-placeholder` | `text-placeholder` |  |  |  |  |  |  |
-| `--bg-hover` |  | `bg-hover` |  |  |  |  |  |
-| `--bg-active` |  | `bg-active` |  |  |  |  |  |
-| `--bg-inverse` |  | `bg-inverse` |  |  |  |  |  |
-| `--text-inverse` | `text-inverse` |  |  |  |  |  |  |
-| `--border-strong` |  |  | `border-strong` | `ring-strong` | `outline-strong` | `fill-strong` | `stroke-strong` |
-| `--brand-bg` |  | `bg-brand-soft` |  |  |  |  |  |
-| `--brand-bg-hover` |  | `bg-brand-soft-hover` |  |  |  |  |  |
-| `--brand-muted` | `text-brand-muted` |  |  |  |  |  |  |
-| `--money-income-contrast` | `text-money-income-contrast` |  |  |  |  |  |  |
-| `--money-expense-contrast` | `text-money-expense-contrast` |  |  |  |  |  |  |
-| `--money-net-contrast` | `text-money-net-contrast` |  |  |  |  |  |  |
-| `--money-neutral-contrast` | `text-money-neutral-contrast` |  |  |  |  |  |  |
-| `--neutral` |  | `bg-neutral` |  |  |  |  |  |
-| `--neutral-contrast` | `text-neutral-contrast` |  |  |  |  |  |  |
-| `--danger` | `text-danger` | `bg-danger` |  |  |  |  |  |
-| `--danger-hover` |  | `bg-danger-hover` |  |  |  |  |  |
-| `--danger-contrast` | `text-danger-contrast` |  |  |  |  |  |  |
-| `--danger-border` |  |  | `border-danger` |  |  |  |  |
-| `--danger-border-strong` |  |  | `border-danger-strong` | `ring-danger-strong` | `outline-danger-strong` |  |  |
-| `--danger-bg` |  | `bg-danger-soft` |  |  |  |  |  |
-| `--warning` | `text-warning` | `bg-warning` |  |  |  |  |  |
-| `--warning-contrast` | `text-warning-contrast` |  |  |  |  |  |  |
-| `--warning-border` |  |  | `border-warning` |  |  |  |  |
-| `--warning-border-strong` |  |  | `border-warning-strong` | `ring-warning-strong` | `outline-warning-strong` |  |  |
-| `--warning-bg` |  | `bg-warning-soft` |  |  |  |  |  |
-| `--info` | `text-info` | `bg-info` |  |  |  |  |  |
-| `--info-contrast` | `text-info-contrast` |  |  |  |  |  |  |
-| `--info-border` |  |  | `border-info` |  |  |  |  |
-| `--info-bg` |  | `bg-info-soft` |  |  |  |  |  |
-| `--success` | `text-success` | `bg-success` |  |  |  |  |  |
-| `--success-contrast` | `text-success-contrast` |  |  |  |  |  |  |
-| `--success-border` |  |  | `border-success` |  |  |  |  |
-| `--success-bg` |  | `bg-success-soft` |  |  |  |  |  |
-| `--media-ink` | `text-media-ink` |  | `border-media-ink` | `ring-media-ink` |  |  |  |
-| `--media-scrim` |  | `bg-media-scrim` |  |  |  |  |  |
-| `--media-scrim-hover` |  | `bg-media-scrim-hover` |  |  |  |  |  |
-| `--hue-blue` | `text-hue-blue` | `bg-hue-blue` |  |  |  |  |  |
-| `--hue-blue-contrast` | `text-hue-blue-contrast` |  |  |  |  |  |  |
-| `--hue-blue-border` |  |  | `border-hue-blue` |  |  |  |  |
-| `--hue-blue-bg` |  | `bg-hue-blue-soft` |  |  |  |  |  |
-| `--hue-indigo` | `text-hue-indigo` | `bg-hue-indigo` |  |  |  |  |  |
-| `--hue-indigo-contrast` | `text-hue-indigo-contrast` |  |  |  |  |  |  |
-| `--hue-indigo-border` |  |  | `border-hue-indigo` |  |  |  |  |
-| `--hue-indigo-bg` |  | `bg-hue-indigo-soft` |  |  |  |  |  |
-| `--hue-purple` | `text-hue-purple` | `bg-hue-purple` |  |  |  |  |  |
-| `--hue-purple-contrast` | `text-hue-purple-contrast` |  |  |  |  |  |  |
-| `--hue-purple-border` |  |  | `border-hue-purple` |  |  |  |  |
-| `--hue-purple-bg` |  | `bg-hue-purple-soft` |  |  |  |  |  |
-| `--hue-teal` | `text-hue-teal` | `bg-hue-teal` |  |  |  |  |  |
-| `--hue-teal-contrast` | `text-hue-teal-contrast` |  |  |  |  |  |  |
-| `--hue-teal-border` |  |  | `border-hue-teal` |  |  |  |  |
-| `--hue-teal-bg` |  | `bg-hue-teal-soft` |  |  |  |  |  |
-| `--hue-orange` | `text-hue-orange` | `bg-hue-orange` |  |  |  |  |  |
-| `--hue-orange-contrast` | `text-hue-orange-contrast` |  |  |  |  |  |  |
-| `--hue-orange-border` |  |  | `border-hue-orange` |  |  |  |  |
-| `--hue-orange-bg` |  | `bg-hue-orange-soft` |  |  |  |  |  |
+| Token | `text-*` | `bg-*` | `border-*` `divide-*` | `ring-offset-*` | `ring-*` | `ring-*` (width) | `outline-*` | `outline-*` (width) | `fill-*` | `stroke-*` |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `--focus-ring-width` |  |  |  |  |  | `ring-focus` |  | `outline-focus` |  |  |
+| `--bg-page` |  | `bg-page` |  | `ring-offset-page` |  |  |  |  |  |  |
+| `--bg-surface` |  | `bg-surface` |  | `ring-offset-surface` |  |  |  |  | `fill-surface` | `stroke-surface` |
+| `--bg-surface-2` |  | `bg-surface-2` |  |  |  |  |  |  |  |  |
+| `--border` |  |  | `border-subtle` |  | `ring-subtle` |  | `outline-subtle` |  | `fill-subtle` | `stroke-subtle` |
+| `--text-primary` | `text-primary` |  |  |  |  |  |  |  | `fill-primary` | `stroke-primary` |
+| `--text-secondary` | `text-secondary` |  |  |  |  |  |  |  | `fill-secondary` | `stroke-secondary` |
+| `--text-muted` | `text-muted` |  |  |  |  |  |  |  | `fill-muted` | `stroke-muted` |
+| `--brand` | `text-brand` | `bg-brand` | `border-brand` |  | `ring-brand` |  | `outline-brand` |  |  |  |
+| `--brand-hover` |  | `bg-brand-hover` |  |  |  |  |  |  |  |  |
+| `--brand-contrast` | `text-brand-contrast` |  |  |  | `ring-brand-contrast` |  |  |  |  |  |
+| `--money-income` | `text-money-income` | `bg-money-income` |  |  |  |  |  |  |  |  |
+| `--money-expense` | `text-money-expense` | `bg-money-expense` |  |  |  |  |  |  |  |  |
+| `--money-net` | `text-money-net` | `bg-money-net` |  |  |  |  |  |  |  |  |
+| `--money-neutral` | `text-money-neutral` | `bg-money-neutral` |  |  |  |  |  |  |  |  |
+| `--text-placeholder` | `text-placeholder` |  |  |  |  |  |  |  |  |  |
+| `--bg-hover` |  | `bg-hover` |  |  |  |  |  |  |  |  |
+| `--bg-active` |  | `bg-active` |  |  |  |  |  |  |  |  |
+| `--bg-inverse` |  | `bg-inverse` |  |  |  |  |  |  |  |  |
+| `--text-inverse` | `text-inverse` |  |  |  |  |  |  |  |  |  |
+| `--border-strong` |  |  | `border-strong` |  | `ring-strong` |  | `outline-strong` |  | `fill-strong` | `stroke-strong` |
+| `--brand-bg` |  | `bg-brand-soft` |  |  |  |  |  |  |  |  |
+| `--brand-bg-hover` |  | `bg-brand-soft-hover` |  |  |  |  |  |  |  |  |
+| `--brand-muted` | `text-brand-muted` |  |  |  |  |  |  |  |  |  |
+| `--money-income-contrast` | `text-money-income-contrast` |  |  |  |  |  |  |  |  |  |
+| `--money-expense-contrast` | `text-money-expense-contrast` |  |  |  |  |  |  |  |  |  |
+| `--money-net-contrast` | `text-money-net-contrast` |  |  |  |  |  |  |  |  |  |
+| `--money-neutral-contrast` | `text-money-neutral-contrast` |  |  |  |  |  |  |  |  |  |
+| `--neutral` |  | `bg-neutral` |  |  |  |  |  |  |  |  |
+| `--neutral-contrast` | `text-neutral-contrast` |  |  |  |  |  |  |  |  |  |
+| `--danger` | `text-danger` | `bg-danger` |  |  |  |  |  |  |  |  |
+| `--danger-hover` |  | `bg-danger-hover` |  |  |  |  |  |  |  |  |
+| `--danger-contrast` | `text-danger-contrast` |  |  |  |  |  |  |  |  |  |
+| `--danger-border` |  |  | `border-danger` |  |  |  |  |  |  |  |
+| `--danger-border-strong` |  |  | `border-danger-strong` |  | `ring-danger-strong` |  | `outline-danger-strong` |  |  |  |
+| `--danger-bg` |  | `bg-danger-soft` |  |  |  |  |  |  |  |  |
+| `--warning` | `text-warning` | `bg-warning` |  |  |  |  |  |  |  |  |
+| `--warning-contrast` | `text-warning-contrast` |  |  |  |  |  |  |  |  |  |
+| `--warning-border` |  |  | `border-warning` |  |  |  |  |  |  |  |
+| `--warning-border-strong` |  |  | `border-warning-strong` |  | `ring-warning-strong` |  | `outline-warning-strong` |  |  |  |
+| `--warning-bg` |  | `bg-warning-soft` |  |  |  |  |  |  |  |  |
+| `--info` | `text-info` | `bg-info` |  |  |  |  |  |  |  |  |
+| `--info-contrast` | `text-info-contrast` |  |  |  |  |  |  |  |  |  |
+| `--info-border` |  |  | `border-info` |  |  |  |  |  |  |  |
+| `--info-bg` |  | `bg-info-soft` |  |  |  |  |  |  |  |  |
+| `--success` | `text-success` | `bg-success` |  |  |  |  |  |  |  |  |
+| `--success-contrast` | `text-success-contrast` |  |  |  |  |  |  |  |  |  |
+| `--success-border` |  |  | `border-success` |  |  |  |  |  |  |  |
+| `--success-bg` |  | `bg-success-soft` |  |  |  |  |  |  |  |  |
+| `--media-ink` | `text-media-ink` |  | `border-media-ink` |  | `ring-media-ink` |  |  |  |  |  |
+| `--media-scrim` |  | `bg-media-scrim` |  |  |  |  |  |  |  |  |
+| `--media-scrim-hover` |  | `bg-media-scrim-hover` |  | `ring-offset-media-scrim-hover` |  |  |  |  |  |  |
+| `--hue-blue` | `text-hue-blue` | `bg-hue-blue` |  |  |  |  |  |  |  |  |
+| `--hue-blue-contrast` | `text-hue-blue-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-blue-border` |  |  | `border-hue-blue` |  |  |  |  |  |  |  |
+| `--hue-blue-bg` |  | `bg-hue-blue-soft` |  |  |  |  |  |  |  |  |
+| `--hue-indigo` | `text-hue-indigo` | `bg-hue-indigo` |  |  |  |  |  |  |  |  |
+| `--hue-indigo-contrast` | `text-hue-indigo-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-indigo-border` |  |  | `border-hue-indigo` |  |  |  |  |  |  |  |
+| `--hue-indigo-bg` |  | `bg-hue-indigo-soft` |  |  |  |  |  |  |  |  |
+| `--hue-purple` | `text-hue-purple` | `bg-hue-purple` |  |  |  |  |  |  |  |  |
+| `--hue-purple-contrast` | `text-hue-purple-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-purple-border` |  |  | `border-hue-purple` |  |  |  |  |  |  |  |
+| `--hue-purple-bg` |  | `bg-hue-purple-soft` |  |  |  |  |  |  |  |  |
+| `--hue-teal` | `text-hue-teal` | `bg-hue-teal` |  |  |  |  |  |  |  |  |
+| `--hue-teal-contrast` | `text-hue-teal-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-teal-border` |  |  | `border-hue-teal` |  |  |  |  |  |  |  |
+| `--hue-teal-bg` |  | `bg-hue-teal-soft` |  |  |  |  |  |  |  |  |
+| `--hue-orange` | `text-hue-orange` | `bg-hue-orange` |  |  |  |  |  |  |  |  |
+| `--hue-orange-contrast` | `text-hue-orange-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-orange-border` |  |  | `border-hue-orange` |  |  |  |  |  |  |  |
+| `--hue-orange-bg` |  | `bg-hue-orange-soft` |  |  |  |  |  |  |  |  |
 
-Plain classes (unlayered, so they win over Tailwind's colour utilities and take **no** variants): `text-money-pos` (`--money-income`), `text-money-neg` (`--money-expense`), `text-money-net` (`--money-net`), `text-money-pos-muted` (`--money-income`, opacity 0.72), `text-money-neg-muted` (`--money-expense`, opacity 0.72), `bg-money-pos` (`--money-income`), `bg-money-neg` (`--money-expense`), `bg-money-neutral` (`--money-neutral`).
+Plain classes (unlayered, so they win over Tailwind's colour utilities and take **no** variants): `text-money-pos` (`--money-income`), `text-money-neg` (`--money-expense`), `text-money-pos-muted` (`--money-income`, opacity 0.72), `text-money-neg-muted` (`--money-expense`, opacity 0.72), `bg-money-pos` (`--money-income`), `bg-money-neg` (`--money-expense`).
 
 Variants: `dark:` `sm:` `md:` `lg:` `xl:` `2xl:` `3xl:` `max-3xl:` `max-2xl:` `max-xl:` `max-lg:` `max-md:` `max-sm:` `large:` `xlarge:` `contrast:`.
 

@@ -40,8 +40,8 @@ describe("ProgressBar legendTone (keksdose tax-tab Bucket)", () => {
       />,
     );
     const [a, b, c] = figures();
-    expect(a.className).toContain("text-[var(--money-income)]");
-    expect(b.className).toContain("text-[var(--money-income)]");
+    expect(a).toHaveClass("text-money-income");
+    expect(b).toHaveClass("text-money-income");
     expect(c.className).toContain("text-muted");
   });
 
@@ -83,7 +83,7 @@ describe("ProgressBar legendTone (keksdose tax-tab Bucket)", () => {
     expect(fs.map((f) => f.textContent)).toEqual(["CHF 60", "CHF 30", "CHF -10"]);
     for (const f of fs) {
       expect(f).toHaveAttribute("data-private");
-      expect(f.className).toContain("text-[var(--money-income)]");
+      expect(f).toHaveClass("text-money-income");
     }
   });
 

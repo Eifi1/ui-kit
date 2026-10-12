@@ -42,8 +42,8 @@ const END = "<!-- END GENERATED: styling -->";
  * Tailwind 4's theme namespaces → the utility prefix each one makes, in column order.
  * Longest first where one is a prefix of another (`ring-offset-color` before
  * `ring-color`), because a variable is matched against them in this order. The width
- * and offset namespaces are here for the utilities DOC-7 plans (`ring-focus`,
- * `ring-offset-surface`), so adding them needs no change to this script.
+ * and offset namespaces carry DOC-7's utilities (`ring-focus`, `outline-focus`,
+ * `ring-offset-surface`, 0.34).
  */
 const NAMESPACES = [
   { ns: "text-color", prefix: "text", heading: "`text-*`" },

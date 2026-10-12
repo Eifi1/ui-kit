@@ -744,7 +744,7 @@ export function MiniCalendar({
                     FOCUS_RING_WIDTH,
                     "focus-visible:outline-none focus-visible:ring-inset",
                     isStart || isEnd
-                      ? "focus-visible:ring-[var(--brand-contrast)]"
+                      ? "focus-visible:ring-brand-contrast"
                       : "focus-visible:ring-brand",
                     disabled
                       ? "cursor-not-allowed text-placeholder"

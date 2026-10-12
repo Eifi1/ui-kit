@@ -655,10 +655,13 @@ No `text-*` names for the border roles: an SVG that strokes in `currentColor` ta
 `stroke-subtle` / `stroke-strong` instead. A chart grid drawn in `stroke-subtle` keeps a
 light weight and follows More contrast, which a palette literal never did.
 
-- The money statics stay: `.text-money-pos/-neg/-net(-muted)` and
-  `.bg-money-pos/-neg/-neutral` (`-muted` is an opacity, not a colour). They take no
-  variants (§3.4); there are no money theme names, so a site that needs a variant keeps
-  the `[var(--money-…)]` form.
+- **Money has theme names since 0.34** (refactor audit DOC-7): `text-money-{income,expense,net,neutral}`
+  and `bg-money-{income,expense}` (plus `bg-money-neutral`) — layered, with variants. The
+  statics `.text-money-pos/-neg(-muted)` and `.bg-money-pos/-neg` stay as aliases for apps
+  (`-muted` is an opacity, not a colour); `.text-money-net` and `.bg-money-neutral` are the
+  theme names now, since an unlayered twin would beat them.
+- **Also since 0.34:** `ring-focus` / `outline-focus` (the focus frame's width),
+  `ring-offset-surface` / `-page` / `-media-scrim-hover`, and `ring-brand-contrast`.
 - `text-brand`, `bg-brand` and `border-brand` are theme names: layered, with variants.
 - `placeholder:text-placeholder` needs no namespace of its own.
 

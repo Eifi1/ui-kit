@@ -3,6 +3,7 @@ import { Calculator as CalculatorIcon, Delete } from "lucide-react";
 import { Popover } from "./popover";
 import { cn } from "../lib/cn";
 import { FIELD_TOUCH_TEXT } from "./field-base";
+import { FOCUS_RING } from "./focus-ring";
 import { evaluateExpression, formatResult, isBareAmount, splitLeadingSign } from "../lib/calc";
 import {
   DEFAULT_CALCULATOR_LABELS,
@@ -73,8 +74,9 @@ const KEYS: Key[] = [
   { kind: "ins", label: "+", ins: "+", accent: true, name: "plus" },
 ];
 
-const KEY_BASE =
-  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-[length:var(--focus-ring-width)] focus:ring-strong";
+// The kit's one focus frame (text-size §5). Until 0.34 the keys rang in `ring-strong` on
+// `focus:`, so a pointer click left a grey ring on the key it pressed (DOC-7).
+const KEY_BASE = `flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${FOCUS_RING}`;
 // Two key families, two fills: digits sit on the inset surface and darken on
 // hover, operators sit a step down on `--bg-active` and lift toward that surface —
 // the same split `NumberPadSheet` uses for this keypad on a phone. The tokens

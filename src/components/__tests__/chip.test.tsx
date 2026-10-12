@@ -276,10 +276,10 @@ describe("Chip — touch size and money tones (0.6.0)", () => {
       </>,
     );
     const income = screen.getByText("In").parentElement!;
-    expect(income.className).toContain("text-[var(--money-income)]");
+    expect(income).toHaveClass("text-money-income");
     expect(income.className).toContain("bg-surface-2");
     const expense = screen.getByRole("button", { name: "Out" });
-    expect(expense.className).toContain("text-[var(--money-expense)]");
+    expect(expense).toHaveClass("text-money-expense");
     expect(expense.className).toContain("bg-active");
     expect(expense).toHaveAttribute("aria-pressed", "true");
   });

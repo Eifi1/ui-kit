@@ -49,8 +49,8 @@ const FILL: Record<ProgressBarTone, string> = {
   warning: "bg-warning",
   danger: "bg-danger",
   info: "bg-info",
-  income: "bg-[var(--money-income)]",
-  expense: "bg-[var(--money-expense)]",
+  income: "bg-money-income",
+  expense: "bg-money-expense",
 };
 
 const TRACK_HEIGHT: Record<ProgressBarSize, string> = { sm: "h-1", slim: "h-1.5", md: "h-2", lg: "h-3" };

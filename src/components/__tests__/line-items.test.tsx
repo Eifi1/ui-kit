@@ -268,9 +268,9 @@ describe("LineItems", () => {
 
     it("summary.tone income / expense take the money palette", () => {
       const { rerender } = render(<Lines summary={{ label: "Left", value: "12.00", tone: "income" }} />);
-      expect(screen.getByText("12.00").className).toContain("text-[var(--money-income)]");
+      expect(screen.getByText("12.00")).toHaveClass("text-money-income");
       rerender(<Lines summary={{ label: "Left", value: "12.00", tone: "expense" }} />);
-      expect(screen.getByText("12.00").className).toContain("text-[var(--money-expense)]");
+      expect(screen.getByText("12.00")).toHaveClass("text-money-expense");
     });
 
     it("with no value the tone colours the label; with a value the label stays neutral", () => {

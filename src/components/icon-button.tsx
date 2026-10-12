@@ -231,7 +231,7 @@ const ICON_BUTTON_OVERLAY =
 // `overlay` uses would give a dark ring on a dark viewfinder in dark mode. The focus ring stands off by 2px, or it would
 // merge into the ring that is part of the look.
 const ICON_BUTTON_SHUTTER =
-  "rounded-full border-4 border-media-ink bg-media-scrim text-media-ink backdrop-blur-sm hover:bg-media-scrim-hover focus-visible:ring-media-ink focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--media-scrim-hover)]";
+  "rounded-full border-4 border-media-ink bg-media-scrim text-media-ink backdrop-blur-sm hover:bg-media-scrim-hover focus-visible:ring-media-ink focus-visible:ring-offset-2 focus-visible:ring-offset-media-scrim-hover";
 
 export type IconButtonVariant = ButtonVariant | "overlay" | "shutter";
 

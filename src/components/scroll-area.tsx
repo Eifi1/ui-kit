@@ -115,7 +115,7 @@ export function ScrollArea({
         // a row with its own background would cover exactly the part of the ring that
         // says where focus is. An outline paints above it, and the negative offset
         // keeps it inside a parent that clips.
-        "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:-outline-offset-2 focus-visible:outline-brand",
+        "focus-visible:outline-focus focus-visible:-outline-offset-2 focus-visible:outline-brand",
         className,
       )}
     />

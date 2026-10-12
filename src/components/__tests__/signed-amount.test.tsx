@@ -14,12 +14,12 @@ describe("SignedAmount", () => {
     );
     const up = screen.getByTestId("up");
     expect(up.querySelector("[aria-hidden]")).toHaveTextContent("+$50.00");
-    expect(up).toHaveClass("text-[var(--money-income)]");
+    expect(up).toHaveClass("text-money-income");
     expect(screen.getByText("plus $50.00")).toHaveClass("sr-only");
 
     const down = screen.getByTestId("down");
     expect(down.querySelector("[aria-hidden]")).toHaveTextContent("−$50.00");
-    expect(down).toHaveClass("text-[var(--money-expense)]");
+    expect(down).toHaveClass("text-money-expense");
     expect(screen.getByText("minus $50.00")).toBeInTheDocument();
 
     expect(screen.getByTestId("zero")).toHaveClass("text-muted");
@@ -89,15 +89,15 @@ describe("palette='money' and flatWithin (keksdose dev#434 price changes)", () =
         <SignedAmount value={0.3} goodDirection="down" locale="en-US" data-testid="status" />
       </>,
     );
-    expect(screen.getByTestId("rise")).toHaveClass("text-[var(--money-expense)]");
-    expect(screen.getByTestId("fall")).toHaveClass("text-[var(--money-income)]");
+    expect(screen.getByTestId("rise")).toHaveClass("text-money-expense");
+    expect(screen.getByTestId("fall")).toHaveClass("text-money-income");
     // Unset, the verdict is still success / danger.
     expect(screen.getByTestId("status")).toHaveClass("text-danger");
   });
 
   it("Delta takes the same palette, sentence unchanged", () => {
     render(<Delta value={0.04} unit="percent" goodDirection="down" palette="money" locale="en-US" />);
-    expect(screen.getByText("Up 4% (worse)").parentElement).toHaveClass("text-[var(--money-expense)]");
+    expect(screen.getByText("Up 4% (worse)").parentElement).toHaveClass("text-money-expense");
   });
 
   it("counts |value| <= flatWithin as no change: no sign, muted, no verdict", () => {

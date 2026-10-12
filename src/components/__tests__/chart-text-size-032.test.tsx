@@ -208,6 +208,6 @@ describe("legends beside a chart go under it at Large (§4)", () => {
     render(<ToggleLegend entries={ENTRIES} hidden={new Set()} onToggle={() => {}} />);
     const entry = screen.getByRole("button", { name: "Left" });
     expect(entry.className).toContain("text-caption");
-    expect(entry.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(entry).toHaveClass("focus-visible:ring-focus");
   });
 });

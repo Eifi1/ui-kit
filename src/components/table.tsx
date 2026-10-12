@@ -354,7 +354,7 @@ export function Table({
           // rounded corners.
           framed && "rounded-md border border-subtle",
           THIN_SCROLLBAR_CLASS,
-          "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:-outline-offset-2 focus-visible:outline-brand",
+          "focus-visible:outline-focus focus-visible:-outline-offset-2 focus-visible:outline-brand",
           wrapperClassName,
         )}
       >

@@ -354,9 +354,10 @@ describe("Switch, Slider, ToggleGroup, Checkbox, ChoiceCard in rem (§3.2, §4)"
   });
 
   it("ChoiceCard: the radio's dot scales with its box, and the focus mark is the frame's width", () => {
-    const { container } = render(<ChoiceCard type="radio" name="plan" title="Monthly" />);
+    render(<ChoiceCard type="radio" name="plan" title="Monthly" />);
     expect(screen.getByRole("radio").className).toContain("checked:border-[0.3125rem]");
-    expect(container.innerHTML).toContain("has-[:focus-visible]:outline-[length:var(--focus-ring-width)]");
+    // `outline-focus` is `--focus-ring-width` wide (0.34, DOC-7); the card is the label.
+    expect(screen.getByRole("radio").closest("label")).toHaveClass("has-[:focus-visible]:outline-focus");
   });
 
   it("Card's strong frame pads one pixel short of p-3 / p-4, in rem", () => {

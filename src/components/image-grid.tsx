@@ -137,7 +137,7 @@ export function ImageGrid({
                 onClick={() => (onOpen ? onOpen(i) : setOpenIndex(i))}
                 className={cn(
                   "block w-full overflow-hidden rounded-md border border-subtle bg-hover",
-                  "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-brand",
+                  "focus-visible:outline-focus focus-visible:outline-offset-2 focus-visible:outline-brand",
                   ASPECT_CLASS[aspect],
                 )}
               >

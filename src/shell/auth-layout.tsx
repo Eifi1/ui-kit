@@ -68,7 +68,7 @@ const SAFE_AREA: CSSProperties = {
 };
 
 const FOOTER_CLASS =
-  "flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted [&_a:hover]:text-primary [&_a:hover]:underline [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-[length:var(--focus-ring-width)] [&_a:focus-visible]:ring-brand";
+  "flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted [&_a:hover]:text-primary [&_a:hover]:underline [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-focus [&_a:focus-visible]:ring-brand";
 
 /**
  * The public page frame outside the app shell: sign-in, registration, email

@@ -1,6 +1,7 @@
 import type { ComponentPropsWithoutRef, ComponentType, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useKitLink } from "../i18n/kit-labels";
+import { FOCUS_RING } from "./focus-ring";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 
 export interface NavPillItem<T extends string> {
@@ -56,9 +57,10 @@ export interface NavPillsProps<T extends string> extends Omit<ComponentPropsWith
 
 // The pill is a ToggleGroup segment's (`rounded`, `px-3 py-1.5`, the inverse fill for
 // the current one), so a strip of these beside a segmented control reads as the same
-// family. Unlike the segments, a pill never truncates: the strip WRAPS instead.
-const PILL =
-  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-[length:var(--focus-ring-width)] focus-visible:ring-strong [&_svg]:size-4 [&_svg]:shrink-0";
+// family. Unlike the segments, a pill never truncates: the strip WRAPS instead. Its focus
+// ring is the kit's one focus frame (text-size §5), in brand; until 0.34 it copied the
+// segment's `ring-strong` too (refactor audit 2026-10, DOC-7).
+const PILL = `inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none ${FOCUS_RING} [&_svg]:size-4 [&_svg]:shrink-0`;
 const PILL_SM = "gap-1 px-2 py-1 text-xs [&_svg]:size-3.5";
 const PILL_CURRENT = "bg-inverse text-inverse";
 const PILL_IDLE = "text-secondary hover:bg-hover hover:text-primary";

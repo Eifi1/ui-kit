@@ -219,13 +219,13 @@ export function NumberPadSheet({
           the value stays visible even when the sheet covers the field. */}
       <div className="flex items-end justify-between gap-3 px-2 pb-2">
         {label != null && (
-          <span className="truncate pb-1 text-xs font-medium text-[var(--money-neutral)]">{label}</span>
+          <span className="truncate pb-1 text-xs font-medium text-money-neutral">{label}</span>
         )}
         {/* At the logical end, opposite the label; the figures themselves stay
             left-to-right and right-aligned, like the desktop calculator's. */}
         <div className="ms-auto min-w-0">
           <div dir="ltr" className="truncate text-right font-mono text-lg leading-tight text-primary">{value || "0"}</div>
-          <div dir="ltr" className="h-4 text-right font-mono text-xs text-[var(--money-neutral)]">{preview}</div>
+          <div dir="ltr" className="h-4 text-right font-mono text-xs text-money-neutral">{preview}</div>
         </div>
       </div>
 
@@ -271,7 +271,7 @@ export function NumberPadSheet({
           // on screen, which is the defect this change exists to fix.
           className={cn(
             PAD_BTN,
-            "col-span-2 bg-brand text-brand-contrast focus-visible:ring-[var(--brand-contrast)] active:bg-brand-hover",
+            "col-span-2 bg-brand text-brand-contrast focus-visible:ring-brand-contrast active:bg-brand-hover",
           )}
         >
           {text.done}

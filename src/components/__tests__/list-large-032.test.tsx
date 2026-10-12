@@ -79,7 +79,7 @@ describe("ListItem wraps at Large (§4)", () => {
     expect(screen.getByText("Updated 3 days ago")).toHaveClass("text-caption");
     expect(screen.getByText("Ada's Garden Planner")).toHaveClass("text-caption");
     const target = screen.getByRole("button");
-    expect(target.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(target).toHaveClass("focus-visible:ring-focus");
     expect(target).toHaveClass("focus-visible:ring-inset");
   });
 });

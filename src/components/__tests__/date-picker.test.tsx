@@ -195,7 +195,7 @@ describe("the step row's focus frame (keksdose live #394)", () => {
     // Not every button in the row: the label's "?" keeps its own 2px focus frame.
     expect(row.some((t) => t.includes("[&_button"))).toBe(false);
     const hint = screen.getByRole("button", { name: "The day the bank booked it" });
-    expect(hint.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(hint).toHaveClass("focus-visible:ring-focus");
     expect(hint.className).not.toContain("ring-inset");
   });
 });

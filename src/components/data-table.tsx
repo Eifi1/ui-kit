@@ -1599,7 +1599,7 @@ export function DataTable<T>({
                       // OUTLINE rather than FOCUS_RING's box-shadow: a shadow on a `<tr>`
                       // is not painted by every engine, an outline is.
                       rowsFocusable &&
-                        "focus-visible:bg-hover focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:-outline-offset-2 focus-visible:outline-brand",
+                        "focus-visible:bg-hover focus-visible:outline-focus focus-visible:-outline-offset-2 focus-visible:outline-brand",
                       rowClassName?.(row),
                     )}
                     onClick={

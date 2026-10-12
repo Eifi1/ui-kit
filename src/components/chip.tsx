@@ -107,12 +107,12 @@ const TONE: Record<ChipTone, { idle: string; selected: string }> = {
   // contrast, and a filled amber pill beside an amber figure reads as one smear.
   // `border-current` takes its hue from the text, so the two cannot drift apart.
   income: {
-    idle: "border-current/40 bg-surface-2 text-[var(--money-income)]",
-    selected: "border-current bg-active text-[var(--money-income)]",
+    idle: "border-current/40 bg-surface-2 text-money-income",
+    selected: "border-current bg-active text-money-income",
   },
   expense: {
-    idle: "border-current/40 bg-surface-2 text-[var(--money-expense)]",
-    selected: "border-current bg-active text-[var(--money-expense)]",
+    idle: "border-current/40 bg-surface-2 text-money-expense",
+    selected: "border-current bg-active text-money-expense",
   },
   // The categorical hues: the `info` recipe with its own token triple, so a hue chip
   // and a status chip in one row carry the same weight.
@@ -150,8 +150,8 @@ const OUTLINE: Record<ChipTone, string> = {
   warning: "border-warning bg-transparent text-warning",
   success: "border-success bg-transparent text-success",
   info: "border-info bg-transparent text-info",
-  income: "border-current/60 bg-transparent text-[var(--money-income)]",
-  expense: "border-current/60 bg-transparent text-[var(--money-expense)]",
+  income: "border-current/60 bg-transparent text-money-income",
+  expense: "border-current/60 bg-transparent text-money-expense",
   blue: "border-hue-blue bg-transparent text-hue-blue",
   indigo: "border-hue-indigo bg-transparent text-hue-indigo",
   purple: "border-hue-purple bg-transparent text-hue-purple",
@@ -192,8 +192,8 @@ const DOT: Record<ChipTone, string> = {
   warning: "bg-warning",
   success: "bg-success",
   info: "bg-info",
-  income: "bg-[var(--money-income)]",
-  expense: "bg-[var(--money-expense)]",
+  income: "bg-money-income",
+  expense: "bg-money-expense",
   blue: "bg-hue-blue",
   indigo: "bg-hue-indigo",
   purple: "bg-hue-purple",
@@ -225,7 +225,7 @@ function surfaceOf(tone: ChipTone, variant: ChipVariant, selected: boolean | und
   }
   if (variant === "solid") {
     // A solid chip is already the strongest look there is, so "on" is a ring round it.
-    return cn(SOLID[tone], selected && "ring-2 ring-strong ring-offset-1 ring-offset-[var(--bg-surface)]");
+    return cn(SOLID[tone], selected && "ring-2 ring-strong ring-offset-1 ring-offset-surface");
   }
   if (selected) return palette.selected;
   return variant === "outline" ? OUTLINE[tone] : palette.idle;
@@ -301,7 +301,7 @@ const CHIP_PILL = "inline-flex max-w-full items-center rounded-full border trans
 // `focus-visible`, not `focus`: a chip commonly receives focus programmatically (the
 // ChipInput moves focus onto one after a removal) and a ring that appears on a
 // pointer click reads as a stuck selection.
-const CHIP_RING = `${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]`;
+const CHIP_RING = `${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-surface`;
 const CHIP_BASE = `${CHIP_PILL} ${CHIP_RING}`;
 
 /**

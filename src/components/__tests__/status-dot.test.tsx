@@ -8,10 +8,12 @@ const TONES: StatusDotTone[] = [
 ];
 
 /** The role utility that paints each colour (tokens.css, `@theme inline`): the dot's class
- *  since 0.34. A colour without one — the money pair, `--text-muted` as a fill — keeps
- *  `bg-[var(--…)]`. */
+ *  since 0.34, the money pair's too (DOC-7). A colour without one — `--text-muted` as a
+ *  fill — keeps `bg-[var(--…)]`. */
 const ROLE_BG: Record<string, string> = {
   "var(--brand)": "bg-brand",
+  "var(--money-income)": "bg-money-income",
+  "var(--money-expense)": "bg-money-expense",
   "var(--success)": "bg-success",
   "var(--warning)": "bg-warning",
   "var(--danger)": "bg-danger",

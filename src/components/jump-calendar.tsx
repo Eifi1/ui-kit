@@ -361,7 +361,7 @@ function JumpCalendar({
                       FOCUS_RING_WIDTH,
                       "focus-visible:outline-none focus-visible:ring-inset",
                       // A --brand ring on a --brand fill exists only in the DOM.
-                      end && !disabled ? "focus-visible:ring-[var(--brand-contrast)]" : "focus-visible:ring-brand",
+                      end && !disabled ? "focus-visible:ring-brand-contrast" : "focus-visible:ring-brand",
                       disabled
                         ? "cursor-not-allowed text-placeholder"
                         : end

@@ -136,7 +136,7 @@ const TILE_BASE =
   "relative inline-flex shrink-0 items-center justify-center rounded-md border transition-colors " +
   "focus:outline-none " +
   FOCUS_RING +
-  " focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] " +
+  " focus-visible:ring-offset-2 focus-visible:ring-offset-surface " +
   "disabled:cursor-not-allowed disabled:opacity-50";
 const TILE_IDLE =
   "border-subtle bg-surface hover:border-strong hover:bg-hover";

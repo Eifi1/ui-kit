@@ -303,7 +303,7 @@ describe("Button variant=link", () => {
     expect(button.tagName).toBe("BUTTON");
     expect(button.className).toContain("hover:underline");
     // The kit's focus frame (0.32, §5), on keyboard focus.
-    expect(button.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(button).toHaveClass("focus-visible:ring-focus");
     expect(button.className).toContain("p-0");
     expect(button.className).not.toMatch(/\bpx-3\b|\bpy-2\b/);
   });

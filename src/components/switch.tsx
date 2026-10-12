@@ -52,7 +52,7 @@ const TRACK =
   "peer block shrink-0 cursor-pointer appearance-none rounded-full bg-[var(--border-strong)] transition-colors " +
   "checked:bg-brand " +
   // The kit's focus frame (§5), stood off the track so it never merges with the fill.
-  `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] ` +
+  `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-2 focus-visible:ring-offset-surface ` +
   "disabled:cursor-not-allowed";
 
 // The thumb, laid over the input and ignoring the pointer so every click still reaches

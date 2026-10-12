@@ -63,9 +63,9 @@ export type StatTileTone =
 const TONE_CLASS: Record<Exclude<StatTileTone, "signed">, string> = {
   neutral: "text-primary",
   brand: "text-brand",
-  income: "text-[var(--money-income)]",
-  expense: "text-[var(--money-expense)]",
-  net: "text-[var(--money-net)]",
+  income: "text-money-income",
+  expense: "text-money-expense",
+  net: "text-money-net",
   success: "text-success",
   warning: "text-warning",
   danger: "text-danger",
@@ -361,7 +361,7 @@ export function StatTile({
     "after:absolute after:inset-0 after:rounded-lg after:content-['']",
     // The kit's focus frame (0.32, §5), on the overlay — `FOCUS_RING`'s classes cannot
     // carry the `after:`, so its width is spelt out.
-    "focus-visible:outline-none focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-inset focus-visible:after:ring-brand",
+    "focus-visible:outline-none focus-visible:after:ring-focus focus-visible:after:ring-inset focus-visible:after:ring-brand",
   );
   const describedBy = d ? `${valueId} ${deltaId}` : valueId;
   let labelNode: ReactNode = label;

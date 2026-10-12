@@ -119,7 +119,7 @@ describe("the phone card at Large (§4)", () => {
     viewport(390);
     renderTable({ onRowClick: () => {} });
     const body = card("Ada Example");
-    expect(body.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(body).toHaveClass("focus-visible:ring-focus");
     expect(body.className).toContain("focus-visible:ring-inset");
   });
 });

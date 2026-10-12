@@ -307,7 +307,7 @@ export function AlertBanner({
         strip ? stripFrameClass(tone, size) : alertFrameClass(tone, size),
         elevated && cn(ELEVATED, TONE_ELEVATED[tone]),
       );
-  const focusRing = cn(FOCUS_RING, "focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]");
+  const focusRing = cn(FOCUS_RING, "focus-visible:ring-offset-1 focus-visible:ring-offset-surface");
 
   const content = (
     <>
@@ -394,7 +394,7 @@ export function AlertBanner({
         inlineRow || strip ? "items-center" : "items-start",
         "outline-none after:absolute after:inset-0 after:content-['']",
         strip ? "after:rounded-none" : "after:rounded-md",
-        "focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-brand",
+        "focus-visible:after:ring-focus focus-visible:after:ring-brand",
       )
     : cn(row, !inlineRow && "w-full", frame, TONE_TEXT[tone], hover, focusRing, className);
   // The div's attributes are the row element's: an `id`, a test id or an

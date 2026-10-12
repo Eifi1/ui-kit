@@ -346,7 +346,7 @@ export function Disclosure({
             // card's hover paint on the stretched area / the row, not the text box.
             cn(
               "min-w-0 flex-1 after:absolute after:inset-0 after:content-['']",
-              "focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-inset focus-visible:after:ring-brand",
+              "focus-visible:after:ring-focus focus-visible:after:ring-inset focus-visible:after:ring-brand",
               card ? cn("after:rounded-lg", joined && "after:rounded-b-none") : !menu && "after:rounded-sm",
             )
           : FOCUS_RING,

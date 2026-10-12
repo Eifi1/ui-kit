@@ -94,15 +94,15 @@ const TRACK = [
   "rtl:[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_left,var(--brand)_var(--slider-fill),var(--border-strong)_var(--slider-fill))]",
   "[&::-webkit-slider-thumb]:-mt-[0.3125rem] [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none",
   "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:shadow",
-  "focus-visible:[&::-webkit-slider-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-webkit-slider-thumb]:ring-brand",
-  "focus-visible:[&::-webkit-slider-thumb]:ring-offset-2 focus-visible:[&::-webkit-slider-thumb]:ring-offset-[var(--bg-surface)]",
+  "focus-visible:[&::-webkit-slider-thumb]:ring-focus focus-visible:[&::-webkit-slider-thumb]:ring-brand",
+  "focus-visible:[&::-webkit-slider-thumb]:ring-offset-2 focus-visible:[&::-webkit-slider-thumb]:ring-offset-surface",
   // Firefox
   "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-[var(--border-strong)]",
   "[&::-moz-range-progress]:h-1.5 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-brand",
   "[&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0",
   "[&::-moz-range-thumb]:bg-brand [&::-moz-range-thumb]:shadow",
-  "focus-visible:[&::-moz-range-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-moz-range-thumb]:ring-brand",
-  "focus-visible:[&::-moz-range-thumb]:ring-offset-2 focus-visible:[&::-moz-range-thumb]:ring-offset-[var(--bg-surface)]",
+  "focus-visible:[&::-moz-range-thumb]:ring-focus focus-visible:[&::-moz-range-thumb]:ring-brand",
+  "focus-visible:[&::-moz-range-thumb]:ring-offset-2 focus-visible:[&::-moz-range-thumb]:ring-offset-surface",
 ].join(" ");
 
 // The marks row sits `-mt-1.5` under a 1.5rem box, tucked against the track. In the 48 px

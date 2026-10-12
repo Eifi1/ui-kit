@@ -200,8 +200,8 @@ const SUMMARY_TONE: Record<LineItemsSummaryTone, string> = {
   danger: "text-danger",
   muted: "text-muted",
   // SignedAmount's money palette (toneTextClass "income" / "expense").
-  income: "text-[var(--money-income)]",
-  expense: "text-[var(--money-expense)]",
+  income: "text-money-income",
+  expense: "text-money-expense",
 };
 const REMOVE_ALIGN: Record<LineItemsRemoveAlign, string> = {
   start: "@lg:self-start",

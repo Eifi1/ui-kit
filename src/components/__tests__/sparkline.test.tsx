@@ -107,8 +107,8 @@ describe("Sparkline", () => {
     const { container } = render(<Sparkline data={[3, -2, null, 5]} variant="bar" tone="signed" />);
     const bars = container.querySelectorAll("rect");
     expect(bars).toHaveLength(3);
-    expect(bars[0].getAttribute("class")).toContain("--money-income");
-    expect(bars[1].getAttribute("class")).toContain("--money-expense");
+    expect(bars[0]).toHaveClass("text-money-income");
+    expect(bars[1]).toHaveClass("text-money-expense");
   });
 
   it("closes an area under the line", () => {

@@ -62,7 +62,7 @@ describe("StatusDot", () => {
   it("uses ProgressBar's tone names, money pair included, and rings on request", () => {
     const { container } = render(<StatusDot tone="income" ring />);
     const dot = container.firstElementChild!;
-    expect(dot.className).toContain("bg-[var(--money-income)]");
+    expect(dot).toHaveClass("bg-money-income");
     expect(dot.className).toContain("ring-[var(--bg-surface)]");
   });
 });

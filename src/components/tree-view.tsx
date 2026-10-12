@@ -546,7 +546,7 @@ export function TreeView<T = unknown>({
           }}
           // The ring goes on this row's own box, not the <li>: the <li> contains the
           // whole open branch below it, and ringing that would outline a subtree.
-          className="outline-none [&:focus-visible>[data-tree-row]]:ring-[length:var(--focus-ring-width)] [&:focus-visible>[data-tree-row]]:ring-brand"
+          className="outline-none [&:focus-visible>[data-tree-row]]:ring-focus [&:focus-visible>[data-tree-row]]:ring-brand"
         >
           <TreeRow
             id={rowId}
