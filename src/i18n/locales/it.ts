@@ -1541,7 +1541,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       keptBeta: "La beta mantiene la sua scadenza; è cambiato solo il piano.",
       untilDone: (date) => `Gratuito fino al ${date}.`,
       overLimit: "Oltre il limite del nuovo piano: non viene rimosso nulla, i nuovi elementi sono bloccati.",
-      // Figures formatted; "di", as `billing.usage`.
+      // Figures formatted; "di", as `billing.usage`. The app's word follows the limit,
+      // in its form (0.33.1): "1 di 1 budget", "1 di 5 budget".
       usageOf: (used, limit, dimension) => `${used} di ${limit} ${dimension}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in

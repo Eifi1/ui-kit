@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { pluralForm } from "../i18n/plurals";
+import type { PluralForms } from "../i18n/plurals";
 import { formatNumber, EMPTY_FORMATTED_VALUE } from "../lib/format";
 import { toLocalIso } from "../lib/dates";
 import type { DataTableColumn } from "../components/data-table";
@@ -61,8 +63,14 @@ export interface PlanChangeLabels {
   untilDone: (date: string) => string;
   /** The result: the account owns more than the new plan allows. */
   overLimit: string;
-  /** The column's usage, spelled out (its tooltip): "1 of 5 budgets". Figures arrive
-   *  formatted; `dimension` is the app's word, as `usage` gives it. */
+  /**
+   * The column's usage, spelled out (its tooltip): "1 of 5 budgets". Figures arrive
+   * formatted; `dimension` is the app's word, as `usage.label` gives it — since 0.33.1
+   * in the form the LIMIT takes when the label gives its plural forms ("1 of 1 budget",
+   * "1 of 5 budgets"): in every shipped language the word follows the limit, or heads
+   * the line in German, whose `von` would want a dative plural no app form carries
+   * ("Budgets: 1 von 5"). An override of yours gets the same word.
+   */
   usageOf: (used: string, limit: string, dimension: string) => string;
 }
 
@@ -98,8 +106,17 @@ export interface PlanColumnUsage {
   used: number;
   /** The plan's limit for it; `null` (unlimited, or none known): no line. */
   limit: number | null;
-  /** The app's word for what is counted, as in "1 of 5 budgets". */
-  label: string;
+  /**
+   * The app's word for what is counted, as it reads after a number: "budgets" in "1 of 5
+   * budgets" — the word in a sentence, not a heading's "Budgets".
+   *
+   * Its plural forms (0.33.1, keksdose): `{ one: "budget", other: "budgets" }` — your
+   * catalogue's `_one` / `_other` pair, any CLDR category allowed, `other` for the rest
+   * ({@link PluralForms}). The column picks the form for the limit in the provider's
+   * locale, so a plan of one reads "1 of 1 budget". A plain string is used as it is,
+   * whatever the count.
+   */
+  label: string | PluralForms;
 }
 
 export interface PlanColumnOptions<T> {
@@ -113,13 +130,18 @@ export interface PlanColumnOptions<T> {
    *  undefined for a row: no chip — billing off, where a status says nothing. */
   status?: (row: T) => SubscriptionStatus | undefined;
   /** The row's usage of its plan's limit: "1/5" under the name, "1 of 5 budgets" in
-   *  the tooltip. Undefined for a row, or a `null` limit: no line. */
+   *  the tooltip (`planChange.usageOf`, with the label's form for the limit). Undefined
+   *  for a row, or a `null` limit: no line. */
   usage?: (row: T) => PlanColumnUsage | undefined;
   /** A select filter over these codes, each named by `planName`. Left out: none. */
   filterPlans?: readonly string[];
   /**
    * The sort. Default: by the plan code (keksdose's, `users-panel.tsx:739`). A function:
    * by its value — the catalogue's `sort` for rank order. `false`: not sortable.
+   *
+   * Client-side only, as every column's `sortBy`: a `DataTable` with `serverPagination`
+   * holds one page, so it sorts nothing itself — with `onSortsChange` it reports the
+   * column's `key` (default `"plan"`), and your server orders the rows by it.
    */
   sortBy?: false | ((row: T) => string | number | null | undefined);
   /** The header's text. Default `planChange.column`. */
@@ -145,6 +167,8 @@ function PlanCell({
 }) {
   const locale = useKitLocale();
   const figure = (value: number) => formatNumber(value, { locale });
+  const word = (label: PlanColumnUsage["label"], limit: number) =>
+    typeof label === "string" ? label : pluralForm(limit, label, locale);
   return (
     <div className="whitespace-nowrap" data-plan={code ?? undefined}>
       <div className="flex items-center gap-1.5">
@@ -155,7 +179,7 @@ function PlanCell({
       {usage && usage.limit !== null && (
         // "1/5" under the plan, "1 of 5 budgets" in the tooltip: the sentence spelled out
         // inline was the widest thing in keksdose's table.
-        <Tooltip label={usageOf(figure(usage.used), figure(usage.limit), usage.label)}>
+        <Tooltip label={usageOf(figure(usage.used), figure(usage.limit), word(usage.label, usage.limit))}>
           <span className="block text-xs tabular-nums text-[var(--text-muted)]">
             {figure(usage.used)}/{figure(usage.limit)}
           </span>
@@ -175,7 +199,11 @@ function PlanCell({
  *       plan: (u) => u.plan,
  *       planName,
  *       status: billingOn ? (u) => u.subscription?.status : undefined,
- *       usage: (u) => ({ used: u.budgets_owned, limit: u.limits.budgets, label: t("budgets") }),
+ *       usage: (u) => ({
+ *         used: u.budgets_owned,
+ *         limit: u.limits.budgets,
+ *         label: { one: t("planUsage.budget_one"), other: t("planUsage.budget_other") },
+ *       }),
  *       filterPlans: plans.map((p) => p.code),
  *     })]
  *

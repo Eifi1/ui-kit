@@ -10,6 +10,7 @@ import { UI_KIT_LABELS_FR } from "../../i18n/locales/fr";
 import { UI_KIT_LABELS_HU } from "../../i18n/locales/hu";
 import { UI_KIT_LABELS_IT } from "../../i18n/locales/it";
 import { UI_KIT_LABELS_ZH } from "../../i18n/locales/zh";
+import type { useKitLocale } from "../../i18n/kit-labels";
 import {
   PAY_PAGE_LANG_PARAM,
   paddleLocale,
@@ -45,6 +46,10 @@ describe("paddleLocale — the kit's locale to Paddle's (§14.4, §14.16 item 20
     expect(paddleLocale("sv-SE")).toBe("en");
     expect(paddleLocale("")).toBe("en");
   });
+
+  it("takes no locale at all as English (0.33.1)", () => {
+    expect(paddleLocale(undefined)).toBe("en");
+  });
 });
 
 describe("payPageUrl — the buyer's language on the way to the pay page", () => {
@@ -65,6 +70,15 @@ describe("payPageUrl — the buyer's language on the way to the pay page", () =>
     expect(payPageUrl(hosted, "de-CH")).toBe(hosted);
     expect(payPageUrl("https://pay.example/?_ptxn=txn_1", "sv")).toBe("https://pay.example/?_ptxn=txn_1");
     expect(payPageUrl("not a url ?_ptxn=1", "fr")).toBe("not a url ?_ptxn=1");
+  });
+
+  it("takes `useKitLocale()`'s undefined: no lang, so the page reads the browser's, else English (0.33.1, keksdose)", () => {
+    // What `useKitLocale()` answers with no provider locale, typed as it is: the call
+    // compiles without a `?? "en"` at every call site.
+    const locale: ReturnType<typeof useKitLocale> = undefined;
+    const link = "https://pay.keksdose.app/?_ptxn=txn_01abc";
+    expect(payPageUrl(link, locale)).toBe(link);
+    expect(payPageLanguage(new URL(payPageUrl(link, locale)).searchParams.get(PAY_PAGE_LANG_PARAM), [])).toBe("en");
   });
 });
 

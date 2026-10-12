@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withAllPlurals } from "../plurals";
+import { pluralForm, withAllPlurals } from "../plurals";
 
 /**
  * withAllPlurals: the CLDR categories i18next asks for, filled from `_other` — the
@@ -51,5 +51,28 @@ describe("withAllPlurals", () => {
     expect(JSON.stringify(catalogue)).toBe(before);
     expect(out).not.toBe(catalogue);
     expect(out.list).toEqual(["a", "b"]);
+  });
+});
+
+describe("pluralForm (0.33.1)", () => {
+  const budget = { one: "budget", other: "budgets" };
+
+  it("picks the count's CLDR category in the locale", () => {
+    expect(pluralForm(1, budget, "en")).toBe("budget");
+    expect(pluralForm(5, budget, "en")).toBe("budgets");
+    expect(pluralForm(0, budget, "en")).toBe("budgets");
+    // French reads 0 and 1 as one.
+    expect(pluralForm(0, budget, "fr")).toBe("budget");
+  });
+
+  it("reads `other` for a category the forms leave out, as withAllPlurals fills it", () => {
+    // Polish 3 is `few`, French 1 000 000 `many`, and Chinese has only `other`.
+    expect(pluralForm(3, { one: "budżet", few: "budżety", other: "budżetów" }, "pl")).toBe("budżety");
+    expect(pluralForm(1_000_000, budget, "fr")).toBe("budgets");
+    expect(pluralForm(1, { other: "预算" }, "zh")).toBe("预算");
+  });
+
+  it("reads a locale Intl cannot, or none, as the runtime's, instead of throwing", () => {
+    for (const locale of [undefined, "", "not a tag"]) expect(pluralForm(2, budget, locale)).toBe(pluralForm(2, budget));
   });
 });

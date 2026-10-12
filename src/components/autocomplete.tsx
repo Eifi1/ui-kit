@@ -266,7 +266,7 @@ function AutocompleteInner<V extends string | number = string>(
   // the highlight put one there.
   const activeId = expanded && isOptionEnabled(results[active]) ? optionId(active) : undefined;
   useActiveOptionScroll(activeId);
-  const { rect, top, maxHeight } = useAnchoredPanel(fieldRef, expanded, { preferredHeight: 256 });
+  const { rect, top, bottom, maxHeight, above } = useAnchoredPanel(fieldRef, expanded, { preferredHeight: 256 });
   const dir = useAnchorDir(fieldRef, expanded);
 
   const close = () => {
@@ -484,7 +484,10 @@ function AutocompleteInner<V extends string | number = string>(
             dir={dir}
             onMouseDown={(e) => e.preventDefault()}
             className="fixed z-50 flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg"
-            style={{ top, left: rect.left, width: rect.width, maxHeight }}
+            // Flipped above, the list hangs from its bottom edge: three rows under a
+            // 256 px cap, placed by `top`, floated ~176 px above the field (keksdose K1),
+            // and the rows come and go as the user types.
+            style={{ ...(above ? { bottom } : { top }), left: rect.left, width: rect.width, maxHeight }}
           >
             {results.length > 0 && (
               <ul

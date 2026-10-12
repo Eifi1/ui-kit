@@ -112,7 +112,7 @@ function SuggestionList({
   panelRef: RefObject<HTMLDivElement | null>;
   children: ReactNode;
 }) {
-  const { rect, top, maxHeight } = useAnchoredPanel(anchorRef, true, { preferredHeight: 256 });
+  const { rect, top, bottom, maxHeight, above } = useAnchoredPanel(anchorRef, true, { preferredHeight: 256 });
   const dir = useAnchorDir(anchorRef, true);
   if (!rect) return null;
   return createPortal(
@@ -124,7 +124,9 @@ function SuggestionList({
       // Portalled out of the form's `dir`; the field's is put back. The list is
       // exactly the field's width, so `left` places it in either direction.
       dir={dir}
-      style={{ top, left: rect.left, width: rect.width }}
+      // Flipped above, the list hangs from its bottom edge: it filters as the user
+      // types, and a short one placed by `top` floated above the field (keksdose K1).
+      style={{ ...(above ? { bottom } : { top }), left: rect.left, width: rect.width }}
     >
       <ul id={id} role="listbox" data-clips="" className={LIST_CLASS} style={{ maxHeight }}>
         {children}

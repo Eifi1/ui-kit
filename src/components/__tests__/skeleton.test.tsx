@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SKELETON_CLASS, Skeleton } from "../skeleton";
@@ -40,6 +41,26 @@ describe("Skeleton", () => {
     const { container } = render(<Skeleton />);
     expect(container.firstElementChild!.className).toMatch(/animate-pulse/);
     expect(container.firstElementChild!.className).toMatch(/motion-reduce:animate-none/);
+  });
+
+  it("takes a ref, on the placeholder in every form (0.33.1, keksdose)", () => {
+    // Typed `ComponentPropsWithRef<"div">`: `<Skeleton ref>` compiles, and the props were
+    // always spread onto the div, so the ref lands where `className` does.
+    const plain = createRef<HTMLDivElement>();
+    const { container, unmount } = render(<Skeleton ref={plain} shape="block" />);
+    expect(plain.current).toBe(container.firstElementChild);
+    expect(plain.current).toHaveAttribute("data-skeleton", "block");
+    unmount();
+
+    const lines = createRef<HTMLDivElement>();
+    render(<Skeleton ref={lines} lines={3} className="mt-2" />);
+    expect(lines.current).toHaveAttribute("data-skeleton", "lines");
+    expect(lines.current).toHaveClass("mt-2");
+
+    const labelled = createRef<HTMLDivElement>();
+    render(<Skeleton ref={labelled} label="Loading activity" />);
+    expect(labelled.current).toHaveAttribute("data-skeleton", "line");
+    expect(labelled.current?.parentElement).toHaveAttribute("role", "status");
   });
 
   it("shares StatTile's loading look", () => {

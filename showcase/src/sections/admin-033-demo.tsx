@@ -84,7 +84,11 @@ export function PlanChange033Demo() {
   // Stable callbacks: usePlanColumn memoises the column on them.
   const plan = useCallback((a: Account) => a.plan, []);
   const status = useCallback((a: Account) => a.status, []);
-  const usage = useCallback((a: Account) => ({ used: a.beds, limit: limitOf(a.plan?.toLowerCase() ?? null), label: "beds" }), []);
+  // The word's plural forms (0.33.1): the tooltip takes the limit's — "1 of 1 bed" on a plan of one.
+  const usage = useCallback(
+    (a: Account) => ({ used: a.beds, limit: limitOf(a.plan?.toLowerCase() ?? null), label: { one: "bed", other: "beds" } }),
+    [],
+  );
   const planColumn = usePlanColumn<Account>({
     plan,
     planName,
@@ -174,8 +178,11 @@ export function PlanChange033Demo() {
       <Note>
         `planColumn` is the plan&apos;s display name, the standing chip beside it while billing is on (left out, no
         chip) and the usage under it — &ldquo;12/30&rdquo;, with &ldquo;12 of 30 beds&rdquo; in its tooltip. It
-        reads the code without case (Dan&apos;s legacy `SEEDLING`), sorts by code unless `sortBy` says otherwise,
-        and filters over `filterPlans`. `PlanChangeConfirm` is `AdminActionConfirm` at `acknowledge`: the current
+        reads the code without case (Dan&apos;s legacy `SEEDLING`), sorts by code unless `sortBy` says otherwise
+        — on the client only: a server-mode DataTable (`serverPagination`) reports the column&apos;s `key` through
+        `onSortsChange` and the server sorts — and filters over `filterPlans`. The usage&apos;s `label` may give
+        the word&apos;s plural forms (`one` &ldquo;bed&rdquo;, `other` &ldquo;beds&rdquo;), and the tooltip
+        takes the limit&apos;s. `PlanChangeConfirm` is `AdminActionConfirm` at `acknowledge`: the current
         plan and the app&apos;s usage sentence, a plan select, and — with `grantEnd`, only while billing is on —
         &ldquo;Free until&rdquo;, sent as the END of the picked day in the operator&apos;s time zone. The confirm
         is held while nothing would change, and it stays live under your own lapsed plan (`COMMIT_EXCEPT_BILLING`,

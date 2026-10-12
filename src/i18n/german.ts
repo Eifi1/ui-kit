@@ -1573,7 +1573,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       keptBeta: "Die Beta behält ihr Ende; nur der Tarif wurde geändert.",
       untilDone: (date) => `Kostenlos bis ${date}.`,
       overLimit: "Über dem Limit des neuen Tarifs: Nichts wird entfernt, neue Einträge sind gesperrt.",
-      usageOf: (used, limit, dimension) => `${used} von ${limit} ${dimension}`,
+      // 0.33.1: the app's word heads the line. After "von" it would want the dative
+      // plural ("von 5 Objekten"), which no app's `one`/`other` form carries; as a
+      // heading it is the nominative, in the form for the limit ("Objekt: 1 von 1").
+      usageOf: (used, limit, dimension) => `${dimension}: ${used} von ${limit}`,
     },
     // 0.32.0 — docs/text-size-harmonization.md §6: the text-size and contrast settings in
     // the "Darstellung" group.

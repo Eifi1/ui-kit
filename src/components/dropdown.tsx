@@ -341,8 +341,18 @@ export function DropdownPanel({
       dir={dir}
       // The caller's `style` is kept underneath, but the placement is measured rather
       // than chosen (dev#548: an `overflow` ancestor clipped a third of this panel
-      // away), so those five values are the panel's own.
-      style={{ ...style, position: "fixed", top: anchored.top, left, width, maxHeight: anchored.maxHeight }}
+      // away), so these values are the panel's own. Flipped above, it hangs from its
+      // bottom edge, so a list shorter than its cap still meets the trigger (keksdose
+      // K1); the edge not in use is cleared, a caller's included.
+      style={{
+        ...style,
+        position: "fixed",
+        top: anchored.above ? undefined : anchored.top,
+        bottom: anchored.above ? anchored.bottom : undefined,
+        left,
+        width,
+        maxHeight: anchored.maxHeight,
+      }}
       className={cn(
         "z-50 flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
         // The list, not the panel, is what scrolls: the search header has to stay put

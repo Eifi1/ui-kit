@@ -73,9 +73,10 @@ function kitLanguageOf(tag: unknown): PayPageLanguage | undefined {
  * The kit's locale → Paddle's checkout locale: `de-CH` → `de`, `zh` → `zh-Hans`, `hu` →
  * `en` (Paddle has no Hungarian), the others as they are. Any tag is read as the kit
  * reads it (`de-AT` is the one German, `zh-TW` the one Chinese); one the kit doesn't
- * ship is English.
+ * ship is English, and so is `undefined` (0.33.1) — `useKitLocale()` with no provider
+ * locale.
  */
-export function paddleLocale(kitLocale: string): string {
+export function paddleLocale(kitLocale: string | undefined): string {
   return PADDLE_LOCALES[kitLanguageOf(kitLocale) ?? "en"];
 }
 
@@ -86,11 +87,14 @@ export function paddleLocale(kitLocale: string): string {
  *
  *     const { url } = await api.checkout({ plan, interval, currency });
  *     noteCheckoutStarted(user.id, overview);
- *     window.location.assign(payPageUrl(url, i18n.language));
+ *     window.location.assign(payPageUrl(url, locale));   // locale = useKitLocale()
  *
- * A wrong `lang` costs nothing but the language: the page falls back to the browser's.
+ * `locale` may be `undefined` (0.33.1, keksdose): `useKitLocale()` answers that with no
+ * provider locale, the runtime's language. The link then goes without `lang`, and the
+ * page speaks the browser's language, else English — what a missing or wrong `lang`
+ * already did: it costs nothing but the language.
  */
-export function payPageUrl(checkoutUrl: string, locale: string): string {
+export function payPageUrl(checkoutUrl: string, locale: string | undefined): string {
   const language = kitLanguageOf(locale);
   if (!language) return checkoutUrl;
   let url: URL;

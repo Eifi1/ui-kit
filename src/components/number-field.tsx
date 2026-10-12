@@ -141,6 +141,13 @@ function roundTo(n: number, digits: number | undefined): number {
  * or a dot typed as the decimal in a comma locale); it is re-spelt in the locale's mark
  * when it commits.
  *
+ * LOCKED (0.33.1, Kurvenschmiede). A field that saves itself takes `commit` (or a
+ * `disabledReason` of its own), NumberInput's: under a locked `WriteLockProvider` it
+ * stays in the tab order showing its value, `readOnly`, with the lock's reason in the
+ * kit Tooltip and its description; the step keys, the calculator and the numpad are
+ * off, and nothing reaches `onValueChange` or `onCommit`. `disabled` takes it out of
+ * the tab order, which is what a lock must not do.
+ *
  * NOT FOR MONEY. `digits={2}` rounds, but a currency is more than two decimals: JPY has
  * none, a unit price has four, and the chip, the minor-unit default and `min`/`max` on
  * the SIGNED figure are {@link MoneyField}'s (number value) and {@link AmountInput}'s

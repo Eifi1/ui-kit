@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { StrictMode, useRef, useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useFocusTrap } from "../use-focus-trap";
+import type { FocusTrapOptions } from "../use-focus-trap";
 
 /**
  * The cases here are the ones Modal's original inline copy did NOT handle, plus the
@@ -15,7 +16,7 @@ function Panel({
 }: {
   active?: boolean;
   restoreFocus?: boolean;
-  initialFocus?: "container" | "first";
+  initialFocus?: FocusTrapOptions["initialFocus"];
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -24,6 +25,28 @@ function Panel({
     <div ref={ref} tabIndex={-1} data-testid="panel">
       {children}
     </div>
+  );
+}
+
+/** A field the app autofocuses on purpose — keksdose's create card and its amount. */
+function Amount() {
+  // eslint-disable-next-line jsx-a11y/no-autofocus -- the case under test
+  return <input aria-label="amount" autoFocus />;
+}
+
+/** A trigger, and a panel that mounts with an autofocused field in it. */
+function AutofocusHost() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpen(true)}>open</button>
+      {open && (
+        <Panel>
+          <Amount />
+          <button onClick={() => setOpen(false)}>close</button>
+        </Panel>
+      )}
+    </>
   );
 }
 
@@ -47,6 +70,74 @@ describe("useFocusTrap", () => {
       </Panel>,
     );
     expect(screen.getByLabelText("first")).toHaveFocus();
+  });
+
+  it("leaves a child the app autofocused where it is, instead of taking the container", () => {
+    // 0.33.1, keksdose live #402. React honours `autoFocus` while it commits and the
+    // trap engages in an effect after that, so focusing the container there took focus
+    // off the field the instant it got it — and on a phone the numpad with it.
+    render(
+      <Panel>
+        <input aria-label="note" />
+        <Amount />
+      </Panel>,
+    );
+    expect(screen.getByLabelText("amount")).toHaveFocus();
+  });
+
+  it('…and instead of the first tabbable with initialFocus="first"', () => {
+    render(
+      <Panel initialFocus="first">
+        <button>first</button>
+        <Amount />
+      </Panel>,
+    );
+    expect(screen.getByLabelText("amount")).toHaveFocus();
+  });
+
+  it("still follows a function initialFocus over an autofocused child", () => {
+    // A thunk is the caller naming the element outright — PickerSheet's search box,
+    // CommandPalette's field — so it wins over anything a child did first.
+    render(
+      <Panel initialFocus={() => screen.getByRole("button", { name: "save" })}>
+        <Amount />
+        <button>save</button>
+      </Panel>,
+    );
+    expect(screen.getByRole("button", { name: "save" })).toHaveFocus();
+  });
+
+  it("gives focus back to the opener after an autofocused open, not to the field", () => {
+    // The opener used to be read in the trap's effect — after React had autofocused the
+    // field — so closing "restored" focus into the panel that was closing, which had
+    // left the DOM by then, and focus fell to <body>.
+    render(<AutofocusHost />);
+    const trigger = screen.getByRole("button", { name: "open" });
+    trigger.focus();
+    fireEvent.click(trigger);
+    expect(screen.getByLabelText("amount")).toHaveFocus();
+
+    fireEvent.click(screen.getByRole("button", { name: "close" }));
+    expect(trigger).toHaveFocus();
+  });
+
+  it("holds both under StrictMode's second effect", () => {
+    // StrictMode runs the cleanup and the effect once more straight after mounting, and
+    // React does not autofocus again for that run. A cleanup that gave focus back to the
+    // opener there would leave the field for good; an opener read in either effect
+    // would be the field itself.
+    render(
+      <StrictMode>
+        <AutofocusHost />
+      </StrictMode>,
+    );
+    const trigger = screen.getByRole("button", { name: "open" });
+    trigger.focus();
+    fireEvent.click(trigger);
+    expect(screen.getByLabelText("amount")).toHaveFocus();
+
+    fireEvent.click(screen.getByRole("button", { name: "close" }));
+    expect(trigger).toHaveFocus();
   });
 
   it("wraps Tab from the last tabbable back to the first", () => {

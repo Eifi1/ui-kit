@@ -967,7 +967,10 @@ class PaddleEnvironment(enum.StrEnum):
 class BillingSettings(BaseModel):
     ...
     #: The app's name in every checkout's custom data (§14.3). Set as the default in the
-    #: app's Settings subclass (billing_app: str | None = "keksdose"), not per deployment.
+    #: app's Settings subclass, not per deployment, with the pattern:
+    #:   billing_app: str | None = Field(default="keksdose", pattern=r"^[a-z][a-z0-9_-]{0,63}$")
+    #: A plain `= "keksdose"` redeclares the field and drops this one's pattern (§14.16,
+    #: item 29); server-kit 0.7.1 checks it in a mixin validator as well.
     billing_app: str | None = None
     #: sandbox or live. Unset → read from the API key's prefix (pdl_sdbx_apikey_ /
     #: pdl_live_apikey_); a legacy key (from before 2025-05-06) needs it set.
@@ -1173,10 +1176,11 @@ The page's own lines stay in the kit's language, Hungarian included.
 export type PaddleEnvironment = "sandbox" | "live";
 export const PAY_PAGE_LANG_PARAM = "lang";
 /** The kit's locale → Paddle's checkout locale (the table above). */
-export function paddleLocale(kitLocale: string): string;
+export function paddleLocale(kitLocale: string | undefined): string;
 /** The checkout's {url} with the buyer's language: lang=<kit locale> on a pay page link
- *  (it carries _ptxn); any other URL unchanged. */
-export function payPageUrl(checkoutUrl: string, locale: string): string;
+ *  (it carries _ptxn); any other URL unchanged. An undefined locale (useKitLocale()
+ *  without a provider locale) adds no lang (ui-kit 0.33.1, §14.16 item 31). */
+export function payPageUrl(checkoutUrl: string, locale: string | undefined): string;
 ```
 
 `PaddlePayPage`, its props and `paddleTransactionId` (the draft's React part) are gone. The
@@ -1223,16 +1227,27 @@ http://{$PAY_HOST:pay.invalid}:{$PORT} {
   `Domain=`), and no CORS allow-list names the pay host.
 - **`PAY_HOST`** is set on the web service. Unset, the block answers `pay.invalid`, which
   never matches. Caddy picks the block by host name, so the app's `:{$PORT}` block stays
-  the catch-all.
+  the catch-all. The default holds only while the variable is UNSET (§14.16, item 30):
+  set but empty, the address is `http://:{$PORT}`, a second catch-all, and the order of
+  the blocks decides which one answers the app's domain. So the deploy passes `PAY_HOST`
+  only with a value, the pay block comes after the app's (a test pins the order), and
+  the variable lives where a deploy keeps it: the deploy's own variables, or
+  `--update-env-vars`. A deploy with `--set-env-vars` replaces every variable and drops
+  one set by hand.
 - **Locally**, the same files on a second localhost port, which is a separate origin too:
   Compose's Caddy (`deploy/Caddyfile` in keksdose and Kurvenschmiede) gets a second site
-  block. Paddle's sandbox approves domains at once.
+  block. Paddle's sandbox approves domains at once. That Caddy has automatic HTTPS on,
+  so its block's default is `http://pay.invalid` — `{$PAY_HOST:http://pay.invalid}` —
+  since a bare `pay.invalid` makes it ask for a certificate at every start (§14.16, item
+  30). The `pay.invalid` default fits only a Caddy without automatic HTTPS, as the Cloud
+  Run block's `http://` address is.
 
 **One-time manual steps per app** (its deploy README):
 1. DNS: `pay` as a CNAME to `ghs.googlehosted.com`, DNS-only in Cloudflare, like the apex.
 2. `gcloud run domain-mappings create --service=<app>-web --domain=pay.<app domain>
    --region=europe-west4` (all three run there); a subdomain inherits the domain's
-   verification. Then `PAY_HOST=pay.<app domain>` on `<app>-web`.
+   verification. Then `PAY_HOST=pay.<app domain>` on `<app>-web`, where the next deploy
+   keeps it (the deploy's own variables, or `--update-env-vars`; see `PAY_HOST` above).
 3. Paddle → Checkout → Website approval: add `pay.<app domain>`. Paddle reviews every
    domain or subdomain a checkout opens from; the sandbox approves at once. The review
    wants the product, the prices, the terms, the refund policy and the privacy policy easy
@@ -2186,3 +2201,19 @@ record. **ka**, **kk** and **KS** n are the reviews' items.
     checkout and portal 503, `share-dialog.tsx:99` and :152, the fixtures, the
     write-lock hooks, `adminApi.changePlan` unused, the admin plan route, the share
     gates, `/settings/subscription`).
+
+**Corrected after the adoptions** (ui-kit 0.33.1, server-kit 0.7.1, 2026-10-10; kastlan's
+and keksdose's 0.33 reports, **ka** and **kk** n):
+29. **`billing_app` keeps its pattern in the app's subclass** (kk 1). §14.2's
+    `billing_app: str | None = "keksdose"` redeclared the field and dropped the mixin's
+    pattern, so `"Not Valid!"` passed. The subclass writes `Field(default="keksdose",
+    pattern=r"^[a-z][a-z0-9_-]{0,63}$")`, and server-kit 0.7.1 checks the tag in a mixin
+    validator that a redeclared field can't shadow (§14.2).
+30. **The pay host's `PAY_HOST`** (kk 3, kk 4): Caddy's `{$PAY_HOST:pay.invalid}` default
+    holds only while the variable is unset. Set but empty, it is a second catch-all, so
+    the deploy passes it only with a value, keeps the pay block after the app's, and sets
+    it where a deploy keeps it (not by hand under `--set-env-vars` deploys). A Caddy with
+    automatic HTTPS (Compose, a VPS) defaults to `http://pay.invalid` instead (§14.4).
+31. **`payPageUrl` and `paddleLocale` take an undefined locale** (kk 15), what
+    `useKitLocale()` answers without a provider locale: no `lang`, so the page reads the
+    browser's language, else English (§14.4).

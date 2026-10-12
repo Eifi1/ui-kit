@@ -154,6 +154,12 @@ export function FullBleedDialog({
   // This is the phone's row EDITOR and its first child is usually an input; focusing it
   // would pull the software keyboard up over half the form before the user has said
   // which field they came for. `Modal` made the same call for the same reason.
+  //
+  // That default only decides when nothing inside asked for focus. A field the app
+  // autofocuses on purpose keeps it (0.33.1): keksdose's create card autofocuses its
+  // amount, and the trap used to take focus straight back to the dialog — and on a
+  // phone the numpad sheet, which shows only while the field is focused, went with it
+  // (live #402). Closing still hands focus back to whatever opened the dialog.
   useFocusTrap(dialogRef, { active: open });
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {

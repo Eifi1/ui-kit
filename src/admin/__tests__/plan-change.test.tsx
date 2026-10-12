@@ -83,6 +83,44 @@ describe("planColumn (§14.12)", () => {
     expect(plain).toMatchObject({ key: "tier", header: "Tier", headerText: "Tier" });
   });
 
+  it("puts the app's word in the form the limit takes (0.33.1, keksdose)", () => {
+    const counted = planColumn<Row>({
+      plan: (r) => r.plan,
+      planName,
+      usage: (r) => ({ used: r.used ?? 0, limit: r.limit ?? null, label: { one: "budget", other: "budgets" } }),
+    });
+    const one = render(<>{counted.cell({ id: 1, plan: "free", used: 1, limit: 1 })}</>);
+    expect(screen.getByText("1 of 1 budget")).toBeInTheDocument();
+    one.unmount();
+    render(<>{counted.cell({ id: 2, plan: "pro", used: 1, limit: 5 })}</>);
+    expect(screen.getByText("1 of 5 budgets")).toBeInTheDocument();
+  });
+
+  it("reads the forms in the provider's locale and words, and keeps an override's hook", () => {
+    const objekte = (r: Row) => ({ used: r.used ?? 0, limit: r.limit ?? null, label: { one: "Objekt", other: "Objekte" } });
+    const row = (limit: number): Row => ({ id: 1, plan: "pro", used: 1, limit });
+    const inGerman = (node: ReactNode) => (
+      <UiKitProvider locale="de-CH" labels={UI_KIT_LABELS_DE_CH}>
+        {node}
+      </UiKitProvider>
+    );
+    function Cell({ limit, labels }: { limit: number; labels?: Parameters<typeof usePlanColumn>[0]["labels"] }) {
+      const column = usePlanColumn<Row>({ plan: (r) => r.plan, planName, usage: objekte, labels });
+      return <>{column.cell(row(limit))}</>;
+    }
+    // German heads the line with the word: after "von" it would want a dative plural.
+    const five = render(inGerman(<Cell limit={5} />));
+    expect(screen.getByText("Objekte: 1 von 5")).toBeInTheDocument();
+    five.unmount();
+    const single = render(inGerman(<Cell limit={1} />));
+    expect(screen.getByText("Objekt: 1 von 1")).toBeInTheDocument();
+    single.unmount();
+    // An override gets the word already in its form.
+    const own = { usageOf: (used: string, limit: string, word: string) => `${used}/${limit} — ${word}` };
+    render(inGerman(<Cell limit={1} labels={own} />));
+    expect(screen.getByText("1/1 — Objekt")).toBeInTheDocument();
+  });
+
   it("usePlanColumn speaks the provider's language", () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
       <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>{children}</UiKitProvider>

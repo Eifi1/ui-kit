@@ -21,6 +21,13 @@ import { useTextSize } from "../theme/text-size";
 export interface ViewportBox {
   top: number;
   height: number;
+  /**
+   * The height of the LAYOUT viewport itself, which `position: fixed`'s `bottom` is
+   * measured from. Only {@link anchoredPanelPlacement} reads it, for a flipped panel's
+   * `bottom`. Defaults to `top + height`: the two are the same box whenever no keyboard
+   * and no zoom shrink the visible region.
+   */
+  layoutHeight?: number;
 }
 
 /**
@@ -71,9 +78,21 @@ export function readKeyboardInset({ minimum = MIN_KEYBOARD_PX }: KeyboardInsetOp
 function readViewport(): ViewportBox {
   if (typeof window === "undefined") return { top: 0, height: 0 };
   const vv = window.visualViewport;
+  // The layout viewport's height is `innerHeight`, the reference `readKeyboardInset`
+  // measures the keyboard against. The keyboard leaves it alone (it shrinks only the
+  // VISUAL viewport; under `interactive-widget=resizes-content` it shrinks both, the
+  // fixed box with them), and it follows the mobile URL bar as it slides away, as a
+  // fixed box's `bottom` does. Not `documentElement.clientHeight`: on mobile Chrome and
+  // Safari that stays at the small, URL-bar-shown height, so with the bar scrolled away
+  // a flipped panel would sit that much too low, over its own field. `innerHeight`'s one
+  // error is a desktop page with a horizontal scrollbar, which it counts and the fixed
+  // box does not: the gap widens by the bar's thickness, and never closes.
+  const layoutHeight = window.innerHeight;
   // offsetTop, not 0: with the keyboard up the user can also pan the visual viewport
   // within the layout viewport, which shifts where "visible" starts.
-  return vv ? { top: vv.offsetTop, height: vv.height } : { top: 0, height: window.innerHeight };
+  return vv
+    ? { top: vv.offsetTop, height: vv.height, layoutHeight }
+    : { top: 0, height: window.innerHeight, layoutHeight };
 }
 
 export interface AnchoredPanelOptions {
@@ -90,11 +109,24 @@ export interface AnchoredPanelOptions {
   minHeight?: number;
 }
 
+/**
+ * `top` and `bottom` are the two edges of a panel exactly `maxHeight` tall. A panel is
+ * sized by its content and `maxHeight` only caps it, so apply the edge on the trigger's
+ * side, the one that holds whatever the height: `top` while the panel is below,
+ * `bottom` (and no `top`) once it is flipped `above`.
+ */
 export interface AnchoredPanel {
   /** The trigger's rect, or null while closed/unmeasured. */
   rect: AnchorRect | null;
-  /** Viewport-space `top` for the panel. */
+  /** Viewport-space `top` for the panel — the one to apply while it is below. Flipped,
+   *  it is where a FULL-height panel's top would be, and a three-row list placed by it
+   *  floated far above its field (keksdose K1, live #401); place that one by `bottom`. */
   top: number;
+  /** CSS `bottom` for a `position: fixed` panel: the distance from the layout
+   *  viewport's bottom edge up to the panel's. The one to apply once it is flipped
+   *  `above`: it keeps the panel's foot `gap` above the trigger however short its
+   *  content, and while a filtered list shrinks or grows under the user's typing. */
+  bottom: number;
   /** Cap that keeps the panel inside the VISIBLE viewport — apply as `maxHeight`. */
   maxHeight: number;
   /** Whether the panel was flipped above the trigger. */
@@ -122,6 +154,14 @@ const FLIP_GAIN = 48;
  * returned `maxHeight` is what makes the flip sufficient rather than merely different:
  * without it a tall panel placed above just runs off the top instead of the bottom.
  *
+ * A flipped panel hangs from its BOTTOM edge, `gap` above the trigger, and is placed by
+ * `bottom` (keksdose K1, live #401). It used to be placed by a `top` worked out as
+ * though the panel were `maxHeight` tall, and a panel is only as tall as its content:
+ * a three-row address list under a 256 px cap sat ~176 px above its field, on a phone
+ * with the keyboard up. Only when even the {@link FLOOR} does not fit above does that
+ * edge give way, as `top` always did, so the panel's head (a search box, often) stays
+ * on screen rather than above it.
+ *
  * Split out so the geometry is testable without a DOM and a fake keyboard — @hb/ui has
  * no test runner of its own, so this is exercised from the consuming app.
  */
@@ -140,19 +180,17 @@ export function anchoredPanelPlacement(
       (spaceBelow < preferredHeight && (spaceAbove >= preferredHeight || spaceAbove - spaceBelow >= FLIP_GAIN)));
   const space = Math.max(FLOOR, above ? spaceAbove : spaceBelow);
   const maxHeight = Math.min(preferredHeight, space);
-  return {
-    top: above ? Math.max(viewTop, rect.top - gap - maxHeight) : rect.bottom + gap,
-    maxHeight,
-    above,
-  };
+  // Unchanged, for the apps that call the hook and apply it: the edge to use below, and
+  // a full-height panel's top above. In layout-viewport space, like the rect.
+  const top = above ? Math.max(viewTop, rect.top - gap - maxHeight) : rect.bottom + gap;
+  // `bottom` counts up from the LAYOUT viewport's bottom edge, not the visible region's:
+  // `position: fixed` is laid out in the layout viewport, which runs on behind the
+  // keyboard, exactly as the rect is measured in it. The keyboard, the pan and the zoom
+  // are already in `maxHeight`, which keeps the panel's top inside what is on screen.
+  const layoutHeight = viewport.layoutHeight ?? viewport.top + viewport.height;
+  return { top, bottom: layoutHeight - (top + maxHeight), maxHeight, above };
 }
 
-/**
- * Where to put a panel anchored under `ref`, tracking the visible viewport.
- *
- * Callers own horizontal placement — the pickers align to the trigger's left edge, the
- * popovers to its right — and must apply `maxHeight` with an internal `overflow-y`.
- */
 /**
  * The region actually on screen, tracked while `active` (Keksdose live #328).
  *
@@ -204,6 +242,14 @@ export function useVisualViewport(active: boolean): ViewportBox | null {
   return box;
 }
 
+/**
+ * Where to put a panel anchored under `ref`, tracking the visible viewport.
+ *
+ * Callers own horizontal placement — the pickers align to the trigger's left edge, the
+ * popovers to its right — and must apply `maxHeight` with an internal `overflow-y`.
+ * Vertically, apply `top` while the panel is below and `bottom` (with no `top`) once it
+ * is `above`; see {@link AnchoredPanel}.
+ */
 export function useAnchoredPanel<T extends HTMLElement>(
   ref: RefObject<T | null>,
   open: boolean,
@@ -236,7 +282,7 @@ export function useAnchoredPanel<T extends HTMLElement>(
   }, [open]);
 
   if (!rect) {
-    return { rect: null, top: 0, maxHeight: preferredHeight, above: false };
+    return { rect: null, top: 0, bottom: 0, maxHeight: preferredHeight, above: false };
   }
   return { rect, ...anchoredPanelPlacement(rect, viewport, { ...options, preferredHeight, minHeight }) };
 }

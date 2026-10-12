@@ -333,6 +333,11 @@ function ModalPanel({
   // hook adds per-keystroke recomputation, a guard on restoring to a detached node,
   // and nesting, none of which this copy had. Released when `open` turns false, which
   // hands focus back to the trigger while the panel is still on its way out.
+  //
+  // "The panel itself" only when nothing inside asked for focus: a field the app
+  // autofocuses on purpose keeps it (0.33.1, keksdose live #402 — the same trap took
+  // an autofocused amount straight back in `FullBleedDialog`). Its keyboard is then the
+  // one the app chose to show; the trigger still gets focus back on close.
   useFocusTrap(panelRef, { active, initialFocus: "container" });
   const leaving = closing || exiting;
 

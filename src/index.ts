@@ -402,8 +402,10 @@ export { kitLabelStrings } from "./i18n/review";
 export type { KitLabelStringsOptions } from "./i18n/review";
 // The seven languages, how an app resolves one, and the kit catalogue loader for it.
 export * from "./i18n/languages";
-// CLDR plural categories for an app's i18next catalogue, filled from `_other`.
+// CLDR plural categories for an app's i18next catalogue, filled from `_other`; and the
+// forms of an app's word a kit part picks from by count (0.33.1, `PlanColumnUsage.label`).
 export { withAllPlurals } from "./i18n/plurals";
+export type { PluralForms } from "./i18n/plurals";
 // Translation review (0.19): one contract for kastlan's and keksdose's review pages —
 // the pure rows/status/placeholder logic and the presentational page parts.
 export {

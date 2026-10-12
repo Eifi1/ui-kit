@@ -184,6 +184,20 @@ export function LabelAbove033Demo() {
           <p className="w-48 max-w-full truncate-until-large rounded-md border border-subtle px-2 py-1 text-sm text-primary">
             Sow the second sweetcorn batch in the cold frame by the shed
           </p>
+          {/* 0.33.1 (keksdose): a figure in a narrow cell. The first breaks the amount
+              mid-number at Large; the second wraps at the space only. */}
+          <p className="pt-1 text-xs text-muted">
+            The same amount with {code("truncate-until-large")} and {code("truncate-until-large-words")}, in 6rem
+            boxes:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <p className="w-24 max-w-full truncate-until-large rounded-md border border-subtle px-2 py-1 text-end text-sm tabular-nums text-primary">
+              CHF 12’345.50
+            </p>
+            <p className="w-24 max-w-full truncate-until-large-words rounded-md border border-subtle px-2 py-1 text-end text-sm tabular-nums text-primary">
+              CHF 12’345.50
+            </p>
+          </div>
         </div>
       </div>
       <Note>
@@ -193,7 +207,9 @@ export function LabelAbove033Demo() {
         it at Large without a change (keksdose re-anchors one Skeleton that was placed from the strip).
         `truncate-until-large` is the one name for &ldquo;truncate at Normal, wrap at Large&rdquo; (`overflow-wrap:
         anywhere`) — it replaced five copies in the kit, and it follows the attribute in CSS, so an app&apos;s{" "}
-        {code('!large && "truncate"')} can go. The size sweep (`scripts/screenshot-sizes.mjs`) now reports a
+        {code('!large && "truncate"')} can go. For a FIGURE — an amount, a date, a count with its unit — use
+        `truncate-until-large-words` (0.33.1): it wraps at spaces only, so a number never splits; give its cell
+        the room for the widest one. The size sweep (`scripts/screenshot-sizes.mjs`) now reports a
         one-line ellipsis that cuts at Large, and a pinned box taller than half the screen: report-only in 0.33,
         gating from 0.34; `data-truncate-ok` marks a deliberate one, never on a name or an email.
       </Note>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * Keep keyboard focus inside an open overlay, and give it back when it closes.
@@ -23,6 +23,10 @@ import { useEffect, useRef } from "react";
  *     `<body>`, which for a keyboard user means losing their place in the page
  *     entirely. When the target is gone, focus falls back to the nearest thing that
  *     still exists rather than to nothing.
+ *   - **Leaves an app's own autofocus alone** (0.33.1). React honours a child's
+ *     `autoFocus` while it commits, and this hook's effect runs AFTER that commit, so
+ *     focusing the container there took focus straight back off the field the app had
+ *     asked for. See `initialFocus`.
  *   - **Nests.** An overlay can open another — a picker inside a dialog. Only the
  *     innermost trap handles a keystroke, and closing it hands control back to the one
  *     underneath. Innermost is decided by DOM containment rather than by mount order;
@@ -66,8 +70,21 @@ export interface FocusTrapOptions {
    * what `Modal` does and why: focusing the first FIELD pops the software keyboard on
    * a phone the moment a dialog opens, before the user has asked to type.
    * The container needs `tabIndex={-1}` for this to work.
+   *
+   * `"container"` and `"first"` both step aside when focus is ALREADY inside the
+   * container, on something other than the container itself. That is a child the app
+   * focused on purpose — an `autoFocus`, which React honours before this hook's effect
+   * runs — and the keyboard it brings up is the one the user was promised. Moving focus
+   * off it lost keksdose's create card its amount field the instant it got it, and on a
+   * phone the numpad sheet with it, which shows only while the field is focused (live
+   * #402). A function is the caller's explicit choice and is always followed.
    */
   initialFocus?: "container" | "first" | (() => HTMLElement | null);
+}
+
+/** Whatever has focus right now; nothing on the server, where there is no document. */
+function focusedElement(): Element | null {
+  return typeof document === "undefined" ? null : document.activeElement;
 }
 
 export function useFocusTrap(
@@ -76,11 +93,31 @@ export function useFocusTrap(
 ): void {
   // Latest-ref so a caller passing an inline `initialFocus` thunk — which every caller
   // will — does not tear the trap down and re-engage it on each render, stealing focus
-  // back to the top of the panel mid-interaction.
-  const optsRef = useRef({ restoreFocus, initialFocus });
-  useEffect(() => {
-    optsRef.current = { restoreFocus, initialFocus };
+  // back to the top of the panel mid-interaction. Written in a LAYOUT effect so that
+  // the trap's cleanup, which runs after the layout effects of the same commit, reads
+  // this render's `active` rather than the last one's — see the cleanup for why.
+  const optsRef = useRef({ active, restoreFocus, initialFocus });
+  useLayoutEffect(() => {
+    optsRef.current = { active, restoreFocus, initialFocus };
   });
+
+  // Where focus was BEFORE the trap engaged: the element it is given back to on close.
+  //
+  // Read DURING the render that turns the trap on, and that timing is the point. React
+  // honours a child's `autoFocus` while it commits that render, before any effect runs,
+  // so the effect below asking `document.activeElement` would get the child, inside the
+  // overlay. Restoring to that on close aimed focus at the dialog that was closing —
+  // already out of the DOM, so focus fell to <body> rather than going back to the
+  // button that opened it.
+  //
+  // State adjusted during render (the pattern `Modal` uses for `open`) rather than a
+  // ref written there: set once per opening and cleared on release, so a re-render
+  // while open cannot replace it with something inside, and StrictMode's second render
+  // and second effect both see the same element. `undefined` means "not captured";
+  // `null` is a capture that found nothing.
+  const [opener, setOpener] = useState<Element | null | undefined>(undefined);
+  if (active && opener === undefined) setOpener(focusedElement());
+  else if (!active && opener !== undefined) setOpener(undefined);
 
   useEffect(() => {
     if (!active) return;
@@ -88,7 +125,6 @@ export function useFocusTrap(
     if (!container) return;
 
     container.setAttribute(TRAP_ATTR, "");
-    const previouslyFocused = document.activeElement as HTMLElement | null;
 
     /** Is `node` inside a trap nested within this one? */
     const inNestedTrap = (node: Element | null) => {
@@ -106,12 +142,13 @@ export function useFocusTrap(
       );
 
     const { initialFocus: how } = optsRef.current;
+    const focused = document.activeElement;
+    // A child that already has focus was given it on purpose — see `initialFocus`.
+    const childHasFocus = focused !== container && container.contains(focused);
     if (typeof how === "function") {
       (how() ?? container).focus();
-    } else if (how === "first") {
-      (tabbables()[0] ?? container).focus();
-    } else {
-      container.focus();
+    } else if (!childHasFocus) {
+      (how === "first" ? (tabbables()[0] ?? container) : container).focus();
     }
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -149,12 +186,18 @@ export function useFocusTrap(
       container.removeEventListener("keydown", onKeyDown);
       container.removeAttribute(TRAP_ATTR);
 
+      // Only when the trap is really being released: the container has left the page,
+      // or `active` has turned false. StrictMode runs this cleanup once more right after
+      // mounting, with the overlay still up, and then the effect again — and React does
+      // not re-apply `autoFocus` for that second run. Restoring here would pull focus
+      // out of the autofocused field for good: live #402 again, in development.
+      if (container.isConnected && optsRef.current.active) return;
       if (!optsRef.current.restoreFocus) return;
       // `isConnected` is the whole point: restoring to a node that has been removed
       // sends focus to <body> and the user loses their place entirely. When the
       // original is gone, leave focus where the browser put it rather than moving it
       // somewhere arbitrary — a wrong guess is worse than no move.
-      if (previouslyFocused?.isConnected) previouslyFocused.focus?.();
+      if (opener?.isConnected) (opener as HTMLElement).focus?.();
     };
-  }, [active, containerRef]);
+  }, [active, containerRef, opener]);
 }
