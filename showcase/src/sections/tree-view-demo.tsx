@@ -204,8 +204,10 @@ function Lazy() {
               ) : (
                 <FileText aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
               )}
-              <span className="truncate">{node.label}</span>
-              <span className="ms-auto text-caption text-[var(--text-muted)]">
+              {/* A renderItem keeps its own classes: the row's label wraps from Large up
+                  as the kit's own does (text size §10.17). */}
+              <span className="min-w-0 truncate-until-large">{node.label}</span>
+              <span className="ms-auto shrink-0 text-caption text-[var(--text-muted)]">
                 {state.loading ? "loading…" : `level ${state.level}`}
               </span>
             </span>

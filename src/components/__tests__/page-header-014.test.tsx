@@ -19,7 +19,8 @@ describe("PageHeader truncateTitle (keksdose G6a)", () => {
       <PageHeader title={long} truncateTitle mobileLayout="inline" actions={<button type="button">Add</button>} />,
     );
     const h1 = screen.getByRole("heading", { level: 1, name: long });
-    expect(classes(h1)).toContain("truncate");
+    // At Normal; from Large up it wraps (text size §10.17, round 0.34 T1).
+    expect(classes(h1)).toContain("truncate-until-large");
     expect(classes(h1)).not.toContain("break-words");
     expect(h1).not.toHaveAttribute("title");
     expect(classes(h1.parentElement!)).toEqual(expect.arrayContaining(["min-w-0", "flex-1"]));

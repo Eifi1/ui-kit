@@ -5,7 +5,8 @@ they settled, and it wins over the sections above where they differ. Led from ui
 parallel with the billing round (`docs/billing-harmonization.md`), and ships as ui-kit 0.32
 or the next minor after the reviews. **2026-10-09:** §10.16 and §10.17 (ui-kit 0.33),
 settled by Marcel and reviewed by the three apps the same day; §10.18–§10.22 record what
-that settled, and §10.16 and §10.17 are corrected to match.
+that settled, and §10.16 and §10.17 are corrected to match. **2026-10-12:** §10.23 (ui-kit
+0.34), help behind a "?", settled by Marcel from keksdose's K3.
 
 Marcel tried keksdose with his father-in-law, who reads poorly and needs larger letters:
 "Not only zoom but the whole appearance should be tailored for larger letters." keksdose
@@ -137,6 +138,8 @@ These follow from §2.3. They are kit behaviour; an app gets them by using the k
 tooltip):
 - `disabledReason` shows as a line under the control, not only as a tooltip;
 - FieldHint and StatTile hints show as inline text;
+- paragraph-long *help* the field is usable without may sit behind a "?" that opens on a
+  tap (`HelpPopover`, §10.23); a *fact* stays visible;
 - relative dates show the absolute one beside them;
 - a colour-only value (heatmap day, status square) gets a number or a word in the
   layout.
@@ -529,10 +532,17 @@ read as corrected.
         and the first 50 characters of its text; then a total. The box is marked
         `data-pinned-offender=n`, and the first is screenshotted, as the other two are;
       - `--pinned` is on by default, as `--truncation` is.
-    - **Report-only in 0.33**, both checks. From 0.34, once the parts above are fixed,
-      the release run passes `--gate-truncation`, which then exits 3 on a truncation or
-      a pinned-box finding. `scripts/check.mjs` does not run the sweep, and jsdom has no
-      layout, so unit tests only pin classes.
+    - **Report-only in 0.33**, both checks. **The release gate since 0.34** (round 0.34
+      T1): `npm run check:sweep` builds the showcase and runs every page with
+      `--pages all --no-screens --gate-truncation`, and `npm run release` runs it before
+      it bumps anything, so a truncation or a pinned-box finding (exit 3), or an overflow
+      (exit 1), stops the release. Local only: `scripts/check.mjs` and CI do not run it
+      (a browser per run costs Actions minutes), and jsdom has no layout, so unit tests
+      only pin classes. Group 4 above took `truncate-until-large` — Tabs' label and
+      detail, MenuItem, Breadcrumbs, the AppShell sidebar's labels, the combobox family's
+      options and values, MultiSelect, Country/CurrencySelect and the DataTable column
+      chooser — and so did what the sweep then measured in the rest of the kit. The phone
+      bar's two lines and a clamp (§10.7) carry `data-truncate-ok`.
     - **i18n:** none; no new strings in any of the kit's seven languages.
     - **Tests:**
       - the script: a fixture page with one ellipsis that cuts, one that fits, one under
@@ -594,7 +604,29 @@ findings' numbers in the round's reviews (kept outside the repo).
     keksdose's may (item 19).
 22. **The sweep gains a second report-only check, tall pinned boxes** (KS 24): a `fixed`
     or vertically `sticky` box taller than 50 % of the viewport at Large and Extra large
-    (item 17, "The sweep's second check"). Report-only in 0.33; from 0.34 it gates with
-    truncation (`--gate-truncation`, exit 3). Kurvenschmiede's corner strip is the case
+    (item 17, "The sweep's second check"). Report-only in 0.33; since 0.34 it gates with
+    truncation (`--gate-truncation`, exit 3), through `npm run check:sweep`, which the
+    release runs. Kurvenschmiede's corner strip is the case
     that found it; the strip and DetailCard's actions, which can't wrap, are
     Kurvenschmiede's fixes in its plan's order (F93, F94).
+
+**Round 034 (ui-kit 0.34).** Marcel settled item 23 on 2026-10-12, as recommended, from
+keksdose's feedback run 77 (live #400).
+
+23. **Help may sit behind a "?"; a fact stays visible** (keksdose K3). §4's "No fact only
+    in a tooltip" prints a FieldHint's words under its field at Large and on a touch
+    screen. keksdose's transaction status carried a paragraph there (four statuses, about
+    500 characters), and on every phone it was the longest thing in the form. So two kinds
+    of text sit beside a field, and they are treated differently:
+    - **A fact** — a format, a limit, a consequence ("22 characters", "at most 72 bytes",
+      "ends your other sessions") — stays visible: a caption, or a `FieldHint` that becomes
+      the caption at Large and on touch (`useInlineHint`, unchanged).
+    - **Help** — why the field exists, how to choose, what the options mean; the field is
+      usable without it — may sit behind a "?" in the kit's `HelpPopover`. It stays a "?"
+      at every size and opens the kit Popover on a tap, a click, Enter or Space: a dialog
+      named by a short question or "About <field>" and described by the help, which takes
+      the focus and gives it back on close. Every kit field that takes a `hint` puts it
+      on its label line, as it does any `hint` that is not text (the `rhf` bindings draw
+      every `hint` under the field).
+    - Also in 0.34: `Select` and `AmountInput` print a FieldHint at Large and on touch as
+      every other field does; 0.32 had missed them.

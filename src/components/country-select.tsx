@@ -463,10 +463,11 @@ export function CountrySelect<Clearable extends boolean = false>({
       <span className="flex min-w-0 items-center gap-2">
         {flags && code && <CurrencyFlag country={code.toLowerCase()} />}
         {/* A long name ("Saint Vincent and the Grenadines") truncates rather than
-            widening the field: the kit is checked at 390px. */}
+            widening the field: the kit is checked at 390px. From Large up it wraps and
+            the trigger grows instead (text size §10.17, round 0.34 T1). */}
         <span
           id={valueId}
-          className={cn("truncate", selectedName === undefined && "text-[var(--text-placeholder)]")}
+          className={cn("truncate-until-large", selectedName === undefined && "text-[var(--text-placeholder)]")}
         >
           {selectedName ?? emptyText}
         </span>

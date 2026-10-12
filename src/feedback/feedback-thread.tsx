@@ -344,7 +344,9 @@ function DefaultAttachment({
   const content = (
     <>
       <Paperclip className="size-3.5 shrink-0" aria-hidden />
-      <span className="truncate">{name}</span>
+      {/* A file name wraps from Large up, as the attachments of the composer do (text
+          size §10.17; round 0.34 T1: the sweep read "export-20…"). */}
+      <span className="min-w-0 truncate-until-large">{name}</span>
       {attachment.size !== undefined && (
         <span className="shrink-0 text-[var(--text-muted)]">{size(attachment.size)}</span>
       )}

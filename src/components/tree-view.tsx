@@ -197,7 +197,9 @@ export function TreeRow({
       {children ?? (
         <>
           {icon && <span className="flex shrink-0 items-center">{icon}</span>}
-          <span id={labelId} data-tree-label="" className="min-w-0 flex-1 truncate">
+          {/* One line at Normal; from Large up it wraps and the `min-h-8` row grows
+              (text size §10.17, round 0.34 T1: the sweep read "1020 Operat…"). */}
+          <span id={labelId} data-tree-label="" className="min-w-0 flex-1 truncate-until-large">
             {label}
           </span>
           {trailing !== undefined && trailing !== null && (

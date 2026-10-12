@@ -181,7 +181,8 @@ export function AccountRoster018Demo() {
       <ul className="mt-4 divide-y divide-[var(--border)] rounded-md border border-[var(--border)]" aria-label="Allowlist">
         {INVITES.map((entry) => (
           <li key={entry.email} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
-            <span className="min-w-0 flex-1 truncate">
+            {/* An email: cut at Normal, wrapped from Large up, never marked (§10.17). */}
+            <span className="min-w-0 flex-1 truncate-until-large">
               {entry.email}
               {entry.note && <span className="ms-2 text-xs text-[var(--text-muted)]">{entry.note}</span>}
             </span>

@@ -23,6 +23,7 @@ import {
   useDisabledReasonLine,
   type DisabledReasonDisplay,
   useFieldHint,
+  useInlineHint,
   useLockReason,
   FLOATING_LABEL_STATIC,
   LABEL_ABOVE_AT_LARGE,
@@ -2253,6 +2254,40 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
    *  string this component renders on its own behalf, and a German form was
    *  reading it out in English. See {@link PasswordRevealLabels}. */
   passwordLabels?: Partial<PasswordRevealLabels>;
+  /**
+   * Why the value cannot be changed — {@link Button}'s `disabledReason`, for a text field
+   * that SAVES itself: a name committed on blur (0.34, KS U10 — Kurvenschmiede's segment
+   * and profile names, behind a local `CommitInput`). `disabled` takes the field out of
+   * the tab order, so the reason never reached a keyboard.
+   *
+   * With a reason the field stays in the tab order and shows its value, `readOnly` (the
+   * settled grey FIELD_BASE gives a `[readonly]` field) and `aria-disabled` — NumberInput's
+   * lock (0.33.1), Autocomplete's. Nothing a save listens to is reported: not `onChange`,
+   * not `onBlur` (on a field that saves itself, blur IS the save), and not Enter, which is
+   * swallowed so the field does not submit the form around it; the caller's `onKeyDown`
+   * still hears every other key. The reason is in the kit {@link Tooltip} and on the
+   * input's `aria-describedby`, between the caption and the error. Wins over `disabled`.
+   */
+  disabledReason?: ReactNode;
+  /**
+   * This field COMMITS — {@link Button}'s `commit`: under a locked
+   * {@link WriteLockProvider} it is locked the `disabledReason` way with the lock's reason
+   * (which wins over its own). A field whose value only reaches the server through its
+   * form's Save leaves this off and stays editable under the lock — the Save takes
+   * `commit`. No provider, or an unlocked one: no effect.
+   */
+  commit?: CommitScope;
+}
+
+/** What a locked {@link Input} swallows of a key: Enter, which would submit the form. */
+function swallowEnter(onKeyDown: ((e: KeyboardEvent<HTMLInputElement>) => void) | undefined) {
+  return (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      return;
+    }
+    onKeyDown?.(e);
+  };
 }
 
 /** The counter's words: the `characterCount` namespace — prop > `<UiKitProvider
@@ -2276,6 +2311,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     showCount,
     countLabels,
     passwordLabels,
+    disabledReason,
+    commit,
     ...rest
   } = props;
   // Passed at all — even as `undefined` — the field keeps its box; see FieldGroup. The
@@ -2290,11 +2327,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
   const counting = Boolean(showCount) && typeof maxLength === "number" && maxLength > 0;
   const length = useTypedLength(rest.value, rest.defaultValue);
   const countText = useCharacterCountLabels(countLabels);
+  // The lock (0.34, KS U10): focusable, `readOnly`, nothing a save listens to is
+  // reported — see `disabledReason`.
+  const lock = useLockReason(commit, disabledReason);
+  const locked = lock.locked;
   const { isInvalid, describedBy, errorEl } = useFieldError(
     error,
     invalid,
-    // Caller's, caption, count — then the error, appended by the hook.
-    mergeDescribedBy(hintParts.describedBy, counting && countId),
+    // Caller's, caption, count, a lock's reason — then the error, appended by the hook.
+    mergeDescribedBy(hintParts.describedBy, counting && countId, locked && lock.reasonId),
     rest["aria-invalid"],
   );
   const counter = counting ? (
@@ -2307,12 +2348,38 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     />
   ) : null;
   const below = fieldBelow(hintParts, counter, errorEl);
-  const onChange = counting
-    ? (e: ChangeEvent<HTMLInputElement>) => {
-        length.track(e.target.value);
-        rest.onChange?.(e);
+  const onChange = locked
+    ? undefined
+    : counting
+      ? (e: ChangeEvent<HTMLInputElement>) => {
+          length.track(e.target.value);
+          rest.onChange?.(e);
+        }
+      : rest.onChange;
+  // Locked, these win over what the caller's spread carried: focusable rather than
+  // `disabled`, `readOnly`, no blur reported (blur is a self-saving field's save), and
+  // Enter swallowed. Spread AFTER `rest` on every branch's input.
+  const lockProps = locked
+    ? {
+        disabled: undefined,
+        readOnly: true,
+        "aria-disabled": true as const,
+        onBlur: undefined,
+        onKeyDown: swallowEnter(rest.onKeyDown),
       }
-    : rest.onChange;
+    : undefined;
+  // While locked the field sits in the reason's Tooltip, which becomes its outermost box
+  // — so `className` (a width, a flex or grid cell) moves onto that, as on Select, and
+  // the form keeps its layout. `block` so a full-width field stays full width in it.
+  const boxClass = locked ? undefined : className;
+  const withReason = (box: ReactNode) =>
+    locked ? (
+      <LockedReason lock={lock} className={cn("block", className)}>
+        {box}
+      </LockedReason>
+    ) : (
+      box
+    );
   const asDisplay = usePhoneLayout() && variant === "display";
   // Password fields get a reveal toggle so users can check what they typed.
   const isPassword = type === "password";
@@ -2342,8 +2409,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
       // input underneath and stays put while focus moves onto the button on top of it.
       onClick={() => setRevealed((v) => !v)}
       // …and since it is a tab stop, a field the user may not edit must not hand the
-      // keyboard a control that shows what is in it.
-      disabled={rest.disabled}
+      // keyboard a control that shows what is in it — a locked one included.
+      disabled={rest.disabled || locked}
       aria-label={revealed ? passwordText.hide : passwordText.show}
       aria-pressed={revealed}
       className={cn(
@@ -2358,96 +2425,106 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     // A "?" with no label line to ride goes at the end edge, outside the box, and
     // `className` moves to that row (see `hint`); without one nothing moves.
     const endHint = hintParts.labelHint;
-    const ownClass = endHint === undefined ? className : undefined;
+    const ownClass = endHint === undefined ? boxClass : undefined;
     if (!isPassword) {
       return (
         <FieldGroup errorEl={below} reserve={reserve}>
-          <EndHintRow hint={endHint} className={className}>
-            <input
-              ref={ref}
-              id={id}
-              type={type}
-              placeholder={placeholder}
-              {...rest}
-              // AFTER the spread, so the prop wins — but OR-ed with whatever the spread
-              // carried, or setting `invalid` would have quietly deleted a caller's own
-              // `aria-invalid`. The prop is the one that also paints; a bare attribute
-              // still announces, which is all it ever did.
-              aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
-              // Likewise merged rather than replaced — see {@link useFieldError}.
-              aria-describedby={describedBy}
-              onClick={handleClick}
-              onChange={onChange}
-              className={cn(FIELD_BASE, ownClass, inputClassName, isInvalid && FIELD_INVALID)}
-            />
-          </EndHintRow>
+          {withReason(
+            <EndHintRow hint={endHint} className={boxClass}>
+              <input
+                ref={ref}
+                id={id}
+                type={type}
+                placeholder={placeholder}
+                {...rest}
+                {...lockProps}
+                // AFTER the spread, so the prop wins — but OR-ed with whatever the spread
+                // carried, or setting `invalid` would have quietly deleted a caller's own
+                // `aria-invalid`. The prop is the one that also paints; a bare attribute
+                // still announces, which is all it ever did.
+                aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+                // Likewise merged rather than replaced — see {@link useFieldError}.
+                aria-describedby={describedBy}
+                onClick={handleClick}
+                onChange={onChange}
+                className={cn(FIELD_BASE, ownClass, inputClassName, isInvalid && FIELD_INVALID, locked && "cursor-not-allowed")}
+              />
+            </EndHintRow>,
+          )}
         </FieldGroup>
       );
     }
     return (
       <FieldGroup errorEl={below} reserve={reserve}>
-        <EndHintRow hint={endHint} className={className}>
-          <div className={cn("relative", ownClass)}>
-            <input
-              ref={ref}
-              id={id}
-              type={effectiveType}
-              placeholder={placeholder}
-              {...rest}
-              aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
-              aria-describedby={describedBy}
-              onChange={onChange}
-              className={cn(FIELD_BASE, "pe-9", inputClassName, isInvalid && FIELD_INVALID)}
-            />
-            {revealToggle}
-          </div>
-        </EndHintRow>
+        {withReason(
+          <EndHintRow hint={endHint} className={boxClass}>
+            <div className={cn("relative", ownClass)}>
+              <input
+                ref={ref}
+                id={id}
+                type={effectiveType}
+                placeholder={placeholder}
+                {...rest}
+                {...lockProps}
+                aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+                aria-describedby={describedBy}
+                onChange={onChange}
+                className={cn(FIELD_BASE, "pe-9", inputClassName, isInvalid && FIELD_INVALID, locked && "cursor-not-allowed")}
+              />
+              {revealToggle}
+            </div>
+          </EndHintRow>,
+        )}
       </FieldGroup>
     );
   }
   const ownPlaceholder = hasPlaceholderText(placeholder);
   return (
     <FieldGroup errorEl={below} reserve={reserve}>
-      <FloatingField
-        className={className}
-        htmlFor={fieldId}
-        label={label}
-        srOnlyLabel={asDisplay}
-        hint={hintParts.labelHint}
-      >
-        <input
-          ref={ref}
-          id={fieldId}
-          type={effectiveType}
-          // A labelled field with no placeholder of its own gets a single space, which
-          // feeds the floating label's peer-placeholder-shown trick. A caller's own is
-          // kept and shown on focus, once the label has floated out of its way (kastlan
-          // 8) — see FLOATING_PLACEHOLDER_ON_FOCUS. With the label sr-only there is no
-          // float left to drive, and an empty borderless line would say nothing at all
-          // — so there the label text is the placeholder when the caller gave none.
-          placeholder={
-            asDisplay
-              ? (placeholder ?? (typeof label === "string" ? label : " "))
-              : ownPlaceholder
-                ? placeholder
-                : " "
-          }
-          {...rest}
-          aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
-          aria-describedby={describedBy}
-          onClick={handleClick}
-          onChange={onChange}
-          className={cn(
-            asDisplay
-              ? cn(FIELD_DISPLAY, "text-xl font-semibold leading-snug")
-              : cn(FLOATING_INPUT_CLASS, ownPlaceholder && FLOATING_PLACEHOLDER_ON_FOCUS),
-            isPassword && "pe-9",
-            inputClassName,
-            isInvalid && FIELD_INVALID,
-          )}
-        />
-        {revealToggle}
-      </FloatingField>
+      {withReason(
+        <FloatingField
+          className={boxClass}
+          htmlFor={fieldId}
+          label={label}
+          srOnlyLabel={asDisplay}
+          hint={hintParts.labelHint}
+        >
+          <input
+            ref={ref}
+            id={fieldId}
+            type={effectiveType}
+            // A labelled field with no placeholder of its own gets a single space, which
+            // feeds the floating label's peer-placeholder-shown trick. A caller's own is
+            // kept and shown on focus, once the label has floated out of its way (kastlan
+            // 8) — see FLOATING_PLACEHOLDER_ON_FOCUS. With the label sr-only there is no
+            // float left to drive, and an empty borderless line would say nothing at all
+            // — so there the label text is the placeholder when the caller gave none.
+            placeholder={
+              asDisplay
+                ? (placeholder ?? (typeof label === "string" ? label : " "))
+                : ownPlaceholder
+                  ? placeholder
+                  : " "
+            }
+            {...rest}
+            {...lockProps}
+            aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
+            aria-describedby={describedBy}
+            onClick={handleClick}
+            onChange={onChange}
+            className={cn(
+              asDisplay
+                ? cn(FIELD_DISPLAY, "text-xl font-semibold leading-snug")
+                : cn(FLOATING_INPUT_CLASS, ownPlaceholder && FLOATING_PLACEHOLDER_ON_FOCUS),
+              isPassword && "pe-9",
+              inputClassName,
+              isInvalid && FIELD_INVALID,
+              locked && "cursor-not-allowed",
+            )}
+          />
+          {revealToggle}
+        </FloatingField>,
+      )}
     </FieldGroup>
   );
 });
@@ -2465,7 +2542,8 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
    *  line is 11px of strip shared with the label, and a sentence placed there was
    *  set in the value's type on top of both the label and the value. On an
    *  UNLABELLED Select (no label line) a FieldHint sits at the field's end edge,
-   *  outside the box. */
+   *  outside the box. Since 0.34 a FieldHint is the caption at Large and on a touch
+   *  screen, as on Input (`useInlineHint`); a `HelpPopover` stays a "?". */
   hint?: ReactNode;
   /**
    * `"sm"`: a 28px, 12px-type select for a toolbar or a table header, where the
@@ -2530,7 +2608,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     children,
     invalid,
     error,
-    hint,
+    hint: hintProp,
     size,
     selectClassName,
     disabledReason,
@@ -2556,6 +2634,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const small = size === "sm" && label === undefined;
   const fieldId = id ?? generated;
   const hintId = useId();
+  // §4 "No fact only in a tooltip": at Large and on a touch screen a FieldHint is its
+  // words, a caption like any text (0.34 — Select had been missed in 0.32; a
+  // HelpPopover stays on the label line, §10.23).
+  const hint = useInlineHint(hintProp);
   // Text is a caption under the field; anything else (a FieldHint) rides the label
   // line. See `hint` above. An empty string is no caption at all.
   const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
@@ -4081,16 +4163,18 @@ export function Tabs<T extends string>({
               </span>
             )}
             {tab.detail != null ? (
-              // `min-w-0` + `truncate` on each line: capped by the tab's `max-w-full`, a
-              // long detail ends in an ellipsis. The whole text stays the tab's name.
+              // `min-w-0` + `truncate-until-large` on each line: capped by the tab's
+              // `max-w-full`, a long detail ends in an ellipsis at Normal and wraps from
+              // Large up (text size §10.17; round 0.34 T1), where the tab grows a line
+              // rather than cut the words. The whole text stays the tab's name.
               <span className="flex min-w-0 flex-col items-start text-start">
-                <span className="max-w-full truncate">{tab.label}</span>
+                <span className="max-w-full truncate-until-large">{tab.label}</span>
                 {/* A separator for the NAME only — whitespace between flex items is
                     not drawn, and without it the two lines ran together into one
                     word for a screen reader ("80 km/hloop 2"). */}{" "}
                 <span
                   className={cn(
-                    "max-w-full truncate text-caption font-normal leading-tight text-[var(--text-muted)]",
+                    "max-w-full truncate-until-large text-caption font-normal leading-tight text-[var(--text-muted)]",
                     // On a wrapped strip's filled chip (below `md`) the muted grey
                     // was dark text on the brand fill — "loop 2" all but vanished
                     // under the one label that most needed reading. It takes the

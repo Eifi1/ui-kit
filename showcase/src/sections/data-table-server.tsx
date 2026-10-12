@@ -441,7 +441,9 @@ function PhoneTable() {
               ? (r) => (
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="min-w-0">
-                      <span className="block truncate font-medium">{r.name}</span>
+                      {/* A caller's own card keeps its own classes: the name wraps from
+                          Large up because it says so (text size §10.17). */}
+                      <span className="block truncate-until-large font-medium">{r.name}</span>
                       <span className="block text-xs text-[var(--text-muted)]">{r.opened}</span>
                     </span>
                     <span className="tabular-nums">

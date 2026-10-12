@@ -468,9 +468,11 @@ export function useComboboxFieldError(
 export const SUGGESTION_LIST_CLASS =
   "max-h-64 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] py-1 shadow-lg";
 
+// One line at Normal; from Large up a long suggestion wraps and its row grows (text size
+// §10.17, round 0.34 T1), like every other option list of the kit.
 export const suggestionRowClass = (isActive: boolean) =>
   cn(
-    "block w-full truncate px-3 py-1.5 text-start text-sm text-[var(--text-primary)]",
+    "block w-full truncate-until-large px-3 py-1.5 text-start text-sm text-[var(--text-primary)]",
     isActive ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]",
   );
 
@@ -782,10 +784,11 @@ export function ComboboxPanel<V extends string | number>({
                 </span>
               )}
               {o.icon && <span className="shrink-0">{o.icon}</span>}
+              {/* Label and sublabel wrap from Large up (text size §10.17, round 0.34 T1). */}
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[var(--text-primary)]">{o.label}</span>
+                <span className="block truncate-until-large text-[var(--text-primary)]">{o.label}</span>
                 {o.sublabel && (
-                  <span className="block truncate text-xs text-[var(--text-placeholder)]">
+                  <span className="block truncate-until-large text-xs text-[var(--text-placeholder)]">
                     {o.sublabel}
                   </span>
                 )}
@@ -831,9 +834,9 @@ export function ComboboxPanel<V extends string | number>({
           >
             <Plus className="size-4 shrink-0" />
             <span className="min-w-0 flex-1">
-              <span className="block truncate">{createContent}</span>
+              <span className="block truncate-until-large">{createContent}</span>
               {createLocked && (
-                <span className="block truncate text-xs text-[var(--text-placeholder)]">
+                <span className="block truncate-until-large text-xs text-[var(--text-placeholder)]">
                   {createDisabledReason}
                 </span>
               )}

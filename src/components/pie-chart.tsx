@@ -456,7 +456,9 @@ export function PieChart({
               aria-hidden={focusedSlice ? true : undefined}
               className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center"
             >
-              <span className="max-w-[40%] truncate text-xs text-[var(--text-muted)]">
+              {/* The label wraps from Large up, inside the hole's 40 % (text size
+                  §10.17, round 0.34 T1: the sweep read "Spent in Sept…"). */}
+              <span className="max-w-[40%] truncate-until-large text-xs text-[var(--text-muted)]">
                 {focusedSlice ? focusedSlice.slice.label : (centerLabel ?? labels.total)}
               </span>
               <span className="max-w-[40%] truncate text-lg font-semibold tabular-nums text-[var(--text-primary)]">

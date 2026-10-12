@@ -15,7 +15,8 @@
  * Extra large.
  *
  * Two more checks at Large and Extra large (0.33, docs/text-size-harmonization.md
- * §10.17, §10.22), both report-only until 0.34 passes `--gate-truncation`:
+ * §10.17, §10.22). Report-only by themselves; with `--gate-truncation` either one fails
+ * the run, and since 0.34 the release runs it that way (`npm run check:sweep`, below):
  *  - **TRUNCATED** (`measureTruncation`): a one-line ellipsis, or a line clamp, that cuts
  *    its text. An overflow check cannot see it — the box holds, only its words are gone
  *    ("Payment r…") — and §4 says text wraps at Large. Normal keeps its ellipses. A
@@ -27,6 +28,12 @@
  *    covers the screen by design; a deliberate case sits under `data-pinned-ok`.
  *
  * Usage:
+ *   npm run check:sweep      the release gate (0.34): builds the showcase, then runs every
+ *                            page with `--pages all --no-screens --gate-truncation`.
+ *                            `npm run release` runs it before it bumps anything; it is
+ *                            NOT part of `npm run check` or CI (a browser per run costs
+ *                            Actions minutes, and the sweep is local-first, like the rest)
+ *
  *   npx vite build --config showcase/vite.config.ts --logLevel warn   (once)
  *   node scripts/screenshot-sizes.mjs [--out DIR] [--pages start,inputs,…|all] [--url URL]
  *                                     [--no-screens] [--no-truncation] [--no-pinned]
@@ -43,7 +50,8 @@
  *                      machine
  *   --truncation / --no-truncation   the TRUNCATED check (on by default)
  *   --pinned / --no-pinned           the PINNED check (on by default)
- *   --gate-truncation  exit 3 on a TRUNCATED or PINNED finding (from 0.34)
+ *   --gate-truncation  exit 3 on a TRUNCATED or PINNED finding — the release gate since
+ *                      0.34, through `npm run check:sweep`
  *
  * The checks' own test, outside `npm run check` (it needs Chromium; jsdom lays nothing
  * out): `node scripts/screenshot-sizes-fixture.test.mjs`, which runs this script on
@@ -54,8 +62,10 @@
  *                    here, else ../keksdose/node_modules/playwright-core)
  *   CHROMIUM         the browser executable (default: the newest Chromium headless shell
  *                    under ~/.cache/ms-playwright)
- *   LD_LIBRARY_PATH  handed to the browser as is — for a machine missing a library the
- *                    headless shell links against (libasound)
+ *   LD_LIBRARY_PATH  handed to the browser — for a machine missing a library the headless
+ *                    shell links against (libasound). ~/.local/lib, where a user without
+ *                    root puts one, is appended when it exists, so the release gate runs
+ *                    without it being set
  *
  * Exits 1 when any page overflows, so it can gate a release run; 3 with
  * `--gate-truncation` and a TRUNCATED or PINNED finding (an overflow still answers 1);
@@ -153,6 +163,15 @@ function findChromium() {
     if (existsSync(exe)) return exe;
   }
   throw new Error(`no Chromium headless shell under ${cache}; set CHROMIUM`);
+}
+
+/** The browser's environment: ours, with ~/.local/lib on the library path when it exists —
+ *  where a machine without root keeps the libasound the headless shell links against. */
+function browserEnv() {
+  const local = join(homedir(), ".local/lib");
+  const path = process.env.LD_LIBRARY_PATH ?? "";
+  if (!existsSync(local) || path.split(":").includes(local)) return { ...process.env };
+  return { ...process.env, LD_LIBRARY_PATH: path ? `${path}:${local}` : local };
 }
 
 /** Starts `vite preview` on `port` and resolves once it answers. */
@@ -265,7 +284,13 @@ function installSweepHelpers() {
     }
     return { slot, heading };
   };
-  window.__sizeSweep = { DIALOG, invisible, offstage, placeOf };
+  /** The box itself, short — `<span.truncate.text-sm>` — so a finding can be traced to
+   *  the class that cut it without opening the page. */
+  const tagOf = (el) => {
+    const cls = typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean).slice(0, 4) : [];
+    return `<${el.tagName.toLowerCase()}${cls.map((c) => "." + c).join("")}>`;
+  };
+  window.__sizeSweep = { DIALOG, invisible, offstage, placeOf, tagOf };
 }
 
 /**
@@ -275,7 +300,7 @@ function installSweepHelpers() {
  * finding is marked `data-truncation-offender=n`.
  */
 function measureTruncation() {
-  const { invisible, offstage, placeOf } = window.__sizeSweep;
+  const { invisible, offstage, placeOf, tagOf } = window.__sizeSweep;
   const findings = [];
   for (const el of document.body.querySelectorAll("*")) {
     const s = getComputedStyle(el);
@@ -289,6 +314,7 @@ function measureTruncation() {
     findings.push({
       ...placeOf(el),
       kind: oneLine ? "ellipsis" : "clamp",
+      box: tagOf(el),
       text: (el.textContent ?? "").replace(/\s+/g, " ").trim(),
       width: Math.round(el.getBoundingClientRect().width),
     });
@@ -306,7 +332,7 @@ function measureTruncation() {
  * `data-pinned-offender=n`.
  */
 function measurePinned() {
-  const { DIALOG, invisible, offstage, placeOf } = window.__sizeSweep;
+  const { DIALOG, invisible, offstage, placeOf, tagOf } = window.__sizeSweep;
   const vh = window.innerHeight;
   const pinnedAs = (el) => {
     const s = getComputedStyle(el);
@@ -335,6 +361,7 @@ function measurePinned() {
     findings.push({
       ...placeOf(el),
       how,
+      box: tagOf(el),
       height: Math.round(height),
       share: Math.round((height / vh) * 100),
       text: (el.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 50),
@@ -365,7 +392,7 @@ async function main() {
   const base = /\.html?$/.test(given) ? given : (given || preview.url).replace(/\/?$/, "/");
 
   const { chromium } = loadPlaywright();
-  const browser = await chromium.launch({ executablePath: findChromium(), env: { ...process.env } });
+  const browser = await chromium.launch({ executablePath: findChromium(), env: browserEnv() });
   const findings = [];
   try {
     for (const variant of VARIANTS) {
@@ -433,8 +460,8 @@ async function main() {
           .join(", ");
         console.log(`${name.padEnd(36)} ${applied === variant.size ? "" : `(size ${applied}!) `}${verdict || "ok"}`);
         for (const offender of result.offenders) console.log(`    ${offender}`);
-        for (const f of truncated) console.log(findingLine("TRUNCATED", f, `${f.width}px ${f.kind}: "${f.text}"`));
-        for (const f of pinned) console.log(findingLine("PINNED", f, `${f.how} ${f.height}px (${f.share} % of the viewport): "${f.text}"`));
+        for (const f of truncated) console.log(findingLine("TRUNCATED", f, `${f.width}px ${f.kind} ${f.box}: "${f.text}"`));
+        for (const f of pinned) console.log(findingLine("PINNED", f, `${f.how} ${f.height}px (${f.share} % of the viewport) ${f.box}: "${f.text}"`));
       }
       await context.close();
     }

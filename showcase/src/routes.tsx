@@ -146,6 +146,7 @@ const DescriptionTableMore = lazySection(() => import("./sections/description-ta
 const DisclosureMore = lazySection(() => import("./sections/disclosure-more-demo"), "DisclosureMore");
 const IntegerTicksDemo = lazySection(() => import("./sections/series-chart-ticks-keys"), "IntegerTicksDemo");
 const KeyboardPointsDemo = lazySection(() => import("./sections/series-chart-ticks-keys"), "KeyboardPointsDemo");
+const RowBudgetDemo = lazySection(() => import("./sections/series-chart-thin-demo"), "RowBudgetDemo");
 const DialogOpenDemo = lazySection(() => import("./sections/dialog-open-demo"), "DialogOpenDemo");
 const TooltipAutoPortal = lazySection(() => import("./sections/tooltip-auto-portal-demo"), "TooltipAutoPortal");
 const TooltipLazyDemo = lazySection(() => import("./sections/tooltip-013-demo"), "TooltipLazyDemo");
@@ -542,7 +543,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Text",
         blurb: "Inputs, and the class constants an app composes its own fields from.",
         icon: TextCursorInput,
-        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "Field", "IbanInput", "PhoneInput", "FieldStrip"],
+        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "HelpPopover", "Field", "IbanInput", "PhoneInput", "FieldStrip"],
         Body: () => (
           <>
             <Fields />
@@ -1058,13 +1059,14 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Series chart",
         short: "Series",
         blurb:
-          "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, and the helpers underneath.",
+          "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, a row budget for long tables, and the helpers underneath.",
         icon: ChartLine,
         components: ["SeriesChart", "StaticSeriesChart", "SharedXZoom", "ToggleLegend", "facingAxes"],
         Body: () => (
           <>
             <SeriesChartDemo />
             <IntegerTicksDemo />
+            <RowBudgetDemo />
           </>
         ),
       },
@@ -1441,7 +1443,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Hooks",
         blurb: "The non-visual exports: hooks read live, and the pure helpers as input → output.",
         icon: FileText,
-        components: ["useMediaQuery", "useAnchoredPanel", "useOverlayHistory", "cn", "useHotkey"],
+        components: ["useMediaQuery", "useAnchoredPanel", "useOverlayHistory", "cn", "useHotkey", "saveBlob", "filenameFromDisposition"],
         Body: () => (
           <>
             <HooksLib />

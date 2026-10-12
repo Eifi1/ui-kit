@@ -107,7 +107,11 @@ export function Breadcrumbs({
       {separator ?? <ChevronRight className="size-3.5 rtl:-scale-x-100" />}
     </span>
   );
-  const linkClass = cn("block max-w-[14rem] truncate rounded-sm hover:text-[var(--text-primary)]", FOCUS_RING);
+  // Each crumb is capped (in rem, so the cap grows with the text) and cut with an
+  // ellipsis at Normal; from Large up it wraps inside its cap instead (text size §10.17,
+  // round 0.34 T1): the list already wraps between crumbs, and a crumb cut to "Inv…" at
+  // 150 % names no page.
+  const linkClass = cn("block max-w-[14rem] truncate-until-large rounded-sm hover:text-[var(--text-primary)]", FOCUS_RING);
 
   return (
     <nav {...rest} aria-label={ariaLabel ?? labels.label} className={cn("min-w-0 text-sm", className)}>
@@ -118,7 +122,7 @@ export function Breadcrumbs({
           let content: ReactNode;
           if (last) {
             content = (
-              <span aria-current="page" className="block max-w-[16rem] truncate font-medium text-[var(--text-primary)]">
+              <span aria-current="page" className="block max-w-[16rem] truncate-until-large font-medium text-[var(--text-primary)]">
                 {item.label}
               </span>
             );
@@ -135,7 +139,7 @@ export function Breadcrumbs({
               </a>
             );
           } else {
-            content = <span className="block max-w-[14rem] truncate">{item.label}</span>;
+            content = <span className="block max-w-[14rem] truncate-until-large">{item.label}</span>;
           }
           return (
             <Fragment key={key}>

@@ -370,10 +370,12 @@ function MonthFieldTrigger({
       {/* The U+00A0 fallback keeps the line box when there is no text — see
           DatePicker. The value arrives capitalised (see `upperFirst`); this span does
           NOT use `capitalize`, which upper-cases every WORD — "Choose A Month",
-          "Septiembre De 2026". */}
+          "Septiembre De 2026". It wraps from Large up, as DatePicker's value does
+          (`truncate-until-large`, text size §10.17; round 0.34 T1: the sweep read
+          "Choose a mo…" at 360 px / Extra large). */}
       <span
         id={valueId}
-        className={cn("truncate", !hasValue && "text-[var(--text-placeholder)]")}
+        className={cn("truncate-until-large", !hasValue && "text-[var(--text-placeholder)]")}
       >
         {triggerText || " "}
       </span>

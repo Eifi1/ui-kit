@@ -451,7 +451,9 @@ export function ProgressBar({
                 style={{ backgroundColor: seg.className ? undefined : seg.color }}
               />
               {seg.label != null && (
-                <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">{seg.label}</span>
+                // Wraps from Large up (text size §10.17, round 0.34 T1); the value
+                // beside it keeps its width.
+                <span className="min-w-0 flex-1 truncate-until-large text-[var(--text-secondary)]">{seg.label}</span>
               )}
               <span
                 data-part="legend-value"

@@ -99,7 +99,7 @@ export function MenuItemBadgeDemo() {
   return (
     <Example
       label="MenuItem — badge beside a long, truncating label"
-      hint="the label truncates, the badge never shrinks, and both are the row's name"
+      hint="the label truncates (and wraps from Large up), the badge never shrinks, and both are the row's name"
     >
       <Row>
         {/* The cap on the menu's box, the trigger held to it: on the Button itself,
@@ -111,7 +111,7 @@ export function MenuItemBadgeDemo() {
           className="min-w-0 max-w-64"
           trigger={({ open, toggle }) => (
             <Button variant="secondary" onClick={toggle} aria-expanded={open} className="max-w-full">
-              <span className="truncate">{budget}</span>
+              <span className="truncate-until-large">{budget}</span>
             </Button>
           )}
         >

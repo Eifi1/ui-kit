@@ -344,7 +344,9 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
               {selectedOption?.icon && <span className="shrink-0">{selectedOption.icon}</span>}
               <span
                 className={cn(
-                  "truncate",
+                  // One line at Normal; from Large up the value wraps and the trigger
+                  // grows, as DatePicker's does (text size §10.17, round 0.34 T1).
+                  "truncate-until-large",
                   // A chosen value is the field's VALUE, so it is set in the same ink an
                   // <input>'s value is — FIELD_BASE's own text colour, inherited rather
                   // than restated (Keksdose dev#477). It used to be one notch lighter

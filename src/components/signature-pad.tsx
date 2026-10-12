@@ -728,7 +728,9 @@ export function SignatureView({
           <span
             role="img"
             aria-label={labels.viewTyped(name)}
-            className="relative max-w-[85%] truncate px-2 text-4xl italic text-[var(--text-primary)]"
+            // A name, so never cut at Large: it wraps inside the 10rem frame from Large
+            // up (`truncate-until-large`, text size §10.17; round 0.34 T1).
+            className="relative max-w-[85%] truncate-until-large px-2 text-4xl italic text-[var(--text-primary)]"
             style={{ fontFamily: SCRIPT_FONT }}
           >
             {name}

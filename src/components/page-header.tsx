@@ -139,6 +139,10 @@ export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * The full title stays in the DOM as the heading's text, so a screen reader and the
    * document outline read all of it. There is deliberately no native `title` tooltip:
    * the kit does not use them (not on touch, not on keyboard focus, not styled).
+   *
+   * At Normal only: from Large up the title wraps (`truncate-until-large`, text size
+   * §10.17; round 0.34 T1), as nothing is cut at Large — the actions then share the row
+   * with a taller title block.
    */
   truncateTitle?: boolean;
 }
@@ -230,7 +234,7 @@ export function PageHeader({
           {eyebrow != null && <p className={cn(SECTION_LABEL_CLASS.xs, "mb-1")}>{eyebrow}</p>}
           <Heading
             className={cn(
-              truncateTitle ? "truncate" : "break-words",
+              truncateTitle ? "truncate-until-large" : "break-words",
               "text-[var(--text-primary)]",
               TITLE[size],
             )}

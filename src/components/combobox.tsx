@@ -691,7 +691,7 @@ export function Combobox(props: ComboboxProps) {
                         optionAdornment && "flex items-center justify-between gap-2",
                       )}
                     >
-                      {optionAdornment ? <span className="truncate">{o}</span> : o}
+                      {optionAdornment ? <span className="truncate-until-large">{o}</span> : o}
                       {optionAdornment?.(o)}
                     </button>
                   </li>
@@ -763,10 +763,12 @@ export function Combobox(props: ComboboxProps) {
                       // A row with a badge is a flex row so the label truncates and the
                       // badge keeps its width; without one it stays the plain block the
                       // other lists render, so nothing shifts for callers that pass none.
+                      // From Large up the label wraps instead (`truncate-until-large`,
+                      // text size §10.17, round 0.34 T1), as the badge-less row does.
                       optionAdornment && "flex items-center justify-between gap-2",
                     )}
                   >
-                    {optionAdornment ? <span className="truncate">{o}</span> : o}
+                    {optionAdornment ? <span className="truncate-until-large">{o}</span> : o}
                     {optionAdornment?.(o)}
                   </button>
                 </li>
@@ -1140,13 +1142,15 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
 
   // The create row's inside, one for both shells: a "+" (it is an action, not a record),
   // the words, and — while a write lock holds it — the lock's reason as a second line.
+  // Both lines wrap from Large up (text size §10.17, round 0.34 T1): the words hold what
+  // the reader typed, which an ellipsis would cut.
   const createRowContent = (
     <>
       <Plus aria-hidden className="size-4 shrink-0" />
       <span className="min-w-0 flex-1">
-        <span className="block truncate">{createText}</span>
+        <span className="block truncate-until-large">{createText}</span>
         {createLocked && (
-          <span className="block truncate text-xs font-normal text-[var(--text-placeholder)]">
+          <span className="block truncate-until-large text-xs font-normal text-[var(--text-placeholder)]">
             {createReason}
           </span>
         )}

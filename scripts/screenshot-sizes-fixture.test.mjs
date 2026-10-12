@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * The size sweep's two report-only checks against their fixture
- * (docs/text-size-harmonization.md §10.17, §10.22). Outside `npm run check`: it drives
- * Chromium, and jsdom lays nothing out, so the unit tests can only pin classes.
+ * The size sweep's two checks against their fixture (docs/text-size-harmonization.md
+ * §10.17, §10.22) — report-only by themselves, the release gate with `--gate-truncation`
+ * (`npm run check:sweep`, since 0.34). Outside `npm run check`: it drives Chromium, and
+ * jsdom lays nothing out, so the unit tests can only pin classes.
  *
  *   node scripts/screenshot-sizes-fixture.test.mjs
  *
@@ -50,7 +51,7 @@ for (const block of blocks) {
     continue;
   }
   expect(truncated.length === 1, `${name}: one TRUNCATED, got ${truncated.length}`);
-  expect(/\[fixture-cut\] «An ellipsis that cuts» 120px ellipsis: "A label far too long/.test(truncated[0] ?? ""), `${name}: the cut one, named by slot and heading`);
+  expect(/\[fixture-cut\] «An ellipsis that cuts» 120px ellipsis <[a-z]+[^>]*>: "A label far too long/.test(truncated[0] ?? ""), `${name}: the cut one, named by slot and heading`);
   expect(pinned.length === 1, `${name}: one PINNED, got ${pinned.length}`);
   expect(/\[fixture-tall\] «A tall sticky box» sticky \d+px \(60 % of the viewport\)/.test(pinned[0] ?? ""), `${name}: the tall sticky box`);
 }

@@ -190,7 +190,13 @@ function MainTable() {
           reload. If you return to this page and a column is missing, that is the feature —
           re-tick it in the panel. The default prefix is{" "}
           <code className="font-mono">hbui-table:</code>; it is a prop so several apps can
-          share one localStorage origin without colliding.
+          share one localStorage origin without colliding. Since 0.34 an app sets its prefix
+          once, on <code className="font-mono">{"<UiKitProvider tableStorageKeyPrefix>"}</code>,
+          and every kit table below takes it — <code className="font-mono">TranslationReviewPanel</code>
+          too, which took none — while a table&apos;s own prop still wins. The stored key is the
+          prefix plus <code className="font-mono">storageKey</code>, so an app that wrapped
+          DataTable to pass its prefix keeps every reader&apos;s saved view when it moves the
+          prefix to the provider.
         </Note>
         <Note>
           Selection and the row link share the modifier keys, and the link wins:{" "}
@@ -839,6 +845,21 @@ function FillHeightTable() {
           flex parent (a viewport-locked app shell, a split pane) there is nothing to fill
           and the prop does nothing — which is why the main table above uses{" "}
           <code className="font-mono">maxBodyHeight</code> instead.
+        </Note>
+        <Note>
+          <strong>Two scrollbars</strong> (0.34, kastlan feedback 55): the default{" "}
+          <code className="font-mono">maxBodyHeight</code>,{" "}
+          <code className="font-mono">calc(100dvh - 12rem)</code>, scrolls the body inside a
+          page that scrolls itself, so a long table under a page header shows two scrollbars
+          side by side. A list page whose table is the point fills the height from{" "}
+          <code className="font-mono">md</code> up instead: the shell&apos;s content column turns
+          into a full-height flex column when its page asks (
+          <code className="font-mono">md:has-[&gt;[data-fill-height]]:flex … :h-full … :flex-col</code>
+          ), the page root asks (<code className="font-mono">data-fill-height</code>,{" "}
+          <code className="font-mono">md:flex md:min-h-0 md:flex-1 md:flex-col</code>) and the
+          table takes the rest (<code className="font-mono">fillHeight</code>). Only the body
+          scrolls then, under its pinned header; every other page grows as before (kastlan
+          e3985c9).
         </Note>
       </div>
     </Example>

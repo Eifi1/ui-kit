@@ -165,7 +165,10 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       <span className="flex min-w-0 items-center gap-2">
         {Icon && <Icon className="size-4 shrink-0" aria-hidden />}
         {leading}
-        <span className="min-w-0 truncate">{children}</span>
+        {/* An ellipsis at Normal; from Large up the label wraps and the row grows
+            (text size §10.17, round 0.34 T1) — a menu row cut to "Househ…" at 150 %
+            is a choice the reader cannot read. */}
+        <span className="min-w-0 truncate-until-large">{children}</span>
         {badge != null && badge !== false && (
           <>
             {/* A space between the name and the badge in the accessible name ("Household

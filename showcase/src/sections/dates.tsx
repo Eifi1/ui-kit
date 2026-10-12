@@ -879,7 +879,9 @@ function RangeTriggerExample() {
                 {...triggerProps}
                 className={cn(triggerProps.className, "rounded-b-none sm:rounded-b-md sm:rounded-e-none")}
               >
-                <span {...valueProps} className="min-w-0 truncate">
+                {/* The kit's own trigger value wraps from Large up; a custom one says so
+                    itself (text size §10.17). */}
+                <span {...valueProps} className="min-w-0 truncate-until-large">
                   {preset ? (
                     <>
                       {preset.label}

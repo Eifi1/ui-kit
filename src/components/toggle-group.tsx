@@ -225,11 +225,17 @@ const CHROME_SEGMENT: Record<"sm" | "md", string> = { md: "py-0 leading-[1.125re
  * A `large:` class, so it costs no render and is right on the first paint.
  * `overflow="wrap"` wraps at every size already.
  *
- * 0.32.1 (Kurvenschmiede's 0.32 report): every count and every placement but the
- * strip, not only a field of four or more. Since a row breaks only where its labels do
- * not fit, a wrap only ever replaces a truncation — and three options in a card at
- * Extra large on a 360 px phone read "Syst… Li… D…". The strip keeps one row: its
- * 26 px group is what lines it up with the 42 px fields beside it (`STRIP_SEGMENT`).
+ * 0.32.1 (Kurvenschmiede's 0.32 report): every count and every placement, not only a
+ * field of four or more. Since a row breaks only where its labels do not fit, a wrap
+ * only ever replaces a truncation — and three options in a card at Extra large on a
+ * 360 px phone read "Syst… Li… D…".
+ *
+ * 0.34 (round 0.34 T1, text size §10.17): the strip too, which 0.32.1 kept to one row so
+ * its 26 px group lined up with the 42 px fields beside it (`STRIP_SEGMENT`). The size
+ * sweep read "Op…" in its segments at 360 px / Extra large — the same "Syst… Li… D…" —
+ * and a row of fields that grows to a taller cell (keksdose's status strip sits in an
+ * `items-start` grid) is the smaller loss. At Normal, and wherever it fits, it is the
+ * one row it was.
  */
 const WRAP_AT_LARGE = "large:flex-wrap";
 
@@ -363,9 +369,9 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   const field = labelled && labelPlacement === "field";
   const above = labelled && labelPlacement === "above";
   const strip = labelled && labelPlacement === "strip";
-  // At Large and Extra large a truncating group wraps instead, the strip excepted (see
-  // WRAP_AT_LARGE).
-  const wrapAtLarge = overflow === "truncate" && !strip;
+  // At Large and Extra large a truncating group wraps instead, the strip too since 0.34
+  // (see WRAP_AT_LARGE).
+  const wrapAtLarge = overflow === "truncate";
   const hasError = labelled && hasContent(error);
   // Taken off the rest so neither reaches the DOM; `props` keeps them paired, which is
   // what lets the `onChange` below be called with `null` only in the mode that allows it.
@@ -454,7 +460,12 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           // keyboard, which is the only input that needs it.
           //
           // The ring is the kit's focus frame (0.32, §5): `--focus-ring-width` wide.
-          overflow === "wrap" ? "whitespace-nowrap" : "min-w-0 truncate",
+          //
+          // From Large up the group wraps its ROW first (WRAP_AT_LARGE), so a segment's
+          // own text breaks only when one label is wider than a whole row — and then it
+          // wraps rather than ending in an ellipsis (`truncate-until-large`, text size
+          // §10.17; round 0.34 T1: the sweep read 'confirmVariant="da…' at 360 px).
+          overflow === "wrap" ? "whitespace-nowrap" : "min-w-0 truncate-until-large",
           "flex-1 basis-auto rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-inset focus-visible:ring-[var(--border-strong)]",
           FOCUS_RING_WIDTH,
           size === "sm" && "px-2 py-1 text-xs",

@@ -96,7 +96,9 @@ export function GroupedPicker({
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between gap-2 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
       >
-        <span className="truncate">{buttonLabel}</span>
+        {/* The trigger's label and each item wrap from Large up (text size §10.17,
+            round 0.34 T1: the sweep read "Choose a cat…" at 360 px / Extra large). */}
+        <span className="truncate-until-large">{buttonLabel}</span>
         <ChevronDown className="size-4 shrink-0 text-[var(--text-placeholder)]" />
       </button>
       {open && (
@@ -139,7 +141,7 @@ export function GroupedPicker({
                               )}
                             >
                               {item.icon && <span className="shrink-0">{item.icon}</span>}
-                              <span className="min-w-0 truncate">{item.label}</span>
+                              <span className="min-w-0 truncate-until-large">{item.label}</span>
                             </button>
                           </li>
                         );

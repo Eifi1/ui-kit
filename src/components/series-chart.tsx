@@ -32,6 +32,12 @@
 // own, when it is too narrow for the ones it has — one a side; the rest go hidden,
 // still scaling their lines, and their series say the unit the title no longer does.
 // The rule is `series-chart-budget.ts`.
+//
+// **A row budget (0.34, KS U2).** Opt-in: `maxRows` thins a long table to at most that
+// many rows before recharts sees it, by ENVELOPE — each bucket's lowest and highest row
+// of every drawn series — never by stride, which aliases a fast tone into a slow wave.
+// A zoom thins the window on show, so it draws more detail, not the same rows larger.
+// The rule is `series-chart-thin.ts`.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import {
@@ -65,6 +71,7 @@ import { categoryTicks, integerTicks, niceTicks, tickTarget, timeTicksWithUnit, 
 // The tick module stays internal; the one type of it a public prop names is re-exported.
 export type { TimeTickUnit } from "./series-chart-ticks";
 import { autoAxisBudget, axisUnit, budgetedAxes, type SeriesChartAxisBudget } from "./series-chart-budget";
+import { thinnedRows } from "./series-chart-thin";
 // The rule stays internal, like the ticks; the one type a public prop names is re-exported.
 export type { SeriesChartAxisBudget } from "./series-chart-budget";
 import { paletteFor } from "../theme/chart-palette";
@@ -632,6 +639,35 @@ export interface SeriesChartProps {
    *  {@link SeriesChartSeries.minBarLength}. Drawing only: domain, tooltip and names
    *  keep the real value. Default: none — a zero draws nothing. */
   minBarLength?: number;
+  /**
+   * The most rows the chart hands recharts (0.34, KS U2). A longer table is THINNED, by
+   * envelope: cut into buckets, and from each the row where each drawn series is lowest
+   * and the row where it is highest, plus each series' first and last sample — so every
+   * line still reaches every peak and dip the table has, and a tone faster than the
+   * buckets draws as the band it fills, never as the slow wave a stride would alias it
+   * into. Nothing is averaged or invented; every point drawn is one of `rows`. There is
+   * no stride option, on purpose.
+   *
+   * Opt-in. Default: none — every row is drawn, as before. Kurvenschmiede draws 2000 for
+   * a 200-second profile at 1 kHz; a few thousand is about what a plot's pixels can show.
+   *
+   * - **Zoom** thins the window on show (with one row past each edge), so zooming in
+   *   draws more of the samples there — all of them, once the window holds fewer than
+   *   `maxRows` — rather than the same rows larger. That needs an abscissa that never
+   *   decreases; where it doubles back (a loop against position) the whole table is
+   *   thinned once, and the abscissa is enveloped too, so the path's turning points stay.
+   * - **Fitting** is not thinned: the axes, the zoom's refit and the automatic whole
+   *   ticks read every row, so a pinned or fitted band is the same either way.
+   * - **Indices** stay the caller's: a `dot` function's `point.index` and a click's
+   *   `hit.index` are positions in `rows`, not in the rows drawn.
+   * - **A category axis** (`x.type: "category"`) is never thinned: a slot is a period, and
+   *   a period left out is a gap. Meant for lines and areas; stacked layers are each
+   *   enveloped on their own.
+   *
+   * The budget is a cap for any `maxRows` of at least 2 + 4 × the drawn series (the
+   * fewest rows an envelope can be drawn with); a smaller one is raised to that.
+   */
+  maxRows?: number;
 }
 
 /** How much of an axis band the rotated title takes, in px at Normal — × the text size's
@@ -1248,6 +1284,7 @@ function SeriesPlot({
   maxVisibleAxes,
   axisBudget = "auto",
   onAxisBudget,
+  maxRows,
 }: PlotProps) {
   const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
@@ -1303,6 +1340,27 @@ function SeriesPlot({
         );
   const budgeted = [...capped, ...auto];
   const budgetKey = budgeted.join("\n");
+
+  // The rows drawn under `maxRows` (KS U2, `series-chart-thin.ts`): their indices into
+  // the caller's rows, or `undefined` for all of them. Up here, above the empty state's
+  // early return, like every hook; worked out again only when the rows, the series
+  // drawn, the budget or the x window change — not on every render of a drag.
+  const thinKeys = series.map((entry) => entry.key).join("\n");
+  const [windowFrom, windowTo] = zoom?.xDomain ?? [undefined, undefined];
+  const thin = useMemo(() => {
+    if (model.kind === "category" || maxRows === undefined) return undefined;
+    const keys = thinKeys ? thinKeys.split("\n") : [];
+    const window: [number, number] | undefined =
+      windowFrom !== undefined && windowTo !== undefined ? [windowFrom, windowTo] : undefined;
+    const kept = thinnedRows(model.rows, model.plotKey, keys, maxRows, window);
+    if (!kept) return undefined;
+    return {
+      kept,
+      plotted: kept.map((index) => model.rows[index]),
+      source: kept.map((index) => model.source[index]),
+    };
+  }, [model, thinKeys, maxRows, windowFrom, windowTo]);
+
   // Reported when the SET changes, not on every render — an inline callback is a new
   // function each time, and the guard keeps it from being called again for nothing.
   const reported = useRef("");
@@ -1336,8 +1394,14 @@ function SeriesPlot({
 
   const x = xAxis;
   const xKey = model.plotKey;
-  const plotted = model.rows;
-  const rows = model.source;
+  // What is DRAWN — the thinned rows under `maxRows`, else the caller's — and what is
+  // FITTED: every row, so a band, a whole-number tick and the zoom's refit are the same
+  // with a budget as without one.
+  const plotted = thin?.plotted ?? model.rows;
+  const rows = thin?.source ?? model.source;
+  const allPlotted = model.rows;
+  /** A drawn row's position in the CALLER's rows, which dots and hits report. */
+  const origin = (index: number) => thin?.kept[index] ?? index;
   // What the budget took off the chart: an axis drawn as `hide` — and its unit, which
   // the tooltip names now that no title says it. Axes the caller hid keep their series'
   // labels as given, as they always did.
@@ -1395,7 +1459,7 @@ function SeriesPlot({
           ...(extend(
             undefined,
             [
-              ...plotted.map((row) => finite(row[xKey])),
+              ...allPlotted.map((row) => finite(row[xKey])),
               ...xRefs.map((ref) => xPos(ref.value)),
               ...(markers ?? []).map((marker) => xPos(marker.x)),
             ],
@@ -1408,7 +1472,7 @@ function SeriesPlot({
   const integerX =
     model.kind === "number" &&
     (x.integerTicks ??
-      plotted.every((row) => {
+      allPlotted.every((row) => {
         const value = finite(row[xKey]);
         return value === undefined || Number.isInteger(value);
       }));
@@ -1456,7 +1520,7 @@ function SeriesPlot({
   const tickBand = tiltedTickBand((xTicks ?? []).map((tick) => xFormat(tick)), tickAngle, scale);
 
   const source: ZoomFitSource = {
-    rows: plotted,
+    rows: allPlotted,
     series,
     axes,
     xKey,
@@ -1475,7 +1539,7 @@ function SeriesPlot({
     series
       .filter((entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axis.id)
       .every((entry) =>
-        plotted.every((row) => {
+        allPlotted.every((row) => {
           const value = finite(row[entry.key]);
           return value === undefined || Number.isInteger(value);
         }),
@@ -1506,7 +1570,7 @@ function SeriesPlot({
       : model.valueAt(finite(plotted[index][xKey]) ?? NaN);
   const hitAt = (index: number, key?: string): SeriesChartHit | undefined => {
     const row = rows[index];
-    return row ? { index, row, x: xOf(index), key } : undefined;
+    return row ? { index: origin(index), row, x: xOf(index), key } : undefined;
   };
 
   // The keyboard stops of a clickable chart — every bar with a value, slot by slot; or,
@@ -1561,7 +1625,7 @@ function SeriesPlot({
       if (value === undefined || !Number.isFinite(cx) || !Number.isFinite(cy)) return <g />;
       const point: SeriesChartPoint = {
         key: entry.key,
-        index,
+        index: origin(index),
         row: rows[index],
         x: xOf(index),
         value,
@@ -1600,6 +1664,9 @@ function SeriesPlot({
     <ChartContainer
       ref={setBox}
       data-axis-budget={budgeted.length ? budgetKey.replace(/\n/g, " ") : undefined}
+      // "drawn/all" while `maxRows` thins: what a reader of the DOM (a test, a bug
+      // report) needs to know the picture is an envelope.
+      data-thinned={thin ? `${thin.kept.length}/${allPlotted.length}` : undefined}
       config={config}
       className={cn(
         "w-full",
@@ -1944,10 +2011,17 @@ function SeriesPlot({
 
 const ZoomablePlot = withChartZoom(SeriesPlot);
 
-/** The caller's props, with the abscissa reduced to numbers for the plot and the zoom. */
-function plotProps(props: SeriesChartProps): PlotProps {
+/**
+ * The caller's props, with the abscissa reduced to numbers for the plot and the zoom.
+ * The reduction is kept while the rows and the two settings it reads stay the same — a
+ * category or time chart otherwise re-maps every row on every render, and `maxRows`'
+ * envelope would be worked out again with it.
+ */
+function usePlotProps(props: SeriesChartProps): PlotProps {
   const x = props.x ?? {};
-  const model = xModel(props.rows, x);
+  const { rows } = props;
+  const { type, key } = x;
+  const model = useMemo(() => xModel(rows, { type, key }), [rows, type, key]);
   return { ...props, rows: model.rows, x: { key: model.plotKey }, model, xAxis: x };
 }
 
@@ -1957,7 +2031,7 @@ function plotProps(props: SeriesChartProps): PlotProps {
  * interaction.
  */
 export function StaticSeriesChart(props: SeriesChartProps) {
-  return <SeriesPlot {...plotProps(props)} />;
+  return <SeriesPlot {...usePlotProps(props)} />;
 }
 
 /**
@@ -1968,5 +2042,5 @@ export function StaticSeriesChart(props: SeriesChartProps) {
  */
 export function SeriesChart(props: SeriesChartProps) {
   // The zoom fits the PLOTTED rows — slot indices and epoch ms, not the caller's labels.
-  return <ZoomablePlot {...plotProps(props)} />;
+  return <ZoomablePlot {...usePlotProps(props)} />;
 }

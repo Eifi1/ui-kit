@@ -9,7 +9,9 @@ import {
   anchoredPanelPlacement,
   buttonClasses,
   cn,
+  filenameFromDisposition,
   logger,
+  saveBlob,
   setStoreLog,
   useAnchoredPanel,
   useAnchoredRect,
@@ -783,6 +785,33 @@ const CN_CASES: Array<[string, string]> = [
 
 /* ── the section ────────────────────────────────────────────────────────────── */
 
+/** Live: each row is the helper's answer to the header on the left. */
+const DISPOSITION_CASES: Array<[string, string]> = [
+  // What server-kit 0.8's `content_disposition("Grün – Bericht.pdf")` writes.
+  `attachment; filename="Grun - Bericht.pdf"; filename*=UTF-8''Gr%C3%BCn%20%E2%80%93%20Bericht.pdf`,
+  `attachment; filename="__.pdf"; filename*=UTF-8''%E6%8A%A5%E5%91%8A.pdf`,
+  "attachment; filename=report.csv",
+  `attachment; filename="../../etc/passwd"`,
+  `attachment; filename*=UTF-8''bad%E2%80.txt; filename="plain.txt"`,
+  "attachment",
+].map((header): [string, string] => [`filenameFromDisposition(${JSON.stringify(header)}, "export.json")`, filenameFromDisposition(header, "export.json")]);
+
+function SaveBlobSpecimen() {
+  return (
+    <Button
+      variant="secondary"
+      onClick={() =>
+        saveBlob(
+          new Blob([JSON.stringify({ saved_at: new Date().toISOString() }, null, 2)], { type: "application/json" }),
+          "ui-kit-showcase.json",
+        )
+      }
+    >
+      Save a small JSON file
+    </Button>
+  );
+}
+
 export function HooksLib() {
   return (
     <>
@@ -1011,6 +1040,28 @@ export const useTx = create<TxState>()(
           stores this wraps transition per pointer event, and the override cannot change without
           a reload anyway. <code className="font-mono">setStoreLog</code> is the console escape
           hatch that per-call read was really buying.
+        </Note>
+      </Example>
+
+      <Example
+        label="saveBlob(blob, filename) · filenameFromDisposition(header, fallback)"
+        hint="0.34: one download for a file the page fetched itself, and the name the server asked for."
+      >
+        <SaveBlobSpecimen />
+        <OutTable rows={DISPOSITION_CASES} />
+        <Note>
+          An <code className="font-mono">{"<a href>"}</code> to an API route carries no{" "}
+          <code className="font-mono">Authorization</code> header, so an app behind a token
+          fetches the file and hands it over: <code className="font-mono">saveBlob</code> clicks
+          one hidden link, attached to the page while it is clicked, and revokes the object URL
+          a minute later — the click only starts the download, and the browser reads the URL
+          after the call has returned. <code className="font-mono">filenameFromDisposition</code>{" "}
+          reads the RFC 8187 <code className="font-mono">filename*</code> first, because
+          server-kit writes the original name only there and an ASCII stand-in in{" "}
+          <code className="font-mono">filename=</code>; it drops directory parts and never
+          throws. The kit&rsquo;s own downloads — the corrections export, a feedback attachment,
+          the account data export — use them. Across origins the header reaches the page only
+          when the server lists it in <code className="font-mono">Access-Control-Expose-Headers</code>.
         </Note>
       </Example>
 

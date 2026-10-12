@@ -38,7 +38,7 @@ import { Popover } from "./popover";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
 import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
-import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabelOverrides, useKitLocale, useKitTableStorageKeyPrefix } from "../i18n/kit-labels";
 import { Tooltip } from "./tooltip";
 import { useEdgeFade } from "../lib/strip-fade";
 import { dirOf, isRtl, type Direction } from "../lib/direction";
@@ -302,6 +302,10 @@ export interface DataTableProps<T> {
    * phone the card list is the scroller instead, with the filter button pinned above
    * it; an unbounded parent simply lets either layout grow to its content. The parent must give it a bounded height (e.g. a flex
    * column inside the viewport-locked app shell). See feedback #207.
+   *
+   * The cure for TWO SCROLLBARS (round 0.34 C14, kastlan feedback 55): the default
+   * `maxBodyHeight` scrolls the body inside a page that scrolls too. How a page fills
+   * the height is in {@link DataTableProps.maxBodyHeight}'s note.
    */
   fillHeight?: boolean;
   /** How tall the scrolling body may get before it scrolls, as a CSS length.
@@ -314,7 +318,25 @@ export interface DataTableProps<T> {
    *  elements there should in best case be no scrolling necessary".
    *
    *  Ignored under `fillHeight`, which bounds the body by its flex parent
-   *  instead and is the stronger statement of the same intent. */
+   *  instead and is the stronger statement of the same intent.
+   *
+   *  **Two scrollbars** (round 0.34 C14, kastlan feedback 55). The cap scrolls the
+   *  body INSIDE a page that, in most shells, scrolls itself: a table taller than
+   *  the cap on a page with anything else on it shows two scrollbars side by side,
+   *  and the wheel moves whichever is under the pointer. For a list page whose table
+   *  is the point, fill the height instead, from `md` up (a phone scrolls the page
+   *  and its card list as one):
+   *
+   *  1. the shell's content column becomes a flex column of the main area's height
+   *     when the page asks — kastlan's
+   *     `md:has-[>[data-fill-height]]:flex md:has-[>[data-fill-height]]:h-full md:has-[>[data-fill-height]]:flex-col`;
+   *  2. the page's root asks, and is a flex column that may shrink:
+   *     `data-fill-height` and `md:flex md:min-h-0 md:flex-1 md:flex-col`;
+   *  3. the table takes the rest: `<DataTable fillHeight>`.
+   *
+   *  Only the body then scrolls, under its pinned header, and every other page grows
+   *  with its content as before (kastlan e3985c9, its leases list). A short table that
+   *  is the last thing on its page can instead drop the cap: `maxBodyHeight="none"`. */
   maxBodyHeight?: string;
   /**
    * When provided, the table renders the supplied rows as-is (no client-side
@@ -377,8 +399,9 @@ export interface DataTableProps<T> {
   /** BCP-47 locale for the date filter's calendar and the pager's numbers. Falls
    *  back to `<UiKitProvider locale>`, then to the runtime's default. */
   locale?: string;
-  /** localStorage namespace prefix for `storageKey` persistence. Defaults to
-   *  "hbui-table:"; pass your app's own prefix to keep a stable namespace. */
+  /** localStorage namespace prefix for `storageKey` persistence: the stored key is this
+   *  plus `storageKey`. Falls back to `<UiKitProvider tableStorageKeyPrefix>` (0.34, set
+   *  your app's prefix there once), then to "hbui-table:". This prop wins over both. */
   storageKeyPrefix?: string;
   /**
    * On phones, surface the expanded row's detail in a full-screen dialog instead
@@ -1110,7 +1133,7 @@ export function DataTable<T>({
   selection,
   labels: labelsProp,
   locale: localeProp,
-  storageKeyPrefix = DEFAULT_PERSIST_PREFIX,
+  storageKeyPrefix: storageKeyPrefixProp,
   mobileExpandAsDialog = false,
   mobileDetailsInRow = false,
   rowName,
@@ -1149,6 +1172,11 @@ export function DataTable<T>({
   // other ten. Memoised because the announcement effects below list `labels` as a
   // dependency, and a fresh object every render would re-run them for nothing.
   const labelOverrides = useKitLabelOverrides("dataTable");
+  // prop > provider > the kit's default, the order every kit setting resolves in (round
+  // 0.34 C5, KS U4): one prefix on the provider reaches the tables an app cannot pass a
+  // prop to, `TranslationReviewPanel`'s among them.
+  const providerStorageKeyPrefix = useKitTableStorageKeyPrefix();
+  const storageKeyPrefix = storageKeyPrefixProp ?? providerStorageKeyPrefix ?? DEFAULT_PERSIST_PREFIX;
   const labels = useMemo(
     () =>
       resolveDataTableLabels(
@@ -2790,7 +2818,7 @@ export function DataTable<T>({
                   >
                     <input
                       type="checkbox"
-                      className="size-3.5"
+                      className="size-3.5 shrink-0"
                       checked={checked}
                       onChange={(e) => {
                         setHiddenCols((s) => {
@@ -2801,7 +2829,10 @@ export function DataTable<T>({
                         });
                       }}
                     />
-                    <span className="truncate">{headerLabel}</span>
+                    {/* The panel is `w-56`: a long column name wraps from Large up rather
+                        than reading "Accoun…" beside its box (text size §10.17, round
+                        0.34 T1). */}
+                    <span className="min-w-0 truncate-until-large">{headerLabel}</span>
                   </label>
                 );
               })}

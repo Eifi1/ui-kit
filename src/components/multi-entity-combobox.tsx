@@ -312,7 +312,9 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
           >
             <span
               className={cn(
-                "min-w-0 truncate",
+                // Wraps from Large up, as MultiSelect's summary does (text size §10.17,
+                // round 0.34 T1).
+                "min-w-0 truncate-until-large",
                 // Inherit FIELD_BASE's ink for a value, keep the placeholder tone
                 // (`--text-placeholder`) — the same rule every field on a form row
                 // follows (Keksdose dev#477).

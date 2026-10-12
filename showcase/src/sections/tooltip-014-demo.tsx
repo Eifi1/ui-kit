@@ -22,7 +22,7 @@ export function TooltipClampDemo() {
             <Terminal />
           </IconButton>
         </Tooltip>
-        <span className="min-w-0 truncate text-sm text-[var(--text-secondary)]">nightly-import</span>
+        <span className="min-w-0 truncate-until-large text-sm text-[var(--text-secondary)]">nightly-import</span>
         <Tooltip label={COMMAND}>
           <IconButton size="sm" aria-label="Show command (default)">
             <Terminal />

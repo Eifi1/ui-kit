@@ -97,7 +97,8 @@
     "preview:showcase": "vite preview --config showcase/vite.config.ts",
     "sync:server-kit": "node scripts/sync-server-kit.mjs",
     "prepublishOnly": "npm run build",
-    "release": "commit-and-tag-version",
+    "check:sweep": "npm run build:showcase && node scripts/screenshot-sizes.mjs --pages all --no-screens --gate-truncation",
+    "release": "npm run check:sweep && commit-and-tag-version",
     "release:dry": "commit-and-tag-version --dry-run",
     "prepare": "husky || true",
     "deps:outdated": "npm outdated || true"

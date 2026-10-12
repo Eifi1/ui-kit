@@ -12,6 +12,9 @@ export { logger, setStoreLog } from "./lib/logger";
 export * from "./lib/format";
 // localStorage that never throws (Safari private mode, blocked site data).
 export { readStored, writeStored } from "./lib/safe-storage";
+// Save a fetched Blob as a download, and read the name a Content-Disposition asks for
+// (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
+export { saveBlob, filenameFromDisposition } from "./lib/download";
 // Date helpers are also available via the "@eifi1/ui-kit/dates" subpath.
 
 // ── hooks ────────────────────────────────────────────────────────────────────
@@ -87,6 +90,10 @@ export * from "./components/field";
 export * from "./components/search-field";
 export * from "./components/dropdown";
 export * from "./components/popover";
+// 0.34 (keksdose K3): paragraph-long help behind a "?", opened on a tap — FieldHint's
+// sibling for help rather than a fact (docs/text-size-harmonization.md §10.23).
+export { HelpPopover } from "./components/help-popover";
+export type { HelpPopoverProps } from "./components/help-popover";
 export { SwipeableRow } from "./components/swipeable-row";
 export type { SwipeAction, SwipePaint, SwipeTone, SwipeableRowProps } from "./components/swipeable-row";
 export * from "./components/calculator";
@@ -658,7 +665,7 @@ export type { AdminPerson } from "./admin/admin-parts";
 // ── 0.31.0: the settings page and the admin page on one shell (docs/settings-harmonization.md) ──
 // Router-aware: the layout, its route and focus hooks (also in `@eifi1/ui-kit/shell`).
 export { SettingsLayout, SETTINGS_SEARCH_THRESHOLD } from "./settings/settings-layout";
-export type { SettingsLayoutProps, SettingsLayoutWidth } from "./settings/settings-layout";
+export type { SettingsLayoutProps, SettingsLayoutWidth, SettingsDocumentTitleParts } from "./settings/settings-layout";
 export {
   useSettingsRoute,
   resolveSettingsLocation,

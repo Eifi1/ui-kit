@@ -666,8 +666,9 @@ function PagerLink({
     <span className="min-w-0">
       <span className="block text-caption text-[var(--text-muted)]">{kicker}</span>
       {/* Two lines before an ellipsis: a title is a few words, and half a phone row is
-          about fifteen characters. */}
-      <span className="line-clamp-2">{title}</span>
+          about fifteen characters. From Large up the whole title, on as many lines as it
+          takes (text size §10.17: nothing is cut at Large; the 0.34 sweep found it). */}
+      <span className="line-clamp-2 large:line-clamp-none">{title}</span>
     </span>
   );
   return (

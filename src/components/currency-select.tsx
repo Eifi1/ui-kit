@@ -328,7 +328,9 @@ export function CurrencySelect({
                       <CurrencyFlag country={c.country} />
                       <span className="font-mono text-[var(--text-muted)] w-8 shrink-0">{c.symbol}</span>
                       <span className="font-medium text-[var(--text-primary)]">{c.code}</span>
-                      <span className="text-[var(--text-muted)] truncate">{currencyName(c, currencyNames, locale)}</span>
+                      {/* The name wraps from Large up (round 0.34 T1); the code beside it
+                          is what a reader scans for, and it never shrinks. */}
+                      <span className="text-[var(--text-muted)] truncate-until-large">{currencyName(c, currencyNames, locale)}</span>
                     </span>
                     {active && <Check className="size-4 text-[var(--text-secondary)] shrink-0" />}
                   </button>

@@ -85,6 +85,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Select — unlabelled, labelled, invalid, disabled",
     "Select — size, and selectClassName",
     "FieldHint — the “?” on the label line",
+    "HelpPopover — paragraph-long help behind “?”",
     "Textarea",
     "FloatingField, FieldLabel, FieldChevron — composing your own",
     "SearchField",
@@ -582,6 +583,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "SeriesChart — labels, locale and right-to-left",
     "Series chart helpers",
     "SeriesChart — whole-number y ticks (integerTicks)",
+    "SeriesChart — a row budget (maxRows)",
   ],
   "series-chart-marks": [
     "Bars, grouped, with a line over them — and onPointClick",
@@ -871,6 +873,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "useAnnounce({ politeness })",
     "cn(...inputs)",
     "logger · setStoreLog(enabled)",
+    "saveBlob(blob, filename) · filenameFromDisposition(header, fallback)",
     "useHotkey(combo, handler, options)",
   ],
   "clipboard-timing": [

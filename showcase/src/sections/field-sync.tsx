@@ -245,7 +245,7 @@ function LiveFieldExample() {
         ).map(([k, v]) => (
           <div key={k}>
             <dt className="text-[var(--text-muted)]">{k}</dt>
-            <dd className="truncate text-[var(--text-primary)]">{v}</dd>
+            <dd className="truncate-until-large text-[var(--text-primary)]">{v}</dd>
           </div>
         ))}
       </dl>
@@ -383,7 +383,7 @@ function AutoSaveExample() {
         ).map(([k, v]) => (
           <div key={k}>
             <dt className="text-[var(--text-muted)]">{k}</dt>
-            <dd className="truncate text-[var(--text-primary)]">{v}</dd>
+            <dd className="truncate-until-large text-[var(--text-primary)]">{v}</dd>
           </div>
         ))}
       </dl>

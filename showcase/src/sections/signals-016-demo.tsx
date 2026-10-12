@@ -37,7 +37,7 @@ export function Signals016Demo() {
         <div className="space-y-2 text-sm">
           {PRICES.map((p) => (
             <div key={p.item} className="flex items-center justify-between gap-4">
-              <span className="min-w-0 truncate text-[var(--text-secondary)]">{p.item}</span>
+              <span className="min-w-0 truncate-until-large text-[var(--text-secondary)]">{p.item}</span>
               <Row className="shrink-0 gap-4">
                 <SignedAmount
                   value={p.change}

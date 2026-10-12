@@ -62,7 +62,10 @@ function EventLines({ iso, state }: { iso: string; state: MiniCalendarDayState }
   if (!events.length) return null;
   const shown = events.slice(0, 2);
   return (
-    <span className="flex min-w-0 flex-col gap-0.5">
+    // `data-truncate-ok` (text size §10.17): a month grid's cell is a seventh of the
+    // screen — 18 px of text at 360 px / Extra large — so its lines are a hint, cut by
+    // design; the day is the button, and its panel lists every event in full.
+    <span data-truncate-ok="" className="flex min-w-0 flex-col gap-0.5">
       {shown.map((e) => (
         <span
           key={e.id}

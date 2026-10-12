@@ -230,8 +230,10 @@ export function MultiSelect({
           )}
         >
           {/* The summary IS the field's value, so it inherits FIELD_BASE's ink rather
-              than restating a lighter one (Keksdose dev#477). */}
-          <span className="truncate">{selectedSummary}</span>
+              than restating a lighter one (Keksdose dev#477). An ellipsis at Normal; from
+              Large up it wraps and the trigger grows, as DatePicker's value does (text
+              size §10.17, round 0.34 T1). */}
+          <span className="truncate-until-large">{selectedSummary}</span>
           {!disabled && <FieldChevron />}
         </button>
       </EndHintRow>
@@ -332,9 +334,10 @@ export function MultiSelect({
                       >
                         {checked && <Check className="size-3" />}
                       </span>
-                      <span className="truncate text-[var(--text-primary)]">{o.label}</span>
+                      {/* Label and hint wrap from Large up (round 0.34 T1). */}
+                      <span className="truncate-until-large text-[var(--text-primary)]">{o.label}</span>
                       {o.hint && (
-                        <span className="truncate text-xs text-[var(--text-placeholder)]">
+                        <span className="truncate-until-large text-xs text-[var(--text-placeholder)]">
                           {o.hint}
                         </span>
                       )}

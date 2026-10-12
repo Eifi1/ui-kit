@@ -373,7 +373,7 @@ describe("ToggleGroup at Large (§4)", () => {
     expect(onChange).toHaveBeenLastCalledWith("month");
   });
 
-  it("wraps with three options and outside the field chrome too, but not in the strip (0.32.1)", () => {
+  it("wraps with three options, outside the field chrome and in the strip too (0.32.1, 0.34)", () => {
     at312(
       <>
         <ToggleGroup label="Three" value="month" onChange={() => {}} options={GRAINS.slice(0, 3)} />
@@ -383,11 +383,12 @@ describe("ToggleGroup at Large (§4)", () => {
         <ToggleGroup label="Wrap" overflow="wrap" value="month" onChange={() => {}} options={GRAINS} />
       </>,
     );
-    for (const name of ["Three", "Bare", "Above"]) {
+    // The strip since 0.34 (round 0.34 T1): its one row cut "Open" to "Op…" at 360 px /
+    // Extra large, which the size sweep reports. At Normal it is still one row.
+    for (const name of ["Three", "Bare", "Above", "Strip"]) {
       expect(screen.getByRole("radiogroup", { name }).className.split(" "), name).toContain("large:flex-wrap");
     }
-    // The strip's 26 px group lines up with the 42 px fields beside it: one row.
-    expect(screen.getByRole("radiogroup", { name: "Strip" }).className).not.toContain("flex-wrap");
+    expect(screen.getByRole("radiogroup", { name: "Strip" }).className.split(" ")).not.toContain("flex-wrap");
     // overflow="wrap" always wraps, so it needs no Large class.
     const wrap = screen.getByRole("radiogroup", { name: "Wrap" }).className.split(" ");
     expect(wrap).toContain("flex-wrap");

@@ -273,7 +273,8 @@ function TopBarSpecimen() {
         brand={
           <>
             <Wallet className="size-5 shrink-0 text-[var(--brand)]" aria-hidden />
-            <span className="truncate font-semibold text-[var(--text-primary)]">Acme Books</span>
+            {/* Wraps from Large up rather than reading "Acme Bo…" (text size §10.17). */}
+            <span className="truncate-until-large font-semibold text-[var(--text-primary)]">Acme Books</span>
             <span className="hidden truncate text-xs text-[var(--text-muted)] sm:inline">
               / Q3 2026
             </span>
@@ -804,7 +805,7 @@ function AppShellPlayground() {
                   brand={
                     <>
                       <Wallet className="size-5 shrink-0 text-[var(--brand)]" aria-hidden />
-                      <span className="truncate font-semibold text-[var(--text-primary)]">
+                      <span className="truncate-until-large font-semibold text-[var(--text-primary)]">
                         Acme Books
                       </span>
                     </>

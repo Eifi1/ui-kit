@@ -476,7 +476,9 @@ export function AppShell({
                     className="flex w-full items-center gap-3 min-h-9 px-3 py-2 rounded-md text-sm text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
                   >
                     <PanelLeftClose className="size-4 shrink-0 rtl:-scale-x-100" />
-                    <span className="truncate">{labels.collapse}</span>
+                    {/* Never drawn at Large (the toggle is not), so the class matters at
+                        Normal only — the kit's one name for it all the same (round 0.34 T1). */}
+                    <span className="truncate-until-large">{labels.collapse}</span>
                   </button>
                 )}
               </div>
@@ -635,7 +637,9 @@ function SidebarFooterItems({
           children: (
             <>
               <item.icon className="size-3.5 shrink-0" aria-hidden />
-              <span className="min-w-0 truncate">{item.text ?? item.label}</span>
+              {/* Wraps from Large up (text size §10.17, round 0.34 T1): the link is
+                  `min-h-8`, so it grows a line rather than cut "Feedb…". */}
+              <span className="min-w-0 truncate-until-large">{item.text ?? item.label}</span>
             </>
           ),
         });
@@ -673,10 +677,19 @@ const mobileCellClass = (active: boolean) =>
  * "Transactions" to "Trans…" in every app (Kurvenschmiede). Two lines and then a clamp,
  * centred, a long word broken (and hyphenated where the page's `lang` allows) rather
  * than overflowing into the next cell. `shortLabel` still wins where the app has one.
+ *
+ * `data-truncate-ok` (text size §10.17, round 0.34 T1): the clamp is that decision, not
+ * an accident — the size sweep finds "Sowing calen…" in a 65 px cell at 360 px / Extra
+ * large, and a third line would make every cell of the bar taller for one long word.
+ * The whole label stays the link's accessible name; an app with a long one gives the bar
+ * a `shortLabel`.
  */
 function MobileCellLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="line-clamp-2 max-w-full break-words px-0.5 text-center leading-tight hyphens-auto">
+    <span
+      data-truncate-ok=""
+      className="line-clamp-2 max-w-full break-words px-0.5 text-center leading-tight hyphens-auto"
+    >
       {children}
     </span>
   );
