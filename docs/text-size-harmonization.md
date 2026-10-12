@@ -1,12 +1,7 @@
 # Text size and contrast — harmonisation plan
 
-Status: **2026-10-07, reviewed.** All three apps answered the same day; §10 records what
-they settled, and it wins over the sections above where they differ. Led from ui-kit at Marcel's request. It runs in
-parallel with the billing round (`docs/billing-harmonization.md`), and ships as ui-kit 0.32
-or the next minor after the reviews. **2026-10-09:** §10.16 and §10.17 (ui-kit 0.33),
-settled by Marcel and reviewed by the three apps the same day; §10.18–§10.22 record what
-that settled, and §10.16 and §10.17 are corrected to match. **2026-10-12:** §10.23 (ui-kit
-0.34), help behind a "?", settled by Marcel from keksdose's K3.
+Led from ui-kit at Marcel's request, in parallel with the billing round
+(`docs/billing-harmonization.md`).
 
 Marcel tried keksdose with his father-in-law, who reads poorly and needs larger letters:
 "Not only zoom but the whole appearance should be tailored for larger letters." keksdose
@@ -18,18 +13,33 @@ It extends the settings round (`docs/settings-harmonization.md`): the two new se
 live in the core `appearance` group, and the text size follows the account the way the
 language does (§6.2 there).
 
+## Status
+
+The body says what the build does as of ui-kit 0.34.0 and server-kit 0.8.0; the reviews
+and adoptions that amended a section are folded into it, and the table names them. The
+snapshot of where each one stood, the per-repo to-dos, the round's risks and the review
+log are in [archive/text-size-history.md](archive/text-size-history.md).
+
+| § | Section | Shipped in | Amended by |
+|---|---|---|---|
+| 1 | Where each one stands | — (archived) | §10.13 (archived) |
+| 2 | Decisions | — | |
+| 3 | The mechanism | ui-kit 0.32.0 | §10.1–§10.4, §10.9, §10.11; 0.34 (`PHONE_QUERY` removed) |
+| 4 | What changes at Large and Extra large | ui-kit 0.32.0 (follow-ups in 0.32.1 and 0.34.0) | §10.7, §10.8, §10.10, §10.17, §10.23; 0.34 (a locked field's reason line, ToggleGroup's strip) |
+| 5 | More contrast | ui-kit 0.32.0 | §10.5 |
+| 6 | The settings and their backend | ui-kit 0.32.0, server-kit 0.6.0 | §10.6, §10.12 |
+| 7 | Per repo | — (archived) | |
+| 8 | What the kit adds | ui-kit 0.32.0–0.34.0, server-kit 0.6.0 | |
+| 9 | Risks | — (archived) | §10.15 (archived) |
+| 10 | Settled after the reviews | — | index; 10.16, 10.17 and 10.23 stand as rules |
+| 10.16 | A row action carries its state | ui-kit 0.33.0 | §10.18 |
+| 10.17 | Nothing truncates at Large, measured | ui-kit 0.33.0; the sweep gates releases since 0.34.0 | §10.22; adopt-0.33 (0.33.1: `truncate-until-large-words`); round 0.34 (the sweep in CI, the wrap list, ToggleGroup's strip) |
+| 10.23 | Help may sit behind a "?" | ui-kit 0.34.0 | |
+
 ## 1. Where each one stands
 
-| | kit | keksdose | kastlan | Kurvenschmiede |
-|---|---|---|---|---|
-| Root font size | not set (the browser's default, usually 16 px) | not set | not set | not set |
-| Fixed-px text | 107 `text-[10/11px]` sites, about 12 shared typography constants | 39 | 4 | 62, plus SVG `fontSize` |
-| Other fixed px | about 25 geometry hacks; about 30 JS px values (popover widths, row heights, chart constants) | 16 chart heights in px; `min-[2400px]` | about 23 px widths and heights | `ROW_HEIGHT = 68` windowed rows; 5 MeasuredGrids at 28 px |
-| Breakpoints | Tailwind rem, which does **not** follow the root size in media queries; about 26 JS queries in px (`PHONE_QUERY` and others); 11 container-query sites in rem, which do | 13 JS px queries; 65 container queries | none in JS | none |
-| Pinch zoom | showcase allows it | **blocked** (`maximum-scale=1`, for the keyboard inset) | allowed | allowed |
-| Bottom bar | `mobileHidden` only; no "More" | 7 entries | 6–7 groups | 4 |
-| Tooltip-only facts | IconButton labels, `disabledReason`, FieldHint, StatTile hints, absolute dates, colour-only heatmap days | flag dots, cleared status | — | — |
-| Contrast handling | none (`prefers-contrast` unused); tokens written inline on `<html>` | 69 hard-coded `text-slate-*` | `--muted-foreground` aliased to `--money-neutral` (110 uses) | 235 hard-coded `text-slate-*` |
+Moved to [archive/text-size-history.md](archive/text-size-history.md): where the kit and
+the three apps stood on 2026-10-07, with §10.13's corrections.
 
 What already works: Tailwind's spacing and type scale are in rem, so about 90 % of the
 kit grows with one root font size. Icons sized with `size-*` grow with it, and so do
@@ -49,9 +59,9 @@ container queries.
    automatically when the device asks for more contrast (`prefers-contrast: more`), and
    it works with any text size.
 5. **keksdose allows pinch zoom again.** Blocking it fails WCAG 1.4.4. Its keyboard
-   handling learns to live with a zoomed viewport (§7.3).
+   handling learns to live with a zoomed viewport (§3.4).
 
-Settled by the kit in this draft; the reviews may object:
+Settled by the kit, and kept by the reviews:
 
 6. **Both settings are device-scoped in storage and account-scoped by default**, through
    one rule for both: the device's own choice, else the account's, else the system's
@@ -68,8 +78,17 @@ Settled by the kit in this draft; the reviews may object:
 - `<html data-text-size="normal|large|xlarge">`, with `font-size: 100% / 125% / 150%` set
   in the kit's `tokens.css`. Percent, never px, so it builds on the browser's own
   default.
-- **Applied before first paint**, the way the theme is: `applyPersistedTextSize(key)` is
-  called in `main.tsx` next to `applyPersistedTheme`, before `createRoot`.
+- **Applied before first paint**, the way the theme is: `applyPersistedTextSize(key,
+  { account })` and `applyPersistedContrast(key, { account })` (`src/theme/text-size.ts`,
+  `src/theme/contrast.ts`) are called in `main.tsx` next to `applyPersistedTheme`, before
+  `createRoot`. **The first paint uses the last known account value:** `account` returns
+  the value the app persisted with its user, so a device without a choice of its own
+  doesn't paint Normal and then jump, offline too (§10.3).
+- **A boot splash** painted from `index.html` takes `TEXT_SIZE_INLINE_SCRIPT`, the same
+  pre-paint as an inline `<head>` script, with the two root rules inline beside it (the
+  app's stylesheet arrives after the splash paints). The stored format it reads is
+  frozen, the splash sizes in rem, and under a hash-based CSP the script is one more
+  hash.
 - **A Tailwind variant** for size-dependent styles without JS, modelled on `dark`:
   `large:` matches `[data-text-size=large]` and `[data-text-size=xlarge]`, and `xlarge:`
   matches only the latter.
@@ -81,11 +100,21 @@ Settled by the kit in this draft; the reviews may object:
 - **Type:** the kit's 10 and 11 px sizes become named rem sizes (`text-micro` =
   0.625 rem, `text-caption` = 0.6875 rem) in `@theme`. Every `text-[Npx]` in the kit and
   in the apps moves to them or to Tailwind's own sizes. A lint rule bans new ones.
+  Arbitrary px media variants (`min-[2400px]:`) are linted too: they can't scale (§3.3).
 - **Geometry:** paddings, track and thumb offsets, popover widths and row heights move to
   rem or `calc(rem ± 1px)`. Pure hairlines stay px: 1 px borders, shadows, gesture
   thresholds.
-- **JS values:** a windowed list's row height, a chart's axis width and tick spacing are
-  multiplied by `scale`.
+- **The kit exports CSS lengths, not px copies,** for what an app lines up with:
+  `DIALOG_GUTTER` (`src/components/full-bleed-dialog.tsx`, the full-screen dialog's
+  gutter) and `TOASTER_OFFSET_TOP` / `TOASTER_OFFSET_BOTTOM` (`src/components/toast.tsx`).
+  An app uses them in `calc()` instead of a px number of its own.
+- **JS values:** a chart's axis width and tick spacing scale (§4 Charts), and
+  SignaturePad's stroke is `lineWidth × scale`.
+- **Windowed lists:** "nothing truncates" needs rows of variable height.
+  `useWindowedRows(count, rowHeight, scrollRef)` (`src/hooks/use-windowed-rows.ts`)
+  measures the rendered rows and takes `rowHeight × scale` as the estimate for the rest;
+  a text size switch drops the measured heights. An app's own windowed grid
+  (Kurvenschmiede's MeasuredGrid) follows the same rule (§10.9).
 
 ### 3.3 Breakpoints that follow the text (§2.3)
 
@@ -93,15 +122,34 @@ A media query's rem resolves against the browser's default, not `<html>`, so Tai
 `sm`/`md`/`lg` stay put when the root grows. The kit makes them follow:
 
 - **CSS:** the breakpoint variants are redefined in `tokens.css`, one set per size, so
-  `md:` means 48 rem at Normal, 60 rem at Large and 72 rem at Extra large. The exact
-  technique (scaled variants under `:where([data-text-size])`, or the body as a named
-  container) is the kit's choice after a spike. Either way `md:` keeps its name in every
-  app.
-- **JS:** `useBreakpoint("md")` and `usePhoneLayout()` replace `useMediaQuery` with px
-  strings and `PHONE_QUERY`. The CSS and JS answers always agree: AppShell's `md:hidden`
-  and its `isMdUp`, DataTable's `isMdUp`.
+  `md:` means 48 rem at Normal, 60 rem at Large and 72 rem at Extra large. Each one is
+  three media queries scoped by an attribute selector inside `:where()`, so a variant
+  keeps its specificity and its place in Tailwind's order; not the body as a container,
+  which would break fixed overlays and a container querying itself. `sm` … `2xl`, the
+  named `3xl` (150 rem, keksdose's `min-[2400px]`) and the `max-*` set all scale, and
+  `md:` keeps its name in every app. An arbitrary `min-[…]` / `max-[…]` media variant
+  doesn't scale and is linted (§3.2).
+- **JS:** `useBreakpoint("md")` and `usePhoneLayout()` (`src/hooks/use-breakpoint.ts`)
+  replace `useMediaQuery` with px strings; `breakpointQuery("max-md", scale)` gives the
+  query string where one is needed (`PHONE_QUERY` is gone since 0.34). The CSS and JS
+  answers always agree: AppShell's `md:hidden` and its `isMdUp`, DataTable's `isMdUp`.
+- **`usePhoneLayout()` is the single answer** to "is this the phone layout": the kit's
+  sheets and cards (the DataTable full-screen dialog among them) and an app's own phone
+  checks (keksdose's sticky editor footer) use the same one, so a tablet at 150 % gets
+  every phone treatment or none. Pointer and display-mode queries stay `useMediaQuery`.
 - **The effective widths at 150 %:** a 390 px phone is 260 px wide, a 768 px tablet 512,
   a 1280 px laptop 853. Layouts must hold at 240 px (a 360 px phone at 150 %).
+
+### 3.4 Zoom (§2.5)
+
+- **The kit's fields are at least 16 px on touch** (`pointer: coarse`) at every size:
+  iOS zooms the page on focus into a field under 16 px, which `maximum-scale=1` used to
+  suppress, and that zoom hides a pinned editor footer behind the keyboard. At Large and
+  above they are 17.5 px anyway (`FIELD_TOUCH_TEXT`, `src/components/ui.tsx`).
+- **A zoomed page keeps the keyboard inset at 0.** Following a zoomed viewport would drag
+  the pinned row on every pan. The kit exports one guarded reader, `readKeyboardInset()`
+  (`src/hooks/use-anchored-panel.ts`), and its own `useVisualViewport` (PickerSheet)
+  uses the same guard. An app reads the inset through it, not a copy of its own.
 
 ## 4. What changes at Large and Extra large
 
@@ -109,35 +157,60 @@ These follow from §2.3. They are kit behaviour; an app gets them by using the k
 
 **Lists and phone cards:**
 - **DataTable phone card:** each label goes above its value, nothing truncates, and rows
-  get more space. A new `mobileDetailsInRow` puts the `mobileHidden` columns into the
-  opened row, so nothing is lost.
+  get more space. `mobileDetailsInRow` puts the `mobileHidden` columns into the opened
+  row, so nothing is lost.
 - **ListItem:** title, subtitle and meta wrap instead of truncating.
 - **Chips and status squares:** every colour carries a word or a symbol (the kit's
-  chips already do; the apps' own dots and squares follow, §7).
+  chips do; an app's own dots and squares follow).
 
 **Controls:**
 - **Touch targets at least 48 px** (in scaled px) for buttons, inputs, chips and row
-  taps. Button `sm` grows to `md`'s height.
-- **IconButton shows its label** as visible text beside the icon. Inside a dense table
-  row an app may keep the icon alone with `labelVisible={false}`, which must be rare.
+  taps (`TOUCH_TARGET_LARGE`, `src/components/ui.tsx`). Button `sm` grows to `md`'s
+  height.
+- **IconButton shows its label** as visible text beside the icon. `labelVisible={false}`
+  keeps the icon alone only for an icon on content: receipt overlays, map zoom, a
+  viewfinder, photo thumbnails.
+- **A dense row's actions collapse into a "⋯" row menu** instead of showing every label:
+  `RowActions` (`src/components/row-actions.tsx`, `collapse="auto"`) shows the icons
+  inline at Normal and the menu at Large once there are two or more; a single action
+  stays inline with its label. A row action's state, tone and tour anchor survive the
+  collapse (§10.16).
 - **FormActions stack** full width on a phone layout.
 - **A floating label becomes a static label above its field** (§10.17), the phone card's
   rule for fields.
 - **Switch, Slider, ToggleGroup and Checkbox** keep their proportions (their px
-  arithmetic moves to rem, §3.2).
+  arithmetic moves to rem, §3.2). A ToggleGroup's segments flow onto a second row inside
+  its frame where they don't fit, whatever their count and placement, the strip
+  (`labelPlacement="strip"`) included; at Normal, and wherever it fits, it stays one
+  row. The keyboard is the same either way.
 
 **Navigation:**
-- **AppShell's bottom bar** shows at most four entries and a fifth "More" cell that opens
-  a sheet with the rest (`mobileBarMax`, default 4 at Large and above, unlimited at
-  Normal). The app orders its nav so the four most used come first.
+- **AppShell's bottom bar** shows at most four entries at Large and three at Extra large,
+  and a "More" cell that opens a sheet with the rest; every entry at Normal
+  (`mobileBarMax`, a number or one per size; `DEFAULT_MOBILE_BAR_MAX` in
+  `src/shell/app-shell.tsx`). A fifth of a 360 px phone at 150 % holds what 48 px holds
+  at Normal.
+  - The bar takes the app's array order: the app puts its most used first, or orders by
+    role (kastlan: manager vs accountant). One hidden entry is no saving, so the bar then
+    shows them all.
+  - The More sheet keeps each group's sub-pages.
+  - Labels wrap to two lines instead of truncating.
+  - The More cell carries the hidden entries' links as tour anchors, so a tour step aimed
+    at a hidden entry points at More.
 - **The sidebar** never collapses to icons only.
 - **The top bar** keeps its essential icons; an app may move others into the account
   menu with `mobileHidden`-style flags.
 
-**No fact only in a tooltip** (at every size, not only at Large: touch can't open a
-tooltip):
-- `disabledReason` shows as a line under the control, not only as a tooltip;
-- FieldHint and StatTile hints show as inline text;
+**No fact only in a tooltip** at Large and Extra large, and on a touch screen at every
+size, which can't hover a tooltip open (`useInlineFacts`, `src/hooks/use-large-text.ts`):
+- `disabledReason` shows as a line under the control, not only as a tooltip: on Button
+  and IconButton, and on a field locked through `commit` or `disabledReason`
+  (`LockedReason`, `src/components/field-parts.tsx`). Inside `CompactControls` (a top
+  bar, a dense row's inline actions) it stays the tooltip: there is no room for a line.
+  `disabledReasonDisplay` overrides it: `"line"` always, `"tooltip"` always (many locked
+  rows under a banner that already says why);
+- FieldHint and StatTile hints show as inline text (`useInlineHint`; every kit field that
+  takes a `hint`, `Select` and `AmountInput` included);
 - paragraph-long *help* the field is usable without may sit behind a "?" that opens on a
   tap (`HelpPopover`, §10.23); a *fact* stays visible;
 - relative dates show the absolute one beside them;
@@ -145,8 +218,16 @@ tooltip):
   layout.
 
 **Charts:**
-- Axis labels follow the text size, the y-axis width and tick spacing scale (§3.2), and
-  there are fewer ticks (three instead of five).
+- Axis labels follow the text size, and there are fewer ticks (`tickTarget` in
+  `src/components/series-chart-ticks.ts`: five at Normal, three from Large up).
+- `SeriesChart`'s height takes a CSS length (`min(20rem, 60dvh)`), not scaled px: 480 px
+  × 1.5 would fill a phone.
+- Axis widths follow the scale: `SeriesChart` multiplies an `axes[].width` by it itself
+  (`axisBandWidth`), so an app passes its Normal width and never multiplies it too. A
+  mirrored tick band scales both sides by the same factor.
+- Strokes, dash patterns and grid ink stay px.
+- An SVG whose text is in viewBox units moves its labels to an HTML overlay or grows the
+  drawing.
 - Legends move under the chart.
 - StatTile shows its one big number; the sparkline and sub-values move below.
 
@@ -155,17 +236,25 @@ tooltip):
 `<html data-contrast="more">`, from the setting or from `prefers-contrast: more` when the
 setting is on "System".
 
-- **Text:** `--text-muted` becomes `--text-secondary`, and `--text-secondary` and
-  `--text-placeholder` move a step towards `--text-primary`.
-- **Lines:** dividers and borders move towards `--border-strong`.
-- **Focus:** one shared focus frame (`--focus-ring-width`, 2 px → 3 px), instead of the
-  hundred spelled-out rings in the kit today.
-- **How:** the kit's `applyTokenSet` takes a contrast flag, because the colour tokens are
-  written inline on `<html>`. The derived tokens are redefined per attribute in
-  `tokens.css`.
-- **Apps follow only through tokens.** Hard-coded `text-slate-*` classes (keksdose 69,
-  Kurvenschmiede 235) and kastlan's `--muted-foreground` alias don't follow, and move to
-  the tokens in this round.
+- **Text:** `--text-muted` becomes the set's `--text-secondary`, `--text-secondary`
+  moves halfway to `--text-primary`, and `--text-placeholder` becomes the set's
+  `--text-muted`, so primary > secondary > muted > placeholder survives the step.
+- **Lines:** `--border` moves towards `--text-primary` until it clears 3 : 1 against the
+  worst of the three surfaces (WCAG 1.4.11), and never less far than `--border-strong`'s
+  45 %; `--border-strong` stays derived in `tokens.css` and grows with it.
+- **Focus:** one shared focus frame (`--focus-ring-width`, 2 px → 3 px) that `FOCUS_RING`
+  draws, instead of a hundred spelled-out rings.
+- **How: the colour tokens are stepped in JS.** `applyTokenSet` writes the text and
+  border tokens inline on `<html>`, and an inline value beats any `[data-contrast=more]`
+  rule or `@media (prefers-contrast: more)` block, so the step happens inside it
+  (`src/theme/contrast-tokens.ts`, `CONTRAST_STEPPED_VARS`), not in a stylesheet. The
+  CSS-derived `--text-placeholder` is written inline there too. `tokens.css` holds only
+  what is not inline: `--focus-ring-width` per attribute, and the `contrast:` variant.
+- **"System" follows the device live:** it re-applies on a
+  `matchMedia("(prefers-contrast: more)")` change (`createContrastStore`'s
+  `useApplyContrast`).
+- **Apps follow only through tokens.** Hard-coded `text-slate-*` classes and kastlan's
+  `--muted-foreground` alias don't follow, and move to the tokens.
 
 ## 6. The settings and their backend
 
@@ -174,184 +263,104 @@ setting is on "System".
   `ThemeSetting`. Both are segmented controls with the kit's words in seven languages.
 - **The stores:** `createTextSizeStore(key)` and `createContrastStore(key)`, shaped like
   `createThemeStore`.
+- **The stored vocabularies:** `TEXT_SIZES = ("normal", "large", "xlarge")` and
+  `CONTRAST_MODES = ("system", "standard", "more")`, the same in the kit and server-kit.
+  **"System" is a stored value**: the PATCH rule refuses an explicit null, so null means
+  only "never chosen".
 - **The account (§2.2):** `/auth/me` gains `text_size` and `contrast`, nullable (null =
   never chosen), written with `PATCH /auth/me` under the PATCH rule (settings §6.1).
-  The kit's `useAccountAppearance` applies the language's order (the device's own choice
-  → the account's → the default) to both and never writes the account on its own; a
-  pick writes the device and the account, except in a demo.
-- **server-kit:** `TEXT_SIZES` and `CONTRAST_MODES`, and the two fields on `UserResponse`
-  and `ProfileUpdate`, both optional.
+  The kit's `useAccountAppearance` (`src/settings/use-account-appearance.ts`) applies the
+  language's order (the device's own choice → the account's → the default) to both and
+  never writes the account on its own; a pick writes the device and the account, except
+  in a demo or signed out. If the save fails the device keeps the pick and the app says
+  so (`appearance.saveFailed`).
+- **One rule for the whole card:** an app ships `useAccountAppearance` together with
+  settings §6.2's language rule (no session-start language write), so the appearance
+  card doesn't follow two opposite rules.
+- **server-kit** (`eifi1_server_kit.auth`): `TEXT_SIZES` and `CONTRAST_MODES`, and the two
+  fields on `UserResponse` and `ProfileUpdate`, both optional; `PROFILE_NOT_NULLABLE`
+  names them, so an explicit null is refused.
 
 ## 7. Per repo (summary; the reviews refine it)
 
-- **keksdose** (first adopter, as it offered):
-  - remove `maximum-scale=1` and the three outdated comments about it; the keyboard inset
-    stays 0 while zoomed (§9, §10.2), as `use-keyboard-inset` already does;
-  - move its appearance card onto the settings layout (due from 0.31) with the two new
-    settings;
-  - its 39 px text sites, 13 JS px queries and 16 chart heights;
-  - the transaction register's phone rows at Large: payee, category and memo wrap; the
-    flag dot gets its name; the cleared status gets a word;
-  - the budget's three-column phone figures stack at Large;
-  - its 7 bottom-bar entries ordered so the four most used come first;
-  - its 69 `text-slate-*` to tokens;
-  - the boot splash in rem.
-- **kastlan:**
-  - `viewport-fit=cover`; the stale inline theme script goes;
-  - `--muted-foreground` points at `--text-muted`;
-  - its px widths and heights to rem; `mobilePrimary` on the main registers (tenant before
-    lease number);
-  - its 6–7 nav groups ordered for the four-plus-More bar.
-- **Kurvenschmiede:**
-  - the segment list's 68 px rows and the five MeasuredGrids scale;
-  - its 62 px text sites and the corner preview's SVG `fontSize`;
-  - its 235 `text-slate-*` to tokens;
-  - the facing-pair legend stacks at Large;
-  - its bar already has four entries.
-
-Every app: the store and the pre-paint call in `main.tsx`, the two settings in the
-appearance group, `useBreakpoint` for its JS queries, and a look at its main screens at
-360 px / 150 %.
+Moved to [archive/text-size-history.md](archive/text-size-history.md): the 0.32 round's
+per-repo to-dos, all adopted. What every app does stays here: the stores and the pre-paint
+call in `main.tsx` (§3.1), the two settings in the appearance group (§6), `useBreakpoint`
+/ `usePhoneLayout` for its JS queries (§3.3), and a look at its main screens at 360 px /
+150 %.
 
 ## 8. What the kit adds (ui-kit 0.32)
 
-- The mechanism: the `data-text-size` and `data-contrast` CSS in `tokens.css`, the
-  `large:` / `xlarge:` / `contrast:` variants, the scaled breakpoint variants,
-  `applyPersistedTextSize` / `applyPersistedContrast`, the stores, `useTextSize`,
-  `useBreakpoint`, `usePhoneLayout`, `useAccountAppearance`.
-- The settings: `TextSizeSetting`, `ContrastSetting`, and the labels in seven languages.
-- The px clean-up of §3.2, and a lint rule against new `text-[Npx]`.
-- The behaviours of §4: DataTable `mobileDetailsInRow` and the stacked labels, ListItem
-  wrapping, IconButton's visible label, FormActions stacking, AppShell `mobileBarMax`
-  with "More", `disabledReason` and hints in the layout, chart scaling.
-- The contrast tokens and the shared focus frame of §5.
+- **0.32.0, the mechanism:** in `tokens.css`, the `data-text-size` root sizes, the
+  `--focus-ring-width` step for `data-contrast`, `text-micro` / `text-caption`, the
+  `large:` / `xlarge:` / `contrast:` variants and the scaled breakpoint variants (`sm` …
+  `3xl` and the `max-*` set). In JS: `TEXT_SIZES`, `TEXT_SCALE`,
+  `applyPersistedTextSize`, `TEXT_SIZE_INLINE_SCRIPT`, `createTextSizeStore`,
+  `useTextSize` (`src/theme/text-size.ts`); `CONTRAST_MODES`, `applyPersistedContrast`,
+  `createContrastStore` (`src/theme/contrast.ts`); `useBreakpoint`, `usePhoneLayout`,
+  `breakpointQuery`, `BREAKPOINT_REM`, `remPx`, `useRemPx`; `useLargeText`,
+  `useInlineFacts`, `useCoarsePointer`; `readKeyboardInset`; `useAccountAppearance`,
+  `resolveAccountAppearance`.
+- **0.32.0, the settings:** `TextSizeSetting`, `ContrastSetting`
+  (`src/components/settings-fields.tsx`) and `DEFAULT_APPEARANCE_LABELS`, in seven
+  languages.
+- **0.32.0, the px clean-up** of §3.2, and the lint rules against a px font size and an
+  arbitrary px media variant (`eslint.config.js`); `DIALOG_GUTTER`,
+  `TOASTER_OFFSET_TOP` / `TOASTER_OFFSET_BOTTOM`; `useWindowedRows` on measured rows.
+- **0.32.0, the behaviours of §4:** DataTable `mobileDetailsInRow` and the stacked
+  labels, ListItem wrapping, IconButton's visible label and the 48 px targets, RowActions'
+  "⋯" at Large, FormActions stacking, AppShell `mobileBarMax` with "More",
+  `disabledReason` and hints in the layout, chart scaling; and the contrast step and the
+  shared focus frame of §5.
+- **0.32.1 / 0.32.2:** `appearance.saveFailed`; `SeriesChart` scales an axis width itself
+  (`axisBandWidth`); a ToggleGroup wraps at Large whatever its count; the splash's inline
+  root rules; the kit's demos hold at 360 px / Extra large.
+- **0.33.0:** §10.16 (`RowAction`'s `pressed`, `expanded` / `controls`, the `muted` /
+  `info` / `warning` tones and `dataTour`; RowActions' `glyphSize` and `tooltipSide`) and
+  §10.17 (`truncate-until-large`, the static label above a field at Large, the
+  truncation and tall-pinned-box checks in `scripts/screenshot-sizes.mjs`).
+- **0.33.1:** `truncate-until-large-words` (§10.17).
+- **0.34.0:** `HelpPopover` (§10.23); `Select` and `AmountInput` print a FieldHint at
+  Large and on touch; a field locked through `commit` or `disabledReason` shows its
+  reason as a line (§4); more parts wrap at Large and ToggleGroup's strip wraps (§10.17);
+  the sweep gates the release (§10.17); `PHONE_QUERY` is gone (§3.3).
 - **The showcase:** a text-size and a contrast switch beside the theme; the device
-  preview gains a size axis (phone, tablet, desktop × three sizes); a Playwright pass at
-  each size, since jsdom has no layout.
+  preview has a size axis (phone, tablet, desktop × three sizes); the size sweep runs it
+  at each size, since jsdom has no layout.
 
-server-kit 0.6: the two account fields and their vocabularies (§6).
-
-ui-kit 0.33 (§10.16, §10.17): `RowAction`'s `pressed`, `expanded`/`controls`, the
-`muted`/`info`/`warning` tones and `dataTour`; RowActions' `glyphSize` and `tooltipSide`;
-the `truncate-until-large` utility; the static label above a field at Large; the
-truncation and tall-pinned-box checks in `scripts/screenshot-sizes.mjs`.
+server-kit 0.6.0: the two account fields and their vocabularies (§6).
 
 ## 9. Risks
 
-- **Breakpoints:** without §3.3, a tablet at 150 % would get the desktop shell with a
-  360 px sidebar.
-- **Arithmetic that breaks at 125 %:** fractional pixels (0.125 rem = 2.5 px), the
-  ToggleGroup-to-field height match, Switch thumbs, fixed windowed rows. §3.2 covers the
-  known ones; the Playwright pass finds the rest.
-- **Layouts tuned for a 320 px phone** crack at 240 px effective width (StatTile 2-up).
-- **Pinch zoom (keksdose):** a zoomed viewport shrinks like an open keyboard; while
-  zoomed, the inset hook must not move bottom editors (§7).
-- **Apps that bypass the tokens** don't follow the contrast setting until their
-  hard-coded colours move.
+Moved to [archive/text-size-history.md](archive/text-size-history.md): the 0.32 round's
+risks, with §10.15's additions; each is answered by a section above (§3.2–§3.4, §5).
 
 ## 10. Settled after the reviews (2026-10-07)
 
-All three apps reviewed the draft (dbc957e) the same day. Where this list and the
-sections above differ, this list wins.
+The reviews' items keep their numbers, which the code cites. An item that amended a
+section above is folded into it and points there; an item that is a rule of its own
+stands here (16, 17 and 23). The reviews' wording is in
+[archive/text-size-history.md](archive/text-size-history.md).
 
-1. **iOS zoom-on-focus** (keksdose): a field under 16 px makes iOS zoom the page on
-   focus, which `maximum-scale=1` used to suppress. Once keksdose drops it, that zoom
-   would hide the pinned editor footer behind the keyboard (keksdose #154). **The kit's
-   fields are at least 16 px on touch** (`pointer: coarse`) at every size. At Large and
-   above they are 17.5 px anyway.
-2. **A zoomed page keeps the keyboard inset at 0** (§9 stands; §7's earlier line is
-   corrected). Following a zoomed viewport would drag the pinned row on every pan. The
-   kit exports one guarded reader, `readKeyboardInset()`, and its own `useVisualViewport`
-   (PickerSheet) uses the same guard. Today a zoomed page puts PickerSheet's close
-   button off screen in kastlan and Kurvenschmiede. keksdose's local copy goes.
-3. **First paint uses the last known account value** (keksdose):
-   - `applyPersistedTextSize(key, {account})` and `applyPersistedContrast(key,
-     {account})` fall back to the account value the app persisted with its user, so a
-     device without its own choice doesn't paint Normal and then jump. This works
-     offline too;
-   - the kit exports a tiny inline `<head>` snippet for a boot splash painted from
-     `index.html`, and the stored format is frozen for it;
-   - the splash's px move to rem.
-4. **Breakpoints:** attribute-scoped media variants wrapped in `:where()`, not the body as
-   a container (fixed overlays and self-queries would break).
-   - Arbitrary px media variants (`min-[2400px]`) are linted; keksdose's four become a
-     named `3xl`.
-   - `usePhoneLayout()` is the single answer: the DataTable full-screen dialog and an
-     app's own phone checks (keksdose's sticky editor footer) use the same one.
-   - Pointer and display-mode queries stay `useMediaQuery`.
-5. **Contrast mechanics** (keksdose):
-   - `applyTokenSet` writes the text and border tokens inline on `<html>`, so the
-     contrast step is applied inside it, not by a CSS rule;
-   - "System" re-applies on a `matchMedia("(prefers-contrast: more)")` change;
-   - CSS-only derived tokens are written inline too, or tested in the built CSS. (This
-     said Tailwind v4 strips a block that holds only custom properties; 4.3.3 keeps it,
-     colour-roles §3.1. The test stays: it proves the value reaches the build.)
-6. **The stored vocabularies:** `TEXT_SIZES = ("normal", "large", "xlarge")` and
-   `CONTRAST_MODES = ("system", "standard", "more")`. **"System" is a stored value**:
-   the PATCH rule refuses an explicit null, so null means only "never chosen".
-7. **The bottom bar:**
-   - `mobileBarMax` takes the app's array order. The app orders by role if it wants
-     (kastlan: manager vs accountant).
-   - The More sheet keeps each group's sub-pages.
-   - At Large: four entries plus More. At **Extra large: three plus More**: a fifth of a
-     360 px phone at 150 % holds what 48 px holds at Normal.
-   - Labels wrap to two lines instead of truncating (Kurvenschmiede).
-   - The More cell carries the hidden entries' links as tour anchors, so a tour step
-     aimed at a hidden entry points at More (keksdose's tours).
-8. **Dense row actions:**
-   - at Large, a dense row's IconButtons collapse into a "⋯" row menu (the roster's
-     `UserRowActionList` pattern), instead of showing every label (Kurvenschmiede 44,
-     kastlan 119 IconButtons); a row action's state, tone and tour anchor survive the
-     collapse (item 16);
-   - `labelVisible={false}` remains for an icon on content: receipt overlays, map zoom,
-     a viewfinder, photo thumbnails.
-9. **Windowed lists** (Kurvenschmiede): "nothing truncates" needs variable rows.
-   `useWindowedRows` takes measured heights, with `rowHeight × scale` as the estimate, and
-   MeasuredGrid follows.
-10. **Charts:**
-    - `SeriesChart`'s height takes a CSS length (e.g. `min(20rem, 60dvh)`) rather than
-      scaled px: 480 px × 1.5 would fill a phone;
-    - axis widths (keksdose `MONEY_AXIS_WIDTH`) follow the scale: `SeriesChart`
-      multiplies an `axes[].width` by it itself (`axisBandWidth`), so an app passes
-      its Normal width and never multiplies it too (corrected 0.32.1, keksdose's
-      report: it would scale twice);
-    - strokes, dash patterns and grid ink stay px;
-    - a mirrored tick band scales both sides by the same factor;
-    - an SVG whose text is in viewBox units (Kurvenschmiede's corner preview) moves its
-      labels to an HTML overlay or grows the drawing.
-11. **The kit exports CSS lengths instead of px copies:** the DataTable dialog's gutter
-    (keksdose copied `py-3` as `SCROLLER_GUTTER_PX`) and the Toaster's offsets.
-    **SignaturePad's** stroke scales with the text (kastlan).
-12. **Same release as the settings rule:** keksdose ships settings §6.2 (no
-    session-start language write, `caches: []`) together with `useAccountAppearance`, so
-    one card doesn't follow two opposite rules.
-13. **Corrections to §1:**
-    - Kurvenschmiede has about 248 `text-slate-*`;
-    - keksdose has 99 lines of `text-slate-*` plus 316 slate border/background lines and
-      117 hard-coded hue text classes, all moving to tokens;
-    - kastlan has 19 px widths and heights;
-    - keksdose's "pinch zoom blocked" is really "zoom-on-focus suppressed" (iOS ignores
-      `maximum-scale` for a pinch; Android overrides it).
-14. **App notes:**
-    - keksdose renames its own "Appearance" select (Simple / Enhanced) to "Feature set";
-    - keksdose keeps PinchZoomImage for receipts;
-    - kastlan fixes its stale inline theme script;
-    - Kurvenschmiede's four bar entries need no More.
-15. **Risks added to §9:**
-    - iOS zoom-on-focus (item 1);
-    - PickerSheet on a zoomed page (item 2);
-    - tours losing nav anchors (item 7);
-    - inline contrast tokens (item 5).
+1. **iOS zoom-on-focus: fields at least 16 px on touch** → §3.4.
+2. **A zoomed page keeps the keyboard inset at 0** → §3.4.
+3. **First paint uses the last known account value** → §3.1.
+4. **Breakpoints** → §3.3.
+5. **Contrast mechanics** → §5.
+6. **The stored vocabularies** → §6.
+7. **The bottom bar** → §4 (Navigation).
+8. **Dense row actions** → §4 (Controls).
+9. **Windowed lists** → §3.2.
+10. **Charts** → §4 (Charts).
+11. **The kit exports CSS lengths instead of px copies** → §3.2.
+12. **Same release as the settings rule** → §6.
+13. **Corrections to §1** → archive.
+14. **App notes** → archive.
+15. **Risks added to §9** → archive.
 
-**Round 033 (ui-kit 0.33).** Marcel settled items 16 and 17 on 2026-10-09, both as
-recommended, from the kit's UI audit of that day (kept outside the repo). The three apps
-reviewed them the same day; items 18–22 record what that settled, and items 16 and 17
-read as corrected.
-
-16. **A row action carries its state** (keksdose k15; Marcel, 2026-10-09). keksdose keeps
-    hand-rolled IconButtons at Normal on three rows and uses RowActions only at Large,
-    because a `RowAction` can't say "on", "open", a tone other than danger, or a tour
-    anchor. From 0.33 it can, at both sizes:
+16. **A row action carries its state** (ui-kit 0.33). A `RowAction`
+    (`src/components/row-actions.tsx`) says "on", "open", a tone and a tour anchor, at
+    both sizes, so no row keeps hand-rolled IconButtons at Normal:
     - **A toggle** (`pressed`): inline, `aria-pressed` with IconButton's "on" look; in the
       menu, `aria-pressed` on the entry. The label stays the same in both states.
     - **A disclosure** (`expanded`, with `controls`): `aria-expanded` and `aria-controls`,
@@ -361,7 +370,7 @@ read as corrected.
       words keep the default text colour and the glyph takes the tone; `danger` keeps its
       danger text; `muted` and `default` look the same in a menu.
     - **A tour anchor** (`dataTour`) goes where the reader must go, on one element per
-      action at a time (item 18):
+      action at a time:
       - inline (Normal, a row's single action, `collapse="inline"`): `data-tour` on the
         action's own control: the IconButton, the small text Button of an action without
         a glyph, or the link of an `href` action;
@@ -369,22 +378,23 @@ read as corrected.
         `relative inline-flex` box with `data-slot="row-actions"` (the inline strip's
         slot), and in that box one aria-hidden `<span data-tour="…">` per anchored
         action, `pointer-events-none absolute inset-0`: the More cell's `TourAnchor`
-        (item 7). So `[data-tour=x]` resolves to a box the size of the "⋯", two anchored
-        actions in one row don't fight over one attribute, and a tap still reaches the
-        button;
+        (`src/shell/app-shell.tsx`, §4 Navigation). So `[data-tour=x]` resolves to a box
+        the size of the "⋯", two anchored actions in one row don't fight over one
+        attribute, and a tap still reaches the button;
       - **the entry in the open menu carries none.** The menu is portalled after the row
         and the kit's tour takes the first visible match, so a copy there would never be
         found while the "⋯" shows; it would only make `[data-tour=x]` match twice.
     - **The row's glyph size and tooltip side** are RowActions props, so a header strip
       with 14 px glyphs and a last column whose tooltips open to the start need no
-      hand-rolled icons. `rowActionsColumn` passes both through.
+      hand-rolled icons. `rowActionsColumn` passes both through. `tooltipSide` is per row:
+      every inline action's tooltip opens to that side.
 
     ```ts
     export type RowActionTone = "default" | "muted" | "info" | "warning" | "danger";
     export interface RowAction {
-      // …existing…
-      tone?: RowActionTone; // widened from "default" | "danger"
-      commit?: CommitScope; // widened by billing §12.36
+      // …the rest of the action…
+      tone?: RowActionTone;
+      commit?: CommitScope; // billing §12.36
       /** A toggle: aria-pressed and the "on" look. The label stays the same in both states. */
       pressed?: boolean;
       /** Opens or closes something in the page: aria-expanded. Not with `pressed`. */
@@ -395,7 +405,7 @@ read as corrected.
       dataTour?: string;
     }
     export interface RowActionsProps {
-      // …existing…
+      // …the rest of the props…
       /** The inline glyphs' size (IconButton's), e.g. 14 in a dense header strip. */
       glyphSize?: IconButtonGlyphSize;
       /** The inline tooltips' side: "start" for a table's last column. */
@@ -408,84 +418,53 @@ read as corrected.
     - `dataTour` is the kit's existing name (`AppShellNavItem.dataTour`). A generic
       `data-*` bag was rejected: it can't say which control carries it when collapsed.
     - **i18n:** none; no new strings in any of the kit's seven languages.
-    - **Tests** (`row-actions-033.test.tsx`, beside `row-actions-032.test.tsx`):
-      - `pressed` gives `aria-pressed` and the on class inline, and `aria-pressed` on the
-        menu entry;
-      - `expanded` and `controls` give `aria-expanded` and `aria-controls` at both sizes;
-      - tones: inline `data-tone`; in the menu the glyph's tint, with danger text for
-        `danger`;
-      - `dataTour`: inline on the IconButton; collapsed, one overlay per anchored action,
-        `querySelector('[data-tour=x]')` resolves to a visible box whose
-        `closest('[data-slot="row-actions"]')` holds the "⋯" button, and nothing in the
-        open menu carries `data-tour`;
-      - `glyphSize` and `tooltipSide` reach the IconButton;
-      - `commit: COMMIT_EXCEPT_BILLING` under a billing lock stays live, inline and in the
-        menu.
-    - **keksdose** folds its three sites into one `<RowActions>` at every size and drops
-      its exception that keeps the icons at Normal:
-      - accounts row (`features/accounts/accounts-page.tsx:931-1040`, and the Large list
-        `accountActions`, :479-518): open and add as muted links, reconcile as `info` +
-        `dataTour="account-reconcile"`, hide as muted + `commit`, delete as danger +
-        `commit`, with `tooltipSide="start"`. The `<span data-tour>` round the "⋯" (:939)
-        and the `CompactControls`/`stopPropagation` div go: RowActions does both.
-        `tooltipSide` is per row, so open, add and reconcile open to the start too (today
-        only hide and delete do, :1006, :1032): an accepted change. Two tests follow
-        (kk 6): the tour guard's `FORWARDED` list
-        (`features/tour/__tests__/tour-anchors.test.ts:103-127`) gains
-        `/dataTour:\s*"[^"]+"/g`, or the anchor reads as orphaned once the literals at
-        :939 and :986 go; and `accounts-page.test.tsx:735`
-        (`menu.closest('[data-tour="account-reconcile"]')`, which the overlay beside the
-        button no longer satisfies) asserts instead that the anchor's
-        `closest('[data-slot="row-actions"]')` holds the "⋯" (`toContainElement(menu)`);
-      - budgets row (`features/budgets/budgets-page.tsx:380-486`): share (today `pressed`,
-        :437-445) becomes `expanded` + `controls` on its share card; rename muted +
-        `commit`; delete danger with its `disabledReason`. The in-row confirm (:466) stays
-        the app's, beside RowActions, as at Large today (:416-428);
-      - category group header (`features/budget/group-admin-actions.tsx:61-120`):
-        `size="sm" glyphSize={14}` (today on each icon, :94, :106, :118), add category as
-        `expanded` (today a hand-set `aria-expanded`, :97);
-      - its other RowActions sites need nothing new.
-    - **kastlan** (15 uses) and **Kurvenschmiede** (6: `segment-list.tsx:187`,
-      `profile-bar.tsx:150`, `segment-cards.tsx:139`, `team-card.tsx:123` and :231,
-      `projects-page.tsx:106`; item 20): nothing required; neither splits Normal and
-      Large.
-17. **Nothing truncates at Large, measured** (Marcel, 2026-10-09). §4 says text wraps at
-    Large, but the size sweep (`scripts/screenshot-sizes.mjs`) sees only a page running
-    past the screen: `measure()` (:142-188) compares the scroll widths of the document,
-    `<main>` and unclipped elements, so an ellipsis inside a box is invisible to it. A
-    `w-64` FloatingField with a hint reads "Payment r…" at Extra large
-    (`showcase/src/sections/fields.tsx:507-510`) and passes.
+    - **Tests** (`src/components/__tests__/row-actions-033.test.tsx`): each field's
+      attributes inline and in the menu at both sizes; `dataTour` resolves to the "⋯"'s
+      box and nothing in the open menu carries it; `commit: COMMIT_EXCEPT_BILLING` under a
+      billing lock stays live.
+    - **The apps:** an app folds its hand-rolled row icons into one `<RowActions>` at
+      every size. The tour guard of an app that checks its anchors learns `dataTour:`,
+      and a test that looked for the anchor round the "⋯" asks its
+      `closest('[data-slot="row-actions"]')` instead. keksdose's sites are in the
+      archive.
+17. **Nothing truncates at Large, measured** (ui-kit 0.33; the release gate since 0.34).
+    §4 says text wraps at Large; the size sweep (`scripts/screenshot-sizes.mjs`) holds
+    the kit to it. Its first check, `measure()`, sees only a page running past the
+    screen, so an ellipsis inside a box needs a check of its own.
     - **The rule:** at Large and Extra large, a one-line ellipsis that cuts its text is a
       finding, as a page running past the screen is. Normal keeps its ellipses.
     - **One name for "truncate at Normal, wrap at Large":** `@utility
       truncate-until-large` in `tokens.css`: `truncate`, plus at `large:`
-      `white-space: normal` and `overflow-wrap: anywhere`. It replaces the five copies:
-      `WRAP_AT_LARGE` (`list.tsx:129`), `CHIP_LABEL_WRAP_AT_LARGE` (`chip.tsx:523`),
-      `LABEL_WRAP_AT_LARGE` (`status-dot.tsx:84`) and `VALUE_WRAP_AT_LARGE`
-      (`inline-edit-field.tsx:173`, `date-picker.tsx:217`). Four of them use
-      `break-words` today; the utility takes list's `overflow-wrap: anywhere`. DataTable's
-      phone card keeps its descendant rule (`CARD_NO_TRUNCATE`, `data-table.tsx:785-786`),
-      which reaches an app's own `truncate` in a cell. The sweep still measures the
-      utility, since it must not cut at Large.
-    - **The parts that truncate at every size today take the utility:** ShareCard
-      (`share-card.tsx:465`, :471, :536), UserRoster (`admin/user-roster.tsx:197`, :203),
-      InvitationsPanel (`admin/invitations-panel.tsx:456`), FileButton's picked file
-      (`file-button.tsx:631`) and the feedback attachments
-      (`feedback/feedback-attachment.tsx:481`, 665-666, 902-904, 926-927). The sweep
-      decides for the rest: Tabs' label and detail, MenuItem, Breadcrumbs, the AppShell
-      sidebar, the combobox, multi-select, country and currency values, and the DataTable
-      header label.
+      `white-space: normal` and `overflow-wrap: anywhere`. It replaced the kit's five
+      hand-written copies. DataTable's phone card keeps its descendant rule
+      (`CARD_NO_TRUNCATE`, `src/components/data-table.tsx`), which reaches an app's own
+      `truncate` in a cell. The sweep still measures the utility, since it must not cut
+      at Large.
+    - **Figures take `truncate-until-large-words`** (0.33.1, `tokens.css`): `truncate` at
+      Normal, and from Large up a wrap at spaces only (`overflow-wrap: normal`), so an
+      amount, a date or a count with its unit never splits mid-number ("CHF 1’2" over
+      "34.50"). A figure wider than its box is cut at its end instead, so its cell gets
+      the room for the widest one (`shrink-0`). Prose (a name, a title, a sentence) keeps
+      `truncate-until-large`.
+    - **The kit's parts that would cut take the utility:** ShareCard, UserRoster,
+      InvitationsPanel, FileButton's picked file and the feedback attachments (0.33);
+      Tabs' label and detail, MenuItem, Breadcrumbs, the AppShell sidebar, the combobox
+      family's options and values, MultiSelect, Country/CurrencySelect, MonthPicker,
+      GroupedPicker, TreeRow, ProgressBar's legend, PieChart's centre label, PageHeader
+      `truncateTitle`, passkey names, SignatureView, the DataTable column chooser,
+      ProfileSetting's email and the translation table (0.34, from the sweep). A
+      ToggleGroup wraps its row instead (§4 Controls).
     - **A deliberate truncation at Large** (a value whose full text is one tap away, such
       as a select's chosen option in a dense table) carries `data-truncate-ok`, with the
       reason in a code comment. The sweep skips that subtree. Never on a name or an email.
     - **The floating label at Large is a static label above the field**: the phone card's
       "label above value" (§4), not a two-line label in the field. It stops being
       absolute, so it wraps like any text, and the field's top strip no longer reserves
-      its height. This covers `FLOATING_LABEL_CLASS` (`ui.tsx:1708-1714`),
-      `FLOATING_LABEL_STATIC` (`field-parts.tsx:39-43`), the row form's
-      `max-w-[calc(100%-3rem)]` (`ui.tsx:1727-1730`) and the static label
-      (`ui.tsx:1785-1787`). Normal keeps the floating label. **A visible change at Large
-      in every app:** every floating-label field shows its label above.
+      its height. This covers `FLOATING_LABEL_CLASS` (`src/components/ui.tsx`) and
+      `FLOATING_LABEL_STATIC` (`src/components/field-parts.tsx`), the row form's label
+      among them. Normal keeps the floating label. Every floating-label field in every
+      app shows its label above at Large; an app that placed something from the field's
+      top strip (a Skeleton at `top-5`) anchors it on the input's own line instead.
     - **The sweep:**
       - `measureTruncation()`, a second `page.evaluate` beside `measure()`, runs only
         where `variant.size !== "normal"`. Per element:
@@ -503,21 +482,23 @@ read as corrected.
       - a finding names the nearest `[data-slot]` (e.g. `row-actions`), the nearest
         showcase example heading, the full `textContent` and the visible width. It is
         marked `data-truncation-offender=n`, and the first is screenshotted, as
-        `data-overflow-offender` is today;
+        `data-overflow-offender` is;
       - it prints `TRUNCATED` lines under each page and a total;
       - flags: `--truncation` (on by default); `--no-screens`, to measure without
         screenshots (faster, less RAM on the shared box); `--pages all`, the slugs of
         `showcase/src/routes.tsx`; `--gate-truncation`, exit 3 on a finding (1 stays
         overflow, 2 a script error);
-      - `DEFAULT_PAGES` gains `fields`, `files`, `auth-account`, `user-admin`,
-        `subscription`, `feedback-compose` and `lists-menus`.
-    - **The sweep's second check, tall pinned boxes** (item 22). A box pinned over the
+      - `DEFAULT_PAGES` holds the pages these checks are about: `fields`, `files`,
+        `auth-account`, `user-admin`, `subscription`, `feedback-compose` and
+        `lists-menus` among them.
+    - **The sweep's second check, tall pinned boxes.** A box pinned over the
       page grows with the text too, and can leave no room for what it is pinned over:
       neither an overflow nor a truncation, so neither check sees it. `measurePinned()`
       runs in the same pass as `measureTruncation()`, at Large and Extra large only:
-      - it takes every element whose computed `position` is `fixed`, or `sticky` with a
-        `top` or `bottom` other than `auto` (a sticky column pins sideways and is left
-        out); the outermost only, so a sticky header inside a fixed sheet is one box;
+      - it takes every element whose computed `position` is `fixed`, or vertically
+        `sticky` (a `top` or `bottom` other than `auto`; a sticky column pins sideways and
+        is left out); the outermost only, so a sticky header inside a fixed sheet is one
+        box;
       - it skips what `measureTruncation()` skips (zero-size and hidden boxes,
         `aria-hidden`, the device-preview frame), a dialog and what holds one
         (`[role=dialog]`, `[role=alertdialog]`, `[aria-modal=true]`: a sheet covers the
@@ -532,101 +513,52 @@ read as corrected.
         and the first 50 characters of its text; then a total. The box is marked
         `data-pinned-offender=n`, and the first is screenshotted, as the other two are;
       - `--pinned` is on by default, as `--truncation` is.
-    - **Report-only in 0.33**, both checks. **The release gate since 0.34** (round 0.34
-      T1): `npm run check:sweep` builds the showcase and runs every page with
-      `--pages all --no-screens --gate-truncation`, and CI runs it on the release PR
-      (refactor plan 2026-10, decision 2), so a truncation or a pinned-box finding
-      (exit 3), or an overflow (exit 1), stops the release. `scripts/check.mjs` does not
-      run it (by hand: `npm run check:sweep`, CONTRIBUTING "The gates"), and jsdom has no
-      layout, so unit tests only pin classes. Group 4 above took `truncate-until-large` — Tabs' label and
-      detail, MenuItem, Breadcrumbs, the AppShell sidebar's labels, the combobox family's
-      options and values, MultiSelect, Country/CurrencySelect and the DataTable column
-      chooser — and so did what the sweep then measured in the rest of the kit. The phone
-      bar's two lines and a clamp (§10.7) carry `data-truncate-ok`.
+    - **The release gate** (report-only in 0.33, both checks): `npm run check:sweep`
+      runs the fixture test, builds the showcase and runs every page with
+      `--pages all --no-screens --gate-truncation`, so a truncation or a pinned-box
+      finding (exit 3), or an overflow (exit 1), stops the release. CI runs it on the
+      release PR, a PR or push that changes `package.json`'s version (the job
+      "Truncation sweep (release)"); by hand it is `npm run check:sweep`, after
+      `npx playwright-core install chromium-headless-shell` once. `scripts/check.mjs`
+      never runs it, and jsdom has no layout, so unit tests only pin classes. The phone
+      bar's two lines and a clamp (§4 Navigation) carry `data-truncate-ok`.
     - **i18n:** none; no new strings in any of the kit's seven languages.
     - **Tests:**
-      - the script: a fixture page with one ellipsis that cuts, one that fits, one under
-        `data-truncate-ok` and one `.sr-only` gives exactly one `TRUNCATED` finding, and
-        a sticky box of 60 % of the viewport beside one of 40 % exactly one `PINNED`
-        finding; run as `node scripts/screenshot-sizes.mjs --url file://… --pages
-        fixture`, outside `npm run check`;
-      - class pins: `truncate-until-large` on ShareCard, UserRoster, InvitationsPanel,
-        FileButton and the feedback attachment, and the static label at Large;
+      - the script: `scripts/screenshot-sizes-fixture.test.mjs` runs the sweep on a
+        fixture page, where one ellipsis that cuts, one that fits, one under
+        `data-truncate-ok` and one `.sr-only` give exactly one `TRUNCATED` finding, and a
+        sticky box of 60 % of the viewport beside one of 40 % exactly one `PINNED`
+        finding, at each Large and Extra large variant; outside `npm run check`;
+      - class pins: `truncate-until-large` on the parts above, and the static label at
+        Large;
       - `data-truncate-ok` never on a name or an email.
-    - **The apps** (corrected, items 19–22): the kit parts follow by themselves, and the
-      label above the field shows in every app's forms at Large. kastlan: nothing more.
-      - **keksdose, with its 0.33 adoption** (kk 13): the price Skeleton in
-        `features/accounts/holdings-panel.tsx:462-467` sits at `top-5`, worked out from
-        the floating field's top strip (border + `pt-4` + 3 px). At Large the label sits
-        above the field and wraps, so `top-5` lands on the label: the Skeleton
-        re-anchors on the input's own line, not at a fixed offset from the top.
-      - **keksdose and Kurvenschmiede may** move their own "truncate at Normal, wrap at
-        Large" to `truncate-until-large`, which then follows the attribute in CSS:
-        keksdose's JS switches (`!large && "truncate"`,
-        `features/budget/budget-mobile-list.tsx:146`, :151, :158;
-        `large ? … : "truncate"`, `features/transactions/mobile-transaction-list.tsx:477`;
-        kk 13) and Kurvenschmiede's class copies
-        (`features/setpoint/segment-cards.tsx:127`, `segment-list.tsx:173`, and
-        `features/landing/landing-visuals.tsx:163`, which lacks the `overflow-wrap`;
-        KS 23).
-      - **Kurvenschmiede, in its plan's order** (F93, F94; KS 24): the corner strip
-        (`features/corner/corner-page.tsx:344`, `sticky top-2`) holds a drawing of
-        `h-64 sm:h-72`, capped by the viewport only at `xl:` (:367). On a phone that is
-        320 px at Large and 384 px at Extra large before the strip's own header, most of
-        the screen: it needs the viewport cap at every width. DetailCard's actions
-        (`features/gear/common.tsx:279`, `flex shrink-0`) can't wrap, so its buttons
-        (share, edit…) run past the card at Large on a phone: the box wraps. (Its title
-        and subtitle truncate at every size, :276-277; the app sweep reports them.)
-      - An app's own `truncate` in fixed rows (keksdose's three-line transaction card)
-        is the next app sweep, with the same script pointed at the app's preview by
-        `--url`.
+    - **The apps:** the kit parts follow by themselves. An app's own "truncate at Normal,
+      wrap at Large" (a JS switch such as `!large && "truncate"`, or a class copy) may
+      move to `truncate-until-large`, which follows the attribute in CSS. An app's own
+      `truncate` in fixed rows, and its own tall pinned boxes, are found by the same
+      script pointed at the app's preview with `--url`. Each app's sites are in the
+      archive.
 
-**Settled after the reviews (2026-10-09).** All three apps reviewed items 16 and 17 the
-same day; kastlan had nothing to change. Each finding is settled as its reviewer proposed,
-and items 16 and 17 above are corrected in place. **kk 6**, **KS 24** and so on are the
-findings' numbers in the round's reviews (kept outside the repo).
+18. **Where `dataTour` lands** → §10.16.
+19. **"No code change for the apps" was wrong for keksdose** → archive.
+20. **Kurvenschmiede has 6 RowActions sites, not 8** → archive.
+21. **Kurvenschmiede's three own "truncate at Normal, wrap at Large" copies** → archive.
+22. **The sweep's second check, tall pinned boxes** → §10.17.
 
-18. **Where `dataTour` lands** (kk 6): on one element per action at a time. Inline, on
-    the action's own control; collapsed, on an overlay `<span>` in the "⋯"'s
-    `data-slot="row-actions"` box, not on the button; **never on the menu entry**, which
-    item 16 first had. The kit's tour takes the first visible match and the portalled
-    menu comes after the row, so that copy was never found and only made the selector
-    match twice. keksdose's tour guard learns `dataTour:`, and its accounts test asks the
-    "⋯"'s box for the anchor instead of an ancestor of the button. A row's one
-    `tooltipSide` turns three more of keksdose's tooltips to the start: accepted.
-19. **"No code change for the apps" was wrong for keksdose** (kk 13): its price Skeleton
-    is placed from the floating field's top strip, so it follows the label above the
-    field at Large, with keksdose's 0.33 adoption. Its JS "truncate until Large" switches
-    may take `truncate-until-large`.
-20. **Kurvenschmiede has 6 RowActions sites, not 8** (KS 22); still nothing required.
-21. **Kurvenschmiede's three own "truncate at Normal, wrap at Large" copies** (KS 23),
-    one of them without `overflow-wrap`, may move to `truncate-until-large`, as
-    keksdose's may (item 19).
-22. **The sweep gains a second report-only check, tall pinned boxes** (KS 24): a `fixed`
-    or vertically `sticky` box taller than 50 % of the viewport at Large and Extra large
-    (item 17, "The sweep's second check"). Report-only in 0.33; since 0.34 it gates with
-    truncation (`--gate-truncation`, exit 3), through `npm run check:sweep`, which the
-    release runs. Kurvenschmiede's corner strip is the case
-    that found it; the strip and DetailCard's actions, which can't wrap, are
-    Kurvenschmiede's fixes in its plan's order (F93, F94).
-
-**Round 034 (ui-kit 0.34).** Marcel settled item 23 on 2026-10-12, as recommended, from
-keksdose's feedback run 77 (live #400).
-
-23. **Help may sit behind a "?"; a fact stays visible** (keksdose K3). §4's "No fact only
+23. **Help may sit behind a "?"; a fact stays visible** (ui-kit 0.34). §4's "No fact only
     in a tooltip" prints a FieldHint's words under its field at Large and on a touch
-    screen. keksdose's transaction status carried a paragraph there (four statuses, about
-    500 characters), and on every phone it was the longest thing in the form. So two kinds
-    of text sit beside a field, and they are treated differently:
+    screen, and a paragraph of help printed there becomes the longest thing in a form on
+    every phone. So two kinds of text sit beside a field, and they are treated
+    differently:
     - **A fact** — a format, a limit, a consequence ("22 characters", "at most 72 bytes",
       "ends your other sessions") — stays visible: a caption, or a `FieldHint` that becomes
-      the caption at Large and on touch (`useInlineHint`, unchanged).
+      the caption at Large and on touch (`useInlineHint`, `src/components/field-parts.tsx`).
+      Every kit field that takes a `hint` does this, `Select` and `AmountInput` included.
     - **Help** — why the field exists, how to choose, what the options mean; the field is
-      usable without it — may sit behind a "?" in the kit's `HelpPopover`. It stays a "?"
-      at every size and opens the kit Popover on a tap, a click, Enter or Space: a dialog
-      named by a short question or "About <field>" and described by the help, which takes
-      the focus and gives it back on close. Every kit field that takes a `hint` puts it
-      on its label line, as it does any `hint` that is not text (the `rhf` bindings draw
-      every `hint` under the field).
-    - Also in 0.34: `Select` and `AmountInput` print a FieldHint at Large and on touch as
-      every other field does; 0.32 had missed them.
+      usable without it — may sit behind a "?" in the kit's `HelpPopover`
+      (`src/components/help-popover.tsx`). It stays a "?" at every size and opens the kit
+      Popover on a tap, a click, Enter or Space: a dialog named by a short question or
+      "About <field>" (`label`, required) and described by the help, which takes the
+      focus and gives it back on close. Passed as a field's `hint`, it sits on the label
+      line, as any `hint` that is not text does (the `rhf` bindings draw every `hint`
+      under the field). It also stands on its own, beside a heading or a column title.

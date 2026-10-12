@@ -1,60 +1,70 @@
 # Feedback across the kit and the three apps — harmonisation plan
 
-Status: **2026-10-04**, led from ui-kit at Marcel's request. Built from a read-only
-survey of each app's working tree (keksdose `main`, kastlan `fix/stale-shell-locales`,
-Kurvenschmiede `feat/segment-list-inline-on-phones`). Marcel's decisions are in §2.
-Everything after them follows the same pattern as the language round
-([i18n-harmonization.md](i18n-harmonization.md)): **one contract + kit parts**. The
+Led from ui-kit at Marcel's request, built from a read-only survey of each app's working
+tree (2026-10-04). Marcel's decisions are in §2. It follows the pattern of the language
+round ([i18n-harmonization.md](i18n-harmonization.md)): **one contract + kit parts**. The
 contract is keksdose's, read off its code; the kit owns every visible word and every
 part that three apps were building separately; each app keeps its data, API client,
-auth and routes. The points the draft left open are settled in §7, which states the
-final canon: **keksdose is the source** (Marcel, 2026-10-04, via keksdose's session) —
-where the kit had made its own calls it went back to keksdose's behaviour, except for
-Marcel's own decisions and keksdose's real defects, which the kit fixes (§7, end).
+auth and routes.
 
 Paths below are relative to each repo: **kk** = keksdose, **ka** = kastlan,
 **KS** = Kurvenschmiede.
 
+## Status
+
+The body says what the build does as of ui-kit 0.34.0 and server-kit 0.8.0; the settled
+points and the 0.31 amendment are folded into the sections they amended, and the table
+names them. The snapshot, the per-repo to-dos and the review records are in
+[archive/feedback-history.md](archive/feedback-history.md).
+
+| § | Section | Shipped in | Amended by |
+|---|---|---|---|
+| 1 | Where each one stands | — (archived) | |
+| 2 | Decisions | — | §7.2, §7.4, §7.7; §8.2 (READY, 0.31) |
+| 3 | The API contract (A) | server-kit 0.1.0 (`feedback`); apps' backends | §7.1, §7.5–§7.9, §7.15, §7.16; §8.2 (server-kit 0.5) |
+| 3.8 | What kastlan and Kurvenschmiede change | — (archived) | |
+| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31) |
+| 5 | What the kit adds, what stays app-side (C) | ui-kit 0.27.0, server-kit 0.1.0 | §8.1, §8.2 (ui-kit 0.31, server-kit 0.5) |
+| 6 | Per repo (D) | — (archived) | |
+| 7 | Settled points — the final canon | — | index; folded items point to their § |
+| 8 | Amendment for 0.31 | ui-kit 0.31.0, server-kit 0.5.0 | index; folded into §2–§5 |
+
 ## 1. Where each one stands
 
-| | keksdose | kastlan | Kurvenschmiede | ui-kit (0.26) |
-|---|---|---|---|---|
-| Statuses | 7 | **5** (no NEEDS_LIVE_TEST, POSTPONED), PG enum | 7, VARCHAR(20) | `FeedbackStatus` (7) + `FEEDBACK_STATUS_META` |
-| Categories | CRASH BUG IDEA QUESTION OTHER | **no CRASH** | CRASH BUG IDEA QUESTION OTHER | `FeedbackCategory` (5) |
-| Status/category labels | app (`STATUS_LABEL`, "the package has no translations") | app | app | **none** |
-| DE labels that differ | In Bearbeitung, Zur Prüfung, Live testen | In Bearbeitung, Zur Prüfung | **In Arbeit, In Prüfung, Test auf der Live-Umgebung** | — |
-| Create | JSON, two-step upload | JSON, two-step upload | **multipart, one step** | — |
-| Reporter context | `context` JSON (10 keys) | `context` JSON (6 keys, no email/version) | **`page_path` + `user_agent` columns** | — |
-| Attachments | screenshot + ≤5 files, png/jpeg/webp/gif/pdf/txt, 10 MB | **1 image**, 10 MB | list in own table (bytes in DB), **4 MB, images only** | field supports `multiple`, 5, 10 MB |
-| Body | optional | **required** | optional | `requireBody` |
-| Conversation | outcome + rework (body append, server reopens) | outcome + rework (client sends `status: OPEN`) + **comment thread** | outcome + `note` (server appends) + **author "done"** | Thread/Composer (support chat uses them) |
-| Author edit while OPEN/IN_PROGRESS | yes | yes | **no** | — |
-| Crash auto-filing | `POST /feedback/crash`, fingerprint dedupe | **none** | **none** (docs say yes) | `ErrorBoundary onReport` |
-| Routes | `/feedback` (admin) + `/my-feedback` | same | **`/feedback` for both** | — |
-| Deep link | `?row=` | `?row=` | **`?report=`** | `useSearchParamState` |
-| Undo on status change | yes (8 s toast) | no | no | — |
-| Phone swipes | advance / Done / Won't do, rebindable | no | no | `DataTable mobileSwipeActions` |
-| Lists | plain array | **`PaginatedResponse`** (client asks `limit=500`) | plain array, **one endpoint for both audiences** | — |
+Moved to [archive/feedback-history.md](archive/feedback-history.md): the three apps and
+the kit (0.26) as surveyed on 2026-10-04.
 
 ## 2. Decisions (Marcel, 2026-10-04)
 
-1. **All 7 statuses everywhere**: OPEN, IN_PROGRESS, IN_EVALUATION, NEEDS_LIVE_TEST,
-   POSTPONED, DONE, WONT_DO — kastlan's backend adds the two it lacks. **Eight since
-   0.31:** READY joins between OPEN and IN_PROGRESS (§8). **Categories**
-   CRASH, BUG, IDEA, QUESTION, OTHER; CRASH is filed automatically and never pickable.
+1. **All eight statuses everywhere**, in chain order: OPEN, READY, IN_PROGRESS,
+   IN_EVALUATION, NEEDS_LIVE_TEST, POSTPONED, DONE, WONT_DO. READY, "Ready to implement",
+   joined in 0.31 (keksdose live #396): **OPEN means "filed, not yet triaged"**, and
+   nobody works on an OPEN row, agents included; an admin releases it for implementation
+   by setting READY. An app whose status column is a database enum adds each value it
+   lacks (Postgres: `ALTER TYPE feedbackstatus ADD VALUE 'READY' AFTER 'OPEN'`); existing
+   OPEN rows stay OPEN, with no back-fill. **Categories** CRASH, BUG, IDEA, QUESTION,
+   OTHER; CRASH is filed automatically and never pickable.
 2. **One conversation model**: the team writes an **outcome**; the submitter can send
    an answered item back for **rework** (a note and at most one file; the server
-   reopens it).
-   kastlan's comment thread goes. keksdose's support chat stays keksdose-only and is
-   out of scope (it keeps using the kit's `FeedbackThread` / `FeedbackComposer`).
-3. **Routes**: `/feedback` (admin inbox) + `/my-feedback` (the user's own).
-   Kurvenschmiede splits its single page.
+   reopens it, §3.4). An answered item stays answered unless its author sends it back:
+   there is no author verdict ("done") beside the rework.
+   kastlan's comment thread goes: its comments were folded into their items' bodies as
+   `--- COMMENT <YYYY-MM-DD HH:MM> · <name> ---` blocks, which never count as rework
+   (§3.4), and its comments table and routes were dropped. keksdose's support chat stays
+   keksdose-only and is out of scope (it keeps using the kit's `FeedbackThread` /
+   `FeedbackComposer`).
+3. **Routes**: `/feedback` (admin inbox) + `/my-feedback` (the user's own), in every
+   app.
 4. **Canon = keksdose's wording and behaviour**, owned by the kit in all 7 languages —
    except the submit button says **"Send"** (keksdose: "Save") and the dialog's body
-   field asks **"What happened? (optional)"** (keksdose: "Description (optional)").
+   field asks **"What happened? (optional)"** (keksdose: "Description (optional)"), also
+   the description editor's placeholder; the body stays optional.
    Multiple attachments + screenshot capture, crash auto-filing, Undo on status changes
-   (swipes included), phone swipes on the inbox. Where the kit's draft had made its own
-   calls, keksdose's behaviour wins (§7).
+   (swipes included), phone swipes on the inbox. **keksdose is the source** (Marcel,
+   2026-10-04): where the kit's draft had made its own calls (the menu, the submit hint,
+   the empty state, the detail heading, the crash payload's caps), keksdose's behaviour
+   wins, except for Marcel's own decisions and keksdose's real defects, which the kit
+   fixes (§4.3, §4.4, §4.6).
 
 ## 3. The API contract (A)
 
@@ -66,7 +76,7 @@ in kk `frontend/src/shared/api/endpoints.ts` (`feedbackApi`). All paths under
 
 ### 3.1 The resource
 
-`FeedbackResponse` (kk `schemas/feedback.py:117`):
+`FeedbackResponse` (kk `schemas/feedback.py`; server-kit `feedback.FeedbackResponse`):
 
 ```jsonc
 {
@@ -76,7 +86,7 @@ in kk `frontend/src/shared/api/endpoints.ts` (`feedbackApi`). All paths under
   "title": "Chart jumps on save",
   "body": "…",                  // "" when none; rework rounds are appended here (§3.4)
   "category": "BUG",            // CRASH | BUG | IDEA | QUESTION | OTHER
-  "status": "OPEN",             // the 7 of §2.1
+  "status": "OPEN",             // the 8 of §2.1
   "context": { … },             // §3.2; null on rows that have none
   "screenshot_url": "/api/v1/feedback/attachments/1ed84e1bc3c7.webp", // the ONE capture, or null
   "attachment_urls": ["/api/v1/feedback/attachments/…pdf"],           // ≤5, or null = none
@@ -91,17 +101,18 @@ in kk `frontend/src/shared/api/endpoints.ts` (`feedbackApi`). All paths under
 - **No rework counter field.** The count is read from the body's
   `--- REWORK <stamp> ---` lines (kk `frontend/src/features/feedback/body-attachments.ts`
   `reworkCount`), so nothing can forget to set it. The kit ships the reader (§5),
-  anchored on `^---\s*REWORK\b` so kastlan's folded `--- COMMENT … ---` blocks (§7.7)
+  anchored on `^---\s*REWORK\b` so kastlan's folded `--- COMMENT … ---` blocks (§2.2)
   never count.
 - Storage (recommended, not wire): the same column names in all three
   (`feedback.title, body, category, status, context, screenshot_url, attachment_urls,
   outcome, resolved_at, crash_fingerprint`), so the outcome-writing loop tools
   (kk `scripts/feedback-live-*.sh`, KS `backend/kurvenschmiede/feedback_loop.py`) and
-  one agent prompt work on every repo.
+  one agent prompt work on every repo. The tools pick READY and IN_PROGRESS rows, never
+  OPEN ones (§2.1).
 
 ### 3.2 The `context` object
 
-Written by the dialog (kk `features/feedback/use-feedback-dialog.tsx:105`) — every key
+Written by the dialog (the kit's `feedbackContext`) — every key
 optional on read; readers treat a missing key as "unknown":
 
 | Key | Value | Withheld when "Attach current page URL" is off? |
@@ -117,9 +128,11 @@ optional on read; readers treat a missing key as "unknown":
 
 **Identity is the server's** (recommended for all three; Kurvenschmiede does it): the
 server overwrites `user_id`, `user_email`, `user_display_name` from the session and
-caps the object's size, so a client cannot file in someone else's name.
+caps the object's size (server-kit `stamp_identity`, 8 KB), so a client cannot file in
+someone else's name. Encrypting `context` at rest like the other reporter data is the
+app's choice, and recommended (Kurvenschmiede does).
 
-Crash rows add (server-written, kk `feedback_service.py:346`): `fingerprint`,
+Crash rows add (server-written, kk `feedback_service.record_crash`): `fingerprint`,
 `boundary` (`app`/`page`), `online`, `occurrences`, `first_seen_at`, `last_seen_at`,
 `auto_reported: true` — and `origin` / `environment`, which the crash payload carries
 (§3.6) and the server copies into `context` (keksdose does since 2026-10-04; older crash
@@ -153,25 +166,28 @@ erases accounts.
 "ADMIN" is each app's role, not "the product maintainer": in kastlan it is a
 **company-scoped** ADMIN (feedback is company-scoped under forced RLS; the maintainer
 works through the database), so no kit string may name "the developers" or "the team
-behind the app".
+behind the app". **The inbox is for admins only**: every other role, kastlan's MANAGER
+included, lists its own reports through `GET /feedback/my`. A list is a plain array in
+every app; the kit takes rows, and an envelope would be the app's to unwrap.
 
 App-specific:
 
 - **keksdose** demo sessions: `POST /feedback` → 403 `Demo sessions cannot submit
   feedback`, `POST /feedback/attachments` → 403 (`upload_guards.refuse_demo`),
   `POST /feedback/crash` → 202 `stored: false`. kastlan has no demo users.
-- **kastlan**: `GET /feedback` and `GET /feedback/my` return plain arrays (§7.5); its
-  admin-only reach also covers `GET /feedback/{id}`, `GET /feedback/counts`, the
-  overview tiles and the activity feed's "Feedback #x submitted" items (all app-side).
+- **kastlan**: its admin-only reach also covers `GET /feedback/{id}`,
+  `GET /feedback/counts`, the overview tiles and the activity feed's "Feedback #x
+  submitted" items (all app-side).
 
-Not in the contract: `GET /feedback/{id}` (keksdose has none; kastlan's admin-only one
-may stay as an app extension, the kit never calls it), kastlan's `GET /feedback/counts`
-(app extension for its overview tiles), Kurvenschmiede's `GET /feedback/categories`
-(the kit carries the limits), and every comments route.
+Not in the contract: `GET /feedback/{id}` (`?row=` deep links work off the list;
+keksdose has none, and kastlan's admin-only one may stay as an app extension, the kit
+never calls it), kastlan's `GET /feedback/counts` (app extension for its overview
+tiles), Kurvenschmiede's `GET /feedback/categories` (the kit carries the limits), and
+every comments route.
 
 ### 3.4 Writes
 
-**Create** — `FeedbackCreate` (kk `schemas/feedback.py:25`):
+**Create** — `FeedbackCreate` (kk `schemas/feedback.py`; server-kit `feedback.FeedbackCreate`):
 
 | Field | Rule |
 |---|---|
@@ -179,51 +195,61 @@ may stay as an app extension, the kit never calls it), kastlan's `GET /feedback/
 | `body` | optional, default `""`; whitespace-only is stored as `""` |
 | `category` | default `OTHER`; **`CRASH` → 422** for everyone (kk `_reject_manual_crash`) |
 | `context` | object or null (§3.2) |
-| `screenshot_url` | the captured screenshot's upload URL, or null; **MUST** match the app's own attachment URL pattern, like `attachment_urls` — the kit fetches it with the bearer token, so a foreign absolute URL would send the token off-origin. keksdose today leaves it an unvalidated `String(500)` (kk `schemas/feedback.py:33-36`) → required backend fix |
+| `screenshot_url` | the captured screenshot's upload URL, or null; **MUST** match the app's own attachment URL pattern, like `attachment_urls` — the kit fetches it with the bearer token, so a foreign absolute URL would send the token off-origin. server-kit's `AttachmentUrlPolicy` checks both |
 | `attachment_urls` | ≤ 5, each must match the app's own attachment URL pattern, deduplicated, order kept |
 
 The client uploads every file **before** the create, so a row never names a file that
-did not arrive (kk `use-feedback-dialog.tsx:89`).
+did not arrive (the kit's `useFeedbackSubmit`).
+
+**The first status is the server's**: READY for an admin's own report (an admin filing
+it has triaged it by writing it), OPEN for everyone else's, and OPEN for every crash
+report, whoever's session it came from (server-kit `initial_status`). The client never
+sends a status with a new row.
 
 **Update** — `PATCH /feedback/{id}` with any of `status`, `title`, `body`, `category`,
-`outcome` (kk `schemas/feedback.py:83`). Rules (kk `feedback_service.update_feedback`):
+`outcome` (`FeedbackUpdate`). Rules (kk `feedback_service.update_feedback`; server-kit
+`plan_update`):
 
 - **None means "not sent"**: an explicit `null` for `status`, `title`, `body` or
   `category` → 422; `outcome: null` clears the outcome (a real edit).
 - **ADMIN**: any field, any status jump, any time. This is the status change and the
   outcome editor.
-- **Author edit**: `title` / `body` / `category` only, and only while the row is OPEN or
-  IN_PROGRESS. Anything else → 403 naming the reason.
+- **Author edit**: `title` / `body` / `category` only, and only while the row is OPEN,
+  READY or IN_PROGRESS: nothing has been answered yet. Anything else → 403 naming the
+  reason.
 - **Rework** (admin or the author — anyone else gets the 403 above before the append
   is even looked at): a PATCH whose only field is `body` and whose new body strictly
-  extends the old one is an append. On a row outside OPEN / IN_PROGRESS the **server**
-  sets `status = OPEN` (kk `_is_rework_append`, live #331). The client never sends a
-  status with it. The appended shape is fixed:
+  extends the old one is an append. On a row outside OPEN / READY / IN_PROGRESS the
+  **server** sets the status: **READY when an admin sends the rework**, which is already
+  triaged, and **OPEN otherwise**, new input for the triager (server-kit
+  `rework_status`; kk `_is_rework_append`, live #331). The client never sends a status
+  with it. The appended shape is fixed:
 
   ```text
   <old body>\n\n--- REWORK 2026-10-04 09:12 ---\n<note>\n[screenshot] /api/v1/feedback/attachments/<key>
   ```
 
   - the stamp is **UTC**, `YYYY-MM-DD HH:MM`
-    (`new Date().toISOString().slice(0, 16).replace("T", " ")`, kk `feedback-page.tsx:351`);
-  - the note is **required** and trimmed — a file alone cannot be sent (kk `:577`);
-  - **one file per rework** (kk `submitRework(note, file?)`, `:350`), so at most one
-    `[screenshot] <url>` line (kk `body-attachments.ts` `attachmentLine`; the marker
-    covers pdf/txt too despite its name);
+    (`new Date().toISOString().slice(0, 16).replace("T", " ")`, the kit's `appendRework`);
+  - the note is **required** and trimmed — a file alone cannot be sent;
+  - **one file per rework**, so at most one `[screenshot] <url>` line (the kit's
+    `feedbackAttachmentLine`; the marker covers pdf/txt too despite its name);
   - `\n\n` is left out when the old body is `""`.
 
   Reading it back: the rework count anchors on `^---\s*REWORK\b` (whole line), so
-  kastlan's folded `--- COMMENT <YYYY-MM-DD HH:MM> · <name> ---` blocks (§7.7) never
+  kastlan's folded `--- COMMENT <YYYY-MM-DD HH:MM> · <name> ---` blocks (§2.2) never
   count; the file line is `^\[screenshot\]\s+(/api/v1/feedback/attachments/[\w.-]+)\s*$`.
-  Keys are opaque (§3.5), so no helper assumes `[a-f0-9]{12}`. Reworkable statuses:
-  IN_EVALUATION, NEEDS_LIVE_TEST, POSTPONED, DONE, WONT_DO.
+  Keys are opaque (§3.5), so no helper assumes `[a-f0-9]{12}`. Reworkable statuses, the
+  answered ones: IN_EVALUATION, NEEDS_LIVE_TEST, POSTPONED, DONE, WONT_DO (READY is not
+  among them).
 - **`resolved_at`**: stamped only on a real transition **into** DONE/WONT_DO (a DONE→DONE
   re-PATCH keeps the date), cleared on leaving them (kk `update_feedback`, feedback #96).
 - **Re-labelling to CRASH** → 422; CRASH → BUG stays an ordinary admin update.
 
 ### 3.5 Attachments
 
-From kk `upload_guards.py:197` and `store_attachment_bytes`:
+From kk `upload_guards.py` and `store_attachment_bytes`; server-kit `uploads.check_upload`
+and `feedback.attachments`:
 
 - Types: `image/png`, `image/jpeg`, `image/webp`, `image/gif`, `application/pdf`,
   `text/plain` (no SVG/HTML). Type taken from the bare media type; anything else → 415.
@@ -244,6 +270,23 @@ From kk `upload_guards.py:197` and `store_attachment_bytes`:
   same in-process limiter (20 uploads/h, 20 crashes/h per user); Kurvenschmiede's are
   per process (2 uvicorn workers → effectively 40/h). Recommended for all: charge after
   validation.
+- Storage is the app's: Kurvenschmiede keeps its own table and encryption. The two-step
+  upload's orphans are the app's to clean (Kurvenschmiede: each upload sweeps unattached
+  uploads older than 24 h, with no scheduler); the URL shape the client sees is this
+  section's.
+
+**Accepted variations** (Kurvenschmiede's; app-side and invisible to the client):
+
+- an attachment is readable by its uploader and by anyone who can see the report that
+  links it; anything else is a 404;
+- the content key is an HMAC-SHA256 under the data key, same `[a-f0-9]{12}.<ext>` shape;
+- a foreign report answers 404 (indistinguishable from a missing one), a rule break on
+  one's own report 403;
+- the type is detected from the bytes (magic numbers; pdf `%PDF-`, txt = UTF-8 without
+  NUL) → 400/415, and the stored type is the detected one;
+- `screenshot_url` / `attachment_urls` are derived from attachment rows (kind
+  `screenshot` | `file` | `rework`), so old rows may list more than 5 `attachment_urls`;
+- the limiters are per process (2 uvicorn workers → effectively 40/h).
 
 ### 3.6 Crash filing
 
@@ -288,60 +331,28 @@ the same shape); validation errors are FastAPI's `{"detail": [ … ]}` list. Cli
 | 403 (keksdose only) | demo session on `POST /feedback` (`Demo sessions cannot submit feedback`) or `POST /feedback/attachments` |
 | 404 | `Feedback not found`; `Attachment not found` |
 | 413 / 415 | file over 10 MB / type outside §3.5 |
-| 422 | CRASH set by hand; explicit null on a NOT NULL field; blank title; an `attachment_urls` or `screenshot_url` entry that is not the app's own (keksdose checks only `attachment_urls` today, §3.4) |
+| 422 | CRASH set by hand; explicit null on a NOT NULL field; blank title; an `attachment_urls` or `screenshot_url` entry that is not the app's own (§3.4) |
 | 429 | upload throttle (`Retry-After`) |
 
 The kit only toasts `detail`, so an app may answer a foreign row with 404 rather than
-403 (Kurvenschmiede does, below) without the client noticing.
+403 (Kurvenschmiede does, §3.5) without the client noticing.
 
 ### 3.8 What kastlan and Kurvenschmiede change
 
-| Contract point | kastlan today | Kurvenschmiede today |
-|---|---|---|
-| 7 statuses | 5 in a PG enum → `ALTER TYPE feedbackstatus ADD VALUE` ×2 | has 7 |
-| CRASH category | missing → add to `feedbackcategory` (before `BUG`, as kk migration 0050) + manual-CRASH 422 | has it, unused |
-| `context` JSON | has it; client sends 6 keys, `user_email: null` | **`page_path` + `user_agent` columns** → `context` (migrate `page_path` → `route`, `user_agent` → `ua`), drop the columns |
-| Create shape | JSON ✓; `body` required → optional | **multipart** → JSON + two-step upload |
-| Attachments | 1 `screenshot_url`, images only → add `attachment_urls` JSON, pdf/txt, decode check, non-image `attachment` disposition | **bytes in `feedback_attachment`** → served at `/feedback/attachments/{key}`, `screenshot_url` + `attachment_urls` on the row, pdf/txt, 4 → 10 MB |
-| Rework | author sends `status: OPEN` + body → server-side append detection, admin or author | `note` field → body append with `--- REWORK <stamp> ---`, author edit while OPEN/IN_PROGRESS added, author `DONE` verdict removed (§7) |
-| `resolved_at` | stamped on every DONE/WONT_DO write, never cleared → enter/leave rule | already right (`stamp_settlement`) |
-| Lists | `PaginatedResponse` → plain arrays (§7.5); MANAGER may list all → own items only (§7.6) | one `GET /feedback` for both audiences → split into `GET /feedback` (ADMIN, 403 otherwise) + `GET /feedback/my` |
-| Response fields | `user_name` extra; no `attachment_urls` | `author_name`/`author_email`/`is_mine`/`page_path`/`user_agent`/`attachments[]` → contract fields; `outcome ""` → `null`; title cap 200 → 255 |
-| `screenshot_url` check | images only, URL unchecked → own pattern (MUST) | derived from its rows → own pattern |
-| Crash | none → endpoint + `crash_fingerprint` column + limiter | none → same |
-| Limiters | none → in-process, 20 uploads/h and 20 crashes/h per user | per process (see below) |
-| Comments | `feedback_comments` + 2 routes → folded into the body as `--- COMMENT <YYYY-MM-DD HH:MM> · <name> ---` blocks, then dropped (§7.7; 0 rows in prod and dev, the fold ships anyway) | — |
-| Demo users / erasure | neither | — |
-| Goes entirely | comments routes | `note`, `GET /feedback/categories`, `POST`/`GET /feedback/{id}/attachments` |
-
-**Accepted Kurvenschmiede deviations** — app-side, invisible to the client:
-
-- an attachment is readable by its uploader and by anyone who can see the report that
-  links it; anything else is a 404;
-- the content key is an HMAC-SHA256 under the data key, same `[a-f0-9]{12}.<ext>` shape;
-- a foreign report answers 404 (indistinguishable from a missing one), a rule break on
-  one's own report 403;
-- the type is detected from the bytes (magic numbers; pdf `%PDF-`, txt = UTF-8 without
-  NUL) → 400/415, and the stored type is the detected one;
-- the server overwrites `user_id` / `user_email` / `user_display_name` in `context` from
-  the session and caps its size (recommended for all three, §3.2);
-- `screenshot_url` / `attachment_urls` are derived from attachment rows (kind
-  `screenshot` | `file` | `rework`), so old rows may list more than 5 `attachment_urls`;
-- each upload sweeps unattached uploads older than 24 h (no scheduler);
-- the limiters are per process (2 uvicorn workers → effectively 40/h).
+Moved to [archive/feedback-history.md](archive/feedback-history.md): the two apps' changes
+to reach the contract, all made. Kurvenschmiede's accepted variations are in §3.5.
 
 ## 4. The UI contract (B)
 
 The canonical English is keksdose's (kk `frontend/src/shared/i18n/locales/en.json`,
 `feedback.*`), the German its `de-CH.json` (ss, never ß), except the two decided
-changes marked ★ and the wording §7 settled. The kit's i18n round translates fr, it,
-es, hu, zh. Key names in backticks are the proposed kit label paths (§5). No string
+changes marked ★ and the wording of §2.4. The kit carries all seven languages (fr, it,
+es, hu, zh translated). Key names in backticks are the kit's label paths (§5). No string
 names "the developers" or "the team": "admin" means a different person per app (§3.3).
 
 ### 4.1 Top-bar feedback menu
 
-kk `frontend/src/app/top-bar.tsx:156` on the kit's `TopBarActionMenu`. No heading
-(kastlan's "New submission" and Kurvenschmiede's "Send feedback" headings go).
+The kit's `FeedbackMenu`, keksdose's menu on the kit's `TopBarActionMenu`. No heading.
 
 | Part | Canon | EN | DE-CH |
 |---|---|---|---|
@@ -349,17 +360,17 @@ kk `frontend/src/app/top-bar.tsx:156` on the kit's `TopBarActionMenu`. No headin
 | Rows | `Bug`, `Lightbulb`, `HelpCircle`, `MoreHorizontal` → opens the dialog on that category | Bug · Idea · Question · Other | Fehler · Idee · Frage · Sonstiges |
 | Divider | always | — | — |
 | Extra entries (app, optional) | keksdose: `Sparkles` Help assistant → `/assistant`, `MessagesSquare` Support chat → `/support` with unread chip | Help assistant · Support chat | Hilfe-Assistent · Support-Chat |
-| List link, last (§7.11) | `Inbox`, ONE by role: **admins** → `/feedback`, **everyone else** → `/my-feedback` | View feedback / My feedback | Feedback ansehen / Mein Feedback |
+| List link, last | `Inbox`, ONE by role: **admins** → `/feedback`, **everyone else** → `/my-feedback` | View feedback / My feedback | Feedback ansehen / Mein Feedback |
 | Trigger badge (optional) | `iconBadge` the app supplies (keksdose: support unread, `danger`) | app's words | app's words |
 
 CRASH never appears as a row. Position in the bar stays each app's. The list link is
-keksdose's (kk `top-bar.tsx:205-214`, feedback #331): an admin reaches their own reports
-through the inbox.
+keksdose's (feedback #331): an admin reaches their own reports through the inbox. The
+menu is the one entry point: no hotkey, event or account-menu item opens the dialog.
 
 ### 4.2 Submit dialog
 
-The kit's `FeedbackDialog` in `attachments="multiple"`, `requireBody={false}`
-(kk `use-feedback-dialog.tsx:142`). Default category when opened from a row: that row's.
+The kit's `FeedbackDialog` in `attachments="multiple"`, `requireBody={false}`, wired by
+`useFeedbackSubmit`. Default category when opened from a row: that row's.
 
 | Part | EN | DE-CH |
 |---|---|---|
@@ -374,11 +385,11 @@ The kit's `FeedbackDialog` in `attachments="multiple"`, `requireBody={false}`
 | Paste hint | …or paste a screenshot straight from the clipboard, so you can show one corner rather than the whole page. | …oder einen Screenshot direkt aus der Zwischenablage einfügen — so lässt sich ein Ausschnitt zeigen statt der ganzen Seite. |
 | Remove (generic / per file) | Remove attachment / Remove {{name}} | Anhang entfernen / {{name}} entfernen |
 | Limit (plural) | Up to {{count}} attachment(s) — remove it/one to add another. | Höchstens {{count}} Anhang/Anhänge – entfernen Sie ihn/einen, um einen weiteren hinzuzufügen. |
-| Submit hint (§7.12) | Ctrl+Enter to send — on Apple: ⌘ Enter to send | Strg+Enter zum Senden — on Apple: ⌘ Enter zum Senden |
+| Submit hint (a function of the platform, `(apple) => …`, as `form.submitShortcut` is; Apple = a Mac, iPhone or iPad) | Ctrl+Enter to send — on Apple: ⌘ Enter to send | Strg+Enter zum Senden — on Apple: ⌘ Enter zum Senden |
 | Buttons ★ | Cancel · **Send** | Abbrechen · **Senden** |
 
 Attachments: accept png/jpeg/webp/gif/pdf/txt, 10 MB, 5 files + the one capture; paste
-adds a file. **Context box** (the dialog's `contextSlot`, kk `use-feedback-dialog.tsx:222`):
+adds a file. **Context box** (the dialog's `contextSlot`, the kit's `FeedbackContextBox`):
 
 | Line | EN | DE-CH |
 |---|---|---|
@@ -398,18 +409,17 @@ Toasts:
 
 ### 4.3 The two pages
 
-One page component, two routes (kk `feedback-page.tsx:614`, `app/routes.tsx:203`):
-`/feedback` is the admin inbox (editable; a non-admin is redirected to `/my-feedback`),
-`/my-feedback` the user's own: no status or outcome editing there (also for an admin),
-but the author can send an answered item back for rework **and** edit the description
-while it is OPEN / IN_PROGRESS — kk `canAuthorEdit` (`feedback-page.tsx:398`) is not
-gated on `mine`.
+One page component, two routes: `/feedback` is the admin inbox (editable; a non-admin is
+redirected to `/my-feedback`), `/my-feedback` the user's own: no status or outcome
+editing there (also for an admin), but the author can send an answered item back for
+rework **and** edit the description while it is OPEN, READY or IN_PROGRESS
+(`FEEDBACK_AUTHOR_EDITABLE_STATUSES`; keksdose's `canAuthorEdit`), on either page.
 
 | Part | EN | DE-CH |
 |---|---|---|
 | Title `/feedback` | Feedback | Feedback |
 | Title `/my-feedback` | My feedback | Mein Feedback |
-| Empty table, both pages (§7.13; keksdose `common.none`) | None | Keine |
+| Empty table, both pages, also when a filter leaves nothing; no hint beneath (keksdose `common.none`) | None | Keine |
 | Erased author | <deleted user> | <gelöschter Nutzer> |
 
 Columns, in order (kit `DataTable`, `urlSync`, `storageKey="feedback"`, newest first):
@@ -432,28 +442,32 @@ Columns, in order (kit `DataTable`, `urlSync`, `storageKey="feedback"`, newest f
 - **Phone**: cards grouped by day header; card = title + env chip + rework chip +
   `FeedbackStatusBadge` on one line, compact category badge · date · (admin) submitter
   beneath. The kit's `FeedbackMobileCard` renders the two chips **itself**: `DataTable`
-  never renders the `mobilePrimary` cell when `mobileCard` is set (kit
-  `src/components/data-table.tsx:1734`), which is why keksdose's phone cards show
-  neither chip today — a latent keksdose bug the kit part fixes. Admin only: a
-  `FloatingActionGroup` (aria "Feedback actions" / "Feedback-Aktionen") with one
-  `Eye` toggle **"Only what is waiting for you" / "Nur was auf Sie wartet"** narrowing
-  to IN_EVALUATION + NEEDS_LIVE_TEST (page state, not URL).
+  (`src/components/data-table.tsx`) never renders the `mobilePrimary` cell when
+  `mobileCard` is set, which is why keksdose's own cards showed neither. Admin only: a
+  `FloatingActionGroup` (aria "Feedback actions" / "Feedback-Aktionen") with one `Eye`
+  toggle, `FeedbackAwaitingToggle`, **"Only what is waiting for you" / "Nur was auf Sie
+  wartet"**, narrowing to OPEN, IN_EVALUATION and NEEDS_LIVE_TEST
+  (`FEEDBACK_AWAITING_STATUSES`; page state, not URL). An OPEN row waits on the
+  triager; READY waits on the implementer.
 
 ### 4.4 Row detail
 
-Expanded inline under its row (kk `FeedbackRow`, `feedback-page.tsx:329`), kit
-`FeedbackDetail` + `FeedbackDetailSection`, sections in this order:
+Expanded inline under its row, the kit's `FeedbackRowDetail` (on `FeedbackDetail` +
+`FeedbackDetailSection`). It **opens with the subject**, `FeedbackSubject` (title and
+category badge), so a scrolled table still says which entry is being answered
+(keksdose live #395); `showSubject={false}` leaves it out for an app that already shows
+the title beside the detail. Then the sections, in this order:
 
-1. **Description** / **Beschreibung** (§7.3) — the body without its
-   `[screenshot]` lines; "—" when empty. Action for the **author while OPEN or
+1. **Description** / **Beschreibung** — the body without its
+   `[screenshot]` lines; "—" when empty. Action for the **author while OPEN, READY or
    IN_PROGRESS**, on either page: button **Edit** / **Bearbeiten**, aria **Edit
    description** / **Beschreibung bearbeiten** → `FeedbackNoteEditor` (placeholder =
    the dialog's body label, **Save** / **Speichern**, **Cancel** / **Abbrechen**);
-   clearing it saves `""`. The editor holds **only the original description**:
-   keksdose edits the raw body (`initial={fb.body}`, kk `feedback-page.tsx:420`), so an
-   author could delete `--- REWORK … ---` blocks and `[screenshot] /api/…` lines and
-   lose the history. The kit keeps the rework (and folded comment) blocks and the file
-   lines out of the editable text and re-appends them unchanged on save.
+   clearing it saves `""`. The editor holds **only the original description**
+   (`splitDescription`, `replaceDescription`): editing the raw body, as keksdose's did,
+   would let an author delete `--- REWORK … ---` blocks and `[screenshot] /api/…` lines
+   and lose the history. The kit keeps the rework (and folded comment) blocks and the
+   file lines out of the editable text and re-appends them unchanged on save.
 2. **URL** — when `context.url` is set, else `context.route` (a path-only `url` is
    accepted — Kurvenschmiede's backfilled rows): the link's text and `href` are path +
    query + hash (kk `localHref`), and `CopyButton` **Copy URL** / **URL kopieren**
@@ -481,9 +495,10 @@ Expanded inline under its row (kk `FeedbackRow`, `feedback-page.tsx:329`), kit
    senden** and Cancel. The note is required (§3.4); the file is uploaded first, and if
    that fails nothing is sent: **The file could not be uploaded. The rework was not
    sent.** / **Die Datei konnte nicht hochgeladen werden. Die Nacharbeit wurde nicht
-   gesendet.** (it fires for pdf/txt too, so it names no screenshot; §7.14).
+   gesendet.** (it fires for pdf/txt too, so it names a file, not a screenshot). German
+   says **Nacharbeit** throughout.
 6. **Status** — `FeedbackStatusTransitions variant="pill"`: admin on `/feedback` gets
-   `selectableFeedbackStatuses` (all 7), everyone else the read-only
+   `selectableFeedbackStatuses` (all 8), everyone else the read-only
    `visibleFeedbackStatuses`.
 
 Any failed PATCH toasts the server's `detail`, else **Could not save that change.** /
@@ -497,30 +512,31 @@ Any failed PATCH toasts the server's `detail`, else **Could not save that change
 | Row detail | `variant="pill"`, `selectableFeedbackStatuses` for the admin |
 | Phone card | swipe (admin, `/feedback` only) |
 
-**Undo** (kk `changeStatusUndoably`): after the PATCH lands, an 8 s success toast
+**Undo** (the kit's `useFeedbackStatusUndo`; keksdose's `changeStatusUndoably`): after
+the PATCH lands, an 8 s success toast
 **Set to “{{status}}”: {{title}}** / **Auf „{{status}}“ gesetzt: {{title}}** with action
 **Undo** / **Rückgängig**, which PATCHes the previous status and confirms **Back to
 “{{status}}”: {{title}}** / **Zurück auf „{{status}}“: {{title}}**. Fired from the page's
 mutation, so it still arrives when a status filter has already removed the row.
 
-**Swipes** (kk `feedback-page.tsx:990`, defaults in kk
-`shared/state/swipe-prefs-store.ts:99`): actions `advance` (to `nextFeedbackStatus`,
-`ChevronsRight`, sky, label = the next status), `done` (`Check`, emerald, "Done"),
-`wont_do` (`Ban`, rose, "Won't do"); an action the row cannot take drops out. Default
-binding: right = advance, then done on the longer drag; left = won't do. keksdose lets
-the user rebind them (Settings → Interaction) and stores **physical** `right` / `left`
-ladders with `"none"` fillers over the ids `advance` | `done` | `wont_do`, mapping them
-to `{ end: right, start: left }` as its translations page does (kk
-`features/translations/translations-page.tsx:280`). The kit's inbox binding uses
-exactly those three ids on logical `start` / `end` ladders and drops `"none"` or any
-unknown id, mirroring 0.26's `TranslationReviewPanel` binding. The other two apps use
-the default. Every swipe commits through the same undoable change as a tap (§7.10) —
-keksdose's too (`changeStatusUndoably`, kk `feedback-page.tsx:991`).
+**Swipes** (the kit's `feedbackSwipePlan`, `DEFAULT_FEEDBACK_SWIPE`): actions `advance`
+(to `nextFeedbackStatus`, `ChevronsRight`, tone `info`, label = the next status), `done`
+(`Check`, tone `success`, "Done"), `wont_do` (`Ban`, tone `danger`, "Won't do"); an
+action the row cannot take drops out. Default binding: toward the end advance, then done
+on the longer drag; toward the start won't do. keksdose lets the user rebind them
+(Settings → Interaction) and stores **physical** `right` / `left` ladders with `"none"`
+fillers over the ids `advance` | `done` | `wont_do`, mapping them to
+`{ end: right, start: left }` as its translations page does. The kit's inbox binding
+uses exactly those three ids on logical `start` / `end` ladders and drops `"none"` or
+any unknown id, mirroring `TranslationReviewPanel`'s binding. The other two apps use the
+default. **Every swipe commits through the same undoable change as a tap**: the 8 s
+"Set to …" toast with Undo (`feedbackSwipePlan` takes `useFeedbackStatusUndo`'s
+change).
 
 ### 4.6 Crash filing (client)
 
-kk `frontend/src/shared/lib/crash-report.ts` as the boundary's `onReport` + `redact`
-(kk `app/error-boundary.tsx:68`), on both placements (`app`, `page`):
+The kit's `createCrashReporter` (keksdose's `crash-report.ts`, lifted) as the boundary's
+`onReport` + `redact`, on both placements (`app`, `page`):
 
 - maps the kit's `CrashReport` to §3.6 (`placement` → `boundary`, anything but `app` is
   `page`), adds `origin` and `environment`, clamped to the server's caps;
@@ -532,17 +548,17 @@ kk `frontend/src/shared/lib/crash-report.ts` as the boundary's `onReport` + `red
 - posts with a bare `fetch` + `keepalive` and the bearer token — not the app's axios
   client, whose 401 handler would log the user out of a crashed page;
 - never assumes a session token: offline or signed out → buffered in `localStorage`
-  (newest 3), flushed at start-up and when a token appears (kk `main.tsx:59-61`);
+  (newest 3), flushed at start-up and when a token appears (`flushPending`, wired by the
+  app);
   401/5xx are retried, other 4xx dropped. A signed-out visitor's crash stays buffered
   until a sign-in (Kurvenschmiede's public pages; accepted — there is no
   unauthenticated crash endpoint);
 - resolves "filed" **only when the server answered `stored === true`** —
   `{ reference }` when it gave one, `{}` otherwise; `stored: false` (limiter, demo) and
-  every failure resolve `{ filed: false }`, so the fallback never claims a report that
-  was not filed. keksdose today keys on `res.ok` + `reference` (kk `crash-report.ts:253-255`,
-  `:325`), so a 202 `stored: false` resolves `{}` and the kit fallback (kit
-  `src/components/error-boundary.tsx:214`) says it was filed without a reference;
-  keksdose takes the fix with adoption;
+  every failure resolve `{ filed: false }`, so the fallback (`ErrorBoundary`,
+  `src/components/error-boundary.tsx`) never claims a report that was not filed.
+  keksdose's own reporter keyed on `res.ok` + `reference` and claimed a filing on a 202
+  `stored: false`; the kit's doesn't;
 - must never throw.
 
 ## 5. What the kit adds, what stays app-side (C)
@@ -550,24 +566,31 @@ kk `frontend/src/shared/lib/crash-report.ts` as the boundary's `onReport` + `red
 **Kit** (all under `@eifi1/ui-kit/feedback`, re-exported from the main barrel):
 
 - **Label namespaces**, all 7 languages, keksdose's text as the English defaults:
-  `feedbackStatus` (7), `feedbackCategory` (5), `feedbackMenu`, `feedbackContext`,
+  `feedbackStatus` (8; READY is "Ready to implement" / „Bereit zur Umsetzung"),
+  `feedbackCategory` (5), `feedbackMenu`, `feedbackContext`,
   `feedbackPage` (titles, columns, empty, deleted user, rework chip, awaiting filter,
   phone actions), `feedbackDetail` (sections, edit, outcome, rework, open page, copy URL,
-  resolved, download), `feedbackToast` (§4.2 toasts, update failed, Undo trio). Existing
-  `feedbackDialog` / `feedbackAttachment` defaults move to the canon (★ already match;
-  `submitHint` "Ctrl/⌘ + Enter to send" → keksdose's "Ctrl+Enter to send", ⌘ on Apple;
-  `attachmentAdd` "Attach image" → "Add attachment", the longer paste hint).
-- **`FeedbackRecord`** type = §3.1, `FeedbackContext` type = §3.2. This reverses the
-  "no `Feedback` type in this file" note in `src/feedback/feedback-inbox.tsx` — the
-  apps now share one shape.
-- **Constants**: `FEEDBACK_ATTACHMENT_ACCEPT` (images + pdf + txt), the existing
+  resolved, download), `feedbackToast` (§4.2 toasts, update failed, Undo trio).
+  `feedbackDialog` / `feedbackAttachment` carry the canon (★; `submitHint` "Ctrl+Enter
+  to send", ⌘ on Apple; `attachmentAdd` "Add attachment"; the longer paste hint).
+- **Statuses and categories:** `FeedbackStatus` and `FeedbackCategory`,
+  `FEEDBACK_STATUS_META` (an icon and a tone per status; READY has its own icon and the
+  brand tint at full strength, so it reads as "go" beside NEEDS_LIVE_TEST's muted brand
+  and OPEN's neutral fill), `FEEDBACK_STATUS_ORDER` (chain order),
+  `nextFeedbackStatus`, `visibleFeedbackStatuses`, `selectableFeedbackStatuses`,
+  `FeedbackStatusBadge`, `FeedbackCategoryBadge`, `FeedbackStatusTransitions`.
+- **`FeedbackRecord`** type = §3.1, `FeedbackContext` type = §3.2: the apps share one
+  shape.
+- **Constants**: `FEEDBACK_ATTACHMENT_ACCEPT` (images + pdf + txt),
   `DEFAULT_MAX_ATTACHMENTS` (5) / `DEFAULT_MAX_ATTACHMENT_BYTES` (10 MB),
-  `FEEDBACK_PICKABLE_CATEGORIES` (no CRASH), `FEEDBACK_REWORKABLE_STATUSES`,
-  `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`.
+  `FEEDBACK_PICKABLE_CATEGORIES` (no CRASH), `FEEDBACK_REWORKABLE_STATUSES` (the five
+  answered), `FEEDBACK_AUTHOR_EDITABLE_STATUSES` (OPEN, READY, IN_PROGRESS),
+  `FEEDBACK_AWAITING_STATUSES` (OPEN, IN_EVALUATION, NEEDS_LIVE_TEST).
 - **Body helpers** (from kk `body-attachments.ts`): `appendRework(body, note, url?, now)`
   (one file, UTC stamp), `reworkCount(body)` anchored on `^---\s*REWORK\b`,
-  `splitBodyAttachments(body)`, `splitDescription(body)` (the original description vs
-  the appended rework/comment blocks, for §4.4.1's editor), `isImageAttachment(url)`,
+  `feedbackAttachmentLine(url)`, `splitBodyAttachments(body)`, `splitDescription(body)`
+  and `replaceDescription(body, description)` (the original description vs the appended
+  rework/comment blocks, for §4.4.1's editor), `isImageAttachment(url)`,
   `attachmentName(url)` — every key match is `[\w.-]+` (kastlan's `<uuid32>_<sha12>`
   keys), never a fixed hex shape.
 - **`FeedbackMenu`** — `TopBarActionMenu` preset: the four category rows, divider,
@@ -575,9 +598,11 @@ kk `frontend/src/shared/lib/crash-report.ts` as the boundary's `onReport` + `red
   `onFile(category)`.
 - **`FeedbackContextBox`** + **`feedbackContext({ user, attachUrl, url, environment,
   version })`** — the box's wording and the §3.2 object, so the two cannot drift.
-- **`useFeedbackDialog`-shaped hook or `FeedbackSubmitDialog`** — the dialog with the
-  canon props (`multiple`, accept, limits, error toasts, capture), taking
-  `upload(file) → url` and `create(payload)` from the app.
+- **`useFeedbackSubmit({ upload, create, user, environment, version, onSubmitted,
+  errorMessage })`** → `{ open(category?), close, dialog }` — the dialog with the canon
+  props (`multiple`, accept, limits, error toasts, capture), taking `upload(file) → url`
+  and `create(payload)` (a `FeedbackCreatePayload`) from the app; it uploads every file,
+  then creates.
 - **`captureAppScreenshot({ rootId = "root" })`** — keksdose's `capture-screenshot.ts`
   (style-property allow-list, viewport and `display:none` filter, WebP with PNG
   fallback). `modern-screenshot` becomes an **optional peer**
@@ -585,16 +610,18 @@ kk `frontend/src/shared/lib/crash-report.ts` as the boundary's `onReport` + `red
   an app without it pays nothing and an app that calls the helper without it gets a
   rejected promise (→ the capture-failed toast).
 - **`createCrashReporter({ endpoint, getToken, allowParams, storageKey, suppress,
-  environment })`** → `{ onReport, redact, flushPending }` — §4.6: filed only on
+  environment, origin?, version? })`** → `{ onReport, redact, flushPending }` — §4.6: filed only on
   `stored === true`, buffers while `getToken()` is empty, adds `origin` / `environment`;
   the endpoint, token source, allow-list and demo check come from the app.
-- **`feedbackColumns({ canEdit, onStatus, renderDate, … })`** — §4.3's nine columns,
-  plus `feedbackMobileGroupBy` and `FeedbackMobileCard`, which draws the env and rework
-  chips itself (§4.3).
+- **`feedbackColumns({ canEdit, onStatus, renderDate, … })`** — §4.3's nine columns
+  (`useFeedbackColumns` with the provider's words, memoised), plus
+  `feedbackMobileGroupBy` and `FeedbackMobileCard`, which draws the env and rework chips
+  itself (§4.3), and `FeedbackEmptyState`.
 - **`FeedbackRowDetail`** — §4.4, taking the row, `canEdit`, `viewerId`, `onUpdate`,
-  `onUpload`, an `AuthedFetcher` for pictures and downloads; owns the description editor
-  (original text only), the URL/route fallback, the outcome editor and the **rework
-  section** (`FeedbackReworkSection`, one file, exported for reuse).
+  `onUpload`, a `fetcher` (`AuthedFetcher`) for pictures and downloads, and
+  `showSubject`; opens with `FeedbackSubject` and owns the description editor (original
+  text only), the URL/route fallback, the outcome editor and the **rework section**
+  (`FeedbackReworkSection`, one file, exported for reuse).
 - **`useFeedbackStatusUndo(mutate)`** — §4.5's toast trio around one status PATCH, used
   by the table, the detail and the swipes.
 - **`FEEDBACK_SWIPE_ACTIONS` (`advance`, `done`, `wont_do`), `DEFAULT_FEEDBACK_SWIPE`,
@@ -602,6 +629,16 @@ kk `frontend/src/shared/lib/crash-report.ts` as the boundary's `onReport` + `red
   (logical `start`/`end` ladders, `"none"` and unknown ids dropped), returning what
   `DataTable mobileSwipeActions` takes.
 - **`FeedbackAwaitingToggle`** — the phone `FloatingAction` of §4.3.
+
+**server-kit** (`eifi1_server_kit.feedback`, since 0.1.0) carries §3 as code: the schemas
+(`FeedbackCreate`, `FeedbackUpdate` with the explicit-null guard, `FeedbackResponse`,
+`CrashReportCreate`, `CrashReportResponse`), `FeedbackStatus` and its sets
+(`AUTHOR_EDITABLE_STATUSES`, `REWORKABLE_STATUSES`, `AWAITING_STATUSES`),
+`plan_update` (the author lanes, the rework re-open, `resolved_at`, the CRASH refusal),
+`initial_status(author_is_admin=, crash=)` and `rework_status(actor_is_admin=)` (0.5,
+READY), the rework body helpers, crash filing (`crash_fingerprint`, `decide_crash`),
+erasure (`FEEDBACK_CONTEXT_KEEP`, `anonymise_feedback`), `AttachmentUrlPolicy` and
+`stamp_identity`. The tables, routes, limiters and storage stay the app's.
 
 **App**: the API client and query keys; auth, roles and the admin check; route
 registration and the `/feedback` → `/my-feedback` redirect; the upload/create calls
@@ -613,184 +650,49 @@ tiles).
 
 ## 6. Per repo (D)
 
-**ui-kit** (first, one minor release):
-1. Label namespaces + all 7 catalogues; canon defaults for `feedbackDialog` / `feedbackAttachment`.
-2. `FeedbackRecord` / `FeedbackContext` types, constants, body helpers (with keksdose's tests).
-3. `FeedbackMenu`, `FeedbackContextBox` + `feedbackContext()`, the submit-dialog wrapper.
-4. `captureAppScreenshot` + optional `modern-screenshot` peer.
-5. `createCrashReporter`.
-6. `feedbackColumns`, `FeedbackMobileCard`, `FeedbackRowDetail` + `FeedbackReworkSection`, `useFeedbackStatusUndo`, swipe plan, awaiting toggle.
-7. `kitLabelStrings` picks the new namespaces up; showcase page; ADOPTING.md section.
-
-**keksdose** — backend (it is the contract's source; dropping the retained
-`feedback_comments` table stays a separate decision):
-1. Validate `screenshot_url` against the own attachment URL pattern (contract MUST, §3.4).
-2. **Done** (2026-10-04): `CrashReportCreate` takes optional `origin` (≤ 200) and `environment` (≤ 20), copied into the crash row's `context` (§3.2, §3.6); the erasure allow-list keeps `environment` and drops `origin` (§3.2).
-3. Recommended, Marcel decides at the push: upload limiter charged after validation, crash limiter after the dedupe (§3.5, §3.6).
-
-keksdose — frontend:
-1. Bump the kit; replace `STATUS_LABEL`, `categoryLabelKey` and the `feedback.*` keys the kit now owns — no `feedback.*` key is used outside `features/feedback` and `app/top-bar.tsx` (tests aside), so removing them is clean; `common.none` and `more.copy_url` stay (shared), as do `support.*` and `assistant.*`.
-2. `app/top-bar.tsx` → `FeedbackMenu` (`isAdmin`) with the assistant/support entries and the unread `iconBadge`; the list link stays keksdose's (§4.1); keep `data-tour="feedback-menu"`.
-3. `use-feedback-dialog.tsx` → kit dialog wrapper + `FeedbackContextBox`; submit reads **Send**, body **What happened? (optional)**, hint **Ctrl+Enter to send** (⌘ on Apple).
-4. `capture-screenshot.ts` → `captureAppScreenshot`; `attachment-options.ts` → kit constants.
-5. `shared/lib/crash-report.ts` → `createCrashReporter` with its own allow-list (filed only on `stored === true`); `main.tsx:59-61` keeps the flush wiring (start-up + token-appears subscription) on the reporter's `flushPending`; `app/error-boundary.tsx` unchanged otherwise.
-6. `feedback-page.tsx` → `feedbackColumns` + `FeedbackRowDetail` + `FeedbackMobileCard` + `FeedbackEmptyState` + `feedbackSwipePlan` + `useFeedbackStatusUndo` (swipes included, as `changeStatusUndoably` already does); the swipe-prefs store keeps its physical bindings and maps them to `{ end: right, start: left }`; `body-attachments.ts` → kit helpers.
-7. Run the feedback tests (`features/feedback/__tests__`) against the kit parts; keep the tours ("Sending feedback", "Report something") on the same anchors, but rewrite their copy: `tour.fb.form_body` ("the Description is optional … Ctrl+Enter sends it") changes with the dialog's "What happened?" wording (Ctrl+Enter stays), and the help-assistant corpus (built from tour copy) needs a rebuild.
-
-**kastlan** — backend:
-1. Alembic: `feedbackstatus` + NEEDS_LIVE_TEST, POSTPONED; `feedbackcategory` + CRASH (before BUG).
-2. Alembic: `attachment_urls` JSON NULL, `crash_fingerprint` VARCHAR(32) indexed.
-3. `schemas/feedback.py`: body optional (`""`), `attachment_urls` (≤ 5) **and** `screenshot_url` checked against the own URL pattern, CRASH → 422 on create and update, explicit-null guard.
-4. `feedback_router.upload_attachment`: pdf/txt, image decode check, `attachment` disposition for non-images, key pattern widened (keys stay `<uuid32>_<sha12>.<ext>`).
-5. `feedback_service.update_feedback`: server-side rework append (admin or author) instead of the author's `status: OPEN`; `resolved_at` enter/leave rule.
-6. `POST /feedback/crash` with fingerprint dedupe and the 202 shapes; rows carry the user's `company_id`; in-process limiters, 20 uploads/h and 20 crashes/h per user.
-7. Fold the comments into their items' bodies as `--- COMMENT <YYYY-MM-DD HH:MM> · <name> ---` blocks (§7.7), then drop the routes, schemas, service methods and table.
-8. `GET /feedback` and `GET /feedback/my` return plain arrays (§7.5); `GET /feedback` ADMIN-only (company-scoped), MANAGER narrowed to own items (§7.6); `/feedback/{id}` and `/feedback/counts` stay ADMIN-only extensions, `/counts` gains the two statuses.
-
-kastlan — frontend:
-1. `shared/types/feedback.ts`: 7 statuses, CRASH, `attachment_urls`, context keys.
-2. `shared/components/feedback/feedback-button.tsx` → kit dialog wrapper (multiple, capture, context box with email, origin, environment, version).
-3. `app/top-bar.tsx` → `FeedbackMenu` (drops "New submission"; rows Bug/Idea/Question/Other; "View feedback" for an admin, "My feedback" for everyone else); the Ctrl+Shift+F hotkey and `feedback:open` event go (§7.11).
-4. `features/feedback/pages/feedback-page.tsx` → kit columns + detail; comments section, `fetchFeedbackComments` / `addFeedbackComment` removed; Undo; swipes with the default binding.
-5. `app/providers.tsx` and `app/app-layout.tsx` boundaries get `createCrashReporter`.
-6. `public/locales/*/feedback.json`: delete the keys the kit owns; overview tiles (`features/overview/pages/group-overview-page.tsx`) and the activity feed's "Feedback #x submitted" items stay admin-only, the tiles count the new statuses.
-
-**Kurvenschmiede** — backend and frontend ship as **one branch / one PR**: today's
-frontend breaks the moment the backend changes. Backend:
-1. Alembic: `context` JSON (encrypted like the body, §7), backfill `{route: page_path, url: page_path + search, ua: user_agent}`, drop `page_path` / `user_agent`; `crash_fingerprint`; title cap 255; `outcome` nullable (`""` → NULL).
-2. Attachments: `POST /feedback/attachments` → `{url}` and `GET /feedback/attachments/{key}` over the existing `feedback_attachment` storage (§7.8, with the deviations accepted in §3.8); `screenshot_url` + `attachment_urls` derived on the row and validated as own URLs; pdf/txt; 10 MB; `note`, `GET /feedback/categories` and `POST`/`GET /feedback/{id}/attachments` go.
-3. `POST /feedback` → JSON `FeedbackCreate`; the server overwrites the `user_*` context keys from the session and caps the object.
-4. Split `GET /feedback` (ADMIN) and `GET /feedback/my`; response = §3.1 (`user_id`, `user_email`).
-5. `PATCH`: contract fields and rules — author title/body/category while OPEN/IN_PROGRESS, rework by body append (replaces `note`), author status writes refused.
-6. Data: rewrite stored `--- <stamp> ---` note rules to `--- REWORK <stamp> ---` (decrypt in app code) so the Rework chip counts them.
-7. `POST /feedback/crash`.
-8. `feedback_loop.py` and `docs/feedback-loop.md` read `context` and the attachment URLs.
-
-Kurvenschmiede — frontend:
-1. `features/feedback/feedback-page.tsx` → two routes in `app/routes.tsx` (`/feedback` admin, `/my-feedback`), kit columns + detail; `?report=` → `?row=`; "Your verdict" goes.
-2. `use-feedback-dialog.tsx` → kit dialog wrapper (multiple, two-step upload, context box); `capture-page.ts` → `captureAppScreenshot`.
-3. `app/top-bar.tsx` → `FeedbackMenu` (no heading, rows Bug/Idea/Question/Other); `app/account-menu.tsx:75` entry per §7.
-4. `main.tsx` and `app/layout.tsx` boundaries get `createCrashReporter`.
-5. Admin: Undo, swipes (default binding), awaiting toggle.
-6. `de-CH.json` etc.: drop the app's feedback keys (In Arbeit → In Bearbeitung, In Prüfung → Zur Prüfung, Test auf der Live-Umgebung → Live testen come with the kit).
-
-Order: the kit release first; keksdose adopts it (the `screenshot_url` check is its only
-required backend change; it proves the parts); kastlan and Kurvenschmiede each do
-backend then frontend in one PR per app.
+Moved to [archive/feedback-history.md](archive/feedback-history.md): the kit's and each
+app's steps to the contract, all shipped (ui-kit 0.27, server-kit 0.1, and the apps'
+adoptions).
 
 ## 7. Settled points — the final canon (2026-10-04)
 
-Every point the draft left open is decided; none is open. Marcel's own decisions are
-marked (M). Everything else follows decision 4 as Marcel clarified it through
-keksdose's session: **keksdose is the source** — where the kit's draft had made its own
-call (the menu, the submit hint, the empty state, the detail heading, the crash
-payload's caps), the kit went back to keksdose's behaviour.
+The points keep their numbers, which the code cites. Each one is folded into the section
+it settled and points there; the wording is in
+[archive/feedback-history.md](archive/feedback-history.md). (M) marks Marcel's own
+decisions.
 
-1. **(M) Rework:** keksdose's full-body PATCH with server-side append detection is the
-   wire (§3.4) — a `--- REWORK <stamp> ---` block, **one file** and a **required note**;
-   the server reopens the row. Kurvenschmiede's `note` field goes (§3.8).
-2. **(M) The author's "done" goes.** An answered item stays answered unless its author
-   sends it back for rework; Kurvenschmiede's "That is it, done" / "Your verdict" is
-   removed.
-3. **Detail heading:** keksdose's **"Description"** / **"Beschreibung"** over the filed
-   body (§4.4); the author's button keeps "Edit" / aria "Edit description".
-4. **(M) The dialog's body field:** **"What happened? (optional)"** / **"Was ist
-   passiert? (optional)"** (keksdose: "Description (optional)") — also the description
-   editor's placeholder. The body stays optional. **(M) Submit: "Send"** (keksdose:
-   "Save").
-5. **kastlan's list envelope:** app-side — the kit takes rows. kastlan's call: plain
-   arrays on `GET /feedback` and `GET /feedback/my`.
-6. **(M) Inbox access: admins only.** kastlan's backend narrows MANAGER to their own
-   items, like keksdose and Kurvenschmiede.
-7. **(M) kastlan's existing comments fold into the item:** a one-time migration appends
-   each item's comments to its body as `--- COMMENT <YYYY-MM-DD HH:MM> · <name> ---`
-   blocks (never counted as rework, §3.4); then the comments table and endpoints are
-   dropped. kastlan has 0 comment rows in prod and dev and ships the fold anyway.
-8. **Kurvenschmiede's attachment storage:** app-side (its own table and encryption may
-   stay). The two-step upload's orphans are its to clean (e.g. unattached uploads older
-   than a day); the URL shape the client sees follows §3.5.
-9. **Kurvenschmiede's `context` encryption:** app-side; encrypting the JSON like the
-   other reporter data is recommended.
-10. **(M) Undo on swipes: yes.** The advance / done / won't-do swipes commit through the
-    same undoable change as a tap — the 8 s "Set to …" toast with Undo (§4.5). keksdose's
-    swipes do too since 2026-10-04 (`changeStatusUndoably`); the kit's
-    `feedbackSwipePlan` takes `useFeedbackStatusUndo`'s change.
-11. **Entry points:** the menu is keksdose's — no heading, the four rows, and ONE list
-    link by role: **admins "View feedback" → `/feedback`, everyone else "My feedback" →
-    `/my-feedback`** (§4.1). For parity, kastlan's Ctrl+Shift+F / `feedback:open` and
-    Kurvenschmiede's account-menu item go.
-12. **Submit hint:** keksdose's **"Ctrl+Enter to send"** / **"Strg+Enter zum Senden"**.
-    On a Mac, iPhone or iPad the kit says **"⌘ Enter to send"** / **"⌘ Enter zum
-    Senden"** — the platform rule the kit's `form.submitShortcut` already follows, since
-    the key there is Cmd; the label is a function of the platform (`(apple) => …`).
-13. **Empty states:** keksdose's **"None"** / **"Keine"** on both pages, no hint beneath
-    it — also when a filter leaves nothing, as keksdose's `empty={t("common.none")}` does.
-14. **(M) German rework wording:** **"Nacharbeit"** throughout, the upload failure toast
-    included: "Die Datei konnte nicht hochgeladen werden. Die Nacharbeit wurde nicht
-    gesendet." keksdose's "Rückmeldung" goes with adoption (the kit owns the string). The
-    toast names a **file**, not a screenshot — keksdose's own review point: it fires for
-    a PDF or a log too.
-15. **`GET /feedback/{id}`:** not part of the contract — `?row=` deep links work off the
-    list; kastlan may keep its endpoint as an extension.
-16. **Crash payload and erasure** (contract change, keksdose's backend already does it):
-    `CrashReportCreate` takes optional `origin` (≤ 200) and `environment` (≤ 20), copied
-    into the row's `context`; the erasure allow-list keeps `environment` and drops
-    `origin` (§3.2, §3.6).
+1. **(M) Rework** → §3.4.
+2. **(M) The author's "done" goes** → §2.2.
+3. **Detail heading** → §4.4.
+4. **(M) The dialog's body field, and "Send"** → §2.4, §4.2, §4.4.
+5. **kastlan's list envelope** → §3.3.
+6. **(M) Inbox access: admins only** → §3.3.
+7. **(M) kastlan's existing comments fold into the item** → §2.2, §3.4.
+8. **Kurvenschmiede's attachment storage** → §3.5.
+9. **Kurvenschmiede's `context` encryption** → §3.2.
+10. **(M) Undo on swipes** → §4.5.
+11. **Entry points** → §4.1.
+12. **Submit hint** → §4.2.
+13. **Empty states** → §4.3.
+14. **(M) German rework wording** → §4.4.
+15. **`GET /feedback/{id}`** → §3.3.
+16. **Crash payload and erasure** → §3.2, §3.6.
 
-**keksdose's defects stay fixed in the kit** — the source's behaviour, not its bugs:
-
-- the crash reporter resolves "filed" only on `stored === true` (keksdose keyed on
-  `res.ok` + `reference`, so a 202 `stored: false` claimed a filing, §4.6);
-- the phone cards draw the environment and Rework chips themselves (`DataTable` never
-  renders `mobilePrimary` beside `mobileCard`, so keksdose's cards showed neither, §4.3);
-- the description editor holds only the original text and re-appends the rework /
-  comment blocks and file lines on save (keksdose's edited the raw body and could delete
-  the history, §4.4).
+keksdose's defects the kit fixed rather than copied (the crash reporter's "filed", the
+phone cards' chips, the description editor) are in §4.6, §4.3 and §4.4.
 
 ## 8. Amendment for 0.31 (Marcel, 2026-10-07)
 
-Two of Marcel's keksdose feedback rows, forwarded by keksdose's session.
+Two of Marcel's keksdose feedback rows, built in ui-kit 0.31 and server-kit 0.5. Both are
+folded into the sections they amend; the wording is in the archive.
 
 ### 8.1 The subject in the expanded row (keksdose live #395)
 
-With a row expanded and the table scrolled, nothing said which entry was being answered.
-**`FeedbackRowDetail` now opens with the subject**: the kit's `FeedbackSubject` (title
-and category badge), in every app. `showSubject={false}` suppresses it for an app that
-already shows the title beside the detail; the default is on.
+→ §4.4 (`FeedbackSubject`, `showSubject`) and §5.
 
 ### 8.2 A triage step: READY, "Ready to implement" (keksdose live #396)
 
-Marcel: "There should be an intermediate status where open is not touched by you but a
-ready to implement. Then I will set it from open to ready to implement and my (or admin
-feedback) will be right away persisted with ready to implement."
-
-- **The eighth status `READY`**, "Ready to implement" / „Bereit zur Umsetzung" /
-  « Prêt à implémenter » / "Pronto da implementare", sits between OPEN and IN_PROGRESS
-  in the chain, so the status order, the picker and the swipe's "next status" go
-  OPEN → READY → IN_PROGRESS.
-- **OPEN now means "filed, not yet triaged".** Nobody works on an OPEN row, agents
-  included. An admin releases it for implementation by setting READY.
-- **Feedback filed by an admin is created READY.** The server decides at submit, from
-  the author's role; the client never sends a status with a new row. A crash report is
-  filed OPEN whoever's session it came from: nobody has looked at it yet.
-- **A rework goes back to READY when an admin sends it, and to OPEN otherwise** (§3.4's
-  append rule; the server sets the status). An admin's rework is already triaged; a
-  user's is new input to look at.
-- **The author may still edit** title, body and category while the row is OPEN, READY or
-  IN_PROGRESS. Nothing has been answered yet.
-- **Rework is offered from the same five answered statuses** as before. READY is not
-  among them.
-- **"Waiting for you"** (the inbox's awaiting toggle, §4.3) now holds **OPEN**,
-  IN_EVALUATION and NEEDS_LIVE_TEST. An OPEN row waits on the triager now, and READY
-  waits on the implementer.
-- **The colour:** READY takes the brand tint at full strength, so it reads as "go"
-  beside NEEDS_LIVE_TEST's muted brand tint and OPEN's neutral one. It has its own icon.
-- **Rollout:** existing OPEN rows stay OPEN; there is no back-fill. Marcel triages them
-  once. An app whose status column is a database enum adds the value
-  (`ALTER TYPE feedbackstatus ADD VALUE 'READY' AFTER 'OPEN'` in Postgres). keksdose's
-  feedback-loop scripts pick READY and IN_PROGRESS instead of OPEN and IN_PROGRESS.
-- **Kits:** server-kit 0.5 has `FeedbackStatus.READY`, `initial_status(author_is_admin,
-  crash=…)` and `rework_status(actor_is_admin)`, and the author-editable set gains READY.
-  ui-kit 0.31 has the status, its meta and its label in seven languages, and the awaiting
-  set above.
-
+→ §2.1 (the eighth status, what OPEN means, the database enum), §3.1 (the loop tools),
+§3.4 (the first status, the author's edits, where a rework goes), §4.3 and §4.4 (the
+author's edit, the awaiting toggle), §5 (the colour, the constants, server-kit's
+`initial_status` and `rework_status`).
