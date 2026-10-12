@@ -65,6 +65,24 @@ one.
   `serverPagination` sorts nothing itself: with `onSortsChange` it reports the column's
   `key` (`"plan"`), and your server orders the rows.
 
+**Fixed** (keksdose's feedback run 77):
+- **A panel flipped above its field hangs from its bottom edge** (kk K1, live #401). It
+  was placed as though it were as tall as its cap, so a three-row Autocomplete list under
+  a 256 px cap floated ~176 px above its field (a phone, the keyboard up). Autocomplete,
+  the comboboxes, Popover and DropdownPanel need nothing. An app that places its own
+  panel from `useAnchoredPanel` / `anchoredPanelPlacement` applies the new `bottom`, and
+  no `top`, while `above`: `...(p.above ? { bottom: p.bottom } : { top: p.top })`. A
+  `ViewportBox` it builds itself with the keyboard up passes `layoutHeight`
+  (`innerHeight`). keksdose's AddressSearch scrolling itself up can stay.
+- **An overlay leaves focus on a field you `autoFocus`** (kk K2, live #402).
+  `FullBleedDialog`, `Modal` and any `useFocusTrap` with `"container"` or `"first"`
+  focused themselves after React had honoured the child's `autoFocus`, so the field lost
+  focus the moment it got it, and on a phone the numpad sheet went with it. Without an
+  autofocus the dialog still takes focus itself, and a function `initialFocus` is
+  followed as before. Closing now returns focus to the opener: it used to fall to
+  `<body>` after an autofocused open. keksdose: the `setTimeout` re-focus in
+  `transaction-fields.tsx` can go.
+
 **Corrections to the 0.33 adoption** (made in place):
 - **kastlan item 25** no longer keeps `due_notices`' recipients and channel. Item 20
   replaces `due_notices`, which had none (ka 1).
