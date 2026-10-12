@@ -218,17 +218,17 @@ export function PickerSheet({
       // or a transition from outside has nothing to do with them. Without a visual
       // viewport to correct for this is character-for-character what the caller passed.
       style={vv ? { ...style, top: vv.top, height: vv.height, bottom: "auto" } : style}
-      className={cn("fixed inset-0 z-50 flex flex-col bg-[var(--bg-surface)] outline-none", className)}
+      className={cn("fixed inset-0 z-50 flex flex-col bg-surface outline-none", className)}
     >
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--text-primary)]">
+      <div className="flex items-center gap-2 border-b border-subtle px-3 py-2">
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">
           {title}
         </span>
         <button
           type="button"
           aria-label={labels.close}
           onClick={onClose}
-          className="rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
+          className="rounded p-1.5 text-muted hover:bg-hover"
         >
           <X className="size-5" />
         </button>
@@ -256,5 +256,5 @@ export function PickerSheet({
  *  so a list is comfortable to hit with a thumb rather than merely legible. */
 export const SHEET_ROW_CLASS = cn(
   "flex min-h-11 w-full items-center gap-2 px-4 py-2 text-start text-base",
-  "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
+  "text-primary hover:bg-hover",
 );

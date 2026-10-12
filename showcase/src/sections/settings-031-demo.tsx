@@ -105,11 +105,11 @@ function AddressBar({ links }: { links: [label: string, to: string][] }) {
   const location = useLocation();
   const navigate = useNavigate();
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2 text-xs">
+    <div className="flex flex-wrap items-center gap-2 border-b border-subtle bg-surface-2 px-3 py-2 text-xs">
       <Button size="sm" variant="ghost" onClick={() => void navigate(-1)}>
         ‹ Back
       </Button>
-      <code className="min-w-0 flex-1 truncate-until-large font-mono text-[var(--text-secondary)]" data-private>
+      <code className="min-w-0 flex-1 truncate-until-large font-mono text-secondary" data-private>
         {location.pathname}
         {location.search}
         {location.hash}
@@ -135,7 +135,7 @@ function Frame({
   children: ReactNode;
 }) {
   return (
-    <div className={`overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)] ${className ?? ""}`}>
+    <div className={`overflow-hidden rounded-md border border-subtle bg-page ${className ?? ""}`}>
       <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
         {/* `/elsewhere` behind the page, so back past settings is visible. */}
         <MemoryRouter initialEntries={["/elsewhere", initial]} initialIndex={1}>
@@ -211,7 +211,7 @@ function LookCard({ account, demo }: { account: GardenAccount; demo: boolean }) 
         onChange={(lang) => void language.pick(lang)}
         options={OFFERED}
       />
-      <p className="text-xs text-[var(--text-muted)]">
+      <p className="text-xs text-muted">
         From the {language.source} · device {code(account.deviceLang ?? "—")} · account{" "}
         {code(account.accountLang ?? "—")}
         {demo && " · a demo never writes the account"}
@@ -334,7 +334,7 @@ function GardenSettings({ layout, demo, account }: { layout: "desktop" | "phone"
       entries={entries}
       basePath="/settings"
       renderGroup={(group) => <GardenGroup group={group} account={account} demo={demo} />}
-      phoneFooter={<ListItem href="/admin" title="Administration" subtitle="Leaves settings" leading={<Users className="size-4 text-[var(--text-muted)]" aria-hidden />} />}
+      phoneFooter={<ListItem href="/admin" title="Administration" subtitle="Leaves settings" leading={<Users className="size-4 text-muted" aria-hidden />} />}
       // The window's title (0.34, §3.1): the desktop specimen writes it, the other two
       // pass `false`, so three specimens on one page do not take turns at one tab.
       appName="Garden Planner"
@@ -454,7 +454,7 @@ export function SettingsAdmin031Demo() {
           search={false}
           documentTitle={false}
           aliases={{ overview: "metrics" }}
-          phoneFooter={<ListItem href="/import" title="Import" leading={<Upload className="size-4 text-[var(--text-muted)]" aria-hidden />} />}
+          phoneFooter={<ListItem href="/import" title="Import" leading={<Upload className="size-4 text-muted" aria-hidden />} />}
           renderGroup={(section) => {
             switch (section) {
               case "metrics":

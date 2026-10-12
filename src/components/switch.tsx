@@ -49,7 +49,7 @@ export type SwitchSize = keyof typeof SIZES;
 // difference in SHAPE, so the state never rests on colour alone.
 const TRACK =
   "peer block shrink-0 cursor-pointer appearance-none rounded-full bg-[var(--border-strong)] transition-colors " +
-  "checked:bg-[var(--brand)] " +
+  "checked:bg-brand " +
   // The kit's focus frame (§5), stood off the track so it never merges with the fill.
   `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] ` +
   "disabled:cursor-not-allowed";
@@ -59,7 +59,7 @@ const TRACK =
 // match the fill in some presets, and the contrast token is the one guaranteed to read
 // against --brand.
 const THUMB =
-  "pointer-events-none absolute start-0.5 top-1/2 -translate-y-1/2 rounded-full bg-[var(--bg-surface)] shadow-sm " +
+  "pointer-events-none absolute start-0.5 top-1/2 -translate-y-1/2 rounded-full bg-surface shadow-sm " +
   "transition-[inset-inline-start,background-color] motion-reduce:transition-none " +
   "peer-checked:bg-[var(--brand-contrast)]";
 
@@ -227,21 +227,21 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
         <label
           htmlFor={inputId}
           className={cn(
-            "block text-sm leading-5 text-[var(--text-primary)]",
+            "block text-sm leading-5 text-primary",
             looksDisabled ? "cursor-not-allowed" : "cursor-pointer select-none",
             dimParts && "opacity-60",
           )}
         >
           {label}
           {required && (
-            <span aria-hidden className="ms-0.5 text-[var(--danger)]">
+            <span aria-hidden className="ms-0.5 text-danger">
               *
             </span>
           )}
         </label>
       )}
       {showDescription && (
-        <span id={descriptionId} className={cn("mt-0.5 block text-xs text-[var(--text-muted)]", dimParts && "opacity-60")}>
+        <span id={descriptionId} className={cn("mt-0.5 block text-xs text-muted", dimParts && "opacity-60")}>
           {description}
         </span>
       )}

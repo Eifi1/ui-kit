@@ -35,7 +35,7 @@ export function WizardSummary({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)]">{l.reviewTitle}</h2>
+      <h2 className="text-lg font-semibold text-primary">{l.reviewTitle}</h2>
       {sections.map((section, sIdx) => (
         <Card key={sIdx}>
           {/* CardHeader is a grid, and CardAction is the top-right column it
@@ -68,11 +68,11 @@ export function WizardSummary({
               {section.items.map((item, iIdx) => (
                 <div key={iIdx}>
                   {iIdx > 0 && (
-                    <div className="mb-2 border-t border-[var(--border)]" role="presentation" />
+                    <div className="mb-2 border-t border-subtle" role="presentation" />
                   )}
                   <div className="flex items-start justify-between gap-4">
-                    <dt className="text-[var(--text-muted)]">{item.label}</dt>
-                    <dd className="text-end font-medium text-[var(--text-primary)]">
+                    <dt className="text-muted">{item.label}</dt>
+                    <dd className="text-end font-medium text-primary">
                       {item.value}
                     </dd>
                   </div>

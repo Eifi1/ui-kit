@@ -238,15 +238,15 @@ export function FullBleedDialog({
     >
       <div
         className={cn(
-          "flex h-full w-full flex-col overflow-hidden bg-[var(--bg-surface)] shadow-xl",
+          "flex h-full w-full flex-col overflow-hidden bg-surface shadow-xl",
           closing ? "animate-sheet-out" : "animate-sheet",
           className,
         )}
       >
-        <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-subtle px-3 py-3">
           {hasTitle ? (
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <Heading id={titleId} className="min-w-0 break-words text-base font-semibold leading-snug text-[var(--text-primary)]">
+              <Heading id={titleId} className="min-w-0 break-words text-base font-semibold leading-snug text-primary">
                 {title}
               </Heading>
               {hasHeader && <div className="min-w-0 flex-1 font-medium">{header}</div>}
@@ -258,7 +258,7 @@ export function FullBleedDialog({
             type="button"
             onClick={requestClose}
             aria-label={closeLabel}
-            className="-me-1 shrink-0 rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+            className="-me-1 shrink-0 rounded p-1.5 text-muted hover:bg-hover hover:text-secondary"
           >
             <X className="size-5" />
           </button>
@@ -275,7 +275,7 @@ export function FullBleedDialog({
         {footer !== undefined && footer !== null && footer !== false && (
           <div
             data-full-bleed-footer=""
-            className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-[var(--border)] px-3 pt-3"
+            className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-subtle px-3 pt-3"
             style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             {footer}

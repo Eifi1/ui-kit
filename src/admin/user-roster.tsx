@@ -188,13 +188,13 @@ export function UserIdentityCell({
       {avatar && <UserAvatar person={person} name={name} email={email} size="sm" />}
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span data-private className="truncate-until-large font-medium text-[var(--text-primary)]">
+          <span data-private className="truncate-until-large font-medium text-primary">
             {named || address}
           </span>
           {badge}
         </div>
         {named && address && (
-          <div data-private className="truncate-until-large text-xs text-[var(--text-muted)]">
+          <div data-private className="truncate-until-large text-xs text-muted">
             {address}
           </div>
         )}
@@ -382,7 +382,7 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
       header: labels.email,
       className: "whitespace-nowrap",
       cell: (row) => (
-        <span data-private className="text-[var(--text-secondary)]">
+        <span data-private className="text-secondary">
           {row.email}
         </span>
       ),

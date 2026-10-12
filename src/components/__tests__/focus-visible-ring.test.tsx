@@ -24,7 +24,8 @@ import type { DataTableColumn } from "../data-table";
 // The kit's one focus frame since 0.32 (`FOCUS_RING`, docs/text-size-harmonization.md
 // §5): its width is `--focus-ring-width`, 2 px, 3 px under More contrast.
 const RING = /focus-visible:ring-\[length:var\(--focus-ring-width\)\]/;
-const TOKEN_RING = /focus-visible:ring-\[var\(--[a-z-]+\)\]/;
+// A token: a role utility (`ring-brand`, 0.34) or a `[var(--…)]` where none exists.
+const TOKEN_RING = /focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/;
 const noop = () => {};
 
 describe("the numpad's keys show where the keyboard is", () => {
@@ -40,7 +41,7 @@ describe("the numpad's keys show where the keyboard is", () => {
   });
 
   it("rings the primary key against its own fill, not in it", () => {
-    // "Done" is the one key wearing `bg-[var(--brand)]`, so a --brand ring on it is a
+    // "Done" is the one key wearing `bg-brand`, so a --brand ring on it is a
     // ring painted in the colour it sits on: present in the DOM, invisible on screen.
     render(<NumberPadSheet value="12" onChange={noop} onDone={noop} />);
     const done = screen.getByRole("button", { name: "Done" });

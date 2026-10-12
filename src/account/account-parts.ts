@@ -64,4 +64,4 @@ export function settle(call: () => unknown): Promise<unknown> {
 
 /** The settings cards' type scale, PasskeysSetting's: a small title and a muted line. */
 export const CARD_TITLE_CLASS = "text-sm font-medium";
-export const CARD_DESCRIPTION_CLASS = "text-xs text-[var(--text-muted)]";
+export const CARD_DESCRIPTION_CLASS = "text-xs text-muted";

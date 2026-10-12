@@ -321,7 +321,7 @@ function withContact(template: string, contact: ReactNode): ReactNode[] {
     .map((part) => (part === "{contact}" ? node : part));
 }
 
-const HINT_CLASS = "text-xs text-[var(--text-secondary)]";
+const HINT_CLASS = "text-xs text-secondary";
 
 /** A backup code's letters and digits — kastlan's: 16, printed `ABCD-EFGH-JKLM-NPQR`. */
 const RECOVERY_CODE_LENGTH = 16;
@@ -332,7 +332,7 @@ const RECOVERY_CODE_LENGTH = 16;
 function recoveryCharacters(value: string): number {
   return value.replace(/[^\p{L}\p{N}]/gu, "").length;
 }
-const INTRO_CLASS = "text-sm text-[var(--text-secondary)]";
+const INTRO_CLASS = "text-sm text-secondary";
 
 /* ── The form ────────────────────────────────────────────────────────────── */
 
@@ -646,7 +646,7 @@ export function SignInForm({
     return (
       <div {...rest} data-step="2fa" className={rootClass}>
         <form className="space-y-3" aria-labelledby={headingId} onSubmit={submitCode}>
-          <Heading id={headingId} className="text-base font-semibold text-[var(--text-primary)]">
+          <Heading id={headingId} className="text-base font-semibold text-primary">
             {labels.twoFactorTitle}
           </Heading>
           <p className={INTRO_CLASS}>
@@ -723,7 +723,7 @@ export function SignInForm({
     return (
       <div {...rest} data-step="password-change" className={rootClass}>
         <form className="space-y-3" aria-labelledby={headingId} onSubmit={submitPassword}>
-          <Heading id={headingId} className="text-base font-semibold text-[var(--text-primary)]">
+          <Heading id={headingId} className="text-base font-semibold text-primary">
             {labels.setPasswordTitle}
           </Heading>
           <p className={INTRO_CLASS}>{labels.setPasswordIntro}</p>
@@ -832,7 +832,7 @@ export function SignInForm({
         </p>
       )}
       {accountLink !== null && (
-        <p className="text-center text-sm text-[var(--text-secondary)]">
+        <p className="text-center text-sm text-secondary">
           {labels.noAccount}{" "}
           <TextLink href={accountLink.href} tone="primary">
             {accountLink.label}

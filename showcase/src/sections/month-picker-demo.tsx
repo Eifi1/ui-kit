@@ -29,7 +29,7 @@ function shiftKey(key: string, delta: number): string {
 
 /** The raw value under a specimen, so what the component emits is visible. */
 function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">value = {children}</p>;
+  return <p className="mt-2 font-mono text-xs text-muted">value = {children}</p>;
 }
 
 export function MonthPickerDemo() {
@@ -97,7 +97,7 @@ export function MonthPickerDemo() {
               aria-label="Previous month"
               disabled={atFloor}
               onClick={() => setToolbar((k) => shiftKey(k, -1))}
-              className="flex size-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-40"
+              className="flex size-9 items-center justify-center rounded-md border border-subtle text-muted hover:bg-hover disabled:opacity-40"
             >
               <span aria-hidden className="rtl:-scale-x-100">
                 ‹
@@ -114,7 +114,7 @@ export function MonthPickerDemo() {
               type="button"
               aria-label="Next month"
               onClick={() => setToolbar((k) => shiftKey(k, 1))}
-              className="flex size-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
+              className="flex size-9 items-center justify-center rounded-md border border-subtle text-muted hover:bg-hover"
             >
               <span aria-hidden className="rtl:-scale-x-100">
                 ›
@@ -123,7 +123,7 @@ export function MonthPickerDemo() {
           </Row>
         </Stage>
         <StateLine>{`"${toolbar}"`}</StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Step a few months with the buttons, then open the picker: it lands on the year the value
           is in now, not the one it was last opened on.
         </p>
@@ -226,7 +226,7 @@ export function MonthPickerDemo() {
           </div>
         </Stage>
         <StateLine>{`"${rtlMonth}"`}</StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The panel is portalled out of this <code className="font-mono">dir</code> but reads it off
           the field when it opens and carries it: the months run from the right, the year chevrons
           are mirrored, and ← moves to the NEXT month (the one to its left). Before 0.7.0 the panel

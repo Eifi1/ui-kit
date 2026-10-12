@@ -37,12 +37,12 @@ export class SectionBoundary extends Component<
           // one), so the role alone cannot distinguish "a section crashed" from "a
           // section is demonstrating an error affordance".
           data-section-error={this.props.title}
-          className="rounded-lg border border-[var(--money-expense)] bg-[var(--bg-surface-2)] p-4"
+          className="rounded-lg border border-[var(--money-expense)] bg-surface-2 p-4"
         >
-          <p className="text-sm font-semibold text-[var(--text-primary)]">
+          <p className="text-sm font-semibold text-primary">
             {this.props.title} failed to render
           </p>
-          <pre className="mt-2 overflow-x-auto font-mono text-xs text-[var(--text-secondary)]">
+          <pre className="mt-2 overflow-x-auto font-mono text-xs text-secondary">
             {this.state.error.message}
           </pre>
         </div>

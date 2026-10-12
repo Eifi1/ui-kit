@@ -158,16 +158,16 @@ describe("Card tone", () => {
     const card = container.firstElementChild!;
     expect(card).toHaveAttribute("data-tone", "warning");
     const cls = card.className.split(" ");
-    expect(cls).toContain("border-[var(--warning-border)]");
-    expect(cls).not.toContain("border-[var(--border)]");
-    expect(cls).toContain("[&_[data-slot=card-title]]:text-[var(--warning)]");
+    expect(cls).toContain("border-warning");
+    expect(cls).not.toContain("border-subtle");
+    expect(cls).toContain("[&_[data-slot=card-title]]:text-warning");
   });
 
   it("an inset panel takes the tone's fill instead of a border", () => {
     const { container } = render(<Card variant="inset" tone="danger">x</Card>);
     const cls = container.firstElementChild!.className.split(" ");
-    expect(cls).toContain("bg-[var(--danger-bg)]");
-    expect(cls).not.toContain("bg-[var(--bg-surface-2)]");
+    expect(cls).toContain("bg-danger-soft");
+    expect(cls).not.toContain("bg-surface-2");
   });
 
   it("without a tone, nothing changes", () => {
@@ -267,7 +267,7 @@ describe("IconButton (keksdose E1)", () => {
       </IconButton>,
     );
     const cls = screen.getByRole("button").className.split(" ");
-    for (const c of ["size-16", "[&_svg]:size-7", "rounded-full", "border-4", "border-[var(--media-ink)]"]) {
+    for (const c of ["size-16", "[&_svg]:size-7", "rounded-full", "border-4", "border-media-ink"]) {
       expect(cls).toContain(c);
     }
   });

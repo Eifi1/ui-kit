@@ -107,7 +107,7 @@ export function CopyButton({
   const stateText = state === "copied" ? words.copied : state === "failed" ? words.failed : idleText;
   const Icon = ICONS[state];
   const iconTone =
-    state === "copied" ? "text-[var(--success)]" : state === "failed" ? "text-[var(--danger)]" : undefined;
+    state === "copied" ? "text-success" : state === "failed" ? "text-danger" : undefined;
 
   const onClick = async () => {
     const ok = await copy(typeof text === "function" ? text() : text);

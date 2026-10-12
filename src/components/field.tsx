@@ -168,7 +168,7 @@ export function Field({
           disabled={disabled}
           size={labelSize}
           data-error={hasError || undefined}
-          className={cn("data-[error=true]:text-[var(--danger)]", LABEL_VISIBILITY[labelVisibility])}
+          className={cn("data-[error=true]:text-danger", LABEL_VISIBILITY[labelVisibility])}
         >
           {label}
         </Label>
@@ -177,12 +177,12 @@ export function Field({
         ? children(control, { labelId: label !== undefined ? labelId : undefined })
         : children}
       {hasHint && (
-        <p id={hintId} className="text-caption leading-tight text-[var(--text-muted)]">
+        <p id={hintId} className="text-caption leading-tight text-muted">
           {hint}
         </p>
       )}
       {hasError && (
-        <p id={errorId} className="text-caption leading-tight text-[var(--danger)]">
+        <p id={errorId} className="text-caption leading-tight text-danger">
           {error}
         </p>
       )}

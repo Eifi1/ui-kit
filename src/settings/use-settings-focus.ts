@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from "react-router";
  * flash: the destructive cards already own a background tint, and a ring reads the same
  * on every card.
  */
-export const SETTINGS_FOCUS_RING = ["ring-2", "ring-[var(--brand)]", "ring-offset-2", "ring-offset-[var(--bg-page)]"];
+export const SETTINGS_FOCUS_RING = ["ring-2", "ring-brand", "ring-offset-2", "ring-offset-[var(--bg-page)]"];
 
 /** How long the ring stays (§3.5). */
 export const SETTINGS_FOCUS_MS = 1800;

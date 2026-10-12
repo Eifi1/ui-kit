@@ -93,8 +93,8 @@ export const FEEDBACK_STATUS_META: Record<
 > = {
   OPEN: {
     icon: Inbox,
-    activeBg: "bg-[var(--bg-active)]",
-    activeText: "text-[var(--text-primary)]",
+    activeBg: "bg-active",
+    activeText: "text-primary",
   },
   // Triaged and released for implementation (feedback contract §8.2, keksdose live
   // #396): OPEN is "filed, nobody has looked yet", READY is "go". The brand tint at full
@@ -102,21 +102,21 @@ export const FEEDBACK_STATUS_META: Record<
   // NEEDS_LIVE_TEST's muted brand.
   READY: {
     icon: ClipboardCheck,
-    activeBg: "bg-[var(--brand-bg)]",
-    activeText: "text-[var(--brand)]",
+    activeBg: "bg-brand-soft",
+    activeText: "text-brand",
   },
   IN_PROGRESS: {
     icon: Wrench,
-    activeBg: "bg-[var(--warning-bg)]",
-    activeText: "text-[var(--warning)]",
+    activeBg: "bg-warning-soft",
+    activeText: "text-warning",
   },
   // Where solved work is parked, waiting on the person who reported it. Its own
   // colour, because "somebody has to check this" is a state you want to find by
   // scanning rather than by reading.
   IN_EVALUATION: {
     icon: Eye,
-    activeBg: "bg-[var(--info-bg)]",
-    activeText: "text-[var(--info)]",
+    activeBg: "bg-info-soft",
+    activeText: "text-info",
   },
   // Resolved but only checkable on a deployed build — the SOFT brand tint, so it
   // reads as "waiting on something" rather than as a done or a refusal, and it
@@ -124,14 +124,14 @@ export const FEEDBACK_STATUS_META: Record<
   // beside it.
   NEEDS_LIVE_TEST: {
     icon: CloudUpload,
-    activeBg: "bg-[var(--brand-bg)]",
-    activeText: "text-[var(--brand-muted)]",
+    activeBg: "bg-brand-soft",
+    activeText: "text-brand-muted",
   },
   // Parked on purpose. Muted, not `--danger`: it is not a refusal.
   POSTPONED: {
     icon: PauseCircle,
-    activeBg: "bg-[var(--bg-active)]",
-    activeText: "text-[var(--text-secondary)]",
+    activeBg: "bg-active",
+    activeText: "text-secondary",
   },
   // The one status with nowhere to move to: the vocabulary has a brand, an info, a
   // warning and a danger, and nothing that means "succeeded". Deliberately NOT
@@ -141,13 +141,13 @@ export const FEEDBACK_STATUS_META: Record<
   // is why both carry a glyph and neither leans on colour alone.
   DONE: {
     icon: CheckCircle2,
-    activeBg: "bg-[var(--success-bg)]",
-    activeText: "text-[var(--success)]",
+    activeBg: "bg-success-soft",
+    activeText: "text-success",
   },
   WONT_DO: {
     icon: Ban,
-    activeBg: "bg-[var(--danger-bg)]",
-    activeText: "text-[var(--danger)]",
+    activeBg: "bg-danger-soft",
+    activeText: "text-danger",
   },
 };
 
@@ -242,28 +242,28 @@ export const FEEDBACK_CATEGORY_META: Record<
 > = {
   CRASH: {
     icon: OctagonAlert,
-    badgeBg: "bg-[var(--danger-bg)]",
-    badgeText: "text-[var(--danger)]",
+    badgeBg: "bg-danger-soft",
+    badgeText: "text-danger",
   },
   BUG: {
     icon: Bug,
-    badgeBg: "bg-[var(--warning-bg)]",
-    badgeText: "text-[var(--warning)]",
+    badgeBg: "bg-warning-soft",
+    badgeText: "text-warning",
   },
   IDEA: {
     icon: Lightbulb,
-    badgeBg: "bg-[var(--bg-surface-2)]",
-    badgeText: "text-[var(--text-secondary)]",
+    badgeBg: "bg-surface-2",
+    badgeText: "text-secondary",
   },
   QUESTION: {
     icon: HelpCircle,
-    badgeBg: "bg-[var(--bg-surface-2)]",
-    badgeText: "text-[var(--text-secondary)]",
+    badgeBg: "bg-surface-2",
+    badgeText: "text-secondary",
   },
   OTHER: {
     icon: MoreHorizontal,
-    badgeBg: "bg-[var(--bg-surface-2)]",
-    badgeText: "text-[var(--text-secondary)]",
+    badgeBg: "bg-surface-2",
+    badgeText: "text-secondary",
   },
 };
 
@@ -455,7 +455,7 @@ export function FeedbackStatusTransitions({
                     "flex size-7 items-center justify-center rounded",
                     active
                       ? cn(meta.activeBg, meta.activeText)
-                      : "text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]",
+                      : "text-placeholder hover:text-secondary",
                   )
                 : cn(
                     "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium",
@@ -463,7 +463,7 @@ export function FeedbackStatusTransitions({
                       ? cn(meta.activeBg, meta.activeText, "border-transparent")
                       : // The translucent ink on hover (0.33, B′), as Button's secondary:
                         // the well is the page in light, and these pills sit on either.
-                        "border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[color-mix(in_srgb,var(--text-primary)_7%,transparent)]",
+                        "border-subtle bg-transparent text-primary hover:bg-[color-mix(in_srgb,var(--text-primary)_7%,transparent)]",
                   ),
               // Both stay unclickable, but only the read-only case is DIMMED: the
               // current status is the one thing in the row that has to be legible
@@ -634,7 +634,7 @@ export function FeedbackNoteEditor({
       {/* The line names the box (0.27.0): it is the only text that says what to write
           in it, and an unnamed textarea is read out as just "edit text". */}
       {placeholder && (
-        <p id={hintId} className="text-xs text-[var(--text-muted)]">
+        <p id={hintId} className="text-xs text-muted">
           {placeholder}
         </p>
       )}
@@ -732,7 +732,7 @@ export function FeedbackDetailSection({
   return (
     <div>
       <div className="mb-1 flex items-center justify-between gap-2">
-        <div className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
+        <div className="text-xs font-medium uppercase tracking-wide text-muted">
           {title}
         </div>
         {action}
@@ -754,8 +754,8 @@ export function FeedbackDetail({ children, className }: { children: ReactNode; c
  *  paragraphs, and a note appended to it later is separated by blank lines that
  *  carry the entire "this arrived after the answer" reading. */
 export function FeedbackProse({ children, empty }: { children?: string; empty?: ReactNode }) {
-  if (!children) return <p className="text-[var(--text-placeholder)]">{empty ?? "—"}</p>;
+  if (!children) return <p className="text-placeholder">{empty ?? "—"}</p>;
   return (
-    <p className="whitespace-pre-wrap text-[var(--text-secondary)]">{children}</p>
+    <p className="whitespace-pre-wrap text-secondary">{children}</p>
   );
 }

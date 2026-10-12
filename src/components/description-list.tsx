@@ -200,7 +200,7 @@ export function DescriptionList({
             ? cn("grid", gap.cls)
             : // Tight rows carry no rules: at a 2px rhythm a line under every row
               // turns a block of small print into a ruled table.
-              cn("@container", density !== "tight" && "divide-y divide-[var(--border)]"),
+              cn("@container", density !== "tight" && "divide-y divide-subtle"),
           text,
           className,
         )}
@@ -298,7 +298,7 @@ export function DescriptionItem({
   const termNode = (
     <dt
       className={cn(
-        "flex min-w-0 items-center gap-1 text-[var(--text-muted)]",
+        "flex min-w-0 items-center gap-1 text-muted",
         cards && (density === "tight" ? "text-micro uppercase tracking-wide" : "text-xs uppercase tracking-wide"),
         // Stacked terms are a step smaller than the detail, as kastlan's dialogs set
         // them; in a list that is already small they stay the list's own size.
@@ -312,16 +312,16 @@ export function DescriptionItem({
   const detail = (
     <dd
       className={cn(
-        "min-w-0 break-words text-[var(--text-primary)]",
+        "min-w-0 break-words text-primary",
         // A stacked figure sits under its term, so it keeps the term's start edge.
         numeric && (stacked ? "tabular-nums" : "tabular-nums text-end"),
         (cards || stacked) && "mt-0.5 font-medium",
-        prose && "font-normal text-[var(--text-secondary)]",
+        prose && "font-normal text-secondary",
         detailClassName,
       )}
     >
       {empty && !isEmptyValue(placeholder) ? (
-        <span data-slot="description-empty" className="font-normal text-[var(--text-muted)]">
+        <span data-slot="description-empty" className="font-normal text-muted">
           {placeholder}
         </span>
       ) : (
@@ -335,7 +335,7 @@ export function DescriptionItem({
       <div
         {...rest}
         className={cn(
-          "min-w-0 rounded-md border border-[var(--border)] bg-[var(--bg-surface)]",
+          "min-w-0 rounded-md border border-subtle bg-surface",
           CARD_PAD[density],
           spanClass,
           className,

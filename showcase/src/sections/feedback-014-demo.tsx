@@ -10,7 +10,7 @@ import { Example, Note, Row } from "../lib/section";
  * send and files uploaded ahead of the send in the composer.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const MINUTE = 60_000;
@@ -62,7 +62,7 @@ export function Feedback014Demo() {
       label="FeedbackThread + FeedbackComposer — a support chat"
       hint='kind: "event", daySeparators, timeFormat="clock"; sendOn="enter", attachmentSlot, canSend'
     >
-      <div className="rounded-md border border-[var(--border)] p-3">
+      <div className="rounded-md border border-subtle p-3">
         <FeedbackThread messages={items} now={NOW} daySeparators timeFormat="clock" redact={false} />
       </div>
       <FeedbackComposer

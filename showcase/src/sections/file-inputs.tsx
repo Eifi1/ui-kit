@@ -12,7 +12,7 @@ import { Example, Note, OutTable, Row, Stage } from "../lib/section";
  * never needs a toaster to demonstrate one.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 const names = (files: readonly File[]) => (files.length ? files.map((f) => f.name).join(", ") : "—");
 
@@ -259,10 +259,10 @@ function HeadlessPicker() {
     onReject: setRejections,
   });
   return (
-    <div className="space-y-2 rounded-md border border-[var(--border)] p-3">
+    <div className="space-y-2 rounded-md border border-subtle p-3">
       {picker.element}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-[var(--text-primary)]">Lease documents</span>
+        <span className="text-sm font-medium text-primary">Lease documents</span>
         <Button variant="ghost" disabled={locked} onClick={picker.open}>
           + Add
         </Button>
@@ -277,7 +277,7 @@ function HeadlessPicker() {
           e.preventDefault();
           picker.take(e.clipboardData.files);
         }}
-        className="w-full resize-none rounded-md border border-dashed border-[var(--border)] bg-transparent p-2 text-xs text-[var(--text-secondary)]"
+        className="w-full resize-none rounded-md border border-dashed border-subtle bg-transparent p-2 text-xs text-secondary"
       />
       <Checkbox
         label="Lock the card (disabled)"
@@ -318,11 +318,11 @@ function OwnWordsButton() {
         <Upload aria-hidden className="size-4" />
         Import statement
       </FileButton>
-      <p className="text-xs text-[var(--text-secondary)]">
+      <p className="text-xs text-secondary">
         No button handy?{" "}
         <button
           type="button"
-          className="text-[var(--brand)] underline"
+          className="text-brand underline"
           onClick={() => ref.current?.click()}
         >
           Open it from this link
@@ -546,13 +546,13 @@ function DropzoneFeedback() {
         // description is merged with the inline error's.
         aria-label="Textnotiz ablegen"
         aria-describedby={helpId}
-        className="bg-[var(--bg-surface-2)]"
+        className="bg-surface-2"
         dropLabel="Drop a text note"
         browseLabel="Choose a note…"
         emptyLabel="Drop a .txt note here"
         hint="Plain text, at most 2 kB"
       />
-      <p id={helpId} className="text-xs text-[var(--text-muted)]">
+      <p id={helpId} className="text-xs text-muted">
         Notes are attached to the current row. (This paragraph is the zone&apos;s own{" "}
         <code className="font-mono">aria-describedby</code>.)
       </p>
@@ -600,7 +600,7 @@ function DropzoneStates() {
   return (
     <>
       <Row className="mb-3">
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={locked} onChange={(e) => setLocked(e.target.checked)} />
           <code className="font-mono">disabled</code>
         </label>
@@ -637,8 +637,8 @@ function DropzoneStates() {
           busy={busy}
           renderBody={(state) => (
             <div className="flex flex-col items-center gap-2 text-center text-sm">
-              {state.busy ? <Spinner className="size-5 border-2" label={null} /> : <Camera aria-hidden className="size-6 text-[var(--text-muted)]" />}
-              <p className={cn("text-[var(--text-secondary)]", state.dragOver && "font-medium text-[var(--brand)]")}>
+              {state.busy ? <Spinner className="size-5 border-2" label={null} /> : <Camera aria-hidden className="size-6 text-muted" />}
+              <p className={cn("text-secondary", state.dragOver && "font-medium text-brand")}>
                 {state.busy
                   ? state.labels.busy
                   : state.dragOver
@@ -648,9 +648,9 @@ function DropzoneStates() {
                       : "Several photos are possible"}
               </p>
               {state.files.length > 0 && (
-                <p className="text-xs text-[var(--text-muted)]">{state.files.map((f) => f.name).join(", ")}</p>
+                <p className="text-xs text-muted">{state.files.map((f) => f.name).join(", ")}</p>
               )}
-              {state.error && <p className="text-xs text-[var(--danger)]">{state.error}</p>}
+              {state.error && <p className="text-xs text-danger">{state.error}</p>}
               <Button variant="secondary" onClick={state.open} disabled={state.disabled || state.busy}>
                 <Camera className="size-4" aria-hidden /> Take a photo
               </Button>
@@ -703,26 +703,26 @@ function DropOnCard() {
         data-drop-over={isOver || undefined}
         className={cn(
           "p-4 transition-colors",
-          isOver && "border-[var(--brand)] bg-[var(--bg-hover)] ring-2 ring-[var(--brand)]",
+          isOver && "border-brand bg-hover ring-2 ring-brand",
         )}
       >
         {/* Wraps: at Extra large "Attach…" beside the heading ran past a 360 px phone. */}
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h4 className="text-sm font-semibold text-[var(--text-primary)]">Booking documents</h4>
+          <h4 className="text-sm font-semibold text-primary">Booking documents</h4>
           <Button variant="secondary" onClick={open}>
             <Paperclip className="size-4" aria-hidden /> Attach…
           </Button>
         </div>
-        <ul className="divide-y divide-[var(--border)] text-sm">
+        <ul className="divide-y divide-subtle text-sm">
           {docs.map((d, i) => (
-            <li key={`${d.name}-${i}`} className="flex items-center gap-2 py-2 text-[var(--text-secondary)]">
-              <FileText className="size-4 shrink-0 text-[var(--text-muted)]" aria-hidden />
+            <li key={`${d.name}-${i}`} className="flex items-center gap-2 py-2 text-secondary">
+              <FileText className="size-4 shrink-0 text-muted" aria-hidden />
               <span className="min-w-0 flex-1 truncate large:whitespace-normal large:[overflow-wrap:anywhere]">{d.name}</span>
-              <span className="shrink-0 text-xs tabular-nums text-[var(--text-muted)]">{formatFileSize(d.size, "en-GB")}</span>
+              <span className="shrink-0 text-xs tabular-nums text-muted">{formatFileSize(d.size, "en-GB")}</span>
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-[var(--text-muted)]">{isOver ? "Drop to attach" : "Drop PDFs anywhere on this card (up to 5 MB)."}</p>
+        <p className="mt-2 text-xs text-muted">{isOver ? "Drop to attach" : "Drop PDFs anywhere on this card (up to 5 MB)."}</p>
         {error && (
           <AlertBanner tone="danger" className="mt-2">
             {error}

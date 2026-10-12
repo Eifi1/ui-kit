@@ -421,7 +421,7 @@ export function AppShell({
           <aside
             className={cn(
               // `border-e`: the sidebar sits at the START, which is the right in RTL.
-              "hidden md:flex md:flex-col border-e border-[var(--border)] bg-[var(--bg-surface)] transition-[width] duration-200 ease-out overflow-hidden",
+              "hidden md:flex md:flex-col border-e border-subtle bg-surface transition-[width] duration-200 ease-out overflow-hidden",
               // Embedded, the row it sits in is already the shell's height; the sticky
               // offsets below are measured against the window's top bar.
               embedded ? "md:self-stretch" : "md:sticky md:top-12 md:self-start md:h-[calc(100vh-3rem)]",
@@ -455,14 +455,14 @@ export function AppShell({
             {sidebarFooter?.(iconOnly)}
             {/* No toggle at Large: the sidebar cannot collapse there (see `iconOnly`). */}
             {!large && (
-              <div className="border-t border-[var(--border)] p-2">
+              <div className="border-t border-subtle p-2">
                 {collapsed ? (
                   <Tooltip label={labels.expand} side="end" portal className="block">
                     <button
                       type="button"
                       onClick={() => setCollapsed(false)}
                       aria-label={labels.expand}
-                      className="flex w-full items-center justify-center min-h-9 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                      className="flex w-full items-center justify-center min-h-9 rounded-md text-muted hover:bg-hover hover:text-secondary"
                     >
                       <PanelLeftOpen className="size-4 shrink-0 rtl:-scale-x-100" />
                     </button>
@@ -472,7 +472,7 @@ export function AppShell({
                     type="button"
                     onClick={() => setCollapsed(true)}
                     aria-label={labels.collapse}
-                    className="flex w-full items-center gap-3 min-h-9 px-3 py-2 rounded-md text-sm text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                    className="flex w-full items-center gap-3 min-h-9 px-3 py-2 rounded-md text-sm text-muted hover:bg-hover hover:text-secondary"
                   >
                     <PanelLeftClose className="size-4 shrink-0 rtl:-scale-x-100" />
                     {/* Never drawn at Large (the toggle is not), so the class matters at
@@ -540,7 +540,7 @@ export function AppShell({
             whole of it. */}
         <div
           ref={navRef}
-          className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-[var(--border)] bg-[var(--bg-surface)]"
+          className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-subtle bg-surface"
         >
           {mobileSubNav && <MobileSubNav nav={nav} layout={mobileSubNavLayout} />}
           <nav
@@ -563,7 +563,7 @@ const routerLink: KitLinkComponent = ({ href, ...p }) => <Link to={href} {...p} 
 const plainLink: KitLinkComponent = ({ children, ...p }) => <a {...p}>{children}</a>;
 
 const FOOTER_ICON_LINK =
-  "flex min-h-8 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]";
+  "flex min-h-8 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-secondary";
 
 /** Calls the link renderer as a component, so a router link's hooks are its own. */
 function RenderedLink({ render, ...props }: KitLinkProps & { render: KitLinkComponent }) {
@@ -618,12 +618,12 @@ function SidebarFooterItems({
             <nav
               key={item.key}
               aria-label={item.label}
-              className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-caption text-[var(--text-muted)]"
+              className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-caption text-muted"
             >
               {item.links.map((l) => (
                 <span key={l.to}>
                   {linkTo(l.to, l.external, {
-                    className: "rounded-sm hover:text-[var(--text-secondary)] hover:underline",
+                    className: "rounded-sm hover:text-secondary hover:underline",
                     children: l.label,
                   })}
                 </span>
@@ -666,8 +666,8 @@ const mobileCellClass = (active: boolean) =>
     "relative flex h-full w-full flex-col items-center justify-start py-2 text-caption gap-0.5 transition-colors",
     "before:absolute before:content-[''] before:inset-x-4 before:top-0 before:h-0.5 before:rounded-full before:transition-colors",
     active
-      ? "font-semibold text-[var(--brand)] before:bg-[var(--brand)]"
-      : "text-[var(--text-muted)] before:bg-transparent",
+      ? "font-semibold text-brand before:bg-brand"
+      : "text-muted before:bg-transparent",
   );
 
 /**
@@ -797,8 +797,8 @@ function MobileMoreCell({
                   cn(
                     "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                     isActive
-                      ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                      : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
+                      ? "bg-inverse text-inverse"
+                      : "text-primary hover:bg-hover",
                   )
                 }
               >
@@ -806,7 +806,7 @@ function MobileMoreCell({
                 <span className="min-w-0 break-words leading-snug">{item.label}</span>
               </NavLink>
               {!!item.items?.length && (
-                <ul aria-label={item.label} className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-[var(--border)] ps-2">
+                <ul aria-label={item.label} className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-subtle ps-2">
                   {item.items.map((sub) => (
                     <li key={sub.to}>
                       <NavLink
@@ -817,8 +817,8 @@ function MobileMoreCell({
                           cn(
                             "flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                             isActive
-                              ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                              : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                              ? "bg-inverse text-inverse"
+                              : "text-secondary hover:bg-hover",
                           )
                         }
                       >
@@ -870,7 +870,7 @@ function MobileSubNav({ nav, layout }: { nav: AppShellNavItem[]; layout: "wrap" 
       aria-label={group.label}
       // Keyed by group so switching groups replays the entrance.
       key={group.to}
-      className="animate-subnav border-b border-[var(--border)]"
+      className="animate-subnav border-b border-subtle"
     >
       <ul
         ref={listRef}
@@ -894,8 +894,8 @@ function MobileSubNav({ nav, layout }: { nav: AppShellNavItem[]; layout: "wrap" 
                 cn(
                   "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
                   isActive
-                    ? "border-[var(--brand)] bg-[var(--brand)] font-medium text-[var(--brand-contrast)]"
-                    : "border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                    ? "border-brand bg-brand font-medium text-brand-contrast"
+                    : "border-subtle text-secondary hover:bg-hover",
                 )
               }
             >
@@ -915,10 +915,10 @@ const navLinkClass = (collapsed: boolean, forceActive: boolean, trail = false) =
   ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 min-h-9 ${collapsed ? "justify-center px-2" : "px-3"} py-2 rounded-md text-sm transition-colors duration-150 ${
       isActive || (forceActive && !trail)
-        ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
+        ? "bg-inverse text-inverse"
         : forceActive
-          ? "font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
-          : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+          ? "font-medium text-primary hover:bg-hover"
+          : "text-secondary hover:bg-hover"
     }`;
 
 /** Whether any of an entry's sub-items is the current route. NavLink only knows about
@@ -1076,7 +1076,7 @@ function SidebarGroup({
             aria-controls={listId}
             aria-label={toggleGroupLabel(item.label)}
             onClick={() => setOpenGroup(open ? null : item.to)}
-            className="flex size-9 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+            className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-secondary"
           >
             <ChevronRight
               aria-hidden
@@ -1110,7 +1110,7 @@ function SidebarGroup({
           {/* The rule and indent live on the list INSIDE the clipping box: margin or
               padding on the element whose row is collapsing to 0fr would hold it open
               by that much. */}
-          <ul className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-[var(--border)] ps-2">
+          <ul className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-subtle ps-2">
             {item.items!.map((sub) => (
               <li key={sub.to}>
                 <NavLink
@@ -1120,8 +1120,8 @@ function SidebarGroup({
                     cn(
                       "flex min-h-8 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                       isActive
-                        ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                        : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                        ? "bg-inverse text-inverse"
+                        : "text-secondary hover:bg-hover",
                     )
                   }
                 >
@@ -1234,9 +1234,9 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
             <div
               role="menu"
               aria-label={item.label}
-              className="animate-flyout min-w-52 overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg"
+              className="animate-flyout min-w-52 overflow-hidden rounded-md border border-subtle bg-surface shadow-lg"
             >
-              <div className="border-b border-[var(--border)] px-3 py-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              <div className="border-b border-subtle px-3 py-2 text-caption font-semibold uppercase tracking-wide text-muted">
                 {item.label}
               </div>
               <ul className="py-1">
@@ -1251,12 +1251,12 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
                         cn(
                           "flex items-center gap-2.5 px-3 py-2 text-sm",
                           isActive
-                            ? "bg-[var(--bg-active)] font-medium text-[var(--text-primary)]"
-                            : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                            ? "bg-active font-medium text-primary"
+                            : "text-secondary hover:bg-hover",
                         )
                       }
                     >
-                      <sub.icon className="size-4 shrink-0 text-[var(--text-placeholder)]" />
+                      <sub.icon className="size-4 shrink-0 text-placeholder" />
                       <span className="min-w-0 break-words leading-snug">{sub.label}</span>
                     </NavLink>
                   </li>

@@ -144,8 +144,8 @@ describe("ListItem", () => {
     );
     const button = screen.getByRole("button", { name: "A" });
     expect(button).toHaveAttribute("aria-current", "true");
-    expect(button.parentElement!.className).toContain("border-[var(--brand)]");
-    expect(button.parentElement!.className).toContain("bg-[var(--bg-surface-2)]");
+    expect(button.parentElement!.className).toContain("border-brand");
+    expect(button.parentElement!.className).toContain("bg-surface-2");
   });
 
   it("says 'Unread' to a screen reader and draws the dot, in the provider's words", () => {
@@ -236,7 +236,7 @@ describe("ListItem targetProps and bordered (lenkbank segment list, profile bar)
         <ListItem title="Profile" onClick={() => {}} bordered />
       </List>,
     );
-    expect(container.querySelector(".border-\\[var\\(--border\\)\\]")).not.toBeNull();
+    expect(container.querySelector(".border-subtle")).not.toBeNull();
   });
 });
 
@@ -319,8 +319,8 @@ describe("ListItem 0.16 slots (keksdose P2)", () => {
         <ListItem title="C" trailing={<span className="text-[var(--money-income)]">+5</span>} trailingTone="inherit" />
       </List>,
     );
-    expect(screen.getByText("12 MB").className).toContain("text-[var(--text-muted)]");
-    expect(screen.getByText("3 overdue").className).toContain("text-[var(--danger)]");
+    expect(screen.getByText("12 MB").className).toContain("text-muted");
+    expect(screen.getByText("3 overdue").className).toMatch(/text-danger(?![\w-])/);
     const slot = screen.getByText("+5").parentElement!;
     expect(slot.className).not.toMatch(/text-\[var/);
   });

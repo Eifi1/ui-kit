@@ -28,7 +28,7 @@ export function TopBar({ brand, actions, className, ...rest }: TopBarProps) {
         // expanded transaction editor (z-30), which on mobile shares the page
         // scroll and otherwise slid over the header while scrolling (feedback
         // #320). Modals/tour (z-50/60) still sit above it.
-        "sticky top-0 z-40 flex h-12 items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--bg-surface)] px-3 md:px-6",
+        "sticky top-0 z-40 flex h-12 items-center justify-between gap-2 border-b border-subtle bg-surface px-3 md:px-6",
         className,
       )}
     >

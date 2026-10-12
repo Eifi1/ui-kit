@@ -141,7 +141,7 @@ export function ProfileSetting(props: ProfileSettingProps) {
           {/* A heading inside a SettingsLayout (0.31, docs/settings-harmonization.md
               §3.7), the plain div it always was outside one. */}
           <SettingsCardTitle>{labels.title}</SettingsCardTitle>
-          <div className="truncate-until-large font-mono text-xs text-[var(--text-muted)]">
+          <div className="truncate-until-large font-mono text-xs text-muted">
             {/* `email` was a required key that nothing rendered; it names the address
                 for a screen reader, which otherwise hears a bare string under a title. */}
             <span className="sr-only">{labels.email}: </span>
@@ -150,9 +150,9 @@ export function ProfileSetting(props: ProfileSettingProps) {
         </div>
       </div>
       <div className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
-        <span className="text-[var(--text-muted)]">{labels.role}</span>
+        <span className="text-muted">{labels.role}</span>
         <span>{role ?? "—"}</span>
-        <span className="text-[var(--text-muted)]">{labels.memberSince}</span>
+        <span className="text-muted">{labels.memberSince}</span>
         <span>{memberSince ?? "—"}</span>
       </div>
       {names ? (
@@ -616,7 +616,7 @@ export function TwoFactorSetting({
 
       {setup && (
         <div className="space-y-2">
-          <div className="text-xs text-[var(--text-secondary)]">{labels.scanHint}</div>
+          <div className="text-xs text-secondary">{labels.scanHint}</div>
           {/* `bg-white`, NOT `--bg-surface`, and it must stay that way: a QR code is
               read by a camera looking for maximum contrast between the modules and
               their quiet zone. On the dark theme a surface-coloured backing makes it
@@ -644,7 +644,7 @@ export function TwoFactorSetting({
           )}
           {secret && (
             <div className="space-y-1">
-              <div className="text-xs text-[var(--text-secondary)]">{labels.secretHint}</div>
+              <div className="text-xs text-secondary">{labels.secretHint}</div>
               <div className="flex items-center gap-1">
                 {/* `dir="ltr"`: a base32 key is Latin letters and digits in a fixed
                     order, and in an RTL page the groups would otherwise be laid out
@@ -676,7 +676,7 @@ export function TwoFactorSetting({
       )}
 
       {enabled && (
-        <div className="space-y-3 border-t border-[var(--border)] pt-3">
+        <div className="space-y-3 border-t border-subtle pt-3">
           <div className="text-sm font-medium">{labels.disableSection}</div>
           <Input type="password" autoComplete="current-password" label={labels.password} value={password} onChange={(e) => setPassword(e.target.value)} />
           <OneTimeCodeInput

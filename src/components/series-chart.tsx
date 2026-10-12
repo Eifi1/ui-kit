@@ -1386,7 +1386,7 @@ function SeriesPlot({
         {empty !== undefined ? (
           empty
         ) : (
-          <p className="text-xs text-[var(--text-muted)]">{labels.empty}</p>
+          <p className="text-xs text-muted">{labels.empty}</p>
         )}
       </div>
     );
@@ -1733,7 +1733,7 @@ function SeriesPlot({
               value={x.title}
               position="insideBottom"
               offset={-grow(12)}
-              className="fill-[var(--text-muted)] text-caption"
+              className="fill-muted text-caption"
             />
           )}
         </XAxis>
@@ -1778,7 +1778,7 @@ function SeriesPlot({
                   // and absent for a shared axis, so the class draws it.
                   style={{ textAnchor: "middle", fill: soleSeriesColor(axis, series) }}
                   offset={grow(AXIS_TITLE_OFFSET)}
-                  className="fill-[var(--text-muted)] text-caption"
+                  className="fill-muted text-caption"
                 />
               )}
             </YAxis>

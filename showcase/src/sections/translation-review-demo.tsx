@@ -208,7 +208,7 @@ export function TranslationReviewDemo() {
             }
           />
           {exported && (
-            <pre className="max-h-64 overflow-auto rounded-md bg-[var(--bg-hover)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+            <pre className="max-h-64 overflow-auto rounded-md bg-hover p-3 font-mono text-xs text-secondary">
               {exported}
             </pre>
           )}
@@ -232,7 +232,7 @@ export function TranslationReviewDemo() {
             <ReviewStatusChip key={status} status={status} />
           ))}
         </div>
-        <p className="mt-2 text-xs text-[var(--text-muted)]">
+        <p className="mt-2 text-xs text-muted">
           Tones: {REVIEW_STATUSES.map((s) => `${s} ${REVIEW_STATUS_TONES[s]}`).join(" · ")}
         </p>
       </Example>

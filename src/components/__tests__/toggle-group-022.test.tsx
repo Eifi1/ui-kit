@@ -91,7 +91,7 @@ describe("ToggleGroup field chrome geometry (keksdose K1, feedback #117 rework)"
     );
     const chrome = screen.getByRole("radiogroup").parentElement!;
     expect(chrome.className).toContain("md:rounded-s-none");
-    expect(chrome.className).toContain("border-[var(--border)]");
+    expect(chrome.className).toContain("border-subtle");
     expect((container.firstElementChild as HTMLElement).className).toContain("md:-ms-px");
     expect(chrome.className).not.toContain("md:-ms-px");
   });
@@ -119,7 +119,7 @@ describe('ToggleGroup labelPlacement="strip" (keksdose K2, live #288 / #431)', (
     // className styles the wrapper; the group keeps its OWN box (no field chrome).
     expect(wrapper.className).toContain("col-span-4");
     expect(wrapper.className).toContain("relative");
-    expect(group.className).toContain("border-[var(--border-strong)]");
+    expect(group.className).toContain("border-strong");
     expect(group.className).toContain("p-0.5");
     expect(group.className).not.toContain("col-span-4");
     const label = screen.getByText("Status");
@@ -161,7 +161,7 @@ describe('ToggleGroup labelPlacement="strip" (keksdose K2, live #288 / #431)', (
     expect(group).toHaveAttribute("aria-invalid", "true");
     expect(group).toHaveAccessibleDescription("Cleared rows are reconciled. Pick a status");
     // No chrome to paint: the bare group wears the invalid border.
-    expect(group.className).toContain("border-[var(--danger-border-strong)]");
+    expect(group.className).toContain("border-danger-strong");
   });
 
   it("dims the label with a disabled group", () => {

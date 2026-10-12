@@ -147,7 +147,7 @@ export function TransferOwnershipDialog({
       onClose={onClose}
       describeError={describeError}
     >
-      {summary && <div className="text-sm text-[var(--text-secondary)]">{summary}</div>}
+      {summary && <div className="text-sm text-secondary">{summary}</div>}
       <Select label={labels.recipient} value={chosen} onChange={(event) => setChosen(event.target.value)}>
         <option value="">{labels.choose}</option>
         {rows.map((row) => (

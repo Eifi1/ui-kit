@@ -8,7 +8,7 @@ import { Example, Note, Row } from "../lib/section";
  * does. And FullBleedDialog's `title`, a real heading that names the dialog.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 /** A save that takes a moment and then closes the dialog from outside. */
 function useFakeSave(onDone: () => void) {
@@ -53,7 +53,7 @@ function ModalOpen() {
         </span>
       </Row>
       <Modal open={open} labelledBy={headingId} className="space-y-3" onClose={() => setOpen(false)}>
-        <h4 id={headingId} className="text-sm font-semibold text-[var(--text-primary)]">
+        <h4 id={headingId} className="text-sm font-semibold text-primary">
           Rename the account (open prop)
         </h4>
         <Input label="Name" defaultValue="Household" />
@@ -68,7 +68,7 @@ function ModalOpen() {
       </Modal>
       {gated && (
         <Modal labelledBy={gatedId} className="space-y-3" onClose={() => setGated(false)}>
-          <h4 id={gatedId} className="text-sm font-semibold text-[var(--text-primary)]">
+          <h4 id={gatedId} className="text-sm font-semibold text-primary">
             Rename the account (mounted only while open)
           </h4>
           <Input label="Name" defaultValue="Household" />
@@ -149,7 +149,7 @@ function FullBleedTitle() {
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Open the phone editor
         </Button>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={level === "h3"} onChange={(e) => setLevel(e.target.checked ? "h3" : "h2")} />
           <code className="font-mono">headingAs=&quot;h3&quot;</code>
         </label>
@@ -160,10 +160,10 @@ function FullBleedTitle() {
         closeLabel="Close the editor"
         title="Edit budget line"
         headingAs={level}
-        header={<span className="truncate text-xs text-[var(--text-muted)]">Groceries · September</span>}
+        header={<span className="truncate text-xs text-muted">Groceries · September</span>}
       >
         <div className="space-y-3">
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-sm text-secondary">
             The heading &ldquo;Edit budget line&rdquo; is an <code className="font-mono">{level}</code> and names this
             dialog; <code className="font-mono">header</code> is still the free slot beside it (the row&apos;s own
             context, in grey). Before 0.10.0 this strip was a styled div, and a named full-screen editor had to

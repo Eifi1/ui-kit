@@ -9,7 +9,7 @@ import { Example, Note, Row } from "../lib/section";
  * BulkActionBar arrow-key stops (keksdose F8).
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 function PressedToggleGroup() {
@@ -66,7 +66,7 @@ const GANTT_KEY: LegendEntry[] = [
     key: "today",
     label: "Today",
     color: "var(--danger)",
-    icon: <span className="block h-3 w-px bg-[var(--danger)]" />,
+    icon: <span className="block h-3 w-px bg-danger" />,
     align: "end",
   },
 ];

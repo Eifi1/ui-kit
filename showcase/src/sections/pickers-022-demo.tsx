@@ -237,7 +237,7 @@ export function Dates022Demo() {
                 onChange={(from, to) => setRange({ from, to })}
               />
             </div>
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-sm text-secondary">
               In a table cell: <DateMark value={due} />
             </p>
           </UiKitProvider>

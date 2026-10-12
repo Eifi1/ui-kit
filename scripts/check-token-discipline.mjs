@@ -15,9 +15,11 @@
  *
  * A SECOND RATCHET since 0.33 (docs/colour-roles-harmonization.md §2.5, §7.4): the role
  * utilities. `tokens.css` names every role for its own property (`text-muted`,
- * `bg-surface-2`, `border-subtle` …), and the kit's ~1,750 `text-[var(--text-muted)]`-style
- * classes stay — a mechanical rewrite would churn hundreds of class assertions here and
- * in the apps — but they may only become fewer. New and touched code uses the utilities.
+ * `bg-surface-2`, `border-subtle` …). 0.33 left the kit's ~1,750 `text-[var(--text-muted)]`-style
+ * classes under a falling count; 0.34 moved them all (round 0.34 Q1, a codemod), so the
+ * count is zero and stays there. A `[var(--…)]` class is still right where no role
+ * utility of the same token and property exists (the money and chart colours, a ring in
+ * `--brand-contrast` …) — this counts only the ones that have one.
  *
  * Run: `npm run check:tokens`
  */
@@ -37,13 +39,14 @@ import { join, resolve } from "node:path";
 const BUDGET = Number(process.env.TOKEN_BUDGET ?? "2");
 
 /**
- * The second ratchet: `[var(--role)]` classes where a role utility exists. Lower this
- * whenever the real count drops; never raise it. Started in 0.33 at the day's count,
- * 1,580 (2026-10-09), after the swipes, Chip solid, the badge, the keypads and B′ had
- * moved to the utilities; 1,576 once the rest of the round had landed (ButtonGroupLink's
- * and ActionCard's brand as text among it).
+ * The second ratchet: `[var(--role)]` classes where a role utility exists. Never raise
+ * it. Started in 0.33 at the day's count, 1,580 (2026-10-09), after the swipes, Chip
+ * solid, the badge, the keypads and B′ had moved to the utilities; 1,576 once the rest of
+ * the round had landed (ButtonGroupLink's and ActionCard's brand as text among it). 0 since
+ * 0.34: the codemod of round 0.34 Q1 moved the remaining 1,578 to the utilities — three
+ * above the budget, which 0.34's HelpPopover commit had added.
  */
-const ROLE_BUDGET = Number(process.env.ROLE_CLASS_BUDGET ?? "1575");
+const ROLE_BUDGET = Number(process.env.ROLE_CLASS_BUDGET ?? "0");
 
 const SRC = resolve(import.meta.dirname, "..", "src");
 

@@ -43,7 +43,7 @@ describe("MiniCalendar showOutsideDays", () => {
     ]);
     const first = container.querySelector<HTMLElement>('[data-iso="2026-08-31"]')!;
     expect(first).toHaveTextContent("31");
-    expect(first).toHaveClass("text-[var(--text-placeholder)]");
+    expect(first).toHaveClass("text-placeholder");
   });
 
   it("keeps the grid whole: seven cells a row, each a named gridcell", () => {

@@ -72,7 +72,7 @@ function physicalSide(side: TooltipSide, dir: Direction): PhysicalSide {
  *  viewport term in this cap is what makes possible: a bubble never wider than the glass
  *  minus the margins always fits once slid. */
 const TOOLTIP_SURFACE =
-  "w-max max-w-[min(20rem,calc(100vw-1rem))] rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] shadow-lg";
+  "w-max max-w-[min(20rem,calc(100vw-1rem))] rounded-md border border-subtle bg-surface px-2 py-1 text-xs font-medium text-primary shadow-lg";
 
 const sidePositionClass: Record<TooltipSide, string> = {
   top: "bottom-full left-1/2 -translate-x-1/2 mb-1",

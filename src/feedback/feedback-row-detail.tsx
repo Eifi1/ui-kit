@@ -655,7 +655,7 @@ export function FeedbackRowDetail({
         <FeedbackDetailSection title={labels.subject}>
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" data-feedback-subject="">
             <FeedbackCategoryBadge category={row.category} />
-            <span className="min-w-0 font-medium text-[var(--text-primary)] [overflow-wrap:anywhere]">
+            <span className="min-w-0 font-medium text-primary [overflow-wrap:anywhere]">
               {row.title}
             </span>
           </p>
@@ -726,7 +726,7 @@ export function FeedbackRowDetail({
                   // AuthedImage default) rather than a grey tile per failure.
                   errorFallback={null}
                   wrapperClassName="inline-block max-w-full"
-                  className="max-h-64 max-w-full rounded border border-[var(--border)]"
+                  className="max-h-64 max-w-full rounded border border-subtle"
                 />
               ) : (
                 <AttachmentDownload key={url} url={url} fetcher={fetchFile} labels={labels} />
@@ -741,7 +741,7 @@ export function FeedbackRowDetail({
         // When the row entered DONE / WONT_DO (keksdose feedback #96).
         action={
           row.resolved_at ? (
-            <span className="text-xs text-[var(--text-muted)]">{labels.resolvedAt(dateText(row.resolved_at))}</span>
+            <span className="text-xs text-muted">{labels.resolvedAt(dateText(row.resolved_at))}</span>
           ) : undefined
         }
       >

@@ -39,12 +39,12 @@ type Sample = keyof typeof SAMPLES;
 /** What the mapper hands over, printed under it — that answer, not the look, is what a
  *  caller builds on. */
 function ResultLine({ result }: { result: ColumnMapperResult<CurveRole> | null }) {
-  if (!result) return <p className="font-mono text-xs text-[var(--text-muted)]">result = null</p>;
+  if (!result) return <p className="font-mono text-xs text-muted">result = null</p>;
   const actual = result.mapping.actual;
   const first =
     result.complete && typeof actual === "number" ? tableNumber(result.rows[0][actual], result.decimalComma) : null;
   return (
-    <p className="font-mono text-xs break-words text-[var(--text-muted)]">
+    <p className="font-mono text-xs break-words text-muted">
       complete = {String(result.complete)} · mapping = {JSON.stringify(result.mapping)} · rows = {result.rows.length} ·
       unread = [{result.unread.map((line) => line.line).join(", ")}]{first !== null && ` · first actual = ${first}`}
     </p>
@@ -129,7 +129,7 @@ function BankExample() {
           mapping={mapping}
           onMappingChange={setMapping}
         />
-        <p className="font-mono text-xs break-words text-[var(--text-muted)]">mapping = {JSON.stringify(mapping)}</p>
+        <p className="font-mono text-xs break-words text-muted">mapping = {JSON.stringify(mapping)}</p>
       </div>
       <Note>
         The preview with the role selects alone, controlled, over rows the caller already has —

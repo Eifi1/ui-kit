@@ -36,18 +36,18 @@ describe("StatTile", () => {
     expect(screen.getByText("Up 5")).toHaveClass("sr-only");
     expect(screen.getByText("vs last week")).toBeInTheDocument();
     expect(container.querySelector("svg[aria-hidden]")).not.toBeNull();
-    expect(screen.getByText("Up 5").parentElement!.className).toContain("--text-muted");
+    expect(screen.getByText("Up 5").parentElement!.className).toMatch(/(^|\s)text-muted(?![\w-])/);
   });
 
   it("judges by goodDirection: a falling cost is good news", () => {
     render(<StatTile label="Cost" value={80} delta={-20} goodDirection="down" />);
     const spoken = screen.getByText("Down 20 (better)");
-    expect(spoken.parentElement!.className).toContain("--success");
+    expect(spoken.parentElement!.className).toMatch(/(^|\s)text-success(?![\w-])/);
   });
 
   it("calls a rise bad when down is good", () => {
     render(<StatTile label="Errors" value={3} delta={2} goodDirection="down" />);
-    expect(screen.getByText("Up 2 (worse)").parentElement!.className).toContain("--danger");
+    expect(screen.getByText("Up 2 (worse)").parentElement!.className).toMatch(/(^|\s)text-danger(?![\w-])/);
   });
 
   it("shows the figure at zero, like Delta (kastlan 48)", () => {

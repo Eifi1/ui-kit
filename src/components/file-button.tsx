@@ -566,7 +566,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
       className={cn(
         // A live drag gets the focus ring's colour as a ring: "let go here", in the
         // same vocabulary the button already uses for "you are here".
-        dragOver && "ring-2 ring-[var(--brand)]",
+        dragOver && "ring-2 ring-brand",
         // Beside a long file name it is the NAME that gives way, never the button.
         showFileName && "shrink-0",
         className,
@@ -607,7 +607,7 @@ export const FileButton = forwardRef<HTMLButtonElement, FileButtonProps>(functio
         id={pickedId}
         aria-live="polite"
         data-slot="file-button-name"
-        className="flex min-w-0 text-sm text-[var(--text-secondary)]"
+        className="flex min-w-0 text-sm text-secondary"
       >
         <Tooltip label={picked.map((f) => f.name).join(", ")} lazy className="min-w-0">
           <span className="block truncate-until-large">{pickedText}</span>

@@ -40,7 +40,7 @@ describe("Tabs", () => {
       render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} />);
       // The scroller and its bottom rule.
       expect(classes(list())).toEqual(
-        "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-[var(--border)]".split(
+        "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-subtle".split(
           " ",
         ),
       );
@@ -49,7 +49,7 @@ describe("Tabs", () => {
       expect(classes(active)).toContain("border-b-2");
       expect(classes(active)).toContain("-mb-px");
       expect(classes(active)).toContain("border-[var(--text-primary)]");
-      expect(active.className).not.toContain("bg-[var(--brand)]");
+      expect(active.className).not.toMatch(/bg-brand(?![\w-])/);
       // …and nothing wraps.
       expect(classes(list())).not.toContain("flex-wrap");
     });
@@ -74,7 +74,7 @@ describe("Tabs", () => {
       expect(cls).toContain("md:flex-nowrap");
       expect(cls).toContain("md:overflow-x-auto");
       expect(cls).toContain("md:border-b");
-      expect(cls).toContain("md:border-[var(--border)]");
+      expect(cls).toContain("md:border-subtle");
     });
 
     it("marks the active tab with a filled brand chip, not a floating underline", () => {
@@ -82,8 +82,8 @@ describe("Tabs", () => {
       const active = classes(screen.getByRole("tab", { name: "Two" }));
       // Theme- and palette-proof: the store writes `--brand` and `--brand-contrast`
       // together for every preset, so this pair cannot end up unreadable.
-      expect(active).toContain("bg-[var(--brand)]");
-      expect(active).toContain("text-[var(--brand-contrast)]");
+      expect(active).toContain("bg-brand");
+      expect(active).toContain("text-brand-contrast");
       // An underline attached to the container's bottom rule would mark only the
       // LAST row, and `-mb-px` would pull every other chip into the row beneath it.
       expect(active).not.toContain("border-b-2");
@@ -98,9 +98,9 @@ describe("Tabs", () => {
     it("keeps every inactive tab readable, on the raised surface", () => {
       render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} wrap />);
       const idle = classes(screen.getByRole("tab", { name: "Three" }));
-      expect(idle).toContain("bg-[var(--bg-surface)]");
-      expect(idle).toContain("text-[var(--text-primary)]");
-      expect(idle).not.toContain("bg-[var(--brand)]");
+      expect(idle).toContain("bg-surface");
+      expect(idle).toContain("text-primary");
+      expect(idle).not.toContain("bg-brand");
       // Ten labels have to fit three rows on a 406px phone: 32px chips (py-2 on
       // text-xs), the desktop sizing restored at md.
       expect(idle).toContain("text-xs");

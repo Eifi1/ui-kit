@@ -100,8 +100,8 @@ export function FeedbackSubmit027Demo() {
             />
           </div>
           {/* A stand-in for the app's top bar: the menu sits where the app puts it. */}
-          <div className="flex items-center justify-end gap-1 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1.5">
-            <span className="me-auto text-sm font-semibold text-[var(--text-primary)]">Example Ltd</span>
+          <div className="flex items-center justify-end gap-1 rounded-lg border border-subtle bg-surface px-3 py-1.5">
+            <span className="me-auto text-sm font-semibold text-primary">Example Ltd</span>
             <FeedbackMenu
               onFile={feedback.open}
               isAdmin={role === "admin"}
@@ -113,7 +113,7 @@ export function FeedbackSubmit027Demo() {
           </div>
           {feedback.dialog}
           {last && (
-            <pre className="max-h-72 overflow-auto rounded-md bg-[var(--bg-surface-2)] p-3 text-xs text-[var(--text-secondary)]">
+            <pre className="max-h-72 overflow-auto rounded-md bg-surface-2 p-3 text-xs text-secondary">
               {JSON.stringify(last, null, 2)}
             </pre>
           )}
@@ -135,7 +135,7 @@ export function FeedbackSubmit027Demo() {
       >
         <div className="grid gap-3 md:grid-cols-2">
           <FeedbackContextBox user={ADA} url={here} attachUrl={attach} onAttachUrlChange={setAttach} />
-          <pre className="min-w-0 overflow-auto rounded-md bg-[var(--bg-surface-2)] p-3 text-xs text-[var(--text-secondary)]">
+          <pre className="min-w-0 overflow-auto rounded-md bg-surface-2 p-3 text-xs text-secondary">
             {JSON.stringify(
               feedbackContext({ user: ADA, attachUrl: attach, url: here, environment: "local", version: "0.27.0" }),
               null,

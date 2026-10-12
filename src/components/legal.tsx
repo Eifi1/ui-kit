@@ -451,8 +451,8 @@ export interface LegalFooterProps {
 export function LegalFooter({ children, links, currentHref, landmark = true, className, labels }: LegalFooterProps) {
   const Root = landmark ? "footer" : "div";
   return (
-    <Root className={cn("border-t border-[var(--border)] bg-[var(--bg-surface)]", className)}>
-      <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-[var(--text-muted)]">
+    <Root className={cn("border-t border-subtle bg-surface", className)}>
+      <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-muted">
         <LegalLinks
           links={links}
           currentHref={currentHref}
@@ -503,16 +503,16 @@ export function LegalSection({ heading, body, children, id: idProp, headingAs }:
   const Heading = headingAs ?? page?.sectionHeading ?? "h2";
   return (
     <section id={id} className="scroll-mt-20">
-      <Heading className="text-lg font-semibold break-words text-[var(--text-primary)]">
+      <Heading className="text-lg font-semibold break-words text-primary">
         {number !== undefined && `${number}. `}
         {heading}
       </Heading>
       <LegalSlotContext.Provider value={null}>
         {body !== undefined && (
-          <LegalText text={body} className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]" />
+          <LegalText text={body} className="mt-2 text-sm leading-relaxed text-secondary" />
         )}
         {children !== undefined && (
-          <div className="mt-2 text-sm leading-relaxed break-words text-[var(--text-secondary)]">
+          <div className="mt-2 text-sm leading-relaxed break-words text-secondary">
             {typeof children === "string" ? resolveLegalRefs(children, page) : children}
           </div>
         )}
@@ -566,7 +566,7 @@ export function LegalLayout({
   return (
     <article className={cn("mx-auto w-full max-w-3xl px-4 py-12", className)}>
       {back !== undefined && <div className="mb-4 text-sm">{back}</div>}
-      <Heading className="text-3xl font-bold tracking-tight break-words text-[var(--text-primary)]">{title}</Heading>
+      <Heading className="text-3xl font-bold tracking-tight break-words text-primary">{title}</Heading>
       {translationNote !== undefined && translationNote !== null && <div className="mt-3">{translationNote}</div>}
       {notice !== undefined && notice !== null && (
         <AlertBanner tone="warning" role="note" className="mt-4">
@@ -575,7 +575,7 @@ export function LegalLayout({
       )}
       <div className="mt-8 space-y-8">{children}</div>
       {links !== undefined && links.length > 0 && (
-        <LegalLinks links={links} currentHref={currentHref} labels={labels} className="mt-12 border-t border-[var(--border)] pt-4" />
+        <LegalLinks links={links} currentHref={currentHref} labels={labels} className="mt-12 border-t border-subtle pt-4" />
       )}
     </article>
   );

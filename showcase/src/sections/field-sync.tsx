@@ -165,7 +165,7 @@ function CompactIndicatorExample() {
           </Row>
         </div>
       </Stage>
-      <p className="text-xs text-[var(--text-muted)]">
+      <p className="text-xs text-muted">
         Top row: <code className="font-mono">showLabel</code> and{" "}
         <code className="font-mono">onRetry</code> (retries pressed: {retries}). Bottom row: the
         defaults — icon only, hover for the words, no retry.
@@ -244,8 +244,8 @@ function LiveFieldExample() {
           ] as const
         ).map(([k, v]) => (
           <div key={k}>
-            <dt className="text-[var(--text-muted)]">{k}</dt>
-            <dd className="truncate-until-large text-[var(--text-primary)]">{v}</dd>
+            <dt className="text-muted">{k}</dt>
+            <dd className="truncate-until-large text-primary">{v}</dd>
           </div>
         ))}
       </dl>
@@ -297,12 +297,12 @@ function RaceExample() {
       </Stage>
 
       <div className="mt-3 flex items-center justify-between gap-2">
-        <span className="text-xs text-[var(--text-muted)]">Save log</span>
+        <span className="text-xs text-muted">Save log</span>
         <Button variant="ghost" onClick={() => setLog([])} disabled={!log.length}>
           Clear
         </Button>
       </div>
-      <pre className="mt-1 max-h-40 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-caption text-[var(--text-secondary)]">
+      <pre className="mt-1 max-h-40 overflow-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-caption text-secondary">
         {log.length ? log.join("\n") : "— nothing sent yet —"}
       </pre>
 
@@ -382,8 +382,8 @@ function AutoSaveExample() {
           ] as const
         ).map(([k, v]) => (
           <div key={k}>
-            <dt className="text-[var(--text-muted)]">{k}</dt>
-            <dd className="truncate-until-large text-[var(--text-primary)]">{v}</dd>
+            <dt className="text-muted">{k}</dt>
+            <dd className="truncate-until-large text-primary">{v}</dd>
           </div>
         ))}
       </dl>
@@ -457,10 +457,10 @@ function ExplicitSaveExample() {
           </Row>
         </div>
       </Stage>
-      <p className="font-mono text-xs text-[var(--text-muted)]">
+      <p className="font-mono text-xs text-muted">
         state {sync.state} · dirty {String(sync.dirty)}
       </p>
-      <pre className="mt-1 max-h-32 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-caption text-[var(--text-secondary)]">
+      <pre className="mt-1 max-h-32 overflow-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-caption text-secondary">
         {log.length ? log.join("\n") : "— nothing yet —"}
       </pre>
       <Note>
@@ -490,7 +490,7 @@ function RtlExample() {
           </div>
         ))}
       </Stage>
-      <p className="text-xs text-[var(--text-muted)]">
+      <p className="text-xs text-muted">
         The icon sits at the field&apos;s END and the input reserves end padding for it — logical
         sides, so in a right-to-left page both move to the left edge.
       </p>

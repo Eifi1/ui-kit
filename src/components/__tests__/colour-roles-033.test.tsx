@@ -26,7 +26,7 @@ describe("B′: a control that can sit on any surface hovers with the translucen
       const { unmount } = render(<Button variant={variant}>Save</Button>);
       const c = cls(screen.getByRole("button"));
       expect(c, variant).toContain(HOVER_INK);
-      expect(c, variant).not.toContain("hover:bg-[var(--bg-surface-2)]");
+      expect(c, variant).not.toContain("hover:bg-surface-2");
       unmount();
     }
   });
@@ -45,7 +45,7 @@ describe("B′: a control that can sit on any surface hovers with the translucen
   it("a danger ghost hovers onto the danger wash, where its red text keeps 4.5:1", () => {
     render(<Button variant="ghost" tone="danger">Remove</Button>);
     const c = cls(screen.getByRole("button"));
-    expect(c).toContain("hover:bg-[var(--danger-bg)]");
+    expect(c).toContain("hover:bg-danger-soft");
     expect(c).not.toContain(HOVER_INK);
   });
 });
@@ -67,7 +67,8 @@ describe("--border is a line, not a fill under text (§12.9)", () => {
     for (const name of ["Plus", "Clear"]) {
       const key = within(panel).getByRole("button", { name });
       expect(cls(key), name).toEqual(expect.arrayContaining(["bg-active", "hover:bg-surface-2"]));
-      expect(key.className, name).not.toContain("var(--border)]");
+      // `--border` in any form: `[var(--border)]`, or a role utility's `subtle` (0.34).
+      expect(key.className, name).not.toMatch(/var\(--border\)\]|-subtle(?![\w-])/);
     }
   });
 
@@ -104,7 +105,7 @@ describe("every fill under its own foreground (§5.1)", () => {
     render(<Chip tone="brand" variant="outline" data-testid="brand">New</Chip>);
     const c = cls(screen.getByTestId("brand"));
     expect(c).toContain("text-brand-muted");
-    expect(c).not.toContain("text-[var(--brand)]");
+    expect(c).not.toContain("text-brand");
   });
 });
 
@@ -132,7 +133,7 @@ describe("DataTable", () => {
 
   it("lets a selected row keep its well and draw the outline on hover (§12.2)", () => {
     // Kurvenschmiede's selected rows: rowClassName merges last, so its `hover:` fill
-    // replaces the row's own `hover:bg-[var(--bg-hover)]`, which would read as "not
+    // replaces the row's own `hover:bg-hover`, which would read as "not
     // selected" — and sits 1.04:1 from a light well.
     const selected = "bg-surface-2 hover:bg-surface-2 hover:outline hover:-outline-offset-1 hover:outline-strong";
     render(
@@ -142,7 +143,7 @@ describe("DataTable", () => {
     );
     const row = screen.getAllByRole("row")[1];
     expect(cls(row)).toEqual(expect.arrayContaining(selected.split(" ")));
-    expect(cls(row)).not.toContain("hover:bg-[var(--bg-hover)]");
+    expect(cls(row)).not.toContain("hover:bg-hover");
   });
 
   describe("on a phone, the row actions' swipes", () => {

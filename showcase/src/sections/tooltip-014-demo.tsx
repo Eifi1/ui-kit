@@ -16,13 +16,13 @@ export function TooltipClampDemo() {
       label="Tooltip — in-place bubble clamped to the viewport"
       hint="a long label at the start edge slides back onto the screen instead of hanging off it"
     >
-      <div className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] px-2 py-1.5">
+      <div className="flex items-center justify-between gap-2 rounded-md border border-subtle px-2 py-1.5">
         <Tooltip label={COMMAND} lazy>
           <IconButton size="sm" aria-label="Show command">
             <Terminal />
           </IconButton>
         </Tooltip>
-        <span className="min-w-0 truncate-until-large text-sm text-[var(--text-secondary)]">nightly-import</span>
+        <span className="min-w-0 truncate-until-large text-sm text-secondary">nightly-import</span>
         <Tooltip label={COMMAND}>
           <IconButton size="sm" aria-label="Show command (default)">
             <Terminal />

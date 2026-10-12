@@ -22,7 +22,7 @@ const del = (onCommit: () => void): SwipeAction => ({
   onCommit,
   label: "Delete",
   className: "bg-[var(--money-neutral)]",
-  armedClassName: "bg-[var(--danger)]",
+  armedClassName: "bg-danger",
 });
 
 const restore = (onCommit: () => void): SwipeAction => ({
@@ -136,6 +136,6 @@ describe("the revealed buttons stay out of the document's way", () => {
     const action = screen.getByRole("button", { name: "Delete" });
     expect(action.className).toMatch(/(^|\s)focus:not-sr-only(\s|$)/);
     expect(action.className).toContain(FOCUS_RING);
-    expect(action.className).toMatch(/focus-visible:ring-\[var\(--brand\)\]/);
+    expect(action.className).toMatch(/focus-visible:ring-brand(?![\w-])/);
   });
 });

@@ -374,7 +374,7 @@ export function SharePanel({
 
   return (
     <div className="space-y-3">
-      {intro && <div className="text-xs text-[var(--text-muted)]">{intro}</div>}
+      {intro && <div className="text-xs text-muted">{intro}</div>}
 
       {canAdd && (
         <div className="space-y-2">
@@ -470,7 +470,7 @@ export function SharePanel({
         <div className="space-y-2">
           <SectionLabel as="h4">{labels.whoHasAccess}</SectionLabel>
           {nobody && <Caption>{labels.nobodyYet}</Caption>}
-          <ul className="divide-y divide-[var(--border)]">
+          <ul className="divide-y divide-subtle">
             {grantees.map((g) => {
               const editable = !readOnly && !g.locked;
               const changeable = editable && onRoleChange !== undefined && choosable;
@@ -483,7 +483,7 @@ export function SharePanel({
                       the name, full row, instead of truncating it to a letter. */}
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
                     <div className="min-w-0 flex-1 basis-40">
-                      <div className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-[var(--text-primary)]">
+                      <div className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-primary">
                         {g.kind === "team" && <UsersRound className="size-4 shrink-0" aria-hidden />}
                         <span data-private className="truncate-until-large">
                           {g.name}
@@ -491,7 +491,7 @@ export function SharePanel({
                         {!changeable && <ShareRoleChip role={roleOf(g.role)} />}
                       </div>
                       {(g.kind === "team" || g.email) && (
-                        <div data-private className="truncate-until-large text-xs text-[var(--text-muted)]">
+                        <div data-private className="truncate-until-large text-xs text-muted">
                           {g.kind === "team" ? labels.team : g.email}
                         </div>
                       )}
@@ -566,7 +566,7 @@ export function SharePanel({
                         data-private={p.email ? true : undefined}
                         className={cn(
                           "truncate-until-large text-sm",
-                          p.email ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]",
+                          p.email ? "text-primary" : "text-muted",
                         )}
                       >
                         {name}
@@ -635,7 +635,7 @@ export interface ShareCardProps extends SharePanelProps {
 export function ShareCard({ title, variant = "outline", className, ...panel }: ShareCardProps) {
   return (
     <Card variant={variant} padding="sm" className={cn("space-y-3", className)}>
-      {title && <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>}
+      {title && <h3 className="text-sm font-semibold text-primary">{title}</h3>}
       <SharePanel {...panel} />
     </Card>
   );

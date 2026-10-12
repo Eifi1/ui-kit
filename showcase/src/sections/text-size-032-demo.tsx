@@ -42,11 +42,11 @@ const code = (s: string) => <code className="font-mono [overflow-wrap:anywhere]"
 
 function Readout({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-[var(--border)] py-1 last:border-b-0">
-      <span className="text-[var(--text-secondary)]">{label}</span>
+    <div className="flex items-baseline justify-between gap-3 border-b border-subtle py-1 last:border-b-0">
+      <span className="text-secondary">{label}</span>
       {/* `anywhere` lowers the value's min-content too: the account's JSON is one
           unbreakable word, and it held the whole grid wider than a phone. */}
-      <span className="min-w-0 text-end font-mono text-[var(--text-primary)] [overflow-wrap:anywhere]">{value}</span>
+      <span className="min-w-0 text-end font-mono text-primary [overflow-wrap:anywhere]">{value}</span>
     </div>
   );
 }
@@ -67,8 +67,8 @@ function LiveAnswers() {
       <Readout label={`useBreakpoint("sm" | "md" | "lg")`} value={`${sm} · ${md} · ${lg}`} />
       <Readout label="usePhoneLayout()" value={String(phone)} />
       <div className="flex items-baseline justify-between gap-3 py-1">
-        <span className="text-[var(--text-secondary)]">The CSS: {code("md:inline")} / {code("max-md:inline")}</span>
-        <span className="font-mono text-[var(--text-primary)]">
+        <span className="text-secondary">The CSS: {code("md:inline")} / {code("max-md:inline")}</span>
+        <span className="font-mono text-primary">
           <span className="hidden md:inline">md: on</span>
           <span className="hidden max-md:inline">max-md: on</span>
         </span>
@@ -106,24 +106,24 @@ export function TextSize032Demo() {
       </Example>
 
       <Example label="A live sample" hint="every role that More contrast steps, and the 16px field floor on touch">
-        <div className="space-y-3 rounded-lg border border-[var(--border)] p-4">
-          <p className="text-base font-semibold text-[var(--text-primary)]">Ada&apos;s Garden Planner</p>
-          <p className="text-sm text-[var(--text-secondary)]">
+        <div className="space-y-3 rounded-lg border border-subtle p-4">
+          <p className="text-base font-semibold text-primary">Ada&apos;s Garden Planner</p>
+          <p className="text-sm text-secondary">
             Secondary text: the tomatoes go out after the last frost.
           </p>
-          <p className="text-sm text-[var(--text-muted)]">Muted text: last watered two days ago.</p>
-          <p className="text-caption text-[var(--text-muted)]">
+          <p className="text-sm text-muted">Muted text: last watered two days ago.</p>
+          <p className="text-caption text-muted">
             {code("text-caption")} (0.6875rem) and <span className="text-micro">{code("text-micro")} (0.625rem)</span>{" "}
             — the sizes the kit&apos;s 11 and 10px move to.
           </p>
           <Input label="Bed name" placeholder="Placeholder: e.g. North bed" />
           <div className="flex flex-wrap items-center gap-2">
             <Button>Save the plan</Button>
-            <button type="button" className={cn("rounded-md border border-[var(--border)] px-3 py-1.5 text-sm", FOCUS_RING)}>
+            <button type="button" className={cn("rounded-md border border-subtle px-3 py-1.5 text-sm", FOCUS_RING)}>
               Tab to me: {code("FOCUS_RING")}
             </button>
           </div>
-          <ul className="divide-y divide-[var(--border)] rounded-md border border-[var(--border)] text-sm">
+          <ul className="divide-y divide-subtle rounded-md border border-subtle text-sm">
             <li className="px-3 py-2">Borders and dividers step toward {code("--border-strong")}</li>
             <li className="px-3 py-2">…until they clear 3:1 on every surface</li>
           </ul>
@@ -207,7 +207,7 @@ function AccountRuleDemo() {
           <Readout label="contrast" value={`${appearance.contrast} (from the ${appearance.sources.contrast})`} />
           <Readout label="account" value={signedIn ? JSON.stringify(account) : "signed out"} />
         </div>
-        <ul aria-label="Writes" className="space-y-0.5 font-mono text-xs text-[var(--text-secondary)] [overflow-wrap:anywhere]">
+        <ul aria-label="Writes" className="space-y-0.5 font-mono text-xs text-secondary [overflow-wrap:anywhere]">
           {log.length === 0 ? <li>No writes yet — signing in wrote nothing.</li> : log.map((l, i) => <li key={i}>{l}</li>)}
         </ul>
       </div>

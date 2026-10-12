@@ -323,7 +323,7 @@ export function SettingsLayout<G extends string>({
                 e.preventDefault();
                 route.back();
               }}
-              className={cn("-ms-1 inline-flex items-center gap-0.5 self-start rounded-md pe-1 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]", FOCUS_RING)}
+              className={cn("-ms-1 inline-flex items-center gap-0.5 self-start rounded-md pe-1 text-sm font-medium text-muted hover:text-primary", FOCUS_RING)}
             >
               <ChevronLeft aria-hidden className="size-4 rtl:-scale-x-100" />
               {pageTitle}
@@ -349,7 +349,7 @@ export function SettingsLayout<G extends string>({
                   leading={
                     <span
                       aria-hidden
-                      className="flex size-8 shrink-0 items-center justify-center rounded-md bg-[var(--bg-surface-2)] text-[var(--text-secondary)] [&_svg]:size-4"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2 text-secondary [&_svg]:size-4"
                     >
                       {g.icon}
                     </span>

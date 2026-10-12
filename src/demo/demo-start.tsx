@@ -125,7 +125,7 @@ export function DemoStart<T>({
           progress line is announced (a region inserted with its text often is not). */}
       <div role="status" aria-live="polite" className="w-full">
         {refusal === null ? (
-          <p className="flex items-center justify-center gap-2 text-sm text-[var(--text-secondary)]">
+          <p className="flex items-center justify-center gap-2 text-sm text-secondary">
             <Spinner label={null} className="size-5" />
             {labels.starting}
           </p>

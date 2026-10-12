@@ -54,15 +54,15 @@ export type SparklineTone =
 // per element is enough and a signed bar chart needs no second lookup table.
 const TONE_CLASS: Record<Exclude<SparklineTone, "signed">, string> = {
   chart: "text-[var(--chart-1)]",
-  brand: "text-[var(--brand)]",
-  muted: "text-[var(--text-muted)]",
+  brand: "text-brand",
+  muted: "text-muted",
   income: "text-[var(--money-income)]",
   expense: "text-[var(--money-expense)]",
   net: "text-[var(--money-net)]",
-  success: "text-[var(--success)]",
-  warning: "text-[var(--warning)]",
-  danger: "text-[var(--danger)]",
-  info: "text-[var(--info)]",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-danger",
+  info: "text-info",
 };
 
 const signedClass = (v: number) => (v < 0 ? TONE_CLASS.expense : TONE_CLASS.income);

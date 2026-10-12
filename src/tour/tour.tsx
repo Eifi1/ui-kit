@@ -682,22 +682,22 @@ function TourCard({
       // trap silently does nothing.
       tabIndex={-1}
       style={style}
-      className="pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-xl outline-none transition-all duration-200 ease-out"
+      className="pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-subtle bg-surface p-4 shadow-xl outline-none transition-all duration-200 ease-out"
     >
-      <div className="text-sm font-semibold text-[var(--text-primary)]">{step.title}</div>
-      <div className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{step.body}</div>
+      <div className="text-sm font-semibold text-primary">{step.title}</div>
+      <div className="mt-1 text-sm leading-relaxed text-secondary">{step.body}</div>
       {step.action && <div className="mt-3">{step.action}</div>}
       <div className="mt-4 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={onSkip}
-            className="text-xs text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+            className="text-xs text-placeholder hover:text-secondary"
           >
             {labels.skip}
           </button>
           <div className="flex items-center gap-2">
-            <span className="whitespace-nowrap text-xs tabular-nums text-[var(--text-placeholder)]">
+            <span className="whitespace-nowrap text-xs tabular-nums text-placeholder">
               {labels.step(index + 1, total)}
             </span>
             {!isFirst && (
@@ -721,7 +721,7 @@ function TourCard({
           </div>
         </div>
         {step.awaitClick && step.target && rect && (
-          <div className="text-center text-xs italic text-[var(--text-placeholder)]">
+          <div className="text-center text-xs italic text-placeholder">
             {labels.awaitClickHint}
           </div>
         )}

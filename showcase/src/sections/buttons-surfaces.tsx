@@ -69,10 +69,10 @@ function ButtonVariants() {
           </Button>
         ))}
       </Row>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
+      <p className="mt-3 text-xs text-muted">
         {last ? (
           <>
-            last pressed: <span className="font-mono text-[var(--text-secondary)]">{last}</span>
+            last pressed: <span className="font-mono text-secondary">{last}</span>
           </>
         ) : (
           "press one — every specimen on this page is wired to real state"
@@ -107,7 +107,7 @@ function ButtonStretch() {
         {/* Narrow enough, with short enough labels, that all three share one line at phone
             width: once "with stretch" wrapped away from the field it had nothing taller to
             stretch to, and the specimen showed two identical buttons. */}
-        <div className="flex h-16 w-24 items-center rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 text-xs text-[var(--text-muted)] sm:w-auto sm:min-w-40">
+        <div className="flex h-16 w-24 items-center rounded-md border border-subtle bg-surface-2 px-3 text-xs text-muted sm:w-auto sm:min-w-40">
           a 64px-tall field
         </div>
         <Button variant="secondary">no stretch</Button>
@@ -166,8 +166,8 @@ function ButtonRef() {
           Save
         </Button>
       </Row>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
-        Save is focused: <span className="font-mono text-[var(--text-secondary)]">{String(focused)}</span>{" "}
+      <p className="mt-3 text-xs text-muted">
+        Save is focused: <span className="font-mono text-secondary">{String(focused)}</span>{" "}
         — the first button calls <code className="font-mono">saveRef.current.focus()</code>.
       </p>
       <div className="mt-3">
@@ -290,7 +290,7 @@ function PlanCard() {
           {/* CardTitle sets weight and leading only — no colour — so it inherits.
               Spelling the token out here keeps the card legible inside this page's
               own surface instead of relying on whatever wraps it. */}
-          <CardTitle className="text-[var(--text-primary)]">Team plan</CardTitle>
+          <CardTitle className="text-primary">Team plan</CardTitle>
           <CardDescription>Billed monthly · renews 14 October</CardDescription>
           <CardAction>
             <IconButton size="sm" variant="ghost" aria-label="Plan options" title="Plan options">
@@ -301,12 +301,12 @@ function PlanCard() {
         <CardContent className="pt-4">
           <dl className="space-y-1.5 text-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-[var(--text-secondary)]">Seats</dt>
-              <dd className="font-medium text-[var(--text-primary)]">{seats}</dd>
+              <dt className="text-secondary">Seats</dt>
+              <dd className="font-medium text-primary">{seats}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-[var(--text-secondary)]">Auto-renew</dt>
-              <dd className="font-medium text-[var(--text-primary)]">
+              <dt className="text-secondary">Auto-renew</dt>
+              <dd className="font-medium text-primary">
                 {autoRenew ? "On" : "Off"}
               </dd>
             </div>
@@ -343,7 +343,7 @@ function FlushCard() {
       hint="drops the radius, side borders and shadow below 768px; narrow the window to see it"
     >
       <Card flush>
-        <CardContent className="py-4 text-sm text-[var(--text-secondary)]">
+        <CardContent className="py-4 text-sm text-secondary">
           On a phone this spans the viewport edge to edge with only a top and bottom rule; from{" "}
           <code className="font-mono">md</code> up it is an ordinary card again. For primary
           content on a data page — not for a centred dialog panel, which should keep its
@@ -467,14 +467,14 @@ function LinkVariant() {
   const [shown, setShown] = useState(false);
   return (
     <Example label="Button — link" hint='variant="link": no box, no padding — an action that reads as a word in a sentence'>
-      <p className="text-sm text-[var(--text-secondary)]">
+      <p className="text-sm text-secondary">
         Twelve rows could not be matched to a payee.{" "}
         <Button variant="link" onClick={() => setShown((v) => !v)}>
           {shown ? "Hide them" : "Show them"}
         </Button>
       </p>
       {shown && (
-        <ul className="mt-2 list-disc ps-5 font-mono text-xs text-[var(--text-muted)]">
+        <ul className="mt-2 list-disc ps-5 font-mono text-xs text-muted">
           <li>2026-09-02 · SEPA 4410</li>
           <li>2026-09-03 · CARD 7781</li>
           <li>…ten more</li>
@@ -502,7 +502,7 @@ function OverlayIconButtons() {
     <Example label="IconButton — overlay" hint='variant="overlay": a round translucent disc over an image, legible on any photo'>
       <div className="flex flex-wrap gap-4">
         {removed ? (
-          <div className="flex h-40 w-64 max-w-full items-center justify-center rounded-lg border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)]">
+          <div className="flex h-40 w-64 max-w-full items-center justify-center rounded-lg border border-dashed border-subtle text-sm text-muted">
             <Button variant="link" onClick={() => setRemoved(false)}>
               Put the photo back
             </Button>
@@ -548,17 +548,17 @@ function InsetCard() {
     <Example label="Card — inset" hint='variant="inset": a panel inside a card — surface-2, small radius, its own p-3, no border'>
       <Card className="max-w-md">
         <CardHeader>
-          <CardTitle className="text-[var(--text-primary)]">Loan calculation</CardTitle>
+          <CardTitle className="text-primary">Loan calculation</CardTitle>
           <CardDescription>Annuity, 20 years, 3.4 % fixed</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 pt-4 sm:grid-cols-2">
           <Card variant="inset">
-            <p className="text-xs text-[var(--text-muted)]">Monthly rate</p>
-            <p className="text-lg font-semibold tabular-nums text-[var(--text-primary)]">1,149.62 €</p>
+            <p className="text-xs text-muted">Monthly rate</p>
+            <p className="text-lg font-semibold tabular-nums text-primary">1,149.62 €</p>
           </Card>
           <Card variant="inset" className="p-4">
-            <p className="text-xs text-[var(--text-muted)]">Total interest</p>
-            <p className="text-lg font-semibold tabular-nums text-[var(--text-primary)]">75,908.80 €</p>
+            <p className="text-xs text-muted">Total interest</p>
+            <p className="text-lg font-semibold tabular-nums text-primary">75,908.80 €</p>
           </Card>
         </CardContent>
       </Card>
@@ -588,7 +588,7 @@ function ButtonGroups() {
     >
       <div className="flex flex-wrap items-start gap-6">
         <div className="space-y-2">
-          <p className="font-mono text-caption text-[var(--text-muted)]">horizontal · Buttons</p>
+          <p className="font-mono text-caption text-muted">horizontal · Buttons</p>
           <ButtonGroup aria-label="Categories">
             <Button variant="secondary" onClick={() => setAllOpen(false)}>
               <ChevronsDownUp className="size-4" aria-hidden /> Collapse all
@@ -597,12 +597,12 @@ function ButtonGroups() {
               <ChevronsUpDown className="size-4" aria-hidden /> Expand all
             </Button>
           </ButtonGroup>
-          <p className="font-mono text-xs text-[var(--text-secondary)]">
+          <p className="font-mono text-xs text-secondary">
             {allOpen === null ? "—" : allOpen ? "expanded all" : "collapsed all"}
           </p>
         </div>
         <div className="space-y-2">
-          <p className="font-mono text-caption text-[var(--text-muted)]">vertical · IconButtons</p>
+          <p className="font-mono text-caption text-muted">vertical · IconButtons</p>
           <ButtonGroup orientation="vertical" aria-label="Zoom">
             <IconButton variant="secondary" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(18, z + 1))}>
               <Plus />
@@ -611,10 +611,10 @@ function ButtonGroups() {
               <Minus />
             </IconButton>
           </ButtonGroup>
-          <p className="font-mono text-xs text-[var(--text-secondary)]">zoom {zoom}</p>
+          <p className="font-mono text-xs text-secondary">zoom {zoom}</p>
         </div>
         <div className="space-y-2">
-          <p className="font-mono text-caption text-[var(--text-muted)]">horizontal · three IconButtons</p>
+          <p className="font-mono text-caption text-muted">horizontal · three IconButtons</p>
           <ButtonGroup aria-label="Text alignment">
             {(
               [
@@ -636,7 +636,7 @@ function ButtonGroups() {
           </ButtonGroup>
         </div>
         <div dir="rtl" className="space-y-2">
-          <p className="font-mono text-caption text-[var(--text-muted)]" dir="ltr">dir=&quot;rtl&quot;</p>
+          <p className="font-mono text-caption text-muted" dir="ltr">dir=&quot;rtl&quot;</p>
           <ButtonGroup aria-label="التنقل">
             <Button variant="secondary">الأول</Button>
             <Button variant="secondary">الثاني</Button>
@@ -669,8 +669,8 @@ function ButtonSizes() {
       label='Button size="sm", and IconButton pressed / tone="info" / disabled'
       hint="sm is 12px text and px-2 py-1 for a toolbar; pressed makes an icon button a toggle"
     >
-      <div className="flex flex-wrap items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2">
-        <span className="me-auto text-sm font-medium text-[var(--text-primary)]">Budgets · September</span>
+      <div className="flex flex-wrap items-center gap-2 rounded-md border border-subtle bg-surface-2 px-3 py-2">
+        <span className="me-auto text-sm font-medium text-primary">Budgets · September</span>
         <Button size="sm" variant="secondary">
           Export
         </Button>
@@ -704,11 +704,11 @@ function ButtonSizes() {
         >
           <Share2 />
         </IconButton>
-        <span className="font-mono text-xs text-[var(--text-muted)]">aria-pressed={String(shared)}</span>
+        <span className="font-mono text-xs text-muted">aria-pressed={String(shared)}</span>
         <IconButton aria-label="Reconcile" tone="info" onClick={() => setReconciled((n) => n + 1)}>
           <Info />
         </IconButton>
-        <span className="font-mono text-xs text-[var(--text-muted)]">reconciled {reconciled}×</span>
+        <span className="font-mono text-xs text-muted">reconciled {reconciled}×</span>
         <IconButton aria-label="Delete (disabled)" tone="danger" disabled={locked}>
           <Trash2 />
         </IconButton>
@@ -748,8 +748,8 @@ function IconButtonQuiet() {
       hint="each coloured tone has two resting looks: quiet (grey until hover/focus) or toned (its colour at rest)"
     >
       {/* A phone bulk bar: ONE destructive action, on a screen that never hovers. */}
-      <div className="flex flex-wrap items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2">
-        <span className="me-auto text-sm font-medium text-[var(--text-primary)]">{selected} selected</span>
+      <div className="flex flex-wrap items-center gap-2 rounded-md border border-subtle bg-surface-2 px-3 py-2">
+        <span className="me-auto text-sm font-medium text-primary">{selected} selected</span>
         <IconButton
           aria-label="Delete the selected rows"
           tone="danger"
@@ -769,13 +769,13 @@ function IconButtonQuiet() {
           Select two
         </Button>
       </div>
-      <p className="mt-1 font-mono text-xs text-[var(--text-muted)]">
+      <p className="mt-1 font-mono text-xs text-muted">
         danger quiet=&#123;false&#125; · deleted {deleted} row{deleted === 1 ? "" : "s"}
       </p>
       {/* A flag repeated down a list: `quiet` on warning/info so every row does not shout. */}
-      <ul className="mt-4 divide-y divide-[var(--border)] rounded-md border border-[var(--border)]">
+      <ul className="mt-4 divide-y divide-subtle rounded-md border border-subtle">
         {QUIET_ROWS.map((row) => (
-          <li key={row} className="flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--text-secondary)]">
+          <li key={row} className="flex items-center gap-2 px-3 py-1.5 text-sm text-secondary">
             <span className="me-auto">{row}</span>
             <IconButton
               aria-label={`Flag ${row} for review`}
@@ -796,7 +796,7 @@ function IconButtonQuiet() {
         ))}
       </ul>
       <Row className="mt-3">
-        <span className="text-xs text-[var(--text-muted)]">defaults, for comparison:</span>
+        <span className="text-xs text-muted">defaults, for comparison:</span>
         <IconButton aria-label="warning, default (toned)" tone="warning">
           <Flag />
         </IconButton>

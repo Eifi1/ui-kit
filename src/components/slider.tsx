@@ -92,15 +92,15 @@ const TRACK = [
   "[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--brand)_var(--slider-fill),var(--border-strong)_var(--slider-fill))]",
   "rtl:[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_left,var(--brand)_var(--slider-fill),var(--border-strong)_var(--slider-fill))]",
   "[&::-webkit-slider-thumb]:-mt-[0.3125rem] [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none",
-  "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--brand)] [&::-webkit-slider-thumb]:shadow",
-  "focus-visible:[&::-webkit-slider-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-webkit-slider-thumb]:ring-[var(--brand)]",
+  "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:shadow",
+  "focus-visible:[&::-webkit-slider-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-webkit-slider-thumb]:ring-brand",
   "focus-visible:[&::-webkit-slider-thumb]:ring-offset-2 focus-visible:[&::-webkit-slider-thumb]:ring-offset-[var(--bg-surface)]",
   // Firefox
   "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-[var(--border-strong)]",
-  "[&::-moz-range-progress]:h-1.5 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-[var(--brand)]",
+  "[&::-moz-range-progress]:h-1.5 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-brand",
   "[&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0",
-  "[&::-moz-range-thumb]:bg-[var(--brand)] [&::-moz-range-thumb]:shadow",
-  "focus-visible:[&::-moz-range-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-moz-range-thumb]:ring-[var(--brand)]",
+  "[&::-moz-range-thumb]:bg-brand [&::-moz-range-thumb]:shadow",
+  "focus-visible:[&::-moz-range-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-moz-range-thumb]:ring-brand",
   "focus-visible:[&::-moz-range-thumb]:ring-offset-2 focus-visible:[&::-moz-range-thumb]:ring-offset-[var(--bg-surface)]",
 ].join(" ");
 
@@ -264,7 +264,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
           {label !== undefined && (
             <label
               htmlFor={inputId}
-              className="min-w-0 select-none text-xs font-medium text-[var(--text-secondary)]"
+              className="min-w-0 select-none text-xs font-medium text-secondary"
             >
               {label}
             </label>
@@ -273,7 +273,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
           {readout !== undefined && (
             <span
               className={cn(
-                "ms-auto max-w-full text-xs tabular-nums text-[var(--text-primary)]",
+                "ms-auto max-w-full text-xs tabular-nums text-primary",
                 plainReadout && "select-none",
               )}
             >
@@ -316,7 +316,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
             >
               <span className="h-1.5 w-px shrink-0 bg-[var(--border-strong)]" />
               {m.label !== undefined && (
-                <span className="mt-0.5 select-none whitespace-nowrap text-caption leading-tight text-[var(--text-muted)]">
+                <span className="mt-0.5 select-none whitespace-nowrap text-caption leading-tight text-muted">
                   {m.label}
                 </span>
               )}

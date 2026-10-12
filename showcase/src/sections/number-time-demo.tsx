@@ -13,7 +13,7 @@ import { Example, Note, Stage } from "../lib/section";
 
 /** The raw value under a specimen. */
 function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">value = {children}</p>;
+  return <p className="mt-2 font-mono text-xs text-muted">value = {children}</p>;
 }
 
 /** NumberField — on the Numbers page, right after the NumberInput it is built on. */
@@ -163,7 +163,7 @@ export function TimeInputDemo() {
       <Example label="TimeInput — compact pair" hint="unlabelled; className sizes the input">
         <Stage>
           <div className="flex items-center gap-1.5">
-            <label htmlFor="demo-quiet-start" className="text-xs text-[var(--text-muted)]">
+            <label htmlFor="demo-quiet-start" className="text-xs text-muted">
               From
             </label>
             <TimeInput
@@ -174,7 +174,7 @@ export function TimeInputDemo() {
             />
           </div>
           <div className="flex items-center gap-1.5">
-            <label htmlFor="demo-quiet-end" className="text-xs text-[var(--text-muted)]">
+            <label htmlFor="demo-quiet-end" className="text-xs text-muted">
               to
             </label>
             <TimeInput

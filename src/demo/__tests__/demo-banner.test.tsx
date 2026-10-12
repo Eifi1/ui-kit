@@ -100,13 +100,13 @@ describe("DemoBanner — §5.4", () => {
     const { container } = render(<DemoBanner {...at(50 * MIN)} model="sandbox" access={ACCESS} />);
     expect(screen.getByText("Demo · 50 min left")).toBeInTheDocument();
     expect(screen.getByText("Your own work is deleted when the demo ends.")).toBeInTheDocument();
-    expect(container.firstElementChild!.className).toContain("var(--info-bg)");
+    expect(container.firstElementChild!.className).toContain("bg-info-soft");
   });
 
   it("turns to the warning tone in the last ten minutes", () => {
     const { container } = render(<DemoBanner {...at(4 * MIN)} model="read-only" access={ACCESS} />);
     expect(screen.getByText("Demo · 4 min left")).toBeInTheDocument();
-    expect(container.firstElementChild!.className).toContain("var(--warning-bg)");
+    expect(container.firstElementChild!.className).toContain("bg-warning-soft");
   });
 
   it("collapses to the countdown for the session, and opens again", async () => {

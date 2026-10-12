@@ -117,11 +117,11 @@ function ModuleSection({ short }: { short: string }) {
       <header className="space-y-2">
         <h2
           id={moduleAnchor(short)}
-          className="scroll-mt-16 md:scroll-mt-6 font-mono text-lg font-semibold text-[var(--text-primary)] [overflow-wrap:anywhere]"
+          className="scroll-mt-16 md:scroll-mt-6 font-mono text-lg font-semibold text-primary [overflow-wrap:anywhere]"
         >
           {mod.name}
         </h2>
-        <Docstring text={mod.summary} resolve={resolve} className="max-w-3xl text-base text-[var(--text-primary)]" />
+        <Docstring text={mod.summary} resolve={resolve} className="max-w-3xl text-base text-primary" />
       </header>
 
       <ModuleFacts mod={mod} short={short} groups={groups} />
@@ -131,7 +131,7 @@ function ModuleSection({ short }: { short: string }) {
       {short === MAIL_MODULE && API.mails.length > 0 && (
         <div className="space-y-3">
           <KindHeading text={mailsHeading(short)} count={new Set(API.mails.map((m) => m.id)).size} />
-          <p className="max-w-3xl text-sm text-[var(--text-secondary)]">
+          <p className="max-w-3xl text-sm text-secondary">
             The release&rsquo;s own sample mails, rendered by <code className="font-mono">render_mail</code> for a
             made-up account of &ldquo;Ada&rsquo;s Garden Planner&rdquo; — the words are the sample app&rsquo;s, the
             layout and the escaping are the kit&rsquo;s. Each is sandboxed: no scripts, and its links lead nowhere.
@@ -144,7 +144,7 @@ function ModuleSection({ short }: { short: string }) {
         <div key={kind} className="space-y-3">
           <KindHeading text={kindHeading(short, kind)} count={members.length} />
           {kind === "constant" ? (
-            <div className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--bg-surface)]">
+            <div className="divide-y divide-subtle rounded-lg border border-subtle bg-surface">
               {members.map((m) => (
                 <MemberEntry key={m.name} short={short} member={m} compact />
               ))}
@@ -166,11 +166,11 @@ function ModuleSection({ short }: { short: string }) {
  *  it, outside the `<h3>`, so the rail does not read "auth · Functions19". */
 function KindHeading({ text, count }: { text: string; count: number }) {
   return (
-    <div className="flex items-baseline gap-2 border-b border-[var(--border)] pb-1.5">
-      <h3 id={slugify(text)} className="scroll-mt-16 md:scroll-mt-6 text-base font-semibold text-[var(--text-primary)]">
+    <div className="flex items-baseline gap-2 border-b border-subtle pb-1.5">
+      <h3 id={slugify(text)} className="scroll-mt-16 md:scroll-mt-6 text-base font-semibold text-primary">
         {text}
       </h3>
-      <span className="text-xs tabular-nums text-[var(--text-muted)]">{count}</span>
+      <span className="text-xs tabular-nums text-muted">{count}</span>
     </div>
   );
 }
@@ -180,8 +180,8 @@ function KindHeading({ text, count }: { text: string; count: number }) {
 function Fact({ term, children }: { term: string; children: ReactNode }) {
   return (
     <div className="grid gap-1 py-2.5 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4">
-      <dt className="text-xs font-medium text-[var(--text-muted)] sm:pt-0.5">{term}</dt>
-      <dd className="min-w-0 text-sm text-[var(--text-secondary)]">{children}</dd>
+      <dt className="text-xs font-medium text-muted sm:pt-0.5">{term}</dt>
+      <dd className="min-w-0 text-sm text-secondary">{children}</dd>
     </div>
   );
 }
@@ -198,7 +198,7 @@ function ModuleFacts({
   const { pathname } = useLocation();
   const counterparts = KIT_COUNTERPARTS[short] ?? [];
   return (
-    <dl className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4">
+    <dl className="divide-y divide-subtle rounded-lg border border-subtle bg-surface px-4">
       {mod.contract && (
         <Fact term="Contract">
           <ul className="space-y-1">
@@ -207,7 +207,7 @@ function ModuleFacts({
                 <TextLink href={link.url} external>
                   {`${mod.contract!.doc.split("/").pop()} ${link.section}`}
                 </TextLink>{" "}
-                <span className="text-[var(--text-muted)]">
+                <span className="text-muted">
                   {link.heading.replace(/^\d+(?:\.\d+)*\.?\s*/, "")}
                 </span>
               </li>
@@ -228,7 +228,7 @@ function ModuleFacts({
             ))}
           </ul>
         ) : (
-          <span className="text-[var(--text-muted)]">None in the kit yet.</span>
+          <span className="text-muted">None in the kit yet.</span>
         )}
       </Fact>
       <Fact term="Members">
@@ -237,7 +237,7 @@ function ModuleFacts({
             <li key={kind}>
               <Link
                 to={`${pathname}#${slugify(kindHeading(short, kind))}`}
-                className="text-[var(--brand)] hover:underline"
+                className="text-brand hover:underline"
               >
                 {members.length} {members.length === 1 ? kind : kindTitle(kind).toLowerCase()}
               </Link>
@@ -259,7 +259,7 @@ function InstallLine() {
   const line = installLine(VERSION);
   return (
     <div className="flex items-start gap-1">
-      <code className="min-w-0 flex-1 rounded-md bg-[var(--bg-surface-2)] px-2 py-1.5 font-mono text-xs text-[var(--text-primary)] [overflow-wrap:anywhere]">
+      <code className="min-w-0 flex-1 rounded-md bg-surface-2 px-2 py-1.5 font-mono text-xs text-primary [overflow-wrap:anywhere]">
         {line}
       </code>
       <CopyButton text={line} label="Copy the install line" />
@@ -277,17 +277,17 @@ function MemberEntry({ short, member, compact }: { short: string; member: ApiMem
       aria-labelledby={anchor}
       className={cn(
         "min-w-0 space-y-3 p-4",
-        !compact && "rounded-lg border border-[var(--border)] bg-[var(--bg-surface)]",
+        !compact && "rounded-lg border border-subtle bg-surface",
       )}
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <h4
           id={anchor}
-          className="scroll-mt-16 md:scroll-mt-6 min-w-0 font-mono text-sm font-semibold text-[var(--text-primary)] [overflow-wrap:anywhere]"
+          className="scroll-mt-16 md:scroll-mt-6 min-w-0 font-mono text-sm font-semibold text-primary [overflow-wrap:anywhere]"
         >
           {member.name}
         </h4>
-        <span className="rounded border border-[var(--border)] px-1.5 text-caption text-[var(--text-muted)]">
+        <span className="rounded border border-subtle px-1.5 text-caption text-muted">
           {member.kind}
         </span>
       </div>
@@ -308,7 +308,7 @@ const MONO = "font-mono text-xs [overflow-wrap:anywhere]";
  *  monospace goes on a `<code>` inside a cell, never the cell: the stacked layout labels a
  *  cell with its column's name, and that label inherits the cell's font. */
 const TABLE = "max-sm:[&_tbody_tr]:px-3";
-const DASH = <span className="text-[var(--text-muted)]">—</span>;
+const DASH = <span className="text-muted">—</span>;
 
 function FieldsTable({ member, resolve }: { member: ApiMember; resolve: ResolveRole }) {
   const fields = member.fields!;
@@ -334,7 +334,7 @@ function FieldsTable({ member, resolve }: { member: ApiMember; resolve: ResolveR
               {f.default != null ? (
                 <code className={MONO}>{f.default}</code>
               ) : (
-                <span className="text-[var(--text-muted)]">required</span>
+                <span className="text-muted">required</span>
               )}
             </TableCell>
             {described && <TableCell>{f.doc?.trim() ? <Docstring text={f.doc} resolve={resolve} /> : DASH}</TableCell>}
@@ -407,16 +407,16 @@ function MethodsTable({ member, resolve }: { member: ApiMember; resolve: Resolve
 export function ServerKitOverview({ group }: { group: ShowcaseGroup }) {
   return (
     <div className="space-y-8">
-      <div className="max-w-3xl space-y-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+      <div className="max-w-3xl space-y-3 text-sm leading-relaxed text-secondary">
         <p>
-          <strong className="text-[var(--text-primary)]">eifi1-server-kit</strong> is the Python package the
+          <strong className="text-primary">eifi1-server-kit</strong> is the Python package the
           apps&rsquo; backends share, beside this kit for their frontends: the contracts these pages&rsquo;
           components speak — schemas, rules, validators, the rate limiter, the CORS layer, the account mails —
           as code, lifted from the app that settled each one and parameterised per app. The database, the routes
           and the sign-in stay in each app.
         </p>
         <p>
-          These pages document <strong className="text-[var(--text-primary)]">server-kit {VERSION}</strong>, from
+          These pages document <strong className="text-primary">server-kit {VERSION}</strong>, from
           the <code className="font-mono">server-kit-api.json</code> its release attaches. The file is pinned in
           this repository the way an app pins the wheel: the pages change when the pin does, not when
           server-kit&rsquo;s main branch moves. Each module links the contract section it implements and the kit
@@ -432,7 +432,7 @@ export function ServerKitOverview({ group }: { group: ShowcaseGroup }) {
         </p>
       </div>
       <div className="max-w-3xl space-y-1.5">
-        <p className="text-xs font-medium text-[var(--text-muted)]">Install</p>
+        <p className="text-xs font-medium text-muted">Install</p>
         <InstallLine />
       </div>
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -452,28 +452,28 @@ function ServerPageCard({ page }: { page: ShowcasePage }) {
   return (
     <Link
       to={`/${page.slug}`}
-      className="group flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4 transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+      className="group flex flex-col gap-3 rounded-lg border border-subtle bg-surface p-4 transition-colors hover:border-strong hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
       <div className="flex items-center gap-2.5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-[var(--bg-surface-2)] text-[var(--text-secondary)]">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2 text-secondary">
           <page.icon className="size-4" aria-hidden />
         </span>
-        <span className="flex-1 font-medium text-[var(--text-primary)]">{title}</span>
+        <span className="flex-1 font-medium text-primary">{title}</span>
         <ArrowRight
           aria-hidden
-          className="size-4 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100"
+          className="size-4 text-muted transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100"
         />
       </div>
-      <p className="text-sm text-[var(--text-secondary)]">{blurb}</p>
+      <p className="text-sm text-secondary">{blurb}</p>
       {/* Module paths are identifiers, not words: never translated, always LTR. */}
       <ul dir="ltr" className="mt-auto flex flex-wrap gap-1.5">
         {modules.map((mod) => (
           <li
             key={mod.name}
-            className="max-w-full rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-caption text-[var(--text-secondary)] [overflow-wrap:anywhere]"
+            className="max-w-full rounded border border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-caption text-secondary [overflow-wrap:anywhere]"
           >
             {mod.name}
-            <span className="text-[var(--text-muted)]">
+            <span className="text-muted">
               {" "}
               · {mod.members.length}
             </span>

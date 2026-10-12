@@ -114,11 +114,11 @@ const NAV_REFERENCE: AppShellNavItem[] = [
 // Anything this page draws for itself is painted in tokens — a control panel in
 // `slate-*` would keep looking right while the palette switch beside it did nothing.
 const MINI_BUTTON =
-  "rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-2 py-1 text-xs text-[var(--text-primary)] hover:border-[var(--brand)]";
+  "rounded-md border border-subtle bg-surface-2 px-2 py-1 text-xs text-primary hover:border-brand";
 
-const READOUT = "font-mono text-xs text-[var(--text-primary)]";
+const READOUT = "font-mono text-xs text-primary";
 
-const PROSE = "font-sans font-normal text-[var(--text-secondary)]";
+const PROSE = "font-sans font-normal text-secondary";
 
 export function ShellSection() {
   return (
@@ -272,10 +272,10 @@ function TopBarSpecimen() {
         className="static"
         brand={
           <>
-            <Wallet className="size-5 shrink-0 text-[var(--brand)]" aria-hidden />
+            <Wallet className="size-5 shrink-0 text-brand" aria-hidden />
             {/* Wraps from Large up rather than reading "Acme Bo…" (text size §10.17). */}
-            <span className="truncate-until-large font-semibold text-[var(--text-primary)]">Acme Books</span>
-            <span className="hidden truncate text-xs text-[var(--text-muted)] sm:inline">
+            <span className="truncate-until-large font-semibold text-primary">Acme Books</span>
+            <span className="hidden truncate text-xs text-muted sm:inline">
               / Q3 2026
             </span>
           </>
@@ -290,7 +290,7 @@ function TopBarSpecimen() {
             >
               <Bell className="size-5" />
               {unread > 0 && (
-                <span className="absolute end-1 top-1 min-w-4 rounded-full bg-[var(--brand)] px-1 text-micro font-semibold leading-4 text-[var(--brand-contrast)]">
+                <span className="absolute end-1 top-1 min-w-4 rounded-full bg-brand px-1 text-micro font-semibold leading-4 text-brand-contrast">
                   {unread}
                 </span>
               )}
@@ -305,7 +305,7 @@ function TopBarSpecimen() {
         }
       />
       <div className="space-y-2 px-4 py-3">
-        <p className="text-xs text-[var(--text-secondary)]">
+        <p className="text-xs text-secondary">
           The bell is app-owned markup wearing{" "}
           <code className="font-mono">TOPBAR_TRIGGER_CLASS</code>; the sun/moon is the kit's{" "}
           <code className="font-mono">ThemeToggle</code>. Same box, same hover, same rhythm.
@@ -492,7 +492,7 @@ function ActionMenu() {
       key: "support",
       icon: <LifeBuoy className="size-4" />,
       label: "Contact support",
-      trailing: <span className="text-micro text-[var(--text-muted)]">24h</span>,
+      trailing: <span className="text-micro text-muted">24h</span>,
       onSelect: () => setChosen("Contact support"),
     },
     { kind: "divider", key: "sep" },
@@ -544,13 +544,13 @@ function ActionMenu() {
 function NavItemReference() {
   return (
     <div className="space-y-3">
-      <ul className="divide-y divide-[var(--border)]">
+      <ul className="divide-y divide-subtle">
         {NAV_REFERENCE.map((item) => (
           <li key={item.to} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
-            <item.icon className="size-4 shrink-0 text-[var(--text-muted)]" aria-hidden />
-            <span className="text-sm text-[var(--text-primary)]">{item.label}</span>
-            <span className="font-mono text-caption text-[var(--text-muted)]">{item.to}</span>
-            <span className="ms-auto flex flex-wrap items-center gap-2 text-caption text-[var(--text-secondary)]">
+            <item.icon className="size-4 shrink-0 text-muted" aria-hidden />
+            <span className="text-sm text-primary">{item.label}</span>
+            <span className="font-mono text-caption text-muted">{item.to}</span>
+            <span className="ms-auto flex flex-wrap items-center gap-2 text-caption text-secondary">
               <span>
                 bar: <span className="font-mono">{item.shortLabel ?? item.label}</span>
               </span>
@@ -725,7 +725,7 @@ function AppShellPlayground() {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <span className="text-xs text-[var(--text-muted)]">subNav</span>
+          <span className="text-xs text-muted">subNav</span>
           <ToggleGroup<"flyout" | "inline">
             aria-label="subNav"
             value={subNav}
@@ -782,7 +782,7 @@ function AppShellPlayground() {
 
       {/* A plain box with a height: no transform, no class overrides reaching into the
           shell. The nested shell fills it and docks its phone bar on it by itself. */}
-      <div className="h-[26rem] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)]">
+      <div className="h-[26rem] overflow-hidden rounded-md border border-subtle bg-page">
         <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
           <MemoryRouter initialEntries={["/books/ledger"]}>
             <AppShell
@@ -804,8 +804,8 @@ function AppShellPlayground() {
                 <TopBar
                   brand={
                     <>
-                      <Wallet className="size-5 shrink-0 text-[var(--brand)]" aria-hidden />
-                      <span className="truncate-until-large font-semibold text-[var(--text-primary)]">
+                      <Wallet className="size-5 shrink-0 text-brand" aria-hidden />
+                      <span className="truncate-until-large font-semibold text-primary">
                         Acme Books
                       </span>
                     </>
@@ -814,7 +814,7 @@ function AppShellPlayground() {
               }
               footer={
                 withFooter ? (
-                  <footer className="border-t border-[var(--border)] px-4 py-2 text-xs text-[var(--text-muted)]">
+                  <footer className="border-t border-subtle px-4 py-2 text-xs text-muted">
                     footer — v2.4.1 · © Acme
                   </footer>
                 ) : undefined
@@ -823,7 +823,7 @@ function AppShellPlayground() {
               sidebarFooter={
                 withSidebarFooter
                   ? (collapsed) => (
-                      <div className="border-t border-[var(--border)] px-3 py-2 text-caption text-[var(--text-muted)]">
+                      <div className="border-t border-subtle px-3 py-2 text-caption text-muted">
                         {collapsed ? "v2" : "sidebarFooter(collapsed=false) · v2.4.1"}
                       </div>
                     )
@@ -885,11 +885,11 @@ function DemoShellPage() {
   const { pathname } = useLocation();
   return (
     <div className="space-y-2 p-4">
-      <p className="text-sm text-[var(--text-primary)]">
+      <p className="text-sm text-primary">
         children — the current route is{" "}
-        <code className="font-mono text-[var(--brand)]">{pathname}</code>
+        <code className="font-mono text-brand">{pathname}</code>
       </p>
-      <p className="text-xs text-[var(--text-secondary)]">
+      <p className="text-xs text-secondary">
         A real app renders its <code className="font-mono">&lt;Outlet /&gt;</code> here. The
         group holding this page stays marked in the sidebar while one of its pages is open.
       </p>
@@ -967,7 +967,7 @@ function PageContentsExample() {
             { value: "disclosure", label: 'variant="disclosure"' },
           ]}
         />
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           line
           <input
             type="range"
@@ -984,36 +984,36 @@ function PageContentsExample() {
           disclosure is not a rail, so it goes above the page instead. */}
       <PageContentsLayout
         position={position}
-        className="rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-page)] p-4 [&_aside]:block"
+        className="rounded-md border border-dashed border-subtle bg-page p-4 [&_aside]:block"
         contents={variant === "rail" ? contents : null}
       >
         {variant === "disclosure" && <div className="mb-3">{contents}</div>}
         <div
           ref={setBox}
-          className="relative h-48 overflow-y-auto rounded border border-[var(--border)] px-3"
+          className="relative h-48 overflow-y-auto rounded border border-subtle px-3"
         >
           {/* The reading line, drawn where the spy puts it. */}
           <div
             aria-hidden
-            className="pointer-events-none sticky z-10 h-0 border-t border-dashed border-[var(--brand)]"
+            className="pointer-events-none sticky z-10 h-0 border-t border-dashed border-brand"
             style={{ top: `${line * 12}rem` }}
           />
           {CONTENTS_SAMPLE.map((item) => (
             <section key={item.id} className="py-3">
-              <h4 id={item.id} className="text-sm font-medium text-[var(--text-primary)]">
+              <h4 id={item.id} className="text-sm font-medium text-primary">
                 {item.label}
               </h4>
-              <p className="mt-1 h-24 text-xs text-[var(--text-muted)]">
+              <p className="mt-1 h-24 text-xs text-muted">
                 Scroll this box: the entry whose heading last crossed the dashed line is marked.
               </p>
             </section>
           ))}
         </div>
       </PageContentsLayout>
-      <p className="mt-3 font-mono text-xs text-[var(--text-secondary)]">
+      <p className="mt-3 font-mono text-xs text-secondary">
         useScrollSpy(ids, {"{"} root: box, line: {line.toFixed(2)} {"}"}) → {JSON.stringify(activeId)}
       </p>
-      <p className="mt-2 text-xs text-[var(--text-secondary)]">
+      <p className="mt-2 text-xs text-secondary">
         Below <code className="font-mono">xl</code> the page&apos;s rail has no room; the same
         entries go in <code className="font-mono">{'<PageContents variant="disclosure">'}</code>{" "}
         under the title, as on this page at a narrower window.{" "}

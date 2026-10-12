@@ -24,7 +24,7 @@ describe("FormActions — cancelVariant and size (keksdose G3)", () => {
   it("defaults stay: an outlined Cancel and md buttons", () => {
     render(<FormActions onCancel={() => {}} destructive={{ label: "Delete", onClick: () => {} }} />);
     const cancel = screen.getByRole("button", { name: "Cancel" });
-    expect(cancel.className).toContain("border-[var(--border)]");
+    expect(cancel.className).toContain("border-subtle");
     for (const name of ["Cancel", "Save", "Delete"]) {
       const cls = screen.getByRole("button", { name }).className;
       expect(cls).toContain("px-3 py-2 text-sm");
@@ -36,8 +36,8 @@ describe("FormActions — cancelVariant and size (keksdose G3)", () => {
     render(<FormActions onCancel={() => {}} cancelVariant="ghost" />);
     const cancel = screen.getByRole("button", { name: "Cancel" });
     expect(cancel.className).toContain("bg-transparent");
-    expect(cancel.className).not.toContain("border-[var(--border)]");
-    expect(screen.getByRole("button", { name: "Save" }).className).toContain("bg-[var(--brand)]");
+    expect(cancel.className).not.toContain("border-subtle");
+    expect(screen.getByRole("button", { name: "Save" }).className).toMatch(/bg-brand(?![\w-])/);
   });
 
   it("size=\"sm\" shrinks every button the row draws — Save, Cancel and the destructive data form", () => {

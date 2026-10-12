@@ -119,13 +119,13 @@ const buttonVariantClasses: Record<ButtonVariant, string> = {
   primary:
     // Hovers onto `--bg-active`, not `--border` (0.33, §12.9): More contrast steps the
     // border until it is a 3:1 LINE, and as a fill under the label that left 2.7:1.
-    "border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] hover:bg-active focus-visible:ring-[var(--brand)]",
-  secondary: `border border-[var(--border)] bg-transparent text-[var(--text-primary)] ${HOVER_INK} focus-visible:ring-[var(--brand)]`,
-  ghost: `bg-transparent text-[var(--text-primary)] ${HOVER_INK} focus-visible:ring-[var(--brand)]`,
+    "border border-subtle bg-surface-2 text-primary hover:bg-active focus-visible:ring-brand",
+  secondary: `border border-subtle bg-transparent text-primary ${HOVER_INK} focus-visible:ring-brand`,
+  ghost: `bg-transparent text-primary ${HOVER_INK} focus-visible:ring-brand`,
   danger:
-    "bg-[var(--danger)] text-[var(--danger-contrast)] hover:bg-[var(--danger-hover)] focus-visible:ring-[var(--danger-border-strong)]",
+    "bg-danger text-danger-contrast hover:bg-danger-hover focus-visible:ring-danger-strong",
   brand:
-    "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)] focus-visible:ring-[var(--brand)]",
+    "bg-brand text-brand-contrast hover:bg-brand-hover focus-visible:ring-brand",
   // A text link that is still a `<button>` — keksdose's six hand-rolled
   // `<button className="text-brand underline">` sites ("Resend code", "Show all",
   // "Undo" in a toast…), which act rather than navigate and so must not be anchors.
@@ -134,7 +134,7 @@ const buttonVariantClasses: Record<ButtonVariant, string> = {
   // a keyboard user tabbing onto them saw nothing at all. `rounded-sm` keeps that
   // ring hugging the word instead of drawing a pill round it.
   link:
-    "rounded-sm p-0 bg-transparent text-[var(--brand)] underline-offset-4 hover:underline focus-visible:ring-[var(--brand)]",
+    "rounded-sm p-0 bg-transparent text-brand underline-offset-4 hover:underline focus-visible:ring-brand",
 };
 
 /**
@@ -167,9 +167,9 @@ export type ButtonTone = "default" | "muted" | "danger";
 
 const BUTTON_TONES: Record<Exclude<ButtonTone, "default">, string> = {
   muted:
-    "text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:hover:text-[var(--text-secondary)]",
+    "text-secondary hover:text-primary disabled:hover:text-secondary",
   danger:
-    "text-[var(--text-secondary)] hover:text-[var(--danger)] focus-visible:ring-[var(--danger-border-strong)] disabled:hover:text-[var(--text-secondary)]",
+    "text-secondary hover:text-danger focus-visible:ring-danger-strong disabled:hover:text-secondary",
 };
 
 /** Only the two transparent variants take every tone; see {@link ButtonTone}. */
@@ -182,18 +182,18 @@ const BUTTON_BOXED_DANGER: Partial<Record<ButtonVariant, string>> = {
   // Not boxed, but its hover is a fill: the danger wash under the danger text, as
   // IconButton's danger tone (0.33). On B′'s translucent ink `--danger` fell to 4.2:1
   // over a light page.
-  ghost: "hover:bg-[var(--danger-bg)]",
+  ghost: "hover:bg-danger-soft",
   secondary:
-    "border-[var(--danger-border)] bg-transparent text-[var(--danger)] hover:bg-[var(--danger-bg)] focus-visible:ring-[var(--danger-border-strong)]",
+    "border-danger bg-transparent text-danger hover:bg-danger-soft focus-visible:ring-danger-strong",
   primary:
-    "border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger)] hover:border-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--danger-contrast)] focus-visible:ring-[var(--danger-border-strong)] disabled:hover:border-[var(--danger-border)] disabled:hover:bg-[var(--danger-bg)] disabled:hover:text-[var(--danger)]",
+    "border-danger bg-danger-soft text-danger hover:border-[var(--danger)] hover:bg-danger hover:text-danger-contrast focus-visible:ring-danger-strong disabled:hover:border-danger disabled:hover:bg-danger-soft disabled:hover:text-danger",
 };
 
 // `pressed` on a `link`: the brand colour and a heavier weight, which is exactly what
 // lenkbank's "All speeds" toggle paints by hand (gear/hysteresis-charts.tsx:482). After
 // the tone, so a pressed muted link is brand, and an unpressed one is quiet grey.
 const BUTTON_LINK_PRESSED =
-  "font-medium text-[var(--brand)] hover:text-[var(--brand)] disabled:hover:text-[var(--brand)]";
+  "font-medium text-brand hover:text-brand disabled:hover:text-brand";
 
 /** The second argument of {@link buttonClasses} in its options form. */
 export interface ButtonClassesOptions {
@@ -748,39 +748,39 @@ type ColouredTone = "danger" | "warning" | "info" | "success" | "custom";
 const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> = {
   danger: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] focus-visible:ring-[var(--danger-border-strong)]",
-    toned: "text-[var(--danger)] hover:bg-[var(--danger-bg)] focus-visible:ring-[var(--danger-border-strong)]",
+      "text-placeholder hover:bg-danger-soft hover:text-danger focus-visible:ring-danger-strong",
+    toned: "text-danger hover:bg-danger-soft focus-visible:ring-danger-strong",
   },
   warning: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--warning-bg)] hover:text-[var(--warning)] focus-visible:ring-warning-strong",
+      "text-placeholder hover:bg-warning-soft hover:text-warning focus-visible:ring-warning-strong",
     // The ring is warning's loud line (0.33, k27): `--warning-border`, amber-300, was a
     // focus ring at 1.1:1 on the light surfaces.
-    toned: "text-[var(--warning)] hover:bg-[var(--warning-bg)] focus-visible:ring-warning-strong",
+    toned: "text-warning hover:bg-warning-soft focus-visible:ring-warning-strong",
   },
   info: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--info-bg)] hover:text-[var(--info)] focus-visible:ring-[var(--info-border)]",
-    toned: "text-[var(--info)] hover:bg-[var(--info-bg)] focus-visible:ring-[var(--info-border)]",
+      "text-placeholder hover:bg-info-soft hover:text-info focus-visible:ring-[var(--info-border)]",
+    toned: "text-info hover:bg-info-soft focus-visible:ring-[var(--info-border)]",
   },
   success: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[var(--success-bg)] hover:text-[var(--success)] focus-visible:ring-[var(--success-border)]",
-    toned: "text-[var(--success)] hover:bg-[var(--success-bg)] focus-visible:ring-[var(--success-border)]",
+      "text-placeholder hover:bg-success-soft hover:text-success focus-visible:ring-[var(--success-border)]",
+    toned: "text-success hover:bg-success-soft focus-visible:ring-[var(--success-border)]",
   },
   // The hover fill and the ring are MIXED from the one colour, since a custom tone
   // brings no `-bg` / `-border` pair of its own. The fallback is the body colour, so a
   // `custom` tone with no colour set is the default look rather than invisible.
   custom: {
     quiet:
-      "text-[var(--text-placeholder)] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] hover:text-[var(--icon-button-tone,var(--text-primary))] focus-visible:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
+      "text-placeholder hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] hover:text-[var(--icon-button-tone,var(--text-primary))] focus-visible:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
     toned:
       "text-[var(--icon-button-tone,var(--text-primary))] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] focus-visible:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
   },
 };
 
 // The translucent ink on hover, as Button's secondary/ghost (B′, see HOVER_INK).
-const ICON_BUTTON_MUTED = `text-[var(--text-placeholder)] ${HOVER_INK} hover:text-[var(--text-primary)]`;
+const ICON_BUTTON_MUTED = `text-placeholder ${HOVER_INK} hover:text-primary`;
 
 /** Which tones sit quiet at rest when `quiet` is left out. */
 const QUIET_BY_DEFAULT: Record<ColouredTone, boolean> = {
@@ -808,19 +808,19 @@ function iconButtonToneClass(tone: IconButtonTone, quiet: boolean | undefined): 
 // RESTING look under `disabled:hover:`, which out-ranks any `hover:` by specificity
 // and only ever matches a disabled button.
 const ICON_BUTTON_DISABLED_REST: Record<IconButtonVariant, string> = {
-  primary: "disabled:hover:bg-[var(--bg-surface-2)]",
+  primary: "disabled:hover:bg-surface-2",
   secondary: "disabled:hover:bg-transparent",
   ghost: "disabled:hover:bg-transparent",
-  danger: "disabled:hover:bg-[var(--danger)]",
-  brand: "disabled:hover:bg-[var(--brand)]",
+  danger: "disabled:hover:bg-danger",
+  brand: "disabled:hover:bg-brand",
   link: "disabled:hover:bg-transparent disabled:hover:no-underline",
   overlay: "disabled:hover:bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)]",
-  shutter: "disabled:hover:bg-[var(--media-scrim)]",
+  shutter: "disabled:hover:bg-media-scrim",
 };
 
 // The quiet looks change the glyph on hover, so they pin their resting glyph the
 // same way. A toned look keeps its glyph on hover and needs no pin.
-const ICON_BUTTON_QUIET_DISABLED_REST = "disabled:hover:text-[var(--text-placeholder)]";
+const ICON_BUTTON_QUIET_DISABLED_REST = "disabled:hover:text-placeholder";
 
 // `pressed`: a toggle that is on. The brand glyph on the quiet brand fill — the
 // "selected" look of a Chip or a SegmentedControl option, so an on toggle reads as on
@@ -828,7 +828,7 @@ const ICON_BUTTON_QUIET_DISABLED_REST = "disabled:hover:text-[var(--text-placeho
 // the glyph turns brand-muted: `--brand` on `--brand-bg-hover` is 2.69–2.80 in four dark
 // presets, under an icon's 3:1 (colour-roles §12.12).
 const ICON_BUTTON_PRESSED =
-  "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-brand-muted disabled:hover:bg-[var(--brand-bg)] disabled:hover:text-[var(--brand)]";
+  "bg-brand-soft text-brand hover:bg-brand-soft-hover hover:text-brand-muted disabled:hover:bg-brand-soft disabled:hover:text-brand";
 
 // `variant="overlay"`: a round, translucent disc for a control that sits ON a photo
 // (keksdose's receipt-scan preview: close, rotate, retake over the camera image).
@@ -838,7 +838,7 @@ const ICON_BUTTON_PRESSED =
 // themes. The disc is the inverse at 60% (`color-mix`, so it stays a token a palette
 // can re-point); the blur keeps a busy background from breaking the glyph's edge.
 const ICON_BUTTON_OVERLAY =
-  "rounded-full bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)] text-[var(--text-inverse)] backdrop-blur-sm hover:bg-[color-mix(in_srgb,var(--bg-inverse)_75%,transparent)] focus-visible:ring-[var(--text-inverse)]";
+  "rounded-full bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)] text-inverse backdrop-blur-sm hover:bg-[color-mix(in_srgb,var(--bg-inverse)_75%,transparent)] focus-visible:ring-[var(--text-inverse)]";
 
 // `variant="shutter"`: the camera's release — keksdose's camera-capture.tsx:248 draws
 // it by hand as a 64px circle with a thick white ring round a translucent fill. It sits
@@ -847,7 +847,7 @@ const ICON_BUTTON_OVERLAY =
 // `overlay` uses would give a dark ring on a dark viewfinder in dark mode. The focus ring stands off by 2px, or it would
 // merge into the ring that is part of the look.
 const ICON_BUTTON_SHUTTER =
-  "rounded-full border-4 border-[var(--media-ink)] bg-[var(--media-scrim)] text-[var(--media-ink)] backdrop-blur-sm hover:bg-[var(--media-scrim-hover)] focus-visible:ring-[var(--media-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--media-scrim-hover)]";
+  "rounded-full border-4 border-media-ink bg-media-scrim text-media-ink backdrop-blur-sm hover:bg-media-scrim-hover focus-visible:ring-media-ink focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--media-scrim-hover)]";
 
 export type IconButtonVariant = ButtonVariant | "overlay" | "shutter";
 
@@ -1282,7 +1282,7 @@ function withIconButtonBadge(control: ReactElement, badge: ReactNode, stretch: b
       <span
         aria-hidden
         data-slot="icon-button-badge"
-        className="pointer-events-none absolute -end-0.5 -bottom-0.5 inline-flex rounded-full bg-[var(--bg-surface)] [&_svg]:size-3"
+        className="pointer-events-none absolute -end-0.5 -bottom-0.5 inline-flex rounded-full bg-surface [&_svg]:size-3"
       >
         {badge}
       </span>
@@ -1577,16 +1577,16 @@ function IconButtonElement(
 export const FIELD_TOUCH_TEXT = "pointer-coarse:text-[length:max(0.875rem,16px)]";
 
 export const FIELD_BASE =
-  "block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] shadow-sm placeholder:text-[var(--text-placeholder)] focus:border-[var(--brand)] focus:ring-[var(--brand)] " +
+  "block w-full rounded-md border border-subtle bg-surface px-3 py-2 text-sm text-primary shadow-sm placeholder:text-placeholder focus:border-brand focus:ring-brand " +
   // §10.1: at least 16 px on a touch screen, or iOS zooms the page on focus.
   FIELD_TOUCH_TEXT +
   " " +
   // A field the user cannot change has to LOOK settled. Without this, `disabled`
   // dimmed the floating label and nothing else — FIELD_BASE's own
-  // `text-[var(--text-primary)]` overrides the browser's grey — so a read-only value
+  // `text-primary` overrides the browser's grey — so a read-only value
   // sat there at full body-text strength, indistinguishable from one you could retype
   // (Keksdose dev#455/#474).
-  "disabled:cursor-default disabled:bg-[var(--bg-surface-2)] disabled:text-[var(--text-muted)] " +
+  "disabled:cursor-default disabled:bg-surface-2 disabled:text-muted " +
   // Same for a field that takes focus but refuses keys: `readOnly` is not
   // `disabled`, and a value that cannot be edited should not claim it can be. Opt
   // OUT with {@link FIELD_WRITABLE_LOOK} in the one case where `readOnly` does not
@@ -1602,14 +1602,14 @@ export const FIELD_BASE =
   // painted them all in the "you may not edit this" grey. On one transaction form
   // that made three different-looking families out of one field style: plain
   // inputs, grey selects, grey trigger buttons.
-  "[&[readonly]]:bg-[var(--bg-surface-2)] [&[readonly]]:text-[var(--text-muted)]";
+  "[&[readonly]]:bg-surface-2 [&[readonly]]:text-muted";
 
 /** Cancels FIELD_BASE's read-only treatment for a field that is `readOnly` for a
  *  reason other than "you may not edit this". Attribute-scoped for the same reason
  *  FIELD_BASE is — the two have to cancel on the identical selector or twMerge
  *  cannot make the later one win. */
 export const FIELD_WRITABLE_LOOK =
-  "[&[readonly]]:bg-[var(--bg-surface)] [&[readonly]]:text-[var(--text-primary)]";
+  "[&[readonly]]:bg-surface [&[readonly]]:text-primary";
 
 // Extra top padding leaves room for a label that floats INSIDE the field (the
 // "filled" pattern) — the label sits in the top strip, the value below it. Used by
@@ -1639,7 +1639,7 @@ export const FIELD_FLOATING_PAD = "pt-4 pb-1 large:py-2";
 // stays exactly the size of a valid one and nothing beside it moves when the value
 // arrives.
 export const FIELD_INVALID =
-  "border-[var(--danger-border-strong)] ring-1 ring-[var(--danger-border-strong)] focus:border-[var(--danger)] focus:ring-[var(--danger)]";
+  "border-danger-strong ring-1 ring-danger-strong focus:border-[var(--danger)] focus:ring-[var(--danger)]";
 
 export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer placeholder:text-transparent");
 
@@ -1668,7 +1668,7 @@ export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer pla
  * wants a heading — so each control adds its own on top.
  */
 export const FIELD_DISPLAY =
-  "block w-full border-x-0 border-t-0 border-b border-[var(--border)] bg-transparent px-0 pt-0 pb-1 text-[var(--text-primary)] shadow-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--brand)] focus:outline-none focus:ring-0 disabled:opacity-60";
+  "block w-full border-x-0 border-t-0 border-b border-subtle bg-transparent px-0 pt-0 pb-1 text-primary shadow-none placeholder:text-placeholder focus:border-brand focus:outline-none focus:ring-0 disabled:opacity-60";
 
 // A field-styled button trigger for the custom dropdown controls (MultiSelect,
 // CurrencySelect) — the field look (border/bg) as a flex row for the value + chevron,
@@ -1689,7 +1689,7 @@ export const FIELD_DISPLAY =
 // in every trigger here (the chevron and the clear button are absolute).
 export const FIELD_TRIGGER = cn(
   FIELD_BASE,
-  "relative flex items-center justify-between gap-2 text-start hover:bg-[var(--bg-hover)]",
+  "relative flex items-center justify-between gap-2 text-start hover:bg-hover",
   "[&>:first-child]:min-h-[1lh]",
 );
 
@@ -1718,7 +1718,7 @@ export function FieldChevron({ className, ...rest }: FieldChevronProps) {
       // announcement of the same field.
       aria-hidden
       className={cn(
-        "pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+        "pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-placeholder",
         className,
       )}
     />
@@ -1736,10 +1736,10 @@ const LABEL_FLOATED_AT_LARGE =
   "large:text-caption large:leading-tight large:text-secondary large:transition-none";
 
 export const FLOATING_LABEL_CLASS = cn(
-  "pointer-events-none absolute start-3 top-2.5 text-sm text-[var(--text-placeholder)] transition-all",
+  "pointer-events-none absolute start-3 top-2.5 text-sm text-placeholder transition-all",
   "max-w-[calc(100%-1.5rem)] truncate-until-large",
-  "peer-focus:top-1 peer-focus:text-caption peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
-  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-caption peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
+  "peer-focus:top-1 peer-focus:text-caption peer-focus:leading-tight peer-focus:text-secondary",
+  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-caption peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-secondary",
   "peer-disabled:opacity-50",
   LABEL_ABOVE_AT_LARGE,
   "large:block",
@@ -1760,9 +1760,9 @@ export const FLOATING_LABEL_CLASS = cn(
 // above the field, as the label alone does, and nothing at the end edge is under it.
 const FLOATING_ROW_CLASS = cn(
   "pointer-events-none absolute start-3 top-2.5 flex items-center gap-1 transition-all",
-  "max-w-[calc(100%-3rem)] text-sm text-[var(--text-placeholder)]",
-  "peer-focus:top-1 peer-focus:text-caption peer-focus:leading-tight peer-focus:text-[var(--text-secondary)]",
-  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-caption peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-[var(--text-secondary)]",
+  "max-w-[calc(100%-3rem)] text-sm text-placeholder",
+  "peer-focus:top-1 peer-focus:text-caption peer-focus:leading-tight peer-focus:text-secondary",
+  "peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-caption peer-[:not(:placeholder-shown)]:leading-tight peer-[:not(:placeholder-shown)]:text-secondary",
   "peer-disabled:opacity-50",
   LABEL_ABOVE_AT_LARGE,
   LABEL_FLOATED_AT_LARGE,
@@ -1896,7 +1896,7 @@ export function Label({ required, size = "md", disabled, className, children, ..
     <label
       {...rest}
       className={cn(
-        "inline-flex items-center gap-0.5 font-medium leading-none text-[var(--text-primary)]",
+        "inline-flex items-center gap-0.5 font-medium leading-none text-primary",
         size === "sm" ? "text-xs" : "text-sm",
         disabled && "cursor-default opacity-50",
         className,
@@ -1904,7 +1904,7 @@ export function Label({ required, size = "md", disabled, className, children, ..
     >
       {children}
       {required && (
-        <span aria-hidden className="text-[var(--danger)]">
+        <span aria-hidden className="text-danger">
           *
         </span>
       )}
@@ -1937,7 +1937,7 @@ export function Label({ required, size = "md", disabled, className, children, ..
  * whatever is being read at the time, on every keystroke of a form that re-validates
  * as you type.
  */
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
 
 function useFieldError(
   error: ReactNode,
@@ -2138,10 +2138,10 @@ function CharacterCount({
         className={cn(
           "shrink-0 text-caption leading-tight tabular-nums",
           zone === "limit"
-            ? "text-[var(--danger)]"
+            ? "text-danger"
             : zone === "near"
-              ? "text-[var(--warning)]"
-              : "text-[var(--text-muted)]",
+              ? "text-warning"
+              : "text-muted",
         )}
       >
         {used}/{max}
@@ -2177,7 +2177,7 @@ function fieldBelow(hint: FieldHintParts, counter: ReactNode, errorEl: ReactNode
  * its hint). `:placeholder-shown` still drives the float: it matches an empty field
  * whatever the placeholder's text is.
  */
-const FLOATING_PLACEHOLDER_ON_FOCUS = "focus:placeholder:text-[var(--text-placeholder)]";
+const FLOATING_PLACEHOLDER_ON_FOCUS = "focus:placeholder:text-placeholder";
 
 /** A placeholder with something to show. `""` and blanks are the float trick's own
  *  `" "`, never the caller's hint. */
@@ -2406,7 +2406,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
       aria-label={revealed ? passwordText.hide : passwordText.show}
       aria-pressed={revealed}
       className={cn(
-        "absolute inset-y-0 end-0 flex items-center rounded-e-md px-2.5 text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)] focus:outline-none disabled:cursor-default disabled:opacity-50",
+        "absolute inset-y-0 end-0 flex items-center rounded-e-md px-2.5 text-placeholder transition-colors hover:text-secondary focus:outline-none disabled:cursor-default disabled:opacity-50",
         FOCUS_RING,
       )}
     >
@@ -2590,7 +2590,7 @@ const LOCKED_SELECT_KEYS = new Set(["Tab", "Escape", "Shift"]);
 
 /** FIELD_BASE's `disabled:` look, for a select that is locked without being `disabled`
  *  (the `:disabled` variants cannot match it). */
-const FIELD_LOCKED = "cursor-not-allowed bg-[var(--bg-surface-2)] text-[var(--text-muted)]";
+const FIELD_LOCKED = "cursor-not-allowed bg-surface-2 text-muted";
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(props, ref) {
   const {
@@ -2646,7 +2646,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     textHint || errorEl !== null ? (
       <>
         {textHint && (
-          <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
+          <p id={hintId} className="mt-1 text-caption leading-tight text-muted">
             {hint}
           </p>
         )}
@@ -2919,11 +2919,11 @@ function labelEdge(scrollTop: number, lineHeight: number): { height: number; sol
  * is {@link TEXTAREA_LABEL_EDGE} (0.25).
  */
 const TEXTAREA_LABEL_STRIP = cn(
-  "pointer-events-none absolute inset-x-px top-px hidden h-4 rounded-t-[calc(0.375rem-1px)] bg-[var(--bg-surface)]",
+  "pointer-events-none absolute inset-x-px top-px hidden h-4 rounded-t-[calc(0.375rem-1px)] bg-surface",
   // Never at Large (0.33, §10.17): the label stands above the field, so there is no
   // strip to keep scrolled text out of, and a layer here would hide the first line.
   "not-large:peer-focus:block not-large:peer-[:not(:placeholder-shown)]:block",
-  "peer-disabled:bg-[var(--bg-surface-2)] peer-[[readonly]]:bg-[var(--bg-surface-2)]",
+  "peer-disabled:bg-surface-2 peer-[[readonly]]:bg-surface-2",
   TEXTAREA_LABEL_EDGE,
 );
 
@@ -3209,24 +3209,24 @@ export type CardTone = "warning" | "danger" | "info" | "success";
 // caller's `className` on CardTitle still wins (it is on the element itself).
 const CARD_TONES: Record<CardTone, { border: string; fill: string; title: string }> = {
   warning: {
-    border: "border-[var(--warning-border)]",
-    fill: "bg-[var(--warning-bg)]",
-    title: "[&_[data-slot=card-title]]:text-[var(--warning)]",
+    border: "border-warning",
+    fill: "bg-warning-soft",
+    title: "[&_[data-slot=card-title]]:text-warning",
   },
   danger: {
-    border: "border-[var(--danger-border)]",
-    fill: "bg-[var(--danger-bg)]",
-    title: "[&_[data-slot=card-title]]:text-[var(--danger)]",
+    border: "border-danger",
+    fill: "bg-danger-soft",
+    title: "[&_[data-slot=card-title]]:text-danger",
   },
   info: {
-    border: "border-[var(--info-border)]",
-    fill: "bg-[var(--info-bg)]",
-    title: "[&_[data-slot=card-title]]:text-[var(--info)]",
+    border: "border-info",
+    fill: "bg-info-soft",
+    title: "[&_[data-slot=card-title]]:text-info",
   },
   success: {
-    border: "border-[var(--success-border)]",
-    fill: "bg-[var(--success-bg)]",
-    title: "[&_[data-slot=card-title]]:text-[var(--success)]",
+    border: "border-success",
+    fill: "bg-success-soft",
+    title: "[&_[data-slot=card-title]]:text-success",
   },
 };
 
@@ -3248,7 +3248,7 @@ const CARD_PADDING_STRONG: Record<NonNullable<CardProps["padding"]>, string> = {
 };
 
 // The wash as a background IMAGE over the card's opaque `--bg-surface` — see
-// `toneFill`. A plain `bg-[var(--danger-bg)]` would REPLACE the surface, and the dark
+// `toneFill`. A plain `bg-danger-soft` would REPLACE the surface, and the dark
 // theme's washes are a translucent tint.
 const CARD_TONE_WASH: Record<CardTone, string> = {
   warning: "bg-[image:linear-gradient(var(--warning-bg),var(--warning-bg))]",
@@ -3259,7 +3259,7 @@ const CARD_TONE_WASH: Record<CardTone, string> = {
 
 const CARD_TONES_STRONG: Record<CardTone, string> = {
   warning: "border-2 border-warning-strong",
-  danger: "border-2 border-[var(--danger-border-strong)]",
+  danger: "border-2 border-danger-strong",
   info: "border-2 border-[var(--info)]",
   success: "border-2 border-[var(--success)]",
 };
@@ -3301,18 +3301,18 @@ export function Card({
       {...rest}
       className={cn(
         variant === "inset"
-          ? "rounded-md bg-[var(--bg-surface-2)] p-3"
+          ? "rounded-md bg-surface-2 p-3"
           : variant === "outline"
             ? // No shadow and no `flush`: it sits on a surface that already has both.
-              "rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4"
+              "rounded-lg border border-subtle bg-surface p-4"
             : cn(
               // Surface + border are theme tokens so the palette switcher (feedback
               // #307) can re-skin every card; a caller's own bg-*/border-* override
               // still wins via tailwind-merge.
-              "bg-[var(--bg-surface)]",
+              "bg-surface",
               flush
-                ? "border-y border-[var(--border)] md:rounded-lg md:border md:shadow-sm"
-                : "rounded-lg border border-[var(--border)] shadow-sm",
+                ? "border-y border-subtle md:rounded-lg md:border md:shadow-sm"
+                : "rounded-lg border border-subtle shadow-sm",
             ),
         toned && (bordered ? toned.border : toned.fill),
         strong && tone && CARD_TONES_STRONG[tone],
@@ -3440,7 +3440,7 @@ export function CardDescription({ className, ...props }: CardDescriptionProps) {
       // field captions). It was `--money-neutral`, a MONEY token that happened to be
       // a similar grey — and a palette that re-tunes the money colours moved every
       // card's description with them.
-      className={cn(compact ? "text-xs" : "text-sm", "text-[var(--text-muted)]", className)}
+      className={cn(compact ? "text-xs" : "text-sm", "text-muted", className)}
       {...props}
     />
   );
@@ -3527,7 +3527,7 @@ export function Spinner({ className, label, showLabel, labelPosition = "end", ..
     loading: label ?? undefined,
   });
   const ring = cn(
-    "relative inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--text-primary)]",
+    "relative inline-block h-5 w-5 animate-spin rounded-full border-2 border-subtle border-t-[var(--text-primary)]",
     className,
   );
   if (label === null) return <span aria-hidden {...rest} className={ring} />;
@@ -3537,7 +3537,7 @@ export function Spinner({ className, label, showLabel, labelPosition = "end", ..
         role="status"
         {...rest}
         className={cn(
-          "inline-flex items-center text-sm text-[var(--text-secondary)]",
+          "inline-flex items-center text-sm text-secondary",
           labelPosition === "below" ? "flex-col gap-2 text-center" : "gap-2",
         )}
       >
@@ -3620,8 +3620,8 @@ export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "
 }
 
 const EMPTY_STATE_TONE: Record<"danger" | "success", string> = {
-  danger: "text-[var(--danger)]",
-  success: "text-[var(--success)]",
+  danger: "text-danger",
+  success: "text-success",
 };
 
 export function EmptyState({
@@ -3645,7 +3645,7 @@ export function EmptyState({
       <div
         {...rest}
         className={cn(
-          "flex flex-wrap items-center text-[var(--text-muted)]",
+          "flex flex-wrap items-center text-muted",
           sm
             ? "justify-start gap-x-1.5 gap-y-0.5 py-1 text-start text-xs"
             : "justify-center gap-x-2 gap-y-1 py-4 text-center text-sm",
@@ -3655,7 +3655,7 @@ export function EmptyState({
         {icon != null && (
           <span
             aria-hidden
-            className={cn("flex text-[var(--text-placeholder)]", sm ? "[&_svg]:size-3.5" : "[&_svg]:size-4", toneClass)}
+            className={cn("flex text-placeholder", sm ? "[&_svg]:size-3.5" : "[&_svg]:size-4", toneClass)}
           >
             {icon}
           </span>
@@ -3672,17 +3672,17 @@ export function EmptyState({
     <div
       {...rest}
       className={cn(
-        "flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface-2)] px-4 py-10 text-center text-sm text-[var(--text-muted)]",
+        "flex flex-col items-center justify-center rounded-lg border border-dashed border-strong bg-surface-2 px-4 py-10 text-center text-sm text-muted",
         className,
       )}
     >
       {icon != null && (
-        <div aria-hidden className={cn("mb-3 text-[var(--text-placeholder)] [&_svg]:size-8", toneClass)}>
+        <div aria-hidden className={cn("mb-3 text-placeholder [&_svg]:size-8", toneClass)}>
           {icon}
         </div>
       )}
       {/* `text-sm`: a heading keeps the box's size, not whatever a stylesheet gives h2. */}
-      <Title className={cn("text-sm font-medium text-[var(--text-secondary)]", toneClass)}>{title}</Title>
+      <Title className={cn("text-sm font-medium text-secondary", toneClass)}>{title}</Title>
       {hasHint && <div className="mt-1 text-xs">{hint}</div>}
       {action != null && (
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">{action}</div>
@@ -3876,7 +3876,7 @@ export interface TabsProps<T extends string>
 // strip resolves to exactly the paint of the default one. Both themes come free now
 // that the colours are tokens: there is no `md:dark:` tier left to keep in step.
 const TABLIST_CLASSES =
-  "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-[var(--border)]";
+  "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-subtle";
 // The side nav. A column of full-width rows with the open one FILLED rather than
 // underlined: an underline under one row of a list reads as a separator, not as a
 // selection. `--bg-active` is the kit's own selected-row fill (the sidebar's), so the
@@ -3884,13 +3884,13 @@ const TABLIST_CLASSES =
 const TABLIST_VERTICAL_CLASSES = "flex flex-col gap-0.5";
 const TAB_VERTICAL_CLASSES =
   FOCUS_RING_WIDTH +
-  " flex w-full items-center rounded-md px-3 py-2 text-start text-sm font-medium transition-colors focus:outline-none focus-visible:ring-[var(--border-strong)]";
-const TAB_VERTICAL_ACTIVE_CLASSES = "bg-[var(--bg-active)] text-[var(--text-primary)]";
+  " flex w-full items-center rounded-md px-3 py-2 text-start text-sm font-medium transition-colors focus:outline-none focus-visible:ring-strong";
+const TAB_VERTICAL_ACTIVE_CLASSES = "bg-active text-primary";
 const TAB_VERTICAL_INACTIVE_CLASSES =
-  "text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]";
+  "text-muted hover:bg-hover hover:text-primary";
 
 const TABLIST_WRAP_CLASSES =
-  "flex flex-wrap gap-1.5 md:flex-nowrap md:gap-1 md:overflow-x-auto md:overflow-y-hidden md:border-b md:border-[var(--border)]";
+  "flex flex-wrap gap-1.5 md:flex-nowrap md:gap-1 md:overflow-x-auto md:overflow-y-hidden md:border-b md:border-subtle";
 
 // `max-w-full`: no tab outgrows its strip. A sheet's `detail` line ("Spurstangenkraft
 // links · … · 31 Punkte") made one tab 448px wide in a 390px strip, and a tab wider
@@ -3898,10 +3898,10 @@ const TABLIST_WRAP_CLASSES =
 // (lenkbank L3). The label and detail truncate inside it instead; see `inner`.
 const TAB_CLASSES =
   FOCUS_RING_WIDTH +
-  " max-w-full whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus-visible:ring-[var(--border-strong)]";
-const TAB_ACTIVE_CLASSES = "border-[var(--text-primary)] text-[var(--text-primary)]";
+  " max-w-full whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus-visible:ring-strong";
+const TAB_ACTIVE_CLASSES = "border-[var(--text-primary)] text-primary";
 const TAB_INACTIVE_CLASSES =
-  "border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:border-[var(--border-strong)]";
+  "border-transparent text-muted hover:text-secondary hover:border-strong";
 
 // Below `md`, a chip: `py-2` on `text-xs` is exactly 32px tall, and ten German
 // report labels then land in three rows on a 406px screen (four at `text-sm`). The
@@ -3913,20 +3913,20 @@ const TAB_INACTIVE_CLASSES =
 // which one is open.
 const TAB_WRAP_CLASSES =
   FOCUS_RING_WIDTH +
-  " max-w-full whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-[var(--border-strong)] md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
+  " max-w-full whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-strong md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
 const TAB_WRAP_ACTIVE_CLASSES =
-  "bg-[var(--brand)] text-[var(--brand-contrast)] md:border-[var(--text-primary)] md:text-[var(--text-primary)]";
+  "bg-brand text-brand-contrast md:border-[var(--text-primary)] md:text-primary";
 const TAB_WRAP_INACTIVE_CLASSES =
-  "bg-[var(--bg-surface)] text-[var(--text-primary)] md:border-transparent md:text-[var(--text-muted)] md:hover:border-[var(--border-strong)] md:hover:text-[var(--text-secondary)]";
+  "bg-surface text-primary md:border-transparent md:text-muted md:hover:border-strong md:hover:text-secondary";
 
 // The add/remove chrome. The × reserves its gutter on every removable tab (see
 // `onRemove`); `md:pe-8` is spelled out because the wrapped chip's `md:px-3` would
 // otherwise hand the gutter back from 768px up.
 const TAB_REMOVABLE_CLASSES = "pe-8 md:pe-8";
-const TAB_EMPTY_CLASSES = "-mx-1.5 rounded border border-dashed border-[var(--border-strong)] px-1.5";
+const TAB_EMPTY_CLASSES = "-mx-1.5 rounded border border-dashed border-strong px-1.5";
 const TAB_ADD_CLASSES =
   FOCUS_RING_WIDTH +
-  " inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4";
+  " inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-primary focus:outline-none focus-visible:ring-strong disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4";
 const TAB_ADD_WRAP_CLASSES = "px-2.5 text-xs md:px-3 md:text-sm";
 // `relative`: the phone's visually hidden label needs a positioned ancestor (see the
 // sr-only rule in CONTRIBUTING); `max-md:px-2` squares the lone "+".
@@ -4152,12 +4152,12 @@ export function Tabs<T extends string>({
                     word for a screen reader ("80 km/hloop 2"). */}{" "}
                 <span
                   className={cn(
-                    "max-w-full truncate-until-large text-caption font-normal leading-tight text-[var(--text-muted)]",
+                    "max-w-full truncate-until-large text-caption font-normal leading-tight text-muted",
                     // On a wrapped strip's filled chip (below `md`) the muted grey
                     // was dark text on the brand fill — "loop 2" all but vanished
                     // under the one label that most needed reading. It takes the
                     // chip's own ink instead, as the label and the × already do.
-                    wrap && isActive && !vertical && "text-[var(--brand-contrast)] md:text-[var(--text-muted)]",
+                    wrap && isActive && !vertical && "text-brand-contrast md:text-muted",
                   )}
                 >
                   {tab.detail}
@@ -4234,7 +4234,7 @@ export function Tabs<T extends string>({
                   "absolute inset-y-0 end-1 my-auto",
                   // On a wrapped strip's filled chip the quiet grey would vanish into
                   // the brand fill below `md`.
-                  wrap && "text-[var(--brand-contrast)] md:text-[var(--text-placeholder)]",
+                  wrap && "text-brand-contrast md:text-placeholder",
                 )}
               >
                 <X />
@@ -4272,8 +4272,8 @@ export function Tabs<T extends string>({
         className={cn(
           "flex flex-1 items-center",
           wrap
-            ? "md:self-stretch md:border-b md:border-[var(--border)]"
-            : "self-stretch border-b border-[var(--border)]",
+            ? "md:self-stretch md:border-b md:border-subtle"
+            : "self-stretch border-b border-subtle",
         )}
       >
         <button

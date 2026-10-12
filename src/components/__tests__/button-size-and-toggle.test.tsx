@@ -66,16 +66,16 @@ describe("IconButton pressed", () => {
     render(<IconButton pressed tone="muted" aria-label="Share budget">x</IconButton>);
     const button = screen.getByRole("button", { name: "Share budget", pressed: true });
     const cls = button.className;
-    expect(cls).toContain("text-[var(--brand)]");
-    expect(cls).toContain("bg-[var(--brand-bg)]");
+    expect(cls).toMatch(/text-brand(?![\w-])/);
+    expect(cls).toMatch(/bg-brand-soft(?![\w-])/);
     // The tone's grey is gone, not merely out-ordered.
-    expect(cls).not.toContain("text-[var(--text-placeholder)]");
+    expect(cls).not.toContain("text-placeholder");
   });
 
   it("pressed=false is still a toggle, with the resting look", () => {
     render(<IconButton pressed={false} aria-label="Share budget">x</IconButton>);
     const button = screen.getByRole("button", { pressed: false });
-    expect(button.className).not.toContain("bg-[var(--brand-bg)]");
+    expect(button.className).not.toMatch(/bg-brand-soft(?![\w-])/);
   });
 
   it("a caller's own aria-pressed is kept when pressed is left out", () => {
@@ -88,8 +88,8 @@ describe("IconButton tone=info", () => {
   it("is sky at rest, with the info hover and ring", () => {
     render(<IconButton tone="info" aria-label="Reconcile">x</IconButton>);
     const cls = screen.getByRole("button").className;
-    expect(cls).toContain("text-[var(--info)]");
-    expect(cls).toContain("hover:bg-[var(--info-bg)]");
+    expect(cls).toMatch(/text-info(?![\w-])/);
+    expect(cls).toContain("hover:bg-info-soft");
     expect(cls).toContain("focus-visible:ring-[var(--info-border)]");
   });
 });
@@ -97,11 +97,11 @@ describe("IconButton tone=info", () => {
 describe("IconButton disabled", () => {
   it("pins every variant's resting fill under disabled:hover", () => {
     const rest: Record<ButtonVariant, string> = {
-      primary: "disabled:hover:bg-[var(--bg-surface-2)]",
+      primary: "disabled:hover:bg-surface-2",
       secondary: "disabled:hover:bg-transparent",
       ghost: "disabled:hover:bg-transparent",
-      danger: "disabled:hover:bg-[var(--danger)]",
-      brand: "disabled:hover:bg-[var(--brand)]",
+      danger: "disabled:hover:bg-danger",
+      brand: "disabled:hover:bg-brand",
       link: "disabled:hover:bg-transparent",
     };
     for (const variant of VARIANTS) {
@@ -117,19 +117,19 @@ describe("IconButton disabled", () => {
 
   it("keeps a hover-changing tone's glyph at rest, and a pressed one's fill", () => {
     const { unmount } = render(<IconButton tone="danger" disabled aria-label="Delete">x</IconButton>);
-    expect(screen.getByRole("button").className).toContain("disabled:hover:text-[var(--text-placeholder)]");
+    expect(screen.getByRole("button").className).toContain("disabled:hover:text-placeholder");
     unmount();
     render(<IconButton pressed disabled aria-label="Share">x</IconButton>);
     const cls = screen.getByRole("button").className;
-    expect(cls).toContain("disabled:hover:bg-[var(--brand-bg)]");
+    expect(cls).toMatch(/disabled:hover:bg-brand-soft(?![\w-])/);
     // tailwind-merge dropped the ghost reset the pressed one replaces.
     expect(cls).not.toContain("disabled:hover:bg-transparent");
   });
 
   it("leaves the plain hover classes alone, so a caller's hover override still wins", () => {
-    render(<IconButton className="hover:bg-[var(--bg-hover)]" aria-label="x">x</IconButton>);
+    render(<IconButton className="hover:bg-hover" aria-label="x">x</IconButton>);
     const cls = screen.getByRole("button").className;
-    expect(cls).toContain("hover:bg-[var(--bg-hover)]");
+    expect(cls).toContain("hover:bg-hover");
     // The ghost's own hover, the translucent ink since 0.33 (B′), is gone.
     expect(cls).not.toContain("hover:bg-[color-mix(in_srgb,var(--text-primary)_7%,transparent)]");
   });

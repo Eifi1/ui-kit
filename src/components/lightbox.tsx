@@ -261,7 +261,7 @@ export function Lightbox({
 
   const header = item ? (
     <div className="flex min-w-0 items-center gap-2">
-      <span aria-hidden className="shrink-0 text-sm tabular-nums text-[var(--text-secondary)]">
+      <span aria-hidden className="shrink-0 text-sm tabular-nums text-secondary">
         {labels.counter(index + 1, count)}
       </span>
       {/* The page turn, said — focus does not move when the picture changes, so
@@ -286,10 +286,10 @@ export function Lightbox({
   ) : null;
 
   const slide = !item ? null : kind === "file" ? (
-    <div className="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-[var(--border)] p-6 text-center">
-      <FileText aria-hidden className="size-10 text-[var(--text-muted)]" />
-      <p className="break-all font-medium text-[var(--text-primary)]">{item.fileName ?? item.alt}</p>
-      <p className="text-sm text-[var(--text-muted)]">{labels.noPreview}</p>
+    <div className="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-subtle p-6 text-center">
+      <FileText aria-hidden className="size-10 text-muted" />
+      <p className="break-all font-medium text-primary">{item.fileName ?? item.alt}</p>
+      <p className="text-sm text-muted">{labels.noPreview}</p>
       {fetched.src && (
         <a
           href={fetched.src}
@@ -338,7 +338,7 @@ export function Lightbox({
         data-lightbox=""
         footer={
           item?.caption !== undefined && item.caption !== null && item.caption !== false ? (
-            <p className="me-auto min-w-0 text-sm text-[var(--text-secondary)]">{item.caption}</p>
+            <p className="me-auto min-w-0 text-sm text-secondary">{item.caption}</p>
           ) : undefined
         }
       >

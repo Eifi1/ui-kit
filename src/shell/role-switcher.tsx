@@ -37,7 +37,7 @@ export function RoleSwitcher<R extends string>({
       ariaLabel={labels.switchRole}
       title={title ?? labels.role(value)}
       heading={heading}
-      icon={<FlaskConical className="size-5 text-[var(--warning)]" />}
+      icon={<FlaskConical className="size-5 text-warning" />}
       options={roles.map((r) => ({ value: r, label: r }))}
       value={value}
       onSelect={onChange}

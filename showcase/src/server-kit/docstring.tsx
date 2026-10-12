@@ -231,7 +231,7 @@ export function parseInline(text: string): Inline[] {
  *  undefined to show it as code. */
 export type ResolveRole = (target: string, role: string) => string | undefined;
 
-const CODE = "rounded bg-[var(--bg-surface-2)] px-1 py-px font-mono text-[0.85em] [overflow-wrap:anywhere]";
+const CODE = "rounded bg-surface-2 px-1 py-px font-mono text-[0.85em] [overflow-wrap:anywhere]";
 
 function renderInline(nodes: Inline[], resolve: ResolveRole | undefined): ReactNode {
   return nodes.map((node, i) => {
@@ -246,7 +246,7 @@ function renderInline(nodes: Inline[], resolve: ResolveRole | undefined): ReactN
         );
       case "strong":
         return (
-          <strong key={i} className="font-semibold text-[var(--text-primary)]">
+          <strong key={i} className="font-semibold text-primary">
             {renderInline(node.children, resolve)}
           </strong>
         );
@@ -254,7 +254,7 @@ function renderInline(nodes: Inline[], resolve: ResolveRole | undefined): ReactN
         return <em key={i}>{renderInline(node.children, resolve)}</em>;
       case "ref": {
         const href = node.link ? resolve?.(node.target, node.role) : undefined;
-        const code = <code className={cn(CODE, href && "text-[var(--brand)]")}>{node.display}</code>;
+        const code = <code className={cn(CODE, href && "text-brand")}>{node.display}</code>;
         return href ? (
           <Link key={i} to={href} className="hover:underline">
             {code}
@@ -271,7 +271,7 @@ export function CodeBlock({ children, className }: { children: string; className
   return (
     <pre
       className={cn(
-        "overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs leading-relaxed text-[var(--text-primary)]",
+        "overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs leading-relaxed text-primary",
         className,
       )}
     >
@@ -319,7 +319,7 @@ export function Docstring({
 }) {
   if (!text || !text.trim()) return null;
   return (
-    <div className={cn("space-y-3 text-sm leading-relaxed text-[var(--text-secondary)]", className)}>
+    <div className={cn("space-y-3 text-sm leading-relaxed text-secondary", className)}>
       {renderBlocks(parseDocstring(text), resolve)}
     </div>
   );

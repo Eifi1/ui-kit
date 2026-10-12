@@ -193,10 +193,10 @@ export interface LineItemsProps<T> extends Omit<ComponentPropsWithoutRef<"div">,
 
 const REMOVE_TRACK = "2.25rem";
 const SUMMARY_TONE: Record<LineItemsSummaryTone, string> = {
-  neutral: "text-[var(--text-primary)]",
-  success: "text-[var(--success)]",
-  danger: "text-[var(--danger)]",
-  muted: "text-[var(--text-muted)]",
+  neutral: "text-primary",
+  success: "text-success",
+  danger: "text-danger",
+  muted: "text-muted",
   // SignedAmount's money palette (toneTextClass "income" / "expense").
   income: "text-[var(--money-income)]",
   expense: "text-[var(--money-expense)]",
@@ -354,7 +354,7 @@ export function LineItems<T>({
     <span
       key={column.key}
       className={cn(
-        "min-w-0 truncate text-xs font-medium text-[var(--text-muted)]",
+        "min-w-0 truncate text-xs font-medium text-muted",
         column.align === "end" && "text-end",
       )}
     >
@@ -422,7 +422,7 @@ export function LineItems<T>({
       )}
 
       {items.length === 0 && hasContent(empty) && (
-        <div className="rounded-md border border-dashed border-[var(--border)] px-3 py-4 text-center text-sm text-[var(--text-muted)]">
+        <div className="rounded-md border border-dashed border-subtle px-3 py-4 text-center text-sm text-muted">
           {empty}
         </div>
       )}
@@ -457,7 +457,7 @@ export function LineItems<T>({
               // still fit a figure each; on anything narrower they stack after all.
               pairs && "@2xs:grid-cols-2",
               // Stacked, each row is a card of its own so the rows stay apart.
-              "@max-lg:rounded-md @max-lg:border @max-lg:border-[var(--border)] @max-lg:p-3",
+              "@max-lg:rounded-md @max-lg:border @max-lg:border-subtle @max-lg:p-3",
               extra?.className,
             )}
           >
@@ -475,7 +475,7 @@ export function LineItems<T>({
                   )}
                 >
                   {!floating && (
-                    <span aria-hidden className="block text-xs font-medium text-[var(--text-muted)] @lg:hidden">
+                    <span aria-hidden className="block text-xs font-medium text-muted @lg:hidden">
                       {column.header}
                     </span>
                   )}
@@ -513,7 +513,7 @@ export function LineItems<T>({
           role="group"
           aria-label={typeof totalsLabel === "string" ? totalsLabel : labels.totals}
           data-line-items-totals=""
-          className="grid grid-cols-1 gap-2 border-t border-[var(--border)] pt-2 text-sm font-semibold tabular-nums text-[var(--text-primary)] @lg:grid-cols-[var(--line-items-cols)]"
+          className="grid grid-cols-1 gap-2 border-t border-subtle pt-2 text-sm font-semibold tabular-nums text-primary @lg:grid-cols-[var(--line-items-cols)]"
         >
           {columns.map((column) => {
             const value = totals[column.key];
@@ -536,7 +536,7 @@ export function LineItems<T>({
               >
                 {hasContent(value) && (
                   <span className="flex justify-between gap-2 @lg:block">
-                    <span aria-hidden className="font-normal text-[var(--text-muted)] @lg:hidden">
+                    <span aria-hidden className="font-normal text-muted @lg:hidden">
                       {column.header}
                     </span>
                     {value}
@@ -552,7 +552,7 @@ export function LineItems<T>({
       {summary && (
         <div
           data-line-items-summary=""
-          className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--text-primary)]"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-primary"
         >
           {/* With no value the line is a state of its own, and the label takes the
               tone — the only place left to carry it. */}
@@ -589,7 +589,7 @@ export function LineItems<T>({
       )}
 
       {hasError && (
-        <p className="text-caption leading-tight text-[var(--danger)]">
+        <p className="text-caption leading-tight text-danger">
           {error}
         </p>
       )}

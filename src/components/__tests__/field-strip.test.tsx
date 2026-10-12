@@ -130,7 +130,7 @@ describe("FieldStrip (keksdose G8)", () => {
     );
     const group = screen.getByRole("group", { name: "Location" });
     expect(group).toHaveAccessibleDescription("Optional. Stays on this device. The position could not be read.");
-    expect(screen.getByText("The position could not be read.").className).toContain("text-[var(--danger)]");
+    expect(screen.getByText("The position could not be read.").className).toMatch(/text-danger(?![\w-])/);
     // A group cannot be invalid; its controls are the caller's to mark.
     expect(group).not.toHaveAttribute("aria-invalid");
   });

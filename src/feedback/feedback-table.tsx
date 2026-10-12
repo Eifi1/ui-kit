@@ -240,9 +240,9 @@ export function useFeedbackRenderDate(renderDate?: FeedbackRenderDate, locale?: 
 
 /** A date in a cell: `<time>`, nowrap, tabular figures; "—" when there is none. */
 function FeedbackDate({ value, renderDate }: { value: string | null | undefined; renderDate: FeedbackRenderDate }) {
-  if (!value) return <span className="text-[var(--text-placeholder)]">{EMPTY_FORMATTED_VALUE}</span>;
+  if (!value) return <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>;
   return (
-    <time dateTime={value} className="whitespace-nowrap tabular-nums text-[var(--text-muted)]">
+    <time dateTime={value} className="whitespace-nowrap tabular-nums text-muted">
       {renderDate(value)}
     </time>
   );
@@ -332,9 +332,9 @@ function FeedbackPageLinkCell({ context, openPage }: { context: FeedbackContext 
   const kitLink = useKitLink();
   const href = feedbackPageHref(context);
   const path = feedbackPagePath(context);
-  if (!href || !path) return <span className="text-[var(--text-placeholder)]">{EMPTY_FORMATTED_VALUE}</span>;
+  if (!href || !path) return <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>;
   const className =
-    "inline-flex min-w-0 max-w-full items-center gap-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:underline";
+    "inline-flex min-w-0 max-w-full items-center gap-1 text-secondary hover:text-primary hover:underline";
   const children = (
     <>
       {/* The space outside the hidden span: a flex container drops it from the layout,
@@ -438,7 +438,7 @@ export function feedbackColumns<T extends FeedbackTableRow>({
     {
       key: "id",
       header: labels.columnId,
-      cell: (row) => <span className="font-mono text-xs text-[var(--text-muted)]">{row.id}</span>,
+      cell: (row) => <span className="font-mono text-xs text-muted">{row.id}</span>,
       sortBy: (row) => row.id,
       filter: { type: "number", getValue: (row) => row.id },
       mobileHidden: true,
@@ -477,7 +477,7 @@ export function feedbackColumns<T extends FeedbackTableRow>({
     {
       key: "user",
       header: labels.columnUser,
-      cell: (row) => <span className="text-[var(--text-secondary)]">{feedbackSubmitter(row, labels)}</span>,
+      cell: (row) => <span className="text-secondary">{feedbackSubmitter(row, labels)}</span>,
       sortBy: (row) => feedbackSubmitter(row, labels),
       // Name AND email, so either finds the person; the erased ones by the placeholder
       // (their context holds no name any more).
@@ -496,9 +496,9 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       cell: (row) => {
         const email = feedbackSubmitterEmail(row);
         return email ? (
-          <span className="text-[var(--text-secondary)]">{email}</span>
+          <span className="text-secondary">{email}</span>
         ) : (
-          <span className="text-[var(--text-placeholder)]">{EMPTY_FORMATTED_VALUE}</span>
+          <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>
         );
       },
       sortBy: feedbackSubmitterEmail,
@@ -640,7 +640,7 @@ export function FeedbackMobileCard({ row, showSubmitter = false, renderDate: ren
             glyph on both layouts. */}
         <FeedbackStatusBadge status={row.status} className="shrink-0" />
       </div>
-      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--text-muted)]">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
         <FeedbackCategoryBadge category={row.category} compact />
         <FeedbackDate value={row.created_at} renderDate={renderDate} />
         {showSubmitter && (

@@ -446,18 +446,18 @@ function SingleField({
             <img
               src={preview}
               alt={value.name}
-              className="h-20 w-20 rounded border border-[var(--border)] object-cover"
+              className="h-20 w-20 rounded border border-subtle object-cover"
             />
           ) : (
             // Non-image attachments (PDF, text) can't preview as an <img>, so
             // show a neutral file tile with the name/size beside it instead.
-            <div className="flex h-20 w-20 items-center justify-center rounded border border-[var(--border)] text-[var(--text-placeholder)]">
+            <div className="flex h-20 w-20 items-center justify-center rounded border border-subtle text-placeholder">
               <FileText className="size-8" />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{value.name}</div>
-            <div className="text-xs text-[var(--text-muted)]">
+            <div className="truncate-until-large text-sm text-secondary">{value.name}</div>
+            <div className="text-xs text-muted">
               {fileText.size(value.size)}
             </div>
           </div>
@@ -488,7 +488,7 @@ function SingleField({
           </div>
           {/* Said out loud, because a gesture with no affordance is a gesture
               nobody finds. */}
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-muted">
             {text.attachmentPaste}
           </p>
         </div>
@@ -636,12 +636,12 @@ function MultipleField({
           {chips.map((chip, index) => (
             <li
               key={fileKey(chip.file)}
-              className="flex min-w-0 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-1"
+              className="flex min-w-0 items-center gap-2 rounded-md border border-subtle bg-surface p-1"
             >
               <ChipPreview file={chip.file} screenshot={chip.screenshot} />
               <div className="min-w-0 flex-1">
-                <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{chip.name}</div>
-                <div className="truncate-until-large text-xs text-[var(--text-muted)]">
+                <div className="truncate-until-large text-sm text-secondary">{chip.name}</div>
+                <div className="truncate-until-large text-xs text-muted">
                   {/* The screenshot's file name moves down here: still there for the
                       reporter who wants to know what will be sent, not its title. */}
                   {chip.screenshot ? `${chip.file.name} · ${fileText.size(chip.file.size)}` : fileText.size(chip.file.size)}
@@ -686,7 +686,7 @@ function MultipleField({
           )}
         </div>
       )}
-      <p className="text-xs text-[var(--text-muted)]">
+      <p className="text-xs text-muted">
         {room > 0 ? text.attachmentPaste : limitLabel(max)}
       </p>
       <input
@@ -873,13 +873,13 @@ function RefsField({
           {value.map((ref, index) => (
             <li
               key={`ref:${ref.key}`}
-              className="flex min-w-0 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-1"
+              className="flex min-w-0 items-center gap-2 rounded-md border border-subtle bg-surface p-1"
             >
               <RefGlyph type={ref.type} />
               <div className="min-w-0 flex-1">
-                <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{ref.name}</div>
+                <div className="truncate-until-large text-sm text-secondary">{ref.name}</div>
                 {ref.size !== undefined && (
-                  <div className="truncate-until-large text-xs text-[var(--text-muted)]">{fileText.size(ref.size)}</div>
+                  <div className="truncate-until-large text-xs text-muted">{fileText.size(ref.size)}</div>
                 )}
               </div>
               <RemoveButton
@@ -895,14 +895,14 @@ function RefsField({
               key={`upload:${upload.id}`}
               aria-busy="true"
               data-attachment-uploading=""
-              className="flex min-w-0 items-center gap-2 rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-1"
+              className="flex min-w-0 items-center gap-2 rounded-md border border-dashed border-subtle bg-surface p-1"
             >
-              <span className="flex size-12 shrink-0 items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-placeholder)]">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded border border-subtle bg-surface-2 text-placeholder">
                 <Spinner label={null} className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{upload.file.name}</div>
-                <div className="truncate-until-large text-xs text-[var(--text-muted)]">{uploadingLabel}</div>
+                <div className="truncate-until-large text-sm text-secondary">{upload.file.name}</div>
+                <div className="truncate-until-large text-xs text-muted">{uploadingLabel}</div>
               </div>
             </li>
           ))}
@@ -938,11 +938,11 @@ function RefsField({
       {locked ? (
         // Where the paste hint was: a phone never hovers, so the Tooltip alone would
         // leave a touch user with buttons that do nothing and no word why.
-        <div data-attachment-reason="" className="text-xs text-[var(--text-muted)]">
+        <div data-attachment-reason="" className="text-xs text-muted">
           {disabledReason}
         </div>
       ) : (
-        <p className="text-xs text-[var(--text-muted)]">{room > 0 ? text.attachmentPaste : limitLabel(max)}</p>
+        <p className="text-xs text-muted">{room > 0 ? text.attachmentPaste : limitLabel(max)}</p>
       )}
       <input
         ref={fileInputRef}
@@ -966,7 +966,7 @@ function RefsField({
  *  preview: an image glyph for an image `type`, a file glyph for anything else. */
 function RefGlyph({ type }: { type?: string }) {
   return (
-    <span className="flex size-12 shrink-0 items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-placeholder)]">
+    <span className="flex size-12 shrink-0 items-center justify-center rounded border border-subtle bg-surface-2 text-placeholder">
       {type?.startsWith("image/") ? <ImageIcon aria-hidden className="size-6" /> : <FileText aria-hidden className="size-6" />}
     </span>
   );
@@ -975,7 +975,7 @@ function RefGlyph({ type }: { type?: string }) {
 function Heading({ text, className }: { text?: string; className?: string }) {
   if (!text) return null;
   return (
-    <div className={cn("mb-1 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]", className)}>
+    <div className={cn("mb-1 text-xs font-medium uppercase tracking-wide text-muted", className)}>
       {text}
     </div>
   );
@@ -1128,7 +1128,7 @@ function ChipPreview({ file, screenshot }: { file: File; screenshot: boolean }) 
   }, [file, isImage]);
 
   return (
-    <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-placeholder)]">
+    <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded border border-subtle bg-surface-2 text-placeholder">
       {isImage && url ? (
         <img src={url} alt="" className="size-full object-cover" />
       ) : (
@@ -1136,7 +1136,7 @@ function ChipPreview({ file, screenshot }: { file: File; screenshot: boolean }) 
       )}
       {screenshot && (
         // Marks the slot apart from the photos: it is why the capture button is gone.
-        <span className="absolute bottom-0.5 end-0.5 rounded-sm bg-[var(--bg-surface)] p-0.5 text-[var(--text-secondary)]">
+        <span className="absolute bottom-0.5 end-0.5 rounded-sm bg-surface p-0.5 text-secondary">
           <Camera aria-hidden className="size-3" />
         </span>
       )}

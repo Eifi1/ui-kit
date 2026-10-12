@@ -5,7 +5,7 @@
  * them at once. Compose with `ring-inset` or `ring-offset-*` where a component needs it.
  */
 export const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-[length:var(--focus-ring-width)] focus-visible:ring-[var(--brand)]";
+  "focus-visible:outline-none focus-visible:ring-[length:var(--focus-ring-width)] focus-visible:ring-brand";
 
 /** Just the width of {@link FOCUS_RING}, for a ring in another colour (a danger control's,
  *  `--brand-contrast` on a filled button): `cn(FOCUS_RING_WIDTH, "focus-visible:ring-[var(--danger)]")`. */

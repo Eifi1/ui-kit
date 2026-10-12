@@ -160,7 +160,7 @@ export function DialogFrame({
         className={cn(
           // `last:pb-4`: a frame with neither body nor actions closes on its header.
           "flex shrink-0 items-start justify-between gap-2 px-4 pt-4 pb-3 last:pb-4",
-          headerDivider && "border-b border-[var(--border)]",
+          headerDivider && "border-b border-subtle",
           headerClassName,
         )}
       >
@@ -169,11 +169,11 @@ export function DialogFrame({
             while the X stays outside it, pinned to the top-end corner. */}
         <div className="flex min-w-0 flex-1 flex-wrap items-start justify-between gap-x-3 gap-y-2">
           <div className="min-w-0 grow basis-48">
-            <Heading id={titleId} className="text-lg font-semibold leading-snug text-[var(--text-primary)]">
+            <Heading id={titleId} className="text-lg font-semibold leading-snug text-primary">
               {title}
             </Heading>
             {hasDescription && (
-              <p id={descriptionId} className="mt-0.5 text-sm text-[var(--text-muted)]">
+              <p id={descriptionId} className="mt-0.5 text-sm text-muted">
                 {description}
               </p>
             )}
@@ -214,7 +214,7 @@ function FrameClose({ label, onClose }: { label?: string; onClose: () => void })
       type="button"
       onClick={close}
       aria-label={labels.close}
-      className={cn("-me-1.5 -mt-1 shrink-0 rounded p-1.5 text-[var(--text-muted)] outline-none hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]", FOCUS_RING)}
+      className={cn("-me-1.5 -mt-1 shrink-0 rounded p-1.5 text-muted outline-none hover:bg-hover hover:text-secondary", FOCUS_RING)}
     >
       <X aria-hidden className="size-5" />
     </button>
@@ -255,7 +255,7 @@ function FrameActions({
     <div
       className={cn(
         "flex shrink-0 flex-wrap items-center justify-end gap-2 px-4 py-3",
-        divider && "border-t border-[var(--border)]",
+        divider && "border-t border-subtle",
       )}
     >
       {typeof actions === "function" ? actions(close) : actions}

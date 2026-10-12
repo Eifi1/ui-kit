@@ -208,7 +208,7 @@ export function CompleteNameDialog({
           />
         </div>
         {message !== undefined && (
-          <p role="alert" className="text-xs text-[var(--danger)]">
+          <p role="alert" className="text-xs text-danger">
             {message}
           </p>
         )}

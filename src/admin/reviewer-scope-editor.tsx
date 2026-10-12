@@ -181,7 +181,7 @@ export function ReviewerScopeEditor({
 
   return (
     <div className="space-y-3">
-      {intro && <div className="text-sm text-[var(--text-secondary)]">{intro}</div>}
+      {intro && <div className="text-sm text-secondary">{intro}</div>}
       <CheckboxGroup
         legend={labels.languages}
         options={languageOptions(languages)}

@@ -14,11 +14,11 @@ import { pickLinkRenderer } from "./text-link";
  * rows (`TopBarActionMenu`, `OptionSwitcherMenu`) cannot drift into two looks.
  */
 const MENU_ITEM_ROW =
-  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-start text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
+  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-start text-secondary hover:bg-hover";
 
 /** HoverMenu moves focus onto items with the arrow keys; a pointer user never sees the
  *  ring, a keyboard user always does. Inset, because the panel clips its children. */
-const MENU_ITEM_FOCUS = `${FOCUS_RING} focus-visible:bg-[var(--bg-hover)] focus-visible:ring-inset`;
+const MENU_ITEM_FOCUS = `${FOCUS_RING} focus-visible:bg-hover focus-visible:ring-inset`;
 
 export type MenuItemTone = "default" | "danger";
 
@@ -156,7 +156,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
   const look = cn(
     MENU_ITEM_ROW,
     MENU_ITEM_FOCUS,
-    tone === "danger" && "text-[var(--danger)] hover:bg-[var(--danger-bg)] focus-visible:bg-[var(--danger-bg)]",
+    tone === "danger" && "text-danger hover:bg-danger-soft focus-visible:bg-danger-soft",
     disabled && "cursor-default opacity-50 hover:bg-transparent",
     className,
   );
@@ -183,7 +183,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       {(trailing != null || on) && (
         <span className="flex shrink-0 items-center gap-2">
           {trailing}
-          {on && <Check className="size-4 text-[var(--text-secondary)]" aria-hidden />}
+          {on && <Check className="size-4 text-secondary" aria-hidden />}
         </span>
       )}
     </>

@@ -22,18 +22,18 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * two account sections added in 0.12: two-factor from an `otpauth://` URI, and passkeys.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 const beat = (ms = 900) => new Promise((r) => setTimeout(r, ms));
 
 /* ── AuthLayout ──────────────────────────────────────────────────────────── */
 
 const LINK_BUTTON =
-  "rounded-sm text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]";
+  "rounded-sm text-xs text-muted hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand";
 
 function LegalText() {
   return (
-    <div className="space-y-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+    <div className="space-y-3 text-sm leading-relaxed text-secondary">
       <p>
         Acme Books GmbH, Musterstraße 1, 10115 Berlin. Managing director: Erika Mustermann. Registered at
         Amtsgericht Charlottenburg, HRB 000000.
@@ -81,7 +81,7 @@ function AuthLayoutSpecimen() {
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <span className="text-xs text-[var(--text-muted)]">screen</span>
+          <span className="text-xs text-muted">screen</span>
           <ToggleGroup<"sign-in" | "imprint">
             aria-label="screen"
             value={screen}
@@ -104,7 +104,7 @@ function AuthLayoutSpecimen() {
 
       {/* The frame: a fixed height and its own scroll. `min-h-full` replaces the layout's
           `min-h-dvh` (cn merges them — later wins), so it fills the box, not the window. */}
-      <div className="mt-4 h-[32rem] overflow-auto rounded-md border border-[var(--border)]">
+      <div className="mt-4 h-[32rem] overflow-auto rounded-md border border-subtle">
         <AuthLayout
           className="min-h-full"
           data-demo="auth-layout"
@@ -122,7 +122,7 @@ function AuthLayoutSpecimen() {
             wide ? (
               <button
                 type="button"
-                className="inline-flex items-center gap-1 text-sm text-[var(--brand)] hover:underline"
+                className="inline-flex items-center gap-1 text-sm text-brand hover:underline"
                 onClick={() => setScreen("sign-in")}
               >
                 <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden /> Back to sign in
@@ -250,7 +250,7 @@ function TwoFactorOtpauthSpecimen() {
           renderQr={
             customQr
               ? (uri) => (
-                  <div className="flex size-48 items-center justify-center bg-[var(--bg-surface-2)] p-3 text-center font-mono text-micro break-all text-[var(--text-secondary)]">
+                  <div className="flex size-48 items-center justify-center bg-surface-2 p-3 text-center font-mono text-micro break-all text-secondary">
                     renderQr({uri.slice(0, 40)}…)
                   </div>
                 )

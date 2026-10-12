@@ -30,14 +30,14 @@ function ScrollBox({ portal }: { portal?: false }) {
   const { ref, extra } = useSideScroll();
   return (
     <div className="min-w-0">
-      <p className="mb-1 font-mono text-xs text-[var(--text-secondary)]">
+      <p className="mb-1 font-mono text-xs text-secondary">
         {portal === false ? "portal={false}" : "no portal prop (the default)"} · sideways scroll:{" "}
         {extra === null ? "…" : `${extra}px`}
       </p>
-      <div ref={ref} className="h-40 w-full max-w-56 overflow-auto rounded-md border border-[var(--border)]">
-        <ul className="divide-y divide-[var(--border)]">
+      <div ref={ref} className="h-40 w-full max-w-56 overflow-auto rounded-md border border-subtle">
+        <ul className="divide-y divide-subtle">
           {ROWS.map((row) => (
-            <li key={row} className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm text-[var(--text-primary)]">
+            <li key={row} className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm text-primary">
               <span className="truncate">{row}</span>
               <Tooltip label={`${row}: booked monthly, split by floor area`} side="end" portal={portal}>
                 <IconButton size="sm" aria-label={`About ${row}`}>

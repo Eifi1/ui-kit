@@ -302,7 +302,7 @@ export function HoverMenu({
             // where no screen reader reads a name.
             aria-label={ariaLabel}
             className={cn(
-              "min-w-44 max-w-[calc(100vw-1rem)] rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+              "min-w-44 max-w-[calc(100vw-1rem)] rounded-md border border-subtle bg-surface shadow-lg",
               panelClassName,
             )}
           >

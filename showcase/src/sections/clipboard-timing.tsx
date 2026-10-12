@@ -13,7 +13,7 @@ import { Example, Note, OutTable, Row, Stage } from "../lib/section";
  * reported, reproduced on demand — the kit code that runs is the real one.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 /** Shadow both copy paths with refusing stand-ins until the next macrotask — long
  *  enough for the click's copy (a rejected promise, then the legacy fallback) to run. */
@@ -44,7 +44,7 @@ function CopyButtons() {
     >
       <Stage>
         <div data-stage="wide" className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-secondary">
             <span className="font-mono">{IBAN}</span>
             <CopyButton text={IBAN} label="Copy IBAN" onCopied={log("icon")} />
             <CopyButton text={IBAN} label="Copy IBAN" size="md" buttonVariant="secondary" tooltipSide="bottom" onCopied={log("icon md")} />
@@ -95,9 +95,9 @@ function CopyButtons() {
 }
 
 const STATE_TONE: Record<CopyState, string> = {
-  idle: "text-[var(--text-muted)]",
-  copied: "text-[var(--success)]",
-  failed: "text-[var(--danger)]",
+  idle: "text-muted",
+  copied: "text-success",
+  failed: "text-danger",
 };
 
 function CopyHook() {
@@ -226,11 +226,11 @@ function DebouncedCallback() {
           }}
           onBlur={() => save.flush()}
           placeholder="Type without stopping for a few seconds…"
-          className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-2 py-1.5 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          className="w-full rounded-md border border-subtle bg-surface-2 px-2 py-1.5 text-sm text-primary outline-none focus:ring-2 focus:ring-brand"
         />
       </Stage>
       <Row>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={withMaxWait} onChange={(e) => setWithMaxWait(e.target.checked)} />
           <code className="font-mono">maxWait: 2500</code>
         </label>

@@ -21,7 +21,7 @@ import { TabControls } from "./field-anatomy-demo";
  *  opinion about what a badge looks like, so the showcase has to bring its own. */
 function CountPill({ children }: { children: number }) {
   return (
-    <span className="rounded-full bg-[var(--bg-surface-2)] px-1.5 py-0.5 text-caption font-medium text-[var(--text-secondary)]">
+    <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-caption font-medium text-secondary">
       {children}
     </span>
   );
@@ -51,8 +51,8 @@ function TabStrip() {
           { id: "docs", label: "Docs", href: "#/chips-toggles" },
         ]}
       />
-      <div className="pt-3 text-sm text-[var(--text-secondary)]">
-        Panel for <span className="font-mono text-[var(--text-primary)]">{active}</span>.
+      <div className="pt-3 text-sm text-secondary">
+        Panel for <span className="font-mono text-primary">{active}</span>.
       </div>
       <div className="mt-3">
         <Note>
@@ -103,8 +103,8 @@ function WrappedTabStrip() {
           badge: <CountPill>{tab.count}</CountPill>,
         }))}
       />
-      <div className="pt-3 text-sm text-[var(--text-secondary)]">
-        Showing <span className="font-mono text-[var(--text-primary)]">{active}</span>.
+      <div className="pt-3 text-sm text-secondary">
+        Showing <span className="font-mono text-primary">{active}</span>.
       </div>
       <div className="mt-3">
         <Note>
@@ -145,8 +145,8 @@ function ToggleGroups() {
           ]}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
-        showing: <span className="font-mono text-[var(--text-secondary)]">{view}</span>
+      <p className="mt-3 text-xs text-muted">
+        showing: <span className="font-mono text-secondary">{view}</span>
       </p>
       <div className="mt-3">
         <Button variant="ghost" onClick={() => setLocked((v) => !v)}>
@@ -242,12 +242,12 @@ function ToggleGroupClearable() {
           options={QUEUE_OPTIONS}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
-        filter: <span className="font-mono text-[var(--text-secondary)]">{String(filter)}</span>
+      <p className="mt-3 text-xs text-muted">
+        filter: <span className="font-mono text-secondary">{String(filter)}</span>
         {log.length > 0 && (
           <>
             {" "}· onChange calls, newest first:{" "}
-            <span className="font-mono text-[var(--text-secondary)]">{log.join(", ")}</span>
+            <span className="font-mono text-secondary">{log.join(", ")}</span>
           </>
         )}
       </p>
@@ -313,7 +313,7 @@ function ChipVariants() {
       <div className="space-y-3">
         {(["soft", "outline", "solid"] as const).map((variant) => (
           <Row key={variant}>
-            <span className="w-16 font-mono text-caption text-[var(--text-muted)]">{variant}</span>
+            <span className="w-16 font-mono text-caption text-muted">{variant}</span>
             {CHIP_TONES.map((t) => (
               <Chip key={t} tone={t} variant={variant}>
                 {t}
@@ -322,7 +322,7 @@ function ChipVariants() {
           </Row>
         ))}
         <Row>
-          <span className="w-16 font-mono text-caption text-[var(--text-muted)]">caps</span>
+          <span className="w-16 font-mono text-caption text-muted">caps</span>
           {STATUS_BADGES.map((b) => (
             <Chip key={b.text} tone={b.tone} size="sm" caps>
               {b.text}
@@ -335,7 +335,7 @@ function ChipVariants() {
           ))}
         </Row>
         <Row>
-          <span className="w-16 font-mono text-caption text-[var(--text-muted)]">square</span>
+          <span className="w-16 font-mono text-caption text-muted">square</span>
           {["Overdue", "EUR", "Q3"].map((v) => (
             <Chip key={v} shape="square" tone="brand" variant="outline" selected={on.includes(v)} onClick={() => toggle(v)}>
               {v}
@@ -349,8 +349,8 @@ function ChipVariants() {
           </Chip>
         </Row>
         <Row>
-          <span className="w-16 font-mono text-caption text-[var(--text-muted)]">count</span>
-          <span className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
+          <span className="w-16 font-mono text-caption text-muted">count</span>
+          <span className="inline-flex items-center gap-1.5 text-sm text-secondary">
             <Bell className="size-4" aria-hidden /> Inbox
             <Chip tone="danger" variant="solid" size="sm" aria-label={`${unread} unread`}>
               {unread}
@@ -396,7 +396,7 @@ function ChipLinkOnClick() {
           {(close) => (
             <ul className="py-1">
               <li className="flex items-center justify-between gap-2 px-3 py-2">
-                <span className="text-sm text-[var(--text-primary)]">Marcel</span>
+                <span className="text-sm text-primary">Marcel</span>
                 <Chip
                   href="/chips-toggles"
                   renderLink={routerLink}
@@ -419,7 +419,7 @@ function ChipLinkOnClick() {
             </ul>
           )}
         </HoverMenu>
-        <span className="font-mono text-xs text-[var(--text-muted)]">chip onClick ran {clicks}×</span>
+        <span className="font-mono text-xs text-muted">chip onClick ran {clicks}×</span>
       </Row>
       <Note>
         Open the menu and press &ldquo;Admin&rdquo;: the chip is still a link (a router{" "}
@@ -467,7 +467,7 @@ function ChipLinksAndRemove() {
             {f}
           </Chip>
         ))}
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={removeLocked} onChange={(e) => setRemoveLocked(e.target.checked)} />
           <span>
             <code className="font-mono">removeDisabled</code> on the first
@@ -525,8 +525,8 @@ function VerticalTabs() {
             { id: "advanced", label: <span className="inline-flex items-center gap-2"><Settings2 className="size-4" aria-hidden /> Advanced</span>, href: "#/chips-toggles" },
           ]}
         />
-        <div className="rounded-md border border-[var(--border)] p-4 text-sm text-[var(--text-secondary)]">
-          The <span className="font-medium text-[var(--text-primary)]">{labels[active]}</span> panel.
+        <div className="rounded-md border border-subtle p-4 text-sm text-secondary">
+          The <span className="font-medium text-primary">{labels[active]}</span> panel.
         </div>
       </div>
       <div className="mt-3">
@@ -732,8 +732,8 @@ function ChipStates() {
           </Button>
         </Row>
       </div>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
-        last event: <span className="font-mono text-[var(--text-secondary)]">{log}</span>
+      <p className="mt-3 text-xs text-muted">
+        last event: <span className="font-mono text-secondary">{log}</span>
       </p>
       <Note>
         The first chip is the <em>action</em> shape: with <code className="font-mono">onClick</code>{" "}
@@ -847,9 +847,9 @@ function ChipInputOptions() {
           error={missing ? "Add at least one recipient." : undefined}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
+      <p className="mt-3 text-xs text-muted">
         values:{" "}
-        <span className="font-mono text-[var(--text-secondary)]">
+        <span className="font-mono text-secondary">
           {JSON.stringify({ keywords, codes, cc })}
         </span>
       </p>

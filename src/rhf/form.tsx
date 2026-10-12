@@ -233,7 +233,7 @@ export function FormLabel({ className, ...rest }: FormLabelProps) {
       data-error={error ? true : undefined}
       htmlFor={formItemId}
       {...rest}
-      className={cn("data-[error=true]:text-[var(--danger)]", className)}
+      className={cn("data-[error=true]:text-danger", className)}
     />
   );
 }
@@ -287,7 +287,7 @@ export function FormDescription({ className, ...rest }: FormDescriptionProps) {
       data-slot="form-description"
       {...rest}
       id={formDescriptionId}
-      className={cn("text-caption leading-tight text-[var(--text-muted)]", className)}
+      className={cn("text-caption leading-tight text-muted", className)}
     />
   );
 }
@@ -315,7 +315,7 @@ export function FormMessage({ className, children, ...rest }: FormMessageProps) 
       data-slot="form-message"
       {...rest}
       id={formMessageId}
-      className={cn("text-caption leading-tight text-[var(--danger)]", className)}
+      className={cn("text-caption leading-tight text-danger", className)}
     >
       {body}
     </p>

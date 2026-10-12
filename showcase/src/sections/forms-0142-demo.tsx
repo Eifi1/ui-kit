@@ -8,7 +8,7 @@ import { Example, Note } from "../lib/section";
  * preset.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 interface BudgetRow {
   id: number;

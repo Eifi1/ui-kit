@@ -255,7 +255,7 @@ export function EmailChangeSetting({
         {/* Focusable, not a control: the request's answer is read out when it takes the
             focus from the submit that went with the form. */}
         <div ref={pendingRef} tabIndex={-1} className="flex gap-2 outline-none">
-          <MailCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--success)]" />
+          <MailCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-success" />
           <div className="min-w-0 space-y-1">
             <p className="break-words text-sm">{labels.pending(pending)}</p>
             <p className={CARD_DESCRIPTION_CLASS}>{labels.pendingHint(currentEmail)}</p>
@@ -291,7 +291,7 @@ export function EmailChangeSetting({
             )}
             {/* Always in the tree, so the "sent again" that appears in it is announced
                 (VerifyEmailStatus's resend line). */}
-            <span role="status" className="text-xs text-[var(--success)]">
+            <span role="status" className="text-xs text-success">
               {resent ? labels.resent : null}
             </span>
           </div>
@@ -394,7 +394,7 @@ export function EmailChangeSetting({
           {/* RegisterForm's offer (auth §4.5): one click, the exact address on the
               button, reversible by typing. */}
           {suggestion && (
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
+            <p className="mt-1 text-xs text-muted">
               <Button
                 type="button"
                 variant="link"

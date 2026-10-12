@@ -93,7 +93,7 @@ export function Choices() {
                 its name from aria-label, and the caption would say it twice. */}
             <div className="flex items-center gap-2">
               <Checkbox aria-label="Bare box, named by aria-label" defaultChecked />
-              <span aria-hidden className="text-xs text-[var(--text-muted)]">
+              <span aria-hidden className="text-xs text-muted">
                 No visible label — named by <code className="font-mono">aria-label</code>
               </span>
             </div>
@@ -154,7 +154,7 @@ export function Choices() {
         hint="the switch at the far end; takes effect when flipped"
       >
         <Stage>
-          <div data-stage="wide" className="divide-y divide-[var(--border)]">
+          <div data-stage="wide" className="divide-y divide-subtle">
             <Switch
               className="py-3"
               label="Email notifications"
@@ -205,7 +205,7 @@ export function Choices() {
           <Switch label="Small, before the words" size="sm" switchPosition="start" defaultChecked />
           <div
             data-stage="wide"
-            className="flex items-center justify-center gap-3 text-sm text-[var(--text-primary)]"
+            className="flex items-center justify-center gap-3 text-sm text-primary"
           >
             <span>Row in a table:</span>
             <Switch
@@ -214,7 +214,7 @@ export function Choices() {
               checked={rowActive}
               onCheckedChange={setRowActive}
             />
-            <span className="text-[var(--text-muted)]">{rowActive ? "Active" : "Inactive"}</span>
+            <span className="text-muted">{rowActive ? "Active" : "Inactive"}</span>
           </div>
         </Stage>
       </Example>
@@ -270,7 +270,7 @@ export function Choices() {
               formatValue={(v) => `${v} percent`}
               onChange={setOpacity}
             />
-            <p className="text-xs text-[var(--text-muted)]">opacity: {opacity}%</p>
+            <p className="text-xs text-muted">opacity: {opacity}%</p>
           </div>
           <div className="space-y-2">
             {/* `onChange` fires on every movement; a request that should run once per
@@ -286,7 +286,7 @@ export function Choices() {
               onPointerUp={() => setReleased(threshold)}
               onKeyUp={() => setReleased(threshold)}
             />
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               live: {threshold}% · last released: {released}%
             </p>
           </div>

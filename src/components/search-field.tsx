@@ -53,7 +53,7 @@ interface SearchFieldOwnProps
 // itself) without even its baseline, because the header it sits in already draws
 // the line. No `text-*` size, on purpose — the input inherits the caller's.
 const SEARCH_INLINE =
-  "block w-full min-w-0 border-0 bg-transparent py-1 text-[var(--text-primary)] shadow-none placeholder:text-[var(--text-placeholder)] focus:outline-none focus:ring-0 " +
+  "block w-full min-w-0 border-0 bg-transparent py-1 text-primary shadow-none placeholder:text-placeholder focus:outline-none focus:ring-0 " +
   // FIELD_BASE carries the 16 px touch floor (§10.1); the inline look needs it too.
   FIELD_TOUCH_TEXT;
 
@@ -121,7 +121,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
       <Search
         aria-hidden
         className={cn(
-          "pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+          "pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-placeholder",
           // Logical sides throughout, so a right-to-left page gets the icon at the
           // start of the line and the clear button at its end.
           inline ? "start-0" : "start-3",
@@ -180,7 +180,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
           }}
           aria-label={clearLabel}
           className={cn(
-            "absolute top-1/2 -translate-y-1/2 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]",
+            "absolute top-1/2 -translate-y-1/2 rounded p-1 text-placeholder hover:text-secondary",
             inline ? "end-0" : "end-2",
           )}
         >

@@ -331,7 +331,7 @@ export function ColumnRoleTable<
                   scope="col"
                   className="min-w-36 py-2 align-top"
                 >
-                  <span className="block max-w-56 truncate pb-1 text-caption font-normal text-[var(--text-muted)]">
+                  <span className="block max-w-56 truncate pb-1 text-caption font-normal text-muted">
                     {name}
                   </span>
                   <Select
@@ -396,7 +396,7 @@ export function ColumnRoleTable<
                     // Dimmed, not hidden: its values are what tell you whether ignoring
                     // it was right.
                     roleOfColumn(roles, mapping, column) === null &&
-                      "text-[var(--text-muted)]",
+                      "text-muted",
                   )}
                 >
                   <span className="block max-w-56 truncate">
@@ -409,7 +409,7 @@ export function ColumnRoleTable<
         </TableBody>
       </Table>
       {total > shown.length && (
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           {labels.previewOf(shown.length, total)}
         </p>
       )}
@@ -613,7 +613,7 @@ export function ColumnMapper<R extends string>({
         disabled={disabled}
         className={cn(
           "font-mono text-xs",
-          dragOver && "rounded-md ring-2 ring-[var(--brand)]",
+          dragOver && "rounded-md ring-2 ring-brand",
         )}
         data-drag-over={dragOver || undefined}
         onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -680,7 +680,7 @@ export function ColumnMapper<R extends string>({
       {table.width > 0 && (
         <>
           <p
-            className="text-xs text-[var(--text-secondary)]"
+            className="text-xs text-secondary"
             data-slot="column-mapper-summary"
           >
             {[
@@ -716,16 +716,16 @@ export function ColumnMapper<R extends string>({
               <ul className="space-y-1 text-xs">
                 {unread.slice(0, UNREAD_LISTED).map((line) => (
                   <li key={line.line} className="min-w-0">
-                    <span className="block text-[var(--text-secondary)]">
+                    <span className="block text-secondary">
                       {labels.unreadLine(line.line)}
                     </span>
-                    <code className="block truncate font-mono text-[var(--text-muted)]">
+                    <code className="block truncate font-mono text-muted">
                       {line.text}
                     </code>
                   </li>
                 ))}
                 {unread.length > UNREAD_LISTED && (
-                  <li className="text-[var(--text-muted)]">
+                  <li className="text-muted">
                     {labels.unreadMore(unread.length - UNREAD_LISTED)}
                   </li>
                 )}

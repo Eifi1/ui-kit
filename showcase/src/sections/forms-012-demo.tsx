@@ -35,7 +35,7 @@ import { Example, Note, Row } from "../lib/section";
  * `LineItems` and `FormActions` they end in.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)] whitespace-pre-wrap [overflow-wrap:anywhere]";
+const READOUT = "font-mono text-xs text-secondary whitespace-pre-wrap [overflow-wrap:anywhere]";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /* ── every Rhf* field in one form ─────────────────────────────────────────── */
@@ -309,7 +309,7 @@ function FormActionsPlacements() {
     >
       <div className="space-y-6">
         <div>
-          <p className="mb-2 text-xs font-medium text-[var(--text-secondary)]">
+          <p className="mb-2 text-xs font-medium text-secondary">
             placement=&quot;inline&quot; (default) — submits the enclosing form, pending on click
           </p>
           <form
@@ -317,7 +317,7 @@ function FormActionsPlacements() {
               e.preventDefault();
               save("inline");
             }}
-            className="rounded-md border border-[var(--border)] p-3"
+            className="rounded-md border border-subtle p-3"
           >
             <Input label="Account name" defaultValue="Household" />
             <FormActions onCancel={() => setLog("inline: cancelled")} pending={pending} pendingLabel="Saving…" />
@@ -325,10 +325,10 @@ function FormActionsPlacements() {
         </div>
 
         <div>
-          <p className="mb-2 text-xs font-medium text-[var(--text-secondary)]">
+          <p className="mb-2 text-xs font-medium text-secondary">
             placement=&quot;sticky&quot; — scroll the box: the row stays on its bottom edge
           </p>
-          <div className="h-48 overflow-y-auto rounded-md border border-[var(--border)] px-3 pt-3">
+          <div className="h-48 overflow-y-auto rounded-md border border-subtle px-3 pt-3">
             <div className="space-y-3">
               {["Street", "Postcode", "City", "Country", "Floor", "Door code"].map((f) => (
                 <Input key={f} label={f} />
@@ -344,7 +344,7 @@ function FormActionsPlacements() {
         </div>
 
         <div>
-          <p className="mb-2 text-xs font-medium text-[var(--text-secondary)]">
+          <p className="mb-2 text-xs font-medium text-secondary">
             placement=&quot;dialog&quot; in DialogFrame&apos;s footer, a destructive action, and a disabled reason
           </p>
           <Button type="button" variant="secondary" onClick={() => setDialogOpen(true)}>
@@ -374,7 +374,7 @@ function FormActionsPlacements() {
               />
             }
           >
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-sm text-secondary">
               Save is disabled with a reason — hover or Tab to it. Delete sits at the start, so the row
               aligns <code className="font-mono">between</code>.
             </p>
@@ -382,7 +382,7 @@ function FormActionsPlacements() {
         </div>
 
         <div>
-          <p className="mb-2 text-xs font-medium text-[var(--text-secondary)]">
+          <p className="mb-2 text-xs font-medium text-secondary">
             align=&quot;start&quot;, extra children, submitVariant=&quot;danger&quot;, no Cancel
           </p>
           <FormActions

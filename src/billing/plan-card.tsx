@@ -100,8 +100,8 @@ function SpanList({ name, items, icon }: { name: string; items: ReactNode[]; ico
   return (
     <span role="list" aria-label={name} className="block space-y-1">
       {items.map((item, i) => (
-        <span role="listitem" key={i} className="flex items-start gap-1.5 text-[var(--text-secondary)]">
-          <span aria-hidden className="mt-[0.0625rem] flex shrink-0 text-[var(--text-muted)] [&_svg]:size-3.5">
+        <span role="listitem" key={i} className="flex items-start gap-1.5 text-secondary">
+          <span aria-hidden className="mt-[0.0625rem] flex shrink-0 text-muted [&_svg]:size-3.5">
             {icon}
           </span>
           <span className="min-w-0">
@@ -170,8 +170,8 @@ export const PlanCard = forwardRef<HTMLInputElement, PlanCardProps>(function Pla
           className={cn(
             "tabular-nums",
             price.kind === "not-offered"
-              ? "text-xs text-[var(--text-muted)]"
-              : "text-lg font-semibold leading-tight text-[var(--text-primary)]",
+              ? "text-xs text-muted"
+              : "text-lg font-semibold leading-tight text-primary",
           )}
         >
           {figure}
@@ -179,15 +179,15 @@ export const PlanCard = forwardRef<HTMLInputElement, PlanCardProps>(function Pla
         {priced && (
           <>
             {" "}
-            <span className="text-xs text-[var(--text-secondary)]">
+            <span className="text-xs text-secondary">
               {interval === "year" ? labels.perYear : labels.perMonth}
             </span>{" "}
-            <span className="block text-xs text-[var(--text-muted)]">{labels.vatIncluded}</span>
+            <span className="block text-xs text-muted">{labels.vatIncluded}</span>
           </>
         )}{" "}
       </span>
       {plan.description !== undefined && plan.description !== null && (
-        <span className="block text-[var(--text-secondary)]">{plan.description} </span>
+        <span className="block text-secondary">{plan.description} </span>
       )}
       <SpanList name={labels.limits} items={limitLines} icon={<Gauge />} />
       <SpanList name={labels.features} items={[...(plan.features ?? [])]} icon={<Check />} />
@@ -416,7 +416,7 @@ export function PlanPicker({
         aria-label={legend === undefined ? labels.plans : undefined}
       >
         {legend !== undefined && (
-          <legend id={legendId} className="mb-2 text-sm font-medium text-[var(--text-primary)]">
+          <legend id={legendId} className="mb-2 text-sm font-medium text-primary">
             {legend}
           </legend>
         )}

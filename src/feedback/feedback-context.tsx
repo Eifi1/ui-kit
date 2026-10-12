@@ -180,7 +180,7 @@ export function FeedbackContextBox({
   return (
     <div
       className={cn(
-        "space-y-1 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2 text-xs text-[var(--text-muted)]",
+        "space-y-1 rounded-md border border-subtle bg-surface-2 px-3 py-2 text-xs text-muted",
         className,
       )}
     >
@@ -189,7 +189,7 @@ export function FeedbackContextBox({
           line
         ) : (
           <>
-            <span className="font-medium text-[var(--text-secondary)]">{lead}</span>
+            <span className="font-medium text-secondary">{lead}</span>
             {submitter}
           </>
         )}
@@ -197,7 +197,7 @@ export function FeedbackContextBox({
       <Checkbox
         checked={attachUrl}
         onCheckedChange={onAttachUrlChange}
-        label={<span className="text-xs font-medium text-[var(--text-secondary)]">{labels.attachUrl}</span>}
+        label={<span className="text-xs font-medium text-secondary">{labels.attachUrl}</span>}
         description={
           url ? (
             // `break-all`: a URL is one unbreakable word, and at 390px a long query string

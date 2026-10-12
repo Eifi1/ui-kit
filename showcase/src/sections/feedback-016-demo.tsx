@@ -19,7 +19,7 @@ import { Example, Note, Row } from "../lib/section";
  * own id type and takes id / data-* / rowProps; every Table part takes a `ref`.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** A real image for the screenshot slot, drawn in the page's brand colour. */
@@ -164,7 +164,7 @@ export function TableRefs016Demo() {
           Scroll to Rent
         </Button>
       </Row>
-      <div className="max-h-40 overflow-y-auto rounded-md border border-[var(--border)]">
+      <div className="max-h-40 overflow-y-auto rounded-md border border-subtle">
         <Table aria-label="Budget lines">
           <TableHead>
             <TableRow>
@@ -180,7 +180,7 @@ export function TableRefs016Demo() {
                   if (el) rows.current.set(line, el);
                   else rows.current.delete(line);
                 }}
-                className={line === current ? "bg-[var(--bg-active)]" : undefined}
+                className={line === current ? "bg-active" : undefined}
               >
                 <TableCell>{line}</TableCell>
                 <TableCell numeric>{(i + 1) * 120}.00</TableCell>

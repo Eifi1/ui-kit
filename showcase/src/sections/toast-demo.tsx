@@ -78,16 +78,16 @@ function ToastUndo() {
       label="Toasts — an action, undo and redo"
       hint="toast.undo(message, { onUndo }) — the action says the provider's toast.undo, and lasts 8s"
     >
-      <ul className="max-w-xs divide-y divide-[var(--border)] rounded-md border border-[var(--border)]">
+      <ul className="max-w-xs divide-y divide-subtle rounded-md border border-subtle">
         {items.map((name) => (
-          <li key={name} className="flex items-center justify-between px-3 py-1.5 text-sm text-[var(--text-primary)]">
+          <li key={name} className="flex items-center justify-between px-3 py-1.5 text-sm text-primary">
             {name}
             <IconButton label={`Delete ${name}`} tone="muted" onClick={() => remove(name)}>
               <Trash2 />
             </IconButton>
           </li>
         ))}
-        {items.length === 0 && <li className="px-3 py-1.5 text-sm text-[var(--text-muted)]">Nothing left.</li>}
+        {items.length === 0 && <li className="px-3 py-1.5 text-sm text-muted">Nothing left.</li>}
       </ul>
       <Row className="mt-3">
         <Button variant="ghost" onClick={() => setItems(FRUIT)}>

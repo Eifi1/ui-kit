@@ -42,7 +42,7 @@ describe("StatusDot", () => {
     const { container } = render(<StatusDot tone="danger" />);
     const dot = container.firstElementChild!;
     expect(dot).toHaveAttribute("aria-hidden", "true");
-    expect(dot.className).toContain("bg-[var(--danger)]");
+    expect(dot.className).toMatch(/bg-danger(?![\w-])/);
   });
 
   it("is an image with a name when given aria-label", () => {
@@ -56,7 +56,7 @@ describe("StatusDot", () => {
     const dot = container.querySelector(".rounded-full")!;
     expect(dot).toHaveAttribute("aria-hidden", "true");
     expect(dot.className).toContain("size-3");
-    expect(dot.className).toContain("bg-[var(--warning)]");
+    expect(dot.className).toMatch(/bg-warning(?![\w-])/);
   });
 
   it("uses ProgressBar's tone names, money pair included, and rings on request", () => {
@@ -109,6 +109,6 @@ describe("SectionLabel md (keksdose's 11px figure labels)", () => {
 describe("StatusDot takes Chip's hues (kastlan lease-unit-step)", () => {
   it("fills with the hue token", () => {
     const { container } = render(<StatusDot tone="blue" />);
-    expect(container.querySelector(".bg-\\[var\\(--hue-blue\\)\\]")).not.toBeNull();
+    expect(container.querySelector(".bg-hue-blue")).not.toBeNull();
   });
 });

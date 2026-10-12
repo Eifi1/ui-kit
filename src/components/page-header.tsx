@@ -235,13 +235,13 @@ export function PageHeader({
           <Heading
             className={cn(
               truncateTitle ? "truncate-until-large" : "break-words",
-              "text-[var(--text-primary)]",
+              "text-primary",
               TITLE[size],
             )}
           >
             {title}
           </Heading>
-          {description != null && <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>}
+          {description != null && <p className="mt-1 text-sm text-muted">{description}</p>}
         </div>
         {actions != null && (
           <div

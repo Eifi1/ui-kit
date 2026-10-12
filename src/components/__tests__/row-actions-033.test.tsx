@@ -32,7 +32,7 @@ describe("RowAction pressed — a toggle", () => {
     const { rerender } = render(<RowActions actions={actions(true)} name="Household" />);
     const share = screen.getByRole("button", { name: "Share budget" });
     expect(share).toHaveAttribute("aria-pressed", "true");
-    expect(share.className).toContain("bg-[var(--brand-bg)]");
+    expect(share.className).toMatch(/bg-brand-soft(?![\w-])/);
     rerender(<RowActions actions={actions(false)} name="Household" />);
     expect(screen.getByRole("button", { name: "Share budget" })).toHaveAttribute("aria-pressed", "false");
     // An action that is no toggle says nothing about pressing.

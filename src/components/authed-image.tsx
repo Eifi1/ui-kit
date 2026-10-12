@@ -195,7 +195,7 @@ export function ImageStates({
             // the one fact a reader needs about it.
             role="img"
             aria-label={alt ? labels.failedImage(alt) : labels.loadError}
-            className="flex h-full min-h-16 w-full flex-col items-center justify-center gap-1 bg-[var(--bg-hover)] p-2 text-center text-xs text-[var(--text-muted)]"
+            className="flex h-full min-h-16 w-full flex-col items-center justify-center gap-1 bg-hover p-2 text-center text-xs text-muted"
           >
             <ImageOff aria-hidden className="size-5 shrink-0" />
             <span aria-hidden className="line-clamp-2">{labels.loadError}</span>

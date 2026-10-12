@@ -14,7 +14,7 @@ const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** The raw value under a specimen, so what the component emits is visible. */
 function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs break-all text-[var(--text-muted)]">{children}</p>;
+  return <p className="mt-2 font-mono text-xs break-all text-muted">{children}</p>;
 }
 
 const PLANS = ["FREE", "PRO", "UNLIMITED"] as const;
@@ -47,7 +47,7 @@ function PlanEditorExample() {
       <Stage>
         <div data-stage="wide" className="flex flex-col items-center gap-4">
           <Switch checked={fail} onCheckedChange={setFail} label="The request fails" />
-          <div className="w-96 max-w-full rounded-lg bg-[var(--bg-surface-2)] p-2">
+          <div className="w-96 max-w-full rounded-lg bg-surface-2 p-2">
             <DangerConfirm
               tone="warning"
               armLabel="Change plan…"
@@ -74,7 +74,7 @@ function PlanEditorExample() {
                 setLog(`PATCH { plan: "${plan}" } → 200`);
               }}
             >
-              <p className="text-xs text-[var(--text-muted)]">
+              <p className="text-xs text-muted">
                 {current} today — 2 budgets owned.
               </p>
               <Select
@@ -137,7 +137,7 @@ function ConfirmVariantExample() {
               { value: "danger", label: 'confirmVariant="danger"' },
             ]}
           />
-          <div className="w-96 max-w-full rounded-lg bg-[var(--bg-surface-2)] p-2">
+          <div className="w-96 max-w-full rounded-lg bg-surface-2 p-2">
             <DangerConfirm
               key={variant}
               tone="warning"

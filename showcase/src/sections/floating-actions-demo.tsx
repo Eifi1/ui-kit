@@ -48,7 +48,7 @@ function ShowBox({
   setActive: (w: Which) => void;
 }) {
   return (
-    <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+    <label className="flex items-center gap-2 text-sm text-secondary">
       <input type="checkbox" checked={active === id} onChange={(e) => setActive(e.target.checked ? id : null)} />
       Float this specimen&apos;s controls over the page
     </label>
@@ -127,7 +127,7 @@ function StatusFab({ active, setActive }: { active: Which; setActive: (w: Which)
         </Button>
       </Row>
       <Row className="mt-3">
-        <span className="text-xs text-[var(--text-muted)]">variant</span>
+        <span className="text-xs text-muted">variant</span>
         <ToggleGroup<"surface" | "primary">
           aria-label="Variant"
           size="sm"
@@ -138,7 +138,7 @@ function StatusFab({ active, setActive }: { active: Which; setActive: (w: Which)
             { value: "primary", label: "primary" },
           ]}
         />
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={extended} onChange={(e) => setExtended(e.target.checked)} />
           <code className="font-mono">extended</code>
         </label>
@@ -203,9 +203,9 @@ function TooltipFab({ active, setActive }: { active: Which; setActive: (w: Which
         <ShowBox id="tooltip" active={active} setActive={setActive} />
       </Row>
       <Row className="mt-3">
-        <span className="text-xs text-[var(--text-muted)]">tooltipSide</span>
+        <span className="text-xs text-muted">tooltipSide</span>
         <ToggleGroup<TooltipSide> aria-label="Tooltip side" size="sm" value={side} onChange={setSide} options={SIDES} />
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={custom} onChange={(e) => setCustom(e.target.checked)} />
           <span>
             tooltip content of its own (not <code className="font-mono">true</code>)
@@ -236,7 +236,7 @@ function TooltipFab({ active, setActive }: { active: Which; setActive: (w: Which
             offset="calc(1rem + 4rem)"
             fabTooltip="Ask the assistant — answers stay on this device"
           >
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-sm text-secondary">
               Hover or focus the button that opened this: the kit tooltip, not the browser&apos;s.
             </p>
           </FloatingPanel>
@@ -285,7 +285,7 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
         <ShowBox id="group" active={active} setActive={setActive} />
       </Row>
       <Row className="mt-3">
-        <span className="text-xs text-[var(--text-muted)]">badge</span>
+        <span className="text-xs text-muted">badge</span>
         <ToggleGroup<string>
           aria-label="Badge count"
           size="sm"
@@ -293,7 +293,7 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
           onChange={(v) => setBadge(Number(v) as (typeof BADGES)[number])}
           options={BADGES.map((b) => ({ value: String(b), label: String(b) }))}
         />
-        <span className="text-xs text-[var(--text-muted)]">badgeTone</span>
+        <span className="text-xs text-muted">badgeTone</span>
         <ToggleGroup<BadgeTone>
           aria-label="Badge tone"
           size="sm"
@@ -305,13 +305,13 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
             { value: "brand", label: "brand" },
           ]}
         />
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={ownWords} onChange={(e) => setOwnWords(e.target.checked)} />
           <code className="font-mono">badgeLabel</code>
         </label>
       </Row>
       <Row className="mt-3">
-        <span className="text-xs text-[var(--text-muted)]">corner</span>
+        <span className="text-xs text-muted">corner</span>
         <ToggleGroup<FloatingCorner>
           aria-label="Corner"
           size="sm"
@@ -322,7 +322,7 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
             { value: "bottom-start", label: "bottom-start" },
           ]}
         />
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={raised} onChange={(e) => setRaised(e.target.checked)} />
           <code className="font-mono">offset=&quot;4rem&quot;</code>
         </label>

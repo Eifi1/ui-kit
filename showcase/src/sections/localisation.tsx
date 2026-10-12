@@ -89,7 +89,7 @@ export function Localisation() {
 function ProviderExample() {
   return (
     <Example label="One provider, once" hint="prop > provider > English default">
-      <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+      <pre className="overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary">
         {`import { UiKitProvider } from "@eifi1/ui-kit";
 import { de } from "./i18n/kit-de"; // a UiKitLabels (or any part of one)
 
@@ -139,7 +139,7 @@ function ShippedTranslationsExample() {
       label="Shipped translations — de-CH and fr"
       hint="the same pager and password meter under three providers; page through one and all three follow"
     >
-      <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+      <pre className="overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary">
         {`import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
 // also: uiKitLabelsDeCh(numberLocale), and /i18n/fr, /it, /es, /hu, /zh —
 // UI_KIT_LABELS_FR … and uiKitLabelsFr(numberLocale) …
@@ -150,8 +150,8 @@ function ShippedTranslationsExample() {
       </pre>
       <div className="mt-3 grid gap-4 lg:grid-cols-3">
         {variants.map((v) => (
-          <div key={v.title} className="min-w-0 rounded-md border border-[var(--border)] p-3">
-            <p className="mb-2 font-mono text-caption text-[var(--text-muted)]">
+          <div key={v.title} className="min-w-0 rounded-md border border-subtle p-3">
+            <p className="mb-2 font-mono text-caption text-muted">
               {v.code} · locale=&quot;{v.locale}&quot;
             </p>
             <UiKitProvider labels={v.labels} locale={v.locale}>
@@ -165,7 +165,7 @@ function ShippedTranslationsExample() {
               <div className="mt-3">
                 <PasswordStrengthMeter value="kurz" />
               </div>
-              <p className="mt-2 font-mono text-caption text-[var(--text-muted)]">
+              <p className="mt-2 font-mono text-caption text-muted">
                 dialogFrame.close: {v.labels.dialogFrame.close}
                 <br />
                 file.size(1234567): {v.labels.file.size(1234567)}
@@ -209,7 +209,7 @@ function CompletenessExample() {
     <Example label="Completeness per language" hint="missingKitLabels(labels, DEFAULT_UI_KIT_LABELS)">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-[var(--border)] text-xs text-[var(--text-muted)]">
+          <tr className="border-b border-subtle text-xs text-muted">
             <th className="py-1.5 pe-4 text-start font-medium">Language</th>
             <th className="py-1.5 pe-4 text-start font-medium">Tag</th>
             <th className="py-1.5 text-end font-medium">Keys translated</th>
@@ -222,14 +222,14 @@ function CompletenessExample() {
             return (
               <tr
                 key={dict.tag}
-                className="border-b border-[var(--border)] last:border-b-0"
+                className="border-b border-subtle last:border-b-0"
                 aria-current={active ? "true" : undefined}
               >
-                <td className={`py-1.5 pe-4 ${active ? "font-medium text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>
+                <td className={`py-1.5 pe-4 ${active ? "font-medium text-primary" : "text-secondary"}`}>
                   {dict.name}
                 </td>
-                <td className="py-1.5 pe-4 font-mono text-xs text-[var(--text-muted)]">{dict.tag}</td>
-                <td className="py-1.5 text-end font-mono text-xs tabular-nums text-[var(--text-primary)]">
+                <td className="py-1.5 pe-4 font-mono text-xs text-muted">{dict.tag}</td>
+                <td className="py-1.5 text-end font-mono text-xs tabular-nums text-primary">
                   {total - missing} / {total}
                 </td>
               </tr>
@@ -284,7 +284,7 @@ function TreeExample() {
           const here = t.kit[ns] as unknown as Record<string, unknown>;
           return (
             <section key={ns}>
-              <h4 className="font-mono text-xs font-semibold text-[var(--text-primary)]">{ns}</h4>
+              <h4 className="font-mono text-xs font-semibold text-primary">{ns}</h4>
               {/* On a phone a quarter of the card is ~75px: every key truncated to
                   "fieldVal…", and the keys a namespace shares a prefix for read the
                   same. There each row becomes a grid — the key on a line of its own at
@@ -294,16 +294,16 @@ function TreeExample() {
                   {Object.keys(en).map((key) => (
                     <tr
                       key={key}
-                      className="border-b border-[var(--border)] last:border-b-0 max-sm:grid max-sm:grid-cols-2 max-sm:py-1"
+                      className="border-b border-subtle last:border-b-0 max-sm:grid max-sm:grid-cols-2 max-sm:py-1"
                     >
                       <td
                         title={key}
-                        className="w-1/4 py-1 pe-3 align-top font-mono break-words text-[var(--text-muted)] max-sm:col-span-2 max-sm:w-auto max-sm:py-0 sm:truncate"
+                        className="w-1/4 py-1 pe-3 align-top font-mono break-words text-muted max-sm:col-span-2 max-sm:w-auto max-sm:py-0 sm:truncate"
                       >
                         {key}
                       </td>
-                      <td className="w-3/8 py-1 pe-3 align-top text-[var(--text-secondary)] max-sm:w-auto max-sm:pb-0">{sample(en[key], `${ns}.${key}`)}</td>
-                      <td className="w-3/8 py-1 align-top text-[var(--text-primary)] max-sm:w-auto max-sm:pb-0">{sample(here?.[key], `${ns}.${key}`)}</td>
+                      <td className="w-3/8 py-1 pe-3 align-top text-secondary max-sm:w-auto max-sm:pb-0">{sample(en[key], `${ns}.${key}`)}</td>
+                      <td className="w-3/8 py-1 align-top text-primary max-sm:w-auto max-sm:pb-0">{sample(here?.[key], `${ns}.${key}`)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -381,7 +381,7 @@ function NestingExample() {
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="min-w-0 space-y-2">
-          <h4 className="text-xs font-semibold text-[var(--text-primary)]">The page&apos;s provider</h4>
+          <h4 className="text-xs font-semibold text-primary">The page&apos;s provider</h4>
           <HookProbe />
         </div>
         <UiKitProvider
@@ -390,13 +390,13 @@ function NestingExample() {
           labels={{ common: { clear: "Wipe (inner provider)" } }}
         >
           <div className="min-w-0 space-y-2">
-            <h4 className="text-xs font-semibold text-[var(--text-primary)]">
+            <h4 className="text-xs font-semibold text-primary">
               Inside {`<UiKitProvider locale="${locale}" labels={{ common: { clear } }}>`}
             </h4>
             <HookProbe />
           </div>
           <div className="min-w-0 space-y-2">
-            <h4 className="text-xs font-semibold text-[var(--text-primary)]">
+            <h4 className="text-xs font-semibold text-primary">
               …plus a component prop
             </h4>
             <HookProbe prop="Reset (prop)" />
@@ -409,7 +409,7 @@ function NestingExample() {
                 onSelect={(from) => setDay(from)}
               />
             </div>
-            <p className="mt-2 text-xs text-[var(--text-secondary)]">
+            <p className="mt-2 text-xs text-secondary">
               A real component under the inner provider: month and weekday names follow its
               locale, the first column follows <code className="font-mono">weekStartsOn</code>,
               and every label the inner provider did not name still comes from the page&apos;s

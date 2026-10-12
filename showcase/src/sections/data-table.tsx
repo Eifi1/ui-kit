@@ -78,7 +78,7 @@ function MainTable() {
       hint="click a row to expand · ⌘/Ctrl- or Shift-click to select · the header sticks because the body is capped · on a phone the rows become cards and the detail opens full-screen"
     >
       <Row className="mb-3 justify-between">
-        <span className="text-xs text-[var(--text-secondary)]">
+        <span className="text-xs text-secondary">
           {selectedCount} of {selectable.length} selectable rows selected
           {ARCHIVED_COUNT > 0 && ` · ${ARCHIVED_COUNT} archived rows carry no checkbox`}
         </span>
@@ -108,14 +108,14 @@ function MainTable() {
         isExpanded={(r) => r.id === expandedId}
         expandedRow={(r) => (
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
-            <dt className="text-[var(--text-muted)]">Identifier</dt>
-            <dd className="font-mono text-[var(--text-primary)]">{r.id}</dd>
-            <dt className="text-[var(--text-muted)]">Opened</dt>
-            <dd className="text-[var(--text-primary)]">{r.opened}</dd>
-            <dt className="text-[var(--text-muted)]">Status</dt>
-            <dd className="text-[var(--text-primary)]">{STATUS_LABEL[r.status]}</dd>
-            <dt className="text-[var(--text-muted)]">Amount</dt>
-            <dd className="text-[var(--text-primary)]">{AMOUNT_FMT.format(r.amount)}</dd>
+            <dt className="text-muted">Identifier</dt>
+            <dd className="font-mono text-primary">{r.id}</dd>
+            <dt className="text-muted">Opened</dt>
+            <dd className="text-primary">{r.opened}</dd>
+            <dt className="text-muted">Status</dt>
+            <dd className="text-primary">{STATUS_LABEL[r.status]}</dd>
+            <dt className="text-muted">Amount</dt>
+            <dd className="text-primary">{AMOUNT_FMT.format(r.amount)}</dd>
           </dl>
         )}
         // The expansion is local component state, so it has no address — except
@@ -136,7 +136,7 @@ function MainTable() {
             type="button"
             onClick={() => setHideArchived((v) => !v)}
             aria-expanded={!hideArchived}
-            className="flex w-full items-center gap-1.5 px-3 py-1.5 text-start text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]"
+            className="flex w-full items-center gap-1.5 px-3 py-1.5 text-start text-xs text-secondary hover:bg-surface-2"
           >
             {hideArchived ? (
               <ChevronRight aria-hidden className="size-3.5 rtl:-scale-x-100" />
@@ -167,7 +167,7 @@ function MainTable() {
         // under the row; desktop always unfolds. Nothing to see above 768px.
         mobileExpandAsDialog
         empty={
-          <span className="text-[var(--text-secondary)]">
+          <span className="text-secondary">
             No rows match the current filters.
           </span>
         }
@@ -386,7 +386,7 @@ const LINE_COLUMNS: DataTableColumn<LineItem>[] = [
         target="_blank"
         rel="noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="inline-flex items-center gap-1 text-[var(--brand)] hover:underline"
+        className="inline-flex items-center gap-1 text-brand hover:underline"
       >
         {r.spec} <ExternalLink aria-hidden className="size-3" />
       </a>
@@ -448,7 +448,7 @@ function ShortTable() {
           autoSize: "Fit fields to content",
         }}
         empty={
-          <span className="text-[var(--text-secondary)]">
+          <span className="text-secondary">
             No line items yet — the <code className="font-mono">empty</code> prop, not a “—”.
           </span>
         }
@@ -506,7 +506,7 @@ function DensityTable() {
       </Row>
       <Card className="max-w-xl">
         <CardHeader>
-          <CardTitle className="text-[var(--text-primary)]">Measurements in a card</CardTitle>
+          <CardTitle className="text-primary">Measurements in a card</CardTitle>
         </CardHeader>
         <CardContent className="pt-3">
           <DataTable
@@ -532,7 +532,7 @@ function DensityTable() {
           />
         </CardContent>
       </Card>
-      <div className="mt-4 max-w-xl rounded-md border border-[var(--border)]">
+      <div className="mt-4 max-w-xl rounded-md border border-subtle">
         <Pagination page={page} totalPages={8} pageSize={25} total={187} onPage={setPage} density={density} />
       </div>
       <div className="mt-3">
@@ -621,7 +621,7 @@ function ReportTable() {
       label="A report table — firstSort, sortCycle, chrome, frame={false}, keyboard rows"
       hint="the half-width summary keksdose's reports need: ranked by size, no power-user chrome, inside the app's own card"
     >
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-secondary">
         <span className={CONTROL}>
           <code className={TRI_LABEL}>chrome</code>
           <ToggleGroup<DataTableChrome>
@@ -651,7 +651,7 @@ function ReportTable() {
           <code className="font-mono">frame</code>
         </label>
       </div>
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-secondary">
         {(
           [
             ["columnSettings", columnSettings, setColumnSettings],
@@ -667,7 +667,7 @@ function ReportTable() {
       </div>
       <Card className="max-w-lg">
         <CardHeader>
-          <CardTitle className="text-[var(--text-primary)]">Top payees, September</CardTitle>
+          <CardTitle className="text-primary">Top payees, September</CardTitle>
         </CardHeader>
         <CardContent className="pt-3">
           <DataTable
@@ -681,14 +681,14 @@ function ReportTable() {
             resizable={tri(resizable)}
             multiSort={tri(multiSort)}
             frame={framed}
-            className={framed ? undefined : "rounded-md border border-[var(--border)]"}
+            className={framed ? undefined : "rounded-md border border-subtle"}
             density="compact"
             onRowClick={(r) => setOpened(r.payee)}
             labels={{ table: "Top payees" }}
           />
         </CardContent>
       </Card>
-      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">onRowClick → {opened}</p>
+      <p className="mt-2 font-mono text-xs text-secondary">onRowClick → {opened}</p>
       <div className="mt-3">
         <Note>
           Bookings and Total are <code className="font-mono">firstSort: &quot;desc&quot;</code>: the first
@@ -774,7 +774,7 @@ function PrivateCellsTable() {
       label="Column cellProps and headProps"
       hint="attributes for a column's <td> per row, and for its <th> once — here data-private for a demo mode"
     >
-      <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+      <label className="mb-3 flex items-center gap-2 text-xs text-secondary">
         <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
         {/* One span: bare text beside the <code> made three flex items, three ragged columns. */}
         <span>
@@ -792,7 +792,7 @@ function PrivateCellsTable() {
           labels={{ table: "Accounts" }}
         />
       </div>
-      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">
+      <p className="mt-2 font-mono text-xs text-secondary">
         [data-private] elements = {counts.cells} · th[data-col-kind] = {counts.heads}
       </p>
       <div className="mt-3">
@@ -823,8 +823,8 @@ function FillHeightTable() {
       label="fillHeight — a table in a bounded pane"
       hint="the dashed box is a fixed 18rem flex column; the table — or the card list on a phone — fills it and scrolls inside"
     >
-      <div className="flex h-72 flex-col rounded-md border border-dashed border-[var(--border)] p-2">
-        <div className="pb-2 text-xs text-[var(--text-muted)]">A toolbar above the table</div>
+      <div className="flex h-72 flex-col rounded-md border border-dashed border-subtle p-2">
+        <div className="pb-2 text-xs text-muted">A toolbar above the table</div>
         <DataTable
           rows={ROWS}
           columns={SMALL_COLUMNS}

@@ -284,12 +284,12 @@ export function BulkActionBar({
   // one the surface wraps the row and the panel, so both share its tint and position.
   const surfaceClass = floating
     ? cn(
-        "fixed z-30 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+        "fixed z-30 rounded-2xl border border-subtle bg-surface shadow-lg",
         shown ? "animate-sheet" : "animate-sheet-out",
       )
     : cn(
         variant === "sticky" &&
-          "sticky top-0 z-20 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--brand)_8%,var(--bg-surface))] backdrop-blur",
+          "sticky top-0 z-20 border-b border-subtle bg-[color-mix(in_srgb,var(--brand)_8%,var(--bg-surface))] backdrop-blur",
         shown ? "animate-overlay" : "animate-overlay-out",
       );
   // `flex-wrap`: on a phone the count, three actions and a text "Clear selection" are
@@ -328,7 +328,7 @@ export function BulkActionBar({
           no room, so it was the item squeezed to nothing instead of a line breaking.
           Its own width is its basis now; `truncate` is left for a label too long for a
           line on its own. */}
-      <span className="min-w-0 flex-auto truncate text-sm font-medium text-[var(--text-primary)]">
+      <span className="min-w-0 flex-auto truncate text-sm font-medium text-primary">
         {labels.selected(shownCount)}
       </span>
       {/* `contents`, so the caller's controls are flex items of the bar itself. */}
@@ -352,7 +352,7 @@ export function BulkActionBar({
           <div
             data-bulk-action-bar-panel=""
             className={cn(
-              "border-t border-[var(--border)] px-3 py-3",
+              "border-t border-subtle px-3 py-3",
               floating && "max-h-[60dvh] overflow-y-auto",
             )}
           >

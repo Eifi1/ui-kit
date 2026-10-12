@@ -70,7 +70,7 @@ describe("B16.1 a customisable Finish", () => {
     );
     const finish = screen.getByRole("button", { name: "Finish" });
     expect(finish).toBeDisabled();
-    expect(finish.className).toContain("bg-[var(--danger)]");
+    expect(finish.className).toMatch(/bg-danger(?![\w-])/);
 
     rerender(
       <MemoryRouter>

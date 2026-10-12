@@ -322,7 +322,7 @@ function AutocompleteInner<V extends string | number = string>(
               <span
                 aria-hidden
                 className={cn(
-                  "pointer-events-none absolute flex text-[var(--text-muted)]",
+                  "pointer-events-none absolute flex text-muted",
                   small ? "start-2 [&>svg]:size-3.5" : "start-2.5 [&>svg]:size-4",
                   // Labelled, the icon sits on the VALUE's line — the one line box below
                   // FIELD_FLOATING_PAD's `pt-4` and the 1px border — not on the middle of
@@ -483,7 +483,7 @@ function AutocompleteInner<V extends string | number = string>(
             // exactly the field's width, so `left` places it in either direction.
             dir={dir}
             onMouseDown={(e) => e.preventDefault()}
-            className="fixed z-50 flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg"
+            className="fixed z-50 flex flex-col overflow-hidden rounded-md border border-subtle bg-surface shadow-lg"
             // Flipped above, the list hangs from its bottom edge: three rows under a
             // 256 px cap, placed by `top`, floated ~176 px above the field (keksdose K1),
             // and the rows come and go as the user types.
@@ -506,7 +506,7 @@ function AutocompleteInner<V extends string | number = string>(
                       {startsGroup && (
                         <li
                           role="presentation"
-                          className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
+                          className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1"
                         >
                           {o.group}
                         </li>
@@ -534,24 +534,24 @@ function AutocompleteInner<V extends string | number = string>(
                             o.disabled
                               ? DISABLED_ROW_CLASS
                               : i === active
-                                ? "bg-[var(--bg-active)]"
-                                : "hover:bg-[var(--bg-hover)]",
+                                ? "bg-active"
+                                : "hover:bg-hover",
                             o.group != null && "ps-6",
                           )}
                         >
                           {o.icon && (
-                            <span aria-hidden className="shrink-0 text-[var(--text-muted)]">
+                            <span aria-hidden className="shrink-0 text-muted">
                               {o.icon}
                             </span>
                           )}
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[var(--text-primary)]">
+                            <span className="block truncate text-primary">
                               {o.label}
                             </span>
                             {o.sublabel && (
                               <span
                                 className={cn(
-                                  "block truncate text-[var(--text-placeholder)]",
+                                  "block truncate text-placeholder",
                                   small ? "text-caption" : "text-xs",
                                 )}
                               >
@@ -572,8 +572,8 @@ function AutocompleteInner<V extends string | number = string>(
                 aria-hidden
                 className={cn(
                   small ? "px-3 py-1.5 text-xs" : "px-3 py-2 text-sm",
-                  failed && !hasStatus ? "text-[var(--danger)]" : "text-[var(--text-muted)]",
-                  results.length > 0 && "border-t border-[var(--border)] text-xs",
+                  failed && !hasStatus ? "text-danger" : "text-muted",
+                  results.length > 0 && "border-t border-subtle text-xs",
                 )}
               >
                 {statusLine}

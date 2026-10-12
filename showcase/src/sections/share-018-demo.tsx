@@ -18,7 +18,7 @@ import { Example, Note, OutTable } from "../lib/section";
  * any address starting with `fail` is refused, so the error box can be seen.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 const ROLES: ShareRole[] = [
   { key: "viewer", label: "Viewer", tone: "neutral", description: "Can open and read it." },
@@ -139,7 +139,7 @@ function GuestExample() {
 }
 
 function KeyLine() {
-  return <p className="text-xs text-[var(--text-muted)]">Key delivered on 12 Sep — the app's own slot.</p>;
+  return <p className="text-xs text-muted">Key delivered on 12 Sep — the app's own slot.</p>;
 }
 
 function DialogExample() {

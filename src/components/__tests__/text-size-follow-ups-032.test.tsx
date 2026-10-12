@@ -354,7 +354,7 @@ describe("ToggleGroup at Large (§4)", () => {
     const group = screen.getByRole("radiogroup", { name: "Group by" });
     expect(group.className.split(" ")).toContain("large:flex-wrap");
     // Still inside the field's chrome: the bordered box round the segments.
-    expect(group.parentElement!.className).toContain("border-[var(--border)]");
+    expect(group.parentElement!.className).toContain("border-subtle");
     // A label wider than a whole row still truncates as the last resort.
     expect(screen.getByRole("radio", { name: "Half-year" }).className).toContain("truncate");
   });

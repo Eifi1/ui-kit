@@ -73,7 +73,7 @@ describe("ProgressBar", () => {
     render(<ProgressBar value={10} tone="danger" size="lg" aria-label="x" />);
     const bar = screen.getByRole("progressbar");
     expect(bar.className).toMatch(/\bh-3\b/);
-    expect(bar.querySelector('[data-part="fill"]')!.className).toMatch(/bg-\[var\(--danger\)\]/);
+    expect(bar.querySelector('[data-part="fill"]')!.className).toMatch(/bg-danger(?![\w-])/);
   });
 });
 

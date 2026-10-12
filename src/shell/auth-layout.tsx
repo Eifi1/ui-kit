@@ -67,7 +67,7 @@ const SAFE_AREA: CSSProperties = {
 };
 
 const FOOTER_CLASS =
-  "flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-[var(--text-muted)] [&_a:hover]:text-[var(--text-primary)] [&_a:hover]:underline [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-[length:var(--focus-ring-width)] [&_a:focus-visible]:ring-[var(--brand)]";
+  "flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted [&_a:hover]:text-primary [&_a:hover]:underline [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-[length:var(--focus-ring-width)] [&_a:focus-visible]:ring-brand";
 
 /**
  * The public page frame outside the app shell: sign-in, registration, email
@@ -117,7 +117,7 @@ export function AuthLayout({
     >
       {logo != null &&
         (logoTile ? (
-          <div className="mb-2 flex size-12 items-center justify-center rounded-lg bg-[var(--brand)] text-[var(--brand-contrast)] [&_svg]:size-6">
+          <div className="mb-2 flex size-12 items-center justify-center rounded-lg bg-brand text-brand-contrast [&_svg]:size-6">
             {logo}
           </div>
         ) : (
@@ -126,14 +126,14 @@ export function AuthLayout({
       {title != null && (
         <Heading
           className={cn(
-            "font-semibold leading-tight text-[var(--text-primary)]",
+            "font-semibold leading-tight text-primary",
             wide ? "text-2xl md:text-3xl" : "text-2xl",
           )}
         >
           {title}
         </Heading>
       )}
-      {description != null && <p className="text-sm text-[var(--text-muted)]">{description}</p>}
+      {description != null && <p className="text-sm text-muted">{description}</p>}
     </div>
   );
 
@@ -149,7 +149,7 @@ export function AuthLayout({
       {...rest}
       data-auth-layout={width}
       style={{ ...SAFE_AREA, ...style }}
-      className={cn("flex min-h-dvh flex-col bg-[var(--bg-page)] text-[var(--text-primary)]", className)}
+      className={cn("flex min-h-dvh flex-col bg-page text-primary", className)}
     >
       {hasCorner && (
         <div data-slot="auth-layout-corner" className="flex items-center justify-end gap-1">

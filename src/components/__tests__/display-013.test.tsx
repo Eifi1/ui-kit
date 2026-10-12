@@ -67,13 +67,13 @@ describe("Delta at zero (kastlan #48)", () => {
     const figure = screen.getByText("No change").parentElement!;
     expect(figure.querySelector("svg")).not.toBeNull();
     expect(figure.querySelector("span[aria-hidden]")).toHaveTextContent("0.00%");
-    expect(figure).toHaveClass("text-[var(--text-muted)]");
+    expect(figure).toHaveClass("text-muted");
   });
 
   it("is not judged at zero even with goodDirection", () => {
     render(<Delta value={0} goodDirection="up" locale="en-US" />);
     const figure = screen.getByText("No change").parentElement!;
-    expect(figure).toHaveClass("text-[var(--text-muted)]");
+    expect(figure).toHaveClass("text-muted");
     expect(figure.querySelector("span[aria-hidden]")).toHaveTextContent("0");
   });
 

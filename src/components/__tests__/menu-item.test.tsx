@@ -149,7 +149,7 @@ describe("MenuItem", () => {
         Sign out
       </MenuItem>,
     );
-    expect(screen.getByRole("menuitem").className).toContain("text-[var(--danger)]");
+    expect(screen.getByRole("menuitem").className).toMatch(/text-danger(?![\w-])/);
   });
 });
 

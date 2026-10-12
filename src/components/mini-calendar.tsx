@@ -518,7 +518,7 @@ export function MiniCalendar({
           type="button"
           onClick={() => moveMonth(-1)}
           aria-label={labels.previousMonth}
-          className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
+          className="rounded p-1 text-muted hover:bg-hover"
         >
           {/* Mirrored in RTL: "previous" points to the reading START, which is right. */}
           <ChevronLeft className="size-4 rtl:-scale-x-100" aria-hidden />
@@ -533,8 +533,8 @@ export function MiniCalendar({
           className={cn(
             "capitalize",
             lg
-              ? "text-base font-semibold text-[var(--text-primary)]"
-              : "text-xs font-medium text-[var(--text-secondary)]",
+              ? "text-base font-semibold text-primary"
+              : "text-xs font-medium text-secondary",
           )}
         >
           {monthLabel}
@@ -543,7 +543,7 @@ export function MiniCalendar({
           type="button"
           onClick={() => moveMonth(1)}
           aria-label={labels.nextMonth}
-          className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
+          className="rounded p-1 text-muted hover:bg-hover"
         >
           <ChevronRight className="size-4 rtl:-scale-x-100" aria-hidden />
         </button>
@@ -559,7 +559,7 @@ export function MiniCalendar({
           // The month view is RULED: a 1px gap over a border-coloured ground draws the
           // lines between the cells, the way a wall calendar does.
           lg
-            ? "gap-px overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--border)]"
+            ? "gap-px overflow-hidden rounded-lg border border-subtle bg-[var(--border)]"
             : "gap-y-0.5",
         )}
       >
@@ -568,8 +568,8 @@ export function MiniCalendar({
           className={cn(
             "grid grid-cols-7 text-center font-medium",
             lg
-              ? "gap-px text-xs text-[var(--text-muted)]"
-              : "text-micro uppercase text-[var(--text-placeholder)]",
+              ? "gap-px text-xs text-muted"
+              : "text-micro uppercase text-placeholder",
           )}
         >
           {weekdayLabels.map((w, i) => (
@@ -577,7 +577,7 @@ export function MiniCalendar({
               key={i}
               role="columnheader"
               aria-label={w.long}
-              className={lg ? "bg-[var(--bg-surface)] py-2" : "py-0.5"}
+              className={lg ? "bg-surface py-2" : "py-0.5"}
             >
               {lg ? w.short : w.narrow}
             </div>
@@ -595,7 +595,7 @@ export function MiniCalendar({
                   <div
                     key={di}
                     role="gridcell"
-                    className={lg ? cn(LG_CELL_HEIGHT, "bg-[var(--bg-surface-2)]") : "h-8"}
+                    className={lg ? cn(LG_CELL_HEIGHT, "bg-surface-2") : "h-8"}
                   />
                 );
               }
@@ -631,12 +631,12 @@ export function MiniCalendar({
                       }}
                       onKeyDown={onDayKeyDown}
                       className={cn(
-                        "text-xs tabular-nums text-[var(--text-placeholder)] transition-colors",
+                        "text-xs tabular-nums text-placeholder transition-colors",
                         FOCUS_RING,
                         "focus-visible:ring-inset",
-                        disabled ? "cursor-not-allowed opacity-60" : "hover:bg-[var(--bg-hover)]",
+                        disabled ? "cursor-not-allowed opacity-60" : "hover:bg-hover",
                         lg
-                          ? cn("flex w-full min-w-0 items-start bg-[var(--bg-surface-2)] p-1.5", LG_CELL_HEIGHT)
+                          ? cn("flex w-full min-w-0 items-start bg-surface-2 p-1.5", LG_CELL_HEIGHT)
                           : "size-8 rounded-full",
                       )}
                     >
@@ -682,7 +682,7 @@ export function MiniCalendar({
               const lastOfMonth = d.getDate() === daysInMonth(d);
               const band = banded
                 ? cn(
-                    "pointer-events-none absolute inset-y-0 bg-[var(--brand-bg)]",
+                    "pointer-events-none absolute inset-y-0 bg-brand-soft",
                     isStart ? "start-1/2 end-0" : isEnd ? "start-0 end-1/2" : "inset-x-0",
                     isInRange && (di === 0 || d.getDate() === 1) && "rounded-s-full",
                     isInRange && (di === 6 || lastOfMonth) && "rounded-e-full",
@@ -727,10 +727,10 @@ export function MiniCalendar({
                           FOCUS_RING,
                         "focus-visible:ring-inset",
                           disabled
-                            ? "cursor-not-allowed bg-[var(--bg-surface)] text-[var(--text-placeholder)]"
+                            ? "cursor-not-allowed bg-surface text-placeholder"
                             : isSelected
-                              ? "bg-[var(--brand-bg)] text-[var(--text-primary)] hover:bg-[var(--brand-bg-hover)]"
-                              : "bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
+                              ? "bg-brand-soft text-primary hover:bg-brand-soft-hover"
+                              : "bg-surface text-primary hover:bg-hover",
                         )
                       : cn(
                     "relative size-8 rounded-full text-xs tabular-nums transition-colors",
@@ -744,9 +744,9 @@ export function MiniCalendar({
                     "focus-visible:outline-none focus-visible:ring-inset",
                     isStart || isEnd
                       ? "focus-visible:ring-[var(--brand-contrast)]"
-                      : "focus-visible:ring-[var(--brand)]",
+                      : "focus-visible:ring-brand",
                     disabled
-                      ? "cursor-not-allowed text-[var(--text-placeholder)]"
+                      ? "cursor-not-allowed text-placeholder"
                       // The two selected states are the BRAND, not a fixed sky: the endpoints
                       // are the solid fill and the days between them its soft tint. Hardcoding
                       // them left an app that changed `--brand` with a calendar in the old
@@ -754,11 +754,11 @@ export function MiniCalendar({
                       // flip light/dark themselves, so there is no `dark:` partner to carry —
                       // one would override the token and bring the hardcoded hue back.
                       : isStart || isEnd
-                        ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
+                        ? "bg-brand text-brand-contrast hover:bg-brand-hover"
                         : isInRange
-                          ? "font-medium text-[var(--brand-muted)] hover:bg-[var(--brand-bg-hover)]"
-                          : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
-                    isToday && !isStart && !isEnd && !isInRange && !disabled && "ring-1 ring-inset ring-[var(--border-strong)]",
+                          ? "font-medium text-brand-muted hover:bg-brand-soft-hover"
+                          : "text-primary hover:bg-hover",
+                    isToday && !isStart && !isEnd && !isInRange && !disabled && "ring-1 ring-inset ring-strong",
                   )
                   }
                 >
@@ -768,10 +768,10 @@ export function MiniCalendar({
                         className={cn(
                           "inline-flex size-6 shrink-0 items-center justify-center self-start rounded-full tabular-nums",
                           isStart || isEnd
-                            ? "bg-[var(--brand)] font-semibold text-[var(--brand-contrast)]"
+                            ? "bg-brand font-semibold text-brand-contrast"
                             : isToday && !disabled
-                              ? "font-semibold text-[var(--brand)] ring-1 ring-inset ring-[var(--brand)]"
-                              : isInRange && "font-medium text-[var(--brand-muted)]",
+                              ? "font-semibold text-brand ring-1 ring-inset ring-brand"
+                              : isInRange && "font-medium text-brand-muted",
                         )}
                       >
                         {label}

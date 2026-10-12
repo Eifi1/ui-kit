@@ -33,7 +33,7 @@ describe("the 16 px field floor on touch (§10.1)", () => {
 describe("the shared focus frame (§5)", () => {
   it("draws its ring --focus-ring-width wide, on keyboard focus", () => {
     expect(FOCUS_RING).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
-    expect(FOCUS_RING).toContain("focus-visible:ring-[var(--brand)]");
+    expect(FOCUS_RING).toContain("focus-visible:ring-brand");
     expect(FOCUS_RING).toContain(FOCUS_RING_WIDTH);
   });
 });

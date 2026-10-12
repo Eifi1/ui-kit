@@ -270,8 +270,8 @@ function MonthHeadingTrigger({
       aria-labelledby={aria["aria-labelledby"]}
       aria-describedby={aria["aria-describedby"]}
       className={cn(
-        "-ms-1.5 inline-flex h-9 min-w-0 items-center gap-1 rounded-md px-1.5 text-lg font-semibold text-[var(--text-primary)] transition-colors",
-        "hover:bg-[var(--bg-hover)]",
+        "-ms-1.5 inline-flex h-9 min-w-0 items-center gap-1 rounded-md px-1.5 text-lg font-semibold text-primary transition-colors",
+        "hover:bg-hover",
         FOCUS_RING,
         disabled && "cursor-not-allowed opacity-50",
       )}
@@ -279,7 +279,7 @@ function MonthHeadingTrigger({
       <span aria-live="polite" className="truncate">
         {text || "\u00a0"}
       </span>
-      <ChevronDown aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
+      <ChevronDown aria-hidden className="size-4 shrink-0 text-muted" />
     </button>
   );
 }
@@ -362,7 +362,7 @@ function MonthFieldTrigger({
           "Choose a mo…" at 360 px / Extra large). */}
       <span
         id={valueId}
-        className={cn("truncate-until-large", !hasValue && "text-[var(--text-placeholder)]")}
+        className={cn("truncate-until-large", !hasValue && "text-placeholder")}
       >
         {triggerText || " "}
       </span>
@@ -497,7 +497,7 @@ function MonthGrid({
   const selectedKey = value ? toKey(value) : null;
 
   const arrow =
-    "flex size-7 items-center justify-center rounded text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
+    "flex size-7 items-center justify-center rounded text-muted hover:bg-hover disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
 
   return (
     <div className="select-none">
@@ -518,7 +518,7 @@ function MonthGrid({
         <div
           id={captionId}
           aria-live="polite"
-          className="text-sm font-semibold tabular-nums text-[var(--text-primary)]"
+          className="text-sm font-semibold tabular-nums text-primary"
         >
           {yearCaption}
         </div>
@@ -566,13 +566,13 @@ function MonthGrid({
                     // A --brand ring on a --brand fill exists only in the DOM.
                     selected && !disabled
                       ? "focus-visible:ring-[var(--brand-contrast)]"
-                      : "focus-visible:ring-[var(--brand)]",
+                      : "focus-visible:ring-brand",
                     disabled
-                      ? "cursor-not-allowed text-[var(--text-placeholder)]"
+                      ? "cursor-not-allowed text-placeholder"
                       : selected
-                        ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
-                        : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
-                    current && !selected && !disabled && "ring-1 ring-inset ring-[var(--border-strong)]",
+                        ? "bg-brand text-brand-contrast hover:bg-brand-hover"
+                        : "text-primary hover:bg-hover",
+                    current && !selected && !disabled && "ring-1 ring-inset ring-strong",
                   )}
                 >
                   {shortNames[ym.month - 1]}
@@ -697,7 +697,7 @@ function YearGrid({
   const prevBlocked = minYear !== null && first - 1 < minYear;
   const nextBlocked = maxYear !== null && first + count > maxYear;
   const arrow =
-    "flex size-7 items-center justify-center rounded text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
+    "flex size-7 items-center justify-center rounded text-muted hover:bg-hover disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
 
   return (
     <div className="select-none">
@@ -713,7 +713,7 @@ function YearGrid({
             <ChevronLeft className="size-4 rtl:-scale-x-100" />
           </button>
         )}
-        <div id={captionId} aria-live="polite" className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">
+        <div id={captionId} aria-live="polite" className="text-sm font-semibold tabular-nums text-primary">
           {caption}
         </div>
         {!whole && (
@@ -757,13 +757,13 @@ function YearGrid({
                     "focus-visible:outline-none focus-visible:ring-inset",
                     selected && !disabled
                       ? "focus-visible:ring-[var(--brand-contrast)]"
-                      : "focus-visible:ring-[var(--brand)]",
+                      : "focus-visible:ring-brand",
                     disabled
-                      ? "cursor-not-allowed text-[var(--text-placeholder)]"
+                      ? "cursor-not-allowed text-placeholder"
                       : selected
-                        ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
-                        : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
-                    current && !selected && !disabled && "ring-1 ring-inset ring-[var(--border-strong)]",
+                        ? "bg-brand text-brand-contrast hover:bg-brand-hover"
+                        : "text-primary hover:bg-hover",
+                    current && !selected && !disabled && "ring-1 ring-inset ring-strong",
                   )}
                 >
                   {yearFormat.format(new Date(year, 0, 1))}
@@ -1048,7 +1048,7 @@ export function MonthPicker(props: MonthPickerProps) {
       </Popover>
       <Calendar
         aria-hidden
-        className="pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]"
+        className="pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-placeholder"
       />
     </div>
   );

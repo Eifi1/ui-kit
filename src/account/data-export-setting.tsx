@@ -178,7 +178,7 @@ export function DataExportSetting({
         </Button>
         {/* Always in the tree, so the confirmation that appears in it is announced; in
             the button's row, so an empty one takes no line of its own. */}
-        <span role="status" className="text-xs text-[var(--text-secondary)]">
+        <span role="status" className="text-xs text-secondary">
           {saved && (
             <>
               {labels.started}{" "}

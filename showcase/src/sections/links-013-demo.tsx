@@ -12,7 +12,7 @@ import { Example, Note, Row } from "../lib/section";
  */
 
 const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 /* ── replace / reloadDocument ─────────────────────────────────────────────── */
 
@@ -82,7 +82,7 @@ function IconButtonLinks() {
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a demo row, reached by the link inside it */}
       <div
         onClick={() => setRowOpens((n) => n + 1)}
-        className="mt-3 flex items-center justify-between rounded-md border border-[var(--border)] px-3 py-2 text-sm"
+        className="mt-3 flex items-center justify-between rounded-md border border-subtle px-3 py-2 text-sm"
       >
         <span>Unit 7 — clicking the row counts: {rowOpens}</span>
         <IconButton href="/links?via=row-link" size="xs" stopPropagation label="Open unit 7">
@@ -107,14 +107,14 @@ function TextLinkTones013() {
   return (
     <Example label="TextLink — primary, secondary, warning" hint="keksdose F3, kastlan 46">
       <div className="space-y-2 text-sm">
-        <p className="text-[var(--text-primary)]">
+        <p className="text-primary">
           Booked by{" "}
           <TextLink href="/links?via=tone-primary" tone="primary">
             Anna Schmidt
           </TextLink>{" "}
           on 3 March.
         </p>
-        <p className="text-[var(--text-secondary)]">
+        <p className="text-secondary">
           Imported from{" "}
           <TextLink href="/links?via=tone-secondary" tone="secondary">
             statement 2026-02.csv

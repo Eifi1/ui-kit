@@ -214,7 +214,7 @@ export function TranslationReview025Demo() {
               { value: "off", label: "Off" },
             ]}
           />
-          <p className="break-words font-mono text-xs text-[var(--text-secondary)]">{SWIPES[swipe].source}</p>
+          <p className="break-words font-mono text-xs text-secondary">{SWIPES[swipe].source}</p>
         </div>
         {grouped && (
           <div className="max-w-sm">
@@ -251,7 +251,7 @@ export function TranslationReview025Demo() {
           </WriteLockProvider>
         </div>
         {log.length > 0 && (
-          <ul className="space-y-0.5 font-mono text-xs text-[var(--text-secondary)]" aria-label="Writes">
+          <ul className="space-y-0.5 font-mono text-xs text-secondary" aria-label="Writes">
             {log.map((line, i) => (
               <li key={`${i}-${line}`}>{line}</li>
             ))}

@@ -216,8 +216,8 @@ function ConfigLegend() {
             className="size-2.5 shrink-0 rounded-[3px]"
             style={{ backgroundColor: series.color }}
           />
-          <span className="text-[var(--text-primary)]">{series.label}</span>
-          <code className="font-mono text-[var(--text-muted)]">{key}</code>
+          <span className="text-primary">{series.label}</span>
+          <code className="font-mono text-muted">{key}</code>
         </span>
       ))}
     </div>
@@ -496,7 +496,7 @@ export function Charts() {
         <div className="grid gap-4 md:grid-cols-2">
           {(["default", "formatValue"] as const).map((mode) => (
             <div key={mode} className="min-w-0">
-              <p className="mb-1 font-mono text-caption text-[var(--text-muted)]">
+              <p className="mb-1 font-mono text-caption text-muted">
                 {mode === "default" ? "valueFormatter only" : "formatValue"}
               </p>
               <ChartContainer config={FORECAST_CONFIG} className="h-56">
@@ -661,7 +661,7 @@ export function Charts() {
             ))}
           </LineChart>
         </ChartContainer>
-        <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">
+        <p className="mt-2 font-mono text-xs text-muted">
           activeKey: {isolated ?? "null"}
         </p>
         <div className="mt-3">

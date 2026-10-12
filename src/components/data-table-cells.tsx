@@ -44,10 +44,10 @@ export function BooleanMark({ value, falseAs = "cross", labels: labelsProp, clas
         className={cn(
           "size-4",
           state === "true"
-            ? "text-[var(--success)]"
+            ? "text-success"
             : state === "false" && falseAs === "cross"
-              ? "text-[var(--text-muted)]"
-              : "text-[var(--text-placeholder)]",
+              ? "text-muted"
+              : "text-placeholder",
         )}
       />
       <span className="sr-only">{text}</span>

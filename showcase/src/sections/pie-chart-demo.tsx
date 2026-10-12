@@ -12,7 +12,7 @@ import { Example, Note, Row } from "../lib/section";
  * Fixed data, so the picture is the same on every load and in every test.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const eur = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });

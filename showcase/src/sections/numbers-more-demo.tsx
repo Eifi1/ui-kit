@@ -19,7 +19,7 @@ import { Example, Note, Stage } from "../lib/section";
 
 /** The raw value under a specimen. */
 function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">{children}</p>;
+  return <p className="mt-2 font-mono text-xs text-muted">{children}</p>;
 }
 
 /** A tiny signature PNG drawn on the spot, so the read-only view has something real
@@ -80,7 +80,7 @@ function LiveCalculator() {
           />
           <StateLine>{`live = ${String(liveRate)} · committed = ${String(rate)}`}</StateLine>
         </div>
-        <p data-stage="wide" className="text-center text-sm text-[var(--text-primary)]">
+        <p data-stage="wide" className="text-center text-sm text-primary">
           Rent estimate, recomputed per keystroke:{" "}
           <strong className="tabular-nums">{total.toFixed(2)}</strong>
         </p>
@@ -182,7 +182,7 @@ function DangerStates() {
   const [log, setLog] = useState("—");
   return (
     <Example label="DangerConfirm — controlled, busy, disabled, rejected" hint="the parent owns the armed state">
-      <div className="mb-3 flex flex-wrap gap-4 text-xs text-[var(--text-secondary)]">
+      <div className="mb-3 flex flex-wrap gap-4 text-xs text-secondary">
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={armed} onChange={(e) => setArmed(e.target.checked)} />
           armed (controlled)
@@ -266,7 +266,7 @@ function SignatureViews() {
           value={png}
           // brand-bg, the brand's tint for a surface — not brand-muted, a text colour the
           // ink could not be read on.
-          frameClassName="border-2 border-dashed border-[var(--brand)] bg-[var(--brand-bg)]"
+          frameClassName="border-2 border-dashed border-brand bg-brand-soft"
         />
         <SignatureView
           label="Unterschrift"
@@ -290,7 +290,7 @@ function WeekStart() {
     <Example label="UiKitProvider weekStartsOn" hint={`locale="en" (Sunday-first) pinned to ${start === 1 ? "Monday" : "Sunday"}`}>
       <Stage>
         <div>
-          <label className="mb-2 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <label className="mb-2 flex items-center gap-2 text-xs text-secondary">
             <input
               type="checkbox"
               checked={start === 1}

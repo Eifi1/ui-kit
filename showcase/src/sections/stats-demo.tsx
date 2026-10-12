@@ -203,8 +203,8 @@ export function StatsDemo() {
             label="Payment rate"
             value="92%"
             footer={
-              <div className="h-1.5 overflow-hidden rounded-full bg-[var(--bg-active)]">
-                <div className="h-full w-[92%] rounded-full bg-[var(--success)]" />
+              <div className="h-1.5 overflow-hidden rounded-full bg-active">
+                <div className="h-full w-[92%] rounded-full bg-success" />
               </div>
             }
           />
@@ -262,7 +262,7 @@ function SparklineOptions() {
           {TONES.map((tone) => (
             <span key={tone} className="inline-flex flex-col items-center gap-1">
               <Sparkline data={VISITS} tone={tone} variant="area" label={tone} />
-              <span className="font-mono text-micro text-[var(--text-muted)]">{tone}</span>
+              <span className="font-mono text-micro text-muted">{tone}</span>
             </span>
           ))}
         </Row>

@@ -63,7 +63,7 @@ function rankStreets(query: string): ComboOption<string>[] {
 }
 
 function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">{children}</p>;
+  return <p className="mt-2 font-mono text-xs text-muted">{children}</p>;
 }
 
 export function AutocompleteDemo() {
@@ -231,8 +231,8 @@ export function AutocompleteDemo() {
               }
             />
             {confirming && (
-              <div className="space-y-2 rounded-md border border-[var(--border)] p-2 text-xs">
-                <p className="text-[var(--text-secondary)]">{confirming}</p>
+              <div className="space-y-2 rounded-md border border-subtle p-2 text-xs">
+                <p className="text-secondary">{confirming}</p>
                 <div className="flex gap-2">
                   <Button
                     className="px-2.5 py-1.5 text-xs"
@@ -311,7 +311,7 @@ export function AutocompleteDemo() {
             invalid={costCentre.trim() === ""}
           />
         </Stage>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The disabled Project field is dimmed as a whole, label and chevron included, the way a
           disabled <code className="font-mono">EntityCombobox</code> is — before 0.7.0 only the
           grey fill changed, and a disabled combobox read like a filled-in one beside it. Its

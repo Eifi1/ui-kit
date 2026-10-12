@@ -58,7 +58,7 @@ function ButtonPending() {
               and wrapped onto a line of its own on a phone, it was a spinner floating in the
               card. The caption travels with it and says what it is. */}
           <span className="inline-flex items-center gap-2">
-            <span className="text-xs text-[var(--text-muted)]">ghost, always pending:</span>
+            <span className="text-xs text-muted">ghost, always pending:</span>
             <Button type="button" variant="ghost" pending>
               Always pending
             </Button>
@@ -97,7 +97,7 @@ function CardTones() {
   return (
     <Example label="Card — tone" hint="a status card: border and title in the tone; an inset card takes the tone's fill">
       <Row className="mb-3">
-        <span className="text-xs text-[var(--text-muted)]">variant</span>
+        <span className="text-xs text-muted">variant</span>
         <ToggleGroup<"default" | "inset">
           aria-label="Card variant"
           size="sm"
@@ -116,7 +116,7 @@ function CardTones() {
               <CardTitle>{title}</CardTitle>
               <CardDescription>{`tone="${tone}"`}</CardDescription>
             </CardHeader>
-            <CardContent className="text-sm text-[var(--text-secondary)]">{body}</CardContent>
+            <CardContent className="text-sm text-secondary">{body}</CardContent>
           </Card>
         ))}
       </div>
@@ -175,7 +175,7 @@ function SyncChip() {
       hint="keksdose's sync chip: a 24px round chip round a 20px cloud, a check on its corner"
     >
       <Row className="mb-3">
-        <span className="text-xs text-[var(--text-muted)]">state</span>
+        <span className="text-xs text-muted">state</span>
         <ToggleGroup<Sync>
           aria-label="Sync state"
           size="sm"
@@ -183,7 +183,7 @@ function SyncChip() {
           onChange={setState}
           options={(["synced", "syncing", "offline", "error"] as const).map((s) => ({ value: s, label: s }))}
         />
-        <span className="text-xs text-[var(--text-muted)]">glyphSize</span>
+        <span className="text-xs text-muted">glyphSize</span>
         <ToggleGroup<string>
           aria-label="Glyph size"
           size="sm"
@@ -207,7 +207,7 @@ function SyncChip() {
           >
             <Icon className={state === "syncing" ? "motion-safe:animate-spin" : undefined} />
           </IconButton>
-          <span className="text-xs text-[var(--text-muted)]">disabledStyle=&quot;keep&quot;</span>
+          <span className="text-xs text-muted">disabledStyle=&quot;keep&quot;</span>
         </div>
         <div className="flex flex-col items-center gap-2">
           <IconButton
@@ -222,13 +222,13 @@ function SyncChip() {
           >
             <Icon className={state === "syncing" ? "motion-safe:animate-spin" : undefined} />
           </IconButton>
-          <span className="text-xs text-[var(--text-muted)]">disabledStyle=&quot;dim&quot; (default)</span>
+          <span className="text-xs text-muted">disabledStyle=&quot;dim&quot; (default)</span>
         </div>
         <div className="flex flex-col items-center gap-2">
           <IconButton size="2xs" shape="round" label="2xs without glyphSize" style={{ color }}>
             <Icon />
           </IconButton>
-          <span className="text-xs text-[var(--text-muted)]">2xs alone: 14px glyph</span>
+          <span className="text-xs text-muted">2xs alone: 14px glyph</span>
         </div>
       </Stage>
       <OutTable

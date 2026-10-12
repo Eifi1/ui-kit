@@ -295,7 +295,7 @@ export function DeleteAccountSetting({
       </div>
       {done ? (
         <div ref={doneRef} tabIndex={-1} role="status" className="flex items-start gap-2 text-sm outline-none">
-          <UserX aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--text-muted)]" />
+          <UserX aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
           <span>{labels.done}</span>
         </div>
       ) : (

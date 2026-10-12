@@ -74,7 +74,7 @@ function useRenderedHrefs(deps: unknown[]) {
  *  router link when there is one, else a plain `<a>`. */
 function OwnRowLink({ href, children }: { href: string; children: ReactNode }) {
   const kitLink = useKitLink();
-  const className = "text-sm text-[var(--brand)] underline underline-offset-2";
+  const className = "text-sm text-brand underline underline-offset-2";
   // Called as a function, as the kit does: the provider's link is a render function,
   // and naming it as a JSX tag here would be a component created during render.
   return kitLink ? (
@@ -170,7 +170,7 @@ function TextLinkTones() {
   return (
     <Example label="TextLink — tones and underline" hint="brand · muted · danger · inherit; hover · always · none">
       <Row className="mb-3">
-        <span className="text-xs text-[var(--text-muted)]">underline</span>
+        <span className="text-xs text-muted">underline</span>
         <ToggleGroup<TextLinkUnderline>
           aria-label="Underline"
           size="sm"
@@ -181,13 +181,13 @@ function TextLinkTones() {
       </Row>
       <div className="space-y-2">
         {TONES.map((tone) => (
-          <p key={tone} className="text-sm text-[var(--success)]">
-            <span className="font-mono text-xs text-[var(--text-muted)]">{tone}: </span>
-            <span className="text-[var(--text-primary)]">Read the </span>
+          <p key={tone} className="text-sm text-success">
+            <span className="font-mono text-xs text-muted">{tone}: </span>
+            <span className="text-primary">Read the </span>
             <TextLink href={`/links?via=tone-${tone}`} tone={tone} underline={underline}>
               {tone === "danger" ? "leave this group" : "terms of service"}
             </TextLink>
-            <span className="text-[var(--text-primary)]"> before you continue.</span>
+            <span className="text-primary"> before you continue.</span>
           </p>
         ))}
       </div>
@@ -211,7 +211,7 @@ function TextLinkKinds() {
       label="TextLink — external, stopPropagation, current and icon"
       hint="a link leaving the app, a link in a clickable row, the current page of a set, a back link"
     >
-      <div className="space-y-4 text-sm text-[var(--text-primary)]">
+      <div className="space-y-4 text-sm text-primary">
         <p>
           Source:{" "}
           <TextLink href="https://www.destatis.de/" external underline="always">
@@ -230,7 +230,7 @@ function TextLinkKinds() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") setRowClicks((n) => n + 1);
               }}
-              className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-page)] px-3 py-2 hover:bg-[var(--bg-hover)]"
+              className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-subtle bg-page px-3 py-2 hover:bg-hover"
             >
               <span className="min-w-0">Invoice 2026-041 (the row opens a preview)</span>
               <TextLink

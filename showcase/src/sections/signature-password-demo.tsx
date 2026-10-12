@@ -14,7 +14,7 @@ import { Example, Note, Row, Stage } from "../lib/section";
 
 /** The raw value under a specimen, so what the component emits is visible. */
 function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">{children}</p>;
+  return <p className="mt-2 font-mono text-xs text-muted">{children}</p>;
 }
 
 /** The exported PNG on WHITE — where it will end up — whatever the page's theme. */
@@ -26,7 +26,7 @@ function Preview({ src }: { src: string | null }) {
     <img
       src={src}
       alt="Exported signature"
-      className="mt-2 h-20 rounded-md border border-[var(--border)] p-1"
+      className="mt-2 h-20 rounded-md border border-subtle p-1"
       style={{ background: "white" }}
     />
   );
@@ -154,7 +154,7 @@ function SignatureSpecimens() {
             onChange={(url) => setStyled(url)}
           />
         </Stage>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           The ink on screen follows the theme; the PNG below is drawn in{" "}
           <code className="font-mono">exportInk</code> (dark blue) on an opaque{" "}
           <code className="font-mono">exportBackground</code>, with a 4px base stroke.
@@ -267,7 +267,7 @@ function PasswordSpecimens() {
           }}
         />
         <StateLine>{`lengthScore(value) = ${custom ? lengthScore(custom) : 0}   built-in = ${scorePassword(custom)}`}</StateLine>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           The checklist still lists the built-in rules — it describes what a password looks like,
           while <code className="font-mono">score</code> alone decides the bar and the level. Type
           &quot;aaaaaaaaaaaaaaaa&quot;: strong by length, weak by the built-in rules.

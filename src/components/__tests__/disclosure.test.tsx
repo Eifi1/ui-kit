@@ -130,7 +130,8 @@ describe("Disclosure", () => {
       </>,
     );
     for (const b of screen.getAllByRole("button")) {
-      expect(b.className).toMatch(/focus-visible:ring-\[var\(--[a-z-]+\)\]/);
+      // A token: a role utility (0.34) or a `[var(--…)]`.
+      expect(b.className).toMatch(/focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/);
     }
   });
 });
@@ -234,7 +235,7 @@ describe("Collapse, with motion", () => {
     expect(header()).toHaveAttribute("aria-expanded", "false");
     // The header is stretched over the row, and the ring moves with it.
     expect(header().className).toContain("after:absolute");
-    expect(header().className).toMatch(/focus-visible:after:ring-\[var\(--[a-z-]+\)\]/);
+    expect(header().className).toMatch(/focus-visible:after:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/);
     fireEvent.click(header());
     expect(screen.getByText("Body")).toBeInTheDocument();
   });
@@ -299,7 +300,7 @@ describe("Disclosure variant=menu", () => {
     expect(classes).toContain("focus-visible:ring-inset");
     expect(classes).not.toContain("font-medium");
     expect(classes).not.toContain("rounded-sm");
-    expect(classes).not.toContain("hover:text-[var(--text-primary)]");
+    expect(classes).not.toContain("hover:text-primary");
     expect(classes).not.toContain("gap-2");
   });
 

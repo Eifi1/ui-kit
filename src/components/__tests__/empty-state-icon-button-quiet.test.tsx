@@ -47,13 +47,13 @@ describe("EmptyState — headingAs and node slots", () => {
 describe("IconButton quiet", () => {
   it("keeps each tone's resting look by default", () => {
     const { rerender } = render(<IconButton tone="danger" aria-label="x">x</IconButton>);
-    expect(screen.getByRole("button").className).toContain("text-[var(--text-placeholder)]");
-    expect(screen.getByRole("button").className).toContain("hover:text-[var(--danger)]");
+    expect(screen.getByRole("button").className).toContain("text-placeholder");
+    expect(screen.getByRole("button").className).toMatch(/hover:text-danger(?![\w-])/);
     rerender(<IconButton tone="warning" aria-label="x">x</IconButton>);
-    expect(screen.getByRole("button").className).toContain("text-[var(--warning)]");
-    expect(screen.getByRole("button").className).not.toContain("text-[var(--text-placeholder)]");
+    expect(screen.getByRole("button").className).toMatch(/text-warning(?![\w-])/);
+    expect(screen.getByRole("button").className).not.toContain("text-placeholder");
     rerender(<IconButton tone="info" aria-label="x">x</IconButton>);
-    expect(screen.getByRole("button").className).toContain("text-[var(--info)]");
+    expect(screen.getByRole("button").className).toMatch(/text-info(?![\w-])/);
   });
 
   it("quiet={false} keeps danger red at rest, for a lone destructive action on touch", () => {
@@ -63,9 +63,9 @@ describe("IconButton quiet", () => {
       </IconButton>,
     );
     const cls = screen.getByRole("button").className;
-    expect(cls).toMatch(/(^|\s)text-\[var\(--danger\)\]/);
-    expect(cls).toContain("hover:bg-[var(--danger-bg)]");
-    expect(cls).not.toContain("text-[var(--text-placeholder)]");
+    expect(cls).toMatch(/(^|\s)text-danger(?![\w-])/);
+    expect(cls).toContain("hover:bg-danger-soft");
+    expect(cls).not.toContain("text-placeholder");
     // Toned: the glyph does not change on hover, so there is nothing to pin when disabled.
     expect(cls).not.toContain("disabled:hover:text-");
   });
@@ -78,17 +78,17 @@ describe("IconButton quiet", () => {
         </IconButton>,
       );
       const cls = screen.getByRole("button").className;
-      expect(cls).toMatch(/(^|\s)text-\[var\(--text-placeholder\)\]/);
-      expect(cls).toContain(`hover:text-[var(--${tone})]`);
-      expect(cls).toContain("disabled:hover:text-[var(--text-placeholder)]");
+      expect(cls).toMatch(/(^|\s)text-placeholder(?![\w-])/);
+      expect(cls).toMatch(new RegExp(`hover:text-${tone}(?![\\w-])`));
+      expect(cls).toContain("disabled:hover:text-placeholder");
       unmount();
     }
   });
 
   it("ignores quiet on muted and default", () => {
     const { rerender } = render(<IconButton tone="muted" quiet={false} aria-label="x">x</IconButton>);
-    expect(screen.getByRole("button").className).toContain("text-[var(--text-placeholder)]");
+    expect(screen.getByRole("button").className).toContain("text-placeholder");
     rerender(<IconButton quiet aria-label="x">x</IconButton>);
-    expect(screen.getByRole("button").className).not.toContain("text-[var(--text-placeholder)]");
+    expect(screen.getByRole("button").className).not.toContain("text-placeholder");
   });
 });

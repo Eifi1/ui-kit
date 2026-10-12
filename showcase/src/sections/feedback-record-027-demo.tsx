@@ -106,7 +106,7 @@ export function FeedbackRecord027Demo() {
       </Example>
       <Example label="The body's rework rounds" hint="appendRework writes them, reworkCount counts them, splitDescription keeps them out of the editor">
         <div className="grid gap-2 text-xs sm:grid-cols-2">
-          <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-[var(--bg-surface-2)] p-2 font-mono">{body}</pre>
+          <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-surface-2 p-2 font-mono">{body}</pre>
           <div className="flex flex-col gap-1">
             <div>
               {code("reworkCount")}: {reworkCount(body)}

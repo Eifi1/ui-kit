@@ -137,9 +137,9 @@ export function ForgotPasswordForm({
     return (
       <div {...rest} data-state="sent" className={cn("space-y-3", className)}>
         {heading}
-        <OutcomeMessage icon={<MailCheck className="text-[var(--success)]" />} focusRef={sentRef}>
+        <OutcomeMessage icon={<MailCheck className="text-success" />} focusRef={sentRef}>
           <p className={INTRO_CLASS}>{labels.sent(sentTo)}</p>
-          <p className="text-xs text-[var(--text-muted)]">{labels.sentHint}</p>
+          <p className="text-xs text-muted">{labels.sentHint}</p>
         </OutcomeMessage>
         {back}
       </div>

@@ -52,7 +52,7 @@ function FieldReadout() {
   const { formItemId, describedBy, invalid, isDirty, error } = useFormField();
   return (
     // Breaks anywhere: a JSON line of ids has no space of its own to break at.
-    <p className="font-mono text-micro text-[var(--text-muted)] [overflow-wrap:anywhere]">
+    <p className="font-mono text-micro text-muted [overflow-wrap:anywhere]">
       useFormField() → {q({ formItemId, describedBy, invalid, isDirty, error: error?.message })}
     </p>
   );
@@ -136,7 +136,7 @@ function RhfExample() {
                   </Select>
                 </FormControl>
                 {/* Children show while there is no error — a standing message. */}
-                <FormMessage className="text-[var(--text-muted)]">Used for the monthly report.</FormMessage>
+                <FormMessage className="text-muted">Used for the monthly report.</FormMessage>
               </FormItem>
             )}
           />
@@ -220,7 +220,7 @@ function RhfExample() {
           </div>
         </form>
       </Form>
-      <p className="mt-3 font-mono text-xs text-[var(--text-secondary)]">
+      <p className="mt-3 font-mono text-xs text-secondary">
         onSubmit: {submitted ? q(submitted) : "not called yet"}
       </p>
       <Note>

@@ -15,19 +15,19 @@ function Readout({ lazy }: { lazy?: boolean }) {
   const read = () => setText(ref.current?.textContent ?? "");
   return (
     <div className="min-w-0 space-y-2">
-      <p className="font-mono text-xs text-[var(--text-secondary)]">{lazy ? "lazy" : "no lazy (the default)"}</p>
+      <p className="font-mono text-xs text-secondary">{lazy ? "lazy" : "no lazy (the default)"}</p>
       <button
         ref={ref}
         type="button"
         onClick={read}
-        className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-primary)]"
+        className="inline-flex items-center gap-2 rounded-md border border-subtle px-3 py-1.5 text-sm text-primary"
       >
         Undo booking
         <Tooltip label="Reverts the last booking on this account" lazy={lazy}>
           <Info className="size-4" aria-hidden />
         </Tooltip>
       </button>
-      <p className="break-words font-mono text-xs text-[var(--text-secondary)]">
+      <p className="break-words font-mono text-xs text-secondary">
         textContent: {text === null ? "(click the button)" : JSON.stringify(text)}
       </p>
     </div>
@@ -50,7 +50,7 @@ export function TooltipLazyDemo() {
             <ArrowLeftRight />
           </IconButton>
         </Tooltip>
-        <span className="text-sm text-[var(--text-secondary)]">
+        <span className="text-sm text-secondary">
           Tab to it: focus mounts the bubble and describes the button; Escape unmounts it.
         </span>
       </div>

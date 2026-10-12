@@ -37,7 +37,7 @@ const SAMPLE = [
 /** What the hook answers, under a specimen. */
 function StateLine({ ready, points, problems }: { ready: boolean; points: number; problems: number }) {
   return (
-    <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">
+    <p className="mt-2 font-mono text-xs text-muted">
       ready = {String(ready)} · rows = {points} · problems = {problems}
     </p>
   );
@@ -87,10 +87,10 @@ export function MeasuredGridDemo() {
               <StateLine ready={pasted.ready} points={pasted.rows.length} problems={pasted.problems} />
             </div>
             <div>
-              <p className="mb-1 text-caption font-medium text-[var(--text-muted)]">
+              <p className="mb-1 text-caption font-medium text-muted">
                 Copy this, click a cell, paste
               </p>
-              <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-primary)]">
+              <pre className="overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-primary">
                 {SAMPLE}
               </pre>
             </div>
@@ -173,7 +173,7 @@ export function MeasuredGridDemo() {
               {...generated.props}
             />
             <StateLine ready={generated.ready} points={generated.rows.length} problems={generated.problems} />
-            <p className="font-mono text-xs text-[var(--text-muted)]">
+            <p className="font-mono text-xs text-muted">
               rows[1] = {generated.rows[1] ? JSON.stringify(generated.rows[1]) : "—"}
             </p>
           </div>
@@ -236,7 +236,7 @@ function WindowedList() {
     <div className="space-y-2">
       <div
         ref={scrollRef}
-        className="h-64 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)]"
+        className="h-64 overflow-y-auto rounded-md border border-subtle bg-surface"
       >
         <div style={{ height: totalHeight, position: "relative" }}>
           {Array.from({ length: last - first }, (_, i) => {
@@ -247,10 +247,10 @@ function WindowedList() {
                 ref={measureRef}
                 data-row-index={index}
                 style={{ position: "absolute", top: offsetOf(index), minHeight: estimate, insetInline: 0 }}
-                className="flex flex-wrap items-center justify-between gap-x-3 border-b border-[var(--border)] px-3 py-1 text-sm text-[var(--text-primary)]"
+                className="flex flex-wrap items-center justify-between gap-x-3 border-b border-subtle px-3 py-1 text-sm text-primary"
               >
                 <span>Reading {index + 1}</span>
-                <span className="font-mono text-xs text-[var(--text-muted)]">
+                <span className="font-mono text-xs text-muted">
                   {(Math.sin(index / 50) * 100).toFixed(2)}
                 </span>
               </div>
@@ -258,7 +258,7 @@ function WindowedList() {
           })}
         </div>
       </div>
-      <p className="font-mono text-xs text-[var(--text-muted)] [overflow-wrap:anywhere]">
+      <p className="font-mono text-xs text-muted [overflow-wrap:anywhere]">
         first = {first} · last = {last} · mounted = {last - first} of {COUNT} · estimate = {estimate}px ·
         totalHeight = {Math.round(totalHeight)}px
       </p>

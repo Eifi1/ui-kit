@@ -100,7 +100,7 @@ const FIELD_LABELS: FeedbackAttachmentLabels = {
   attachmentRemove: "Remove attachment",
 };
 
-const READOUT = "font-mono text-caption text-[var(--text-muted)]";
+const READOUT = "font-mono text-caption text-muted";
 
 /** Shown instead of a bare "null" so an empty specimen still says what it is. */
 function FileReadout({ file }: { file: File | null }) {
@@ -117,7 +117,7 @@ function FileReadout({ file }: { file: File | null }) {
 function RejectedLine({ kind }: { kind: "type" | "size" | null }) {
   if (!kind) return null;
   return (
-    <p className="text-xs text-[var(--text-secondary)]">
+    <p className="text-xs text-secondary">
       onError(&quot;{kind}&quot;) — the file was rejected{" "}
       {kind === "type" ? "for its MIME type" : "for its size"}, and `value` is unchanged.
     </p>
@@ -234,7 +234,7 @@ export function FeedbackCompose() {
         hint="Exported because they are the defaults a consumer narrows from, not ones it has to restate."
       >
         <OutTable rows={DEFAULT_ROWS} />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           The accept list is matched against{" "}
           <code className="font-mono">file.type</code> exactly — it is not a glob, so{" "}
           <code className="font-mono">image/*</code> would match nothing, and the same array is
@@ -249,7 +249,7 @@ export function FeedbackCompose() {
         hint="Pure. The extension comes off the MIME type rather than being assumed to be .png."
       >
         <OutTable rows={PASTED_ROWS} />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           It exists because a clipboard image arrives called{" "}
           <code className="font-mono">image.png</code> at best and unnamed at worst, and that
           name is what the inbox shows beside the thumbnail. Safari puts TIFF on the clipboard,
@@ -296,7 +296,7 @@ function Dialog() {
         >
           Report an issue
         </Button>
-        <span className="text-xs text-[var(--text-muted)]">
+        <span className="text-xs text-muted">
           Drag it by its heading; Ctrl/Cmd+Enter sends; Ctrl/Cmd+V attaches a screenshot from
           anywhere in the page.
         </span>
@@ -334,8 +334,8 @@ function Dialog() {
         // field, which is why the rejection line below is put here rather than
         // beside the trigger: while the dialog is up, the trigger is behind it.
         contextSlot={
-          <div className="space-y-1 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2">
-            <p className="text-xs text-[var(--text-secondary)]">
+          <div className="space-y-1 rounded-md border border-subtle bg-surface-2 px-3 py-2">
+            <p className="text-xs text-secondary">
               contextSlot — reported from <code className="font-mono">/#feedback-compose</code>
             </p>
             <RejectedLine kind={rejected} />
@@ -383,7 +383,7 @@ function Multiple() {
           labels={{ attachment: "Screenshot and photos", attachmentAdd: "Add a photo or PDF" }}
         />
         {rejected === "count" ? (
-          <p className="text-xs text-[var(--text-secondary)]">
+          <p className="text-xs text-secondary">
             onError(&quot;count&quot;) — more files than the {MULTI_MAX} slots had room for; the
             surplus was dropped.
           </p>
@@ -487,7 +487,7 @@ function ProviderLabels() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <div className="space-y-2">
-        <p className="text-xs font-medium text-[var(--text-secondary)]">
+        <p className="text-xs font-medium text-secondary">
           The page&apos;s provider (this page&apos;s language)
         </p>
         {/* No labels at all — legal since 0.7.0; the field reads `feedbackAttachment`. */}
@@ -499,7 +499,7 @@ function ProviderLabels() {
         <FileReadout file={plain} />
       </div>
       <div className="space-y-2">
-        <p className="text-xs font-medium text-[var(--text-secondary)]">
+        <p className="text-xs font-medium text-secondary">
           A nested provider, plus one key from the prop
         </p>
         <UiKitProvider labels={{ feedbackAttachment: FEEDBACK_ATTACHMENT_DE }}>

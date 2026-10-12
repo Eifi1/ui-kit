@@ -102,7 +102,7 @@ describe("Checkbox", () => {
       expect(box.indeterminate).toBe(true);
       // jest-dom reads `indeterminate` as the "mixed" state.
       expect(box).toBePartiallyChecked();
-      expect(box.className).toMatch(/(^|\s)bg-\[var\(--brand\)\]/);
+      expect(box.className).toMatch(/(^|\s)bg-brand(?![\w-])/);
     });
 
     it("puts the dash back after a click while the prop still says so", () => {
@@ -150,7 +150,7 @@ describe("Checkbox", () => {
       const box = screen.getByRole("checkbox", { name: "Accept the terms" });
       expect(box).toHaveAttribute("aria-invalid", "true");
       expect(descriptions(box)).toEqual(["Required to continue"]);
-      expect(box.className).toContain("border-[var(--danger-border-strong)]");
+      expect(box.className).toContain("border-danger-strong");
     });
 
     it("merges caller → description → error, in reading order", () => {
@@ -213,7 +213,8 @@ describe("Checkbox", () => {
     const cls = screen.getByRole("checkbox").className;
     // The kit's focus frame (0.32, §5): `--focus-ring-width` wide.
     expect(cls).toMatch(/focus-visible:ring-\[length:var\(--focus-ring-width\)\]/);
-    expect(cls).toMatch(/focus-visible:ring-\[var\(--[a-z-]+\)\]/);
+    // A token: a role utility (0.34) or a `[var(--…)]`.
+    expect(cls).toMatch(/focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/);
     expect(cls).toMatch(/focus-visible:ring-offset-\[var\(--bg-surface\)\]/);
   });
 

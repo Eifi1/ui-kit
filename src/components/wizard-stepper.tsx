@@ -20,16 +20,16 @@ export function WizardStepper({
     <ol className="flex flex-wrap items-center gap-1 text-xs" aria-label={ariaLabel}>
       {steps.map((step, i) => (
         <li key={step.key} className="flex items-center gap-1">
-          {i > 0 && <span className="w-4 border-t border-[var(--border)]" />}
+          {i > 0 && <span className="w-4 border-t border-subtle" />}
           <span
             aria-current={step.key === current ? "step" : undefined}
             className={cn(
               "rounded-full px-2 py-0.5",
               i === currentIndex
-                ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)] font-medium"
+                ? "bg-inverse text-inverse font-medium"
                 : i < currentIndex
-                  ? "text-[var(--text-secondary)]"
-                  : "text-[var(--text-placeholder)]",
+                  ? "text-secondary"
+                  : "text-placeholder",
             )}
           >
             {step.label}

@@ -72,7 +72,7 @@ function SizeSwitch() {
   return (
     <div className="grid gap-2">
       <TextSizeSetting label="This page's text size" labelPlacement="above" value={resolveTextSize(device)} onChange={setSize} />
-      <p className="text-xs text-[var(--text-muted)]">
+      <p className="text-xs text-muted">
         In force: {code(size)} × {scale}. Every example below reads it.
       </p>
     </div>
@@ -101,14 +101,14 @@ function ControlsDemo() {
           </IconButton>
         </div>
         <div className="flex flex-wrap items-center gap-4">
-          <div className="relative flex size-24 items-end justify-end rounded-md bg-[var(--bg-inverse)] p-1">
+          <div className="relative flex size-24 items-end justify-end rounded-md bg-inverse p-1">
             {/* On a picture: the icon alone at every size (`labelVisible={false}`). */}
             <IconButton variant="overlay" size="sm" label="Next photo" labelVisible={false}>
               <Flower2 />
             </IconButton>
           </div>
-          <div className="flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1">
-            <span className="text-xs text-[var(--text-muted)]">A top bar:</span>
+          <div className="flex items-center gap-1 rounded-md border border-subtle px-2 py-1">
+            <span className="text-xs text-muted">A top bar:</span>
             <CompactControls>
               <IconButton label="Notifications" size="sm">
                 <CalendarDays />
@@ -213,7 +213,7 @@ function RowsDemo() {
   return (
     <Example label="Rows that make room" hint="RowActions, the phone card, ListItem — narrow the window for the card">
       <div className="space-y-4">
-        <ul className="divide-y divide-[var(--border)] rounded-md border border-[var(--border)]">
+        <ul className="divide-y divide-subtle rounded-md border border-subtle">
           {BEDS.slice(0, 2).map((bed) => (
             <li key={bed.id} className="flex items-center gap-2 px-3 py-2 text-sm">
               <span className="min-w-0 flex-1 break-words">{bed.name}</span>
@@ -234,7 +234,7 @@ function RowsDemo() {
             </li>
           ))}
         </ul>
-        <p className="text-xs text-[var(--text-muted)]" aria-live="polite">
+        <p className="text-xs text-muted" aria-live="polite">
           Last action: {log}
         </p>
         <DataTable
@@ -274,7 +274,7 @@ function FormAndTileDemo() {
   return (
     <Example label="Forms and tiles" hint="FormActions stacks on a phone at Large; StatTile leads with its one number">
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-md border border-[var(--border)] p-3">
+        <div className="rounded-md border border-subtle p-3">
           <Input label="Bed name" defaultValue="Herb spiral" />
           <FormActions onCancel={() => {}} onSubmit={() => {}} submitLabel="Save the bed" />
         </div>
@@ -325,7 +325,7 @@ function ShellDemo() {
   const { size } = useTextSize();
   return (
     <Example label="The phone bar folds into More" hint="six entries: all six at Normal, four + More at Large, three + More at Extra large">
-      <div className="h-[24rem] max-w-sm overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)]">
+      <div className="h-[24rem] max-w-sm overflow-hidden rounded-md border border-subtle bg-page">
         <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
           <MemoryRouter initialEntries={["/beds"]}>
             <AppShell
@@ -333,7 +333,7 @@ function ShellDemo() {
               embedded
               topBar={<div className="flex h-12 items-center px-3 text-sm font-semibold">Ada&apos;s Garden Planner</div>}
             >
-              <div className="p-4 text-sm text-[var(--text-secondary)]">
+              <div className="p-4 text-sm text-secondary">
                 The bar shows {DEFAULT_MOBILE_BAR_MAX[size] === Number.POSITIVE_INFINITY ? "every entry" : `${DEFAULT_MOBILE_BAR_MAX[size]} entries and More`} at this size.
               </div>
             </AppShell>
@@ -367,14 +367,14 @@ function WindowedDemo() {
   const rows = useWindowedRows(DIARY.length, 32, scrollRef);
   return (
     <Example label="A windowed list whose rows wrap" hint="useWindowedRows measures each rendered row (§10.9)">
-      <div ref={scrollRef} className="relative h-56 overflow-y-auto rounded-md border border-[var(--border)]">
+      <div ref={scrollRef} className="relative h-56 overflow-y-auto rounded-md border border-subtle">
         <div style={{ height: rows.totalHeight }} className="relative">
           {DIARY.slice(rows.first, rows.last).map((entry) => (
             <div
               key={entry.id}
               ref={rows.measureRef}
               data-row-index={entry.id}
-              className="absolute inset-x-0 border-b border-[var(--border)] px-3 py-1.5 text-sm"
+              className="absolute inset-x-0 border-b border-subtle px-3 py-1.5 text-sm"
               style={{ top: rows.offsetOf(entry.id), minHeight: rows.estimate }}
             >
               {entry.text}

@@ -87,7 +87,7 @@ describe("Button at Large (§4 touch targets)", () => {
     render(<Button>Save</Button>);
     const cls = screen.getByRole("button").className;
     expect(cls).toContain(FOCUS_RING_WIDTH);
-    expect(cls).toContain("focus-visible:ring-[var(--brand)]");
+    expect(cls).toContain("focus-visible:ring-brand");
     expect(cls).not.toMatch(/(^|\s)focus:ring-/);
   });
 });

@@ -32,7 +32,7 @@ import { hasMessage, mergeDescribedBy } from "./choice-parts";
 // same baseline — which is what put dev#468's "?" three pixels above the word it
 // belongs to.
 export const STATIC_LABEL_TYPE =
-  "text-caption leading-tight text-[var(--text-muted)] peer-disabled:opacity-50";
+  "text-caption leading-tight text-muted peer-disabled:opacity-50";
 
 /**
  * A field's label at Large and Extra large (0.33, docs/text-size-harmonization.md
@@ -155,7 +155,7 @@ export function FieldHint({
         onClick={(e) => e.preventDefault()}
         // The kit's focus frame (0.32, §5): the "?" is a tab stop, and had no ring at all.
         className={cn(
-          "flex rounded-full text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)]",
+          "flex rounded-full text-placeholder transition-colors hover:text-secondary",
           FOCUS_RING,
           className,
         )}
@@ -207,7 +207,7 @@ export function isTextHint(hint: ReactNode): hint is string | number {
 
 /** The caption under a field — Select's and NumberInput's type, so every field's
  *  standing advice reads alike. */
-export const FIELD_CAPTION_CLASS = "mt-1 text-caption leading-tight text-[var(--text-muted)]";
+export const FIELD_CAPTION_CLASS = "mt-1 text-caption leading-tight text-muted";
 
 export interface FieldHintParts {
   /** The caller's `aria-describedby` with the caption's id appended — standing
@@ -417,7 +417,7 @@ export function useDisabledReasonLine(display: DisabledReasonDisplay = "auto"): 
  *  control's "why" reads like a field's standing advice. Capped, so a long reason under
  *  a small control wraps rather than widening its row without end. */
 export const DISABLED_REASON_LINE_CLASS =
-  "mt-1 block max-w-[20rem] text-caption leading-tight text-[var(--text-muted)]";
+  "mt-1 block max-w-[20rem] text-caption leading-tight text-muted";
 
 /**
  * A control and its `disabledReason` as a line under it — the `"line"` form of
@@ -465,7 +465,7 @@ export function hasContent(node: ReactNode): boolean {
   return node !== undefined && node !== null && node !== false && node !== "";
 }
 
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
 
 export interface FieldMessages {
   /** `invalid`, a message, or an `aria-invalid` from outside (a form library). */

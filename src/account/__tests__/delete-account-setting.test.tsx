@@ -85,7 +85,7 @@ describe("DeleteAccountSetting — the confirm", () => {
       "This cannot be undone after the date.",
       "3 items others can see will pass to an administrator.",
     ]);
-    expect(screen.getByText("This cannot be undone after the date.")).toHaveClass("text-[var(--danger)]");
+    expect(screen.getByText("This cannot be undone after the date.")).toHaveClass("text-danger");
   });
 
   it("one hand-over item reads in the singular; none, no line", async () => {

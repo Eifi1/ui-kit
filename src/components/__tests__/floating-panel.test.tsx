@@ -225,20 +225,20 @@ describe("FloatingActionButton — native title and toggle", () => {
     const { rerender } = render(<FloatingActionButton label="Awaiting only" icon="?" pressed={false} />);
     const off = screen.getByRole("button", { name: "Awaiting only" });
     expect(off).toHaveAttribute("aria-pressed", "false");
-    expect(off.className).toContain("bg-[var(--bg-surface)]");
-    expect(off.className).not.toContain("bg-[var(--brand)]");
+    expect(off.className).toMatch(/bg-surface(?![\w-])/);
+    expect(off.className).not.toMatch(/bg-brand(?![\w-])/);
 
     rerender(<FloatingActionButton label="Awaiting only" icon="?" pressed />);
     const on = screen.getByRole("button", { name: "Awaiting only" });
     expect(on).toHaveAttribute("aria-pressed", "true");
-    expect(on.className).toContain("bg-[var(--brand-bg)]");
-    expect(on.className).toContain("text-[var(--brand)]");
+    expect(on.className).toMatch(/bg-brand-soft(?![\w-])/);
+    expect(on.className).toMatch(/text-brand(?![\w-])/);
   });
 
   it("stays an action button, with no aria-pressed, when pressed is left out", () => {
     render(<FloatingActionButton label="New" icon="+" />);
     const button = screen.getByRole("button", { name: "New" });
     expect(button).not.toHaveAttribute("aria-pressed");
-    expect(button.className).toContain("bg-[var(--brand)]");
+    expect(button.className).toMatch(/bg-brand(?![\w-])/);
   });
 });

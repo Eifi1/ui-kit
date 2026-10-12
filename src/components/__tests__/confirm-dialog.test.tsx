@@ -127,12 +127,12 @@ describe("useConfirm", () => {
   it("styles the confirm as destructive only for danger", async () => {
     const { confirm } = setup();
     await ask(confirm(), { title: "Delete?", tone: "danger", confirmLabel: "Delete" });
-    expect(screen.getByRole("button", { name: "Delete" }).className).toContain("bg-[var(--danger)]");
+    expect(screen.getByRole("button", { name: "Delete" }).className).toMatch(/bg-danger(?![\w-])/);
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
 
     await ask(confirm(), { title: "Archive?", tone: "warning", confirmLabel: "Archive" });
-    expect(screen.getByRole("button", { name: "Archive" }).className).not.toContain("bg-[var(--danger)]");
+    expect(screen.getByRole("button", { name: "Archive" }).className).not.toMatch(/bg-danger(?![\w-])/);
   });
 
   it("queues a second confirm and answers each one separately", async () => {

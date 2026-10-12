@@ -49,7 +49,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
 
 /** Panel chrome shared by the four specimens that open something. */
 const PANEL =
-  "rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 text-sm text-[var(--text-primary)]";
+  "rounded-md border border-subtle bg-surface-2 p-3 text-sm text-primary";
 
 /** Rects are fractional in a real browser (device pixel ratios that are not whole
  *  numbers) and exactly 0 in jsdom. One decimal keeps the first readable without
@@ -66,7 +66,7 @@ function Bool({ value }: { value: boolean }) {
         aria-hidden
         className={cn(
           "inline-block size-2 rounded-full",
-          value ? "bg-[var(--brand)]" : "bg-[var(--border)]",
+          value ? "bg-brand" : "bg-[var(--border)]",
         )}
       />
       {String(value)}
@@ -76,7 +76,7 @@ function Bool({ value }: { value: boolean }) {
 
 /** Trailing prose inside an `OutTable` cell, which is otherwise monospaced. */
 function Aside({ children }: { children: ReactNode }) {
-  return <span className="font-sans font-normal text-[var(--text-muted)]">{children}</span>;
+  return <span className="font-sans font-normal text-muted">{children}</span>;
 }
 
 /**
@@ -252,13 +252,13 @@ function AnchoredPanelSpecimen() {
               maxHeight: panel.maxHeight,
               zIndex: 50,
             }}
-            className="overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-2 shadow-lg"
+            className="overflow-y-auto rounded-md border border-subtle bg-surface p-2 shadow-lg"
           >
             <ul className="space-y-1">
               {Array.from({ length: 12 }, (_, i) => (
                 <li
                   key={i}
-                  className="rounded px-2 py-1 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]"
+                  className="rounded px-2 py-1 text-sm text-secondary hover:bg-surface-2"
                 >
                   Row {i + 1}
                 </li>
@@ -382,7 +382,7 @@ function DismissSpecimen() {
         >
           {open ? "Close" : "Open a dismissible panel"}
         </button>
-        <span className="text-xs text-[var(--text-muted)]">
+        <span className="text-xs text-muted">
           then press Escape, or click anywhere off the panel
         </span>
       </Row>
@@ -533,7 +533,7 @@ function FocusTrapSpecimen() {
         <Button variant="secondary" onClick={() => setOpen(true)} disabled={open}>
           Open a trapped panel
         </Button>
-        <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-1.5 text-xs text-secondary">
           <input
             type="checkbox"
             checked={restoreFocus}
@@ -541,12 +541,12 @@ function FocusTrapSpecimen() {
           />
           restoreFocus
         </label>
-        <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-1.5 text-xs text-secondary">
           initialFocus
           <select
             value={initialFocus}
             onChange={(e) => setInitialFocus(e.target.value as typeof initialFocus)}
-            className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 py-0.5 text-xs"
+            className="rounded border border-subtle bg-surface px-1 py-0.5 text-xs"
           >
             <option value="container">&quot;container&quot;</option>
             <option value="first">&quot;first&quot;</option>
@@ -557,13 +557,13 @@ function FocusTrapSpecimen() {
       {open && (
         // tabIndex -1: the default `initialFocus` focuses the container itself.
         <div ref={panel} tabIndex={-1} className={cn(PANEL, "max-w-md space-y-2 outline-none")}>
-          <p className="text-xs text-[var(--text-secondary)]">
+          <p className="text-xs text-secondary">
             Tab and Shift+Tab cycle inside this box; Escape closes it.
           </p>
           <input
             aria-label="Name"
             placeholder="A field"
-            className="w-full rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-sm"
+            className="w-full rounded border border-subtle bg-surface px-2 py-1 text-sm"
           />
           <Row>
             {/* The kit's Button takes a ref (0.7.0), which the thunk needs. */}
@@ -578,8 +578,8 @@ function FocusTrapSpecimen() {
             </Button>
           </Row>
           {nested && (
-            <div ref={inner} className={cn(PANEL, "space-y-2 bg-[var(--bg-surface)]")}>
-              <p className="text-xs text-[var(--text-secondary)]">
+            <div ref={inner} className={cn(PANEL, "space-y-2 bg-surface")}>
+              <p className="text-xs text-secondary">
                 The innermost trap owns Tab now; closing it hands control back.
               </p>
               <Row>
@@ -683,7 +683,7 @@ function LoggerSpecimen() {
       >
         setStoreLog(false)
       </Button>
-      <span className="font-mono text-xs text-[var(--text-muted)]">
+      <span className="font-mono text-xs text-muted">
         {enabled === null ? "default for this build" : `logging ${enabled ? "on" : "off"}`} — open
         the console and bump
       </span>
@@ -770,8 +770,8 @@ const CN_CASES: Array<[string, string]> = [
   ['cn("px-2", "px-4")', cn("px-2", "px-4")],
   ['cn("px-2 py-1", "p-4")', cn("px-2 py-1", "p-4")],
   [
-    'cn("text-[var(--text-muted)]", "text-[var(--text-primary)]")',
-    cn("text-[var(--text-muted)]", "text-[var(--text-primary)]"),
+    'cn("text-muted", "text-primary")',
+    cn("text-muted", "text-primary"),
   ],
   [
     'cn("rounded-md", false && "shadow-lg", undefined)',
@@ -780,8 +780,8 @@ const CN_CASES: Array<[string, string]> = [
     cn("rounded-md", false && "shadow-lg", undefined),
   ],
   [
-    'cn(["border", { "border-[var(--border)]": true, "opacity-50": false }])',
-    cn(["border", { "border-[var(--border)]": true, "opacity-50": false }]),
+    'cn(["border", { "border-subtle": true, "opacity-50": false }])',
+    cn(["border", { "border-subtle": true, "opacity-50": false }]),
   ],
   ['cn("p-2", "")', cn("p-2", "")],
 ];
@@ -1012,7 +1012,7 @@ export function HooksLib() {
         hint="Its only output is a console.debug line per set — open devtools."
       >
         <LoggerSpecimen />
-        <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+        <pre className="overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary">
           {`import { create } from "zustand";
 import { logger } from "@eifi1/ui-kit";
 

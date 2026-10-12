@@ -34,8 +34,8 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * and the UserAvatar's `badge`.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const CAPTION = "font-mono text-caption text-[var(--text-muted)]";
+const READOUT = "font-mono text-xs text-secondary";
+const CAPTION = "font-mono text-caption text-muted";
 
 /** A picture to float controls over, with no image request: a "map" drawn in CSS from
  *  the palette's own chart colours, so it follows the palette switch too. */
@@ -55,14 +55,14 @@ function GroupsOverContent() {
       hint="toolbars that float OVER content: a filled, shadowed frame, or separate discs"
     >
       <div
-        className="relative h-56 overflow-hidden rounded-md border border-[var(--border)]"
+        className="relative h-56 overflow-hidden rounded-md border border-subtle"
         style={{ background: MAP_GROUND }}
         role="img"
         aria-label={`A map at ${zoom}% zoom, rotated ${rotation}°`}
       >
         <div
           aria-hidden
-          className="absolute inset-0 grid place-items-center text-4xl font-bold text-[var(--text-inverse)] opacity-70 transition-transform"
+          className="absolute inset-0 grid place-items-center text-4xl font-bold text-inverse opacity-70 transition-transform"
           style={{ transform: `scale(${zoom / 100}) rotate(${rotation}deg)` }}
         >
           ⌖

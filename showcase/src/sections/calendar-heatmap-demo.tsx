@@ -115,7 +115,7 @@ function OneMonth() {
           <Button size="sm" variant="secondary" disabled={month <= "2025-10"} onClick={() => setMonth((m) => shiftMonth(m, -1))}>
             Previous
           </Button>
-          <span className="text-sm font-medium text-[var(--text-primary)]">{title}</span>
+          <span className="text-sm font-medium text-primary">{title}</span>
           <Button size="sm" variant="secondary" disabled={month >= "2026-09"} onClick={() => setMonth((m) => shiftMonth(m, 1))}>
             Next
           </Button>
@@ -172,7 +172,7 @@ function ScaleControls() {
   return (
     <Example label="CalendarHeatmap — levels, max and color" hint="the scale: how many steps, where it tops out, in what colour">
       <Row className="mb-3">
-        <span className="text-xs text-[var(--text-muted)]">levels</span>
+        <span className="text-xs text-muted">levels</span>
         <ToggleGroup<string>
           aria-label="Levels"
           size="sm"
@@ -180,7 +180,7 @@ function ScaleControls() {
           onChange={setLevels}
           options={["2", "4", "6"].map((l) => ({ value: l, label: l }))}
         />
-        <span className="text-xs text-[var(--text-muted)]">max</span>
+        <span className="text-xs text-muted">max</span>
         <ToggleGroup<"auto" | "100">
           aria-label="Max"
           size="sm"
@@ -191,7 +191,7 @@ function ScaleControls() {
             { value: "100", label: "100" },
           ]}
         />
-        <span className="text-xs text-[var(--text-muted)]">color</span>
+        <span className="text-xs text-muted">color</span>
         <ToggleGroup<Colour>
           aria-label="Colour"
           size="sm"
@@ -236,15 +236,15 @@ function Truncated() {
   return (
     <Example label="CalendarHeatmap — maxDays, legend and sensitive" hint="a long window cut to its latest days, and says so">
       <Row className="mb-3">
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={capped} onChange={(e) => setCapped(e.target.checked)} />
           <code className="font-mono">maxDays=&#123;90&#125;</code>
         </label>
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={legend} onChange={(e) => setLegend(e.target.checked)} />
           <code className="font-mono">legend</code>
         </label>
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={sensitive} onChange={(e) => setSensitive(e.target.checked)} />
           <code className="font-mono">sensitive</code>
         </label>
@@ -285,7 +285,7 @@ function RtlWeekStart() {
   return (
     <Example label="CalendarHeatmap — right-to-left and weekStartsOn" hint={<code className="font-mono">dir=&quot;rtl&quot; locale=&quot;ar-EG&quot;</code>}>
       <Row className="mb-3">
-        <span className="text-xs text-[var(--text-muted)]">weekStartsOn</span>
+        <span className="text-xs text-muted">weekStartsOn</span>
         <ToggleGroup<string> aria-label="Week starts on" size="sm" value={start} onChange={setStart} options={WEEK_STARTS} />
       </Row>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

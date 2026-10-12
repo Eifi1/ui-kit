@@ -180,7 +180,7 @@ function Detail({ viewer }: { viewer: Viewer }) {
       />
       <button
         type="button"
-        className="text-xs text-[var(--text-muted)] underline"
+        className="text-xs text-muted underline"
         onClick={() => setRow(seedRow())}
       >
         Reset the row

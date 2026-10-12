@@ -160,7 +160,7 @@ function ResendStatus({
   return (
     <span
       role="status"
-      className={cn(phase === "failed" ? "text-[var(--danger)]" : "text-[var(--success)]", className)}
+      className={cn(phase === "failed" ? "text-danger" : "text-success", className)}
     >
       {phase === "sent" ? labels.resent : failed}
     </span>

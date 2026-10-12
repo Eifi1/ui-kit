@@ -365,7 +365,7 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           <>
             {subjectField}
             {bodyField}
-            <div className="space-y-3 border-t border-[var(--border)] pt-3">
+            <div className="space-y-3 border-t border-subtle pt-3">
               {categoryField}
               {attachmentField}
               {contextSlot}
@@ -381,7 +381,7 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           </>
         )}
         <div className="flex items-center justify-between gap-2">
-          <div className="text-xs text-[var(--text-placeholder)]">
+          <div className="text-xs text-placeholder">
             {typeof labels.submitHint === "function" ? labels.submitHint(isApplePlatform()) : labels.submitHint}
           </div>
           <div className="flex gap-2">

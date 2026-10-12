@@ -314,7 +314,7 @@ function ZoomAxesDemo() {
     >
       <Row className="mb-3">
         <ToggleGroup<ZoomAxesSetting | "default"> aria-label="zoomAxes" value={zoom} onChange={setZoom} options={ZOOM_OPTIONS} />
-        <span className="font-mono text-xs text-[var(--text-muted)]">clicked: {clicked}</span>
+        <span className="font-mono text-xs text-muted">clicked: {clicked}</span>
       </Row>
       <SeriesChart
         rows={DAILY}
@@ -439,7 +439,7 @@ function LateAdditions() {
       label="Tilted category ticks, a tooltip bounded by its scroller, whole-number ticks, a custom dash"
       hint="x.tickAngle · tooltip.boundary · height in px · x.integerTicks · dash: '4 3' · activeDot: false"
     >
-      <Row className="mb-2 text-xs text-[var(--text-secondary)]">
+      <Row className="mb-2 text-xs text-secondary">
         <span>x.tickAngle</span>
         <ToggleGroup<"0" | "-30" | "-45">
           aria-label="Tick angle"
@@ -452,7 +452,7 @@ function LateAdditions() {
           ]}
         />
       </Row>
-      <div ref={scroller} className="overflow-x-auto rounded-md border border-[var(--border)]">
+      <div ref={scroller} className="overflow-x-auto rounded-md border border-subtle">
         <div style={{ minWidth: LONG_CATEGORIES.length * 90 }}>
           <SeriesChart
             rows={LONG_CATEGORIES}
@@ -468,7 +468,7 @@ function LateAdditions() {
           />
         </div>
       </div>
-      <Row className="mb-2 mt-5 text-xs text-[var(--text-secondary)]">
+      <Row className="mb-2 mt-5 text-xs text-secondary">
         <span>x.integerTicks</span>
         <ToggleGroup<"auto" | "off">
           aria-label="Integer ticks"

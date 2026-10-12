@@ -495,7 +495,7 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
             type="button"
             onClick={clear}
             className={cn(
-              "absolute end-1 top-1 z-10 inline-flex items-center gap-1 rounded border border-[var(--border)] bg-[var(--bg-surface)]/90 px-1.5 py-0.5 text-micro text-[var(--text-muted)] backdrop-blur transition-colors hover:text-[var(--text-primary)]",
+              "absolute end-1 top-1 z-10 inline-flex items-center gap-1 rounded border border-subtle bg-surface/90 px-1.5 py-0.5 text-micro text-muted backdrop-blur transition-colors hover:text-primary",
               FOCUS_RING,
             )}
           >

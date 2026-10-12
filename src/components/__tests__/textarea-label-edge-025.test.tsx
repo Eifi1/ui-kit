@@ -58,9 +58,9 @@ describe("Textarea label strip — its lower edge (Kurvenschmiede, 0.25)", () =>
     // The strip's own surfaces are still where the edge inherits them from.
     expect(c).toEqual(
       expect.arrayContaining([
-        "bg-[var(--bg-surface)]",
-        "peer-disabled:bg-[var(--bg-surface-2)]",
-        "peer-[[readonly]]:bg-[var(--bg-surface-2)]",
+        "bg-surface",
+        "peer-disabled:bg-surface-2",
+        "peer-[[readonly]]:bg-surface-2",
       ]),
     );
   });

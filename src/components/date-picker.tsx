@@ -331,7 +331,7 @@ function DateFieldTrigger({
 
   return (
     <button {...attrs}>
-      <span id={valueId} className={cn(VALUE_TRUNCATE, !hasValue && "text-[var(--text-placeholder)]")}>
+      <span id={valueId} className={cn(VALUE_TRUNCATE, !hasValue && "text-placeholder")}>
         {/* `|| " "` (a NON-BREAKING space) — triggerText is "" when there is no value and no
             placeholder was passed. An empty span has no line box, so the
             trigger collapses to its padding and sits shorter than every
@@ -363,7 +363,7 @@ const popoverFrame: PanelFrame = (body, actions) =>
   actions ? (
     <div className="flex flex-col gap-2">
       {body}
-      <div className="flex items-center justify-end gap-2 border-t border-[var(--border)] pt-2">{actions}</div>
+      <div className="flex items-center justify-end gap-2 border-t border-subtle pt-2">{actions}</div>
     </div>
   ) : (
     body
@@ -557,14 +557,14 @@ function DateField({
           type="button"
           aria-label={clearLabel}
           onClick={onClear}
-          className="absolute end-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+          className="absolute end-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-placeholder hover:text-secondary"
         >
           <X className="size-4" />
         </button>
       ) : (
         <Calendar
           aria-hidden
-          className="pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]"
+          className="pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-placeholder"
         />
       )}
     </div>
@@ -618,11 +618,11 @@ function StepButton({
           FIELD_BASE,
           // FIELD_BASE is `block w-full` for text inputs; a step button is neither, and
           // px-3 would make it wider than it needs to be. twMerge lets these win.
-          "relative flex h-full w-10 shrink-0 items-center justify-center px-0 text-[var(--text-muted)]",
-          "hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]",
+          "relative flex h-full w-10 shrink-0 items-center justify-center px-0 text-muted",
+          "hover:bg-hover hover:text-secondary",
           // Dimmed ICON, not a dimmed box: at 40% opacity the whole button — border
           // included — faded out of the group and read as a broken, detached control.
-          "disabled:cursor-not-allowed disabled:text-[var(--text-placeholder)] disabled:opacity-60 disabled:hover:bg-[var(--bg-surface)]",
+          "disabled:cursor-not-allowed disabled:text-placeholder disabled:opacity-60 disabled:hover:bg-surface",
           className,
         )}
       >
@@ -867,7 +867,7 @@ function JumpCalendar({
   // Aria-disabled rather than disabled, like the day cells: a focused button that
   // turns `disabled` drops the focus to <body>, mid-panel.
   const arrow =
-    "rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-disabled:hover:bg-transparent";
+    "rounded p-1 text-muted hover:bg-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-disabled:hover:bg-transparent";
 
   return (
     <div className="select-none">
@@ -896,7 +896,7 @@ function JumpCalendar({
           aria-describedby={inDays ? hintId : undefined}
           onClick={inDays ? openMonths : () => closeMonths(false)}
           onKeyDown={escapeToDays}
-          className="inline-flex min-w-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+          className="inline-flex min-w-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-secondary hover:bg-hover"
         >
           {/* The name is the text, so it says what is on screen; `aria-live` because
               pressing an arrow leaves focus ON the arrow, and this is the only thing
@@ -906,7 +906,7 @@ function JumpCalendar({
           </span>
           <ChevronDown
             aria-hidden
-            className={cn("size-3.5 shrink-0 text-[var(--text-muted)]", !inDays && "rotate-180")}
+            className={cn("size-3.5 shrink-0 text-muted", !inDays && "rotate-180")}
           />
         </button>
         <button
@@ -978,15 +978,15 @@ function JumpCalendar({
                       FOCUS_RING_WIDTH,
                       "focus-visible:outline-none focus-visible:ring-inset",
                       // A --brand ring on a --brand fill exists only in the DOM.
-                      end && !disabled ? "focus-visible:ring-[var(--brand-contrast)]" : "focus-visible:ring-[var(--brand)]",
+                      end && !disabled ? "focus-visible:ring-[var(--brand-contrast)]" : "focus-visible:ring-brand",
                       disabled
-                        ? "cursor-not-allowed text-[var(--text-placeholder)]"
+                        ? "cursor-not-allowed text-placeholder"
                         : end
-                          ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
+                          ? "bg-brand text-brand-contrast hover:bg-brand-hover"
                           : selected
-                            ? "bg-[var(--brand-bg)] font-medium text-[var(--brand-muted)] hover:bg-[var(--brand-bg-hover)]"
-                            : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
-                      current && !selected && !disabled && "ring-1 ring-inset ring-[var(--border-strong)]",
+                            ? "bg-brand-soft font-medium text-brand-muted hover:bg-brand-soft-hover"
+                            : "text-primary hover:bg-hover",
+                      current && !selected && !disabled && "ring-1 ring-inset ring-strong",
                     )}
                   >
                     {shortNames[index]}
@@ -1426,7 +1426,7 @@ function PresetColumn({
       className={
         sheet
           ? "grid grid-cols-2 gap-0.5"
-          : "flex w-32 shrink-0 flex-col gap-0.5 border-e border-[var(--border)] pe-2"
+          : "flex w-32 shrink-0 flex-col gap-0.5 border-e border-subtle pe-2"
       }
     >
       {presets.map((p, i) => {
@@ -1443,8 +1443,8 @@ function PresetColumn({
               // 44px on a phone: the kit's touch-target size (`SHEET_ROW_CLASS`).
               sheet ? "min-h-11 py-2 text-sm" : "py-1.5 text-xs",
               selected
-                ? "bg-[var(--bg-active)] font-medium text-[var(--text-primary)]"
-                : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                ? "bg-active font-medium text-primary"
+                : "text-secondary hover:bg-hover",
             )}
           >
             {p.label}
@@ -1535,7 +1535,7 @@ function RangePanel({
     drafting && renderDraftSummary ? (
       <div className="flex flex-col gap-2">
         {summary != null && (
-          <div aria-live="polite" data-draft-summary="" className="text-xs text-[var(--text-muted)]">
+          <div aria-live="polite" data-draft-summary="" className="text-xs text-muted">
             {summary}
           </div>
         )}

@@ -71,7 +71,7 @@ const KEYS: Key[] = [
 ];
 
 const KEY_BASE =
-  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-[length:var(--focus-ring-width)] focus:ring-[var(--border-strong)]";
+  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-[length:var(--focus-ring-width)] focus:ring-strong";
 // Two key families, two fills: digits sit on the inset surface and darken on
 // hover, operators sit a step down on `--bg-active` and lift toward that surface —
 // the same split `NumberPadSheet` uses for this keypad on a phone. The tokens
@@ -156,9 +156,9 @@ function CalculatorPanel({
         // is right-aligned in every script too — so both stay physical, pinned
         // with `dir="ltr"` rather than mirrored in a right-to-left form.
         dir="ltr"
-        className={cn("block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-right font-mono text-sm text-[var(--text-primary)] focus:border-[var(--border-strong)] focus:ring-[var(--border-strong)]", FIELD_TOUCH_TEXT)}
+        className={cn("block w-full rounded-md border border-subtle bg-surface px-2 py-1.5 text-right font-mono text-sm text-primary focus:border-strong focus:ring-strong", FIELD_TOUCH_TEXT)}
       />
-      <div dir="ltr" className="h-4 pr-1 text-right font-mono text-xs text-[var(--text-placeholder)]">
+      <div dir="ltr" className="h-4 pr-1 text-right font-mono text-xs text-placeholder">
         {result !== null && formatResult(result) !== text.trim() ? `= ${formatResult(result)}` : ""}
       </div>
       <div className="grid grid-cols-4 gap-1.5">
@@ -204,7 +204,7 @@ function CalculatorPanel({
             // an inverted fill, so the hover is the chip mixed back toward the
             // surface — a step quieter in either theme, and still a colour, so
             // KEY_BASE's `transition-colors` carries it.
-            "col-span-2 bg-[var(--bg-inverse)] text-[var(--text-inverse)] hover:bg-[color-mix(in_oklab,var(--bg-inverse)_88%,var(--bg-surface))]",
+            "col-span-2 bg-inverse text-inverse hover:bg-[color-mix(in_oklab,var(--bg-inverse)_88%,var(--bg-surface))]",
           )}
         >
           =
@@ -247,7 +247,7 @@ export function CalculatorButton({
           aria-label={labels.open}
           aria-expanded={open}
           className={cn(
-            "flex items-center justify-center text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)]",
+            "flex items-center justify-center text-placeholder transition-colors hover:text-secondary",
             className,
           )}
         >

@@ -23,7 +23,7 @@ import { Example, Note, Row } from "../lib/section";
  */
 
 const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" });
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 function StackedList() {
   const [columns, setColumns] = useState<"1" | "2" | "3" | "4">("3");
@@ -84,8 +84,8 @@ function TightCardsProse() {
       hint="small print read as a block; at most n cards a row; details that are sentences, not values"
     >
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-md border border-[var(--border)] p-3">
-          <p className="mb-1 font-mono text-xs text-[var(--text-muted)]">density=&quot;tight&quot; numeric</p>
+        <div className="rounded-md border border-subtle p-3">
+          <p className="mb-1 font-mono text-xs text-muted">density=&quot;tight&quot; numeric</p>
           <DescriptionList density="tight" numeric>
             <DescriptionItem term="Sign-ins today">1,204</DescriptionItem>
             <DescriptionItem term="New accounts">37</DescriptionItem>
@@ -95,7 +95,7 @@ function TightCardsProse() {
           </DescriptionList>
         </div>
         <div>
-          <p className="mb-1 font-mono text-xs text-[var(--text-muted)]">
+          <p className="mb-1 font-mono text-xs text-muted">
             layout=&quot;cards&quot; columns={"{2}"} minCardWidth=&quot;0&quot;
           </p>
           <DescriptionList layout="cards" columns={2} minCardWidth="0" density="compact">
@@ -107,7 +107,7 @@ function TightCardsProse() {
         </div>
       </div>
       <div className="mt-4">
-        <p className="mb-1 font-mono text-xs text-[var(--text-muted)]">layout=&quot;cards&quot; prose (one item prose={"{false}"})</p>
+        <p className="mb-1 font-mono text-xs text-muted">layout=&quot;cards&quot; prose (one item prose={"{false}"})</p>
         <DescriptionList layout="cards" prose minCardWidth="14rem">
           <DescriptionItem term="Hysteresis">
             How far the output lags behind the input when the direction of travel reverses.
@@ -158,7 +158,7 @@ function TableEmptyDensityLayout() {
         <Button variant="ghost" size="sm" onClick={() => setFilter("zzz")}>
           Filter everything away
         </Button>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={extraColumn} onChange={(e) => setExtraColumn(e.target.checked)} />
           add a column
         </label>
@@ -198,8 +198,8 @@ function TableEmptyDensityLayout() {
       </p>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <div className="rounded-md border border-[var(--border)] p-3">
-          <p className="mb-2 font-mono text-xs text-[var(--text-muted)]">density=&quot;none&quot; inside a card&apos;s padding</p>
+        <div className="rounded-md border border-subtle p-3">
+          <p className="mb-2 font-mono text-xs text-muted">density=&quot;none&quot; inside a card&apos;s padding</p>
           <Table density="none" aria-label="VAT summary">
             <TableHead>
               <TableRow>
@@ -222,8 +222,8 @@ function TableEmptyDensityLayout() {
             </TableBody>
           </Table>
         </div>
-        <div className="rounded-md border border-[var(--border)] p-3">
-          <p className="mb-2 font-mono text-xs text-[var(--text-muted)]">TableEmpty on its own, colSpan={"{3}"}</p>
+        <div className="rounded-md border border-subtle p-3">
+          <p className="mb-2 font-mono text-xs text-muted">TableEmpty on its own, colSpan={"{3}"}</p>
           <Table density="compact" aria-label="Scheduled payments">
             <TableHead>
               <TableRow>

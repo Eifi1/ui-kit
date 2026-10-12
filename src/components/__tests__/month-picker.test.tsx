@@ -37,7 +37,7 @@ describe("MonthPicker trigger", () => {
 
   it("shows the placeholder, muted, when there is no value", () => {
     renderPicker({ value: "", placeholder: "Pick a month" });
-    expect(screen.getByText("Pick a month")).toHaveClass("text-[var(--text-placeholder)]");
+    expect(screen.getByText("Pick a month")).toHaveClass("text-placeholder");
   });
 
   it("is named by its label AND its value", () => {

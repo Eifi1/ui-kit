@@ -89,9 +89,9 @@ describe("Tabs", () => {
   it("the open chip's detail takes the chip's ink on a wrapped strip", () => {
     render(<Tabs tabs={LOOPS} active="b" onChange={() => {}} wrap />);
     const open = screen.getByText("loop 2");
-    expect(open.className).toContain("text-[var(--brand-contrast)]");
+    expect(open.className).toContain("text-brand-contrast");
     // From `md` up the strip is an underline again, and the detail muted again.
-    expect(open.className).toContain("md:text-[var(--text-muted)]");
+    expect(open.className).toContain("md:text-muted");
     expect(screen.getByText("loop 1").className).not.toContain("brand-contrast");
   });
 

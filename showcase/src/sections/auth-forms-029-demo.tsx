@@ -57,7 +57,7 @@ function usePreviewLink(log: (line: string) => void): KitLinkComponent {
 
 function Readout({ lines }: { lines: string[] }) {
   return (
-    <pre className="mt-3 max-h-32 overflow-auto whitespace-pre-wrap rounded-md bg-[var(--bg-surface-2)] p-2 font-mono text-xs text-[var(--text-secondary)]">
+    <pre className="mt-3 max-h-32 overflow-auto whitespace-pre-wrap rounded-md bg-surface-2 p-2 font-mono text-xs text-secondary">
       {lines.length ? lines.join("\n") : "—"}
     </pre>
   );
@@ -66,7 +66,7 @@ function Readout({ lines }: { lines: string[] }) {
 /** A fixed-height box with its own scroll; `min-h-full` replaces the layout's
  *  `min-h-dvh`, so the frame fills the box rather than the window. */
 function Frame({ height, children }: { height: string; children: ReactNode }) {
-  return <div className={`${height} overflow-auto rounded-md border border-[var(--border)]`}>{children}</div>;
+  return <div className={`${height} overflow-auto rounded-md border border-subtle`}>{children}</div>;
 }
 
 /* ── SignInForm ──────────────────────────────────────────────────────────── */
@@ -273,7 +273,7 @@ export function RegisterForm029Demo() {
               }
               appFieldsComplete={!companyRequired || companyName.trim() !== ""}
               afterFields={
-                <p className="text-xs text-[var(--text-muted)]">
+                <p className="text-xs text-muted">
                   Your data is stored unencrypted by default; you can switch on end-to-end encryption later in Settings.
                 </p>
               }
@@ -281,7 +281,7 @@ export function RegisterForm029Demo() {
           </AuthLayout>
         </UiKitProvider>
       </Frame>
-      <p className="mt-2 text-xs text-[var(--text-muted)]">
+      <p className="mt-2 text-xs text-muted">
         The app&apos;s language (bound to the field, no copy in the form): {code(language)}
       </p>
       <Readout lines={lines} />

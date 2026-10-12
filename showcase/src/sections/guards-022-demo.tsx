@@ -16,7 +16,7 @@ const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** The raw value under a specimen, so what the component emits is visible. */
 function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">{children}</p>;
+  return <p className="mt-2 font-mono text-xs text-muted">{children}</p>;
 }
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -97,7 +97,7 @@ function TypedField() {
     <Example label="TypedConfirmField" hint="the typed confirmation on its own — the next step appears once it matches">
       <Stage>
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-sm text-secondary">
             End-to-end encryption cannot be undone by turning it off again.
           </p>
           <TypedConfirmField target="ENCRYPT" match="caseless" onMatchedChange={setMatched} />

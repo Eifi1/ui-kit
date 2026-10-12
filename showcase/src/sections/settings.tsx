@@ -106,9 +106,9 @@ function ThemeRow() {
           optionLabels={{ system: "Match system", light: "Light", dark: "Dark" }}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-secondary)]">
-        preference <code className="font-mono text-[var(--brand)]">{preference}</code> → resolved
-        mode <code className="font-mono text-[var(--brand)]">{mode}</code>
+      <p className="mt-3 text-xs text-secondary">
+        preference <code className="font-mono text-brand">{preference}</code> → resolved
+        mode <code className="font-mono text-brand">{mode}</code>
       </p>
       <div className="mt-3">
         <Note>
@@ -150,8 +150,8 @@ function LanguageRow() {
           ]}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-secondary)]">
-        value <code className="font-mono text-[var(--brand)]">{lang}</code>
+      <p className="mt-3 text-xs text-secondary">
+        value <code className="font-mono text-brand">{lang}</code>
       </p>
       <div className="mt-3">
         <Note>
@@ -288,7 +288,7 @@ function PasswordRow() {
           />
         </div>
         {receipt && (
-          <p className="mt-3 font-mono text-xs text-[var(--text-secondary)]">{receipt}</p>
+          <p className="mt-3 font-mono text-xs text-secondary">{receipt}</p>
         )}
         <div className="mt-3 space-y-2">
           <Note>
@@ -415,7 +415,7 @@ function TwoFactorRow() {
         />
       </div>
       <Row className="mt-3">
-        {log && <span className="font-mono text-xs text-[var(--text-secondary)]">{log}</span>}
+        {log && <span className="font-mono text-xs text-secondary">{log}</span>}
         {stuck && (
           <Button
             variant="secondary"
@@ -508,7 +508,7 @@ function ProfileLoadingRow() {
           name={null}
           email={null}
           role={
-            <span className="rounded bg-[var(--bg-surface-2)] px-1.5 py-0.5 text-xs font-medium">
+            <span className="rounded bg-surface-2 px-1.5 py-0.5 text-xs font-medium">
               Owner
             </span>
           }

@@ -74,11 +74,11 @@ export function NotFoundPage({
   useNoIndex(noIndex);
   return (
     <div {...rest} className={cn("flex flex-col items-center gap-2 py-4 text-center", className)}>
-      <p aria-hidden className="text-6xl font-bold leading-none tracking-tight text-[var(--text-placeholder)]">
+      <p aria-hidden className="text-6xl font-bold leading-none tracking-tight text-placeholder">
         404
       </p>
-      <Heading className="mt-2 text-xl font-semibold text-[var(--text-primary)]">{labels.title}</Heading>
-      <p className="max-w-prose text-sm text-[var(--text-secondary)]">{labels.body}</p>
+      <Heading className="mt-2 text-xl font-semibold text-primary">{labels.title}</Heading>
+      <p className="max-w-prose text-sm text-secondary">{labels.body}</p>
       {children}
       <div className="mt-4 flex flex-wrap justify-center gap-3">
         <Button href={homeHref} variant="brand">

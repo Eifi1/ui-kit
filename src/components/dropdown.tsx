@@ -192,11 +192,11 @@ export function DropdownSearchHeader({
     <div
       {...rest}
       className={cn(
-        "flex items-center gap-2 border-b border-[var(--border)] px-2 py-1.5",
+        "flex items-center gap-2 border-b border-subtle px-2 py-1.5",
         className,
       )}
     >
-      <Search className="size-4 text-[var(--text-placeholder)]" />
+      <Search className="size-4 text-placeholder" />
       <input
         ref={inputRef}
         type="text"
@@ -211,7 +211,7 @@ export function DropdownSearchHeader({
         // FIELD_TOUCH_TEXT: a search box is a field — at least 16 px on touch, or iOS zooms
         // the page the moment a picker opens and focuses it (§10.1).
         className={cn(
-          "w-full rounded-sm bg-transparent text-sm outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)]",
+          "w-full rounded-sm bg-transparent text-sm outline-none placeholder:text-placeholder text-primary",
           FOCUS_RING,
           FIELD_TOUCH_TEXT,
         )}
@@ -298,7 +298,7 @@ export function DropdownPanel({
             end up with one child that is not an option. The em dash still reads — it
             is the row's semantics that are dropped, not its text. */}
         {empty && (
-          <li role="presentation" className="px-3 py-2 text-sm text-[var(--text-muted)]">
+          <li role="presentation" className="px-3 py-2 text-sm text-muted">
             —
           </li>
         )}
@@ -313,7 +313,7 @@ export function DropdownPanel({
         style={style}
         ref={panelRef}
         className={cn(
-          "absolute z-30 mt-1 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+          "absolute z-30 mt-1 rounded-md border border-subtle bg-surface shadow-lg",
           "[&>ul]:max-h-64",
           className,
         )}
@@ -354,7 +354,7 @@ export function DropdownPanel({
         maxHeight: anchored.maxHeight,
       }}
       className={cn(
-        "z-50 flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+        "z-50 flex flex-col overflow-hidden rounded-md border border-subtle bg-surface shadow-lg",
         // The list, not the panel, is what scrolls: the search header has to stay put
         // while the options move under it.
         "[&>ul]:min-h-0 [&>ul]:flex-1",

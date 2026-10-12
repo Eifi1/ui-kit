@@ -83,7 +83,7 @@ describe("Card toneFill", () => {
   it("is off by default, at both strengths", () => {
     for (const toneStrength of ["soft", "strong"] as const) {
       const { container } = card({ tone: "danger", toneStrength, padding: "md" });
-      expect((container.firstElementChild as HTMLElement).className).not.toContain("--danger-bg");
+      expect((container.firstElementChild as HTMLElement).className).not.toMatch(/--danger-bg|bg-danger-soft/);
     }
   });
 
@@ -91,9 +91,9 @@ describe("Card toneFill", () => {
     const { container } = card({ tone: "danger", toneStrength: "strong", toneFill: true, padding: "md" });
     const cls = (container.firstElementChild as HTMLElement).className;
     expect(cls).toContain(WASH);
-    expect(cls).toContain("bg-[var(--bg-surface)]");
+    expect(cls).toMatch(/bg-surface(?![\w-])/);
     expect(cls).toContain("border-2");
-    expect(cls).toContain("border-[var(--danger-border-strong)]");
+    expect(cls).toContain("border-danger-strong");
     expect(cls).toContain("p-[calc(1rem-1px)]");
   });
 
@@ -109,7 +109,7 @@ describe("Card toneFill", () => {
     expect((none.container.firstElementChild as HTMLElement).className).not.toContain("linear-gradient");
     const inset = card({ tone: "success", variant: "inset", toneFill: true });
     const cls = (inset.container.firstElementChild as HTMLElement).className;
-    expect(cls).toContain("bg-[var(--success-bg)]");
+    expect(cls).toContain("bg-success-soft");
     expect(cls).not.toContain("linear-gradient");
   });
 });

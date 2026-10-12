@@ -154,8 +154,8 @@ export function TreeRow({
       className={cn(
         "relative flex min-h-8 items-center gap-1.5 rounded pe-2 text-sm",
         selected
-          ? "bg-[var(--bg-active)] font-medium text-[var(--text-primary)]"
-          : "text-[var(--text-secondary)]",
+          ? "bg-active font-medium text-primary"
+          : "text-secondary",
         className,
       )}
     >
@@ -183,12 +183,12 @@ export function TreeRow({
             e.stopPropagation();
             onToggle();
           }}
-          className={cn("flex size-4 shrink-0 items-center justify-center rounded text-[var(--text-muted)] outline-none hover:text-[var(--text-primary)]", FOCUS_RING)}
+          className={cn("flex size-4 shrink-0 items-center justify-center rounded text-muted outline-none hover:text-primary", FOCUS_RING)}
         >
           {chevron}
         </button>
       ) : expandable ? (
-        <span data-tree-toggle="" className="flex size-4 shrink-0 cursor-pointer items-center justify-center text-[var(--text-muted)]">
+        <span data-tree-toggle="" className="flex size-4 shrink-0 cursor-pointer items-center justify-center text-muted">
           {chevron}
         </span>
       ) : (
@@ -203,7 +203,7 @@ export function TreeRow({
             {label}
           </span>
           {trailing !== undefined && trailing !== null && (
-            <span className="ms-auto flex shrink-0 items-center gap-1 text-xs tabular-nums text-[var(--text-muted)]">
+            <span className="ms-auto flex shrink-0 items-center gap-1 text-xs tabular-nums text-muted">
               {trailing}
             </span>
           )}
@@ -546,7 +546,7 @@ export function TreeView<T = unknown>({
           }}
           // The ring goes on this row's own box, not the <li>: the <li> contains the
           // whole open branch below it, and ringing that would outline a subtree.
-          className="outline-none [&:focus-visible>[data-tree-row]]:ring-[length:var(--focus-ring-width)] [&:focus-visible>[data-tree-row]]:ring-[var(--brand)]"
+          className="outline-none [&:focus-visible>[data-tree-row]]:ring-[length:var(--focus-ring-width)] [&:focus-visible>[data-tree-row]]:ring-brand"
         >
           <TreeRow
             id={rowId}
@@ -560,7 +560,7 @@ export function TreeView<T = unknown>({
             selected={isSelected}
             loading={isLoading}
             className={cn(
-              node.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-[var(--bg-hover)]",
+              node.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-hover",
               rowClassName,
             )}
           >

@@ -73,13 +73,13 @@ export function FilterPopover<T>({
   // border going from --border to --border-strong is not a location. The ring is, and it
   // is the package's brand focus colour, as on every field in ui.tsx.
   const inputBase =
-    "block w-full rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-sm text-[var(--text-secondary)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-strong)] focus:outline-none " +
+    "block w-full rounded border border-subtle bg-surface px-2 py-1.5 text-sm text-secondary placeholder:text-placeholder focus:border-strong focus:outline-none " +
     FOCUS_RING +
     " " +
     // §10.1: a filter field is a field — 16 px on touch, or iOS zooms on focus.
     FIELD_TOUCH_TEXT;
   const buttonBase =
-    "rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
+    "rounded border border-subtle bg-surface px-2 py-1 text-xs text-secondary hover:bg-hover";
 
   const clearRow = (
     <div className="flex justify-end pt-1">
@@ -119,7 +119,7 @@ export function FilterPopover<T>({
     };
     return (
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+        <div className="flex items-center justify-between text-xs text-muted">
           <span>{labels.selectFilter}</span>
           <div className="flex gap-1">
             <button
@@ -138,12 +138,12 @@ export function FilterPopover<T>({
             </button>
           </div>
         </div>
-        <ul className="max-h-56 overflow-y-auto rounded border border-[var(--border)]">
+        <ul className="max-h-56 overflow-y-auto rounded border border-subtle">
           {selectOptions.map((o) => {
             const checked = v.values.includes(o.value);
             return (
               <li key={o.value}>
-                <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm hover:bg-[var(--bg-hover)]">
+                <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm hover:bg-hover">
                   <input
                     type="checkbox"
                     checked={checked}
@@ -156,7 +156,7 @@ export function FilterPopover<T>({
             );
           })}
           {selectOptions.length === 0 && (
-            <li className="px-2 py-2 text-sm text-[var(--text-muted)]">—</li>
+            <li className="px-2 py-2 text-sm text-muted">—</li>
           )}
         </ul>
         {clearRow}
@@ -185,8 +185,8 @@ export function FilterPopover<T>({
                   className={cn(
                     "block rounded px-2 py-1 text-start transition-colors sm:w-full",
                     active
-                      ? "bg-[var(--brand-bg)] text-[var(--brand-muted)]"
-                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                      ? "bg-brand-soft text-brand-muted"
+                      : "text-secondary hover:bg-hover",
                   )}
                 >
                   {labels.presets[p.key] ?? p.key}
@@ -201,7 +201,7 @@ export function FilterPopover<T>({
               to be translated — the table has no prop to forward them through. */}
           <MiniCalendar from={v.from} to={v.to} locale={locale} onSelect={set} />
           <div className="grid grid-cols-2 gap-2">
-            <label className="text-xs text-[var(--text-muted)]">
+            <label className="text-xs text-muted">
               {labels.dateFrom}
               <input
                 type="date"
@@ -210,7 +210,7 @@ export function FilterPopover<T>({
                 className={cn("mt-0.5", inputBase)}
               />
             </label>
-            <label className="text-xs text-[var(--text-muted)]">
+            <label className="text-xs text-muted">
               {labels.dateTo}
               <input
                 type="date"
@@ -231,7 +231,7 @@ export function FilterPopover<T>({
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
-        <label className="text-xs text-[var(--text-muted)]">
+        <label className="text-xs text-muted">
           {labels.numberMin} (≥)
           <input
             type="number"
@@ -242,7 +242,7 @@ export function FilterPopover<T>({
             className={cn("mt-0.5", inputBase)}
           />
         </label>
-        <label className="text-xs text-[var(--text-muted)]">
+        <label className="text-xs text-muted">
           {labels.numberMax} (≤)
           <input
             type="number"
@@ -254,7 +254,7 @@ export function FilterPopover<T>({
           />
         </label>
       </div>
-      <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+      <label className="flex items-center gap-2 text-sm text-secondary">
         <input
           type="checkbox"
           checked={v.abs}

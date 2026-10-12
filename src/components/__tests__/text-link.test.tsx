@@ -16,7 +16,7 @@ describe("TextLink", () => {
     render(<TextLink href="/units">Units</TextLink>);
     const link = screen.getByRole("link", { name: "Units" });
     expect(link).toHaveAttribute("href", "/units");
-    expect(link.className).toContain("text-[var(--brand)]");
+    expect(link.className).toMatch(/text-brand(?![\w-])/);
     expect(link.className).toContain("hover:underline");
     expect(link.className).toContain("focus-visible:outline-[length:var(--focus-ring-width)]");
     expect(link).not.toHaveAttribute("target");
@@ -37,10 +37,10 @@ describe("TextLink", () => {
       </>,
     );
     const a = screen.getByRole("link", { name: "A" }).className;
-    expect(a).toContain("text-[var(--text-muted)]");
+    expect(a).toContain("text-muted");
     expect(a).toMatch(/(^|\s)underline(\s|$)/);
     const b = screen.getByRole("link", { name: "B" }).className;
-    expect(b).toContain("text-[var(--danger)]");
+    expect(b).toMatch(/text-danger(?![\w-])/);
     expect(b).toContain("no-underline");
     expect(screen.getByRole("link", { name: "C" }).className).not.toMatch(/text-\[var/);
   });

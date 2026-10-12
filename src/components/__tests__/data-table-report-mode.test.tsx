@@ -273,7 +273,7 @@ describe("frame", () => {
     const root = container.querySelector("[data-density]")!;
     expect(root).toHaveAttribute("data-frame", "none");
     expect(root).toHaveClass("group/table", "mt-4");
-    expect(root.className).not.toMatch(/border|shadow|rounded|bg-\[var\(--bg-surface\)\]/);
+    expect(root.className).not.toMatch(/border|shadow|rounded|bg-surface(?![\w-])/);
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 });

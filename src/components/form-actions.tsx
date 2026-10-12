@@ -146,7 +146,7 @@ const ALIGN_CLASS: Record<FormActionsAlign, string> = {
 
 const PLACEMENT_CLASS: Record<FormActionsPlacement, string> = {
   inline: "pt-4",
-  sticky: "sticky bottom-0 z-10 border-t border-[var(--border)] bg-[var(--bg-surface)] pt-3",
+  sticky: "sticky bottom-0 z-10 border-t border-subtle bg-surface pt-3",
   dialog: "",
 };
 

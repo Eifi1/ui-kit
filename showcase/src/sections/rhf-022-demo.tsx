@@ -11,7 +11,7 @@ import { Example, Note } from "../lib/section";
  * and a segmented choice — bound in one line each.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)] whitespace-pre-wrap [overflow-wrap:anywhere]";
+const READOUT = "font-mono text-xs text-secondary whitespace-pre-wrap [overflow-wrap:anywhere]";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 type Meeting = {

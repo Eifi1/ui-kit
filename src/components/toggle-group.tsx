@@ -459,7 +459,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           // wraps rather than ending in an ellipsis (`truncate-until-large`, text size
           // §10.17; round 0.34 T1: the sweep read 'confirmVariant="da…' at 360 px).
           overflow === "wrap" ? "whitespace-nowrap" : "min-w-0 truncate-until-large",
-          "flex-1 basis-auto rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-inset focus-visible:ring-[var(--border-strong)]",
+          "flex-1 basis-auto rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-inset focus-visible:ring-strong",
           FOCUS_RING_WIDTH,
           size === "sm" && "px-2 py-1 text-xs",
           // In the field chrome: no vertical padding, and the line that makes the
@@ -469,8 +469,8 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           // In the strip placement: a 26px group under a 16px strip — STRIP_SEGMENT.
           strip && STRIP_SEGMENT[size],
           active
-            ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-            : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+            ? "bg-inverse text-inverse"
+            : "text-secondary hover:bg-hover",
           // No hover fill on a group that cannot be changed — a segment that
           // lights up under the pointer is an offer, and there is none here. Not on
           // the chosen segment: its fill IS its state, and its inverse text would
@@ -524,7 +524,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         // (The hover fill is the DESKTOP half of that report: Tailwind v4 wraps every
         // `hover:` in `@media (hover: hover)`, so a phone never paints it. The half a
         // phone does see is the focus ring — see the segment's own note below.)
-        "inline-flex w-full gap-0.5 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] p-0.5 shadow-sm",
+        "inline-flex w-full gap-0.5 rounded-md border border-strong bg-surface p-0.5 shadow-sm",
         overflow === "wrap" && "flex-wrap",
         wrapAtLarge && WRAP_AT_LARGE,
         // The whole group fades, the way every other disabled control in this
@@ -570,13 +570,13 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       <p
         id={captionId}
         aria-live={captionIsLive ? "polite" : undefined}
-        className={cn("text-caption leading-snug text-[var(--text-muted)]", hasCaption && "mt-1")}
+        className={cn("text-caption leading-snug text-muted", hasCaption && "mt-1")}
       >
         {hasCaption ? captionNode : null}
       </p>
     ) : null;
   const errorEl = hasError ? (
-    <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
+    <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
       {error}
     </p>
   ) : null;
@@ -609,7 +609,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
             id={labelId}
             disabled={dimmed}
             data-error={hasError || undefined}
-            className="data-[error=true]:text-[var(--danger)]"
+            className="data-[error=true]:text-danger"
           >
             {label}
           </Label>
@@ -657,9 +657,9 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       >
         <div
           className={cn(
-            "flex flex-1 flex-col justify-center rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-1 shadow-sm",
+            "flex flex-1 flex-col justify-center rounded-md border border-subtle bg-surface px-1 shadow-sm",
             CHROME_PAD[size],
-            dimmed && "bg-[var(--bg-surface-2)] opacity-60",
+            dimmed && "bg-surface-2 opacity-60",
             hasError && FIELD_INVALID,
             chromeClassName,
           )}

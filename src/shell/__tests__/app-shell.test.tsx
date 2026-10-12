@@ -96,8 +96,8 @@ describe("AppShell — the group that holds the current page", () => {
   it("highlights a flyout group while one of its sub-pages is open", () => {
     renderGrouped("/dates");
     // The group's own `to` is /forms; NavLink alone would not mark it on /dates.
-    expect(sidebarLink("Forms").className).toContain("bg-[var(--bg-inverse)]");
-    expect(sidebarLink("Home").className).not.toContain("bg-[var(--bg-inverse)]");
+    expect(sidebarLink("Forms").className).toContain("bg-inverse");
+    expect(sidebarLink("Home").className).not.toContain("bg-inverse");
   });
 
   it("inline mode lists the sub-pages, opened on the current group, and toggles", () => {
@@ -105,8 +105,8 @@ describe("AppShell — the group that holds the current page", () => {
     const toggle = screen.getByRole("button", { name: "Forms: pages" });
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     // The page carries the strong marker; the group is the lighter trail.
-    expect(sidebarLink("Dates").className).toContain("bg-[var(--bg-inverse)]");
-    expect(sidebarLink("Forms").className).not.toContain("bg-[var(--bg-inverse)]");
+    expect(sidebarLink("Dates").className).toContain("bg-inverse");
+    expect(sidebarLink("Forms").className).not.toContain("bg-inverse");
     expect(sidebarLink("Forms").className).toContain("font-medium");
 
     fireEvent.click(toggle);
@@ -146,7 +146,7 @@ describe("AppShell — the phone's page row", () => {
     const cell = within(phoneNav(container))
       .getAllByRole("link", { name: "Forms" })
       .find((a) => a.closest("[data-tour=nav]"))!;
-    expect(cell.className).toContain("text-[var(--brand)]");
+    expect(cell.className).toMatch(/text-brand(?![\w-])/);
   });
 
   it("mobileSubNav={false} keeps the single bar", () => {

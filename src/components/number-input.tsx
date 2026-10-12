@@ -209,7 +209,7 @@ export function stepNumber(
 
 // The error line under a field — the type of `ui.tsx`'s (module-private) one, so a
 // NumberInput's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
 
 // ── The money guard (kastlan 5, Kurvenschmiede) ─────────────────────────────────
 
@@ -542,7 +542,7 @@ export function NumberInput(props: NumberInputProps) {
               aria-hidden
               // pe-2, not the input's px-3: the unit is chrome at the box's edge, and
               // with pe-3 plus the 4px gap it took ~26px of a narrow table cell.
-              className="pointer-events-none pe-2 text-xs font-medium text-[var(--text-muted)]"
+              className="pointer-events-none pe-2 text-xs font-medium text-muted"
             >
               {suffix}
             </span>
@@ -579,7 +579,7 @@ export function NumberInput(props: NumberInputProps) {
     <div>
       {box}
       {textHint && (
-        <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
+        <p id={hintId} className="mt-1 text-caption leading-tight text-muted">
           {hint}
         </p>
       )}

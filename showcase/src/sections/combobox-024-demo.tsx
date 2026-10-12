@@ -17,7 +17,7 @@ import { Example, Note } from "../lib/section";
  * Synthetic data throughout.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)] whitespace-pre-wrap [overflow-wrap:anywhere]";
+const READOUT = "font-mono text-xs text-secondary whitespace-pre-wrap [overflow-wrap:anywhere]";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const CHART: ComboOption<number>[] = [

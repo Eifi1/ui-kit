@@ -239,7 +239,7 @@ function ServerTable() {
       hint="600ms simulated latency · uncheck the toggle to see the sort and filter controls disappear"
     >
       <Row className="mb-3 justify-between">
-        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="inline-flex items-center gap-2 text-xs text-secondary">
           <input
             type="checkbox"
             checked={takeOver}
@@ -250,7 +250,7 @@ function ServerTable() {
           />
           pass onFiltersChange / onSortsChange
         </label>
-        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="inline-flex items-center gap-2 text-xs text-secondary">
           <input
             type="checkbox"
             checked={sizeIsOurs}
@@ -266,7 +266,7 @@ function ServerTable() {
         </Button>
         <span
           role="status"
-          className={cn("text-xs", loading ? "text-[var(--brand)]" : "text-[var(--text-muted)]")}
+          className={cn("text-xs", loading ? "text-brand" : "text-muted")}
         >
           {loading ? "request in flight…" : `${result.total} rows on the server`}
         </span>
@@ -392,13 +392,13 @@ function PhoneTable() {
       hint="below 768px only: narrow the window or open the screen-size preview in the top bar"
     >
       <Row className="mb-3 justify-between">
-        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="inline-flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={compact} onChange={(e) => setCompact(e.target.checked)} />
           <span>
             custom <code className="font-mono">mobileCard</code>
           </span>
         </label>
-        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="inline-flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={rtl} onChange={(e) => setRtl(e.target.checked)} />
           right-to-left
         </label>
@@ -423,7 +423,7 @@ function PhoneTable() {
           // Inline on the phone this time (no mobileExpandAsDialog): the chevron points
           // down and flips when the panel is open.
           expandedRow={(r) => (
-            <span className="text-xs text-[var(--text-secondary)]">
+            <span className="text-xs text-secondary">
               {r.id} · opened {r.opened} · {AMOUNT_FMT.format(r.amount)}
             </span>
           )}
@@ -444,7 +444,7 @@ function PhoneTable() {
                       {/* A caller's own card keeps its own classes: the name wraps from
                           Large up because it says so (text size §10.17). */}
                       <span className="block truncate-until-large font-medium">{r.name}</span>
-                      <span className="block text-xs text-[var(--text-muted)]">{r.opened}</span>
+                      <span className="block text-xs text-muted">{r.opened}</span>
                     </span>
                     <span className="tabular-nums">
                       <Amount value={r.amount} />

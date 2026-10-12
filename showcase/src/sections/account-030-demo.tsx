@@ -41,7 +41,7 @@ function useLog() {
 
 function Readout({ lines }: { lines: string[] }) {
   return (
-    <pre className="mt-3 max-h-28 overflow-auto whitespace-pre-wrap rounded-md bg-[var(--bg-surface-2)] p-2 font-mono text-xs text-[var(--text-secondary)]">
+    <pre className="mt-3 max-h-28 overflow-auto whitespace-pre-wrap rounded-md bg-surface-2 p-2 font-mono text-xs text-secondary">
       {lines.length ? lines.join("\n") : "—"}
     </pre>
   );
@@ -312,13 +312,13 @@ export function SignInExtras030Demo() {
           Start again
         </Button>
       </div>
-      <div className="h-[34rem] overflow-auto rounded-md border border-[var(--border)]">
+      <div className="h-[34rem] overflow-auto rounded-md border border-subtle">
         <AuthLayout className="min-h-full" landmark={false} headingAs="h4" logo={<KeyRound />} title="Sign in">
           <SignInForm
             key={run}
             headingAs="h5"
             recoveryCode
-            twoFactorContent={(token) => <p className="text-xs text-[var(--text-muted)]">Challenge: {code(token)}</p>}
+            twoFactorContent={(token) => <p className="text-xs text-muted">Challenge: {code(token)}</p>}
             onSubmit={({ email, password }) =>
               answer(
                 `onSubmit({ email: "${email}" })`,

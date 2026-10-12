@@ -427,7 +427,7 @@ export function RolesEditor030Demo() {
           columns={3}
           onChange={setRoles}
         />
-        <p className="font-mono text-xs text-[var(--text-secondary)]">roles: {JSON.stringify(roles)}</p>
+        <p className="font-mono text-xs text-secondary">roles: {JSON.stringify(roles)}</p>
       </div>
       <Note>
         TENANT is not offered (no tenant portal yet, §4.1); a reason in {code("optionDisabledReason")} keeps the box as

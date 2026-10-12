@@ -249,7 +249,7 @@ export function CurrencySelect({
       {/* The trigger stays COMPACT — flag + code only — so it never clips in a
           narrow field; the full names live in the (wider) popup (feedback
           #308). */}
-      <span className={cn("flex items-center gap-2 min-w-0", selected ? "text-[var(--text-primary)]" : "text-[var(--text-placeholder)]")}>
+      <span className={cn("flex items-center gap-2 min-w-0", selected ? "text-primary" : "text-placeholder")}>
         {selected ? (
           <>
             <CurrencyFlag country={selected.country} />
@@ -320,19 +320,19 @@ export function CurrencySelect({
                       setOpen(false);
                     }}
                     className={cn(
-                      "flex w-full items-center justify-between gap-2 px-3 py-2 text-sm text-start hover:bg-[var(--bg-hover)]",
-                      active && "bg-[var(--bg-active)]",
+                      "flex w-full items-center justify-between gap-2 px-3 py-2 text-sm text-start hover:bg-hover",
+                      active && "bg-active",
                     )}
                   >
                     <span className="flex items-center gap-2 min-w-0">
                       <CurrencyFlag country={c.country} />
-                      <span className="font-mono text-[var(--text-muted)] w-8 shrink-0">{c.symbol}</span>
-                      <span className="font-medium text-[var(--text-primary)]">{c.code}</span>
+                      <span className="font-mono text-muted w-8 shrink-0">{c.symbol}</span>
+                      <span className="font-medium text-primary">{c.code}</span>
                       {/* The name wraps from Large up (round 0.34 T1); the code beside it
                           is what a reader scans for, and it never shrinks. */}
-                      <span className="text-[var(--text-muted)] truncate-until-large">{currencyName(c, currencyNames, locale)}</span>
+                      <span className="text-muted truncate-until-large">{currencyName(c, currencyNames, locale)}</span>
                     </span>
-                    {active && <Check className="size-4 text-[var(--text-secondary)] shrink-0" />}
+                    {active && <Check className="size-4 text-secondary shrink-0" />}
                   </button>
                 </li>
               );
@@ -343,7 +343,7 @@ export function CurrencySelect({
           is `absolute` with no `top`, so it opens at its place in the flow — under the
           caption, had the caption come first. */}
       {textHint && (
-        <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
+        <p id={hintId} className="mt-1 text-caption leading-tight text-muted">
           {hint}
         </p>
       )}
@@ -358,4 +358,4 @@ export function CurrencySelect({
 
 // The error line under a field — the type of `ui.tsx`'s (module-private) one, so a
 // CurrencySelect's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";

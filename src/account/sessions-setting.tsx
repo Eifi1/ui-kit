@@ -206,7 +206,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
         ) : sessions.length === 0 ? (
           <p className={CARD_DESCRIPTION_CLASS}>{labels.empty}</p>
         ) : (
-          <ul aria-label={labels.list} className="divide-y divide-[var(--border)]">
+          <ul aria-label={labels.list} className="divide-y divide-subtle">
             {sessions.map((session) => {
               const device = session.device?.trim() || labels.unknownDevice;
               const when = lastActive(session.lastActiveAt);
@@ -218,7 +218,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
                   data-current={session.current || undefined}
                   className="flex items-center gap-3 py-2"
                 >
-                  <MonitorSmartphone aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
+                  <MonitorSmartphone aria-hidden className="size-4 shrink-0 text-muted" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="min-w-0 break-words text-sm font-medium">{device}</span>

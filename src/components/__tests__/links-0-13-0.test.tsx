@@ -176,7 +176,7 @@ describe("IconButton href (keksdose F2, kastlan 45)", () => {
     const link = screen.getByRole("link", { name: "Open" });
     expect(link.tagName).toBe("A");
     expect(link.className).toContain("size-8");
-    expect(link.className).toContain("text-[var(--danger)]");
+    expect(link.className).toMatch(/text-danger(?![\w-])/);
     fireEvent.pointerEnter(link.parentElement!);
     fireEvent.focus(link);
     expect(screen.getAllByText("Open").length).toBeGreaterThan(0);
@@ -252,9 +252,9 @@ describe("TextLink tones (keksdose F3, kastlan 46)", () => {
       </>,
     );
     const cls = (name: string) => screen.getByRole("link", { name }).className.split(" ");
-    expect(cls("P")).toContain("text-[var(--text-primary)]");
-    expect(cls("S")).toContain("text-[var(--text-secondary)]");
-    expect(cls("W")).toContain("text-[var(--warning)]");
+    expect(cls("P")).toContain("text-primary");
+    expect(cls("S")).toContain("text-secondary");
+    expect(cls("W")).toContain("text-warning");
     for (const name of ["P", "S", "W"]) expect(cls(name)).toContain("underline");
     expect(cls("W hover")).toContain("hover:underline");
     expect(cls("W hover")).not.toContain("underline");

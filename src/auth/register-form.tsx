@@ -365,7 +365,7 @@ export function RegisterForm({
           {/* The tag, offered rather than applied (§4.5): one click, the exact address
               on the button, reversible by typing — or, invited, by the button back. */}
           {suggestion && (
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
+            <p className="mt-1 text-xs text-muted">
               <Button
                 type="button"
                 variant="link"
@@ -381,7 +381,7 @@ export function RegisterForm({
             </p>
           )}
           {backToInvited !== null && (
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
+            <p className="mt-1 text-xs text-muted">
               <span>{labels.invitedTagNote}</span>{" "}
               <Button
                 type="button"
@@ -444,7 +444,7 @@ export function RegisterForm({
         </Button>
       </form>
       {signInHref !== undefined && (
-        <p className="text-center text-sm text-[var(--text-secondary)]">
+        <p className="text-center text-sm text-secondary">
           {labels.haveAccount}{" "}
           <TextLink href={signInHref} tone="primary">
             {labels.signIn}

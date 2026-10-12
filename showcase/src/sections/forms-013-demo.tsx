@@ -11,7 +11,7 @@ import { Example, Note, Row } from "../lib/section";
  * header `actions` (43) and `formatNumber`'s `unit` (lenkbank P8).
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)] whitespace-pre-wrap [overflow-wrap:anywhere]";
+const READOUT = "font-mono text-xs text-secondary whitespace-pre-wrap [overflow-wrap:anywhere]";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const LOCALES = ["fr-CH", "de-DE", "de-CH", "en-US"] as const;
@@ -92,7 +92,7 @@ function WizardStepActionsDemo() {
           </Button>
         }
       >
-        <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+        <ul className="space-y-1 text-sm text-secondary">
           {buildings.map((b) => (
             <li key={b}>{b}</li>
           ))}

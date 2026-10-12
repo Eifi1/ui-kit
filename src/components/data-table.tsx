@@ -248,7 +248,7 @@ export interface DataTableProps<T> {
   isExpanded?: (row: T) => boolean;
   /**
    * Extra classes for a row — the `<tr>` on desktop, the card on mobile. Merged last,
-   * so a `hover:` fill here replaces the row's own `hover:bg-[var(--bg-hover)]`.
+   * so a `hover:` fill here replaces the row's own `hover:bg-hover`.
    *
    * **A row you paint has to pick its own hover** (0.33, docs/colour-roles-harmonization.md
    * §12.2): the kit cannot see your rest colour, and `--bg-hover` is mixed against the
@@ -782,7 +782,7 @@ function logicalAlign(className: string | undefined): string | undefined {
  * behind at the bottom of the rows while the sticky cell rides over them.
  */
 const FOOTER_CELL =
-  "sticky bottom-0 z-10 bg-[var(--bg-surface-2)] shadow-[inset_0_2px_0_var(--border-strong)]";
+  "sticky bottom-0 z-10 bg-surface-2 shadow-[inset_0_2px_0_var(--border-strong)]";
 
 /** Whether a column is end-aligned — the header then puts its filter button first. */
 const END_ALIGN = /(^|\s)text-end(?=\s|$)/;
@@ -840,10 +840,10 @@ function StackedFields<T>({ columns, row, compact }: { columns: DataTableColumn<
     >
       {columns.map((col) => (
         <div key={col.key} className="min-w-0">
-          <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)]">{col.header}</dt>
+          <dt className="text-xs uppercase tracking-wide text-muted">{col.header}</dt>
           <dd
             {...dataAttrsOf(col.cellProps?.(row))}
-            className="mt-0.5 min-w-0 break-words text-[var(--text-secondary)]"
+            className="mt-0.5 min-w-0 break-words text-secondary"
           >
             {col.cell(row)}
           </dd>
@@ -934,11 +934,11 @@ function MobileSort<T>({
       className={cn(
         // At Large the direction button shows its words (IconButton's label, §4); the
         // row wraps so the select keeps a usable width on a 240 px card.
-        "flex flex-wrap items-center gap-2 border-b border-[var(--border)]",
+        "flex flex-wrap items-center gap-2 border-b border-subtle",
         compact ? "px-3 py-1.5" : "px-4 py-2",
       )}
     >
-      <label htmlFor={selectId} className="shrink-0 text-xs text-[var(--text-muted)]">
+      <label htmlFor={selectId} className="shrink-0 text-xs text-muted">
         {sortLabels.sortBy}
       </label>
       <Select
@@ -1867,7 +1867,7 @@ export function DataTable<T>({
       // rather than feedback. `transition-transform` alone, so the existing background
       // flip stays instant.
       interactive &&
-        "cursor-pointer transition-transform duration-100 active:scale-[0.995] active:bg-[var(--bg-active)] motion-reduce:transition-none motion-reduce:active:scale-100",
+        "cursor-pointer transition-transform duration-100 active:scale-[0.995] active:bg-active motion-reduce:transition-none motion-reduce:active:scale-100",
       // The keyboard's frame drawn INSIDE the card, as the desktop row's is (keksdose live
       // #394): the browser's own ring and tap highlight sit on the card's outer edge, and
       // three ancestors clip it — SwipeableRow's `overflow-hidden`, the card list, and
@@ -1918,12 +1918,12 @@ export function DataTable<T>({
                 >
                   {mobileSecondaryColumns.map((col) => (
                     <Fragment key={col.key}>
-                      <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)] self-center">
+                      <dt className="text-xs uppercase tracking-wide text-muted self-center">
                         {col.header}
                       </dt>
                       <dd
                         {...dataAttrsOf(col.cellProps?.(row))}
-                        className="min-w-0 text-[var(--text-secondary)] self-center"
+                        className="min-w-0 text-secondary self-center"
                       >
                         {col.cell(row)}
                       </dd>
@@ -1941,13 +1941,13 @@ export function DataTable<T>({
             // Points INTO the sheet, which is the reading-forward direction.
             <ChevronRight
               aria-hidden
-              className="size-4 shrink-0 text-[var(--text-placeholder)] rtl:-scale-x-100"
+              className="size-4 shrink-0 text-placeholder rtl:-scale-x-100"
             />
           ) : (
             <ChevronDown
               aria-hidden
               className={cn(
-                "size-4 shrink-0 text-[var(--text-placeholder)] transition-transform",
+                "size-4 shrink-0 text-placeholder transition-transform",
                 expanded && "rotate-180",
               )}
             />
@@ -2021,7 +2021,7 @@ export function DataTable<T>({
         {expansion && !mobileExpandAsDialog && (
           <div
             className={cn(
-              "bg-[var(--bg-surface-2)] border-t border-[var(--border)]",
+              "bg-surface-2 border-t border-subtle",
               compact ? "px-3 py-2" : "px-4 py-3",
             )}
           >
@@ -2082,7 +2082,7 @@ export function DataTable<T>({
           className={cn(
             "flex flex-wrap items-center gap-2",
             frame
-              ? cn("border-b border-[var(--border)]", compact ? "px-2 py-1.5" : "px-3 py-2")
+              ? cn("border-b border-subtle", compact ? "px-2 py-1.5" : "px-3 py-2")
               : "pb-3",
           )}
         >
@@ -2136,7 +2136,7 @@ export function DataTable<T>({
         )}
         <ul
           className={cn(
-            "divide-y divide-[var(--border)]",
+            "divide-y divide-subtle",
             // Under `fillHeight` the list is the scroller, as the table body is on a
             // wide screen: the filter button stays above it and a server pager below.
             // The endless-scroll sentinel still fires in here — an
@@ -2150,7 +2150,7 @@ export function DataTable<T>({
           {mobileGroups
             ? mobileGroups.map((g) => (
                 <Fragment key={`hb-group:${g.key}`}>
-                  <li className="sticky top-0 z-10 bg-[var(--bg-surface-2)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] backdrop-blur">
+                  <li className="sticky top-0 z-10 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur">
                     {mobileGroupLabel ? mobileGroupLabel(g.key) : g.key}
                   </li>
                   {g.rows.map(renderMobileRow)}
@@ -2160,7 +2160,7 @@ export function DataTable<T>({
           {mobileSlice.length === 0 && (
             <li
               className={cn(
-                "text-center text-[var(--text-muted)]",
+                "text-center text-muted",
                 compact ? "px-3 py-3 text-xs" : "px-4 py-6 text-sm",
               )}
             >
@@ -2172,7 +2172,7 @@ export function DataTable<T>({
           {canRevealMoreMobile && (
             <li
               ref={loadMoreRef}
-              className="px-4 py-4 text-center text-xs text-[var(--text-placeholder)]"
+              className="px-4 py-4 text-center text-xs text-placeholder"
             >
               {/* Isolated for the reason spelled out on LoadingText. */}
               <bdi>{labels.loading}</bdi>
@@ -2191,7 +2191,7 @@ export function DataTable<T>({
             data-table-footer=""
             aria-labelledby={footerLabel != null ? footerHeadingId : undefined}
             className={cn(
-              "border-t-2 border-[var(--border-strong)] bg-[var(--bg-surface-2)]",
+              "border-t-2 border-strong bg-surface-2",
               compact ? "px-3 py-2" : "px-4 py-3",
               isLoading && "opacity-60 transition-opacity",
             )}
@@ -2211,10 +2211,10 @@ export function DataTable<T>({
                 .filter((c) => c.footer)
                 .map((col) => (
                   <Fragment key={col.key}>
-                    <dt className="self-center text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                    <dt className="self-center text-xs uppercase tracking-wide text-muted">
                       {col.header}
                     </dt>
-                    <dd className="min-w-0 self-center font-semibold text-[var(--text-primary)]">
+                    <dd className="min-w-0 self-center font-semibold text-primary">
                       {footerValue(col)}
                     </dd>
                   </Fragment>
@@ -2292,13 +2292,13 @@ export function DataTable<T>({
               header then stays put as you scroll the rows. position:sticky on
               <thead> isn't reliable across browsers, so we put it on each <th>
               (see headClassName below). */}
-          <thead className="bg-[var(--bg-surface-2)] text-[var(--text-secondary)]">
+          <thead className="bg-surface-2 text-secondary">
             <tr className="text-start">
               {selection && (
                 <th
                   scope="col"
                   className={cn(
-                    "sticky top-0 z-10 bg-[var(--bg-surface-2)] align-middle backdrop-blur-sm",
+                    "sticky top-0 z-10 bg-surface-2 align-middle backdrop-blur-sm",
                     compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2",
                   )}
                 >
@@ -2366,7 +2366,7 @@ export function DataTable<T>({
                       // Keep the header visible while the user scrolls the page.
                       // Each <th> carries its own bg so the row doesn't render
                       // transparent over the data rows underneath.
-                      "sticky top-0 z-10 bg-[var(--bg-surface-2)] backdrop-blur-sm",
+                      "sticky top-0 z-10 bg-surface-2 backdrop-blur-sm",
                       logicalAlign(ownHead.className),
                       headClass,
                     )}
@@ -2384,7 +2384,7 @@ export function DataTable<T>({
                           disabled={!sortable}
                           className={cn(
                             "flex items-center gap-1 text-start",
-                            sortable && "hover:text-[var(--text-primary)]",
+                            sortable && "hover:text-primary",
                           )}
                         >
                           <span>{col.header}</span>
@@ -2416,8 +2416,8 @@ export function DataTable<T>({
                               className={cn(
                                 "rounded p-1 transition-colors",
                                 filterActive
-                                  ? "bg-[var(--brand-bg)] text-[var(--brand-muted)]"
-                                  : "text-[var(--text-placeholder)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                                  ? "bg-brand-soft text-brand-muted"
+                                  : "text-placeholder hover:text-secondary hover:bg-hover",
                               )}
                             >
                               <Filter className="size-3" />
@@ -2461,7 +2461,7 @@ export function DataTable<T>({
                       // scrolling before the first `pointermove` ever arrives.
                       // `end-0` and a translate that flips with it: the handle sits on the column's
                       // trailing edge, which is its left one in a right-to-left table.
-                      className="absolute end-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 rtl:translate-x-1/2 cursor-col-resize select-none touch-none hover:bg-[var(--brand-bg-hover)]"
+                      className="absolute end-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 rtl:translate-x-1/2 cursor-col-resize select-none touch-none hover:bg-brand-soft-hover"
                     />
                     )}
                   </th>
@@ -2473,7 +2473,7 @@ export function DataTable<T>({
             className={cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity")}
           >
             {leadingRow && (
-              <tr className="border-t border-[var(--border)]">
+              <tr className="border-t border-subtle">
                 <td colSpan={totalColSpan} className="p-0">
                   {leadingRow}
                 </td>
@@ -2519,13 +2519,13 @@ export function DataTable<T>({
                         : undefined
                     }
                     className={cn(
-                      "border-t border-[var(--border)]",
-                      rowInteractive && "cursor-pointer hover:bg-[var(--bg-hover)]",
+                      "border-t border-subtle",
+                      rowInteractive && "cursor-pointer hover:bg-hover",
                       // The kit's focus frame width (§5, `--focus-ring-width`), drawn as an
                       // OUTLINE rather than FOCUS_RING's box-shadow: a shadow on a `<tr>`
                       // is not painted by every engine, an outline is.
                       rowsFocusable &&
-                        "focus-visible:bg-[var(--bg-hover)] focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
+                        "focus-visible:bg-hover focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:-outline-offset-2 focus-visible:outline-brand",
                       rowClassName?.(row),
                     )}
                     onClick={
@@ -2642,7 +2642,7 @@ export function DataTable<T>({
                     })}
                   </tr>
                   {expansion && (
-                    <tr className="bg-[var(--bg-surface-2)] border-t border-[var(--border)]">
+                    <tr className="bg-surface-2 border-t border-subtle">
                       {/* The detail panel spans every column. In an `auto` table
                           layout (the default here — columns only get fixed style
                           widths once the user resizes/auto-sizes them) the cell's
@@ -2668,7 +2668,7 @@ export function DataTable<T>({
               <tr>
                 <td
                   colSpan={totalColSpan}
-                  className={cn("text-center text-[var(--text-muted)]", compact ? "px-2 py-2" : "px-3 py-4")}
+                  className={cn("text-center text-muted", compact ? "px-2 py-2" : "px-3 py-4")}
                 >
                   {/* Nothing is not the same as not-yet: "no results" while the first
                       page is still in flight is a claim the table cannot make. */}
@@ -2686,7 +2686,7 @@ export function DataTable<T>({
             <tfoot
               data-table-footer=""
               className={cn(
-                "font-semibold text-[var(--text-primary)]",
+                "font-semibold text-primary",
                 isLoading && "opacity-60 transition-opacity",
               )}
             >
@@ -2764,13 +2764,13 @@ export function DataTable<T>({
             tabIndex={showSettings ? -1 : 0}
             className={cn(
               "group flex shrink-0 items-start justify-center overflow-hidden pt-3 transition-[width] duration-200 ease-out",
-              "border-s border-[var(--border)]",
-              "hover:bg-[var(--bg-hover)]",
+              "border-s border-subtle",
+              "hover:bg-hover",
               showSettings ? "w-0 border-s-0" : "w-8 cursor-pointer",
             )}
           >
             <span
-              className="whitespace-nowrap text-xs font-medium tracking-wide text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
+              className="whitespace-nowrap text-xs font-medium tracking-wide text-muted group-hover:text-secondary"
               style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
             >
               {columnsCountLabel}
@@ -2783,9 +2783,9 @@ export function DataTable<T>({
             showSettings ? "w-56" : "w-0",
           )}
         >
-          <div className="flex w-56 flex-col border-s border-[var(--border)] p-2">
+          <div className="flex w-56 flex-col border-s border-subtle p-2">
             <div className="mb-2 flex items-center justify-between gap-1">
-              <div className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted">
                 {columnsCountLabel}
               </div>
               <Tooltip label={labels.close} portal>
@@ -2793,7 +2793,7 @@ export function DataTable<T>({
                   type="button"
                   onClick={() => setShowSettings(false)}
                   aria-label={labels.close}
-                  className="rounded p-0.5 text-[var(--text-placeholder)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                  className="rounded p-0.5 text-placeholder hover:bg-hover hover:text-secondary"
                 >
                   <X className="size-4" />
                 </button>
@@ -2802,7 +2802,7 @@ export function DataTable<T>({
             <button
               type="button"
               onClick={autoSizeAll}
-              className="mb-2 rounded border border-[var(--border)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+              className="mb-2 rounded border border-subtle px-2 py-1 text-xs font-medium text-secondary hover:bg-hover"
             >
               {labels.autoSize}
             </button>
@@ -2814,7 +2814,7 @@ export function DataTable<T>({
                 return (
                   <label
                     key={col.key}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs hover:bg-[var(--bg-hover)]"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs hover:bg-hover"
                   >
                     <input
                       type="checkbox"
@@ -2938,19 +2938,19 @@ function MobileFilters<T>({
   }).length;
 
   return (
-    <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-2">
+    <div className="flex items-center justify-between gap-2 border-b border-subtle px-4 py-2">
       <button
         type="button"
         onClick={(e) => {
           setDir(dirOf(e.currentTarget));
           setOpen(true);
         }}
-        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-secondary hover:bg-hover"
       >
         <Filter className="size-4" />
         <span>{labels.filters}</span>
         {activeCount > 0 && (
-          <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--info-bg)] px-1 text-caption font-semibold text-[var(--info)]">
+          <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-info-soft px-1 text-caption font-semibold text-info">
             {activeCount}
           </span>
         )}
@@ -2959,7 +2959,7 @@ function MobileFilters<T>({
         <button
           type="button"
           onClick={onClearAll}
-          className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+          className="text-xs text-muted hover:text-secondary"
         >
           {labels.clearAll}
         </button>
@@ -2973,19 +2973,19 @@ function MobileFilters<T>({
             dir={dir}
             {...backdropClose}
           >
-            <div className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl bg-[var(--bg-surface)] shadow-xl">
-              <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-3">
+            <div className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface shadow-xl">
+              <div className="flex items-center justify-between gap-2 border-b border-subtle px-4 py-3">
                 <div className="font-medium">{labels.filters}</div>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
                   aria-label={labels.close}
-                  className="-me-1 rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                  className="-me-1 rounded p-1.5 text-muted hover:bg-hover hover:text-secondary"
                 >
                   <X className="size-5" />
                 </button>
               </div>
-              <div className="flex-1 divide-y divide-[var(--border)] overflow-y-auto overscroll-contain">
+              <div className="flex-1 divide-y divide-subtle overflow-y-auto overscroll-contain">
                 {filterable.map(({ col, filter }) => {
                   const state = filters[col.key];
                   const active = !!state && isFilterActive(state);
@@ -2998,13 +2998,13 @@ function MobileFilters<T>({
                         aria-expanded={isItemOpen}
                         className="flex w-full items-center justify-between gap-2 px-4 py-3 text-start"
                       >
-                        <span className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
+                        <span className="flex items-center gap-2 text-sm font-medium text-secondary">
                           {col.header}
                           {active && <span className="size-1.5 rounded-full bg-brand" />}
                         </span>
                         <ChevronDown
                           className={cn(
-                            "size-4 shrink-0 text-[var(--text-placeholder)] transition-transform",
+                            "size-4 shrink-0 text-placeholder transition-transform",
                             isItemOpen && "rotate-180",
                           )}
                         />
@@ -3026,19 +3026,19 @@ function MobileFilters<T>({
                   );
                 })}
               </div>
-              <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-4 py-3">
+              <div className="flex items-center justify-between gap-2 border-t border-subtle px-4 py-3">
                 <button
                   type="button"
                   onClick={onClearAll}
                   disabled={activeCount === 0}
-                  className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] disabled:opacity-40"
+                  className="text-sm text-muted hover:text-secondary disabled:opacity-40"
                 >
                   {labels.clearAll}
                 </button>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-md bg-[var(--bg-inverse)] px-4 py-2 text-sm font-medium text-[var(--text-inverse)]"
+                  className="rounded-md bg-inverse px-4 py-2 text-sm font-medium text-inverse"
                 >
                   {labels.done}
                 </button>

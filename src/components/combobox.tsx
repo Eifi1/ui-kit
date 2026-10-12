@@ -157,7 +157,7 @@ function lockedKeyDown(e: { key: string; preventDefault: () => void }) {
 /** {@link InlineEntityCombobox}'s create row over the shared row look: in the brand
  *  colour {@link Combobox}'s own create row wears, with a leading "+" as the panel
  *  pickers' has — an action at the foot of the list, not one more record. */
-const CREATE_ROW_CLASS = "flex items-center gap-2 font-medium text-[var(--brand)]";
+const CREATE_ROW_CLASS = "flex items-center gap-2 font-medium text-brand";
 
 /**
  * Four of the div's own attributes are omitted because this component already owns
@@ -615,7 +615,7 @@ export function Combobox(props: ComboboxProps) {
                 if (!inert) setOpen((o) => !o);
               }}
               className={cn(
-                "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+                "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-placeholder",
                 // The box above does the dimming; dimming here too would halve it again.
                 !inert && "cursor-pointer",
               )}
@@ -662,7 +662,7 @@ export function Combobox(props: ComboboxProps) {
                   role="option"
                   aria-selected={false}
                   onClick={() => take(typed)}
-                  className={cn(SHEET_ROW_CLASS, "font-medium text-[var(--brand)]")}
+                  className={cn(SHEET_ROW_CLASS, "font-medium text-brand")}
                 >
                   {createRow}
                 </button>
@@ -675,7 +675,7 @@ export function Combobox(props: ComboboxProps) {
                   {group !== undefined && (
                     <li
                       role="presentation"
-                      className="px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                      className="px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-muted"
                     >
                       {group}
                     </li>
@@ -716,7 +716,7 @@ export function Combobox(props: ComboboxProps) {
                   e.preventDefault();
                   take(typed);
                 }}
-                className={cn(rowClass(false), "font-medium text-[var(--brand)]")}
+                className={cn(rowClass(false), "font-medium text-brand")}
               >
                 {createRow}
               </button>
@@ -732,7 +732,7 @@ export function Combobox(props: ComboboxProps) {
                 {group !== undefined && (
                   <li
                     role="presentation"
-                    className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
+                    className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1"
                   >
                     {group}
                   </li>
@@ -1150,7 +1150,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       <span className="min-w-0 flex-1">
         <span className="block truncate-until-large">{createText}</span>
         {createLocked && (
-          <span className="block truncate-until-large text-xs font-normal text-[var(--text-placeholder)]">
+          <span className="block truncate-until-large text-xs font-normal text-placeholder">
             {createReason}
           </span>
         )}
@@ -1303,8 +1303,8 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                   if (!locked) onChange(clearValue);
                 }}
                 className={cn(
-                  "absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)]",
-                  "hover:text-[var(--text-secondary)]",
+                  "absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-placeholder",
+                  "hover:text-secondary",
                 )}
               >
                 <X aria-hidden className="size-4" />
@@ -1320,7 +1320,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                   if (!inert) setOpen((o) => !o);
                 }}
                 className={cn(
-                  "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+                  "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-placeholder",
                   // The box above does the dimming; dimming here too would halve it again.
                   !inert && "cursor-pointer",
                 )}
@@ -1363,7 +1363,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                 {o.group && o.group !== matches[i - 1]?.group && (
                   <li
                     role="presentation"
-                    className="px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                    className="px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-muted"
                   >
                     {o.group}
                   </li>
@@ -1408,7 +1408,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
             {/* "Nothing matched" only when there is nothing to do either: with a create
                 row the list is not empty, it is offering to fill itself. */}
             {matches.length === 0 && !showCreate && (
-              <li className="px-4 py-3 text-sm text-[var(--text-muted)]">{labels.noResults}</li>
+              <li className="px-4 py-3 text-sm text-muted">{labels.noResults}</li>
             )}
           </ul>
         </PickerSheet>
@@ -1426,7 +1426,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
               {o.group && o.group !== matches[i - 1]?.group && (
                 <li
                   role="presentation"
-                  className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
+                  className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1"
                 >
                   {o.group}
                 </li>
@@ -1463,7 +1463,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                 >
                   {o.label}
                   {o.sublabel && (
-                    <span className="ms-2 text-xs text-[var(--text-placeholder)]">
+                    <span className="ms-2 text-xs text-placeholder">
                       {o.sublabel}
                     </span>
                   )}

@@ -109,7 +109,8 @@ describe("Switch", () => {
     const cls = screen.getByRole("switch").className;
     // The kit's focus frame (0.32, §5): `--focus-ring-width` wide.
     expect(cls).toMatch(/focus-visible:ring-\[length:var\(--focus-ring-width\)\]/);
-    expect(cls).toMatch(/focus-visible:ring-\[var\(--[a-z-]+\)\]/);
+    // A token: a role utility (0.34) or a `[var(--…)]`.
+    expect(cls).toMatch(/focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/);
   });
 
   it("moves the thumb with a LOGICAL offset, so it travels the right way in RTL", () => {

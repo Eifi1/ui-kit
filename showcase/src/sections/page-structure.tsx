@@ -26,7 +26,7 @@ import { ConstList, Example, Note, Row, Stage } from "../lib/section";
  * 0.10.0. Every link below goes to a real page of this showcase through the router.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 /** react-router's Link takes `to`, not `href`. */
 const routerCrumb = ({ href, ...props }: BreadcrumbLinkProps) => <Link to={href} {...props} />;
@@ -149,7 +149,7 @@ function BreadcrumbCollapse() {
       hint="below 768px only: narrow the window or open the screen-size preview in the top bar"
     >
       <Row className="mb-4">
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={collapse} onChange={(e) => setCollapse(e.target.checked)} />
           <code className="font-mono">collapse</code>
         </label>
@@ -256,19 +256,19 @@ function TextPrimitives() {
         <div data-stage="wide" className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-3">
             <SectionLabel>Heating (size sm, as h3)</SectionLabel>
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-sm text-secondary">
               The default: 12px, above a block of page content — a heading, since it is an{" "}
               <code className="font-mono">h3</code> unless told otherwise.
             </p>
             <SectionLabel size="xs" as="p">
               Legend group (size xs, as p)
             </SectionLabel>
-            <p className="text-sm text-[var(--text-secondary)]">10px, for inside a dense panel — a legend, a menu row.</p>
-            <fieldset className="rounded-md border border-[var(--border)] px-3 pb-3">
+            <p className="text-sm text-secondary">10px, for inside a dense panel — a legend, a menu row.</p>
+            <fieldset className="rounded-md border border-subtle px-3 pb-3">
               <SectionLabel as="legend" className="px-1">
                 as legend
               </SectionLabel>
-              <p className="text-sm text-[var(--text-secondary)]">The label of a fieldset.</p>
+              <p className="text-sm text-secondary">The label of a fieldset.</p>
             </fieldset>
           </div>
           <div className="space-y-3">
@@ -276,7 +276,7 @@ function TextPrimitives() {
             <Caption className="mt-1">
               Invoices go to this address as PDF. Leave it empty to send them to the account&apos;s owner.
             </Caption>
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-sm text-secondary">
               Total due <strong>€ 1,425.50</strong>{" "}
               <Caption as="span">(incl. 19 % VAT — a caption as=&quot;span&quot;, inside a line)</Caption>
             </p>
@@ -320,7 +320,7 @@ function StatusDots() {
     >
       <div className="space-y-4">
         <div className="overflow-x-auto">
-          <table className="text-xs text-[var(--text-secondary)]">
+          <table className="text-xs text-secondary">
             <thead>
               <tr>
                 <th className="pe-4 text-start font-medium">tone</th>
@@ -355,11 +355,11 @@ function StatusDots() {
             {unread > 0 && <StatusDot tone="danger" size="md" ring className="absolute -end-0.5 -top-0.5" />}
           </span>
           <span className="relative inline-flex">
-            <Bell className="size-5 text-[var(--text-secondary)]" aria-hidden />
+            <Bell className="size-5 text-secondary" aria-hidden />
             <StatusDot tone="brand" ring className="absolute -end-0.5 -top-0.5" />
           </span>
           <span className="relative inline-flex">
-            <Bell className="size-5 text-[var(--text-secondary)]" aria-hidden />
+            <Bell className="size-5 text-secondary" aria-hidden />
             <StatusDot tone="brand" className="absolute -end-0.5 -top-0.5" />
           </span>
           <Button variant="ghost" size="sm" onClick={() => setUnread((n) => (n > 0 ? 0 : 3))}>

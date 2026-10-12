@@ -408,7 +408,7 @@ function useFilterEchoCheck(filterProp: Partial<TranslationReviewFilter> | undef
 /** The row's text — or, for a missing string, the line that says so. */
 function TextCell({ row, labels, clamp }: { row: TranslationRow; labels: TranslationReviewLabels; clamp?: boolean }) {
   return row.text === "" ? (
-    <span className="italic text-[var(--text-muted)]">{labels.missingText}</span>
+    <span className="italic text-muted">{labels.missingText}</span>
   ) : (
     <span lang={row.locale} className={cn("whitespace-pre-line break-words", clamp && "line-clamp-3 large:line-clamp-none")}>
       {row.text}
@@ -711,7 +711,7 @@ export function TranslationReviewPanel({
     {
       key: "key",
       header: labels.key,
-      cell: (r) => <code className="break-all text-xs text-[var(--text-secondary)]">{r.key}</code>,
+      cell: (r) => <code className="break-all text-xs text-secondary">{r.key}</code>,
       sortBy: (r) => r.key,
       mobileHidden: true,
     },
@@ -719,7 +719,7 @@ export function TranslationReviewPanel({
       key: "reference",
       header: referenceLabel,
       cell: (r) => (
-        <span className="line-clamp-3 whitespace-pre-line break-words text-[var(--text-secondary)]">{r.reference}</span>
+        <span className="line-clamp-3 whitespace-pre-line break-words text-secondary">{r.reference}</span>
       ),
       mobileHidden: true,
     },
@@ -900,8 +900,8 @@ export function TranslationReviewPanel({
       )}
       mobileCard={(r) => (
         <div className="min-w-0 space-y-1">
-          <code className="block break-all text-xs text-[var(--text-muted)]">{r.key}</code>
-          <div className="text-sm text-[var(--text-primary)]">
+          <code className="block break-all text-xs text-muted">{r.key}</code>
+          <div className="text-sm text-primary">
             <TextCell row={r} labels={labels} clamp />
           </div>
           <div className="flex flex-wrap gap-1">
@@ -961,10 +961,10 @@ export function TranslationReviewPanel({
             </Button>
           ) : undefined
         }
-        bodyClassName="space-y-0 px-0 pb-0 border-t border-[var(--border)]"
+        bodyClassName="space-y-0 px-0 pb-0 border-t border-subtle"
       >
         {body && confirming === g.key && targets.length > 0 && (
-          <div className="border-b border-[var(--border)] p-3">
+          <div className="border-b border-subtle p-3">
             <AlertBanner tone="warning" size="sm">
               <div className="min-w-0 space-y-2">
                 <p id={questionId}>{labels.confirmGroup(targets.length, name)}</p>

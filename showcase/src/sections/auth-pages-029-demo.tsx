@@ -114,7 +114,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
               ? refuse("token_invalid")
               : beat().then(() => ({
                   email: "ada@example.com",
-                  notices: <p className="text-xs text-[var(--text-muted)]">Your 2 personal access tokens were revoked.</p>,
+                  notices: <p className="text-xs text-muted">Your 2 personal access tokens were revoked.</p>,
                 }))
           }
           onSignIn={onRestart}
@@ -196,7 +196,7 @@ export function AuthPages029Demo() {
           }}
           options={ANSWERS[page]}
         />
-        <div className="overflow-hidden rounded-lg border border-[var(--border)]">
+        <div className="overflow-hidden rounded-lg border border-subtle">
           <AuthLayout
             key={`${page}-${answer}-${run}`}
             className="min-h-0"
@@ -240,7 +240,7 @@ export function EmailVerificationBanner029Demo() {
             { value: "fail", label: "Resend fails" },
           ]}
         />
-        <div className="overflow-hidden rounded-lg border border-[var(--border)]">
+        <div className="overflow-hidden rounded-lg border border-subtle">
           {shown ? (
             <EmailVerificationBanner
               onResend={() => (fail ? beat(600).then(() => Promise.reject(new Error("500"))) : beat(600))}
@@ -253,7 +253,7 @@ export function EmailVerificationBanner029Demo() {
             <Row className="p-3">
               <button
                 type="button"
-                className="text-sm text-[var(--brand)] underline"
+                className="text-sm text-brand underline"
                 onClick={() => setShown(true)}
               >
                 Show the banner again
@@ -287,7 +287,7 @@ export function PersonNames029Demo() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-start text-xs text-[var(--text-muted)]">
+            <tr className="text-start text-xs text-muted">
               <th className="py-1 pe-3 text-start font-medium">first / last</th>
               {LOCALES.map((l) => (
                 <th key={l} className="py-1 pe-3 text-start font-medium">
@@ -298,8 +298,8 @@ export function PersonNames029Demo() {
           </thead>
           <tbody>
             {PEOPLE.map(({ label, person }) => (
-              <tr key={label} className="border-t border-[var(--border)]">
-                <td className="py-2 pe-3 text-[var(--text-muted)]">{label}</td>
+              <tr key={label} className="border-t border-subtle">
+                <td className="py-2 pe-3 text-muted">{label}</td>
                 {LOCALES.map((locale) => (
                   <td key={locale} className="py-2 pe-3">
                     <UiKitProvider locale={locale}>
@@ -336,7 +336,7 @@ const COMPANIES = [
 
 function TopBarStrip({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center justify-end gap-1 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1">
+    <div className="flex items-center justify-end gap-1 rounded-md border border-subtle bg-surface px-2 py-1">
       {children}
     </div>
   );
@@ -354,13 +354,13 @@ export function CompanySwitcher029Demo() {
             onSwitch={(id) => beat(1200).then(() => setCurrent(id))}
           />
         </TopBarStrip>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           current: {COMPANIES.find((c) => c.id === current)?.name}
         </p>
-        <p className="text-xs text-[var(--text-muted)]">One company — the switcher renders nothing:</p>
+        <p className="text-xs text-muted">One company — the switcher renders nothing:</p>
         <TopBarStrip>
           <CompanySwitcher companies={[COMPANIES[0]!]} currentId={1} onSwitch={() => {}} />
-          <span className="text-xs text-[var(--text-muted)]">(nothing before this)</span>
+          <span className="text-xs text-muted">(nothing before this)</span>
         </TopBarStrip>
         <Note>
           {code("onSwitch(id)")} is the app&apos;s {code("POST /auth/switch-company")}: while its promise runs the

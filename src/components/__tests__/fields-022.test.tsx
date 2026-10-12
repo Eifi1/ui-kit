@@ -28,7 +28,7 @@ describe("kastlan 8: a labelled field keeps the caller's placeholder", () => {
     expect(input).toHaveAttribute("placeholder", "Anything the tenant should know");
     // Transparent at rest (the label sits where it would be), visible on focus.
     expect(input.className).toContain("placeholder:text-transparent");
-    expect(input.className).toContain("focus:placeholder:text-[var(--text-placeholder)]");
+    expect(input.className).toContain("focus:placeholder:text-placeholder");
   });
 
   it("Input without a placeholder keeps the float trick's single space", () => {
@@ -47,7 +47,7 @@ describe("kastlan 8: a labelled field keeps the caller's placeholder", () => {
     render(<Textarea label="Note" placeholder="Pick up at the back door" />);
     const area = screen.getByRole("textbox", { name: "Note" });
     expect(area).toHaveAttribute("placeholder", "Pick up at the back door");
-    expect(area.className).toContain("focus:placeholder:text-[var(--text-placeholder)]");
+    expect(area.className).toContain("focus:placeholder:text-placeholder");
   });
 
   it("an unlabelled field is untouched", () => {
@@ -170,7 +170,7 @@ describe("keksdose K11: showCount", () => {
   it("says nothing on mount, even for a stored value already at the limit", () => {
     render(<Counted initial={"a".repeat(20)} />);
     expect(screen.getByRole("status")).toBeEmptyDOMElement();
-    expect(screen.getByText("20/20")).toHaveClass("text-[var(--danger)]");
+    expect(screen.getByText("20/20")).toHaveClass("text-danger");
   });
 
   it("counts an uncontrolled Input from defaultValue on", () => {

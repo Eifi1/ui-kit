@@ -45,14 +45,14 @@ function eventsOn(iso: string): CalendarEvent[] {
 }
 
 const TONE_TEXT: Record<CalendarEvent["tone"], string> = {
-  brand: "text-[var(--brand)]",
-  warning: "text-[var(--warning)]",
-  success: "text-[var(--success)]",
+  brand: "text-brand",
+  warning: "text-warning",
+  success: "text-success",
 };
 const TONE_DOT: Record<CalendarEvent["tone"], string> = {
-  brand: "bg-[var(--brand)]",
-  warning: "bg-[var(--warning)]",
-  success: "bg-[var(--success)]",
+  brand: "bg-brand",
+  warning: "bg-warning",
+  success: "bg-success",
 };
 
 /** The lg cell's content: up to two event lines and a "+N more". Plain text — it
@@ -75,7 +75,7 @@ function EventLines({ iso, state }: { iso: string; state: MiniCalendarDayState }
         </span>
       ))}
       {events.length > 2 && (
-        <span className="block text-micro leading-tight text-[var(--text-muted)]">+{events.length - 2} more</span>
+        <span className="block text-micro leading-tight text-muted">+{events.length - 2} more</span>
       )}
     </span>
   );
@@ -108,9 +108,9 @@ function MonthViewWithDayPanel() {
         />
         <section
           aria-label={`Events on ${longDate(day)}`}
-          className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface-2)] p-3"
+          className="rounded-lg border border-subtle bg-surface-2 p-3"
         >
-          <h4 className="text-sm font-semibold text-[var(--text-primary)]">{longDate(day)}</h4>
+          <h4 className="text-sm font-semibold text-primary">{longDate(day)}</h4>
           {events.length ? (
             <ul className="mt-2 space-y-1">
               {events.map((e) => (
@@ -122,14 +122,14 @@ function MonthViewWithDayPanel() {
                     onClick={() => setOpened(e.title)}
                   >
                     <span aria-hidden className={`size-2 shrink-0 rounded-full ${TONE_DOT[e.tone]}`} />
-                    {e.time && <span className="tabular-nums text-[var(--text-muted)]">{e.time}</span>}
+                    {e.time && <span className="tabular-nums text-muted">{e.time}</span>}
                     {e.title}
                   </Button>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-[var(--text-muted)]">Nothing planned.</p>
+            <p className="mt-2 text-sm text-muted">Nothing planned.</p>
           )}
         </section>
       </div>
@@ -177,7 +177,7 @@ function OwnHeader() {
         <IconButton label="Show the previous month" size="sm" variant="secondary" onClick={() => setMonth((m) => shiftMonth(m, -1))}>
           <ChevronLeft className="rtl:-scale-x-100" />
         </IconButton>
-        <h4 className="min-w-36 text-center text-base font-semibold text-[var(--text-primary)]">{monthTitle(month)}</h4>
+        <h4 className="min-w-36 text-center text-base font-semibold text-primary">{monthTitle(month)}</h4>
         <IconButton label="Show the next month" size="sm" variant="secondary" onClick={() => setMonth((m) => shiftMonth(m, 1))}>
           <ChevronRight className="rtl:-scale-x-100" />
         </IconButton>
@@ -185,7 +185,7 @@ function OwnHeader() {
           aria-label="Jump to month"
           value={MONTHS.includes(month) ? month : ""}
           onChange={(e) => setMonth(e.target.value)}
-          className="rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-sm text-[var(--text-primary)]"
+          className="rounded-md border border-subtle bg-surface px-2 py-1 text-sm text-primary"
         >
           {!MONTHS.includes(month) && <option value="">—</option>}
           {MONTHS.map((m) => (
@@ -197,7 +197,7 @@ function OwnHeader() {
         <Button size="sm" variant="secondary" onClick={() => setMonth("2026-09")}>
           Back to September
         </Button>
-        <label className="ms-auto flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="ms-auto flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} />
           <code className="font-mono">hideNavigation</code>
         </label>

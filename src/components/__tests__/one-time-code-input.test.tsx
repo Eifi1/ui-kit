@@ -207,7 +207,7 @@ describe("OneTimeCodeInput", () => {
       const input = screen.getByLabelText("Verification code");
       expect(input).toHaveAttribute("readonly");
       // FIELD_WRITABLE_LOOK cancels FIELD_BASE's read-only grey.
-      expect(input.className).toContain("[&[readonly]]:bg-[var(--bg-surface)]");
+      expect(input.className).toMatch(/\[&\[readonly\]\]:bg-surface(?![\w-])/);
       await userEvent.click(input);
       expect(input).not.toHaveAttribute("readonly");
       await userEvent.type(input, "123");
@@ -227,7 +227,7 @@ describe("OneTimeCodeInput", () => {
       const locked = screen.getByLabelText("Locked");
       fireEvent.focus(locked);
       expect(locked).toHaveAttribute("readonly");
-      expect(locked.className).not.toContain("[&[readonly]]:bg-[var(--bg-surface)]");
+      expect(locked.className).not.toMatch(/\[&\[readonly\]\]:bg-surface(?![\w-])/);
     });
 
     it("lets a read-only field ignore a pasted code", () => {

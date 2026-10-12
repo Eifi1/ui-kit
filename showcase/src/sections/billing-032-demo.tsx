@@ -56,7 +56,7 @@ function Sandbox({ children, start = "/beds" }: { children: ReactNode; start?: s
 
 function Where() {
   const { pathname } = useLocation();
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">route: {pathname}</p>;
+  return <p className="mt-2 font-mono text-xs text-muted">route: {pathname}</p>;
 }
 
 /* ── The catalogue (server-kit PlanSpec, §3.1) ───────────────────────────── */
@@ -143,14 +143,14 @@ export function PlanPicker032Demo() {
                 return minor ? (
                   <span>
                     {formatPlanPrice(minor, currency)}
-                    <span className="ms-1 text-xs font-normal text-[var(--text-muted)]">(provider)</span>
+                    <span className="ms-1 text-xs font-normal text-muted">(provider)</span>
                   </span>
                 ) : undefined;
               }
             : undefined
         }
       />
-      <p className="mt-2 text-xs text-[var(--text-muted)]" aria-live="polite">
+      <p className="mt-2 text-xs text-muted" aria-live="polite">
         {chosen
           ? `onChoose(${JSON.stringify(chosen)}) — the app now calls POST /billing/checkout and follows its url.`
           : "Pick a plan and press the button."}
@@ -193,7 +193,7 @@ export function SubscriptionStatus032Demo() {
 function Labelled({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <p className="mb-1 text-xs text-[var(--text-muted)]">{label}</p>
+      <p className="mb-1 text-xs text-muted">{label}</p>
       {children}
     </div>
   );
@@ -326,7 +326,7 @@ export function BillingLock032Demo() {
           <Button commit variant="secondary">
             Add a bed
           </Button>
-          <span className="text-xs text-[var(--text-muted)]">
+          <span className="text-xs text-muted">
             {lock.locked ? "Locked — hover or focus a button for the reason." : "Unlocked."}
           </span>
         </div>
@@ -392,7 +392,7 @@ export function CommercialDisclaimer032Demo() {
           ]}
         />
       </div>
-      <div className="rounded-lg border border-[var(--border)] p-4">
+      <div className="rounded-lg border border-subtle p-4">
         <LegalKitSection page="impressum" section="disclaimer" variant={variant} headingAs="h3" operator={OPERATOR} />
       </div>
       <Note>

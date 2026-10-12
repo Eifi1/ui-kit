@@ -199,19 +199,19 @@ function FinishLockWizard({ onDone }: { onDone: () => void }) {
     <StepperNav wizard={wizard} finishCommit>
       {wizard.currentStep.id === "map" && (
         <WizardStep title="Map the accounts">
-          <p className="text-sm text-[var(--text-secondary)]">Nothing is written yet — Next stays live under the lock.</p>
+          <p className="text-sm text-secondary">Nothing is written yet — Next stays live under the lock.</p>
         </WizardStep>
       )}
       {wizard.currentStep.id === "confirm" && (
         <WizardStep title="Confirm the import">
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-sm text-secondary">
             Finish is the commit, and the only button the lock holds. Hover or focus it to read why.
           </p>
         </WizardStep>
       )}
       {wizard.currentStep.id === "done" && (
         <WizardStep title="Imported">
-          <p className="text-sm text-[var(--text-secondary)]">Synthetic: nothing was sent anywhere. Done starts over.</p>
+          <p className="text-sm text-secondary">Synthetic: nothing was sent anywhere. Done starts over.</p>
         </WizardStep>
       )}
     </StepperNav>

@@ -31,7 +31,7 @@ export function Signals017Demo() {
         <div className="space-y-2 text-sm">
           {PRICE_CHANGES.map((p) => (
             <div key={p.item} className="flex items-center justify-between gap-4">
-              <span className="min-w-0 truncate-until-large text-[var(--text-secondary)]">{p.item}</span>
+              <span className="min-w-0 truncate-until-large text-secondary">{p.item}</span>
               <Row className="shrink-0 gap-4">
                 <SignedAmount value={p.pct} unit="percent" ratio={false} flatWithin={0.5} goodDirection="down" />
                 <Delta
@@ -93,7 +93,7 @@ export function FormActions017Demo() {
       label="FormActions — sticky on a phone, inline from md up, bled to the pane's edges"
       hint={'`placement={{ base: "sticky", md: "inline" }}` · `bleed="0.75rem"`'}
     >
-      <div className="h-64 max-w-xl overflow-y-auto rounded-md border border-[var(--border)] px-3">
+      <div className="h-64 max-w-xl overflow-y-auto rounded-md border border-subtle px-3">
         <div className="space-y-3 py-3">
           {Array.from({ length: 6 }, (_, i) => (
             <Input key={i} label={`Field ${i + 1}`} value="" onChange={() => {}} />

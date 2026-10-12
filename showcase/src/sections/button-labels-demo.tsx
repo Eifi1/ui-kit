@@ -10,7 +10,7 @@ import { Example, Note, Row } from "../lib/section";
  * (`pressed`), and a disabled button that can say why (`disabledReason`).
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const SIDES: TooltipSide[] = ["top", "bottom", "start", "end"];
 
 function IconButtonLabel() {
@@ -44,14 +44,14 @@ function IconButtonLabel() {
           ))}
         </Row>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex items-center justify-end gap-2 overflow-hidden rounded-md border border-dashed border-[var(--border)] p-2">
-            <span className="me-auto text-xs text-[var(--text-muted)]">overflow-hidden · tooltipPortal</span>
+          <div className="flex items-center justify-end gap-2 overflow-hidden rounded-md border border-dashed border-subtle p-2">
+            <span className="me-auto text-xs text-muted">overflow-hidden · tooltipPortal</span>
             <IconButton label="Notifications — the bubble escapes the box" tooltipSide="end" tooltipPortal>
               <Bell />
             </IconButton>
           </div>
-          <div className="flex items-center justify-end gap-2 overflow-hidden rounded-md border border-dashed border-[var(--border)] p-2">
-            <span className="me-auto text-xs text-[var(--text-muted)]">overflow-hidden · tooltipPortal={"{false}"}</span>
+          <div className="flex items-center justify-end gap-2 overflow-hidden rounded-md border border-dashed border-subtle p-2">
+            <span className="me-auto text-xs text-muted">overflow-hidden · tooltipPortal={"{false}"}</span>
             <IconButton label="Notifications — clipped by the box" tooltipSide="end" tooltipPortal={false}>
               <Bell />
             </IconButton>
@@ -89,7 +89,7 @@ function ButtonTones() {
             {/* On a phone the variant name takes its own line and the buttons say only the
                 tone: with `tone="…"` on each they wrapped two-and-one, a different break
                 in each row, so the columns stopped lining up. */}
-            <span className="w-12 font-mono text-xs text-[var(--text-muted)] max-sm:w-full">{variant}</span>
+            <span className="w-12 font-mono text-xs text-muted max-sm:w-full">{variant}</span>
             {TONES.map((tone) => (
               <Button key={tone} variant={variant} tone={tone} onClick={() => setLog(`${variant} ${tone}`)}>
                 {tone}
@@ -98,8 +98,8 @@ function ButtonTones() {
           </Row>
         ))}
         <Row>
-          <span className="w-12 font-mono text-xs text-[var(--text-muted)] max-sm:w-full">in use</span>
-          <span className="text-sm text-[var(--text-secondary)]">Split 2 of 3</span>
+          <span className="w-12 font-mono text-xs text-muted max-sm:w-full">in use</span>
+          <span className="text-sm text-secondary">Split 2 of 3</span>
           <Button variant="link" onClick={() => setLog("add line")}>
             Add line
           </Button>

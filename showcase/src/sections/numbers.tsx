@@ -65,8 +65,8 @@ function State({ rows }: { rows: Array<[label: string, value: string]> }) {
     <dl className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
       {rows.map(([label, value]) => (
         <div key={label} className="flex items-baseline gap-2">
-          <dt className="text-[var(--text-muted)]">{label}</dt>
-          <dd className="font-mono text-[var(--text-primary)]">{value === "" ? '""' : value}</dd>
+          <dt className="text-muted">{label}</dt>
+          <dd className="font-mono text-primary">{value === "" ? '""' : value}</dd>
         </div>
       ))}
     </dl>
@@ -283,8 +283,8 @@ export function Numbers() {
       >
         <Stage>
           <div className="space-y-3">
-            <div className="relative inline-flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2">
-              <span className="font-mono text-sm text-[var(--text-primary)]">
+            <div className="relative inline-flex items-center gap-3 rounded-md border border-subtle bg-surface-2 px-3 py-2">
+              <span className="font-mono text-sm text-primary">
                 {calcValue || "—"}
               </span>
               {/* The second argument is the EXPRESSION the result came out of. A host
@@ -494,17 +494,17 @@ export function Numbers() {
                 invalid={requiredCode === ""}
               />
             </Row>
-            <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+            <div className="flex items-center gap-2 text-xs text-secondary">
               <span>getCurrency(value) →</span>
               {selected ? (
                 <>
                   <CurrencyFlag country={selected.country} />
-                  <span className="font-mono text-[var(--text-primary)]">
+                  <span className="font-mono text-primary">
                     {selected.code} · {selected.symbol} · {selected.name}
                   </span>
                 </>
               ) : (
-                <span className="font-mono text-[var(--text-primary)]">undefined</span>
+                <span className="font-mono text-primary">undefined</span>
               )}
             </div>
           </div>
@@ -563,7 +563,7 @@ export function Numbers() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <span className="font-mono text-sm text-[var(--text-primary)]">{deCalcButton}</span>
+              <span className="font-mono text-sm text-primary">{deCalcButton}</span>
               <CalculatorButton
                 value={deCalcButton}
                 onChange={(next) => setDeCalcButton(next)}
@@ -651,7 +651,7 @@ export function Numbers() {
               <Button type="button" variant="secondary" onClick={() => setDePadOpen(true)}>
                 Open it with labels (German)
               </Button>
-              <span className="font-mono text-sm text-[var(--text-primary)]">
+              <span className="font-mono text-sm text-primary">
                 {padValue || "0"}
               </span>
             </Row>
@@ -713,9 +713,9 @@ export function NumberHelpers() {
               {SAMPLES.map((c) => (
                 <span key={c.code} className="flex items-center gap-2 text-xs">
                   <CurrencyFlag country={c.country} />
-                  <span className="font-mono font-medium text-[var(--text-primary)]">{c.code}</span>
-                  <span className="font-mono text-[var(--text-muted)]">{c.symbol}</span>
-                  <span className="text-[var(--text-secondary)]">{c.name}</span>
+                  <span className="font-mono font-medium text-primary">{c.code}</span>
+                  <span className="font-mono text-muted">{c.symbol}</span>
+                  <span className="text-secondary">{c.name}</span>
                 </span>
               ))}
             </Row>

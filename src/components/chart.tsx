@@ -73,10 +73,10 @@ export function ChartContainer({ id, className, children, config, ...props }: Ch
           "[&_.recharts-surface]:[direction:ltr]",
           // muted axis labels + gridlines; one class each, since the tokens
           // already carry the light/dark values
-          "[&_.recharts-cartesian-axis-tick_text]:fill-[var(--text-muted)]",
-          "[&_.recharts-cartesian-grid_line]:stroke-[var(--border)]/70",
+          "[&_.recharts-cartesian-axis-tick_text]:fill-muted",
+          "[&_.recharts-cartesian-grid_line]:stroke-subtle/70",
           // hairline hover cursor instead of the heavy default
-          "[&_.recharts-curve.recharts-tooltip-cursor]:stroke-[var(--border-strong)]",
+          "[&_.recharts-curve.recharts-tooltip-cursor]:stroke-strong",
           "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-[var(--bg-hover)]",
           // kill the focus outlines & white sector strokes Recharts adds
           "[&_.recharts-sector]:outline-none [&_.recharts-sector[stroke='#fff']]:stroke-transparent",
@@ -392,7 +392,7 @@ export function ChartTooltipContent({
           style={{ backgroundColor: color }}
         />
         <span
-          className={cn("min-w-0 text-[var(--text-muted)]", inRow ? "truncate" : "break-words")}
+          className={cn("min-w-0 text-muted", inRow ? "truncate" : "break-words")}
         >
           {name}
         </span>
@@ -401,7 +401,7 @@ export function ChartTooltipContent({
           // Isolated, so an RTL page does not turn "-26.6" into "26.6-": a figure has no
           // strong direction of its own, and one formatted with an RTL mark keeps it.
           dir="auto"
-          className="ms-auto shrink-0 whitespace-nowrap font-mono font-medium tabular-nums text-[var(--text-primary)]"
+          className="ms-auto shrink-0 whitespace-nowrap font-mono font-medium tabular-nums text-primary"
         >
           {text}
         </span>
@@ -419,7 +419,7 @@ export function ChartTooltipContent({
       <div className="text-xs" data-chart-readout={shown ? "active" : "idle"}>
         {/* A full 24 px line: the zoom's reset button sits at the top corner of a chart
             whose row is above it, and has to fit beside the heading, not over a value. */}
-        <div data-readout-heading className="truncate font-medium leading-6 text-[var(--text-primary)]">
+        <div data-readout-heading className="truncate font-medium leading-6 text-primary">
           {shown && !hideLabel && label != null
             ? labelFormatter
               ? labelFormatter(label)
@@ -452,10 +452,10 @@ export function ChartTooltipContent({
       // labels) made the box wider than a 390px chart, and recharts, which keeps a box
       // inside the plot only when it fits, let it run off the edge with the values cut.
       // Names wrap inside the cap; the values never do.
-      className="min-w-[9rem] max-w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-2 text-xs shadow-xl"
+      className="min-w-[9rem] max-w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-subtle bg-surface px-2.5 py-2 text-xs shadow-xl"
     >
       {!hideLabel && label != null && (
-        <div className="mb-1.5 font-medium text-[var(--text-primary)]">
+        <div className="mb-1.5 font-medium text-primary">
           {labelFormatter ? labelFormatter(label) : label}
         </div>
       )}
@@ -509,7 +509,7 @@ export function ChartLegendContent({
         const off = hidden?.has(cfgKey) ?? false;
         const dimmed = off || (activeKey != null && activeKey !== cfgKey);
         const className = cn(
-          "flex items-center gap-1.5 text-[var(--text-secondary)] transition-opacity",
+          "flex items-center gap-1.5 text-secondary transition-opacity",
           onItemClick ? "cursor-pointer hover:opacity-80" : "cursor-default",
           dimmed && "opacity-40",
         );

@@ -110,14 +110,14 @@ function FilterObjectDemo() {
             Clear filters
           </Button>
         </Row>
-        <ul className="divide-y divide-[var(--border)] rounded-md border border-[var(--border)] text-xs">
+        <ul className="divide-y divide-subtle rounded-md border border-subtle text-xs">
           {rows.length === 0 ? (
-            <li className="px-3 py-2 text-[var(--text-secondary)]">No key matches.</li>
+            <li className="px-3 py-2 text-secondary">No key matches.</li>
           ) : (
             rows.map((r) => (
               <li key={r.key} className="flex flex-wrap justify-between gap-x-3 px-3 py-2">
                 <span className="font-mono break-all">{r.key}</span>
-                <span className="text-[var(--text-secondary)]">{r.status}</span>
+                <span className="text-secondary">{r.status}</span>
               </li>
             ))
           )}

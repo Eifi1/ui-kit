@@ -206,12 +206,12 @@ export function StepperNav<TData extends Record<string, unknown>>({
       {(title || description) && (
         <div>
           {title && (
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+            <h1 className="text-2xl font-bold tracking-tight text-primary">
               {title}
             </h1>
           )}
           {description && (
-            <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>
+            <p className="mt-1 text-sm text-muted">{description}</p>
           )}
         </div>
       )}
@@ -242,13 +242,13 @@ export function StepperNav<TData extends Record<string, unknown>>({
                     className={cn(
                       "flex size-8 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors",
                       status === "completed" &&
-                        "border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-contrast)]",
+                        "border-brand bg-brand text-brand-contrast",
                       status === "active" &&
-                        "border-[var(--brand)] bg-[var(--bg-surface)] text-[var(--brand)]",
+                        "border-brand bg-surface text-brand",
                       status === "upcoming" &&
-                        "border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-placeholder)]",
+                        "border-subtle bg-surface text-placeholder",
                       status === "skipped" &&
-                        "border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-muted)]",
+                        "border-subtle bg-surface-2 text-muted",
                     )}
                   >
                     {status === "completed" ? <Check className="size-4" /> : index + 1}
@@ -258,8 +258,8 @@ export function StepperNav<TData extends Record<string, unknown>>({
                     className={cn(
                       "hidden text-xs font-medium md:block",
                       status === "active" || status === "completed"
-                        ? "text-[var(--text-primary)]"
-                        : "text-[var(--text-muted)]",
+                        ? "text-primary"
+                        : "text-muted",
                     )}
                   >
                     {step.label}
@@ -271,7 +271,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
                   <div
                     className={cn(
                       "mx-2 h-0.5 flex-1",
-                      status === "completed" ? "bg-[var(--brand)]" : "bg-[var(--border)]",
+                      status === "completed" ? "bg-brand" : "bg-[var(--border)]",
                     )}
                   />
                 )}
@@ -280,7 +280,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
           })}
         </ol>
         {/* Mobile: the labels above are hidden, so name the current step here */}
-        <p className="mt-2 text-center text-sm font-medium text-[var(--text-primary)] md:hidden">
+        <p className="mt-2 text-center text-sm font-medium text-primary md:hidden">
           {l.step(wizard.currentStepIndex + 1, wizard.steps.length)}
           {" — "}
           {wizard.currentStep.label}
@@ -299,7 +299,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
         <div
           role="alert"
           className={cn(
-            "text-sm text-[var(--danger)]",
+            "text-sm text-danger",
             alertFrameClass("danger"),
           )}
         >
@@ -308,7 +308,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
       )}
 
       {/* Navigation bar */}
-      <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
+      <div className="flex items-center justify-between border-t border-subtle pt-4">
         {/* The empty span keeps the right-hand group on the right when Cancel is off. */}
         {wizard.canCancel ? (
           <Button variant="secondary" onClick={wizard.cancel}>
@@ -342,10 +342,10 @@ export function StepperNav<TData extends Record<string, unknown>>({
       {wizard.showCancelDialog && (
         <Modal onClose={wizard.dismissCancel} labelledBy={cancelTitleId} className="space-y-4">
           <div className="space-y-1.5">
-            <h2 id={cancelTitleId} className="text-lg font-semibold text-[var(--text-primary)]">
+            <h2 id={cancelTitleId} className="text-lg font-semibold text-primary">
               {l.cancelTitle}
             </h2>
-            <p className="text-sm text-[var(--text-muted)]">{l.confirmCancel}</p>
+            <p className="text-sm text-muted">{l.confirmCancel}</p>
           </div>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="secondary" onClick={wizard.dismissCancel}>

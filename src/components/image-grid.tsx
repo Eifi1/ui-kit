@@ -136,14 +136,14 @@ export function ImageGrid({
                 aria-label={name}
                 onClick={() => (onOpen ? onOpen(i) : setOpenIndex(i))}
                 className={cn(
-                  "block w-full overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-hover)]",
-                  "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
+                  "block w-full overflow-hidden rounded-md border border-subtle bg-hover",
+                  "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-brand",
                   ASPECT_CLASS[aspect],
                 )}
               >
                 {kind === "file" ? (
-                  <span className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-xs text-[var(--text-secondary)]">
-                    <FileText aria-hidden className="size-6 shrink-0 text-[var(--text-muted)]" />
+                  <span className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-xs text-secondary">
+                    <FileText aria-hidden className="size-6 shrink-0 text-muted" />
                     <FileNameLabel name={item.fileName ?? item.alt ?? ""} />
                   </span>
                 ) : (
@@ -174,7 +174,7 @@ export function ImageGrid({
                 </div>
               )}
               {item.caption !== undefined && item.caption !== null && item.caption !== false && (
-                <div className="mt-1 line-clamp-2 text-xs text-[var(--text-secondary)]">{item.caption}</div>
+                <div className="mt-1 line-clamp-2 text-xs text-secondary">{item.caption}</div>
               )}
             </li>
           );

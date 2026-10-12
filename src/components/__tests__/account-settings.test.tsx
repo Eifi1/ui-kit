@@ -381,7 +381,7 @@ describe("TwoFactorSetting code fields (0.22.0: OneTimeCodeInput)", () => {
     expect(field).toHaveAttribute("readonly");
     expect(field).toHaveAttribute("autocomplete", "one-time-code");
     expect(field).toHaveAttribute("inputmode", "numeric");
-    expect(field.className).toContain("[&[readonly]]:bg-[var(--bg-surface)]");
+    expect(field.className).toMatch(/\[&\[readonly\]\]:bg-surface(?![\w-])/);
     await userEvent.click(field);
     expect(field).not.toHaveAttribute("readonly");
     // A grouped code from an authenticator: the space no longer reaches onEnable.

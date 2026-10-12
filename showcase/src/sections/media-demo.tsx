@@ -20,7 +20,7 @@ import { Example, Note, Row } from "../lib/section";
  * a function that waits and then answers — so nothing leaves the machine.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /* ── Generated media ─────────────────────────────────────────────────────── */
@@ -114,7 +114,7 @@ function ImageGridSpecimen() {
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <span className="text-xs text-[var(--text-muted)]">aspect</span>
+          <span className="text-xs text-muted">aspect</span>
           <ToggleGroup<"square" | "video" | "auto">
             aria-label="aspect"
             value={aspect}
@@ -377,7 +377,7 @@ function AuthedImageSpecimen() {
       hint="the app's authenticated GET goes in; a skeleton, the picture or a 'couldn't load' tile comes out"
     >
       <Row>
-        <span className="text-xs text-[var(--text-muted)]">delay</span>
+        <span className="text-xs text-muted">delay</span>
         <ToggleGroup aria-label="delay" value={delay} onChange={setDelay} options={DELAYS} />
         <Button variant="secondary" size="sm" onClick={() => setRound((r) => r + 1)}>
           <RotateCcw className="size-4" aria-hidden /> Fetch again
@@ -405,7 +405,7 @@ function AuthedImageSpecimen() {
               wrapperClassName="aspect-[4/3] w-full"
               className="h-full w-full rounded-md object-cover"
               errorFallback={
-                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-md border border-dashed border-[var(--border)] p-2 text-center text-xs text-[var(--text-muted)]">
+                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-md border border-dashed border-subtle p-2 text-center text-xs text-muted">
                   errorFallback: not yours to see
                 </div>
               }
@@ -462,11 +462,11 @@ function UseAuthedSrcSpecimen() {
         </Button>
       </Row>
       <div className="mt-4 grid gap-4 sm:grid-cols-[12rem_1fr]">
-        <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-hover)]">
+        <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-subtle bg-hover">
           {status === "ready" && src && type?.startsWith("image/") ? (
             <img src={src} alt="Fetched" className="h-full w-full object-cover" />
           ) : status === "ready" && src ? (
-            <a href={src} target="_blank" rel="noreferrer" className="text-sm text-[var(--brand)] underline">
+            <a href={src} target="_blank" rel="noreferrer" className="text-sm text-brand underline">
               Open the {type || "file"}
             </a>
           ) : (

@@ -98,7 +98,7 @@ function PaginationSpecimen() {
             ["totalPages", String(totalPages)],
           ]}
         />
-        <div className="rounded-md border border-[var(--border)]">
+        <div className="rounded-md border border-subtle">
           <Pagination
             page={safePage}
             totalPages={totalPages}
@@ -113,7 +113,7 @@ function PaginationSpecimen() {
             labels={PAGER_LABELS}
           />
         </div>
-        <div className="rounded-md border border-[var(--border)]">
+        <div className="rounded-md border border-subtle">
           {/* No `labels`, no `locale`, no `onPageSize`: everything from the provider. */}
           <UiKitProvider labels={{ dataTable: PROVIDER_PAGER_LABELS }} locale="de-DE">
             <Pagination
@@ -242,15 +242,15 @@ function FilterPopoverSpecimen() {
           <div
             key={col.key}
             className={cn(
-              "rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3",
+              "rounded-md border border-subtle bg-surface-2 p-3",
               // The date variant is the one the table opens at a fixed 420px: a
               // preset column beside a calendar does not fold into half a grid.
               filter.type === "date" && "md:col-span-2",
             )}
           >
             <div className="mb-2 flex items-baseline justify-between gap-2">
-              <span className="text-xs font-medium text-[var(--text-primary)]">{col.header}</span>
-              <span className="font-mono text-caption text-[var(--text-muted)]">
+              <span className="text-xs font-medium text-primary">{col.header}</span>
+              <span className="font-mono text-caption text-muted">
                 {filter.type}
                 {col.filterBy && !col.filter && " (via filterBy)"}
               </span>
@@ -261,7 +261,7 @@ function FilterPopoverSpecimen() {
       </div>
 
       {nameEntry && (
-        <div className="mt-4 rounded-md border border-dashed border-[var(--border)] p-3">
+        <div className="mt-4 rounded-md border border-dashed border-subtle p-3">
           <Button
             variant="secondary"
             className="px-2 py-1 text-xs"
@@ -350,13 +350,13 @@ function LabelsSpecimen() {
       />
       <div className="mt-4 grid gap-6 md:grid-cols-2">
         <div>
-          <div className="mb-2 text-xs font-medium text-[var(--text-primary)]">
+          <div className="mb-2 text-xs font-medium text-primary">
             DataTableLabels
           </div>
           <ConstList items={LABEL_ITEMS} />
         </div>
         <div>
-          <div className="mb-2 text-xs font-medium text-[var(--text-primary)]">
+          <div className="mb-2 text-xs font-medium text-primary">
             …presets, keyed by the key <code className="font-mono">dateRangePresets()</code>{" "}
             returns
           </div>

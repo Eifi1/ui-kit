@@ -20,8 +20,8 @@ import { Example, Note, Row } from "../lib/section";
  */
 
 const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const CAPTION = "text-xs text-[var(--text-muted)]";
+const READOUT = "font-mono text-xs text-secondary";
+const CAPTION = "text-xs text-muted";
 
 /* ── LoadingState ─────────────────────────────────────────────────────────── */
 
@@ -29,20 +29,20 @@ function LoadingStateDemo() {
   return (
     <Example label="LoadingState — sizes, inline and a label of its own" hint='role="status" on the wrapper; the spinner is decorative'>
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-md border border-[var(--border)]">
+        <div className="rounded-md border border-subtle">
           <p className={`${CAPTION} px-2 pt-2`}>size=&quot;sm&quot;</p>
           <LoadingState size="sm" />
         </div>
-        <div className="rounded-md border border-[var(--border)]">
+        <div className="rounded-md border border-subtle">
           <p className={`${CAPTION} px-2 pt-2`}>size=&quot;md&quot; (default)</p>
           <LoadingState label="Loading transactions…" />
         </div>
-        <div className="rounded-md border border-[var(--border)]">
+        <div className="rounded-md border border-subtle">
           <p className={`${CAPTION} px-2 pt-2`}>size=&quot;lg&quot;</p>
           <LoadingState size="lg" label="Preparing the report…" />
         </div>
       </div>
-      <div className="mt-3 rounded-md border border-[var(--border)] px-2">
+      <div className="mt-3 rounded-md border border-subtle px-2">
         <LoadingState size="sm" inline label="inline — spinner beside the words" />
       </div>
       <div className="mt-3">
@@ -69,7 +69,7 @@ function SkeletonLabelDemo() {
         <span className={READOUT}>{loaded ? "loaded" : 'label="Loading activity…"'}</span>
       </Row>
       {loaded ? (
-        <ul className="space-y-1 text-sm text-[var(--text-primary)]">
+        <ul className="space-y-1 text-sm text-primary">
           <li>Anna paid the March rent</li>
           <li>Ben uploaded statement.pdf</li>
           <li>Carla changed the budget for Groceries</li>
@@ -91,7 +91,7 @@ function SkeletonLabelDemo() {
 
 function Fragile({ broken, what }: { broken: boolean; what: string }) {
   if (broken) throw new TypeError(`Cannot read properties of undefined (reading '${what}')`);
-  return <p className="text-sm text-[var(--text-primary)]">The balance chart would be here — all fine.</p>;
+  return <p className="text-sm text-primary">The balance chart would be here — all fine.</p>;
 }
 
 function ErrorBoundaryDemo() {
@@ -113,7 +113,7 @@ function ErrorBoundaryDemo() {
           <Button variant="secondary" size="sm" tone="danger" onClick={() => setBroken(true)} disabled={broken}>
             Break the child
           </Button>
-          <div className="rounded-md border border-[var(--border)] p-2">
+          <div className="rounded-md border border-subtle p-2">
             <ErrorBoundary
               showDetails
               headingAs="h4"
@@ -145,14 +145,14 @@ function ErrorBoundaryDemo() {
               Fix from outside (resetKeys)
             </Button>
           </Row>
-          <div className="rounded-md border border-[var(--border)] p-2">
+          <div className="rounded-md border border-subtle p-2">
             <ErrorBoundary
               resetKeys={[fixKey]}
               onReset={() => setBrokenCustom(false)}
               fallback={({ details, reset }) => (
                 <div role="alert" className="space-y-2 text-sm">
-                  <p className="font-medium text-[var(--danger)]">{details.name}</p>
-                  <p className="break-words text-[var(--text-secondary)]">{details.message}</p>
+                  <p className="font-medium text-danger">{details.name}</p>
+                  <p className="break-words text-secondary">{details.message}</p>
                   <Button size="sm" variant="secondary" onClick={reset}>
                     reset()
                   </Button>
@@ -303,7 +303,7 @@ export function HotkeyDemo() {
           onChange={(e) => setAllowInInputs(e.target.checked)}
         />
       </Row>
-      <p className="mb-2 text-sm text-[var(--text-secondary)]">
+      <p className="mb-2 text-sm text-secondary">
         Press <kbd className="font-mono">Mod+Shift+L</kbd>, <kbd className="font-mono">Alt+↑</kbd> /{" "}
         <kbd className="font-mono">Alt+↓</kbd>, <kbd className="font-mono">g</kbd> or{" "}
         <kbd className="font-mono">?</kbd> anywhere on the page — then again while typing in the field.

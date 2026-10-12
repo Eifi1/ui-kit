@@ -458,16 +458,16 @@ export function AdminActionConfirm({
         }}
       >
         {lines ? (
-          <ul className="list-disc space-y-1 ps-5 text-sm text-[var(--text-secondary)]">
+          <ul className="list-disc space-y-1 ps-5 text-sm text-secondary">
             {lines.map((line) => (
-              <li key={line.key} className={line.severe ? "text-[var(--danger)]" : undefined}>
+              <li key={line.key} className={line.severe ? "text-danger" : undefined}>
                 {line.text}
               </li>
             ))}
           </ul>
         ) : (
           hasMessage(consequence as ReactNode) && (
-            <p className="text-sm text-[var(--text-secondary)]">{consequence as ReactNode}</p>
+            <p className="text-sm text-secondary">{consequence as ReactNode}</p>
           )
         )}
         {Children.toArray(children).some(hasMessage) && (

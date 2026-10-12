@@ -14,7 +14,7 @@ import { Example, Note } from "../lib/section";
  */
 
 const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "mt-3 rounded-md bg-[var(--bg-surface-2)] px-3 py-2 font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "mt-3 rounded-md bg-surface-2 px-3 py-2 font-mono text-xs text-secondary";
 
 const day = 86_400_000;
 const ago = (days: number) => new Date(Date.now() - days * day).toISOString();
@@ -139,7 +139,7 @@ const COLUMNS: DataTableColumn<Account>[] = [
     cell: (r) => (
       <div className="min-w-0">
         <div className="truncate font-medium">{r.name}</div>
-        <div className="truncate text-xs text-[var(--text-muted)]">{r.email}</div>
+        <div className="truncate text-xs text-muted">{r.email}</div>
       </div>
     ),
     sortBy: (r) => r.name,
@@ -178,13 +178,13 @@ export function AccountRoster018Demo() {
   return (
     <Example label="Admin roster parts — RoleChip, AccountStateChip, dateColumn" hint="the roster stays the app's DataTable">
       <DataTable rows={ACCOUNTS} columns={COLUMNS} rowKey={(r) => r.id} />
-      <ul className="mt-4 divide-y divide-[var(--border)] rounded-md border border-[var(--border)]" aria-label="Allowlist">
+      <ul className="mt-4 divide-y divide-subtle rounded-md border border-subtle" aria-label="Allowlist">
         {INVITES.map((entry) => (
           <li key={entry.email} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
             {/* An email: cut at Normal, wrapped from Large up, never marked (§10.17). */}
             <span className="min-w-0 flex-1 truncate-until-large">
               {entry.email}
-              {entry.note && <span className="ms-2 text-xs text-[var(--text-muted)]">{entry.note}</span>}
+              {entry.note && <span className="ms-2 text-xs text-muted">{entry.note}</span>}
             </span>
             {entry.role !== "MEMBER" && <RoleChip value={entry.role} roles={ROLES} size="xs" />}
             <AccountStateChip state={entry.registered ? "registered" : "invited"} size="xs" />

@@ -63,9 +63,9 @@ describe("Textarea label strip (Kurvenschmiede, 0.24)", () => {
     const surfaces = classes(field).filter((k) => /^(?:[^:]+:)?bg-/.test(k));
     expect(surfaces).toEqual(
       expect.arrayContaining([
-        "bg-[var(--bg-surface)]",
-        "disabled:bg-[var(--bg-surface-2)]",
-        "[&[readonly]]:bg-[var(--bg-surface-2)]",
+        "bg-surface",
+        "disabled:bg-surface-2",
+        "[&[readonly]]:bg-surface-2",
       ]),
     );
     const twin = (k: string) =>

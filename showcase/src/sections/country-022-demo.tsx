@@ -54,7 +54,7 @@ export function Country022Demo() {
               hint="All 249 countries, sorted by name"
             />
           </div>
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-muted">
             Stored value: {code(address ?? "null")}
           </p>
         </div>

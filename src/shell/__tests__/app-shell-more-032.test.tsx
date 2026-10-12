@@ -208,10 +208,10 @@ describe("the More cell", () => {
     viewport(390);
     applyTextSize("large");
     const { unmount } = renderShell({}, "/reports/spending");
-    expect(screen.getByRole("button", { name: "More" }).className).toContain("text-[var(--brand)]");
+    expect(screen.getByRole("button", { name: "More" }).className).toMatch(/text-brand(?![\w-])/);
     unmount();
     renderShell({}, "/budget");
-    expect(screen.getByRole("button", { name: "More" }).className).not.toContain("text-[var(--brand)]");
+    expect(screen.getByRole("button", { name: "More" }).className).not.toMatch(/text-brand(?![\w-])/);
   });
 
   it("carries the hidden entries' links and data-tour anchors for tours", () => {

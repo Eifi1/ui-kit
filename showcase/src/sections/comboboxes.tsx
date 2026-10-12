@@ -57,7 +57,7 @@ export function Comboboxes() {
             groupBy={(o) => PAYEE_GROUPS[o] ?? "Other"}
             optionAdornment={(o) =>
               RECURRING.has(o) ? (
-                <span className="shrink-0 rounded border border-[var(--border)] px-1 text-micro uppercase tracking-wide text-[var(--text-muted)]">
+                <span className="shrink-0 rounded border border-subtle px-1 text-micro uppercase tracking-wide text-muted">
                   monthly
                 </span>
               ) : null

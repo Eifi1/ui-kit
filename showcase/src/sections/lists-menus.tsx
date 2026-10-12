@@ -49,7 +49,7 @@ import { Example, Note, Row } from "../lib/section";
  * keyboard press do can be tried rather than read about.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 /** react-router's Link takes `to`, not `href` — the one name the row's props need mapped. */
 const routerRow = ({ href, ...props }: ListItemLinkProps) => <Link to={href} {...props} />;
@@ -335,21 +335,21 @@ function ListLayout() {
         />
       </Row>
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-md border border-[var(--border)] p-1">
+        <div className="rounded-md border border-subtle p-1">
           <List density={density} separator={separator} aria-label="Accounts">
             {accounts.map((a) => (
               <ListItem
                 key={a}
                 icon={Wallet}
                 title={a}
-                trailing={picked === a ? <Check className="size-4 text-[var(--brand)]" aria-hidden /> : undefined}
+                trailing={picked === a ? <Check className="size-4 text-brand" aria-hidden /> : undefined}
                 selected={picked === a}
                 onClick={() => setPicked(a)}
               />
             ))}
           </List>
         </div>
-        <div className="rounded-md border border-[var(--border)] p-1">
+        <div className="rounded-md border border-subtle p-1">
           <List as="ol" density={density} separator={separator} aria-label="Ranked payees">
             {["Hausverwaltung Nord", "Rewe", "Deutsche Bahn"].map((p, i) => (
               <ListItem key={p} title={`${i + 1}. ${p}`} subtitle='as="ol" — the order means something' />
@@ -365,7 +365,7 @@ function ListLayout() {
           title='as="div" — a single row outside any list'
           subtitle="an <li> must sit in a list; a lone row is a div"
           onClick={() => {}}
-          className="max-w-md border-[var(--border)]"
+          className="max-w-md border-subtle"
         />
       </div>
       <p className={`mt-3 ${READOUT}`}>picked: {picked}</p>
@@ -629,7 +629,7 @@ function BulkInlineSticky() {
         </Button>
         <span className={READOUT}>last action: {log}</span>
       </Row>
-      <div className="max-h-64 overflow-auto rounded-md border border-[var(--border)]">
+      <div className="max-h-64 overflow-auto rounded-md border border-subtle">
         <BulkActionBar
           variant={variant}
           count={selected.length}
@@ -663,7 +663,7 @@ function BulkFloating() {
       label="BulkActionBar — floating, count, clear and labels"
       hint="the phone's bar: a rounded card fixed above the bottom nav — here held inside the box"
     >
-      <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+      <label className="mb-3 flex items-center gap-2 text-xs text-secondary">
         <input type="checkbox" checked={overPage} onChange={(e) => setOverPage(e.target.checked)} />
         let it float over the whole page (as in an app — above the phone&apos;s bottom nav)
       </label>
@@ -671,7 +671,7 @@ function BulkFloating() {
           so the floating bar is anchored to the box rather than to the window — and the
           box's own `--app-nav-h` of 0 drops the phone nav's offset. */}
       <div
-        className="relative h-80 overflow-hidden rounded-md border border-[var(--border)] [transform:translateZ(0)]"
+        className="relative h-80 overflow-hidden rounded-md border border-subtle [transform:translateZ(0)]"
         style={{ ["--app-nav-h" as string]: "0px" }}
       >
         <div className="h-full overflow-auto p-1 pb-20">

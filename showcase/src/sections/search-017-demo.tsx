@@ -10,7 +10,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * units, contacts and leases at once.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 type Kind = "estate" | "unit" | "contact" | "lease";
 
@@ -87,9 +87,9 @@ export function Search017Demo() {
             navigate={setWent}
             hrefFor={(href) => href}
             shortcut={false}
-            triggerClassName="border border-[var(--border)]"
+            triggerClassName="border border-subtle"
           />
-          <span className="text-xs text-[var(--text-secondary)]">← open, then type “müller” or “park”</span>
+          <span className="text-xs text-secondary">← open, then type “müller” or “park”</span>
         </Row>
         <OutTable
           rows={[

@@ -246,11 +246,11 @@ export function ResetPasswordForm({
     return (
       <div {...rest} data-state="done" className={rootClass}>
         {heading}
-        <OutcomeMessage icon={<CheckCircle2 className="text-[var(--success)]" />} focusRef={doneRef}>
+        <OutcomeMessage icon={<CheckCircle2 className="text-success" />} focusRef={doneRef}>
           <p className={INTRO_CLASS}>{labels.success}</p>
         </OutcomeMessage>
         {notices}
-        <p className="text-xs text-[var(--text-muted)]">{labels.sessionsEnded}</p>
+        <p className="text-xs text-muted">{labels.sessionsEnded}</p>
         {onSignIn ? (
           <Button type="button" variant="brand" className="w-full" onClick={() => onSignIn(email)}>
             {labels.signIn}

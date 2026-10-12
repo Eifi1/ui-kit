@@ -47,7 +47,7 @@ export function ServerWake018Demo() {
             <Input value={appName} onChange={(e) => setAppName(e.target.value)} />
           </Field>
         </div>
-        <p className="text-sm text-[var(--text-secondary)]">
+        <p className="text-sm text-secondary">
           Stage: <span className="font-mono">{stage}</span>
         </p>
         <ServerWakeNotice watcher={demo} appName={appName || undefined} />

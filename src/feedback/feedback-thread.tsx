@@ -257,7 +257,7 @@ export function FeedbackThread({
             <li
               key={message.id}
               data-event=""
-              className="flex flex-wrap items-baseline justify-center gap-x-2 px-4 text-center text-xs text-[var(--text-muted)]"
+              className="flex flex-wrap items-baseline justify-center gap-x-2 px-4 text-center text-xs text-muted"
             >
               <span>{message.body}</span>
               {time && <span className="text-caption">{time}</span>}
@@ -277,18 +277,18 @@ export function FeedbackThread({
               className={cn(
                 "max-w-[85%] min-w-0 rounded-lg px-3 py-2 text-sm",
                 message.own
-                  ? "rounded-ee-sm bg-[var(--brand-bg)]"
-                  : "rounded-es-sm bg-[var(--bg-surface-2)]",
+                  ? "rounded-ee-sm bg-brand-soft"
+                  : "rounded-es-sm bg-surface-2",
               )}
             >
-              <header className="mb-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-[var(--text-muted)]">
+              <header className="mb-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted">
                 {author != null && (
-                  <span data-private={priv} className="font-medium text-[var(--text-secondary)]">
+                  <span data-private={priv} className="font-medium text-secondary">
                     {author}
                   </span>
                 )}
                 {message.staff && (
-                  <span className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 text-micro font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+                  <span className="rounded border border-subtle bg-surface px-1 text-micro font-medium uppercase tracking-wide text-secondary">
                     {labels.staff}
                   </span>
                 )}
@@ -298,7 +298,7 @@ export function FeedbackThread({
                 <p
                   data-private={priv}
                   dir="auto"
-                  className="whitespace-pre-wrap break-words text-start text-[var(--text-primary)]"
+                  className="whitespace-pre-wrap break-words text-start text-primary"
                 >
                   {message.body}
                 </p>
@@ -341,14 +341,14 @@ function DefaultAttachment({
           size §10.17; round 0.34 T1: the sweep read "export-20…"). */}
       <span className="min-w-0 truncate-until-large">{name}</span>
       {attachment.size !== undefined && (
-        <span className="shrink-0 text-[var(--text-muted)]">{size(attachment.size)}</span>
+        <span className="shrink-0 text-muted">{size(attachment.size)}</span>
       )}
     </>
   );
   const chip =
-    "inline-flex max-w-full items-center gap-1 rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs text-[var(--text-secondary)]";
+    "inline-flex max-w-full items-center gap-1 rounded border border-subtle bg-surface px-2 py-1 text-xs text-secondary";
   return url ? (
-    <a href={url} target="_blank" rel="noopener noreferrer" className={cn(chip, "hover:bg-[var(--bg-hover)]")}>
+    <a href={url} target="_blank" rel="noopener noreferrer" className={cn(chip, "hover:bg-hover")}>
       {content}
     </a>
   ) : (
@@ -371,9 +371,9 @@ function ImageThumbnail({ url, name }: { url: string; name: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="relative block h-20 w-20 overflow-hidden rounded border border-[var(--border)] bg-[var(--bg-surface-2)]"
+      className="relative block h-20 w-20 overflow-hidden rounded border border-subtle bg-surface-2"
     >
-      <Glyph aria-hidden className="absolute inset-0 m-auto size-6 text-[var(--text-muted)]" />
+      <Glyph aria-hidden className="absolute inset-0 m-auto size-6 text-muted" />
       {!failed && (
         // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- load/error are resource events, not interactions
         <img
@@ -444,7 +444,7 @@ function DaySeparator({ date, now, locale }: { date: Date; now: number; locale: 
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return (
-    <li data-day-separator="" className="flex items-center gap-3 py-1 text-xs text-[var(--text-muted)]">
+    <li data-day-separator="" className="flex items-center gap-3 py-1 text-xs text-muted">
       <span aria-hidden className="h-px flex-1 bg-[var(--border)]" />
       <time dateTime={`${y}-${m}-${d}`} className="font-medium">
         {label}
@@ -756,7 +756,7 @@ export function FeedbackComposer({
 
   if (disabledReason != null && disabledReason !== false) {
     return (
-      <p {...rootAttributes} className={cn("text-xs text-[var(--text-muted)]", className)}>
+      <p {...rootAttributes} className={cn("text-xs text-muted", className)}>
         {disabledReason}
       </p>
     );
@@ -850,7 +850,7 @@ export function FeedbackComposer({
         <div className="ms-auto flex items-center gap-2">
           <span
             id={hintId}
-            className={size === "sm" ? "sr-only" : "text-xs text-[var(--text-placeholder)]"}
+            className={size === "sm" ? "sr-only" : "text-xs text-placeholder"}
           >
             {sendOn === "enter" ? labels.sendHintEnter : labels.sendHint(modifier)}
           </span>

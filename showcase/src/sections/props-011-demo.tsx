@@ -39,7 +39,7 @@ import { Example, Note, Row } from "../lib/section";
  * and `valign`; the `data-clips` marker; SeriesChart `minBarLength`; StatusDot's hues.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /* ── Buttons page: IconButton disabledReason ─────────────────────────────── */
@@ -137,7 +137,7 @@ export function MenuItemBadgeDemo() {
         </HoverMenu>
         {/* The badges live in the panel, so closed the example showed only a truncated
             button and nothing of what it is about — say where to look. */}
-        <span className="text-xs text-[var(--text-muted)]">
+        <span className="text-xs text-muted">
           Open it: the last two rows carry the &ldquo;Shared&rdquo; and &ldquo;Guest&rdquo; badges.
         </span>
       </Row>
@@ -184,7 +184,7 @@ export function BulkActionBarPanelDemo() {
       {/* `transform` makes the box the containing block of the floating bar's `position:
           fixed`, so below md the phone's card is held inside the box. */}
       <div
-        className="relative h-96 overflow-hidden rounded-md border border-[var(--border)] [transform:translateZ(0)]"
+        className="relative h-96 overflow-hidden rounded-md border border-subtle [transform:translateZ(0)]"
         style={{ ["--app-nav-h" as string]: "0px" }}
       >
         <div className="h-full overflow-auto">
@@ -269,7 +269,7 @@ export function AlertBannerBlockDemo() {
     >
       <div className="grid gap-6 md:grid-cols-2">
         <div className="max-w-xs space-y-1.5">
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-sm text-secondary">
             Total <strong>€ 1,425.50</strong>
           </p>
           <AlertBanner tone="info" variant="inline" size="sm" block live={false}>
@@ -281,7 +281,7 @@ export function AlertBannerBlockDemo() {
           </AlertBanner>
         </div>
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <label className="flex items-center gap-2 text-xs text-secondary">
             <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} />
             live (role=&quot;alert&quot;)
           </label>
@@ -312,11 +312,11 @@ export function EmptyStateSmallDemo() {
     >
       <div className="grid gap-4 md:grid-cols-2">
         {(["sm", "md"] as const).map((size) => (
-          <div key={size} className="rounded-md border border-[var(--border)] px-3 py-2">
+          <div key={size} className="rounded-md border border-subtle px-3 py-2">
             <SectionLabel as="p" size="xs">
               Holdings (size {size})
             </SectionLabel>
-            <ul className="mt-1 space-y-0.5 text-xs text-[var(--text-secondary)]">
+            <ul className="mt-1 space-y-0.5 text-xs text-secondary">
               <li>ACME Corp · 12 shares</li>
             </ul>
             <SectionLabel as="p" size="xs" className="mt-2">
@@ -353,7 +353,7 @@ export function SectionLabelMdDemo() {
             <SectionLabel as="p" size="md">
               {label}
             </SectionLabel>
-            <p className="text-lg font-semibold tabular-nums text-[var(--text-primary)]">{value}</p>
+            <p className="text-lg font-semibold tabular-nums text-primary">{value}</p>
           </div>
         ))}
       </div>
@@ -382,7 +382,7 @@ export function StatusDotHuesDemo() {
       <div className="flex flex-col gap-2">
         {HUES.map((hue) => (
           <Row key={hue}>
-            <span className="w-16 font-mono text-xs text-[var(--text-secondary)]">{hue}</span>
+            <span className="w-16 font-mono text-xs text-secondary">{hue}</span>
             <StatusDot tone={hue} size="lg" label={HUE_STATES[hue]} />
             <Chip tone={hue} size="xs">
               {HUE_STATES[hue]}
@@ -531,11 +531,11 @@ export function ClipsMarkerDemo() {
           </p>
           <div
             {...{ [CLIPS_ATTRIBUTE]: "" }}
-            className="h-40 w-full max-w-64 overflow-auto rounded-md border border-[var(--border)]"
+            className="h-40 w-full max-w-64 overflow-auto rounded-md border border-subtle"
           >
-            <ul ref={ref} className="divide-y divide-[var(--border)]">
+            <ul ref={ref} className="divide-y divide-subtle">
               {ACCOUNTS.map((name) => (
-                <li key={name} className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm text-[var(--text-primary)]">
+                <li key={name} className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm text-primary">
                   <span className="truncate">{name}</span>
                   <Tooltip label={`${name}: booked daily`} side="end">
                     <IconButton size="xs" aria-label={`About ${name}`}>
@@ -548,7 +548,7 @@ export function ClipsMarkerDemo() {
           </div>
           <p className={READOUT}>first row&apos;s textContent: &ldquo;{text}&rdquo;</p>
         </div>
-        <pre className="min-w-0 whitespace-pre-wrap break-words rounded-md bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+        <pre className="min-w-0 whitespace-pre-wrap break-words rounded-md bg-surface-2 p-3 font-mono text-xs text-secondary">
           {`// in the app\n<div {...{ [CLIPS_ATTRIBUTE]: "" }}\n     className="overflow-auto">\n\n// in its jsdom test — no\n// "CheckingChecking: booked daily"\nexpect(row).toHaveTextContent(/^Checking$/);`}
         </pre>
       </div>
@@ -587,11 +587,11 @@ export function MinBarLengthDemo() {
       hint="a zero keeps a visible stub; the axis, tooltip and names still say 0"
     >
       <Row className="mb-3">
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={chartWide} onChange={(e) => setChartWide(e.target.checked)} />
           chart minBarLength={"{3}"}
         </label>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={averageOff} onChange={(e) => setAverageOff(e.target.checked)} />
           average: minBarLength={"{0}"} (off for that series)
         </label>

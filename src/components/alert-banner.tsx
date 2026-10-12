@@ -29,11 +29,11 @@ export type AlertSize = "sm" | "md";
  * at any offset. Callers compensate the extra pixel in their own padding so
  * switching tones never shifts the layout. */
 const TONE_FRAME: Record<AlertTone, string> = {
-  danger: "border-2 border-[var(--danger-border-strong)] bg-[var(--danger-bg)]",
-  warning: "border-2 border-[var(--warning-border)] bg-[var(--warning-bg)]",
-  info: "border-2 border-[var(--info-border)] bg-[var(--info-bg)]",
-  success: "border-2 border-[var(--success-border)] bg-[var(--success-bg)]",
-  neutral: "border border-[var(--border)]",
+  danger: "border-2 border-danger-strong bg-danger-soft",
+  warning: "border-2 border-warning bg-warning-soft",
+  info: "border-2 border-info bg-info-soft",
+  success: "border-2 border-success bg-success-soft",
+  neutral: "border border-subtle",
 };
 
 /** `elevated`: the same frame on an OPAQUE surface. The dark tone washes are
@@ -50,7 +50,7 @@ const TONE_ELEVATED: Record<AlertTone, string> = {
   success: "bg-[image:linear-gradient(var(--success-bg),var(--success-bg))]",
   neutral: "",
 };
-const ELEVATED = "bg-[var(--bg-surface)] shadow-lg";
+const ELEVATED = "bg-surface shadow-lg";
 
 /** The tone's border + surface on their own — for a caller that already has a box
  * with its own radius and padding (e.g. a Card). Remember to shave 1px off that
@@ -91,19 +91,19 @@ function stripFrameClass(tone: AlertTone, size: AlertSize): string {
 }
 
 const TONE_TEXT: Record<AlertTone, string> = {
-  danger: "text-[var(--danger)]",
-  warning: "text-[var(--warning)]",
-  info: "text-[var(--info)]",
-  success: "text-[var(--success)]",
-  neutral: "text-[var(--text-secondary)]",
+  danger: "text-danger",
+  warning: "text-warning",
+  info: "text-info",
+  success: "text-success",
+  neutral: "text-secondary",
 };
 
 const TONE_ICON: Record<AlertTone, string> = {
-  danger: "text-[var(--danger)]",
-  warning: "text-[var(--warning)]",
-  info: "text-[var(--info)]",
-  success: "text-[var(--success)]",
-  neutral: "text-[var(--text-muted)]",
+  danger: "text-danger",
+  warning: "text-warning",
+  info: "text-info",
+  success: "text-success",
+  neutral: "text-muted",
 };
 
 /** Which glyph a tone draws when the caller names none. The triangle belongs to the
@@ -385,7 +385,7 @@ export function AlertBanner({
         inlineRow || strip ? "items-center" : "items-start",
         "outline-none after:absolute after:inset-0 after:content-['']",
         strip ? "after:rounded-none" : "after:rounded-md",
-        "focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-[var(--brand)]",
+        "focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-brand",
       )
     : cn(row, !inlineRow && "w-full", frame, TONE_TEXT[tone], hover, focusRing, className);
   // The div's attributes are the row element's: an `id`, a test id or an

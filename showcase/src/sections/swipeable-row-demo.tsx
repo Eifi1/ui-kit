@@ -105,7 +105,7 @@ function SwipeDemo() {
         left={left}
         right={right}
         enabled={enabled}
-        className="rounded-md border border-[var(--border)]"
+        className="rounded-md border border-subtle"
       >
         {/* The row content carries its own click handler on purpose: a drag past 24px
             has its trailing click swallowed in the capture phase, so committing an
@@ -117,10 +117,10 @@ function SwipeDemo() {
           className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start"
         >
           <span className="min-w-0">
-            <span className="block truncate-until-large text-sm text-[var(--text-primary)]">
+            <span className="block truncate-until-large text-sm text-primary">
               Monthly groceries
             </span>
-            <span className="block truncate-until-large text-xs text-[var(--text-muted)]">
+            <span className="block truncate-until-large text-xs text-muted">
               22 Sep · Rewe
             </span>
           </span>
@@ -216,11 +216,11 @@ function SwipeVariants() {
   const rowContent = (title: string, sub: string, amount: string) => (
     <div className="flex items-center justify-between gap-3 px-4 py-3">
       <span className="min-w-0">
-        <span className="block truncate-until-large text-sm text-[var(--text-primary)]">{title}</span>
-        <span className="block truncate-until-large text-xs text-[var(--text-muted)]">{sub}</span>
+        <span className="block truncate-until-large text-sm text-primary">{title}</span>
+        <span className="block truncate-until-large text-xs text-muted">{sub}</span>
       </span>
       {/* An amount is a left-to-right token even inside an RTL row. */}
-      <span dir="ltr" className="shrink-0 font-mono text-sm text-[var(--text-secondary)]">
+      <span dir="ltr" className="shrink-0 font-mono text-sm text-secondary">
         {amount}
       </span>
     </div>
@@ -231,15 +231,15 @@ function SwipeVariants() {
       <SwipeableRow
         left={three}
         actionsLabel="Actions for Rent"
-        className="rounded-md border border-[var(--border)]"
+        className="rounded-md border border-subtle"
       >
         {rowContent("Rent", "left only · three stages · actionsLabel", "−950.00 €")}
       </SwipeableRow>
-      <SwipeableRow right={pinOnly} className="rounded-md border border-[var(--border)]">
+      <SwipeableRow right={pinOnly} className="rounded-md border border-subtle">
         {rowContent("Salary", "right only · one stage, no icon", "+3,100.00 €")}
       </SwipeableRow>
       <div dir="rtl">
-        <SwipeableRow left={three} right={pinOnly} className="rounded-md border border-[var(--border)]">
+        <SwipeableRow left={three} right={pinOnly} className="rounded-md border border-subtle">
           {rowContent("إيجار", 'dir="rtl" · both sides', "−950.00 €")}
         </SwipeableRow>
       </div>
@@ -417,7 +417,7 @@ function RawSwipe() {
 
   return (
     <div className="space-y-3">
-      <div className="overflow-hidden rounded-md border border-[var(--border)]">
+      <div className="overflow-hidden rounded-md border border-subtle">
         <div
           {...swipe.handlers}
           onClickCapture={(e) => {
@@ -433,11 +433,11 @@ function RawSwipe() {
             touchAction: "pan-y",
           }}
           className={cn(
-            "flex items-center justify-between gap-3 bg-[var(--bg-surface-2)] px-4 py-3",
+            "flex items-center justify-between gap-3 bg-surface-2 px-4 py-3",
             swipe.dragging ? "select-none" : "transition-transform duration-150",
           )}
         >
-          <span className="text-sm text-[var(--text-primary)]">Drag me sideways</span>
+          <span className="text-sm text-primary">Drag me sideways</span>
           <Button variant="secondary" onClick={() => setTaps((n) => n + 1)}>
             Tap ({taps})
           </Button>

@@ -102,7 +102,7 @@ export function Breadcrumbs({
   const isHidden = (i: number) => collapsible && i >= 1 && i < firstKept;
 
   const sep = (
-    <span aria-hidden className="flex shrink-0 items-center text-[var(--text-placeholder)]">
+    <span aria-hidden className="flex shrink-0 items-center text-placeholder">
       {separator ?? <ChevronRight className="size-3.5 rtl:-scale-x-100" />}
     </span>
   );
@@ -110,18 +110,18 @@ export function Breadcrumbs({
   // ellipsis at Normal; from Large up it wraps inside its cap instead (text size §10.17,
   // round 0.34 T1): the list already wraps between crumbs, and a crumb cut to "Inv…" at
   // 150 % names no page.
-  const linkClass = cn("block max-w-[14rem] truncate-until-large rounded-sm hover:text-[var(--text-primary)]", FOCUS_RING);
+  const linkClass = cn("block max-w-[14rem] truncate-until-large rounded-sm hover:text-primary", FOCUS_RING);
 
   return (
     <nav {...rest} aria-label={ariaLabel ?? labels.label} className={cn("min-w-0 text-sm", className)}>
-      <ol className="m-0 flex min-w-0 list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0 text-[var(--text-muted)]">
+      <ol className="m-0 flex min-w-0 list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0 text-muted">
         {items.map((item, i) => {
           const last = i === items.length - 1;
           const key = item.key ?? (typeof item.label === "string" ? `${i}-${item.label}` : String(i));
           let content: ReactNode;
           if (last) {
             content = (
-              <span aria-current="page" className="block max-w-[16rem] truncate-until-large font-medium text-[var(--text-primary)]">
+              <span aria-current="page" className="block max-w-[16rem] truncate-until-large font-medium text-primary">
                 {item.label}
               </span>
             );
@@ -153,7 +153,7 @@ export function Breadcrumbs({
                     }}
                     aria-label={labels.showAll}
                     aria-expanded={false}
-                    className={cn("flex items-center rounded-sm px-0.5 hover:text-[var(--text-primary)]", FOCUS_RING)}
+                    className={cn("flex items-center rounded-sm px-0.5 hover:text-primary", FOCUS_RING)}
                   >
                     <MoreHorizontal className="size-4" aria-hidden />
                   </button>

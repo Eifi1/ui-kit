@@ -115,8 +115,8 @@ describe("IconButton", () => {
   it("turns red on hover with tone=danger, from the danger tokens", () => {
     render(<IconButton aria-label="Delete" tone="danger" />);
     const cls = classes(screen.getByRole("button", { name: "Delete" }));
-    expect(cls).toContain("hover:text-[var(--danger)]");
-    expect(cls).toContain("hover:bg-[var(--danger-bg)]");
+    expect(cls).toContain("hover:text-danger");
+    expect(cls).toContain("hover:bg-danger-soft");
   });
 
   it("keeps a click and its Enter from reaching a clickable row", async () => {

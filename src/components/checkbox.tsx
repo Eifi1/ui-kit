@@ -38,8 +38,8 @@ import type { CommitScope } from "./write-lock";
 // touching a --brand-filled (checked) box would be a ring painted in the colour it sits
 // on — present in the DOM and invisible on screen. The offset is what separates the two.
 const BOX =
-  "peer size-4 shrink-0 cursor-pointer appearance-none rounded border border-[var(--border-strong)] bg-[var(--bg-surface)] shadow-sm transition-colors " +
-  "checked:border-[var(--brand)] checked:bg-[var(--brand)] " +
+  "peer size-4 shrink-0 cursor-pointer appearance-none rounded border border-strong bg-surface shadow-sm transition-colors " +
+  "checked:border-brand checked:bg-brand " +
   `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)] ` +
   "disabled:cursor-not-allowed";
 
@@ -58,15 +58,15 @@ const LABEL_TOUCH_LARGE =
 // A mixed box wears the checked fill whether or not the underlying input is checked:
 // `indeterminate` is a property the browser keeps separately from `checked`, and the
 // dash means "some", which is neither answer.
-const BOX_MIXED = "border-[var(--brand)] bg-[var(--brand)]";
+const BOX_MIXED = "border-brand bg-brand";
 
 // The same geometry as FIELD_INVALID — a border plus a 1px ring, so the highlight
 // survives fractional display scaling on every edge (see the note in ui.tsx). The
 // focus ring turns danger too, so focusing a wrong box does not repaint it as fine.
 const BOX_INVALID =
-  "border-[var(--danger-border-strong)] ring-1 ring-[var(--danger-border-strong)] checked:border-[var(--danger-border-strong)] focus-visible:ring-[var(--danger)]";
+  "border-danger-strong ring-1 ring-danger-strong checked:border-danger-strong focus-visible:ring-[var(--danger)]";
 
-const ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+const ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
 
 export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   /**
@@ -259,13 +259,13 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         <Minus
           aria-hidden
           strokeWidth={3}
-          className="pointer-events-none absolute inset-0 m-auto size-3 text-[var(--brand-contrast)]"
+          className="pointer-events-none absolute inset-0 m-auto size-3 text-brand-contrast"
         />
       ) : (
         <Check
           aria-hidden
           strokeWidth={3}
-          className="pointer-events-none invisible absolute inset-0 m-auto size-3 text-[var(--brand-contrast)] peer-checked:visible"
+          className="pointer-events-none invisible absolute inset-0 m-auto size-3 text-brand-contrast peer-checked:visible"
         />
       )}
     </span>
@@ -307,7 +307,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           <label
             htmlFor={inputId}
             className={cn(
-              "block text-sm leading-5 text-[var(--text-primary)]",
+              "block text-sm leading-5 text-primary",
               // `select-none`: a double-click to toggle twice would otherwise select the
               // words, and a drag that starts on them starts a native text drag.
               looksDisabled ? "cursor-not-allowed" : "cursor-pointer select-none",
@@ -317,14 +317,14 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           >
             {label}
             {required && !starOnLegend && (
-              <span aria-hidden className="ms-0.5 text-[var(--danger)]">
+              <span aria-hidden className="ms-0.5 text-danger">
                 *
               </span>
             )}
           </label>
         )}
         {showDescription && (
-          <span id={descriptionId} className={cn("mt-0.5 block text-xs text-[var(--text-muted)]", dimParts && "opacity-60")}>
+          <span id={descriptionId} className={cn("mt-0.5 block text-xs text-muted", dimParts && "opacity-60")}>
             {description}
           </span>
         )}

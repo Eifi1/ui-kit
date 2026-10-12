@@ -302,7 +302,7 @@ function DrillBar({ crumbs, label }: { crumbs: Crumb[]; label: string }) {
   const up = crumbs.length > 1 ? crumbs[crumbs.length - 2]?.onSelect : undefined;
   const reset = crumbs.length > 1 ? crumbs[0]?.onSelect : undefined;
   const control =
-    "rounded px-1.5 py-0.5 text-[var(--brand)] hover:bg-[var(--bg-hover)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--brand)] disabled:cursor-default disabled:text-[var(--text-muted)] disabled:no-underline disabled:hover:bg-transparent";
+    "rounded px-1.5 py-0.5 text-brand hover:bg-hover hover:underline focus-visible:outline-2 focus-visible:outline-brand disabled:cursor-default disabled:text-muted disabled:no-underline disabled:hover:bg-transparent";
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
       <nav aria-label={label}>
@@ -310,7 +310,7 @@ function DrillBar({ crumbs, label }: { crumbs: Crumb[]; label: string }) {
           {crumbs.map((c, i) => (
             <li key={i} className="flex items-center gap-1">
               {i > 0 && (
-                <span aria-hidden className="text-[var(--text-muted)]">
+                <span aria-hidden className="text-muted">
                   ›
                 </span>
               )}
@@ -319,7 +319,7 @@ function DrillBar({ crumbs, label }: { crumbs: Crumb[]; label: string }) {
                   {c.label}
                 </button>
               ) : (
-                <span aria-current="page" className="px-1.5 font-medium text-[var(--text-primary)]">
+                <span aria-current="page" className="px-1.5 font-medium text-primary">
                   {c.label}
                 </span>
               )}
@@ -375,11 +375,11 @@ function LevelTitle({
       <h4
         ref={titleRef}
         tabIndex={-1}
-        className="rounded text-sm font-semibold text-[var(--text-primary)] outline-none focus-visible:outline-2 focus-visible:outline-[var(--brand)]"
+        className="rounded text-sm font-semibold text-primary outline-none focus-visible:outline-2 focus-visible:outline-brand"
       >
         {children}
       </h4>
-      <p className="text-xs text-[var(--text-muted)]">{sub}</p>
+      <p className="text-xs text-muted">{sub}</p>
     </div>
   );
 }
@@ -574,7 +574,7 @@ function BarDrilldown() {
         // too, and an outline on a bar the pointer is not on would read as a selection.
         onFocus={(e) => setFocused(e.currentTarget.matches(":focus-visible"))}
         onBlur={() => setFocused(false)}
-        className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+        className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-brand"
       >
         {/* Keyed by the path: a new level is a new chart, and the remount is what
             replays `.animate-drill`. */}
@@ -640,7 +640,7 @@ function BarDrilldown() {
       <p
         id={readoutId}
         aria-live="polite"
-        className={cn("min-h-4 text-xs text-[var(--text-secondary)]", !focused && "invisible")}
+        className={cn("min-h-4 text-xs text-secondary", !focused && "invisible")}
       >
         {current &&
           `${current.label}: ${MONEY.format(current.value)}${terminal ? "" : " — Enter to open"}`}

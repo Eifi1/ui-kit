@@ -12,7 +12,7 @@ import { Example, Note, Row } from "../lib/section";
  * before adding a passkey (`ReauthDialog`).
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 function useLog() {
   const [log, setLog] = useState<string[]>([]);
@@ -75,7 +75,7 @@ export function TypedConfirm018Demo() {
         label="DangerConfirm — caseless phrase, inline under a row"
         hint="keksdose keeps the question under the row, so the row being acted on stays in view"
       >
-        <div className="space-y-2 rounded-lg border border-[var(--border)] p-3">
+        <div className="space-y-2 rounded-lg border border-subtle p-3">
           {/* Wraps: at Extra large the address and "Reset password…" ran past a 360 px phone. */}
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span className="min-w-0 [overflow-wrap:anywhere]">ben@example.org</span>

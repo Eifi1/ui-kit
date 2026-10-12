@@ -78,7 +78,7 @@ const InGroupContext = createContext(false);
  *  announced from the control and a star read out in the name is only noise. */
 function RequiredMark() {
   return (
-    <span aria-hidden className="ms-0.5 text-[var(--danger)]">
+    <span aria-hidden className="ms-0.5 text-danger">
       *
     </span>
   );
@@ -87,29 +87,29 @@ function RequiredMark() {
 // The card. `has-[:checked]` and `has-[:focus-visible]` read the INPUT's state, so an
 // uncontrolled card (`defaultChecked`, a plain form) looks right with no React state.
 const CARD =
-  "flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3 shadow-sm transition-colors " +
-  "hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)] " +
-  "has-[:checked]:border-[var(--brand)] has-[:checked]:bg-[var(--brand-bg)] has-[:checked]:ring-1 has-[:checked]:ring-[var(--brand)] " +
+  "flex cursor-pointer items-start gap-3 rounded-lg border border-subtle bg-surface p-3 shadow-sm transition-colors " +
+  "hover:border-strong hover:bg-hover " +
+  "has-[:checked]:border-brand has-[:checked]:bg-brand-soft has-[:checked]:ring-1 has-[:checked]:ring-brand " +
   // The focus mark is the CARD's, not the 16px box's: the card is what was clicked and
   // what the eye is on. An OUTLINE rather than a ring, because the checked state already
   // spends the ring — two `ring-*` widths on one element are decided by stylesheet
   // order, and the loser would be the focus mark. Offset, so the two never merge. Its
   // width is the kit's focus frame (0.32, §5: `--focus-ring-width`, 3 px under More
   // contrast) — `FOCUS_RING` itself is a ring, which this mark cannot be.
-  "has-[:focus-visible]:outline-[length:var(--focus-ring-width)] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--brand)] " +
+  "has-[:focus-visible]:outline-[length:var(--focus-ring-width)] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand " +
   // Read from the input too, so a card disabled by its `<fieldset>` fades as well.
   "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60";
 
 // No hover offer on a card that cannot be changed.
-const CARD_DISABLED = "hover:border-[var(--border)] hover:bg-[var(--bg-surface)]";
+const CARD_DISABLED = "hover:border-subtle hover:bg-surface";
 
 const CARD_INVALID =
-  "border-[var(--danger-border-strong)] ring-1 ring-[var(--danger-border-strong)] has-[:checked]:border-[var(--danger-border-strong)] has-[:checked]:ring-[var(--danger-border-strong)]";
+  "border-danger-strong ring-1 ring-danger-strong has-[:checked]:border-danger-strong has-[:checked]:ring-danger-strong";
 
 const BOX =
-  "peer size-4 shrink-0 appearance-none border border-[var(--border-strong)] bg-[var(--bg-surface)] transition-colors " +
-  "checked:border-[var(--brand)] focus:outline-none disabled:cursor-not-allowed";
-const CHECKBOX = "rounded checked:bg-[var(--brand)]";
+  "peer size-4 shrink-0 appearance-none border border-strong bg-surface transition-colors " +
+  "checked:border-brand focus:outline-none disabled:cursor-not-allowed";
+const CHECKBOX = "rounded checked:bg-brand";
 // A radio's dot is its BORDER: a 0.3125rem brand border (5px at Normal) round a
 // surface-coloured 0.375rem centre. No glyph to lay over it, and in rem since 0.32
 // (§3.2) it scales with the box — a 5px border on a 24px box at 150 % was a ring, not a
@@ -188,7 +188,7 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
           className={cn(
             BOX,
             type === "radio" ? RADIO : CHECKBOX,
-            mixed && "border-[var(--brand)] bg-[var(--brand)]",
+            mixed && "border-brand bg-brand",
             inputClassName,
           )}
         />
@@ -197,33 +197,33 @@ export const ChoiceCard = forwardRef<HTMLInputElement, ChoiceCardProps>(function
             <Minus
               aria-hidden
               strokeWidth={3}
-              className="pointer-events-none absolute inset-0 m-auto size-3 text-[var(--brand-contrast)]"
+              className="pointer-events-none absolute inset-0 m-auto size-3 text-brand-contrast"
             />
           ) : (
             <Check
               aria-hidden
               strokeWidth={3}
-              className="pointer-events-none invisible absolute inset-0 m-auto size-3 text-[var(--brand-contrast)] peer-checked:visible"
+              className="pointer-events-none invisible absolute inset-0 m-auto size-3 text-brand-contrast peer-checked:visible"
             />
           ))}
       </span>
-      {Icon && <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--text-secondary)]" />}
+      {Icon && <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-secondary" />}
       <span className="min-w-0 flex-1">
         <span
           id={titleId}
           // `select-none`: a double-click to toggle twice would otherwise select the words.
-          className="block select-none text-sm font-medium leading-5 text-[var(--text-primary)]"
+          className="block select-none text-sm font-medium leading-5 text-primary"
         >
           {title}
           {required && !inGroup && <RequiredMark />}
         </span>
         {showDescription && (
-          <span id={descriptionId} className="mt-0.5 block text-xs text-[var(--text-muted)]">
+          <span id={descriptionId} className="mt-0.5 block text-xs text-muted">
             {description}
           </span>
         )}
         {showError && (
-          <span id={errorId} className="mt-1 block text-caption leading-tight text-[var(--danger)]">
+          <span id={errorId} className="mt-1 block text-caption leading-tight text-danger">
             {error}
           </span>
         )}
@@ -239,11 +239,11 @@ ChoiceCard.displayName = "ChoiceCard";
 export type ActionCardMetaTone = "muted" | "warning" | "danger" | "info" | "success";
 
 const META_TONE: Record<ActionCardMetaTone, string> = {
-  muted: "text-[var(--text-muted)]",
-  warning: "text-[var(--warning)]",
-  danger: "text-[var(--danger)]",
-  info: "text-[var(--info)]",
-  success: "text-[var(--success)]",
+  muted: "text-muted",
+  warning: "text-warning",
+  danger: "text-danger",
+  info: "text-info",
+  success: "text-success",
 };
 
 /** The colour of {@link ActionCardProps.icon}. `default` is the secondary text colour
@@ -253,7 +253,7 @@ const META_TONE: Record<ActionCardMetaTone, string> = {
 export type ActionCardIconTone = "default" | "muted" | "brand" | "warning" | "danger" | "info" | "success";
 
 const ICON_TONE: Record<ActionCardIconTone, string> = {
-  default: "text-[var(--text-secondary)]",
+  default: "text-secondary",
   ...META_TONE,
   brand: "text-brand-muted",
 };
@@ -345,12 +345,12 @@ export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(functio
   const showDescription = hasMessage(description);
   const showMeta = hasMessage(meta);
   const look = cn(
-    "flex w-full items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3 text-start shadow-sm transition-colors",
-    "hover:border-[var(--brand)] hover:bg-[var(--bg-hover)]",
+    "flex w-full items-start gap-3 rounded-lg border border-subtle bg-surface p-3 text-start shadow-sm transition-colors",
+    "hover:border-brand hover:bg-hover",
     // The outline, as on ChoiceCard: the card is what the eye is on — the focus frame's
     // width (§5).
-    "focus:outline-none focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
-    "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-[var(--border)] disabled:hover:bg-[var(--bg-surface)]",
+    "focus:outline-none focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-brand",
+    "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-subtle disabled:hover:bg-surface",
     className,
   );
   const labelledBy = rest["aria-labelledby"] ?? titleId;
@@ -363,11 +363,11 @@ export const ActionCard = forwardRef<HTMLButtonElement, ActionCardProps>(functio
     <>
       {Icon && <Icon aria-hidden className={cn("mt-0.5 size-5 shrink-0", ICON_TONE[iconTone], iconClassName)} />}
       <span className="min-w-0 flex-1 space-y-1">
-        <span id={titleId} className="block text-sm font-medium leading-5 text-[var(--text-primary)]">
+        <span id={titleId} className="block text-sm font-medium leading-5 text-primary">
           {title}
         </span>
         {showDescription && (
-          <span id={descriptionId} className="block text-sm text-[var(--text-secondary)]">
+          <span id={descriptionId} className="block text-sm text-secondary">
             {description}
           </span>
         )}
@@ -525,7 +525,7 @@ export function ChoiceCardGroup<T extends string>(props: ChoiceCardGroupProps<T>
         className="min-w-0"
       >
         {legend !== undefined && (
-          <legend className="mb-2 text-sm font-medium text-[var(--text-primary)]">
+          <legend className="mb-2 text-sm font-medium text-primary">
             {legend}
             {required && <RequiredMark />}
           </legend>
@@ -550,7 +550,7 @@ export function ChoiceCardGroup<T extends string>(props: ChoiceCardGroupProps<T>
           ))}
         </div>
         {showError && (
-          <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
+          <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
             {error}
           </p>
         )}

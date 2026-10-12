@@ -32,16 +32,16 @@ export type TextTone =
   | "info";
 
 const TEXT_TONE: Record<TextTone, string> = {
-  default: "text-[var(--text-primary)]",
-  muted: "text-[var(--text-muted)]",
-  brand: "text-[var(--brand)]",
+  default: "text-primary",
+  muted: "text-muted",
+  brand: "text-brand",
   income: "text-[var(--money-income)]",
   expense: "text-[var(--money-expense)]",
   net: "text-[var(--money-net)]",
-  success: "text-[var(--success)]",
-  warning: "text-[var(--warning)]",
-  danger: "text-[var(--danger)]",
-  info: "text-[var(--info)]",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-danger",
+  info: "text-info",
 };
 
 /**
@@ -338,7 +338,7 @@ export function Delta({
         <span aria-hidden>{amount}</span>
         <span className="sr-only">{spoken}</span>
       </span>
-      {label != null && <span className="text-[var(--text-muted)]">{label}</span>}
+      {label != null && <span className="text-muted">{label}</span>}
     </span>
   );
 }

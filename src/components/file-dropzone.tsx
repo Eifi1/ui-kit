@@ -313,7 +313,7 @@ export function FileDropzone({
   const controlDisabled = Boolean(disabled || busy);
   const controlReason = locked ? disabledReason : undefined;
   const reasonLine = locked && (
-    <div data-slot="file-dropzone-reason" className="text-xs text-[var(--text-muted)]">
+    <div data-slot="file-dropzone-reason" className="text-xs text-muted">
       {disabledReason}
     </div>
   );
@@ -371,16 +371,16 @@ export function FileDropzone({
           // Inert zones keep the resting hairline and lose the hover pull: a border that
           // answers the pointer promises a drop the zone will refuse.
           disabled
-            ? "cursor-not-allowed border-[var(--border)] opacity-60"
+            ? "cursor-not-allowed border-subtle opacity-60"
             : busy
-              ? "cursor-progress border-[var(--border)]"
+              ? "cursor-progress border-subtle"
               : locked
-                ? "cursor-not-allowed border-[var(--border)]"
+                ? "cursor-not-allowed border-subtle"
                 : dragOver
-                ? "cursor-pointer border-[var(--border-strong)] bg-[var(--bg-active)]"
+                ? "cursor-pointer border-strong bg-active"
                 : showError
-                  ? "cursor-pointer border-[var(--danger-border-strong)]"
-                  : "cursor-pointer border-[var(--border)] hover:border-[var(--border-strong)]",
+                  ? "cursor-pointer border-danger-strong"
+                  : "cursor-pointer border-subtle hover:border-strong",
           className,
         )}
       >
@@ -401,11 +401,11 @@ export function FileDropzone({
             {/* `label={null}`: the zone is `aria-busy` and the line below says the
                 same in words; a spoken "Loading" would only run into it. */}
             <Spinner label={null} className="size-5" />
-            <div className="text-sm text-[var(--text-secondary)]">{labels.busy}</div>
+            <div className="text-sm text-secondary">{labels.busy}</div>
           </>
         ) : (
           <>
-            <Upload aria-hidden className="size-5 text-[var(--text-muted)]" />
+            <Upload aria-hidden className="size-5 text-muted" />
             {multiple && chosen.length > 0 ? (
               <>
                 <ul className="flex w-full max-w-sm flex-col gap-1 text-start">
@@ -414,10 +414,10 @@ export function FileDropzone({
                       // Name + size + position: two files may share a name, and the index
                       // alone would re-key every row below a removal.
                       key={`${f.name}-${f.size}-${i}`}
-                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)]"
+                      className="flex items-center gap-2 text-sm text-secondary"
                     >
                       <span className="min-w-0 flex-1 truncate font-medium">{f.name}</span>
-                      <span className="shrink-0 text-xs text-[var(--text-muted)]">{fileText.size(f.size)}</span>
+                      <span className="shrink-0 text-xs text-muted">{fileText.size(f.size)}</span>
                       {onRemove && (
                         <IconButton
                           type="button"
@@ -441,7 +441,7 @@ export function FileDropzone({
               </>
             ) : (
               <>
-                <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+                <div className="flex items-center gap-1 text-sm text-secondary">
                   {/* `!multiple`: in multiple mode an empty `files` list is "nothing chosen",
                       whatever a stray `file` prop says — it used to show that file's name. */}
                   {!multiple && file ? <span className="font-medium">{file.name}</span> : emptyLabel}
@@ -467,7 +467,7 @@ export function FileDropzone({
                 {locked && !(file && !multiple) ? (
                   reasonLine
                 ) : (
-                  <div className="text-xs text-[var(--text-muted)]">
+                  <div className="text-xs text-muted">
                     {file && !multiple ? fileText.size(file.size) : hint}
                   </div>
                 )}
@@ -507,7 +507,7 @@ export function FileDropzone({
           )}
         </div>
         {showError && (
-          <p id={errorId} className="text-xs text-[var(--danger)]">
+          <p id={errorId} className="text-xs text-danger">
             {error}
           </p>
         )}

@@ -468,7 +468,7 @@ export function CalendarHeatmap({
       className: cn(
         cellClass,
         isSelected && "ring-2 ring-[var(--text-primary)]",
-        onSelect && "cursor-pointer hover:ring-1 hover:ring-[var(--brand)]",
+        onSelect && "cursor-pointer hover:ring-1 hover:ring-brand",
       ),
     } as const;
     const inner = withNumber ? (
@@ -509,7 +509,7 @@ export function CalendarHeatmap({
       <div ref={scrollerRef} className="overflow-x-auto pb-1">
         <div ref={gridRef} role="grid" aria-label={gridName} className="inline-grid gap-0.5">
           {/* Decoration: every cell's name already carries its month. */}
-          <div aria-hidden className="grid gap-0.5 text-micro leading-3 text-[var(--text-muted)]" style={columns}>
+          <div aria-hidden className="grid gap-0.5 text-micro leading-3 text-muted" style={columns}>
             <span />
             {monthLabels.map((m, w) => (
               <span key={w} className="overflow-visible whitespace-nowrap">
@@ -522,7 +522,7 @@ export function CalendarHeatmap({
               <div
                 role="rowheader"
                 aria-label={weekdayLabels[r].long}
-                className="overflow-hidden pe-1 text-micro leading-3 text-[var(--text-muted)]"
+                className="overflow-hidden pe-1 text-micro leading-3 text-muted"
               >
                 {/* Every other weekday, as a contribution graph does: seven labels
                     at this size are a smear. The name is there for all seven. */}
@@ -551,7 +551,7 @@ export function CalendarHeatmap({
               key={i}
               role="columnheader"
               aria-label={w.long}
-              className="pb-0.5 text-center text-micro uppercase tracking-wide text-[var(--text-muted)]"
+              className="pb-0.5 text-center text-micro uppercase tracking-wide text-muted"
             >
               {w.short}
             </div>
@@ -576,11 +576,11 @@ export function CalendarHeatmap({
   return (
     <div {...rest} className={cn("min-w-0", className)}>
       {dropped > 0 && (
-        <div className="mb-2 text-xs text-[var(--text-muted)]">{labels.truncated(dropped)}</div>
+        <div className="mb-2 text-xs text-muted">{labels.truncated(dropped)}</div>
       )}
       {body}
       {legend && (
-        <div aria-hidden className="mt-2 flex items-center justify-end gap-1 text-micro text-[var(--text-muted)]">
+        <div aria-hidden className="mt-2 flex items-center justify-end gap-1 text-micro text-muted">
           <span className="me-0.5">{labels.less}</span>
           {legendLevels.map((l) => (
             <span

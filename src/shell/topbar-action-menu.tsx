@@ -326,7 +326,7 @@ export function TopBarActionMenu({
         const footerBody = typeof footer === "function" ? footer(close) : footer;
         const headerExtra = typeof header?.extra === "function" ? header.extra(close) : header?.extra;
         const footerClass =
-          "flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--text-muted)] [&_a:hover]:text-[var(--text-primary)] [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-[length:var(--focus-ring-width)] [&_a:focus-visible]:ring-[var(--brand)]";
+          "flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted [&_a:hover]:text-primary [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-[length:var(--focus-ring-width)] [&_a:focus-visible]:ring-brand";
         /** One action or link row — loose, or inside a heading's group. */
         const row = (entry: RowEntry) => (
           <li key={entry.key}>
@@ -365,16 +365,16 @@ export function TopBarActionMenu({
           // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a Tab bubbling up from a row or footer link, see keepTabInsidePanel
           <ul className={cn("py-1", panelClassName)} onKeyDown={keepTabInsidePanel}>
             {header && (
-              <MenuSection className="mb-1 border-b border-[var(--border)] px-3 py-2">
-                <div className="truncate text-sm font-medium text-[var(--text-primary)]">{header.title}</div>
+              <MenuSection className="mb-1 border-b border-subtle px-3 py-2">
+                <div className="truncate text-sm font-medium text-primary">{header.title}</div>
                 {header.subtitle != null && (
-                  <div className="truncate text-xs text-[var(--text-muted)]">{header.subtitle}</div>
+                  <div className="truncate text-xs text-muted">{header.subtitle}</div>
                 )}
                 {headerExtra != null && headerExtra !== false && <div className="mt-1">{headerExtra}</div>}
               </MenuSection>
             )}
             {heading && (
-              <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
+              <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder">
                 {heading}
               </li>
             )}
@@ -382,7 +382,7 @@ export function TopBarActionMenu({
               if (block.kind === "loose") {
                 const entry = block.entry;
                 if (entry.kind === "divider") {
-                  return <li key={entry.key} className="my-1 border-t border-[var(--border)]" />;
+                  return <li key={entry.key} className="my-1 border-t border-subtle" />;
                 }
                 return row(entry);
               }
@@ -397,7 +397,7 @@ export function TopBarActionMenu({
                     id={headingId}
                     role="presentation"
                     className={cn(
-                      "px-3 pb-0.5 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] [overflow-wrap:anywhere]",
+                      "px-3 pb-0.5 text-caption font-semibold uppercase tracking-wide text-muted [overflow-wrap:anywhere]",
                       tight ? "pt-1" : "pt-2.5",
                     )}
                   >
@@ -411,7 +411,7 @@ export function TopBarActionMenu({
             })}
             {children?.(close)}
             {footerBody != null && footerBody !== false && (
-              <MenuSection className="mt-1 border-t border-[var(--border)] px-3 py-2">
+              <MenuSection className="mt-1 border-t border-subtle px-3 py-2">
                 {footerLabel ? (
                   <nav aria-label={footerLabel} className={footerClass}>
                     {footerBody}

@@ -9,7 +9,7 @@ import { Example, Note, Row } from "../lib/section";
  * here an array in state that the composer appends to.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const MINUTE = 60_000;

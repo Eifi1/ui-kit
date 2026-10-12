@@ -50,14 +50,14 @@ function Sandbox({ children, start = "/" }: { children: ReactNode; start?: strin
 function Where() {
   const { pathname, search } = useLocation();
   return (
-    <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">
+    <p className="mt-2 font-mono text-xs text-muted">
       route: {pathname}
       {search}
     </p>
   );
 }
 
-const Logo = () => <Sprout className="text-[var(--brand)]" />;
+const Logo = () => <Sprout className="text-brand" />;
 const BRAND = { logo: <Logo />, name: APP };
 
 /* ── The mock visuals (decorative, kit tokens only) ──────────────────────── */
@@ -73,8 +73,8 @@ const BEDS = [
 
 function BedPlanMock() {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-xl">
-      <p className="text-xs font-semibold text-[var(--text-secondary)]">Spring plan · plot A</p>
+    <div className="rounded-xl border border-subtle bg-surface p-4 shadow-xl">
+      <p className="text-xs font-semibold text-secondary">Spring plan · plot A</p>
       <div className="mt-3 grid grid-cols-3 gap-2">
         {BEDS.map((bed) => (
           <div
@@ -92,17 +92,17 @@ function BedPlanMock() {
 
 function WateringMock() {
   return (
-    <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] text-sm shadow-lg">
+    <ul className="divide-y divide-subtle rounded-xl border border-subtle bg-surface text-sm shadow-lg">
       {[
         ["Mon", "Tomatoes", "2 l"],
         ["Tue", "Lettuce", "1 l"],
         ["Thu", "Beans", "1.5 l"],
       ].map(([day, bed, amount]) => (
         <li key={day} className="flex items-center gap-3 px-4 py-2.5">
-          <Droplets className="size-4 text-[var(--info)]" />
-          <span className="w-10 text-[var(--text-muted)]">{day}</span>
-          <span className="flex-1 text-[var(--text-primary)]">{bed}</span>
-          <span className="tabular-nums text-[var(--text-secondary)]">{amount}</span>
+          <Droplets className="size-4 text-info" />
+          <span className="w-10 text-muted">{day}</span>
+          <span className="flex-1 text-primary">{bed}</span>
+          <span className="tabular-nums text-secondary">{amount}</span>
         </li>
       ))}
     </ul>
@@ -111,7 +111,7 @@ function WateringMock() {
 
 function HarvestMock() {
   return (
-    <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-lg">
+    <div className="space-y-3 rounded-xl border border-subtle bg-surface p-4 shadow-lg">
       {[
         ["Tomatoes", 72],
         ["Beans", 45],
@@ -153,7 +153,7 @@ export function SampleLanding031Demo() {
         />
       </div>
       <Sandbox>
-        <div className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)]">
+        <div className="overflow-hidden rounded-md border border-subtle bg-page">
           <PublicHeader brand={BRAND} session={session} access={access} openAppHref="/beds" className="static" />
           <Hero
             beta
@@ -234,11 +234,11 @@ export function PublicHeaderStates031Demo() {
       <div className="space-y-3">
         {SESSIONS.map(({ value, label }) => (
           <div key={value}>
-            <p className="mb-1 text-xs text-[var(--text-muted)]">
+            <p className="mb-1 text-xs text-muted">
               {code(`session="${value}"`)} — {label}
             </p>
             <Sandbox>
-              <div className="overflow-hidden rounded-md border border-[var(--border)]">
+              <div className="overflow-hidden rounded-md border border-subtle">
                 <PublicHeader brand={BRAND} session={value} access={ACCESS_REQUEST} openAppHref="/beds" className="static" />
               </div>
             </Sandbox>
@@ -311,7 +311,7 @@ export function DemoStart031Demo() {
           />
         </div>
       </Sandbox>
-      <pre className="mt-3 overflow-x-auto rounded-md bg-[var(--bg-surface-2)] p-2 font-mono text-xs text-[var(--text-secondary)]">
+      <pre className="mt-3 overflow-x-auto rounded-md bg-surface-2 p-2 font-mono text-xs text-secondary">
         {log.length ? log.join("\n") : "—"}
       </pre>
       <Note>
@@ -358,7 +358,7 @@ export function DemoBanner031Demo() {
         <div className="space-y-3">
           {MOMENTS.map((moment) => (
             <div key={moment.key}>
-              <p className="mb-1 text-xs text-[var(--text-muted)]">{moment.label}</p>
+              <p className="mb-1 text-xs text-muted">{moment.label}</p>
               <DemoBanner
                 expiresAt={NOW + moment.left}
                 now={frozen}
@@ -369,7 +369,7 @@ export function DemoBanner031Demo() {
             </div>
           ))}
           <div>
-            <p className="mb-1 text-xs text-[var(--text-muted)]">
+            <p className="mb-1 text-xs text-muted">
               Live, on the real clock: ends 90 s after this page opened {ended && "— onEnded() was called"}
             </p>
             <DemoBanner
@@ -422,7 +422,7 @@ export function DemoEnded031Demo() {
         />
       </div>
       <Sandbox start="/demo/ended">
-        <div className="overflow-hidden rounded-md border border-[var(--border)]">
+        <div className="overflow-hidden rounded-md border border-subtle">
           <AuthLayout logo={<Sprout />} title={APP} landmark={false} headingAs="h4" className="min-h-0">
             <DemoEnded model={model} access={ACCESS_REQUEST} headingAs="h5" noIndex={false} />
           </AuthLayout>

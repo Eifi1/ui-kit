@@ -223,7 +223,7 @@ export function Popover({
               maxHeight: placement.maxHeight,
             }}
             className={cn(
-              "z-50 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-3 shadow-lg outline-none",
+              "z-50 overflow-y-auto rounded-md border border-subtle bg-surface p-3 shadow-lg outline-none",
               className,
             )}
           >

@@ -80,7 +80,7 @@ function Hex({ value }: { value: string }) {
     <span className="inline-flex items-center gap-2">
       <span
         aria-hidden
-        className="inline-block size-3.5 rounded-sm border border-[var(--border)]"
+        className="inline-block size-3.5 rounded-sm border border-subtle"
         style={{ background: value }}
       />
       {value}
@@ -361,7 +361,7 @@ export function Foundations() {
         label="Form-control accent"
         hint="a base-layer rule in tokens.css, not a utility"
       >
-        <div className="space-y-3 text-sm text-[var(--text-primary)]">
+        <div className="space-y-3 text-sm text-primary">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -408,8 +408,8 @@ export function Foundations() {
 
       <Example label="Animation utilities" hint="also shipped by tokens.css">
         <div className="space-y-4">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-surface-2)]">
-            <div className="animate-indeterminate h-full w-1/3 rounded-full bg-[var(--brand)]" />
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+            <div className="animate-indeterminate h-full w-1/3 rounded-full bg-brand" />
           </div>
           {/* The five overlay/drill classes are listed rather than rendered: four of
               them animate an element out of view or assume a mount transition, so a
@@ -442,15 +442,15 @@ export function Foundations() {
           {PALETTES.map((p) => (
             <div key={p.id} className="space-y-1.5">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span className="text-sm font-medium text-[var(--text-primary)]">{p.name}</span>
-                <code className="font-mono text-xs text-[var(--text-muted)]">id: {p.id}</code>
+                <span className="text-sm font-medium text-primary">{p.name}</span>
+                <code className="font-mono text-xs text-muted">id: {p.id}</code>
                 {p.id === activeId && (
-                  <span className="rounded bg-[var(--brand)] px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide text-[var(--brand-contrast)]">
+                  <span className="rounded bg-brand px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide text-brand-contrast">
                     active
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[var(--text-secondary)]">{p.blurb}</p>
+              <p className="text-xs text-secondary">{p.blurb}</p>
               {/* The ramps side by side: Imprint is the default preset with ONLY the
                   nine categorical hues swapped; the derived presets come out of
                   `derivePalette` and keep the default's Paul Tol ramp. */}
@@ -459,7 +459,7 @@ export function Foundations() {
                   <span
                     key={i}
                     title={hex}
-                    className="size-6 rounded border border-[var(--border)]"
+                    className="size-6 rounded border border-subtle"
                     style={{ background: hex }}
                   />
                 ))}
@@ -525,10 +525,10 @@ function PresetPreview() {
       </div>
       <div
         ref={card}
-        className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--bg-page)] p-4 text-[var(--text-primary)]"
+        className="space-y-3 rounded-lg border border-subtle bg-page p-4 text-primary"
       >
         <p className="text-sm">
-          {preset.name} <span className="text-[var(--text-muted)]">— {preset.blurb}</span>
+          {preset.name} <span className="text-muted">— {preset.blurb}</span>
         </p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="w-56 max-w-full">
@@ -542,7 +542,7 @@ function PresetPreview() {
           {preset[mode].chart.map((hex, i) => (
             <span
               key={i}
-              className="size-5 rounded border border-[var(--border)]"
+              className="size-5 rounded border border-subtle"
               style={{ background: `var(--chart-${i + 1})` }}
               title={hex}
             />
@@ -561,7 +561,7 @@ function PresetPreview() {
             `presetById("${ALTERNATIVE_PRESETS[0].id}").id`,
             <>
               {presetById(ALTERNATIVE_PRESETS[0].id).id}{" "}
-              <span className="font-sans font-normal text-[var(--text-muted)]">
+              <span className="font-sans font-normal text-muted">
                 — not in PALETTES, so the default
               </span>
             </>,
@@ -581,7 +581,7 @@ function PresetPreview() {
 
 /** A small action button in this page's own tokens. */
 const STORE_BUTTON =
-  "rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-2 py-1 font-mono text-xs text-[var(--text-primary)] hover:border-[var(--brand)]";
+  "rounded-md border border-subtle bg-surface-2 px-2 py-1 font-mono text-xs text-primary hover:border-brand";
 
 /**
  * The hooks the two factories return, wired to the showcase's real stores
@@ -602,7 +602,7 @@ function StoreApi() {
 
   return (
     <div className="space-y-3">
-      <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+      <pre className="overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary">
         {`// stores.ts — one key per app, so two apps on one origin do not share a theme
 export const { useTheme, useApplyTheme } = createThemeStore("${THEME_KEY}");
 export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =

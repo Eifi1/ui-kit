@@ -70,7 +70,7 @@ describe("FeedbackComposer maxLength / showCount", () => {
     render(<FeedbackComposer ref={ref} onSend={onSend} maxLength={10} showCount canSend />);
     act(() => ref.current!.insertText("Thanks, fixed in the next release"));
     expect(box()).toHaveValue("Thanks, fixed in the next release");
-    expect(screen.getByText("33/10")).toHaveClass("text-[var(--danger)]");
+    expect(screen.getByText("33/10")).toHaveClass("text-danger");
     // Over the limit wins over `canSend`, as `pending` does.
     expect(send()).toBeDisabled();
     fireEvent.keyDown(box(), { key: "Enter", ctrlKey: true });

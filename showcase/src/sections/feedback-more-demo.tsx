@@ -18,14 +18,14 @@ function EmptyStateInlineTones() {
       hint='variant="inline" is one quiet line for inside a frame; tone colours the icon and the title, never the hint'
     >
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-md border border-[var(--border)]">
-          <p className="border-b border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text-primary)]">
+        <div className="rounded-md border border-subtle">
+          <p className="border-b border-subtle px-3 py-2 text-sm font-medium text-primary">
             Notifications
           </p>
           <EmptyState variant="inline" icon={<BellOff />} title="No notifications" hint="You are all caught up." />
         </div>
-        <div className="rounded-md border border-[var(--border)]">
-          <p className="border-b border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text-primary)]">
+        <div className="rounded-md border border-subtle">
+          <p className="border-b border-subtle px-3 py-2 text-sm font-medium text-primary">
             Support thread
           </p>
           <EmptyState
@@ -123,7 +123,7 @@ function AlertBannerMore() {
           </AlertBanner>
         </div>
 
-        <div className="overflow-hidden rounded-md border border-[var(--border)]">
+        <div className="overflow-hidden rounded-md border border-subtle">
           {strip && (
             <AlertBanner
               tone="warning"
@@ -141,7 +141,7 @@ function AlertBannerMore() {
           <AlertBanner tone="danger" variant="strip" size="sm">
             Payment past due — a small strip, no action.
           </AlertBanner>
-          <div className="p-3 text-sm text-[var(--text-secondary)]">
+          <div className="p-3 text-sm text-secondary">
             The page under the strips — the trial strip&apos;s action pressed {paid}×.{" "}
             {!strip && (
               <Button variant="link" onClick={() => setStrip(true)}>
@@ -152,12 +152,12 @@ function AlertBannerMore() {
         </div>
 
         <div>
-          <label className="mb-2 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+          <label className="mb-2 flex items-center gap-2 text-xs text-secondary">
             <input type="checkbox" checked={elevated} onChange={(e) => setElevated(e.target.checked)} />
             <code className="font-mono">elevated</code>
           </label>
-          <div className="relative h-32 overflow-hidden rounded-md border border-[var(--border)] p-3">
-            <p className="text-sm leading-6 text-[var(--text-secondary)]">
+          <div className="relative h-32 overflow-hidden rounded-md border border-subtle p-3">
+            <p className="text-sm leading-6 text-secondary">
               Page text under a floating notice. Page text under a floating notice. Page text under a
               floating notice. Page text under a floating notice. Page text under a floating notice. Page
               text under a floating notice.

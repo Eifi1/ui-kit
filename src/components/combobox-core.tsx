@@ -437,7 +437,7 @@ export function useComboboxCore<V extends string | number>({
 
 /** The error line under a field — the same type as `ui.tsx`'s (module-private) one,
  *  so a combobox's message is indistinguishable from an Input's. */
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
 
 /**
  * {@link Input}'s `error` for the combobox family: the message under the field, its
@@ -466,14 +466,14 @@ export function useComboboxFieldError(
 /** The anchored suggestion list's box and rows — one look for {@link Combobox},
  *  {@link InlineEntityCombobox} and {@link Autocomplete}. */
 export const SUGGESTION_LIST_CLASS =
-  "max-h-64 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] py-1 shadow-lg";
+  "max-h-64 overflow-y-auto rounded-md border border-subtle bg-surface py-1 shadow-lg";
 
 // One line at Normal; from Large up a long suggestion wraps and its row grows (text size
 // §10.17, round 0.34 T1), like every other option list of the kit.
 export const suggestionRowClass = (isActive: boolean) =>
   cn(
-    "block w-full truncate-until-large px-3 py-1.5 text-start text-sm text-[var(--text-primary)]",
-    isActive ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]",
+    "block w-full truncate-until-large px-3 py-1.5 text-start text-sm text-primary",
+    isActive ? "bg-active" : "hover:bg-hover",
   );
 
 /**
@@ -691,7 +691,7 @@ export function ComboboxPanel<V extends string | number>({
       className={cn(
         "relative",
         message !== null && cn("py-2 text-sm", isPhone ? "px-4" : "px-3"),
-        failed ? "text-[var(--danger)]" : "text-[var(--text-muted)]",
+        failed ? "text-danger" : "text-muted",
       )}
     >
       {message ??
@@ -733,7 +733,7 @@ export function ComboboxPanel<V extends string | number>({
               <li
                 role="presentation"
                 className={cn(
-                  "font-semibold uppercase tracking-wide text-[var(--text-muted)]",
+                  "font-semibold uppercase tracking-wide text-muted",
                   isPhone ? "px-4 pb-1 pt-3 text-xs" : "px-3 pb-0.5 pt-2 text-caption first:pt-1",
                 )}
               >
@@ -762,8 +762,8 @@ export function ComboboxPanel<V extends string | number>({
                 o.disabled
                   ? DISABLED_ROW_CLASS
                   : i === current && !isPhone
-                    ? "bg-[var(--bg-active)]"
-                    : !isPhone && "hover:bg-[var(--bg-hover)]",
+                    ? "bg-active"
+                    : !isPhone && "hover:bg-hover",
                 // After SHEET_ROW_CLASS, so its hover is the one cancelled.
                 o.disabled && isPhone && DISABLED_ROW_CLASS,
               )}
@@ -776,8 +776,8 @@ export function ComboboxPanel<V extends string | number>({
                   className={cn(
                     "flex size-4 shrink-0 items-center justify-center rounded border",
                     selected
-                      ? "border-[var(--bg-inverse)] bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                      : "border-[var(--border-strong)] bg-[var(--bg-surface)]",
+                      ? "border-[var(--bg-inverse)] bg-inverse text-inverse"
+                      : "border-strong bg-surface",
                   )}
                 >
                   {selected && <Check className="size-3" />}
@@ -786,14 +786,14 @@ export function ComboboxPanel<V extends string | number>({
               {o.icon && <span className="shrink-0">{o.icon}</span>}
               {/* Label and sublabel wrap from Large up (text size §10.17, round 0.34 T1). */}
               <span className="min-w-0 flex-1">
-                <span className="block truncate-until-large text-[var(--text-primary)]">{o.label}</span>
+                <span className="block truncate-until-large text-primary">{o.label}</span>
                 {o.sublabel && (
-                  <span className="block truncate-until-large text-xs text-[var(--text-placeholder)]">
+                  <span className="block truncate-until-large text-xs text-placeholder">
                     {o.sublabel}
                   </span>
                 )}
               </span>
-              {!multi && selected && <Check className="size-4 shrink-0 text-[var(--brand)]" />}
+              {!multi && selected && <Check className="size-4 shrink-0 text-brand" />}
             </button>
           </li>
           </Fragment>
@@ -822,12 +822,12 @@ export function ComboboxPanel<V extends string | number>({
               isPhone
                 ? SHEET_ROW_CLASS
                 : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
-              "text-[var(--text-secondary)]",
+              "text-secondary",
               createLocked
                 ? DISABLED_ROW_CLASS
                 : current === results.length && !isPhone
-                  ? "bg-[var(--bg-active)]"
-                  : !isPhone && "hover:bg-[var(--bg-hover)]",
+                  ? "bg-active"
+                  : !isPhone && "hover:bg-hover",
               // After SHEET_ROW_CLASS, so its hover is the one cancelled.
               createLocked && isPhone && DISABLED_ROW_CLASS,
             )}
@@ -836,7 +836,7 @@ export function ComboboxPanel<V extends string | number>({
             <span className="min-w-0 flex-1">
               <span className="block truncate-until-large">{createContent}</span>
               {createLocked && (
-                <span className="block truncate-until-large text-xs text-[var(--text-placeholder)]">
+                <span className="block truncate-until-large text-xs text-placeholder">
                   {createDisabledReason}
                 </span>
               )}
@@ -917,7 +917,7 @@ export function ComboboxPanel<V extends string | number>({
         maxHeight: placement.maxHeight,
       }}
       className={cn(
-        "z-50 flex flex-col rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+        "z-50 flex flex-col rounded-md border border-subtle bg-surface shadow-lg",
         className,
       )}
     >

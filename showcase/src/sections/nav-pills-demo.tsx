@@ -55,11 +55,11 @@ export function NavPillsDemo() {
         hint="switching a panel on the same page; wraps rather than scrolls at phone width"
       >
         <Row className="mb-3">
-          <span className="text-xs text-[var(--text-muted)]">size</span>
-          <label className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+          <span className="text-xs text-muted">size</span>
+          <label className="flex items-center gap-1 text-sm text-secondary">
             <input type="radio" name="pills-size" checked={size === "md"} onChange={() => setSize("md")} /> md
           </label>
-          <label className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+          <label className="flex items-center gap-1 text-sm text-secondary">
             <input type="radio" name="pills-size" checked={size === "sm"} onChange={() => setSize("sm")} /> sm
           </label>
         </Row>
@@ -80,12 +80,12 @@ export function NavPillsDemo() {
             ]}
           />
         </div>
-        <div className="mt-3 flex items-center gap-2 rounded-md border border-[var(--border)] p-3 text-sm text-[var(--text-secondary)]">
+        <div className="mt-3 flex items-center gap-2 rounded-md border border-subtle p-3 text-sm text-secondary">
           <Hand className="size-4 shrink-0" aria-hidden />
           {/* One span, so the sentence is one flex item that wraps as text rather than three
               items that each wrap in their own column. */}
           <span>
-            Swipe actions for <strong className="text-[var(--text-primary)]">{surface}</strong> would be set up here.
+            Swipe actions for <strong className="text-primary">{surface}</strong> would be set up here.
           </span>
         </div>
         <div className="mt-3">

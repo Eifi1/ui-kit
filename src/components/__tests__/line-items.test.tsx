@@ -158,7 +158,7 @@ describe("LineItems", () => {
       expect(box).toHaveTextContent("Left to assign");
       const value = within(box).getByText("CHF 12.00");
       expect(value).toHaveAttribute("data-tone", "danger");
-      expect(value.className).toContain("text-[var(--danger)]");
+      expect(value.className).toMatch(/text-danger(?![\w-])/);
       await userEvent.click(within(box).getByRole("button", { name: "Set amount to total" }));
       expect(onClick).toHaveBeenCalledTimes(1);
       // Under the lines: after the last row, before the add button.
@@ -168,7 +168,7 @@ describe("LineItems", () => {
 
       rerender(<Lines summary={{ ...summary, tone: "success" }} disabled />);
       const after = container.querySelector("[data-line-items-summary]") as HTMLElement;
-      expect(within(after).getByText("CHF 12.00").className).toContain("text-[var(--success)]");
+      expect(within(after).getByText("CHF 12.00").className).toMatch(/text-success(?![\w-])/);
       expect(within(after).getByRole("button", { name: "Set amount to total" })).toBeDisabled();
     });
 
@@ -176,7 +176,7 @@ describe("LineItems", () => {
       const { container, rerender } = render(<Lines summary={{ label: "Left", value: "0.00" }} />);
       expect(screen.getByText("0.00")).toHaveAttribute("data-tone", "neutral");
       rerender(<Lines summary={{ label: "Left", value: "—", tone: "muted" }} />);
-      expect(screen.getByText("—").className).toContain("text-[var(--text-muted)]");
+      expect(screen.getByText("—").className).toContain("text-muted");
       rerender(<Lines />);
       expect(container.querySelector("[data-line-items-summary]")).toBeNull();
     });
@@ -277,10 +277,10 @@ describe("LineItems", () => {
       const { rerender } = render(<Lines summary={{ label: "Waiting for the total", tone: "muted" }} />);
       const label = screen.getByText("Waiting for the total");
       expect(label).toHaveAttribute("data-tone", "muted");
-      expect(label.className).toContain("text-[var(--text-muted)]");
+      expect(label.className).toContain("text-muted");
       rerender(<Lines summary={{ label: "Left", value: "1.00", tone: "danger" }} />);
       expect(screen.getByText("Left")).not.toHaveAttribute("data-tone");
-      expect(screen.getByText("Left").className).not.toContain("text-[var(--danger)]");
+      expect(screen.getByText("Left").className).not.toMatch(/text-danger(?![\w-])/);
     });
 
     it("summary.action variant link: a muted link button; secondary by default", () => {
@@ -290,7 +290,7 @@ describe("LineItems", () => {
       rerender(<Lines summary={{ label: "Left", action: { label: "Settle", onClick, variant: "link" } }} />);
       const link = screen.getByRole("button", { name: "Settle" });
       expect(link.className).toContain("p-0");
-      expect(link.className).toContain("text-[var(--text-secondary)]");
+      expect(link.className).toContain("text-secondary");
       fireEvent.click(link);
       expect(onClick).toHaveBeenCalledTimes(1);
     });

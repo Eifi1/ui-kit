@@ -101,8 +101,8 @@ function DescriptionNumeric() {
       hint="a numeric list of rows never stacks: a figure is short"
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-md border border-[var(--border)] p-3">
-          <p className="mb-1 text-xs font-medium text-[var(--text-muted)]">numeric, compact</p>
+        <div className="rounded-md border border-subtle p-3">
+          <p className="mb-1 text-xs font-medium text-muted">numeric, compact</p>
           <DescriptionList numeric density="compact">
             <DescriptionItem term="Net rent">{EUR.format(1180)}</DescriptionItem>
             <DescriptionItem term="Service charge">{EUR.format(245.5)}</DescriptionItem>
@@ -112,8 +112,8 @@ function DescriptionNumeric() {
             </DescriptionItem>
           </DescriptionList>
         </div>
-        <div className="rounded-md border border-[var(--border)] p-3">
-          <p className="mb-1 text-xs font-medium text-[var(--text-muted)]">text, the same width</p>
+        <div className="rounded-md border border-subtle p-3">
+          <p className="mb-1 text-xs font-medium text-muted">text, the same width</p>
           <DescriptionList>
             <DescriptionItem term="Landlord">Hausverwaltung Nord GmbH</DescriptionItem>
             <DescriptionItem term="Contract">Indexed, from 2021</DescriptionItem>
@@ -161,11 +161,11 @@ function StaticTable() {
             { value: "compact", label: "compact" },
           ]}
         />
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={zebra} onChange={(e) => setZebra(e.target.checked)} />
           <code className="font-mono">zebra</code>
         </label>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={hover} onChange={(e) => setHover(e.target.checked)} />
           <code className="font-mono">hover</code>
         </label>
@@ -230,10 +230,10 @@ function OverflowTable() {
       label="Table — overflow"
       hint="a table cannot shrink below its content; the wrapper scrolls, and while it does it is a named, focusable region"
     >
-      <Table density="compact" aria-label="Monthly budget by category" wrapperClassName="max-h-44 rounded-md border border-[var(--border)]">
+      <Table density="compact" aria-label="Monthly budget by category" wrapperClassName="max-h-44 rounded-md border border-subtle">
         <TableHead>
           <TableRow>
-            <TableHeaderCell className="sticky start-0 bg-[var(--bg-surface-2)]">Category</TableHeaderCell>
+            <TableHeaderCell className="sticky start-0 bg-surface-2">Category</TableHeaderCell>
             {WIDE_COLUMNS.map((m) => (
               <TableHeaderCell key={m} numeric>
                 {m}
@@ -244,7 +244,7 @@ function OverflowTable() {
         <TableBody>
           {[...WIDE_ROWS, ...WIDE_ROWS].map(([name, base], i) => (
             <TableRow key={i}>
-              <TableHeaderCell className="sticky start-0 bg-[var(--bg-surface)] font-normal">{name}</TableHeaderCell>
+              <TableHeaderCell className="sticky start-0 bg-surface font-normal">{name}</TableHeaderCell>
               {WIDE_COLUMNS.map((m, j) => (
                 <TableCell key={m} numeric>
                   {EUR.format(base + ((i + 1) * (j + 3)) % 40)}
@@ -270,7 +270,7 @@ function OverflowTable() {
 function Separators() {
   return (
     <Example label="Separator" hint='role="separator" by default; decorative={true} is role="none" — a line for the eye only'>
-      <div className="space-y-4 text-sm text-[var(--text-secondary)]">
+      <div className="space-y-4 text-sm text-secondary">
         <div>
           <p>Account settings</p>
           <Separator className="my-3" />
@@ -284,7 +284,7 @@ function Separators() {
           <Separator orientation="vertical" />
           <Button variant="ghost">Link</Button>
           <Separator orientation="vertical" decorative />
-          <span className="text-xs text-[var(--text-muted)]">saved 2 min ago</span>
+          <span className="text-xs text-muted">saved 2 min ago</span>
         </div>
       </div>
       <div className="mt-3">
@@ -312,9 +312,9 @@ function ScrollAreas() {
     >
       <div className="grid gap-4 md:grid-cols-3 [&>*]:min-w-0">
         <div className="space-y-1">
-          <p className="font-mono text-caption text-[var(--text-muted)]">vertical (default) · label</p>
-          <ScrollArea label="Activity log" className="h-40 rounded-md border border-[var(--border)] p-2">
-            <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
+          <p className="font-mono text-caption text-muted">vertical (default) · label</p>
+          <ScrollArea label="Activity log" className="h-40 rounded-md border border-subtle p-2">
+            <ul className="space-y-1 text-xs text-secondary">
               {(short ? ACTIVITY.slice(0, 3) : ACTIVITY).map((line) => (
                 <li key={line}>{line}</li>
               ))}
@@ -325,11 +325,11 @@ function ScrollAreas() {
           </Button>
         </div>
         <div className="space-y-1">
-          <p className="font-mono text-caption text-[var(--text-muted)]">horizontal</p>
-          <ScrollArea orientation="horizontal" label="Tags" className="rounded-md border border-[var(--border)] p-2">
+          <p className="font-mono text-caption text-muted">horizontal</p>
+          <ScrollArea orientation="horizontal" label="Tags" className="rounded-md border border-subtle p-2">
             <div className="flex w-max gap-2">
               {TAGS.map((tag) => (
-                <span key={tag} className="rounded-full bg-[var(--bg-surface-2)] px-2 py-0.5 text-xs text-[var(--text-secondary)]">
+                <span key={tag} className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-secondary">
                   {tag}
                 </span>
               ))}
@@ -337,11 +337,11 @@ function ScrollAreas() {
           </ScrollArea>
         </div>
         <div className="space-y-1">
-          <p className="font-mono text-caption text-[var(--text-muted)]">both</p>
-          <ScrollArea orientation="both" label="Grid preview" className="h-40 rounded-md border border-[var(--border)]">
+          <p className="font-mono text-caption text-muted">both</p>
+          <ScrollArea orientation="both" label="Grid preview" className="h-40 rounded-md border border-subtle">
             <div className="grid w-[36rem] grid-cols-6 gap-1 p-2">
               {Array.from({ length: 60 }, (_, i) => (
-                <span key={i} className="rounded bg-[var(--bg-surface-2)] px-2 py-3 text-center font-mono text-micro text-[var(--text-muted)]">
+                <span key={i} className="rounded bg-surface-2 px-2 py-3 text-center font-mono text-micro text-muted">
                   {i + 1}
                 </span>
               ))}

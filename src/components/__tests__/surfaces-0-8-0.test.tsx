@@ -63,7 +63,7 @@ describe("EmptyState icon and action slots", () => {
 
 describe("AlertBanner 0.8.0", () => {
   it("offers info and neutral tones, with frames from the one source", () => {
-    expect(toneFrameClass("info")).toContain("border-[var(--info-border)]");
+    expect(toneFrameClass("info")).toContain("border-info");
     expect(alertFrameClass("info")).toContain("p-[calc(0.75rem-1px)]"); // 2px border, like danger/warning
     expect(alertFrameClass("neutral")).toContain("p-3");
     render(
@@ -72,9 +72,9 @@ describe("AlertBanner 0.8.0", () => {
         <AlertBanner tone="neutral" data-testid="neutral">Values are rounded</AlertBanner>
       </>,
     );
-    expect(screen.getByTestId("info").className).toContain("text-[var(--info)]");
-    expect(screen.getByTestId("info").className).toContain("bg-[var(--info-bg)]");
-    expect(screen.getByTestId("neutral").className).toContain("border-[var(--border)]");
+    expect(screen.getByTestId("info").className).toMatch(/text-info(?![\w-])/);
+    expect(screen.getByTestId("info").className).toContain("bg-info-soft");
+    expect(screen.getByTestId("neutral").className).toContain("border-subtle");
   });
 
   it("a neutral banner draws no warning triangle", () => {
@@ -88,7 +88,7 @@ describe("AlertBanner 0.8.0", () => {
     const box = screen.getByTestId("b");
     expect(box.tagName).toBe("DIV");
     expect(box).not.toHaveAttribute("role");
-    expect(box.className).toContain("border-[var(--danger-border-strong)]");
+    expect(box.className).toContain("border-danger-strong");
   });
 
   it("onDismiss renders a labelled × that calls it", () => {
@@ -125,7 +125,7 @@ describe("AlertBanner 0.8.0", () => {
     const button = screen.getByRole("button", { name: /Budget 92% spent/ });
     expect(button).toBe(screen.getByTestId("row"));
     expect(button).toHaveAttribute("type", "button");
-    expect(button.className).toContain("border-[var(--warning-border)]");
+    expect(button.className).toMatch(/border-warning(?![\w-])/);
     expect(button.querySelectorAll("button, a")).toHaveLength(0);
     fireEvent.click(button);
     expect(onClick).toHaveBeenCalledOnce();
@@ -167,7 +167,7 @@ describe("AlertBanner 0.8.0", () => {
     );
     const warning = screen.getByRole("status");
     expect(warning).toHaveTextContent("Radius below the minimum");
-    expect(warning.className).toContain("text-[var(--warning)]");
+    expect(warning.className).toMatch(/text-warning(?![\w-])/);
     expect(warning.className).toContain("inline-flex");
     expect(warning.className).not.toMatch(/\bborder|\bp-|\bbg-/);
     expect(screen.getByRole("alert")).toHaveTextContent("Solver failed");
@@ -189,9 +189,9 @@ describe("Chip 0.8.0", () => {
     render(<Chip variant="outline" tone="warning" data-testid="c">DEV</Chip>);
     const chip = screen.getByTestId("c");
     expect(chip.className).toContain("bg-transparent");
-    expect(chip.className).toContain("border-[var(--warning-border)]");
-    expect(chip.className).toContain("text-[var(--warning)]");
-    expect(chip.className).not.toContain("bg-[var(--warning-bg)]");
+    expect(chip.className).toMatch(/border-warning(?![\w-])/);
+    expect(chip.className).toMatch(/text-warning(?![\w-])/);
+    expect(chip.className).not.toContain("bg-warning-soft");
   });
 
   it("variant=solid is the filled count style under contrasting text", () => {
@@ -205,7 +205,7 @@ describe("Chip 0.8.0", () => {
 
   it("the default is still the soft look", () => {
     render(<Chip tone="warning" data-testid="c">x</Chip>);
-    expect(screen.getByTestId("c").className).toContain("bg-[var(--warning-bg)]");
+    expect(screen.getByTestId("c").className).toContain("bg-warning-soft");
   });
 
   it("shape=square swaps the pill radius, on the split pill too", () => {
@@ -323,7 +323,7 @@ describe("IconButton 0.8.0", () => {
   it("tone=warning is amber at rest", () => {
     render(<IconButton tone="warning" aria-label="Needs review">x</IconButton>);
     const cls = screen.getByRole("button").className;
-    expect(cls).toContain("text-[var(--warning)]");
+    expect(cls).toMatch(/text-warning(?![\w-])/);
     // Warning's loud line since 0.33: amber-300 was a 1.1:1 focus ring on the light surfaces.
     expect(cls).toContain("focus-visible:ring-warning-strong");
   });
@@ -334,7 +334,7 @@ describe("IconButton 0.8.0", () => {
     expect(cls).toContain("rounded-full");
     expect(cls).not.toMatch(/\brounded(?!-full)\b/);
     expect(cls).toContain("var(--bg-inverse)");
-    expect(cls).toContain("text-[var(--text-inverse)]");
+    expect(cls).toContain("text-inverse");
   });
 });
 
@@ -342,7 +342,7 @@ describe("Card variant=inset", () => {
   it("is surface-2 with its own small padding, no border and no shadow", () => {
     render(<Card variant="inset" data-testid="c">Results</Card>);
     const cls = screen.getByTestId("c").className;
-    expect(cls).toContain("bg-[var(--bg-surface-2)]");
+    expect(cls).toContain("bg-surface-2");
     expect(cls).toContain("p-3");
     expect(cls).not.toContain("shadow");
     expect(cls).not.toMatch(/\bborder\b/);

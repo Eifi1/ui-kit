@@ -345,8 +345,8 @@ export function FeedbackNoteButtons025Demo() {
             buttonSize: LOOKS[look].size,
           }}
         />
-        <p className="text-xs text-[var(--text-muted)]">
-          Last sent: <span className="font-mono text-[var(--text-secondary)]">{sent ?? "— nothing yet —"}</span>
+        <p className="text-xs text-muted">
+          Last sent: <span className="font-mono text-secondary">{sent ?? "— nothing yet —"}</span>
         </p>
         <Note>
           The note editor sits inline in a triage panel and ends in a ghost Discard and a brand

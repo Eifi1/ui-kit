@@ -29,7 +29,7 @@ function ChipHues() {
           hue and cut the fourth mid-word with nothing to say more was there. Below `sm` each
           variant is its own block instead — its name on top, the five chips wrapping under it. */}
       <div className="overflow-x-auto">
-        <table className="text-xs text-[var(--text-secondary)] max-sm:block">
+        <table className="text-xs text-secondary max-sm:block">
           <tbody className="max-sm:block max-sm:space-y-3">
             {HUE_VARIANTS.map((variant) => (
               <tr key={variant} className="max-sm:flex max-sm:flex-wrap max-sm:gap-1">
@@ -71,7 +71,7 @@ function ChipXsCheckboxDot() {
       hint="xs fits inside a line of figures; checkbox reads as TICKED; dot is a status in a dense column"
     >
       <div className="space-y-4">
-        <p className="text-sm text-[var(--text-primary)]">
+        <p className="text-sm text-primary">
           Groceries € 412.80{" "}
           <Chip size="xs" tone="warning">
             92 %
@@ -85,7 +85,7 @@ function ChipXsCheckboxDot() {
           </Chip>
         </p>
         <div>
-          <p className="mb-1 font-mono text-xs text-[var(--text-secondary)]">
+          <p className="mb-1 font-mono text-xs text-secondary">
             checkbox — which categories come along: {included.join(", ") || "none"}
           </p>
           <Row>
@@ -99,12 +99,12 @@ function ChipXsCheckboxDot() {
         <div className="overflow-x-auto">
           <table className="text-sm">
             <thead>
-              <tr className="text-start text-xs text-[var(--text-muted)]">
+              <tr className="text-start text-xs text-muted">
                 <th className="pe-6 text-start font-medium">Unit</th>
                 <th className="text-start font-medium">Status (variant=&quot;dot&quot;)</th>
               </tr>
             </thead>
-            <tbody className="text-[var(--text-primary)]">
+            <tbody className="text-primary">
               {[
                 ["1st floor, west", "success", "Rented"],
                 ["1st floor, east", "warning", "Notice given"],
@@ -166,7 +166,7 @@ function ToggleGroupSmallAndField() {
     >
       <div className="space-y-4">
         <Row>
-          <span className="text-xs text-[var(--text-muted)]">Range</span>
+          <span className="text-xs text-muted">Range</span>
           <ToggleGroup<"1d" | "7d" | "30d">
             aria-label="Range"
             size="sm"
@@ -178,7 +178,7 @@ function ToggleGroupSmallAndField() {
               { value: "30d", label: "30 days" },
             ]}
           />
-          <span className="font-mono text-xs text-[var(--text-secondary)]">size=&quot;sm&quot; · {range}</span>
+          <span className="font-mono text-xs text-secondary">size=&quot;sm&quot; · {range}</span>
         </Row>
         <div className="grid items-stretch gap-3 sm:grid-cols-3">
           <Input label="Speed (km/h)" defaultValue="80" inputMode="decimal" />
@@ -213,7 +213,7 @@ function ToggleGroupSmallAndField() {
           />
           <Input label="Notes" placeholder="Optional" />
         </div>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={error} onChange={(e) => setError(e.target.checked)} />
           <span>
             show the Gear field&apos;s <code className="font-mono">error</code>

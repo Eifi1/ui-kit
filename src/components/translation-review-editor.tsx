@@ -61,7 +61,7 @@ function Then({ label, text }: { label: string; text: string }) {
   return (
     <div className="mt-1.5 min-w-0">
       <span className="text-xs font-medium">{label}</span>
-      <p className="whitespace-pre-line break-words text-[var(--text-secondary)]">{text}</p>
+      <p className="whitespace-pre-line break-words text-secondary">{text}</p>
     </div>
   );
 }
@@ -153,21 +153,21 @@ export function TranslationReviewEditor({
 
   return (
     <div className={cn("min-w-0 space-y-3 text-sm", className)}>
-      <code className="block break-all text-xs text-[var(--text-muted)]">{row.key}</code>
+      <code className="block break-all text-xs text-muted">{row.key}</code>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="min-w-0">
           <SectionLabel as="span" size="xs">
             {referenceLabel}
           </SectionLabel>
-          <p className="mt-1 whitespace-pre-line break-words text-[var(--text-secondary)]">{row.reference}</p>
+          <p className="mt-1 whitespace-pre-line break-words text-secondary">{row.reference}</p>
         </div>
         <div className="min-w-0">
           <SectionLabel as="span" size="xs">
             {localeLabel}
           </SectionLabel>
           {missing ? (
-            <p className="mt-1 italic text-[var(--text-muted)]">{labels.missingText}</p>
+            <p className="mt-1 italic text-muted">{labels.missingText}</p>
           ) : (
             <p lang={row.locale} className="mt-1 whitespace-pre-line break-words">
               {row.text}

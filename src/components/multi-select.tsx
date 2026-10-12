@@ -222,7 +222,7 @@ export function MultiSelect({
             "pe-9",
             label !== undefined && FIELD_FLOATING_PAD,
             // FIELD_TRIGGER's hover would still light a trigger nothing can open.
-            "disabled:hover:bg-[var(--bg-surface-2)]",
+            "disabled:hover:bg-surface-2",
             // Dimmed like EntityCombobox's and MultiEntityCombobox's disabled triggers;
             // only the label was, so a disabled MultiSelect read as live (showcase audit).
             "disabled:cursor-not-allowed disabled:opacity-50",
@@ -280,7 +280,7 @@ export function MultiSelect({
                   type="button"
                   onClick={selectAll}
                   disabled={allChecked}
-                  className="rounded px-2 py-0.5 text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] disabled:opacity-40"
+                  className="rounded px-2 py-0.5 text-secondary hover:bg-hover disabled:opacity-40"
                 >
                   {labels.selectAll}
                 </button>
@@ -288,7 +288,7 @@ export function MultiSelect({
                   type="button"
                   onClick={clearAll}
                   disabled={!anyChecked}
-                  className="rounded px-2 py-0.5 text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] disabled:opacity-40"
+                  className="rounded px-2 py-0.5 text-secondary hover:bg-hover disabled:opacity-40"
                 >
                   {labels.clear}
                 </button>
@@ -315,9 +315,9 @@ export function MultiSelect({
                     onClick={() => toggle(o.value)}
                     onMouseEnter={() => setActive(i)}
                     className={cn(
-                      "flex w-full items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-[var(--bg-hover)]",
-                      checked && "bg-[var(--bg-active)]",
-                      i === active && "bg-[var(--bg-hover)]",
+                      "flex w-full items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-hover",
+                      checked && "bg-active",
+                      i === active && "bg-hover",
                     )}
                   >
                     <span className="flex items-center gap-2 min-w-0">
@@ -328,16 +328,16 @@ export function MultiSelect({
                         className={cn(
                           "flex size-4 shrink-0 items-center justify-center rounded border",
                           checked
-                            ? "border-[var(--bg-inverse)] bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                            : "border-[var(--border-strong)] bg-[var(--bg-surface)]",
+                            ? "border-[var(--bg-inverse)] bg-inverse text-inverse"
+                            : "border-strong bg-surface",
                         )}
                       >
                         {checked && <Check className="size-3" />}
                       </span>
                       {/* Label and hint wrap from Large up (round 0.34 T1). */}
-                      <span className="truncate-until-large text-[var(--text-primary)]">{o.label}</span>
+                      <span className="truncate-until-large text-primary">{o.label}</span>
                       {o.hint && (
-                        <span className="truncate-until-large text-xs text-[var(--text-placeholder)]">
+                        <span className="truncate-until-large text-xs text-placeholder">
                           {o.hint}
                         </span>
                       )}

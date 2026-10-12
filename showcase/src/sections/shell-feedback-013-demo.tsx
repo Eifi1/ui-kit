@@ -9,7 +9,7 @@ import { Example, Note, Row } from "../lib/section";
  * the caller's own (F9).
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** keksdose F7: the admin role chip in the account header links to the admin area. */
@@ -20,7 +20,7 @@ export function AccountHeaderLinkDemo() {
       label="TopBarActionMenu — a link in the header that closes the menu"
       hint="header.extra takes (close) => ReactNode, like footer"
     >
-      <div className="flex justify-end rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-2">
+      <div className="flex justify-end rounded-md border border-subtle bg-surface-2 p-2">
         <TopBarActionMenu
           ariaLabel="Account menu"
           triggerClassName="rounded-full"

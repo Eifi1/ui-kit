@@ -101,9 +101,9 @@ function useInPageAnchors(box: React.RefObject<HTMLDivElement | null>) {
 
 function DemoHeader() {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
-      <span className="text-sm font-semibold text-[var(--text-primary)]">Example App</span>
-      <span className="text-xs text-[var(--text-muted)]">the app&apos;s public header</span>
+    <div className="flex items-center justify-between gap-3 border-b border-subtle bg-surface px-4 py-3">
+      <span className="text-sm font-semibold text-primary">Example App</span>
+      <span className="text-xs text-muted">the app&apos;s public header</span>
     </div>
   );
 }
@@ -196,7 +196,7 @@ export function Legal028Demo() {
             { value: "terms", label: "Terms" },
           ]}
         />
-        <div ref={box} className="overflow-hidden rounded-lg border border-[var(--border)]">
+        <div ref={box} className="overflow-hidden rounded-lg border border-subtle">
           <UiKitProvider linkComponent={link}>
             {/* An app renders it on its own route: an h1, a <main>, and noindex. A
                 preview inside this page is none of those. */}
@@ -244,12 +244,12 @@ export function LegalAccept028Demo() {
           <LegalAcceptCheckbox checked={accepted} onCheckedChange={setAccepted} />
           <Button disabled={!accepted}>Create account</Button>
           {page !== null && (
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               In an app, that link opens {code(`/${page}`)}.
             </p>
           )}
-          <div className="rounded-md border border-[var(--border)] p-3">
-            <p className="mb-2 text-xs text-[var(--text-muted)]">An account menu&apos;s footer:</p>
+          <div className="rounded-md border border-subtle p-3">
+            <p className="mb-2 text-xs text-muted">An account menu&apos;s footer:</p>
             <LegalLinks nav={false} />
           </div>
         </div>

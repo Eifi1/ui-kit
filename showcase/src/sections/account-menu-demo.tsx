@@ -94,22 +94,22 @@ function AccountMenu() {
       hint="avatar trigger with a badge, identity header, choices, a danger row, children rows and a legal footer"
     >
       <Row className="mb-3">
-        <span className="text-xs text-[var(--text-muted)]">align</span>
-        <label className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+        <span className="text-xs text-muted">align</span>
+        <label className="flex items-center gap-1 text-sm text-secondary">
           <input type="radio" name="account-align" checked={align === "end"} onChange={() => setAlign("end")} /> end
         </label>
-        <label className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-1 text-sm text-secondary">
           <input type="radio" name="account-align" checked={align === "start"} onChange={() => setAlign("start")} /> start
         </label>
         <button
           type="button"
-          className="text-sm text-[var(--brand)] underline"
+          className="text-sm text-brand underline"
           onClick={() => setUnread((n) => n + 1)}
         >
           one more notification
         </button>
       </Row>
-      <div className={`flex rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-2 ${align === "end" ? "justify-end" : "justify-start"}`}>
+      <div className={`flex rounded-md border border-subtle bg-surface-2 p-2 ${align === "end" ? "justify-end" : "justify-start"}`}>
         <TopBarActionMenu
           ariaLabel="Account menu"
           align={align}
@@ -123,7 +123,7 @@ function AccountMenu() {
               />
               <ChevronDown
                 aria-hidden
-                className={`size-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-180" : ""}`}
+                className={`size-4 text-muted transition-transform ${open ? "rotate-180" : ""}`}
               />
             </>
           )}
@@ -155,7 +155,7 @@ function AccountMenu() {
         >
           {(close) => (
             <>
-              <li className="my-1 border-t border-[var(--border)]" />
+              <li className="my-1 border-t border-subtle" />
               {(["household", "business"] as const).map((w) => (
                 <li key={w}>
                   <MenuItem

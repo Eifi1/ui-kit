@@ -50,7 +50,7 @@ export function Surfaces017Demo() {
               </IconButton>
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-3 text-sm text-[var(--text-secondary)]">
+          <CardContent className="pt-3 text-sm text-secondary">
             Your password was changed 3 months ago.
           </CardContent>
         </Card>

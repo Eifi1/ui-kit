@@ -65,11 +65,11 @@ export function ChatComposerSlot024Demo() {
         />
         <div
           className={
-            width === "phone" ? "w-full max-w-[390px] space-y-3 rounded-lg border border-[var(--border)] p-4" : "space-y-3"
+            width === "phone" ? "w-full max-w-[390px] space-y-3 rounded-lg border border-subtle p-4" : "space-y-3"
           }
         >
           {sent.length > 0 && (
-            <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+            <ul className="space-y-1 text-sm text-secondary">
               {sent.map((m, i) => (
                 <li key={i} className="break-words">
                   {m}

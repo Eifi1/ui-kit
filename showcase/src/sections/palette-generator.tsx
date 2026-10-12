@@ -168,13 +168,13 @@ function cssBlock(selector: string, p: DerivedPalette, chart: string[] | null): 
  * the word carries it to a screen reader, and the colour is the third copy.
  */
 function Verdict({ check }: { check?: ContrastCheck }) {
-  if (!check) return <span className="text-[var(--text-muted)]">—</span>;
+  if (!check) return <span className="text-muted">—</span>;
   const Icon = check.passes ? Check : CircleAlert;
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1.5 font-mono",
-        check.passes ? "text-[var(--text-secondary)]" : "font-semibold text-[var(--danger)]",
+        check.passes ? "text-secondary" : "font-semibold text-danger",
       )}
     >
       <Icon aria-hidden className="size-3.5 shrink-0" />
@@ -191,7 +191,7 @@ function AuditSummary({ label, report }: { label: string; report: ContrastReport
     <span
       className={cn(
         "inline-flex items-center gap-1.5 text-xs",
-        failed ? "font-semibold text-[var(--danger)]" : "text-[var(--text-muted)]",
+        failed ? "font-semibold text-danger" : "text-muted",
       )}
     >
       {failed ? <TriangleAlert aria-hidden className="size-3.5" /> : <Check aria-hidden className="size-3.5" />}
@@ -217,7 +217,7 @@ function AuditTable({ light, dark }: { light: ContrastReport; dark: ContrastRepo
     // width — so the columns still line up row to row and nothing needs a sideways scroll.
     <table className="w-full text-left text-xs max-sm:block">
       <thead className="max-sm:block">
-        <tr className={cn("border-b border-[var(--border)] text-[var(--text-muted)]", AUDIT_ROW)}>
+        <tr className={cn("border-b border-subtle text-muted", AUDIT_ROW)}>
           <th scope="col" className="py-1.5 pr-3 font-medium">Pair</th>
           <th scope="col" className="py-1.5 pr-3 font-medium">Needs</th>
           <th scope="col" className="py-1.5 pr-3 font-medium">Light</th>
@@ -235,16 +235,16 @@ function AuditTable({ light, dark }: { light: ContrastReport; dark: ContrastRepo
               // The fill is the fourth signal, and the only one that finds the row while
               // you are scrolling past rather than reading it.
               className={cn(
-                "border-b border-[var(--border)] last:border-b-0",
+                "border-b border-subtle last:border-b-0",
                 AUDIT_ROW,
-                failed && "bg-[var(--danger-bg)]",
+                failed && "bg-danger-soft",
               )}
             >
-              <td className="py-1.5 pr-3 align-top font-mono text-[var(--text-primary)] max-sm:break-words">{check.pair}</td>
-              <td className="py-1.5 pr-3 align-top font-mono text-[var(--text-muted)]">{check.required}:1</td>
+              <td className="py-1.5 pr-3 align-top font-mono text-primary max-sm:break-words">{check.pair}</td>
+              <td className="py-1.5 pr-3 align-top font-mono text-muted">{check.required}:1</td>
               <td className="py-1.5 pr-3 align-top"><Verdict check={check} /></td>
               <td className="py-1.5 pr-3 align-top"><Verdict check={other} /></td>
-              <td className="py-1.5 align-top text-[var(--text-muted)] max-sm:col-span-full max-sm:pt-0">{check.rule}</td>
+              <td className="py-1.5 align-top text-muted max-sm:col-span-full max-sm:pt-0">{check.rule}</td>
             </tr>
           );
         })}
@@ -291,15 +291,15 @@ function AnchorField({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="w-20 shrink-0 text-xs font-medium text-[var(--text-primary)]">{label}</span>
+      <span className="w-20 shrink-0 text-xs font-medium text-primary">{label}</span>
       {value === null ? (
         <>
           <span
             aria-hidden
-            className="size-9 shrink-0 rounded-md border border-dashed border-[var(--border)]"
+            className="size-9 shrink-0 rounded-md border border-dashed border-subtle"
             style={auto ? { background: auto } : undefined}
           />
-          <span className="font-mono text-xs text-[var(--text-muted)]">
+          <span className="font-mono text-xs text-muted">
             {/* "none" and not a sentence: the long "not derived unless pinned" pushed
                 accent's Pin onto a line of its own, so its row broke unlike its siblings.
                 The hint under it already says the role exists only when pinned. */}
@@ -318,7 +318,7 @@ function AnchorField({
             // parsed. Typing into the hex field never makes the swatch jump to black.
             value={parsed ? toHex(parsed) : (auto ?? seed)}
             onChange={(e) => onChange(e.target.value)}
-            className="size-9 shrink-0 cursor-pointer rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-1"
+            className="size-9 shrink-0 cursor-pointer rounded-md border border-subtle bg-surface p-1"
           />
           <input
             type="text"
@@ -330,7 +330,7 @@ function AnchorField({
             className={cn(FIELD_BASE, "w-28 font-mono")}
           />
           {invalid && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--danger)]">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-danger">
               <CircleAlert aria-hidden className="size-3.5" />
               not a hex colour
             </span>
@@ -344,7 +344,7 @@ function AnchorField({
       )}
       {/* On a phone the hint always takes its own line: left to wrap, the short ones
           ("amber") stayed on the row and the long ones dropped, so the rows looked ragged. */}
-      <span className="text-xs text-[var(--text-muted)] max-sm:basis-full">{hint}</span>
+      <span className="text-xs text-muted max-sm:basis-full">{hint}</span>
     </div>
   );
 }
@@ -388,25 +388,25 @@ function RampReport({ report }: { report: ChartRampReport }) {
         [".colors.length", String(report.colors.length)],
         [
           ".minSeparation",
-          <span className={report.minSeparation < 0.05 ? "text-[var(--danger)]" : undefined}>
+          <span className={report.minSeparation < 0.05 ? "text-danger" : undefined}>
             {report.minSeparation.toFixed(4)}
           </span>,
         ],
         [
           ".minContrast",
-          <span className={report.minContrast < 3 ? "text-[var(--danger)]" : undefined}>
+          <span className={report.minContrast < 3 ? "text-danger" : undefined}>
             {report.minContrast.toFixed(2)}:1
           </span>,
         ],
         [
           ".collisions.length",
-          <span className={report.collisions.length ? "text-[var(--danger)]" : undefined}>
+          <span className={report.collisions.length ? "text-danger" : undefined}>
             {report.collisions.length}
           </span>,
         ],
         [
           ".lowContrast.length",
-          <span className={report.lowContrast.length ? "text-[var(--danger)]" : undefined}>
+          <span className={report.lowContrast.length ? "text-danger" : undefined}>
             {report.lowContrast.length}
           </span>,
         ],
@@ -415,7 +415,7 @@ function RampReport({ report }: { report: ChartRampReport }) {
           <span
             className={cn(
               "inline-flex items-center gap-1.5",
-              report.passes ? undefined : "font-semibold text-[var(--danger)]",
+              report.passes ? undefined : "font-semibold text-danger",
             )}
           >
             {report.passes ? <Check aria-hidden className="size-3.5" /> : <CircleAlert aria-hidden className="size-3.5" />}
@@ -561,8 +561,8 @@ export function PaletteGenerator() {
             seed={DEFAULT_BRAND}
             onChange={changeBrand}
           />
-          <div className="border-t border-[var(--border)] pt-3">
-            <p className="mb-2 text-xs text-[var(--text-muted)]">
+          <div className="border-t border-subtle pt-3">
+            <p className="mb-2 text-xs text-muted">
               Hard points. Unpinned, each is placed away from the brand and from its
               siblings within its own licence to move; pinned, it is honoured exactly.
             </p>
@@ -583,9 +583,9 @@ export function PaletteGenerator() {
               ))}
             </div>
           </div>
-          <div className="border-t border-[var(--border)] pt-3">
+          <div className="border-t border-subtle pt-3">
             <Row className="gap-2">
-              <span className="text-xs text-[var(--text-muted)]">Try:</span>
+              <span className="text-xs text-muted">Try:</span>
               {TRY_THESE.map(([hex, why]) => (
                 <Button
                   key={hex}
@@ -595,7 +595,7 @@ export function PaletteGenerator() {
                 >
                   <span aria-hidden className="size-3.5 rounded-sm" style={{ background: hex }} />
                   <span className="font-mono">{hex}</span>
-                  <span className="text-[var(--text-muted)]">{why}</span>
+                  <span className="text-muted">{why}</span>
                 </Button>
               ))}
             </Row>
@@ -627,7 +627,7 @@ export function PaletteGenerator() {
               value={surfaceTint ?? 0.55}
               onChange={setSurfaceTint}
             />
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               How much of the brand hue the surfaces carry. 0 is neutral grey; the default is
               0.55; above ~0.5 they start competing with the content.
             </p>
@@ -644,7 +644,7 @@ export function PaletteGenerator() {
               value={mutedTarget ?? 4.6}
               onChange={setMutedTarget}
             />
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               The contrast the muted text is solved to against the worst surface (default
               4.6). <code className="font-mono">primary</code> (10) and{" "}
               <code className="font-mono">secondary</code> (7) take a target the same way.
@@ -663,7 +663,7 @@ export function PaletteGenerator() {
         <div className="grid gap-6 lg:grid-cols-2">
           {([["Light", light], ["Dark", dark]] as const).map(([label, p]) => (
             <div key={label} className="min-w-0 space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">
                 {label}
               </h4>
               <ThemePreview p={p} />
@@ -672,7 +672,7 @@ export function PaletteGenerator() {
                   <Swatch key={name} name={name} value={p.tokens[key]} />
                 ))}
               </div>
-              <div className="grid gap-3 border-t border-[var(--border)] pt-3 sm:grid-cols-2">
+              <div className="grid gap-3 border-t border-subtle pt-3 sm:grid-cols-2">
                 {SEMANTIC_VARS.map(([name, key]) => {
                   const value = p.semantic[key];
                   return value ? <Swatch key={name} name={name} value={value} /> : null;
@@ -723,11 +723,11 @@ export function PaletteGenerator() {
         <div className="grid gap-4 lg:grid-cols-2">
           {([["Light", light], ["Dark", dark]] as const).map(([label, p]) => (
             <div key={label} className="space-y-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">
                 {label}
               </h4>
               {p.warnings.length === 0 ? (
-                <p className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+                <p className="inline-flex items-center gap-1.5 text-xs text-muted">
                   <Check aria-hidden className="size-3.5" />
                   No compromises — every role reached its target.
                 </p>
@@ -736,9 +736,9 @@ export function PaletteGenerator() {
                   {p.warnings.map((w) => (
                     <li
                       key={w}
-                      className="flex gap-2 rounded-md border border-[var(--warning-border)] bg-[var(--warning-bg)] px-3 py-2 text-xs text-[var(--text-primary)]"
+                      className="flex gap-2 rounded-md border border-warning bg-warning-soft px-3 py-2 text-xs text-primary"
                     >
-                      <TriangleAlert aria-hidden className="mt-0.5 size-3.5 shrink-0 text-[var(--warning)]" />
+                      <TriangleAlert aria-hidden className="mt-0.5 size-3.5 shrink-0 text-warning" />
                       <span>{w}</span>
                     </li>
                   ))}
@@ -772,12 +772,12 @@ export function PaletteGenerator() {
               Reset to the active preset
             </Button>
             {previewing && (
-              <span className="text-xs text-[var(--text-muted)]">
+              <span className="text-xs text-muted">
                 Preview applied — every token-driven surface in the showcase is now yours.
               </span>
             )}
           </Row>
-          <label className="flex items-center gap-2 text-xs text-[var(--text-primary)]">
+          <label className="flex items-center gap-2 text-xs text-primary">
             <input
               type="checkbox"
               checked={useDerivedRamp}
@@ -810,9 +810,9 @@ export function PaletteGenerator() {
               <Copy aria-hidden className="size-4" />
               Copy
             </Button>
-            {copied && <span className="text-xs text-[var(--text-muted)]">Copied to the clipboard.</span>}
+            {copied && <span className="text-xs text-muted">Copied to the clipboard.</span>}
           </Row>
-          <pre className="max-h-96 overflow-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-caption leading-relaxed text-[var(--text-secondary)]">
+          <pre className="max-h-96 overflow-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-caption leading-relaxed text-secondary">
             {css}
           </pre>
         </div>
@@ -837,7 +837,7 @@ export function PaletteGenerator() {
 
       <Example label="The categorical chart ramp" hint="a separate system, deliberately">
         <div className="space-y-5">
-          <p className="max-w-3xl text-sm text-[var(--text-secondary)]">
+          <p className="max-w-3xl text-sm text-secondary">
             A UI colour needs contrast against one known surface and carries a fixed
             meaning. A chart colour needs to stay separable from eight unknown siblings at
             roughly equal salience with no implied order. Optimising for one makes a set
@@ -847,7 +847,7 @@ export function PaletteGenerator() {
           </p>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">
               The shipped ramp, audited — {mode} theme, live preset
             </h4>
             <Row className="gap-1.5">
@@ -855,16 +855,16 @@ export function PaletteGenerator() {
                 <span
                   key={i}
                   title={hex}
-                  className="size-6 rounded border border-[var(--border)]"
+                  className="size-6 rounded border border-subtle"
                   style={{ background: hex }}
                 />
               ))}
             </Row>
             <RampReport report={presetRamp} />
             {presetRamp.lowContrast.length > 0 && (
-              <p className="text-xs text-[var(--text-secondary)]">
+              <p className="text-xs text-secondary">
                 Below 3:1 against a surface it may be drawn on:{" "}
-                <span className="font-mono text-[var(--danger)]">
+                <span className="font-mono text-danger">
                   {[...new Set(presetRamp.lowContrast.map((l) => l.index))]
                     .map((i) => `chart[${i}]`)
                     .join(", ")}
@@ -874,12 +874,12 @@ export function PaletteGenerator() {
             )}
           </div>
 
-          <div className="space-y-2 border-t border-[var(--border)] pt-4">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+          <div className="space-y-2 border-t border-subtle pt-4">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">
               deriveChartRamp, opt-in — from your brand hue
             </h4>
             <Row className="gap-2">
-              <label htmlFor="ramp-count" className="text-xs text-[var(--text-primary)]">
+              <label htmlFor="ramp-count" className="text-xs text-primary">
                 Series
               </label>
               <select
@@ -898,7 +898,7 @@ export function PaletteGenerator() {
                 <span
                   key={i}
                   title={hex}
-                  className="size-6 rounded border border-[var(--border)]"
+                  className="size-6 rounded border border-subtle"
                   style={{ background: hex }}
                 />
               ))}
@@ -909,7 +909,7 @@ export function PaletteGenerator() {
       </Example>
 
       <Note>
-        <strong className="font-semibold text-[var(--text-primary)]">
+        <strong className="font-semibold text-primary">
           The trade-off, as the deriver measured it.
         </strong>{" "}
         At a SINGLE lightness, the most series that can satisfy both the 3:1 fill contrast
@@ -954,7 +954,7 @@ function Chip({ hex }: { hex: string }) {
     <span className="inline-flex items-center gap-1.5">
       <span
         aria-hidden
-        className="inline-block size-3.5 rounded-sm border border-[var(--border)]"
+        className="inline-block size-3.5 rounded-sm border border-subtle"
         style={{ background: hex }}
       />
       {hex}
@@ -1010,7 +1010,7 @@ function ColourMaths({ brand, tokens }: { brand: string; tokens: TokenSet }) {
           ["auditPalette(activeTokens).passes", String(audit.passes)],
         ]}
       />
-      <p className="text-xs text-[var(--text-secondary)]">
+      <p className="text-xs text-secondary">
         <code className="font-mono">deltaE</code> is a distance in OKLab — the number the chart
         ramp&apos;s separability is measured in. <code className="font-mono">solveLightness</code>{" "}
         keeps hue and chroma and searches only lightness, which is how the deriver moves a

@@ -8,7 +8,7 @@ import { Example, Note, Row, Stage } from "../lib/section";
  * MonthPicker's `variant="stepper"` (Month & time).
  */
 
-const READOUT = "mt-2 font-mono text-xs text-[var(--text-muted)]";
+const READOUT = "mt-2 font-mono text-xs text-muted";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 export function OutsideDaysDemo() {

@@ -18,19 +18,19 @@ export type StatusDotTone = ProgressBarTone | ChipHue;
 export type StatusDotSize = "sm" | "md" | "lg";
 
 const FILL: Record<StatusDotTone, string> = {
-  brand: "bg-[var(--brand)]",
+  brand: "bg-brand",
   neutral: "bg-[var(--text-muted)]",
-  success: "bg-[var(--success)]",
-  warning: "bg-[var(--warning)]",
-  danger: "bg-[var(--danger)]",
-  info: "bg-[var(--info)]",
+  success: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger",
+  info: "bg-info",
   income: "bg-[var(--money-income)]",
   expense: "bg-[var(--money-expense)]",
-  blue: "bg-[var(--hue-blue)]",
-  indigo: "bg-[var(--hue-indigo)]",
-  purple: "bg-[var(--hue-purple)]",
-  teal: "bg-[var(--hue-teal)]",
-  orange: "bg-[var(--hue-orange)]",
+  blue: "bg-hue-blue",
+  indigo: "bg-hue-indigo",
+  purple: "bg-hue-purple",
+  teal: "bg-hue-teal",
+  orange: "bg-hue-orange",
 };
 
 /**

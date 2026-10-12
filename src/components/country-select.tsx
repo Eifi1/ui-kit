@@ -465,7 +465,7 @@ export function CountrySelect<Clearable extends boolean = false>({
             the trigger grows instead (text size §10.17, round 0.34 T1). */}
         <span
           id={valueId}
-          className={cn("truncate-until-large", selectedName === undefined && "text-[var(--text-placeholder)]")}
+          className={cn("truncate-until-large", selectedName === undefined && "text-placeholder")}
         >
           {selectedName ?? emptyText}
         </span>
@@ -483,7 +483,7 @@ export function CountrySelect<Clearable extends boolean = false>({
             e.stopPropagation();
             clear();
           }}
-          className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+          className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-placeholder hover:text-secondary"
         >
           <X aria-hidden className="size-4" />
         </span>
@@ -531,7 +531,7 @@ export function CountrySelect<Clearable extends boolean = false>({
     <div {...rest} className={className}>
       {box}
       {textHint && (
-        <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
+        <p id={hintId} className="mt-1 text-caption leading-tight text-muted">
           {hint}
         </p>
       )}

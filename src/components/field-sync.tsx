@@ -293,7 +293,7 @@ export function FieldSyncIndicator({
     <span
       // The ICON carries the status colour; the words are `--text-secondary`, because
       // the amber of `edited` is a graphic colour (3:1), not a text colour (4.5:1).
-      className={cn("inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)]", className)}
+      className={cn("inline-flex items-center gap-1.5 text-xs text-secondary", className)}
       // Polite for the three ordinary states so save chatter does not interrupt
       // typing; assertive for a failure, which the user has to know about now.
       role={state === "error" ? "alert" : "status"}

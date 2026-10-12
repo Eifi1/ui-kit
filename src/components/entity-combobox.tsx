@@ -354,7 +354,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
                   // and a text field share a form row. Nothing selected keeps the
                   // placeholder tone (`--text-placeholder`), which every field here
                   // agrees on.
-                  !selectedOption && "text-[var(--text-placeholder)]",
+                  !selectedOption && "text-placeholder",
                 )}
               >
                 {selectedOption?.label ?? placeholder ?? ""}
@@ -372,7 +372,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
                   e.stopPropagation();
                   onChange(clearValue);
                 }}
-                className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+                className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-placeholder hover:text-secondary"
               >
                 <X className="size-4" />
               </span>

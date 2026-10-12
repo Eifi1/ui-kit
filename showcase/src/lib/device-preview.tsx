@@ -189,16 +189,16 @@ export function DevicePreview({ onExit }: { onExit?: () => void }) {
           </Button>
         )}
       </div>
-      <p className="mb-4 max-w-prose text-sm text-[var(--text-secondary)]">{t.chrome.previewHint}</p>
+      <p className="mb-4 max-w-prose text-sm text-secondary">{t.chrome.previewHint}</p>
       <div className={cn("flex items-start", shown.length === 1 && "justify-center")} style={{ gap: GAP * scale }}>
         {shown.map((d) => {
           const phone = isPhone(d.key);
           const sizeLabel = appearance.textSizes[d.size];
           return (
             <figure key={d.key} className="m-0 shrink-0">
-              <figcaption className="mb-1.5 flex items-baseline gap-2 text-xs text-[var(--text-secondary)]">
-                <span className="font-medium text-[var(--text-primary)]">{nameOf(d)}</span>
-                <span className="font-mono text-[var(--text-muted)]" dir="ltr">
+              <figcaption className="mb-1.5 flex items-baseline gap-2 text-xs text-secondary">
+                <span className="font-medium text-primary">{nameOf(d)}</span>
+                <span className="font-mono text-muted" dir="ltr">
                   {d.width} × {d.height}
                 </span>
                 <span>{sizeLabel}</span>
@@ -208,10 +208,10 @@ export function DevicePreview({ onExit }: { onExit?: () => void }) {
                   phone gets a bezel, so it reads as a phone and not as a narrow panel. */}
               <div
                 className={cn(
-                  "overflow-hidden bg-[var(--bg-page)] shadow-sm",
+                  "overflow-hidden bg-page shadow-sm",
                   phone
                     ? "rounded-[2rem] border-[10px] border-[var(--text-primary)]"
-                    : "rounded-lg border border-[var(--border-strong)]",
+                    : "rounded-lg border border-strong",
                 )}
                 style={{
                   width: (d.width + bezel(d.key)) * scale,

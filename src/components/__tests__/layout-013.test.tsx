@@ -51,17 +51,17 @@ describe("SectionLabel variant=band (keksdose F5)", () => {
     const cls = classes(screen.getByText("Today"));
     expect(cls).toEqual(
       expect.arrayContaining([
-        "bg-[var(--bg-surface-2)]",
+        "bg-surface-2",
         "border-b",
-        "border-[var(--border)]",
+        "border-subtle",
         "font-medium",
         "uppercase",
         "text-xs",
-        "text-[var(--text-secondary)]",
+        "text-secondary",
       ]),
     );
     expect(cls).not.toContain("font-semibold");
-    expect(cls).not.toContain("text-[var(--text-muted)]");
+    expect(cls).not.toContain("text-muted");
   });
 
   it("keeps the size's font size, and lets className move the padding", () => {

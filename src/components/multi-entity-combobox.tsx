@@ -318,7 +318,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
                 // Inherit FIELD_BASE's ink for a value, keep the placeholder tone
                 // (`--text-placeholder`) — the same rule every field on a form row
                 // follows (Keksdose dev#477).
-                !value.length && "text-[var(--text-placeholder)]",
+                !value.length && "text-placeholder",
               )}
             >
               {summary}
@@ -336,7 +336,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
                   e.stopPropagation();
                   onChange([]);
                 }}
-                className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+                className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-placeholder hover:text-secondary"
               >
                 <X className="size-4" />
               </span>

@@ -183,7 +183,7 @@ export function Wizard() {
             ],
           ]}
         />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           Row four is the trap: the default check is a trimmed non-empty string OR{" "}
           <code className="font-mono">value != null</code>, so <code className="font-mono">0</code>{" "}
           and <code className="font-mono">false</code> pass it. Anything numeric needs the{" "}
@@ -268,7 +268,7 @@ export function Wizard() {
             >
               Next
             </Button>
-            <span className="font-mono text-xs text-[var(--text-muted)]">
+            <span className="font-mono text-xs text-muted">
               current={JSON.stringify(importStep)}
             </span>
           </Row>
@@ -308,7 +308,7 @@ function ImportWizardDemo() {
       label="A committing step, a step after it, and the chrome's options"
       hint="urlSync: false (no ?step= written) · commits · onDone · onExit · cancellable · confirmCancel · finishVariant · finishDisabled · doneDisabled · renderFinish · nextLabel"
     >
-      <Row className="mb-3 text-xs text-[var(--text-secondary)]">
+      <Row className="mb-3 text-xs text-secondary">
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={cancellable} onChange={(e) => setCancellable(e.target.checked)} />
           <code className="font-mono">cancellable</code>
@@ -335,7 +335,7 @@ function ImportWizardDemo() {
         onEvent={note}
         onRestart={() => setRun((n) => n + 1)}
       />
-      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">callbacks: {log.length ? log.join(" · ") : "—"}</p>
+      <p className="mt-2 font-mono text-xs text-secondary">callbacks: {log.length ? log.join(" · ") : "—"}</p>
       <div className="mt-3">
         <Note>
           Step 2 is flagged <code className="font-mono">commits</code>: its button is Finish (labelled by the
@@ -467,15 +467,15 @@ function ImportWizard({
     >
       {wizard.currentStepIndex === 0 && (
         <WizardStep>
-          <p className="text-sm text-[var(--text-secondary)]">
-            <span className="font-mono text-[var(--text-primary)]">{wizard.data.file}</span> — press
+          <p className="text-sm text-secondary">
+            <span className="font-mono text-primary">{wizard.data.file}</span> — press
             &ldquo;Analyse&rdquo; and watch it pend while the pretend server checks the file.
           </p>
         </WizardStep>
       )}
       {wizard.currentStepIndex === 1 && (
         <WizardStep>
-          <label className="mb-3 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <label className="mb-3 flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               checked={wizard.data.replace}
@@ -489,10 +489,10 @@ function ImportWizard({
       )}
       {wizard.currentStepIndex === 2 && (
         <WizardStep>
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-sm text-secondary">
             Imported. Set up rules for the 12 payees seen for the first time?
           </p>
-          <label className="mt-2 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <label className="mt-2 flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               checked={wizard.data.rules}
@@ -504,7 +504,7 @@ function ImportWizard({
             <Button size="sm" variant="secondary" onClick={convert} disabled={converting || rulesWritten === 12}>
               Create 12 rules
             </Button>
-            <span className="text-xs text-[var(--text-secondary)]" aria-live="polite">
+            <span className="text-xs text-secondary" aria-live="polite">
               {converting
                 ? `Writing rule ${rulesWritten} of 12… Done waits (doneDisabled).`
                 : rulesWritten === 12
@@ -514,7 +514,7 @@ function ImportWizard({
           </Row>
         </WizardStep>
       )}
-      <p className="mt-3 font-mono text-caption text-[var(--text-muted)]">
+      <p className="mt-3 font-mono text-caption text-muted">
         isCommitStep={String(wizard.isCommitStep)} · committed={String(wizard.committed)} · canGoBack=
         {String(wizard.canGoBack)} · canCancel={String(wizard.canCancel)} · canDone={String(wizard.canDone)} ·
         isValidating={String(wizard.isValidating)}
@@ -697,8 +697,8 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
             ["onComplete received", submitted ? JSON.stringify(submitted) : "(not submitted)"],
           ]}
         />
-        <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-3">
-          <p className="text-xs text-[var(--text-secondary)]">
+        <div className="mt-4 space-y-2 border-t border-subtle pt-3">
+          <p className="text-xs text-secondary">
             What Finish should do — the failing branches reject, which is how{" "}
             <code className="font-mono">wizard.error</code> and the alert inside{" "}
             <code className="font-mono">StepperNav</code> get populated. A rejection with no
@@ -799,8 +799,8 @@ function NameStep({
         />
         {/* `fieldErrors` is populated by the LAST failed goNext and cleared for any
             key `updateData` touches, so this message disappears as you type. */}
-        {error && <p className="text-xs text-[var(--text-secondary)]">{error}</p>}
-        <p className="text-xs text-[var(--text-muted)]">
+        {error && <p className="text-xs text-secondary">{error}</p>}
+        <p className="text-xs text-muted">
           {value.length}/24 — over that, Next and Skip go dead via{" "}
           <code className="font-mono">setNextBlocked</code> rather than failing on click.
         </p>
@@ -826,7 +826,7 @@ function SizeStep({
   return (
     <WizardStep>
       <div className="space-y-2">
-        <p className="text-sm text-[var(--text-secondary)]">Pick a size.</p>
+        <p className="text-sm text-secondary">Pick a size.</p>
         {/* `""` is not one of the options, which is how "nothing picked yet"
             renders: the group shows with no segment pressed. */}
         <ToggleGroup<Draft["size"]>
@@ -878,7 +878,7 @@ function ContextProbe() {
 }
 
 function Empty() {
-  return <span className="text-[var(--text-muted)]">—</span>;
+  return <span className="text-muted">—</span>;
 }
 
 /** The helper's return type is `boolean | { ok, errors? }`; print whichever came

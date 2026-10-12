@@ -59,7 +59,7 @@ export function TopBarBrand({
       href={to}
       className={cn(
         // `relative` contains the sr-only name.
-        "relative flex min-w-0 items-center gap-2 rounded-md font-semibold text-[var(--text-primary)] hover:opacity-80",
+        "relative flex min-w-0 items-center gap-2 rounded-md font-semibold text-primary hover:opacity-80",
         FOCUS_RING,
         className,
       )}

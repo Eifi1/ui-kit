@@ -27,7 +27,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  */
 
 const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 /* ── Tenants: rowActions, toolbar, empty, BooleanMark, CopyButton ──────────── */
 
@@ -238,7 +238,7 @@ const UNIT_COLUMNS: DataTableColumn<Unit>[] = [
   {
     key: "tenant",
     header: "Tenant",
-    cell: (r) => r.tenant || <span className="text-[var(--text-muted)]">—</span>,
+    cell: (r) => r.tenant || <span className="text-muted">—</span>,
     sortBy: (r) => r.tenant || null,
     filter: textFilter((r) => r.tenant),
   },
@@ -373,12 +373,12 @@ export function DataTableUrlFiltersDemo() {
             key={label}
             to={href}
             state={{ unitsSeed: seed + 1 }}
-            className="text-sm text-[var(--brand)] underline underline-offset-2"
+            className="text-sm text-brand underline underline-offset-2"
           >
             {label}
           </Link>
         ))}
-        <Link to={pathname} state={{ unitsSeed: seed + 1 }} className="text-sm text-[var(--text-secondary)] underline underline-offset-2">
+        <Link to={pathname} state={{ unitsSeed: seed + 1 }} className="text-sm text-secondary underline underline-offset-2">
           No filter
         </Link>
       </Row>

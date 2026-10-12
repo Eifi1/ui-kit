@@ -242,7 +242,7 @@ export function SessionRefresh034Demo() {
             Sign in again
           </Button>
         </div>
-        <ol aria-label="What happened" aria-live="polite" className="min-h-24 space-y-0.5 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)] [overflow-wrap:anywhere]">
+        <ol aria-label="What happened" aria-live="polite" className="min-h-24 space-y-0.5 rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary [overflow-wrap:anywhere]">
           {shown.length === 0 ? <li>Nothing sent yet.</li> : shown.map((line, i) => <li key={i}>{line}</li>)}
         </ol>
         <Note>

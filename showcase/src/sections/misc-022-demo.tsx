@@ -111,7 +111,7 @@ export function FormActionsShortcut022Demo() {
         <Textarea label="Memo" rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
         <FormActions submitShortcut="mod-enter" submitShortcutHint pending={pending} pendingLabel="Saving…" />
       </form>
-      <p className="mt-2 text-xs text-[var(--text-muted)]">Saved: {saved.length ? saved.join(" · ") : "nothing yet"}</p>
+      <p className="mt-2 text-xs text-muted">Saved: {saved.length ? saved.join(" · ") : "nothing yet"}</p>
       <Note>
         Press Ctrl+Enter (⌘+Enter on a Mac) in the memo: it is a press of Save — the form submits with its validation —
         and it does nothing while Save could not be pressed: {code("pending")}, {code("submitDisabled")}, or a{" "}
@@ -236,10 +236,10 @@ export function FeedbackAttachmentRefs022Demo() {
           onError={(kind, error) => say(kind === "upload" ? `upload failed: ${String(error)}` : `refused: ${kind}`)}
           accept={["image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf", "text/plain"]}
         />
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           {uploading ? "Uploading — Send waits." : `Ready to send: ${refs.map((r) => r.key).join(", ") || "nothing"}`}
         </p>
-        {log.length > 0 && <p className="text-xs text-[var(--text-muted)]">{log.join(" · ")}</p>}
+        {log.length > 0 && <p className="text-xs text-muted">{log.join(" · ")}</p>}
       </div>
       <Note>
         Every way in — pick, paste, capture — is validated as in the File modes, then handed to {code("onUpload")}; a
@@ -259,7 +259,7 @@ export function ChatComposer022Demo() {
     <Example label="ChatComposer — the composer under a neutral name" hint="`id` and `data-*` reach its root">
       <div className="space-y-3">
         {sent.length > 0 && (
-          <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+          <ul className="space-y-1 text-sm text-secondary">
             {sent.map((m, i) => (
               <li key={i}>{m}</li>
             ))}

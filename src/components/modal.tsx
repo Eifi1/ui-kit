@@ -411,7 +411,7 @@ function ModalPanel({
         style={{ ...style, ...drag.style }}
         className={cn(
           leaving ? "animate-sheet-out md:animate-none" : "animate-sheet md:animate-none",
-          "w-full rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-sm outline-none",
+          "w-full rounded-lg border border-subtle bg-surface shadow-sm outline-none",
           { md: "max-w-md", lg: "max-w-lg", xl: "max-w-3xl", "2xl": "max-w-[110rem]" }[size],
           // A panel taller than the screen has to scroll ITSELF. The backdrop is
           // `fixed inset-0` and the body is scroll-locked while a dialog is open, so

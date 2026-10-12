@@ -43,9 +43,9 @@ function MapPlaceholder({ pinned }: { pinned: boolean }) {
   return (
     <div
       aria-hidden
-      className="flex h-28 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-muted)]"
+      className="flex h-28 items-center justify-center rounded-md border border-subtle bg-surface-2 text-muted"
     >
-      <MapPin className={pinned ? "size-6 text-[var(--danger)]" : "size-5"} />
+      <MapPin className={pinned ? "size-6 text-danger" : "size-5"} />
     </div>
   );
 }
@@ -95,7 +95,7 @@ export function FieldStrip023Demo() {
                     )}
                   </div>
                 )}
-                {readOnly && !pinned && <p className="text-sm text-[var(--text-muted)]">No location</p>}
+                {readOnly && !pinned && <p className="text-sm text-muted">No location</p>}
               </div>
             </FieldStrip>
           </div>

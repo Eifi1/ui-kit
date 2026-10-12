@@ -15,7 +15,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * showcase until you tick a box, and leaving the page unmounts it.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 
 function useLog() {
   const [log, setLog] = useState<string[]>([]);
@@ -157,17 +157,17 @@ function FloatingPanels() {
       hint="fixed to the viewport, so opt-in: tick the box and the buttons appear in the screen's bottom corners"
     >
       <Row>
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
           Show the floating buttons on this page
         </label>
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={startOpen} onChange={(e) => setStartOpen(e.target.checked)} />
           <span>
             assistant <code className="font-mono">defaultOpen</code>
           </span>
         </label>
-        <label className="flex min-w-0 items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex min-w-0 items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={nativeTitles} onChange={(e) => setNativeTitles(e.target.checked)} />
           <span>
             native <code className="font-mono">title</code> (<code className="font-mono">nativeTitle</code> /{" "}
@@ -176,7 +176,7 @@ function FloatingPanels() {
         </label>
       </Row>
       <Row className="mt-3">
-        <span className="text-xs text-[var(--text-muted)]">assistant corner</span>
+        <span className="text-xs text-muted">assistant corner</span>
         <ToggleGroup<FloatingCorner> aria-label="Corner" value={corner} onChange={setCorner} options={CORNERS} />
         <Button variant="secondary" disabled={!enabled} onClick={() => setControlledOpen((v) => !v)}>
           {controlledOpen ? "Close feedback from the page" : "Open feedback from the page"}
@@ -209,7 +209,7 @@ function FloatingPanels() {
             initialFocus={() => fieldRef.current}
             bodyClassName="space-y-3"
           >
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-sm text-secondary">
               Non-modal: the page stays usable, Tab walks out into it, and a click on the page does
               not close this. Escape does, while focus is in here.
             </p>
@@ -220,7 +220,7 @@ function FloatingPanels() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="initialFocus put the caret here"
-              className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-2 py-1.5 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--brand)]"
+              className="w-full rounded-md border border-subtle bg-surface-2 px-2 py-1.5 text-sm text-primary outline-none focus:ring-2 focus:ring-brand"
             />
           </FloatingPanel>
           {/* Controlled, in the other corner: the page's button above opens it too. */}
@@ -237,7 +237,7 @@ function FloatingPanels() {
             closeLabel="Close feedback"
             className="md:w-[20rem]"
           >
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-sm text-secondary">
               Controlled: <code className="font-mono">open</code> is the page&apos;s state, and the
               FAB, the × (named by <code className="font-mono">closeLabel</code>) and Escape each ask
               through <code className="font-mono">onOpenChange</code>.

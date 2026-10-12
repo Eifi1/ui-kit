@@ -32,7 +32,7 @@ export function Legal019Demo() {
             { value: "none", label: "No notice" },
           ]}
         />
-        <div className="rounded-lg border border-[var(--border)]">
+        <div className="rounded-lg border border-subtle">
           <LegalLayout
             headingAs="h2"
             className="py-6"

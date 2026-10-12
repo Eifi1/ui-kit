@@ -25,9 +25,9 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-16 border-t border-[var(--border)] pt-8 first:border-t-0">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
-      {blurb && <p className="mt-1 max-w-3xl text-sm text-[var(--text-secondary)]">{inlineCode(blurb)}</p>}
+    <section id={id} className="scroll-mt-16 border-t border-subtle pt-8 first:border-t-0">
+      <h2 className="text-lg font-semibold text-primary">{title}</h2>
+      {blurb && <p className="mt-1 max-w-3xl text-sm text-secondary">{inlineCode(blurb)}</p>}
       <div className="mt-5 space-y-6">{children}</div>
     </section>
   );
@@ -66,14 +66,14 @@ export function Example({
         {/* `overflow-wrap: anywhere` for a label that is an identifier with no break of
             its own: "selectableFeedbackStatuses(current)" ran 16 px past a 360 px phone
             at Extra large (0.32.1). Words still break only at their spaces. */}
-        <h3 id={id} className="min-w-0 scroll-mt-6 text-sm font-medium text-[var(--text-primary)] [overflow-wrap:anywhere]">
+        <h3 id={id} className="min-w-0 scroll-mt-6 text-sm font-medium text-primary [overflow-wrap:anywhere]">
           {label}
         </h3>
-        {hint && <span className="text-xs text-[var(--text-muted)]">{inlineCode(hint)}</span>}
+        {hint && <span className="text-xs text-muted">{inlineCode(hint)}</span>}
       </div>
       <div
         className={cn(
-          "rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4",
+          "rounded-lg border border-subtle bg-surface p-4",
           className,
         )}
       >
@@ -98,7 +98,7 @@ export function Row({ children, className }: { children: ReactNode; className?: 
  *  margin collapses into the gap that is already there, so nothing doubles. */
 export function Note({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-3 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2 text-xs text-[var(--text-secondary)] first:mt-0">
+    <p className="mt-3 rounded-md border border-subtle bg-surface-2 px-3 py-2 text-xs text-secondary first:mt-0">
       {inlineCode(children)}
     </p>
   );
@@ -144,7 +144,7 @@ export function Swatch({ name, value }: { name: string; value: string }) {
     <div className="flex min-w-0 items-center gap-2">
       <span
         aria-hidden
-        className="size-8 shrink-0 rounded-md border border-[var(--border)]"
+        className="size-8 shrink-0 rounded-md border border-subtle"
         style={{ background: value }}
       />
       {/* `truncate-until-large` (0.33): one line at Normal; at Large a token's name wraps
@@ -227,12 +227,12 @@ export function OutTable({ rows }: { rows: Array<[expression: string, result: Re
           {rows.map(([expr, result], i) => (
             <tr
               key={i}
-              className="border-b border-[var(--border)] last:border-b-0 max-md:@max-sm:block max-md:@max-sm:py-1.5"
+              className="border-b border-subtle last:border-b-0 max-md:@max-sm:block max-md:@max-sm:py-1.5"
             >
-              <td className="py-1.5 pr-4 align-top font-mono break-words text-[var(--text-secondary)] max-md:@max-sm:block max-md:@max-sm:p-0">
+              <td className="py-1.5 pr-4 align-top font-mono break-words text-secondary max-md:@max-sm:block max-md:@max-sm:p-0">
                 {breakable(expr)}
               </td>
-              <td className="py-1.5 align-top font-mono font-medium break-words text-[var(--text-primary)] max-md:@max-sm:block max-md:@max-sm:ps-3 max-md:@max-sm:pt-0.5 max-md:@max-sm:pb-0">
+              <td className="py-1.5 align-top font-mono font-medium break-words text-primary max-md:@max-sm:block max-md:@max-sm:ps-3 max-md:@max-sm:pt-0.5 max-md:@max-sm:pb-0">
                 {breakable(result)}
               </td>
             </tr>
@@ -252,10 +252,10 @@ export function ConstList({ items }: { items: Array<[name: string, value: string
     <dl className="space-y-2">
       {items.map(([name, value]) => (
         <div key={name}>
-          <dt className="font-mono text-xs font-medium break-words text-[var(--text-primary)]">
+          <dt className="font-mono text-xs font-medium break-words text-primary">
             {softBreaks(name)}
           </dt>
-          <dd className="break-words font-mono text-caption leading-relaxed text-[var(--text-muted)]">
+          <dd className="break-words font-mono text-caption leading-relaxed text-muted">
             {softBreaks(value)}
           </dd>
         </div>
@@ -280,7 +280,7 @@ export function Stage({ children, className }: { children: ReactNode; className?
   return (
     <div
       className={cn(
-        "mb-3 flex flex-wrap items-start justify-center gap-4 rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-page)] px-4 py-8",
+        "mb-3 flex flex-wrap items-start justify-center gap-4 rounded-md border border-dashed border-subtle bg-page px-4 py-8",
         "[&>*]:w-80 [&>*]:max-w-full [&>[data-stage=wide]]:w-full",
         className,
       )}

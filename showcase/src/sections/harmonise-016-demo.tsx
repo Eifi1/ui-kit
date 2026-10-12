@@ -24,8 +24,8 @@ import { Example, Note, Row } from "../lib/section";
  */
 
 const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const CAPTION = "text-xs text-[var(--text-muted)]";
+const READOUT = "font-mono text-xs text-secondary";
+const CAPTION = "text-xs text-muted";
 
 /* ── FormActions (Forms page) ─────────────────────────────────────────────── */
 
@@ -41,7 +41,7 @@ export function FormActions016Demo() {
         label="FormActions — start slot, submitIcon and submitProps"
         hint="the spinner takes the icon's place while pending"
       >
-        <div className="max-w-xl rounded-md border border-[var(--border)] p-3">
+        <div className="max-w-xl rounded-md border border-subtle p-3">
           <FormActions
             start={<span className={CAPTION}>Drag the corners to crop</span>}
             submitIcon={Check}
@@ -70,7 +70,7 @@ export function FormActions016Demo() {
         </Note>
       </Example>
       <Example label="FormActions — sticky inside a scroll container" hint='stickyWithin="container"'>
-        <div className="h-56 max-w-xl overflow-y-auto rounded-md border border-[var(--border)]">
+        <div className="h-56 max-w-xl overflow-y-auto rounded-md border border-subtle">
           <div className="space-y-3 p-3">
             {Array.from({ length: 6 }, (_, i) => (
               <Input key={i} label={`Field ${i + 1}`} value="" onChange={() => {}} />
@@ -101,15 +101,15 @@ export function LoadingState016Demo() {
   return (
     <Example label="LoadingState — hidden label and compact padding" hint="role=status still announces">
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-md border border-[var(--border)]">
+        <div className="rounded-md border border-subtle">
           <p className={`${CAPTION} px-2 pt-2`}>labelVisibility=&quot;sr-only&quot;</p>
           <LoadingState labelVisibility="sr-only" label="Loading invoices" />
         </div>
-        <div className="rounded-md border border-[var(--border)]">
+        <div className="rounded-md border border-subtle">
           <p className={`${CAPTION} px-2 pt-2`}>label=&#123;null&#125;</p>
           <LoadingState label={null} />
         </div>
-        <div className="rounded-md border border-[var(--border)]">
+        <div className="rounded-md border border-subtle">
           <p className={`${CAPTION} px-2 pt-2`}>compact (md at py-8)</p>
           <LoadingState compact />
         </div>
@@ -136,13 +136,13 @@ export function Media016Demo() {
     <Example label="AuthedImage — errorFallback={null} and stopPropagation">
       <div className="grid max-w-xl grid-cols-2 gap-3">
         <figure className="space-y-1">
-          <div className="flex aspect-[4/3] items-center justify-center rounded-md border border-dashed border-[var(--border)]">
+          <div className="flex aspect-[4/3] items-center justify-center rounded-md border border-dashed border-subtle">
             <AuthedImage src="/missing-photo.png" alt="Receipt" errorFallback={null} wrapperClassName="h-full w-full" />
           </div>
           <figcaption className={READOUT}>404 · errorFallback=&#123;null&#125; renders nothing</figcaption>
         </figure>
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a stand-in for a clickable table row */}
-        <div className="cursor-pointer space-y-1 rounded-md p-1 hover:bg-[var(--bg-hover)]" onClick={() => setRowClicks((n) => n + 1)}>
+        <div className="cursor-pointer space-y-1 rounded-md p-1 hover:bg-hover" onClick={() => setRowClicks((n) => n + 1)}>
           <AuthedImage
             src={PICTURE}
             alt="Meter reading"

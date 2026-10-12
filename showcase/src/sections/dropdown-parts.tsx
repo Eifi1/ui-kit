@@ -124,7 +124,7 @@ export function DropdownParts() {
           label="second"
           value={plainMarkets.length ? JSON.stringify(plainMarkets) : "[] (= all)"}
         />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The second one passes no strings but <code className="font-mono">placeholder</code>: its
           search box, its two actions and its count come from{" "}
           <code className="font-mono">multiSelect.*</code> in the provider — switch the showcase
@@ -150,7 +150,7 @@ export function DropdownParts() {
           label="selected"
           value={picked ? `{ group: "${picked.group}", item: "${picked.item}" }` : "null"}
         />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The filter treats a group name as a whole-group match: typing{" "}
           <code className="font-mono">food</code> keeps every row under Food, while{" "}
           <code className="font-mono">bike</code> reduces Transport to its one matching row and
@@ -197,13 +197,13 @@ export function DropdownParts() {
                 >
                   <span className="min-w-0 flex-1 truncate">{a.label}</span>
                   {a.sublabel && (
-                    <span className="shrink-0 text-xs text-[var(--text-muted)]">{a.sublabel}</span>
+                    <span className="shrink-0 text-xs text-muted">{a.sublabel}</span>
                   )}
                 </button>
               </li>
             ))}
             {sheetHits.length === 0 && (
-              <li className="px-4 py-3 text-sm text-[var(--text-muted)]">No account matches.</li>
+              <li className="px-4 py-3 text-sm text-muted">No account matches.</li>
             )}
           </ul>
         </PickerSheet>
@@ -260,7 +260,7 @@ export function DropdownParts() {
                           setSortOpen(false);
                         }}
                         className={cn(
-                          "block w-full px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
+                          "block w-full px-3 py-1.5 text-start text-sm text-primary hover:bg-surface-2",
                           s.key === sortKey && "font-medium",
                         )}
                       >
@@ -274,7 +274,7 @@ export function DropdownParts() {
           </Row>
         </Stage>
         <Current label="sort" value={`"${sortKey}"`} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Open it and press Escape: the list closes and focus is back on the button, because the
           button carries <code className="font-mono">triggerRef</code>. Browser Back closes the
           list too, without leaving the page (<code className="font-mono">backCloses</code>,
@@ -299,7 +299,7 @@ export function DropdownParts() {
                 onClick={() => setStoreOpen((o) => !o)}
                 className={cn(FIELD_TRIGGER, FIELD_FLOATING_PAD, "pe-9")}
               >
-                <span className={cn("truncate", !storeKey && "text-[var(--text-muted)]")}>
+                <span className={cn("truncate", !storeKey && "text-muted")}>
                   {STORES.find((s) => s.key === storeKey)?.label ?? "Pick a store"}
                 </span>
                 <FieldChevron />
@@ -339,12 +339,12 @@ export function DropdownParts() {
                           setStoreOpen(false);
                         }}
                         className={cn(
-                          "flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
+                          "flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-start text-sm text-primary hover:bg-surface-2",
                           s.key === storeKey && "font-medium",
                         )}
                       >
                         <span className="min-w-0 truncate">{s.label}</span>
-                        <span className="shrink-0 text-xs text-[var(--text-muted)]">{s.hint}</span>
+                        <span className="shrink-0 text-xs text-muted">{s.hint}</span>
                       </button>
                     </li>
                   ))}

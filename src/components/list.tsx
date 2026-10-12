@@ -518,7 +518,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     <>
       {Icon && (
         <Icon
-          className={cn("size-4 shrink-0 text-[var(--text-muted)]", align === "start" && "mt-0.5")}
+          className={cn("size-4 shrink-0 text-muted", align === "start" && "mt-0.5")}
           aria-hidden
         />
       )}
@@ -528,7 +528,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           now-wrapping title into a column one word wide (§4, 240 px effective width). */}
       <span className={cn("flex min-w-0 flex-1 flex-col", trailing != null && "large:basis-40")}>
         {overline != null && (
-          <span className="block truncate-until-large text-caption font-medium leading-snug text-[var(--text-muted)]">
+          <span className="block truncate-until-large text-caption font-medium leading-snug text-muted">
             {overline}
           </span>
         )}
@@ -536,7 +536,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           // Names the body's and the expanded content's group; harmless without one.
           id={stacked ? titleId : undefined}
           className={cn(
-            "block text-sm text-[var(--text-primary)]",
+            "block text-sm text-primary",
             titleLines === 1
               ? "truncate-until-large"
               : titleLines === 2
@@ -552,7 +552,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         {subtitle != null && (
           <span
             className={cn(
-              "block text-xs text-[var(--text-muted)]",
+              "block text-xs text-muted",
               subtitleLines === 2 ? cn("line-clamp-2 break-words", UNCLAMP_AT_LARGE) : "truncate-until-large",
             )}
           >
@@ -562,7 +562,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         {meta != null && (
           <span
             className={cn(
-              "mt-0.5 text-caption leading-snug text-[var(--text-muted)]",
+              "mt-0.5 text-caption leading-snug text-muted",
               metaWrap ? "flex flex-wrap items-center gap-1" : "block truncate-until-large",
             )}
           >
@@ -585,7 +585,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         <Spinner label={null} className="size-3.5 shrink-0" />
       ) : (
         external && href !== undefined && (
-          <ExternalLink className="size-3.5 shrink-0 text-[var(--text-muted)] rtl:-scale-x-100" aria-hidden />
+          <ExternalLink className="size-3.5 shrink-0 text-muted rtl:-scale-x-100" aria-hidden />
         )
       )}
       {mark}
@@ -595,7 +595,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         <ChevronDown
           aria-hidden
           className={cn(
-            "size-4 shrink-0 text-[var(--text-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none",
+            "size-4 shrink-0 text-muted transition-transform duration-200 ease-out motion-reduce:transition-none",
             align === "start" && "mt-0.5",
             expanded && "rotate-180",
           )}
@@ -613,7 +613,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     // When stacked the target is the top of the box, not all of it, so it takes its
     // own corners and its own hover fill (see `children`).
     stacked ? "rounded-md" : "rounded-[inherit]",
-    stacked && interactive && !inert && !selected && "transition-colors hover:bg-[var(--bg-hover)]",
+    stacked && interactive && !inert && !selected && "transition-colors hover:bg-hover",
     interactive && TARGET_RING,
     interactive && !inert && "cursor-pointer",
     loading && "cursor-progress",
@@ -722,11 +722,11 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         // See `renderRow`: the wrapper may be inline, the row is not.
         renderRow && "w-full",
         selected
-          ? "border-[var(--brand)] bg-[var(--bg-surface-2)]"
+          ? "border-brand bg-surface-2"
           : bordered
-            ? "border-[var(--border)]"
+            ? "border-subtle"
             : "border-transparent",
-        !stacked && interactive && !inert && !selected && "hover:bg-[var(--bg-hover)]",
+        !stacked && interactive && !inert && !selected && "hover:bg-hover",
         (disabled || locked) && "opacity-50",
         className,
       )}
@@ -765,7 +765,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
   return (
     <Tag
       className={cn(
-        list.separator === "divider" && "border-b border-[var(--border)] last:border-b-0",
+        list.separator === "divider" && "border-b border-subtle last:border-b-0",
         list.separator === "divider" && as === "li" && "py-0.5",
         renderRow && "flex flex-col",
       )}

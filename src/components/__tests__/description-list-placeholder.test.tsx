@@ -17,7 +17,7 @@ describe("DescriptionItem placeholder", () => {
     );
     const [iban, notes, units, owner] = screen.getAllByRole("definition");
     expect(iban).toHaveTextContent("—");
-    expect(iban.querySelector("[data-slot=description-empty]")).toHaveClass("text-[var(--text-muted)]");
+    expect(iban.querySelector("[data-slot=description-empty]")).toHaveClass("text-muted");
     expect(notes).toHaveTextContent("—");
     expect(units).toHaveTextContent("0");
     expect(owner).toHaveTextContent("Ada");

@@ -423,7 +423,7 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
   const content = hasContent(shown) ? (
     shown
   ) : (
-    <span className="text-[var(--text-muted)]">{placeholder ?? labels.empty}</span>
+    <span className="text-muted">{placeholder ?? labels.empty}</span>
   );
   const alignClass = align === "end" ? "text-end" : "text-start";
 
@@ -483,7 +483,7 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
           {pending && <Spinner label={null} className="size-4 shrink-0" />}
         </div>
         {failed && (
-          <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
+          <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
             {failure}
           </p>
         )}

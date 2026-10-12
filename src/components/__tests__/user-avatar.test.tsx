@@ -57,7 +57,7 @@ describe("UserAvatar badge", () => {
     const dot = container.querySelector(".absolute")!;
     expect(dot.className).toContain("ring-2");
     expect(dot.className).toContain("-end-0.5");
-    expect(dot.className).toContain("bg-[var(--danger)]");
+    expect(dot.className).toMatch(/bg-danger(?![\w-])/);
     expect(dot).toHaveAttribute("aria-hidden", "true");
   });
 

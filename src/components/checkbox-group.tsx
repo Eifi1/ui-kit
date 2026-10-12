@@ -178,12 +178,12 @@ export function CheckboxGroup<T extends string = string>({
           className={
             legendVisibility === "sr-only"
               ? "sr-only"
-              : cn("mb-2 p-0 text-sm font-medium text-[var(--text-primary)]", (disabled || locked) && "opacity-60")
+              : cn("mb-2 p-0 text-sm font-medium text-primary", (disabled || locked) && "opacity-60")
           }
         >
           {legend}
           {required && (
-            <span aria-hidden className="ms-0.5 text-[var(--danger)]">
+            <span aria-hidden className="ms-0.5 text-danger">
               *
             </span>
           )}
@@ -215,12 +215,12 @@ export function CheckboxGroup<T extends string = string>({
       </RequiredStarOnLegend.Provider>
       {showHint && (
         // A `div`, not a `p`: a hint may be a node with a link in it.
-        <div id={hintId} className="mt-1.5 text-caption leading-tight text-[var(--text-muted)]">
+        <div id={hintId} className="mt-1.5 text-caption leading-tight text-muted">
           {hint}
         </div>
       )}
       {showError && (
-        <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
+        <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
           {error}
         </p>
       )}

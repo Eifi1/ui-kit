@@ -9,7 +9,7 @@ import { Example, Note, Row } from "../lib/section";
  * unread dot on a menu's icon trigger.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** A made-up brand mark: an SVG with no size of its own, so TopBarBrand's `h-6` sizes it. */
@@ -50,7 +50,7 @@ function TopBarBrandSpecimen() {
       hint="pass it as TopBar's brand; it is a router link to `to`"
     >
       <Row>
-        <span className="text-xs text-[var(--text-muted)]">collapseBelow</span>
+        <span className="text-xs text-muted">collapseBelow</span>
         <ToggleGroup<Collapse>
           aria-label="collapseBelow"
           value={collapse}
@@ -63,7 +63,7 @@ function TopBarBrandSpecimen() {
         />
         <Switch label="renderLink of its own" checked={own} onCheckedChange={setOwn} />
       </Row>
-      <div className="mt-4 overflow-hidden rounded-md border border-[var(--border)]">
+      <div className="mt-4 overflow-hidden rounded-md border border-subtle">
         <TopBar
           className="static"
           brand={
@@ -157,7 +157,7 @@ function IconBadgeSpecimen() {
       <Row className="mt-3">
         <button
           type="button"
-          className="rounded-md border border-[var(--border)] px-2 py-1 text-xs"
+          className="rounded-md border border-subtle px-2 py-1 text-xs"
           onClick={() => {
             setUnread((n) => n + 1);
             setOffline(true);

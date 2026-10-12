@@ -15,12 +15,12 @@ import { pickLinkRenderer } from "./text-link";
 // `<a>` one level down: a router link member (see {@link ButtonGroupLink}) under a
 // tooltip. A bare link is a direct child and needs nothing extra.
 const JOINED_COMMON = cn(
-  "inline-flex rounded-md border border-[var(--border)]",
+  "inline-flex rounded-md border border-subtle",
   // The group draws the frame; each member gives up its own border, radius and shadow.
   "[&>*]:rounded-none [&>*]:border-0 [&>*]:shadow-none",
   "[&>*>button]:rounded-none [&>*>button]:border-0 [&>*>button]:shadow-none",
   "[&>*>a]:rounded-none [&>*>a]:border-0 [&>*>a]:shadow-none",
-  "[&>*]:border-[var(--border)]",
+  "[&>*]:border-subtle",
   // A focused member rises above its neighbours so its ring is not painted over by
   // the next one's background.
   "[&>*]:relative [&>*:focus-within]:z-10",
@@ -82,7 +82,7 @@ const GAPPED: Record<"horizontal" | "vertical", string> = {
 // `elevated`, joined: the frame itself floats — a filled surface under the members (a
 // ghost member would otherwise show the content through it) and the shadow of a
 // control lifted over the page.
-const ELEVATED_JOINED = "bg-[var(--bg-surface)] shadow-lg";
+const ELEVATED_JOINED = "bg-surface shadow-lg";
 // `elevated`, gapped: there is no frame, so each disc carries the shadow. Aimed at the
 // control, not the tooltip's square wrapper span, whose shadow would be a box round a
 // round disc.
@@ -181,7 +181,7 @@ export interface ButtonGroupLinkProps extends Omit<ComponentPropsWithoutRef<"a">
 // The brand AS TEXT is `--brand-muted` (0.33, docs/colour-roles-harmonization.md §5.5):
 // `--brand` itself is solved to 3:1 and read 2.97:1 on its own wash in the derived dark
 // presets; the muted form holds 4.5:1 on it in every preset.
-const LINK_CURRENT = "bg-[var(--brand-bg)] text-brand-muted hover:bg-[var(--brand-bg-hover)]";
+const LINK_CURRENT = "bg-brand-soft text-brand-muted hover:bg-brand-soft-hover";
 
 /**
  * A {@link ButtonGroup} member that navigates: a link drawn as a {@link Button}, so it

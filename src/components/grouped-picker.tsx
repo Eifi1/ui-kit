@@ -87,15 +87,15 @@ export function GroupedPicker({
         aria-expanded={open}
         aria-label={ariaLabel}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-2 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+        className="flex w-full items-center justify-between gap-2 rounded-md border border-strong bg-surface px-2.5 py-1.5 text-sm text-primary hover:bg-hover"
       >
         {/* The trigger's label and each item wrap from Large up (text size §10.17,
             round 0.34 T1: the sweep read "Choose a cat…" at 360 px / Extra large). */}
         <span className="truncate-until-large">{buttonLabel}</span>
-        <ChevronDown className="size-4 shrink-0 text-[var(--text-placeholder)]" />
+        <ChevronDown className="size-4 shrink-0 text-placeholder" />
       </button>
       {open && (
-        <div className="absolute start-0 z-30 mt-1 flex max-h-96 w-[min(56rem,85vw)] flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg">
+        <div className="absolute start-0 z-30 mt-1 flex max-h-96 w-[min(56rem,85vw)] flex-col overflow-hidden rounded-md border border-subtle bg-surface shadow-lg">
           <DropdownSearchHeader
             query={query}
             onQueryChange={setQuery}
@@ -104,12 +104,12 @@ export function GroupedPicker({
           />
           <div className="overflow-y-auto p-3">
             {filtered.length === 0 ? (
-              <p className="text-sm text-[var(--text-muted)]">—</p>
+              <p className="text-sm text-muted">—</p>
             ) : (
               <div className="columns-2 gap-4 md:columns-3 xl:columns-4">
                 {filtered.map((g) => (
                   <div key={g.key} className="mb-3 break-inside-avoid">
-                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
                       {g.label}
                     </div>
                     <ul className="space-y-0.5">
@@ -129,8 +129,8 @@ export function GroupedPicker({
                               className={cn(
                                 "flex w-full items-center gap-1.5 rounded px-1.5 py-0.5 text-start text-sm",
                                 isSelected
-                                  ? "bg-[var(--brand-bg)] font-medium text-[var(--brand-muted)]"
-                                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                                  ? "bg-brand-soft font-medium text-brand-muted"
+                                  : "text-secondary hover:bg-hover",
                               )}
                             >
                               {item.icon && <span className="shrink-0">{item.icon}</span>}

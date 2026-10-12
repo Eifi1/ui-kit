@@ -6,9 +6,9 @@ describe("AlertBanner 0.10.0", () => {
   it("has a success tone with its own frame, ink and a check glyph", () => {
     const { container } = render(<AlertBanner tone="success">Import finished</AlertBanner>);
     const box = container.firstElementChild!;
-    expect(box.className).toContain("bg-[var(--success-bg)]");
-    expect(box.className).toContain("text-[var(--success)]");
-    expect(toneFrameClass("success")).toContain("border-[var(--success-border)]");
+    expect(box.className).toContain("bg-success-soft");
+    expect(box.className).toMatch(/text-success(?![\w-])/);
+    expect(toneFrameClass("success")).toContain("border-success");
     expect(alertFrameClass("success")).toContain("p-[calc(0.75rem-1px)]");
     expect(box.querySelector("svg")!.getAttribute("class")).toContain("lucide-circle-check");
   });
@@ -115,14 +115,14 @@ describe("AlertBanner 0.10.0", () => {
       </>,
     );
     const warn = screen.getByTestId("warn").className;
-    expect(warn).toContain("bg-[var(--bg-surface)]");
+    expect(warn).toMatch(/bg-surface(?![\w-])/);
     // The translucent wash is no longer the background COLOUR (tailwind-merge dropped
     // it), only an image over the opaque surface.
-    expect(warn).not.toMatch(/(^| )bg-\[var\(--warning-bg\)\]/);
+    expect(warn).not.toMatch(/(^| )bg-warning-soft(?![\w-])/);
     expect(warn).toContain("bg-[image:linear-gradient(var(--warning-bg),var(--warning-bg))]");
     expect(warn).toContain("shadow-lg");
-    expect(warn).toContain("border-[var(--warning-border)]");
-    expect(screen.getByTestId("neutral").className).toContain("bg-[var(--bg-surface)]");
+    expect(warn).toMatch(/border-warning(?![\w-])/);
+    expect(screen.getByTestId("neutral").className).toMatch(/bg-surface(?![\w-])/);
   });
 
   it("leaves existing callers untouched", () => {

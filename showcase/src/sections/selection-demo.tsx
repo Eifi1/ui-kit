@@ -78,7 +78,7 @@ type Channel = "mail" | "sms" | "push";
  *  and a light/dark pair is exactly what a class can hold and an inline colour cannot. */
 const CLASS_SWATCHES: SwatchOption<Colour>[] = [
   { value: "c1", label: "Ink", swatchClassName: "bg-[var(--text-primary)]" },
-  { value: "c2", label: "Brand", swatchClassName: "bg-[var(--brand)]" },
+  { value: "c2", label: "Brand", swatchClassName: "bg-brand" },
   { value: "c3", label: "Income", swatchClassName: "bg-[var(--money-income)]" },
   { value: "c4", label: "Expense", swatchClassName: "bg-[var(--money-expense)]" },
   { value: "c5", label: "Retired colour", swatchClassName: "bg-[var(--border-strong)]", disabled: true },
@@ -131,7 +131,7 @@ export function SelectionDemo() {
               onChange={setColour}
               allowNone
             />
-            <p className="text-xs text-[var(--text-muted)]">value: {shown(colour)}</p>
+            <p className="text-xs text-muted">value: {shown(colour)}</p>
           </div>
           <div className="space-y-2">
             <SwatchPicker
@@ -147,7 +147,7 @@ export function SelectionDemo() {
               activation="manual"
               size="lg"
             />
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               {bulkMixed ? "mixed — the rows disagree" : `value: ${shown(flag)}`}
             </p>
           </div>
@@ -173,7 +173,7 @@ export function SelectionDemo() {
               allowNone
               searchable
             />
-            <p className="text-xs text-[var(--text-muted)]">value: {shown(symbol)}</p>
+            <p className="text-xs text-muted">value: {shown(symbol)}</p>
           </div>
         </Stage>
       </Example>
@@ -190,7 +190,7 @@ export function SelectionDemo() {
               value={themed}
               onChange={setThemed}
             />
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               value: {shown(themed)} · the last tile is disabled
             </p>
           </div>
@@ -202,7 +202,7 @@ export function SelectionDemo() {
               onChange={() => {}}
               disabled
             />
-            <p className="text-xs text-[var(--text-muted)]">disabled — the choice stays visible</p>
+            <p className="text-xs text-muted">disabled — the choice stays visible</p>
           </div>
           <div className="space-y-2">
             <IconPicker
@@ -218,7 +218,7 @@ export function SelectionDemo() {
               activation="manual"
               size="lg"
             />
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               {bulkSymbolMixed ? "mixed — arrows move, Space/Enter chooses" : `value: ${shown(bulkSymbol)}`}
             </p>
           </div>
@@ -240,7 +240,7 @@ export function SelectionDemo() {
                 resultCount: (n) => (n === 1 ? "1 Symbol" : `${n} Symbole`),
               }}
             />
-            <p className="text-xs text-[var(--text-muted)]">value: {shown(deSymbol)}</p>
+            <p className="text-xs text-muted">value: {shown(deSymbol)}</p>
           </div>
           <div className="space-y-2">
             <IconPicker
@@ -264,7 +264,7 @@ export function SelectionDemo() {
                 mixed: "Gemischt: die gewählten Zeilen haben verschiedene Farben",
               }}
             />
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               labels.none names the ∅ tile; labels.mixed describes the group
             </p>
           </div>
@@ -357,7 +357,7 @@ export function SelectionDemo() {
               checked={recurring}
               onCheckedChange={setRecurring}
             />
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               role: {shown(role)} · roles: {shown(roles)} · recurring: {shown(recurring)}
             </p>
           </div>
@@ -459,7 +459,7 @@ export function SelectionDemo() {
               <Button type="submit" variant="secondary">
                 Submit (native form)
               </Button>
-              <p className="text-xs text-[var(--text-muted)]">
+              <p className="text-xs text-muted">
                 {channelsSent === null
                   ? "not submitted — with nothing ticked the browser refuses and points at the first box"
                   : `submitted: ${channelsSent}`}
@@ -489,7 +489,7 @@ export function SelectionDemo() {
                 Continue
               </Button>
             </div>
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               autopay: {shown(autopay)} · plan: {shown(plan)} · lease read: {shown(ack)}
             </p>
           </div>
@@ -526,7 +526,7 @@ export function SelectionDemo() {
                 { value: "closed", label: "Closed" },
               ]}
             />
-            <p className="text-xs text-[var(--text-muted)]">value: {shown(status)}</p>
+            <p className="text-xs text-muted">value: {shown(status)}</p>
           </div>
           <div className="space-y-2">
             {/* Without allowEmpty: radios, one option is always the answer. */}
@@ -541,7 +541,7 @@ export function SelectionDemo() {
                 { value: "year", label: "Year", className: "font-semibold" },
               ]}
             />
-            <p className="text-xs text-[var(--text-muted)]">value: {shown(period)} (required mode)</p>
+            <p className="text-xs text-muted">value: {shown(period)} (required mode)</p>
           </div>
           <div className="space-y-2">
             <ToggleGroup
@@ -555,7 +555,7 @@ export function SelectionDemo() {
                 { value: "closed", label: "Closed" },
               ]}
             />
-            <p className="text-xs text-[var(--text-muted)]">disabled — the chosen one keeps its fill</p>
+            <p className="text-xs text-muted">disabled — the chosen one keeps its fill</p>
           </div>
         </Stage>
         <Note>
@@ -598,7 +598,7 @@ export function SelectionDemo() {
             />
           </div>
         </Stage>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           colour: {shown(rtlColour)} · role: {shown(rtlRole)} — focus a swatch and press ← : it moves
           left, to the next tile, as the arrow points.
         </p>

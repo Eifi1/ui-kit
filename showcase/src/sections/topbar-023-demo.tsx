@@ -10,7 +10,7 @@ import { Example, Note, Row } from "../lib/section";
  * The tours here are made up; an app's are its own.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 type Mode = "headings" | "dividers";
@@ -25,7 +25,7 @@ export function TopBarMenuHeadingsDemo() {
     icon: <Icon className="size-4" />,
     label,
     trailing: done.includes(key) ? (
-      <Check className="size-4 text-[var(--text-secondary)]" />
+      <Check className="size-4 text-secondary" />
     ) : fresh ? (
       <Chip size="sm" tone="brand" caps className="px-1.5">
         New
@@ -75,7 +75,7 @@ export function TopBarMenuHeadingsDemo() {
             { value: "dividers", label: "Dividers only (before)" },
           ]}
         />
-        <div className="flex justify-end rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-2">
+        <div className="flex justify-end rounded-md border border-subtle bg-surface-2 p-2">
           <TopBarActionMenu
             icon={<Compass className="size-5" />}
             ariaLabel="Guided tours"

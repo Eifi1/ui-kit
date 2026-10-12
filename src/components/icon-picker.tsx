@@ -198,14 +198,14 @@ export function IconPicker<T extends string>({
           }}
           tileClassName={(_item, selected) =>
             cn(
-              selected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
+              selected ? "text-primary" : "text-secondary",
               tileClassName,
             )
           }
         />
       </div>
       {needle && visible.length === 0 && (
-        <p className="text-xs text-[var(--text-muted)]">{text.noResults}</p>
+        <p className="text-xs text-muted">{text.noResults}</p>
       )}
       {mixed && (
         <span id={mixedId} hidden>

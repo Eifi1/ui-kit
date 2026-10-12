@@ -67,9 +67,9 @@ export function DemoEnded({
   useNoIndex(noIndex);
   return (
     <div {...rest} className={cn("flex flex-col items-center gap-2 py-4 text-center", className)}>
-      <Hourglass aria-hidden className="size-10 text-[var(--text-placeholder)]" />
-      <Heading className="mt-2 text-xl font-semibold text-[var(--text-primary)]">{labels.endedTitle}</Heading>
-      <p className="max-w-prose text-sm text-[var(--text-secondary)]">
+      <Hourglass aria-hidden className="size-10 text-placeholder" />
+      <Heading className="mt-2 text-xl font-semibold text-primary">{labels.endedTitle}</Heading>
+      <p className="max-w-prose text-sm text-secondary">
         {model === "sandbox" ? labels.endedSandbox : labels.endedReadOnly}
       </p>
       {children}

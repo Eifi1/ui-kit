@@ -33,7 +33,7 @@ export function ProgressSegmentsDemo() {
       <div className="space-y-6">
         <div className="space-y-2">
           <ProgressBar label="This month's budget" segments={budget} legend showValue={showValue} />
-          <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--text-secondary)]">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-secondary">
             <label className="flex items-center gap-2">
               Food
               <input

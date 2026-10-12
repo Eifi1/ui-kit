@@ -95,8 +95,8 @@ export function HelpPopover({ label, children, width = HELP_WIDTH, className }: 
           // FieldHint's look, so the two marks read as one family on a label line; the
           // open one holds its hover colour while its panel shows.
           className={cn(
-            "flex rounded-full text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)]",
-            open && "text-[var(--text-secondary)]",
+            "flex rounded-full text-placeholder transition-colors hover:text-secondary",
+            open && "text-secondary",
             FOCUS_RING,
             className,
           )}
@@ -106,7 +106,7 @@ export function HelpPopover({ label, children, width = HELP_WIDTH, className }: 
       )}
     >
       {() => (
-        <div id={bodyId} className="space-y-2 text-sm leading-snug text-[var(--text-primary)]">
+        <div id={bodyId} className="space-y-2 text-sm leading-snug text-primary">
           {children}
         </div>
       )}

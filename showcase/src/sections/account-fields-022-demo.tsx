@@ -9,7 +9,7 @@ import { Example, Note, Row } from "../lib/section";
  * (Kurvenschmiede) and the now-public TileRadioGroup. Every value is synthetic.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
+const READOUT = "font-mono text-xs text-secondary";
 const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /* ── OneTimeCodeInput — page: auth-account ──────────────────────────────── */
@@ -82,7 +82,7 @@ export function OneTimeCodeUnlabelled022Demo() {
   return (
     <Example label="OneTimeCodeInput — named by its prompt" hint="aria-labelledby, a placeholder, a FieldHint at the end edge">
       <div className="max-w-xs space-y-2">
-        <p id="otp-022-prompt" className="text-sm text-[var(--text-secondary)]">
+        <p id="otp-022-prompt" className="text-sm text-secondary">
           Enter the code from your authenticator app.
         </p>
         <OneTimeCodeInput

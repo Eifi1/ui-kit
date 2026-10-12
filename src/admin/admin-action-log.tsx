@@ -337,17 +337,17 @@ export function AdminActionLog({
     if (subject === undefined) return null;
     if (isGroupTarget(subject)) return groupText(subject, "font-medium text-primary");
     if (isOtherTarget(subject)) return <span className="font-medium text-primary">{subject.label}</span>;
-    if (scrubbed(subject)) return <span className="italic text-[var(--text-muted)]">{labels.erased}</span>;
+    if (scrubbed(subject)) return <span className="italic text-muted">{labels.erased}</span>;
     const person = subject!;
     const name = nameOf(person);
     const address = (person.email ?? "").trim();
     const text = (
       <>
-        <span data-private className="font-medium text-[var(--text-primary)]">
+        <span data-private className="font-medium text-primary">
           {name}
         </span>
         {address && address !== name && (
-          <span data-private className="ms-1 text-xs text-[var(--text-muted)]">
+          <span data-private className="ms-1 text-xs text-muted">
             {address}
           </span>
         )}
@@ -385,13 +385,13 @@ export function AdminActionLog({
         <ol
           aria-label={labels.title}
           aria-busy={loading || undefined}
-          className={cn("divide-y divide-[var(--border)]", loading && "opacity-60")}
+          className={cn("divide-y divide-subtle", loading && "opacity-60")}
         >
           {entries.map((entry) => (
             <li key={entry.id} data-action={entry.action} className="space-y-0.5 py-2 first:pt-0 last:pb-0">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                 <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
-                  <span className="font-medium text-[var(--text-primary)]">{actionText(entry.action)}</span>
+                  <span className="font-medium text-primary">{actionText(entry.action)}</span>
                   {entry.target !== undefined && <span className="min-w-0 break-words">{targetNode(entry)}</span>}
                   {entry.group && (
                     <span data-group className="min-w-0 break-words text-xs text-muted">
@@ -399,16 +399,16 @@ export function AdminActionLog({
                     </span>
                   )}
                 </div>
-                <DateMark value={entry.at} display="relative" className="text-xs text-[var(--text-muted)]" />
+                <DateMark value={entry.at} display="relative" className="text-xs text-muted" />
               </div>
-              <div className="text-xs text-[var(--text-muted)]">
+              <div className="text-xs text-muted">
                 <span data-private={entry.actor !== null && entry.actor !== "self" ? true : undefined}>
                   {actorText(entry)}
                 </span>
                 {entry.detail !== undefined && entry.detail !== null && entry.detail !== "" && (
                   <>
                     {" · "}
-                    <span className="text-[var(--text-secondary)]">{entry.detail}</span>
+                    <span className="text-secondary">{entry.detail}</span>
                   </>
                 )}
               </div>

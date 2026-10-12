@@ -276,10 +276,10 @@ describe("Chip — touch size and money tones (0.6.0)", () => {
     );
     const income = screen.getByText("In").parentElement!;
     expect(income.className).toContain("text-[var(--money-income)]");
-    expect(income.className).toContain("bg-[var(--bg-surface-2)]");
+    expect(income.className).toContain("bg-surface-2");
     const expense = screen.getByRole("button", { name: "Out" });
     expect(expense.className).toContain("text-[var(--money-expense)]");
-    expect(expense.className).toContain("bg-[var(--bg-active)]");
+    expect(expense.className).toContain("bg-active");
     expect(expense).toHaveAttribute("aria-pressed", "true");
   });
 });
@@ -319,7 +319,7 @@ describe("Chip — the combined link/button + dismiss shape (0.7.0)", () => {
     expect(link).not.toContainElement(remove);
     expect(pill.className).toContain("rounded-full");
     expect(pill.className).toContain("border");
-    expect(pill.className).toContain("bg-[var(--brand-bg)]");
+    expect(pill.className).toMatch(/bg-brand-soft(?![\w-])/);
     expect(pill.className).toContain("custom");
     expect(link.className).not.toContain("border");
   });
@@ -500,13 +500,13 @@ describe("Chip 0.10.0", () => {
       </>,
     );
     const soft = screen.getByTestId("soft").className;
-    expect(soft).toContain("bg-[var(--hue-purple-bg)]");
-    expect(soft).toContain("text-[var(--hue-purple)]");
-    expect(soft).toContain("border-[var(--hue-purple-border)]");
+    expect(soft).toContain("bg-hue-purple-soft");
+    expect(soft).toMatch(/text-hue-purple(?![\w-])/);
+    expect(soft).toContain("border-hue-purple");
     expect(screen.getByTestId("outline").className).toContain("bg-transparent");
-    expect(screen.getByTestId("outline").className).toContain("text-[var(--hue-teal)]");
+    expect(screen.getByTestId("outline").className).toMatch(/text-hue-teal(?![\w-])/);
     // The fill under its own foreground (0.33), as role utilities.
-    expect(screen.getByTestId("solid").className).toContain("bg-hue-orange");
+    expect(screen.getByTestId("solid").className).toMatch(/bg-hue-orange(?![\w-])/);
     expect(screen.getByTestId("solid").className).toContain("text-hue-orange-contrast");
     expect(screen.getByTestId("on").className).toContain("border-[var(--hue-indigo)]");
   });
@@ -556,10 +556,10 @@ describe("Chip 0.10.0", () => {
     expect(chip.className).toContain("bg-transparent");
     expect(chip.className).toContain("border-transparent");
     expect(chip.className).toContain("px-0");
-    expect(chip.className).toContain("text-[var(--text-secondary)]");
+    expect(chip.className).toContain("text-secondary");
     const dot = chip.querySelector("[data-chip-dot]")!;
     expect(dot).toHaveAttribute("aria-hidden");
-    expect(dot.className).toContain("bg-[var(--hue-blue)]");
+    expect(dot.className).toMatch(/bg-hue-blue(?![\w-])/);
     expect(chip).toHaveTextContent("Rented");
   });
 });

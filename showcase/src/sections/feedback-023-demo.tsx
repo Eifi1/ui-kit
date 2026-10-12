@@ -64,7 +64,7 @@ export function FeedbackAttachment023Demo() {
           onError={(kind, error, info) => say(kind === "upload" ? `${info.message} (${String(error)})` : info.message)}
         />
         {log.length > 0 && (
-          <ul aria-live="polite" className="space-y-0.5 text-xs text-[var(--danger)]">
+          <ul aria-live="polite" className="space-y-0.5 text-xs text-danger">
             {log.map((line, i) => (
               <li key={i}>{line}</li>
             ))}
@@ -118,7 +118,7 @@ export function ChatComposerCount023Demo() {
           ]}
         />
         {sent.length > 0 && (
-          <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+          <ul className="space-y-1 text-sm text-secondary">
             {sent.map((m, i) => (
               <li key={i} className="break-words">
                 {m}

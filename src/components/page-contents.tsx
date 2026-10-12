@@ -166,7 +166,7 @@ export function PageContents({
     <ul
       ref={listRef}
       className={cn(
-        "space-y-0.5 border-s border-[var(--border)]",
+        "space-y-0.5 border-s border-subtle",
         variant === "rail" && "max-h-[calc(100dvh-10rem)] overflow-y-auto [scrollbar-width:thin]",
       )}
     >
@@ -186,8 +186,8 @@ export function PageContents({
                 variant === "rail" && "[overflow-wrap:anywhere]",
                 item.level === 2 ? "ps-6" : "ps-3",
                 current
-                  ? "border-[var(--brand)] font-medium text-[var(--brand)]"
-                  : "border-transparent text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]",
+                  ? "border-brand font-medium text-brand"
+                  : "border-transparent text-muted hover:border-strong hover:text-primary",
               )}
             >
               {item.label}
@@ -202,18 +202,18 @@ export function PageContents({
     return (
       <details
         className={cn(
-          "group rounded-md border border-[var(--border)] bg-[var(--bg-surface)]",
+          "group rounded-md border border-subtle bg-surface",
           className,
         )}
       >
-        <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-sm font-medium text-[var(--text-secondary)] [&::-webkit-details-marker]:hidden">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-sm font-medium text-secondary [&::-webkit-details-marker]:hidden">
           {l.title}
           <ChevronDown
             aria-hidden
             className="size-4 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
           />
         </summary>
-        <nav {...rest} aria-label={l.title} className="border-t border-[var(--border)] px-2 py-2">
+        <nav {...rest} aria-label={l.title} className="border-t border-subtle px-2 py-2">
           {list}
         </nav>
       </details>
@@ -222,7 +222,7 @@ export function PageContents({
 
   return (
     <nav {...rest} aria-label={l.title} className={className}>
-      <p className="mb-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+      <p className="mb-2 text-caption font-semibold uppercase tracking-wide text-muted">
         {l.title}
       </p>
       {list}

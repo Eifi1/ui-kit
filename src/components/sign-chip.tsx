@@ -116,7 +116,7 @@ export function SignChip({ negative, onNegativeChange, disabled, labels: labelsP
     <span data-slot="sign-chip" className={cn("inline-flex shrink-0 flex-col items-start gap-0.5", className)}>
       {chip}
       {/* Hidden from the accessibility tree: the chip's name already says it. */}
-      <span aria-hidden className="text-xs text-[var(--text-muted)]">
+      <span aria-hidden className="text-xs text-muted">
         {labels.switchTo(next)}
       </span>
     </span>

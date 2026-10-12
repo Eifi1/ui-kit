@@ -306,7 +306,7 @@ function settleAmount(text: string, digits: number | undefined, min?: number, ma
 
 // The error line under a field — the type of `ui.tsx`'s (module-private) one, so an
 // AmountInput's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
 
 // The consuming app's ONE money palette (`--money-expense` / `--money-income`),
 // not a bespoke rose/emerald pairing: a figure being typed has to wear the same
@@ -666,7 +666,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             <span
               aria-hidden
               className={cn(
-                "pointer-events-none px-1 font-medium text-[var(--text-muted)]",
+                "pointer-events-none px-1 font-medium text-muted",
                 // A text-xs chip next to a 36px figure reads as a stray footnote.
                 asDisplay ? "text-sm" : "text-xs",
               )}
@@ -685,7 +685,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
                 selected ? common.fieldValue(currencyText.currency, selected.code) : currencyText.currency
               }
               className={cn(
-                "flex items-center gap-1 rounded px-2 py-1 font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                "flex items-center gap-1 rounded px-2 py-1 font-medium text-secondary hover:bg-hover",
                 asDisplay ? "text-sm" : "text-xs",
               )}
             >
@@ -719,16 +719,16 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
                         setOpen(false);
                       }}
                       className={cn(
-                        "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-start hover:bg-[var(--bg-hover)]",
-                        active && "bg-[var(--bg-active)]",
+                        "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-start hover:bg-hover",
+                        active && "bg-active",
                       )}
                     >
                       <CurrencyFlag country={c.country} />
-                      <span className="font-mono text-[var(--text-muted)] w-8 shrink-0 text-xs">
+                      <span className="font-mono text-muted w-8 shrink-0 text-xs">
                         {c.symbol}
                       </span>
-                      <span className="font-medium text-[var(--text-primary)]">{c.code}</span>
-                      <span className="text-[var(--text-muted)] truncate text-xs">{currencyName(c, currencyNames, locale)}</span>
+                      <span className="font-medium text-primary">{c.code}</span>
+                      <span className="text-muted truncate text-xs">{currencyName(c, currencyNames, locale)}</span>
                     </button>
                   </li>
                 );
@@ -740,7 +740,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
         {/* Outside the relative box, as NumberInput's caption is: the trailing
             controls are `inset-y-1` in it and would stretch down over a second line. */}
         {textHint && (
-          <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
+          <p id={hintId} className="mt-1 text-caption leading-tight text-muted">
             {hint}
           </p>
         )}

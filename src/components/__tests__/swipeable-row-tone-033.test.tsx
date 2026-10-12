@@ -121,7 +121,7 @@ describe("SwipeAction paint (a documented app exception)", () => {
 
 describe("the deprecated className path", () => {
   it("keeps the old look: the caller's fill, white text, dimmed until armed", () => {
-    renderRow([{ label: "Archive", onCommit: vi.fn(), className: "bg-[var(--money-neutral)]", armedClassName: "bg-[var(--danger)]" }]);
+    renderRow([{ label: "Archive", onCommit: vi.fn(), className: "bg-[var(--money-neutral)]", armedClassName: "bg-danger" }]);
     dragLeft(40);
     let p = panel("Archive");
     expect(hasClass(p, "bg-[var(--money-neutral)]")).toBe(true);
@@ -129,17 +129,17 @@ describe("the deprecated className path", () => {
     expect(hasClass(p, "opacity-60")).toBe(true);
     dragLeft(150);
     p = panel("Archive");
-    expect(hasClass(p, "bg-[var(--danger)]")).toBe(true);
+    expect(hasClass(p, "bg-danger")).toBe(true);
     expect(hasClass(p, "opacity-60")).toBe(false);
   });
 
   it("lets the caller's classes set the text colour over the white default", () => {
     renderRow([
-      { label: "Archive", onCommit: vi.fn(), className: "bg-[var(--danger)] text-[var(--danger-contrast)]", armedClassName: "bg-[var(--danger)]" },
+      { label: "Archive", onCommit: vi.fn(), className: "bg-danger text-danger-contrast", armedClassName: "bg-danger" },
     ]);
     dragLeft(40);
     const p = panel("Archive");
-    expect(hasClass(p, "text-[var(--danger-contrast)]")).toBe(true);
+    expect(hasClass(p, "text-danger-contrast")).toBe(true);
     expect(hasClass(p, "text-white")).toBe(false);
   });
 });

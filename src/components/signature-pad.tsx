@@ -523,10 +523,10 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
   return (
     <div {...rest} className={cn("relative space-y-1.5", className)} data-empty={isEmpty || undefined}>
       <div>
-        <span id={labelId} className="block text-sm font-medium text-[var(--text-primary)]">
+        <span id={labelId} className="block text-sm font-medium text-primary">
           {label ?? labels.label}
         </span>
-        <p id={descId} className="text-xs text-[var(--text-muted)]">
+        <p id={descId} className="text-xs text-muted">
           {description ?? labels.instructions}
           {allowTypedName && !typed ? ` ${labels.typedFallbackHint}` : null}
         </p>
@@ -549,7 +549,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
           onPointerCancel={endStroke}
           className={cn(
             // `touch-none` stops the page scrolling under a finger that is signing.
-            "block h-40 w-full touch-none select-none rounded-md border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)]",
+            "block h-40 w-full touch-none select-none rounded-md border border-subtle bg-surface text-primary",
             typed || disabled ? "cursor-default" : "cursor-crosshair",
             disabled && "opacity-60",
             isInvalid && FIELD_INVALID,
@@ -559,7 +559,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
         {/* The signing line — where people expect to sign. Decoration only. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-[var(--border-strong)]"
+          className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-strong"
         />
         <span id={statusId} className="sr-only">
           {isEmpty ? labels.empty : labels.signed}
@@ -618,7 +618,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
       </div>
 
       {hasError && (
-        <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
+        <p id={errorId} className="mt-1 text-caption leading-tight text-danger">
           {error}
         </p>
       )}
@@ -692,11 +692,11 @@ export function SignatureView({
       data-empty={kind === "empty" || undefined}
     >
       {captioned && (
-        <figcaption id={captionId} className="block text-sm font-medium text-[var(--text-primary)]">{caption}</figcaption>
+        <figcaption id={captionId} className="block text-sm font-medium text-primary">{caption}</figcaption>
       )}
       <div
         className={cn(
-          "relative flex h-40 items-center justify-center overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)]",
+          "relative flex h-40 items-center justify-center overflow-hidden rounded-md border border-subtle bg-surface",
           frameClassName,
         )}
       >
@@ -715,19 +715,19 @@ export function SignatureView({
             aria-label={labels.viewTyped(name)}
             // A name, so never cut at Large: it wraps inside the 10rem frame from Large
             // up (`truncate-until-large`, text size §10.17; round 0.34 T1).
-            className="relative max-w-[85%] truncate-until-large px-2 text-4xl italic text-[var(--text-primary)]"
+            className="relative max-w-[85%] truncate-until-large px-2 text-4xl italic text-primary"
             style={{ fontFamily: SCRIPT_FONT }}
           >
             {name}
           </span>
         )}
         {kind === "empty" && (
-          <span className="relative text-xs text-[var(--text-muted)]">{labels.viewEmpty}</span>
+          <span className="relative text-xs text-muted">{labels.viewEmpty}</span>
         )}
         {/* The signing line, as on the pad. Decoration only. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-[var(--border-strong)]"
+          className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-strong"
         />
       </div>
     </figure>

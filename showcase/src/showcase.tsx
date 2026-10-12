@@ -324,7 +324,7 @@ export function Showcase() {
       // 390px screen on the long groups (showcase audit, decided 2026-09-27).
       mobileSubNavLayout="scroll"
       footer={
-        <footer className="border-t border-[var(--border)] px-6 py-3 text-xs text-[var(--text-muted)]">
+        <footer className="border-t border-subtle px-6 py-3 text-xs text-muted">
           {/* One translated sentence, not three fragments with markup between them. The
               paths used to be wrapped in <code>; word order is the first thing that moves
               between these seven languages, and a sentence interrupted by two elements is a
@@ -338,7 +338,7 @@ export function Showcase() {
           brand={
             <Link
               to={`/${HOME_SLUG}`}
-              className="truncate font-semibold text-[var(--text-primary)] hover:underline"
+              className="truncate font-semibold text-primary hover:underline"
             >
               {/* `dir="ltr"` is load-bearing, not decoration. The brand is a Latin
                   package name inside a paragraph that is right-to-left on Arabic, and
@@ -492,7 +492,7 @@ function PreviewRoute({ onExit }: { onExit: () => void }) {
   const { title } = usePageText(slug ?? "");
   return (
     <div className="w-full px-4 py-6 md:px-6">
-      <h1 className="mb-2 text-2xl font-semibold text-[var(--text-primary)]">{title}</h1>
+      <h1 className="mb-2 text-2xl font-semibold text-primary">{title}</h1>
       <DevicePreview onExit={onExit} />
     </div>
   );
@@ -541,27 +541,27 @@ function PageView({
       contents={<PageContentsRail />}
       className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6"
     >
-      <nav aria-label={t.chrome.breadcrumb} className="text-xs text-[var(--text-muted)]">
+      <nav aria-label={t.chrome.breadcrumb} className="text-xs text-muted">
         {isOverview || !group ? (
-          <span className="text-[var(--text-secondary)]">{groupLabel || title}</span>
+          <span className="text-secondary">{groupLabel || title}</span>
         ) : (
           <>
             {/* The group links to its overview when it has one — the breadcrumb's
                 parent is a place, not a caption. */}
             {hasOverview(group) ? (
-              <Link to={`/${group.slug}`} className="hover:text-[var(--text-secondary)] hover:underline">
+              <Link to={`/${group.slug}`} className="hover:text-secondary hover:underline">
                 {groupLabel}
               </Link>
             ) : (
               groupLabel
             )}{" "}
-            <span aria-hidden>/</span> <span className="text-[var(--text-secondary)]">{title}</span>
+            <span aria-hidden>/</span> <span className="text-secondary">{title}</span>
           </>
         )}
       </nav>
 
-      <h1 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{title}</h1>
-      <p className="mt-1 max-w-3xl text-sm text-[var(--text-secondary)]">{blurb}</p>
+      <h1 className="mt-2 text-2xl font-semibold text-primary">{title}</h1>
+      <p className="mt-1 max-w-3xl text-sm text-secondary">{blurb}</p>
       <ServerSideLinks slug={page.slug} />
 
       <PageContentsMenu />
@@ -587,7 +587,7 @@ function PageView({
         // Two equal columns, not `justify-between`: in a flex row the two links shrank
         // together and both titles truncated ("Buttons & surf…") with the room between
         // them unused. Each side now owns half the row and wraps inside it.
-        className="mt-12 grid grid-cols-2 items-center gap-4 border-t border-[var(--border)] pt-6"
+        className="mt-12 grid grid-cols-2 items-center gap-4 border-t border-subtle pt-6"
       >
         {prev ? (
           <PagerLink
@@ -628,7 +628,7 @@ function ServerSideLinks({ slug }: { slug: string }) {
   });
   if (links.length === 0) return null;
   return (
-    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-muted)]">
+    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
       <Server aria-hidden className="size-3.5 shrink-0" />
       <span>{t.chrome.serverSide}</span>
       {links.map(({ module, to }) => (
@@ -637,7 +637,7 @@ function ServerSideLinks({ slug }: { slug: string }) {
           key={module}
           to={to}
           dir="ltr"
-          className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-px font-mono text-caption text-[var(--brand)] hover:underline"
+          className="rounded border border-subtle bg-surface-2 px-1.5 py-px font-mono text-caption text-brand hover:underline"
         >
           {module}
         </Link>
@@ -664,7 +664,7 @@ function PagerLink({
   const { title } = usePageText(slug);
   const label = (
     <span className="min-w-0">
-      <span className="block text-caption text-[var(--text-muted)]">{kicker}</span>
+      <span className="block text-caption text-muted">{kicker}</span>
       {/* Two lines before an ellipsis: a title is a few words, and half a phone row is
           about fifteen characters. From Large up the whole title, on as many lines as it
           takes (text size §10.17: nothing is cut at Large; the 0.34 sweep found it). */}
@@ -676,7 +676,7 @@ function PagerLink({
       to={to}
       // `text-end`, not `text-right`: the trailing side of the pager is the right in
       // English and the left in Arabic, and only the logical property knows which.
-      className={`group flex min-w-0 items-center gap-2 text-sm text-[var(--brand)] hover:underline${
+      className={`group flex min-w-0 items-center gap-2 text-sm text-brand hover:underline${
         arrowFirst ? " justify-self-start" : " justify-self-end text-end"
       }`}
     >
@@ -769,7 +769,7 @@ function NotFound() {
     <div className="mx-auto w-full max-w-2xl px-4 py-16 md:px-6">
       <EmptyState title={t.chrome.notFoundTitle} hint={t.chrome.notFoundHint} />
       <div className="mt-4 flex justify-center">
-        <Link to={`/${HOME_SLUG}`} className="text-sm text-[var(--brand)] hover:underline">
+        <Link to={`/${HOME_SLUG}`} className="text-sm text-brand hover:underline">
           {t.chrome.backToStart}
         </Link>
       </div>

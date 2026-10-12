@@ -109,7 +109,7 @@ export const AMOUNT_FMT = new Intl.NumberFormat("en-GB", {
 
 export function StatusPill({ status }: { status: Status }) {
   return (
-    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--border)] bg-[var(--bg-surface-2)] px-2 py-0.5 text-xs text-[var(--text-secondary)]">
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-subtle bg-surface-2 px-2 py-0.5 text-xs text-secondary">
       <span aria-hidden className={cn("size-1.5 rounded-full", STATUS_DOT[status])} />
       {STATUS_LABEL[status]}
     </span>
@@ -156,7 +156,7 @@ export const AMOUNT_FILTER: ColumnFilter<TableRow> = {
 export const ID_COL: DataTableColumn<TableRow> = {
   key: "id",
   header: "ID",
-  cell: (r) => <span className="font-mono text-xs text-[var(--text-muted)]">{r.id}</span>,
+  cell: (r) => <span className="font-mono text-xs text-muted">{r.id}</span>,
   sortBy: (r) => r.id,
   className: "whitespace-nowrap",
   // Exactly the "noisy detail" the prop's own note names: an id earns its column

@@ -232,17 +232,17 @@ export function FloatingActionButton({
               "shadow-lg transition-colors disabled:cursor-default",
               !toggle &&
                 variant === "primary" &&
-                "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]",
+                "bg-brand text-brand-contrast hover:bg-brand-hover",
               !toggle &&
                 variant === "surface" &&
-                "border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:hover:bg-[var(--bg-surface)]",
+                "border border-subtle bg-surface text-primary hover:bg-hover disabled:hover:bg-surface",
               // A toggle sits on the page's surface — a solid brand disc would read as
               // "on" in both states — and says "on" in the brand family.
-              toggle && "border border-[var(--border)]",
+              toggle && "border border-subtle",
               pressed === false &&
-                "bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
+                "bg-surface text-secondary hover:bg-hover hover:text-primary",
               pressed === true &&
-                "border-[var(--brand)] bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-brand-muted",
+                "border-brand bg-brand-soft text-brand hover:bg-brand-soft-hover hover:text-brand-muted",
               "outline-none focus-visible:ring-offset-2",
               FOCUS_RING,
               className,
@@ -485,7 +485,7 @@ export function FloatingPanel({
             }
             className={cn(
               "animate-sheet fixed z-40 flex flex-col overflow-hidden outline-none",
-              "border border-[var(--border)] bg-[var(--bg-surface)] shadow-2xl",
+              "border border-subtle bg-surface shadow-2xl",
               // Phone: full width, docked, rounded only where it meets the page.
               "inset-x-0 bottom-[var(--fp-bottom)] max-h-[min(85dvh,calc(100dvh_-_var(--fp-bottom)_-_1rem))] rounded-t-xl border-x-0 border-b-0",
               "pb-[env(safe-area-inset-bottom,0px)] md:pb-0",
@@ -495,8 +495,8 @@ export function FloatingPanel({
               className,
             )}
           >
-            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-3">
-              <h2 id={titleId} className="min-w-0 truncate text-base font-semibold text-[var(--text-primary)]">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-subtle px-4 py-3">
+              <h2 id={titleId} className="min-w-0 truncate text-base font-semibold text-primary">
                 {title}
               </h2>
               <button
@@ -506,7 +506,7 @@ export function FloatingPanel({
                   setOpen(false);
                 }}
                 aria-label={labels.close}
-                className={cn("-me-1.5 shrink-0 rounded p-1.5 text-[var(--text-muted)] outline-none hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]", FOCUS_RING)}
+                className={cn("-me-1.5 shrink-0 rounded p-1.5 text-muted outline-none hover:bg-hover hover:text-secondary", FOCUS_RING)}
               >
                 <X aria-hidden className="size-5" />
               </button>
@@ -573,11 +573,11 @@ export function FloatingActionGroup({
             style={{ ...cornerStyle(corner, offset), ...style }}
             className={cn(
               "fixed z-40 inline-flex flex-row overflow-hidden rounded-2xl",
-              "border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+              "border border-subtle bg-surface shadow-lg",
               // Dividers on the logical start edge of every member but the first, so
               // they sit between the same two members in RTL. The member is the
               // tooltip's wrapper span, which is the direct child.
-              "[&>*:not(:first-child)]:border-s [&>*]:border-[var(--border)]",
+              "[&>*:not(:first-child)]:border-s [&>*]:border-subtle",
               className,
             )}
           >
@@ -694,10 +694,10 @@ export function FloatingAction({
     FOCUS_RING,
     "disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-5",
     variant === "primary"
-      ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
+      ? "bg-brand text-brand-contrast hover:bg-brand-hover"
       : pressed && !isLink && pressedStyle === "tint"
-        ? "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-brand-muted"
-        : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
+        ? "bg-brand-soft text-brand hover:bg-brand-soft-hover hover:text-brand-muted"
+        : "text-secondary hover:bg-hover hover:text-primary",
     className,
   );
   const body = (

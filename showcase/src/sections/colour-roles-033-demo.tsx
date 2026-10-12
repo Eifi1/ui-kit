@@ -546,9 +546,9 @@ function UtilitiesDemo() {
         so a local override still works, and an unused name costs nothing. `hover:`, `md:`, `dark:` and `/60` work
         on every one — `hover:bg-brand` generated nothing while `.bg-brand` was a plain class. The money classes
         stay plain (`.text-money-pos`, `.bg-money-neg` …): a site that needs a variant keeps the `[var()]` form.
-        The kit&apos;s own ~1,580 `[var(--role)]` classes stay too, under a ratchet that only lets the count fall
-        (`npm run check:tokens`); new and touched code uses the names. In kastlan, `text-primary` is now the ink,
-        not its shadcn brand.
+        Since 0.34 the kit&apos;s own markup uses the names too: every `[var(--role)]` class with a name of the same
+        role and property moved, and a ratchet keeps the count at zero (`npm run check:tokens`). In kastlan,
+        `text-primary` is now the ink, not its shadcn brand.
       </Note>
     </Example>
   );

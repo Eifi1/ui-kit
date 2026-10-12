@@ -205,7 +205,7 @@ describe("Slider — the element", () => {
     const cls = screen.getByRole("slider").className;
     // The kit's focus frame (0.32, §5): `--focus-ring-width` wide.
     expect(cls).toMatch(/focus-visible:\[&::-webkit-slider-thumb\]:ring-\[length:var\(--focus-ring-width\)\]/);
-    expect(cls).toMatch(/focus-visible:\[&::-webkit-slider-thumb\]:ring-\[var\(--brand\)\]/);
+    expect(cls).toMatch(/focus-visible:\[&::-webkit-slider-thumb\]:ring-brand(?![\w-])/);
     expect(cls).toMatch(/focus-visible:\[&::-moz-range-thumb\]:ring-\[length:var\(--focus-ring-width\)\]/);
   });
 

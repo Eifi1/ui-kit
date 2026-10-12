@@ -16,10 +16,10 @@ import { cn } from "../lib/cn";
 export type AuthHeadingLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
 /** The form pages' heading: start-aligned, the size of `SignInForm`'s step headings. */
-export const FORM_HEADING_CLASS = "text-base font-semibold text-[var(--text-primary)]";
+export const FORM_HEADING_CLASS = "text-base font-semibold text-primary";
 /** The status pages' heading: centred over the centred outcome below it. */
-export const STATUS_HEADING_CLASS = "text-center text-base font-semibold text-[var(--text-primary)]";
-export const INTRO_CLASS = "text-sm text-[var(--text-secondary)]";
+export const STATUS_HEADING_CLASS = "text-center text-base font-semibold text-primary";
+export const INTRO_CLASS = "text-sm text-secondary";
 
 /**
  * kastlan's outcome block (verify-email-page, reset-password-page): the kit's

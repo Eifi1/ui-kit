@@ -302,21 +302,21 @@ function PlacementTour() {
       <div className="flex items-center justify-between gap-3">
         <span
           data-tour="showcase-place-a"
-          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+          className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary"
         >
           Target A
         </span>
         {revealed && (
           <span
             data-tour="showcase-place-c"
-            className="rounded-md border border-[var(--brand)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+            className="rounded-md border border-brand px-3 py-1.5 text-xs text-primary"
           >
             Target C (revealed by beforeStep)
           </span>
         )}
         <span
           data-tour="showcase-place-b"
-          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+          className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary"
         >
           Target B
         </span>
@@ -324,7 +324,7 @@ function PlacementTour() {
       <div dir="rtl" className="flex justify-center">
         <span
           data-tour="showcase-place-rtl"
-          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+          className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary"
         >
           الهدف د — <bdi dir="ltr">Target D, dir=&quot;rtl&quot;</bdi>
         </span>
@@ -332,12 +332,12 @@ function PlacementTour() {
       <Row>
         {/* The select is as wide as its longest option; held to the row, it ran 73 px
             past a 360 px phone at Extra large otherwise (0.32.1). */}
-        <label className="flex min-w-0 max-w-full flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex min-w-0 max-w-full flex-wrap items-center gap-2 text-xs text-secondary">
           startIndex
           <select
             value={from}
             onChange={(e) => setFrom(Number(e.target.value))}
-            className="min-w-0 max-w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-1 py-0.5 text-[var(--text-primary)]"
+            className="min-w-0 max-w-full rounded-md border border-subtle bg-surface-2 px-1 py-0.5 text-primary"
           >
             {steps.map((st, i) => (
               <option key={st.title} value={i}>

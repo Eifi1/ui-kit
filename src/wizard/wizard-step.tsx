@@ -49,8 +49,8 @@ export function WizardStep({
   const Heading = HEADING[headingLevel];
   const heading = (
     <>
-      {hasTitle && <Heading className="text-lg font-semibold text-[var(--text-primary)]">{title}</Heading>}
-      {hasDescription && <p className="text-sm text-[var(--text-muted)]">{description}</p>}
+      {hasTitle && <Heading className="text-lg font-semibold text-primary">{title}</Heading>}
+      {hasDescription && <p className="text-sm text-muted">{description}</p>}
     </>
   );
   return (

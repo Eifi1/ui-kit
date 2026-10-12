@@ -72,7 +72,7 @@ export function SubscriptionActions({
   const labels = useBillingLabels(labelsProp);
   if (!atProvider) {
     return (
-      <div {...rest} data-at-provider="false" className={cn("text-sm text-[var(--text-muted)]", className)}>
+      <div {...rest} data-at-provider="false" className={cn("text-sm text-muted", className)}>
         <p>{labels.notAtProvider}</p>
       </div>
     );

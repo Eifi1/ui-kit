@@ -212,7 +212,7 @@ export function NumberPadSheet({
       // Keep the host input focused when tapping the pad: preventDefault on
       // pointerdown blocks the focus/blur, while the buttons' click still fires.
       onPointerDown={(e) => e.preventDefault()}
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--border)] bg-[var(--bg-surface)] px-2 pt-2 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-subtle bg-surface px-2 pt-2 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
     >
       {/* Header display: which field + the running expression and live result, so
@@ -224,7 +224,7 @@ export function NumberPadSheet({
         {/* At the logical end, opposite the label; the figures themselves stay
             left-to-right and right-aligned, like the desktop calculator's. */}
         <div className="ms-auto min-w-0">
-          <div dir="ltr" className="truncate text-right font-mono text-lg leading-tight text-[var(--text-primary)]">{value || "0"}</div>
+          <div dir="ltr" className="truncate text-right font-mono text-lg leading-tight text-primary">{value || "0"}</div>
           <div dir="ltr" className="h-4 text-right font-mono text-xs text-[var(--money-neutral)]">{preview}</div>
         </div>
       </div>
@@ -271,7 +271,7 @@ export function NumberPadSheet({
           // on screen, which is the defect this change exists to fix.
           className={cn(
             PAD_BTN,
-            "col-span-2 bg-[var(--brand)] text-[var(--brand-contrast)] focus-visible:ring-[var(--brand-contrast)] active:bg-[var(--brand-hover)]",
+            "col-span-2 bg-brand text-brand-contrast focus-visible:ring-[var(--brand-contrast)] active:bg-brand-hover",
           )}
         >
           {text.done}

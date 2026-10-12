@@ -305,7 +305,7 @@ export function PieChart({
           onBlur={() => setFocused(undefined)}
           // CSS beats a presentation attribute, so this recolours the sector's own
           // stroke for as long as it has keyboard focus.
-          className="outline-none [&:focus-visible>path]:stroke-[var(--text-primary)]"
+          className="outline-none [&:focus-visible>path]:stroke-primary"
         >
           <Sector key={key ?? undefined} {...sector} />
         </g>
@@ -404,7 +404,7 @@ export function PieChart({
 
   const emptyBox = (
     <div
-      className={cn("flex items-center justify-center text-sm text-[var(--text-muted)]", box.className)}
+      className={cn("flex items-center justify-center text-sm text-muted", box.className)}
       style={box.style}
     >
       {empty ?? labels.empty}
@@ -458,14 +458,14 @@ export function PieChart({
             >
               {/* The label wraps from Large up, inside the hole's 40 % (text size
                   §10.17, round 0.34 T1: the sweep read "Spent in Sept…"). */}
-              <span className="max-w-[40%] truncate-until-large text-xs text-[var(--text-muted)]">
+              <span className="max-w-[40%] truncate-until-large text-xs text-muted">
                 {focusedSlice ? focusedSlice.slice.label : (centerLabel ?? labels.total)}
               </span>
-              <span className="max-w-[40%] truncate text-lg font-semibold tabular-nums text-[var(--text-primary)]">
+              <span className="max-w-[40%] truncate text-lg font-semibold tabular-nums text-primary">
                 {focusedSlice ? formatValue(focusedSlice.value) : (centerValue ?? formatValue(total))}
               </span>
               {focusedSlice && (
-                <span className="text-xs tabular-nums text-[var(--text-muted)]">
+                <span className="text-xs tabular-nums text-muted">
                   {formatShare(focusedSlice.share)}
                 </span>
               )}

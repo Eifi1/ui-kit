@@ -631,7 +631,7 @@ function ErrorFallback({
             // program's words and can be read out or screenshotted verbatim.
             <p
               data-error-message=""
-              className="-mt-1 mb-1 basis-full whitespace-pre-wrap break-words rounded-md border border-[var(--danger-border-strong)] bg-[var(--danger-bg)] px-3 py-2 text-start font-mono text-xs text-[var(--text-primary)]"
+              className="-mt-1 mb-1 basis-full whitespace-pre-wrap break-words rounded-md border border-danger-strong bg-danger-soft px-3 py-2 text-start font-mono text-xs text-primary"
             >
               {errorLine}
             </p>
@@ -648,7 +648,7 @@ function ErrorFallback({
           {actions}
           {showDetails && reportText !== null && (
             <Disclosure variant="bare" title={text.details} className="basis-full text-start">
-              <pre className="max-h-60 overflow-auto whitespace-pre-wrap break-words text-xs text-[var(--text-secondary)]">
+              <pre className="max-h-60 overflow-auto whitespace-pre-wrap break-words text-xs text-secondary">
                 {reportText}
               </pre>
             </Disclosure>

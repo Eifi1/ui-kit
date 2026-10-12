@@ -203,7 +203,7 @@ export function ToggleLegend({
             aria-pressed={!off}
             onClick={() => onToggle(entry.key)}
             className={cn(
-              "flex items-center gap-1.5 rounded text-start text-caption text-[var(--text-secondary)] transition-opacity hover:opacity-80",
+              "flex items-center gap-1.5 rounded text-start text-caption text-secondary transition-opacity hover:opacity-80",
               FOCUS_RING,
               off && "opacity-35",
               entry.align === "end" && "ms-auto",
@@ -285,7 +285,7 @@ export function StaticLegend({
         <Item
           key={entry.key}
           className={cn(
-            "flex items-center gap-1.5 text-caption text-[var(--text-secondary)]",
+            "flex items-center gap-1.5 text-caption text-secondary",
             entry.align === "end" && "ms-auto",
           )}
         >
@@ -335,7 +335,7 @@ export function LegendColumn({ children, className }: { children: ReactNode; cla
 export function LegendGroup({ title, children }: { title: ReactNode; children: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col items-start gap-1">
-      <span className="text-micro font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+      <span className="text-micro font-semibold uppercase tracking-wide text-muted">
         {title}
       </span>
       <div className="flex flex-col items-start gap-y-0.5">{children}</div>

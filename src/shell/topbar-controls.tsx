@@ -9,17 +9,17 @@ import { DEFAULT_TOP_BAR_LABELS, useKitLabels } from "../i18n/kit-labels";
 /** Shared square icon-button styling for top-bar triggers, so app-owned controls
  *  (account/feedback menus) line up with the shared ones. */
 export const TOPBAR_TRIGGER_CLASS =
-  "size-9 rounded-md flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]";
+  "size-9 rounded-md flex items-center justify-center text-secondary hover:text-primary hover:bg-hover";
 
 /** Shared row styling for the top-bar hover-menu items. `text-start`, so a label that
  *  wraps aligns to the reading edge in RTL too. */
 export const TOPBAR_MENU_ITEM_CLASS =
-  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-start text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
+  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-start text-secondary hover:bg-hover";
 
 /** The small uppercase heading row the top-bar menus share (`heading`). */
 function MenuHeading({ children }: { children: string }) {
   return (
-    <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
+    <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder">
       {children}
     </li>
   );
@@ -131,13 +131,13 @@ export function PaletteMenu({
                     </span>
                     <span className="flex min-w-0 flex-col text-start">
                       <span className="truncate">{p.name}</span>
-                      <span className="truncate text-caption text-[var(--text-placeholder)]">
+                      <span className="truncate text-caption text-placeholder">
                         {p.blurb}
                       </span>
                     </span>
                   </span>
                   {activeId === p.id && (
-                    <Check className="size-4 shrink-0 text-[var(--text-secondary)]" />
+                    <Check className="size-4 shrink-0 text-secondary" />
                   )}
                 </button>
               </li>
@@ -228,7 +228,7 @@ export function LanguageMenu({
                     />
                     {lang.label}
                   </span>
-                  {isActive && <Check className="size-4 text-[var(--text-secondary)]" />}
+                  {isActive && <Check className="size-4 text-secondary" />}
                 </button>
               </li>
             );

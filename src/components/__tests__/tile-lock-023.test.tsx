@@ -71,7 +71,7 @@ describe("TileRadioGroup item disabledReason", () => {
     expect(lines.className).toContain("opacity-50");
     expect(lines.className).toContain("cursor-not-allowed");
     // No hover offer on a tile that cannot be chosen.
-    expect(lines.className).toContain("hover:bg-[var(--bg-surface)]");
+    expect(lines.className).toMatch(/hover:bg-surface(?![\w-])/);
     // A plain `disabled` tile is still out of reach.
     expect(screen.getByRole("radio", { name: "Grid" })).toBeDisabled();
     expect(screen.getByRole("radio", { name: "Dots" })).not.toHaveAttribute("aria-disabled");

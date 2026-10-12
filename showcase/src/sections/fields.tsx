@@ -111,7 +111,7 @@ export function Fields() {
               keeps React from warning about a value with no onChange. */}
           <Input className="w-56 max-w-full" label="Closed on" disabled readOnly value="12 March 2024" />
         </Row>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           Clear the second field and click away: the label drops back to the centre. The float is
           driven by <code className="font-mono">:placeholder-shown</code>, which is why a labelled
           Input forces its placeholder to a single space — pass your own and it is ignored.
@@ -138,7 +138,7 @@ export function Fields() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           The highlight is a border <em>plus</em> a 1px ring, not a thicker border. A ring is a
           box-shadow, so it adds no layout and nothing beside the field moves when the value arrives
           — and at 125% display scaling the two together guarantee one fully covered device pixel on
@@ -185,7 +185,7 @@ export function Fields() {
             value="hunter2"
           />
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           The third field passes{" "}
           <code className="font-mono">
             passwordLabels={"{{"} show, hide {"}}"}
@@ -256,13 +256,13 @@ export function Fields() {
                 error={statesReason.trim() === "" ? "Say why the entry is returned." : undefined}
               />
             </div>
-            <p id={ibanHintId} className="text-xs text-[var(--text-muted)]">
+            <p id={ibanHintId} className="text-xs text-muted">
               IBAN hint: 22 characters for a German account — this line is the IBAN field&apos;s
               own <code className="font-mono">aria-describedby</code>.
             </p>
           </div>
         </Stage>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           The last column passes <code className="font-mono">error</code>: the message renders under
           the field, implies <code className="font-mono">invalid</code>, and is attached through{" "}
           <code className="font-mono">aria-describedby</code> — MERGED with one the caller passed
@@ -301,7 +301,7 @@ export function Fields() {
             </FloatingField>
           </div>
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           Narrow the window past 768px and the first field becomes the second. The chrome goes so
           the one field a form is about reads as the thing itself; a hairline baseline stays, and
           the label goes <code className="font-mono">sr-only</code> rather than away — display type
@@ -323,7 +323,7 @@ export function Fields() {
             value={TWO_FACTOR_CODE}
           />
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           The grey is matched on the <code className="font-mono">[readonly]</code> ATTRIBUTE, never
           the <code className="font-mono">:read-only</code> pseudo-class — per Selectors 4 that
           pseudo-class matches everything that is not <code className="font-mono">:read-write</code>
@@ -353,7 +353,7 @@ export function Fields() {
             onChange={(e) => setAmount(e.target.value)}
           />
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           <code className="font-mono">className</code> and{" "}
           <code className="font-mono">inputClassName</code> are not interchangeable: once a{" "}
           <code className="font-mono">label</code> turns an Input into a FloatingField,{" "}
@@ -403,7 +403,7 @@ export function Fields() {
             <option value="personal">Personal</option>
           </Select>
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           Pick an account and the rose ring goes. The third select is disabled and has{" "}
           <em>dropped its chevron</em> on purpose: the arrow is the one thing on the control that
           promises a choice, and a read-only account type that still looked like a picker is what
@@ -426,7 +426,7 @@ export function Fields() {
               <option value="q3">Q3 2026</option>
               <option value="q2">Q2 2026</option>
             </Select>
-            <span className="text-xs text-[var(--text-muted)]">size=&quot;sm&quot; · {period}</span>
+            <span className="text-xs text-muted">size=&quot;sm&quot; · {period}</span>
           </div>
           {/* `selectClassName` reaches the <select>; `className` (the width here) stays
               on the wrapper the chevron is positioned against. */}
@@ -470,7 +470,7 @@ export function Fields() {
             <option value="it">Italy</option>
           </Select>
         </Stage>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           <code className="font-mono">size=&quot;sm&quot;</code> is honoured by unlabelled selects
           only — a floating label needs the tall box to float in, so a labelled Select ignores it.{" "}
           <code className="font-mono">size={"{4}"}</code> passes straight through as the HTML
@@ -536,7 +536,7 @@ export function Fields() {
               <option value="booking">Booking date</option>
             </Select>
             <div>
-              <p className="mb-2 text-xs text-[var(--text-muted)]">
+              <p className="mb-2 text-xs text-muted">
                 Every side — hover or tab to each. <code>start</code> (the default) and{" "}
                 <code>end</code> follow the reading direction; <code>left</code>/<code>right</code>{" "}
                 are the screen&apos;s. The bubble is portalled, so it measures
@@ -546,7 +546,7 @@ export function Fields() {
                 {(["start", "end", "left", "right", "top", "bottom"] as const).map((side) => (
                   <span key={side} className="inline-flex items-center gap-1.5">
                     <FieldHint label={`side="${side}"`} side={side} />
-                    <code className="font-mono text-xs text-[var(--text-secondary)]">{side}</code>
+                    <code className="font-mono text-xs text-secondary">{side}</code>
                   </span>
                 ))}
               </Row>
@@ -640,11 +640,11 @@ export function Fields() {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
-              <p className="mt-1 text-xs text-[var(--text-muted)]">{reason.length} / 80</p>
+              <p className="mt-1 text-xs text-muted">{reason.length} / 80</p>
             </div>
           </div>
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           Textarea has no <code className="font-mono">inputClassName</code> escape hatch and no{" "}
           <code className="font-mono">hint</code> slot — on a labelled one,{" "}
           <code className="font-mono">className</code> reaches the wrapper only. Compose with{" "}
@@ -770,12 +770,12 @@ export function Fields() {
                 clearLabel="مسح"
               />
             </div>
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               Current value: <code className="font-mono">{JSON.stringify(query)}</code>
             </p>
           </div>
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           A name is required — <code className="font-mono">aria-label</code> — and the placeholder falls back to it, never the
           other way round — a placeholder vanishes the moment someone types, so a field named only
           by one is unnamed exactly when a screen-reader user is working in it. Omitting{" "}

@@ -10,9 +10,9 @@ describe("Button tone (keksdose's quiet links)", () => {
       </Button>,
     );
     const cls = screen.getByRole("button").className;
-    expect(cls).toContain("text-[var(--text-secondary)]");
-    expect(cls).toContain("hover:text-[var(--text-primary)]");
-    expect(cls).not.toContain("text-[var(--brand)]");
+    expect(cls).toContain("text-secondary");
+    expect(cls).toContain("hover:text-primary");
+    expect(cls).not.toMatch(/text-brand(?![\w-])/);
   });
 
   it("turns a danger link red only on hover", () => {
@@ -22,13 +22,13 @@ describe("Button tone (keksdose's quiet links)", () => {
       </Button>,
     );
     const cls = screen.getByRole("button").className;
-    expect(cls).toContain("text-[var(--text-secondary)]");
-    expect(cls).toContain("hover:text-[var(--danger)]");
+    expect(cls).toContain("text-secondary");
+    expect(cls).toMatch(/hover:text-danger(?![\w-])/);
   });
 
   it("ignores a tone on a boxed variant", () => {
     render(<Button tone="muted">Save</Button>);
-    expect(screen.getByRole("button").className).not.toContain("text-[var(--text-secondary)]");
+    expect(screen.getByRole("button").className).not.toContain("text-secondary");
   });
 });
 
@@ -45,7 +45,7 @@ describe("Button pressed (lenkbank's All speeds toggle)", () => {
       </Button>,
     );
     const button = screen.getByRole("button", { pressed: false });
-    expect(button.className).toContain("text-[var(--text-secondary)]");
+    expect(button.className).toContain("text-secondary");
   });
 
   it("says on, and wears the brand, when true — over the muted tone", () => {
@@ -55,9 +55,9 @@ describe("Button pressed (lenkbank's All speeds toggle)", () => {
       </Button>,
     );
     const button = screen.getByRole("button", { pressed: true });
-    expect(button.className).toContain("text-[var(--brand)]");
+    expect(button.className).toMatch(/text-brand(?![\w-])/);
     expect(button.className).toContain("font-medium");
-    expect(button.className).not.toContain("text-[var(--text-secondary)]");
+    expect(button.className).not.toContain("text-secondary");
   });
 
   it("gives a boxed variant the quiet brand fill", () => {
@@ -66,7 +66,7 @@ describe("Button pressed (lenkbank's All speeds toggle)", () => {
         Bold
       </Button>,
     );
-    expect(screen.getByRole("button", { pressed: true }).className).toContain("bg-[var(--brand-bg)]");
+    expect(screen.getByRole("button", { pressed: true }).className).toMatch(/bg-brand-soft(?![\w-])/);
   });
 });
 

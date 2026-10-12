@@ -130,10 +130,10 @@ const LEVEL_KEYS = ["tooShort", "weak", "fair", "good", "strong"] as const;
 // segment count. Index 0 is never drawn — a too-short secret fills no segment.
 const FILL: Record<PasswordStrengthScore, string> = {
   0: "",
-  1: "bg-[var(--danger)]",
-  2: "bg-[var(--warning)]",
+  1: "bg-danger",
+  2: "bg-warning",
   3: "bg-[color-mix(in_oklab,var(--success)_60%,var(--warning))]",
-  4: "bg-[var(--success)]",
+  4: "bg-success",
 };
 
 export interface PasswordStrengthMeterProps extends ComponentPropsWithoutRef<"div"> {
@@ -215,7 +215,7 @@ export function PasswordStrengthMeter({
                 />
               ))}
             </div>
-            <p className="min-w-[4.5rem] text-end text-xs text-[var(--text-secondary)]">{level}</p>
+            <p className="min-w-[4.5rem] text-end text-xs text-secondary">{level}</p>
           </div>
           {showRequirements && (
             <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
@@ -225,7 +225,7 @@ export function PasswordStrengthMeter({
                   // `relative`: the sr-only state needs a local containing block.
                   className={cn(
                     "relative",
-                    r.met ? "text-[var(--success)]" : "text-[var(--text-muted)]",
+                    r.met ? "text-success" : "text-muted",
                   )}
                   data-met={r.met}
                 >
@@ -236,7 +236,7 @@ export function PasswordStrengthMeter({
               ))}
             </ul>
           )}
-          {tooLong && <p className="text-xs text-[var(--danger)]">{labels.tooLong(maxBytes)}</p>}
+          {tooLong && <p className="text-xs text-danger">{labels.tooLong(maxBytes)}</p>}
         </>
       )}
     </div>

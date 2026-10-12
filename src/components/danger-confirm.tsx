@@ -797,7 +797,7 @@ export function DangerConfirm({
       : { key: item.key ?? String(index), text: item.text, severe: Boolean(item.severe) },
   );
 
-  const toneText = tone === "warning" ? "text-[var(--warning)]" : "text-[var(--danger)]";
+  const toneText = tone === "warning" ? "text-warning" : "text-danger";
 
   if (!armed) {
     const arm = (
@@ -834,7 +834,7 @@ export function DangerConfirm({
           arm
         )}
         {locked && (
-          <p id={reasonId} className="text-xs text-[var(--text-muted)]">
+          <p id={reasonId} className="text-xs text-muted">
             {lockedReason}
           </p>
         )}
@@ -855,9 +855,9 @@ export function DangerConfirm({
           {prompt ?? labels.prompt}
         </p>
         {lines.length > 0 && (
-          <ul id={consequencesId} className="list-disc space-y-1 ps-5 text-xs text-[var(--text-secondary)]">
+          <ul id={consequencesId} className="list-disc space-y-1 ps-5 text-xs text-secondary">
             {lines.map((line) => (
-              <li key={line.key} className={line.severe ? "text-[var(--danger)]" : undefined}>
+              <li key={line.key} className={line.severe ? "text-danger" : undefined}>
                 {line.text}
               </li>
             ))}
@@ -925,7 +925,7 @@ export function DangerConfirm({
             {confirmLabel ?? labels.confirm}
           </Button>
         </div>
-        {locked && <p className="text-xs text-[var(--text-muted)]">{lockedReason}</p>}
+        {locked && <p className="text-xs text-muted">{lockedReason}</p>}
       </form>
     </div>
   );

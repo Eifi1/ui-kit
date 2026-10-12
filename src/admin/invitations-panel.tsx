@@ -310,7 +310,7 @@ export function InvitationsPanel<R extends string = string>({
 
   return (
     <div className={cn("space-y-3", className)}>
-      {intro && <div className="text-sm text-[var(--text-secondary)]">{intro}</div>}
+      {intro && <div className="text-sm text-secondary">{intro}</div>}
       {mailBackend === "console" && (
         <AlertBanner tone="info" size="sm">
           {labels.consoleHint}
@@ -417,7 +417,7 @@ export function InvitationsPanel<R extends string = string>({
         ) : invitations.length === 0 ? (
           <Caption>{labels.empty}</Caption>
         ) : (
-          <ul aria-label={labels.listTitle} className="divide-y divide-[var(--border)]">
+          <ul aria-label={labels.listTitle} className="divide-y divide-subtle">
             {invitations.map((invitation) => {
               const key = String(invitation.id);
               const link = invitation.link ?? links[key];
@@ -436,7 +436,7 @@ export function InvitationsPanel<R extends string = string>({
                 <li key={key} data-status={invitation.status} className="py-2 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
                     <div className="min-w-0 flex-1 basis-48 space-y-1">
-                      <div data-private className="truncate-until-large text-sm font-medium text-[var(--text-primary)]">
+                      <div data-private className="truncate-until-large text-sm font-medium text-primary">
                         {invitation.email}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
@@ -451,7 +451,7 @@ export function InvitationsPanel<R extends string = string>({
                         )}
                       </div>
                       {(facts.length > 0 || invitation.note) && (
-                        <div className="text-xs text-[var(--text-muted)]">
+                        <div className="text-xs text-muted">
                           {facts.join(" · ")}
                           {invitation.note && (
                             <>

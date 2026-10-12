@@ -206,7 +206,7 @@ describe("18: SwipeableRow's hidden keyboard buttons take no room until they sho
   it("puts the padding and the border behind `focus:`, beside `focus:not-sr-only`", () => {
     render(
       <SwipeableRow
-        left={[{ onCommit: vi.fn(), label: "Delete", className: "bg-[var(--danger)]", armedClassName: "bg-[var(--danger)]" }]}
+        left={[{ onCommit: vi.fn(), label: "Delete", className: "bg-danger", armedClassName: "bg-danger" }]}
       >
         <span>Ada Example</span>
       </SwipeableRow>,

@@ -65,7 +65,7 @@ export function LoadingState({
       {...rest}
       role="status"
       className={cn(
-        "flex items-center justify-center text-center text-[var(--text-muted)]",
+        "flex items-center justify-center text-center text-muted",
         inline ? "gap-2" : "flex-col gap-2",
         (compact ? PAD_COMPACT : PAD)[size],
         className,

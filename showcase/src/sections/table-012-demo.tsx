@@ -119,7 +119,7 @@ export function DescriptionPlaceholderDemo() {
     >
       <div className="grid gap-6 md:grid-cols-2">
         <div>
-          <p className="mb-2 text-xs font-medium text-[var(--text-secondary)]">Default (the provider&apos;s “—”)</p>
+          <p className="mb-2 text-xs font-medium text-secondary">Default (the provider&apos;s “—”)</p>
           <DescriptionList>
             <DescriptionItem term="Tenant">Ada Lovelace</DescriptionItem>
             <DescriptionItem term="Phone">{null}</DescriptionItem>
@@ -130,7 +130,7 @@ export function DescriptionPlaceholderDemo() {
           </DescriptionList>
         </div>
         <div>
-          <p className="mb-2 text-xs font-medium text-[var(--text-secondary)]">
+          <p className="mb-2 text-xs font-medium text-secondary">
             List placeholder “Not set”, one item overriding, one showing nothing
           </p>
           <DescriptionList placeholder="Not set">

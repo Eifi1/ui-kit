@@ -188,7 +188,7 @@ export function SwatchPicker<T extends string>({
                 // not-allowed cursor, and no hover offer on a tile that cannot be
                 // chosen. Not on the selected tile, whose frame IS its state.
                 locked && "cursor-not-allowed opacity-50",
-                locked && !selected && "hover:border-[var(--border)] hover:bg-[var(--bg-surface)]",
+                locked && !selected && "hover:border-subtle hover:bg-surface",
                 tileClassName,
               )
           : undefined

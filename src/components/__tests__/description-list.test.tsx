@@ -190,10 +190,10 @@ describe("DescriptionList 0.10.0", () => {
     );
     const [value, prose] = Array.from(container.querySelectorAll("dd"));
     expect(value.className).toContain("font-medium");
-    expect(value.className).toContain("text-[var(--text-primary)]");
+    expect(value.className).toContain("text-primary");
     expect(prose.className).toContain("font-normal");
     expect(prose.className).not.toContain("font-medium");
-    expect(prose.className).toContain("text-[var(--text-secondary)]");
+    expect(prose.className).toContain("text-secondary");
 
     const { container: list } = render(
       <DescriptionList layout="cards" prose>

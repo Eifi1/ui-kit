@@ -297,7 +297,7 @@ export function DateMark({
   const fromProvider = useKitDateFormatter();
   const date = toDate(value);
   const cls = cn("whitespace-nowrap tabular-nums", className);
-  if (!date) return <span className={cn(cls, "text-[var(--text-muted)]")}>{empty}</span>;
+  if (!date) return <span className={cn(cls, "text-muted")}>{empty}</span>;
   if (display === "date") {
     const own =
       dateStyle === undefined && fromProvider
@@ -332,7 +332,7 @@ export function DateMark({
     >
       <span className="whitespace-nowrap tabular-nums">{text}</span>
       {absolute === "inline" && " · "}
-      <span className={cn("whitespace-nowrap tabular-nums text-[var(--text-muted)]", absolute === "below" && "text-xs")}>
+      <span className={cn("whitespace-nowrap tabular-nums text-muted", absolute === "below" && "text-xs")}>
         {exact}
       </span>
     </time>

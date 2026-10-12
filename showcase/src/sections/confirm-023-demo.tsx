@@ -13,7 +13,7 @@ const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** The raw value under a specimen, so what the component emits is visible. */
 function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs break-all text-[var(--text-muted)]">{children}</p>;
+  return <p className="mt-2 font-mono text-xs break-all text-muted">{children}</p>;
 }
 
 /* ── Forms page (slug "forms") ──────────────────────────────────────────── */
@@ -31,8 +31,8 @@ export function FormActions023Demo() {
       <Stage>
         <div data-stage="wide" className="flex flex-col items-center gap-4">
           <Switch checked={small} onCheckedChange={setSmall} label={'size="sm" and cancelVariant="ghost"'} />
-          <div className="w-full max-w-md space-y-2 rounded-lg bg-[var(--bg-surface-2)] p-2">
-            <div className="flex gap-2 text-xs font-medium text-[var(--text-secondary)]">
+          <div className="w-full max-w-md space-y-2 rounded-lg bg-surface-2 p-2">
+            <div className="flex gap-2 text-xs font-medium text-secondary">
               <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
               <span>Move user@example.com onto the PRO plan</span>
             </div>

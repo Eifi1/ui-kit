@@ -74,62 +74,62 @@ export type ChipShape = "pill" | "square";
 
 const TONE: Record<ChipTone, { idle: string; selected: string }> = {
   neutral: {
-    idle: "border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-secondary)]",
-    selected: "border-[var(--border-strong)] bg-[var(--bg-active)] text-[var(--text-primary)]",
+    idle: "border-subtle bg-surface-2 text-secondary",
+    selected: "border-strong bg-active text-primary",
   },
   brand: {
-    idle: "border-[var(--border)] bg-[var(--brand-bg)] text-[var(--brand-muted)]",
-    selected: "border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-contrast)]",
+    idle: "border-subtle bg-brand-soft text-brand-muted",
+    selected: "border-brand bg-brand text-brand-contrast",
   },
   danger: {
-    idle: "border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger)]",
-    selected: "border-[var(--danger)] bg-[var(--danger)] text-[var(--danger-contrast)]",
+    idle: "border-danger bg-danger-soft text-danger",
+    selected: "border-[var(--danger)] bg-danger text-danger-contrast",
   },
   warning: {
-    idle: "border-[var(--warning-border)] bg-[var(--warning-bg)] text-[var(--warning)]",
-    selected: "border-[var(--warning)] bg-[var(--warning-bg)] text-[var(--warning)]",
+    idle: "border-warning bg-warning-soft text-warning",
+    selected: "border-[var(--warning)] bg-warning-soft text-warning",
   },
   success: {
-    idle: "border-[var(--success-border)] bg-[var(--success-bg)] text-[var(--success)]",
-    selected: "border-[var(--success)] bg-[var(--success-bg)] text-[var(--success)]",
+    idle: "border-success bg-success-soft text-success",
+    selected: "border-[var(--success)] bg-success-soft text-success",
   },
   info: {
-    idle: "border-[var(--info-border)] bg-[var(--info-bg)] text-[var(--info)]",
-    selected: "border-[var(--info)] bg-[var(--info-bg)] text-[var(--info)]",
+    idle: "border-info bg-info-soft text-info",
+    selected: "border-[var(--info)] bg-info-soft text-info",
   },
   // The money pair (Keksdose's direction toggle). Only the TEXT and the BORDER carry
   // the tint, on the neutral chip's own surfaces: the money tokens are chosen for text
   // contrast, and a filled amber pill beside an amber figure reads as one smear.
   // `border-current` takes its hue from the text, so the two cannot drift apart.
   income: {
-    idle: "border-current/40 bg-[var(--bg-surface-2)] text-[var(--money-income)]",
-    selected: "border-current bg-[var(--bg-active)] text-[var(--money-income)]",
+    idle: "border-current/40 bg-surface-2 text-[var(--money-income)]",
+    selected: "border-current bg-active text-[var(--money-income)]",
   },
   expense: {
-    idle: "border-current/40 bg-[var(--bg-surface-2)] text-[var(--money-expense)]",
-    selected: "border-current bg-[var(--bg-active)] text-[var(--money-expense)]",
+    idle: "border-current/40 bg-surface-2 text-[var(--money-expense)]",
+    selected: "border-current bg-active text-[var(--money-expense)]",
   },
   // The categorical hues: the `info` recipe with its own token triple, so a hue chip
   // and a status chip in one row carry the same weight.
   blue: {
-    idle: "border-[var(--hue-blue-border)] bg-[var(--hue-blue-bg)] text-[var(--hue-blue)]",
-    selected: "border-[var(--hue-blue)] bg-[var(--hue-blue-bg)] text-[var(--hue-blue)]",
+    idle: "border-hue-blue bg-hue-blue-soft text-hue-blue",
+    selected: "border-[var(--hue-blue)] bg-hue-blue-soft text-hue-blue",
   },
   indigo: {
-    idle: "border-[var(--hue-indigo-border)] bg-[var(--hue-indigo-bg)] text-[var(--hue-indigo)]",
-    selected: "border-[var(--hue-indigo)] bg-[var(--hue-indigo-bg)] text-[var(--hue-indigo)]",
+    idle: "border-hue-indigo bg-hue-indigo-soft text-hue-indigo",
+    selected: "border-[var(--hue-indigo)] bg-hue-indigo-soft text-hue-indigo",
   },
   purple: {
-    idle: "border-[var(--hue-purple-border)] bg-[var(--hue-purple-bg)] text-[var(--hue-purple)]",
-    selected: "border-[var(--hue-purple)] bg-[var(--hue-purple-bg)] text-[var(--hue-purple)]",
+    idle: "border-hue-purple bg-hue-purple-soft text-hue-purple",
+    selected: "border-[var(--hue-purple)] bg-hue-purple-soft text-hue-purple",
   },
   teal: {
-    idle: "border-[var(--hue-teal-border)] bg-[var(--hue-teal-bg)] text-[var(--hue-teal)]",
-    selected: "border-[var(--hue-teal)] bg-[var(--hue-teal-bg)] text-[var(--hue-teal)]",
+    idle: "border-hue-teal bg-hue-teal-soft text-hue-teal",
+    selected: "border-[var(--hue-teal)] bg-hue-teal-soft text-hue-teal",
   },
   orange: {
-    idle: "border-[var(--hue-orange-border)] bg-[var(--hue-orange-bg)] text-[var(--hue-orange)]",
-    selected: "border-[var(--hue-orange)] bg-[var(--hue-orange-bg)] text-[var(--hue-orange)]",
+    idle: "border-hue-orange bg-hue-orange-soft text-hue-orange",
+    selected: "border-[var(--hue-orange)] bg-hue-orange-soft text-hue-orange",
   },
 };
 
@@ -137,21 +137,21 @@ const TONE: Record<ChipTone, { idle: string; selected: string }> = {
 // chip sits on. Selected still takes the tone's `selected` look (below), because an
 // outline toggle that stays an outline when on has no visible state.
 const OUTLINE: Record<ChipTone, string> = {
-  neutral: "border-[var(--border-strong)] bg-transparent text-[var(--text-secondary)]",
+  neutral: "border-strong bg-transparent text-secondary",
   // The brand AS TEXT is `--brand-muted` (0.33): `--brand` itself is solved to 3:1, a
   // fill's boundary, and as text it fell to 3.0:1 in the derived dark presets.
-  brand: "border-[var(--brand)] bg-transparent text-brand-muted",
-  danger: "border-[var(--danger-border)] bg-transparent text-[var(--danger)]",
-  warning: "border-[var(--warning-border)] bg-transparent text-[var(--warning)]",
-  success: "border-[var(--success-border)] bg-transparent text-[var(--success)]",
-  info: "border-[var(--info-border)] bg-transparent text-[var(--info)]",
+  brand: "border-brand bg-transparent text-brand-muted",
+  danger: "border-danger bg-transparent text-danger",
+  warning: "border-warning bg-transparent text-warning",
+  success: "border-success bg-transparent text-success",
+  info: "border-info bg-transparent text-info",
   income: "border-current/60 bg-transparent text-[var(--money-income)]",
   expense: "border-current/60 bg-transparent text-[var(--money-expense)]",
-  blue: "border-[var(--hue-blue-border)] bg-transparent text-[var(--hue-blue)]",
-  indigo: "border-[var(--hue-indigo-border)] bg-transparent text-[var(--hue-indigo)]",
-  purple: "border-[var(--hue-purple-border)] bg-transparent text-[var(--hue-purple)]",
-  teal: "border-[var(--hue-teal-border)] bg-transparent text-[var(--hue-teal)]",
-  orange: "border-[var(--hue-orange-border)] bg-transparent text-[var(--hue-orange)]",
+  blue: "border-hue-blue bg-transparent text-hue-blue",
+  indigo: "border-hue-indigo bg-transparent text-hue-indigo",
+  purple: "border-hue-purple bg-transparent text-hue-purple",
+  teal: "border-hue-teal bg-transparent text-hue-teal",
+  orange: "border-hue-orange bg-transparent text-hue-orange",
 };
 
 // `solid`: the fill under its own foreground, `<fill>-contrast` (0.33, colour-roles
@@ -182,18 +182,18 @@ const SOLID: Record<ChipTone, string> = {
  *  grey dot is "no particular state", not a darker black. */
 const DOT: Record<ChipTone, string> = {
   neutral: "bg-[var(--text-muted)]",
-  brand: "bg-[var(--brand)]",
-  danger: "bg-[var(--danger)]",
-  warning: "bg-[var(--warning)]",
-  success: "bg-[var(--success)]",
-  info: "bg-[var(--info)]",
+  brand: "bg-brand",
+  danger: "bg-danger",
+  warning: "bg-warning",
+  success: "bg-success",
+  info: "bg-info",
   income: "bg-[var(--money-income)]",
   expense: "bg-[var(--money-expense)]",
-  blue: "bg-[var(--hue-blue)]",
-  indigo: "bg-[var(--hue-indigo)]",
-  purple: "bg-[var(--hue-purple)]",
-  teal: "bg-[var(--hue-teal)]",
-  orange: "bg-[var(--hue-orange)]",
+  blue: "bg-hue-blue",
+  indigo: "bg-hue-indigo",
+  purple: "bg-hue-purple",
+  teal: "bg-hue-teal",
+  orange: "bg-hue-orange",
 };
 
 /** Per size: the dot's diameter. */
@@ -215,12 +215,12 @@ function surfaceOf(tone: ChipTone, variant: ChipVariant, selected: boolean | und
     // No surface and no border colour: the dot carries the tone, the text stays ink.
     // The border goes transparent rather than away, so a dot chip lines up with a pill.
     return selected
-      ? "border-transparent bg-transparent font-medium text-[var(--text-primary)]"
-      : "border-transparent bg-transparent text-[var(--text-secondary)]";
+      ? "border-transparent bg-transparent font-medium text-primary"
+      : "border-transparent bg-transparent text-secondary";
   }
   if (variant === "solid") {
     // A solid chip is already the strongest look there is, so "on" is a ring round it.
-    return cn(SOLID[tone], selected && "ring-2 ring-[var(--border-strong)] ring-offset-1 ring-offset-[var(--bg-surface)]");
+    return cn(SOLID[tone], selected && "ring-2 ring-strong ring-offset-1 ring-offset-[var(--bg-surface)]");
   }
   if (selected) return palette.selected;
   return variant === "outline" ? OUTLINE[tone] : palette.idle;
@@ -565,7 +565,7 @@ interface ChipBaseProps {
   caps?: boolean;
   /**
    * The leading glyph: a lucide component (`icon={Check}`, drawn at the chip's size), or
-   * — since 0.15.4 — a ready element (`icon={<Check className="text-[var(--success)]" />}`)
+   * — since 0.15.4 — a ready element (`icon={<Check className="text-success" />}`)
    * for a glyph whose colour or stroke carries a state; it is sized to the same box
    * (keksdose live #358 built that slot by hand inside `children`).
    */
@@ -896,7 +896,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         FOCUS_RING,
         // §4: the × is a 48 px target at Large without growing the chip around it.
         REMOVE_HIT_AREA_LARGE,
-        !locked && "hover:bg-[var(--bg-active)]",
+        !locked && "hover:bg-active",
         locked && "cursor-not-allowed",
         ((disabled && !locked) || removeDisabled) && "pointer-events-none",
         // A disabled chip is already dimmed as a whole; dimming the × again on top
@@ -1321,7 +1321,7 @@ export function ChipInput({
     // anonymous.
     <div {...rest} className={cn("space-y-1", className)}>
       {label && (
-        <label htmlFor={`${id}-input`} className="block text-sm text-[var(--text-secondary)]">
+        <label htmlFor={`${id}-input`} className="block text-sm text-secondary">
           {label}
         </label>
       )}
@@ -1332,9 +1332,9 @@ export function ChipInput({
         // `relative` so the live region below can be `sr-only` without escaping to the
         // initial containing block and inflating the document height.
         className={cn(
-          "relative flex flex-wrap items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 shadow-sm",
-          "focus-within:border-[var(--brand)] focus-within:ring-1 focus-within:ring-[var(--brand)]",
-          disabled && "cursor-default bg-[var(--bg-surface-2)]",
+          "relative flex flex-wrap items-center gap-1.5 rounded-md border border-subtle bg-surface px-2 py-1.5 shadow-sm",
+          "focus-within:border-brand focus-within:ring-1 focus-within:ring-brand",
+          disabled && "cursor-default bg-surface-2",
           isInvalid && FIELD_INVALID,
         )}
         onClick={() => !disabled && inputRef.current?.focus()}
@@ -1407,7 +1407,7 @@ export function ChipInput({
           // `w-0` with flex-1: without a width the browser's default input size (20
           // characters) became the field's minimum width and pushed it past a 240 px
           // phone at 150 % (0.32's screenshot run).
-          className={cn("w-0 min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] disabled:cursor-default", FIELD_TOUCH_TEXT)}
+          className={cn("w-0 min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-primary outline-none placeholder:text-placeholder disabled:cursor-default", FIELD_TOUCH_TEXT)}
         />
         {/* Additions, removals and rejections move no focus, so nothing would announce
             them. `sr-only-fixed` rather than `sr-only`: this sits inside a consumer's
@@ -1417,12 +1417,12 @@ export function ChipInput({
         </span>
       </div>
       {error && (
-        <p id={errorId} className="text-xs text-[var(--danger)]">
+        <p id={errorId} className="text-xs text-danger">
           {error}
         </p>
       )}
       {rejected && (
-        <p id={rejectedId} className="text-xs text-[var(--danger)]" data-chip-input-rejected="">
+        <p id={rejectedId} className="text-xs text-danger" data-chip-input-rejected="">
           {rejected}
         </p>
       )}

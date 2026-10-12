@@ -23,8 +23,8 @@ export function TooltipTapDemo() {
           showed its label and the sentence-long sync label ran 66 px past a 360 px phone
           at Extra large (0.32.1). */}
       <CompactControls>
-        <div className="flex h-12 items-center justify-end gap-1 rounded-md border border-[var(--border)] px-2">
-          <span className="me-auto truncate-until-large text-sm font-medium text-[var(--text-primary)]">Example Ltd</span>
+        <div className="flex h-12 items-center justify-end gap-1 rounded-md border border-subtle px-2">
+          <span className="me-auto truncate-until-large text-sm font-medium text-primary">Example Ltd</span>
           <IconButton label={SYNC_LABEL} tooltipSide="bottom" size="sm" shape="round" onClick={() => {}}>
             <RefreshCw />
           </IconButton>
@@ -44,12 +44,12 @@ export function TooltipTapDemo() {
         <Tooltip label="Example Ltd, 000 Sample Street, Sampletown" lazy>
           {/* `data-truncate-ok` (text size §10.17): the cut IS the example — a truncated
               address whose full text the tap shows — and an address, not a name. */}
-          <span data-truncate-ok="" className="max-w-[9rem] truncate text-sm text-[var(--text-secondary)]">
+          <span data-truncate-ok="" className="max-w-[9rem] truncate text-sm text-secondary">
             Example Ltd, 000 Sample Street, Sampletown
           </span>
         </Tooltip>
         <Tooltip label="Booked on the day the money left the account, not the day it was entered." tap="toggle" lazy>
-          <button type="button" aria-label="What is the booking date?" className="flex text-[var(--text-placeholder)]">
+          <button type="button" aria-label="What is the booking date?" className="flex text-placeholder">
             <CircleHelp className="size-4" />
           </button>
         </Tooltip>
