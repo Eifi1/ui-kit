@@ -189,6 +189,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         submit: "Passwort ändern",
         tooShort: "Das neue Passwort ist zu kurz.",
         mismatch: "Die Passwörter stimmen nicht überein.",
+        wrongPassword: "Das Passwort ist falsch.",
       },
       twoFactor: {
         status: "Zwei-Faktor-Authentifizierung",

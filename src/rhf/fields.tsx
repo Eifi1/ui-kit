@@ -86,6 +86,7 @@ import {
   type InlineEntityComboboxProps,
 } from "../components/combobox";
 import type { ComboClearValue } from "../components/combobox-core";
+import type { CommitScope } from "../components/write-lock";
 import { cn } from "../lib/cn";
 
 // ── the shell ────────────────────────────────────────────────────────────────
@@ -411,6 +412,10 @@ export type RhfNumberFieldProps<
     | "locale"
     | "ariaLabel"
     | "autoFocus"
+    // 0.34: the write lock NumberField has had since 0.33.1 (Kurvenschmiede's F80) —
+    // the 0.33.1 notes said the Rhf twins pass it on, and this list did not pick it.
+    | "commit"
+    | "disabledReason"
   > & {
     /** What an emptied field stores. Default `null`; `""` for a schema written
      *  against a native number input (`z.coerce.number()` over `""`). */
@@ -585,6 +590,13 @@ export type RhfMoneyFieldProps<
    *  {@link RhfTextarea} and {@link RhfNumberField} take it; since 0.23 AmountInput
    *  does too (keksdose G7: `text-end` for a money column). */
   inputClassName?: string;
+  /** {@link AmountInput}'s write lock (0.34, round 0.34 C2): why the amount cannot be
+   *  changed — focusable, `readOnly`, nothing reaches the form. Wins over `disabled`. */
+  disabledReason?: ReactNode;
+  /** {@link AmountInput}'s `commit`: locked the `disabledReason` way under a locked
+   *  `WriteLockProvider`, for an amount whose change saves itself. A field that only
+   *  reaches the server through the form's Save leaves it off. */
+  commit?: CommitScope;
 };
 
 /** The amount a text reads as, or `undefined` for a draft that is not one yet. */

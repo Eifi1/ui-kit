@@ -111,6 +111,11 @@ export function FieldLabel({ children, className, ...rest }: FieldLabelProps) {
  * reach of a keyboard and of every touch device, and the tooltip shows on focus
  * too. The text is also its accessible name, so a screen reader gets it without
  * the bubble ever opening.
+ *
+ * For a FACT — a format, a limit, a consequence — which at Large and on a touch screen
+ * becomes the field's caption ({@link useInlineHint}). Paragraph-long HELP the field is
+ * usable without belongs in a `HelpPopover` instead (0.34, §10.23), which opens on a tap
+ * and stays a "?" at every size.
  */
 export interface FieldHintProps extends Omit<ComponentPropsWithoutRef<"button">, "children"> {
   /** The explanation. It is both the tooltip's text and, by default, the button's
@@ -167,6 +172,11 @@ export function FieldHint({
  * {@link FieldHint} becomes its own words — so the field shows them as its CAPTION under
  * the box, where they are read without hovering or tapping a 14 px "?". Anywhere else,
  * and for any other hint, the hint unchanged.
+ *
+ * A FieldHint only, on purpose (0.34, §10.23): a FieldHint is a FACT, and a fact stays
+ * visible. Paragraph-long HELP — why, how, what the options mean; the field is usable
+ * without it — goes in a `HelpPopover`, which this leaves on the label line at every
+ * size: printed under the field it was the longest thing in the form (keksdose K3).
  *
  * The kit's fields call it through {@link useFieldHint} / {@link useFieldMessages}; a
  * field that resolves its own `hint` (an app's, or one of the kit's own outside this

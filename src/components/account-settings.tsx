@@ -1,5 +1,5 @@
-import { useId, useState } from "react";
-import type { FormEvent, KeyboardEvent, ReactNode } from "react";
+import { useId, useRef, useState } from "react";
+import type { ChangeEvent, FormEvent, KeyboardEvent, ReactNode, RefObject } from "react";
 import { Button, Card, Input } from "./ui";
 import { UserAvatar } from "./user-avatar";
 import { CopyButton } from "./copy-button";
@@ -23,6 +23,9 @@ import type {
   TwoFactorSettingLabels,
 } from "./account-settings-labels";
 import { COMMIT_EXCEPT_BILLING } from "./write-lock";
+import { AlertBanner } from "./alert-banner";
+import { hasMessage } from "./choice-parts";
+import { authErrorCode } from "../auth/auth-errors";
 
 // The label types moved beside the namespace's defaults (0.12.0); re-exported here so
 // every existing `import type { ProfileSettingLabels }` keeps resolving.
@@ -296,16 +299,40 @@ function PersonNameFields({
  */
 export type PasswordSettingStrength = Pick<PasswordStrengthMeterProps, "score" | "showRequirements" | "labels">;
 
+/**
+ * Changing the account's password: the current one, the new one twice, then the app's
+ * `onSubmit`.
+ *
+ * **Refusals under their fields** (0.34, KS U3). The card's own checks say why under the
+ * field they are about — too short or too long under the new password, a mismatch under
+ * the confirmation — and a server's `password_incorrect` (server-kit's `400` for a wrong
+ * current password; an older `invalid_credentials` too) is read from `onSubmit`'s
+ * rejection by code ({@link authErrorCode}) and said under the current password, in
+ * `EmailChangeSetting`'s and `DeleteAccountSetting`'s words. The field in error takes
+ * the focus, so its message is read with it. Until 0.34 the card swallowed every
+ * rejection and each app toasted the wrong password itself, in three spellings.
+ *
+ * **Anything else** is the app's: `describeError` puts its words in the card (a banner
+ * over the button), and without it the card shows nothing — the app's own toast, as
+ * before. The fields keep what was typed for a retry; a resolved `onSubmit` empties
+ * them.
+ */
 export function PasswordSetting({
   onSubmit,
   pending,
   minLength = 8,
   strength,
   maxBytes,
+  describeError,
   labels: labelsProp,
   id,
 }: {
-  /** Called with the validated (current, new) pair; return a promise to auto-clear on success. */
+  /**
+   * Called with the validated (current, new) pair; return a promise to auto-clear on
+   * success. Reject with the client's error: `password_incorrect` is said under the
+   * current password; anything else goes through `describeError`, else stays the app's
+   * to say (a toast).
+   */
   onSubmit: (currentPassword: string, newPassword: string) => void | Promise<unknown>;
   pending?: boolean;
   /** The shortest new password the card submits, in characters as a person counts them
@@ -332,6 +359,15 @@ export function PasswordSetting({
    * talks people out of the long passphrase they chose.
    */
   maxBytes?: number;
+  /**
+   * The app's own words for a failure of `onSubmit`, said IN the card (a banner over the
+   * button), or `undefined` for the kit's handling. Asked first, for every failure — as
+   * `EmailChangeSetting`'s and `DeleteAccountSetting`'s are (0.34, KS U3): a demo's
+   * refusal, the device offline, a `422` whose sentence the app has. Without it, or when
+   * it answers `undefined`, the card says `password_incorrect` under the current password
+   * and nothing else: the rest stays the app's own toast.
+   */
+  describeError?: (error: unknown) => ReactNode | undefined;
   /** Prop > `<UiKitProvider labels={{ accountSettings: { password } }}>` > English. */
   labels?: Partial<PasswordSettingLabels>;
   /** The card's DOM id — a settings catalogue `anchor`, so `?focus=` can ring it (0.31). */
@@ -344,43 +380,101 @@ export function PasswordSetting({
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  // One refusal at a time, under the field it is about; the app's words in the banner.
+  const [fieldError, setFieldError] = useState<{ field: PasswordField; message: string } | null>(null);
+  const [failure, setFailure] = useState<ReactNode>(null);
+  const currentRef = useRef<HTMLInputElement>(null);
+  const nextRef = useRef<HTMLInputElement>(null);
+  const confirmRef = useRef<HTMLInputElement>(null);
+  const refs: Record<PasswordField, RefObject<HTMLInputElement | null>> = {
+    current: currentRef,
+    next: nextRef,
+    confirm: confirmRef,
+  };
+
+  // The field in error takes the focus, so its message (its description) is read with it.
+  const refuse = (field: PasswordField, message: string) => {
+    setFieldError({ field, message });
+    refs[field].current?.focus();
+  };
+  const errorOf = (field: PasswordField) => (fieldError?.field === field ? fieldError.message : undefined);
+  // Typing in a field answers its refusal, and the banner's: both go.
+  const edit = (field: PasswordField, set: (value: string) => void) => (e: ChangeEvent<HTMLInputElement>) => {
+    set(e.target.value);
+    if (fieldError?.field === field) setFieldError(null);
+    if (failure !== null) setFailure(null);
+  };
+
+  const present = (error: unknown) => {
+    const own = describeError?.(error);
+    if (hasMessage(own)) {
+      setFailure(own);
+      return;
+    }
+    const code = authErrorCode(error);
+    // `invalid_credentials` too, for a server that answered a wrong password so before
+    // server-kit 0.4.0 named `password_incorrect` — the siblings' rule.
+    if (code === "password_incorrect" || code === "invalid_credentials") {
+      refuse("current", labels.wrongPassword);
+    }
+    // Anything else is the app's to say (a toast), as before 0.34.
+  };
 
   const submit = async () => {
+    setFailure(null);
     // Code points, not UTF-16 units — the count the meter's checklist and a server's
     // `len()` use. `next.length` counted an emoji as two, so four of them passed a
     // minimum of eight that the meter beside the field said they missed.
     if ([...next].length < minLength) {
-      setError(labels.tooShort);
+      refuse("next", labels.tooShort);
       return;
     }
     if (maxBytes !== undefined && passwordByteLength(next) > maxBytes) {
-      setError(strengthLabels.tooLong(maxBytes));
+      refuse("next", strengthLabels.tooLong(maxBytes));
       return;
     }
     if (next !== confirm) {
-      setError(labels.mismatch);
+      refuse("confirm", labels.mismatch);
       return;
     }
-    setError(null);
+    setFieldError(null);
     try {
       await onSubmit(current, next);
       setCurrent("");
       setNext("");
       setConfirm("");
-    } catch {
-      // The app surfaces the failure (e.g. a toast); keep the fields for a retry.
+    } catch (error) {
+      // Keep the fields for a retry, and say what the card can.
+      present(error);
     }
   };
 
+  // `error` passed on all three from the first render, so a message coming and going
+  // never remounts a field and takes the caret with it (Input's `FieldGroup`).
   const nextField = (
-    <Input type="password" autoComplete="new-password" label={labels.next} value={next} onChange={(e) => setNext(e.target.value)} />
+    <Input
+      ref={nextRef}
+      type="password"
+      autoComplete="new-password"
+      label={labels.next}
+      value={next}
+      onChange={edit("next", setNext)}
+      error={errorOf("next")}
+    />
   );
 
   return (
     <Card id={id} className="p-4 space-y-3">
       <SettingsCardTitle>{labels.title}</SettingsCardTitle>
-      <Input type="password" autoComplete="current-password" label={labels.current} value={current} onChange={(e) => setCurrent(e.target.value)} />
+      <Input
+        ref={currentRef}
+        type="password"
+        autoComplete="current-password"
+        label={labels.current}
+        value={current}
+        onChange={edit("current", setCurrent)}
+        error={errorOf("current")}
+      />
       {strength ? (
         // One box for the field and its meter, so the card's `space-y-3` spaces the pair
         // from its neighbours and the meter keeps its own small gap under the field.
@@ -398,14 +492,29 @@ export function PasswordSetting({
       ) : (
         nextField
       )}
-      <Input type="password" autoComplete="new-password" label={labels.confirm} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-      {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
+      <Input
+        ref={confirmRef}
+        type="password"
+        autoComplete="new-password"
+        label={labels.confirm}
+        value={confirm}
+        onChange={edit("confirm", setConfirm)}
+        error={errorOf("confirm")}
+      />
+      {hasMessage(failure) && (
+        <AlertBanner tone="danger" size="sm" role="alert">
+          {failure}
+        </AlertBanner>
+      )}
       <Button onClick={() => void submit()} disabled={!current || !next || !confirm || pending}>
         {labels.submit}
       </Button>
     </Card>
   );
 }
+
+/** The three fields of {@link PasswordSetting}, for the refusal that names one. */
+type PasswordField = "current" | "next" | "confirm";
 
 /**
  * What the app's setup call returned.

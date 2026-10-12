@@ -309,9 +309,12 @@ describe("PasswordSetting strength meter (0.22.0)", () => {
     await userEvent.type(field, "abc");
     expect(screen.getByText("Too short")).toBeInTheDocument();
     expect(screen.getByText("At least 10 characters")).toBeInTheDocument();
-    // Right under the field: the two share one box in the card's stack.
+    // Right under the field: the two share one box in the card's stack. (Since 0.34 the
+    // field keeps a box of its own for its refusal, so the pair's box is one level up.)
     const meter = document.querySelector("[data-score]")!;
-    expect(field.closest("div.relative")!.parentElement).toContainElement(meter as HTMLElement);
+    const pair = field.closest("div.relative")!.parentElement!.parentElement!;
+    expect(pair).toContainElement(meter as HTMLElement);
+    expect(pair.parentElement).toHaveClass("space-y-3");
   });
 
   it("passes the meter's own options through", async () => {

@@ -10,6 +10,15 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
  *
  * The first render returns `value` itself, not `undefined`: a list filtered by the
  * debounced query must render its initial state immediately, not after `ms`.
+ *
+ * **It re-arms when `value`'s IDENTITY changes** (an effect on `[value, ms]`), not its
+ * content. Pass a primitive — the typed query, a JSON string — or a value whose
+ * identity is stable (state, a `useMemo`). An object or array built in render is a new
+ * one every render, so the timer is re-armed on every render and the value never
+ * settles — or, when the debounced value feeds the render that built it, settles,
+ * renders, builds another and fires again, every `ms`, with nobody typing
+ * (Kurvenschmiede's control page, KS U9). Debounce `JSON.stringify(body)`, or a key that
+ * changes exactly when the content does, and build the object from that.
  */
 export function useDebounce<T>(value: T, ms: number): T {
   const [debounced, setDebounced] = useState(value);

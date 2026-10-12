@@ -11,6 +11,8 @@ import { CheckboxGroup } from "../../../src/components/checkbox-group";
 import { Switch } from "../../../src/components/switch";
 import { List, ListItem } from "../../../src/components/list";
 import { WriteLockProvider } from "../../../src/components/write-lock";
+import { NumberField } from "../../../src/components/number-field";
+import { MoneyField } from "../../../src/components/money-field";
 import { Example, Note } from "../lib/section";
 
 /**
@@ -182,10 +184,13 @@ export function CommitControls022Demo() {
   const [reviewer, setReviewer] = useState(false);
   const [role, setRole] = useState("member");
   const [read, setRead] = useState(0);
+  const [profile, setProfile] = useState("Morning ramp");
+  const [wheelbase, setWheelbase] = useState<number | null>(2700);
+  const [assigned, setAssigned] = useState<number | null>(120.5);
   return (
     <Example
       label="commit on the controls that save themselves"
-      hint="keksdose K3 — Switch, Checkbox, Select and a ListItem click, Button's pattern"
+      hint="keksdose K3 — Switch, Checkbox, Select and a ListItem click, Button's pattern; the fields saved on blur since 0.33.1 / 0.34"
     >
       <div className="flex flex-col gap-4">
         <Switch checked={locked} onCheckedChange={setLocked} label="Viewing a budget shared to read" />
@@ -198,6 +203,11 @@ export function CommitControls022Demo() {
                 <option value="member">Member</option>
                 <option value="admin">Admin</option>
               </Select>
+              {/* Fields that ARE their own save (committed on blur): NumberField since 0.33.1,
+                  Input and the amount fields since 0.34 (KS U10, round 0.34 C2). */}
+              <Input commit label="Profile name" value={profile} onChange={(e) => setProfile(e.target.value)} />
+              <NumberField commit label="Wheelbase (mm)" value={wheelbase} onCommit={setWheelbase} />
+              <MoneyField commit label="Assigned" currency="CHF" value={assigned} onCommit={setAssigned} />
             </div>
             <List separator="divider">
               <ListItem
@@ -214,7 +224,10 @@ export function CommitControls022Demo() {
       <Note>
         Under a lock each control is {code("aria-disabled")} but stays focusable, says why in the kit tooltip and its
         description, and fires no change. Without a provider (or unlocked) {code("commit")} does nothing;{" "}
-        {code("disabledReason")} does the same for a reason of the control&apos;s own.
+        {code("disabledReason")} does the same for a reason of the control&apos;s own. A field that saves itself is{" "}
+        {code("readOnly")} besides — it shows its value, and reports no change, no blur and no Enter; the amount
+        fields offer no calculator, numpad or currency picker. A field that only reaches the server through the
+        form&apos;s Save leaves {code("commit")} off and stays editable.
       </Note>
     </Example>
   );

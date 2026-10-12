@@ -177,6 +177,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         submit: "Jelszó módosítása",
         tooShort: "Az új jelszó túl rövid.",
         mismatch: "A jelszavak nem egyeznek.",
+        wrongPassword: "A jelszó helytelen.",
       },
       twoFactor: {
         status: "Kétlépcsős azonosítás",

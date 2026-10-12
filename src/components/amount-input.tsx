@@ -27,6 +27,8 @@ import {
 } from "../lib/calc";
 import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
 import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { LockedReason, useInlineHint, useLockReason, type LockReason } from "./field-parts";
+import type { CommitScope } from "./write-lock";
 
 interface AmountInputProps {
   value: string;
@@ -98,7 +100,12 @@ interface AmountInputProps {
    *  the currency chip live); plain TEXT (a string or a number) is a caption UNDER
    *  the field, attached through `aria-describedby` after the caller's own. A phone's
    *  `variant="display"` has no visible label, so a FieldHint is dropped there; a
-   *  caption still shows. */
+   *  caption still shows.
+   *
+   *  Since 0.34 a FieldHint is that caption at Large and on a touch screen, as on
+   *  NumberInput since 0.32 (`useInlineHint`, docs/text-size-harmonization.md §4: a fact
+   *  a finger cannot hover open is printed). A `HelpPopover` — help, not a fact (§10.23)
+   *  — stays on the label line at every size. */
   hint?: ReactNode;
   /** Every user-facing string this component and the two it composes own, so a
    *  translating host can supply its own. Each key optional, and each a per-field
@@ -244,6 +251,31 @@ interface AmountInputProps {
    * {@link MoneyField}, which is built on it).
    */
   onCommit?: (value: string) => void;
+  /**
+   * Why the amount cannot be changed — {@link NumberInput}'s `disabledReason` (0.34,
+   * round 0.34 C2), for an amount that SAVES itself: a budget row's assigned cell, a
+   * price committed on blur. `disabled` takes the field out of the tab order, so the
+   * reason never reached a keyboard.
+   *
+   * With a reason the field stays in the tab order and shows its figure, `readOnly` (the
+   * settled grey FIELD_BASE gives a `[readonly]` field) and `aria-disabled`. Nothing
+   * changes the amount: the calculator and the phone's numpad are not offered, the
+   * currency chip is a read-out rather than a picker, and neither blur nor Enter
+   * settles — so `onChange`, `onCommit`, `onNegativeChange` and `onCurrencyChange` are
+   * never called. Enter is swallowed, so the field does not submit the form around it.
+   * The reason is in the kit {@link Tooltip} and on the input's `aria-describedby`,
+   * between the caption and the error. Wins over `disabled`. {@link MoneyField} and
+   * `RhfMoneyField` take it too.
+   */
+  disabledReason?: ReactNode;
+  /**
+   * This amount COMMITS — {@link Button}'s `commit`, NumberInput's: under a locked
+   * {@link WriteLockProvider} it is locked the `disabledReason` way with the lock's reason
+   * (which wins over its own). An amount that only reaches the server through its form's
+   * Save leaves this off and stays editable under the lock; the Save takes `commit`. No
+   * provider, or an unlocked one: no effect.
+   */
+  commit?: CommitScope;
 }
 
 
@@ -317,29 +349,40 @@ function isResultOf(previous: string, text: string, settle: (text: string) => st
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, error, calculator = true, className, inputClassName, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, hint, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit }, ref) => {
+  ({ value, onChange, currency, onCurrencyChange, placeholder, label, disabled, invalid: invalidProp, error, calculator = true, className, inputClassName, id, ariaLabel, "aria-describedby": ariaDescribedBy, "aria-invalid": ariaInvalid, "aria-required": ariaRequired, hint: hintProp, autoFocus, tone = "neutral", negative = false, onNegativeChange, variant = "field", align = "start", labels, currencyNames, digits: digitsProp, min, max, onCommit, disabledReason, commit: commitScope }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
     const hintId = useId();
     const errorId = useId();
+    // The lock: focusable, `readOnly`, nothing changes or settles — see `disabledReason`.
+    const lock = useLockReason(commitScope, disabledReason);
+    const locked = lock.locked;
+    // Locked wins over `disabled`: the point of a reason is a field a keyboard reaches.
+    const off = Boolean(disabled) && !locked;
+    // §4 (docs/text-size-harmonization.md): at Large and on a touch screen a FieldHint is
+    // its words, so it takes the caption's path below, as on NumberInput.
+    const hint = useInlineHint(hintProp);
     // Text is a caption under the field; a FieldHint rides the label line. See `hint`.
     const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
     const hasError = hasMessage(error);
-    // The standing advice first, the news second: the caller's ids, the caption, the error.
-    const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
+    // The standing advice first, the news second: the caller's ids, the caption, the
+    // error — a lock's reason between the last two, as on NumberInput.
+    const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, locked && lock.reasonId, hasError && errorId);
     const invalid = Boolean(invalidProp) || hasError || ariaInvalid === true || ariaInvalid === "true";
-    const editable = !!onCurrencyChange;
+    // A locked chip is a read-out: picking a currency is a change too.
+    const editable = !!onCurrencyChange && !locked;
     // On phones we suppress the OS keyboard (inputMode="none" below) and show our
     // own calculator numpad, so the desktop popover trigger is hidden. The
-    // end padding keys off showCalc, so it tightens up automatically.
+    // end padding keys off showCalc, so it tightens up automatically. A locked field
+    // offers no calculator: its result would be a value.
     const isMobile = usePhoneLayout();
-    const showCalc = calculator && !disabled && !isMobile;
+    const showCalc = calculator && !disabled && !locked && !isMobile;
     const [focused, setFocused] = useState(false);
     // On mobile, focusing the field opens the numpad bottom sheet in place of the
     // native keyboard (feedback #334) — a full calculator keypad, not just the old
     // operator bar. An internal ref lets the sheet's "Done" blur the input, which
-    // commits + closes via the existing onBlur handler.
-    const showNumpad = isMobile && !disabled && focused;
+    // commits + closes via the existing onBlur handler. Never under the lock.
+    const showNumpad = isMobile && !disabled && !locked && focused;
     // Gate the display treatment on the SAME `isMobile` the numpad uses rather than
     // on `max-md:` classes, so the two can never drift apart on the breakpoint —
     // and so the two shapes are separate class strings instead of one string
@@ -468,12 +511,16 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
     // `CurrencySelect` resolves, under this component's older key names. The
     // calculator and the numpad resolve `calculator` themselves; `labels.calculator`
     // and `labels.pad` are handed straight through to them as overrides.
+    // The two strings read out first, so the memo depends on them and not on the
+    // caller's `labels` object (a new one every render) — what the React Compiler infers.
+    const currencyLabel = labels?.currency;
+    const currencySearchLabel = labels?.currencySearch;
     const currencyOverrides = useMemo(() => {
       const out: Partial<CurrencyLabels> = {};
-      if (labels?.currency !== undefined) out.currency = labels.currency;
-      if (labels?.currencySearch !== undefined) out.search = labels.currencySearch;
+      if (currencyLabel !== undefined) out.currency = currencyLabel;
+      if (currencySearchLabel !== undefined) out.search = currencySearchLabel;
       return out;
-    }, [labels?.currency, labels?.currencySearch]);
+    }, [currencyLabel, currencySearchLabel]);
     const currencyText = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, currencyOverrides);
     const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
 
@@ -499,6 +546,9 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             the kit's FloatingField, which draws the label — floating, or sr-only in
             the display shape — and puts a FieldHint on the label's line, as it does
             for NumberInput. */}
+        {/* Locked, the field sits in the reason's Tooltip (LockedReason), as NumberInput
+            does; the root above keeps `className`, so nothing reflows. */}
+        <LockedOrNot lock={lock}>
         <FloatingField
           className="w-full"
           htmlFor={fieldId}
@@ -517,7 +567,10 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           // field keeps focus/caret. Desktop keeps the native decimal keypad.
           inputMode={isMobile ? "none" : "decimal"}
           autoComplete="off"
-          disabled={disabled}
+          disabled={off}
+          // Locked: focusable, `readOnly`, `aria-disabled` — see `disabledReason`.
+          readOnly={locked || undefined}
+          aria-disabled={locked || undefined}
           // The floating-label pattern needs a blank placeholder for its
           // peer-placeholder-shown trick. The display shape has no floating label,
           // so it spends the placeholder on what an empty borderless form actually
@@ -525,14 +578,21 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           // only the app knows the locale's decimal separator.
           placeholder={asDisplay ? (placeholder ?? "0") : label !== undefined ? " " : placeholder}
           value={display}
-          onChange={(e) => typed(e.target.value)}
+          onChange={(e) => {
+            if (!locked) typed(e.target.value);
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() => {
-            commit();
+            // Nothing settles under the lock — not even a draft typed before it arrived,
+            // which stays in the field for when it lifts.
+            if (!locked) commit();
             setFocused(false);
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter") commit();
+            if (e.key !== "Enter") return;
+            // Locked: Enter submits no form and settles nothing.
+            if (locked) e.preventDefault();
+            else commit();
           }}
           className={cn(
             // With a label, use the floating-input padding (pt-4 pb-1) like every
@@ -560,6 +620,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
             // and calculator the same way).
             trailingRoom,
             invalid && FIELD_INVALID,
+            locked && "cursor-not-allowed",
           )}
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy}
@@ -675,6 +736,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           </DropdownPanel>
         )}
         </FloatingField>
+        </LockedOrNot>
         {/* Outside the relative box, as NumberInput's caption is: the trailing
             controls are `inset-y-1` in it and would stretch down over a second line. */}
         {textHint && (
@@ -713,3 +775,15 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
 );
 
 AmountInput.displayName = "AmountInput";
+
+/** The field in its lock's {@link LockedReason} while locked, as it is otherwise. A
+ *  component rather than a ternary so the field's JSX is written once. `block w-full`:
+ *  the Tooltip's box stands where the field's own did. */
+function LockedOrNot({ lock, children }: { lock: LockReason; children: ReactNode }) {
+  if (!lock.locked) return <>{children}</>;
+  return (
+    <LockedReason lock={lock} className="block w-full">
+      {children}
+    </LockedReason>
+  );
+}

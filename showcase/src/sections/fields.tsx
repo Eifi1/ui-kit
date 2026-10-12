@@ -5,6 +5,7 @@ import {
   FieldHint,
   FieldLabel,
   FloatingField,
+  HelpPopover,
   Input,
   SearchField,
   Select,
@@ -65,6 +66,7 @@ export function Fields() {
   const [staticRef, setStaticRef] = useState("INV-2026-0142");
   const [period, setPeriod] = useState("q3");
   const [listPick, setListPick] = useState("eur");
+  const [status, setStatus] = useState("cleared");
 
   // Ids are ours to mint here because these specimens assemble FloatingField by
   // hand; the Input/Select/Textarea wrappers generate their own.
@@ -552,6 +554,73 @@ export function Fields() {
             </div>
           </div>
         </Stage>
+      </Example>
+
+      <Example
+        label="HelpPopover — paragraph-long help behind “?”"
+        hint="tap, click or Enter opens it; Escape, a second press or a press outside closes it — at every text size and on a phone"
+      >
+        <Stage>
+          <div className="space-y-4">
+            {/* keksdose K3 (live #400): the status explanation, ~500 characters, was a
+                FieldHint, and since 0.32 a FieldHint prints its words under the field on a
+                touch screen and at Large — the longest thing in the form. Help the field
+                is usable without goes behind this "?" instead; a fact stays a FieldHint. */}
+            <Select
+              className="w-64 max-w-full"
+              label="Status"
+              hint={
+                <HelpPopover label="What do the statuses mean?">
+                  <p>
+                    <strong>Pending</strong> — entered here, not yet seen by the bank.
+                  </p>
+                  <p>
+                    <strong>Accepted</strong> — the bank has it, but it has not been booked.
+                  </p>
+                  <p>
+                    <strong>Cleared</strong> — booked: it is on the statement.
+                  </p>
+                  <p>
+                    <strong>Reconciled</strong> — checked against the statement and locked.
+                  </p>
+                </HelpPopover>
+              }
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="pending">Pending</option>
+              <option value="accepted">Accepted</option>
+              <option value="cleared">Cleared</option>
+              <option value="reconciled">Reconciled</option>
+            </Select>
+            {/* The pair side by side: the FACT stays a FieldHint (a caption at Large and
+                on touch), the HELP is a HelpPopover (a "?" at every size). */}
+            <Input
+              className="w-64 max-w-full"
+              label="Settlement date"
+              hint={<FieldHint label="Two working days after the trade." />}
+            />
+            <Input
+              className="w-64 max-w-full"
+              label="Reference"
+              hint={
+                <HelpPopover label="About the reference">
+                  The bank prints it on the counterparty&apos;s statement, so they can match the payment to an
+                  invoice. Leave it empty for a transfer between your own accounts.
+                </HelpPopover>
+              }
+            />
+          </div>
+        </Stage>
+        <Note>
+          <strong>Help, not a fact</strong> (text size §10.23): a FieldHint holds a fact — a format, a limit, a
+          consequence — and turns into the field&apos;s caption at Large and on a touch screen, because a fact a finger
+          cannot hover open is a fact the reader does not have. Help the field is usable without — why, how, what the
+          options mean — may sit behind this &ldquo;?&rdquo;, which stays a &ldquo;?&rdquo; at every size and opens the
+          kit Popover: a dialog named by <code className="font-mono">label</code> (a short question, or &ldquo;About
+          …&rdquo;) and described by the help, with the focus inside it. Any field that takes a{" "}
+          <code className="font-mono">hint</code> puts it on its label line.
+        </Note>
       </Example>
 
       <Example label="Textarea" hint="type past 80 characters in the third to raise the ring">

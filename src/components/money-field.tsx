@@ -48,6 +48,13 @@ function parseSettled(text: string): number | null | undefined {
  * `inputClassName` (0.23, keksdose G7) styles the `<input>` itself — `text-end` for a
  * money column — where `className` sizes the wrapper; see {@link AmountInput}'s.
  *
+ * LOCKED (0.34, round 0.34 C2): a row that saves itself passes `commit` (or a
+ * `disabledReason` of its own), AmountInput's — under a locked `WriteLockProvider` the
+ * field stays in the tab order showing its amount, `readOnly`, with the lock's reason in
+ * the kit Tooltip and its description; the calculator, the numpad and the currency
+ * picker are off, and `onCommit` is never called. `disabled` takes it out of the tab
+ * order, which is what a lock must not do.
+ *
  * This, not a `NumberField` with `digits={2}`, is the number-valued field for money:
  * it settles to the CURRENCY's minor unit (JPY 0, CHF 2) and `digits` takes a unit
  * price's finer scale (kastlan 5).

@@ -179,6 +179,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         submit: "Changer le mot de passe",
         tooShort: "Le nouveau mot de passe est trop court.",
         mismatch: "Les mots de passe ne correspondent pas.",
+        wrongPassword: "Le mot de passe est incorrect.",
       },
       twoFactor: {
         status: "Authentification à deux facteurs",

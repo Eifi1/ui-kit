@@ -43,6 +43,14 @@ export interface PasswordSettingLabels {
   submit: string;
   tooShort: string;
   mismatch: string;
+  /**
+   * 0.34 (KS U3): `password_incorrect` — server-kit's `400` for a wrong current
+   * password — under the current-password field, in the words `EmailChangeSetting`
+   * and `DeleteAccountSetting` say it with. OPTIONAL, like
+   * `TwoFactorSettingLabels.qrAlt` and for its reason — this interface is annotated at
+   * call sites — and filled from the provider's `accountSettings.password`, then English.
+   */
+  wrongPassword?: string;
 }
 
 export interface TwoFactorSettingLabels {
@@ -128,7 +136,7 @@ export interface PasskeysSettingLabels {
 
 export interface AccountSettingsLabels {
   profile: Required<ProfileSettingLabels>;
-  password: PasswordSettingLabels;
+  password: Required<PasswordSettingLabels>;
   // `Required` here, optional on the section interfaces: the namespace is what a full
   // catalogue (`@eifi1/ui-kit/i18n/<code>`, `missingKitLabels`) is written against, so
   // it must name the late keys; the section interfaces are annotated at call sites.
@@ -156,6 +164,8 @@ export const DEFAULT_ACCOUNT_SETTINGS_LABELS: AccountSettingsLabels = {
     submit: "Change password",
     tooShort: "The new password is too short.",
     mismatch: "The passwords don’t match.",
+    // The siblings' sentence (emailChange, deleteAccount), under the current password.
+    wrongPassword: "The password is incorrect.",
   },
   twoFactor: {
     status: "Two-factor authentication",

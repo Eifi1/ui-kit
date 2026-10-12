@@ -170,6 +170,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         submit: "修改密码",
         tooShort: "新密码太短。",
         mismatch: "两次输入的密码不一致。",
+        wrongPassword: "密码不正确。",
       },
       twoFactor: {
         status: "双重验证",

@@ -181,6 +181,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         submit: "Cambia password",
         tooShort: "La nuova password è troppo corta.",
         mismatch: "Le password non coincidono.",
+        wrongPassword: "La password non è corretta.",
       },
       twoFactor: {
         status: "Autenticazione a due fattori",

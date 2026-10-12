@@ -261,11 +261,16 @@ function PasswordRow() {
     setReceipt(`onSubmit(current: ${current.length} chars, new: ${next.length} chars)`);
   };
 
-  const submitAndFail = async () => {
+  // Rejects the way an app's client does — an axios-shaped error with server-kit's coded
+  // body. "offline" as the current password stands for a failure the card cannot read.
+  const submitAndFail = async (current: string) => {
     setFailPending(true);
     await beat();
     setFailPending(false);
-    throw new Error("wrong current password");
+    if (current === "offline") throw new Error("Network Error");
+    throw Object.assign(new Error("Request failed with status code 400"), {
+      response: { status: 400, data: { detail: "The current password is not correct", code: "password_incorrect" } },
+    });
   };
 
   return (
@@ -291,7 +296,7 @@ function PasswordRow() {
             <code className="font-mono">tooShort</code> and{" "}
             <code className="font-mono">mismatch</code> — because the card has no strings of its
             own and no way to translate one. The check runs on click, not while typing, so the
-            message appears once and clears on the next attempt.
+            message stands under the field it is about (0.34) and clears as that field is typed in.
           </Note>
           <Note>
             The card holds the three passwords itself and never lifts them; the app sees them
@@ -305,22 +310,29 @@ function PasswordRow() {
 
       <Example
         label="PasswordSetting — rejecting handler"
-        hint="fill in three fields (10+ chars, matching) and submit: the values stay for a retry"
+        hint="fill in three fields (10+ chars, matching) and submit: a wrong password is said under its field; “offline” as the current password goes through describeError"
       >
         <div className="max-w-md">
           <PasswordSetting
-            onSubmit={submitAndFail}
+            onSubmit={(current) => submitAndFail(current)}
             pending={failPending}
             minLength={10}
             labels={PASSWORD_LABELS}
+            describeError={(error) =>
+              error instanceof Error && error.message === "Network Error"
+                ? "You are offline. Your new password was not saved."
+                : undefined
+            }
           />
         </div>
         <div className="mt-3">
           <Note>
-            The rejection is swallowed deliberately: the comment in the source says the app
-            surfaces the failure. So a consumer that passes a handler which throws and shows no
-            toast gets a button that visibly does nothing — this card reports success by
-            emptying itself and failure not at all.
+            Since 0.34 (Kurvenschmiede&apos;s U3) the card reads a rejection by its code: server-kit&apos;s{" "}
+            <code className="font-mono">400 password_incorrect</code> is said under the current password, in{" "}
+            <code className="font-mono">labels.wrongPassword</code> — the words the email-change and deletion cards
+            use — and that field takes the focus. <code className="font-mono">describeError</code> is asked first, for
+            every failure, and its words stand in the card; anything else stays the app&apos;s to say, in its own
+            toast, as before. The typed values stay for a retry either way.
           </Note>
         </div>
       </Example>
