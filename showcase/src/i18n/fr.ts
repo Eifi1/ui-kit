@@ -124,7 +124,7 @@ export const fr: Dictionary = {
       title: "Administration des utilisateurs",
       short: "Utilisateurs",
       blurb:
-        "Le côté administration des comptes\u00a0: la liste des utilisateurs avec leurs rôles et leurs états, les quatre actions d’administration avec la confirmation demandée par le serveur, le journal d’audit, les invitations, la transmission du travail, ainsi que la colonne de formule et le changement de formule par l’opérateur.",
+        "Le côté administration des comptes\u00a0: la liste des utilisateurs avec leurs rôles et leurs états, les quatre actions d’administration avec la confirmation demandée par le serveur, le journal d’audit avec ses actions de groupe, les invitations, la transmission du travail, ainsi que la colonne de formule et le changement de formule par l’opérateur.",
     },
     subscription: {
       title: "Abonnement",
@@ -371,7 +371,7 @@ export const fr: Dictionary = {
       title: "Graphique de séries",
       short: "Séries",
       blurb:
-        "Le graphique de séries zoomable que partagent les applications\u00a0: un axe par unité, une légende d’interrupteurs, un seul zoom pour une pile de graphiques, et les utilitaires en dessous.",
+        "Le graphique de séries zoomable que partagent les applications\u00a0: un axe par unité, une légende d’interrupteurs, un seul zoom pour une pile de graphiques, un budget de lignes pour les longues tables, et les utilitaires en dessous.",
     },
     "series-chart-marks": {
       title: "Graphique de séries\u00a0: barres, aires et temps",

@@ -118,7 +118,7 @@ export const it: Dictionary = {
       title: "Amministrazione utenti",
       short: "Utenti",
       blurb:
-        "Il lato amministrativo degli account: l’elenco utenti con ruoli e stati, le quattro azioni di amministrazione con la conferma richiesta dal server, il registro di audit, gli inviti, il passaggio del lavoro, e la colonna del piano e il cambio di piano da parte dell’operatore.",
+        "Il lato amministrativo degli account: l’elenco utenti con ruoli e stati, le quattro azioni di amministrazione con la conferma richiesta dal server, il registro di audit con le sue azioni di gruppo, gli inviti, il passaggio del lavoro, e la colonna del piano e il cambio di piano da parte dell’operatore.",
     },
     subscription: {
       title: "Abbonamento",
@@ -365,7 +365,7 @@ export const it: Dictionary = {
       title: "Grafico a serie",
       short: "Serie",
       blurb:
-        "Il grafico a serie con zoom condiviso dalle app: un asse per unità, una legenda di interruttori, un solo zoom per una pila di grafici e le funzioni sottostanti.",
+        "Il grafico a serie con zoom condiviso dalle app: un asse per unità, una legenda di interruttori, un solo zoom per una pila di grafici, un budget di righe per le tabelle lunghe e le funzioni sottostanti.",
     },
     "series-chart-marks": {
       title: "Grafico a serie: barre, aree e tempo",

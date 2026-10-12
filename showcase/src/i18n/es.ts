@@ -121,7 +121,7 @@ export const es: Dictionary = {
       title: "Administración de usuarios",
       short: "Usuarios",
       blurb:
-        "La parte de administración de las cuentas: la lista de usuarios con sus roles y estados, las cuatro acciones de administración con la confirmación que pide el servidor, el registro de auditoría, las invitaciones, el traspaso de trabajo, y la columna de plan y el cambio de plan del operador.",
+        "La parte de administración de las cuentas: la lista de usuarios con sus roles y estados, las cuatro acciones de administración con la confirmación que pide el servidor, el registro de auditoría con sus acciones de grupo, las invitaciones, el traspaso de trabajo, y la columna de plan y el cambio de plan del operador.",
     },
     subscription: {
       title: "Suscripción",
@@ -368,7 +368,7 @@ export const es: Dictionary = {
       title: "Gráfico de series",
       short: "Series",
       blurb:
-        "El gráfico de series con zoom que comparten las aplicaciones: un eje por unidad, una leyenda de interruptores, un solo zoom para una pila de gráficos y las utilidades que hay debajo.",
+        "El gráfico de series con zoom que comparten las aplicaciones: un eje por unidad, una leyenda de interruptores, un solo zoom para una pila de gráficos, un presupuesto de filas para tablas largas y las utilidades que hay debajo.",
     },
     "series-chart-marks": {
       title: "Gráfico de series: barras, áreas y tiempo",

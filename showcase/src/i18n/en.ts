@@ -132,7 +132,7 @@ export const en: Dictionary = {
       title: "User administration",
       short: "Users",
       blurb:
-        "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, handing work on, and the operator's plan column and plan change.",
+        "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
     },
     subscription: {
       title: "Subscription",
@@ -377,7 +377,7 @@ export const en: Dictionary = {
       title: "Series chart",
       short: "Series",
       blurb:
-        "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, and the helpers underneath.",
+        "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, a row budget for long tables, and the helpers underneath.",
     },
     "series-chart-marks": {
       title: "Series chart: bars, areas & time",

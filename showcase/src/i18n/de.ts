@@ -129,7 +129,7 @@ export const de: Dictionary = {
       title: "Benutzerverwaltung",
       short: "Benutzer",
       blurb:
-        "Die Admin-Seite der Konten: die Benutzerliste mit Rollen und Status, die vier Admin-Aktionen mit der Bestätigung, die der Server verlangt, das Audit-Log, Einladungen, das Übergeben von Arbeit sowie die Tarifspalte und der Tarifwechsel durch den Betreiber.",
+        "Die Admin-Seite der Konten: die Benutzerliste mit Rollen und Status, die vier Admin-Aktionen mit der Bestätigung, die der Server verlangt, das Audit-Log mit seinen Gruppenaktionen, Einladungen, das Übergeben von Arbeit sowie die Tarifspalte und der Tarifwechsel durch den Betreiber.",
     },
     subscription: {
       title: "Abonnement",
@@ -376,7 +376,7 @@ export const de: Dictionary = {
       title: "Reihendiagramm",
       short: "Reihen",
       blurb:
-        "Das zoombare Reihendiagramm, das die Apps teilen: eine Achse pro Einheit, eine Legende aus Schaltern, ein Zoom für einen ganzen Stapel Diagramme und die Hilfsfunktionen darunter.",
+        "Das zoombare Reihendiagramm, das die Apps teilen: eine Achse pro Einheit, eine Legende aus Schaltern, ein Zoom für einen ganzen Stapel Diagramme, ein Zeilenbudget für lange Tabellen und die Hilfsfunktionen darunter.",
     },
     "series-chart-marks": {
       title: "Reihendiagramm: Balken, Flächen & Zeit",

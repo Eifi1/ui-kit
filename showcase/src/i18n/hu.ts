@@ -127,7 +127,7 @@ export const hu: Dictionary = {
       title: "Felhasználókezelés",
       short: "Felhasználók",
       blurb:
-        "A fiókok adminisztrátori oldala: a felhasználólista szerepkörökkel és állapotokkal, a négy adminisztrátori művelet a szerver által kért megerősítéssel, az auditnapló, a meghívók, a munka továbbadása, valamint a csomagoszlop és a csomag üzemeltetői módosítása.",
+        "A fiókok adminisztrátori oldala: a felhasználólista szerepkörökkel és állapotokkal, a négy adminisztrátori művelet a szerver által kért megerősítéssel, az auditnapló a csoportműveletekkel, a meghívók, a munka továbbadása, valamint a csomagoszlop és a csomag üzemeltetői módosítása.",
     },
     subscription: {
       title: "Előfizetés",
@@ -374,7 +374,7 @@ export const hu: Dictionary = {
       title: "Adatsor-diagram",
       short: "Adatsorok",
       blurb:
-        "Az alkalmazások közös, nagyítható adatsor-diagramja: mértékegységenként egy tengely, kapcsolókból álló jelmagyarázat, egyetlen nagyítás diagramok egész sorára, és az alattuk lévő segédfüggvények.",
+        "Az alkalmazások közös, nagyítható adatsor-diagramja: mértékegységenként egy tengely, kapcsolókból álló jelmagyarázat, egyetlen nagyítás diagramok egész sorára, sorkeret a hosszú táblázatokhoz, és az alattuk lévő segédfüggvények.",
     },
     "series-chart-marks": {
       title: "Adatsor-diagram: oszlopok, területek és idő",
