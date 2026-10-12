@@ -533,7 +533,7 @@ export const it: Dictionary = {
       title: "Fatturazione",
       short: "Fatturazione",
       blurb:
-        "I piani e i loro limiti, la posizione dell’abbonamento con le date della prova e della beta, il blocco di sola lettura alla scadenza, e i webhook di Paddle e Lemon Squeezy: firme verificate, eventi normalizzati, un solo dispatch.",
+        "I piani e i loro limiti, la posizione dell’abbonamento con le date della prova e della beta, il blocco di sola lettura alla scadenza, e i webhook di Paddle: firme verificate, eventi normalizzati, un solo dispatch.",
     },
     "server-mail": {
       title: "Email",
@@ -1230,7 +1230,7 @@ export const it: Dictionary = {
     "server-billing": [
       "controllare il limite del piano sul server",
       "verificare la firma di un webhook",
-      "gestire gli eventi di Paddle e Lemon Squeezy",
+      "gestire gli eventi di Paddle",
       "l’abbonamento è in regola",
       "date di fine della prova e della beta",
       "rifiutare le scritture quando l’abbonamento scade",

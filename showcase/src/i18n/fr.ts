@@ -539,7 +539,7 @@ export const fr: Dictionary = {
       title: "Facturation",
       short: "Facturation",
       blurb:
-        "Les formules et leurs limites, la situation de l’abonnement avec les dates de l’essai et de la bêta, le verrou de lecture seule à l’expiration, et les webhooks de Paddle et de Lemon Squeezy\u00a0: signatures vérifiées, événements normalisés, un seul dispatch.",
+        "Les formules et leurs limites, la situation de l’abonnement avec les dates de l’essai et de la bêta, le verrou de lecture seule à l’expiration, et les webhooks de Paddle\u00a0: signatures vérifiées, événements normalisés, un seul dispatch.",
     },
     "server-mail": {
       title: "E-mails",
@@ -1236,7 +1236,7 @@ export const fr: Dictionary = {
     "server-billing": [
       "vérifier une limite de formule sur le serveur",
       "vérifier la signature d’un webhook",
-      "traiter les événements Paddle et Lemon Squeezy",
+      "traiter les événements Paddle",
       "l’abonnement est-il à jour",
       "dates de fin de l’essai et de la bêta",
       "refuser les écritures quand l’abonnement expire",

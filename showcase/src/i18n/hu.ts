@@ -542,7 +542,7 @@ export const hu: Dictionary = {
       title: "Számlázás",
       short: "Számlázás",
       blurb:
-        "A csomagok és korlátaik, az előfizetés helyzete a próbaidő és a béta dátumaival, a csak olvasható zár lejáratkor, valamint a Paddle és a Lemon Squeezy webhookjai: ellenőrzött aláírások, egységesített események, egyetlen dispatch.",
+        "A csomagok és korlátaik, az előfizetés helyzete a próbaidő és a béta dátumaival, a csak olvasható zár lejáratkor, valamint a Paddle webhookjai: ellenőrzött aláírások, egységesített események, egyetlen dispatch.",
     },
     "server-mail": {
       title: "E-mail",
@@ -1239,7 +1239,7 @@ export const hu: Dictionary = {
     "server-billing": [
       "csomagkorlát ellenőrzése a szerveren",
       "webhook aláírásának ellenőrzése",
-      "Paddle és Lemon Squeezy események kezelése",
+      "Paddle-események kezelése",
       "rendben van-e az előfizetés",
       "a próbaidő és a béta záró dátuma",
       "írások elutasítása lejárt előfizetésnél",

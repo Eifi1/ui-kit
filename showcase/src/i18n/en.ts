@@ -542,7 +542,7 @@ export const en: Dictionary = {
       title: "Billing",
       short: "Billing",
       blurb:
-        "Plans and their limits, the subscription's standing with the trial's and the beta's dates, the read-only gate on lapse, and Paddle's and Lemon Squeezy's webhooks: signatures checked, events normalised, one dispatch.",
+        "Plans and their limits, the subscription's standing with the trial's and the beta's dates, the read-only gate on lapse, and Paddle's webhooks: signatures checked, events normalised, one dispatch.",
     },
     "server-mail": {
       title: "Mail",
@@ -1238,7 +1238,7 @@ export const en: Dictionary = {
     "server-billing": [
       "check a plan limit on the server",
       "verify a webhook signature",
-      "handle Paddle and Lemon Squeezy events",
+      "handle Paddle events",
       "is the subscription in good standing",
       "trial and beta end dates",
       "refuse writes when billing lapses",

@@ -536,7 +536,7 @@ export const es: Dictionary = {
       title: "Facturación",
       short: "Facturación",
       blurb:
-        "Los planes y sus límites, la situación de la suscripción con las fechas de la prueba y de la beta, el bloqueo de solo lectura al vencer, y los webhooks de Paddle y Lemon Squeezy: firmas comprobadas, eventos normalizados, un solo dispatch.",
+        "Los planes y sus límites, la situación de la suscripción con las fechas de la prueba y de la beta, el bloqueo de solo lectura al vencer, y los webhooks de Paddle: firmas comprobadas, eventos normalizados, un solo dispatch.",
     },
     "server-mail": {
       title: "Correo",
@@ -1233,7 +1233,7 @@ export const es: Dictionary = {
     "server-billing": [
       "comprobar el límite del plan en el servidor",
       "verificar la firma de un webhook",
-      "procesar eventos de Paddle y Lemon Squeezy",
+      "procesar eventos de Paddle",
       "la suscripción está al día",
       "fechas de fin de la prueba y de la beta",
       "rechazar escrituras al vencer la suscripción",

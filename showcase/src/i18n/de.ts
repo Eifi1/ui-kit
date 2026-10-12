@@ -544,7 +544,7 @@ export const de: Dictionary = {
       title: "Abrechnung",
       short: "Abrechnung",
       blurb:
-        "Tarife und ihre Limits, der Stand des Abonnements mit den Daten der Testphase und der Beta, die Nur-Lesen-Sperre bei Ablauf und die Webhooks von Paddle und Lemon Squeezy: Signaturen geprüft, Ereignisse vereinheitlicht, ein Dispatch.",
+        "Tarife und ihre Limits, der Stand des Abonnements mit den Daten der Testphase und der Beta, die Nur-Lesen-Sperre bei Ablauf und die Webhooks von Paddle: Signaturen geprüft, Ereignisse vereinheitlicht, ein Dispatch.",
     },
     "server-mail": {
       title: "E-Mail",
@@ -1241,7 +1241,7 @@ export const de: Dictionary = {
     "server-billing": [
       "Tariflimit auf dem Server prüfen",
       "Webhook-Signatur prüfen",
-      "Ereignisse von Paddle und Lemon Squeezy verarbeiten",
+      "Ereignisse von Paddle verarbeiten",
       "ist das Abonnement in Ordnung",
       "Enddaten von Testphase und Beta",
       "Schreibzugriffe nach Ablauf des Abonnements ablehnen",

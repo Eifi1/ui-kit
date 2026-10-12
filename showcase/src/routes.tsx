@@ -1563,7 +1563,7 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Billing",
         short: "Billing",
         blurb:
-          "Plans and their limits, the subscription's standing with the trial's and the beta's dates, the read-only gate on lapse, and Paddle's and Lemon Squeezy's webhooks: signatures checked, events normalised, one dispatch.",
+          "Plans and their limits, the subscription's standing with the trial's and the beta's dates, the read-only gate on lapse, and Paddle's webhooks: signatures checked, events normalised, one dispatch.",
         icon: CreditCard,
         serverModules: ["billing"],
       }),

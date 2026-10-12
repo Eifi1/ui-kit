@@ -523,7 +523,7 @@ export const zh: Dictionary = {
       title: "计费",
       short: "计费",
       blurb:
-        "套餐及其上限，订阅状态以及试用期和测试版的日期，到期后的只读限制，以及 Paddle 和 Lemon Squeezy 的 webhook：校验签名、统一事件、单一分发。",
+        "套餐及其上限，订阅状态以及试用期和测试版的日期，到期后的只读限制，以及 Paddle 的 webhook：校验签名、统一事件、单一分发。",
     },
     "server-mail": {
       title: "邮件",
@@ -1220,7 +1220,7 @@ export const zh: Dictionary = {
     "server-billing": [
       "在服务器上 检查 套餐上限",
       "验证 webhook 签名",
-      "处理 Paddle 和 Lemon Squeezy 事件",
+      "处理 Paddle 事件",
       "订阅 是否 正常",
       "试用期 和 测试版 结束日期",
       "订阅到期时 拒绝 写入",
