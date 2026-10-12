@@ -20,6 +20,14 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.33.1](https://github.com/Eifi1/ui-kit/compare/v0.33.0...v0.33.1) (2026-10-12)
+
+### Fixed
+
+* **anchored-panel:** a flipped panel hangs from its bottom edge, at any content height ([434c3ca](https://github.com/Eifi1/ui-kit/commit/434c3ca0b643e4ffeb876c0c52eefdabefbb6606)), references [#401](https://github.com/Eifi1/ui-kit/issues/401)
+* **focus-trap:** leave focus on an autofocused child; give it back to the opener on close ([b0ce972](https://github.com/Eifi1/ui-kit/commit/b0ce9720f35f08ed4355f2912b36fbe8a1bc4294)), references [#402](https://github.com/Eifi1/ui-kit/issues/402)
+* lockable composers and number fields, a ref on Skeleton, figures that wrap at spaces ([63e12aa](https://github.com/Eifi1/ui-kit/commit/63e12aa43ee24b18a5d5e92e64cfa9d369582e8a))
+
 ## [0.33.0](https://github.com/Eifi1/ui-kit/compare/v0.32.2...v0.33.0) (2026-10-09)
 
 ### ⚠ BREAKING CHANGES
