@@ -185,6 +185,8 @@ company's creation, and by a migration for those that exist. "No row" never happ
   `effective_comped_until`, the `launch` argument of `in_good_standing` and `grant_holds`;
   Kurvenschmiede's 0.32 report). A moved launch date then needs no data change.
 - **An operator's grant** is `comped`, `source = manual`, with or without an end date.
+  It clears `trial_ends_at` (0.34, §14.17): the row describes one state, and a trial date
+  left behind on a grant feeds a trial banner or notice the payer is no longer owed.
 
 ### 3.3 Good standing and read-only (§2.3, §2.7)
 
@@ -2217,3 +2219,14 @@ and keksdose's 0.33 reports, **ka** and **kk** n):
 31. **`payPageUrl` and `paddleLocale` take an undefined locale** (kk 15), what
     `useKitLocale()` answers without a provider locale: no `lang`, so the page reads the
     browser's language, else English (§14.4).
+
+### 14.17 A grant clears the trial's end (round 0.34, 2026-10-12)
+
+Kurvenschmiede's 0.33.1 report asked which rule holds: keksdose's `change_plan` clears
+`trial_ends_at` on a manual grant, Kurvenschmiede's keeps it. **A manual grant clears it.**
+Good standing reads `comped_until` for a `comped` row (§3.3), so the old trial date decides
+nothing there; left behind, it only feeds what reads it without the status: a "trial ends
+in 7 days" banner, a trial-end notice (§14.7). A beta grant kept by `change_plan` (decision
+22) is not a manual grant and keeps its own dates. keksdose already clears it; Kurvenschmiede
+(`change_plan`) and kastlan (`billing_service.set_plan`, :243, which sets status, source and
+`comped_until` and leaves the trial's end) add the one line.
