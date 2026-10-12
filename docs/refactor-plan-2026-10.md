@@ -1,6 +1,11 @@
 # @eifi1/ui-kit refactor plan — 2026-10-12
 
-## Status — Wave 0 DONE in 0.34 (2026-10-12); Waves 1–5 planned for 0.35+
+## Status — Wave 0 DONE in 0.34; Waves 1–5 also going into 0.34 (Marcel, 2026-10-12)
+
+Marcel, after Wave 0: "Wire all waves also into 0.34." So every wave ships in 0.34, and the
+dates below shift by one minor: what this plan deprecates "in 0.35" is deprecated in 0.34 and
+removed in 0.35. Execution order: phase A (Wave 1 + the docs, i18n and theme items of Wave 5),
+B (Wave 2), C (Wave 3 + Wave 4), D (the rest of Wave 5).
 
 **Decisions taken (Marcel, 2026-10-12):** 1 yes, Wave 0 into 0.34; 2 yes, the sweep runs in CI on
 the release PR (local-first otherwise); 3–5 as recommended.
