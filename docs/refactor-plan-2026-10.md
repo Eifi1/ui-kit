@@ -1,6 +1,9 @@
 # @eifi1/ui-kit refactor plan — 2026-10-12
 
-## Status — PLANNED, nothing executed
+## Status — PLANNED; Wave 0 going into 0.34 (Marcel, 2026-10-12)
+
+**Decisions taken (Marcel, 2026-10-12):** 1 yes, Wave 0 into 0.34; 2 yes, the sweep runs in CI on
+the release PR (local-first otherwise); 3–5 as recommended.
 
 Six read-only auditors went over the kit at `feat/0.34.0` (round 0.34 committed, not yet
 released), one area each, on Marcel's request of 2026-10-12. Together they filed **69
@@ -245,6 +248,12 @@ removes a class of drift.
   - RhfSelect and RhfCheckbox drop the lock today.
   - RhfMoneyField and MoneyField share one `useMoneyDraft`.
   - Add a type test.
+- **K5 follow-up (keksdose run 78).** 0.34 fixed the half-strength focus line at fractional
+  device-pixel ratios (125 %) on DatePicker's stepper only. Every single field's focus has the
+  same problem: `FIELD_BASE` draws a 1 px `focus:border-brand` with a ring colour but no ring
+  width, and `FIELD_DISPLAY`'s bottom line does the same. `FIELD_INVALID` already pairs the
+  border with `ring-1` for this reason (live #295). Fix: an inset 1 px focus ring in
+  `FIELD_BASE` and `FIELD_DISPLAY`, with the apps' class assertions in the adopt doc.
 - **DUP-10.** One `useNumericField` engine for NumberInput and AmountInput, done last in this
   wave, once DUP-2, DUP-3 and DUP-8 have shrunk what moves. AmountInput also gains `locale`.
 
