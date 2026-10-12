@@ -107,6 +107,11 @@ optional**, merged over a `DEFAULT_*` constant by a `resolve*` helper — see
 matter: a caller passing three of eleven must get English for the other eight, not
 `undefined` rendered into the DOM.
 
+The `DEFAULT_*` constant lives in a `<component>-labels.ts` beside the component, with no
+component code (type imports only); the component imports and re-exports it. That keeps
+the English catalogue one chunk like the other languages (0.34);
+`english-catalogue-graph.test.ts` and `check:graph` enforce it.
+
 **A label that interpolates a value is a function of that value, never a template
 literal.** Word order, pluralisation and where the number lands are the translator's
 business, and a string with a hole in it decides all three on their behalf:
@@ -126,8 +131,11 @@ audit found six leaks, including a password-reveal toggle with a hardcoded `aria
 npm run check:tokens
 ```
 
-Use `text-[var(--text-muted)]`, `bg-[var(--bg-hover)]`, `text-[var(--danger)]`,
-`border-[var(--border)]`. Not `text-slate-500`, not `bg-indigo-600`.
+Use the role utilities: `text-muted`, `bg-hover`, `text-danger`, `border-subtle`
+(`tokens.css`'s `@theme inline` block lists them; colour roles §7). Not `text-slate-500`, not
+`bg-indigo-600`, and not `text-[var(--text-muted)]` where a utility exists: since 0.34 the
+ratchet in `check:tokens` allows none (`ROLE_BUDGET` 0). `[var(--…)]` stays only for a role
+with no utility (money and chart colours, `--status-*`, ring offsets).
 
 A consuming app re-skins this kit by changing token values. Every raw palette class is a
 place where that fails and the app has to fork the component instead. The audit counted
@@ -333,10 +341,14 @@ just the symptom, because a reader upgrading needs to know whether it could have
 
 ### Cutting a release
 
-1. On the release branch: `npm run check` — clean.
+1. On the release branch: `npm run check` — clean. Close what else eats memory first: the
+   release step below also builds the showcase and runs Chromium.
 2. `npm run build && node scripts/gen-export-inventory.mjs` — the README inventory is
    current.
-3. `npm run release:dry` to read the version and the entry; then `npm run release`. It bumps
+3. `npm run release:dry` to read the version and the entry; then `npm run release`. It first
+   runs `npm run check:sweep` (the showcase build and the truncation sweep with
+   `--gate-truncation`, Chromium, about 25 minutes here; text-size §10.17–§10.22) and stops on
+   a TRUNCATED or PINNED finding; then it bumps
    `package.json` and the lockfile, writes `CHANGELOG.md` and commits
    `chore(release): X.Y.Z`. It does NOT tag (`skip.tag`). Force a version with
    `npm run release -- --release-as minor` when the commits under-state it.

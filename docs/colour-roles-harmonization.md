@@ -71,7 +71,9 @@ All as recommended.
    wherever a utility exists and only lets the number fall; new or touched code uses the
    utilities (§7.4). A mechanical rewrite would change 262 class assertions in the kit's
    tests, and kk has 22 test files that name `[var(--…)]` class strings, some of them
-   on kit-rendered markup (§12.7).
+   on kit-rendered markup (§12.7). *Superseded in 0.34 (round 0.34 Q1):* the kit's markup
+   moved to the utilities in one codemod (3,290 classes, the same rules), the ratchet's
+   budget is 0, and `docs/adopt-0.34.md` lists the app tests that name kit classes.
 6. **SwipeAction: a soft wash when idle, the solid fill and its `-contrast` when armed**
    (§6). Idle is the tone's wash under the tone's text (≥ 4.52:1; brand is the exception
    at 4.43–4.49 in three derived dark presets, the Chip brand soft pair's own edge).
@@ -743,7 +745,8 @@ No `text-*` names for the border roles: an SVG that strokes in `currentColor` ta
   less documented than `--color-*`, and a Tailwind release that drops one should fail
   CI.
 - **A second ratchet** counts `[var(--role)]` classes wherever a utility exists, and only
-  lets the number fall (§2.5).
+  lets the number fall (§2.5). Since 0.34 its budget (`ROLE_BUDGET`) is 0: no role class
+  with an exact utility may come back.
 - **kk's lint message** (`eslint.config.js:47`) names the utilities instead of the
   `[var(--…)]` forms.
 

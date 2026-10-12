@@ -116,7 +116,9 @@ Settled by the kit in this draft; the reviews may object:
   - ka `/profile` → `/settings/account`.
   - KS `/account` → `/settings/account`.
 - **Breadcrumb and title:** `document.title` is "<group> · Settings · <app>". kastlan's
-  breadcrumb shows Settings › <group>.
+  breadcrumb shows Settings › <group>. Since 0.34 `SettingsLayout` writes it from `appName`
+  ("<page> · <app>" on the phone's group list) and puts the old title back on unmount;
+  `documentTitle={false}` or a function overrides it.
 
 ### 3.2 Desktop
 

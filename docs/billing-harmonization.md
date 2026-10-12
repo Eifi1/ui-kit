@@ -1704,7 +1704,7 @@ export function planColumn<T>(options: {
   plan: (row: T) => string | null;                      // the code, read case-insensitively (§12.16)
   planName: (code: string) => string;                   // the app's i18n (§3.1)
   status?: (row: T) => SubscriptionStatus | undefined;  // left out or undefined: no chip (billing off)
-  usage?: (row: T) => { used: number; limit: number | null; label: string } | undefined;  // "1/5", tooltip "1 of 5 budgets"
+  usage?: (row: T) => PlanColumnUsage | undefined;     // { used, limit: number | null, label: string | PluralForms } (0.33.1); "1/5", tooltip "1 of 5 budgets"
   filterPlans?: readonly string[];                      // a select filter over these codes
   /** Default: by the plan code. A function: by its value (the catalogue's sort for rank
    *  order). false: not sortable. keksdose sorts by code (users-panel.tsx:739). */
@@ -1718,7 +1718,7 @@ export interface PlanChangeConfirmProps {
   target: AdminActionTarget;
   plans: readonly { code: string; name: string }[];
   current: string | null;
-  usage?: ReactNode;                     // "3 of 5 budgets", the app's sentence
+  usage?: PlanColumnUsage | ReactNode;   // planColumn's shape, said with its sentence and plural (0.34), or the app's own node
   /** Offer "Free until" (only meaningful while billing is on). */
   grantEnd?: boolean;
   /** comped_until: the END of the picked day in the operator's time zone, as ISO UTC. */
