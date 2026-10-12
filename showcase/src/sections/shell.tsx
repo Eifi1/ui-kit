@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { ContextType } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import {
   ArrowLeftRight,
@@ -32,6 +31,8 @@ import {
   TopBar,
   TopBarActionMenu,
   cn,
+  Chip,
+  UserAvatar,
 } from "@eifi1/ui-kit";
 import type {
   AppShellNavItem,
@@ -47,7 +48,7 @@ import {
   ToggleGroup,
   useScrollSpy,
 } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
+import { ConstList, Example, Note, OutTable, Row, NO_ROUTER, code, READOUT } from "../lib/section";
 import { usePalette, useTheme } from "../stores";
 
 /**
@@ -116,7 +117,7 @@ const NAV_REFERENCE: AppShellNavItem[] = [
 const MINI_BUTTON =
   "rounded-md border border-subtle bg-surface-2 px-2 py-1 text-xs text-primary hover:border-brand";
 
-const READOUT = "font-mono text-xs text-primary";
+const READOUT_STRONG = "font-mono text-xs text-primary";
 
 const PROSE = "font-sans font-normal text-secondary";
 
@@ -357,7 +358,7 @@ function ThemeAndPalette() {
           Follow the system
         </button>
       </Row>
-      <p className={READOUT}>
+      <p className={READOUT_STRONG}>
         mode: {mode} · preference: {preference} · palette: {paletteId} ({activeName})
       </p>
       <Note>
@@ -400,7 +401,7 @@ function Languages() {
         <button type="button" className={MINI_BUTTON} onClick={() => setLang(undefined)}>
           Clear the selection
         </button>
-        <span className={READOUT}>current: {lang ?? "undefined"}</span>
+        <span className={READOUT_STRONG}>current: {lang ?? "undefined"}</span>
       </Row>
       <Note>
         The flags are <code className="font-mono">flag-icons</code> spans (
@@ -439,7 +440,7 @@ function Environments() {
           value={env}
           onSelect={setEnv}
         />
-        <span className={READOUT}>value: {env}</span>
+        <span className={READOUT_STRONG}>value: {env}</span>
       </Row>
       <Note>
         Generic in the option type, so <code className="font-mono">onSelect</code> hands back the
@@ -460,7 +461,7 @@ function Roles() {
     <div className="space-y-3">
       <Row>
         <RoleSwitcher roles={ROLES} value={role} onChange={setRole} heading="Act as" />
-        <span className={READOUT}>value: {role}</span>
+        <span className={READOUT_STRONG}>value: {role}</span>
       </Row>
       <Note>
         A thin wrapper: the flask icon, and a default{" "}
@@ -520,7 +521,7 @@ function ActionMenu() {
           entries={entries}
           panelClassName="w-64"
         />
-        <span className={READOUT}>last chosen: {chosen}</span>
+        <span className={READOUT_STRONG}>last chosen: {chosen}</span>
       </Row>
       <Note>
         The <code className="font-mono">link</code> row renders a react-router{" "}
@@ -600,7 +601,7 @@ function AppShellNotes() {
         >
           Read --app-nav-h
         </button>
-        <span className={READOUT}>{navHeight ?? "press to read"}</span>
+        <span className={READOUT_STRONG}>{navHeight ?? "press to read"}</span>
       </Row>
       <Note>
         <code className="font-mono">--app-nav-h</code> is the mobile bar's MEASURED height,
@@ -688,9 +689,6 @@ const DEMO_FOOTER_ITEMS: AppShellSidebarFooterItem[] = [
     ],
   },
 ];
-
-/** `null` is what a `LocationContext` holds outside any router. See the playground. */
-const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
 /**
  * A second `AppShell`, in a box.
@@ -846,7 +844,7 @@ function AppShellPlayground() {
         >
           Read --app-nav-h on both
         </button>
-        <span className={READOUT}>{navVars ?? "press to read"}</span>
+        <span className={READOUT_STRONG}>{navVars ?? "press to read"}</span>
       </Row>
       <Note>
         Narrow the window below 768px and read again: the box&apos;s own bar is measured onto{" "}
@@ -1018,6 +1016,67 @@ function PageContentsExample() {
         <code className="font-mono">labels.title</code> overrides the provider&apos;s{" "}
         <code className="font-mono">pageContents.title</code> for one instance.
       </p>
+    </Example>
+  );
+}
+
+/* ── since 0.13 ─────────────────────────────────────────────────────────── */
+
+/**
+ * The 0.13 follow-ups from keksdose: a header link that can close the account menu
+ * (F7), and a support composer that canned-reply chips can write into, with a hint of
+ * the caller's own (F9).
+ */
+
+/** keksdose F7: the admin role chip in the account header links to the admin area. */
+export function AccountHeaderLinkDemo() {
+  const [log, setLog] = useState("—");
+  return (
+    <Example
+      label="TopBarActionMenu — a link in the header that closes the menu"
+      hint="header.extra takes (close) => ReactNode, like footer"
+    >
+      <div className="flex justify-end rounded-md border border-subtle bg-surface-2 p-2">
+        <TopBarActionMenu
+          aria-label="Account menu"
+          triggerClassName="rounded-full"
+          trigger={() => <UserAvatar name="Marcel Eifert" email="marcel@example.com" />}
+          header={{
+            title: "Marcel Eifert",
+            subtitle: "marcel@example.com",
+            extra: (close) => (
+              <Chip
+                size="xs"
+                tone="info"
+                href="/shell"
+                renderLink={({ href, children, ...p }) => (
+                  <a {...p} href={`#${href}`}>
+                    {children}
+                  </a>
+                )}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setLog("admin chip → menu closed");
+                  close();
+                }}
+              >
+                Admin
+              </Chip>
+            ),
+          }}
+          entries={[{ key: "logout", label: "Log out", tone: "danger", onSelect: () => setLog("log out") }]}
+          panelClassName="w-64"
+        />
+      </div>
+      <Row className="mt-2">
+        <span className={READOUT}>{log}</span>
+      </Row>
+      <Note>
+        A router link does not unmount the menu, so a header link that is handed nothing
+        leaves the panel open over the page it navigated to. The plain {code("ReactNode")}{" "}
+        form still works for a chip that is only a label.
+      </Note>
+      <Note>Since 0.13.</Note>
     </Example>
   );
 }

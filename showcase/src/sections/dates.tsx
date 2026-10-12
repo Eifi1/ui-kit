@@ -1,6 +1,17 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { ReactNode } from "react";
-import { Button, DatePicker, DateRangePicker, MiniCalendar, ToggleGroup, cn } from "@eifi1/ui-kit";
+import {
+  Button,
+  DatePicker,
+  DateRangePicker,
+  MiniCalendar,
+  ToggleGroup,
+  cn,
+  DateMark,
+  FieldHint,
+  Select,
+  UiKitProvider,
+} from "@eifi1/ui-kit";
 import type { DateRangeDraftSummary, DateRangePickerPreset } from "@eifi1/ui-kit";
 import {
   addDaysIso,
@@ -22,7 +33,7 @@ import {
   toLocalIso,
   todayIso,
 } from "@eifi1/ui-kit/dates";
-import { Example, Note, OutTable, Stage } from "../lib/section";
+import { Example, Note, OutTable, Stage, StateLine, code } from "../lib/section";
 
 /**
  * DATES.
@@ -104,12 +115,6 @@ const DE_CALENDAR = {
   startSelected: (d: string) => `${d} als Start gewählt. Enddatum wählen.`,
   rangeSelected: (f: string, t: string) => `Zeitraum ${f} bis ${t} gewählt.`,
 };
-
-/** The live value under a specimen. A controlled component is only demonstrably
- *  controlled once you can watch the state it is driven by change underneath it. */
-function StateLine({ children }: { children: ReactNode }) {
-  return <p className="mt-3 font-mono text-xs text-muted">{children}</p>;
-}
 
 /** An empty string is invisible on a page; render it as the literal instead. */
 function iso(value: string): string {
@@ -1017,6 +1022,91 @@ export function DateHelpers() {
           and that is the point — the server compares plain dates with no zone at all, so the
           user&apos;s local day is what it wants.
         </p>
+      </Example>
+    </>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+/** keksdose's date-format preference, as the provider formatter it asked for: digits
+ *  in ISO order, the weekday in the UI language. */
+function useIsoWithWeekday(language: string) {
+  return useCallback(
+    (iso: string, ctx: { unit: "day" | "month" | "year"; weekday: boolean }) => {
+      if (ctx.unit !== "day") return "";
+      const [y, m, d] = iso.split("-").map(Number);
+      const day = new Date(y, m - 1, d).toLocaleDateString(language, { weekday: "short" });
+      return ctx.weekday ? `${day}, ${iso}` : iso;
+    },
+    [language],
+  );
+}
+
+/** DatePicker / DateRangePicker: hint and error (K4), the provider formatter (K12). */
+export function Dates022Demo() {
+  const [due, setDue] = useState("2026-09-07");
+  const [range, setRange] = useState({ from: "2026-09-01", to: "2026-09-30" });
+  const [language, setLanguage] = useState("en-GB");
+  const formatDate = useIsoWithWeekday(language);
+  return (
+    <>
+      <Example label="DatePicker hint and error" hint="the anatomy every field has: caption, message, aria-describedby">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2">
+          <DatePicker
+            label="Booking date"
+            value={due}
+            onChange={setDue}
+            step
+            today="2026-10-02"
+            hint="The day the bank booked it, not the receipt's."
+            error={due > "2026-10-02" ? "A booking cannot be in the future." : undefined}
+          />
+          <DateRangePicker
+            label="Statement period"
+            hint={<FieldHint label="Both days are included" />}
+            from={range.from}
+            to={range.to}
+            onChange={(from, to) => setRange({ from, to })}
+          />
+        </div>
+        <Note>
+          A text {code("hint")} is a caption under the field, a {code("FieldHint")} rides the label line, as on{" "}
+          {code("Select")}. {code("error")} goes under the whole row (steppers included) and implies{" "}
+          {code("invalid")}; step past today to see it.
+        </Note>
+        <Note>Since 0.22.</Note>
+      </Example>
+      <Example label="<UiKitProvider formatDate>" hint="one date look for every picker trigger and DateMark">
+        <div className="flex flex-col gap-3">
+          <Select label="Weekday language" value={language} onChange={(e) => setLanguage(e.target.value)} className="sm:w-56">
+            <option value="en-GB">English</option>
+            <option value="de-CH">Deutsch (Schweiz)</option>
+            <option value="fr-CH">Français (Suisse)</option>
+          </Select>
+          <UiKitProvider formatDate={formatDate}>
+            <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2">
+              <DatePicker label="Booking date" value={due} onChange={setDue} />
+              <DateRangePicker
+                label="Statement period"
+                from={range.from}
+                to={range.to}
+                onChange={(from, to) => setRange({ from, to })}
+              />
+            </div>
+            <p className="text-sm text-secondary">
+              In a table cell: <DateMark value={due} />
+            </p>
+          </UiKitProvider>
+        </div>
+        <Note>
+          keksdose&apos;s preference — ISO digits, the weekday in the UI language — set once on the provider
+          instead of a {code("formatValue")} on every field. The formatter is told the {code("unit")}, the{" "}
+          {code("source")} and a {code("weekday")} suggestion (a single date yes, a range&apos;s ends no); returning{" "}
+          {code('""')} falls back to the kit&apos;s own. A field&apos;s own {code("formatValue")} or{" "}
+          {code("formatOptions")} still wins.
+        </Note>
+        <Note>Since 0.22.</Note>
       </Example>
     </>
   );

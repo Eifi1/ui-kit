@@ -26,7 +26,7 @@ import {
   useKitLink,
 } from "@eifi1/ui-kit";
 import type { ActionCardIconTone, TextLinkTone, TextLinkUnderline } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row, Stage } from "../lib/section";
+import { Example, Note, OutTable, Row, Stage, code } from "../lib/section";
 
 /**
  * LINKS (0.12): the provider's `linkComponent` — the app's router link, set once — and
@@ -38,8 +38,6 @@ import { Example, Note, OutTable, Row, Stage } from "../lib/section";
  * one keeps the reader here and the readout shows that the router handled it (no reload,
  * the hash changed). A few go to another page, which is the ordinary case.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** The `?via=` of the current location — which link was last followed. */
 function useVia(): string {

@@ -1,5 +1,6 @@
 import { Children, Fragment } from "react";
-import type { ReactNode } from "react";
+import type { ContextType, ReactNode } from "react";
+import type { UNSAFE_LocationContext } from "react-router";
 import { cn } from "@eifi1/ui-kit";
 
 /**
@@ -137,6 +138,62 @@ export function inlineCode(node: ReactNode): ReactNode {
   }
   return node;
 }
+
+/* ── The demos' small helpers ──
+ *
+ * Each of these was copied into the section files that needed it — `code` into 81 of
+ * them, `READOUT` into 43, a timer promise into 21 under two names and six defaults —
+ * until the refactor audit of 2026-10 (DOC-8) moved them here. A demo that wants a
+ * different one writes its own under a different name. */
+
+/** A `code` span written inside JSX — `{code("onChange")}`; a string attribute uses
+ *  backticks instead (see {@link inlineCode}). `anywhere`: an identifier has no space to
+ *  break at, and at Extra large on a phone it is wider than the note it sits in. */
+export function code(s: string): ReactNode {
+  return (
+    <code dir="ltr" className="font-mono [overflow-wrap:anywhere]">
+      {s}
+    </code>
+  );
+}
+
+/** A live value under a specimen: what a callback last said, a hook's answer. */
+export const READOUT = "font-mono text-xs text-secondary";
+/** A readout holding long identifiers or JSON: it may break inside them. Not for a cell
+ *  of an `OutTable` (see `softBreaks`, which explains what `anywhere` does to a table). */
+export const READOUT_WRAP = `${READOUT} [overflow-wrap:anywhere]`;
+/** A readout whose line breaks and indents are part of the value (a payload, a log). */
+export const READOUT_PRE = `${READOUT} whitespace-pre-wrap [overflow-wrap:anywhere]`;
+
+/** The app's side of a pretend request: a promise that settles after `ms`. Each demo
+ *  names its own duration — long enough to see the pending state, short enough not to
+ *  wait for. */
+export function beat(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** The raw value under a specimen, so what the component emits is visible — a
+ *  controlled component is only demonstrably controlled once you can watch the state
+ *  it is driven by change underneath it. `label="value"` prints `value = …`. */
+export function StateLine({ children, label }: { children: ReactNode; label?: string }) {
+  return (
+    <p className="mt-2 font-mono text-xs text-muted [overflow-wrap:anywhere]">
+      {label && `${label} = `}
+      {children}
+    </p>
+  );
+}
+
+/**
+ * React Router refuses a router inside a router. `null` is what a `LocationContext` holds
+ * outside any router, so a specimen with a history of its own — a boxed-in AppShell, a
+ * landing page, the billing banners — renders
+ *
+ *   <UNSAFE_LocationContext.Provider value={NO_ROUTER}><MemoryRouter>…
+ *
+ * and its links move ITS router, not the showcase's. The documented escape hatch.
+ */
+export const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
 /** A single design token, shown as the colour plus the value that produced it. */
 export function Swatch({ name, value }: { name: string; value: string }) {

@@ -16,7 +16,7 @@ import type {
   ProfileSettingLabels,
   TwoFactorSettingLabels,
 } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, beat } from "../lib/section";
 import { useTheme } from "../stores";
 
 /**
@@ -36,8 +36,6 @@ import { useTheme } from "../stores";
 
 /** Long enough to read the disabled button, short enough not to feel broken. */
 const BEAT_MS = 800;
-
-const beat = (ms = BEAT_MS) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
  * A placeholder for whatever the app's `/2fa/setup` call returns. It is a real
@@ -187,7 +185,7 @@ function ProfileRow() {
 
   const save = async () => {
     setSaving(true);
-    await beat();
+    await beat(BEAT_MS);
     setName(draft.trim());
     setSaving(false);
   };
@@ -256,7 +254,7 @@ function PasswordRow() {
   const submit = async (current: string, next: string) => {
     setPending(true);
     setReceipt(null);
-    await beat();
+    await beat(BEAT_MS);
     setPending(false);
     setReceipt(`onSubmit(current: ${current.length} chars, new: ${next.length} chars)`);
   };
@@ -265,7 +263,7 @@ function PasswordRow() {
   // body. "offline" as the current password stands for a failure the card cannot read.
   const submitAndFail = async (current: string) => {
     setFailPending(true);
-    await beat();
+    await beat(BEAT_MS);
     setFailPending(false);
     if (current === "offline") throw new Error("Network Error");
     throw Object.assign(new Error("Request failed with status code 400"), {
@@ -375,14 +373,14 @@ function TwoFactorRow() {
   const startSetup = async () => {
     setBusy(true);
     setLog(null);
-    await beat();
+    await beat(BEAT_MS);
     setSetup({ qrSvg: QR_SVG_BASE64, secret: FAKE_SECRET });
     setBusy(false);
   };
 
   const enable = async (code: string) => {
     setBusy(true);
-    await beat();
+    await beat(BEAT_MS);
     setEnabled(true);
     setSetup(null);
     setBusy(false);
@@ -391,7 +389,7 @@ function TwoFactorRow() {
 
   const disable = async (password: string, code: string) => {
     setBusy(true);
-    await beat();
+    await beat(BEAT_MS);
     setEnabled(false);
     setSetup(null);
     setBusy(false);

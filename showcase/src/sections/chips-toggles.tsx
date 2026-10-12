@@ -1,9 +1,22 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Bell, CreditCard, Hash, Pin, Settings2, Star, Tag, User } from "lucide-react";
-import { Button, Chip, ChipInput, HoverMenu, TOPBAR_MENU_ITEM_CLASS, Tabs, ToggleGroup } from "@eifi1/ui-kit";
+import {
+  Button,
+  Chip,
+  ChipInput,
+  HoverMenu,
+  TOPBAR_MENU_ITEM_CLASS,
+  Tabs,
+  ToggleGroup,
+  FieldHint,
+  Input,
+  Select,
+  Switch,
+  WriteLockProvider,
+} from "@eifi1/ui-kit";
 import type { ChipLinkProps, ToggleOption } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code } from "../lib/section";
 import { useT } from "../i18n";
 import { TabControls } from "./field-anatomy-demo";
 
@@ -896,5 +909,133 @@ function ChipsRtl() {
         previous one (to its right), ← to move on towards the input.
       </Note>
     </Example>
+  );
+}
+
+/* ── since 0.16 ─────────────────────────────────────────────────────────── */
+
+export function Chips016Demo() {
+  return (
+    <Example label="Chip — xs with an icon" hint="the icon at the xs text's cap height">
+      <Row>
+        <Chip size="xs" icon={Tag}>
+          Groceries
+        </Chip>
+        <Chip size="xs" icon={Star} tone="warning">
+          Pinned
+        </Chip>
+        <Chip size="xs" icon={Tag} caps tone="success">
+          Paid
+        </Chip>
+        <Chip size="sm" icon={Tag}>
+          sm for scale
+        </Chip>
+      </Row>
+      <Note>Since 0.16.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+const GRAINS = [
+  { value: "month", label: "Month" },
+  { value: "quarter", label: "Quarter" },
+  { value: "half", label: "Half-year" },
+  { value: "year", label: "Year" },
+];
+
+const STATUSES = [
+  { value: "open", label: "Open" },
+  { value: "cleared", label: "Cleared" },
+  { value: "reconciled", label: "Done" },
+];
+
+/** ToggleGroup: the chrome clears its label (K1), the strip (K2), the lock (K3). */
+export function ToggleGroup022Demo() {
+  const [grain, setGrain] = useState("month");
+  const [status, setStatus] = useState("open");
+  const [locked, setLocked] = useState(true);
+  const [chip, setChip] = useState(true);
+  return (
+    <>
+      <Example
+        label="ToggleGroup as a field — the label is clear of the fill"
+        hint="42px beside a labelled Select, md and sm; chromeClassName joins it flush"
+      >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <Select label="Range" defaultValue="12">
+            <option value="12">Last 12 months</option>
+            <option value="24">Last 24 months</option>
+          </Select>
+          <ToggleGroup label="Group by" value={grain} onChange={setGrain} options={GRAINS} />
+          <ToggleGroup label="Group by" size="sm" value={grain} onChange={setGrain} options={GRAINS} />
+        </div>
+        <div className="mt-4 flex flex-col md:flex-row">
+          <Select label="Range" defaultValue="12" className="md:w-52" selectClassName="md:rounded-e-none">
+            <option value="12">Last 12 months</option>
+            <option value="24">Last 24 months</option>
+          </Select>
+          <ToggleGroup
+            label="Group by"
+            size="sm"
+            className="mt-3 md:mt-0 md:-ms-px"
+            chromeClassName="md:rounded-s-none"
+            value={grain}
+            onChange={setGrain}
+            options={GRAINS}
+          />
+        </div>
+        <Note>
+          The active fill starts 21px down, 3.25px below the 11px label&apos;s line (it was 17px, touching it —
+          keksdose feedback #117). {code('size="sm"')} keeps its 12px type inside the chrome. The joined pair
+          squares the shared edge from {code("md")} up with {code('chromeClassName="md:rounded-s-none"')} and{" "}
+          {code('className="md:-ms-px"')}; on a phone the two stack.
+        </Note>
+        <Note>Since 0.22.</Note>
+      </Example>
+      <Example label='ToggleGroup labelPlacement="strip"' hint="a group that is not a field, on its neighbours' label line">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
+          <Input label="Memo" defaultValue="Rent September" />
+          <ToggleGroup
+            label="Status"
+            labelPlacement="strip"
+            hint={<FieldHint label="What the bank statement says" />}
+            value={status}
+            onChange={setStatus}
+            options={STATUSES}
+          />
+          <Input label="Amount" defaultValue="1,250.00" />
+        </div>
+        <Note>
+          20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line
+          (keksdose&apos;s measured {code("ClearedStatusPicker")}, live #288 / #431), and the label and its
+          &ldquo;?&rdquo; clear of the group&apos;s border (dev#593: over the 16px strip it had, they crossed it by
+          2px).
+        </Note>
+        <Note>Since 0.22.</Note>
+      </Example>
+      <Example label="commit / disabledReason on a group and a chip" hint="under a WriteLockProvider: reachable, refusing, saying why">
+        <div className="flex flex-col gap-3">
+          <Switch checked={locked} onCheckedChange={setLocked} label="Read-only (WriteLockProvider locked)" />
+          <WriteLockProvider locked={locked} reason="This is a shared budget: you can look, not change.">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-full sm:w-72">
+                <ToggleGroup label="Status" commit value={status} onChange={setStatus} options={STATUSES} />
+              </div>
+              <Chip commit onClick={() => setChip((v) => !v)} selected={chip} checkbox>
+                Include in report
+              </Chip>
+            </div>
+          </WriteLockProvider>
+        </div>
+        <Note>
+          Hover or Tab onto a segment or the chip: the lock&apos;s reason shows and is read out; a press changes
+          nothing. Without the lock (or the {code("commit")} prop) both behave as before. {code("disabledReason")}{" "}
+          is the same refusal with a reason of the control&apos;s own.
+        </Note>
+        <Note>Since 0.22.</Note>
+      </Example>
+    </>
   );
 }

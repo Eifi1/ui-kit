@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Archive, BellOff, CircleSlash, Trash2, Undo2 } from "lucide-react";
 import { Button, Select, SwipeableRow, cn, usePhoneLayout, useRowSwipe } from "@eifi1/ui-kit";
 import type { SwipeAction, SwipePaint, SwipeTone } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, READOUT } from "../lib/section";
 
 /**
  * SWIPEABLE ROW — `SwipeableRow`, and `useRowSwipe` underneath it.
@@ -20,7 +20,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
 
 // Live readouts share one class so a reader can tell "this is state" from "this is
 // chrome" at a glance.
-const READOUT = "font-mono text-xs text-secondary";
 
 export function SwipeableRowDemo() {
   return (

@@ -14,7 +14,9 @@ import {
   ToggleGroup,
 } from "@eifi1/ui-kit";
 import type { DataTableColumn } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
+
+/* ── since 0.25 ─────────────────────────────────────────────────────────── */
 
 /**
  * 0.25: `edgeFade` on Table (the Description list & table page) and on DataTable (the
@@ -23,7 +25,6 @@ import { Example, Note } from "../lib/section";
  * specimens do not move with the language.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
 const gbp = (n: number) =>
   new Intl.NumberFormat("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
@@ -47,6 +48,7 @@ const PAYMENTS: Payment[] = [
 ];
 
 type Width = "phone" | "full";
+
 type Direction = "ltr" | "rtl";
 
 function Controls({
@@ -165,6 +167,7 @@ export function TableEdgeFadeDemo() {
         {code('data-overflow="start" | "end" | "both"')}. ColumnRoleTable&apos;s preview (0.24)
         is this prop.
       </Note>
+      <Note>Since 0.25.</Note>
     </Example>
   );
 }
@@ -242,6 +245,7 @@ export function DataTableEdgeFadeDemo() {
         scrolled clear of it. Off by default: it changes how every overflowing desktop table
         looks. The phone layout is a list of cards, which never scrolls sideways.
       </Note>
+      <Note>Since 0.25.</Note>
     </Example>
   );
 }

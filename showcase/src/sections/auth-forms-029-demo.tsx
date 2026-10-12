@@ -10,7 +10,7 @@ import type { RegisterValues } from "../../../src/auth/register-form";
 import { CompleteNameDialog } from "../../../src/auth/complete-name-dialog";
 import { authErrorCode, isAuthError } from "../../../src/auth/auth-errors";
 import { taggedEmail } from "../../../src/auth/email-tag";
-import { Example, Note, OutTable } from "../lib/section";
+import { Example, Note, OutTable, code, beat } from "../lib/section";
 
 /**
  * SIGN-IN AND SIGN-UP (0.29, docs/auth-harmonization.md §4–§5, §8): the forms every app
@@ -19,8 +19,6 @@ import { Example, Note, OutTable } from "../lib/section";
  * only. Belongs on the "Sign-in & account security" page (`auth-account`).
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 700) => new Promise((resolve) => setTimeout(resolve, ms));
 const masked = (password: string) => "•".repeat(Math.min(password.length, 12));
 
 /** What a coded refusal looks like coming out of axios — the shape the apps' clients
@@ -75,7 +73,7 @@ const PASSWORD = "correct horse";
 
 /** Pretend `/auth/login`: keksdose's three answers, mapped to the kit's. */
 async function pretendLogin(email: string, password: string): Promise<SignInAnswer> {
-  await beat();
+  await beat(700);
   // A deactivated account answers exactly like a wrong password (§2.10).
   if (password !== PASSWORD || email === "lin@example.com") throw refusal(401, "invalid_credentials");
   if (email === "ada@example.com") return { kind: "signed-in" };
@@ -146,7 +144,7 @@ export function SignInForm029Demo() {
               onCode={({ challengeToken, code: digits }) =>
                 answered(
                   `onCode({ challengeToken: "${challengeToken}", code: "${digits}" })`,
-                  beat().then((): SignInAnswer => {
+                  beat(700).then((): SignInAnswer => {
                     if (digits === "000000") throw refusal(401, "token_invalid");
                     if (digits !== "123456") throw refusal(401, "x");
                     return { kind: "signed-in" };
@@ -156,11 +154,11 @@ export function SignInForm029Demo() {
               onSetPassword={({ challengeToken, password }) =>
                 answered(
                   `onSetPassword({ challengeToken: "${challengeToken}", password: "${masked(password)}" })`,
-                  beat().then((): SignInAnswer => ({ kind: "signed-in" })),
+                  beat(700).then((): SignInAnswer => ({ kind: "signed-in" })),
                 )
               }
               onPasskey={() =>
-                answered("onPasskey()", beat().then((): SignInAnswer => ({ kind: "2fa", challengeToken: "challenge-passkey" })))
+                answered("onPasskey()", beat(700).then((): SignInAnswer => ({ kind: "2fa", challengeToken: "challenge-passkey" })))
               }
               passwordChangeContent={(extra) =>
                 extra?.encrypted ? (
@@ -207,7 +205,7 @@ export function RegisterForm029Demo() {
 
   const submit = async (values: RegisterValues) => {
     log(`onSubmit(${JSON.stringify({ ...values, password: masked(values.password) })})`);
-    await beat();
+    await beat(700);
     if (values.email === "taken@example.com") throw refusal(409, "email_taken");
     if (values.email === "closed@example.com") throw refusal(403, "registration_closed");
     log("201 — signed in, the app navigates now");
@@ -317,7 +315,7 @@ export function CompleteName029Demo() {
           lastName=""
           onSave={async (values) => {
             log(`onSave(${JSON.stringify(values)})`);
-            await beat();
+            await beat(700);
             if (values.lastName === "Fail") throw new Error("500");
           }}
           onClose={(saved) => {

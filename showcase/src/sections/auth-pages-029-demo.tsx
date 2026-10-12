@@ -17,7 +17,7 @@ import {
   formatPersonName,
 } from "@eifi1/ui-kit";
 import type { PersonName } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, beat } from "../lib/section";
 
 /**
  * 0.29.0 (docs/auth-harmonization.md §3.2, §5.3, §7): the signed-out pages besides
@@ -27,8 +27,6 @@ import { Example, Note, Row } from "../lib/section";
  * People and companies are SYNTHETIC.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 900) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 /** A coded refusal (§5.2) as an axios-style error, after a beat. */
 const refuse = (errorCode: string, ms = 900) =>
   beat(ms).then(() => Promise.reject({ response: { data: { code: errorCode } } }));
@@ -87,7 +85,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           headingAs={level}
           signInHref={HERE}
           defaultEmail="ada@example.com"
-          onSubmit={() => (answer === "throttled" ? beat().then(() => Promise.reject({ status: 429 })) : beat())}
+          onSubmit={() => (answer === "throttled" ? beat(900).then(() => Promise.reject({ status: 429 })) : beat(900))}
           describeError={() => "Too many requests from this address. Try again in an hour."}
         />
       );
@@ -100,7 +98,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           onCheck={() =>
             answer === "dead"
               ? refuse("token_invalid")
-              : beat().then(() => ({
+              : beat(900).then(() => ({
                   email: "ada@example.com",
                   notices: (
                     <AlertBanner tone="warning" size="sm">
@@ -112,7 +110,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           onSubmit={() =>
             answer === "stale"
               ? refuse("token_invalid")
-              : beat().then(() => ({
+              : beat(900).then(() => ({
                   email: "ada@example.com",
                   notices: <p className="text-xs text-muted">Your 2 personal access tokens were revoked.</p>,
                 }))
@@ -126,7 +124,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           headingAs={level}
           token="demo-token"
           signedIn={answer === "expired"}
-          onVerify={() => (answer === "ok" ? beat() : refuse("token_invalid"))}
+          onVerify={() => (answer === "ok" ? beat(900) : refuse("token_invalid"))}
           classifyError={() => (answer === "expired" ? "expired" : "invalid")}
           onResend={() => beat(600)}
           cooldown={10}
@@ -141,7 +139,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           token="demo-invite"
           signedIn={answer !== "signedOut"}
           onAccept={() =>
-            answer === "expired" ? refuse("invitation_expired") : beat().then(() => ({ name: "Example Property Ltd" }))
+            answer === "expired" ? refuse("invitation_expired") : beat(900).then(() => ({ name: "Example Property Ltd" }))
           }
           continueHref={HERE}
           signInHref={HERE}

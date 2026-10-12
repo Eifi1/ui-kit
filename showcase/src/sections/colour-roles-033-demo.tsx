@@ -8,7 +8,7 @@ import type { Rgb } from "@eifi1/ui-kit";
 // package name an app writes.
 import { KIT_CSS_VARIABLES, undeclaredCssVariables } from "@eifi1/ui-kit/testing";
 import type { UndeclaredCssVariablesOptions } from "@eifi1/ui-kit/testing";
-import { Example, Note, OutTable } from "../lib/section";
+import { Example, Note, OutTable, code } from "../lib/section";
 import { useActiveTokenSet, useTheme } from "../stores";
 
 /**
@@ -25,8 +25,6 @@ import { useActiveTokenSet, useTheme } from "../stores";
  * New code here uses the role utilities (`text-muted`, `bg-surface`, `border-subtle`),
  * never `[var(--…)]` — the page is their specimen.
  */
-
-const code = (s: string) => <code className="font-mono [overflow-wrap:anywhere]">{s}</code>;
 
 /* ── Measuring what is on screen ───────────────────────────────────────────── */
 

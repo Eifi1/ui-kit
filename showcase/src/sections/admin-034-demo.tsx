@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AdminActionConfirm, AdminActionLog, Button, ToggleGroup } from "@eifi1/ui-kit";
 import type { AdminActionLogEntry, AdminGroupNoun, AdminGroupTarget } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, beat } from "../lib/section";
 
 /**
  * GROUPS IN THE AUDIT (0.34, docs/user-admin-harmonization.md §11): Kurvenschmiede's team
@@ -12,7 +12,6 @@ import { Example, Note } from "../lib/section";
  * The people, the teams and the pretend server are SYNTHETIC; nothing is sent.
  */
 
-const beat = (ms = 500) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const day = 86_400_000;
 const ago = (days: number) => new Date(Date.now() - days * day).toISOString();
 
@@ -87,7 +86,7 @@ export function GroupActions034Demo() {
           tone="danger"
           consequence={`${plural(team.members, "member", "members")}, ${plural(team.grants, "grant", "grants")} and ${plural(team.invitations, "invitation", "invitations")} go with it.`}
           onConfirm={async () => {
-            await beat();
+            await beat(500);
             setLog((rows) => [
               {
                 id: rows.length + 1,

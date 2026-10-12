@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { CalendarHeatmap, ToggleGroup, heatmapWindowEnd } from "@eifi1/ui-kit";
 import { todayIso } from "@eifi1/ui-kit/dates";
 import type { CalendarHeatmapDatum, CalendarHeatmapProps } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
  * CALENDAR HEATMAP, 0.12: a continuous colour ramp (`colorFrom`/`colorTo`), a fill of
@@ -10,8 +10,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  *
  * Deterministic data (a seeded generator over fixed dates), as on the rest of the page.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 function seeded(seed: number) {
   let a = seed;

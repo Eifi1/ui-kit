@@ -15,8 +15,9 @@ import {
   cn,
   useDropdown,
   useDropdownSearch,
+  Tooltip,
 } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, Row, Stage } from "../lib/section";
+import { ConstList, Example, Note, Row, Stage, code } from "../lib/section";
 import { ACCOUNTS, CATEGORY_GROUPS, Current, MARKETS, SORTS, STORES } from "./dropdown-fixtures";
 
 /**
@@ -371,5 +372,86 @@ export function DropdownParts() {
         </Note>
       </Example>
     </>
+  );
+}
+
+/* ── since 0.12 ─────────────────────────────────────────────────────────── */
+
+/**
+ * `data-clips` on the dropdown lists (keksdose E8). Combobox's listbox and PickerSheet's
+ * scroller now carry the {@link CLIPS_ATTRIBUTE} marker, so a Tooltip inside a row — the
+ * `optionAdornment` badge that says what an option IS — sees a scroll container above it
+ * and portals its bubble out, instead of being cut off by the list's edge (and, in jsdom,
+ * joining the option's accessible name).
+ */
+
+export function PickerSheetClipsDemo() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [account, setAccount] = useState<string | null>(null);
+  const hits = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? ACCOUNTS.filter((a) => a.label.toLowerCase().includes(q)) : ACCOUNTS;
+  }, [query]);
+  return (
+    <Example
+      label="PickerSheet — data-clips on the scroller"
+      hint="a Tooltip in a sheet row portals out rather than being clipped"
+    >
+      <Stage>
+        <Row>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setQuery("");
+              setOpen(true);
+            }}
+          >
+            Open the sheet with tooltips
+          </Button>
+        </Row>
+      </Stage>
+      <PickerSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Account"
+        query={query}
+        onQueryChange={setQuery}
+        searchPlaceholder="Search accounts"
+        closeLabel="Close"
+      >
+        <ul role="listbox" aria-label="Accounts">
+          {hits.map((a) => (
+            <li key={a.value} role="option" aria-selected={a.value === account}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAccount(a.value);
+                  setOpen(false);
+                }}
+                className={cn(SHEET_ROW_CLASS, a.value === account && "font-medium")}
+              >
+                <span className="min-w-0 flex-1 truncate">{a.label}</span>
+                <Tooltip label={`Group: ${a.group ?? "—"} · ${a.sublabel ?? ""}`} side="start">
+                  <span className="shrink-0 rounded border border-subtle px-1 text-micro uppercase tracking-wide text-muted">
+                    {a.group}
+                  </span>
+                </Tooltip>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </PickerSheet>
+      <Current label="value" value={account === null ? "null" : `"${account}"`} />
+      <div className="mt-3">
+        <Note>
+          The sheet's scrolling body is marked {code("data-clips")}, so any Tooltip in a row —
+          including a {code("Combobox")}'s {code("optionAdornment")} when the combobox opens as a sheet on
+          a phone — portals its bubble out of the scroller instead of drawing it inside, where the
+          scroller's edge would clip it. Hover (or focus) a group badge.
+        </Note>
+      </div>
+      <Note>Since 0.12.</Note>
+    </Example>
   );
 }

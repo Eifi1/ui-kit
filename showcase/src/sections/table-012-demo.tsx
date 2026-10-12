@@ -11,7 +11,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code } from "../lib/section";
 
 /**
  * 0.12 on the Description list & table page: Table `framed`, the statement row
@@ -21,7 +21,6 @@ import { Example, Note, Row } from "../lib/section";
  * Figures are formatted once with en-GB, so the specimens do not move with the language.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
 const chf = (n: number) =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: "CHF" }).format(n);
 

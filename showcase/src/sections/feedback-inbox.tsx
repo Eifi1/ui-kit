@@ -18,7 +18,7 @@ import {
   visibleFeedbackStatuses,
 } from "@eifi1/ui-kit";
 import type { FeedbackCategory, FeedbackNoteAttachment, FeedbackStatus } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, beat } from "../lib/section";
 
 /**
  * FEEDBACK — INBOX.
@@ -100,7 +100,6 @@ const CHAIN: FeedbackStatus[] = (() => {
 /** Long enough to read the `pending` state, short enough not to feel broken. A save
  *  that resolves in the same tick renders "saving" for zero frames. */
 const BEAT_MS = 700;
-const beat = () => new Promise<void>((resolve) => setTimeout(resolve, BEAT_MS));
 
 /** A report as one of the consuming apps happens to shape it. Deliberately a plain
  *  object: nothing in the kit knows this type, which is the whole point of the
@@ -470,7 +469,7 @@ function OutcomeEditor() {
         setPending(true);
         // `.then` rather than an async handler: `onSave` returns void, and a promise
         // handed to a void callback is a promise nobody is watching for a rejection.
-        void beat().then(() => {
+        void beat(BEAT_MS).then(() => {
           setSaved(value);
           setPending(false);
           setEditing(false);
@@ -535,7 +534,7 @@ function ReplyEditor() {
         onSave={(value, file) => {
           setPending(true);
           setRejected(null);
-          void beat().then(() => {
+          void beat(BEAT_MS).then(() => {
             setSent(file ? `${value}  [+ ${file.name}]` : value);
             setPending(false);
             setSentCount((n) => n + 1);

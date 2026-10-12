@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { ContextType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation, useNavigate } from "react-router";
 import { LogOut, NotebookPen, Plus } from "lucide-react";
 import {
@@ -36,7 +36,7 @@ import type {
   ShareRole,
   WriteLock,
 } from "@eifi1/ui-kit";
-import { Example, Note, OutTable } from "../lib/section";
+import { Example, Note, OutTable, code, READOUT_WRAP, beat, NO_ROUTER } from "../lib/section";
 
 /**
  * SUBSCRIPTION, 0.33 (docs/billing-harmonization.md §12.36, §14): the way back from the
@@ -50,16 +50,7 @@ import { Example, Note, OutTable } from "../lib/section";
  * app's part, played by a timer; nothing loads Paddle.js.
  */
 
-// `anywhere`: identifiers have no space to break at, and at Extra large on a phone they
-// are wider than the note.
-const code = (s: string) => <code className="font-mono [overflow-wrap:anywhere]">{s}</code>;
-const beat = (ms = 900) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-const READOUT = "font-mono text-xs text-secondary [overflow-wrap:anywhere]";
 const PRE = "overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary";
-
-/** React Router refuses a router inside a router; resetting the location context is its
- *  documented escape hatch (billing-032-demo does the same). */
-const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
 function Sandbox({ children, start }: { children: ReactNode; start: string }) {
   return (
@@ -192,7 +183,7 @@ export function CheckoutReturn033Demo() {
             onLanded={() => note("onLanded() — refresh the plans and the locked items")}
           />
         </Sandbox>
-        <ul aria-label="Requests" className={`space-y-0.5 ${READOUT}`}>
+        <ul aria-label="Requests" className={`space-y-0.5 ${READOUT_WRAP}`}>
           {log.length === 0 ? <li>No request yet.</li> : log.map((line, i) => <li key={i}>{line}</li>)}
         </ul>
       </div>
@@ -219,7 +210,7 @@ export function PortalTargets033Demo() {
   const open = async (target: PortalTarget) => {
     setPending(target);
     setLast(`POST /billing/portal {"target":"${target}"}`);
-    await beat();
+    await beat(900);
     setPending(null);
     setLast(`POST /billing/portal {"target":"${target}"} → {url}: followed, never stored`);
   };
@@ -244,7 +235,7 @@ export function PortalTargets033Demo() {
           onAction={() => void open("payment_method")}
           actionPending={pending === "payment_method"}
         />
-        <p className={READOUT} aria-live="polite">
+        <p className={READOUT_WRAP} aria-live="polite">
           {last ?? "No request yet."}
         </p>
       </div>
@@ -303,7 +294,7 @@ export function PlanLimitToast033Demo() {
           A refusal without a figure
         </Button>
       </div>
-      <p className={`mt-3 ${READOUT}`} aria-live="polite">
+      <p className={`mt-3 ${READOUT_WRAP}`} aria-live="polite">
         {last}
       </p>
       <Note>
@@ -548,7 +539,7 @@ export function ShareCardBillingLock033Demo() {
           }}
         />
       </WriteLockProvider>
-      <p className={`mt-2 ${READOUT}`}>last callback: {last}</p>
+      <p className={`mt-2 ${READOUT_WRAP}`}>last callback: {last}</p>
       <Note>
         A lapsed plan allows what removes access and refuses what grants it (§12.13). So under billing: removing a
         grantee and withdrawing an invitation stay live; the add form is locked with the billing reason; and the

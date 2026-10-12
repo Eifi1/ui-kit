@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Command, FileText, Layers, Moon, Palette, Plus, Receipt, Table2, User } from "lucide-react";
 import { Button, CommandPalette, GlobalSearch, Input, ToggleGroup, useCommandKey } from "@eifi1/ui-kit";
 import type { CommandItem, GlobalSearchSource, SearchEntry } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, READOUT } from "../lib/section";
 
 /**
  * COMMAND PALETTE — `CommandPalette` and `useCommandKey`.
@@ -17,7 +17,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
 
 // Live readouts share one class so a reader can tell "this is state" from "this is
 // chrome" at a glance.
-const READOUT = "font-mono text-xs text-secondary";
 
 export function CommandPaletteDemo() {
   return (

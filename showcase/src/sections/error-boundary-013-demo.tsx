@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, ErrorBoundary, formatCrashReport } from "@eifi1/ui-kit";
 import type { CrashReport, CrashReportResult } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * The 0.13 crash screen on the Feedback page: the one fallback lenkbank, keksdose and
@@ -10,8 +10,6 @@ import { Example, Note, Row } from "../lib/section";
  * screen, the `actions` slot, and the chunk-load title.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-secondary";
 const CAPTION = "text-xs text-muted";
 
 /** Throws the given value during render, so the boundary above it catches. */

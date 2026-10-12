@@ -1,29 +1,83 @@
-import { useCallback, useState } from "react";
+import { useState, useCallback } from "react";
 import {
+  FeedbackNoteEditor,
+  ToggleGroup,
   FEEDBACK_CATEGORY_ORDER,
   FeedbackCategoryBadge,
   FeedbackStatusBadge,
   FeedbackStatusTransitions,
-  ToggleGroup,
   UiKitProvider,
   appendRework,
   reworkCount,
   selectableFeedbackStatuses,
   splitDescription,
   useFeedbackStatusUndo,
-  type FeedbackStatus,
-  type FeedbackStatusMutate,
-  type UiKitLabelOverrides,
 } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import type { FeedbackStatus, FeedbackStatusMutate, UiKitLabelOverrides } from "@eifi1/ui-kit";
+import { Example, Note, code } from "../../lib/section";
+import { LOOKS, LookToggle, capture } from "../feedback-compose";
+import type { Look } from "../feedback-compose";
+
+/**
+ * The Feedback inbox page: what the staff records on a report — status and category in
+ * the kit's words with Undo, the rework rounds, and the note editor's attachment buttons
+ * (refactor audit 2026-10, DOC-8). Filed by release until then (polish-025,
+ * feedback-record-027); each specimen keeps its label and says since which release.
+ */
+
+/* ── since 0.25 ─────────────────────────────────────────────────────────── */
+
+function FeedbackNoteButtons025Demo() {
+  const [look, setLook] = useState<Look>("ghost-sm");
+  const [sent, setSent] = useState<string | null>(null);
+  const [count, setCount] = useState(0);
+  return (
+    <Example
+      label="FeedbackNoteEditor — the attachment buttons' look"
+      hint="buttonVariant / buttonSize in the attachment config"
+    >
+      <div className="flex flex-col gap-3">
+        <LookToggle value={look} onChange={setLook} />
+        <FeedbackNoteEditor
+          initial=""
+          pending={false}
+          resetKey={count}
+          onSave={(value, file) => {
+            setSent(file ? `${value}  [+ ${file.name}]` : value);
+            setCount((n) => n + 1);
+          }}
+          onCancel={() => setSent(null)}
+          saveLabel="Send reply"
+          cancelLabel="Discard"
+          attachment={{
+            labels: { attachmentAdd: "Attach image", attachmentRemove: "Remove" },
+            onCaptureScreenshot: capture,
+            buttonVariant: LOOKS[look].variant,
+            buttonSize: LOOKS[look].size,
+          }}
+        />
+        <p className="text-xs text-muted">
+          Last sent: <span className="font-mono text-secondary">{sent ?? "— nothing yet —"}</span>
+        </p>
+        <Note>
+          The note editor sits inline in a triage panel and ends in a ghost Discard and a brand
+          Send; two bordered full-size attachment buttons above them read as a second form. The
+          {" "}{code("attachment")} config ({code("FeedbackNoteAttachment")}) now carries the
+          field&apos;s {code("buttonVariant")} / {code("buttonSize")}. Left out, nothing changes.
+        </Note>
+      </div>
+      <Note>Since 0.25.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.27 ─────────────────────────────────────────────────────────── */
 
 /**
  * 0.27's feedback foundation (docs/feedback-harmonization.md §5): the status and category
  * words are the kit's, a status change offers Undo, and the body's rework rounds are read
  * and written by the kit. Synthetic data only.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 // The de-CH canon for the two namespaces, as the i18n round will ship it — here only to
 // show the provider taking over; an app gets it from the kit's catalogue.
@@ -67,7 +121,7 @@ function Pills() {
   );
 }
 
-export function FeedbackRecord027Demo() {
+function FeedbackRecord027Demo() {
   const [lang, setLang] = useState<"en" | "de-CH">("en");
   const body =
     appendRework(
@@ -103,6 +157,7 @@ export function FeedbackRecord027Demo() {
           app drops its {code("STATUS_LABEL")} map. {code("useFeedbackStatusUndo(update.mutate)")} wraps one status
           PATCH in the toast trio; the table, the row detail and the phone swipes all go through it.
         </Note>
+        <Note>Since 0.27.</Note>
       </Example>
       <Example label="The body's rework rounds" hint="appendRework writes them, reworkCount counts them, splitDescription keeps them out of the editor">
         <div className="grid gap-2 text-xs sm:grid-cols-2">
@@ -119,7 +174,20 @@ export function FeedbackRecord027Demo() {
             </div>
           </div>
         </div>
+        <Note>Since 0.27.</Note>
       </Example>
+    </>
+  );
+}
+
+/* ── the page's section ───────────────────────────────────────────────────── */
+
+/** What the staff records, then the note editor's buttons. */
+export function FeedbackRecordDemo() {
+  return (
+    <>
+      <FeedbackRecord027Demo />
+      <FeedbackNoteButtons025Demo />
     </>
   );
 }

@@ -354,6 +354,7 @@ group overview and the search's component results read it) and a `Body` that ren
 sections, each a `lazySection` fetched as its own chunk. A page holds one component family,
 about a dozen specimens, and a group about ten pages; the comment above `GROUPS` says why.
 A split page leaves its old slug in `RETIRED_SLUGS`.
+A release adds to the component's family file, not a new version file: no new `*-0NN-demo.tsx` (the specimen says "Since 0.NN." in a `Note`; `demo-files.test.ts` lets their count only fall).
 
 **Adding a component to the kit means adding it to a page:** a section on its family's page,
 and its name in that page's `components[]`. That is the only thing keeping the showcase

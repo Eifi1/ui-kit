@@ -15,15 +15,13 @@ import {
   isinCheckDigit,
 } from "@eifi1/ui-kit";
 import type { IbanKind } from "@eifi1/ui-kit";
-import { Example, Note, OutTable } from "../lib/section";
+import { Example, Note, OutTable, code } from "../lib/section";
 
 /**
  * Account numbers (0.22): IbanInput and the IBAN/ISIN helpers (kastlan, keksdose) and
  * PhoneInput (kastlan). Every sample is synthetic — zeros with a single 1, the check
  * digits computed by the kit's own helpers — so nothing here is anybody's account.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const sampleIban = (country: string, bban: string) => `${country}${ibanCheckDigits(country, bban)}${bban}`;
 const PLAIN = sampleIban("CH", `${"0".repeat(16)}1`);

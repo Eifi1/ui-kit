@@ -84,13 +84,13 @@ const FormsRhf = lazySection(() => import("./sections/forms-rhf"), "FormsRhf");
 const Choices = lazySection(() => import("./sections/choices"), "Choices");
 const TimeInputDemo = lazySection(() => import("./sections/number-time-demo"), "TimeInputDemo");
 const FileInputs = lazySection(() => import("./sections/file-inputs"), "FileInputs");
-const AutocompleteDemo = lazySection(() => import("./sections/autocomplete-demo"), "AutocompleteDemo");
+const ComboboxDemo = lazySection(() => import("./sections/combobox"), "ComboboxDemo");
 const FieldAnatomyDemo = lazySection(() => import("./sections/field-anatomy-demo"), "FieldAnatomyDemo");
 const SelectionDemo = lazySection(() => import("./sections/selection-demo"), "SelectionDemo");
 const LayoutDemo = lazySection(() => import("./sections/layout-demo"), "LayoutDemo");
 const MeasuredGridDemo = lazySection(() => import("./sections/measured-grid-demo"), "MeasuredGridDemo");
 const TableTextDemo = lazySection(() => import("./sections/table-text-demo"), "TableTextDemo");
-const DangerConfirmDemo = lazySection(() => import("./sections/numbers-more-demo"), "DangerConfirmDemo");
+const ConfirmDemo = lazySection(() => import("./sections/confirm"), "ConfirmDemo");
 const NumberStepsDemo = lazySection(() => import("./sections/numbers-more-demo"), "NumberStepsDemo");
 const SignatureViewDemo = lazySection(() => import("./sections/numbers-more-demo"), "SignatureViewDemo");
 const WeekStartDemo = lazySection(() => import("./sections/numbers-more-demo"), "WeekStartDemo");
@@ -99,14 +99,13 @@ const StatsDemo = lazySection(() => import("./sections/stats-demo"), "StatsDemo"
 const SeriesChartDemo = lazySection(() => import("./sections/series-chart-demo"), "SeriesChartDemo");
 const FieldSync = lazySection(() => import("./sections/field-sync"), "FieldSync");
 const Numbers = lazySection(() => import("./sections/numbers"), "Numbers");
-const Comboboxes = lazySection(() => import("./sections/comboboxes"), "Comboboxes");
 const EntityPickers = lazySection(() => import("./sections/entity-pickers"), "EntityPickers");
 const DropdownParts = lazySection(() => import("./sections/dropdown-parts"), "DropdownParts");
 const Dialogs = lazySection(() => import("./sections/overlays"), "Dialogs");
 const PopoversMenusTooltips = lazySection(() => import("./sections/overlays"), "PopoversMenusTooltips");
 const Dates = lazySection(() => import("./sections/dates"), "Dates");
 const MonthPickerDemo = lazySection(() => import("./sections/month-picker-demo"), "MonthPickerDemo");
-const DataTableSection = lazySection(() => import("./sections/data-table"), "DataTableSection");
+const DataTableDemo = lazySection(() => import("./sections/data-table"), "DataTableDemo");
 const DataTableServerSection = lazySection(() => import("./sections/data-table-server"), "DataTableServerSection");
 const DataTablePartsSection = lazySection(() => import("./sections/data-table-parts"), "DataTablePartsSection");
 const Charts = lazySection(() => import("./sections/charts"), "Charts");
@@ -129,8 +128,7 @@ const FeedbackProgress = lazySection(() => import("./sections/feedback-progress"
 const DescriptionTable = lazySection(() => import("./sections/description-table"), "DescriptionTable");
 const TreeViewDemo = lazySection(() => import("./sections/tree-view-demo"), "TreeViewDemo");
 const ConfirmFloating = lazySection(() => import("./sections/confirm-floating"), "ConfirmFloating");
-const TypedConfirm018Demo = lazySection(() => import("./sections/confirm-018-demo"), "TypedConfirm018Demo");
-const Reauth018Demo = lazySection(() => import("./sections/confirm-018-demo"), "Reauth018Demo");
+const TypedConfirmReauthDemo = lazySection(() => import("./sections/confirm"), "TypedConfirmReauthDemo");
 const ClipboardTiming = lazySection(() => import("./sections/clipboard-timing"), "ClipboardTiming");
 const SeriesChartMarks = lazySection(() => import("./sections/series-chart-marks"), "SeriesChartMarks");
 const Localisation = lazySection(() => import("./sections/localisation"), "Localisation");
@@ -148,9 +146,7 @@ const IntegerTicksDemo = lazySection(() => import("./sections/series-chart-ticks
 const KeyboardPointsDemo = lazySection(() => import("./sections/series-chart-ticks-keys"), "KeyboardPointsDemo");
 const RowBudgetDemo = lazySection(() => import("./sections/series-chart-thin-demo"), "RowBudgetDemo");
 const DialogOpenDemo = lazySection(() => import("./sections/dialog-open-demo"), "DialogOpenDemo");
-const TooltipAutoPortal = lazySection(() => import("./sections/tooltip-auto-portal-demo"), "TooltipAutoPortal");
-const TooltipLazyDemo = lazySection(() => import("./sections/tooltip-013-demo"), "TooltipLazyDemo");
-const TooltipClampDemo = lazySection(() => import("./sections/tooltip-014-demo"), "TooltipClampDemo");
+const TooltipDemo = lazySection(() => import("./sections/tooltip"), "TooltipDemo");
 const FloatingActions = lazySection(() => import("./sections/floating-actions-demo"), "FloatingActions");
 const CalendarHeatmapDemo = lazySection(() => import("./sections/calendar-heatmap-demo"), "CalendarHeatmapDemo");
 const MonthViewDemo = lazySection(() => import("./sections/month-view-demo"), "MonthViewDemo");
@@ -165,49 +161,43 @@ const FieldDemo = lazySection(() => import("./sections/field-demo"), "FieldDemo"
 const RhfWizardDemo = lazySection(() => import("./sections/rhf-wizard-demo"), "RhfWizardDemo");
 const ListDragDemo = lazySection(() => import("./sections/list-drag-demo"), "ListDragDemo");
 const List016Demo = lazySection(() => import("./sections/list-016-demo"), "List016Demo");
-const AlertBannerBlockDemo = lazySection(() => import("./sections/props-011-demo"), "AlertBannerBlockDemo");
-const BulkActionBarPanelDemo = lazySection(() => import("./sections/props-011-demo"), "BulkActionBarPanelDemo");
-const ClipsMarkerDemo = lazySection(() => import("./sections/props-011-demo"), "ClipsMarkerDemo");
-const EmptyStateSmallDemo = lazySection(() => import("./sections/props-011-demo"), "EmptyStateSmallDemo");
-const IconButtonDisabledReasonDemo = lazySection(() => import("./sections/props-011-demo"), "IconButtonDisabledReasonDemo");
-const MenuItemBadgeDemo = lazySection(() => import("./sections/props-011-demo"), "MenuItemBadgeDemo");
-const MinBarLengthDemo = lazySection(() => import("./sections/props-011-demo"), "MinBarLengthDemo");
-const SectionLabelMdDemo = lazySection(() => import("./sections/props-011-demo"), "SectionLabelMdDemo");
+const AlertBannerBlockDemo = lazySection(() => import("./sections/feedback-more-demo"), "AlertBannerBlockDemo");
+const BulkActionBarPanelDemo = lazySection(() => import("./sections/lists-menus"), "BulkActionBarPanelDemo");
+const EmptyStateSmallDemo = lazySection(() => import("./sections/feedback-more-demo"), "EmptyStateSmallDemo");
+const IconButtonDisabledReasonDemo = lazySection(() => import("./sections/buttons-more-demo"), "IconButtonDisabledReasonDemo");
+const DisabledReasonLineDemo = lazySection(() => import("./sections/buttons-more-demo"), "DisabledReasonLineDemo");
+const MenuItemBadgeDemo = lazySection(() => import("./sections/lists-menus"), "MenuItemBadgeDemo");
+const MinBarLengthDemo = lazySection(() => import("./sections/series-chart-marks"), "MinBarLengthDemo");
+const SectionLabelMdDemo = lazySection(() => import("./sections/page-structure"), "SectionLabelMdDemo");
 const Layout013Demo = lazySection(() => import("./sections/layout-013-demo"), "Layout013Demo");
 const PageHeader014Demo = lazySection(() => import("./sections/page-header-014-demo"), "PageHeader014Demo");
-const StatusDotHuesDemo = lazySection(() => import("./sections/props-011-demo"), "StatusDotHuesDemo");
-const TableHeaderValignDemo = lazySection(() => import("./sections/props-011-demo"), "TableHeaderValignDemo");
+const StatusDotHuesDemo = lazySection(() => import("./sections/page-structure"), "StatusDotHuesDemo");
+const TableHeaderValignDemo = lazySection(() => import("./sections/description-table-more"), "TableHeaderValignDemo");
 const LinksDemo = lazySection(() => import("./sections/links-demo"), "LinksDemo");
 const Links013Demo = lazySection(() => import("./sections/links-013-demo"), "Links013Demo");
 const Buttons012 = lazySection(() => import("./sections/buttons-012-demo"), "Buttons012");
 const Surfaces016Demo = lazySection(() => import("./sections/surfaces-016-demo"), "Surfaces016Demo");
 const Surfaces017Demo = lazySection(() => import("./sections/surfaces-017-demo"), "Surfaces017Demo");
-const FormLayoutDemo = lazySection(() => import("./sections/forms-012-demo"), "FormLayoutDemo");
-const RhfFieldsDemo = lazySection(() => import("./sections/forms-012-demo"), "RhfFieldsDemo");
+const LineItemsDemo = lazySection(() => import("./sections/line-items"), "LineItemsDemo");
+const RhfFieldsDemo = lazySection(() => import("./sections/forms-rhf"), "RhfFieldsDemo");
 const Forms013Demo = lazySection(() => import("./sections/forms-013-demo"), "Forms013Demo");
 const Forms0142Demo = lazySection(() => import("./sections/forms-0142-demo"), "Forms0142Demo");
-const LineItems016Demo = lazySection(() => import("./sections/line-items-016-demo"), "LineItems016Demo");
-const LineItemsJournal017Demo = lazySection(() => import("./sections/line-items-017-demo"), "LineItemsJournal017Demo");
-const LineItemsSplit017Demo = lazySection(() => import("./sections/line-items-017-demo"), "LineItemsSplit017Demo");
 const WizardStepHooksDemo = lazySection(() => import("./sections/wizard-012-demo"), "WizardStepHooksDemo");
 const DescriptionPlaceholderDemo = lazySection(() => import("./sections/table-012-demo"), "DescriptionPlaceholderDemo");
 const TableVariantsDemo = lazySection(() => import("./sections/table-012-demo"), "TableVariantsDemo");
 const TableStackDemo = lazySection(() => import("./sections/table-012-demo"), "TableStackDemo");
-const DataTableActionsDemo = lazySection(() => import("./sections/data-table-012-demo"), "DataTableActionsDemo");
-const DataTableUrlFiltersDemo = lazySection(() => import("./sections/data-table-012-demo"), "DataTableUrlFiltersDemo");
-const DataTableTotalsDemo = lazySection(() => import("./sections/data-table-017-demo"), "DataTableTotalsDemo");
+const DataTableUrlFiltersDemo = lazySection(() => import("./sections/data-table-server"), "DataTableUrlFiltersDemo");
 const UrlStateDemo = lazySection(() => import("./sections/url-state-demo"), "UrlStateDemo");
 const FormattingDemo = lazySection(() => import("./sections/formatting-demo"), "FormattingDemo");
 const Signals016Demo = lazySection(() => import("./sections/signals-016-demo"), "Signals016Demo");
 const Signals017Demo = lazySection(() => import("./sections/signals-017-demo"), "Signals017Demo");
-const FormActions017Demo = lazySection(() => import("./sections/signals-017-demo"), "FormActions017Demo");
+const FormActionsDemo = lazySection(() => import("./sections/form-actions"), "FormActionsDemo");
 const WriteLock018Demo = lazySection(() => import("./sections/write-lock-018-demo"), "WriteLock018Demo");
-const FormActions016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "FormActions016Demo");
-const LoadingState016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "LoadingState016Demo");
-const Media016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Media016Demo");
-const Numbers016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Numbers016Demo");
-const Files016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Files016Demo");
-const Chips016Demo = lazySection(() => import("./sections/harmonise-016-demo"), "Chips016Demo");
+const LoadingState016Demo = lazySection(() => import("./sections/feedback-more-demo"), "LoadingState016Demo");
+const Media016Demo = lazySection(() => import("./sections/media-demo"), "Media016Demo");
+const Numbers016Demo = lazySection(() => import("./sections/numbers"), "Numbers016Demo");
+const Files016Demo = lazySection(() => import("./sections/file-inputs"), "Files016Demo");
+const Chips016Demo = lazySection(() => import("./sections/chips-toggles"), "Chips016Demo");
 const ChipSnapEdges018Demo = lazySection(() => import("./sections/chip-toast-018-demo"), "ChipSnapEdges018Demo");
 const ToastMiddleClick018Demo = lazySection(() => import("./sections/chip-toast-018-demo"), "ToastMiddleClick018Demo");
 const ServerWake018Demo = lazySection(() => import("./sections/server-wake-018-demo"), "ServerWake018Demo");
@@ -220,23 +210,17 @@ const HeatmapRampDemo = lazySection(() => import("./sections/heatmap-012-demo"),
 const MonthStepperDemo = lazySection(() => import("./sections/calendars-012-demo"), "MonthStepperDemo");
 const Display013Demo = lazySection(() => import("./sections/display-013-demo"), "Display013Demo");
 const OutsideDaysDemo = lazySection(() => import("./sections/calendars-012-demo"), "OutsideDaysDemo");
-const ComboboxClipsDemo = lazySection(() => import("./sections/clips-012-demo"), "ComboboxClipsDemo");
-const PickerSheetClipsDemo = lazySection(() => import("./sections/clips-012-demo"), "PickerSheetClipsDemo");
+const PickerSheetClipsDemo = lazySection(() => import("./sections/dropdown-parts"), "PickerSheetClipsDemo");
 const MediaDemo = lazySection(() => import("./sections/media-demo"), "MediaDemo");
 const AuthAccountDemo = lazySection(() => import("./sections/auth-account-demo"), "AuthAccountDemo");
-const FeedbackThreadDemo = lazySection(() => import("./sections/feedback-thread-demo"), "FeedbackThreadDemo");
+const FeedbackComposerDemo = lazySection(() => import("./sections/feedback-inbox/composer"), "FeedbackComposerDemo");
 const ShellBrandDemo = lazySection(() => import("./sections/shell-012-demo"), "ShellBrandDemo");
-const AccountHeaderLinkDemo = lazySection(() => import("./sections/shell-feedback-013-demo"), "AccountHeaderLinkDemo");
-const ComposerCannedRepliesDemo = lazySection(() => import("./sections/shell-feedback-013-demo"), "ComposerCannedRepliesDemo");
-const Feedback014Demo = lazySection(() => import("./sections/feedback-014-demo"), "Feedback014Demo");
-const FeedbackAttachment016Demo = lazySection(() => import("./sections/feedback-016-demo"), "FeedbackAttachment016Demo");
-const Passkeys016Demo = lazySection(() => import("./sections/feedback-016-demo"), "Passkeys016Demo");
-const Passkeys018Demo = lazySection(() => import("./sections/account-018-demo"), "Passkeys018Demo");
+const AccountHeaderLinkDemo = lazySection(() => import("./sections/shell"), "AccountHeaderLinkDemo");
+const FeedbackAttachment016Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackAttachment016Demo");
+const PasskeysDemo = lazySection(() => import("./sections/passkeys"), "PasskeysDemo");
 const AccountRoster018Demo = lazySection(() => import("./sections/account-018-demo"), "AccountRoster018Demo");
 const Share018Demo = lazySection(() => import("./sections/share-018-demo"), "Share018Demo");
-const Legal019Demo = lazySection(() => import("./sections/legal-019-demo"), "Legal019Demo");
-const Legal028Demo = lazySection(() => import("./sections/legal-028-demo"), "Legal028Demo");
-const LegalAccept028Demo = lazySection(() => import("./sections/legal-028-demo"), "LegalAccept028Demo");
+const LegalDemo = lazySection(() => import("./sections/legal"), "LegalDemo");
 const AuthForms029Demo = lazySection(() => import("./sections/auth-forms-029-demo"), "AuthForms029Demo");
 const AuthPages029Demo = lazySection(() => import("./sections/auth-pages-029-demo"), "AuthPages029Demo");
 const EmailVerificationBanner029Demo = lazySection(
@@ -262,71 +246,56 @@ const PublicHeaderStates031Demo = lazySection(() => import("./sections/landing-0
 const DemoStart031Demo = lazySection(() => import("./sections/landing-031-demo"), "DemoStart031Demo");
 const DemoBanner031Demo = lazySection(() => import("./sections/landing-031-demo"), "DemoBanner031Demo");
 const DemoEnded031Demo = lazySection(() => import("./sections/landing-031-demo"), "DemoEnded031Demo");
-const TableRefs016Demo = lazySection(() => import("./sections/feedback-016-demo"), "TableRefs016Demo");
+const TableRefs016Demo = lazySection(() => import("./sections/description-table-more"), "TableRefs016Demo");
 const Rhf022Demo = lazySection(() => import("./sections/rhf-022-demo"), "Rhf022Demo");
 const Country022Demo = lazySection(() => import("./sections/country-022-demo"), "Country022Demo");
-const Guards022Demo = lazySection(() => import("./sections/guards-022-demo"), "Guards022Demo");
-const FileLock022Demo = lazySection(() => import("./sections/guards-022-demo"), "FileLock022Demo");
-const InlineEdit022Demo = lazySection(() => import("./sections/guards-022-demo"), "InlineEdit022Demo");
+const Guards022Demo = lazySection(() => import("./sections/signature-password-demo"), "Guards022Demo");
+const FileLock022Demo = lazySection(() => import("./sections/file-inputs"), "FileLock022Demo");
+const InlineEdit022Demo = lazySection(() => import("./sections/measured-grid-demo"), "InlineEdit022Demo");
 const OneTimeCode022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCode022Demo");
 const OneTimeCodeUnlabelled022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCodeUnlabelled022Demo");
 const PasswordStrength022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "PasswordStrength022Demo");
 const LanguageSelect022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "LanguageSelect022Demo");
 const TileRadioGroup022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "TileRadioGroup022Demo");
 const AccountNumbers022Demo = lazySection(() => import("./sections/account-numbers-022-demo"), "AccountNumbers022Demo");
-const ToggleGroup022Demo = lazySection(() => import("./sections/pickers-022-demo"), "ToggleGroup022Demo");
-const Choices022Demo = lazySection(() => import("./sections/pickers-022-demo"), "Choices022Demo");
-const Dates022Demo = lazySection(() => import("./sections/pickers-022-demo"), "Dates022Demo");
-const Month022Demo = lazySection(() => import("./sections/pickers-022-demo"), "Month022Demo");
+const ToggleGroup022Demo = lazySection(() => import("./sections/chips-toggles"), "ToggleGroup022Demo");
+const Choices022Demo = lazySection(() => import("./sections/choices"), "Choices022Demo");
+const Dates022Demo = lazySection(() => import("./sections/dates"), "Dates022Demo");
+const Month022Demo = lazySection(() => import("./sections/month-picker-demo"), "Month022Demo");
 const Numbers022Demo = lazySection(() => import("./sections/numbers-022-demo"), "Numbers022Demo");
-const DataTableMobileSort022Demo = lazySection(() => import("./sections/misc-022-demo"), "DataTableMobileSort022Demo");
-const FormActionsShortcut022Demo = lazySection(() => import("./sections/misc-022-demo"), "FormActionsShortcut022Demo");
-const LineItemsRowProps022Demo = lazySection(() => import("./sections/misc-022-demo"), "LineItemsRowProps022Demo");
-const FeedbackAttachmentRefs022Demo = lazySection(() => import("./sections/misc-022-demo"), "FeedbackAttachmentRefs022Demo");
-const ChatComposer022Demo = lazySection(() => import("./sections/misc-022-demo"), "ChatComposer022Demo");
-const TourStaleSpotlight022Demo = lazySection(() => import("./sections/misc-022-demo"), "TourStaleSpotlight022Demo");
-const Fields022Demo = lazySection(() => import("./sections/fields-022-demo"), "Fields022Demo");
-const PickerHints022Demo = lazySection(() => import("./sections/fields-022-demo"), "PickerHints022Demo");
-const CheckboxGroup022Demo = lazySection(() => import("./sections/fields-022-demo"), "CheckboxGroup022Demo");
-const CommitControls022Demo = lazySection(() => import("./sections/fields-022-demo"), "CommitControls022Demo");
+const FeedbackAttachmentRefs022Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackAttachmentRefs022Demo");
+const TourStaleSpotlight022Demo = lazySection(() => import("./sections/tour"), "TourStaleSpotlight022Demo");
+const Fields022Demo = lazySection(() => import("./sections/fields"), "Fields022Demo");
+const CheckboxGroup022Demo = lazySection(() => import("./sections/choices"), "CheckboxGroup022Demo");
+const CommitControls022Demo = lazySection(() => import("./sections/forms-rhf"), "CommitControls022Demo");
 // 0.23.0: the apps' 0.22 adoption round.
 const TopBarMenuHeadingsDemo = lazySection(() => import("./sections/topbar-023-demo"), "TopBarMenuHeadingsDemo");
-const FormActions023Demo = lazySection(() => import("./sections/confirm-023-demo"), "FormActions023Demo");
-const DangerConfirm023Demo = lazySection(() => import("./sections/confirm-023-demo"), "DangerConfirm023Demo");
 const Rhf023Demo = lazySection(() => import("./sections/fields-023-demo"), "Rhf023Demo");
 const CountryClear023Demo = lazySection(() => import("./sections/fields-023-demo"), "CountryClear023Demo");
 const AmountClass023Demo = lazySection(() => import("./sections/fields-023-demo"), "AmountClass023Demo");
-const FeedbackAttachment023Demo = lazySection(() => import("./sections/feedback-023-demo"), "FeedbackAttachment023Demo");
-const ChatComposerCount023Demo = lazySection(() => import("./sections/feedback-023-demo"), "ChatComposerCount023Demo");
+const FeedbackAttachment023Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackAttachment023Demo");
 const FieldStrip023Demo = lazySection(() => import("./sections/strip-023-demo"), "FieldStrip023Demo");
 const TileLock023Demo = lazySection(() => import("./sections/strip-023-demo"), "TileLock023Demo");
-const ComboboxFamilyLock023Demo = lazySection(() => import("./sections/combobox-023-demo"), "ComboboxFamilyLock023Demo");
-const InlineCreateRow023Demo = lazySection(() => import("./sections/combobox-023-demo"), "InlineCreateRow023Demo");
-const StepperNavFinishLock023Demo = lazySection(() => import("./sections/combobox-023-demo"), "StepperNavFinishLock023Demo");
+const EntityComboboxLockDemo = lazySection(() => import("./sections/combobox"), "EntityComboboxLockDemo");
+const StepperNavFinishLock023Demo = lazySection(() => import("./sections/wizard"), "StepperNavFinishLock023Demo");
 const DateRange023Demo = lazySection(() => import("./sections/date-range-023-demo"), "DateRange023Demo");
-const ColumnMapper023Demo = lazySection(() => import("./sections/column-mapper-023-demo"), "ColumnMapper023Demo");
+const ColumnMapperDemo = lazySection(() => import("./sections/column-mapper"), "ColumnMapperDemo");
 // 0.24.0: the apps' 0.23 adoption round.
 const Textarea024Demo = lazySection(() => import("./sections/textarea-024-demo"), "Textarea024Demo");
-const DangerConfirm024Demo = lazySection(() => import("./sections/confirm-024-demo"), "DangerConfirm024Demo");
-const ChatComposerSlot024Demo = lazySection(() => import("./sections/feedback-024-demo"), "ChatComposerSlot024Demo");
-const ColumnMapper024Demo = lazySection(() => import("./sections/column-mapper-024-demo"), "ColumnMapper024Demo");
-const RhfInlineEntity024Demo = lazySection(() => import("./sections/combobox-024-demo"), "RhfInlineEntity024Demo");
-const AutocompleteHint024Demo = lazySection(() => import("./sections/combobox-024-demo"), "AutocompleteHint024Demo");
+const RhfInlineEntity024Demo = lazySection(() => import("./sections/combobox"), "RhfInlineEntity024Demo");
 // 0.25.0: keksdose's feedback run 72 and the polish list.
 const SearchParams025Demo = lazySection(() => import("./sections/search-params-025-demo"), "SearchParams025Demo");
 const TranslationReview025Demo = lazySection(() => import("./sections/translation-review-025-demo"), "TranslationReview025Demo");
-const TextareaEdge025Demo = lazySection(() => import("./sections/polish-025-demo"), "TextareaEdge025Demo");
-const ColumnRoleRequired025Demo = lazySection(() => import("./sections/polish-025-demo"), "ColumnRoleRequired025Demo");
-const FeedbackDialogButtons025Demo = lazySection(() => import("./sections/polish-025-demo"), "FeedbackDialogButtons025Demo");
-const FeedbackNoteButtons025Demo = lazySection(() => import("./sections/polish-025-demo"), "FeedbackNoteButtons025Demo");
-const TableEdgeFadeDemo = lazySection(() => import("./sections/table-fade-025-demo"), "TableEdgeFadeDemo");
-const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-fade-025-demo"), "DataTableEdgeFadeDemo");
-const TooltipTapDemo = lazySection(() => import("./sections/tooltip-025-demo"), "TooltipTapDemo");
+const TextareaEdge025Demo = lazySection(() => import("./sections/fields"), "TextareaEdge025Demo");
+const FeedbackDialogButtons025Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackDialogButtons025Demo");
+const FeedbackRecordDemo = lazySection(() => import("./sections/feedback-inbox/record"), "FeedbackRecordDemo");
+const TableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fade"), "TableEdgeFadeDemo");
+const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fade"), "DataTableEdgeFadeDemo");
 // 0.27.0: the feedback harmonization.
-const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-submit-027-demo"), "FeedbackSubmit027Demo");
-const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-table-027-demo"), "FeedbackTable027Demo");
-const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-detail-027-demo"), "FeedbackDetail027Demo");
-const FeedbackRecord027Demo = lazySection(() => import("./sections/feedback-record-027-demo"), "FeedbackRecord027Demo");
+const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackSubmit027Demo");
+const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackTable027Demo");
+const FeedbackSubjectDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackSubjectDemo");
+const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-inbox/detail"), "FeedbackDetail027Demo");
 // 0.32.0: text size and contrast, and billing.
 const TextSize032Demo = lazySection(() => import("./sections/text-size-032-demo"), "TextSize032Demo");
 const TextSizeComponents032Demo = lazySection(
@@ -510,7 +479,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Every string the kit renders, as one typed tree — and the provider that hands a translation to every component at once.",
         icon: Languages,
-        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDeCh", "KIT_LANGUAGES", "resolveLanguage", "loadUiKitLabels", "kitLabelStrings", "TranslationReviewPanel", "ReviewStatusChip", "TranslationExportButton"],
+        components: ["UiKitProvider", "UiKitLabels", "TranslationProgress", "TranslationReviewEditor", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDeCh", "KIT_LANGUAGES", "resolveLanguage", "loadUiKitLabels", "kitLabelStrings", "TranslationReviewPanel", "ReviewStatusChip", "TranslationExportButton"],
         Body: () => (
           <>
             <Localisation />
@@ -572,21 +541,14 @@ export const GROUPS: ShowcaseGroup[] = [
             <FormsRhf />
             <RhfWizardDemo />
             <RhfFieldsDemo />
-            <FormLayoutDemo />
+            <LineItemsDemo />
             <Forms013Demo />
             <Forms0142Demo />
-            <LineItems016Demo />
-            <LineItemsJournal017Demo />
-            <LineItemsSplit017Demo />
-            <FormActions016Demo />
-            <FormActions017Demo />
+            <FormActionsDemo />
             <WriteLock018Demo />
             <Rhf022Demo />
-            <FormActionsShortcut022Demo />
-            <LineItemsRowProps022Demo />
             <CommitControls022Demo />
             <Rhf023Demo />
-            <FormActions023Demo />
             <RhfInlineEntity024Demo />
           </>
         ),
@@ -724,11 +686,7 @@ export const GROUPS: ShowcaseGroup[] = [
         components: ["Combobox", "Autocomplete"],
         Body: () => (
           <>
-            <Comboboxes />
-            <AutocompleteDemo />
-            <ComboboxClipsDemo />
-            <PickerHints022Demo />
-            <AutocompleteHint024Demo />
+            <ComboboxDemo />
           </>
         ),
       },
@@ -745,8 +703,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <EntityPickers />
             <Country022Demo />
             <CountryClear023Demo />
-            <ComboboxFamilyLock023Demo />
-            <InlineCreateRow023Demo />
+            <EntityComboboxLockDemo />
           </>
         ),
       },
@@ -778,9 +735,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <MeasuredGridDemo />
             <TableTextDemo />
             <InlineEdit022Demo />
-            <ColumnMapper023Demo />
-            <ColumnMapper024Demo />
-            <ColumnRoleRequired025Demo />
+            <ColumnMapperDemo />
           </>
         ),
       },
@@ -806,10 +761,8 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <SignaturePasswordDemo />
             <SignatureViewDemo />
-            <DangerConfirmDemo />
+            <ConfirmDemo />
             <Guards022Demo />
-            <DangerConfirm023Demo />
-            <DangerConfirm024Demo />
           </>
         ),
       },
@@ -847,13 +800,14 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Buttons, button groups, icon buttons, cards, spinners and avatars — the pieces everything else is built from.",
         icon: Blocks,
-        components: ["Button", "ButtonGroup", "ButtonGroupLink", "IconButton", "Card", "Spinner", "UserAvatar", "buttonClasses"],
+        components: ["Button", "ButtonGroup", "ButtonGroupLink", "IconButton", "Card", "Spinner", "UserAvatar", "buttonClasses", "DisabledReasonLine"],
         Body: () => (
           <>
             <ButtonsSurfaces />
             <ButtonLabelsTones />
             <ButtonsMore />
             <IconButtonDisabledReasonDemo />
+            <DisabledReasonLineDemo />
             <Buttons012 />
             <Surfaces016Demo />
             <Surfaces017Demo />
@@ -965,10 +919,7 @@ export const GROUPS: ShowcaseGroup[] = [
         components: ["DataTable", "BooleanMark", "booleanColumn", "CopyButton"],
         Body: () => (
           <>
-            <DataTableSection />
-            <DataTableActionsDemo />
-            <DataTableTotalsDemo />
-            <DataTableMobileSort022Demo />
+            <DataTableDemo />
             <DataTableEdgeFadeDemo />
           </>
         ),
@@ -1152,8 +1103,7 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: () => (
           <>
             <ConfirmFloating />
-            <TypedConfirm018Demo />
-            <Reauth018Demo />
+            <TypedConfirmReauthDemo />
           </>
         ),
       },
@@ -1178,11 +1128,7 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: () => (
           <>
             <PopoversMenusTooltips />
-            <TooltipAutoPortal />
-            <TooltipLazyDemo />
-            <TooltipClampDemo />
-            <TooltipTapDemo />
-            <ClipsMarkerDemo />
+            <TooltipDemo />
           </>
         ),
       },
@@ -1335,17 +1281,14 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
-        components: ["AuthLayout", "TwoFactorSetting", "QrCode", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput", "SignInForm", "RegisterForm", "CompleteNameDialog", "taggedEmail", "isAuthError", "ForgotPasswordForm", "ResetPasswordForm", "VerifyEmailStatus", "EmailVerificationBanner", "NotFoundPage", "AcceptInvitation", "formatPersonName", "personInitials", "EmailChangeSetting", "SessionsSetting", "DeleteAccountSetting", "DataExportSetting", "isRateLimited", "retryAfterSeconds"],
+        components: ["AuthLayout", "TwoFactorSetting", "QrCode", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "SharePanel", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput", "SignInForm", "RegisterForm", "CompleteNameDialog", "taggedEmail", "isAuthError", "ForgotPasswordForm", "ResetPasswordForm", "VerifyEmailStatus", "EmailVerificationBanner", "NotFoundPage", "AcceptInvitation", "formatPersonName", "personInitials", "EmailChangeSetting", "SessionsSetting", "DeleteAccountSetting", "DataExportSetting", "isRateLimited", "retryAfterSeconds"],
         Body: () => (
           <>
             <AuthAccountDemo />
-            <Passkeys016Demo />
-            <Passkeys018Demo />
+            <PasskeysDemo />
             <AccountRoster018Demo />
             <Share018Demo />
-            <Legal019Demo />
-            <Legal028Demo />
-            <LegalAccept028Demo />
+            <LegalDemo />
             <OneTimeCode022Demo />
             <OneTimeCodeUnlabelled022Demo />
             <AuthForms029Demo />
@@ -1415,20 +1358,15 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
-        components: ["FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "FeedbackComposer", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan"],
+        components: ["FeedbackSubject", "FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "FeedbackComposer", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan"],
         Body: () => (
           <>
             <FeedbackInbox />
-            <FeedbackThreadDemo />
-            <ComposerCannedRepliesDemo />
-            <Feedback014Demo />
-            <ChatComposer022Demo />
-            <ChatComposerCount023Demo />
-            <ChatComposerSlot024Demo />
-            <FeedbackNoteButtons025Demo />
             <FeedbackTable027Demo />
+            <FeedbackSubjectDemo />
             <FeedbackDetail027Demo />
-            <FeedbackRecord027Demo />
+            <FeedbackRecordDemo />
+            <FeedbackComposerDemo />
           </>
         ),
       },

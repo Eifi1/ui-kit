@@ -3,6 +3,7 @@ import { Button } from "@eifi1/ui-kit";
 import {
   ShareCard,
   ShareDialog,
+  SharePanel,
   type ShareAddRequest,
   type ShareCandidate,
   type ShareGrantee,
@@ -10,15 +11,13 @@ import {
   type ShareRole,
 } from "../../../src/components/share-card";
 import { WriteLockProvider } from "../../../src/components/write-lock";
-import { Example, Note, OutTable } from "../lib/section";
+import { Example, Note, OutTable, READOUT, beat } from "../lib/section";
 
 /**
  * 0.18.0 — `ShareCard` / `ShareDialog`: Kurvenschmiede's share dialog and keksdose's
  * budget share card on one presentational component. The "server" here is a timeout;
  * any address starting with `fail` is refused, so the error box can be seen.
  */
-
-const READOUT = "font-mono text-xs text-secondary";
 
 const ROLES: ShareRole[] = [
   { key: "viewer", label: "Viewer", tone: "neutral", description: "Can open and read it." },
@@ -39,8 +38,6 @@ const CANDIDATES: ShareCandidate[] = [
   { id: "u4", name: "Lena Fischer", email: "lena@example.com" },
 ];
 
-const wait = (ms = 600) => new Promise((resolve) => setTimeout(resolve, ms));
-
 /** The app's side: every rule the kit leaves out lives here. */
 function useFakeShares(initialGrantees: ShareGrantee[], initialPending: SharePendingGrant[]) {
   const [grantees, setGrantees] = useState(initialGrantees);
@@ -50,7 +47,7 @@ function useFakeShares(initialGrantees: ShareGrantee[], initialPending: SharePen
 
   const onAdd = async (request: ShareAddRequest) => {
     setLast(JSON.stringify({ ...request, candidate: request.candidate?.name ?? null }));
-    await wait();
+    await beat(600);
     if (request.email?.startsWith("fail")) throw new Error("The server refused that address.");
     if (request.candidate) {
       const c = request.candidate;
@@ -73,17 +70,17 @@ function useFakeShares(initialGrantees: ShareGrantee[], initialPending: SharePen
   };
   const onRoleChange = async (grantee: ShareGrantee, role: string) => {
     setLast(`role ${grantee.name} → ${role}`);
-    await wait(400);
+    await beat(400);
     setGrantees((all) => all.map((g) => (g.id === grantee.id ? { ...g, role } : g)));
   };
   const onRemove = async (grantee: ShareGrantee) => {
     setLast(`remove ${grantee.name}`);
-    await wait(400);
+    await beat(400);
     setGrantees((all) => all.filter((g) => g.id !== grantee.id));
   };
   const onRevokePending = async (grant: SharePendingGrant) => {
     setLast(`withdraw ${grant.email ?? "open link"}`);
-    await wait(400);
+    await beat(400);
     setPending((all) => all.filter((p) => p.id !== grant.id));
   };
   return { grantees, pending, last, onAdd, onRoleChange, onRemove, onRevokePending };
@@ -193,12 +190,30 @@ function LockedExample() {
   );
 }
 
+/** The body both forms share, in a frame of the app's own (round 0.34: it had no
+ *  specimen — refactor audit 2026-10, DOC-9). */
+function PanelExample() {
+  const shares = useFakeShares([{ id: 7, name: "Jonas Weber", email: "jonas@example.com", role: "viewer" }], []);
+  return (
+    <Example label="SharePanel — the body in the app's own frame" hint="what ShareCard and ShareDialog wrap">
+      <section aria-label="Sharing" className="max-w-xl rounded-md border border-subtle p-4">
+        <SharePanel roles={ROLES.slice(0, 2)} candidates={CANDIDATES} {...shares} />
+      </section>
+      <Note>
+        For a settings section or a sheet that brings its own heading and frame: the add form, then the list, with
+        the same callbacks and labels as the card.
+      </Note>
+    </Example>
+  );
+}
+
 export function Share018Demo() {
   return (
     <>
       <CardExample />
       <GuestExample />
       <DialogExample />
+      <PanelExample />
       <ReadOnlyExample />
       <LockedExample />
       <Note>

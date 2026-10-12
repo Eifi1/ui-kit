@@ -1,110 +1,17 @@
-import { useRef, useState } from "react";
 import { ShieldCheck } from "lucide-react";
-import { Button, DataTable, DialogFrame, Input } from "@eifi1/ui-kit";
+import { DataTable } from "@eifi1/ui-kit";
 import type { DataTableColumn } from "@eifi1/ui-kit";
-import { PasskeysSetting } from "../../../src/account/passkeys-setting";
-import type { PasskeyItem } from "../../../src/account/passkeys-setting";
 import { AccountStateChip, RoleChip, dateColumn } from "../../../src/components/account-chips";
 import type { RoleVocabulary } from "../../../src/components/account-chips";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * ACCOUNT 0.18 — Kurvenschmiede 5 and 6: `PasskeysSetting`'s `mode` and `beforeAdd`,
  * and the chips and date column an admin roster repeats.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "mt-3 rounded-md bg-surface-2 px-3 py-2 font-mono text-xs text-secondary";
-
 const day = 86_400_000;
 const ago = (days: number) => new Date(Date.now() - days * day).toISOString();
-
-export function Passkeys018Demo() {
-  const [items, setItems] = useState<PasskeyItem<number>[]>([
-    { id: 1, name: "Laptop", createdAt: ago(120), lastUsedAt: ago(2) },
-  ]);
-  const [asking, setAsking] = useState(false);
-  const [password, setPassword] = useState("");
-  const [log, setLog] = useState("—");
-  // The step's answer, and what it produced for onAdd — Kurvenschmiede's server mints
-  // the registration options only once the password is right.
-  const answer = useRef<(go: boolean) => void>(() => {});
-  const options = useRef<string | null>(null);
-
-  const close = (go: boolean) => {
-    setAsking(false);
-    setPassword("");
-    answer.current(go);
-  };
-
-  return (
-    <Example label="PasskeysSetting — beside the password, confirmed first" hint={'mode="alongside"; beforeAdd'}>
-      <div className="max-w-md">
-        <PasskeysSetting
-          passkeys={items}
-          mode="alongside"
-          beforeAdd={(name) => {
-            setLog(`beforeAdd("${name}") — asking for the password…`);
-            return new Promise<boolean>((resolve) => {
-              answer.current = (go) => {
-                setLog(go ? `beforeAdd → true, options ${options.current}` : "beforeAdd → false (stopped quietly)");
-                resolve(go);
-              };
-              setAsking(true);
-            });
-          }}
-          onAdd={(name) => {
-            setLog(`onAdd("${name}") with ${options.current}`);
-            setItems((list) => [...list, { id: Date.now(), name: name || "Passkey", createdAt: new Date(), lastUsedAt: null }]);
-          }}
-          onDelete={(id) => setItems((list) => list.filter((k) => k.id !== id))}
-        />
-      </div>
-      <div className={READOUT}>{log}</div>
-      {asking && (
-        <DialogFrame
-          onClose={() => close(false)}
-          title="Confirm your password"
-          description="A passkey is added only after the current password is entered."
-          actions={(dismiss) => (
-            <>
-              <Button variant="secondary" onClick={dismiss}>
-                Cancel
-              </Button>
-              <Button variant="brand" type="submit" form="demo-passkey-password" disabled={!password}>
-                Continue
-              </Button>
-            </>
-          )}
-        >
-          <form
-            id="demo-passkey-password"
-            onSubmit={(event) => {
-              event.preventDefault();
-              options.current = `challenge-${Math.floor(Math.random() * 1000)}`;
-              close(true);
-            }}
-          >
-            <Input
-              label="Current password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </form>
-        </DialogFrame>
-      )}
-      <Note>
-        {code('mode="alongside"')} swaps the line under the title for{" "}
-        {code("labels.descriptionAlongside")} — the password keeps working; the default{" "}
-        {code('"instead"')} keeps "instead of a password". {code("beforeAdd")} runs first: resolve{" "}
-        {code("true")} to go on to {code("onAdd")}, {code("false")} to stop with the typed name kept.
-        What the step produced reaches {code("onAdd")} through a ref.
-      </Note>
-    </Example>
-  );
-}
 
 type Role = "ADMIN" | "MEMBER" | "CUSTOMER";
 const ROLES: RoleVocabulary<Role> = {

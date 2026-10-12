@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useState, useRef } from "react";
 import {
   cn,
   FieldChevron,
@@ -20,8 +20,10 @@ import {
   FLOATING_INPUT_CLASS,
   FLOATING_LABEL_CLASS,
   FLOATING_LABEL_STATIC,
+  ToggleGroup,
 } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, Row, Stage } from "../lib/section";
+import { ConstList, Example, Note, Row, Stage, code } from "../lib/section";
+import { TimeInput } from "../../../src/components/time-input";
 
 /** The three the trigger specimen cycles through — a stand-in for a real menu, so
  *  the trigger is something you can actually operate rather than a still. */
@@ -841,5 +843,161 @@ export function FieldClassConstants() {
         />
       </Example>
     </>
+  );
+}
+
+/* ── since 0.25 ─────────────────────────────────────────────────────────── */
+
+// A recorder export with decimal commas — every row has the commas whose tails the
+// report was about.
+const TABLE = [
+  "zeit;soll;ist",
+  ...Array.from({ length: 40 }, (_, i) => {
+    const t = (i * 0.5).toFixed(1).replace(".", ",");
+    const set = (i < 8 ? 20 : 22).toFixed(1).replace(".", ",");
+    const act = (i < 8 ? 19.8 : 22 - 2.2 * Math.exp(-(i - 8) / 5)).toFixed(2).replace(".", ",");
+    return `${t};${set};${act}`;
+  }),
+].join("\n");
+
+const NOTES = Array.from(
+  { length: 12 },
+  (_, i) => `Run ${i + 1}: gently quiet, typography by jumping glyphs; quality kept, yields okay.`,
+).join("\n");
+
+/** Where to put the fields: so many pixels of the line on its way out left below the
+ *  strip. The field's lines are 20px (text-sm), and three lines are scrolled past. */
+const POSITIONS = {
+  tails: 4,
+  half: 10,
+  more: 13,
+  boundary: 0,
+  top: -1,
+} as const;
+
+type Position = keyof typeof POSITIONS;
+
+const scrollFor = (position: Position) => {
+  const left = POSITIONS[position];
+  if (left < 0) return 0;
+  return left === 0 ? 60 : 60 + (20 - left);
+};
+
+/** Open in the state the report was about — a line scrolled all but its tails away.
+ *  Module-level, so it is one stable ref and runs on mount only, never under typing. */
+const opened = (el: HTMLTextAreaElement | null) => {
+  if (el) el.scrollTop = scrollFor("tails");
+};
+
+export function TextareaEdge025Demo() {
+  const [table, setTable] = useState(TABLE);
+  const [notes, setNotes] = useState(NOTES);
+  const [position, setPosition] = useState<Position>("tails");
+  const box = useRef<HTMLDivElement>(null);
+  const place = (next: Position) => {
+    setPosition(next);
+    for (const field of box.current?.querySelectorAll("textarea") ?? []) field.scrollTop = scrollFor(next);
+  };
+  return (
+    <Example
+      label="Textarea — the label strip's lower edge"
+      hint="both fields open with a line scrolled all but its tails under the label; pick another position"
+    >
+      <div className="flex flex-col gap-4">
+        <ToggleGroup
+          aria-label="Scroll position"
+          size="sm"
+          value={position}
+          onChange={(v) => place(v as Position)}
+          options={[
+            { value: "tails", label: "4px left" },
+            { value: "half", label: "Half a line" },
+            { value: "more", label: "13px left" },
+            { value: "boundary", label: "On a line" },
+            { value: "top", label: "At rest" },
+          ]}
+        />
+        <div ref={box} className="grid gap-4 md:grid-cols-2">
+          <Textarea
+            ref={opened}
+            label="Paste a table"
+            rows={5}
+            wrap="off"
+            spellCheck={false}
+            className="font-mono"
+            value={table}
+            onChange={(e) => setTable(e.target.value)}
+          />
+          <Textarea
+            ref={opened}
+            label="Notes on the runs"
+            rows={5}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </div>
+        <Note>
+          Kurvenschmiede, on 0.24: under the label strip, a line scrolled most of the way out
+          left a row of comma tails above the first whole line. The strip&apos;s edge now follows
+          the scroll. Half a line or less left: covered, solid, to exactly where that line ends —
+          the strip snaps to the line box, and the next line is untouched. More than half: a 3px
+          soft edge instead of a cut. On a line boundary, and at rest, nothing at all — an
+          unscrolled first line is never covered. It is a pseudo-element of the strip, so it
+          inherits the strip&apos;s surface ({code("--bg-surface")}, {code("--bg-surface-2")} when
+          disabled or read-only, both themes), its scrollbar inset and its RTL side.
+        </Note>
+      </div>
+      <Note>Since 0.25.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+export function Fields022Demo() {
+  const [note, setNote] = useState("");
+  const [subject, setSubject] = useState("Maintenance on Saturday");
+  const [start, setStart] = useState("08:30");
+  return (
+    <Example
+      label="Placeholder, hint and counter on a labelled field"
+      hint="kastlan 8, keksdose K4 and K11"
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input label="Access note" placeholder="e.g. the key is with the caretaker" />
+        <Input label="IBAN" hint="22 characters, spaces allowed" />
+        <Input label="Interest rate" hint={<FieldHint label="Per year, before tax" />} />
+        <TimeInput label="Start" value={start} onValueChange={setStart} hint="Local time at the site" />
+        <Input
+          label="Subject"
+          maxLength={60}
+          showCount
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+        />
+        <Input aria-label="Reference" placeholder="Reference" hint={<FieldHint label="From the letter, top right" />} />
+        <div className="sm:col-span-2">
+          <Textarea
+            label="Note for the tenant"
+            placeholder="Anything they should know before the visit"
+            hint="Shown in the tenant's inbox"
+            maxLength={120}
+            showCount
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
+      </div>
+      <Note>
+        A labelled field keeps a caller&apos;s {code("placeholder")} and shows it once the label has floated up (focus
+        the first field). {code("hint")} follows Select&apos;s rule: text is a caption under the field, on its{" "}
+        {code("aria-describedby")} before any error; a {code("FieldHint")} rides the label line, or the end edge when
+        there is no label. {code("showCount")} with {code("maxLength")} reads as &quot;12 of 60 characters&quot; with the
+        field and is announced only on entering the last tenth and at the limit — type into Subject to see the colours
+        turn.
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
   );
 }

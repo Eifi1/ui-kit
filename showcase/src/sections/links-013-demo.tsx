@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router";
 import { ArrowUpRight, CloudCheck, ExternalLink, Pencil, Settings } from "lucide-react";
 import { Button, IconButton, TextLink, Tone } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * LINKS (0.13): `replace` and `reloadDocument` on every kit link (keksdose F1), the
@@ -10,9 +10,6 @@ import { Example, Note, Row } from "../lib/section";
  * `primary` / `secondary` (keksdose F3) and `warning` (kastlan 46) tones, and
  * IconButton's per-theme `toneColor` pair (keksdose).
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-secondary";
 
 /* ── replace / reloadDocument ─────────────────────────────────────────────── */
 

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import type { ContextType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import { CalendarDays, Droplets, Leaf, Server, ShieldCheck, Sprout, Users } from "lucide-react";
 import { AuthLayout, Button, ProgressBar, ToggleGroup } from "@eifi1/ui-kit";
@@ -11,7 +11,7 @@ import { DemoStart } from "../../../src/demo/demo-start";
 import { DemoBanner } from "../../../src/demo/demo-banner";
 import { DemoEnded } from "../../../src/demo/demo-ended";
 import type { DemoModel } from "../../../src/demo/demo-session";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, beat, NO_ROUTER } from "../lib/section";
 
 /**
  * THE PUBLIC LANDING PAGE AND THE DEMO (0.31, docs/landing-demo-harmonization.md §4, §5):
@@ -23,17 +23,9 @@ import { Example, Note } from "../lib/section";
  * is the app's part, played by a timer: the kit sends no request.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 900) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
 const APP = "Ada's Garden Planner";
 const ACCESS_REQUEST: AccessChoice = { kind: "request", email: "support@example.com", app: APP };
 const ACCESS_REGISTER: AccessChoice = { kind: "register", href: "/register" };
-
-/** React Router refuses a router inside a router; resetting the location context is its
- *  documented escape hatch (see the shell page's nested AppShell). Each specimen gets a
- *  router of its own, so its links move IT, not this page. */
-const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
 function Sandbox({ children, start = "/" }: { children: ReactNode; start?: string }) {
   return (
@@ -303,7 +295,7 @@ export function DemoStart031Demo() {
             access={ACCESS_REQUEST}
             start={async () => {
               note(`start() → POST /auth/demo-session`);
-              await beat();
+              await beat(900);
               if (answer === "created") return { access_token: "…", refresh_token: null, expires_at: "…" };
               throw ANSWERS[answer];
             }}
@@ -434,18 +426,5 @@ export function DemoEnded031Demo() {
         read its {code("noindex")}.
       </Note>
     </Example>
-  );
-}
-
-/** The whole "Landing & demo" page. */
-export function Landing031Demo() {
-  return (
-    <>
-      <SampleLanding031Demo />
-      <PublicHeaderStates031Demo />
-      <DemoStart031Demo />
-      <DemoBanner031Demo />
-      <DemoEnded031Demo />
-    </>
   );
 }

@@ -15,16 +15,12 @@ import {
 } from "@eifi1/ui-kit";
 import type { PasskeyItem, TwoFactorSetupData, UiKitLabelOverrides } from "@eifi1/ui-kit";
 import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code, READOUT, beat } from "../lib/section";
 
 /**
  * AUTH & ACCOUNT — the page frame outside the app (sign-in, the legal pages) and the
  * two account sections added in 0.12: two-factor from an `otpauth://` URI, and passkeys.
  */
-
-const READOUT = "font-mono text-xs text-secondary";
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 900) => new Promise((r) => setTimeout(r, ms));
 
 /* ── AuthLayout ──────────────────────────────────────────────────────────── */
 
@@ -203,7 +199,7 @@ function TwoFactorOtpauthSpecimen() {
 
   const start = async () => {
     setBusy(true);
-    await beat();
+    await beat(900);
     setSetup(explicitSecret ? { otpauthUri: OTPAUTH, secret: "JBSW Y3DP EHPK 3PXP" } : { otpauthUri: OTPAUTH });
     setBusy(false);
     setLog("onStartSetup() → { otpauthUri }");
@@ -234,7 +230,7 @@ function TwoFactorOtpauthSpecimen() {
           onStartSetup={() => void start()}
           onEnable={async (otp) => {
             setBusy(true);
-            await beat();
+            await beat(900);
             setBusy(false);
             setSetup(null);
             setEnabled(true);
@@ -242,7 +238,7 @@ function TwoFactorOtpauthSpecimen() {
           }}
           onDisable={async (password, otp) => {
             setBusy(true);
-            await beat();
+            await beat(900);
             setBusy(false);
             setEnabled(false);
             setLog(`onDisable(${password.length} chars, "${otp}") → off`);
@@ -356,14 +352,14 @@ function PasskeysSpecimen() {
           }}
           onRename={async (id, name) => {
             setBusyId(id);
-            await beat();
+            await beat(900);
             setBusyId(null);
             setItems((all) => all.map((p) => (p.id === id ? { ...p, name } : p)));
             setLog(`onRename(${id}, "${name}")`);
           }}
           onDelete={async (id) => {
             setBusyId(id);
-            await beat();
+            await beat(900);
             setBusyId(null);
             setItems((all) => all.filter((p) => p.id !== id));
             setLog(`onDelete(${id})`);

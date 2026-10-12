@@ -1,14 +1,7 @@
 import { useState } from "react";
-import {
-  DangerConfirm,
-  MiniCalendar,
-  NumberField,
-  NumberInput,
-  SignatureView,
-  UiKitProvider,
-} from "@eifi1/ui-kit";
+import { MiniCalendar, NumberField, NumberInput, SignatureView, UiKitProvider } from "@eifi1/ui-kit";
 import type { WeekDay } from "@eifi1/ui-kit";
-import { Example, Note, Stage } from "../lib/section";
+import { Example, Note, Stage, StateLine } from "../lib/section";
 
 /**
  * The 0.6.0 additions on the numbers side, and the small items beside them:
@@ -16,11 +9,6 @@ import { Example, Note, Stage } from "../lib/section";
  * provider's `weekStartsOn`. Each specimen prints what it emits, because the
  * contract — when a number arrives, and which one — is the point.
  */
-
-/** The raw value under a specimen. */
-function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-muted">{children}</p>;
-}
 
 /** A tiny signature PNG drawn on the spot, so the read-only view has something real
  *  to show without a binary fixture. Browser-only, like the rest of the showcase. */
@@ -114,142 +102,6 @@ function StepInput() {
   );
 }
 
-function DangerSpecimens() {
-  const [log, setLog] = useState("—");
-  return (
-    <Example label="DangerConfirm" hint="arm → guards → confirm">
-      <Stage>
-        <DangerConfirm
-          armLabel="Wipe all data…"
-          confirmLabel="Wipe everything"
-          prompt="Deletes every budget and transaction. This cannot be undone."
-          phrase="wipe"
-          requirePassword
-          onConfirm={(password) =>
-            new Promise<void>((resolve) =>
-              setTimeout(() => {
-                setLog(`confirmed with a ${password?.length ?? 0}-character password`);
-                resolve();
-              }, 800),
-            )
-          }
-        />
-        <DangerConfirm
-          tone="warning"
-          armLabel="Load demo data…"
-          confirmLabel="Replace with demo data"
-          prompt="Your own entries are replaced by the demo's."
-          onConfirm={() => setLog("demo data loaded")}
-        />
-        <DangerConfirm
-          armLabel="Delete account…"
-          confirmLabel="Delete my account"
-          prompt="Your account and every budget in it are removed for good."
-          phrase="DELETE"
-          phraseMatch="exact"
-          // A finished label from the app's own catalogue, and a placeholder: the label
-          // then sits above the field, which the placeholder has to itself.
-          labels={{ phrase: "Type DELETE, in capitals, to confirm", phrasePlaceholder: (p) => p }}
-          onConfirm={() => setLog("account deleted (exact match, spaces count)")}
-        />
-        <DangerConfirm
-          armLabel="Reset budget…"
-          lockedReason="The demo is read-only — nothing here can be deleted."
-          onConfirm={() => {}}
-        />
-      </Stage>
-      <StateLine>{`last = ${log}`}</StateLine>
-      <Note>
-        A promise from <code>onConfirm</code> keeps the tile busy, collapses it when it resolves and
-        leaves it armed (fields kept) when it rejects. <code>lockedReason</code> replaces an
-        app&rsquo;s write-lock hook: the arm button stays focusable and says why it is off — in
-        the line under it and, since 0.7.0, in a tooltip on the button itself (hover or focus
-        &ldquo;Reset budget…&rdquo;), where the pointer that tried it is. The bubble is visual
-        only: the button is already described by the line, so a screen reader hears the reason
-        once.
-        The phrase ignores surrounding spaces unless <code>phraseMatch=&quot;exact&quot;</code>;{" "}
-        <code>labels.phrase</code> takes a function of the phrase or a finished string, and{" "}
-        <code>labels.phrasePlaceholder</code> moves the label above the field.
-      </Note>
-    </Example>
-  );
-}
-
-function DangerStates() {
-  const [armed, setArmed] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [disabled, setDisabled] = useState(true);
-  const [log, setLog] = useState("—");
-  return (
-    <Example label="DangerConfirm — controlled, busy, disabled, rejected" hint="the parent owns the armed state">
-      <div className="mb-3 flex flex-wrap gap-4 text-xs text-secondary">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={armed} onChange={(e) => setArmed(e.target.checked)} />
-          armed (controlled)
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={busy} onChange={(e) => setBusy(e.target.checked)} />
-          busy
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={disabled} onChange={(e) => setDisabled(e.target.checked)} />
-          disabled (third tile)
-        </label>
-      </div>
-      <Stage>
-        <DangerConfirm
-          armLabel="Archive project…"
-          confirmLabel="Archive"
-          prompt="Controlled: the checkbox above arms and disarms this tile."
-          armed={armed}
-          onArmedChange={(next) => {
-            setArmed(next);
-            setLog(`onArmedChange(${next})`);
-          }}
-          busy={busy}
-          onConfirm={() => setLog("archived")}
-        />
-        <DangerConfirm
-          armLabel="Revoke keys…"
-          confirmLabel="Revoke (fails)"
-          prompt="The server refuses: the promise rejects, the tile stays armed and keeps the phrase."
-          phrase="revoke"
-          onConfirm={() =>
-            new Promise<void>((_, reject) =>
-              setTimeout(() => {
-                setLog("onConfirm rejected — still armed");
-                reject(new Error("refused"));
-              }, 800),
-            )
-          }
-        />
-        <DangerConfirm
-          disabled={disabled}
-          labels={{
-            arm: "Übertragen…",
-            confirm: "Endgültig übertragen",
-            cancel: "Abbrechen",
-            prompt: "Diese Aktion kann nicht rückgängig gemacht werden.",
-            password: "Passwort",
-            phrase: (p) => `Zur Bestätigung „${p}“ eingeben`,
-          }}
-          phrase="übertragen"
-          requirePassword
-          onConfirm={() => setLog("übertragen")}
-        />
-      </Stage>
-      <StateLine>{`armed = ${armed} · busy = ${busy} · last = ${log}`}</StateLine>
-      <Note>
-        <code>busy</code> from the parent shows the same state a pending promise does, for a
-        mutation the app tracks itself. <code>disabled</code> turns the arm button off without a
-        reason — prefer <code>lockedReason</code> when the user can do something about it. The
-        third tile takes every word from <code>labels</code>; <code>armLabel</code> and{" "}
-        <code>confirmLabel</code> would win over them.
-      </Note>
-    </Example>
-  );
-}
-
 function SignatureViews() {
   const [png] = useState(sampleSignature);
   return (
@@ -320,16 +172,6 @@ export function NumberStepsDemo() {
     <>
       <LiveCalculator />
       <StepInput />
-    </>
-  );
-}
-
-/** Signature, password & confirmation: the arm-then-confirm tile. */
-export function DangerConfirmDemo() {
-  return (
-    <>
-      <DangerSpecimens />
-      <DangerStates />
     </>
   );
 }

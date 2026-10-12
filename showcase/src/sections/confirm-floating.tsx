@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Bot, Filter, MessageSquarePlus, Plus } from "lucide-react";
 import { Button, FloatingActionButton, FloatingPanel, ToggleGroup, useConfirm } from "@eifi1/ui-kit";
 import type { ConfirmTone, FloatingCorner } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, READOUT } from "../lib/section";
 
 /**
  * CONFIRM DIALOG & FLOATING PANEL — the two overlays 0.8.0 added.
@@ -14,8 +14,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * The floating panel is fixed to the viewport, so it is opt-in: nothing floats over the
  * showcase until you tick a box, and leaving the page unmounts it.
  */
-
-const READOUT = "font-mono text-xs text-secondary";
 
 function useLog() {
   const [log, setLog] = useState<string[]>([]);

@@ -18,7 +18,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { AccountAppearanceFields, AccountAppearancePatch, ContrastMode, TextSize } from "@eifi1/ui-kit";
 import { useContrastStore, useTextSizeStore } from "../stores";
-import { Example, Note, OutTable } from "../lib/section";
+import { Example, Note, OutTable, code } from "../lib/section";
 
 /**
  * TEXT SIZE AND CONTRAST (0.32, docs/text-size-harmonization.md §2–§6, §10): the two
@@ -38,7 +38,6 @@ import { Example, Note, OutTable } from "../lib/section";
 
 // `anywhere`: an identifier has no space to break at, and at Extra large on a phone a long
 // one is wider than the line.
-const code = (s: string) => <code className="font-mono [overflow-wrap:anywhere]">{s}</code>;
 
 function Readout({ label, value }: { label: string; value: string }) {
   return (

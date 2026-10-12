@@ -18,9 +18,10 @@ import {
   sanitizeLive,
   splitLeadingSign,
   usePhoneLayout,
+  roundToCurrency,
 } from "@eifi1/ui-kit";
 import { NumberFieldDemo } from "./number-time-demo";
-import { Example, Note, OutTable, Row, Swatch, Stage } from "../lib/section";
+import { Example, Note, OutTable, Row, Swatch, Stage, READOUT } from "../lib/section";
 
 /**
  * NUMBERS & MONEY.
@@ -792,5 +793,46 @@ export function NumberHelpers() {
         />
       </Example>
     </>
+  );
+}
+
+/* ── since 0.16 ─────────────────────────────────────────────────────────── */
+
+const CAPTION = "text-xs text-muted";
+
+export function Numbers016Demo() {
+  const [amount, setAmount] = useState("12.50");
+  const [rate, setRate] = useState("3.49");
+  return (
+    <Example label="AmountInput hint, a tighter unit, roundToCurrency fallbackDigits">
+      <div className="grid max-w-2xl gap-3 sm:grid-cols-2">
+        <AmountInput
+          label="Deposit"
+          currency="EUR"
+          value={amount}
+          onChange={setAmount}
+          hint={<FieldHint label="Held until the lease ends." />}
+        />
+        <AmountInput label="Monthly rent" currency="EUR" value={amount} onChange={setAmount} hint="Cold rent, without utilities" />
+      </div>
+      <Row>
+        <div className="w-24">
+          <NumberInput aria-label="VAT rate" value={rate} onChange={setRate} suffix="%" calculator={false} />
+        </div>
+        <div className="w-28">
+          <NumberInput aria-label="Speed" value="88" onChange={() => {}} suffix="km/h" calculator={false} />
+        </div>
+        <span className={CAPTION}>a unit in a narrow cell: ~8px of end padding, not 12</span>
+      </Row>
+      <ul className={`space-y-0.5 ${READOUT}`}>
+        <li>roundToCurrency(0.1 + 0.2, &quot;&quot;) → {String(roundToCurrency(0.1 + 0.2, ""))}</li>
+        <li>
+          roundToCurrency(0.1 + 0.2, &quot;&quot;, &#123; fallbackDigits: 2 &#125;) →{" "}
+          {String(roundToCurrency(0.1 + 0.2, "", { fallbackDigits: 2 }))}
+        </li>
+        <li>roundToCurrency(1.005, &quot;EUR&quot;, &#123; fallbackDigits: 0 &#125;) → {String(roundToCurrency(1.005, "EUR", { fallbackDigits: 0 }))}</li>
+      </ul>
+      <Note>Since 0.16.</Note>
+    </Example>
   );
 }

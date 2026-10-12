@@ -11,7 +11,10 @@ import { MOUNT_TIMEOUT_MS, renderShowcase, useShowcaseEnvironment } from "./show
  * `<h3>` anchors against the search index.)
  */
 
-useShowcaseEnvironment();
+// The pages rendered below. Every Server kit page is the one section `ServerModules`; the
+// two kit pages are there for the frame's "Server side" line (TST-8: this file loaded all
+// 250-odd sections for them).
+useShowcaseEnvironment({ pages: ["server-settings", "server-auth", "server-mail", "settings", "tokens"] });
 
 const api = SERVER_KIT_API;
 

@@ -14,14 +14,12 @@ import { Field } from "../../../src/components/field";
 import { Switch } from "../../../src/components/switch";
 import { FormActions } from "../../../src/components/form-actions";
 import { WriteLockProvider, useWriteLock } from "../../../src/components/write-lock";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * WriteLockProvider (0.18): keksdose's read-only demo budget and Kurvenschmiede's
  * shared-to-view curve — everything renders, only the commit is locked.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** A control that IS its own commit reads the lock itself. */
 function AutoSaveSwitch() {
@@ -47,7 +45,7 @@ function AccountForm() {
       </CardHeader>
       <CardContent className="mt-3 flex flex-col gap-3">
         <Field label="Name">
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
+          {(control) => <Input {...control} value={name} onChange={(e) => setName(e.target.value)} />}
         </Field>
         <AutoSaveSwitch />
         <FormActions

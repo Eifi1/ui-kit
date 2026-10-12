@@ -11,16 +11,13 @@ import {
   useWizardStepValidate,
 } from "@eifi1/ui-kit";
 import type { WizardStepConfig } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * 0.12 on the Wizard page: `WizardStep`'s own `title` / `description`, and the two
  * gates a step that is NOT a react-hook-form uses — `useWizardNextGate` (Next greyed
  * out before a click) and `useWizardStepValidate` (a validator Next runs).
  */
-
-const READOUT = "font-mono text-xs text-secondary";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 type Share = { name: string; pct: number | null };
 type Payee = string;

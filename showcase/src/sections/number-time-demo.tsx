@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FieldHint, NumberField, TimeInput, UiKitProvider } from "@eifi1/ui-kit";
-import { Example, Note, Stage } from "../lib/section";
+import { Example, Note, Stage, StateLine } from "../lib/section";
 
 /**
  * NumberField and TimeInput.
@@ -10,11 +10,6 @@ import { Example, Note, Stage } from "../lib/section";
  * prints the value it holds under it, so what the component EMITS is visible — the
  * point of both controls is the contract, not the look.
  */
-
-/** The raw value under a specimen. */
-function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-muted">value = {children}</p>;
-}
 
 /** NumberField — on the Numbers page, right after the NumberInput it is built on. */
 export function NumberFieldDemo() {
@@ -47,7 +42,7 @@ export function NumberFieldDemo() {
             onCommit={setWheelbase}
           />
         </Stage>
-        <StateLine>{String(wheelbase)}</StateLine>
+        <StateLine label="value">{String(wheelbase)}</StateLine>
       </Example>
 
       <Example
@@ -78,7 +73,7 @@ export function NumberFieldDemo() {
             onCommit={setRate}
           />
         </Stage>
-        <StateLine>{`gain ${String(gain)}, vat ${String(rate)}`}</StateLine>
+        <StateLine label="value">{`gain ${String(gain)}, vat ${String(rate)}`}</StateLine>
       </Example>
 
       <Example label="NumberField — nullable" hint="empty is an answer: null">
@@ -92,7 +87,7 @@ export function NumberFieldDemo() {
             error={yoke !== null && yoke < 0 ? "Must not be negative" : undefined}
           />
         </Stage>
-        <StateLine>{String(yoke)}</StateLine>
+        <StateLine label="value">{String(yoke)}</StateLine>
       </Example>
 
       <Example
@@ -118,7 +113,7 @@ export function NumberFieldDemo() {
             onCommit={setFrench}
           />
         </Stage>
-        <StateLine>{`track ${String(track)}, montant ${String(french)}`}</StateLine>
+        <StateLine label="value">{`track ${String(track)}, montant ${String(french)}`}</StateLine>
       </Example>
 
       <Example
@@ -130,7 +125,7 @@ export function NumberFieldDemo() {
             <NumberField label="Betrag" unit="€" digits={2} value={german} onCommit={setGerman} />
           </div>
         </UiKitProvider>
-        <StateLine>{String(german)}</StateLine>
+        <StateLine label="value">{String(german)}</StateLine>
       </Example>
     </>
   );
@@ -157,7 +152,7 @@ export function TimeInputDemo() {
         <Stage>
           <TimeInput label="Meeting time" value={meeting} onValueChange={setMeeting} />
         </Stage>
-        <StateLine>{JSON.stringify(meeting)}</StateLine>
+        <StateLine label="value">{JSON.stringify(meeting)}</StateLine>
       </Example>
 
       <Example label="TimeInput — compact pair" hint="unlabelled; className sizes the input">
@@ -185,7 +180,7 @@ export function TimeInputDemo() {
             />
           </div>
         </Stage>
-        <StateLine>{`${JSON.stringify(quietStart)} – ${JSON.stringify(quietEnd)}`}</StateLine>
+        <StateLine label="value">{`${JSON.stringify(quietStart)} – ${JSON.stringify(quietEnd)}`}</StateLine>
       </Example>
 
       <Example
@@ -207,7 +202,7 @@ export function TimeInputDemo() {
             <TimeInput label="Lap" step={1} value={lap} onValueChange={setLap} />
           </div>
         </Stage>
-        <StateLine>{`${JSON.stringify(office)}, ${JSON.stringify(lap)}`}</StateLine>
+        <StateLine label="value">{`${JSON.stringify(office)}, ${JSON.stringify(lap)}`}</StateLine>
       </Example>
     </>
   );

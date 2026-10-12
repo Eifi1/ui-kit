@@ -12,15 +12,13 @@ import {
   TileRadioGroup,
   ToggleGroup,
 } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * 0.23.0: the label strip on its own (keksdose G8) and a lock reason per option on the
  * tile pickers (the kit's later list). Two specimens: `FieldStrip023Demo` (page:
  * fields) and `TileLock023Demo` (page: choices). Every value is synthetic.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const STATUSES = [
   { value: "open", label: "Open" },

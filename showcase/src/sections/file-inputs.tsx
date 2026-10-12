@@ -1,8 +1,22 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Camera, FileText, Paperclip, Upload } from "lucide-react";
-import { AlertBanner, Button, Card, Checkbox, FileButton, FileDropzone, Spinner, cn, formatFileSize, useFileDrop, useFilePicker } from "@eifi1/ui-kit";
+import {
+  AlertBanner,
+  Button,
+  Card,
+  Checkbox,
+  FileButton,
+  FileDropzone,
+  Spinner,
+  cn,
+  formatFileSize,
+  useFileDrop,
+  useFilePicker,
+  Switch,
+} from "@eifi1/ui-kit";
 import type { FileDropzoneRejectionFeedback, FilePickerLabels, FileRejection } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row, Stage } from "../lib/section";
+import { Example, Note, OutTable, Row, Stage, READOUT, code, StateLine } from "../lib/section";
+import { WriteLockProvider } from "../../../src/components/write-lock";
 
 /**
  * FILE INPUTS — `FileButton`, `useFilePicker` and the 0.6 `FileDropzone`.
@@ -11,8 +25,6 @@ import { Example, Note, OutTable, Row, Stage } from "../lib/section";
  * `AlertBanner` without `role="alert"`, since the kit already speaks them), so the page
  * never needs a toaster to demonstrate one.
  */
-
-const READOUT = "font-mono text-xs text-secondary";
 
 const names = (files: readonly File[]) => (files.length ? files.map((f) => f.name).join(", ") : "—");
 
@@ -730,5 +742,70 @@ function DropOnCard() {
         )}
       </Card>
     </>
+  );
+}
+
+/* ── since 0.16 ─────────────────────────────────────────────────────────── */
+
+export function Files016Demo() {
+  return (
+    <Example label="FileButton — showFileName" hint="the last accepted pick, beside the button">
+      <Row>
+        <FileButton variant="secondary" showFileName onFiles={() => {}}>
+          <Paperclip aria-hidden className="size-4" /> Attach receipt
+        </FileButton>
+        <FileButton variant="secondary" multiple showFileName onFiles={() => {}}>
+          <Paperclip aria-hidden className="size-4" /> Attach several
+        </FileButton>
+      </Row>
+      <Note>Since 0.16.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+/** Files (`files`): the pickers that commit take the write lock. */
+export function FileLock022Demo() {
+  const [locked, setLocked] = useState(true);
+  const [file, setFile] = useState<File | null>(null);
+  const [log, setLog] = useState("—");
+  return (
+    <Example label="FileButton, FileDropzone — commit" hint="an upload that starts on pick is a commit; under a lock it says why">
+      <Stage>
+        <div data-stage="wide" className="flex flex-col items-center gap-4">
+          <Switch checked={locked} onCheckedChange={setLocked} label="Viewing a budget shared to read" />
+          <WriteLockProvider locked={locked} reason="Shared with you to read — uploads are off.">
+            <div className="flex w-80 max-w-full flex-col gap-3">
+              <FileButton commit droppable variant="secondary" accept="image/*,application/pdf" onFiles={([f]) => setLog(`uploaded ${f.name}`)}>
+                <Upload aria-hidden className="size-4" />
+                Attach receipt
+              </FileButton>
+              <FileDropzone
+                commit
+                accept=".pdf"
+                file={file}
+                onFileSelected={(f) => {
+                  setFile(f);
+                  setLog(`dropped ${f.name}`);
+                }}
+                onClear={() => setFile(null)}
+                onReject={() => {}}
+                rejectionFeedback="inline"
+              />
+            </div>
+          </WriteLockProvider>
+        </div>
+      </Stage>
+      <StateLine>{`last = ${log}`}</StateLine>
+      <Note>
+        {code("commit")} (or a {code("disabledReason")} of the picker&rsquo;s own) is Button&rsquo;s path plus the
+        picker&rsquo;s half: focusable and {code("aria-disabled")}, the reason in the tooltip and the description, no
+        picker opens, no drop is taken (the drag is still cancelled, so the browser does not open the file). The zone
+        shows the reason where its hint was, and a chosen file stays readable. A picker that only fills a form saved
+        later is not a commit — leave {code("commit")} off and let the form&rsquo;s Save carry the lock.
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
   );
 }

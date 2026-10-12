@@ -2,15 +2,12 @@ import { useState } from "react";
 import { Bell, CloudOff, MessageSquarePlus, RefreshCw } from "lucide-react";
 import { Switch, ToggleGroup, TopBar, TopBarActionMenu, TopBarBrand } from "@eifi1/ui-kit";
 import type { KitLinkComponent, StatusDotTone, TopBarMenuEntry } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * The 0.12 top-bar parts: the brand link that collapses to its logo on a phone, and the
  * unread dot on a menu's icon trigger.
  */
-
-const READOUT = "font-mono text-xs text-secondary";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** A made-up brand mark: an SVG with no size of its own, so TopBarBrand's `h-6` sizes it. */
 function AcmeMark() {

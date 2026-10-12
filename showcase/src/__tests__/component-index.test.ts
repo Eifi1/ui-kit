@@ -80,8 +80,9 @@ const ENTRY_FILES = [
 
 /**
  * Exported, and deliberately on no page's list. A part is documented on its parent's
- * page and found through it; a component with "no specimen yet" is one no page renders,
- * which the showcase merge (refactor plan, DOC-8) is to give a specimen and a list entry.
+ * page and found through it. (The five "no specimen yet" entries — DisabledReasonLine,
+ * FeedbackSubject, SharePanel, TranslationProgress, TranslationReviewEditor — got a
+ * specimen and a list entry in the showcase merge, refactor plan DOC-8.)
  */
 const NOT_ON_A_PAGE: Record<string, string> = {
   CardHeader: "a part of Card (the Buttons & surfaces page)",
@@ -94,11 +95,6 @@ const NOT_ON_A_PAGE: Record<string, string> = {
   TableRow: "a part of Table (the Description list & table page)",
   TableHeaderCell: "a part of Table (the Description list & table page)",
   TableCell: "a part of Table (the Description list & table page)",
-  DisabledReasonLine: "no specimen yet",
-  FeedbackSubject: "no specimen yet",
-  SharePanel: "no specimen yet",
-  TranslationProgress: "no specimen yet",
-  TranslationReviewEditor: "no specimen yet",
 };
 
 /** `Button`, `QrCode` — not `PALETTES`, `cn` or `useWizard`. */

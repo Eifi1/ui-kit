@@ -14,7 +14,7 @@ import type {
   SeriesChartSeries,
   ZoomAxesSetting,
 } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
  * SERIES CHART — BARS, AREAS & TIME. The 0.8.0 half of the series chart: per-series
@@ -522,5 +522,65 @@ export function SeriesChartMarks() {
       <StableLegend />
       <LateAdditions />
     </>
+  );
+}
+
+/* ── since 0.11 (keksdose's 0.10 feedback) ─────────────────────────────────── */
+
+const WEEKDAYS = [
+  { day: "Mon", thisWeek: 42, average: 38 },
+  { day: "Tue", thisWeek: 18, average: 25 },
+  { day: "Wed", thisWeek: 55, average: 31 },
+  { day: "Thu", thisWeek: 1, average: 29 },
+  { day: "Fri", thisWeek: 76, average: 64 },
+  { day: "Sat", thisWeek: 120, average: 88 },
+  { day: "Sun", thisWeek: 0, average: 0 },
+];
+
+export function MinBarLengthDemo() {
+  const [chartWide, setChartWide] = useState(true);
+  const [averageOff, setAverageOff] = useState(true);
+  return (
+    <Example
+      label="Bars — minBarLength, chart-wide and per series"
+      hint="a zero keeps a visible stub; the axis, tooltip and names still say 0"
+    >
+      <Row className="mb-3">
+        <label className="flex items-center gap-2 text-xs text-secondary">
+          <input type="checkbox" checked={chartWide} onChange={(e) => setChartWide(e.target.checked)} />
+          chart minBarLength={"{3}"}
+        </label>
+        <label className="flex items-center gap-2 text-xs text-secondary">
+          <input type="checkbox" checked={averageOff} onChange={(e) => setAverageOff(e.target.checked)} />
+          average: minBarLength={"{0}"} (off for that series)
+        </label>
+      </Row>
+      <SeriesChart
+        rows={WEEKDAYS}
+        x={{ type: "category", key: "day", title: "Weekday" }}
+        axes={[{ id: "y", title: "EUR" }]}
+        minBarLength={chartWide ? 3 : undefined}
+        series={[
+          { key: "thisWeek", label: "This week", type: "bar", color: "var(--chart-1)" },
+          {
+            key: "average",
+            label: "Average",
+            type: "bar",
+            color: "var(--chart-3)",
+            ...(averageOff ? { minBarLength: 0 } : {}),
+          },
+        ]}
+        valueFormat={(v) => `€${v}`}
+      />
+      <div className="mt-3">
+        <Note>
+          Sunday is 0 in both series and Thursday&apos;s €1 is too small to see. With the chart&apos;s{" "}
+          {code("minBarLength")} each is drawn as a 3px stub, so an empty slot still reads as a slot with a
+          value rather than a gap; the Average series sets {code("0")} to opt out. Only the drawing changes. The
+          axis is fitted to the values, and hovering Sunday still says €0.
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
   );
 }

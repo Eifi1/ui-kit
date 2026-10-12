@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, CopyButton, Input, copyToClipboard, useCopyToClipboard, useDebounce, useDebouncedCallback } from "@eifi1/ui-kit";
 import type { CopyState } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row, Stage } from "../lib/section";
+import { Example, Note, OutTable, Row, Stage, READOUT } from "../lib/section";
 
 /**
  * CLIPBOARD & TIMING — two small non-visual families 0.8.0 added: copying that reports
@@ -12,8 +12,6 @@ import { Example, Note, OutTable, Row, Stage } from "../lib/section";
  * refuse, then put the real ones back. That is the plain-http LAN build keksdose
  * reported, reproduced on demand — the kit code that runs is the real one.
  */
-
-const READOUT = "font-mono text-xs text-secondary";
 
 /** Shadow both copy paths with refusing stand-ins until the next macrotask — long
  *  enough for the click's copy (a rejected promise, then the legacy fallback) to run. */

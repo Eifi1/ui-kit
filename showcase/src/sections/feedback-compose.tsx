@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Button,
   DEFAULT_ATTACHMENT_ACCEPT,
@@ -10,6 +10,12 @@ import {
   Textarea,
   UiKitProvider,
   pastedName,
+  ToggleGroup,
+  Chip,
+  FeedbackContextBox,
+  FeedbackMenu,
+  feedbackContext,
+  useFeedbackSubmit,
 } from "@eifi1/ui-kit";
 import type {
   FeedbackAttachmentLabels,
@@ -18,8 +24,14 @@ import type {
   FeedbackDialogLabels,
   FeedbackMultipleSubmission,
   FeedbackSubmission,
+  FeedbackAttachmentRef,
+  ButtonSize,
+  ButtonVariant,
+  FeedbackCreatePayload,
+  TopBarMenuEntry,
 } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code, READOUT, beat } from "../lib/section";
+import { MessagesSquare, Sparkles } from "lucide-react";
 
 /**
  * FEEDBACK — COMPOSE.
@@ -100,13 +112,13 @@ const FIELD_LABELS: FeedbackAttachmentLabels = {
   attachmentRemove: "Remove attachment",
 };
 
-const READOUT = "font-mono text-caption text-muted";
+const READOUT_SMALL = "font-mono text-caption text-muted";
 
 /** Shown instead of a bare "null" so an empty specimen still says what it is. */
 function FileReadout({ file }: { file: File | null }) {
-  if (!file) return <p className={READOUT}>value: null</p>;
+  if (!file) return <p className={READOUT_SMALL}>value: null</p>;
   return (
-    <p className={READOUT}>
+    <p className={READOUT_SMALL}>
       value: {`{ name: "${file.name}", type: "${file.type}", size: ${file.size} }`}
     </p>
   );
@@ -309,11 +321,11 @@ function Dialog() {
       />
 
       {last ? (
-        <p className={READOUT}>
+        <p className={READOUT_SMALL}>
           {`onSubmit({ title: "${last.title}", category: "${last.category}", body: ${last.body.length} chars, attachment: ${last.attachment ? `"${last.attachment.name}"` : "null"} })`}
         </p>
       ) : (
-        <p className={READOUT}>onSubmit: not called yet</p>
+        <p className={READOUT_SMALL}>onSubmit: not called yet</p>
       )}
 
       <FeedbackDialog
@@ -390,7 +402,7 @@ function Multiple() {
         ) : (
           <RejectedLine kind={rejected} />
         )}
-        <p className={READOUT}>
+        <p className={READOUT_SMALL}>
           {`screenshot: ${screenshot ? shortName(screenshot) : "null"} · value: [${files.map(shortName).join(", ")}]`}
         </p>
       </div>
@@ -399,7 +411,7 @@ function Multiple() {
           Open the dialog with attachments=&quot;multiple&quot;
         </Button>
       </Row>
-      <p className={READOUT}>
+      <p className={READOUT_SMALL}>
         {last
           ? `onSubmit({ title: "${last.title}", screenshot: ${last.screenshot ? shortName(last.screenshot) : "null"}, attachments: [${last.attachments.map(shortName).join(", ")}] })`
           : "onSubmit: not called yet"}
@@ -663,3 +675,456 @@ const PASTED_ROWS: Array<[string, string]> = [
   ['pastedName("image/svg+xml")', pastedName("image/svg+xml")],
   ['pastedName("")', pastedName("")],
 ];
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+let nextUpload = 1;
+
+export function FeedbackAttachmentRefs022Demo() {
+  const [refs, setRefs] = useState<FeedbackAttachmentRef[]>([]);
+  const [outcome, setOutcome] = useState<"succeed" | "fail">("succeed");
+  const [uploading, setUploading] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const say = (line: string) => setLog((list) => [line, ...list].slice(0, 4));
+  const upload = (file: File) =>
+    new Promise<FeedbackAttachmentRef>((resolve, reject) => {
+      window.setTimeout(() => {
+        if (outcome === "fail") reject(new Error("413 Payload Too Large"));
+        else resolve({ key: `upload-${nextUpload++}`, name: file.name, size: file.size, type: file.type });
+      }, 1200);
+    });
+  return (
+    <Example label="FeedbackAttachmentField — uploaded on pick" hint="`refs`: the value is the refs the uploads answered">
+      <div className="space-y-3">
+        <ToggleGroup
+          aria-label="Upload outcome"
+          value={outcome}
+          onChange={(v) => setOutcome(v as "succeed" | "fail")}
+          options={[
+            { value: "succeed", label: "Uploads succeed" },
+            { value: "fail", label: "Uploads fail" },
+          ]}
+        />
+        <FeedbackAttachmentField
+          refs
+          value={refs}
+          onChange={setRefs}
+          onUpload={upload}
+          onRemove={(key) => say(`removed ${key} — delete it on the server`)}
+          onUploadingChange={setUploading}
+          onError={(kind, error) => say(kind === "upload" ? `upload failed: ${String(error)}` : `refused: ${kind}`)}
+          accept={["image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf", "text/plain"]}
+        />
+        <p className="text-xs text-muted">
+          {uploading ? "Uploading — Send waits." : `Ready to send: ${refs.map((r) => r.key).join(", ") || "nothing"}`}
+        </p>
+        {log.length > 0 && <p className="text-xs text-muted">{log.join(" · ")}</p>}
+      </div>
+      <Note>
+        Every way in — pick, paste, capture — is validated as in the File modes, then handed to {code("onUpload")}; a
+        chip with a spinner stands in until it answers, and the ref joins {code("value")}. A rejection drops the chip and
+        reports {code('onError("upload", error)')}. Removal goes by key ({code("onRemove")}). Uploads in flight count
+        against {code("max")}. keksdose K16 (the support chat&apos;s AttachmentPicker).
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.25 ─────────────────────────────────────────────────────────── */
+
+// The attachment buttons' two looks, the toggle between them and a stand-in capture:
+// shared with the note editor's specimen (feedback-inbox/record.tsx), which shows the
+// same `attachmentButtonVariant` / `attachmentButtonSize` on FeedbackNoteEditor.
+export type Look = "default" | "ghost-sm";
+
+export const LOOKS: Record<Look, { variant?: ButtonVariant; size?: ButtonSize }> = {
+  default: {},
+  "ghost-sm": { variant: "ghost", size: "sm" },
+};
+
+export function LookToggle({ value, onChange }: { value: Look; onChange: (next: Look) => void }) {
+  return (
+    <ToggleGroup
+      aria-label="Attachment buttons"
+      size="sm"
+      value={value}
+      onChange={(v) => onChange(v as Look)}
+      options={[
+        { value: "default", label: "Default (secondary / md)" },
+        { value: "ghost-sm", label: "ghost / sm" },
+      ]}
+    />
+  );
+}
+
+/** A stand-in for an app's screenshot hook, so the capture button shows. */
+export async function capture(): Promise<File | null> {
+  const canvas = document.createElement("canvas");
+  canvas.width = 320;
+  canvas.height = 180;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  const css = getComputedStyle(document.documentElement);
+  ctx.fillStyle = css.getPropertyValue("--bg-page").trim() || "#eee";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = css.getPropertyValue("--text-primary").trim() || "#111";
+  ctx.font = "14px sans-serif";
+  ctx.fillText("App view — stand-in capture", 16, 40);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+  return blob ? new File([blob], "screenshot.png", { type: "image/png" }) : null;
+}
+
+const CATEGORIES_025 = [
+  { value: "bug", label: "Bug" },
+  { value: "idea", label: "Idea" },
+];
+
+export function FeedbackDialogButtons025Demo() {
+  const [look, setLook] = useState<Look>("ghost-sm");
+  const [open, setOpen] = useState(false);
+  const [category, setCategory] = useState("bug");
+  return (
+    <Example
+      label="FeedbackDialog — the attachment buttons' look"
+      hint="attachmentButtonVariant / attachmentButtonSize, handed to the field inside"
+    >
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <LookToggle value={look} onChange={setLook} />
+          <Button onClick={() => setOpen(true)}>Report an issue</Button>
+        </div>
+        <FeedbackDialog
+          open={open}
+          onClose={() => setOpen(false)}
+          categories={CATEGORIES_025}
+          category={category}
+          onCategoryChange={setCategory}
+          onSubmit={() => setOpen(false)}
+          onCaptureScreenshot={capture}
+          attachmentButtonVariant={LOOKS[look].variant}
+          attachmentButtonSize={LOOKS[look].size}
+        />
+        <Note>
+          FeedbackAttachmentField took {code("buttonVariant")} / {code("buttonSize")} in 0.24
+          (keksdose&apos;s support chat), but the dialog builds its field itself and passed neither.
+          It now takes {code("attachmentButtonVariant")} / {code("attachmentButtonSize")}, named like
+          its other attachment options ({code("attachmentAccept")}, {code("onAttachmentError")}),
+          in both {code("attachments")} modes. Left out, the buttons are secondary / md as before.
+        </Note>
+      </div>
+      <Note>Since 0.25.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.16 ─────────────────────────────────────────────────────────── */
+
+/** A real image for the screenshot slot, drawn in the page's brand colour. */
+function useScreenshot(): File | null {
+  const [file, setFile] = useState<File | null>(null);
+  useEffect(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 160;
+    canvas.height = 100;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const css = getComputedStyle(document.documentElement);
+    ctx.fillStyle = css.getPropertyValue("--bg-surface-2").trim() || "gray";
+    ctx.fillRect(0, 0, 160, 100);
+    ctx.fillStyle = css.getPropertyValue("--brand").trim() || "black";
+    ctx.fillRect(12, 12, 136, 16);
+    ctx.fillRect(12, 40, 80, 48);
+    canvas.toBlob((blob) => {
+      if (blob) setFile(new File([blob], "screenshot.webp", { type: blob.type || "image/webp" }));
+    }, "image/webp");
+  }, []);
+  return file;
+}
+
+/** Two image pastes delivered back to back, before React re-renders between them. */
+function pasteTwice(target: EventTarget, image: File) {
+  for (let i = 0; i < 2; i++) {
+    const data = new DataTransfer();
+    data.items.add(new File([image], "image.png", { type: image.type }));
+    target.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+  }
+}
+
+export function FeedbackAttachment016Demo() {
+  const shot = useScreenshot();
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const pasteRoot = useRef<HTMLDivElement>(null);
+  // The demo's screenshot arrives once the canvas is encoded; seed the slot with it.
+  const [seeded, setSeeded] = useState(false);
+  if (shot && !seeded) {
+    setSeeded(true);
+    setScreenshot(shot);
+  }
+
+  return (
+    <Example
+      label="FeedbackAttachmentField multiple — screenshot chip and two adds in one tick"
+      hint="attachmentScreenshot; attachmentList is the dialog's heading"
+    >
+      <div ref={pasteRoot} className="max-w-md">
+        <FeedbackAttachmentField
+          multiple
+          value={files}
+          onChange={setFiles}
+          pasteFrom={pasteRoot}
+          screenshot={screenshot}
+          onScreenshotChange={setScreenshot}
+          onCaptureScreenshot={async () => shot}
+          labels={{ attachment: "Attachments" }}
+        />
+      </div>
+      <Row>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={!shot}
+          onClick={() => shot && pasteRoot.current && pasteTwice(pasteRoot.current, shot)}
+        >
+          Paste two images at once
+        </Button>
+        <span className={READOUT}>value: [{files.map((f) => f.name).join(", ")}]</span>
+      </Row>
+      <Note>
+        The screenshot slot's chip says {code("Screenshot")} (the {code("attachmentScreenshot")}{" "}
+        label) with the file name beneath it. Two pastes in one tick both land — the field
+        builds on what it already handed to {code("onChange")}, not on a {code("value")} the
+        parent has not re-rendered yet. {code("<FeedbackDialog attachments=\"multiple\">")}{" "}
+        heads the list with {code("attachmentList")}.
+      </Note>
+      <Note>Since 0.16.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.23 ─────────────────────────────────────────────────────────── */
+
+/**
+ * 0.23.0, from keksdose's 0.22 adoption report (the support chat): the attachment
+ * field's refusals name the file and the limit (G5a), the field holds while a send is in
+ * flight and, uploading on pick, takes the write lock (G5b), and the composer counts
+ * against the server's limit as Textarea does (G6).
+ */
+
+const ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf", "text/plain"];
+
+/** Small, so a refusal is easy to provoke in the demo: most screenshots are larger. */
+const MAX_BYTES = 200_000;
+
+
+const fakeUpload = (file: File) =>
+  new Promise<FeedbackAttachmentRef>((resolve) => {
+    window.setTimeout(
+      () => resolve({ key: `upload-${nextUpload++}`, name: file.name, size: file.size, type: file.type }),
+      900,
+    );
+  });
+
+export function FeedbackAttachment023Demo() {
+  const [refs, setRefs] = useState<FeedbackAttachmentRef[]>([
+    { key: "upload-0", name: "invoice-000.pdf", size: 48_000, type: "application/pdf" },
+  ]);
+  const [state, setState] = useState<"open" | "sending" | "closed">("open");
+  const [log, setLog] = useState<string[]>([]);
+  const say = (line: string) => setLog((list) => [line, ...list].slice(0, 3));
+  return (
+    <Example
+      label="FeedbackAttachmentField — refusals that name the file, and a field that holds"
+      hint="pick an image over 200 KB, an SVG, or more than three files"
+    >
+      <div className="space-y-3">
+        <ToggleGroup
+          aria-label="Field state"
+          value={state}
+          onChange={(v) => setState(v as typeof state)}
+          options={[
+            { value: "open", label: "Open" },
+            { value: "sending", label: "Sending…" },
+            { value: "closed", label: "Thread closed" },
+          ]}
+        />
+        <FeedbackAttachmentField
+          refs
+          value={refs}
+          onChange={setRefs}
+          onUpload={fakeUpload}
+          max={3}
+          accept={ACCEPT}
+          maxBytes={MAX_BYTES}
+          disabled={state === "sending"}
+          disabledReason={state === "closed" ? "This conversation is closed — reopen it to add files." : undefined}
+          // `info.message` is ready for a toast; an upload failure can say more from `error`.
+          onError={(kind, error, info) => say(kind === "upload" ? `${info.message} (${String(error)})` : info.message)}
+        />
+        {log.length > 0 && (
+          <ul aria-live="polite" className="space-y-0.5 text-xs text-danger">
+            {log.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <Note>
+        {code("onError")} now carries what was refused: {code("onError(kind, info)")} in the File modes,{" "}
+        {code("onError(kind, error, info)")} in {code("refs")} mode — the second place stays the upload&apos;s error, as
+        in 0.22. {code("info")} holds {code("file")}, {code("files")} (the surplus, for {code('"count"')}),{" "}
+        {code("maxBytes")}, {code("accept")}, {code("max")} and a translated {code("message")} from the{" "}
+        {code("filePicker")} labels FileButton uses: “photo.png” is larger than 200 kB. {code("disabled")} holds the field
+        while a send is in flight — the chips stay, nothing is added or removed. {code("refs")} mode uploads on pick, so
+        it is a commit: {code("disabledReason")} (or {code("commit")} under a locked WriteLockProvider) keeps the
+        buttons focusable and says why. keksdose G5a / G5b.
+      </Note>
+      <Note>Since 0.23.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.27 ─────────────────────────────────────────────────────────── */
+
+/**
+ * 0.27's submit side of feedback (docs/feedback-harmonization.md §4.1, §4.2): the top-bar
+ * menu, the wired dialog, the context box and the screenshot capture — what keksdose,
+ * kastlan and Kurvenschmiede each built around the kit's dialog, once. Synthetic data
+ * only; nothing leaves the page.
+ */
+
+const ADA = { id: 7, email: "ada@example.com", display_name: "Ada Example" };
+
+let uploads = 0;
+
+// Every link stays in the showcase; in an app they are /assistant, /support, /my-feedback
+// and /feedback (the menu's defaults).
+const HERE = "/feedback-compose";
+
+export function FeedbackSubmit027Demo() {
+  const [role, setRole] = useState<"user" | "admin">("user");
+  const [outcome, setOutcome] = useState<"ok" | "fail">("ok");
+  const [last, setLast] = useState<FeedbackCreatePayload | null>(null);
+  const [attach, setAttach] = useState(true);
+
+  const feedback = useFeedbackSubmit({
+    // An app's authed client goes here; the demo hands back a made-up attachment URL.
+    upload: async (file) => {
+      await beat(300);
+      const ext = file.name.split(".").pop() ?? "bin";
+      return `/api/v1/feedback/attachments/${(++uploads).toString(16).padStart(12, "0")}.${ext}`;
+    },
+    create: async (payload) => {
+      await beat(500);
+      if (outcome === "fail") throw new Error("Demo: the server said no");
+      setLast(payload);
+      return { id: 412 };
+    },
+    user: ADA,
+    environment: "local",
+    version: "0.27.0",
+  });
+
+  // keksdose's extra rows, as an app passes them: the help assistant and the support chat
+  // with its unread count.
+  const extraEntries: TopBarMenuEntry[] = [
+    { kind: "link", key: "assistant", to: HERE, icon: <Sparkles className="size-4" />, label: "Help assistant" },
+    {
+      kind: "link",
+      key: "support",
+      to: HERE,
+      icon: <MessagesSquare className="size-4" />,
+      label: "Support chat",
+      trailing: (
+        <Chip size="sm" variant="solid" tone="danger">
+          2
+        </Chip>
+      ),
+    },
+  ];
+
+  const here = typeof window === "undefined" ? "" : window.location.href;
+
+  return (
+    <>
+      <Example
+        label="FeedbackMenu + useFeedbackSubmit — the top-bar menu and the wired dialog"
+        hint="pick a row; the report is not sent anywhere — its payload is printed below"
+      >
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <ToggleGroup
+              aria-label="Signed in as"
+              value={role}
+              onChange={(v) => setRole(v as "user" | "admin")}
+              options={[
+                { value: "user", label: "User" },
+                { value: "admin", label: "Admin" },
+              ]}
+            />
+            <ToggleGroup
+              aria-label="The create call"
+              value={outcome}
+              onChange={(v) => setOutcome(v as "ok" | "fail")}
+              options={[
+                { value: "ok", label: "Succeeds" },
+                { value: "fail", label: "Fails" },
+              ]}
+            />
+          </div>
+          {/* A stand-in for the app's top bar: the menu sits where the app puts it. */}
+          <div className="flex items-center justify-end gap-1 rounded-lg border border-subtle bg-surface px-3 py-1.5">
+            <span className="me-auto text-sm font-semibold text-primary">Example Ltd</span>
+            <FeedbackMenu
+              onFile={feedback.open}
+              isAdmin={role === "admin"}
+              extraEntries={extraEntries}
+              myFeedbackHref={HERE}
+              inboxHref="/feedback-inbox"
+              iconBadge={{ label: "2 unread", tone: "danger" }}
+            />
+          </div>
+          {feedback.dialog}
+          {last && (
+            <pre className="max-h-72 overflow-auto rounded-md bg-surface-2 p-3 text-xs text-secondary">
+              {JSON.stringify(last, null, 2)}
+            </pre>
+          )}
+          <Note>
+            {code("<FeedbackMenu onFile={feedback.open} isAdmin={…} />")} draws §4.1: Bug · Idea · Question · Other,
+            a rule, the app&apos;s {code("extraEntries")}, then one list link: {code("View feedback")} for an admin,{" "}
+            {code("My feedback")} for everyone else — never a Crash row. {code("useFeedbackSubmit")} takes the
+            app&apos;s {code("upload(file) → url")} and {code("create(payload)")} and owns the rest: multiple attachments
+            (one screenshot + 5 files, images/PDF/text, 10 MB), the capture, the context box, uploads before the create,
+            and every toast in the kit&apos;s words. Hand it {code("errorMessage")} to toast the server&apos;s{" "}
+            {code("detail")} instead of the generic failure.
+          </Note>
+        </div>
+        <Note>Since 0.27.</Note>
+      </Example>
+
+      <Example
+        label="FeedbackContextBox + feedbackContext() — what the box shows is what is sent"
+        hint="untick the box: the URL is struck through, and url / route go empty"
+      >
+        <div className="grid gap-3 md:grid-cols-2">
+          <FeedbackContextBox user={ADA} url={here} attachUrl={attach} onAttachUrlChange={setAttach} />
+          <pre className="min-w-0 overflow-auto rounded-md bg-surface-2 p-3 text-xs text-secondary">
+            {JSON.stringify(
+              feedbackContext({ user: ADA, attachUrl: attach, url: here, environment: "local", version: "0.27.0" }),
+              null,
+              2,
+            )}
+          </pre>
+        </div>
+        <Note>
+          One set of values feeds both, so the box cannot promise one thing while the report carries another.{" "}
+          {code("origin")} and {code("environment")} are never withheld — which copy of the app is not personal, and
+          triage asks it first.
+        </Note>
+        <Note>Since 0.27.</Note>
+      </Example>
+    </>
+  );
+}

@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { BulkActionBar, Button, Delta, StaticLegend, ToggleGroup } from "@eifi1/ui-kit";
 import type { LegendEntry } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * 0.13 display fixes: ToggleGroup `semantics="pressed"` (kastlan #47), Delta's figure
  * at zero (kastlan #48), a legend entry `align: "end"` (kastlan #49), and links as
  * BulkActionBar arrow-key stops (keksdose F8).
  */
-
-const READOUT = "font-mono text-xs text-secondary";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 function PressedToggleGroup() {
   const [view, setView] = useState<"list" | "board" | "calendar">("list");

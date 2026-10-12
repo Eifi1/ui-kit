@@ -3,6 +3,7 @@ import { PAGES } from "../routes";
 import { slugify } from "../lib/section";
 import { PAGE_EXAMPLE_LABELS } from "../search/examples.generated";
 import { MOUNT_TIMEOUT_MS, renderShowcase, useShowcaseEnvironment } from "./showcase-harness";
+import { axeFindings } from "./page-axe";
 
 /** How many files the per-page check is spread over (pages-shard-1…4.test.tsx). */
 export const PAGE_SHARDS = 4;
@@ -22,15 +23,32 @@ export function pagesOfShard(index: number) {
  *   legitimately render alerts of their own);
  * - the static extraction checked against the DOM: the anchors the search index links
  *   to are exactly the `<h3 id>` headings the page renders — no example the page shows
- *   is missing from the search, and no result points at a heading that is not there.
+ *   is missing from the search, and no result points at a heading that is not there;
+ * - axe's jsdom-safe rules over the page's `<main>` find nothing that is not on the
+ *   known list (page-axe.ts; refactor audit 2026-10, DOC-10). The frame around it is the
+ *   same on every page, so the first shard checks it once.
  */
 export function describePageShard(index: number): void {
-  useShowcaseEnvironment();
+  // Only this shard's pages' sections: a quarter of the modules, a quarter of the heap.
+  useShowcaseEnvironment({ pages: pagesOfShard(index).map((p) => p.slug) });
 
   describe(`every page, shard ${index + 1} of ${PAGE_SHARDS}`, () => {
+    if (index === 0) {
+      it(
+        "the frame — sidebar, top bar, page header — passes axe",
+        async () => {
+          const [first] = pagesOfShard(index);
+          renderShowcase(`/${first.slug}`);
+          // The page's own content is the per-page check's; here only what surrounds it.
+          expect(await axeFindings(document.body, first.slug, document.querySelector("main")!)).toEqual([]);
+        },
+        MOUNT_TIMEOUT_MS,
+      );
+    }
+
     it.each(pagesOfShard(index).map((p) => [p.slug, p.title] as const))(
-      "/%s mounts, and its examples match the search index",
-      (slug, title) => {
+      "/%s mounts, its examples match the search index, and axe finds nothing new",
+      async (slug, title) => {
         renderShowcase(`/${slug}`);
         expect(screen.getByRole("heading", { name: title, level: 1 })).toBeInTheDocument();
         const crashed = [...document.querySelectorAll("[data-section-error]")].map((el) =>
@@ -42,6 +60,12 @@ export function describePageShard(index: number): void {
         const indexed = new Set((PAGE_EXAMPLE_LABELS[slug] ?? []).map(slugify));
         for (const id of indexed) expect(rendered, `#${id} is indexed but not on /${slug}`).toContain(id);
         for (const id of rendered) expect(indexed, `#${id} is on /${slug} but not indexed`).toContain(id);
+
+        const findings = await axeFindings(document.querySelector("main")!, slug);
+        expect(
+          findings,
+          `axe on /${slug}:\n${findings.map((f) => `  ${f.rule}  ${f.html}`).join("\n")}`,
+        ).toEqual([]);
       },
       MOUNT_TIMEOUT_MS,
     );

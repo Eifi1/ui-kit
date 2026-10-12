@@ -10,7 +10,7 @@ import { DeleteAccountSetting } from "../../../src/account/delete-account-settin
 import type { DeletionMode } from "../../../src/account/delete-account-setting";
 import { DataExportSetting } from "../../../src/account/data-export-setting";
 import { isRateLimited } from "../../../src/auth/auth-errors";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, beat } from "../lib/section";
 
 /**
  * THE ACCOUNT'S OWN SETTINGS (0.30, docs/user-admin-harmonization.md §6): first and last
@@ -22,8 +22,6 @@ import { Example, Note } from "../lib/section";
  * security" page (`auth-account`).
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 700) => new Promise((resolve) => setTimeout(resolve, ms));
 const PASSWORD = "correct horse";
 
 /** What a coded refusal looks like coming out of axios — the shape the apps' clients
@@ -70,7 +68,7 @@ export function ProfileNames030Demo() {
           lastName={saved.last}
           onSave={async (values) => {
             log(`onSave(${JSON.stringify(values)})`);
-            await beat();
+            await beat(700);
             setSaved({ first: values.firstName, last: values.lastName });
           }}
         />
@@ -103,7 +101,7 @@ export function EmailChange030Demo() {
           emailTag="exampleapp"
           onRequest={async ({ newEmail, password }) => {
             log(`onRequest({ newEmail: "${newEmail}", password: "•••" })`);
-            await beat();
+            await beat(700);
             if (password !== PASSWORD) throw refusal(400, "password_incorrect");
             if (newEmail === "grace@example.com") throw refusal(409, "email_taken");
             if (newEmail === "slow@example.com") throw refusal(429);
@@ -112,11 +110,11 @@ export function EmailChange030Demo() {
           }}
           onResend={async () => {
             log("onResend()");
-            await beat();
+            await beat(700);
           }}
           onCancel={async () => {
             log("onCancel()");
-            await beat();
+            await beat(700);
             setPending(null);
           }}
         />
@@ -175,14 +173,14 @@ export function Sessions030Demo() {
             withList
               ? async (id) => {
                   log(`onRevoke("${id}")`);
-                  await beat();
+                  await beat(700);
                   setSessions((rows) => rows.filter((row) => row.id !== id));
                 }
               : undefined
           }
           onSignOutEverywhere={async () => {
             log("onSignOutEverywhere() — the app signs this page out next");
-            await beat();
+            await beat(700);
           }}
         />
       </Column>
@@ -226,7 +224,7 @@ export function DeleteAccount030Demo() {
           consequences={["Your 2 budgets are deleted with their shares.", "Their 3 guests are told today."]}
           onRequest={async ({ password, confirmEmail }) => {
             log(`onRequest({ password: "•••", confirmEmail: "${confirmEmail}" })`);
-            await beat();
+            await beat(700);
             if (password !== PASSWORD) throw refusal(400, "password_incorrect");
             if (lastAdmin && mode === "operator")
               throw Object.assign(refusal(409, "last_admin"), {
@@ -264,7 +262,7 @@ export function DataExport030Demo() {
           description="Your account; your company’s records are your company’s, ask them."
           onExport={async () => {
             log("onExport()");
-            await beat();
+            await beat(700);
             if (throttled) throw refusal(429);
             const envelope = {
               format: "eifi1-account-export",
@@ -322,7 +320,7 @@ export function SignInExtras030Demo() {
             onSubmit={({ email, password }) =>
               answer(
                 `onSubmit({ email: "${email}" })`,
-                beat().then((): SignInAnswer => {
+                beat(700).then((): SignInAnswer => {
                   // keksdose's shape: uncoded, with the wait in a Retry-After header.
                   if (email === "slow@example.com")
                     throw Object.assign(refusal(429), {
@@ -337,14 +335,14 @@ export function SignInExtras030Demo() {
             onCode={({ challengeToken, code: typed, kind }) =>
               answer(
                 `onCode({ challengeToken: "${challengeToken}", code: "${typed}"${kind ? `, kind: "${kind}"` : ""} })`,
-                beat().then((): SignInAnswer => {
+                beat(700).then((): SignInAnswer => {
                   const ok = kind === "recovery" ? typed.replace(/[^a-z0-9]/gi, "").toUpperCase() === "ABCDEFGHJKLMNPQR" : typed === "123456";
                   if (!ok) throw refusal(401);
                   return { kind: "signed-in" };
                 }),
               )
             }
-            onSetPassword={() => answer("onSetPassword()", beat().then((): SignInAnswer => ({ kind: "signed-in" })))}
+            onSetPassword={() => answer("onSetPassword()", beat(700).then((): SignInAnswer => ({ kind: "signed-in" })))}
           />
         </AuthLayout>
       </div>

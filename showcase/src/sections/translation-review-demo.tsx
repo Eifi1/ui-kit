@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button } from "@eifi1/ui-kit";
+import { Button, TranslationProgress, TranslationReviewEditor } from "@eifi1/ui-kit";
 import {
   REVIEW_STATUS_TONES,
   ReviewStatusChip,
@@ -23,7 +23,7 @@ import {
   type TranslationReviewKey,
   type TranslationReviewWrite,
 } from "../../../src/lib/translation-review";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, beat } from "../lib/section";
 
 /**
  * 0.19 — the translation review as kit parts (H1): keksdose's /translations, which kastlan
@@ -31,8 +31,6 @@ import { Example, Note } from "../lib/section";
  * app's bundles are a dozen keksdose-style strings, and the kit's own words come from
  * `kitLabelStrings` under `kit.`, as every app's review will list them.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 // The app's own strings, keksdose-style: dotted keys, English as the reference.
 const APP: Record<string, Record<string, unknown>> = {
@@ -122,8 +120,6 @@ const SEED: TranslationReview[] = [
   { locale: "it", key: "common.save", text: "Salva", referenceText: "Save", verdict: "APPROVED", note: null, suggestion: null, reviewerName: "Giulia", reviewedAt: at },
 ];
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export function TranslationReviewDemo() {
   const [reviews, setReviews] = useState<TranslationReview[]>(SEED);
   const [locale, setLocale] = useState("fr");
@@ -151,17 +147,18 @@ export function TranslationReviewDemo() {
     [reference, reviews, areas],
   );
   const current = LOCALES.find((l) => l.value === locale) ?? LOCALES[0];
+  const editorRow = rowsByLocale.get("fr")?.find((row) => row.key === "legal.terms");
 
   // The app's request, here a timeout: answers with the rows it wrote, which the page
   // merges into its copy — as keksdose's cache patch does.
   const save = async (writes: TranslationReviewWrite[]) => {
-    await wait(500);
+    await beat(500);
     if (refuse) throw new Error("403");
     const now = new Date().toISOString();
     setReviews((prev) => mergeReviews(prev, writes.map((w) => ({ ...w, reviewerName: "You", reviewedAt: now }))));
   };
   const clear = async (keys: TranslationReviewKey[]) => {
-    await wait(500);
+    await beat(500);
     if (refuse) throw new Error("403");
     setReviews((prev) => dropReviews(prev, keys));
   };
@@ -235,6 +232,28 @@ export function TranslationReviewDemo() {
         <p className="mt-2 text-xs text-muted">
           Tones: {REVIEW_STATUSES.map((s) => `${s} ${REVIEW_STATUS_TONES[s]}`).join(" · ")}
         </p>
+      </Example>
+
+      {/* The panel's two parts on their own (round 0.34: neither had a specimen —
+          refactor audit 2026-10, DOC-9). Same rows and "server" as the panel above. */}
+      <Example label="TranslationProgress — one locale's bar and legend" hint="the panel's header, for an app's own overview">
+        <TranslationProgress rows={rowsByLocale.get("fr") ?? []} />
+      </Example>
+
+      <Example label="TranslationReviewEditor — one string, opened" hint="what the panel opens on a row">
+        {editorRow ? (
+          <TranslationReviewEditor
+            row={editorRow}
+            referenceLabel="English"
+            localeLabel="Français"
+            onSave={(write) => save([write])}
+            onClear={(key) => clear([key])}
+          />
+        ) : null}
+        <Note>
+          The reference beside the translation, what changed since the verdict, the placeholders a machine can check,
+          and the two verdicts. Here on the French {code("legal.terms")}, which was sent back with a better wording.
+        </Note>
       </Example>
     </div>
   );

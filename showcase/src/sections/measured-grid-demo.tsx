@@ -1,6 +1,18 @@
-import { useRef } from "react";
-import { Button, MeasuredGrid, UiKitProvider, useMeasuredRows, useWindowedRows } from "@eifi1/ui-kit";
-import { Example, Note, Stage } from "../lib/section";
+import { useRef, useState } from "react";
+import {
+  Button,
+  MeasuredGrid,
+  UiKitProvider,
+  useMeasuredRows,
+  useWindowedRows,
+  DataTable,
+  NumberInput,
+  Switch,
+  formatMoney,
+} from "@eifi1/ui-kit";
+import { Example, Note, Stage, code, beat, StateLine } from "../lib/section";
+import { InlineEditField } from "../../../src/components/inline-edit-field";
+import { WriteLockProvider } from "../../../src/components/write-lock";
 
 /**
  * MeasuredGrid and useMeasuredRows.
@@ -35,7 +47,7 @@ const SAMPLE = [
 ].join("\n");
 
 /** What the hook answers, under a specimen. */
-function StateLine({ ready, points, problems }: { ready: boolean; points: number; problems: number }) {
+function GridStateLine({ ready, points, problems }: { ready: boolean; points: number; problems: number }) {
   return (
     <p className="mt-2 font-mono text-xs text-muted">
       ready = {String(ready)} · rows = {points} · problems = {problems}
@@ -70,7 +82,7 @@ export function MeasuredGridDemo() {
               columns={SWEEP_COLUMNS}
               {...sweep.props}
             />
-            <StateLine ready={sweep.ready} points={sweep.rows.length} problems={sweep.problems} />
+            <GridStateLine ready={sweep.ready} points={sweep.rows.length} problems={sweep.problems} />
           </div>
         </Stage>
       </Example>
@@ -84,7 +96,7 @@ export function MeasuredGridDemo() {
                 columns={[{ label: "x" }, { label: "y" }, { label: "z", unit: "N" }]}
                 {...pasted.props}
               />
-              <StateLine ready={pasted.ready} points={pasted.rows.length} problems={pasted.problems} />
+              <GridStateLine ready={pasted.ready} points={pasted.rows.length} problems={pasted.problems} />
             </div>
             <div>
               <p className="mb-1 text-caption font-medium text-muted">
@@ -116,7 +128,7 @@ export function MeasuredGridDemo() {
                   views={["text", "cells"]}
                   {...german.props}
                 />
-                <StateLine ready={german.ready} points={german.rows.length} problems={german.problems} />
+                <GridStateLine ready={german.ready} points={german.rows.length} problems={german.problems} />
               </div>
             </UiKitProvider>
             <MeasuredGrid
@@ -172,7 +184,7 @@ export function MeasuredGridDemo() {
               }}
               {...generated.props}
             />
-            <StateLine ready={generated.ready} points={generated.rows.length} problems={generated.problems} />
+            <GridStateLine ready={generated.ready} points={generated.rows.length} problems={generated.problems} />
             <p className="font-mono text-xs text-muted">
               rows[1] = {generated.rows[1] ? JSON.stringify(generated.rows[1]) : "—"}
             </p>
@@ -263,5 +275,146 @@ function WindowedList() {
         totalHeight = {Math.round(totalHeight)}px
       </p>
     </div>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+interface Envelope {
+  id: number;
+  name: string;
+  assigned: string;
+}
+
+const START: Envelope[] = [
+  { id: 1, name: "Rent", assigned: "1100.0000" },
+  { id: 2, name: "Groceries", assigned: "450.0000" },
+  { id: 3, name: "Holidays", assigned: "0.0000" },
+];
+
+function EnvelopeTable() {
+  const [rows, setRows] = useState(START);
+  const [locked, setLocked] = useState(false);
+  const [log, setLog] = useState("—");
+  const update = (id: number, patch: Partial<Envelope>) =>
+    setRows((all) => all.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  return (
+    <Example label="InlineEditField in a DataTable" hint="click a value — Enter or leaving saves, Escape cancels">
+      <div className="flex flex-col gap-3">
+        <Switch checked={locked} onCheckedChange={setLocked} label="Read-only demo budget" />
+        <WriteLockProvider locked={locked} reason="Read-only demo — saving is disabled.">
+          <DataTable
+            rows={rows}
+            rowKey={(r) => r.id}
+            columns={[
+              {
+                key: "name",
+                header: "Envelope",
+                cell: (r) => (
+                  <InlineEditField
+                    commit
+                    label="Envelope name"
+                    value={r.name}
+                    inputProps={{ maxLength: 40 }}
+                    onCommit={(name) => {
+                      if (name.trim() === "") throw new Error("A name is needed.");
+                      update(r.id, { name: name.trim() });
+                      setLog(`renamed to ${name.trim()}`);
+                    }}
+                    formatError={(e) => (e as Error).message}
+                  />
+                ),
+              },
+              {
+                key: "assigned",
+                header: "Assigned",
+                headClassName: "text-end",
+                cell: (r) => (
+                  <InlineEditField
+                    commit
+                    redact
+                    align="end"
+                    label="Assigned"
+                    value={r.assigned}
+                    display={(v) => formatMoney(Number(v), "CHF")}
+                    // The column is Numeric(18,4): "1100" is the server's "1100.0000".
+                    isEqual={(a, b) => Number(a) === Number(b)}
+                    onCommit={(v) =>
+                      beat(500).then(() => {
+                        update(r.id, { assigned: Number(v).toFixed(4) });
+                        setLog(`assigned ${v}`);
+                      })
+                    }
+                    editor={(p) => (
+                      <NumberInput
+                        calculator={false}
+                        aria-label={p.label}
+                        value={p.value}
+                        onChange={p.onChange}
+                        onCommit={p.commit}
+                        aria-invalid={p.invalid || undefined}
+                        aria-describedby={p.describedBy}
+                        inputClassName="px-2 py-1 text-end"
+                      />
+                    )}
+                  />
+                ),
+              },
+            ]}
+          />
+        </WriteLockProvider>
+        <StateLine>{`last = ${log}`}</StateLine>
+      </div>
+      <Note>
+        The value is a quiet button named by the value — the action (&ldquo;Edit Assigned&rdquo;) is its description,
+        so a screen reader does not hear a column of &ldquo;edit, edit, edit&rdquo;. A text value needs no editor; any
+        other takes one through {code("editor")} (here {code("NumberInput calculator={false}")}, whose own{" "}
+        {code("onCommit")} hands over the evaluated &ldquo;1100-50&rdquo;). Unchanged by {code("isEqual")} is not a
+        write. A returned promise keeps the editor read-only with a spinner; a rejection (or a throw — empty the name)
+        keeps it open with the failure under it. With {code("commit")} under a lock, the value stays a button,{" "}
+        {code("aria-disabled")}, with the reason — never a field that takes keys it cannot save.
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
+  );
+}
+
+function Rename() {
+  const [name, setName] = useState("Household");
+  return (
+    <Example label="InlineEditField — a rename that can fail" hint="the save rejects for “Taken”; the typed name stays for a retry">
+      <Stage>
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <InlineEditField
+            label="Budget name"
+            value={name}
+            className="flex-1"
+            formatError={(e) => (e as Error).message}
+            onCommit={(next) =>
+              beat(600).then(() => {
+                if (next.trim().toLowerCase() === "taken") throw new Error("You already have a budget called that.");
+                setName(next.trim());
+              })
+            }
+          />
+        </div>
+      </Stage>
+      <Note>
+        keksdose&rsquo;s budgets rename was an {code("Input")} with Save and Cancel and no Escape. The failure is shown
+        under the field, described and spoken; the next keystroke clears it. Focus returns to the value after Enter or
+        Escape, and stays where you went after a save that came from leaving the field.
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
+  );
+}
+
+/** Table entry (`measured-grid`): the value that edits in place. */
+export function InlineEdit022Demo() {
+  return (
+    <>
+      <EnvelopeTable />
+      <Rename />
+    </>
   );
 }

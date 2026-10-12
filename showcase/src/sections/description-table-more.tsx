@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Button,
   DescriptionItem,
@@ -13,8 +13,14 @@ import {
   TableRow,
   ToggleGroup,
 } from "@eifi1/ui-kit";
-import type { DescriptionListColumns, TableLayout } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import type {
+  DescriptionListColumns,
+  TableLayout,
+  TableHeaderCellSize,
+  TableHeaderCellWeight,
+  TableVAlign,
+} from "@eifi1/ui-kit";
+import { Example, Note, Row, READOUT, code } from "../lib/section";
 
 /**
  * DESCRIPTION LIST & TABLE — the 0.10.0 layouts: the stacked grid with columns and
@@ -23,7 +29,6 @@ import { Example, Note, Row } from "../lib/section";
  */
 
 const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" });
-const READOUT = "font-mono text-xs text-secondary";
 
 function StackedList() {
   const [columns, setColumns] = useState<"1" | "2" | "3" | "4">("3");
@@ -264,5 +269,167 @@ export function DescriptionTableMore() {
       <TightCardsProse />
       <TableEmptyDensityLayout />
     </>
+  );
+}
+
+/* ── since 0.11 ─────────────────────────────────────────────────────────── */
+
+const VAT_RATES = [
+  { rate: "19\u00a0%", net: 1200 },
+  { rate: "7\u00a0%", net: 310.5 },
+];
+
+
+export function TableHeaderValignDemo() {
+  const [size, setSize] = useState<TableHeaderCellSize>("sm");
+  const [weight, setWeight] = useState<TableHeaderCellWeight>("normal");
+  const [valign, setValign] = useState<TableVAlign>("middle");
+  const [nets, setNets] = useState(VAT_RATES.map((r) => String(r.net)));
+  return (
+    <Example
+      label="Table — header size and weight, valign on a table of inputs"
+      hint="a quiet header at the body size; read-out figures centred on the fields beside them"
+    >
+      <Row className="mb-3">
+        <ToggleGroup<TableHeaderCellSize>
+          aria-label="header size"
+          size="sm"
+          value={size}
+          onChange={setSize}
+          options={[
+            { value: "xs", label: "size xs" },
+            { value: "sm", label: "size sm" },
+          ]}
+        />
+        <ToggleGroup<TableHeaderCellWeight>
+          aria-label="header weight"
+          size="sm"
+          value={weight}
+          onChange={setWeight}
+          options={[
+            { value: "normal", label: "normal" },
+            { value: "medium", label: "medium" },
+            { value: "semibold", label: "semibold" },
+          ]}
+        />
+        <ToggleGroup<TableVAlign>
+          aria-label="row valign"
+          size="sm"
+          value={valign}
+          onChange={setValign}
+          options={[
+            { value: "top", label: "top" },
+            { value: "middle", label: "middle" },
+            { value: "bottom", label: "bottom" },
+          ]}
+        />
+      </Row>
+      <Table aria-label="VAT summary">
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell size={size} weight={weight}>
+              Rate
+            </TableHeaderCell>
+            <TableHeaderCell size={size} weight={weight}>
+              Net
+            </TableHeaderCell>
+            <TableHeaderCell size={size} weight={weight} numeric>
+              VAT
+            </TableHeaderCell>
+            <TableHeaderCell size={size} weight={weight} numeric>
+              Gross
+            </TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {VAT_RATES.map((r, i) => {
+            const net = Number(nets[i]) || 0;
+            const pct = parseFloat(r.rate) / 100;
+            return (
+              <TableRow key={r.rate} valign={valign}>
+                <TableCell>{r.rate}</TableCell>
+                <TableCell>
+                  <div className="w-32">
+                    <Input
+                      aria-label={`Net at ${r.rate}`}
+                      inputMode="decimal"
+                      value={nets[i]}
+                      onChange={(e) => setNets((n) => n.map((v, j) => (j === i ? e.target.value : v)))}
+                    />
+                  </div>
+                </TableCell>
+                <TableCell numeric>{EUR.format(net * pct)}</TableCell>
+                <TableCell numeric>{EUR.format(net * (1 + pct))}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+      <div className="mt-3">
+        <Note>
+          {code("TableHeaderCell")}&apos;s {code("size")} and {code("weight")} say &ldquo;a quiet header at the
+          body size&rdquo; without overriding classes. {code("TableRow valign")} reaches every cell of the row
+          that does not set its own (each cell states its default — top in the body, bottom in the head — so a
+          class on the row could not): at {code("top")} the figures sit above the middle of the field beside them.
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.16 ─────────────────────────────────────────────────────────── */
+
+const LINES_016 = ["Rent", "Utilities", "Groceries", "Transport", "Insurance", "Phone", "Leisure", "Savings"];
+
+export function TableRefs016Demo() {
+  const rows = useRef(new Map<string, HTMLTableRowElement>());
+  const [current, setCurrent] = useState<string | null>(null);
+  const jump = (line: string) => {
+    setCurrent(line);
+    rows.current.get(line)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  };
+  return (
+    <Example label="Table parts take a ref" hint="<TableRow ref>, <TableCell ref>, <Table ref>">
+      <Row>
+        <Button variant="secondary" size="sm" onClick={() => jump("Savings")}>
+          Scroll to Savings
+        </Button>
+        <Button variant="secondary" size="sm" onClick={() => jump("Rent")}>
+          Scroll to Rent
+        </Button>
+      </Row>
+      <div className="max-h-40 overflow-y-auto rounded-md border border-subtle">
+        <Table aria-label="Budget lines">
+          <TableHead>
+            <TableRow>
+              <TableHeaderCell>Line</TableHeaderCell>
+              <TableHeaderCell numeric>Budget</TableHeaderCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {LINES_016.map((line, i) => (
+              <TableRow
+                key={line}
+                ref={(el) => {
+                  if (el) rows.current.set(line, el);
+                  else rows.current.delete(line);
+                }}
+                className={line === current ? "bg-active" : undefined}
+              >
+                <TableCell>{line}</TableCell>
+                <TableCell numeric>{(i + 1) * 120}.00</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <Note>
+        Every Table part forwards {code("ref")} to its element (React 19's ref-as-a-prop),
+        so a row can be scrolled into view without {code("useId")} +{" "}
+        {code("getElementById")}.
+      </Note>
+      <Note>Since 0.16.</Note>
+    </Example>
   );
 }

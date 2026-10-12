@@ -5,6 +5,7 @@ import {
   FeedbackAwaitingToggle,
   FeedbackEmptyState,
   FeedbackMobileCard,
+  FeedbackSubject,
   ToggleGroup,
   feedbackMobileGroupBy,
   feedbackSwipePlan,
@@ -14,18 +15,24 @@ import {
   useFeedbackRenderDate,
   useFeedbackStatusLabels,
   useFeedbackStatusUndo,
-  type FeedbackRecord,
-  type FeedbackStatusMutate,
 } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import type { FeedbackRecord, FeedbackStatusMutate } from "@eifi1/ui-kit";
+import { Example, Note, code } from "../../lib/section";
+
+/**
+ * The Feedback inbox page, part 1 of 4 (refactor audit 2026-10, DOC-8): the two lists —
+ * `feedbackColumns`, the phone card and the awaiting toggle. The page's other parts are
+ * feedback-inbox.tsx (the vocabulary, transitions and note editor), composer.tsx, detail.tsx
+ * and record.tsx beside this file.
+ */
+
+/* ── since 0.27 ─────────────────────────────────────────────────────────── */
 
 /**
  * 0.27's feedback TABLE (docs/feedback-harmonization.md §4.3): the nine columns, the
  * phone card with its chips, day headers, swipes, the awaiting toggle and the empty
  * state — keksdose's page, as kit parts. Synthetic data only.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** The demo's viewer: an admin, so both pages make sense. */
 const ME = 1;
@@ -40,6 +47,7 @@ const base = {
 } as const;
 
 const me = { user_display_name: "Example Admin", user_email: "admin@example.test" };
+
 const them = { user_display_name: "Example User", user_email: "user@example.test" };
 
 const ROWS: FeedbackRecord[] = [
@@ -214,6 +222,32 @@ export function FeedbackTable027Demo() {
           adds {code('urlSync storageKey="feedback"')}, its {code("?row=")} deep link and the row detail.
         </Note>
       </div>
+      <Note>Since 0.27.</Note>
+    </Example>
+  );
+}
+
+/** The table's subject cell on its own (§4.3, column 4) — round 0.34: it had no specimen
+ *  (refactor audit 2026-10, DOC-9). */
+export function FeedbackSubjectDemo() {
+  return (
+    <Example
+      label="FeedbackSubject — the title with its environment and rework chips"
+      hint="one line in a table cell; wrap on a phone card"
+    >
+      <div className="max-w-sm space-y-3">
+        <div className="rounded-md border border-subtle p-2">
+          <FeedbackSubject row={ROWS[1]} />
+        </div>
+        <div className="rounded-md border border-subtle p-2">
+          <FeedbackSubject row={ROWS[1]} wrap />
+        </div>
+      </div>
+      <Note>
+        The chips are facts read off the record: {code("context.environment")} when it is not production, and{" "}
+        {code("Rework ×n")} from the body&apos;s rework rounds. Without {code("wrap")} the title truncates and the chips
+        stay whole; with it the title wraps and the chips follow its last word.
+      </Note>
     </Example>
   );
 }

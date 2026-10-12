@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Bell, Copy, Pencil, Star, Trash2, X } from "lucide-react";
 import { Button, IconButton } from "@eifi1/ui-kit";
 import type { ButtonTone, TooltipSide } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, READOUT } from "../lib/section";
 
 /**
  * BUTTONS — the 0.10.0 props: an icon button that names itself once (`label`, and the
@@ -10,7 +10,6 @@ import { Example, Note, Row } from "../lib/section";
  * (`pressed`), and a disabled button that can say why (`disabledReason`).
  */
 
-const READOUT = "font-mono text-xs text-secondary";
 const SIDES: TooltipSide[] = ["top", "bottom", "start", "end"];
 
 function IconButtonLabel() {

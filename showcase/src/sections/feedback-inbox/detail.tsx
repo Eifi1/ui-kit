@@ -5,12 +5,16 @@ import {
   UiKitProvider,
   appendRework,
   useFeedbackStatusUndo,
-  type AuthedFetcher,
-  type FeedbackDetailUpdate,
-  type FeedbackRecord,
-  type UiKitLabelOverrides,
 } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import type { AuthedFetcher, FeedbackDetailUpdate, FeedbackRecord, UiKitLabelOverrides } from "@eifi1/ui-kit";
+import { Example, Note, code } from "../../lib/section";
+
+/**
+ * The Feedback inbox page: the row detail (refactor audit 2026-10, DOC-8). The page's
+ * other parts are feedback-inbox.tsx, table.tsx, record.tsx and composer.tsx.
+ */
+
+/* ── since 0.27 ─────────────────────────────────────────────────────────── */
 
 /**
  * 0.27's row detail (docs/feedback-harmonization.md §4.4): the panel a feedback table
@@ -18,7 +22,6 @@ import { Example, Note } from "../lib/section";
  * the authenticated GET are faked in memory here; every row and key is synthetic.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
 const ATT = "/api/v1/feedback/attachments";
 
 /** A picture for a `.png` key — an SVG blob, which the image decodes as it would the
@@ -232,6 +235,7 @@ export function FeedbackDetail027Demo() {
         (uploaded first) and PATCHes the body alone; the server reopens the row. Send a rework as the author: the row goes
         back to Open, and the Edit button appears.
       </Note>
+      <Note>Since 0.27.</Note>
     </Example>
   );
 }

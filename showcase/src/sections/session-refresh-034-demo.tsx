@@ -8,7 +8,7 @@ import {
   isTransientRefreshFailure,
 } from "@eifi1/ui-kit";
 import type { ServerWakeAxiosConfig, SessionRenewal } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, beat } from "../lib/section";
 
 /**
  * attachSessionRefresh (0.34, docs/auth-harmonization.md §11, round 0.34 C7): renewing a
@@ -19,8 +19,6 @@ import { Example, Note } from "../lib/section";
  * few lines of axios's shape (interceptors and `request`), because the showcase has no
  * axios — the kit types the instance structurally, so the real one fits the same way.
  */
-
-const beat = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /** What the pretend refresh answers. */
 type Answer = "renewal" | "ended" | "busy" | "elsewhere";

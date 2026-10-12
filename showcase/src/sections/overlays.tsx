@@ -1,5 +1,5 @@
 import { useContext, useId, useState } from "react";
-import { Info, Keyboard, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import {
   Button,
   FullBleedDialog,
@@ -13,11 +13,9 @@ import {
   Tooltip,
   buttonClasses,
   cn,
-  placeTooltip,
   useBackdropClose,
   useCloseTransition,
 } from "@eifi1/ui-kit";
-import type { AnchorRect, TooltipPlacement, TooltipSize, TooltipViewport } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
 /**
@@ -37,8 +35,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
 // Panel sizes as a list so the four specimens cannot drift from the prop's union.
 const MODAL_SIZES = ["md", "lg", "xl", "2xl"] as const;
 type ModalSize = (typeof MODAL_SIZES)[number];
-
-const TOOLTIP_SIDES = ["top", "right", "bottom", "left", "start", "end"] as const;
 
 const MENU_ITEMS = ["Duplicate", "Export as CSV", "Archive"];
 
@@ -205,36 +201,11 @@ export function PopoversMenusTooltips() {
         for a top bar; it is worth knowing before you file it as a bug here.
       </Note>
 
-      <Example label="Tooltip — side" hint="The CSS-only variant. `side` is absolute here: it never flips.">
-        <TooltipSides />
-      </Example>
-
-      <Example
-        label="Tooltip — portal, redact and the empty label"
-        hint="`portal` forces the portalled bubble; left out, a tooltip inside a scroll container portals on its own (see the auto-portal example below)."
-      >
-        <TooltipPortal />
-      </Example>
-
-      <Example
-        label="Tooltip — rich labels, className and the portal flip"
-        hint="Focus a trigger with Tab and press Escape: the bubble goes (WCAG 1.4.13) and comes back on the next focus."
-      >
-        <TooltipMore />
-      </Example>
-
       <Example
         label="Right-to-left — which placements flip"
         hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}
       >
         <OverlaysRtl />
-      </Example>
-
-      <Example
-        label="placeTooltip"
-        hint="Pure, viewport pixels in and out — which is why it can be shown as a table at all."
-      >
-        <OutTable rows={PLACEMENT_ROWS} />
       </Example>
     </>
   );
@@ -903,6 +874,9 @@ function PopoverNaming() {
               ref={ref}
               type="button"
               role="combobox"
+              // A combobox takes no name from its content (that is its value), so it
+              // needs one of its own (axe "button-name", refactor audit 2026-10, DOC-10).
+              aria-label="Category"
               aria-expanded={open}
               aria-controls={open ? panelId : undefined}
               aria-haspopup="dialog"
@@ -1088,126 +1062,6 @@ function HoverMenuClamp() {
   );
 }
 
-/* ── Tooltip ──────────────────────────────────────────────────────────────── */
-
-function TooltipSides() {
-  const [pressed, setPressed] = useState("—");
-
-  return (
-    <Row>
-      {TOOLTIP_SIDES.map((side) => (
-        <Tooltip key={side} side={side} label={`side="${side}"`}>
-          <button
-            type="button"
-            onClick={() => setPressed(side)}
-            className={buttonClasses("secondary")}
-          >
-            {side}
-          </button>
-        </Tooltip>
-      ))}
-      <span className="text-xs text-muted">Last pressed: {pressed}</span>
-    </Row>
-  );
-}
-
-function TooltipPortal() {
-  const [redact, setRedact] = useState(true);
-  const [pressed, setPressed] = useState("—");
-
-  return (
-    <Row>
-      <Tooltip
-        portal
-        side="right"
-        redact={redact}
-        label={redact ? "Ada Lovelace — the user's own data" : "Just a UI string"}
-      >
-        <IconButton aria-label="Toggle the redact prop" onClick={() => setRedact((v) => !v)}>
-          <Info />
-        </IconButton>
-      </Tooltip>
-      <span className="text-xs text-secondary">
-        <code className="font-mono">redact={String(redact)}</code> — the bubble carries{" "}
-        <code className="font-mono">data-private</code>. The blur rule itself lives in the
-        consuming app (a <code className="font-mono">demo-mode</code> class on{" "}
-        <code className="font-mono">&lt;html&gt;</code>), so here it only tags; inspect the
-        element to see it.
-      </span>
-      <Tooltip label="">
-        <button
-          type="button"
-          onClick={() => setPressed("empty label")}
-          className={buttonClasses("ghost")}
-        >
-          label=&quot;&quot; — no bubble and no wrapper
-        </button>
-      </Tooltip>
-      <span className="text-xs text-muted">Last pressed: {pressed}</span>
-    </Row>
-  );
-}
-
-function TooltipMore() {
-  const helpId = useId();
-
-  return (
-    <div className="space-y-3">
-      <Row>
-        {/* A ReactNode label, not only a string. */}
-        <Tooltip
-          label={
-            <span className="inline-flex items-center gap-1">
-              Open the palette: <kbd className="font-mono">Ctrl</kbd>+<kbd className="font-mono">K</kbd>
-            </span>
-          }
-        >
-          <IconButton aria-label="Keyboard shortcut">
-            <Keyboard />
-          </IconButton>
-        </Tooltip>
-
-        {/* `0` is a real label; only "", null, undefined and false count as empty. */}
-        <Tooltip label={0} side="bottom">
-          <button type="button" className={buttonClasses("secondary")}>
-            label={"{0}"}
-          </button>
-        </Tooltip>
-
-        {/* The caller's own description is APPENDED to, never replaced: the button ends
-            up described by the hint text below AND the bubble. `className` and any other
-            span attribute land on the wrapper. */}
-        <Tooltip
-          label="…and the bubble, appended"
-          className="rounded-md ring-1 ring-brand"
-          data-testid="showcase-tooltip-wrapper"
-        >
-          <button type="button" aria-describedby={helpId} className={buttonClasses("secondary")}>
-            Own aria-describedby
-          </button>
-        </Tooltip>
-        <span id={helpId} className="text-xs text-muted">
-          Described by this text…
-        </span>
-      </Row>
-      <Row>
-        <Tooltip
-          portal
-          side="left"
-          label="side='left' is a preference for the portal variant: with no room on the left, this bubble turns round to the right and is clamped into the window."
-        >
-          <button type="button" className={buttonClasses("secondary")}>
-            portal, side=&quot;left&quot;
-          </button>
-        </Tooltip>
-        <span className="text-xs text-muted">
-          Needs the window&apos;s left edge within ~20rem to flip — the phone preview shows it.
-        </span>
-      </Row>
-    </div>
-  );
-}
-
 /* ── Right-to-left ────────────────────────────────────────────────────────── */
 
 function OverlaysRtl() {
@@ -1331,41 +1185,6 @@ function OverlaysRtl() {
     </div>
   );
 }
-
-/* ── placeTooltip ─────────────────────────────────────────────────────────── */
-
-// Fixed rects rather than measured ones: the helper is pure, so the table is the same
-// on every screen, and a reader can check the arithmetic against the source.
-const NEAR_TOP: AnchorRect = { top: 8, left: 120, right: 160, bottom: 28, width: 40, height: 20 };
-const NEAR_LEFT: AnchorRect = { top: 200, left: 4, right: 44, bottom: 220, width: 40, height: 20 };
-const BUBBLE: TooltipSize = { width: 160, height: 32 };
-const SCREEN: TooltipViewport = { width: 400, height: 600 };
-const NARROW: TooltipViewport = { width: 180, height: 600 };
-
-function show(p: TooltipPlacement): string {
-  return `{ left: ${p.left}, top: ${p.top}, side: "${p.side}" }`;
-}
-
-// Computed at module scope by calling the real export, so the table cannot go stale the
-// way a transcribed one would.
-const PLACEMENT_ROWS: Array<[string, string]> = [
-  [
-    'placeTooltip(nearTop, "top", bubble, screen)',
-    show(placeTooltip(NEAR_TOP, "top", BUBBLE, SCREEN)),
-  ],
-  [
-    'placeTooltip(nearLeft, "top", bubble, screen)',
-    show(placeTooltip(NEAR_LEFT, "top", BUBBLE, SCREEN)),
-  ],
-  [
-    'placeTooltip(nearLeft, "left", bubble, screen)',
-    show(placeTooltip(NEAR_LEFT, "left", BUBBLE, SCREEN)),
-  ],
-  [
-    'placeTooltip(nearLeft, "left", bubble, narrow)',
-    show(placeTooltip(NEAR_LEFT, "left", BUBBLE, NARROW)),
-  ],
-];
 
 /* ── OVERLAY_EXIT_MS / useCloseTransition ─────────────────────────────────── */
 

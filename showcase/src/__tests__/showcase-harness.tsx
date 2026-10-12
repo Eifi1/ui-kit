@@ -4,7 +4,8 @@ import { MemoryRouter } from "react-router";
 import { TourProvider } from "@eifi1/ui-kit";
 import { Showcase } from "../showcase";
 import { LocaleProvider } from "../i18n";
-import { preloadAllSections } from "../lib/lazy-section";
+import { preloadAllSections, preloadSections } from "../lib/lazy-section";
+import { PAGE_SECTIONS } from "../search/examples.generated";
 
 /**
  * What every test file that mounts the whole showcase shares: the environment it needs
@@ -34,9 +35,12 @@ const JSDOM_HAS_IT = "scrollIntoView" in Element.prototype;
 
 /**
  * Registers the file's hooks:
- * - every lazy section loaded up front (lib/lazy-section.ts), so a page renders in one
+ * - the lazy sections loaded up front (lib/lazy-section.ts), so a page renders in one
  *   synchronous pass and a test asserts right after render(), not on a Suspense
- *   fallback; the lazy path itself is covered by lazy-section.test.tsx;
+ *   fallback; the lazy path itself is covered by lazy-section.test.tsx. With `pages`
+ *   (slugs), only the sections those pages render (`PAGE_SECTIONS`): a page shard loaded
+ *   all 250-odd for its ~20 pages, 1.4 GB per file (refactor audit 2026-10, TST-8).
+ *   Without, all of them — for a file that follows links to pages it does not list;
  * - a ResizeObserver stub, and recharts' 0×0 warnings silenced — expected in jsdom, and
  *   noise that would bury a real failure;
  * - `scrollIntoView` where the file asks for it (the search jumps to an anchor);
@@ -44,8 +48,14 @@ const JSDOM_HAS_IT = "scrollIntoView" in Element.prototype;
  *   outside React's tree and outside `cleanup()`, so a test that picks Hungarian would
  *   otherwise hand it to the next one.
  */
-export function useShowcaseEnvironment({ scrollIntoView = false }: { scrollIntoView?: boolean } = {}): void {
-  beforeAll(() => preloadAllSections(), 60_000);
+export function useShowcaseEnvironment({
+  scrollIntoView = false,
+  pages,
+}: { scrollIntoView?: boolean; pages?: readonly string[] } = {}): void {
+  beforeAll(
+    () => (pages ? preloadSections(pages.flatMap((slug) => PAGE_SECTIONS[slug] ?? [])) : preloadAllSections()),
+    60_000,
+  );
   beforeAll(() => {
     vi.stubGlobal("ResizeObserver", ResizeObserverStub);
     vi.spyOn(console, "warn").mockImplementation(() => {});

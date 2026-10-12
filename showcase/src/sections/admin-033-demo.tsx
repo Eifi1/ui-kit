@@ -13,7 +13,7 @@ import {
   usePlanColumn,
 } from "@eifi1/ui-kit";
 import type { DataTableColumn, PlanChange, PlanChangeLine, PlanChangeOutcome, SubscriptionStatus } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, READOUT_WRAP, beat } from "../lib/section";
 
 /**
  * THE OPERATOR'S PLAN PARTS (0.33, docs/billing-harmonization.md §14.12, decision 27):
@@ -23,9 +23,6 @@ import { Example, Note } from "../lib/section";
  *
  * The accounts, the plans and the pretend server are SYNTHETIC; nothing is sent.
  */
-
-const beat = (ms = 600) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-const READOUT = "font-mono text-xs text-secondary [overflow-wrap:anywhere]";
 
 /** `GET /admin/plans`: the codes with their limits and sort, no prices — whatever the
  *  billing switch says. The display names are the app's (§3.1). */
@@ -116,7 +113,7 @@ export function PlanChange033Demo() {
 
   /** The pretend `POST /admin/users/{id}/plan` — server-kit 0.7's PlanChangeResponse. */
   const send = async (account: Account, change: PlanChange): Promise<PlanChangeOutcome> => {
-    await beat();
+    await beat(600);
     const previous = account.plan?.toLowerCase() ?? null;
     const limit = limitOf(change.plan);
     const res: PlanChangeOutcome = {
@@ -165,7 +162,7 @@ export function PlanChange033Demo() {
           />
         )}
       </WriteLockProvider>
-      <ul aria-label="The answer's lines" className={`mt-3 space-y-0.5 ${READOUT}`}>
+      <ul aria-label="The answer's lines" className={`mt-3 space-y-0.5 ${READOUT_WRAP}`}>
         {lines.length === 0 ? (
           <li>No change yet — try Ada to Seedling (over the limit), or Cleo (a running beta).</li>
         ) : (

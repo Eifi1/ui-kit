@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AlertTriangle, BellOff, CheckCircle2, RefreshCw } from "lucide-react";
-import { AlertBanner, Button, EmptyState, Input } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { AlertBanner, Button, EmptyState, Input, SectionLabel, LoadingState } from "@eifi1/ui-kit";
+import { Example, Note, code, READOUT } from "../lib/section";
 
 /**
  * FEEDBACK — the 0.10.0 shapes: the one-line empty state for inside a frame, the error
@@ -190,5 +190,116 @@ export function FeedbackMore() {
       <EmptyStateInlineTones />
       <AlertBannerMore />
     </>
+  );
+}
+
+/* ── since 0.11 ─────────────────────────────────────────────────────────── */
+
+export function AlertBannerBlockDemo() {
+  const [live, setLive] = useState(false);
+  return (
+    <Example
+      label="AlertBanner — inline block and live={false}"
+      hint="a line of its own with the glyph on the first line; static page content outside the live region"
+    >
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="max-w-xs space-y-1.5">
+          <p className="text-sm text-secondary">
+            Total <strong>€ 1,425.50</strong>
+          </p>
+          <AlertBanner tone="info" variant="inline" size="sm" block live={false}>
+            block: two currencies are converted at the rate of each booking day, so this total can differ from the
+            statement&apos;s by a few cents.
+          </AlertBanner>
+          <AlertBanner tone="info" variant="inline" size="sm" live={false}>
+            default: the same wrapped hint centres its glyph between the lines.
+          </AlertBanner>
+        </div>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-xs text-secondary">
+            <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} />
+            live (role=&quot;alert&quot;)
+          </label>
+          <AlertBanner tone="danger" variant="inline" block live={live}>
+            3 unresolved rows block the import.
+          </AlertBanner>
+          <p className={READOUT}>role: {live ? "alert" : "none"}</p>
+        </div>
+      </div>
+      <div className="mt-3">
+        <Note>
+          {code("block")} lays an inline banner out as a full-width row with the glyph on the text&apos;s first
+          line, instead of the inline, centred line it is by default (which a toolbar or a run of content
+          needs). {code("live={false}")} drops {code('role="alert"')} / {code('role="status"')} for a message that
+          is part of the page, like a review step&apos;s standing warning, so a screen reader does not interrupt
+          with it on every mount. A {code("role")} you pass still wins.
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
+  );
+}
+
+export function EmptyStateSmallDemo() {
+  return (
+    <Example
+      label="EmptyState — inline size sm"
+      hint="12px, start-aligned and tight: the empty line inside a detail panel"
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        {(["sm", "md"] as const).map((size) => (
+          <div key={size} className="rounded-md border border-subtle px-3 py-2">
+            <SectionLabel as="p" size="xs">
+              Holdings (size {size})
+            </SectionLabel>
+            <ul className="mt-1 space-y-0.5 text-xs text-secondary">
+              <li>ACME Corp · 12 shares</li>
+            </ul>
+            <SectionLabel as="p" size="xs" className="mt-2">
+              Dividends
+            </SectionLabel>
+            <EmptyState variant="inline" size={size} icon={<BellOff />} title="No dividends this year" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-3">
+        <Note>
+          {code('size="sm"')} fits among {code("text-xs")} rows under a panel heading; the default{" "}
+          {code("md")} (right) is a centred 14px line with room above and below, which reads as a section of
+          its own there.
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.16 ─────────────────────────────────────────────────────────── */
+
+const CAPTION = "text-xs text-muted";
+
+export function LoadingState016Demo() {
+  return (
+    <Example label="LoadingState — hidden label and compact padding" hint="role=status still announces">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-md border border-subtle">
+          <p className={`${CAPTION} px-2 pt-2`}>labelVisibility=&quot;sr-only&quot;</p>
+          <LoadingState labelVisibility="sr-only" label="Loading invoices" />
+        </div>
+        <div className="rounded-md border border-subtle">
+          <p className={`${CAPTION} px-2 pt-2`}>label=&#123;null&#125;</p>
+          <LoadingState label={null} />
+        </div>
+        <div className="rounded-md border border-subtle">
+          <p className={`${CAPTION} px-2 pt-2`}>compact (md at py-8)</p>
+          <LoadingState compact />
+        </div>
+      </div>
+      <Note>
+        {code("label={null}")} used to print &ldquo;Loading…&rdquo; anyway; now it hides the words and the status region
+        keeps announcing {code("common.loading")}. {code("compact")} is the step between {code("sm")} and {code("md")}.
+      </Note>
+      <Note>Since 0.16.</Note>
+    </Example>
   );
 }

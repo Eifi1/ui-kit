@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FieldHint, Textarea, ToggleGroup } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * 0.24: the Textarea's floated label on a scrolled field (Kurvenschmiede). Fields page
@@ -13,8 +13,6 @@ import { Example, Note } from "../lib/section";
  * that surface (read-only and disabled take the inset surface, invalid only the
  * border), and the strip has to follow every one of them. Synthetic values only.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 // A recorder export as a user would paste it: a header and forty rows, far more than
 // the five the field shows.

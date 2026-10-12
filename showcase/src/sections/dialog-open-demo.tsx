@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { Button, DialogFrame, FullBleedDialog, Input, Modal } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, READOUT } from "../lib/section";
 
 /**
  * DIALOGS — 0.10.0's `open` on Modal and DialogFrame: the dialog stays mounted, and a
  * close the CALLER decides on (a save that succeeded) plays the same exit a dismissal
  * does. And FullBleedDialog's `title`, a real heading that names the dialog.
  */
-
-const READOUT = "font-mono text-xs text-secondary";
 
 /** A save that takes a moment and then closes the dialog from outside. */
 function useFakeSave(onDone: () => void) {

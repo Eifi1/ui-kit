@@ -2,16 +2,13 @@ import { useState } from "react";
 import { Check, Compass, PiggyBank, Upload, Users, Wallet } from "lucide-react";
 import { Chip, ToggleGroup, TopBarActionMenu } from "@eifi1/ui-kit";
 import type { TopBarMenuEntry } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * Group headings in `TopBarActionMenu` (0.23, keksdose's guided-tours menu): the tours
  * filed by topic, each block named by a heading instead of fenced off by a bare divider.
  * The tours here are made up; an app's are its own.
  */
-
-const READOUT = "font-mono text-xs text-secondary";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 type Mode = "headings" | "dividers";
 

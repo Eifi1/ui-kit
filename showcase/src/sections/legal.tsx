@@ -1,17 +1,95 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router";
+import { ArrowLeft } from "lucide-react";
 import {
+  LegalLayout,
+  LegalSection,
+  TextLink,
+  ToggleGroup,
   Button,
   LegalAcceptCheckbox,
   LegalKitSection,
   LegalLinks,
   LegalPage,
-  LegalSection,
-  ToggleGroup,
   UiKitProvider,
 } from "@eifi1/ui-kit";
 import type { KitLinkComponent, LegalOperator, LegalPageKey } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
+
+/**
+ * The legal pages — LegalLayout, LegalPage, LegalAcceptCheckbox and LegalLinks — in one
+ * module, rendered as one section of the Sign-in & account page. Filed by release until
+ * the refactor audit of 2026-10 (DOC-8): legal-019, legal-028. Each specimen keeps its
+ * label, so its anchor and its search entry hold, and says since which release in a Note.
+ */
+
+/* ── since 0.19 ─────────────────────────────────────────────────────────── */
+
+/**
+ * The legal pages' shell (0.19, harmonisation H10): keksdose's and kastlan's two copies,
+ * once, for every app. The texts here are placeholders; an app's are its own.
+ */
+
+// Every link points at this page, so the demo never leaves it; in an app each is a route.
+const HERE = "/auth-account";
+
+const LINKS = [
+  { href: HERE, label: "Imprint" },
+  { href: `${HERE}?legal=privacy`, label: "Privacy Policy" },
+  { href: `${HERE}?legal=terms`, label: "Terms" },
+];
+
+function Legal019Demo() {
+  const [notice, setNotice] = useState<"draft" | "none">("draft");
+  return (
+    <Example label="LegalLayout — Imprint, Privacy Policy, Terms" hint="a content column inside the app's own chrome; the texts stay the app's">
+      <div className="flex flex-col gap-3">
+        <ToggleGroup
+          aria-label="Notice"
+          value={notice}
+          onChange={(v) => setNotice(v as "draft" | "none")}
+          options={[
+            { value: "draft", label: "Draft notice" },
+            { value: "none", label: "No notice" },
+          ]}
+        />
+        <div className="rounded-lg border border-subtle">
+          <LegalLayout
+            headingAs="h2"
+            className="py-6"
+            title="Imprint"
+            back={
+              <TextLink href={HERE} icon={ArrowLeft}>
+                Back to the start page
+              </TextLink>
+            }
+            notice={notice === "draft" ? "Closed beta: these texts are a draft and await a lawyer's review." : undefined}
+            links={LINKS}
+            currentHref={HERE}
+          >
+            <LegalSection headingAs="h3" heading="Provider" body={"Acme Books GmbH\nExample Street 1\n8000 Zurich, Switzerland"} />
+            <LegalSection headingAs="h3" heading="Contact" body={"hello@acme-books.example\n+41 00 000 00 00"} />
+            <LegalSection headingAs="h3" id="legal-demo-responsible" heading="Responsible for content">
+              Erika Muster, address as above. See also the{" "}
+              <TextLink href={`${HERE}?legal=privacy`}>Privacy Policy</TextLink>.
+            </LegalSection>
+          </LegalLayout>
+        </div>
+        <Note>
+          {code("LegalLayout")} is a column, not a page: keksdose puts it inside its landing header and footer,
+          kastlan inside {code('<AuthLayout width="wide" card={false}>')} — whose footer then takes{" "}
+          {code("<LegalLinks links currentHref nav={false} />")}, since AuthLayout names its own {code("<nav>")}.{" "}
+          {code("notice")} is per page (a {code('role="note"')} banner, not an alert); {code("LegalSection")} keeps a
+          translation&apos;s line breaks in {code("body")} and takes children for links. Review the texts under the{" "}
+          {code("legal")} area of the translation review.
+        </Note>
+      </div>
+      <Note>Since 0.19.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.28 ─────────────────────────────────────────────────────────── */
 
 /**
  * The legal pages of 0.28 (docs/legal-harmonization.md): one frame, the shared wording
@@ -21,8 +99,6 @@ import { Example, Note } from "../lib/section";
  * The operator is SYNTHETIC — the kit holds no personal data, its showcase neither — and
  * the app sections (`data`, `retention`, the browser list, …) are a made-up app's.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const OPERATOR: LegalOperator = {
   name: "Example Operator",
@@ -35,7 +111,8 @@ const OPERATOR: LegalOperator = {
   bindingLanguage: "de-CH",
 };
 
-const HERE = "/auth-account";
+const HERE_028 = "/auth-account";
+
 const PAGE_OF: Readonly<Record<string, LegalPageKey>> = {
   "/impressum": "impressum",
   "/privacy": "privacy",
@@ -62,7 +139,7 @@ function usePreviewLink(show: (page: LegalPageKey) => void): KitLinkComponent {
         }
         return (
           <a
-            href={`#${HERE}`}
+            href={`#${HERE_028}`}
             {...rest}
             onClick={(event) => {
               onClick?.(event);
@@ -175,7 +252,7 @@ const TERMS = (
 
 const SECTIONS: Record<LegalPageKey, React.JSX.Element> = { impressum: IMPRESSUM, privacy: PRIVACY, terms: TERMS };
 
-export function Legal028Demo() {
+function Legal028Demo() {
   const [page, setPage] = useState<LegalPageKey>("privacy");
   const link = usePreviewLink(setPage);
   const box = useRef<HTMLDivElement>(null);
@@ -204,7 +281,7 @@ export function Legal028Demo() {
               page={page}
               operator={OPERATOR}
               header={<DemoHeader />}
-              homeHref={HERE}
+              homeHref={HERE_028}
               headingAs="h2"
               landmark={false}
               noIndex={false}
@@ -226,11 +303,12 @@ export function Legal028Demo() {
           {code("noIndex={false}")}.
         </Note>
       </div>
+      <Note>Since 0.28.</Note>
     </Example>
   );
 }
 
-export function LegalAccept028Demo() {
+function LegalAccept028Demo() {
   const [accepted, setAccepted] = useState(false);
   const [page, setPage] = useState<LegalPageKey | null>(null);
   const link = usePreviewLink(setPage);
@@ -262,6 +340,20 @@ export function LegalAccept028Demo() {
         {code("links")} any more: the three routes with the kit&apos;s labels and {code("·")} separators;{" "}
         {code("nav={false}")} inside a menu that is a named nav already.
       </Note>
+      <Note>Since 0.28.</Note>
     </Example>
+  );
+}
+
+/* ── the page's section ───────────────────────────────────────────────────── */
+
+/** Every legal-page specimen, in the order the releases added them. */
+export function LegalDemo() {
+  return (
+    <>
+      <Legal019Demo />
+      <Legal028Demo />
+      <LegalAccept028Demo />
+    </>
   );
 }

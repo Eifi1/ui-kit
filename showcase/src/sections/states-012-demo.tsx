@@ -11,7 +11,7 @@ import {
   useHotkey,
 } from "@eifi1/ui-kit";
 import type { ProgressBarSegment } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * The 0.12 states on the Feedback page — LoadingState, Skeleton `label`, the kit's
@@ -19,8 +19,6 @@ import { Example, Note, Row } from "../lib/section";
  * `legendValue`, `legendOnly`) — and `useHotkey` for the Hooks page.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-secondary";
 const CAPTION = "text-xs text-muted";
 
 /* ── LoadingState ─────────────────────────────────────────────────────────── */

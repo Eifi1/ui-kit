@@ -1,14 +1,12 @@
 import { Trash2 } from "lucide-react";
 import { Button, Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle, IconButton } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * The 0.17 Card props from keksdose's Q3: `density="compact"` (the small settings
  * card's title / description / header-gap classes, set once on the Card) and
  * `toneFill` (the tone's wash, opt-in, on top of either frame strength).
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 export function Surfaces017Demo() {
   return (

@@ -14,7 +14,7 @@ import {
   StatTile,
   StatTileGrid,
 } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code } from "../lib/section";
 
 /**
  * The 0.16 surface props from keksdose's 0.15.5 sweep: Card parts that follow the
@@ -22,8 +22,6 @@ import { Example, Note, Row } from "../lib/section";
  * IconButton `pending` (and its lazy label bubble), a FieldHint on an unlabelled
  * Select, and StatTile `variant` / StatTileGrid `stretch` and `loading`.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 function CardParts016() {
   return (

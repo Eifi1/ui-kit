@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import type { ContextType } from "react";
 import { MemoryRouter, UNSAFE_LocationContext } from "react-router";
 import {
   BarChart3,
@@ -40,7 +39,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { AppShellNavItem, DataTableColumn } from "@eifi1/ui-kit";
 import { useTextSizeStore } from "../stores";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, NO_ROUTER } from "../lib/section";
 
 /**
  * WHAT THE COMPONENTS DO AT LARGE AND EXTRA LARGE (0.32, docs/text-size-harmonization.md
@@ -58,12 +57,6 @@ import { Example, Note } from "../lib/section";
  *
  * Ada Example and her garden are SYNTHETIC. Nothing sends a request.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
-
-/** `null` is what a `LocationContext` holds outside any router — see shell.tsx's
- *  playground, whose boxed-in shell this copies. */
-const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
 function SizeSwitch() {
   const device = useTextSizeStore((s) => s.size);

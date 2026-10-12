@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { ContextType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation, useNavigate } from "react-router";
 import {
   Activity,
@@ -38,7 +38,7 @@ import { settingsSearchEntries } from "../../../src/settings/settings-catalogue"
 import type { SettingsEntry, SettingsGroup } from "../../../src/settings/settings-catalogue";
 import { DEFAULT_SETTINGS_LABELS } from "../../../src/settings/settings-labels";
 import { useAccountLanguage } from "../../../src/settings/use-account-language";
-import { Example, Note, OutTable } from "../lib/section";
+import { Example, Note, OutTable, code, beat, NO_ROUTER } from "../lib/section";
 
 /**
  * THE SETTINGS PAGE (0.31, docs/settings-harmonization.md §3–§5): one settings page for
@@ -54,13 +54,7 @@ import { Example, Note, OutTable } from "../lib/section";
  * ThemeSetting.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 600) => new Promise((resolve) => setTimeout(resolve, ms));
 const PASSWORD = "correct horse";
-
-/** `null` is what a `LocationContext` holds outside any router — the escape hatch the
- *  shell demo uses for a widget with its own history inside the showcase's router. */
-const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
 /* ── The catalogue ──────────────────────────────────────────────────────── */
 
@@ -234,7 +228,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
             firstName={account.names.first}
             lastName={account.names.last}
             onSave={async (values) => {
-              await beat();
+              await beat(600);
               account.setNames({ first: values.firstName, last: values.lastName });
             }}
           />
@@ -243,7 +237,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
               id="email-card"
               currentEmail="ada@example.com"
               onRequest={async ({ password }) => {
-                await beat();
+                await beat(600);
                 if (password !== PASSWORD) throw new Error("password_incorrect");
               }}
             />
@@ -253,7 +247,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
     case "security":
       return (
         <>
-          <PasswordSetting id="password-card" onSubmit={() => beat()} />
+          <PasswordSetting id="password-card" onSubmit={() => beat(600)} />
           <TwoFactorSetting
             id="twofactor-card"
             enabled={account.twoFactor}
@@ -273,7 +267,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
               ]);
             }}
             onDelete={async (id) => {
-              await beat();
+              await beat(600);
               account.setPasskeys((rows) => rows.filter((row) => row.id !== id));
             }}
           />
@@ -281,10 +275,10 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
             id="sessions-card"
             sessions={account.sessions}
             onRevoke={async (id) => {
-              await beat();
+              await beat(600);
               account.setSessions((rows) => rows.filter((row) => row.id !== id));
             }}
-            onSignOutEverywhere={() => beat()}
+            onSignOutEverywhere={() => beat(600)}
           />
         </>
       );
@@ -294,7 +288,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
           <DataExportSetting
             id="export-card"
             onExport={async () => {
-              await beat();
+              await beat(600);
               return new Blob([JSON.stringify({ format: "eifi1-account-export", app: "garden-planner" }, null, 2)], {
                 type: "application/json",
               });
@@ -306,7 +300,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
             mode="after_days"
             consequences={["Your 3 garden beds and their planting plans are deleted."]}
             onRequest={async ({ password }) => {
-              await beat();
+              await beat(600);
               if (password !== PASSWORD) throw new Error("password_incorrect");
             }}
           />

@@ -12,15 +12,13 @@ import {
   ToggleGroup,
 } from "@eifi1/ui-kit";
 import type { CardTone, IconButtonGlyphSize } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row, Stage } from "../lib/section";
+import { Example, Note, OutTable, Row, Stage, code } from "../lib/section";
 
 /**
  * The 0.12 props on the building blocks: Button `pending`, Card `tone`, Spinner
  * `showLabel` / `labelPosition`, and IconButton `glyphSize`, `badge`,
  * `disabledStyle="keep"` and the 64px `size="2xl"` camera shutter.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /* ── Button pending ───────────────────────────────────────────────────────── */
 

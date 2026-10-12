@@ -15,6 +15,8 @@ import {
   requiredFieldsValidator,
   useWizard,
   useWizardContext,
+  Switch,
+  WriteLockProvider,
 } from "@eifi1/ui-kit";
 import type {
   SummarySection,
@@ -23,7 +25,7 @@ import type {
   WizardLabels,
   WizardStepConfig,
 } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
+import { ConstList, Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
  * WIZARD.
@@ -860,4 +862,74 @@ function Empty() {
  *  back rather than assuming the object form. */
 function show(result: ValidateResult): string {
   return JSON.stringify(result);
+}
+
+/* ── since 0.23 ─────────────────────────────────────────────────────────── */
+
+/**
+ * 0.23 for the Combobox family and the wizard (keksdose G1, G2, G9 and the kit's later
+ * list). Three parts, three pages:
+ *
+ *   - {@link ComboboxFamilyLock023Demo} — Entity pickers: the write lock on all five
+ *     pickers (Autocomplete included), and MultiEntityCombobox's `hint`;
+ *   - {@link InlineCreateRow023Demo} — Entity pickers: the create row;
+ *   - {@link StepperNavFinishLock023Demo} — Wizard: `finishCommit` on Finish.
+ *
+ * Synthetic data throughout.
+ */
+
+const STEPS: WizardStepConfig[] = [
+  { id: "map", label: "Map accounts" },
+  { id: "confirm", label: "Confirm", commits: true },
+  { id: "done", label: "Done" },
+];
+
+/** keksdose G1: Finish takes the write lock itself — no `renderFinish` clone. */
+export function StepperNavFinishLock023Demo() {
+  const [locked, setLocked] = useState(true);
+  // Done starts the demo wizard over: a fresh key is a fresh `useWizard`.
+  const [run, setRun] = useState(0);
+  return (
+    <Example label="Finish under a write lock" hint="`finishCommit` / `finishDisabledReason` on StepperNav">
+      <div className="flex flex-col gap-4">
+        <Switch checked={locked} onCheckedChange={setLocked} label="Read-only demo (WriteLockProvider locked)" />
+        <WriteLockProvider locked={locked} reason="Read-only demo — importing is disabled.">
+          <FinishLockWizard key={run} onDone={() => setRun((n) => n + 1)} />
+        </WriteLockProvider>
+        <Note>
+          With {code("finishCommit")}, Finish is the kit Button&apos;s {code("commit")}: under a locked provider it
+          is {code("aria-disabled")} but focusable, the reason is in its Tooltip, and {code("wizard.finish")} does
+          not run. Back, Next and Cancel stay live — the steps before the commit write nothing.{" "}
+          {code("finishDisabledReason")} is the same lock with a reason of the app&apos;s own. A{" "}
+          {code("renderFinish")} that clones {code("commit")} in keeps working.
+        </Note>
+      </div>
+      <Note>Since 0.23.</Note>
+    </Example>
+  );
+}
+
+function FinishLockWizard({ onDone }: { onDone: () => void }) {
+  const wizard = useWizard<Record<string, unknown>>({ steps: STEPS, onComplete: () => {}, onDone });
+  return (
+    <StepperNav wizard={wizard} finishCommit>
+      {wizard.currentStep.id === "map" && (
+        <WizardStep title="Map the accounts">
+          <p className="text-sm text-secondary">Nothing is written yet — Next stays live under the lock.</p>
+        </WizardStep>
+      )}
+      {wizard.currentStep.id === "confirm" && (
+        <WizardStep title="Confirm the import">
+          <p className="text-sm text-secondary">
+            Finish is the commit, and the only button the lock holds. Hover or focus it to read why.
+          </p>
+        </WizardStep>
+      )}
+      {wizard.currentStep.id === "done" && (
+        <WizardStep title="Imported">
+          <p className="text-sm text-secondary">Synthetic: nothing was sent anywhere. Done starts over.</p>
+        </WizardStep>
+      )}
+    </StepperNav>
+  );
 }

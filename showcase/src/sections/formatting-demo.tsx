@@ -18,7 +18,7 @@ import {
   useKitFormat,
 } from "@eifi1/ui-kit";
 import type { TextTone } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code, READOUT } from "../lib/section";
 
 /**
  * The 0.12 formatters (`formatNumber`, `formatMoney`, `formatPercent`, `formatDate`,
@@ -26,9 +26,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * (`SignedAmount`, `Delta`, `Tone`). The formatters are `Intl` with the kit's locale
  * handed in, so the useful specimen is the same input in several locales side by side.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-secondary";
 
 const LOCALES = ["en-GB", "de-CH", "fr-FR", "hu-HU", "zh-CN"] as const;
 

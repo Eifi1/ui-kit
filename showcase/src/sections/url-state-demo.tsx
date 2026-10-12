@@ -10,7 +10,7 @@ import {
   useSearchParamState,
   useTabParam,
 } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
  * URL STATE — 0.12.0's search-param hooks: one param as React state
@@ -21,8 +21,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * demos share the page's query string without stepping on each other — which is the
  * contract of the hooks: every OTHER param is left as it is.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** The router's query, which under the HashRouter lives after the `#`. */
 function QueryReadout({ extra = [] }: { extra?: Array<[string, React.ReactNode]> }) {

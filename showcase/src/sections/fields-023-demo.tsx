@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { AmountInput, Button, CountrySelect, MoneyField } from "@eifi1/ui-kit";
 // See forms-rhf.tsx: the showcase alias maps "@eifi1/ui-kit/rhf" to src/rhf.ts.
 import { Form, RhfCountrySelect, RhfMonthPicker } from "@eifi1/ui-kit/rhf";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, READOUT_PRE } from "../lib/section";
 
 /**
  * 0.23 fields. Three demos, one per page:
@@ -16,9 +16,6 @@ import { Example, Note } from "../lib/section";
  *
  * Synthetic values only.
  */
-
-const READOUT = "font-mono text-xs text-secondary whitespace-pre-wrap [overflow-wrap:anywhere]";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const NEIGHBOURS = ["CH", "LI", "DE", "AT", "FR", "IT"];
 
@@ -87,7 +84,7 @@ export function Rhf023Demo() {
           </div>
         </form>
       </Form>
-      <p className={READOUT}>submitted: {submitted}</p>
+      <p className={READOUT_PRE}>submitted: {submitted}</p>
       <Note>
         Both bind the way {code("RhfIbanInput")} does: {code("field.ref")} reaches the trigger, so a failed submit
         focuses it; the form&apos;s error paints the trigger and is the message under it; the hint is the
@@ -124,7 +121,7 @@ export function CountryClear023Demo() {
             </Button>
           </div>
         </div>
-        <p className={READOUT}>value: {country === null ? "null" : JSON.stringify(country)}</p>
+        <p className={READOUT_PRE}>value: {country === null ? "null" : JSON.stringify(country)}</p>
       </div>
       <Note>
         {code("clearable")} types {code("onChange")} as {code("(code: string | null) => void")}; without it the handler

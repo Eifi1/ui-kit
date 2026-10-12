@@ -15,7 +15,7 @@ import type { AdminActionKind, AdminActionLogEntry, AdminActionLogProps } from "
 import { TransferOwnershipDialog } from "../../../src/admin/transfer-ownership-dialog";
 import { InvitationsPanel } from "../../../src/admin/invitations-panel";
 import type { InvitationDraft, InvitationRow } from "../../../src/admin/invitations-panel";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, beat } from "../lib/section";
 
 /**
  * USER ADMINISTRATION (0.30, docs/user-admin-harmonization.md §3–§5): the roster preset,
@@ -25,8 +25,6 @@ import { Example, Note } from "../lib/section";
  * page (`user-admin`) in the App chrome group, after "Sign-in & account security".
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
 const day = 86_400_000;
 const ago = (days: number) => new Date(Date.now() - days * day).toISOString();
 const ahead = (days: number) => new Date(Date.now() + days * day).toISOString();
@@ -185,7 +183,7 @@ export function UserRoster030Demo() {
         level: LEVEL[action] ?? "none",
         ...words,
         run: async () => {
-          await beat();
+          await beat(500);
           // The server's own guards, which a hand-written request meets too.
           if (action === "deactivate" && person.otherCompanies) throw refusal("other_companies");
           run();
@@ -347,7 +345,7 @@ export function UserRoster030Demo() {
           consequence={pending.consequence}
           onConfirm={pending.run}
           onRemoveFromCompany={async () => {
-            await beat();
+            await beat(500);
             record("membership_remove", pending.person);
             setPeople((rows) => rows.filter((row) => row.id !== pending.person.id));
           }}
@@ -363,7 +361,7 @@ export function UserRoster030Demo() {
             unavailable: row.role === "CUSTOMER" ? "customer" : !row.is_active ? "deactivated" : undefined,
           }))}
           onTransfer={async ({ toUserId }) => {
-            await beat();
+            await beat(500);
             const to = people.find((row) => row.id === toUserId)!;
             patch(to.id, { owned: to.owned + transferFrom.owned });
             patch(transferFrom.id, { owned: 0 });
@@ -384,7 +382,7 @@ export function UserRoster030Demo() {
             languages={["de-CH", "en", "es", "fr", "it", "hu", "zh"]}
             onCancel={() => setReviewerOf(null)}
             onSave={async (scope) => {
-              await beat();
+              await beat(500);
               patch(reviewerOf.id, {
                 role: scope.locales.length ? "REVIEWER" : "MEMBER",
                 translation_review_locales: scope.locales,
@@ -480,7 +478,7 @@ export function Invitations030Demo() {
           languages={["de-CH", "en", "fr", "it"]}
           mailBackend={consoleMail ? "console" : "resend"}
           onInvite={async (draft: InvitationDraft<InviteRole>) => {
-            await beat();
+            await beat(500);
             const id = Math.max(0, ...rows.map((row) => Number(row.id))) + 1;
             setRows((list) => [
               { id, ...draft, created_at: new Date().toISOString(), expires_at: ahead(14), status: "open" },
@@ -489,7 +487,7 @@ export function Invitations030Demo() {
             return { id, link: consoleMail ? link(id) : null, sent: true };
           }}
           onResend={async (invitation) => {
-            await beat();
+            await beat(500);
             setRows((list) =>
               list.map((row) =>
                 row.id === invitation.id
@@ -500,7 +498,7 @@ export function Invitations030Demo() {
             return { link: consoleMail ? link(Number(invitation.id)) : null, sent: true };
           }}
           onRevoke={async (invitation) => {
-            await beat();
+            await beat(500);
             setRows((list) => list.map((row) => (row.id === invitation.id ? { ...row, status: "revoked" } : row)));
           }}
         />
@@ -529,17 +527,5 @@ export function AccountDeletionChip030Demo() {
         the provider&apos;s {code("formatDate")} when the app set one.
       </Note>
     </Example>
-  );
-}
-
-/** All of the above, in the page's order — the routes may take the parts one by one. */
-export function Admin030Demo() {
-  return (
-    <>
-      <UserRoster030Demo />
-      <RolesEditor030Demo />
-      <Invitations030Demo />
-      <AccountDeletionChip030Demo />
-    </>
   );
 }

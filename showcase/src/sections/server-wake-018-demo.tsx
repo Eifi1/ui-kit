@@ -6,7 +6,7 @@ import { Field } from "../../../src/components/field";
 import { FloatingActionButton } from "../../../src/components/floating-panel";
 import { ServerWakeNotice, useServerWakeStage } from "../../../src/components/server-wake";
 import { createServerWake } from "../../../src/lib/server-wake";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * ServerWakeNotice (0.18): keksdose's cold-start notice, for every app. A demo watcher
@@ -14,8 +14,6 @@ import { Example, Note } from "../lib/section";
  */
 
 const demo = createServerWake();
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** A request that takes `ms` — what a sleeping Cloud Run container does to a GET. */
 const simulate = (ms: number) =>
@@ -44,8 +42,10 @@ export function ServerWake018Demo() {
           <Button variant="ghost" aria-pressed={pill} onClick={() => setPill((on) => !on)}>
             {pill ? "Hide the offline pill" : "Show an offline pill"}
           </Button>
+          {/* The render prop wires the label to the input; a plain child would need an
+              `htmlFor` id of its own (axe "label", refactor audit 2026-10, DOC-10). */}
           <Field label="App name" className="w-40">
-            <Input value={appName} onChange={(e) => setAppName(e.target.value)} />
+            {(control) => <Input {...control} value={appName} onChange={(e) => setAppName(e.target.value)} />}
           </Field>
         </div>
         <p className="text-sm text-secondary">
