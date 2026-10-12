@@ -1,6 +1,6 @@
 # @eifi1/ui-kit refactor plan — 2026-10-12
 
-## Status — PLANNED; Wave 0 going into 0.34 (Marcel, 2026-10-12)
+## Status — Wave 0 DONE in 0.34 (2026-10-12); Waves 1–5 planned for 0.35+
 
 **Decisions taken (Marcel, 2026-10-12):** 1 yes, Wave 0 into 0.34; 2 yes, the sweep runs in CI on
 the release PR (local-first otherwise); 3–5 as recommended.
@@ -90,7 +90,12 @@ Decision 1 below asks whether they should.
    - About 28 names; each removal costs each app 0–3 call sites.
    - Only for names that are unused and not in the showcase.
 
-## Wave 0 — into 0.34, before the release (if decision 1)
+## Wave 0 — into 0.34, before the release — DONE 2026-10-12
+
+Built and committed on `feat/0.34.0`, each bug with a regression test seen failing first.
+The commits: `6574ed9` (BUG-1, BUG-4, BUG-7b, BUG-2, BUG-14), `5e5ea3f` (DUP-3, API-1,
+BUG-6, BUG-11), `080e173` (BUG-3, BUG-13, TST-5, TST-6, decision 2's CI sweep), `12071e8`
+(TST-7), `e00cceb` (DOC-2's user-admin part), `64c914b` (DOC-3's Lemon Squeezy part).
 
 Each item is independent, internal, S or XS, and gets its regression test written
 failing-first.
@@ -254,6 +259,8 @@ removes a class of drift.
   width, and `FIELD_DISPLAY`'s bottom line does the same. `FIELD_INVALID` already pairs the
   border with `ring-1` for this reason (live #295). Fix: an inset 1 px focus ring in
   `FIELD_BASE` and `FIELD_DISPLAY`, with the apps' class assertions in the adopt doc.
+- **BUG-11 follow-up.** NumberField's own `roundTo` (`toFixed`, so 1.005 → 1.00 and −0.004 →
+  −0) is a third rounding copy; it should use 0.34's `lib/round.ts` `roundHalfAway`.
 - **DUP-10.** One `useNumericField` engine for NumberInput and AmountInput, done last in this
   wave, once DUP-2, DUP-3 and DUP-8 have shrunk what moves. AmountInput also gains `locale`.
 

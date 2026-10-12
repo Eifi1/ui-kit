@@ -76,6 +76,31 @@ checks (billing §14.15) come after Marcel's sandbox run, in a later round.
   names and the translation table: they use `truncate-until-large`. ToggleGroup's strip
   wraps at Large (0.32.1's one-row exception is gone; Marcel, 2026-10-12).
 
+**Fixed before the release** (the refactor audit's Wave 0, `docs/refactor-plan-2026-10.md`,
+and keksdose's feedback run 78), nothing to change unless noted in §2:
+- **Escape on an open picker list inside a dialog closes only the list**; the next Escape
+  closes the dialog. Every picker, AmountInput's currency chip included (it was closing a
+  Modal, DialogFrame or FullBleedDialog and losing the form: kastlan's lease dialog).
+- **Tab stays inside** the DatePicker and MonthPicker popovers and the phone picker sheet
+  (the focus trap counted `tabindex="-1"` controls).
+- **DataTable's phone filter sheet is a real dialog**: named "Filters", focus moves in and
+  back to the Filters button, Escape and Back close it.
+- **DataTable's date filter matches the local day the cell shows**: the feedback inboxes
+  filed rows from 00:00–02:00 under the day before.
+- **An empty paged table's pager** says the row count, not "1–0 / 0".
+- **A reopened photo** in Lightbox / ImageGrid / AuthedImage no longer shows the error state.
+- **A field locked through `commit` or `disabledReason` shows its reason as a line** under
+  the control on a phone and at Large, as Button does (text-size §4); one kit frame draws
+  it. `disabledReasonDisplay="tooltip"` keeps the bubble, e.g. for many locked rows under a
+  banner.
+- **German number fields read "0.500" as 0.5**, no longer 500, and `roundToCurrency`
+  never returns NaN or −0 (AmountInput no longer blanks "0.0000001" or a 22-digit amount).
+- **A strip's label clears its group's border** (keksdose dev #593): the strip is 20 px,
+  a ToggleGroup's segments in it a 16 px line, so a strip field keeps a labelled Input's
+  42 px. `FieldStrip`'s `pad` is deprecated (both values are 20 px).
+- **The DatePicker's stepper keeps a full-strength focus line at 125 %** (keksdose live
+  #394): an inset 1 px ring beside the 1 px border.
+
 ### server-kit 0.8
 
 - **Lemon Squeezy is gone** (billing §14.13; deprecated in 0.7).
@@ -102,6 +127,17 @@ checks (billing §14.15) come after Marcel's sandbox run, in a later round.
     now requires it);
   - `PHONE_QUERY` → `usePhoneLayout()`, or `breakpointQuery("max-md", scale)` for the string;
   - `feedbackDialog.attachments` → `attachmentList` / `feedbackAttachment.attachmentList`.
+- **`ariaLabel` is deprecated on every component that still takes it** (removed in 0.35):
+  AmountInput, MoneyField, NumberInput, NumberField, IntegerField, CalculatorButton,
+  RhfNumberField / RhfIntegerField / RhfMoneyField, WizardStepper, ThemeToggle, PaletteMenu,
+  LanguageMenu, OptionSwitcherMenu, RoleSwitcher, TopBarActionMenu. They take `aria-label`,
+  which wins. One rule for all twenty components with the four removed above:
+  `ariaLabel` → `aria-label`. Rename now or by 0.35.
+- **Peers: `react` and `react-dom` `>=19.2`** (`useEffectEvent`); all three apps already are.
+- **App tests:** a test counting tab stops inside a dialog may shift (BUG-4); the phone
+  filter sheet's dialog role is on its panel now, not the backdrop, its title an `<h2>`, and
+  its close plays a 220 ms exit where `matchMedia` is stubbed without reduced motion, so
+  assert its absence with `waitFor`.
 - **Exhaustive switches:** `AdminActionKind` gains five members; `AdminActionLogEntry.target`
   widens to a group or other target; `AdminActionConfirmProps` is a type (an interface can no
   longer extend it); `AuthErrorCode` gains `session_ended`. No app's code breaks on these
@@ -180,6 +216,14 @@ checks (billing §14.15) come after Marcel's sandbox run, in a later round.
   `bg-danger-soft` / `text-danger`; `image-cropper.test.tsx` :134 → `bg-surface`;
   `invoice-line-confidence.test.tsx` :148-150 → `text-danger` / `-warning` / `-success`;
   `danger-card-frame.test.tsx` :55 → `border-danger-strong`.
+- **K4 / K5 overrides go:** `cleared-status-toggle.tsx:330` drops `pt-5
+  [&>[role=radiogroup]]:flex` (keep `@3xl:py-0 @3xl:leading-4` at :335: its own `text-sm`
+  cancels the kit's 16 px line); `shared/components/date-field.tsx:99` drops
+  `[&_button:focus]:ring-1 [&_button:focus]:ring-inset`.
+- **`ariaLabel` → `aria-label`** (by 0.35): 24 sites (AmountInput ×15, e.g.
+  transaction-fields.tsx:753, budget-cells.tsx:501; TopBarActionMenu account-menu.tsx:365,
+  tour-menu.tsx:80; RoleSwitcher top-bar.tsx:94, :117; WizardStepper
+  file-import-panel.tsx:72), plus 15 in tests.
 
 ### kastlan
 
@@ -208,7 +252,8 @@ checks (billing §14.15) come after Marcel's sandbox run, in a later round.
   `account_deletion`: move a log query or alert with it); the ops router uses
   `Depends(require_jobs_token(lambda: settings.jobs_token))`, settings may inherit
   `JobsSettings` (same 401 and detail); the ports' "Paddle or Lemon Squeezy" wording goes.
-- **Removed aliases:** none used.
+- **Removed aliases:** none used. **`ariaLabel` → `aria-label`** (by 0.35): 23 sites
+  (NumberField ×4, RhfNumberField ×3, AmountInput ×5, top-bar.tsx:112, :114, :149, …).
 
 ### Kurvenschmiede
 
@@ -251,6 +296,7 @@ checks (billing §14.15) come after Marcel's sandbox run, in a later round.
   kit's `AccountNoticeKind`, `deletion_request` → `account_deletion`; the ops router uses the
   kit's `require_jobs_token(lambda: get_settings().jobs_token)` (the 401's detail becomes "A
   valid X-Jobs-Token is required").
+- **`ariaLabel` → `aria-label`** (by 0.35): 1 site (chrome-controls.tsx:31).
 
 ## 4. Versions
 
@@ -268,7 +314,10 @@ checks (billing §14.15) come after Marcel's sandbox run, in a later round.
 
 ## Where the build differs from the contracts
 
-- **`AdminOtherTarget` has an optional `id`** (user-admin §11.4 has none): without it,
-  keksdose's `e.target.id === target` and the showcase's filter stop compiling.
-- **The truncation sweep gates `npm run release`, not CI**: Chromium runs locally before the
-  version bump (`npm run check:sweep`), never in `npm run check` or a workflow.
+- **`AdminOtherTarget` has an optional `id`**, so keksdose's `e.target.id === target` and the
+  showcase's filter still compile (now written into user-admin §11.4).
+- **The truncation sweep runs in CI on the release PR** (Marcel, 2026-10-12: the repo is
+  public, so Actions cost nothing, and it keeps Chromium off the shared machine): the job
+  "Truncation sweep (release)" runs for a PR or push that changes `package.json`'s version.
+  By hand: `npm run check:sweep` (after `npx playwright-core install chromium-headless-shell`).
+  Never in `npm run check`.
