@@ -157,7 +157,7 @@ and the page asks for what it says.
 | Level | Actions |
 |---|---|
 | `type_email` | deactivate, erase now (operator), transfer, the user's own deletion request |
-| `acknowledge` | force password change, change role |
+| `acknowledge` | force password change, change role, change plan (`plan`, billing §14.12), delete a group (`group_delete`, §11) |
 | `none` | the rest |
 
 Every action body carries the answer: `acknowledged` and `confirm_email`. A typed
@@ -178,11 +178,13 @@ The kit's `AdminActionConfirm` renders the right dialog from the level, over
 | `id` | |
 | `at` | |
 | `actor_id` | |
-| `action` | `deactivate`, `reactivate`, `role`, `membership_remove` (kastlan), `password_change_require` / `_withdraw`, `mail_verification` / `mail_reset`, `reviewer`, `invite`, `invite_resend`, `invite_revoke`, `transfer`, `deletion_request` (the actor is the user themselves), `deletion_cancel`, `erase` |
+| `action` | `deactivate`, `reactivate`, `role`, `membership_remove` (kastlan), `password_change_require` / `_withdraw`, `mail_verification` / `mail_reset`, `reviewer`, `invite`, `invite_resend`, `invite_revoke`, `transfer`, `deletion_request` (the actor is the user themselves), `deletion_cancel`, `erase`; since 0.33 `plan` (billing §14.12); since 0.34 `group_create`, `group_rename`, `group_delete`, `membership_add`, `membership_role` (§11.3; an accepted invitation is a `membership_add` with the invitee as actor) |
 | `target_user_id` | nullable after an erasure |
 | `target_email` | kept as written, for invitations |
 | `detail` | JSON: ids, roles, flags and counts. **Never content** (no note, title or body: Kurvenschmiede encrypts those at rest, and a plaintext `detail` would leak them) and never a secret |
 | `company_id` | kastlan only, nullable: a company admin's actions carry the company, the platform's carry none, and RLS shows each to its own reader (§9.3) |
+| `target_group_id` | since 0.34, nullable, no foreign key: the group a group or membership row is about (§11.4). kastlan fills the group from `company_id` instead and has no column |
+| `target_group_name` | since 0.34, nullable: written only on a `group_delete` row, so the log can name a deleted group (§11.4) |
 
 - **Written in the same transaction** as the action it records.
 - `GET /admin/actions?limit=&offset=&target=` answers newest first. The kit's
@@ -670,7 +672,7 @@ target?: AdminPerson | AdminGroupTarget | AdminOtherTarget | null;
 group?: AdminGroupTarget | null;
 
 interface AdminGroupTarget { kind: "group"; id?: string | number | null; name?: string | null }
-interface AdminOtherTarget { kind: "other"; label: string }
+interface AdminOtherTarget { kind: "other"; label: string; id?: number | string }  // id: as built, so an app's `e.target.id === target` filter still compiles
 ```
 
 | Target | Drawn as |
