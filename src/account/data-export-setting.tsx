@@ -4,6 +4,7 @@ import { Download } from "lucide-react";
 
 import { useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
+import { clickDownload } from "../lib/download";
 import { AlertBanner } from "../components/alert-banner";
 import { hasMessage } from "../components/choice-parts";
 import { TextLink } from "../components/text-link";
@@ -96,20 +97,6 @@ function isUrlAnswer(value: unknown): value is { url: string; filename?: string 
   return typeof value === "object" && value !== null && typeof (value as { url?: unknown }).url === "string";
 }
 
-/** Hand `href` to the browser as a download named `filename`: a link with `download`,
- *  clicked once and taken out again — the one way a page saves a file without a new
- *  tab that would show the JSON instead. */
-function startDownload(href: string, filename: string) {
-  const link = document.createElement("a");
-  link.href = href;
-  link.download = filename;
-  link.rel = "noopener";
-  link.hidden = true;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-}
-
 /**
  * The account's data as a download (docs/user-admin-harmonization.md §6.5, §2.2): what it
  * is, the app's sentence on what it holds, and one button.
@@ -171,7 +158,9 @@ export function DataExportSetting({
           return;
         }
         setSaved(next);
-        startDownload(next.href, next.filename);
+        // The click alone, not `saveBlob`: the object URL is the card's to revoke, since
+        // the "Save the file" link below points at it for as long as it is shown.
+        clickDownload(next.href, next.filename);
       },
       (error: unknown) => {
         if (!mounted.current) return;

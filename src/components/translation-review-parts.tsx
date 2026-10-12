@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Download } from "lucide-react";
 
 import { useKitLabels } from "../i18n/kit-labels";
+import { saveBlob } from "../lib/download";
 import { useKitFormat } from "../lib/format";
 import { summariseRows, translationCorrections } from "../lib/translation-review";
 import type {
@@ -252,13 +253,7 @@ export function TranslationExportButton({
       onExport(corrections, file);
       return;
     }
-    const url = URL.createObjectURL(file);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName ?? `translation-corrections-${now.toISOString().slice(0, 10)}.json`;
-    a.click();
-    // After the click has handed the URL to the download, not before.
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+    saveBlob(file, fileName ?? `translation-corrections-${now.toISOString().slice(0, 10)}.json`);
   };
   return (
     <Button variant="secondary" disabled={corrections.length === 0} onClick={run} className={className}>

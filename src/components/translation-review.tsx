@@ -165,8 +165,17 @@ export interface TranslationReviewPanelProps {
   progress?: boolean;
   /** Rows per page. Default 50. */
   pageSize?: number;
-  /** Persists the table's sort and page size (DataTable's `storageKey`). */
+  /** Persists the table's sort and page size (DataTable's `storageKey`), under the
+   *  prefix below. */
   storageKey?: string;
+  /**
+   * The `localStorage` prefix in front of `storageKey` (DataTable's `storageKeyPrefix`).
+   * Left out, it is the provider's `tableStorageKeyPrefix`, then the kit's
+   * `"hbui-table:"` — so an app that sets its prefix on `UiKitProvider` needs nothing
+   * here. Before 0.34 the panel took no prefix and its view always landed under the
+   * kit's, which an app listing what it stores had to list as its own (KS U4).
+   */
+  storageKeyPrefix?: string;
   /** How a verdict's date reads in the editor. */
   formatDate?: (iso: string) => string;
   /** Turns a callback's rejection into words. Default {@link TranslationReviewLabels.failed}. */
@@ -444,6 +453,7 @@ export function TranslationReviewPanel({
   progress = true,
   pageSize = 50,
   storageKey,
+  storageKeyPrefix,
   formatDate,
   formatError,
   swipe = false,
@@ -862,7 +872,7 @@ export function TranslationReviewPanel({
             onSortsChange: setGroupSorts,
             labels: { table: group.name },
           }
-        : { storageKey })}
+        : { storageKey, storageKeyPrefix })}
       isExpanded={(r) => r.id === openId}
       onRowClick={(r) => {
         if (openId !== r.id) keepGroupOpen(group?.key);

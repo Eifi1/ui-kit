@@ -568,6 +568,7 @@ interface KitI18n {
   linkComponent?: KitLinkComponent;
   chartTooltipPlacement?: ChartTooltipPlacement;
   formatDate?: KitDateFormatter;
+  tableStorageKeyPrefix?: string;
 }
 
 /** What a {@link KitDateFormatter} is told about the date it is formatting. */
@@ -686,6 +687,22 @@ export interface UiKitProviderProps {
    * context value, so a new function every render re-renders every consumer.
    */
   formatDate?: KitDateFormatter;
+  /**
+   * The `localStorage` prefix every kit table below keeps its view under (sort, filters,
+   * page size, widths, hidden columns), when the table is not handed a
+   * `storageKeyPrefix` of its own — round 0.34 C5, KS U4. Left out, it is the kit's
+   * `"hbui-table:"`, as before.
+   *
+   * Set once here rather than per table because not every table is the app's to pass a
+   * prop to: `TranslationReviewPanel` wraps a `DataTable`, and until this the panel's
+   * view landed under the kit's prefix whatever the app's was — so an app that lists
+   * what it stores (a privacy page) had to list the kit's prefix as a key of its own.
+   * Resolves like every kit setting: the table's own prop > this > the default. The
+   * key is the prefix plus the table's `storageKey`, verbatim, so an app that wrapped
+   * `DataTable` to pass its prefix (Keksdose's `keksdose-table:`) keeps every stored
+   * view when it moves the prefix here.
+   */
+  tableStorageKeyPrefix?: string;
   children: ReactNode;
 }
 
@@ -704,6 +721,7 @@ export function UiKitProvider({
   linkComponent,
   chartTooltipPlacement,
   formatDate,
+  tableStorageKeyPrefix,
   children,
 }: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
@@ -715,8 +733,9 @@ export function UiKitProvider({
       linkComponent: linkComponent ?? outer.linkComponent,
       chartTooltipPlacement: chartTooltipPlacement ?? outer.chartTooltipPlacement,
       formatDate: formatDate ?? outer.formatDate,
+      tableStorageKeyPrefix: tableStorageKeyPrefix ?? outer.tableStorageKeyPrefix,
     }),
-    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement, formatDate],
+    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement, formatDate, tableStorageKeyPrefix],
   );
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
 }
@@ -813,6 +832,12 @@ export function useKitChartTooltipPlacement(): ChartTooltipPlacement | undefined
  *  `formatValue` / `formatOptions` wins over it. See {@link KitDateFormatter}. */
 export function useKitDateFormatter(): KitDateFormatter | undefined {
   return useContext(KitI18nContext).formatDate;
+}
+
+/** The nearest provider's `tableStorageKeyPrefix`, or `undefined` — a table's own
+ *  `storageKeyPrefix` wins over it, and the kit's `"hbui-table:"` comes after both. */
+export function useKitTableStorageKeyPrefix(): string | undefined {
+  return useContext(KitI18nContext).tableStorageKeyPrefix;
 }
 
 /** {@link DEFAULT_FILE_LABELS}, but formatting in the provider's locale. */

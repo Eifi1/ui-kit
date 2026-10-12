@@ -61,13 +61,14 @@ export function ServerWake018Demo() {
           />
         )}
         <Note>
-          The notice is fixed in the start corner, above AppShell&apos;s bottom nav ({code("--app-nav-h")}, or{" "}
-          {code("navOffset")}). Wire it once: {code("attachServerWake(api)")} on the axios instance (or{" "}
+          The notice is fixed at the top, centred under the status bar, and takes no taps (0.34, keksdose live
+          #399): until then it sat in the bottom-start corner, which on a phone is where a sticky Create footer and
+          the floating buttons live. Wire it once: {code("attachServerWake(api)")} on the axios instance (or{" "}
           {code("wrapFetch(fetch)")}) and {code("<ServerWakeNotice appName=\"…\" />")} next to the router. GETs only by
           default; {code("createServerWake({ shouldWatch: watchReadsAnd(/\\/auth\\/login\\b/) })")} adds the login POST.
           Never while offline, never an upload, never a download ({code("responseType")} {code("blob")},{" "}
-          {code("arraybuffer")} or {code("stream")}; 0.19.0). A visible FloatingActionButton under it — kastlan&apos;s
-          offline pill — lifts it above (0.19.0): show the pill, then simulate a request.
+          {code("arraybuffer")} or {code("stream")}; 0.19.0). kastlan&apos;s offline pill no longer meets it: show
+          the pill, then simulate a request — they stand at opposite ends of the screen.
         </Note>
       </div>
     </Example>

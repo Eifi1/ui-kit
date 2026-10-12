@@ -365,6 +365,58 @@ describe("SettingsLayout — phone (§3.3)", () => {
   });
 });
 
+/**
+ * Round 0.34 C8 (KS U7): "<group> · Settings · <app>" (§3.1), which Kastlan's
+ * `SettingsChrome` and Kurvenschmiede's `GroupTitle` wrote by hand — and which
+ * Kurvenschmiede's admin page, on the same layout, never wrote at all.
+ */
+describe("SettingsLayout — the window's title (§3.1)", () => {
+  afterEach(() => {
+    document.title = "";
+  });
+
+  it("names the open group, the page and the app, and follows the group", () => {
+    document.title = "Kastlan";
+    mount("/settings/security", { appName: "Kastlan" });
+    expect(document.title).toBe("Security · Settings · Kastlan");
+    fireEvent.click(screen.getByRole("tab", { name: "Data" }));
+    expect(document.title).toBe("Data · Settings · Kastlan");
+  });
+
+  it("puts back the title it found when it unmounts", () => {
+    document.title = "Dashboard · Kastlan";
+    const { unmount } = mount("/settings/security", { appName: "Kastlan" });
+    fireEvent.click(screen.getByRole("tab", { name: "Data" }));
+    unmount();
+    expect(document.title).toBe("Dashboard · Kastlan");
+  });
+
+  it("is the page and the app on the phone's list, and leaves out a missing app name", () => {
+    mount("/settings", { layout: "phone", appName: "Kastlan" });
+    expect(document.title).toBe("Settings · Kastlan");
+    fireEvent.click(screen.getByRole("link", { name: /Security/ }));
+    expect(document.title).toBe("Security · Settings · Kastlan");
+  });
+
+  it("reads the page from a string title — Kurvenschmiede's admin page", () => {
+    mount("/settings/account", { title: "Administration" });
+    expect(document.title).toBe("Account · Administration");
+  });
+
+  it("writes another order through documentTitle, and nothing with documentTitle={false}", () => {
+    const { unmount } = mount("/settings/account", {
+      appName: "Kurvenschmiede",
+      documentTitle: ({ group, page, appName }) => `${appName} — ${page}: ${group}`,
+    });
+    expect(document.title).toBe("Kurvenschmiede — Settings: Account");
+    unmount();
+
+    document.title = "Untouched";
+    mount("/settings/account", { appName: "Kurvenschmiede", documentTitle: false });
+    expect(document.title).toBe("Untouched");
+  });
+});
+
 describe("settingsSearchEntries (⌘K)", () => {
   it("builds GlobalSearch entries that link to the card, under the group's name", () => {
     const entries = settingsSearchEntries(GROUPS, ENTRIES, { basePath: "/settings/" });

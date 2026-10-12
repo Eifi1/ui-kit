@@ -34,8 +34,8 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * from here covers the whole showcase rather than the section.
  */
 
-// Panel sizes as a list so the three specimens cannot drift from the prop's union.
-const MODAL_SIZES = ["md", "lg", "xl"] as const;
+// Panel sizes as a list so the four specimens cannot drift from the prop's union.
+const MODAL_SIZES = ["md", "lg", "xl", "2xl"] as const;
 type ModalSize = (typeof MODAL_SIZES)[number];
 
 const TOOLTIP_SIDES = ["top", "right", "bottom", "left", "start", "end"] as const;
@@ -263,11 +263,14 @@ function ModalSizes() {
       {size && (
         <Modal size={size} labelledBy={headingId} className="space-y-3" onClose={() => setSize(null)}>
           <h4 id={headingId} className="text-sm font-semibold text-[var(--text-primary)]">
-            size=&quot;{size}&quot; — md 28rem, lg 32rem, xl 48rem
+            size=&quot;{size}&quot; — md 28rem, lg 32rem, xl 48rem, 2xl the display less a margin
+            (110rem at most)
           </h4>
           <p className="text-xs text-[var(--text-secondary)]">
             The panel is <code className="font-mono">w-full</code> under every cap, so on a phone
-            all three are the same full-width bottom sheet and only the desktop widths differ.
+            all four are the same full-width bottom sheet and only the desktop widths differ.{" "}
+            <code className="font-mono">2xl</code> (0.34) is for a dialog whose content is a table
+            to be read — a pasted measurement table, a report drilldown.
           </p>
           <input
             aria-label="Scratch field"

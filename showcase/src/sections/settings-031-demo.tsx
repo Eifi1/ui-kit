@@ -335,6 +335,10 @@ function GardenSettings({ layout, demo, account }: { layout: "desktop" | "phone"
       basePath="/settings"
       renderGroup={(group) => <GardenGroup group={group} account={account} demo={demo} />}
       phoneFooter={<ListItem href="/admin" title="Administration" subtitle="Leaves settings" leading={<Users className="size-4 text-[var(--text-muted)]" aria-hidden />} />}
+      // The window's title (0.34, §3.1): the desktop specimen writes it, the other two
+      // pass `false`, so three specimens on one page do not take turns at one tab.
+      appName="Garden Planner"
+      documentTitle={layout === "desktop" ? undefined : false}
     />
   );
 }
@@ -361,7 +365,10 @@ export function SettingsDesktop031Demo() {
         settings. Ten entries are over the threshold of eight, so the search shows: try “dark”, “2fa” or “sécurité”
         — accents fold, and a group&rsquo;s name finds its settings. “Legacy link” is keksdose&rsquo;s old
         {code("#security")} URL, converted with the whole query while the page stays mounted. “Mail link” rings the
-        passkeys card, focuses its heading and removes only {code("focus")}.
+        passkeys card, focuses its heading and removes only {code("focus")}. Since 0.34 the browser tab follows the
+        open group — “Security · Garden Planner settings · Garden Planner”, from {code("appName")} — and gets its
+        old title back when the layout unmounts; {code("documentTitle")} takes a function for another order, or{" "}
+        {code("false")}, which the phone and admin specimens pass.
       </Note>
     </Example>
   );
@@ -445,6 +452,7 @@ export function SettingsAdmin031Demo() {
           basePath="/admin"
           width="7xl"
           search={false}
+          documentTitle={false}
           aliases={{ overview: "metrics" }}
           phoneFooter={<ListItem href="/import" title="Import" leading={<Upload className="size-4 text-[var(--text-muted)]" aria-hidden />} />}
           renderGroup={(section) => {

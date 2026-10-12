@@ -3,7 +3,7 @@
  * can sit above it instead of on it.
  *
  * kastlan 0.18: its offline pill is a `bottom-start` FloatingActionButton, and
- * `ServerWakeNotice` sits in the same corner — right after a break both show at once
+ * `ServerWakeNotice` sat in the same corner — right after a break both show at once
  * (the photo outbox syncs while the first reads wake the server), one over the other.
  * The FAB's `offset` cannot help: the notice comes and goes, and on a phone it is
  * nearly as wide as the screen, so a FAB in EITHER corner can be under it.
@@ -13,6 +13,10 @@
  * whatever offset, `extended` label or `hidden` state the controls are in. A control
  * that is `hidden` measures 0 × 0 and is skipped, so kastlan's pill, which stays
  * mounted and hidden while there is nothing to report, costs the notice nothing.
+ *
+ * NO READER since 0.34: `ServerWakeNotice` moved to the top of the screen (keksdose
+ * live #399), out of every FAB's corner. FloatingActionButton still registers; the
+ * next notice that has to sit above the bottom's floating controls reads this.
  *
  * Internal: not exported from the barrel.
  */

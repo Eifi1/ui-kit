@@ -8,6 +8,7 @@ import { toast } from "../components/toast";
 import { Button } from "../components/ui";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { filenameFromDisposition, saveBlob } from "../lib/download";
 import { formatDate } from "../lib/format";
 import { DEFAULT_MAX_ATTACHMENT_BYTES } from "./feedback-attachment";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog";
@@ -269,7 +270,12 @@ const plainFetch: AuthedFetcher = (url, { signal }) => fetch(url, { signal, cred
  * A PDF or a text log (keksdose `FeedbackFileDownload`, dev #578): the bytes sit behind
  * an authenticated route that serves them as `attachment`, never inline (§3.5), so a
  * plain link would be a 401 the moment it was opened. Fetched through the app's
- * fetcher and handed to a synthetic anchor; a failure says so in a toast.
+ * fetcher and saved with {@link saveBlob}; a failure says so in a toast.
+ *
+ * Saved under the name the server gives it when the fetcher answers with a `Response`
+ * (server-kit's `content_disposition` puts the uploader's own name in `filename*`), and
+ * under the URL's last segment — the name on the button — when it answers with a bare
+ * `Blob`, which has no headers to ask.
  */
 function AttachmentDownload({
   url,
@@ -287,14 +293,13 @@ function AttachmentDownload({
     event.stopPropagation();
     setBusy(true);
     try {
-      const blob = await toBlob(await fetcher(url, { signal: new AbortController().signal }));
-      const href = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = href;
-      anchor.download = name;
-      anchor.click();
-      // After the click has handed the URL to the download, not before.
-      setTimeout(() => URL.revokeObjectURL(href), 0);
+      const answer = await fetcher(url, { signal: new AbortController().signal });
+      const blob = await toBlob(answer);
+      const saveAs =
+        typeof Response !== "undefined" && answer instanceof Response
+          ? filenameFromDisposition(answer.headers.get("Content-Disposition"), name)
+          : name;
+      saveBlob(blob, saveAs);
     } catch {
       toast.error(labels.downloadFailed);
     } finally {

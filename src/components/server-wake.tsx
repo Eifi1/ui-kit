@@ -1,9 +1,7 @@
-import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { CSSProperties, RefObject } from "react";
+import { useSyncExternalStore } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import { clearanceAbove, subscribeFloating } from "../lib/floating-stack";
 import { serverWake } from "../lib/server-wake";
 import type { ServerWakeStage, ServerWakeWatcher } from "../lib/server-wake";
 import { AlertBanner } from "./alert-banner";
@@ -15,11 +13,23 @@ import { Spinner } from "./ui";
  * unanswered read it says the app is still loading, and after seven it says WHY — the
  * server sleeps when nobody is using it, and the first request has to start it again.
  *
- * Corner-anchored and non-blocking on purpose. The pages underneath already show their
- * own skeletons; what was missing is the explanation, not another overlay. Start
- * corner, above the phone's bottom nav, so it collides with neither the centred toasts
- * nor the nav bar — and above any FloatingActionButton it would otherwise cover
- * (kastlan's offline pill shares the corner; on a phone the notice spans both).
+ * Non-blocking on purpose. The pages underneath already show their own skeletons; what
+ * was missing is the explanation, not another overlay.
+ *
+ * **At the top, centred, and it takes no taps** (0.34, round C13; keksdose live #399:
+ * *"Move the notification to the top where it can be better seen and not block any
+ * sticky elements."*). Until 0.34 it sat in the bottom-start corner above the phone's
+ * nav — exactly where a phone keeps what floats: a register's action group, a
+ * FloatingActionButton, a dialog's sticky Create/Cancel footer — and a cold start is
+ * when that Create is wanted first. It rose above a FloatingActionButton it measured,
+ * but a sticky footer is not one. The top bar is the one band whose contents nobody
+ * needs while the server is still waking, and `pointer-events-none` lets a tap through
+ * to whatever the notice does cover: it is a status line with nothing in it to press.
+ * Below the status bar and inside the side insets of a notched phone (`safe-area-inset-*`);
+ * its width is in rem, so at the Large text size it is wider and wraps less, and the
+ * screen's edges still stop it. The toasts stay readable: a phone shows them at the
+ * bottom, and a desktop `TOASTER_OFFSET_TOP` (4rem) down, where they draw over a long
+ * notice rather than under it (`--z-toast` is above this `z-50`).
  *
  * Mount it next to the router, not inside the app layout, so it also covers the login
  * screen and the landing page — a cold start is at its most confusing exactly there,
@@ -62,43 +72,15 @@ export interface ServerWakeNoticeProps {
   appName?: string;
   labels?: Partial<ServerWakeLabels>;
   /**
-   * The height to keep clear at the bottom — AppShell's bottom nav. Default: its
-   * measured `--app-nav-h` (0px from `md` up and on pages without a shell, such as the
-   * login screen), so nothing has to be passed under an AppShell. The safe area is
-   * respected either way, and a 1rem gap is added. Numbers are px.
+   * @deprecated Since 0.34 the notice sits at the TOP of the screen, so there is no
+   * bottom nav to clear and this does nothing; it goes in 0.35. It was the height kept
+   * clear at the bottom (AppShell's `--app-nav-h`).
    */
   navOffset?: string | number;
-  /** Extra classes on the fixed anchor — a different width or `start-*`. The bottom
-   *  offset is an inline style, so move it vertically with {@link navOffset}. Either
-   *  way it rises above a visible FloatingActionButton under it. */
+  /** Extra classes on the fixed anchor — a different width (`max-w-*`), or another
+   *  `top-*` for an app that wants it under its top bar rather than over it. Merged, so
+   *  a class given here replaces the kit's of the same kind. */
   className?: string;
-}
-
-const px = (v: string | number) => (typeof v === "number" ? `${v}px` : v);
-
-/** Gap between the notice and a floating control it stacks above. */
-const STACK_GAP = "0.5rem";
-
-/**
- * How far off the bottom the notice must sit to clear the FloatingActionButtons under
- * it (`lib/floating-stack.ts`), re-measured when one appears, goes, resizes or the
- * viewport does — or `null` while it is idle or nothing is under it. kastlan 0.18.
- */
-function useFloatingClearance(anchor: RefObject<HTMLDivElement | null>, stage: ServerWakeStage): number | null {
-  const [clearance, setClearance] = useState<number | null>(null);
-  useLayoutEffect(() => {
-    if (stage === "idle") return;
-    const measure = () => setClearance(clearanceAbove(anchor.current));
-    measure();
-    const unsubscribe = subscribeFloating(measure);
-    window.addEventListener("resize", measure);
-    return () => {
-      unsubscribe();
-      window.removeEventListener("resize", measure);
-    };
-  }, [anchor, stage]);
-  // Idle, the last measurement is stale and nothing shows anyway.
-  return stage === "idle" ? null : clearance;
 }
 
 /**
@@ -108,29 +90,28 @@ function useFloatingClearance(anchor: RefObject<HTMLDivElement | null>, stage: S
  * so the region waits empty and the banner appears inside it. keksdose's notice
  * mounted the region and the words at once.
  */
-export function ServerWakeNotice({ watcher, appName, labels: labelsProp, navOffset, className }: ServerWakeNoticeProps) {
+export function ServerWakeNotice({ watcher, appName, labels: labelsProp, className }: ServerWakeNoticeProps) {
   const labels = useKitLabels("serverWake", DEFAULT_SERVER_WAKE_LABELS, labelsProp);
   const stage = useServerWakeStage(watcher);
   const waking = stage === "waking";
-  const anchor = useRef<HTMLDivElement>(null);
-  const clearance = useFloatingClearance(anchor, stage);
-  const base = `calc(max(${navOffset === undefined ? "var(--app-nav-h, 0px)" : px(navOffset)}, env(safe-area-inset-bottom, 0px)) + 1rem)`;
-  const style: CSSProperties = {
-    bottom: clearance === null ? base : `max(${base}, calc(${clearance}px + ${STACK_GAP}))`,
-  };
 
   return (
     <div
-      ref={anchor}
       role="status"
       aria-live="polite"
       data-stage={stage}
-      style={style}
-      // `pointer-events-none` on the empty anchor: a fixed box, even an empty one, is not
-      // allowed to swallow a tap on what it sits over.
       className={cn(
-        "fixed start-4 z-50 max-w-[min(24rem,calc(100vw-2rem))]",
-        stage === "idle" && "pointer-events-none",
+        // Centred at the top (keksdose live #399): `left`/`right` hold it inside the
+        // side insets of a notched phone held sideways, `w-fit` + `mx-auto` centre it
+        // between them, and `top` puts it under the status bar.
+        "fixed z-50 mx-auto w-fit max-w-[24rem]",
+        "top-[calc(env(safe-area-inset-top,0px)+0.375rem)]",
+        "left-[max(1rem,env(safe-area-inset-left,0px))] right-[max(1rem,env(safe-area-inset-right,0px))]",
+        // No taps, ever: a status line has nothing in it to press, and whatever it
+        // covers — the top bar's buttons, a page's own header — must still answer
+        // underneath it. A link or button inside would take its taps back (none today:
+        // the labels are text), so the rule cannot quietly disable a control later.
+        "pointer-events-none [&_:is(a,button)]:pointer-events-auto",
         className,
       )}
     >

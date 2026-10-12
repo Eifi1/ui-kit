@@ -244,6 +244,33 @@ describe("FeedbackRowDetail — attachments", () => {
     click.mockRestore();
   });
 
+  it("saves under the server's name when the fetcher answers with a Response (round 0.34 C6)", async () => {
+    // server-kit's `content_disposition`: the uploader's own name in `filename*`, an ASCII
+    // stand-in in `filename=`; the URL's last segment is only the storage key.
+    const fetcher = vi.fn(
+      async () =>
+        new Response("x", {
+          headers: { "Content-Disposition": `attachment; filename="Grun.pdf"; filename*=UTF-8''Gr%C3%BCn.pdf` },
+        }),
+    );
+    render(
+      <FeedbackRowDetail
+        row={record({ attachment_urls: [`${ATT}/${kastlanKey}.pdf`] })}
+        canEdit={false}
+        viewerId={OTHER}
+        onUpdate={landing()}
+        fetcher={fetcher}
+      />,
+    );
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: `Download ${kastlanKey}.pdf` }));
+    });
+    expect(click).toHaveBeenCalledTimes(1);
+    expect((click.mock.contexts[0] as HTMLAnchorElement).download).toBe("Grün.pdf");
+    click.mockRestore();
+  });
+
   it("toasts a failed download", async () => {
     const fetcher = vi.fn(async () => new Response("", { status: 404 }));
     render(

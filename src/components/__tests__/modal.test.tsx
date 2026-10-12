@@ -49,6 +49,9 @@ describe("Modal", () => {
     ["md", "max-w-md"],
     ["lg", "max-w-lg"],
     ["xl", "max-w-3xl"],
+    // Round 0.34 C3 (KS U1): a table to be read. Kurvenschmiede's five part dialogs
+    // wrote `w-[min(110rem,94vw)] max-w-none`, Keksdose's drilldown `max-w-5xl`.
+    ["2xl", "max-w-[110rem]"],
   ] as const)("caps the panel at the %s width", (size, expected) => {
     render(
       <Modal onClose={vi.fn()} size={size}>
