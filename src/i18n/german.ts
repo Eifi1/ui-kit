@@ -168,6 +168,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       reworkPlaceholder: "Was muss noch angepasst werden? Neue Anforderungen oder Richtungswechsel.",
       reworkUploadFailed: "Die Datei konnte nicht hochgeladen werden. Die Nacharbeit wurde nicht gesendet.",
       status: "Status",
+      note: "Notiz",
     },
     accountSettings: {
       profile: {
@@ -275,6 +276,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       filter: "Filter",
       close: "Schließen",
       selectRow: "Zeile auswählen",
+      rowDetails: "Details",
       autoSize: "Spaltenbreiten anpassen",
       loading: "Wird geladen…",
       filters: "Filter",

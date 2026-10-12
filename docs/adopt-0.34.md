@@ -232,6 +232,15 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
     `toneTextClass()` change value. `.text-money-net` and `.bg-money-neutral` are layered theme
     utilities now; the other `.text-money-pos`-style statics stay.
   - Preset hex values move about one step (a test that pins a preset's hex updates it).
+  - Accessibility fixes from the showcase's new axe check: an expandable DataTable row (desktop,
+    `onRowClick` + `expandedRow`) carries no `aria-expanded` on its `<tr>` — a visually hidden
+    "Details" button in the first cell holds it (`getByRole("button", { name: "Details",
+    expanded: true })`; the first cell's accessible name gains "Details", so a
+    `getByRole("cell", { name: "Alpha" })` needs a regex); Tabs' named "Remove <tab>" button
+    sits right after the tablist, not inside it (`within(tablist)` no longer finds it,
+    `screen.getByRole` does); FeedbackNoteEditor without a placeholder is named "Note" (new
+    `label` prop; keys `feedbackDetail.note`, `dataTable.rowDetails` in all seven languages);
+    FileDropzone's and FeedbackAttachmentField's hidden file inputs left the tab order.
   - Types: `ThemeSettingProps` is the union; `LanguageSettingProps` drops `multiple`; 25
     components are function components, not `ForwardRefExoticComponent` (JSX,
     `ComponentProps` and `ComponentRef` work as before; `X.displayName` is gone).

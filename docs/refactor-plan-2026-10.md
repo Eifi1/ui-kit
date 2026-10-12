@@ -1,6 +1,12 @@
 # @eifi1/ui-kit refactor plan — 2026-10-12
 
-## Status — Wave 0 DONE in 0.34; Waves 1–5 also going into 0.34 (Marcel, 2026-10-12)
+## Status — ALL WAVES DONE in 0.34 (2026-10-13)
+
+Every finding below is built and committed on `feat/0.34.0`; the apps' side is in
+`docs/adopt-0.34.md`. Left on purpose: items each wave named as open (e.g. MOD-10's alias
+entries kept, 0.35's removals of what 0.34 deprecates).
+
+### History
 
 Marcel, after Wave 0: "Wire all waves also into 0.34." So every wave ships in 0.34, and the
 dates below shift by one minor: what this plan deprecates "in 0.35" is deprecated in 0.34 and

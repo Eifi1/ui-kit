@@ -499,6 +499,11 @@ function SingleField({
         type="file"
         accept={accept.join(",")}
         className="sr-only"
+        // Out of the tab order and the accessibility tree, as in the other two modes:
+        // the add button is the way in (round 0.34, the showcase's axe check — this one
+        // was a second, nameless stop).
+        tabIndex={-1}
+        aria-hidden
         disabled={disabled}
         onChange={(e) => {
           pick(e.target.files?.[0]);

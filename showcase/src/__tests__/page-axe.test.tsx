@@ -1,6 +1,6 @@
 import axe from "axe-core";
 import { render } from "@testing-library/react";
-import { AXE_KNOWN, AXE_RULES, axeFindings, duplicateIds } from "./page-axe";
+import { AXE_RULES, axeFindings, duplicateIds, type AxeKnown } from "./page-axe";
 
 /** The axe check the page shards run on every page (page-axe.ts, refactor audit 2026-10,
  *  DOC-10): that it reports, that the known list filters, and that it cleans up. */
@@ -24,10 +24,11 @@ describe("axeFindings", () => {
   });
 
   it("leaves out a known finding — on its page, and only there when it names pages", async () => {
-    const textarea = AXE_KNOWN.find((k) => k.html.source.startsWith("^<textarea"))!;
+    // Its own list: the real one is empty since round 0.34 fixed the five it held.
+    const known: AxeKnown[] = [{ rule: "label", pages: ["feedback-inbox"], html: /^<textarea /, reason: "test" }];
     const { container } = render(<textarea rows={3} />);
-    expect(await axeFindings(container, textarea.pages![0])).toEqual([]);
-    expect((await axeFindings(container, "another-page")).map((f) => f.rule)).toEqual(["label"]);
+    expect(await axeFindings(container, "feedback-inbox", undefined, known)).toEqual([]);
+    expect((await axeFindings(container, "another-page", undefined, known)).map((f) => f.rule)).toEqual(["label"]);
   });
 
   it("does not report what is hidden — by the attribute, an inline display or visibility", async () => {

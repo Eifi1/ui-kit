@@ -15,7 +15,9 @@ import {
   type FeedbackCategory,
   type FeedbackStatus,
 } from "./feedback-vocabulary";
-import type { LabelOverride } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+// The words module, not ./feedback-row-detail: that one imports this file.
+import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "./feedback-row-detail-labels";
 
 /**
  * The feedback **inbox**, as the parts two apps were each writing separately.
@@ -334,6 +336,7 @@ export function FeedbackNoteEditor({
   saveLabel,
   cancelLabel,
   placeholder,
+  label,
   rows = 3,
   attachment,
   resetKey,
@@ -350,6 +353,11 @@ export function FeedbackNoteEditor({
    *  a hint that disappears the moment somebody starts typing is a hint that is
    *  gone exactly when it is being followed. */
   placeholder?: ReactNode;
+  /** The box's accessible name (0.34). Without it the `placeholder` line names the
+   *  box, and without that the `feedbackDetail` namespace's `note` ("Note") does —
+   *  a box with neither was read out as just "edit text" (the showcase's axe check).
+   *  Given with a `placeholder`, this names the box and the line describes it. */
+  label?: string;
   rows?: number;
   /** Offer a picture with the note (Steering Design feedback #128). Omitted,
    *  the editor is exactly the text box it always was — which is what the
@@ -393,6 +401,7 @@ export function FeedbackNoteEditor({
   // (Steering Design feedback #140).
   const root = useRef<HTMLDivElement>(null);
   const hintId = useId();
+  const detailText = useKitLabels("feedbackDetail", DEFAULT_FEEDBACK_DETAIL_LABELS);
   // The lock as the save button sees it, with its scope (§12.36): `commit &&
   // lock.locked` read a `{ except }` scope as `true`.
   const lock = useWriteLock(commit ?? false);
@@ -426,7 +435,11 @@ export function FeedbackNoteEditor({
         rows={rows}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
-        aria-labelledby={placeholder ? hintId : undefined}
+        // Never nameless (round 0.34): the caller's `label`, else the line, else the
+        // `feedbackDetail` namespace's `note`. With both, the line describes the box.
+        aria-label={label ?? (placeholder ? undefined : detailText.note)}
+        aria-labelledby={placeholder && label === undefined ? hintId : undefined}
+        aria-describedby={placeholder && label !== undefined ? hintId : undefined}
         aria-required={required || undefined}
       />
       {attachment && (

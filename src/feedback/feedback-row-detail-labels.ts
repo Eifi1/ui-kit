@@ -29,4 +29,5 @@ export const DEFAULT_FEEDBACK_DETAIL_LABELS: FeedbackDetailLabels = {
   reworkPlaceholder: "What still needs refinement? Any new constraints or change of direction.",
   reworkUploadFailed: "The file could not be uploaded. The rework was not sent.",
   status: "Status",
+  note: "Note",
 };

@@ -539,6 +539,11 @@ export function FileDropzone({
           // handler again would open the dialog a second time.
           onClick={(e) => e.stopPropagation()}
           className="sr-only"
+          // Out of the tab order and the accessibility tree, as useFilePicker's: Browse
+          // is the way in, and this was a second, nameless stop beside it (round 0.34,
+          // the showcase's axe check).
+          tabIndex={-1}
+          aria-hidden
         />
       </div>
       {/* Outside the zone, where they have always been (the zone used to be a

@@ -1111,6 +1111,8 @@ export function DataTable<T>({
     : undefined;
   const footerValue = (col: DataTableColumn<T>) => col.footer?.(sorted, slice);
   const footerHeadingId = useId();
+  // Each open row's detail row, for its disclosure button's `aria-controls`.
+  const detailIdBase = useId();
   // The actions column is the table's own, not one the user can hide: out of the count.
   const columnsCountLabel = rowActions
     ? labels.columnsCount(visibleCount - 1, totalCount - 1)
@@ -1559,13 +1561,34 @@ export function DataTable<T>({
               const rowInteractive = !!onRowClick || !!selection;
               const href = rowHref?.(row);
               const key = rowKey(row);
+              const detailId = `${detailIdBase}-${rowIndex}`;
+              // Whether the row is open, said where ARIA allows it (round 0.34, the
+              // showcase's axe check): `aria-expanded` belongs to a treegrid's row, not a
+              // table's, and the <tr> wore it. A disclosure button in the first cell carries
+              // it now, with `aria-controls` on the detail row while that is there.
+              // Visually hidden and not a tab stop: the row stays the one roving stop, with
+              // Enter/Space and the whole-row click — this is the screen reader cursor's
+              // way in, and where it hears the state. Named by `aria-label`, so the cell's
+              // text stays the cell's own.
+              const disclosure =
+                rowsFocusable && expandedRow ? (
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="sr-only-fixed"
+                    aria-label={labels.rowDetails}
+                    aria-expanded={expanded}
+                    aria-controls={expansion ? detailId : undefined}
+                    // The row's own handler leaves a click on a control inside it alone.
+                    onClick={() => onRowClick!(row)}
+                  />
+                ) : null;
               return (
                 <Fragment key={key}>
                   <tr
                     {...cleanAttrs(rowAttributes?.(row))}
                     data-row-nav={rowsFocusable ? "" : undefined}
                     tabIndex={rowsFocusable ? (key === tabRowKey ? 0 : -1) : undefined}
-                    aria-expanded={rowsFocusable && expandedRow ? expanded : undefined}
                     onFocus={
                       rowsFocusable
                         ? (e) => {
@@ -1682,7 +1705,7 @@ export function DataTable<T>({
                         )}
                       </td>
                     )}
-                    {visibleColumns.map((col) => {
+                    {visibleColumns.map((col, colIndex) => {
                       const width = widths[col.key];
                       // The caller's first, the table's over it — see `cellProps`.
                       const own = splitCellProps(col.cellProps?.(row));
@@ -1701,6 +1724,7 @@ export function DataTable<T>({
                             logicalAlign(col.className),
                           )}
                         >
+                          {colIndex === 0 && disclosure}
                           {col === linkColumn && href ? (
                             // No `onActivate`: the click is left to bubble to the
                             // <tr> handler above, which already owns expand-vs-select.
@@ -1716,7 +1740,7 @@ export function DataTable<T>({
                     })}
                   </tr>
                   {expansion && (
-                    <tr className="bg-surface-2 border-t border-subtle">
+                    <tr id={disclosure ? detailId : undefined} className="bg-surface-2 border-t border-subtle">
                       {/* The detail panel spans every column. In an `auto` table
                           layout (the default here — columns only get fixed style
                           widths once the user resizes/auto-sizes them) the cell's

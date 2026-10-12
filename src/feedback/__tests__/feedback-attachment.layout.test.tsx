@@ -67,6 +67,18 @@ describe.each(modes)("FeedbackAttachmentField (%s) root", (mode) => {
   });
 });
 
+// Round 0.34, the showcase's axe check: single mode left its sr-only file input in the
+// tab order with no name, beside the add button that is the way in; the other two
+// modes (and useFilePicker) had already taken theirs out.
+describe.each(modes)("FeedbackAttachmentField (%s) file input", (mode) => {
+  it("is out of the tab order and the accessibility tree", () => {
+    const { container } = render(field(mode));
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    expect(input).toHaveAttribute("tabindex", "-1");
+    expect(input).toHaveAttribute("aria-hidden", "true");
+  });
+});
+
 describe("FeedbackAttachmentField refs, with a long name inside a flex row", () => {
   it("truncates the chip's name (the class jsdom can check)", () => {
     const name = "Screenshot 2026-10-03 at 07.45.12 of the whole overview page.png";

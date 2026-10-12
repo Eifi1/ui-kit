@@ -19,6 +19,14 @@ export interface DataTableLabels extends DataTableSortLabels {
   filter: string;
   close: string;
   selectRow: string;
+  /**
+   * The name of an opening row's disclosure button on desktop — visually hidden, in the
+   * row's first cell, carrying `aria-expanded` and `aria-controls` (round 0.34, the
+   * showcase's axe check: ARIA allows `aria-expanded` on a row only in a treegrid, and
+   * the `<tr>` wore it). The same words whether the row is open or shut: the state is
+   * the button's to say.
+   */
+  rowDetails: string;
   autoSize: string;
   loading: string;
   filters: string;
@@ -109,6 +117,7 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
   filter: "Filter",
   close: "Close",
   selectRow: "Select row",
+  rowDetails: "Details",
   autoSize: "Auto-size columns",
   loading: "Loading…",
   filters: "Filters",

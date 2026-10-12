@@ -160,6 +160,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       reworkUploadFailed:
         "Non è stato possibile caricare il file. La richiesta di rielaborazione non è stata inviata.",
       status: "Stato",
+      note: "Nota",
     },
     accountSettings: {
       profile: {
@@ -268,6 +269,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       filter: "Filtra",
       close: "Chiudi",
       selectRow: "Seleziona riga",
+      rowDetails: "Dettagli",
       autoSize: "Adatta larghezza colonne",
       loading: "Caricamento…",
       filters: "Filtri",

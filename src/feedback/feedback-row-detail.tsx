@@ -146,6 +146,10 @@ export interface FeedbackDetailLabels {
   reworkUploadFailed: string;
   /** Section 6's heading. de-CH: "Status" */
   status: string;
+  /** A `FeedbackNoteEditor`'s box, named when no `placeholder` line names it and the
+   *  caller gives no `label` — without it the box was read out as just "edit text"
+   *  (round 0.34, the showcase's axe check). de-CH: "Notiz" */
+  note: string;
 }
 
 // Defined in ./feedback-row-detail-labels, which holds no component code (0.34, KS U8).

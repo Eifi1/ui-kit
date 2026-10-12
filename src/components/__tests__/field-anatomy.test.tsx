@@ -284,6 +284,34 @@ describe("Tabs — add, remove, adornments", () => {
     expect(screen.getByRole("button", { name: "Add loop" })).toHaveFocus();
   });
 
+  // Round 0.34, the showcase's axe check: the × was a button inside the tablist, which
+  // may own tabs only. The named remove button is after the strip now; the × drawn on
+  // the open tab is the pointer's, hidden from assistive tech.
+  it("keeps the remove button OUTSIDE the tablist too, and the drawn × still removes", async () => {
+    const user = userEvent.setup();
+    const spy = vi.fn();
+    render(<Workbook onRemove={spy} />);
+    const list = screen.getByRole("tablist", { name: "Sheets" });
+    expect(within(list).queryAllByRole("button")).toHaveLength(0);
+    expect(list).not.toContainElement(screen.getByRole("button", { name: "Remove 80 km/h" }));
+    const drawn = list.querySelector<HTMLButtonElement>("[data-tab-remove]")!;
+    expect(drawn).toHaveAttribute("aria-hidden", "true");
+    expect(drawn).toHaveAttribute("tabindex", "-1");
+    await user.click(drawn);
+    expect(spy).toHaveBeenCalledWith("b");
+    expect(screen.getByRole("tab", { name: "40 km/h" })).toHaveFocus();
+  });
+
+  it("keeps the strip the root without an add button, the remove button right after it", () => {
+    const { container } = render(
+      <Tabs tabs={SHEETS} active="b" onChange={vi.fn()} onRemove={vi.fn()} className="mb-4" />,
+    );
+    const list = screen.getByRole("tablist");
+    expect(container.firstElementChild).toBe(list);
+    expect(list).toHaveClass("mb-4");
+    expect(list.nextElementSibling).toBe(screen.getByRole("button", { name: "Remove 80 km/h" }));
+  });
+
   it("adds through a button OUTSIDE the tablist, since a tablist owns only tabs", async () => {
     const user = userEvent.setup();
     render(<Workbook />);

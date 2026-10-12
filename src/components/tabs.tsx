@@ -130,9 +130,13 @@ export interface TabsProps<T extends string>
    * things to hit by accident, and the tab you can remove should be the one you
    * are looking at — but its room is reserved on every removable tab, so opening a
    * tab never widens it and never pushes the rest of the strip along (lenkbank
-   * feedback #72). It is named "Remove <tab>" and is not a tab stop of its own: the
-   * strip stays one stop, and the keyboard path is Delete (announced through
-   * `aria-keyshortcuts`), which removes whichever tab has focus (see `removeOn`).
+   * feedback #72). It is not a tab stop of its own: the strip stays one stop, and the
+   * keyboard path is Delete (announced through `aria-keyshortcuts`), which removes
+   * whichever tab has focus (see `removeOn`).
+   *
+   * Assistive tech meets the remove as a "Remove <tab>" button right AFTER the strip,
+   * not as the × (0.34): a tablist may own tabs only, so the drawn × is the pointer's
+   * and `aria-hidden`, and the named button beside the tablist is visually hidden.
    *
    * The strip only ASKS: it calls this, and the tab goes when the caller drops it
    * from `tabs` — after a confirmation, a request, whatever it needs. When it does,
@@ -303,6 +307,7 @@ export function Tabs<T extends string>({
   // owns `tabs` and may take its time (a confirmation, a request), so this waits
   // for the id to actually leave the list rather than guessing at the moment.
   const pendingFocus = useRef<{ removed: T; wasActive: boolean; neighbour?: T } | null>(null);
+  const removeRef = useRef<HTMLButtonElement>(null);
   const requestRemove = (id: T) => {
     const index = tabs.findIndex((t) => t.id === id);
     pendingFocus.current = {
@@ -318,10 +323,11 @@ export function Tabs<T extends string>({
     pendingFocus.current = null;
     const strip = stripRef.current;
     if (!strip) return;
-    // Only focus that fell out of the strip with the removed tab is ours to place.
+    // Only focus that fell out of the strip with the removed tab is ours to place —
+    // or that sits on the remove button after it, which a pick removed through.
     // If the user has moved on — into the panel, into a dialog — leave it there.
     const focused = document.activeElement;
-    if (focused && focused !== document.body && !strip.contains(focused)) return;
+    if (focused && focused !== document.body && !strip.contains(focused) && focused !== removeRef.current) return;
     // The removed tab was open: focus follows the caller's new selection, which is
     // also the strip's tab stop. It was not: its neighbour, as the ARIA pattern has it.
     const target =
@@ -547,12 +553,15 @@ export function Tabs<T extends string>({
               <IconButton
                 size="2xs"
                 tone="danger"
-                // Not a tab stop: the strip is one, and Delete is the keyboard's path.
-                // Still a named button, so a screen reader's cursor and a touch
-                // reader's swipe both reach it.
+                // The POINTER's ×, hidden from assistive tech (round 0.34, the showcase's
+                // axe check): a tablist may own tabs only, and this button sat in it. The
+                // named "Remove <tab>" a screen reader's cursor and a touch reader's swipe
+                // reach is `removeButton`, after the strip. Not a tab stop either way:
+                // the strip is one, and Delete is the keyboard's path.
+                aria-hidden
+                data-tab-remove=""
                 tabIndex={-1}
                 type="button"
-                aria-label={text.remove(nameOf(tab))}
                 disabled={busy}
                 onClick={() => requestRemove(tab.id)}
                 className={cn(
@@ -570,12 +579,42 @@ export function Tabs<T extends string>({
       })}
     </div>
   );
-  if (!onAdd) return tablist;
+  // The open tab's remove action as assistive tech meets it: right after the strip,
+  // OUTSIDE the tablist, which may own tabs only (round 0.34, the showcase's axe check).
+  // Visually hidden, since the × drawn on the tab is the pointer's, and not a tab stop,
+  // since Delete is the keyboard's. `sr-only-fixed`: it sits wherever the caller put the
+  // strip, with no positioned box of the kit's around it.
+  const activeTab = tabs.find((tab) => tab.id === active);
+  const removeButton =
+    activeTab && isRemovable(activeTab) ? (
+      <button
+        ref={removeRef}
+        type="button"
+        tabIndex={-1}
+        disabled={busy}
+        onClick={() => requestRemove(activeTab.id)}
+        className="sr-only-fixed"
+      >
+        {text.remove(nameOf(activeTab))}
+      </button>
+    ) : null;
+  if (!onAdd) {
+    // No outer box: the strip stays the root, as callers' `className` and tests expect.
+    return removeButton ? (
+      <>
+        {tablist}
+        {removeButton}
+      </>
+    ) : (
+      tablist
+    );
+  }
   if (vertical) {
     // Under the column, not beside it, and with no rule to carry on: a side nav has none.
     return (
       <div className={cn("flex flex-col gap-0.5", className)}>
         {tablist}
+        {removeButton}
         <button type="button" onClick={onAdd} disabled={busy} className={TAB_ADD_CLASSES}>
           <Plus aria-hidden />
           {addLabel ?? text.add}
@@ -591,6 +630,7 @@ export function Tabs<T extends string>({
       )}
     >
       {tablist}
+      {removeButton}
       {/* Outside the tablist: an action, not a tab — and a tablist may own only
           tabs. The rule under the strip carries on beneath it. */}
       <div

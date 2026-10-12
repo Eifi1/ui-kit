@@ -159,6 +159,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       reworkPlaceholder: "¿Qué falta por pulir? Nuevos requisitos o cambios de rumbo.",
       reworkUploadFailed: "No se ha podido subir el archivo. La solicitud de corrección no se ha enviado.",
       status: "Estado",
+      note: "Nota",
     },
     accountSettings: {
       profile: {
@@ -266,6 +267,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       filter: "Filtrar",
       close: "Cerrar",
       selectRow: "Seleccionar fila",
+      rowDetails: "Detalles",
       autoSize: "Ajustar ancho de columnas",
       loading: "Cargando…",
       filters: "Filtros",

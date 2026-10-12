@@ -18,48 +18,28 @@ export const AXE_RULES: readonly string[] = axe
   .map((rule) => rule.ruleId)
   .filter((id) => id.startsWith("aria-") || ["label", "button-name", "link-name", "list", "listitem"].includes(id));
 
+/** One known finding: the rule, the pages it is known on (all when left out), the start
+ *  of the element's HTML as axe prints it, and why it is there. */
+export interface AxeKnown {
+  rule: string;
+  pages?: readonly string[];
+  html: RegExp;
+  reason: string;
+}
+
 /**
  * What axe finds today and is known: each with its reason. A kit bug stays here until its
  * fix lands (then its entry goes, and the shard holds the fix); a specimen's own mistake
  * is fixed in the showcase instead of listed. Matched on the rule, the page (when given)
  * and the start of the element's HTML as axe prints it.
+ *
+ * Empty since round 0.34: the five kit bugs the check found when it landed are fixed —
+ * FileDropzone's and FeedbackAttachmentField's single-mode file input (out of the tab
+ * order and the tree), FeedbackNoteEditor's unnamed box (`feedbackDetail.note`),
+ * DataTable's `aria-expanded` on a `<tr>` (a disclosure button in the row now), and
+ * Tabs' × inside the tablist (the named remove button sits after it).
  */
-export const AXE_KNOWN: ReadonlyArray<{
-  rule: string;
-  pages?: readonly string[];
-  html: RegExp;
-  reason: string;
-}> = [
-  {
-    rule: "label",
-    html: /^<input [^>]*class="sr-only"[^>]*type="file"|^<input [^>]*type="file"[^>]*class="sr-only"/,
-    reason:
-      "kit: FileDropzone (file-dropzone.tsx:522) and FeedbackAttachmentField's single-file mode " +
-      "(feedback-attachment.tsx:497) leave their sr-only file input in the tab order with no name, beside " +
-      "the button that is the way in; the other modes and useFilePicker take it out (tabIndex -1, aria-hidden)",
-  },
-  {
-    rule: "label",
-    pages: ["feedback-inbox"],
-    html: /^<textarea /,
-    reason:
-      "kit: FeedbackNoteEditor names its textarea only through `placeholder` (feedback-inbox.tsx:425); " +
-      "without one it is read as just 'edit text'",
-  },
-  {
-    rule: "aria-conditional-attr",
-    html: /^<tr [^>]*aria-expanded=/,
-    reason:
-      "kit: DataTable puts aria-expanded on the row that opens a detail (data-table.tsx:1568); ARIA allows " +
-      "it on a treegrid row, not a table row",
-  },
-  {
-    rule: "aria-required-children",
-    html: /^<div role="tablist"/,
-    reason:
-      "kit: Tabs draws the active tab's remove × inside the tablist (tabs.tsx:546), which may own tabs only",
-  },
-];
+export const AXE_KNOWN: readonly AxeKnown[] = [];
 
 export interface AxeFinding {
   rule: string;
@@ -178,13 +158,19 @@ function styleForAxe(original: typeof window.getComputedStyle): typeof window.ge
 
 /**
  * Runs {@link AXE_RULES} and {@link duplicateIds} over `root` (less `exclude`) and returns
- * what {@link AXE_KNOWN} does not explain, for the page `slug`.
+ * what `known` ({@link AXE_KNOWN} unless a test passes its own) does not explain, for the
+ * page `slug`.
  *
  * Kept near a second for a large page: `getComputedStyle` is {@link styleForAxe}'s, and
  * axe builds no CSS selectors for what it finds (`selectors: false`; the HTML says which
  * element) — making one unique is a `querySelectorAll` per element.
  */
-export async function axeFindings(root: Element, slug: string, exclude?: Element): Promise<AxeFinding[]> {
+export async function axeFindings(
+  root: Element,
+  slug: string,
+  exclude?: Element,
+  known: readonly AxeKnown[] = AXE_KNOWN,
+): Promise<AxeFinding[]> {
   const original = window.getComputedStyle;
   window.getComputedStyle = styleForAxe(original);
   try {
@@ -201,9 +187,9 @@ export async function axeFindings(root: Element, slug: string, exclude?: Element
     ];
     return found.filter(
       (finding) =>
-        !AXE_KNOWN.some(
-          (known) =>
-            known.rule === finding.rule && (!known.pages || known.pages.includes(slug)) && known.html.test(finding.html),
+        !known.some(
+          (entry) =>
+            entry.rule === finding.rule && (!entry.pages || entry.pages.includes(slug)) && entry.html.test(finding.html),
         ),
     );
   } finally {

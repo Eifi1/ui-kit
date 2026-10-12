@@ -158,6 +158,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         "Que faut-il encore affiner\u202f? Nouvelles contraintes ou changement de cap éventuels.",
       reworkUploadFailed: "Le fichier n’a pas pu être envoyé. La demande de reprise n’a pas été transmise.",
       status: "Statut",
+      note: "Note",
     },
     accountSettings: {
       profile: {
@@ -272,6 +273,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       filter: "Filtrer",
       close: "Fermer",
       selectRow: "Sélectionner la ligne",
+      rowDetails: "Détails",
       autoSize: "Ajuster la largeur des colonnes",
       loading: "Chargement…",
       filters: "Filtres",

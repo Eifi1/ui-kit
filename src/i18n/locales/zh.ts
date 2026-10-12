@@ -149,6 +149,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       reworkPlaceholder: "还有哪些需要完善？如有新的限制或方向调整，请一并说明。",
       reworkUploadFailed: "无法上传文件，返工请求未发送。",
       status: "状态",
+      note: "备注",
     },
     accountSettings: {
       profile: {
@@ -256,6 +257,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       filter: "筛选",
       close: "关闭",
       selectRow: "选择行",
+      rowDetails: "详情",
       autoSize: "自动调整列宽",
       loading: "加载中…",
       filters: "筛选条件",

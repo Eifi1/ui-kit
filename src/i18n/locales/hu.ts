@@ -156,6 +156,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       reworkPlaceholder: "Min kell még finomítani? Új feltételek vagy irányváltás.",
       reworkUploadFailed: "A fájlt nem sikerült feltölteni. Az átdolgozási kérés nem ment el.",
       status: "Állapot",
+      note: "Megjegyzés",
     },
     accountSettings: {
       profile: {
@@ -264,6 +265,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       filter: "Szűrés",
       close: "Bezárás",
       selectRow: "Sor kijelölése",
+      rowDetails: "Részletek",
       autoSize: "Oszlopszélességek igazítása",
       loading: "Betöltés…",
       filters: "Szűrők",
