@@ -70,9 +70,9 @@ export interface ServerWakeNoticeProps {
   appName?: string;
   labels?: Partial<ServerWakeLabels>;
   /**
-   * @deprecated Since 0.34 the notice sits at the TOP of the screen, so there is no
-   * bottom nav to clear and this does nothing; it goes in 0.35. It was the height kept
-   * clear at the bottom (AppShell's `--app-nav-h`).
+   * @deprecated 0.34 — drop it; removed in 0.35. The notice sits at the TOP of the
+   * screen since 0.34, so there is no bottom nav to clear and this does nothing. It was
+   * the height kept clear at the bottom (AppShell's `--app-nav-h`).
    */
   navOffset?: string | number;
   /** Extra classes on the fixed anchor — a different width (`max-w-*`), or another

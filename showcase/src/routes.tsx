@@ -483,7 +483,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Normal, Large and Extra large on one root scale, with the breakpoints that move with it, the More contrast step, the account rule that carries both between devices — and what the components do at Large.",
         icon: ALargeSmall,
-        components: ["TextSizeSetting", "ContrastSetting", "useTextSize", "useBreakpoint", "usePhoneLayout", "useAccountAppearance", "RowActions", "rowActionsColumn", "IconButton", "AppShell", "DataTable", "Input", "FieldHint"],
+        components: ["TextSizeSetting", "ContrastSetting", "useTextSize", "useBreakpoint", "usePhoneLayout", "useAccountAppearance", "RowActions", "rowActionsColumn", "IconButton", "CompactControls", "AppShell", "DataTable", "Input", "FieldHint"],
         Body: () => (
           <>
             <TextSize032Demo />
@@ -510,7 +510,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Every string the kit renders, as one typed tree — and the provider that hands a translation to every component at once.",
         icon: Languages,
-        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDeCh", "KIT_LANGUAGES", "resolveLanguage", "loadUiKitLabels", "kitLabelStrings", "TranslationReviewPanel"],
+        components: ["UiKitProvider", "UiKitLabels", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDeCh", "KIT_LANGUAGES", "resolveLanguage", "loadUiKitLabels", "kitLabelStrings", "TranslationReviewPanel", "ReviewStatusChip", "TranslationExportButton"],
         Body: () => (
           <>
             <Localisation />
@@ -545,7 +545,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Text",
         blurb: "Inputs, and the class constants an app composes its own fields from.",
         icon: TextCursorInput,
-        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "HelpPopover", "Field", "IbanInput", "PhoneInput", "FieldStrip"],
+        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "FieldLabel", "FieldChevron", "HelpPopover", "Field", "IbanInput", "PhoneInput", "FieldStrip"],
         Body: () => (
           <>
             <Fields />
@@ -566,7 +566,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput", "RhfCountrySelect", "RhfMonthPicker", "RhfInlineEntityCombobox"],
+        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormDescription", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput", "RhfCountrySelect", "RhfMonthPicker", "RhfInlineEntityCombobox", "MoneyField", "IntegerField"],
         Body: () => (
           <>
             <FormsRhf />
@@ -597,7 +597,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Choices",
         blurb: "On or off, one of a few, a value on a scale — and picking a colour, an icon or a card.",
         icon: ToggleRight,
-        components: ["Checkbox", "Switch", "Slider", "SwatchPicker", "IconPicker", "ChoiceCard", "ActionCard", "TileRadioGroup", "CheckboxGroup"],
+        components: ["Checkbox", "Switch", "Slider", "SwatchPicker", "IconPicker", "ChoiceCard", "ChoiceCardGroup", "ActionCard", "TileRadioGroup", "CheckboxGroup"],
         Body: () => (
           <>
             <Choices />
@@ -617,7 +617,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The numeric stack: a calculator-backed number field, a field whose value is a number, the money field and its tones, and the currency picker.",
         icon: Sigma,
-        components: ["NumberInput", "NumberField", "AmountInput", "CurrencySelect", "NumberPadSheet", "SignChip"],
+        components: ["NumberInput", "NumberField", "AmountInput", "CalculatorButton", "CurrencySelect", "CurrencyFlag", "NumberPadSheet", "SignChip"],
         Body: () => (
           <>
             <Numbers />
@@ -635,7 +635,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets and bounds, and the first day of the week.",
         icon: CalendarDays,
-        components: ["MiniCalendar", "DatePicker", "DateRangePicker", "calendarMonthPresets", "UiKitProvider", "useKitDateFormatter"],
+        components: ["MiniCalendar", "DatePicker", "DateRangePicker", "DateMark", "calendarMonthPresets", "UiKitProvider", "useKitDateFormatter"],
         Body: () => (
           <>
             <Dates />
@@ -757,7 +757,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Multi-select, the grouped picker and the phone sheet — and the hooks and panel every dropdown in the kit is built from.",
         icon: Puzzle,
-        components: ["MultiSelect", "GroupedPicker", "PickerSheet", "useDropdown", "useDropdownSearch", "DropdownPanel"],
+        components: ["MultiSelect", "GroupedPicker", "PickerSheet", "useDropdown", "useDropdownSearch", "DropdownPanel", "DropdownSearchHeader"],
         Body: () => (
           <>
             <DropdownParts />
@@ -821,7 +821,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Wizard",
         blurb: "The multi-step engine, its chrome and its review step.",
         icon: Wand2,
-        components: ["useWizard", "StepperNav", "WizardSummary", "WizardStep", "useWizardStepValidate", "useWizardNextGate"],
+        components: ["useWizard", "WizardContextProvider", "StepperNav", "WizardStepper", "WizardSummary", "WizardStep", "useWizardStepValidate", "useWizardNextGate"],
         Body: () => (
           <>
             <Wizard />
@@ -1029,7 +1029,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The themed chart shell over Recharts — container, tooltip and legend — and the colour system every chart in the kit draws from.",
         icon: ChartColumn,
-        components: ["ChartContainer", "ChartTooltip", "ChartLegend", "useChart", "paletteFor"],
+        components: ["ChartContainer", "ChartTooltip", "ChartTooltipContent", "ChartLegend", "ChartLegendContent", "useChart", "paletteFor"],
         Body: Charts,
       },
       {
@@ -1064,7 +1064,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, a row budget for long tables, and the helpers underneath.",
         icon: ChartLine,
-        components: ["SeriesChart", "StaticSeriesChart", "SharedXZoom", "ToggleLegend", "facingAxes"],
+        components: ["SeriesChart", "StaticSeriesChart", "SharedXZoom", "ToggleLegend", "LegendColumn", "LegendGroup", "facingAxes"],
         Body: () => (
           <>
             <SeriesChartDemo />
@@ -1133,7 +1133,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Modal and full-bleed dialog, the backdrop press that closes them, and the close-transition timing every overlay shares.",
         icon: AppWindow,
-        components: ["Modal", "FullBleedDialog", "useBackdropClose", "OVERLAY_EXIT_MS", "useCloseTransition", "useDialogParam"],
+        components: ["Modal", "ModalCloseContext", "FullBleedDialog", "useBackdropClose", "OVERLAY_EXIT_MS", "useCloseTransition", "useDialogParam"],
         Body: () => (
           <>
             <Dialogs />
@@ -1208,7 +1208,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The ⌘K palette: a searchable list of places and actions, opened by the shortcut anywhere on the page, with results that can arrive late.",
         icon: Command,
-        components: ["CommandPalette", "useCommandKey"],
+        components: ["CommandPalette", "useCommandKey", "GlobalSearch"],
         Body: () => (
           <>
             <CommandPaletteDemo />
@@ -1242,7 +1242,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
-        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "ThemeToggle", "LanguageMenu", "TopBarActionMenu", "UserAvatar", "CompanySwitcher"],
+        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher"],
         Body: () => (
           <>
             <ShellSection />
@@ -1297,7 +1297,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
         icon: SettingsIcon,
-        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "TwoFactorSetting", "LanguageSelect"],
+        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "PasswordSetting", "TwoFactorSetting", "LanguageSelect"],
         Body: () => (
           <>
             <SettingsDesktop031Demo />
@@ -1335,7 +1335,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
-        components: ["AuthLayout", "TwoFactorSetting", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput", "SignInForm", "RegisterForm", "CompleteNameDialog", "taggedEmail", "isAuthError", "ForgotPasswordForm", "ResetPasswordForm", "VerifyEmailStatus", "EmailVerificationBanner", "NotFoundPage", "AcceptInvitation", "formatPersonName", "personInitials", "EmailChangeSetting", "SessionsSetting", "DeleteAccountSetting", "DataExportSetting", "isRateLimited", "retryAfterSeconds"],
+        components: ["AuthLayout", "TwoFactorSetting", "QrCode", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput", "SignInForm", "RegisterForm", "CompleteNameDialog", "taggedEmail", "isAuthError", "ForgotPasswordForm", "ResetPasswordForm", "VerifyEmailStatus", "EmailVerificationBanner", "NotFoundPage", "AcceptInvitation", "formatPersonName", "personInitials", "EmailChangeSetting", "SessionsSetting", "DeleteAccountSetting", "DataExportSetting", "isRateLimited", "retryAfterSeconds"],
         Body: () => (
           <>
             <AuthAccountDemo />
@@ -1415,7 +1415,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
-        components: ["FeedbackInbox", "FEEDBACK_STATUSES", "FeedbackThread", "FeedbackComposer", "ChatComposer", "useFeedbackColumns", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan"],
+        components: ["FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "FeedbackComposer", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan"],
         Body: () => (
           <>
             <FeedbackInbox />

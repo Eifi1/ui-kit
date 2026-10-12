@@ -38,8 +38,9 @@ export interface FieldStripProps extends Omit<ComponentPropsWithoutRef<"div">, "
    */
   disabled?: boolean;
   /**
-   * @deprecated Since 0.34 both values are the same 20px strip, and the prop does
-   * nothing; it stays so a caller that passes it still compiles.
+   * @deprecated 0.34 — drop it; removed in 0.35. Both values are the same 20px strip
+   * since 0.34, and the prop does nothing; it stays so a caller that passes it still
+   * compiles.
    *
    * It chose between `"clear"` (20px) and `"field"` (16px: the strip plus a 26px
    * bordered control made a labelled Input's 42px). The label row — the label and its

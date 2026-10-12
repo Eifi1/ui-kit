@@ -75,12 +75,12 @@ export type SwipeAction = SwipeActionBase &
     | {
         tone?: never;
         paint?: never;
-        /** @deprecated 0.33 — pass `tone`, or `paint` for an exception. Background
-         *  utility class while the action is previewed but not yet armed; the panel is
-         *  dimmed then, and its text is white unless this sets a text colour. */
+        /** @deprecated 0.33 — pass `tone`, or `paint` for an exception; removed in 0.35.
+         *  Background utility class while the action is previewed but not yet armed; the
+         *  panel is dimmed then, and its text is white unless this sets a text colour. */
         className: string;
-        /** @deprecated 0.33 — pass `tone`, or `paint`. Background utility class once
-         *  the drag has passed this action's threshold. */
+        /** @deprecated 0.33 — pass `tone`, or `paint`; removed in 0.35. Background
+         *  utility class once the drag has passed this action's threshold. */
         armedClassName: string;
       }
   );
