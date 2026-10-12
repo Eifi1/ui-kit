@@ -10,13 +10,14 @@ import { Chip } from "../chip";
 import { InlineEditField } from "../inline-edit-field";
 import { SwipeableRow } from "../swipeable-row";
 import { usePhoneLayout } from "../../hooks/use-breakpoint";
+import { viewportMatchMedia } from "../../test/viewport";
 
 /**
  * 0.32.1: four items from keksdose's 0.32 adoption report (their numbering).
  *
  *  8. DataTable and TranslationReviewPanel decide "phone" with `usePhoneLayout()`
  *     itself (§10.4: the single answer), and `max-*` is range syntax, so it is the
- *     exact complement of `md` at a fractional width (use-breakpoint-032 holds that).
+ *     exact complement of `md` at a fractional width (use-breakpoint.text-size.test.tsx holds that).
  * 16. StatusDot's label, Chip's label and InlineEditField's value wrap at Large instead
  *     of truncating (§4 "nothing truncates"); Normal keeps its one line.
  * 18. SwipeableRow's hidden keyboard buttons carry no padding or border until they show.
@@ -30,24 +31,10 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const classes = (el: Element) => (el.getAttribute("class") ?? "").split(/\s+/);
-
 /** A `matchMedia` evaluating width queries against a viewport `width` px wide, fractions
  *  included, as a browser does: `(min-width: N)`, `(max-width: N)`, `(width < N)`. */
 function viewport(width: number) {
-  vi.stubGlobal("matchMedia", (query: string) => {
-    const min = /min-width:\s*([\d.]+)px/.exec(query);
-    const maxWidth = /max-width:\s*([\d.]+)px/.exec(query);
-    const below = /width\s*<\s*([\d.]+)px/.exec(query);
-    const matches = min
-      ? width >= Number(min[1])
-      : maxWidth
-        ? width <= Number(maxWidth[1])
-        : below
-          ? width < Number(below[1])
-          : false;
-    return { matches, media: query, addEventListener() {}, removeEventListener() {} };
-  });
+  vi.stubGlobal("matchMedia", viewportMatchMedia(width));
 }
 
 /** A `matchMedia` answering every query with `answer`, as a test stub often does. */
@@ -137,7 +124,7 @@ describe("16: labels wrap at Large instead of truncating", () => {
   it("StatusDot: the label keeps `truncate` at Normal and wraps at Large", () => {
     render(<StatusDot tone="success" label="Zur Prüfung zurücklegen" />);
     const label = screen.getByText("Zur Prüfung zurücklegen");
-    expect(classes(label)).toEqual(expect.arrayContaining(["min-w-0", UNTIL_LARGE]));
+    expect(label).toHaveClass("min-w-0", UNTIL_LARGE);
   });
 
   it("StatusDot: the dot sits on the label's first line at Large, at every size", () => {
@@ -145,10 +132,10 @@ describe("16: labels wrap at Large instead of truncating", () => {
     for (const size of ["sm", "md", "lg"] as const) {
       const { container, unmount } = render(<StatusDot size={size} label="Rented" />);
       const outer = container.firstElementChild!;
-      expect(classes(outer)).toEqual(expect.arrayContaining(["items-center", "large:items-start"]));
+      expect(outer).toHaveClass("items-center", "large:items-start");
       const dot = outer.querySelector("[aria-hidden]")!;
       // Half of what one line (1lh, inherited from the label's text size) leaves round it.
-      expect(classes(dot)).toContain(`large:mt-[calc((1lh_-_${offsets[size]})/2)]`);
+      expect(dot).toHaveClass(`large:mt-[calc((1lh_-_${offsets[size]})/2)]`);
       unmount();
     }
   });
@@ -162,11 +149,11 @@ describe("16: labels wrap at Large instead of truncating", () => {
     for (const size of ["xs", "sm", "md", "lg"] as const) {
       const { unmount } = render(<Chip size={size}>Zur Prüfung zurücklegen</Chip>);
       const label = screen.getByText("Zur Prüfung zurücklegen");
-      expect(classes(label)).toEqual(expect.arrayContaining(["min-w-0", UNTIL_LARGE]));
-      for (const old of OLD_WRAP) expect(classes(label)).not.toContain(old);
+      expect(label).toHaveClass("min-w-0", UNTIL_LARGE);
+      for (const old of OLD_WRAP) expect(label).not.toHaveClass(old);
       // No fixed height anywhere up the pill, so it grows with its lines.
       for (let el: Element | null = label; el && el !== document.body; el = el.parentElement) {
-        expect(classes(el).filter((c) => /^h-/.test(c))).toEqual([]);
+        expect([...el.classList].filter((c) => /^h-/.test(c))).toEqual([]);
       }
       unmount();
     }
@@ -179,26 +166,24 @@ describe("16: labels wrap at Large instead of truncating", () => {
         <Chip onRemove={() => {}}>Ada Example</Chip>
       </div>,
     );
-    expect(classes(screen.getByText("Zur Prüfung zurücklegen"))).toContain(UNTIL_LARGE);
-    expect(classes(screen.getByText("Ada Example"))).toContain(UNTIL_LARGE);
+    expect(screen.getByText("Zur Prüfung zurücklegen")).toHaveClass(UNTIL_LARGE);
+    expect(screen.getByText("Ada Example")).toHaveClass(UNTIL_LARGE);
   });
 
   it("InlineEditField: the display button, the locked button and the read-only text wrap at Large", () => {
     const value = "ada.example@example.org";
     const { unmount } = render(<InlineEditField value={value} onCommit={() => {}} label="E-mail" />);
-    expect(classes(screen.getByRole("button", { name: value }))).toEqual(
-      expect.arrayContaining(["block", "w-full", UNTIL_LARGE]),
-    );
+    expect(screen.getByRole("button", { name: value })).toHaveClass("block", "w-full", UNTIL_LARGE);
     unmount();
 
     const locked = render(
       <InlineEditField value={value} onCommit={() => {}} label="E-mail" disabledReason="The period is closed." />,
     );
-    expect(classes(screen.getByRole("button", { name: value }))).toContain(UNTIL_LARGE);
+    expect(screen.getByRole("button", { name: value })).toHaveClass(UNTIL_LARGE);
     locked.unmount();
 
     render(<InlineEditField value={value} onCommit={() => {}} label="E-mail" readOnly />);
-    expect(classes(screen.getByText(value))).toContain(UNTIL_LARGE);
+    expect(screen.getByText(value)).toHaveClass(UNTIL_LARGE);
   });
 });
 
@@ -212,11 +197,11 @@ describe("18: SwipeableRow's hidden keyboard buttons take no room until they sho
       </SwipeableRow>,
     );
     const button = screen.getByRole("button", { name: "Delete" });
-    const own = classes(button);
-    expect(own).toEqual(expect.arrayContaining(["sr-only", "focus:not-sr-only", "focus:px-2", "focus:py-1", "focus:border"]));
+    const own = button;
+    expect(own).toHaveClass("sr-only", "focus:not-sr-only", "focus:px-2", "focus:py-1", "focus:border");
     // Unconditional, each beat sr-only's `padding: 0` / `border-width: 0`: a 26 px box
     // past the row's end at Extra large, counted in the page's scroll width.
-    for (const box of ["px-2", "py-1", "border", "p-1", "p-2"]) expect(own).not.toContain(box);
+    for (const box of ["px-2", "py-1", "border", "p-1", "p-2"]) expect(own).not.toHaveClass(box);
   });
 });
 

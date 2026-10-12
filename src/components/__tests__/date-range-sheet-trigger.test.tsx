@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DateRangePicker } from "../date-picker";
 import type { DateRangePickerPreset, DateRangePickerProps } from "../date-picker";
 import { cn } from "../../lib/cn";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * The two gaps keksdose's report range field (report-range-field.tsx, "Why this is
@@ -39,15 +40,7 @@ function Harness(
 
 /** A phone: `(width < 768px)` matches, and reduced motion so the sheet closes at once. */
 function mockPhone() {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes("width < 768px") || query.includes("reduced-motion"),
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
+  stubViewportWidth(PHONE_WIDTH, { reducedMotion: true });
 }
 
 afterEach(() => {

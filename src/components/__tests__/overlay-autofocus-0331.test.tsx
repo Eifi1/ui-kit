@@ -1,10 +1,11 @@
 import { StrictMode, useState } from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { AmountInput } from "../amount-input";
 import { FullBleedDialog } from "../full-bleed-dialog";
 import { Modal } from "../modal";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * keksdose live #402 (0.33.1): the transactions create card autofocuses its amount, and
@@ -72,16 +73,7 @@ function CreateCard({
 /** The sheet only exists on a phone, and jsdom's matchMedia is undefined (the desktop
  *  fallback), so the field never reaches its numpad branch otherwise. */
 function asPhone() {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: true,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
+  stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
 }
 
 describe("FullBleedDialog and an autofocused field (0.33.1)", () => {

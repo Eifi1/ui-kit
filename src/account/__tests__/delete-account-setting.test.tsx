@@ -5,14 +5,14 @@ import { describe, expect, it, vi } from "vitest";
 import { WriteLockProvider } from "../../components/write-lock";
 import { DeleteAccountSetting } from "../delete-account-setting";
 import type { DeleteAccountSettingProps } from "../delete-account-setting";
+import { fill } from "../../test/fill";
+import { refusal } from "../../test/fixtures";
 
 /**
  * docs/user-admin-harmonization.md §6.4 / §2.1: the request deactivates at once and the
  * erasure follows per the app's mode; the confirm asks for the typed address and the
  * password; the coded refusals are said. Synthetic people only.
  */
-
-const refusal = (status: number, code: string) => ({ response: { status, data: { detail: "x", code } } });
 
 function setup(props: Partial<DeleteAccountSettingProps> = {}) {
   const onRequest = vi.fn<DeleteAccountSettingProps["onRequest"]>(async () => undefined);
@@ -28,9 +28,10 @@ type User = ReturnType<typeof userEvent.setup>;
 const arm = (user: User) => user.click(screen.getByRole("button", { name: "Delete account…" }));
 const confirmButton = () => screen.getByRole("button", { name: "Delete my account" });
 
+// Pasted (`fill`, TST-13): these are about the values the confirm hands over, not typing.
 async function answer(user: User, typed = "ada@example.com", password = "correct horse") {
-  await user.type(screen.getByLabelText("Type “ada@example.com” to confirm"), typed);
-  await user.type(screen.getByLabelText("Password"), password);
+  await fill(user, screen.getByLabelText("Type “ada@example.com” to confirm"), typed);
+  await fill(user, screen.getByLabelText("Password"), password);
   await user.click(confirmButton());
 }
 
@@ -103,9 +104,9 @@ describe("DeleteAccountSetting — the confirm", () => {
     const { user, onRequest } = setup();
     await arm(user);
     expect(confirmButton()).toHaveAttribute("aria-disabled", "true");
-    await user.type(screen.getByLabelText("Type “ada@example.com” to confirm"), " Ada@Example.com ");
+    await fill(user, screen.getByLabelText("Type “ada@example.com” to confirm"), " Ada@Example.com ");
     expect(confirmButton()).toHaveAccessibleDescription("Enter your password to confirm");
-    await user.type(screen.getByLabelText("Password"), "correct horse");
+    await fill(user, screen.getByLabelText("Password"), "correct horse");
     await user.click(confirmButton());
     // The address as typed (trimmed), for the server to re-check.
     expect(onRequest).toHaveBeenCalledWith({ password: "correct horse", confirmEmail: "Ada@Example.com" });

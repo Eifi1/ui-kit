@@ -102,7 +102,7 @@ describe("Checkbox", () => {
       expect(box.indeterminate).toBe(true);
       // jest-dom reads `indeterminate` as the "mixed" state.
       expect(box).toBePartiallyChecked();
-      expect(box.className).toMatch(/(^|\s)bg-brand(?![\w-])/);
+      expect(box).toHaveClass("bg-brand");
     });
 
     it("puts the dash back after a click while the prop still says so", () => {

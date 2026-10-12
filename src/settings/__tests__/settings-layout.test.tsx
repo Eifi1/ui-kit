@@ -1,16 +1,17 @@
 import { useEffect } from "react";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, useLocation, useNavigate, useNavigationType, type InitialEntry } from "react-router";
 import { Database, KeyRound, Palette, User } from "lucide-react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SettingsLayout, type SettingsLayoutProps } from "../settings-layout";
 import { SettingsSection } from "../settings-section";
 import { SettingsHeadingLevel } from "../settings-heading";
 import { useSettingsLayout } from "../settings-context";
 import { settingsSearchEntries, type SettingsEntry, type SettingsGroup } from "../settings-catalogue";
-import { SETTINGS_FOCUS_RING } from "../use-settings-focus";
+import { SETTINGS_FOCUS_MS, SETTINGS_FOCUS_RING } from "../use-settings-focus";
 import { ListItem } from "../../components/list";
 import { PasswordSetting, TwoFactorSetting } from "../../account/account-settings";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * SettingsLayout (docs/settings-harmonization.md §3.2–§3.5, §3.7): the search threshold
@@ -114,15 +115,7 @@ function mount(initial: InitialEntry, props: Partial<SettingsLayoutProps<G>> = {
 
 /** A phone: the phone layout's `(width < 768px)` matches. */
 function mockPhone() {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes("width < 768px"),
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-    }),
-  });
+  stubViewportWidth(PHONE_WIDTH);
 }
 
 afterEach(() => {
@@ -283,15 +276,25 @@ describe("SettingsLayout — search on a desktop (§3.4)", () => {
 });
 
 describe("SettingsLayout — ?focus= (§3.5)", () => {
-  it("rings the card, focuses its heading and removes ONLY `focus`", async () => {
-    mount("/settings/security?tour=t1&focus=twofactor-card&tourStep=2");
-    const card = document.getElementById("twofactor-card")!;
-    expect(card).toHaveClass("ring-2");
-    expect(document.activeElement).toBe(screen.getByRole("heading", { level: 3, name: "Two-factor authentication" }));
-    expect(path()).toBe("/settings/security?tour=t1&tourStep=2");
-    expect(probe!.type).toBe("REPLACE");
-    // 1.8 s later the ring is gone.
-    await waitFor(() => expect(card).not.toHaveClass("ring-2"), { timeout: 3000 });
+  it("rings the card, focuses its heading and removes ONLY `focus`", () => {
+    // Fake timers: the ring's 1.8 s are run, not waited out — a real wait of up to 3 s
+    // that held 1.2 s of slack against the load (TST-11).
+    vi.useFakeTimers();
+    try {
+      mount("/settings/security?tour=t1&focus=twofactor-card&tourStep=2");
+      const card = document.getElementById("twofactor-card")!;
+      expect(card).toHaveClass("ring-2");
+      expect(document.activeElement).toBe(screen.getByRole("heading", { level: 3, name: "Two-factor authentication" }));
+      expect(path()).toBe("/settings/security?tour=t1&tourStep=2");
+      expect(probe!.type).toBe("REPLACE");
+      // The ring stays its full 1.8 s, and is gone after.
+      act(() => vi.advanceTimersByTime(SETTINGS_FOCUS_MS - 1));
+      expect(card).toHaveClass("ring-2");
+      act(() => vi.advanceTimersByTime(1));
+      expect(card).not.toHaveClass("ring-2");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("finds the anchor's group from /settings?focus=", () => {

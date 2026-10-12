@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Modal } from "../modal";
 import { DialogFrame } from "../dialog-frame";
 import { OVERLAY_EXIT_MS } from "../../hooks/use-close-transition";
+import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * `open` on `Modal` / `DialogFrame` (kastlan 0.9 audit): kastlan's `FormModal` was only an
@@ -17,15 +18,7 @@ import { OVERLAY_EXIT_MS } from "../../hooks/use-close-transition";
  */
 
 const motion = (reduced: boolean) =>
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes("prefers-reduced-motion") ? reduced : false,
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
+  stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
 
 function liveSentinel(): string | null {
   const state = window.history.state as Record<string, unknown> | null;

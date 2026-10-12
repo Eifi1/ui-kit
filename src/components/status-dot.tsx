@@ -133,6 +133,9 @@ export function StatusDot({
 }: StatusDotProps) {
   const dot = (
     <span
+      // The tone as data (0.34, refactor audit 2026-10, TST-9): a stable hook for a test or
+      // a caller's selector, where the fill class is the kit's to change.
+      data-tone={tone}
       className={cn(
         "inline-block shrink-0 rounded-full",
         SIZE[size],

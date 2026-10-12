@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FullBleedDialog } from "../full-bleed-dialog";
 import { OVERLAY_EXIT_MS } from "../../hooks/use-close-transition";
 import { Modal } from "../modal";
+import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * Keksdose live #320: *"Evaluate how much work it would be to have nicer transitions
@@ -64,15 +65,7 @@ describe("overlay motion (live #320)", () => {
 
 describe("overlay exit (live #320 rework)", () => {
   const motion = (reduced: boolean) =>
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true,
-      value: (query: string) => ({
-        matches: query.includes("prefers-reduced-motion") ? reduced : false,
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }),
-    });
+    stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
 
   beforeEach(() => {
     vi.useFakeTimers();

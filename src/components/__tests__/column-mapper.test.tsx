@@ -294,7 +294,7 @@ describe("ColumnRoleTable", () => {
   it("marks the required roles where some are not, and not a group's members", () => {
     render(<Bank />);
     const select = screen.getByRole("combobox", { name: "What does column “Soll” hold?" });
-    // Shown with the short mark (0.25), named with the word — see column-mapper-required-025.
+    // Shown with the short mark (0.25), named with the word — see column-mapper.required-mark.test.tsx.
     expect(within(select).getAllByRole("option").map((option) => option.textContent)).toEqual([
       "Ignore",
       "Booking date *",

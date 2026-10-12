@@ -5,6 +5,8 @@ import { describe, expect, it, vi } from "vitest";
 import { WriteLockProvider } from "../../components/write-lock";
 import { EmailChangeSetting } from "../email-change-setting";
 import type { EmailChangeSettingProps } from "../email-change-setting";
+import { fill } from "../../test/fill";
+import { refusal } from "../../test/fixtures";
 
 /**
  * docs/user-admin-harmonization.md §6.2: the new address confirms before it takes
@@ -12,8 +14,7 @@ import type { EmailChangeSettingProps } from "../email-change-setting";
  * people only.
  */
 
-const refusal = (status: number, code: string) => ({ response: { status, data: { detail: "x", code } } });
-const throttled = { response: { status: 429, data: { detail: "Too many requests" } } };
+const throttled = refusal(429, undefined, "Too many requests");
 
 function setup(props: Partial<EmailChangeSettingProps> = {}) {
   const onRequest = vi.fn<EmailChangeSettingProps["onRequest"]>(async () => undefined);
@@ -24,9 +25,10 @@ function setup(props: Partial<EmailChangeSettingProps> = {}) {
 
 type User = ReturnType<typeof userEvent.setup>;
 
+// Pasted (`fill`, TST-13): these are about the values the card hands over, not typing.
 async function request(user: User, email = "ada.new@example.com", password = "correct horse") {
-  await user.type(screen.getByLabelText("New email address"), email);
-  await user.type(screen.getByLabelText("Current password"), password);
+  await fill(user, screen.getByLabelText("New email address"), email);
+  await fill(user, screen.getByLabelText("Current password"), password);
   await user.click(screen.getByRole("button", { name: "Change email address" }));
 }
 
@@ -88,7 +90,7 @@ describe("EmailChangeSetting — the form", () => {
 
   it("offers the tagged address (emailTag), applied only on a click", async () => {
     const { user } = setup({ emailTag: "kastlan" });
-    await user.type(screen.getByLabelText("New email address"), "ada.new@example.com");
+    await fill(user, screen.getByLabelText("New email address"), "ada.new@example.com");
     await user.click(screen.getByRole("button", { name: "Use ada.new+kastlan@example.com" }));
     expect(screen.getByLabelText("New email address")).toHaveValue("ada.new+kastlan@example.com");
   });
@@ -128,7 +130,7 @@ describe("EmailChangeSetting — refusals", () => {
 
   it("a 429 says rateLimited; anything else failed; describeError comes first", async () => {
     const first = setup({
-      onRequest: async () => Promise.reject({ ...throttled, response: { ...throttled.response, headers: { "retry-after": "9" } } }),
+      onRequest: async () => Promise.reject(refusal(429, undefined, "Too many requests", { "retry-after": "9" })),
     });
     await request(first.user);
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Try again in 9 s.");

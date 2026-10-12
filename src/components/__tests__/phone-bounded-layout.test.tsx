@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { BulkActionBar } from "../bulk-action-bar";
 import { DataTable } from "../data-table";
 import type { DataTableColumn } from "../data-table";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * Two phone-width layout faults found on the showcase at 390px. jsdom has no layout,
@@ -23,16 +24,6 @@ interface Row {
 
 const ROWS: Row[] = Array.from({ length: 30 }, (_, i) => ({ id: i, name: `Row ${i}` }));
 const COLUMNS: DataTableColumn<Row>[] = [{ key: "name", header: "Name", cell: (r) => r.name }];
-
-/** The phone layout: `usePhoneLayout()`'s `(width < 768px)` matches, nothing else. */
-function stubPhone() {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("width <"), // the phone layout's `(width < 768px)`
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  }));
-}
 
 afterEach(() => vi.unstubAllGlobals());
 

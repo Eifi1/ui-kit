@@ -6,6 +6,7 @@ import type { DataTableColumn, DataTableProps, FilterState } from "../data-table
 import { Pagination } from "../data-table-pagination";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { SwipeAction } from "../swipeable-row";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * The 0.7.0 data-table fixes, one `describe` per finding: server loading state,
@@ -57,17 +58,6 @@ function renderTable(extra: Partial<DataTableProps<Row>> = {}) {
 function namesOnScreen(): string[] {
   const rows = within(screen.getByRole("table")).getAllByRole("row").slice(1);
   return rows.map((r) => within(r).getAllByRole("cell")[0]?.textContent ?? "");
-}
-
-/** The phone layout: `usePhoneLayout()`'s `(width < 768px)` matches, nothing else. */
-function stubPhone() {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("width <"),
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  }));
-  return () => vi.unstubAllGlobals();
 }
 
 // ---------------------------------------------------------------------------

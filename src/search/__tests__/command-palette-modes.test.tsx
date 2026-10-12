@@ -20,23 +20,32 @@ const field = () => screen.getByRole("combobox");
 
 describe('CommandPalette searchOn="submit"', () => {
   it("edits a draft while typing and commits on Enter", async () => {
-    const spy = vi.fn(search);
-    const onQueryChange = vi.fn();
-    render(<CommandPalette open onClose={vi.fn()} search={spy} searchOn="submit" onQueryChange={onQueryChange} />);
-    await waitFor(() => expect(screen.getByRole("option", { name: "Accounts" })).toBeInTheDocument());
+    // Fake timers: "no search for the draft" is only worth asserting once every pending
+    // search has run, and a real 200 ms sleep did not guarantee that under load (TST-11).
+    vi.useFakeTimers();
+    try {
+      const spy = vi.fn(search);
+      const onQueryChange = vi.fn();
+      render(<CommandPalette open onClose={vi.fn()} search={spy} searchOn="submit" onQueryChange={onQueryChange} />);
+      await act(() => vi.runAllTimersAsync());
+      expect(screen.getByRole("option", { name: "Accounts" })).toBeInTheDocument();
 
-    fireEvent.change(field(), { target: { value: "bud" } });
-    expect(field()).toHaveValue("bud");
-    expect(onQueryChange).not.toHaveBeenCalled();
-    // Results stay on the committed (empty) query.
-    await new Promise((r) => setTimeout(r, 200));
-    expect(spy).not.toHaveBeenCalledWith("bud");
-    expect(screen.getByRole("option", { name: "Accounts" })).toBeInTheDocument();
+      fireEvent.change(field(), { target: { value: "bud" } });
+      expect(field()).toHaveValue("bud");
+      expect(onQueryChange).not.toHaveBeenCalled();
+      // Results stay on the committed (empty) query, past every debounce there is.
+      await act(() => vi.runAllTimersAsync());
+      expect(spy).not.toHaveBeenCalledWith("bud");
+      expect(screen.getByRole("option", { name: "Accounts" })).toBeInTheDocument();
 
-    fireEvent.keyDown(field(), { key: "Enter" });
-    expect(onQueryChange).toHaveBeenCalledWith("bud");
-    await waitFor(() => expect(screen.queryByRole("option", { name: "Accounts" })).toBeNull());
-    expect(screen.getByRole("option", { name: "Budgets" })).toBeInTheDocument();
+      fireEvent.keyDown(field(), { key: "Enter" });
+      expect(onQueryChange).toHaveBeenCalledWith("bud");
+      await act(() => vi.runAllTimersAsync());
+      expect(screen.queryByRole("option", { name: "Accounts" })).toBeNull();
+      expect(screen.getByRole("option", { name: "Budgets" })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("chooses the highlighted row on Enter once nothing new is typed", async () => {

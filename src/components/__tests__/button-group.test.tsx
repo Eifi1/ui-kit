@@ -88,7 +88,7 @@ describe("ButtonGroup — elevated, gapped, link members", () => {
       </ButtonGroup>,
     );
     const cls = screen.getByRole("group").className;
-    expect(cls).toMatch(/bg-surface(?![\w-])/);
+    expect(screen.getByRole("group")).toHaveClass("bg-surface");
     expect(cls).toContain("shadow-lg");
     expect(cls).toContain("[&>*]:rounded-none");
   });
@@ -144,10 +144,10 @@ describe("ButtonGroup — elevated, gapped, link members", () => {
     const a = screen.getByRole("link", { name: "A" });
     expect(a).toHaveAttribute("href", "/a");
     expect(a).toHaveAttribute("aria-current", "page");
-    expect(a.className).toMatch(/bg-brand-soft(?![\w-])/);
+    expect(a).toHaveClass("bg-brand-soft");
     // The brand as text is `--brand-muted` (0.33): 4.5:1 on its wash, where `--brand` is not.
     expect(a.className.split(" ")).toContain("text-brand-muted");
-    expect(a.className).not.toMatch(/text-brand(?![\w-])/);
+    expect(a).not.toHaveClass("text-brand");
     expect(screen.getByRole("link", { name: "B" })).not.toHaveAttribute("aria-current");
   });
 

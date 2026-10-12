@@ -8,6 +8,7 @@ import type { SearchEntry } from "../search-index";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import { clickLeftToBrowser } from "../../test/browser-click";
+import { drainTasks } from "../../test/tasks";
 
 /**
  * `GlobalSearch` is what kastlan's and keksdose's hand-built ⌘K wrappers become, so these
@@ -18,15 +19,21 @@ import { clickLeftToBrowser } from "../../test/browser-click";
 
 const PROTO = Element.prototype as unknown as { scrollIntoView?: () => void };
 const JSDOM_HAS_IT = "scrollIntoView" in Element.prototype;
-// The palette loads on the first open (0.34, MOD-1). Loaded once up front so the first
-// test's `findBy` does not spend its second compiling it under a full parallel run;
-// React.lazy still resolves it a render later, so the waits stay.
-beforeAll(async () => {
-  await import("../command-palette");
-});
 beforeAll(() => {
   if (!JSDOM_HAS_IT) PROTO.scrollIntoView = () => {};
 });
+// The palette loads on the first open (0.34, MOD-1), and React shows a lazy component
+// that suspended only after its Suspense throttle — some 300 ms of real time, and far
+// more under a full parallel run, where the first test's `findBy` ran out waiting (2 runs
+// in 9). Importing the module up front was not enough: React.lazy still suspends once.
+// So the palette is opened once here, and every test below opens one that is already
+// loaded, in the same render. The loading itself is global-search-lazy.test.tsx's subject.
+beforeAll(async () => {
+  const warm = render(<GlobalSearch entries={[]} trigger="none" open onOpenChange={() => {}} navigate={() => {}} />);
+  await screen.findByRole("dialog", undefined, { timeout: 15_000 });
+  warm.unmount();
+  await drainTasks();
+}, 20_000);
 afterAll(() => {
   if (!JSDOM_HAS_IT) delete PROTO.scrollIntoView;
 });
@@ -169,8 +176,9 @@ describe("GlobalSearch: results", () => {
     type("budget");
     fireEvent.click(await screen.findByRole("option", { name: "Budget" }));
     await waitFor(() => expect(window.location.pathname).toBe("/budget"));
-    // …and it stays there once every deferred traversal has run.
-    await new Promise((r) => setTimeout(r, 100));
+    // …and it stays there once every deferred traversal has run: drained by turns, not
+    // slept on (a 100 ms sleep passed under load before the unwind's traversal ran, TST-11).
+    await drainTasks();
     expect(window.location.pathname).toBe("/budget");
     expect(screen.getByTestId("where")).toHaveTextContent("/budget");
     window.history.replaceState(null, "", "/");

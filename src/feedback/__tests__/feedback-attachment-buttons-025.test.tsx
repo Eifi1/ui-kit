@@ -12,7 +12,7 @@ import { FeedbackNoteEditor } from "../feedback-inbox";
  * as `attachmentButtonVariant` / `attachmentButtonSize` beside its other attachment
  * options, the note editor inside its `attachment` config. Left out, nothing changes.
  *
- * The classes asserted are Button's own (the same ones feedback-attachment-024 holds
+ * The classes asserted are Button's own (the same ones feedback-attachment.layout.test.tsx holds
  * the field to): secondary / md is bordered `px-3 py-2 text-sm` with a 16px icon; ghost /
  * sm is borderless `px-2 py-1 text-xs` with a 14px icon.
  */

@@ -5,6 +5,7 @@ import { CLIPS_ATTRIBUTE, Tooltip } from "../tooltip";
 import { DataTable, type DataTableColumn } from "../data-table";
 import { Table, TableBody, TableCell, TableRow } from "../table";
 import { hasClippingAncestor } from "../../lib/clipping";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * keksdose 0.10 (D2): jsdom computes no Tailwind, so the kit's scrollers read
@@ -74,12 +75,7 @@ describe("the clips marker", () => {
   });
 
   it("portals in the phone card list too (the framed root clips)", () => {
-    vi.stubGlobal("matchMedia", (query: string) => ({
-      matches: query.includes("width <"), // the phone layout's `(width < 768px)`
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-    }));
+    stubPhone();
     renderTable();
     expect(screen.queryByRole("table")).toBeNull();
     // Once: the trigger, with no bubble beside it.

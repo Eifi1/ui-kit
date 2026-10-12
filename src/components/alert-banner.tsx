@@ -366,6 +366,9 @@ export function AlertBanner({
   if (!interactive) {
     return (
       <div
+        // The tone as data (0.34, refactor audit 2026-10, TST-9): a stable hook for a
+        // test or a caller's selector, where the frame classes are the kit's to change.
+        data-tone={tone}
         // Arbitrary attributes first — a `data-tour` anchor, a test id, an
         // `aria-describedby` — then the layout and tone classes, which are merged
         // through `cn` rather than spread so a caller's `className` refines the box
@@ -407,6 +410,7 @@ export function AlertBanner({
   const rowAction =
     href !== undefined ? (
       <a
+        data-tone={split ? undefined : tone}
         {...(actionRest as ComponentPropsWithoutRef<"a">)}
         ref={rowRef as Ref<HTMLAnchorElement> | undefined}
         href={href}
@@ -416,6 +420,7 @@ export function AlertBanner({
       </a>
     ) : (
       <button
+        data-tone={split ? undefined : tone}
         {...(actionRest as ComponentPropsWithoutRef<"button">)}
         ref={rowRef as Ref<HTMLButtonElement> | undefined}
         type="button"
@@ -429,6 +434,7 @@ export function AlertBanner({
   if (!split) return rowAction;
   return (
     <div
+      data-tone={tone}
       {...rest}
       ref={ref as Ref<HTMLDivElement>}
       role={resolvedRole}

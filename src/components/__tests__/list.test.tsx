@@ -320,7 +320,7 @@ describe("ListItem 0.16 slots (keksdose P2)", () => {
       </List>,
     );
     expect(screen.getByText("12 MB").className).toContain("text-muted");
-    expect(screen.getByText("3 overdue").className).toMatch(/text-danger(?![\w-])/);
+    expect(screen.getByText("3 overdue")).toHaveClass("text-danger");
     const slot = screen.getByText("+5").parentElement!;
     expect(slot.className).not.toMatch(/text-\[var/);
   });

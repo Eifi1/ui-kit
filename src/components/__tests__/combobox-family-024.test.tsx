@@ -6,6 +6,7 @@ import { EntityCombobox } from "../entity-combobox";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
 import { Autocomplete } from "../autocomplete";
 import { FieldHint } from "../field-parts";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * The Combobox family in 0.24:
@@ -159,23 +160,11 @@ describe("Autocomplete: the end-hint row", () => {
 // ── sheetTitle ───────────────────────────────────────────────────────────────
 
 describe("sheetTitle: the phone sheet's heading for a field labelled by a form", () => {
-  let original: typeof window.matchMedia;
+  let undo = () => {};
   const asPhone = () => {
-    original = window.matchMedia;
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: true,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })) as unknown as typeof window.matchMedia;
+    undo = stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
   };
-  afterEach(() => {
-    if (original) window.matchMedia = original;
-  });
+  afterEach(() => undo());
 
   it.each([
     [

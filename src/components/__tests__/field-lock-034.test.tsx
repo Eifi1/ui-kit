@@ -6,6 +6,7 @@ import { Input } from "../input";
 import { AmountInput } from "../amount-input";
 import { MoneyField } from "../money-field";
 import { WriteLockProvider } from "../write-lock";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * Round 0.34 C2: the write lock NumberInput got in 0.33.1, on the other fields that save
@@ -266,16 +267,7 @@ describe("AmountInput under a write lock (round 0.34 C2)", () => {
     });
 
     it("opens no numpad", () => {
-      window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-        matches: true,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })) as unknown as typeof window.matchMedia;
+      stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
       render(locked(<AmountInput label="Assigned" value="1" onChange={() => {}} commit />));
       fireEvent.focus(screen.getByRole("textbox", { name: "Assigned" }));
       expect(screen.queryByRole("button", { name: "5" })).toBeNull();

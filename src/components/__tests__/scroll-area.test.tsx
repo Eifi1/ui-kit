@@ -46,7 +46,7 @@ describe("ScrollArea", () => {
     expect(cls).toMatch(/\[scrollbar-width:thin\]/);
     expect(cls).toMatch(/\[scrollbar-color:var\(--border-strong\)_transparent\]/);
     expect(cls).toMatch(/overflow-x-auto/);
-    expect(cls).toMatch(/focus-visible:outline-brand(?![\w-])/);
+    expect(screen.getByRole("region")).toHaveClass("focus-visible:outline-brand");
   });
 
   it("forwards a ref", () => {

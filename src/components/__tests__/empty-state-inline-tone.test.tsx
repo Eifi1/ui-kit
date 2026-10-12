@@ -37,8 +37,8 @@ describe("EmptyState tone (kastlan's error state and its no-defects note)", () =
     const { container } = render(
       <EmptyState tone="danger" icon={<svg />} title="Something went wrong" hint="Try again" />,
     );
-    expect(container.querySelector("[aria-hidden]")!.className).toMatch(/text-danger(?![\w-])/);
-    expect(screen.getByText("Something went wrong").className).toMatch(/text-danger(?![\w-])/);
+    expect(container.querySelector("[aria-hidden]")!).toHaveClass("text-danger");
+    expect(screen.getByText("Something went wrong")).toHaveClass("text-danger");
     expect(screen.getByText("Try again").className).not.toMatch(/-danger/); // `text-danger` or any `[var(--danger…)]`
   });
 
@@ -46,8 +46,8 @@ describe("EmptyState tone (kastlan's error state and its no-defects note)", () =
     const { container } = render(
       <EmptyState variant="inline" tone="success" icon={<svg />} title="No defects recorded" />,
     );
-    expect(container.querySelector("[aria-hidden]")!.className).toMatch(/text-success(?![\w-])/);
-    expect(screen.getByText("No defects recorded").className).toMatch(/text-success(?![\w-])/);
+    expect(container.querySelector("[aria-hidden]")!).toHaveClass("text-success");
+    expect(screen.getByText("No defects recorded")).toHaveClass("text-success");
   });
 
   it("stays muted without a tone", () => {

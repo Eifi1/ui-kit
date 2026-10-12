@@ -177,7 +177,7 @@ describe("IconButton href (keksdose F2, kastlan 45)", () => {
     const link = screen.getByRole("link", { name: "Open" });
     expect(link.tagName).toBe("A");
     expect(link.className).toContain("size-8");
-    expect(link.className).toMatch(/text-danger(?![\w-])/);
+    expect(link).toHaveClass("text-danger");
     fireEvent.pointerEnter(link.parentElement!);
     fireEvent.focus(link);
     expect(screen.getAllByText("Open").length).toBeGreaterThan(0);

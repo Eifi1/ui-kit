@@ -17,6 +17,7 @@ import { StatTile } from "../stat-tile";
 import { Disclosure } from "../disclosure";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { clickLeftToBrowser } from "../../test/browser-click";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * The 0.8.0 extensions to the existing surfaces — the app requests from keksdose,
@@ -77,7 +78,7 @@ describe("AlertBanner 0.8.0", () => {
         <AlertBanner tone="neutral" data-testid="neutral">Values are rounded</AlertBanner>
       </>,
     );
-    expect(screen.getByTestId("info").className).toMatch(/text-info(?![\w-])/);
+    expect(screen.getByTestId("info")).toHaveClass("text-info");
     expect(screen.getByTestId("info").className).toContain("bg-info-soft");
     expect(screen.getByTestId("neutral").className).toContain("border-subtle");
   });
@@ -130,7 +131,7 @@ describe("AlertBanner 0.8.0", () => {
     const button = screen.getByRole("button", { name: /Budget 92% spent/ });
     expect(button).toBe(screen.getByTestId("row"));
     expect(button).toHaveAttribute("type", "button");
-    expect(button.className).toMatch(/border-warning(?![\w-])/);
+    expect(button).toHaveClass("border-warning");
     expect(button.querySelectorAll("button, a")).toHaveLength(0);
     fireEvent.click(button);
     expect(onClick).toHaveBeenCalledOnce();
@@ -172,7 +173,7 @@ describe("AlertBanner 0.8.0", () => {
     );
     const warning = screen.getByRole("status");
     expect(warning).toHaveTextContent("Radius below the minimum");
-    expect(warning.className).toMatch(/text-warning(?![\w-])/);
+    expect(warning).toHaveClass("text-warning");
     expect(warning.className).toContain("inline-flex");
     expect(warning.className).not.toMatch(/\bborder|\bp-|\bbg-/);
     expect(screen.getByRole("alert")).toHaveTextContent("Solver failed");
@@ -194,8 +195,8 @@ describe("Chip 0.8.0", () => {
     render(<Chip variant="outline" tone="warning" data-testid="c">DEV</Chip>);
     const chip = screen.getByTestId("c");
     expect(chip.className).toContain("bg-transparent");
-    expect(chip.className).toMatch(/border-warning(?![\w-])/);
-    expect(chip.className).toMatch(/text-warning(?![\w-])/);
+    expect(chip).toHaveClass("border-warning");
+    expect(chip).toHaveClass("text-warning");
     expect(chip.className).not.toContain("bg-warning-soft");
   });
 
@@ -328,7 +329,7 @@ describe("IconButton 0.8.0", () => {
   it("tone=warning is amber at rest", () => {
     render(<IconButton tone="warning" aria-label="Needs review">x</IconButton>);
     const cls = screen.getByRole("button").className;
-    expect(cls).toMatch(/text-warning(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("text-warning");
     // Warning's loud line since 0.33: amber-300 was a 1.1:1 focus ring on the light surfaces.
     expect(cls).toContain("focus-visible:ring-warning-strong");
   });
@@ -510,15 +511,7 @@ describe("Tabs orientation=vertical", () => {
   });
 
   it("on a phone it is the horizontal strip, and says so", async () => {
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true,
-      value: (query: string) => ({
-        matches: query.includes("width < 768px"),
-        media: query,
-        addEventListener: () => {},
-        removeEventListener: () => {},
-      }),
-    });
+    stubViewportWidth(PHONE_WIDTH);
     const user = userEvent.setup();
     render(<Harness />);
     const list = screen.getByRole("tablist");

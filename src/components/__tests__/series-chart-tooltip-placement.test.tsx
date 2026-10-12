@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen, within } from "@testing-library/react";
 import { SeriesChart, resolveTooltipPlacement, type SeriesChartProps } from "../series-chart";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { stubDesktop, stubPhone } from "../../test/viewport";
 
 /**
  * keksdose #359: `tooltip.placement` — the values in a readout row above or below the
@@ -19,23 +20,10 @@ vi.mock("recharts", async (importOriginal) => {
   };
 });
 
-/** jsdom has no matchMedia; `phone` answers the readout's phone query, `(width < N)`. */
-function stubPhone(phone: boolean) {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: phone && query.includes("width <"),
-    media: query,
-    onchange: null,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
-}
-
-const original = window.matchMedia;
+// jsdom has no matchMedia; a phone or a desktop answers the readout's phone query,
+// `(width < N)`.
 afterEach(() => {
-  window.matchMedia = original;
+  vi.unstubAllGlobals();
 });
 
 const MONTHS = [
@@ -136,11 +124,11 @@ describe("tooltip placement on the chart", () => {
   });
 
   it("resolves the provider's `auto` against the phone query", () => {
-    stubPhone(true);
+    stubPhone();
     const phone = render(<UiKitProvider chartTooltipPlacement="auto">{chart()}</UiKitProvider>);
     expect(readout(phone.container)?.dataset.tooltipReadout).toBe("above");
     phone.unmount();
-    stubPhone(false);
+    stubDesktop();
     const desk = render(<UiKitProvider chartTooltipPlacement="auto">{chart()}</UiKitProvider>);
     expect(readout(desk.container)).toBeNull();
   });

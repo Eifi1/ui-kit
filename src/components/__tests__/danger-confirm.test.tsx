@@ -290,7 +290,7 @@ describe("DangerConfirm — requireAcknowledge and consequences (0.22)", () => {
     const items = screen.getAllByRole("listitem");
     expect(items.map((li) => li.textContent)).toEqual(["Every session ends now.", "The only way into the data goes."]);
     expect(items[0].className).not.toMatch(/-danger/); // `text-danger` or any `[var(--danger…)]`
-    expect(items[1].className).toMatch(/text-danger(?![\w-])/);
+    expect(items[1]).toHaveClass("text-danger");
   });
 
   it("takes the acknowledge word from the provider", async () => {
@@ -527,21 +527,21 @@ describe("CurrentPasswordInput", () => {
 describe("DangerConfirm — confirmVariant, confirmDisabledReason and fields of the caller's (0.24)", () => {
   it("takes the confirm's variant from `tone` by default, and from `confirmVariant` when given", () => {
     const { rerender } = render(<DangerConfirm armed onConfirm={() => {}} />);
-    expect(confirmButton().className).toMatch(/bg-danger(?![\w-])/);
+    expect(confirmButton()).toHaveClass("bg-danger");
     rerender(<DangerConfirm armed tone="warning" onConfirm={() => {}} />);
-    expect(confirmButton().className).not.toMatch(/bg-danger(?![\w-])/);
+    expect(confirmButton()).not.toHaveClass("bg-danger");
     expect(confirmButton().className).toContain("bg-surface-2");
     // The amber question and the red Go of keksdose's UserActionConfirm.
     rerender(<DangerConfirm armed tone="warning" confirmVariant="danger" prompt="Reset?" onConfirm={() => {}} />);
-    expect(confirmButton().className).toMatch(/bg-danger(?![\w-])/);
-    expect(screen.getByText("Reset?").className).toMatch(/text-warning(?![\w-])/);
+    expect(confirmButton()).toHaveClass("bg-danger");
+    expect(screen.getByText("Reset?")).toHaveClass("text-warning");
     rerender(<DangerConfirm armed confirmVariant="brand" onConfirm={() => {}} />);
-    expect(confirmButton().className).toMatch(/bg-brand(?![\w-])/);
+    expect(confirmButton()).toHaveClass("bg-brand");
   });
 
   it("leaves the arm button to `tone`", () => {
     render(<DangerConfirm tone="warning" confirmVariant="danger" onConfirm={() => {}} />);
-    expect(screen.getByRole("button", { name: "Delete…" }).className).not.toMatch(/bg-danger(?![\w-])/);
+    expect(screen.getByRole("button", { name: "Delete…" })).not.toHaveClass("bg-danger");
   });
 
   it("holds the armed confirm for the caller's reason: focusable, the reason in its tooltip, no line printed", async () => {

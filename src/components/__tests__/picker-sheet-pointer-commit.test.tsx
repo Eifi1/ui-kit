@@ -3,6 +3,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Combobox, InlineEntityCombobox } from "../combobox";
 import { EntityCombobox } from "../entity-combobox";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * A tap inside a phone {@link PickerSheet} is never an outside click — for ALL FOUR
@@ -44,16 +45,7 @@ describe("phone picker sheet — a tap starts at pointerdown", () => {
   beforeEach(() => {
     // matchMedia is undefined by default in jsdom (the desktop fallback), so the
     // sheet branch never runs otherwise.
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: true, // (width < 768px) matches → phone
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })) as unknown as typeof window.matchMedia;
+    stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
   });
 
   afterEach(() => {

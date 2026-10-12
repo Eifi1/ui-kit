@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { AmountInput } from "../amount-input";
 import { NumberInput } from "../number-input";
 import { NumberPadSheet } from "../numpad-sheet";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * Every string on the mobile numpad is the HOST's to translate — all of them, from
@@ -38,16 +39,7 @@ const PAD_DE = {
 /** The sheet only exists on a phone, and jsdom's matchMedia is undefined (the
  *  desktop fallback), so the fields never reach their numpad branch otherwise. */
 function asPhone() {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: true,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
+  stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
 }
 
 describe("NumberPadSheet labels", () => {

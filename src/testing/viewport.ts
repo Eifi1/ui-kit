@@ -1,0 +1,251 @@
+/**
+ * Environment stubs for an app's own tests (0.34, refactor audit 2026-10, TST-10): the
+ * two browser APIs jsdom does not have and the kit's layout reads — `matchMedia` and
+ * `ResizeObserver`.
+ *
+ * Every suite rebuilt them by hand: the kit stubbed `matchMedia` in 25 files and defined
+ * the same `stubPhone()` eight times, keksdose stubs it in 41, and most copies answer
+ * one literal string. That breaks quietly at Large text, where `md` is 960 px and the
+ * phone query the kit writes is `(width < 960px)`, not `(width < 768px)`. These answer
+ * every width query from a WIDTH, as a browser does, so they stay right at every text
+ * size (docs/text-size-harmonization.md §3.3). The reference is keksdose's
+ * `frontend/src/test/viewport.ts`, which this generalises.
+ *
+ * Framework-free, like the rest of `@eifi1/ui-kit/testing`: nothing here imports vitest
+ * or jest. Each stub returns its own undo, so it works under either runner, and a suite
+ * that prefers `vi.stubGlobal` passes it {@link viewportMatchMedia} instead.
+ */
+
+/** The media features a test may want besides the width. Each is off by default. */
+export interface ViewportOptions {
+  /** The primary pointer is a finger: `(pointer: coarse)`, `(any-pointer: coarse)` and
+   *  `(hover: none)` match; `(pointer: fine)` and `(hover: hover)` do not. */
+  coarse?: boolean;
+  /** The person asked for less motion: `(prefers-reduced-motion: reduce)` matches, and
+   *  the kit's overlays skip their exit animations. */
+  reducedMotion?: boolean;
+  /** `(prefers-color-scheme: dark)` matches (`light` does not). */
+  dark?: boolean;
+  /** `(prefers-contrast: more)` matches. */
+  moreContrast?: boolean;
+}
+
+/** One length in CSS px. A media query's `rem`/`em` is the browser's default font size,
+ *  16 px, never `<html>`'s — the kit's own `breakpointQuery` writes px. */
+function lengthPx(value: string, unit: string): number {
+  return unit === "px" ? Number(value) : Number(value) * 16;
+}
+
+const RANGE = /^\(\s*width\s*(<=|>=|<|>)\s*([\d.]+)(px|r?em)\s*\)$/;
+const MIN_MAX = /^\(\s*(min|max)-width\s*:\s*([\d.]+)(px|r?em)\s*\)$/;
+const FEATURE = /^\(\s*([a-z-]+)\s*:\s*([a-z-]+)\s*\)$/;
+
+/** One `(…)` condition, or a media type. */
+function condition(part: string, width: number, options: ViewportOptions): boolean {
+  const q = part.trim();
+  if (q === "all" || q === "screen") return true;
+  const range = RANGE.exec(q);
+  if (range) {
+    const px = lengthPx(range[2], range[3]);
+    switch (range[1]) {
+      case "<":
+        return width < px;
+      case "<=":
+        return width <= px;
+      case ">":
+        return width > px;
+      default:
+        return width >= px;
+    }
+  }
+  const minMax = MIN_MAX.exec(q);
+  if (minMax) {
+    const px = lengthPx(minMax[2], minMax[3]);
+    return minMax[1] === "min" ? width >= px : width <= px;
+  }
+  const feature = FEATURE.exec(q);
+  if (!feature) return false;
+  const [, name, value] = feature;
+  const coarse = Boolean(options.coarse);
+  switch (name) {
+    case "pointer":
+    case "any-pointer":
+      return value === (coarse ? "coarse" : "fine");
+    case "hover":
+    case "any-hover":
+      return value === (coarse ? "none" : "hover");
+    case "prefers-reduced-motion":
+      return value === (options.reducedMotion ? "reduce" : "no-preference");
+    case "prefers-color-scheme":
+      return value === (options.dark ? "dark" : "light");
+    case "prefers-contrast":
+      return value === (options.moreContrast ? "more" : "no-preference");
+    default:
+      return false;
+  }
+}
+
+/**
+ * A `window.matchMedia` for a viewport `width` CSS px wide.
+ *
+ * Width queries answer from `width`: the range syntax the kit writes for `max-*`
+ * (`(width < 768px)`) and every other comparison, `(min-width: …)` and `(max-width: …)`,
+ * in px or rem; `and` and comma lists combine as in CSS. The features in `options` answer
+ * as set there; every other query is false. The lists it returns never change, so
+ * nothing fires `change`: a test that changes the width stubs again and renders again.
+ *
+ * Hand it to the runner's own global stub where the suite undoes stubs that way —
+ * `vi.stubGlobal("matchMedia", viewportMatchMedia(375))` — or use
+ * {@link stubViewportWidth}.
+ */
+export function viewportMatchMedia(
+  width: number,
+  options: ViewportOptions = {},
+): (query: string) => MediaQueryList {
+  const answer = (query: string) =>
+    query
+      .split(",")
+      .some((alternative) =>
+        alternative.split(/\s+and\s+/).every((part) => condition(part, width, options)),
+      );
+  return (query: string) =>
+    ({
+      matches: answer(query),
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }) as unknown as MediaQueryList;
+}
+
+/**
+ * Make `window.matchMedia` answer as a viewport `width` CSS px wide (see
+ * {@link viewportMatchMedia}), and return the undo: it puts back what was there, which
+ * in jsdom is nothing — no `matchMedia` at all, the desktop fallback of every kit hook.
+ *
+ * ```ts
+ * let undo = () => {};
+ * afterEach(() => undo());
+ * it("shows cards on a phone", () => {
+ *   undo = stubViewportWidth(375);
+ *   …
+ * });
+ * ```
+ *
+ * Right at every text size: at Large the kit's phone query is `(width < 960px)`, which a
+ * 375 px viewport matches and a 1280 px one does not, as in a browser.
+ */
+export function stubViewportWidth(width: number, options: ViewportOptions = {}): () => void {
+  const before = Object.getOwnPropertyDescriptor(window, "matchMedia");
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: viewportMatchMedia(width, options),
+  });
+  return () => {
+    if (before) Object.defineProperty(window, "matchMedia", before);
+    else Reflect.deleteProperty(window, "matchMedia");
+  };
+}
+
+/** A box size for {@link ResizeObserverStub.resize}, in CSS px. */
+export interface StubbedBoxSize {
+  width: number;
+  height: number;
+}
+
+/** What {@link stubResizeObserver} returns: the test drives the observers. */
+export interface ResizeObserverStub {
+  /**
+   * Report `target` at `size` to every live observer watching it, as a browser does once
+   * layout settles: one entry, with `contentRect` and the three box sizes all `size`.
+   * Synchronous; wrap it in `act()` when the callback sets state.
+   */
+  resize(target: Element, size: StubbedBoxSize): void;
+  /** The elements some live observer watches now, each once. */
+  observed(): Element[];
+  /** Put back the `ResizeObserver` that was there before — in jsdom, none. */
+  restore(): void;
+}
+
+/**
+ * Install a `ResizeObserver` the test drives. jsdom has none, and lays nothing out, so a
+ * component that measures itself (a windowed list, a fitted chart, a measured grid)
+ * either crashes on the missing global or never learns a size. Observers here record
+ * what they watch and are called only by {@link ResizeObserverStub.resize}.
+ *
+ * ```ts
+ * const ro = stubResizeObserver();
+ * afterEach(() => ro.restore());
+ * act(() => ro.resize(screen.getByRole("list"), { width: 400, height: 320 }));
+ * ```
+ */
+export function stubResizeObserver(): ResizeObserverStub {
+  const live = new Set<StubResizeObserver>();
+
+  class StubResizeObserver {
+    readonly targets = new Set<Element>();
+    constructor(readonly callback: ResizeObserverCallback) {
+      live.add(this);
+    }
+    observe(target: Element) {
+      this.targets.add(target);
+    }
+    unobserve(target: Element) {
+      this.targets.delete(target);
+    }
+    disconnect() {
+      this.targets.clear();
+      live.delete(this);
+    }
+  }
+
+  const before = Object.getOwnPropertyDescriptor(globalThis, "ResizeObserver");
+  Object.defineProperty(globalThis, "ResizeObserver", {
+    configurable: true,
+    writable: true,
+    value: StubResizeObserver,
+  });
+
+  return {
+    resize(target, { width, height }) {
+      const box = [{ inlineSize: width, blockSize: height }];
+      const contentRect = {
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        width,
+        height,
+        right: width,
+        bottom: height,
+        toJSON: () => ({ x: 0, y: 0, width, height }),
+      };
+      const entry = {
+        target,
+        contentRect,
+        borderBoxSize: box,
+        contentBoxSize: box,
+        devicePixelContentBoxSize: box,
+      } as unknown as ResizeObserverEntry;
+      for (const observer of [...live]) {
+        if (observer.targets.has(target)) {
+          observer.callback([entry], observer as unknown as ResizeObserver);
+        }
+      }
+    },
+    observed() {
+      const all: Element[] = [];
+      for (const observer of live) for (const target of observer.targets) if (!all.includes(target)) all.push(target);
+      return all;
+    },
+    restore() {
+      live.clear();
+      if (before) Object.defineProperty(globalThis, "ResizeObserver", before);
+      else Reflect.deleteProperty(globalThis, "ResizeObserver");
+    },
+  };
+}

@@ -37,7 +37,7 @@ describe("FormActions — cancelVariant and size (keksdose G3)", () => {
     const cancel = screen.getByRole("button", { name: "Cancel" });
     expect(cancel.className).toContain("bg-transparent");
     expect(cancel.className).not.toContain("border-subtle");
-    expect(screen.getByRole("button", { name: "Save" }).className).toMatch(/bg-brand(?![\w-])/);
+    expect(screen.getByRole("button", { name: "Save" })).toHaveClass("bg-brand");
   });
 
   it("size=\"sm\" shrinks every button the row draws — Save, Cancel and the destructive data form", () => {

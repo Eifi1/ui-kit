@@ -16,6 +16,7 @@ import { NumberPadSheet } from "../numpad-sheet";
 import { Popover } from "../popover";
 import { Tooltip } from "../tooltip";
 import { CommandPalette } from "../../search/command-palette";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * Round 0.34 Wave 2, DUP-1: one Escape stack. Every kit overlay and picker is a layer
@@ -237,14 +238,9 @@ describe("Escape closes the topmost layer only (DUP-1)", () => {
 
 describe("the phone picker sheet in a dialog (DUP-1)", () => {
   beforeEach(() => {
-    vi.stubGlobal("matchMedia", (query: string) => ({
-      // The phone layout's `(width < 768px)`, and no motion: a dialog lowers itself
-      // before it reports the close otherwise.
-      matches: query.includes("width <") || query.includes("reduced-motion"),
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-    }));
+    // The phone layout, and no motion: a dialog lowers itself before it reports the
+    // close otherwise.
+    stubPhone({ reducedMotion: true });
   });
   afterEach(() => {
     vi.unstubAllGlobals();

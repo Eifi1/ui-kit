@@ -20,8 +20,6 @@ import { ToggleGroup } from "../toggle-group";
  * a browser, this keeps from quietly coming back.
  */
 
-const has = (el: Element, cls: string) => (el.getAttribute("class") ?? "").split(/\s+/).includes(cls);
-
 describe("group 4 parts wrap from Large up", () => {
   it("Tabs: the label and the detail line", () => {
     render(
@@ -34,20 +32,20 @@ describe("group 4 parts wrap from Large up", () => {
     );
     for (const text of ["80 km/h", "loop 2 · 31 points"]) {
       const line = screen.getByText(text);
-      expect(has(line, "truncate-until-large"), text).toBe(true);
-      expect(has(line, "truncate"), text).toBe(false);
+      expect(line, text).toHaveClass("truncate-until-large");
+      expect(line, text).not.toHaveClass("truncate");
     }
   });
 
   it("MenuItem: the label, beside a badge that never shrinks", () => {
     render(<MenuItem badge={<span>Shared</span>}>Holiday house on the coast</MenuItem>);
-    expect(has(screen.getByText("Holiday house on the coast"), "truncate-until-large")).toBe(true);
+    expect(screen.getByText("Holiday house on the coast")).toHaveClass("truncate-until-large");
   });
 
   it("Breadcrumbs: a link, a plain crumb and the current page", () => {
     render(<Breadcrumbs items={[{ label: "Estates", href: "/estates" }, { label: "Riverside" }, { label: "Unit 4" }]} />);
     for (const text of ["Estates", "Riverside", "Unit 4"]) {
-      expect(has(screen.getByText(text), "truncate-until-large"), text).toBe(true);
+      expect(screen.getByText(text), text).toHaveClass("truncate-until-large");
     }
   });
 
@@ -69,14 +67,14 @@ describe("group 4 parts wrap from Large up", () => {
     );
     const summary = screen.getByRole("combobox", { name: /Markets/ }).querySelector(".truncate-until-large");
     expect(summary).not.toBeNull();
-    expect(has(screen.getByText("Switzerland"), "truncate-until-large")).toBe(true);
+    expect(screen.getByText("Switzerland")).toHaveClass("truncate-until-large");
   });
 });
 
 describe("what the 0.34 sweep found", () => {
   it("TreeRow's label wraps in its min-h-8 row", () => {
     render(<TreeRow level={1} label="1020 Operating account" />);
-    expect(has(screen.getByText("1020 Operating account"), "truncate-until-large")).toBe(true);
+    expect(screen.getByText("1020 Operating account")).toHaveClass("truncate-until-large");
   });
 
   it("ToggleGroup: the strip wraps its row at Large too, and a segment wraps rather than cuts", () => {
@@ -93,8 +91,8 @@ describe("what the 0.34 sweep found", () => {
       />,
     );
     const group = screen.getByRole("radiogroup", { name: "Status" });
-    expect(has(group, "large:flex-wrap")).toBe(true);
-    expect(has(screen.getByRole("radio", { name: "Open" }), "truncate-until-large")).toBe(true);
+    expect(group).toHaveClass("large:flex-wrap");
+    expect(screen.getByRole("radio", { name: "Open" })).toHaveClass("truncate-until-large");
   });
 });
 

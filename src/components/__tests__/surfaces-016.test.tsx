@@ -132,7 +132,7 @@ describe("Card toneStrength (P9)", () => {
   it("is the soft 1px frame by default and does nothing on inset", () => {
     const { container, rerender } = render(<Card tone="danger">x</Card>);
     let card = container.firstElementChild as HTMLElement;
-    expect(card.className).toMatch(/border-danger(?![\w-])/);
+    expect(card).toHaveClass("border-danger");
     expect(card.className).not.toContain("border-2");
     rerender(
       <Card tone="danger" toneStrength="strong" variant="inset">

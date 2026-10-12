@@ -7,7 +7,7 @@ describe("AlertBanner 0.10.0", () => {
     const { container } = render(<AlertBanner tone="success">Import finished</AlertBanner>);
     const box = container.firstElementChild!;
     expect(box.className).toContain("bg-success-soft");
-    expect(box.className).toMatch(/text-success(?![\w-])/);
+    expect(box).toHaveClass("text-success");
     expect(toneFrameClass("success")).toContain("border-success");
     expect(alertFrameClass("success")).toContain("p-[calc(0.75rem-1px)]");
     expect(box.querySelector("svg")!.getAttribute("class")).toContain("lucide-circle-check");
@@ -115,14 +115,14 @@ describe("AlertBanner 0.10.0", () => {
       </>,
     );
     const warn = screen.getByTestId("warn").className;
-    expect(warn).toMatch(/bg-surface(?![\w-])/);
+    expect(screen.getByTestId("warn")).toHaveClass("bg-surface");
     // The translucent wash is no longer the background COLOUR (tailwind-merge dropped
     // it), only an image over the opaque surface.
-    expect(warn).not.toMatch(/(^| )bg-warning-soft(?![\w-])/);
+    expect(screen.getByTestId("warn")).not.toHaveClass("bg-warning-soft");
     expect(warn).toContain("bg-[image:linear-gradient(var(--warning-bg),var(--warning-bg))]");
     expect(warn).toContain("shadow-lg");
-    expect(warn).toMatch(/border-warning(?![\w-])/);
-    expect(screen.getByTestId("neutral").className).toMatch(/bg-surface(?![\w-])/);
+    expect(screen.getByTestId("warn")).toHaveClass("border-warning");
+    expect(screen.getByTestId("neutral")).toHaveClass("bg-surface");
   });
 
   it("leaves existing callers untouched", () => {
@@ -197,5 +197,26 @@ describe("AlertBanner box with an action on a phone (kastlan 53)", () => {
     expect(action.parentElement!.className).toContain("max-sm:flex-wrap");
     rerender(<AlertBanner tone="warning">Plain.</AlertBanner>);
     expect(screen.getByText("Plain.").parentElement!.className).not.toContain("max-sm:flex-wrap");
+  });
+});
+
+describe("AlertBanner data-tone (0.34, refactor audit 2026-10, TST-9)", () => {
+  it("carries its tone on the frame in every shape: plain, a whole-row link, and split", () => {
+    render(
+      <>
+        <AlertBanner tone="warning" data-testid="plain">Check the dates</AlertBanner>
+        <AlertBanner tone="info" href="#more">Read more</AlertBanner>
+        <AlertBanner tone="success" onClick={() => {}} onDismiss={() => {}} data-testid="split">
+          Saved
+        </AlertBanner>
+        <AlertBanner>Danger by default</AlertBanner>
+      </>,
+    );
+    expect(screen.getByTestId("plain")).toHaveAttribute("data-tone", "warning");
+    expect(screen.getByRole("link", { name: "Read more" })).toHaveAttribute("data-tone", "info");
+    // Split: the frame is the wrapper, and the row button inside it carries none.
+    expect(screen.getByTestId("split")).toHaveAttribute("data-tone", "success");
+    expect(screen.getByRole("button", { name: "Saved" })).not.toHaveAttribute("data-tone");
+    expect(screen.getByText("Danger by default").closest("[data-tone]")).toHaveAttribute("data-tone", "danger");
   });
 });

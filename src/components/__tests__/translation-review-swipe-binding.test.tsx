@@ -9,6 +9,7 @@ import { toast } from "../toast";
 import { TranslationReviewPanel } from "../translation-review";
 import type { TranslationReviewPanelProps } from "../translation-review";
 import { WriteLockProvider } from "../write-lock";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * keksdose — Marcel's live #377 rework, 2026-10-03: *"Add the swipe options to be shown also
@@ -86,16 +87,6 @@ function setup(props: Partial<TranslationReviewPanelProps> = {}, wrap?: (ui: Rea
   );
   const utils = render(wrap ? wrap(panel) : panel);
   return { onSave, onClear, ...utils };
-}
-
-/** jsdom has no matchMedia, so the desktop table renders unless a phone is stubbed. */
-function stubPhone() {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("width <"), // the phone layout's `(width < 768px)`
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  }));
 }
 
 const undoMock = () => vi.mocked(toast.undo);

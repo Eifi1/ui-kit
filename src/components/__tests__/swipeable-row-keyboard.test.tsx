@@ -136,6 +136,6 @@ describe("the revealed buttons stay out of the document's way", () => {
     const action = screen.getByRole("button", { name: "Delete" });
     expect(action.className).toMatch(/(^|\s)focus:not-sr-only(\s|$)/);
     expect(action.className).toContain(FOCUS_RING);
-    expect(action.className).toMatch(/focus-visible:ring-brand(?![\w-])/);
+    expect(action).toHaveClass("focus-visible:ring-brand");
   });
 });

@@ -3,6 +3,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { DateRangePicker } from "../date-picker";
 import type { DateRangeDraftSummary, DateRangePickerPreset, DateRangePickerProps } from "../date-picker";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * `renderDraftSummary` — the "Custom · from – to" line keksdose's report range field
@@ -39,15 +40,7 @@ function Harness(props: Partial<DateRangePickerProps>) {
 const line = () => document.querySelector("[data-draft-summary]");
 
 function mockPhone() {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes("width < 768px") || query.includes("reduced-motion"),
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
+  stubViewportWidth(PHONE_WIDTH, { reducedMotion: true });
 }
 
 afterEach(() => {

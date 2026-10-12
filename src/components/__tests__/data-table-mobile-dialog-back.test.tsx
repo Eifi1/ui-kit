@@ -4,6 +4,7 @@ import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router";
 import { DataTable } from "../data-table";
 import type { DataTableColumn, DataTableProps } from "../data-table";
 import { useSearchParamState } from "../../hooks/use-search-param-state";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * `mobileDialogBackCloses` — the phone row dialog's Back sentinel, switchable
@@ -35,12 +36,7 @@ async function settle() {
 }
 
 beforeEach(() => {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("width <"), // the phone layout's `(width < 768px)`
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  }));
+  stubPhone();
 });
 afterEach(async () => {
   vi.unstubAllGlobals();

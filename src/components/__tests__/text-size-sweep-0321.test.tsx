@@ -52,8 +52,6 @@ function size(s: TextSize) {
   act(() => applyTextSize(s));
 }
 
-const classes = (el: Element) => (el.getAttribute("class") ?? "").split(/\s+/);
-
 describe("Pagination (0.32.1)", () => {
   const pager = () => (
     <Pagination page={0} totalPages={494} pageSize={25} total={12_345} onPage={() => {}} locale="en-GB" />
@@ -66,10 +64,10 @@ describe("Pagination (0.32.1)", () => {
   it("keeps the arrows at the ends and lets the numbers between them wrap", () => {
     render(pager());
     const strip = document.querySelector("[data-slot=page-strip]")!;
-    expect(classes(strip)).toEqual(expect.arrayContaining(["min-w-0", "max-w-full"]));
-    expect(classes(strip)).not.toContain("flex-wrap");
+    expect(strip).toHaveClass("min-w-0", "max-w-full");
+    expect(strip).not.toHaveClass("flex-wrap");
     const group = document.querySelector("[data-slot=page-numbers]")!;
-    expect(classes(group)).toEqual(expect.arrayContaining(["flex-wrap", "min-w-0", "justify-center"]));
+    expect(group).toHaveClass("flex-wrap", "min-w-0", "justify-center");
     // The arrows are the strip's own children, outside the wrapping numbers.
     expect(within(strip as HTMLElement).getByRole("button", { name: "Previous page" }).parentElement).toBe(strip);
     expect(within(strip as HTMLElement).getByRole("button", { name: "Next page" }).parentElement).toBe(strip);
@@ -113,7 +111,7 @@ describe("WizardStepper (0.32.1)", () => {
         ]}
       />,
     );
-    expect(classes(screen.getByRole("list", { name: "Import" }))).toContain("flex-wrap");
+    expect(screen.getByRole("list", { name: "Import" })).toHaveClass("flex-wrap");
   });
 });
 
@@ -129,22 +127,21 @@ describe("CardHeader's action at Large (0.32.1)", () => {
         </CardHeader>
       </Card>,
     );
-    return classes(container.querySelector("[data-slot=card-header]")!);
+    return container.querySelector<HTMLElement>("[data-slot=card-header]")!;
   };
 
   it("unset, stacks the action under the title below sm at Large only", () => {
-    const cls = header();
-    expect(cls).toContain("large:max-sm:grid-cols-1");
-    expect(cls).toContain("large:max-sm:[&>[data-slot=card-action]]:col-start-1");
-    expect(cls).not.toContain("max-sm:grid-cols-1");
+    const el = header();
+    expect(el).toHaveClass("large:max-sm:grid-cols-1", "large:max-sm:[&>[data-slot=card-action]]:col-start-1");
+    expect(el).not.toHaveClass("max-sm:grid-cols-1");
   });
 
   it("stackAction stacks at every size; stackAction={false} never", () => {
     const always = header(true);
-    expect(always).toContain("max-sm:grid-cols-1");
-    expect(always).not.toContain("large:max-sm:grid-cols-1");
+    expect(always).toHaveClass("max-sm:grid-cols-1");
+    expect(always).not.toHaveClass("large:max-sm:grid-cols-1");
     const never = header(false);
-    expect(never.some((c) => c.includes("grid-cols-1"))).toBe(false);
+    expect([...never.classList].some((c) => c.includes("grid-cols-1"))).toBe(false);
   });
 
   it("WizardSummary's pencil, an icon at every size, stays beside its title", () => {
@@ -154,8 +151,8 @@ describe("CardHeader's action at Large (0.32.1)", () => {
         onEditStep={() => {}}
       />,
     );
-    const cls = classes(container.querySelector("[data-slot=card-header]")!);
-    expect(cls.some((c) => c.includes("grid-cols-1"))).toBe(false);
+    const el = container.querySelector("[data-slot=card-header]")!;
+    expect([...el.classList].some((c) => c.includes("grid-cols-1"))).toBe(false);
   });
 });
 
@@ -185,8 +182,8 @@ describe("ShareCard's row controls (0.32.1)", () => {
   it("hold to the row and wrap inside it", () => {
     card(true);
     const box = screen.getByRole("button", { name: "Remove access" }).closest(".ms-auto")!;
-    expect(classes(box)).toEqual(expect.arrayContaining(["flex-wrap", "min-w-0", "max-w-full"]));
-    expect(classes(box)).not.toContain("shrink-0");
+    expect(box).toHaveClass("flex-wrap", "min-w-0", "max-w-full");
+    expect(box).not.toHaveClass("shrink-0");
   });
 
   it("under a lock at Large, say the reason once, under Share, when the form is there", () => {
@@ -212,7 +209,7 @@ describe("Date and month fields at Large (0.32.1)", () => {
     );
     const value = screen.getByText(/2026.*2026/);
     // 0.33 (§10.17): the kit's one utility for "truncate at Normal, wrap at Large".
-    expect(classes(value)).toContain("truncate-until-large");
+    expect(value).toHaveClass("truncate-until-large");
   });
 
   it("the ‹ date › row stacks on a phone at Large: the field on its own line, the buttons under it", () => {
@@ -221,15 +218,7 @@ describe("Date and month fields at Large (0.32.1)", () => {
     );
     const field = container.querySelector("[data-slot=date-step-field]")!;
     const row = field.parentElement!;
-    expect(classes(row)).toEqual(
-      expect.arrayContaining([
-        "large:max-sm:flex-wrap",
-        "large:max-sm:[&>[data-slot=date-step-field]]:order-first",
-        "large:max-sm:[&>[data-slot=date-step-field]]:basis-full",
-        "large:max-sm:[&_[role=combobox]]:rounded-md",
-        "large:max-sm:[&>span]:flex-1",
-      ]),
-    );
+    expect(row).toHaveClass("large:max-sm:flex-wrap", "large:max-sm:[&>[data-slot=date-step-field]]:order-first", "large:max-sm:[&>[data-slot=date-step-field]]:basis-full", "large:max-sm:[&_[role=combobox]]:rounded-md", "large:max-sm:[&>span]:flex-1");
   });
 
   it("a bare DatePicker carries no row marker", () => {
@@ -241,17 +230,17 @@ describe("Date and month fields at Large (0.32.1)", () => {
     const { container } = render(
       <MonthPicker variant="stepper" value="2026-10" onChange={() => {}} currentMonth="2026-10" locale="en-GB" />,
     );
-    expect(classes(container.firstElementChild!)).toContain("flex-wrap");
+    expect(container.firstElementChild!).toHaveClass("flex-wrap");
   });
 
   it("PhoneInput gives the number its own line on a phone at Large", () => {
     render(<PhoneInput label="Phone" value="" onValueChange={() => {}} />);
     const input = screen.getByRole("textbox", { name: "Phone" });
     const row = screen.getByRole("combobox").closest(".flex")!;
-    expect(classes(row)).toContain("large:max-sm:flex-wrap");
+    expect(row).toHaveClass("large:max-sm:flex-wrap");
     expect(row.contains(input)).toBe(true);
     const cell = Array.from(row.children).find((c) => c.contains(input))!;
-    expect(classes(cell)).toContain("large:max-sm:basis-full");
+    expect(cell).toHaveClass("large:max-sm:basis-full");
   });
 });
 
@@ -264,21 +253,11 @@ describe("ButtonGroup, joined, at Large (0.32.1)", () => {
         <Button variant="secondary">Feedback</Button>
       </ButtonGroup>,
     );
-    const cls = classes(screen.getByRole("group", { name: "Display pages" }));
-    expect(cls).toEqual(
-      expect.arrayContaining([
-        "large:flex-wrap",
-        "large:max-w-full",
-        "large:border-0",
-        "large:[&>*]:border",
-        "large:[&>*]:-ms-px",
-        "large:[&>*]:-mt-px",
-        "large:[&>*]:grow",
-      ]),
-    );
+    const el = screen.getByRole("group", { name: "Display pages" });
+    expect(el).toHaveClass("large:flex-wrap", "large:max-w-full", "large:border-0", "large:[&>*]:border", "large:[&>*]:-ms-px", "large:[&>*]:-mt-px", "large:[&>*]:grow");
     // Normal keeps the group's own frame.
-    expect(cls).toContain("border");
-    expect(cls).not.toContain("flex-wrap");
+    expect(el).toHaveClass("border");
+    expect(el).not.toHaveClass("flex-wrap");
   });
 
   it("a column and a gapped group are left as they were", () => {
@@ -295,7 +274,7 @@ describe("ButtonGroup, joined, at Large (0.32.1)", () => {
       </>,
     );
     for (const name of ["Zoom", "Discs"]) {
-      expect(classes(screen.getByRole("group", { name })), name).not.toContain("large:flex-wrap");
+      expect(screen.getByRole("group", { name }), name).not.toHaveClass("large:flex-wrap");
     }
   });
 });

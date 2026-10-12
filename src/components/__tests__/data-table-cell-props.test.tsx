@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { DataTable } from "../data-table";
 import type { DataTableColumn } from "../data-table";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * `cellProps` / `headProps` — keksdose's accounts page wanted `data-private` on the
@@ -84,15 +85,7 @@ describe("DataTable cellProps", () => {
   });
 
   it("on a phone, only the data-* attributes reach the card field", () => {
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true,
-      value: (query: string) => ({
-        matches: query.includes("width <"), // the phone layout's `(width < 768px)`
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }),
-    });
+    stubViewportWidth(PHONE_WIDTH);
     renderTable();
     expect(screen.queryByRole("table")).toBeNull();
     const dd = screen.getByText("CH00 2").closest("dd")!;

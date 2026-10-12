@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Toaster, toast } from "../toast";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { createThemeStore } from "../../theme/theme-store";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * The kit `<Toaster>` against the REAL sonner: what reaches the screen. The call
@@ -11,13 +12,28 @@ import { createThemeStore } from "../../theme/theme-store";
 
 const toaster = () => document.querySelector<HTMLElement>("[data-sonner-toaster]");
 
-afterEach(async () => {
-  act(() => toast.dismiss());
+/** Run what a dismissal sets off, on fake timers: sonner's frame, then — once that frame's
+ *  update has rendered — its 200 ms exit animation. Well short of a toast's own 4 s, so
+ *  nothing else ends on the way. */
+function runDismissal() {
+  act(() => vi.advanceTimersByTime(50));
+  act(() => vi.advanceTimersByTime(250));
+}
+
+afterEach(() => {
+  // Dismissed in sonner's store, so the next test's Toaster is not handed them again, and
+  // the exit sonner plays is RUN on fake timers, where this slept 250 ms after every test
+  // (refactor audit 2026-10, TST-11). Also undoes a test's own fake timers.
+  vi.useFakeTimers();
+  try {
+    act(() => toast.dismiss());
+    runDismissal();
+  } finally {
+    vi.useRealTimers();
+  }
   cleanup();
   document.documentElement.classList.remove("dark");
   vi.unstubAllGlobals();
-  // sonner removes a dismissed toast after its exit animation.
-  await new Promise((r) => setTimeout(r, 250));
 });
 
 /** Mount and wait for the lazy import to deliver sonner's Toaster. */
@@ -166,16 +182,7 @@ describe("<Toaster> — placement and paint", () => {
   });
 
   it("is bottom-center above the bottom nav and the safe area on a phone", async () => {
-    vi.stubGlobal(
-      "matchMedia",
-      (query: string) =>
-        ({
-          matches: query.includes("width < 768px"),
-          media: query,
-          addEventListener: () => {},
-          removeEventListener: () => {},
-        }) as unknown as MediaQueryList,
-    );
+    stubPhone();
     await mount();
     act(() => {
       toast("Phone");
@@ -252,10 +259,13 @@ describe("<Toaster> — dismissOnMiddleClick (0.18.0)", () => {
       });
     });
     const link = await screen.findByRole("link", { name: "Open report" });
+    // A dismissal these clicks set off would be RUN below, not raced by a 250 ms sleep
+    // that a loaded machine outlasted before sonner's frame (TST-11). afterEach restores.
+    vi.useFakeTimers();
     expect(middle(link, "mousedown").defaultPrevented).toBe(false);
     expect(middle(link).defaultPrevented).toBe(false);
     expect(middle(screen.getByRole("button", { name: "Share" })).defaultPrevented).toBe(false);
-    await new Promise((r) => setTimeout(r, 250));
+    runDismissal();
     expect(screen.getByText("Report ready")).toBeInTheDocument();
   });
 
@@ -265,11 +275,14 @@ describe("<Toaster> — dismissOnMiddleClick (0.18.0)", () => {
       toast("Right click", { id: "r" });
       toast("Pinned", { id: "p", dismissible: false });
     });
-    expect(middle(await screen.findByText("Right click"), "auxclick", 2).defaultPrevented).toBe(false);
+    const right = await screen.findByText("Right click");
+    // As above: a dismissal is run, not slept on (TST-11). afterEach restores the timers.
+    vi.useFakeTimers();
+    expect(middle(right, "auxclick", 2).defaultPrevented).toBe(false);
     expect(middle(screen.getByText("Pinned")).defaultPrevented).toBe(false);
     view.rerender(<Toaster dismissOnMiddleClick={false} />);
     expect(middle(screen.getByText("Right click")).defaultPrevented).toBe(false);
-    await new Promise((r) => setTimeout(r, 250));
+    runDismissal();
     expect(screen.getByText("Right click")).toBeInTheDocument();
     expect(screen.getByText("Pinned")).toBeInTheDocument();
   });

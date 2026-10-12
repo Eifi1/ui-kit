@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BulkActionBar } from "../bulk-action-bar";
 import { OVERLAY_EXIT_MS } from "../../hooks/use-close-transition";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * keksdose's three hand-built selection bars (mobile-bulk-bar, invoice-lines-bulk-bar,
@@ -12,15 +13,7 @@ import { UiKitProvider } from "../../i18n/kit-labels";
  */
 
 const motion = (reduced: boolean) =>
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes("prefers-reduced-motion") ? reduced : false,
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
+  stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
 
 function bar(count: number, extra: Partial<Parameters<typeof BulkActionBar>[0]> = {}) {
   return (

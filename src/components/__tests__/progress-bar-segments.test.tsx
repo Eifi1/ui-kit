@@ -21,10 +21,10 @@ describe("ProgressBar segments (keksdose cut-card:133)", () => {
     const segs = screen.getByRole("meter").querySelectorAll<HTMLElement>('[data-part="segment"]');
     expect(segs).toHaveLength(3);
     expect(segs[0]).toHaveStyle({ width: "40%" });
-    expect(segs[0].className).toMatch(/bg-danger(?![\w-])/);
+    expect(segs[0]).toHaveClass("bg-danger");
     // The first part WITHOUT a colour of its own: --chart-1, though it is second.
     expect(segs[1].className).toContain("bg-[var(--chart-1)]");
-    expect(segs[2].className).toMatch(/bg-brand(?![\w-])/);
+    expect(segs[2]).toHaveClass("bg-brand");
   });
 
   it("counts the chart-colour fallback among uncoloured parts only, in the bar and the legend", () => {

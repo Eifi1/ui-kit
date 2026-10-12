@@ -7,6 +7,7 @@ import { Form } from "../../rhf/form";
 import { RhfDateRangePicker } from "../../rhf/fields";
 import type { DateRangePickerPreset, DateRangePickerProps } from "../date-picker";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * `monthJump` (0.23, kastlan): the panel's caption opens a month grid with year steps,
@@ -334,15 +335,7 @@ describe("DateRangePicker monthJump (kastlan's July–June period)", () => {
   });
 
   it("works in the phone sheet, where Escape in the months also stays in the sheet", () => {
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true,
-      value: (query: string) => ({
-        matches: query.includes("width < 768px") || query.includes("reduced-motion"),
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }),
-    });
+    stubViewportWidth(PHONE_WIDTH, { reducedMotion: true });
     render(<Range />);
     fireEvent.click(screen.getByRole("combobox", { name: /^Service-charge period/ }));
     expect(panel()).toHaveAttribute("aria-modal", "true");

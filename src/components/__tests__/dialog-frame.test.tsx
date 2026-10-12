@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { DialogFrame } from "../dialog-frame";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { OVERLAY_EXIT_MS } from "../../hooks/use-close-transition";
+import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * The frame 34 dialogs across two apps were writing by hand. The load-bearing part is
@@ -114,15 +115,7 @@ describe("DialogFrame", () => {
   describe("with motion", () => {
     beforeEach(() => {
       vi.useFakeTimers();
-      Object.defineProperty(window, "matchMedia", {
-        configurable: true,
-        value: (query: string) => ({
-          matches: false,
-          media: query,
-          addEventListener: vi.fn(),
-          removeEventListener: vi.fn(),
-        }),
-      });
+      stubViewportWidth(DESKTOP_WIDTH);
     });
     afterEach(() => {
       vi.useRealTimers();

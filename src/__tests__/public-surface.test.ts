@@ -264,7 +264,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.33.0: the guard an app runs from its own suite — `undeclaredCssVariables`,
   // `KIT_CSS_VARIABLES` and the stylesheet rule they share, `declaredCustomProperties`
   // (docs/colour-roles-harmonization.md §8.3).
-  ["@eifi1/ui-kit/testing", testing, 3],
+  // 0.34.0 (+3): the environment stubs (refactor audit 2026-10, TST-10) —
+  // `stubViewportWidth`, `viewportMatchMedia`, `stubResizeObserver`.
+  ["@eifi1/ui-kit/testing", testing, 6],
   // 0.18.0: the only German left (see the history above); `uiKitLabelsDeCh` (+1).
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 2],
   // 0.17.0: `uiKitLabelsEn(numberLocale)`, the English defaults with grouped counts

@@ -615,6 +615,12 @@ export function Chip({
     className,
   );
 
+  // The tone as data on the visible pill (0.34, refactor audit 2026-10, TST-9): a stable
+  // hook for a test or a caller's selector, where the surface classes are the kit's to
+  // change. On the pill wrapper of a split chip, else on the chip itself; before the
+  // caller's props, so a `data-tone` of their own wins.
+  const toneData = { "data-tone": onRemove ? undefined : tone } as Record<string, string | undefined>;
+
   // The checkbox box, only on the toggle shape it has meaning on.
   const isCheckbox = checkbox && !!onClick && !href;
   const body = (
@@ -706,6 +712,7 @@ export function Chip({
   const pill = (inner: ReactNode) => (
     <span
       ref={snap ? snapRef : undefined}
+      data-tone={tone}
       // The pill is the target's box here (§4): the body inside stretches to its height.
       className={cn(CHIP_PILL, s.tail, radius, surface, target && CHIP_TOUCH_LARGE, snap && "justify-center", className)}
     >
@@ -731,6 +738,7 @@ export function Chip({
     // On this shape `onClick` is the link shape's, typed for the anchor.
     const onLinkClick = onClick as ChipLinkProps["onClick"];
     const linkProps: ChipLinkProps = {
+      ...toneData,
       ...rest,
       ref: (remove ? ref : ownRef) as Ref<HTMLAnchorElement>,
       href,
@@ -747,6 +755,7 @@ export function Chip({
     ) : (
       <a
         ref={(remove ? ref : ownRef) as React.Ref<HTMLAnchorElement>}
+        {...toneData}
         href={href}
         aria-current={selected ? "true" : undefined}
         onClick={onLinkClick}
@@ -767,6 +776,7 @@ export function Chip({
     const button = (
       <button
         ref={(remove ? ref : ownRef) as React.Ref<HTMLButtonElement>}
+        {...toneData}
         type="button"
         onClick={(e) => {
           // Locked: the press is swallowed — the chip saves on press, and a lock that
@@ -813,6 +823,7 @@ export function Chip({
        (ChipInput does); the role is a prop, so the rule cannot see it. */
     <span
       ref={ownRef as React.Ref<HTMLSpanElement>}
+      {...toneData}
       className={look}
       tabIndex={tabIndex}
       role={role}

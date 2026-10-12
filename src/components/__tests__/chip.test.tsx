@@ -320,7 +320,7 @@ describe("Chip — the combined link/button + dismiss shape (0.7.0)", () => {
     expect(link).not.toContainElement(remove);
     expect(pill.className).toContain("rounded-full");
     expect(pill.className).toContain("border");
-    expect(pill.className).toMatch(/bg-brand-soft(?![\w-])/);
+    expect(pill).toHaveClass("bg-brand-soft");
     expect(pill.className).toContain("custom");
     expect(link.className).not.toContain("border");
   });
@@ -512,12 +512,12 @@ describe("Chip 0.10.0", () => {
     );
     const soft = screen.getByTestId("soft").className;
     expect(soft).toContain("bg-hue-purple-soft");
-    expect(soft).toMatch(/text-hue-purple(?![\w-])/);
+    expect(screen.getByTestId("soft")).toHaveClass("text-hue-purple");
     expect(soft).toContain("border-hue-purple");
     expect(screen.getByTestId("outline").className).toContain("bg-transparent");
-    expect(screen.getByTestId("outline").className).toMatch(/text-hue-teal(?![\w-])/);
+    expect(screen.getByTestId("outline")).toHaveClass("text-hue-teal");
     // The fill under its own foreground (0.33), as role utilities.
-    expect(screen.getByTestId("solid").className).toMatch(/bg-hue-orange(?![\w-])/);
+    expect(screen.getByTestId("solid")).toHaveClass("bg-hue-orange");
     expect(screen.getByTestId("solid").className).toContain("text-hue-orange-contrast");
     expect(screen.getByTestId("on").className).toContain("border-[var(--hue-indigo)]");
   });
@@ -570,7 +570,7 @@ describe("Chip 0.10.0", () => {
     expect(chip.className).toContain("text-secondary");
     const dot = chip.querySelector("[data-chip-dot]")!;
     expect(dot).toHaveAttribute("aria-hidden");
-    expect(dot.className).toMatch(/bg-hue-blue(?![\w-])/);
+    expect(dot).toHaveClass("bg-hue-blue");
     expect(chip).toHaveTextContent("Rented");
   });
 });
@@ -596,5 +596,32 @@ describe("Chip — the provider's router link", () => {
     expect(screen.getByRole("link", { name: "Mail" })).not.toHaveAttribute("data-router");
     expect(screen.getByRole("link", { name: "Own" })).toHaveAttribute("data-own");
     expect(screen.getByRole("link", { name: "Own" })).not.toHaveAttribute("data-router");
+  });
+});
+
+describe("Chip data-tone (0.34, refactor audit 2026-10, TST-9)", () => {
+  it("carries its tone on the visible pill, whatever its shape, and a caller's own wins", () => {
+    render(
+      <>
+        <Chip tone="warning" data-testid="inert">Due</Chip>
+        <Chip tone="teal" href="#t">Link</Chip>
+        <Chip tone="danger" onClick={() => {}}>Toggle</Chip>
+        <Chip tone="info" href="#s" onRemove={() => {}}>Split</Chip>
+        <Chip tone="success" data-tone="mine" data-testid="own">Own</Chip>
+      </>,
+    );
+    expect(screen.getByTestId("inert")).toHaveAttribute("data-tone", "warning");
+    expect(screen.getByRole("link", { name: "Link" })).toHaveAttribute("data-tone", "teal");
+    expect(screen.getByRole("button", { name: "Toggle" })).toHaveAttribute("data-tone", "danger");
+    // A split chip's pill is the wrapper; the link inside it carries no second one.
+    const split = screen.getByRole("link", { name: "Split" });
+    expect(split.parentElement).toHaveAttribute("data-tone", "info");
+    expect(split).not.toHaveAttribute("data-tone");
+    expect(screen.getByTestId("own")).toHaveAttribute("data-tone", "mine");
+  });
+
+  it("says neutral when no tone is given", () => {
+    render(<Chip data-testid="plain">Plain</Chip>);
+    expect(screen.getByTestId("plain")).toHaveAttribute("data-tone", "neutral");
   });
 });

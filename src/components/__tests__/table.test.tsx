@@ -83,8 +83,8 @@ describe("Table", () => {
   it("zebra and hover tint body rows only", () => {
     render(<Ledger zebra hover />);
     const [headRow, bodyRow, , footRow] = screen.getAllByRole("row");
-    expect(bodyRow.className).toMatch(/even:bg-surface-2(?![\w-])/);
-    expect(bodyRow.className).toMatch(/hover:bg-hover(?![\w-])/);
+    expect(bodyRow).toHaveClass("even:bg-surface-2");
+    expect(bodyRow).toHaveClass("hover:bg-hover");
     expect(headRow.className).not.toMatch(/hover:/);
     expect(footRow.className).not.toMatch(/even:/);
   });

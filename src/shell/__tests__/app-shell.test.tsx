@@ -146,7 +146,7 @@ describe("AppShell — the phone's page row", () => {
     const cell = within(phoneNav(container))
       .getAllByRole("link", { name: "Forms" })
       .find((a) => a.closest("[data-tour=nav]"))!;
-    expect(cell.className).toMatch(/text-brand(?![\w-])/);
+    expect(cell).toHaveClass("text-brand");
   });
 
   it("mobileSubNav={false} keeps the single bar", () => {

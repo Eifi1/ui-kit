@@ -42,7 +42,7 @@ describe("StatusDot", () => {
     const { container } = render(<StatusDot tone="danger" />);
     const dot = container.firstElementChild!;
     expect(dot).toHaveAttribute("aria-hidden", "true");
-    expect(dot.className).toMatch(/bg-danger(?![\w-])/);
+    expect(dot).toHaveClass("bg-danger");
   });
 
   it("is an image with a name when given aria-label", () => {
@@ -56,7 +56,7 @@ describe("StatusDot", () => {
     const dot = container.querySelector(".rounded-full")!;
     expect(dot).toHaveAttribute("aria-hidden", "true");
     expect(dot.className).toContain("size-3");
-    expect(dot.className).toMatch(/bg-warning(?![\w-])/);
+    expect(dot).toHaveClass("bg-warning");
   });
 
   it("uses ProgressBar's tone names, money pair included, and rings on request", () => {

@@ -4,6 +4,7 @@ import { CountrySelect, DEFAULT_COUNTRY_SELECT_LABELS, type CountrySelectProps }
 import { FieldHint } from "../field-parts";
 import { WriteLockProvider } from "../write-lock";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * CountrySelect — kastlan (addresses, its six neighbours on top) and keksdose (the
@@ -50,16 +51,7 @@ function rows(list: HTMLElement) {
 
 /** The sheet only exists on a phone; jsdom has no matchMedia (the desktop fallback). */
 function asPhone() {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: true,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
+  stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
 }
 
 describe("CountrySelect: value and names", () => {
@@ -306,9 +298,8 @@ describe("CountrySelect: the write lock", () => {
 });
 
 describe("CountrySelect on a phone", () => {
-  const original = window.matchMedia;
   afterEach(() => {
-    window.matchMedia = original;
+    Reflect.deleteProperty(window, "matchMedia");
   });
 
   it("opens the full-screen sheet, titled by the label, with the whole list to search", () => {

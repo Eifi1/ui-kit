@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Form } from "../form";
 import { RhfCombobox, RhfInlineEntityCombobox, RhfTextCombobox } from "../fields";
 import { FieldHint } from "../../components/field-parts";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * 0.24 — kastlan: `RhfInlineEntityCombobox`. Its account picker is an
@@ -240,16 +241,7 @@ describe("the phone sheet takes the form's label as its title", () => {
   let original: typeof window.matchMedia;
   beforeEach(() => {
     original = window.matchMedia;
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: true,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })) as unknown as typeof window.matchMedia;
+    stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
   });
   afterEach(() => {
     window.matchMedia = original;

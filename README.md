@@ -522,7 +522,7 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
-| `@eifi1/ui-kit/testing` | 4 |
+| `@eifi1/ui-kit/testing` | 10 |
 | `@eifi1/ui-kit/rhf` | 60 |
 
 Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a

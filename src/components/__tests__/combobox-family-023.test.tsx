@@ -8,6 +8,7 @@ import { EntityCombobox } from "../entity-combobox";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
 import { FieldHint } from "../field-parts";
 import { WriteLockProvider } from "../write-lock";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * The Combobox family in 0.23 (keksdose G2, G9, and the kit's later list):
@@ -36,16 +37,7 @@ function described(el: HTMLElement): (string | null | undefined)[] {
 }
 
 function asPhone() {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: true,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
+  return stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
 }
 
 type Lock = { commit?: boolean; disabledReason?: string };
@@ -170,14 +162,13 @@ describe("the lock on the typed fields", () => {
   });
 
   it("a locked picker opens no phone sheet", () => {
-    const original = window.matchMedia;
-    asPhone();
+    const undo = asPhone();
     try {
       render(<InlineEntityCombobox<string> label="Account" value="a1" onChange={vi.fn()} options={OPTIONS} disabledReason="Locked" />);
       fireEvent.focus(screen.getByRole("combobox"));
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     } finally {
-      window.matchMedia = original;
+      undo();
     }
   });
 });
@@ -329,8 +320,7 @@ describe("InlineEntityCombobox: the create row (keksdose G9)", () => {
   });
 
   it("on a phone the sheet ends in the create row, and “No results” gives way to it", () => {
-    const original = window.matchMedia;
-    asPhone();
+    const undo = asPhone();
     try {
       const onCreate = vi.fn();
       render(<CreateHost onCreate={onCreate} />);
@@ -342,7 +332,7 @@ describe("InlineEntityCombobox: the create row (keksdose G9)", () => {
       expect(onCreate).toHaveBeenCalledWith("Wallet");
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     } finally {
-      window.matchMedia = original;
+      undo();
     }
   });
 });

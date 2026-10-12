@@ -27,11 +27,11 @@ describe("IconButton 0.11 additions", () => {
 
   it("tone success is green at rest, and quiet waits for hover", () => {
     const { rerender } = render(<IconButton tone="success" aria-label="Synced" />);
-    expect(screen.getByRole("button").className).toMatch(/text-success(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("text-success");
     rerender(<IconButton tone="success" quiet aria-label="Synced" />);
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("text-placeholder");
-    expect(cls).toMatch(/hover:text-success(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("hover:text-success");
   });
 
   it("toneColor sets the custom tone's variable and implies tone=custom", () => {

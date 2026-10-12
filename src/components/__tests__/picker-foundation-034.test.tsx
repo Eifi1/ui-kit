@@ -6,6 +6,7 @@ import { AmountInput } from "../amount-input";
 import { MultiSelect } from "../multi-select";
 import { GroupedPicker, type PickerGroup } from "../grouped-picker";
 import { Autocomplete } from "../autocomplete";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * DUP-4 + BUG-12 (refactor audit 2026-10, Wave 2): one picker foundation.
@@ -21,16 +22,7 @@ import { Autocomplete } from "../autocomplete";
  */
 
 function asPhone() {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: true,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
+  stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
 }
 
 const original = window.matchMedia;

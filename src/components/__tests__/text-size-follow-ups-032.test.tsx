@@ -19,6 +19,7 @@ import { DemoBanner } from "../../demo/demo-banner";
 import { InvitationsPanel } from "../../admin/invitations-panel";
 import type { InvitationRow } from "../../admin/invitations-panel";
 import { applyTextSize, type TextSize } from "../../theme/text-size";
+import { viewportMatchMedia } from "../../test/viewport";
 
 /**
  * The text-size follow-ups of 0.32 (docs/text-size-harmonization.md §4, §10.8): Chip's
@@ -40,18 +41,7 @@ afterEach(() => {
 /** A `matchMedia` for a viewport `width` px wide whose pointer is a finger when `coarse`
  *  (as text-size-behaviours-032 stubs it). */
 function media({ width = 1280, coarse = false }: { width?: number; coarse?: boolean } = {}) {
-  vi.stubGlobal("matchMedia", (query: string) => {
-    const min = /min-width:\s*(\d+)px/.exec(query);
-    const max = /width\s*<\s*(\d+)px/.exec(query);
-    const matches = /pointer:\s*coarse/.test(query)
-      ? coarse
-      : min
-        ? width >= Number(min[1])
-        : max
-          ? width < Number(max[1])
-          : false;
-    return { matches, media: query, addEventListener() {}, removeEventListener() {} };
-  });
+  vi.stubGlobal("matchMedia", viewportMatchMedia(width, { coarse }));
 }
 
 function size(s: TextSize) {

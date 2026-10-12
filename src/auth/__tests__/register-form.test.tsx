@@ -5,13 +5,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { RegisterForm } from "../register-form";
 import type { RegisterFormProps } from "../register-form";
+import { fill } from "../../test/fill";
+import { refusal } from "../../test/fixtures";
 
 /**
  * §4.1 / §4.5 / §8: the same sign-up form in every app — callbacks only, the submit
  * waiting for a complete form, the address tag offered and never applied.
  */
-
-const refusal = (status: number, code: string) => ({ response: { status, data: { detail: "x", code } } });
 
 function setup(props: Partial<RegisterFormProps> = {}) {
   const onSubmit = vi.fn<RegisterFormProps["onSubmit"]>(async () => undefined);
@@ -22,12 +22,14 @@ function setup(props: Partial<RegisterFormProps> = {}) {
 
 type User = ReturnType<typeof userEvent.setup>;
 
+/** Pasted (`fill`, TST-13): the gating follows the values, which is what these tests are
+ *  about; the meter's own test still types. */
 async function fillIn(user: User, { email = "ada@example.com", password = "a good password" } = {}) {
-  await user.type(screen.getByLabelText("First name"), " Ada ");
-  await user.type(screen.getByLabelText("Last name"), "Example");
-  if (email) await user.type(screen.getByLabelText("Email"), email);
-  await user.type(screen.getByLabelText("Password"), password);
-  await user.type(screen.getByLabelText("Repeat password"), password);
+  await fill(user, screen.getByLabelText("First name"), " Ada ");
+  await fill(user, screen.getByLabelText("Last name"), "Example");
+  if (email) await fill(user, screen.getByLabelText("Email"), email);
+  await fill(user, screen.getByLabelText("Password"), password);
+  await fill(user, screen.getByLabelText("Repeat password"), password);
 }
 
 const termsBox = () => screen.getByRole("checkbox");
@@ -59,16 +61,16 @@ describe("RegisterForm — gating", () => {
     expect(submitButton()).toBeDisabled();
 
     await user.clear(screen.getByLabelText("Password"));
-    await user.type(screen.getByLabelText("Password"), "a good password");
+    await fill(user, screen.getByLabelText("Password"), "a good password");
     expect(screen.getByText("The passwords don't match.")).toBeInTheDocument();
     expect(submitButton()).toBeDisabled();
 
     await user.clear(screen.getByLabelText("Repeat password"));
-    await user.type(screen.getByLabelText("Repeat password"), "a good password");
+    await fill(user, screen.getByLabelText("Repeat password"), "a good password");
     expect(submitButton()).toBeEnabled();
 
     await user.clear(screen.getByLabelText("Last name"));
-    await user.type(screen.getByLabelText("Last name"), "   ");
+    await fill(user, screen.getByLabelText("Last name"), "   ");
     expect(submitButton()).toBeDisabled();
   });
 
@@ -99,7 +101,7 @@ describe("RegisterForm — defaultEmail (0.30.0)", () => {
     expect(email).not.toHaveAttribute("readonly");
     expect(screen.getByRole("button", { name: /^Use ada\+exampleapp@example\.com/ })).toBeInTheDocument();
     await user.clear(email);
-    await user.type(email, "grace@example.com");
+    await fill(user, email, "grace@example.com");
     expect(email).toHaveValue("grace@example.com");
   });
 
@@ -133,12 +135,12 @@ describe("RegisterForm — the address tag", () => {
 
   it("offers nothing without emailTag, or for an address that carries a tag already", async () => {
     const { user, rerender, onSubmit } = setup();
-    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await fill(user, screen.getByLabelText("Email"), "ada@example.com");
     expect(screen.queryByRole("button", { name: /^Use / })).not.toBeInTheDocument();
     rerender(<RegisterForm onSubmit={onSubmit} emailTag="kastlan" />);
     expect(screen.getByRole("button", { name: "Use ada+kastlan@example.com" })).toBeInTheDocument();
     await user.clear(screen.getByLabelText("Email"));
-    await user.type(screen.getByLabelText("Email"), "ada+bank@example.com");
+    await fill(user, screen.getByLabelText("Email"), "ada+bank@example.com");
     expect(screen.queryByRole("button", { name: /^Use / })).not.toBeInTheDocument();
   });
 });

@@ -418,7 +418,7 @@ stands here (16, 17 and 23). The reviews' wording is in
     - `dataTour` is the kit's existing name (`AppShellNavItem.dataTour`). A generic
       `data-*` bag was rejected: it can't say which control carries it when collapsed.
     - **i18n:** none; no new strings in any of the kit's seven languages.
-    - **Tests** (`src/components/__tests__/row-actions-033.test.tsx`): each field's
+    - **Tests** (`src/components/__tests__/row-actions.states.test.tsx`): each field's
       attributes inline and in the menu at both sizes; `dataTour` resolves to the "⋯"'s
       box and nothing in the open menu carries it; `commit: COMMIT_EXCEPT_BILLING` under a
       billing lock stays live.

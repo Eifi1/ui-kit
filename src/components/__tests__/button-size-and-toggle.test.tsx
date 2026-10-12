@@ -68,8 +68,8 @@ describe("IconButton pressed", () => {
     render(<IconButton pressed tone="muted" aria-label="Share budget">x</IconButton>);
     const button = screen.getByRole("button", { name: "Share budget", pressed: true });
     const cls = button.className;
-    expect(cls).toMatch(/text-brand(?![\w-])/);
-    expect(cls).toMatch(/bg-brand-soft(?![\w-])/);
+    expect(button).toHaveClass("text-brand");
+    expect(button).toHaveClass("bg-brand-soft");
     // The tone's grey is gone, not merely out-ordered.
     expect(cls).not.toContain("text-placeholder");
   });
@@ -77,7 +77,7 @@ describe("IconButton pressed", () => {
   it("pressed=false is still a toggle, with the resting look", () => {
     render(<IconButton pressed={false} aria-label="Share budget">x</IconButton>);
     const button = screen.getByRole("button", { pressed: false });
-    expect(button.className).not.toMatch(/bg-brand-soft(?![\w-])/);
+    expect(button).not.toHaveClass("bg-brand-soft");
   });
 
   it("a caller's own aria-pressed is kept when pressed is left out", () => {
@@ -90,7 +90,7 @@ describe("IconButton tone=info", () => {
   it("is sky at rest, with the info hover and ring", () => {
     render(<IconButton tone="info" aria-label="Reconcile">x</IconButton>);
     const cls = screen.getByRole("button").className;
-    expect(cls).toMatch(/text-info(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("text-info");
     expect(cls).toContain("hover:bg-info-soft");
     expect(cls).toContain("focus-visible:ring-[var(--info-border)]");
   });
@@ -123,7 +123,7 @@ describe("IconButton disabled", () => {
     unmount();
     render(<IconButton pressed disabled aria-label="Share">x</IconButton>);
     const cls = screen.getByRole("button").className;
-    expect(cls).toMatch(/disabled:hover:bg-brand-soft(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("disabled:hover:bg-brand-soft");
     // tailwind-merge dropped the ghost reset the pressed one replaces.
     expect(cls).not.toContain("disabled:hover:bg-transparent");
   });

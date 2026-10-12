@@ -158,7 +158,7 @@ describe("LineItems", () => {
       expect(box).toHaveTextContent("Left to assign");
       const value = within(box).getByText("CHF 12.00");
       expect(value).toHaveAttribute("data-tone", "danger");
-      expect(value.className).toMatch(/text-danger(?![\w-])/);
+      expect(value).toHaveClass("text-danger");
       await userEvent.click(within(box).getByRole("button", { name: "Set amount to total" }));
       expect(onClick).toHaveBeenCalledTimes(1);
       // Under the lines: after the last row, before the add button.
@@ -168,7 +168,7 @@ describe("LineItems", () => {
 
       rerender(<Lines summary={{ ...summary, tone: "success" }} disabled />);
       const after = container.querySelector("[data-line-items-summary]") as HTMLElement;
-      expect(within(after).getByText("CHF 12.00").className).toMatch(/text-success(?![\w-])/);
+      expect(within(after).getByText("CHF 12.00")).toHaveClass("text-success");
       expect(within(after).getByRole("button", { name: "Set amount to total" })).toBeDisabled();
     });
 
@@ -280,7 +280,7 @@ describe("LineItems", () => {
       expect(label.className).toContain("text-muted");
       rerender(<Lines summary={{ label: "Left", value: "1.00", tone: "danger" }} />);
       expect(screen.getByText("Left")).not.toHaveAttribute("data-tone");
-      expect(screen.getByText("Left").className).not.toMatch(/text-danger(?![\w-])/);
+      expect(screen.getByText("Left")).not.toHaveClass("text-danger");
     });
 
     it("summary.action variant link: a muted link button; secondary by default", () => {

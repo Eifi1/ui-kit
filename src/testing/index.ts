@@ -11,3 +11,14 @@ export {
   undeclaredCssVariables,
   type UndeclaredCssVariablesOptions,
 } from "./css-variables";
+// 0.34 (refactor audit 2026-10, TST-10): the environment jsdom lacks — a `matchMedia`
+// that answers from a viewport width (right at every text size) and a `ResizeObserver`
+// the test drives. Framework-free: each returns its own undo.
+export {
+  stubResizeObserver,
+  stubViewportWidth,
+  viewportMatchMedia,
+  type ResizeObserverStub,
+  type StubbedBoxSize,
+  type ViewportOptions,
+} from "./viewport";

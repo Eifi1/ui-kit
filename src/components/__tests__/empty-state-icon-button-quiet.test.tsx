@@ -49,12 +49,12 @@ describe("IconButton quiet", () => {
   it("keeps each tone's resting look by default", () => {
     const { rerender } = render(<IconButton tone="danger" aria-label="x">x</IconButton>);
     expect(screen.getByRole("button").className).toContain("text-placeholder");
-    expect(screen.getByRole("button").className).toMatch(/hover:text-danger(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("hover:text-danger");
     rerender(<IconButton tone="warning" aria-label="x">x</IconButton>);
-    expect(screen.getByRole("button").className).toMatch(/text-warning(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("text-warning");
     expect(screen.getByRole("button").className).not.toContain("text-placeholder");
     rerender(<IconButton tone="info" aria-label="x">x</IconButton>);
-    expect(screen.getByRole("button").className).toMatch(/text-info(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("text-info");
   });
 
   it("quiet={false} keeps danger red at rest, for a lone destructive action on touch", () => {
@@ -64,7 +64,7 @@ describe("IconButton quiet", () => {
       </IconButton>,
     );
     const cls = screen.getByRole("button").className;
-    expect(cls).toMatch(/(^|\s)text-danger(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("text-danger");
     expect(cls).toContain("hover:bg-danger-soft");
     expect(cls).not.toContain("text-placeholder");
     // Toned: the glyph does not change on hover, so there is nothing to pin when disabled.
@@ -79,8 +79,8 @@ describe("IconButton quiet", () => {
         </IconButton>,
       );
       const cls = screen.getByRole("button").className;
-      expect(cls).toMatch(/(^|\s)text-placeholder(?![\w-])/);
-      expect(cls).toMatch(new RegExp(`hover:text-${tone}(?![\\w-])`));
+      expect(screen.getByRole("button")).toHaveClass("text-placeholder");
+      expect(screen.getByRole("button")).toHaveClass(`hover:text-${tone}`);
       expect(cls).toContain("disabled:hover:text-placeholder");
       unmount();
     }

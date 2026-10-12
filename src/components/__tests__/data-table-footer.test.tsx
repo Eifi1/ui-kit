@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { DataTable } from "../data-table";
 import type { DataTableColumn, DataTableProps } from "../data-table";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * The totals row (kastlan 54): a column's `footer`, the table's `footerLabel` and
@@ -53,15 +54,7 @@ function renderTable(props: Partial<DataTableProps<Acc>> = {}) {
 }
 
 function phone() {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes("width <"), // the phone layout's `(width < 768px)`
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
+  stubViewportWidth(PHONE_WIDTH);
 }
 
 const tfoot = (container: HTMLElement) => container.querySelector("tfoot");

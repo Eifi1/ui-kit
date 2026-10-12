@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { AdminActionConfirm } from "../admin-action-confirm";
 import type { AdminActionConfirmProps, AdminActionTarget } from "../admin-action-confirm";
+import { refusal } from "../../test/fixtures";
 
 /**
  * §4.2: the server states the level — none, acknowledge, type_email — and the dialog asks
@@ -12,10 +13,6 @@ import type { AdminActionConfirmProps, AdminActionTarget } from "../admin-action
  */
 
 const ADA = { email: "ada@example.com", first: "Ada", last: "Example" };
-
-/** What axios throws for `409 {code}`. */
-const refusal = (code: string) =>
-  Object.assign(new Error("Request failed with status code 409"), { response: { status: 409, data: { code } } });
 
 /** The props with a person as the target — the union's first half (0.34). */
 type PersonProps = Extract<AdminActionConfirmProps, { target: AdminActionTarget }>;
@@ -57,7 +54,7 @@ describe("AdminActionConfirm", () => {
 
   it("none: a refusal opens a dialog of its own to say it", async () => {
     const user = userEvent.setup();
-    render(<Harness level="none" onConfirm={async () => Promise.reject(refusal("self_action"))} />);
+    render(<Harness level="none" onConfirm={async () => Promise.reject(refusal(409, "self_action"))} />);
     const dialog = await screen.findByRole("alertdialog", { name: "Deactivate Ada Example?" });
     expect(dialog).toHaveTextContent("You can’t do this to your own account.");
     await user.click(within(dialog).getByRole("button", { name: "Close" }));
@@ -108,7 +105,7 @@ describe("AdminActionConfirm", () => {
     ["confirmation_mismatch", "The address doesn’t match this account. Check which account you are on."],
   ])("keeps the dialog open with the %s refusal", async (code, text) => {
     const user = userEvent.setup();
-    render(<Harness level="acknowledge" onConfirm={async () => Promise.reject(refusal(code))} />);
+    render(<Harness level="acknowledge" onConfirm={async () => Promise.reject(refusal(409, code))} />);
     const dialog = await screen.findByRole("alertdialog");
     await user.click(within(dialog).getByRole("checkbox"));
     await user.click(within(dialog).getByRole("button", { name: "Deactivate" }));
@@ -122,7 +119,7 @@ describe("AdminActionConfirm", () => {
     render(
       <Harness
         level="type_email"
-        onConfirm={async () => Promise.reject(refusal("other_companies"))}
+        onConfirm={async () => Promise.reject(refusal(409, "other_companies"))}
         onRemoveFromCompany={onRemoveFromCompany}
       />,
     );
@@ -140,7 +137,7 @@ describe("AdminActionConfirm", () => {
     const { unmount } = render(
       <Harness
         level="acknowledge"
-        onConfirm={async () => Promise.reject(refusal("customer_owns_work"))}
+        onConfirm={async () => Promise.reject(refusal(409, "customer_owns_work"))}
         describeError={() => "Ada owns work: hand it on first."}
       />,
     );

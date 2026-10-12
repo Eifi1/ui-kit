@@ -153,18 +153,18 @@ describe("Button tone='danger' on the boxed variants", () => {
       </Button>,
     );
     const cls = screen.getByRole("button").className;
-    expect(cls).toMatch(/border-danger(?![\w-])/);
-    expect(cls).toMatch(/text-danger(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("border-danger");
+    expect(screen.getByRole("button")).toHaveClass("text-danger");
     expect(cls).toContain("hover:bg-danger-soft");
     expect(cls).not.toContain("text-primary");
-    expect(cls).not.toMatch(/(^|\s)border-subtle(?![\w-])/);
+    expect(screen.getByRole("button")).not.toHaveClass("border-subtle");
   });
 
   it("makes primary a soft destructive button that fills on hover", () => {
     render(<Button tone="danger">Delete</Button>);
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("bg-danger-soft");
-    expect(cls).toMatch(/hover:bg-danger(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("hover:bg-danger");
     expect(cls).not.toContain("bg-surface-2");
   });
 
@@ -179,9 +179,9 @@ describe("Button tone='danger' on the boxed variants", () => {
         </Button>
       </>,
     );
-    expect(screen.getByRole("button", { name: "A" }).className).toMatch(/bg-danger(?![\w-])/);
+    expect(screen.getByRole("button", { name: "A" })).toHaveClass("bg-danger");
     expect(screen.getByRole("button", { name: "A" }).className).not.toContain("bg-danger-soft");
-    expect(screen.getByRole("button", { name: "B" }).className).toMatch(/bg-brand(?![\w-])/);
+    expect(screen.getByRole("button", { name: "B" })).toHaveClass("bg-brand");
   });
 });
 
@@ -203,7 +203,7 @@ describe("Card variant='outline'", () => {
     const cls = screen.getByTestId("c").className;
     expect(cls).toContain("p-3");
     expect(cls).not.toContain("p-4");
-    expect(cls).toMatch(/border-warning(?![\w-])/);
+    expect(screen.getByTestId("c")).toHaveClass("border-warning");
     rerender(
       <Card variant="outline" padding="sm" className="p-1" data-testid="c">
         x

@@ -13,7 +13,7 @@ describe("Button tone (keksdose's quiet links)", () => {
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("text-secondary");
     expect(cls).toContain("hover:text-primary");
-    expect(cls).not.toMatch(/text-brand(?![\w-])/);
+    expect(screen.getByRole("button")).not.toHaveClass("text-brand");
   });
 
   it("turns a danger link red only on hover", () => {
@@ -24,7 +24,7 @@ describe("Button tone (keksdose's quiet links)", () => {
     );
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("text-secondary");
-    expect(cls).toMatch(/hover:text-danger(?![\w-])/);
+    expect(screen.getByRole("button")).toHaveClass("hover:text-danger");
   });
 
   it("ignores a tone on a boxed variant", () => {
@@ -56,7 +56,7 @@ describe("Button pressed (lenkbank's All speeds toggle)", () => {
       </Button>,
     );
     const button = screen.getByRole("button", { pressed: true });
-    expect(button.className).toMatch(/text-brand(?![\w-])/);
+    expect(button).toHaveClass("text-brand");
     expect(button.className).toContain("font-medium");
     expect(button.className).not.toContain("text-secondary");
   });
@@ -67,7 +67,7 @@ describe("Button pressed (lenkbank's All speeds toggle)", () => {
         Bold
       </Button>,
     );
-    expect(screen.getByRole("button", { pressed: true }).className).toMatch(/bg-brand-soft(?![\w-])/);
+    expect(screen.getByRole("button", { pressed: true })).toHaveClass("bg-brand-soft");
   });
 });
 

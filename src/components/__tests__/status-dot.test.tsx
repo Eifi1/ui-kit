@@ -32,6 +32,8 @@ describe("statusDotColor", () => {
       const { container, unmount } = render(<StatusDot tone={tone} />);
       const colour = statusDotColor(tone);
       expect(container.firstElementChild).toHaveClass(ROLE_BG[colour] ?? `bg-[${colour}]`);
+      // The tone as data too (0.34, TST-9): what a test that is about the tone asserts.
+      expect(container.firstElementChild).toHaveAttribute("data-tone", tone);
       unmount();
     }
   });

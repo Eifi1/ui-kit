@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ResetPasswordForm } from "../reset-password-form";
 import type { ResetPasswordCheck, ResetPasswordResult } from "../reset-password-form";
+import { fill } from "../../test/fill";
+import { refusal } from "../../test/fixtures";
 
 /**
  * docs/auth-harmonization.md §6.3: a reset is NOT a sign-in. The link is checked first,
@@ -18,9 +20,11 @@ const GOOD = "correct horse battery";
 const live = (check: ResetPasswordCheck = { email: "ada@example.com" }) => vi.fn(async () => check);
 const dead = () => vi.fn(() => Promise.reject({ response: { data: { code: "token_invalid" } } }));
 
+/** Pasted (`fill`, TST-13): the rules and the meter's verdict follow the value, which is
+ *  what these tests are about — one change each, not a render of the form per character. */
 async function fillPassword(user: ReturnType<typeof userEvent.setup>, password = GOOD, confirm = password) {
-  await user.type(await screen.findByLabelText("New password"), password);
-  await user.type(screen.getByLabelText("Repeat new password"), confirm);
+  await fill(user, await screen.findByLabelText("New password"), password);
+  await fill(user, screen.getByLabelText("Repeat new password"), confirm);
 }
 
 describe("ResetPasswordForm — the check", () => {
@@ -241,7 +245,7 @@ describe("ResetPasswordForm — the form", () => {
 
   it("says the kit's rateLimited for a 429, keeping the password (0.30.0)", async () => {
     const user = userEvent.setup();
-    const onSubmit = vi.fn(() => Promise.reject({ response: { status: 429, data: { detail: "Too many requests" } } }));
+    const onSubmit = vi.fn(() => Promise.reject(refusal(429, undefined, "Too many requests")));
     const { unmount } = render(<ResetPasswordForm token={TOKEN} onCheck={live()} onSubmit={onSubmit} />);
     await fillPassword(user);
     await user.click(screen.getByRole("button", { name: "Save password" }));
