@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 
 import { useKitLocale } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
@@ -22,7 +22,10 @@ export function planLimitMailto(email: string, subject: string): string {
   return `mailto:${to}?subject=${encodeStrict(subject)}`;
 }
 
-interface PlanLimitNoticeBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onClick"> {
+/** A `div`'s props, `ref` included since 0.35 (round 0.35 R4, the follow-up to API-2): they
+ *  go on to the {@link AlertBanner}, so the ref is the notice's `<div>` — its `href` is the
+ *  action button's, never the banner's, so the frame is never a link. */
+interface PlanLimitNoticeBaseProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onClick"> {
   /** The dimension as the refusal names it (`"budgets"`, `"seats"`) — `isPlanLimit(err)`'s
    *  `dimension`. Carried as `data-dimension`. */
   dimension: string;

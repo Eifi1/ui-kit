@@ -52,7 +52,8 @@ export interface ThemeSettingSelectProps
  * choice visible without opening anything, in every app (keksdose offered light and dark
  * only; its store already knew "system"). A {@link ToggleGroup}'s props pass through —
  * `labelPlacement`, `disabledReason`, `commit`, `size`, `overflow` — minus the options
- * and the value, which this owns.
+ * and the value, which this owns. `ref` too: the group, whose `focus()` lands on the
+ * checked option (pinned in round 0.35 R4; the select variant's `ref` is the `<select>`).
  *
  * The options wrap rather than truncate (`overflow="wrap"`), as in its two siblings
  * {@link TextSizeSetting} and {@link ContrastSetting} (0.32.1, Kurvenschmiede's 0.32
@@ -161,7 +162,8 @@ export function LanguageSetting({ options, ...rest }: LanguageSettingProps) {
 /**
  * What {@link TextSizeSetting} and {@link ContrastSetting} take: a {@link ToggleGroup}'s
  * props — `labelPlacement`, `disabledReason`, `commit`, `size`, `overflow` — minus the
- * options and the value, which they own, as {@link ThemeSettingToggleProps} does.
+ * options and the value, which they own, as {@link ThemeSettingToggleProps} does. `ref`
+ * is the group's, as there (round 0.35 R4).
  */
 type AppearanceToggleProps<T extends string> = Omit<ToggleGroupBaseProps<T>, "options" | "label"> & {
   value: T;

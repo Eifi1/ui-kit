@@ -1,5 +1,5 @@
 import { createContext, isValidElement, useContext, useId, useLayoutEffect, useState } from "react";
-import type { ComponentPropsWithoutRef, ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels, useKitLink, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
@@ -115,8 +115,14 @@ export interface StatTileLinkProps {
   children: ReactNode;
 }
 
+/**
+ * A `div`'s props, `ref` included since 0.35 (round 0.35 R4, the follow-up to API-2): they
+ * ride on to the {@link Card} that is the tile, so the ref is the tile's own `<div>` — the
+ * one to scroll into view or measure. `ComponentPropsWithoutRef` only kept it out of the
+ * type; at runtime `{...rest}` already carried it there.
+ */
 export interface StatTileProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onClick"> {
+  extends Omit<ComponentPropsWithRef<"div">, "children" | "onClick"> {
   /** What is measured. Also the tile's accessible name when it is a link/button. */
   label: ReactNode;
   /**

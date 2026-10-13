@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { CreditCard, Hourglass, PencilOff } from "lucide-react";
 
 import type { LabelOverride } from "../i18n/kit-labels";
@@ -29,7 +29,10 @@ export type BillingBannerKind =
   | "guest"
   | "processing";
 
-interface BillingBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onClick"> {
+/** A `div`'s props, `ref` included since 0.35 (round 0.35 R4, the follow-up to API-2): they
+ *  go on to the {@link AlertBanner}, so the ref is the banner's `<div>` — with an × too,
+ *  since the banner has no `href` or `onClick` that would make its row a link or a button. */
+interface BillingBannerBaseProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onClick"> {
   /**
    * Over the kind's tone: `trial-ending` and `grant-ending` are `info` until the last
    * three days and `warning` in them; `payment-failed` is `danger` (money did not
