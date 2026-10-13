@@ -15,7 +15,7 @@ are in [archive/i18n-history.md](archive/i18n-history.md).
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
 | 2 | Proposals, now the rules: | | |
-| | H1 translation review | ui-kit 0.19 (the parts, `kitLabelStrings`); server-kit 0.1 (`translation_review`) | the area scope (2026-10-02); ui-kit 0.28 (an area holds the kit's words of it) |
+| | H1 translation review | ui-kit 0.19 (the parts, `kitLabelStrings`); server-kit 0.1 (`translation_review`) | the area scope (2026-10-02); ui-kit 0.28 (an area holds the kit's words of it); DRAFT for server-kit 0.10 ([server-services §6](server-services-harmonization.md), round 0.37): the service behind a store port, server-kit's area rule gains the `<area>:` arm, `reviewer_first_name` / `reviewer_last_name`, one export shape |
 | | H2 language registry | ui-kit 0.19 (`KIT_LANGUAGES`, `resolveLanguage`, `loadUiKitLabels`, `formatLocaleOf`, `languageOptions`); 0.20 (`useUiKitLabels`, `peekUiKitLabels`) | refactor audit DOC-2 (the barrel, not an `i18n/languages` subpath) |
 | | H3 German is `de-CH` | app-side; the kit reads every German as `de-CH` (0.19, `resolveLanguage`) | |
 | | H4 register | ui-kit 0.18 (de-CH formal), 0.18.1 (es, it); the rest app-side | |

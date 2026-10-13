@@ -21,6 +21,9 @@ reviews raised the same day ("As recommended"). Everything is folded into the se
 below, and §8 says where each review point went. The build works from §4; each app's
 steps are §5.
 
+**§9 is a DRAFT for review (round 0.37):** KS's admin transfer of work as a type, and a
+retry for a notification mail that failed to send.
+
 ## 1. Where each one stands
 
 Read at kk `79b2949c` (`feat/kit-0.34`), ka `f2b9574` (`feat/kit-0.35`), KS `c687637`
@@ -922,6 +925,8 @@ passing its actor; the tables and migrations (the switches, the settings row wit
    invoices that run marked, and a run at start (`jobs.py:113`) after them sends nothing.
    A failed send is logged and not retried (there is no marker); the invoices stay marked
    and listed. The mail names the company, the count and the link: no tenant, no amount.
+   (Round 0.37's draft replaces this item's first three sentences: §9.2 decision 8.
+   kastlan may hold the overdue mail until §9 is settled.)
 7. **Mail plumbing:** the two headers on both transports (Resend's JSON gains `headers`,
    `email.py:81-87`; SMTP sets them on the message, :102-108); the footer line written by
    kastlan itself (no `render_mail`); the unsubscribe routes, the `/unsubscribe` page in
@@ -987,17 +992,18 @@ Every question the draft asked was answered on 2026-10-13. The answers are folde
 
 - Delaying a held push to the end of the window, and bundling several events in one
   mail: both need a queue (layer 2).
-- A retry for a notification mail that failed to send (kastlan's overdue mail, §5.2).
 - A switch per channel and per device beyond `app` / `email`.
 - A zone on the account, and one at sign-up: when a server-written time needs it.
 - The kit's inbox list and bell, once a second app keeps an inbox.
 - `pushsubscriptionchange`: re-registering a rotated subscription from the worker (today
   the old endpoint 410s and the person enables again).
-- KS: an admin's transfer of a person's work (`admin_service.py:435`) as a type
-  (Marcel, 2026-10-13: not this round).
 - kastlan's push (§5.2.5); any app's SMS or native push.
 - Open check at the build: the DKIM signature on a received notification mail covers
   both `List-Unsubscribe` headers (Gmail, "Show original"), as RFC 8058 requires.
+
+Two items that stood here moved to round 0.37's draft, §9: KS's admin transfer of a
+person's work as a type (§9.3), and a retry for a notification mail that failed to send
+(§9.4).
 
 ## 8. Settled after the reviews (2026-10-13)
 
@@ -1038,3 +1044,290 @@ questions the reviews raised the same day ("As recommended"). Where each point w
   change and an accepted invitation stay silent) → §1, §5.3; KS 1.7 (the wiring) → §5.3;
   KS §6 (`feedback_answered` on, with its rule; `share_granted` and `team_added` off;
   e-mail only; no zone) → decision 1, decision 6, §5.3.
+
+## 9. Round 0.37 amendment (DRAFT for review)
+
+Two items of §7, taken up for round 0.37 at Marcel's go (2026-10-13: "Sounds good,
+continue"): Kurvenschmiede's admin transfer of a person's work as a notification type
+(§9.3), and a retry for a notification mail that failed to send (§9.4). §1–§8 stand as
+settled; where this draft changes them it says so (§5.2.6 in decision 8, §3.4 in
+decision 9). If settled, it is built as server-kit 0.10 and ui-kit 0.37.
+
+### 9.1 Where each one stands
+
+Read at kk `c90d068e` (`feat/kit-0.34`), ka `8a7eb0b` (`feat/kit-0.36`: its working tree
+bumps the kits and nothing else, so no notification code yet), KS `bcadab6`
+(`refactor/plan-2026-10`: server-kit 0.8, no notification code) and server-kit `41dbc85`
+(0.9.0). Paths as in §1.
+
+**The transfer (KS):**
+- `admin_service.transfer` (`domain/services/admin_service.py:435-476`), from
+  `POST /admin/users/{id}/transfer` (`adapters/api/admin_router.py:319-338`, an admin
+  only): every row the source owns moves to the recipient, in the request's transaction,
+  and the answer is `moved`, a count per kind. The kinds are `WORK`'s six (:80-87):
+  projects, setpoint sessions, gears, transmissions, hysteresis sets, kinematics
+  mappings. Reports stay with their author (`REPORTS`, :89-95).
+- Refused onto the source itself, onto an inactive account and onto a customer
+  (:459-475); confirmed by the source's typed address. The source may be active or
+  deactivated (the docstring's case: "a colleague left").
+- The grants on the moved rows stay, now granted by the recipient; a grant the recipient
+  held on a moved row goes (`share_service.follow_transfer`, `share_service.py:414-433`).
+  `updated_at` is written back as it was, so the moved rows don't rise to the top of the
+  recipient's lists (`admin_service.py:451-453`).
+- One audit row, `transfer`, with `{to_user_id, moved}` (:508-510).
+- `transfer_rows` (:479-511) also serves the erasure's hand-over, where the erasing admin
+  is both actor and recipient (`erasure_service.py:384-386`).
+- No other admin action on an account mails the person: `set_role` (:261), `set_active`
+  (:323) and `require_password_change` (:378) write an audit row and nothing else.
+- The UI calls it "Hand on work" (`frontend/src/shared/i18n/locales/en.json:1648-1650`).
+  The kinds' plural words are the frontend's (`en.json:1621-1636`); KS's mail words have
+  no plural forms.
+- **A mail after the commit** has a precedent in KS: the password reset is rendered in the
+  request and sent by a background task after the answer, "the commit comes first"
+  (`password_reset_service.py:203-242`; `adapters/api/auth_router.py:533-552`).
+
+**A failed send today:**
+
+| | keksdose | kastlan | Kurvenschmiede |
+|---|---|---|---|
+| Transport | the kit's `ResendClient`: one retry on a transport error, a 429 or a 5xx, both tries under one random `Idempotency-Key` (server-kit `mail.py:468-472`, :519; `infrastructure/email.py:12-19`) | its own Resend POST, no retry, no `Idempotency-Key` (`infrastructure/email.py:72-95`); SMTP (:98-120) | the kit's `ResendClient` (`infrastructure/email.py:182-189`) |
+| Account mail | best effort, never raises; the person asks again (`email.py:16-19`) | the same (`email.py:16-17`) | the same; an invitation answers `sent` to the admin (`admin_router.py:449`) |
+| Billing notices (a job) | marker on success, committed per row; a failed mail is "owed again next run" while due (`domain/services/billing_notice_service.py:17-20`, :227-232) | one marker per company, set when **one** admin got it (`domain/services/billing_notices.py:73-85`) | marker on success, the row claimed `FOR UPDATE SKIP LOCKED` (`billing_notice_service.py:492-510`) |
+| Push | a failed device counts toward the reap; a push is never retried; `push_sent` on the inbox row records a success (`push_notifications.py:381-406`) | none | none |
+
+- **The precedent is billing §14.7:** the job reads what is owed from the state, sends,
+  sets the marker only when the send answered True, and commits per row; the window
+  (`NOTICE_LATE_LIMIT`, 3 days, server-kit `billing/notices.py:92`) bounds the retries.
+  The digest copies it (§3.4, `DIGEST_LATE_DAYS`).
+- **kastlan's overdue mail (§5.2.6, settled, not built) has no state to read back.**
+  `mark_overdue` is one UPDATE across companies (`domain/services/invoice_service.py:46-59`),
+  and the mail goes for "the invoices that run marked": the event lives only inside that
+  run, so a failed send has nothing to be retried from. The run at every start
+  (`infrastructure/jobs.py:112-113`) marks too, and on a Cloud Run that scales to zero a
+  start before the 00:10 run (:106) marks the day's invoices first.
+- kastlan's job routes answer 500 on a failure, which Cloud Scheduler retries
+  (`adapters/api/ops_router.py:6-9`). A send never raises, so a failed mail fails no route.
+- An invoice past its due date stays `OVERDUE` after a partial payment, and one entered
+  past its due date is `OVERDUE` from the start (`domain/services/invoice_logic.py:36-65`).
+
+### 9.2 Decisions
+
+1. **`work_transferred` is a Kurvenschmiede type, e-mail only, off by default.** By §2.1 a
+   type is on only when it fires only in answer to the person's own act. A transfer to
+   you is an admin's act, and the server holds no request of yours, so even a transfer
+   you asked an admin for doesn't count. It is `share_granted`'s case. **Rec:** off. The
+   one argument for on: the recipient becomes the granter of every share on the work
+   (§9.3), which they may want to know at once.
+2. **One recipient: the account the work goes to.** Not the actor (an admin who takes the
+   work themselves, §3.3 step 1), not the grantees (their access doesn't change), not the
+   former owner. That one is mostly deactivated ("a colleague left") and so sent nothing;
+   while active, a transfer of their work is like KS's other admin actions on an account,
+   none of which mails (§9.1). **Rec:** the recipient alone. Telling an active former
+   owner would be an account notice (§2.8), not this type (§9.7).
+3. **The mail names the actor, the former owner and the kinds of work: never a title,
+   never a count.** The former owner's name is what tells the recipient what arrived: the
+   moved rows keep their `updated_at` and sit among the recipient's own. Names are not
+   sealed in KS (§1); titles are. No count: a count per kind needs six nouns with plural
+   forms in seven languages, which KS's mail words don't have, and the lists show the
+   numbers. **Rec:** as stated. The alternative is "gears (12)", a count no language
+   inflects.
+4. **The hook is `admin_service.transfer`, not `transfer_rows`, and the mail goes after
+   the commit.** `transfer_rows` serves the erasure too, where the actor takes the work.
+   The mail is rendered in the request and sent by a background task after the answer,
+   the password reset's way, so a transfer that rolls back mails nothing. Nothing moved,
+   no mail. **Rec:** as stated, and "after the commit" for every notification mail a
+   request sends (KS's three of §5.3 too).
+5. **A notification mail a job sends is owed until it went, for 3 days; one a request
+   sends is tried once.**
+   - A job's event happens with nobody watching, and the mail may be the only word of it
+     (kastlan's overdue invoices). It is owed per recipient per event from the event's
+     day until `MAIL_LATE_DAYS` = 3 days after: billing's and the digest's grace.
+   - A request's mail goes once, with the transport's own retry, and a failure is logged.
+     Its event is in the app for the recipient to see (the shared project in their list,
+     the answer on their report, the work in their lists); a retry would need a stored
+     outbox and a job in every app, for a nudge.
+   - Push is not retried either: a failed push still has its inbox row (keksdose's
+     `push_sent`).
+
+   **Rec:** as stated.
+6. **The marker: per recipient, type and event, written only when the send answered
+   True.** The event key is the app's: stable, with no personal data and no sealed
+   content (kastlan: `<company_id>:<first overdue day>`). **No stored count of tries:** a
+   job tries once per scheduled run and never at the app's start, so the window holds it
+   to four tries. A failed try writes nothing. Markers are kept 30 days, so an operator
+   can tell whether a person was sent a mail (the logs never name the recipient).
+   **Rec:** as stated. kastlan's billing marker (one per company) stays: it is billing's.
+7. **Idempotency: one `Idempotency-Key` per recipient, event and day**,
+   `<type>:<event>:<user_id>:<YYYY-MM-DD>`. Two runs on one day (Cloud Scheduler's retry
+   of a failed route, a manual run) send one mail: Resend answers the second from the
+   first. The next day's try is a new key, so a count that changed in between is no
+   conflict at Resend. What is left: a mail Resend took but whose answer was lost twice
+   may go again the next day. The marker is written with `ON CONFLICT DO NOTHING`.
+   **Rec:** as stated.
+8. **kastlan's overdue mail reads its events from the state, not from the run.** An event
+   is a company's invoices that became overdue on one day: the invoices still `OVERDUE`
+   whose due date + 1 is that day. It is owed while that day is at most 3 days back.
+   `mark_overdue` stays as it is (no `RETURNING`); the run at start marks and sends no
+   mail; the scheduled run mails what is owed, whoever marked it. This replaces
+   §5.2.6's first three sentences; its last (the company, the count, the link) stays.
+   **Rec:** as stated.
+9. **In an app with no inbox, the digest's marker is written when the send answered
+   True**, not "when the mail is handed to the mailer" (§3.4), so a digest by mail
+   follows decision 6. No app has one; keksdose's marker stays on its inbox row.
+   **Rec:** as stated.
+
+### 9.3 `work_transferred` (Kurvenschmiede)
+
+```python
+NotificationType("work_transferred", app=None, email=False, quiet=False)  # after team_added
+```
+
+`quiet` is moot without push; `False` marks it person-sent, as `share_granted`.
+
+**When:** in `admin_service.transfer`, once `transfer_rows` has answered `moved`, for the
+recipient, through `plan_delivery(…, is_actor=recipient.id == actor.id,
+keeps_inbox=False)`:
+- **nothing** when every count is 0, when the recipient is the actor, or when the plan
+  says so (the switch off, which is the default, or the address unconfirmed);
+- never from the erasure's hand-over, never to the former owner or a grantee.
+
+`transfer` hands back the rendered mail beside `moved` (an `Outgoing`, as
+`password_reset_service.py:203`), and the route sends it with `background.add_task` after
+the answer, under `kind="work_transferred"`.
+
+**The words** (KS's, in seven languages; English here):
+- The card: "Work handed on to you"; description "When an administrator hands someone's
+  work on to you."
+- The mail, a `MailText` through `render_mail(…, unsubscribe=…)`, linking `app_link()`:
+  - subject: "Work handed on to you in Kurvenschmiede"
+  - intro: "Hello {name},"
+  - body: "{actor} has handed {owner}'s work on to you: {kinds}. It is yours now. Whoever
+    it was shared with keeps their access, and the shares are now yours."
+  - cta: "Open Kurvenschmiede"
+  - outro: "Questions about it go to {actor}."
+  - then the footer line with the unsubscribe link (§3.6).
+- `{kinds}`: the plural nouns of the kinds that moved, in `WORK`'s order, joined by the
+  language's separator (", "; zh "、"): "projects, gears, setpoint sessions". Six nouns
+  and a separator per language, new in KS's mail words.
+- `{actor}` and `{owner}`: each name in the **recipient's** language order (server-kit
+  `full_name(first, last, recipient.locale)`), not `display_name`, which is the named
+  account's own order. An empty name reads "An administrator" or "a colleague".
+- Never a title, a count or an address (decision 3).
+
+### 9.4 A notification mail that failed to send
+
+**The rule** (decisions 5–7), for a job that sends notification mail:
+1. Each scheduled run reads the events still due (`mail_due`), and for each its
+   recipients by §3.3's plan, read again at every try: a switch turned off, an address
+   no longer confirmed, an account deactivated or a role lost since the event, and
+   nothing goes.
+2. A recipient with a marker for (type, event) is skipped.
+3. The send to the provider carries `Idempotency-Key: <MailMarker.idempotency_key(today)>`
+   (a request header to Resend, not a mail header).
+4. Sent: the marker, `ON CONFLICT DO NOTHING`, committed per recipient. Not sent: logged
+   with the type and the event, never the address; nothing written; tried again at the
+   next scheduled run while due.
+5. Only the scheduled run sends. A run at the app's start does the job's other work and
+   sends no mail.
+6. The same job deletes markers older than `MAIL_MARKER_RETENTION` (30 days).
+
+A request's mail is tried once, after the commit, and a failure logged (decisions 4, 5).
+
+**What the app stores** (kastlan, the one app whose job sends notification mail):
+
+```sql
+notification_mail_sent (
+  user_id  <users' key> NOT NULL REFERENCES users ON DELETE CASCADE,
+  type_id  VARCHAR(40) NOT NULL,
+  event    VARCHAR(64) NOT NULL,
+  sent_at  TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (user_id, type_id, event)
+)
+```
+
+It goes with the account and is not in the export: it is a delivery record, as the
+mail's log lines are.
+
+### 9.5 Build
+
+**server-kit 0.10**, layer 1, no new dependency:
+- `notifications/retry.py`, re-exported from `notifications`:
+  - `MAIL_LATE_DAYS = 3`; `MAIL_MARKER_RETENTION = timedelta(days=30)`;
+    `MAIL_EVENT_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9:._-]{0,63}$"`.
+  - `mail_event(*parts: str | int | date) -> str`: the parts joined with `:`, a date as
+    ISO; `ValueError` outside the pattern or for an empty part. kastlan:
+    `mail_event(company_id, day)` → `"42:2026-10-13"`.
+  - `MailMarker(user_id: int | str, type_id: str, event: str)`, frozen; `ValueError` for a
+    type id outside `TYPE_ID_PATTERN` or an event outside the pattern.
+    `.idempotency_key(day: date) -> str` → `"invoices_overdue:42:2026-10-13:17:2026-10-14"`.
+  - `mail_due(event_day: date, today: date, *, sent: bool, late_days: int =
+    MAIL_LATE_DAYS) -> bool`: not sent, and `today` is 0 to `late_days` days after
+    `event_day`; a future `event_day` is not due.
+- `mail`, additive: `MailMessage.idempotency_key: str | None = None` (one line, at most
+  256 characters); `ResendClient` sends it as the `Idempotency-Key` of both tries instead
+  of the random `{kind}-{uuid}`; `ConsoleMailer` ignores it.
+- `timing`'s docstring as decision 9; the README's `notifications` section gains "a
+  failed send"; CHANGELOG.
+- Tests, at 100 %: the window's edges (day 0, day 3, day 4, a future day, `sent`); the
+  key's shape and each refusal; `mail_event` with a date and an int, an empty part, a
+  space; Resend's request with the field and without it.
+
+Size: S.
+
+**ui-kit 0.37:** nothing in `src/`. `work_transferred` is one app's type, so its words
+stay KS's (§2.1). The showcase's KS sample (`showcase/src/sections/notifications.tsx:206-218`)
+gains it as a fourth row, off. Size: XS.
+
+**Open checks at the build:** Resend keeps an idempotency key 24 hours and takes up to
+256 characters (its API docs); a second request with the same key while the first runs
+is a 409, which `ResendClient` reads as not sent, and the first run writes the marker.
+
+### 9.6 Per app
+
+**Kurvenschmiede** (with its 0.36 adoption, §5.3):
+1. The registry gains `work_transferred` (§9.3).
+2. The hook in `transfer`, the mail after the commit. The same for `share_granted`,
+   `team_added` and `feedback_answered` where a request sends them; the loop's
+   `--resolve` (`feedback_loop.py:176-222`) runs outside a request and sends inline.
+3. The words: the card's in the frontend catalogue; the mail's `MailText` in seven
+   languages with the six plural nouns and the separator; the mail-language test renders
+   it in each.
+4. Tests: no mail when nothing moved, to an admin who takes the work, from the erasure,
+   to the former owner, with the switch off (the default) or the address unconfirmed, or
+   when the transaction rolls back; the mail carries no title.
+
+**kastlan** (with its 0.36 adoption, §5.2):
+1. §5.2.6 as decision 8 amends it: `mark_overdue` unchanged; a step
+   `send_overdue_mail(session, today)` in the `invoices-overdue` job, run from the route
+   and the local scheduler, never from the start (`jobs.py:112-124`).
+2. Each run: the events of the last 3 days, by company and day (the invoices still
+   `OVERDUE`, not deleted, whose due date + 1 is that day), then §9.4's rule for each
+   staff recipient, the role checked in the event's company. The count is the event's
+   invoices still overdue at the send.
+3. The marker table (§9.4) and its migration; the job reads and writes it with the
+   bypass, as every job does.
+4. `send_email(…, idempotency_key=None)`: the header on Resend, nothing on SMTP.
+5. Tests: a failed send goes at the next run and a sent one doesn't; two runs on one day
+   send once; four days late, nothing; a start run sends nothing; a switch off, an
+   unconfirmed address, a tenant: nothing; staff in two companies: one mail each;
+   markers past 30 days go.
+
+**keksdose:** nothing. It sends no notification mail, and its push and inbox are
+unchanged (decision 5).
+
+### 9.7 For the reviews
+
+- **Kurvenschmiede:** (a) `work_transferred` off (decision 1), or on, for the shares the
+  recipient now grants? (b) The former owner named in the mail (decision 3)? (c) No
+  counts, or "gears (12)"? (d) An active former owner told nothing (decision 2), or an
+  account notice? (e) The link: the start page, or one of the lists? (f) After the commit
+  (decision 4): do KS's background tasks run after `db_session`'s commit for every route,
+  as `auth_router.py:533-537` says for the reset?
+- **kastlan:** (a) The overdue mail from the state (decision 8): its event key, and the
+  count read at the send? (b) The step inside `invoices-overdue`, or a job of its own?
+  (c) The marker table under RLS: a policy like every table's, or none, since only the
+  job reads it? (d) The header on its own Resend call, or the kit's `ResendClient` for
+  this mail (it takes plain text, `html=None`)?
+- **keksdose:** (a) Nothing to build: right? (b) Decision 9, for a digest by mail.
+- **Marcel:** decision 5's split (a job's mail retried, a request's not), and
+  decision 1.
