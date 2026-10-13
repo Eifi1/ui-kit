@@ -417,7 +417,7 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
   uv add "eifi1-server-kit[billing,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.8.0/eifi1_server_kit-0.8.0-py3-none-any.whl"          # Kurvenschmiede
   ```
 
-  sha256: `<sha256 at release>`
+  sha256: `e6a87ea3e5d61772e1ed6d6e5f3126662e4aa8316535cc7d4184958cb328860c`
 
 ## Where the build differs from the contracts
 

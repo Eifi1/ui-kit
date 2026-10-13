@@ -560,7 +560,7 @@ export const hu: Dictionary = {
       title: "Korlátok, hibák és CORS",
       short: "Korlátok",
       blurb:
-        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, és CORS néhány további originre.",
+        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, és az ütemező tokenje a feladatútvonalakon.",
     },
     "server-translation-review": {
       title: "Fordítások ellenőrzése",

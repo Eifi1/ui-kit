@@ -551,7 +551,7 @@ export const it: Dictionary = {
       title: "Limiti, errori e CORS",
       short: "Limiti",
       blurb:
-        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, e CORS per qualche origine in più.",
+        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, CORS per qualche origine in più e il token dello scheduler sulle rotte dei job.",
     },
     "server-translation-review": {
       title: "Revisione delle traduzioni",

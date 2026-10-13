@@ -562,7 +562,7 @@ export const de: Dictionary = {
       title: "Limits, Fehler & CORS",
       short: "Limits",
       blurb:
-        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, und CORS für einige zusätzliche Origins.",
+        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, CORS für einige zusätzliche Origins und das Token des Schedulers auf Job-Routen.",
     },
     "server-translation-review": {
       title: "Übersetzungsprüfung",

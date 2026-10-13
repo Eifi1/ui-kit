@@ -557,7 +557,7 @@ export const fr: Dictionary = {
       title: "Limites, erreurs et CORS",
       short: "Limites",
       blurb:
-        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, et CORS pour quelques origines supplémentaires.",
+        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, CORS pour quelques origines supplémentaires, et le jeton du planificateur sur les routes de tâches.",
     },
     "server-translation-review": {
       title: "Relecture des traductions",

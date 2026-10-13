@@ -961,6 +961,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "mail · Rendered mails",
     "mail · Functions",
     "mail · Classes",
+    "mail · Enums",
     "mail · Protocols",
     "mail · Constants",
   ],
@@ -984,6 +985,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "cors · Functions",
     "cors · Classes",
     "cors · Constants",
+    "jobs · Functions",
+    "jobs · Classes",
+    "jobs · Models",
+    "jobs · Constants",
   ],
   "server-translation-review": [
     "translation_review · Functions",

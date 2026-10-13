@@ -541,7 +541,7 @@ export const zh: Dictionary = {
       title: "限流、错误与 CORS",
       short: "限流",
       blurb:
-        "滑动窗口限流器及其计数所依据的地址、本套件的每种拒绝都以契约规定的状态码响应，以及为少量额外来源开放的 CORS。",
+        "滑动窗口限流器及其计数所依据的地址、本套件的每种拒绝都以契约规定的状态码响应、为少量额外来源开放的 CORS，以及作业路由上的调度器令牌。",
     },
     "server-translation-review": {
       title: "翻译审校",

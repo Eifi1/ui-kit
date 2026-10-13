@@ -560,7 +560,7 @@ export const en: Dictionary = {
       title: "Limits, errors & CORS",
       short: "Limits",
       blurb:
-        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, and CORS for a few extra origins.",
+        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, and the scheduler's token on job routes.",
     },
     "server-translation-review": {
       title: "Translation review",

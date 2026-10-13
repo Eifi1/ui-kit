@@ -554,7 +554,7 @@ export const es: Dictionary = {
       title: "Límites, errores y CORS",
       short: "Límites",
       blurb:
-        "El limitador de frecuencia de ventana deslizante y de quién es la dirección que cuenta, cada rechazo del kit respondido con el estado de su contrato, y CORS para algunos orígenes más.",
+        "El limitador de frecuencia de ventana deslizante y de quién es la dirección que cuenta, cada rechazo del kit respondido con el estado de su contrato, CORS para algunos orígenes más y el token del planificador en las rutas de tareas.",
     },
     "server-translation-review": {
       title: "Revisión de traducciones",
