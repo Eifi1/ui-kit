@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { StoreApi, UseBoundStore } from "zustand";
 import { logger } from "../lib/logger";
+import { registerDeviceSetting } from "../lib/device-settings";
 import type { HeatStops } from "./chart-palette";
 import { applyTokenSet, DEFAULT_PRESET, presetById, type TokenSet } from "./palette-presets";
 import type { ThemeState, ThemeMode } from "./theme-store";
@@ -56,6 +57,17 @@ export function createPaletteStore(
       "palette",
     ),
   );
+  // Reset this device's settings (docs/settings-harmonization.md §11.4): the Default
+  // palette, STATE ONLY. `useApplyPalette`, where the app mounts it, re-applies through
+  // its effect. Never an imperative `applyTokenSet` here: it would remember a token set
+  // on <html>, and an app without a palette layer (Kurvenschmiede) would then take the
+  // contrast store's palette branch, where a theme switch no longer re-writes the stepped
+  // tokens (KS 3.3).
+  registerDeviceSetting({
+    key: storageKey,
+    kind: "appearance",
+    reset: () => usePalette.getState().setId(DEFAULT_PRESET.id),
+  });
 
   /** Apply the active preset's tokens to <html> as inline CSS custom properties,
    *  re-applying when the preset or the light/dark theme changes. Tailwind v4

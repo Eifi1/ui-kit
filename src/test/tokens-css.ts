@@ -11,6 +11,8 @@ import type { TokenSet } from "../theme/palette-presets";
  * contrast has to do the cascade itself. This is that cascade, deliberately small:
  * - the top-level `:root`, `.dark` and `:root, .dark` blocks, in source order (the same
  *   specificity, so the later one wins, as in the browser); `.dark` blocks only in dark;
+ *   in light under More contrast, the `:root[data-contrast="more"]:not(.dark)` block over
+ *   them (it outranks them);
  * - over them, what `applyTokenSet` writes inline for a token set, at either contrast
  *   level — or, for an app without a palette layer, what the mirror holds plus the same
  *   contrast step, which is the same values;
@@ -60,25 +62,37 @@ const SELECTORS: Record<ThemeMode, string[]> = {
   dark: [":root", ".dark", ":root, .dark"],
 };
 
-/** Every custom property the cascade on `<html>` sees in `mode`, later blocks winning. */
-export function tokensCssDeclarations(css: string, mode: ThemeMode): Map<string, string> {
+/** The light More-contrast block (0.36, colour-roles §13.4): `(0,3,0)`, so it wins over
+ *  the blocks above whatever the source order; `.dark` on <html> leaves it out. */
+const MORE_LIGHT = ':root[data-contrast="more"]:not(.dark)';
+
+/**
+ * Every custom property the cascade on `<html>` sees in `mode`, later blocks winning —
+ * and, in light with `more`, the More-contrast block over them all. Never in dark.
+ */
+export function tokensCssDeclarations(css: string, mode: ThemeMode, more = false): Map<string, string> {
   const out = new Map<string, string>();
+  const moreLight = new Map<string, string>();
   for (const { selector, body } of topLevelBlocks(stripComments(css))) {
-    if (!SELECTORS[mode].includes(selector.replace(/\s+/g, " "))) continue;
+    const sel = selector.replace(/\s+/g, " ");
+    const into = SELECTORS[mode].includes(sel) ? out : mode === "light" && more && sel === MORE_LIGHT ? moreLight : null;
+    if (!into) continue;
     for (const [, name, value] of body.matchAll(/(--[a-zA-Z0-9-]+)\s*:\s*([^;]+);/g)) {
-      out.set(name, value.trim());
+      into.set(name, value.trim());
     }
   }
+  for (const [name, value] of moreLight) out.set(name, value);
   return out;
 }
 
-/** The inline values `applyTokenSet` writes for `t`, stepped under More contrast. */
+/** The inline values `applyTokenSet` writes for `t`, stepped under More contrast — in a
+ *  light set the well and the money too. */
 export function inlineTokens(t: TokenSet, more: boolean): Map<string, string> {
   const step = more ? contrastStep(t) : null;
   const out = new Map<string, string>([
     ["--bg-page", t.bgPage],
     ["--bg-surface", t.bgSurface],
-    ["--bg-surface-2", t.bgSurface2],
+    ["--bg-surface-2", step?.well?.bgSurface2 ?? t.bgSurface2],
     ["--border", step?.border ?? t.border],
     ["--text-primary", t.textPrimary],
     ["--text-secondary", step?.textSecondary ?? t.textSecondary],
@@ -86,10 +100,10 @@ export function inlineTokens(t: TokenSet, more: boolean): Map<string, string> {
     ["--brand", t.brand],
     ["--brand-hover", t.brandHover],
     ["--brand-contrast", t.brandContrast],
-    ["--money-income", t.moneyIncome],
-    ["--money-expense", t.moneyExpense],
-    ["--money-net", t.moneyNet],
-    ["--money-neutral", t.moneyNeutral],
+    ["--money-income", step?.well?.moneyIncome ?? t.moneyIncome],
+    ["--money-expense", step?.well?.moneyExpense ?? t.moneyExpense],
+    ["--money-net", step?.well?.moneyNet ?? t.moneyNet],
+    ["--money-neutral", step?.well?.moneyNeutral ?? t.moneyNeutral],
   ]);
   if (step) out.set("--text-placeholder", step.textPlaceholder);
   t.chart.forEach((c, i) => out.set(`--chart-${i + 1}`, c));
@@ -216,7 +230,7 @@ export class ResolvedTokens {
  * `t` is the preset's set for that mode; `css` the stylesheet's text.
  */
 export function resolveTokens(css: string, t: TokenSet, mode: ThemeMode, more: boolean): ResolvedTokens {
-  const values = tokensCssDeclarations(css, mode);
+  const values = tokensCssDeclarations(css, mode, more);
   for (const [name, value] of inlineTokens(t, more)) values.set(name, value);
   return new ResolvedTokens(values);
 }

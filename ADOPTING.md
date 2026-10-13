@@ -75,6 +75,19 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    `TEXT_SIZE_INLINE_SCRIPT` and the two root rules (README → Styling → "Before the
    first paint"), and add the script's hash if you run a hash-based CSP.
 
+   The four stores join the **device reset** on their own (0.36,
+   docs/settings-harmonization.md §11), as do `UiKitProvider` (its tables' prefix) and
+   `AppShell` (the sidebar). Register what else this device keeps of your app's look and
+   views, at module scope beside the store that owns it, with a `reset` through the
+   store's own setter for anything held in memory:
+   ```ts
+   registerDeviceSetting({ key: "<app>-date-format", kind: "appearance", reset: () => useDateFormat.getState().setPref(DEFAULT) });
+   registerDeviceSetting({ key: "<app>.pageParams.", prefix: true, kind: "view" }); // read at the next mount
+   ```
+   Never the sign-in, the session or anything waiting to be sent. `DeviceResetSetting`
+   is the last card of your appearance group, with its catalogue entry
+   (`DEVICE_RESET_ANCHOR`).
+
 5. **Labels: one provider, the shipped catalogues.** Every word the kit renders is a
    label with an English default, and the kit ships its own words in seven languages.
    Your app decides the language and hands the kit's catalogue to one provider at the

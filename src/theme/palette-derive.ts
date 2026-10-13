@@ -13,7 +13,8 @@ import {
   solveLightness,
 } from "./color";
 import type { CvdType, Oklch } from "./color";
-import { brandSoft, hoverFill } from "./contrast-tokens";
+import type { ContrastLevel } from "./contrast";
+import { brandSoft, contrastStep, hoverFill, steppedWellFill, WELL_STEP_MIN } from "./contrast-tokens";
 
 /**
  * Build a whole palette from one brand colour, plus any number of colours pinned by
@@ -104,6 +105,8 @@ export interface ContrastReport {
 export interface DerivedPalette {
   tokens: TokenSet;
   semantic: SemanticTokens;
+  /** {@link auditPalette} at both contrast levels: the More-contrast checks carry a
+   *  " (More contrast)" suffix (0.36). */
   audit: ContrastReport;
   /** Compromises the deriver had to make, in plain words. Never silent. */
   warnings: string[];
@@ -310,15 +313,24 @@ export function derivePalette({
   // ── Brand. Keep the hue the caller asked for; move only the lightness, and only as
   // far as 3:1 against the worst surface — WCAG 1.4.11, since a brand-filled control is
   // a graphical object whose boundary has to be perceivable.
+  //
+  // In light the worst surface includes More contrast's well (0.36, colour-roles §13.4):
+  // 10 % ink into the card, darker than the page. The step is applied, not derived, but
+  // the brand is not stepped, so both brand solves measure there too and a derived
+  // palette holds at both levels.
+  const moreWell = steppedWellFill({ textPrimary, bgSurface: surfaces.bgSurface });
+  const brandGround = moreWell
+    ? [worstSurface, moreWell].reduce((a, b) => (contrast(a, "#000000") < contrast(b, "#000000") ? a : b))
+    : worstSurface;
   const brandChroma = Math.max(brand.c, 0.06);
-  const brandRatio = contrast(anchors.brand, worstSurface);
+  const brandRatio = contrast(anchors.brand, brandGround);
   // NORMALISED, never the caller's raw string. `parseHex` accepts "4f46e5" and "#abc",
   // and passing either through unchanged put a value in the TokenSet that is not a CSS
   // colour — it then fails silently at paint time, three layers from here.
   let brandHex =
     brandRatio >= 3
       ? toHex(parseHex(anchors.brand)!)
-      : solveAgainst(brand.h, brandChroma, 3, worstSurface, mode);
+      : solveAgainst(brand.h, brandChroma, 3, brandGround, mode);
   if (brandRatio < 3) {
     warnings.push(
       `brand ${anchors.brand} sits at ${brandRatio.toFixed(2)}:1 against the ${mode} surfaces, ` +
@@ -338,6 +350,8 @@ export function derivePalette({
       contrast(soft.brandMuted, worstText),
       contrast(soft.brandMuted, soft.brandBg),
       contrast(soft.brandMuted, soft.brandBgHover),
+      // …and on More contrast's light well, where a link button reads it (§13.3).
+      moreWell ? contrast(soft.brandMuted, moreWell) : Infinity,
     );
   };
   for (let i = 0; i < 40 && brandMutedWorst(brandHex) < 4.5; i++) {
@@ -525,7 +539,15 @@ export function derivePalette({
     heat: deriveHeat(moneyIncome, moneyExpense, surfaces, mode),
   };
 
-  return { tokens, semantic, audit: auditPalette(tokens, semantic), warnings };
+  // Audited at both contrast levels (0.36, colour-roles §13.5): More contrast steps the
+  // text, the border and, in light, the well and money of this set. The derived semantic
+  // colours are audited at Standard only: they are solved for the standard grounds, and
+  // only tokens.css's shipped literals step for the darker well.
+  const standard = auditPalette(tokens, semantic);
+  const more = auditPalette(tokens, undefined, { level: "more" });
+  const checks = [...standard.checks, ...more.checks];
+  const failures = checks.filter((c) => !c.passes);
+  return { tokens, semantic, audit: { checks, failures, passes: failures.length === 0 }, warnings };
 }
 
 /**
@@ -560,8 +582,40 @@ function deriveHeat(
  * This is the part the shipped presets were missing. `derivePalette` runs it on the way
  * out, and the preset test runs it over everything the package ships, so a palette that
  * does not hold up cannot be merged with a comment claiming that it does.
+ *
+ * **`level: "more"`** (0.36, docs/colour-roles-harmonization.md §13.5) measures the set as
+ * More contrast paints it: the stepped secondary, muted and border, and in a light set the
+ * stepped well (as `bgSurface2`) and money — the same pairs, named with a " (More
+ * contrast)" suffix. Two things change with the level: the border is a field's boundary
+ * there, held to WCAG 1.4.11's 3:1 rather than the hairline's 1.1, and a light set's well
+ * must stand {@link WELL_STEP_MIN}:1 from the card. Pass `semantic` with tokens.css's More
+ * literals for a light set (the status colours step there); the status text is then
+ * measured on the stepped well too.
  */
-export function auditPalette(t: TokenSet, semantic?: SemanticTokens): ContrastReport {
+export function auditPalette(
+  set: TokenSet,
+  semantic?: SemanticTokens,
+  options: { level?: ContrastLevel } = {},
+): ContrastReport {
+  const more = options.level === "more";
+  const step = more ? contrastStep(set) : null;
+  // The set as it paints at this level: what `applyTokenSet` writes for it.
+  const t: TokenSet = step
+    ? {
+        ...set,
+        textSecondary: step.textSecondary,
+        textMuted: step.textMuted,
+        border: step.border,
+        ...(step.well && {
+          bgSurface2: step.well.bgSurface2,
+          moneyIncome: step.well.moneyIncome,
+          moneyExpense: step.well.moneyExpense,
+          moneyNet: step.well.moneyNet,
+          moneyNeutral: step.well.moneyNeutral,
+        }),
+      }
+    : set;
+  const suffix = more ? " (More contrast)" : "";
   const checks: ContrastCheck[] = [];
   const surfaces: Array<[string, string]> = [
     ["bgPage", t.bgPage],
@@ -585,12 +639,17 @@ export function auditPalette(t: TokenSet, semantic?: SemanticTokens): ContrastRe
   const add = (pair: string, fg: string, bg: string, required: number, rule: string) => {
     const ratio = contrast(fg, bg);
     const slack = MIXED.test(pair) ? 0.05 : 0;
-    checks.push({ pair, ratio, required, rule, passes: ratio >= required - slack });
+    checks.push({ pair: pair + suffix, ratio, required, rule, passes: ratio >= required - slack });
   };
 
   for (const [name, bg] of surfaces) {
     add(`brand on ${name}`, t.brand, bg, 3, "WCAG 1.4.11 graphical object");
-    add(`border on ${name}`, t.border, bg, 1.1, "house rule: a hairline must be findable");
+    if (more) add(`border on ${name}`, t.border, bg, 3, "WCAG 1.4.11 — under More contrast a border bounds a field");
+    else add(`border on ${name}`, t.border, bg, 1.1, "house rule: a hairline must be findable");
+  }
+  // The stepped light well, a hex `applyTokenSet` writes (§13.3, decision 2).
+  if (step?.well) {
+    add("bgSurface2 on bgSurface", t.bgSurface2, t.bgSurface, WELL_STEP_MIN, "house rule: the well stands two hover steps from the card");
   }
   for (const [name, bg] of textGrounds) {
     add(`textPrimary on ${name}`, t.textPrimary, bg, 7, "WCAG 1.4.6 AAA body text");
@@ -628,6 +687,8 @@ export function auditPalette(t: TokenSet, semantic?: SemanticTokens): ContrastRe
     ] as const) {
       add(`${name} on bgSurface`, fg, t.bgSurface, 4.5, "WCAG 1.4.3 — rendered as text");
       add(`${name} on bgHover`, fg, hover, 4.5, "WCAG 1.4.3 — rendered as text, on a hovered row");
+      // The darker light well the More literals were solved for (§13.3).
+      if (step?.well) add(`${name} on bgSurface2`, fg, t.bgSurface2, 4.5, "WCAG 1.4.3 — rendered as text, on the well");
     }
     add("danger on dangerBg", semantic.danger, semantic.dangerBg, 4.5, "WCAG 1.4.3 — badge text");
     add("warning on warningBg", semantic.warning, semantic.warningBg, 4.5, "WCAG 1.4.3 — badge text");

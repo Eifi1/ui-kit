@@ -35,7 +35,7 @@ snapshot of the three apps, the per-repo to-dos and the review list as written a
 | 8 | Per repo | — (archived) | |
 | 9 | Order | — (archived) | |
 | 10 | Settled after the reviews | — | an index: each item points to its § |
-| 11 | Reset this device's settings | — (round 0.36: settled 2026-10-13, building in ui-kit 0.36) | §11.7 (the reviews; round decisions 10, 11) |
+| 11 | Reset this device's settings | — (round 0.36: settled 2026-10-13, built for ui-kit 0.36.0) | §11.7 (the reviews; round decisions 10, 11) |
 
 ## 1. Where each one stands
 
@@ -209,6 +209,9 @@ hit, ⌘K, a tour and a mail link all use it.
 - `TwoFactorSetting` has a title ("Two-factor authentication") with an On/Off chip.
 - Destructive cards (`DeleteAccountSetting`, keksdose's "erase all data") go last in
   the "data" group, in the `danger` tone.
+- `DeviceResetSetting` ("Reset this device", 0.36, §11.4) goes last in the "appearance"
+  group, in the default tone, with its catalogue entry (`DEVICE_RESET_ANCHOR`) last there
+  too.
 
 ## 4. The catalogue
 
@@ -254,7 +257,7 @@ interface SettingsEntry<G extends string = string> {
 
 | Group | Holds |
 |---|---|
-| `appearance` | language, theme, text size and contrast (text-size §6), palette, date format, density |
+| `appearance` | language, theme, text size and contrast (text-size §6), palette, date format, density; last, the device reset (§11) |
 | `account` | profile, email change, the app's memberships (kastlan's companies, KS's pending shares) |
 | `security` | password, 2FA, passkeys, sessions, API tokens |
 | *app groups* | the app's own (keksdose: privacy, assistant, interaction) |
@@ -371,7 +374,7 @@ server-kit's `ProfileUpdate` follows the rule.
   so a new device that adopts the account's language gets the matching format anyway.
   It would move to the account only once the server renders a date as text.
 - Putting this device's settings back to their defaults, in one action, is §11
-  (round 0.36: settled 2026-10-13, building in ui-kit 0.36).
+  (round 0.36: settled 2026-10-13, built for ui-kit 0.36.0).
 
 ### 6.4 Notifications (the notifications round)
 
@@ -498,7 +501,7 @@ above, is folded into it and points there. The reviews' wording is in
 
 ## 11. Reset this device's settings (round 0.36; settled 2026-10-13)
 
-**Settled 2026-10-13, building in ui-kit 0.36.** §6.3 keeps the theme, the palette, the
+**Settled 2026-10-13, built for ui-kit 0.36.0.** §6.3 keeps the theme, the palette, the
 date format and keksdose's gestures on the device, and nothing puts them back. Someone who
 hid a table's column, picked a palette or a text size on a shared device undoes each by
 hand, or clears the site's data, which also signs them out and drops the offline copy with
@@ -767,7 +770,11 @@ export function resetDeviceSettings(): string[];
 - `UiKitProvider`, while mounted: view, `prefix: true`, the prefix its tables use
   (`tableStorageKeyPrefix`, else the outer provider's, else `hbui-table:`,
   `DEFAULT_PERSIST_PREFIX`); no `reset`, since a table reads its view at mount. A table
-  with a `storageKeyPrefix` prop of its own is the app's to register.
+  with a `storageKeyPrefix` prop of its own is the app's to register. *Built:* it joins a
+  microtask after it mounts, through a literal `import()` of the registry, because every
+  catalogue reaches `kit-labels` and a catalogue may reach nothing outside `i18n/`
+  (`scripts/check-module-graph.mjs`); a test that reads `deviceSettings()` right after a
+  render waits for it (`await waitFor(…)`).
 - `AppShell`, while mounted and only with a collapse key: view; `setCollapsed(false)`,
   whose effect writes `"0"`. An embedded shell without a key stores nothing and joins
   nothing.
@@ -870,7 +877,8 @@ skips the setter's side effect (keksdose's `setPrivacyMode` → `applyDemoModeCl
     state-only reset changes nothing it shows;
   - `storage-keys.ts` gains `KIND_OF: Record<keyof typeof STORAGE, "appearance" | "view" |
     "never">` beside `ENTRY_OF`. `storage-keys.test.ts` renders the app's providers and
-    shell (so the kit's parts join), then holds `deviceSettings()` to exactly the keys
+    shell (so the kit's parts join; the provider's a microtask later, §11.4), then holds
+    `deviceSettings()` to exactly the keys
     `KIND_OF` marks appearance or view, kinds equal; its `SITES` (the calls that hand a key
     to storage) gains `registerDeviceSetting`;
   - the card and its entry.

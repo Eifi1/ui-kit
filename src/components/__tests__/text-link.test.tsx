@@ -45,6 +45,25 @@ describe("TextLink", () => {
     expect(screen.getByRole("link", { name: "C" }).className).not.toMatch(/text-\[var/);
   });
 
+  it("reads the brand as text under More contrast, at rest and hovered; other tones keep their colour (0.36)", () => {
+    // colour-roles §13.3 decision 8: `--brand` is a mark (3:1), `--brand-muted` the brand as text.
+    render(
+      <>
+        <TextLink href="/a">A</TextLink>
+        {(["muted", "danger", "inherit", "primary", "secondary", "warning"] as const).map((tone) => (
+          <TextLink key={tone} href={`/${tone}`} tone={tone}>
+            {tone}
+          </TextLink>
+        ))}
+      </>,
+    );
+    const brand = screen.getByRole("link", { name: "A" });
+    expect(brand).toHaveClass("contrast:text-brand-muted", "contrast:hover:text-brand-muted");
+    for (const tone of ["muted", "danger", "inherit", "primary", "secondary", "warning"]) {
+      expect(screen.getByRole("link", { name: tone }).className, tone).not.toContain("brand-muted");
+    }
+  });
+
   it("goes through the provider's linkComponent; its own renderLink wins", () => {
     render(
       <UiKitProvider linkComponent={routerLink}>

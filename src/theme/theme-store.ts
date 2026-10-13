@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { logger } from "../lib/logger";
+import { registerDeviceSetting } from "../lib/device-settings";
 
 export type ThemeMode = "light" | "dark";
 /** What the user chose; "system" tracks the OS `prefers-color-scheme`. */
@@ -116,6 +117,15 @@ export function createThemeStore(storageKey: string) {
       "theme",
     ),
   );
+  // Reset this device's settings (docs/settings-harmonization.md §11.4): back to
+  // "System" through the setter, which re-resolves `mode`; `useApplyTheme` puts the
+  // class back and follows the OS again, and the persisted blob is what the pre-paint
+  // `applyPersistedTheme` reads next load.
+  registerDeviceSetting({
+    key: storageKey,
+    kind: "appearance",
+    reset: () => useTheme.getState().setPreference("system"),
+  });
 
   function useApplyTheme(): void {
     const mode = useTheme((s) => s.mode);

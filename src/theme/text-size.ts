@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { logger } from "../lib/logger";
 import { readStored } from "../lib/safe-storage";
+import { registerDeviceSetting } from "../lib/device-settings";
 
 /**
  * The text size (docs/text-size-harmonization.md §2.1, §3.1, §10.3, §10.6).
@@ -267,6 +268,13 @@ export function createTextSizeStore(storageKey: string) {
       "text-size",
     ),
   );
+  // Reset this device's settings (docs/settings-harmonization.md §11.4): no choice on
+  // this device, so `useApplyTextSize` re-resolves to the account's size, else Normal.
+  registerDeviceSetting({
+    key: storageKey,
+    kind: "appearance",
+    reset: () => useTextSizeStore.getState().setSize(null),
+  });
 
   function useApplyTextSize({ account }: ApplyTextSizeOptions = {}): TextSize {
     const device = useTextSizeStore((s) => s.size);

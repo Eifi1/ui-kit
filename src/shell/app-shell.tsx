@@ -8,6 +8,7 @@ import { cn } from "../lib/cn";
 import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { dirOf, type Direction } from "../lib/direction";
 import { readStored, writeStored } from "../lib/safe-storage";
+import { registerDeviceSetting } from "../lib/device-settings";
 import { Tooltip } from "../components/tooltip";
 import { pickLinkRenderer } from "../components/text-link";
 import { DialogFrame } from "../components/dialog-frame";
@@ -394,6 +395,13 @@ export function AppShell({
   useEffect(() => {
     if (collapseStorageKey !== null) writeStored(collapseStorageKey, collapsed ? "1" : "0");
   }, [collapsed, collapseStorageKey]);
+  // Reset this device's settings (docs/settings-harmonization.md §11.4): the sidebar
+  // unfolds, live, and the effect above writes "0". An embedded shell without a key of
+  // its own stores nothing and joins nothing.
+  useEffect(() => {
+    if (collapseStorageKey === null) return;
+    return registerDeviceSetting({ key: collapseStorageKey, kind: "view", reset: () => setCollapsed(false) });
+  }, [collapseStorageKey]);
   // §4: at Large and Extra large the sidebar never collapses to icons only — a glyph
   // with its name in a tooltip is the very thing a reader who asked for bigger type
   // cannot use. The persisted preference is left alone, so Normal gets it back, and the

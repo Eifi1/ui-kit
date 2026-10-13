@@ -472,7 +472,8 @@ export function presetById(id: string): PalettePreset {
  * element, which is what that list was standing in for.
  *
  * **More contrast (0.32, docs/text-size-harmonization.md §5, §10.5).** With `contrast`
- * the text and border tokens are written one step stronger, and `--text-placeholder` —
+ * the text and border tokens are written one step stronger — in a light set the well and
+ * the four money colours too (0.36, docs/colour-roles-harmonization.md §13) — and `--text-placeholder` —
  * otherwise derived in tokens.css — is written inline too; without it that inline
  * placeholder is removed again, so the stylesheet's formula applies. The step is made
  * HERE because these tokens are inline: no `[data-contrast=more]` rule could beat them.
@@ -491,7 +492,9 @@ export function applyTokenSet(
   const step = contrast ? contrastStep(t) : null;
   el.style.setProperty("--bg-page", t.bgPage);
   el.style.setProperty("--bg-surface", t.bgSurface);
-  el.style.setProperty("--bg-surface-2", t.bgSurface2);
+  // The light well and money step under More contrast (0.36, colour-roles §13); in dark
+  // and at Standard `well` is null and the set's own are written.
+  el.style.setProperty("--bg-surface-2", step?.well?.bgSurface2 ?? t.bgSurface2);
   el.style.setProperty("--border", step?.border ?? t.border);
   el.style.setProperty("--text-primary", t.textPrimary);
   el.style.setProperty("--text-secondary", step?.textSecondary ?? t.textSecondary);
@@ -501,9 +504,9 @@ export function applyTokenSet(
   el.style.setProperty("--brand", t.brand);
   el.style.setProperty("--brand-hover", t.brandHover);
   el.style.setProperty("--brand-contrast", t.brandContrast);
-  el.style.setProperty("--money-income", t.moneyIncome);
-  el.style.setProperty("--money-expense", t.moneyExpense);
-  el.style.setProperty("--money-net", t.moneyNet);
-  el.style.setProperty("--money-neutral", t.moneyNeutral);
+  el.style.setProperty("--money-income", step?.well?.moneyIncome ?? t.moneyIncome);
+  el.style.setProperty("--money-expense", step?.well?.moneyExpense ?? t.moneyExpense);
+  el.style.setProperty("--money-net", step?.well?.moneyNet ?? t.moneyNet);
+  el.style.setProperty("--money-neutral", step?.well?.moneyNeutral ?? t.moneyNeutral);
   t.chart.forEach((c, i) => el.style.setProperty(`--chart-${i + 1}`, c));
 }

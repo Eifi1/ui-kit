@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Button } from "../button";
+import { buttonClasses } from "../button-look";
 import { IconButton } from "../icon-button";
 
 describe("Button tone (keksdose's quiet links)", () => {
@@ -30,6 +31,59 @@ describe("Button tone (keksdose's quiet links)", () => {
   it("ignores a tone on a boxed variant", () => {
     render(<Button tone="muted">Save</Button>);
     expect(screen.getByRole("button").className).not.toContain("text-secondary");
+  });
+});
+
+describe("a link's brand under More contrast (0.36, colour-roles §13.3 decision 8)", () => {
+  it("reads --brand-muted, the brand as text, on a default link and in buttonClasses('link')", () => {
+    render(<Button variant="link">Resend code</Button>);
+    expect(screen.getByRole("button")).toHaveClass("text-brand", "contrast:text-brand-muted");
+    expect(buttonClasses("link").split(" ")).toContain("contrast:text-brand-muted");
+    // A boxed variant has no brand text to step.
+    expect(buttonClasses("secondary")).not.toContain("brand-muted");
+  });
+
+  it("keeps a muted or danger link quiet: the tone's own colour wins under the variant too", () => {
+    render(
+      <>
+        <Button variant="link" tone="muted">
+          Mark undone
+        </Button>
+        <Button variant="link" tone="danger">
+          Remove split
+        </Button>
+      </>,
+    );
+    for (const name of ["Mark undone", "Remove split"]) {
+      const cls = screen.getByRole("button", { name }).className;
+      expect(cls, name).not.toContain("brand-muted");
+      expect(cls.split(" "), name).toContain("contrast:text-secondary");
+    }
+  });
+
+  it("gives a pressed link the brand as text at rest and hovered, whatever its tone", () => {
+    render(
+      <>
+        <Button variant="link" pressed>
+          Plain
+        </Button>
+        <Button variant="link" tone="muted" pressed>
+          Muted
+        </Button>
+        <Button variant="link" tone="danger" pressed>
+          Danger
+        </Button>
+      </>,
+    );
+    for (const name of ["Plain", "Muted", "Danger"]) {
+      const button = screen.getByRole("button", { name, pressed: true });
+      expect(button, name).toHaveClass(
+        "contrast:text-brand-muted",
+        "contrast:hover:text-brand-muted",
+        "contrast:disabled:hover:text-brand-muted",
+      );
+      expect(button.className, name).not.toContain("contrast:text-secondary");
+    }
   });
 });
 

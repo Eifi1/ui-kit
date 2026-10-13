@@ -47,6 +47,12 @@ const TEXT_SIZE_CSS = [
   ["the Extra large root size", /html\[data-text-size="?xlarge"?\]\{font-size:150%\}/],
   ["the focus frame's width", /:root\{--focus-ring-width:2px\}/],
   ["the focus frame under More contrast", /:root\[data-contrast="?more"?\]\{--focus-ring-width:3px\}/],
+  // 0.36 (docs/colour-roles-harmonization.md §13.4): the light literals and `--bg-active`
+  // step for More contrast's darker well, in a block of custom properties only — and the
+  // link's brand as text under the `contrast:` variant reaches the built CSS.
+  ["the light More-contrast literals", /:root\[data-contrast="?more"?\]:not\(\.dark\)\{[^}]*--danger:#ba0739/],
+  ["the light More-contrast --bg-active", /:root\[data-contrast="?more"?\]:not\(\.dark\)\{[^}]*--bg-active:color-mix\(in oklab, ?var\(--text-primary\) ?16%, ?var\(--bg-surface\)\)/],
+  ["the link's brand as text under More contrast", /\.contrast\\:text-brand-muted:where\([^)]*data-contrast=more[^{]*\{color:var\(--brand-muted\)\}/],
   ["md: at Normal, scoped", /@media \(width>=48rem\)\{\.md\\:[^{]*:where\(:not\(\[data-text-size\$=large\] \*\)\)\{/],
   ["md: at Large", /@media \(width>=60rem\)\{\.md\\:[^{]*:where\(\[data-text-size=large\] \*\)\{/],
   ["md: at Extra large", /@media \(width>=72rem\)\{\.md\\:[^{]*:where\(\[data-text-size=xlarge\] \*\)\{/],
