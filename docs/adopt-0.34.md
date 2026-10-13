@@ -19,6 +19,31 @@ invisible to an app; what an app sees is in §1–§3 below. Deprecations it add
 **Nothing has to be switched on to adopt 0.34**, and billing stays off. The Paddle sandbox
 checks (billing §14.15) come after Marcel's sandbox run, in a later round.
 
+## 0.34.1
+
+From the three apps' 0.34 adoptions. Bump to `^0.34.1`; server-kit stays 0.8.0.
+
+- **`@eifi1/ui-kit/currencies`** (keksdose): a pure-data entry — no React, no CSS, no other kit
+  module — exporting `CURRENCIES` and `CURRENCY_COUNTRIES` (`Record<string, string>`, currency
+  code → lowercase ISO country code, flag-icons' file names). A build plugin imports it in Node
+  instead of parsing a dist file, which moved in 0.34. keksdose: `import { CURRENCY_COUNTRIES }
+  from "@eifi1/ui-kit/currencies"` and drop the dist-path parse.
+- **`setViewportWidth(width)`** in `@eifi1/ui-kit/testing` (keksdose): changes an active
+  `stubViewportWidth` stub and fires `change` on every media query, so a test can simulate a live
+  resize.
+- **Escape inside a dialog** (Kurvenschmiede): a dialog's own `onKeyDown` sees Escape only while
+  the dialog is the topmost layer; with a tooltip, menu or list open inside, the first press
+  closes that, the next reaches the dialog's handler (KS's gear wizard asks to discard on the
+  second press).
+- **TranslationReviewPanel under `groupBy`** (Kurvenschmiede) remembers the sort and page size
+  under the same `storageKey` as the ungrouped table.
+- **The wake notice's French and Italian words** follow keksdose's reviewed ones.
+- **Corrections to this guide**, made in place: the `commit` counts (controls that save on their
+  own: keksdose one, kastlan five), keksdose's money classes (no `[var()]` left; the unlayered
+  statics' precedence) and its missed brand test, the `wrongPassword` key (only an app with its
+  own catalogue), and §2's test notes (the "No results" status row, currency row names, the
+  always-present wake region, MultiSelect's portalled panel).
+
 ## 1. What's new
 
 ### ui-kit
@@ -189,7 +214,8 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
   longer extend it); `AuthErrorCode` gains `session_ended`. No app's code breaks on these
   today (each has a `default`), but a new switch must cover them.
 - **A complete `UiKitLabels` catalogue** of the app's own needs
-  `accountSettings.password.wrongPassword`.
+  `accountSettings.password.wrongPassword` — only an app that ships its OWN catalogue for a
+  language; one that mounts the kit's catalogues needs nothing (corrected in 0.34.1).
 - **Emitted classes changed** in the parts listed under "No text is cut at Large": a test or
   style looking for `.truncate` there looks for `.truncate-until-large`.
 - **Kit class names changed to the role utilities** (same colours): a test that asserts a kit
@@ -220,6 +246,12 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
     `fireEvent.mouseDown` — `fireEvent.click` no longer picks. GroupedPicker's trigger is a
     combobox. DataTable's number bounds are textboxes, its filter buttons "Filter <column>".
   - The feedback dialog and the search palette appear a render after opening: `await findBy…`.
+  - (0.34.1) The no-match row in CurrencySelect, MultiSelect and the AmountInput chip is the
+    combobox core's `role="status"` "No results", not "—"; a currency row's accessible name has
+    spaces ("CHF CHF Swiss Franc", was "CHFCHFSwiss Franc"); the wake notice's live region is
+    always in the DOM, so `getByRole("status").first()` may hit it; MultiSelect's panel is
+    portalled to the body with an inline width, so a `panelClassName` width utility is inert and
+    the panel is no longer under the trigger's parent.
   - A FieldHint on the fields above prints as words at Large and on touch, not a "?".
   - Kit class names: `FIELD_BASE` focus = `focus:border-brand focus:ring-1 focus:ring-inset
     focus:ring-brand`; `FIELD_DISPLAY` adds `focus:shadow-[inset_0_-1px_0_var(--brand)]`;
@@ -277,7 +309,9 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
 - **`PasswordSetting`:** `/me/password` sends a plain 400 without a code; answer
   `AccountError(PASSWORD_INCORRECT)`, then drop that case from the toast. The comment that it
   "takes no validator prop" is stale (`maxBytes`).
-- **`commit`** on the fields that save on blur (25 sites).
+- **`commit`** on the controls that save on their own (keksdose: one — the budget's inline
+  assigned figure; fields behind a commit-locked Save are covered by it). The "25 sites" first
+  given here was a grep count (corrected in 0.34.1).
 - **Table prefix:** `<UiKitProvider tableStorageKeyPrefix="keksdose-table:">`; drop the
   `storageKeyPrefix` line from `shared/components/data-table.tsx` (keys unchanged; the wrapper
   stays for `mobileExpandAsDialog`). The translations panel moves from
@@ -314,15 +348,20 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
   tour-menu.tsx:80; RoleSwitcher top-bar.tsx:94, :117; WizardStepper
   file-import-panel.tsx:72), plus 15 in tests.
 - **Refactor waves:** MultiSelect at price-shop-picker.tsx:403 drops `next.map(String)`,
-  `values` → `value`, `allLabel` → `labels.all` (its `panelClassName` can go) and at
+  `values` → `value`, `allLabel` → `labels.all` (its `panelClassName` width is inert now — drop it) and at
   reports-filters.tsx:216 drops `as string[]`; CurrencySelect (×6) and GroupedPicker (×2) get
-  the phone sheet; `FeedbackComposer` → `ChatComposer` (support-thread.tsx:9, :222);
+  the phone sheet; `FeedbackComposer` → `ChatComposer` (features/support/support-thread.tsx; line
+  numbers here may have moved — locate by content);
   data-table-pagination.test.tsx:4, :14 `resolveDataTableLabels({…})` →
   `{ ...DEFAULT_DATA_TABLE_LABELS, … }`; `admin-actions-panel.tsx:129`'s wrapper div can go
   (`<Card ref={card}>`); kit-markup money asserts → `text-money-expense` / `text-money-income`
   (report-amount-tones.test's KIT_EXPENSE / KIT_INCOME, investment-history-panel:98,
-  reports-page:286-287, food-groups-and-level:247, tax-tab:193, :197, investments-tab:218),
-  and its own 39 `[var(--money-…)]` can move to the money utilities; the 41 hand-written
+  reports-page:286-287, food-groups-and-level:247, tax-tab:193, :197, investments-tab:218;
+  and food-groups-and-level.test.tsx:192's `.bg-[var(--brand)]` for ProgressBar's fill →
+  `bg-brand` — it fails as a TypeError, not an assertion). keksdose has no
+  `[var(--money-…)]` left; it uses the unlayered statics (`text-money-pos/-neg/-muted`,
+  `bg-money-pos`), which beat the layered `text-money-*` utilities on the same element — swap
+  them only together with any other colour class there. The 41 hand-written
   matchMedia stubs can use `stubViewportWidth` from `@eifi1/ui-kit/testing`.
 
 ### kastlan
@@ -342,7 +381,9 @@ and keksdose's feedback run 78), nothing to change unless noted in §2:
 - **Billing (§14.17):** `billing_service.set_plan` clears `trial_ends_at` on a manual grant.
 - **`PasswordSetting`:** the `.catch` toasts "profile.wrongPassword" on every failure; let the
   code reach the card and keep a generic toast for the rest.
-- **`commit`** on the fields that save on blur (21 files).
+- **`commit`** on the controls that save on their own (kastlan: five — the lease tenant share,
+  the handover meter reading, the two notification Switches, the operator's two "active"
+  Switches). The "21 files" first given here was a grep count (corrected in 0.34.1).
 - **Settings title:** `SettingsChrome` keeps its breadcrumb, drops its title effect, passes
   `appName="Kastlan"`.
 - **Downloads:** `openAuthenticatedFile` opens a tab rather than saving and stays; a real
