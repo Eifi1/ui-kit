@@ -59,3 +59,19 @@ export function writeSessionStored(key: string, value: string | null): void {
     value === null ? storage.removeItem(key) : storage.setItem(key, value),
   );
 }
+
+/**
+ * Every key in `area` that starts with `prefix`, or `[]` where storage refuses — for the
+ * reset of this device's settings, which removes a table's views by their prefix
+ * (docs/settings-harmonization.md §11.4). Package-private, like {@link removeStored}.
+ */
+export function storedKeys(prefix: string, area: "local" | "session" = "local"): string[] {
+  return guarded(area === "session" ? "sessionStorage" : "localStorage", [], (storage) => {
+    const keys: string[] = [];
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (key !== null && key.startsWith(prefix)) keys.push(key);
+    }
+    return keys;
+  });
+}

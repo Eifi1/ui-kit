@@ -11,7 +11,7 @@ import {
 } from "./field-base";
 // The data alone (0.35): not the picker, which this field does not render.
 import { CURRENCIES } from "../currencies";
-import { FieldCaption, LockedReason, mergeRefs, type DisabledReasonDisplay } from "./field-parts";
+import { FieldCaption, LockedReason, mergeRefs, type DisabledReasonDisplay, type FieldHelpProps } from "./field-parts";
 import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
@@ -19,7 +19,7 @@ import { commitExpression, formatResult } from "../lib/calc";
 
 /** {@link NumberInput}'s props — exported since 0.34 (refactor audit 2026-10, API-9): a
  *  wrapper typed itself off `ComponentProps<typeof NumberInput>` until then. */
-export interface NumberInputProps {
+export interface NumberInputProps extends FieldHelpProps {
   /** The text, DOT-decimal ("1234.5", or a calculation being typed: "12+5"), as
    *  `onChange` reports it — so a caller's `Number(value)` reads it. The field SHOWS it
    *  in the locale's mark (see `locale`). A comma here is read as the decimal mark too,

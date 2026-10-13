@@ -265,6 +265,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       // No-break space before the colon, per French typography.
       fieldValue: (field, value) => `${field}\u00a0: ${value}`,
       opensInNewTab: "s’ouvre dans un nouvel onglet",
+      aboutField: (field) => `À propos de «\u202f${field}\u202f»`,
+      help: "Aide",
     },
     dataTable: {
       columns: "Colonnes",
@@ -1074,6 +1076,96 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       rateLimited,
       failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
     },
+    // 0.36.0 — docs/notifications-harmonization.md §4.2: the notification cards. The push
+    // and device words follow keksdose's reviewed French.
+    notifications: {
+      typesTitle: "Me notifier pour",
+      typesDescription: "Choisissez ce dont vous êtes averti, et comment.",
+      byEmail: "Par e-mail",
+      emailUnverified: "Confirmez votre adresse pour les recevoir.",
+      digestCadence: "Fréquence",
+      digestWeekly: "Hebdomadaire",
+      digestMonthly: "Mensuelle",
+      typesLoading: "Chargement des paramètres de notification…",
+      typesEmpty: "Il n’y a aucune notification pour ce compte.",
+      quietTitle: "Heures calmes",
+      quietDescription: (inbox) =>
+        inbox
+          ? "Aucune notification push pendant cette plage. Elles arrivent quand même dans votre boîte de réception."
+          : "Aucune notification push pendant cette plage.",
+      quietFrom: "De",
+      quietUntil: "Jusqu’à",
+      quietIncomplete:
+        "Définissez une heure de début et une heure de fin. Les heures calmes s’appliquent une fois les deux renseignées.",
+      timeZone: "Fuseau horaire",
+      deviceZone: (zone) => `Cet appareil est dans le fuseau ${zone}.`,
+      useDeviceZone: "L’utiliser",
+      regions: {
+        Africa: "Afrique",
+        America: "Amériques",
+        Antarctica: "Antarctique",
+        Arctic: "Arctique",
+        Asia: "Asie",
+        Atlantic: "Atlantique",
+        Australia: "Australie",
+        Europe: "Europe",
+        Indian: "Océan Indien",
+        Pacific: "Pacifique",
+      },
+      pushTitle: "Notifications push",
+      pushDescription: "Les notifications sur cet appareil, même quand l’app est fermée.",
+      unsupported: "Ce navigateur ne prend pas en charge les notifications push.",
+      iosInstall: (app) =>
+        `Sur iPhone ou iPad, ajoutez d’abord ${app} à votre écran d’accueil\u00a0: iOS ne délivre les notifications qu’à l’app installée.`,
+      notConfigured: "Les notifications push ne sont pas configurées sur ce serveur.",
+      blocked: "Les notifications sont bloquées dans les réglages de ce navigateur.",
+      on: "Les notifications sont activées pour cet appareil.",
+      off: "Les notifications sont désactivées pour cet appareil.",
+      otherAccount:
+        "Ce navigateur reçoit les notifications d’un autre compte. Activez-les ici pour les recevoir sur le compte avec lequel vous êtes connecté.",
+      enable: "Activer les notifications",
+      disable: "Désactiver",
+      sendTest: "Envoyer un test",
+      enableFailed: "Impossible d’activer les notifications.",
+      noServiceWorker: "Impossible de joindre le service worker de l’app. Rechargez la page et réessayez.",
+      pushTimeout: "Le service push du navigateur n’a pas répondu. Vérifiez votre connexion et réessayez.",
+      testSent: (count) => `Test envoyé à ${n(count)} ${plural(count, "appareil", "appareils")}`,
+      testNone: "Aucun appareil n’a accepté le test. Activez d’abord les notifications pour cet appareil.",
+      testFailed: "Impossible d’envoyer la notification de test.",
+      explainerTitle: "Activer les notifications\u202f?",
+      explainerBody: (app) =>
+        `${app} n’envoie de notifications que pour ce que vous choisissez, et vous pouvez les désactiver à tout moment.`,
+      explainerHint: "Votre navigateur va ensuite demander l’autorisation.",
+      explainerContinue: "Continuer",
+      devicesTitle: "Appareils de notification",
+      devicesDescription:
+        "Tous les appareils qui reçoivent des notifications push pour votre compte. Retirez ceux que vous n’utilisez plus.",
+      devicesLoading: "Chargement des appareils…",
+      devicesEmpty: "Aucun appareil ne reçoit encore de notifications.",
+      unknownDevice: "Appareil inconnu",
+      thisDevice: "Cet appareil",
+      added: (date) => `Ajouté le ${date}`,
+      lastDelivery: (date) => `Dernière remise le ${date}`,
+      noDelivery: "Aucune remise pour l’instant",
+      failures: (count) =>
+        `${n(count)} ${plural(count, "remise échouée", "remises échouées")} d’affilée`,
+      remove: "Retirer",
+      // Starts with `remove`, the button's visible text, for voice control.
+      removeItem: (device) => `Retirer ${device}`,
+      removePrompt: "Ne plus envoyer de notifications à cet appareil\u202f?",
+      unsubscribeTitle: "Notifications par e-mail",
+      unsubscribeAbout: (type) => `Vous recevez des e-mails concernant\u00a0: ${type}.`,
+      unsubscribeGeneric: "Vous recevez des e-mails de notification.",
+      stopThese: "Ne plus recevoir ces e-mails",
+      stopAll: (app) => `Ne plus recevoir aucun e-mail de notification de ${app}`,
+      stoppedThese: "C’est fait. Vous ne recevrez plus ces e-mails.",
+      stoppedAll: (app) => `C’est fait. Vous ne recevrez plus d’e-mails de notification de ${app}.`,
+      accountMail: "Les e-mails concernant votre compte continuent d’arriver.",
+      turnBackOn: "Vous pouvez les réactiver à tout moment dans les paramètres.",
+      openSettings: "Ouvrir les paramètres",
+      invalidLink: "Ce lien ne fonctionne plus. Vous pouvez désactiver les e-mails dans les paramètres.",
+      failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
+    },
     sessions: {
       title: "Sessions",
       description:
@@ -1623,6 +1715,20 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         "Le contraste renforcé assombrit les textes discrets et les lignes, et épaissit les contours de focus. «\u202fSystème\u202f» suit le réglage de cet appareil.",
       contrastModes: { system: "Système", standard: "Standard", more: "Renforcé" },
       saveFailed: "Impossible de l’enregistrer dans votre compte. Le réglage s’applique tout de même sur cet appareil.",
+    },
+    // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
+    // last card of "Apparence". "Réglages", as `contrastHelp` says "réglage".
+    deviceReset: {
+      title: "Réinitialiser cet appareil",
+      description:
+        "Rétablit les valeurs par défaut de l’apparence de cet appareil et de l’état dans lequel ses tableaux et ses panneaux ont été laissés. Votre compte, vos données et votre connexion ne sont pas touchés.",
+      action: "Réinitialiser les réglages de cet appareil",
+      confirmTitle: "Réinitialiser les réglages de cet appareil ?",
+      confirmBody:
+        "Le thème, les couleurs, la taille du texte, le contraste et la langue reprennent ici leurs valeurs par défaut, et les tableaux et les panneaux s’ouvrent comme la première fois. Si votre compte définit une langue, une taille de texte ou un contraste, cet appareil s’y conforme de nouveau. Votre compte et vos autres appareils restent tels quels.",
+      confirmAction: "Réinitialiser",
+      done: "Les réglages de cet appareil ont retrouvé leurs valeurs par défaut.",
+      keywords: "réinitialiser défaut appareil restaurer rétablir apparence tableaux disposition",
     },
     rowActions: {
       actions: "Actions",

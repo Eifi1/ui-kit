@@ -170,6 +170,7 @@ export function DatePicker(props: DatePickerProps) {
     disabled,
     invalid,
     hint,
+    help,
     error,
     // Named so it reaches the field (and so its trigger) when a step/today row is the
     // root and takes the rest of the caller's props.
@@ -185,6 +186,8 @@ export function DatePicker(props: DatePickerProps) {
   // (the element a screen reader is on) after any description of the caller's own.
   const messages = useFieldMessages({
     hint,
+    help,
+    name: label ?? rest["aria-label"],
     error,
     invalid,
     describedBy: rest["aria-describedby"],

@@ -36,6 +36,7 @@ import {
   LockedReason,
   mergeRefs,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
   type LockReason,
 } from "./field-parts";
 import { useEndWidth, useNumericField } from "./numeric-field";
@@ -43,7 +44,7 @@ import type { CommitScope } from "./write-lock";
 
 /** {@link AmountInput}'s props — exported since 0.34 (refactor audit 2026-10, API-9): a
  *  wrapper typed itself off `ComponentProps<typeof AmountInput>` until then. */
-export interface AmountInputProps {
+export interface AmountInputProps extends FieldHelpProps {
   value: string;
   onChange: (value: string) => void;
   currency?: string;

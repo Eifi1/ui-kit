@@ -58,6 +58,52 @@ describe("cross-links", () => {
     expect(serverModulesFor("user-admin")).toEqual(["user_admin"]);
     expect(serverModulesFor("auth-account")).toEqual(expect.arrayContaining(["auth", "user_admin", "mail"]));
     expect(serverModulesFor("tokens")).toEqual([]);
+    // server-kit 0.9: the Notifications page's server half, and the feedback router.
+    expect(serverModulesFor("notifications")).toEqual(["notifications"]);
+    expect(serverModulesFor("feedback-compose")).toEqual(expect.arrayContaining(["feedback", "feedback.router"]));
+    expect(serverPageOf("feedback.router")).toBe("server-feedback");
+    expect(serverPageOf("notifications")).toBe("server-notifications");
+  });
+});
+
+describe("a nested module (server-kit 0.9's feedback.router)", () => {
+  it("is named by its dotted path minus the package, and documented beside its package", () => {
+    expect(moduleShort("eifi1_server_kit.feedback.router")).toBe("feedback.router");
+    expect(findModule(api, "feedback.router")?.name).toBe("eifi1_server_kit.feedback.router");
+    expect(PAGES.find((p) => p.slug === "server-feedback")?.serverModules).toEqual([
+      "feedback",
+      "feedback.router",
+      "uploads",
+    ]);
+  });
+
+  it("has an anchor no member shares: `feedback` has no member `router`", () => {
+    // The rule (api.ts anchors; scripts/sync-server-kit.mjs anchorClashes): `#a.b` is
+    // member `b` of module `a` unless `a.b` is a module, and then `a` has no member `b`.
+    expect(findModule(api, "feedback")!.members.some((m) => m.name === "router")).toBe(false);
+    const anchors = api.modules.flatMap((mod) => {
+      const short = moduleShort(mod.name);
+      return [targetAnchor({ module: short }), ...mod.members.map((m) => targetAnchor({ module: short, member: m.name }))];
+    });
+    expect(anchors).toContain("feedback.router");
+    expect(new Set(anchors).size).toBe(anchors.length);
+  });
+
+  it("resolves roles to the module, its members, and its package's members", () => {
+    const anchor = (target: string, module: string) => {
+      const found = resolveTarget(api, target, { module });
+      return found && targetAnchor(found);
+    };
+    expect(resolveTarget(api, "eifi1_server_kit.feedback.router", { module: "feedback" })).toEqual({
+      module: "feedback.router",
+    });
+    // The longest module that prefixes the path owns the member.
+    expect(anchor("~eifi1_server_kit.feedback.router.feedback_router", "feedback")).toBe(
+      "feedback.router.feedback_router",
+    );
+    expect(anchor("FeedbackDeps", "feedback.router")).toBe("feedback.router.FeedbackDeps");
+    // From inside the router, the package's own members are still the package's.
+    expect(anchor("~eifi1_server_kit.feedback.FeedbackService", "feedback.router")).toBe("feedback.FeedbackService");
   });
 });
 
@@ -148,7 +194,19 @@ describe("search", () => {
   it("finds a module by its dotted path, and lists every member once", () => {
     const hits = createSearchIndex(entries).search("eifi1_server_kit.limiter");
     expect(hits[0].entry.href).toBe("/server-limits#limiter");
-    const members = entries.filter((e) => e.id.startsWith("server:") && e.id.includes("."));
+    // A module's id is `server:<short>`, a member's `server:<short>.<name>` — and a nested
+    // module's short name has a dot too, so the modules are told apart by name.
+    const modules = new Set(api.modules.map((m) => `server:${moduleShort(m.name)}`));
+    const server = entries.filter((e) => e.id.startsWith("server:"));
+    const members = server.filter((e) => !modules.has(e.id));
     expect(members).toHaveLength(api.modules.reduce((n, m) => n + m.members.length, 0));
+    expect(new Set(server.map((e) => e.id)).size).toBe(server.length);
+  });
+
+  it("finds a nested module and its members on their page", () => {
+    const index = createSearchIndex(entries);
+    expect(index.search("eifi1_server_kit.feedback.router")[0].entry.href).toBe("/server-feedback#feedback.router");
+    const [hit] = index.search("feedback_router");
+    expect(hit.entry.href).toBe("/server-feedback#feedback.router.feedback_router");
   });
 });

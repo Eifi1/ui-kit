@@ -330,6 +330,7 @@ export function extractServerKit(pages = pageBodies()) {
   for (const { slug, serverModules } of pages) for (const short of serverModules ?? []) pageOf.set(short, slug);
   const modules = [];
   for (const mod of api.modules) {
+    // The name minus the package, dots kept: `feedback.router` (server-kit/api.ts moduleShort).
     const short = mod.name.slice(PACKAGE.length + 1);
     const page = pageOf.get(short);
     if (!page) {
@@ -353,7 +354,8 @@ export function renderServerKit(data) {
     "export interface ServerKitSearchModule {",
     "  /** The Server kit page that documents it. */",
     "  page: string;",
-    "  /** Its short name, `auth` for `eifi1_server_kit.auth` — also its anchor on the page. */",
+    "  /** Its short name, `auth` for `eifi1_server_kit.auth` (`feedback.router` for a nested",
+    "   *  one) — also its anchor on the page. */",
     "  module: string;",
     "  summary: string;",
     "  /** [name, kind] per member; a member's anchor is `module.name`. */",

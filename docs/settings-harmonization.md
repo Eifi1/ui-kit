@@ -35,6 +35,7 @@ snapshot of the three apps, the per-repo to-dos and the review list as written a
 | 8 | Per repo | — (archived) | |
 | 9 | Order | — (archived) | |
 | 10 | Settled after the reviews | — | an index: each item points to its § |
+| 11 | Reset this device's settings | — (round 0.36: settled 2026-10-13, built for ui-kit 0.36.0) | §11.7 (the reviews; round decisions 10, 11) |
 
 ## 1. Where each one stands
 
@@ -208,6 +209,9 @@ hit, ⌘K, a tour and a mail link all use it.
 - `TwoFactorSetting` has a title ("Two-factor authentication") with an On/Off chip.
 - Destructive cards (`DeleteAccountSetting`, keksdose's "erase all data") go last in
   the "data" group, in the `danger` tone.
+- `DeviceResetSetting` ("Reset this device", 0.36, §11.4) goes last in the "appearance"
+  group, in the default tone, with its catalogue entry (`DEVICE_RESET_ANCHOR`) last there
+  too.
 
 ## 4. The catalogue
 
@@ -253,7 +257,7 @@ interface SettingsEntry<G extends string = string> {
 
 | Group | Holds |
 |---|---|
-| `appearance` | language, theme, text size and contrast (text-size §6), palette, date format, density |
+| `appearance` | language, theme, text size and contrast (text-size §6), palette, date format, density; last, the device reset (§11) |
 | `account` | profile, email change, the app's memberships (kastlan's companies, KS's pending shares) |
 | `security` | password, 2FA, passkeys, sessions, API tokens |
 | *app groups* | the app's own (keksdose: privacy, assistant, interaction) |
@@ -369,7 +373,8 @@ server-kit's `ProfileUpdate` follows the rule.
 - The date format in particular stays on the device: its "auto" follows the language,
   so a new device that adopts the account's language gets the matching format anyway.
   It would move to the account only once the server renders a date as text.
-- There is no "reset this device's settings".
+- Putting this device's settings back to their defaults, in one action, is §11
+  (round 0.36: settled 2026-10-13, built for ui-kit 0.36.0).
 
 ### 6.4 Notifications (the notifications round)
 
@@ -493,3 +498,465 @@ above, is folded into it and points there. The reviews' wording is in
 8. **The language: detection, the account, the demo** → §6.2.
 9. **Device-local settings keep their keys; the date format stays on the device** → §6.3.
 10. **A stored notification switch is respected** → §6.4.
+
+## 11. Reset this device's settings (round 0.36; settled 2026-10-13)
+
+**Settled 2026-10-13, built for ui-kit 0.36.0.** §6.3 keeps the theme, the palette, the
+date format and keksdose's gestures on the device, and nothing puts them back. Someone who
+hid a table's column, picked a palette or a text size on a shared device undoes each by
+hand, or clears the site's data, which also signs them out and drops the offline copy with
+its unsent changes. This adds one action on the settings page that puts this device's
+appearance and views back to their defaults, and never touches the account, the session
+or anything waiting to be sent (brief 0.36 R). The three reviews (2026-10-13) are folded
+in; §11.7 says where each went.
+
+### 11.1 Where each one stands
+
+Read at kk `79b2949c` (checked again at `c90d068e`), ka `f2b9574`, KS `c687637` and the kit
+at 0.35.0. No kit part resets the device, and no app has a reset on its settings page.
+keksdose has a partial one, for a change of person: `forgetPreviousAccount`
+(`frontend/src/shared/state/auth-store.ts:47-60`) runs at logout and when a different user
+signs in, and clears the last page, the saved page filters with the reports view
+(`clearPersistedPageParams`, `shared/hooks/use-persisted-search-params.ts:21-32`), a
+receipt's last answers and the offline copy. The nearest to an appearance reset is one
+card's own: keksdose's gestures ("Reset to defaults", "Restore the shipped defaults",
+`features/auth/swipe-settings-card.tsx:137-148`). DataTable has no reset of its view.
+
+**The kit** stores, each under a key the app passes unless a default is named:
+
+| What | Key | Where |
+|---|---|---|
+| theme | the app's | `createThemeStore`, `src/theme/theme-store.ts:86-101`; pre-paint `:65` |
+| palette | the app's | `createPaletteStore`, `src/theme/palette-store.ts:43-54`; pre-paint `:17` |
+| text size, contrast (this device's choice) | the app's | `src/theme/text-size.ts:246-255`, `src/theme/contrast.ts:179-188` |
+| table views (sort, filters, page size, widths, hidden columns) | `tableStorageKeyPrefix` (provider) or `hbui-table:`, then the table's `storageKey` | `src/components/use-table-state.ts:29`, `:370-374` |
+| the sidebar folded | `collapseStorageKey` or `appLayout.sidebarCollapsed` | `src/shell/app-shell.tsx:368-369`, `:395` |
+| the demo banner folded | `kit.demoBanner.collapsed`, `sessionStorage` | `src/demo/demo-banner.tsx:22`, `:98-103` |
+| the last page | the app's | `src/landing/routing.tsx:126` |
+| a checkout on its way | `eifi1-billing-checkout` or the app's | `src/billing/checkout-processing.ts:53`, `:158` |
+| unsent crash reports | the app's | `src/feedback/feedback-crash.ts:387-402` |
+
+The language picked on a device is under the app's own key: `useAccountLanguage` takes
+`device` and `setDevice` (`src/settings/use-account-language.ts:83-85`).
+
+**The apps** (paths under each app's `frontend/src/`):
+- **keksdose:**
+  - appearance: `keksdose-theme`, `keksdose-palette`, `keksdose-text-size`,
+    `keksdose-contrast` (`shared/state/theme-store.ts:8`, `palette-store.ts:8`,
+    `text-size-store.ts:10`, `contrast-store.ts:9`), all four the kit's factories; the
+    language, `keksdose-lang`, in a store (`shared/i18n/account-language.tsx:35`,
+    `:58-68`), which i18next never writes (`shared/i18n/index.ts:116`, `caches: []`); the
+    date format (`shared/state/date-format-store.ts:74`); the feature set, simple or
+    enhanced (`appearance-store.ts:28`); gestures, the map and "my defaults" in one key,
+    `keksdose-swipe-prefs` (`swipe-prefs-store.ts:105-123`, `:190`);
+  - views: tables under `keksdose-table:` (`shared/i18n/kit-labels.tsx:115`); the sidebar
+    on the kit's default key (`app/layout.tsx:117` passes no `collapseStorageKey`); saved
+    page filters `keksdose.pageParams.*` and `keksdose.reportsView`
+    (`shared/hooks/use-persisted-search-params.ts:4`, `:11`); folded budget groups,
+    `budget.collapsedGroups`, read at mount (`features/budget/use-budget-prefs.ts:3`); the
+    display currency per budget, `budget.displayCurrency.<id>`, a plain accessor
+    (`shared/state/display-currency-store.ts:23-31`; the legacy global
+    `budget.displayCurrency`, `:27`, is not under the prefix, and
+    `clearLegacyDisplayCurrency` already removes it);
+  - presentation mode (blurred figures), the last version shown and the what's-new switch,
+    in one blob, `keksdose-ui-prefs` (`shared/state/ui-prefs-store.ts:25-70`);
+  - usage: recent categories, tours done, a receipt's last answers per budget, the last
+    page (`recent-categories-store.ts:47`, `tour-progress-store.ts:34`,
+    `features/invoices/receipt-confirm-prefs.ts:82`, `shared/hooks/use-last-visited-page.ts:20`);
+  - dismissed notices (`features/billing/billing-banner.tsx:16`,
+    `app/beta-perf-banner.tsx:6`); the home position, `keksdose-home-position`
+    (`shared/state/home-position-store.ts:92`);
+  - sign-in: `keksdose-auth`, `auth_token`, `refresh_token`, `mirror_user_id`,
+    `plausible_ignore` (`shared/state/auth-store.ts:17`, `:27`, `:146`);
+  - waiting to be sent, in localStorage: crash reports, `keksdose.pendingCrashReports`
+    (`shared/lib/crash-report.ts:87`), and a checkout, `keksdose-billing-checkout`
+    (`features/billing/checkout-return.ts:40`);
+  - IndexedDB, exactly three stores: the offline copy with its outbox, `keksdose-mirror`
+    (`shared/offline/db.ts:106`); unlocked keys, `keksdose-keys`
+    (`shared/crypto/key-store.ts:43`); the query cache, `keksdose-query-cache`
+    (`shared/state/query-client.ts:67`). None holds view state;
+  - developer overrides: `api_log` (`shared/api/client.ts:32`), `pending_key_file_persist`
+    (`shared/crypto/pending-key-file.ts:68`) and, in development only, sessionStorage
+    `keksdose.pending-key-file` (`:64`, `:119`).
+- **kastlan:**
+  - appearance: `kastlan-theme`, `-palette`, `-text-size`, `-contrast`
+    (`shared/theme/storage-keys.ts:7-13`); the language, `kastlan-lang`, read when needed
+    (`shared/i18n/language-storage.ts:11`, `:20-31`; the old `i18nextLng` moves over once,
+    `:14`);
+  - **the account's values, cached for the first paint and the start language**:
+    `kastlan-account-lang` (`language-storage.ts:17`) and `kastlan-account-appearance`
+    (`shared/theme/account-appearance.ts:10`), read at `main.tsx:25-26` and
+    `shared/i18n/config.ts:19`;
+  - views: tables on the kit's default prefix (`app/providers.tsx:55-59` passes none), the
+    sidebar `kastlan.sidebarCollapsed` (`app/app-layout.tsx:117`);
+  - usage: tours done (`features/tours/utils/completions.ts:3`), the last page
+    (`features/landing/access.ts:19`);
+  - sign-in `kastlan_rt`, a demo's `kastlan.demoSession` (`shared/api/client.ts:37`, `:41`);
+    crash reports, `kastlan.pendingCrashReports` (`shared/feedback/crash-reporter.ts:21`);
+    a checkout under the kit's `eifi1-billing-checkout`
+    (`features/billing/components/subscription-section.tsx:20`); the demo banner's
+    `kit.demoBanner.collapsed` (sessionStorage);
+  - IndexedDB: the photo outbox, `kastlan-offline` (`shared/offline/db.ts:31`), and one
+    handover copy per person and company, `kastlan-handover-<userId>-<companyId>`
+    (`features/handover/offline/db.ts:79`). The old `kastlan-query-cache` is removed at
+    every boot (`app/providers.tsx:32`).
+- **Kurvenschmiede** keeps one list, `STORAGE`, with the privacy line of each key in
+  `ENTRY_OF` (`shared/lib/storage-keys.ts:36-96`), and a test fails on a key outside it:
+  - appearance: `steering-theme`, `steering-palette` (pinned to Default, `main.tsx:64`),
+    `kurvenschmiede-text-size`, `-contrast`; the language, `kurvenschmiede-lang`, read
+    when needed (`shared/i18n/index.ts:134-146`);
+  - views: tables `steering-table:`, the sidebar `kurvenschmiede.sidebarCollapsed`, the
+    curve plot's channels `steering-curve-channels` (`storage-keys.ts:53-58`), a persisted
+    zustand store (`shared/state/curve-channels-store.ts`);
+  - the last page, crash reports, a checkout, the tokens, the session store and the demo
+    banner's `kit.demoBanner.collapsed`.
+
+No app stores a density: §6.3's word names none.
+
+### 11.2 Decisions
+
+All settled (Marcel, 2026-10-13: "As recommended"; round decisions 10 and 11), with the
+reviews' corrections:
+
+1. **It clears how this device shows the app**, in two kinds:
+   - **appearance**: the theme, the palette, this device's own language, text size and
+     contrast, and the app's own appearance choices (keksdose's date format, feature set
+     and gestures);
+   - **views**: table views, the sidebar, folded groups, saved page filters, KS's curve
+     channels, keksdose's display currency per budget.
+
+   Each goes back to what a new device gets: the theme "System" (§2.8), the Default
+   palette, and for the language, the text size and the contrast **the account's
+   value**, because the device's own choice is what goes (§6.2; text-size §6). Without an
+   account value: the browser's language, else the app's own default (kastlan de-CH);
+   Normal; "system".
+2. **It never clears** the sign-in and the session; the account's values cached for the
+   first paint and the start language (kastlan's two `kastlan-account-*` keys); anything
+   waiting to be sent or kept for offline use (crash reports, a checkout, the offline copy
+   and its outbox, kastlan's handover copies, the query cache, unlocked keys); usage
+   (recent categories, tours done, the last page, a receipt's last answers); dismissed
+   notices; developer overrides (keksdose's `api_log`, `pending_key_file_persist`,
+   `keksdose.pending-key-file`); and the demo banner (`sessionStorage`, gone with the
+   tab). None of them is a setting: some are the account's, some would lose work, and the
+   rest are answers someone gave once.
+3. **The account is never written.** No PATCH: the account keeps its language, text size
+   and contrast, and this device follows them again. A demo session and a lapsed plan
+   reset the same way: nothing is written, so no write lock applies.
+4. **The kit learns the keys from a registry** its own parts join and an app adds to
+   (§11.4). The precedent is Kurvenschmiede's `STORAGE`: it is the one app that keeps such
+   a list. keksdose's `forgetPreviousAccount` is a reset for a change of person, not of
+   look, and stays as it is; where the two clear the same keys, the registry calls
+   keksdose's own function (§11.5), so no sweep is written twice.
+5. **Table views go too** (round decision 10). DataTable has no reset of its own, and a
+   hidden column or a forgotten filter is the commonest "where did my rows go" a reset
+   answers. A per-table "Reset view" is a separate item, not this round.
+6. **keksdose's presentation mode and what's new stay, and `keksdose-ui-prefs` stays
+   whole** (round decision 11). Presentation mode is a mask, not a look: a reset that
+   unblurs figures during a shared screen is what #286 prevents, and it has its own
+   switch. The last version shown back at `null` counts as a first run, which shows
+   nothing (`ui-prefs-store.ts:37-38`), and the what's-new switch back on would bring back
+   a notice someone turned off from inside it. Splitting the blob would need a
+   `partialize` or a new key, for nothing.
+7. **keksdose's home position stays** (round decision 11). It is data that is costly to
+   get back, not a look: only standing at home and pressing "use where I am now" sets it
+   (`home-position-store.ts:26-30`). On a shared device it is guarded by its owner check
+   and its own clear button (`features/reports/price-shop-picker.tsx:449-456`).
+8. **Where: the last card of the appearance group.** Most of what it clears is set there.
+   Not "data": that group holds the account's data and the destructive cards (§3.7), and
+   this is neither.
+9. **A confirm, not an undo.** The kit's `useConfirm` (each app mounts a
+   `ConfirmProvider`: kk `shared/i18n/kit-labels.tsx`, ka `app/providers.tsx`, KS
+   `main.tsx`), in the neutral tone, then a toast. An undo would need every registered
+   store to restore itself live, and a table reads its view only when it mounts. For a
+   rare action that is cheap to repeat, a confirm that says what goes is enough.
+10. **Live, no reload.** Everything held in memory is put back through its entry's
+    `reset`, at once: the theme flips, the palette re-applies, the text size and the
+    contrast re-resolve, the sidebar unfolds, the language switches. Removing the key of
+    a live store is not enough: a persisted zustand store keeps its value in memory and
+    writes it back on its next change (KS 3.1), so **every persisted store's entry carries
+    a `reset`**. Only what is read where it is next used (a table at its next mount, a
+    plain accessor) is removed without one. Other open tabs keep what they hold until
+    they reload, as with every device setting today.
+
+### 11.3 The words
+
+A kit namespace of its own, `deviceReset` (`DeviceResetLabels`,
+`DEFAULT_DEVICE_RESET_LABELS`), as each kit card has one (`dataExport`, `deleteAccount`,
+`sessions`); English here, the seven languages with the build. An app may override any
+(prop > `<UiKitProvider labels={{ deviceReset }}>` > English). Its own choices go in the
+card's `description` prop, a sentence after the kit's (§11.4), not in an override.
+
+| Key | English |
+|---|---|
+| `title` | Reset this device |
+| `description` | Puts this device's appearance, and the way its tables and panels were left, back to the defaults. Your account, your data and your sign-in are not touched. |
+| `action` | Reset this device's settings |
+| `confirmTitle` | Reset this device's settings? |
+| `confirmBody` | Theme, colours, text size, contrast and language go back to their defaults here, and tables and panels open as they first did. Where your account has a language, a text size or a contrast, this device follows it again. Your account and your other devices stay as they are. |
+| `confirmAction` | Reset |
+| `done` | This device's settings are back to their defaults. |
+| `keywords` | reset defaults device restore appearance tables layout |
+
+`title` and `keywords` are also what the app's catalogue entry takes (§11.4); the card
+never reads `keywords`.
+
+### 11.4 The registry and the card
+
+**The registry**, `src/lib/device-settings.ts` (no React, no router), exported from the
+main entry. It sits in `src/lib` beside `safe-storage.ts`, which the stores and the shell
+already import, so `src/theme` and `src/shell` do not import `src/settings`. One module
+instance (`bundle: false`), one module-level list.
+
+```ts
+/** What a reset of this device's settings clears (§11.2 decision 1). An app's own list
+ *  may add a third kind of its own for what never goes (KS's "never"). */
+export type DeviceSettingKind = "appearance" | "view";
+
+export interface DeviceSetting {
+  /** The storage key; with `prefix`, every key that starts with it. */
+  key: string;
+  /** `true`: `key` is a prefix (a table's views, keksdose's display currency per budget). */
+  prefix?: boolean;
+  /** Default `"local"`. */
+  storage?: "local" | "session";
+  kind: DeviceSettingKind;
+  /**
+   * Puts the live value back to its default through the store's own setter, the one its
+   * control calls, so whatever that setter also does still happens. REQUIRED for
+   * anything held in memory: every persisted zustand store, a mounted component's state.
+   * With `reset` the key is left to it (a persisted store writes its default itself);
+   * without, the key, or every key under the prefix, is removed.
+   */
+  reset?: () => void;
+}
+
+/** Joins the registry; answers the leave function. A store joins once, at creation, and
+ *  never leaves; a component joins while mounted. */
+export function registerDeviceSetting(entry: DeviceSetting): () => void;
+/** Every entry, in join order: for an app's own test (KS's list) or its privacy page. */
+export function deviceSettings(): readonly DeviceSetting[];
+/** Resets every entry; answers the keys it reset or removed, prefixes expanded. */
+export function resetDeviceSettings(): string[];
+```
+
+- **One entry per key** (and storage): joining a key again replaces its entry and adds a
+  holder; a leave function drops its holder, and the entry goes with its last holder. A
+  module evaluated twice (a test, a hot reload) does not reset twice; two nested
+  providers with one prefix keep their entry until the outer one unmounts.
+- **`resetDeviceSettings`**, synchronous: first every `reset`, in join order; then the
+  keys of the entries without one. A `reset` that throws is caught (`console.error` in
+  development), its key is removed instead, and the rest still run. It never reloads,
+  navigates or sends a request.
+- **Storage through the kit's guard** (`src/lib/safe-storage.ts`): `removeStored`,
+  `writeSessionStored(key, null)`, and a new package-private `storedKeys(prefix, area)`
+  that lists the keys under a prefix and answers `[]` where storage refuses. Where the
+  browser refuses storage, the live values still reset and nothing throws.
+- **A prefix matches by `startsWith`**: `budget.displayCurrency.` does not take the legacy
+  `budget.displayCurrency`.
+
+**The kit's parts join on their own** (kind; reset):
+- `createThemeStore(key)`, at creation: appearance;
+  `useTheme.getState().setPreference("system")`. `useApplyTheme` puts the class back.
+- `createPaletteStore(key, useTheme)`, at creation: appearance;
+  `usePalette.getState().setId(DEFAULT_PRESET.id)`. **State only, never `applyTokenSet`**
+  (KS 3.3): an imperative write would remember a token set on `<html>`, and an app without
+  a palette layer (KS) would then take the palette branch, where a theme switch no longer
+  re-writes the stepped tokens. `useApplyPalette`, where an app mounts it, re-applies
+  through its effect.
+- `createTextSizeStore(key)`, `createContrastStore(key)`, at creation: appearance;
+  `setSize(null)`, `setContrast(null)` (no choice on this device). `useApplyTextSize` and
+  `useApplyContrast` re-resolve against the account's value they are given, else Normal
+  and "system", and the contrast re-steps the tokens.
+- `UiKitProvider`, while mounted: view, `prefix: true`, the prefix its tables use
+  (`tableStorageKeyPrefix`, else the outer provider's, else `hbui-table:`,
+  `DEFAULT_PERSIST_PREFIX`); no `reset`, since a table reads its view at mount. A table
+  with a `storageKeyPrefix` prop of its own is the app's to register. *Built:* it joins a
+  microtask after it mounts, through a literal `import()` of the registry, because every
+  catalogue reaches `kit-labels` and a catalogue may reach nothing outside `i18n/`
+  (`scripts/check-module-graph.mjs`); a test that reads `deviceSettings()` right after a
+  render waits for it (`await waitFor(…)`).
+- `AppShell`, while mounted and only with a collapse key: view; `setCollapsed(false)`,
+  whose effect writes `"0"`. An embedded shell without a key stores nothing and joins
+  nothing.
+- **Not joined:** the demo banner (`kit.demoBanner.collapsed`), the last page, a
+  checkout, crash reports, `store_log` (decision 2).
+
+**What comes back when:**
+- **At once**: the `.dark` class, the palette's inline tokens (where `useApplyPalette` is
+  mounted), `data-text-size`, `data-contrast` with its stepped tokens, the sidebar, and
+  each app entry with a `reset` (the language).
+- **At the next mount**: table views and every entry without a `reset`. The card sits on
+  the appearance group's page, which holds no stored table in any of the three apps, so
+  nothing it removes is on screen.
+- **At the next load**: the pre-paint calls (`applyPersistedTheme`,
+  `applyPersistedPalette`, `applyPersistedTextSize`, `applyPersistedContrast`) read what
+  the stores wrote and paint the defaults, with no step of their own.
+- **Other open tabs** keep what they hold until they reload.
+
+**The card**, `src/settings/device-reset-setting.tsx`, in the main entry beside
+`SettingsSection`:
+
+```ts
+export const DEVICE_RESET_ANCHOR = "settings-device-reset";
+
+export interface DeviceResetSettingProps
+  extends Omit<SettingsSectionProps, "anchor" | "title" | "description" | "children"> {
+  /** The app's sentence after the kit's description: what of its own goes back, and
+   *  what stays (keksdose: the date format, the feature set and the gestures go;
+   *  presentation mode and the home position stay). */
+  description?: ReactNode;
+  labels?: LabelOverride<DeviceResetLabels>;
+  /** Runs after the reset and before the toast, with the keys reset or removed. */
+  onReset?: (keys: string[]) => void;
+}
+
+export function DeviceResetSetting(props: DeviceResetSettingProps): JSX.Element;
+```
+
+- A `SettingsSection` with `DEVICE_RESET_ANCHOR`, `title`, and `description` (the kit's
+  sentence, then the app's), holding one `Button variant="secondary"` (`action`).
+- The button asks `useConfirm()` with `confirmTitle`, `confirmBody`, `confirmAction`, the
+  neutral tone and **no `commit`**: nothing is written, so a demo or a locked write lock
+  does not disable it (decision 3). Cancel changes nothing.
+- Confirmed: `resetDeviceSettings()`, then `onReset?.(keys)`, then `toast.success(done)`.
+  The card stays where it is; no reload.
+- The app adds the catalogue entry, `{ id: "device_reset", group: "appearance", anchor:
+  DEVICE_RESET_ANCHOR, title, keywords }`, last in its appearance group; `SettingsSection`
+  throws in development without it.
+
+### 11.5 Per app
+
+Each app registers at module scope, beside the store or accessor it names, so the
+entries exist before the card can be pressed. A reset goes through the store's own
+setter, never `setState(getInitialState())` where the setter does more than set: that
+skips the setter's side effect (keksdose's `setPrivacyMode` → `applyDemoModeClass`,
+`ui-prefs-store.ts:59`, would have left the blur on while the store said off).
+
+- **keksdose:**
+  - registers, as appearance: `keksdose-lang` (reset: the device-language store's
+    setter with `null`, `account-language.tsx:58-68`, so `AccountLanguageProvider` adopts
+    the account's language, else the browser's); `keksdose-date-format` (reset:
+    `setPref` with the store's default); `keksdose-appearance` (reset: `setMode` with the
+    store's default); `keksdose-swipe-prefs` (reset: `resetToShipped()`,
+    `swipe-prefs-store.ts:187`, which clears the map and "my defaults" together);
+  - registers, as views: `keksdose.pageParams.` (a prefix; reset:
+    `clearPersistedPageParams`, which also clears `keksdose.reportsView`: the sweep
+    `forgetPreviousAccount` already uses, not written twice); `budget.collapsedGroups`
+    (no reset: read at mount); `budget.displayCurrency.` (a prefix, no reset: a plain
+    accessor read at mount);
+  - the kit covers the four appearance stores, `keksdose-table:` and the sidebar's
+    default key;
+  - leaves `keksdose-ui-prefs` whole, `keksdose-home-position`, usage, notices, the
+    sign-in, crash reports, the checkout, the three IndexedDB stores and the developer
+    overrides alone (decisions 2, 6, 7);
+  - the card last in appearance, its catalogue entry, and a `description` in its four
+    languages that names the date format, the feature set and the gestures, and says
+    presentation mode and the home position stay.
+- **kastlan:**
+  - registers `kastlan-lang`, appearance, with a new `resetDeviceLanguage()` in
+    `shared/i18n/switch-language.ts`: remove `kastlan-lang` (and a leftover
+    `i18nextLng`), then `show(resolveLanguage([accountLanguage(), ...navigator.languages],
+    OFFERED_LANGUAGES))`, the order of `shared/i18n/config.ts:18-21` without the device:
+    the account's language, else the browser's, else de-CH, live, no reload. Not
+    `applyAccountLanguage`: with no locale it returns at `:54` and leaves the old
+    language on screen, and `rememberAccountLanguage(null)` would clear the account's
+    cached language;
+  - the kit covers the rest: the four stores, `hbui-table:`, `kastlan.sidebarCollapsed`;
+  - the two `kastlan-account-*` keys, crash reports, the checkout, the photo outbox, the
+    handover copies and the demo banner's key stay (decision 2);
+  - the card and its entry.
+- **Kurvenschmiede:**
+  - registers `kurvenschmiede-lang`, appearance; reset: remove the key, then
+    `changeLanguage(i18n, readerLanguage(user?.locale))` (`shared/i18n/index.ts:303`,
+    `:183`), live, no reload. Not `followAccountLanguage` (`:325`): it changes nothing when the
+    account has no language;
+  - registers `steering-curve-channels`, view; reset:
+    `useCurveChannels.setState({ flipped: [] })`. A persisted zustand store, so removing
+    the key alone would be written back (KS 3.1);
+  - the kit covers the rest; its palette stays pinned (`main.tsx:64`), and the palette's
+    state-only reset changes nothing it shows;
+  - `storage-keys.ts` gains `KIND_OF: Record<keyof typeof STORAGE, "appearance" | "view" |
+    "never">` beside `ENTRY_OF`. `storage-keys.test.ts` renders the app's providers and
+    shell (so the kit's parts join; the provider's a microtask later, §11.4), then holds
+    `deviceSettings()` to exactly the keys
+    `KIND_OF` marks appearance or view, kinds equal; its `SITES` (the calls that hand a key
+    to storage) gains `registerDeviceSetting`;
+  - the card and its entry.
+
+### 11.6 Build
+
+**ui-kit 0.36 (M):**
+1. `src/lib/device-settings.ts`: `DeviceSettingKind`, `DeviceSetting`,
+   `registerDeviceSetting`, `deviceSettings`, `resetDeviceSettings` (§11.4), exported from
+   the main entry; `storedKeys(prefix, area)` package-private in `src/lib/safe-storage.ts`.
+2. Joins, each with the kind and the `reset` of §11.4: `createThemeStore`,
+   `createPaletteStore` (state only), `createTextSizeStore`, `createContrastStore` at
+   creation; `UiKitProvider` (`src/i18n/kit-labels.tsx`) and `AppShell`
+   (`src/shell/app-shell.tsx`) in an effect, left on unmount.
+3. `src/settings/device-reset-setting.tsx`: `DeviceResetSetting`,
+   `DeviceResetSettingProps`, `DEVICE_RESET_ANCHOR`; the `deviceReset` namespace
+   (`DeviceResetLabels`, `DEFAULT_DEVICE_RESET_LABELS`, the `KitLabels` key) in English
+   and the six locales (`src/i18n/locales/`), all exported from the main entry.
+4. Tests:
+   - the registry (`src/lib/__tests__/device-settings.test.ts`): a key is removed, a
+     prefix removes every key under it and nothing else (the legacy
+     `budget.displayCurrency` survives `budget.displayCurrency.`), `storage: "session"`
+     removes from sessionStorage; an entry with `reset` keeps its key and runs once; every
+     `reset` runs before any removal, in join order; a throwing `reset` is caught, its key
+     removed, the rest still run; joining a key twice resets once; holders: the entry
+     stays until its last leave; keys nobody registered (a sign-in's) survive; a storage
+     that throws on access still runs every `reset`, throws nothing, and answers what it
+     reset; the answer lists the keys reset and removed, prefixes expanded;
+   - the kit's parts (`src/theme/__tests__/`, `src/shell/__tests__/app-shell.test.tsx`,
+     `src/i18n/`): each joins with its key and kind; a reset puts each value back live
+     (the `.dark` class follows the system, the palette id is Default and, with
+     `useApplyPalette` mounted, its inline tokens are re-written, `data-text-size` and
+     `data-contrast` re-resolve to the account's value passed in, the sidebar unfolds)
+     and each persisted blob then holds the default the pre-paint call reads;
+   - **without a palette layer** (`useApplyPalette` never mounted, as in KS): the palette
+     reset writes nothing inline, `rememberedTokenSet(document.documentElement)` stays
+     undefined, and a theme switch afterwards still re-writes the stepped tokens (KS 3.3);
+   - `UiKitProvider`: its own prefix, an inherited one, the default `hbui-table:`; left on
+     unmount; two nested providers with one prefix keep one entry until the outer goes.
+     `AppShell`: joins with its key, an embedded shell without a key joins nothing;
+   - the card (`src/settings/__tests__/device-reset-setting.test.tsx`): renders under
+     `SettingsLayout` with its catalogue entry; cancel changes nothing; confirm runs the
+     reset, then `onReset(keys)`, then the toast; the button and the confirm stay enabled
+     under a locked `WriteLockProvider`; the app's `description` follows the kit's;
+     `labels` override.
+5. The showcase's Settings page gains the card; the README's settings lines and
+   `ADOPTING.md` name the registry and the card.
+
+**server-kit:** nothing; the reset never reaches the server.
+
+**The apps** (their 0.36 adoption): §11.5.
+
+### 11.7 Settled after the reviews (2026-10-13)
+
+The three reviews (kk at `c90d068e`, ka at `f2b9574`, KS) and the round's decisions 10 and
+11 are folded into §11.1–§11.6; the reviews are kept outside the repo. Where each went:
+- **Table views go** (round decision 10) → §11.2, decision 5.
+- **keksdose's presentation mode, what's new (the blob whole) and home position stay**
+  (round decision 11; kk's reasons, and why `setState(getInitialState())` is wrong) →
+  §11.2, decisions 6 and 7; §11.5.
+- **keksdose already has a partial reset, `forgetPreviousAccount`** (kk) → §11.1;
+  decision 4; the pageParams entry's `reset` is its `clearPersistedPageParams` → §11.5.
+- **keksdose's keys**: crash reports and the checkout in localStorage, IndexedDB's three
+  stores, the developer overrides named, the gestures one key, the legacy display
+  currency, `keksdose-lang` never written by i18next, the `frontend/src/` paths (kk) →
+  §11.1, decision 2.
+- **kastlan's keys**: the handover copies and the photo outbox told apart, crash
+  reports, the kit's checkout key, the demo banner, the query cache removed at boot; the
+  account caches stay (ka) → §11.1, decision 2.
+- **kastlan's language: account, then browser, then de-CH, without a reload** (ka Q5) →
+  §11.5.
+- **KS's key list holds**; the demo banner's key added (KS) → §11.1.
+- **Every persisted zustand store's entry carries a `reset`** (KS 3.1) → §11.2,
+  decision 10; §11.4; `steering-curve-channels` → §11.5.
+- **KS's language: `changeLanguage(readerLanguage(…))`, not `followAccountLanguage`**
+  (KS 3.2) → §11.5.
+- **The palette's reset is state only; tested without a palette layer** (KS 3.3) →
+  §11.4, §11.6.
+- **`KIND_OF` beside `ENTRY_OF`, the test by render, `SITES` gains
+  `registerDeviceSetting`** (KS 3.4) → §11.5.
+- **Where, a confirm, live** (decisions 8–10, as recommended) → §11.2.

@@ -19,7 +19,8 @@
  *   - In an app WITH a palette layer (keksdose, kastlan), `applyTokenSet` writes the
  *     active preset's values inline on <html>, and those beat these.
  *   - In an app WITHOUT one (Kurvenschmiede), these are what paints, and More contrast
- *     writes only its four stepped values over them (`reapplyContrastTokens`).
+ *     writes only its stepped values over them (`reapplyContrastTokens`): four in dark,
+ *     nine in light, where the well and the money step too.
  *
  * Because it was taken for inert, it drifted silently, and it did — twice. The surfaces
  * and text colour below still held the pre-#328 palette while DEFAULT_PRESET had moved
@@ -42,9 +43,13 @@
  * paint (`applyPersistedTextSize`, or the inline `TEXT_SIZE_INLINE_SCRIPT`).
  *
  * `data-contrast="more"` is "More contrast", from the setting or from
- * `prefers-contrast: more` on "System". The colour tokens are stepped in JS
- * (`applyTokenSet`), because they are written inline on <html> and no rule here could
- * beat them; what lives here is only what is NOT inline — the focus frame's width.
+ * `prefers-contrast: more` on "System". The inline colour tokens — the text roles, the
+ * border, and in light the well and the money — are stepped in JS (`applyTokenSet`,
+ * `contrastStep`), because they are written inline on <html> and no rule here could beat
+ * them. What lives here is only what is NOT inline: the focus frame's width below, and
+ * in light the status, hue and field-sync literals and `--bg-active`, which step to read
+ * on the darker well (0.36, the `:root[data-contrast="more"]:not(.dark)` block after the
+ * categorical hues; docs/colour-roles-harmonization.md §13).
  *
  * These names are frozen: apps read them, and so does an app's boot splash. */
 
@@ -633,6 +638,35 @@ html[data-text-size="xlarge"] {
   --hue-orange-contrast: #431407; /* orange-950 */
   --hue-orange-border: rgba(194, 65, 12, 0.6);
   --hue-orange-bg: rgba(124, 45, 18, 0.25);
+}
+
+/* ── More contrast in light: the literals on the darker well (0.36) ───────────────
+   docs/colour-roles-harmonization.md §13. Under More contrast a light set's well is 10 %
+   ink into the card (`WELL_INK_MORE`, stepped in JS with the money, since both are
+   inline). On it the light literals above fell to 4.07–4.28:1 as text and
+   `--status-edited` to 2.77:1 as a mark, so they step here, each at its light value's
+   OKLCH hue and chroma at the lightness that clears its ratio on the stepped well of every
+   shipped preset — as §5.5 solved them against the page. On the page and the card they
+   then read 5.08:1 and up. The ones not listed hold on the stepped well as they are
+   (blue 4.60, indigo 5.42, purple 4.79; synced 4.89, pending 4.60, error 4.44 and the
+   danger line 3.22, marks and lines needing 3); `--warning-border-strong` is
+   `var(--warning)` in light and follows.
+
+   `--bg-active` (a digit key's hover, Button primary's, keksdose's assistant bubbles on
+   the well) sat 1.04:1 from a 10 % well at 12 %; at 16 % it is 1.12–1.15:1 from it.
+
+   `(0,3,0)` outranks `:root` and `:root, .dark` whatever the order, and `.dark` on
+   <html> leaves it out: dark does not step (§13.3, decision 4).
+   tokens-css-audit.test.ts measures every pair here. */
+:root[data-contrast="more"]:not(.dark) {
+  --danger: #ba0739;              /* solved: 4.53:1 on the worst stepped well (was 4.31) */
+  --warning: #9a4300;             /* solved: 4.53:1 (was 4.13) */
+  --success: #006a4d;             /* solved: 4.54:1 (was 4.13) */
+  --info: #006197;                /* solved: 4.56:1 (was 4.07) */
+  --hue-teal: #006862;            /* solved: 4.56:1 (was 4.15) */
+  --hue-orange: #a93400;          /* solved: 4.53:1 (was 4.11) */
+  --status-edited: #b66200;       /* solved, a mark: 3.04:1 (was 2.77) */
+  --bg-active: color-mix(in oklab, var(--text-primary) 16%, var(--bg-surface));
 }
 
 /* ── Role utilities (0.33, docs/colour-roles-harmonization.md §7, k25) ─────────────

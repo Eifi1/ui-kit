@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { logger } from "../lib/logger";
 import { readStored } from "../lib/safe-storage";
+import { registerDeviceSetting } from "../lib/device-settings";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { CONTRAST_STEPPED_VARS, contrastStep, rememberedTokenSet } from "./contrast-tokens";
 import { applyTokenSet, DEFAULT_PRESET } from "./palette-presets";
@@ -16,8 +17,10 @@ import type { PersistedAppearanceOptions } from "./text-size";
  * In force it is `<html data-contrast="more">` (else `"standard"`), which does two things:
  * - the inline colour tokens are re-written one step stronger (`applyTokenSet`'s
  *   contrast flag — see contrast-tokens.ts for what moves and why it is JS);
- * - tokens.css raises `--focus-ring-width` from 2 to 3 px and turns on the `contrast:`
- *   variant for anything else a component wants to change.
+ * - tokens.css raises `--focus-ring-width` from 2 to 3 px, in light deepens the status,
+ *   hue and field-sync literals and `--bg-active` to read on the stepped well (0.36,
+ *   colour-roles §13), and turns on the `contrast:` variant for anything else a
+ *   component wants to change.
  *
  * The names below are frozen like the text size's: server-kit's `CONTRAST_MODES`, the
  * stored format, the attribute.
@@ -75,8 +78,15 @@ export function readContrastLevel(): ContrastLevel {
  *
  * With a palette layer (`applyTokenSet` has written a set here), that set is applied
  * again and steps itself. Without one — an app whose base tokens come from tokens.css,
- * like Kurvenschmiede's — the four stepped tokens are written over the stylesheet for
- * the default preset in the current light/dark, or removed again.
+ * like Kurvenschmiede's — the stepped tokens are written over the stylesheet for the
+ * default preset in the current light/dark, or removed again: the four text and line
+ * tokens in both modes, and in light the well and the four money colours too (0.36,
+ * docs/colour-roles-harmonization.md §13.3 decision 10). In dark those five stay removed,
+ * so the stylesheet's dark well and money paint.
+ *
+ * It never calls `applyTokenSet` here: that would remember a token set on `<html>`, and
+ * this app would then take the palette branch above, which a theme switch does not re-run
+ * (the class observer in `useApplyContrast` re-writes only while nothing is remembered).
  */
 function reapplyContrastTokens(el: HTMLElement): void {
   const written = rememberedTokenSet(el);
@@ -91,6 +101,14 @@ function reapplyContrastTokens(el: HTMLElement): void {
   el.style.setProperty("--text-muted", step.textMuted);
   el.style.setProperty("--text-placeholder", step.textPlaceholder);
   el.style.setProperty("--border", step.border);
+  // One line per variable, not a loop: the step's fields are not the variables' names.
+  if (step.well) {
+    el.style.setProperty("--bg-surface-2", step.well.bgSurface2);
+    el.style.setProperty("--money-income", step.well.moneyIncome);
+    el.style.setProperty("--money-expense", step.well.moneyExpense);
+    el.style.setProperty("--money-net", step.well.moneyNet);
+    el.style.setProperty("--money-neutral", step.well.moneyNeutral);
+  }
 }
 
 /** Put `level` on `<html>` and re-write the colour tokens for it. */
@@ -197,6 +215,14 @@ export function createContrastStore(storageKey: string) {
       "contrast",
     ),
   );
+  // Reset this device's settings (docs/settings-harmonization.md §11.4): no choice on
+  // this device, so `useApplyContrast` re-resolves to the account's mode, else "system",
+  // and re-steps the tokens.
+  registerDeviceSetting({
+    key: storageKey,
+    kind: "appearance",
+    reset: () => useContrastStore.getState().setContrast(null),
+  });
 
   function useApplyContrast({ account }: ApplyContrastOptions = {}): ContrastLevel {
     const device = useContrastStore((s) => s.contrast);

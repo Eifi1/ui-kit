@@ -229,7 +229,16 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // the provider — `resolveChipInputLabels`, `resolveFieldSyncLabels`,
   // `resolvePasswordRevealLabels`, `resolveWizardLabels`, `resolveDataTableLabels` (now
   // DataTable's own) and `missingDataTableLabels` (`missingKitLabels` checks every namespace).
-  ["@eifi1/ui-kit", barrel, 868],
+  // 0.36.0 (+22, round 0.36): reset this device's settings (settings §11) —
+  // `registerDeviceSetting`, `deviceSettings`, `resetDeviceSettings`, `DeviceResetSetting`,
+  // `DEVICE_RESET_ANCHOR`, `DEFAULT_DEVICE_RESET_LABELS` (+6); the notification cards
+  // (docs/notifications-harmonization.md §4.2) — `NotificationTypesSetting`,
+  // `QuietHoursSetting`, `TimeZoneSelect`, `timeZoneOptions`, `deviceTimeZone`,
+  // `usePushDevice`, `PUSH_SUBSCRIPTION_CHANGED`, `notifyPushSubscriptionChanged`,
+  // `pushSupported`, `PushDeviceError`, `PushDeviceSetting`, `PushDevicesSetting`,
+  // `describeUserAgent`, `UnsubscribePanel`, `unsubscribeTokenType`,
+  // `DEFAULT_NOTIFICATIONS_LABELS` (+16).
+  ["@eifi1/ui-kit", barrel, 890],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

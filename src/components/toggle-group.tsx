@@ -11,11 +11,13 @@ import {
   DISABLED_REASON_LINE_CLASS,
   FIELD_CAPTION_CLASS,
   FIELD_ERROR_CLASS,
+  fieldHelpMark,
   isTextHint,
   LabelStrip,
   useDisabledReasonLine,
   useInlineHint,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
 } from "./field-parts";
 import { FOCUS_RING_WIDTH } from "./focus-ring";
 
@@ -35,7 +37,8 @@ export interface ToggleOption<T extends string> {
  * worse than one that does not compile.
  */
 export interface ToggleGroupBaseProps<T extends string>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children"> {
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children">,
+    FieldHelpProps {
   options: ToggleOption<T>[];
   className?: string;
   /** Applied to every option button (e.g. to tune height/rounding to match
@@ -380,6 +383,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     labelPlacement = "field",
     chromeClassName,
     hint,
+    help,
     error,
     disabledReason: ownDisabledReason,
     disabledReasonDisplay,
@@ -407,10 +411,22 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   // §4: at Large and on touch the reason is a line under the group, not a bubble.
   const reasonLine = useDisabledReasonLine(disabledReasonDisplay) && locked;
   // §4: likewise a FieldHint "?" on the label line becomes a caption under the group at
-  // Large and on touch; text is a caption at every size, as Select's (see `hint`).
-  const inlineHint = useInlineHint(hint);
-  const hintAsCaption = isTextHint(hint) ? hint : inlineHint !== hint ? inlineHint : undefined;
-  const labelHint = hintAsCaption === undefined ? hint : undefined;
+  // Large and on touch; text is a caption at every size, as Select's (see `hint`). With
+  // a `help` (0.36, only with `label`, as `hint`), its "?" is the label line's only one,
+  // and the hint — a FieldHint's words included — is the caption at every size.
+  const helpMark = fieldHelpMark(hasContent(label) ? help : undefined, label);
+  const withHelp = helpMark !== undefined;
+  const inlineHint = useInlineHint(hint, withHelp);
+  const hintAsCaption = withHelp
+    ? hasContent(inlineHint)
+      ? inlineHint
+      : undefined
+    : isTextHint(hint)
+      ? hint
+      : inlineHint !== hint
+        ? inlineHint
+        : undefined;
+  const labelHint = helpMark ?? (hintAsCaption === undefined ? hint : undefined);
   // Locked looks disabled — the dimmed group, the not-allowed cursor, no hover offer —
   // but stays focusable; `disabled` alone also takes the segments out of the tab order.
   const dimmed = disabled || locked;

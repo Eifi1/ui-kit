@@ -465,6 +465,12 @@ export const de: Dictionary = {
       short: "Grundgerüst",
       blurb: "Der Anwendungsrahmen, den Sie gerade vor sich haben, auseinandergenommen.",
     },
+    notifications: {
+      title: "Benachrichtigungen",
+      short: "Benachrichtigungen",
+      blurb:
+        "Die Benachrichtigungseinstellungen, die jede App teilt: die Arten, die der Server liefert, mit einem Schalter in der App und einem per E-Mail, Ruhezeiten und die Zeitzone, Push auf diesem Gerät und die Liste der Geräte, und die Seite, die der Abmeldelink einer E-Mail öffnet.",
+    },
     settings: {
       title: "Einstellungen",
       short: "Einstellungen",
@@ -552,11 +558,17 @@ export const de: Dictionary = {
       blurb:
         "E-Mails zum Konto: die Texte pro Sprache, ein einziges Layout, das jeden Wert escapt, zwei Transporte, die nie eine Ausnahme werfen — und die Beispiel-E-Mails des Releases, gerendert.",
     },
+    "server-notifications": {
+      title: "Benachrichtigungen",
+      short: "Benachrichtigungen",
+      blurb:
+        "Die Benachrichtigungsarten der App und die Schalter jedes Kontos, der PATCH der Einstellungen, wer einen Eintrag im Posteingang, einen Push oder eine E-Mail bekommt, Ruhezeiten und die Zusammenfassung, die Push-Nutzlast und die Antwort eines Push-Dienstes, und das signierte Token zum Abmelden mit einem Klick.",
+    },
     "server-feedback": {
       title: "Feedback & Uploads",
       short: "Feedback",
       blurb:
-        "Der Feedback-Vertrag als reine Funktionen — Schemas, Status, die PATCH-Regeln, Nacharbeit, Absturzmeldungen, Löschung — und Anhänge, beurteilt nach ihren Bytes.",
+        "Der Feedback-Vertrag als reine Funktionen — Schemas, Status, die PATCH-Regeln, Nacharbeit, Absturzmeldungen, Löschung — seine Routen als eine Router-Factory, und Anhänge, beurteilt nach ihren Bytes.",
     },
     "server-limits": {
       title: "Limits, Fehler & CORS",
@@ -1131,6 +1143,22 @@ export const de: Dictionary = {
       "Seitenleiste einklappen",
       "Kontomenü mit Avatar",
     ],
+    notifications: [
+      "Benachrichtigungseinstellungen",
+      "Benachrichtigungen ein- oder ausschalten",
+      "wählen, welche Benachrichtigungen kommen",
+      "per E-Mail benachrichtigen",
+      "Ruhezeiten",
+      "nachts nicht stören",
+      "Zeitzone wählen",
+      "Push-Benachrichtigungen auf diesem Gerät",
+      "Test-Benachrichtigung senden",
+      "Geräte mit Benachrichtigungen auflisten",
+      "Gerät entfernen",
+      "E-Mails abbestellen",
+      "Abmeldelink mit einem Klick",
+      "wöchentliche oder monatliche Zusammenfassung",
+    ],
     settings: [
       "Kontoeinstellungen",
       "Passwort ändern",
@@ -1255,6 +1283,17 @@ export const de: Dictionary = {
       "E-Mails in der Entwicklung protokollieren",
       "Support-Adresse als Antwortadresse",
     ],
+    "server-notifications": [
+      "Benachrichtigungsarten der App registrieren",
+      "Endpunkt für Benachrichtigungseinstellungen",
+      "wer einen Push oder eine E-Mail bekommt",
+      "Ruhezeiten auf dem Server prüfen",
+      "wann die Zusammenfassung fällig ist",
+      "Web-Push-Nutzlast erstellen",
+      "tote Push-Abonnements entfernen",
+      "Abmeldelink mit einem Klick signieren",
+      "Aufbau des Benachrichtigungs-Posteingangs",
+    ],
     "server-feedback": [
       "Feedback-Meldung validieren",
       "Statusregeln für Feedback",
@@ -1262,6 +1301,7 @@ export const de: Dictionary = {
       "Typ einer hochgeladenen Datei prüfen",
       "Grösse von Anhängen begrenzen",
       "Feedback eines gelöschten Benutzers löschen",
+      "Feedback-Routen einbinden",
     ],
     "server-limits": [
       "Rate-Limit für eine Route",

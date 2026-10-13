@@ -6,7 +6,7 @@ import { PAGES } from "../routes";
  * the page frame (showcase.tsx) puts a "Server side" link under the title of every kit
  * page it names — so the two directions cannot disagree.
  *
- * Keyed by the module's short name (`user_admin`), valued by kit page slugs from
+ * Keyed by the module's short name (`user_admin`, `feedback.router`), valued by kit page slugs from
  * routes.tsx. A slug that is not a page fails the server-kit test, so a renamed page
  * shows up there rather than as a dead link.
  *
@@ -28,7 +28,13 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   billing: ["subscription"],
   // The reset and email-change mails the Auth page's forms ask for.
   mail: ["auth-account"],
+  // The types, switches, quiet hours, push devices and unsubscribe token the
+  // Notifications page's cards read and write (server-kit 0.9).
+  notifications: ["notifications"],
   feedback: ["feedback-compose", "feedback-inbox"],
+  // The same two pages' routes, as one router factory (server-kit 0.9, the `fastapi`
+  // extra). Nested: its anchor is `#feedback.router` (server-kit/api.ts anchors).
+  "feedback.router": ["feedback-compose", "feedback-inbox"],
   // The attachment policy behind the feedback dialog's attachment field.
   uploads: ["feedback-compose"],
   // `Retry-After` and the per-address delay, which `isRateLimited` / `retryAfterSeconds`

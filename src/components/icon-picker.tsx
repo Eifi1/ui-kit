@@ -7,7 +7,7 @@ import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
 import { hasContent } from "../lib/presence";
 import { foldForSearch } from "../lib/text-match";
-import { LabelStrip, useFieldMessages } from "./field-parts";
+import { LabelStrip, useFieldMessages, type FieldHelpProps } from "./field-parts";
 import { DEFAULT_ICON_PICKER_LABELS } from "./icon-picker-labels";
 
 export interface IconPickerLabels {
@@ -52,7 +52,8 @@ export interface IconOption<T extends string> {
 }
 
 export interface IconPickerProps<T extends string>
-  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue">,
+    FieldHelpProps {
   options: IconOption<T>[];
   /** The chosen icon, or `null` for none. */
   value: T | null;
@@ -122,6 +123,7 @@ export function IconPicker<T extends string>({
   labels,
   label,
   hint,
+  help,
   className,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
@@ -134,9 +136,12 @@ export function IconPicker<T extends string>({
   const mixedId = useId();
   const labelId = useId();
   const labelled = hasContent(label);
-  // The label line's "?", or the caption under the grid (DUP-2). Only with a label.
+  // The label line's "?", or the caption under the grid (DUP-2). Only with a label, the
+  // help's "?" too (0.36).
   const messages = useFieldMessages({
     hint: labelled ? hint : undefined,
+    help: labelled ? help : undefined,
+    name: label,
     describedBy: ariaDescribedBy,
     reasonId: mixed && mixedId,
   });

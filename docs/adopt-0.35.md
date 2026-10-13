@@ -84,7 +84,9 @@ Escape rule need nothing.
 
 Each was deprecated in 0.34 with its replacement named (the two SwipeAction members in 0.33).
 Call sites in the apps' `frontend/src` today: **keksdose 0, kastlan 0, Kurvenschmiede 0** for
-every line below.
+every line below — in the apps' code. The count skipped tests, which tsc checks too: keksdose's
+`transaction-swipe-plan.test.ts` read `SwipeAction.className` to assert no plan uses it (found in
+its adoption; correction 2026-10-13).
 
 | Removed | Use |
 |---|---|

@@ -1,7 +1,7 @@
 import { useId } from "react";
 import type { CSSProperties, ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
-import { useFieldMessages } from "./field-parts";
+import { useFieldMessages, type FieldHelpProps } from "./field-parts";
 
 /**
  * A range control on a native `<input type="range">`.
@@ -123,7 +123,8 @@ export interface SliderProps
   extends Omit<
     InputHTMLAttributes<HTMLInputElement>,
     "type" | "value" | "defaultValue" | "onChange" | "min" | "max" | "step" | "children"
-  > {
+  >,
+    FieldHelpProps {
   /** The value. On a log scale this is the real value, not the track position. */
   value: number;
   /** The new value — a number, not the DOM event, like `ToggleGroup`. Fired on every
@@ -201,6 +202,7 @@ export function Slider({
   formatValue,
   label,
   hint,
+  help,
   readout,
   marks,
   className,
@@ -254,7 +256,12 @@ export function Slider({
   const hasMarkLabels = normalizedMarks.some((m) => m.label !== undefined);
 
   // The label line's "?", or the caption under the track (DUP-2).
-  const messages = useFieldMessages({ hint, describedBy: rest["aria-describedby"] });
+  const messages = useFieldMessages({
+    hint,
+    help,
+    name: label ?? rest["aria-label"],
+    describedBy: rest["aria-describedby"],
+  });
   const labelHint = messages.labelHint;
   const hasHeader = label !== undefined || labelHint !== undefined || readout !== undefined;
   const plainReadout = typeof readout === "string" || typeof readout === "number";

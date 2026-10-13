@@ -228,7 +228,9 @@ export interface TextLinkProps
 }
 
 const TONE: Record<TextLinkTone, string> = {
-  brand: "text-brand hover:text-[var(--brand-hover)]",
+  // Under More contrast the brand as text, `--brand-muted`, at rest and hovered (0.36,
+  // colour-roles §13.3 decision 8): `--brand` is a mark's colour, solved to 3:1.
+  brand: "text-brand hover:text-[var(--brand-hover)] contrast:text-brand-muted contrast:hover:text-brand-muted",
   muted: "text-muted hover:text-primary",
   danger: "text-danger hover:text-[var(--danger-hover)]",
   inherit: "",

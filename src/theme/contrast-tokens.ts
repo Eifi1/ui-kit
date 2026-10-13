@@ -1,4 +1,4 @@
-import { contrast, oklchToRgb, parseHex, rgbToOklch, toHex } from "./color";
+import { contrast, hexToOklch, luminance, oklchToHex, oklchToRgb, parseHex, rgbToOklch, solveLightness, toHex } from "./color";
 import type { TokenSet } from "./palette-presets";
 
 /**
@@ -20,17 +20,48 @@ import type { TokenSet } from "./palette-presets";
  * - `--border` moves toward `--text-primary` until it clears 3:1 against the worst of the
  *   three surfaces (WCAG 1.4.11, a field's boundary), and never less far than
  *   `--border-strong`'s 45 % — so every border is at least as strong as a "strong" one was.
- *   `--border-strong` stays derived in tokens.css and grows with it.
+ *   `--border-strong` stays derived in tokens.css and grows with it;
+ * - in a LIGHT set only (0.36, docs/colour-roles-harmonization.md §13): the well
+ *   (`--bg-surface-2`) becomes {@link WELL_INK_MORE} of `--text-primary` mixed into the
+ *   card, and each of the four money colours that falls under 4.5:1 on that well is
+ *   solved darker at its own hue and chroma. The border above is solved against the
+ *   stepped well. A dark set's well stands 1.11–1.13:1 from its card already, and its
+ *   money has no room: nothing of it steps.
+ *
+ * What does NOT move here, because it is not inline: the light status, hue and field-sync
+ * literals and `--bg-active` step in tokens.css's `:root[data-contrast="more"]:not(.dark)`
+ * block, solved over these stepped wells.
  */
 
-/** The custom properties a contrast step writes. */
-export const CONTRAST_STEPPED_VARS = ["--text-secondary", "--text-muted", "--text-placeholder", "--border"] as const;
+/** The custom properties a contrast step writes. The last five only for a light set. */
+export const CONTRAST_STEPPED_VARS = [
+  "--text-secondary",
+  "--text-muted",
+  "--text-placeholder",
+  "--border",
+  "--bg-surface-2",
+  "--money-income",
+  "--money-expense",
+  "--money-net",
+  "--money-neutral",
+] as const;
+
+/** The light well under More contrast and the money that reads on it (§13.4). */
+export interface WellStep {
+  bgSurface2: string;
+  moneyIncome: string;
+  moneyExpense: string;
+  moneyNet: string;
+  moneyNeutral: string;
+}
 
 export interface ContrastStep {
   textSecondary: string;
   textMuted: string;
   textPlaceholder: string;
   border: string;
+  /** The stepped well and money, or null for a dark set (which does not step them). */
+  well: WellStep | null;
 }
 
 interface Lab {
@@ -83,6 +114,63 @@ export function hoverFill(t: Pick<TokenSet, "textPrimary" | "bgSurface">): strin
 }
 
 /**
+ * The light well under More contrast: this share of `--text-primary` mixed into the card,
+ * `--bg-hover`'s formula at a larger share (0.36, docs/colour-roles-harmonization.md §13).
+ *
+ * In light the well is the page (§5.3), 1.09–1.11:1 from the card. At 10 % it stands
+ * 1.19–1.24:1 from it, about twice that. The rule it is held to: **the stepped well stands
+ * at least 1.17:1 from the card**, two of the hover rule's 1.08 steps; 9 % is the least
+ * that clears it in every shipped preset, with no room. The step cannot ship alone: on a
+ * 10 % well money, status and two hues read 4.07–4.28:1, so the money is solved with it
+ * here and the status and hue literals in tokens.css.
+ */
+export const WELL_INK_MORE = 0.1;
+
+/** The least the stepped light well stands from the card (§13.3, decision 2). */
+export const WELL_STEP_MIN = 1.17;
+
+/** True when `t` is a light set: its body ink darker than its card. */
+function isLightSet(t: Pick<TokenSet, "textPrimary" | "bgSurface">): boolean | null {
+  const ink = parseHex(t.textPrimary);
+  const card = parseHex(t.bgSurface);
+  if (!ink || !card) return null;
+  return luminance(ink) < luminance(card);
+}
+
+/** Money as text: WCAG 1.4.3 AA. */
+const MONEY_TARGET = 4.5;
+
+/** `color` as it is when it clears 4.5:1 on `well`, else solved darker at its own hue and
+ *  chroma until it does — measured on the hex (`solveLightness`). */
+function moneyOn(color: string, well: string): string {
+  if (contrast(color, well) >= MONEY_TARGET) return color;
+  const lch = hexToOklch(color);
+  const bg = parseHex(well);
+  if (!lch || !bg) return color;
+  const l = solveLightness(MONEY_TARGET, bg, lch.h, lch.c, "darker");
+  return oklchToHex({ l, c: lch.c, h: lch.h });
+}
+
+/** The light well under More contrast for `t`, or null for a dark set (or one whose ink or
+ *  card is not hex, which cannot be mixed). The deriver solves the brand against it. */
+export function steppedWellFill(t: Pick<TokenSet, "textPrimary" | "bgSurface">): string | null {
+  return isLightSet(t) ? mix(t.textPrimary, t.bgSurface, WELL_INK_MORE) : null;
+}
+
+/** The stepped well and money of a light set, or null (see {@link steppedWellFill}). */
+function wellStep(t: TokenSet): WellStep | null {
+  const well = steppedWellFill(t);
+  if (!well) return null;
+  return {
+    bgSurface2: well,
+    moneyIncome: moneyOn(t.moneyIncome, well),
+    moneyExpense: moneyOn(t.moneyExpense, well),
+    moneyNet: moneyOn(t.moneyNet, well),
+    moneyNeutral: moneyOn(t.moneyNeutral, well),
+  };
+}
+
+/**
  * `--brand-muted` in tokens.css: this share of `--brand` mixed into `--text-primary`.
  *
  * 62 %, down from 70 % in 0.33 (docs/colour-roles-harmonization.md §12.11): the brand as
@@ -118,32 +206,38 @@ const BORDER_TARGET = 3;
 /** `--border-strong` in tokens.css: 55 % border, 45 % text. */
 const BORDER_STRONG_SHARE = 0.45;
 
-function worstContrast(color: string, t: TokenSet): number {
-  return Math.min(contrast(color, t.bgPage), contrast(color, t.bgSurface), contrast(color, t.bgSurface2));
+/** The worst of the three surfaces; `well`, when the step has one, in place of the set's. */
+function worstContrast(color: string, t: TokenSet, well: string): number {
+  return Math.min(contrast(color, t.bgPage), contrast(color, t.bgSurface), contrast(color, well));
 }
 
-function steppedBorder(t: TokenSet): string {
+function steppedBorder(t: TokenSet, well: WellStep | null): string {
   // The share of `--text-primary` in the border: at least --border-strong's, more until
   // 3:1. Monotonic in the share (the mix walks from the border to the text, away from
-  // every surface), so a bisection finds the least that clears it.
+  // every surface), so a bisection finds the least that clears it. Against the stepped
+  // light well (§13.4), which is the darkest surface under More contrast.
+  const surface2 = well?.bgSurface2 ?? t.bgSurface2;
   let lo = BORDER_STRONG_SHARE;
-  if (worstContrast(mix(t.border, t.textPrimary, 1 - lo), t) >= BORDER_TARGET) return mix(t.border, t.textPrimary, 1 - lo);
+  if (worstContrast(mix(t.border, t.textPrimary, 1 - lo), t, surface2) >= BORDER_TARGET) return mix(t.border, t.textPrimary, 1 - lo);
   let hi = 1;
   for (let i = 0; i < 16; i++) {
     const mid = (lo + hi) / 2;
-    if (worstContrast(mix(t.border, t.textPrimary, 1 - mid), t) >= BORDER_TARGET) hi = mid;
+    if (worstContrast(mix(t.border, t.textPrimary, 1 - mid), t, surface2) >= BORDER_TARGET) hi = mid;
     else lo = mid;
   }
   return mix(t.border, t.textPrimary, 1 - hi);
 }
 
-/** The four stepped values for `t`. Pure. */
+/** The stepped values for `t`: the four text and line tokens, and for a light set the
+ *  well and money (`well`, null in dark). Pure. */
 export function contrastStep(t: TokenSet): ContrastStep {
+  const well = wellStep(t);
   return {
     textSecondary: mix(t.textSecondary, t.textPrimary, 0.5),
     textMuted: t.textSecondary,
     textPlaceholder: t.textMuted,
-    border: steppedBorder(t),
+    border: steppedBorder(t, well),
+    well,
   };
 }
 

@@ -142,6 +142,40 @@ describe("validation", () => {
     expect(errors).toContain("mails[1]: notice in en is listed twice");
   });
 
+  it("accepts a nested module, and refuses what is not a module of the package", () => {
+    const api = exportOf();
+    // server-kit 0.9: the FastAPI-only router is a module of its own inside a package.
+    api.modules.push({ name: "eifi1_server_kit.feedback.router", summary: "", doc: "", members: [] });
+    expect(validate(api)).toEqual([]);
+    for (const name of ["eifi1_server_kit", "eifi1_server_kit.Feedback", "eifi1_server_kit.feedback.", "other.feedback"]) {
+      const bad = exportOf();
+      bad.modules[0].name = name;
+      expect(validate(bad), name).toEqual([`${name}: name ${JSON.stringify(name)} is not an eifi1_server_kit module`]);
+    }
+  });
+
+  it("refuses a dotted member name, which would read as a member of a nested module", () => {
+    const api = exportOf();
+    api.modules[0].members.push({ name: "router.make", kind: "function", signature: "make()", doc: "" });
+    expect(validate(api)).toEqual([
+      'eifi1_server_kit.settings.router.make: name "router.make" is not a Python identifier',
+    ]);
+  });
+
+  it("refuses a module beside a member of its parent with its name: one anchor, two things", () => {
+    // `#feedback.router` is the module only because `feedback` has no member `router`.
+    const api = exportOf();
+    api.modules = [
+      { name: "eifi1_server_kit.feedback", summary: "", doc: "", members: [] },
+      { name: "eifi1_server_kit.feedback.router", summary: "", doc: "", members: [] },
+    ];
+    expect(validate(api)).toEqual([]);
+    api.modules[0].members.push({ name: "router", kind: "constant", signature: "router = None", doc: "" });
+    expect(validate(api)).toEqual([
+      "eifi1_server_kit.feedback.router: eifi1_server_kit.feedback has a member router as well, and both would be the showcase's anchor #feedback.router",
+    ]);
+  });
+
   it("refuses a contract path outside the repository", () => {
     const api = exportOf();
     api.modules[0].contract = { doc: "../elsewhere.md", section: "§1" };

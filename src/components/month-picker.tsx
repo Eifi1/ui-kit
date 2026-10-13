@@ -13,7 +13,7 @@ import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { useKitDateFormatter, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
-import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, mergeRefs, useFieldMessages } from "./field-parts";
+import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, mergeRefs, useFieldMessages, type FieldHelpProps } from "./field-parts";
 import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker-labels";
 
 /**
@@ -63,7 +63,7 @@ function useMonthPickerLabels(partial?: Partial<MonthPickerLabels>): MonthPicker
  * a `FormEvent`, and this one answers with a month key. Everything else reaches the
  * field's root, so a test id or a `data-tour` anchor can find it.
  */
-export interface MonthPickerProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
+export interface MonthPickerProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange">, FieldHelpProps {
   /**
    * The selected month as a `"YYYY-MM"` key, or `""` for none.
    *
@@ -831,6 +831,7 @@ export function MonthPicker(props: MonthPickerProps) {
     invalid,
     error,
     hint,
+    help,
     size = "md",
     mode = "month",
     formatOptions,
@@ -877,7 +878,13 @@ export function MonthPicker(props: MonthPickerProps) {
   // keksdose K4: the caption and the error, on the trigger after the caller's own
   // description. Painted for `invalid` and a message — not for a bare `aria-invalid`,
   // which this field has never painted for.
-  const messages = useFieldMessages({ hint, error, describedBy: rest["aria-describedby"] });
+  const messages = useFieldMessages({
+    hint,
+    help,
+    name: label ?? rest["aria-label"],
+    error,
+    describedBy: rest["aria-describedby"],
+  });
   const [ownAria, wrapperRest] = splitTriggerAria(rest);
   // The field's trigger is described by the caption and the error too; the stepper
   // draws neither, so its heading keeps the caller's own description.

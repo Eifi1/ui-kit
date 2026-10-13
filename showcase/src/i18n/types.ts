@@ -84,6 +84,7 @@ export type PageSlug =
   | "page-structure"
   | "links"
   | "settings"
+  | "notifications"
   | "auth-account"
   | "landing-demo"
   | "user-admin"
@@ -104,6 +105,7 @@ export type PageSlug =
   | "server-demo"
   | "server-billing"
   | "server-mail"
+  | "server-notifications"
   | "server-feedback"
   | "server-limits"
   | "server-translation-review";

@@ -12,8 +12,8 @@ const TOKENS_CSS = Object.values(
  * stylesheet's literals, the dark washes composited on the card (0.33: the audit used to
  * run without it, so no status literal was ever measured against a preset surface).
  */
-function semanticOf(preset: (typeof PALETTES)[number], mode: "light" | "dark"): SemanticTokens {
-  const t = resolveTokens(TOKENS_CSS, preset[mode], mode, false);
+function semanticOf(preset: (typeof PALETTES)[number], mode: "light" | "dark", more = false): SemanticTokens {
+  const t = resolveTokens(TOKENS_CSS, preset[mode], mode, more);
   const hex = (name: string) => {
     const c = t.color(name);
     return hexOf(c.a < 1 ? over(c, t.color("--bg-surface")) : c);
@@ -86,6 +86,72 @@ describe("every shipped preset survives its own audit", () => {
         (f) => `${f.pair} ${f.ratio.toFixed(2)}:1 < ${f.required}:1 (${f.rule})`,
       );
       expect(failures, `${id}/${mode}`).toEqual([]);
+    }
+  });
+
+  it.each(PALETTES.map((p) => [p.id, p] as const))("%s passes under More contrast on both themes (§13.5)", (id, preset) => {
+    for (const mode of ["light", "dark"] as const) {
+      // The set as More contrast paints it, with tokens.css's More literals in light.
+      const report = auditPalette(preset[mode], semanticOf(preset, mode, true), { level: "more" });
+      const failures = report.failures.map(
+        (f) => `${f.pair} ${f.ratio.toFixed(2)}:1 < ${f.required}:1 (${f.rule})`,
+      );
+      expect(failures, `${id}/${mode} +more`).toEqual([]);
+      // Not vacuous: the stepped pairs are there, named for the level.
+      const pairs = report.checks.map((c) => c.pair);
+      expect(pairs).toContain("moneyExpense on bgSurface2 (More contrast)");
+      expect(pairs).toContain("border on bgSurface2 (More contrast)");
+      if (mode === "light") {
+        expect(pairs).toContain("bgSurface2 on bgSurface (More contrast)");
+        expect(pairs).toContain("danger on bgSurface2 (More contrast)");
+      } else {
+        expect(pairs).not.toContain("bgSurface2 on bgSurface (More contrast)");
+      }
+    }
+  });
+});
+
+describe("auditPalette({ level: 'more' }) (0.36, colour-roles §13.5)", () => {
+  it("measures the stepped well and money in light: the well 1.17 from the card, money 4.5 on it", () => {
+    const t = DEFAULT_PRESET.light;
+    const report = auditPalette(t, undefined, { level: "more" });
+    const check = (pair: string) => report.checks.find((c) => c.pair === `${pair} (More contrast)`)!;
+    // Default's stepped well, #e3d9c7, and expense solved onto it (#905902 → #895400).
+    expect(check("bgSurface2 on bgSurface").ratio).toBeCloseTo(contrast("#e3d9c7", t.bgSurface), 6);
+    expect(check("bgSurface2 on bgSurface").required).toBe(1.17);
+    expect(check("moneyExpense on bgSurface2").ratio).toBeCloseTo(contrast("#895400", "#e3d9c7"), 6);
+    // The muted text is the set's secondary; the border is a field's boundary, at 3.
+    expect(check("textMuted on bgSurface2").ratio).toBeCloseTo(contrast(t.textSecondary, "#e3d9c7"), 6);
+    expect(check("border on bgPage").required).toBe(3);
+    // Standard keeps the hairline's 1.1 and has no well rule.
+    const standard = auditPalette(t);
+    expect(standard.checks.find((c) => c.pair === "border on bgPage")!.required).toBe(1.1);
+    expect(standard.checks.map((c) => c.pair)).not.toContain("bgSurface2 on bgSurface");
+  });
+
+  it("fails what it measures: a light set whose ink is too light to step the well 1.17 from the card", () => {
+    // The ink at 4.6:1 on the card: 10 % of it into the card moves the well too little.
+    const pale = { ...DEFAULT_PRESET.light, textPrimary: "#7a7262", textSecondary: "#7a7262", textMuted: "#7a7262" };
+    const failing = auditPalette(pale, undefined, { level: "more" }).failures.map((f) => f.pair);
+    expect(failing).toContain("bgSurface2 on bgSurface (More contrast)");
+  });
+
+  it("fails what it measures: today's light literals on the stepped well", () => {
+    // tokens.css's STANDARD light status colours, audited on More contrast's well.
+    const failing = auditPalette(DEFAULT_PRESET.light, semanticOf(DEFAULT_PRESET, "light", false), { level: "more" })
+      .failures.map((f) => f.pair);
+    expect(failing).toContain("info on bgSurface2 (More contrast)");
+    expect(failing).toContain("warning on bgSurface2 (More contrast)");
+  });
+
+  it("is what derivePalette reports too: both levels, the More ones suffixed", () => {
+    for (const mode of ["light", "dark"] as const) {
+      const p = derivePalette({ anchors: { brand: "#2f5fd0" }, mode });
+      const pairs = p.audit.checks.map((c) => c.pair);
+      expect(pairs).toContain("textMuted on bgSurface2");
+      expect(pairs).toContain("textMuted on bgSurface2 (More contrast)");
+      expect(pairs.includes("bgSurface2 on bgSurface (More contrast)")).toBe(mode === "light");
+      expect(p.audit.passes, mode).toBe(true);
     }
   });
 });

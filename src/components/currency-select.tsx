@@ -2,7 +2,7 @@ import { useCallback, useId } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { FieldChevron, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./field-base";
 import { FieldLabel } from "./field-parts";
-import { assignRef, EndHintRow, useFieldMessages } from "./field-parts";
+import { assignRef, EndHintRow, useFieldMessages, type FieldHelpProps } from "./field-parts";
 import { cn } from "../lib/cn";
 import { useComboboxCore } from "./combobox-core";
 import {
@@ -29,7 +29,7 @@ export type { CurrencyFlagProps, CurrencyOption };
 
 /** `onChange` is the kit's — "a currency was picked", carrying the code — rather
  *  than the div's form event. */
-export interface CurrencySelectProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
+export interface CurrencySelectProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange">, FieldHelpProps {
   value: string;
   onChange: (code: string) => void;
   placeholder?: string;
@@ -106,6 +106,7 @@ export function CurrencySelect({
   invalid,
   error,
   hint,
+  help,
   labels,
   currencyNames,
   "aria-label": ariaLabel,
@@ -143,7 +144,15 @@ export function CurrencySelect({
   // on the wrapper `<div>` through the spread, where nothing reads it. The caller's ids
   // first, then the caption, then the error — Select's order, through useFieldMessages
   // since 0.34 (DUP-2, DUP-8).
-  const field = useFieldMessages({ hint, error, invalid, describedBy: ariaDescribedBy, ariaInvalid });
+  const field = useFieldMessages({
+    hint,
+    help,
+    name: label ?? ariaLabel,
+    error,
+    invalid,
+    describedBy: ariaDescribedBy,
+    ariaInvalid,
+  });
   const { labelHint, describedBy, isInvalid } = field;
 
   // The trigger's NAME. A combobox does not take its name from its content, and the

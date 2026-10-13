@@ -21,7 +21,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
 | 2 | Decisions | — | §7.2, §7.4, §7.7; §8.2 (READY, 0.31) |
-| 3 | The API contract (A) | server-kit 0.1.0 (`feedback`); apps' backends | §7.1, §7.5–§7.9, §7.15, §7.16; §8.2 (server-kit 0.5) |
+| 3 | The API contract (A) | server-kit 0.1.0 (`feedback`); apps' backends | §7.1, §7.5–§7.9, §7.15, §7.16; §8.2 (server-kit 0.5); round 0.36 (§3.5, §3.6: the limiter is charged before the work, as the three apps do; [server-services §2.11](server-services-harmonization.md)) |
 | 3.8 | What kastlan and Kurvenschmiede change | — (archived) | |
 | 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31) |
 | 5 | What the kit adds, what stays app-side (C) | ui-kit 0.27.0, server-kit 0.1.0 | §8.1, §8.2 (ui-kit 0.31, server-kit 0.5) |
@@ -263,13 +263,15 @@ and `feedback.attachments`:
 - Download: authenticated, so clients fetch through the authed client (`AuthedImage`
   for pictures, blob download for pdf/txt — kk `FeedbackFileDownload`); non-images are
   always served as `attachment`, never inline.
-- Throttle: 20 uploads / hour / user → 429 with `Retry-After` (kk `throttle_attachment`).
-  App-specific: keksdose's window is **shared with support-chat uploads**
-  (`upload_guards._attachment_limiter`) and charged **before** the type/size checks, so a
-  refused file uses a slot — and one full report is up to 6 uploads. kastlan adds the
-  same in-process limiter (20 uploads/h, 20 crashes/h per user); Kurvenschmiede's are
-  per process (2 uvicorn workers → effectively 40/h). Recommended for all: charge after
-  validation.
+- Throttle: 20 uploads / hour / user → 429 with `Retry-After` (kk `throttle_attachment`),
+  **charged before the file is read**, in all three apps (amended in round 0.36,
+  [server-services §2.11](server-services-harmonization.md)): the window bounds the work a
+  looping client makes the server do, and reading and sniffing 10 MB is that work. So a
+  refused file uses a slot too, and one full report is up to 6 uploads. App-specific:
+  keksdose's window is **shared with support-chat uploads**
+  (`upload_guards._attachment_limiter`). kastlan has the same in-process limiter
+  (20 uploads/h, 20 crashes/h per user); Kurvenschmiede's are per process (2 uvicorn
+  workers → effectively 40/h).
 - Storage is the app's: Kurvenschmiede keeps its own table and encryption. The two-step
   upload's orphans are the app's to clean (Kurvenschmiede: each upload sweeps unattached
   uploads older than 24 h, with no scheduler); the URL shape the client sees is this
@@ -314,9 +316,11 @@ digits to `#`; a fingerprint matching a row **not** in DONE/WONT_DO bumps
 row (a regression is news). New row: category CRASH, status OPEN, title
 `[crash] <name>: <message>` (≤ 255), body a plain-text diagnostics block (kk
 `_crash_body`), `crash_fingerprint` in its own indexed column. `reference` = the first 8
-fingerprint characters, shown in the fallback so a user can quote it. keksdose's limiter
-is hit **before** the dedupe, so duplicates count too and `occurrences` stops rising
-after 20 in an hour — recommended for all: charge after the dedupe.
+fingerprint characters, shown in the fallback so a user can quote it. The limiter is hit
+**before** the dedupe, in all three apps (amended in round 0.36,
+[server-services §2.11](server-services-harmonization.md)): the lookup and the write are
+the work a page in a render loop makes the server do. So duplicates count too, and
+`occurrences` stops rising after 20 in an hour.
 
 ### 3.7 Errors
 

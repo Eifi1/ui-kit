@@ -463,6 +463,12 @@ export const hu: Dictionary = {
       short: "Váz",
       blurb: "Az alkalmazáskeret, amelyet éppen lát, darabjaira szedve.",
     },
+    notifications: {
+      title: "Értesítések",
+      short: "Értesítések",
+      blurb:
+        "Az értesítési beállítások, amelyeken minden alkalmazás osztozik: a szerver által visszaadott típusok egy alkalmazáson belüli és egy e-mailes kapcsolóval, a csendes órák és az időzóna, a push ezen az eszközön és az eszközök listája, valamint az oldal, amelyet egy e-mail leiratkozási linkje megnyit.",
+    },
     settings: {
       title: "Beállítások",
       short: "Beállítások",
@@ -550,11 +556,17 @@ export const hu: Dictionary = {
       blurb:
         "A fiók e-mailjei: a szövegek nyelvenként, egyetlen elrendezés, amely minden értéket escape-el, két küldési mód, amely soha nem dob kivételt — és a kiadás minta-e-mailjei, renderelve.",
     },
+    "server-notifications": {
+      title: "Értesítések",
+      short: "Értesítések",
+      blurb:
+        "Az alkalmazás értesítéstípusai és minden fiók kapcsolói, a beállítások PATCH-e, hogy ki kap bejegyzést a postafiókba, pusht vagy e-mailt, a csendes órák és az összefoglaló, a push tartalma és egy push-szolgáltatás válasza, valamint az aláírt, egykattintásos leiratkozási token.",
+    },
     "server-feedback": {
       title: "Visszajelzés és feltöltés",
       short: "Visszajelzés",
       blurb:
-        "A visszajelzési szerződés tiszta függvényekként — sémák, állapotok, a PATCH-szabályok, átdolgozás, összeomlások rögzítése, törlés — és a mellékletek, amelyeket a bájtjaik alapján ítél meg.",
+        "A visszajelzési szerződés tiszta függvényekként — sémák, állapotok, a PATCH-szabályok, átdolgozás, összeomlások rögzítése, törlés —, az útvonalai egyetlen routergyárként, és a mellékletek, amelyeket a bájtjaik alapján ítél meg.",
     },
     "server-limits": {
       title: "Korlátok, hibák és CORS",
@@ -1129,6 +1141,22 @@ export const hu: Dictionary = {
       "oldalsáv becsukása",
       "fiókmenü avatárral",
     ],
+    notifications: [
+      "értesítési beállítások",
+      "értesítések be- és kikapcsolása",
+      "milyen értesítéseket kapjak",
+      "értesítés e-mailben",
+      "csendes órák",
+      "éjjel ne zavarjon",
+      "időzóna kiválasztása",
+      "push-értesítések ezen az eszközön",
+      "tesztértesítés küldése",
+      "értesítést kapó eszközök listája",
+      "eszköz eltávolítása",
+      "leiratkozás az e-mailekről",
+      "egykattintásos leiratkozási link",
+      "heti vagy havi összefoglaló",
+    ],
     settings: [
       "fiókbeállítások",
       "jelszó módosítása",
@@ -1253,6 +1281,17 @@ export const hu: Dictionary = {
       "e-mailek naplózása fejlesztés közben",
       "ügyfélszolgálati válaszcím",
     ],
+    "server-notifications": [
+      "az alkalmazás értesítéstípusainak regisztrálása",
+      "értesítési beállítások végpontja",
+      "ki kap pusht vagy e-mailt",
+      "csendes órák ellenőrzése a szerveren",
+      "mikor esedékes az összefoglaló",
+      "web push tartalmának összeállítása",
+      "lejárt push-feliratkozás törlése",
+      "egykattintásos leiratkozási link aláírása",
+      "értesítési postafiók szerkezete",
+    ],
     "server-feedback": [
       "visszajelzés validálása",
       "visszajelzések állapotszabályai",
@@ -1260,6 +1299,7 @@ export const hu: Dictionary = {
       "feltöltött fájl típusának ellenőrzése",
       "mellékletek méretének korlátozása",
       "törölt felhasználó visszajelzéseinek törlése",
+      "a visszajelzési útvonalak beillesztése",
     ],
     "server-limits": [
       "útvonal sebességkorlátozása",

@@ -198,6 +198,12 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
           ? "1 item others can see will pass to an administrator."
           : `${n(count)} items others can see will pass to an administrator.`,
     },
+    notifications: {
+      ...d.notifications,
+      testSent: (count) => (count === 1 ? "Test sent to 1 device" : `Test sent to ${n(count)} devices`),
+      failures: (count) =>
+        count === 1 ? "1 failed delivery in a row" : `${n(count)} failed deliveries in a row`,
+    },
     settings: {
       ...d.settings,
       matchCount: (count) => (count === 1 ? "1 match" : `${n(count)} matches`),

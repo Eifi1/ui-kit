@@ -856,6 +856,13 @@ export type { PlanLimitToastOptions } from "./billing/plan-limit-toast";
 // come with `./shell` above (also `@eifi1/ui-kit/shell`).
 export { DEFAULT_SETTINGS_LABELS, useSettingsLabels } from "./settings/settings-labels";
 export type { SettingsLabels, SettingsGroupLabels, SettingsCoreGroup } from "./settings/settings-labels";
+// 0.36.0 (§11): "Reset this device's settings" — the registry the kit's stores, provider
+// and shell join on their own and an app adds its own device keys to, and the card, the
+// appearance group's last.
+export { registerDeviceSetting, deviceSettings, resetDeviceSettings } from "./lib/device-settings";
+export type { DeviceSetting, DeviceSettingKind } from "./lib/device-settings";
+export { DeviceResetSetting, DEVICE_RESET_ANCHOR, DEFAULT_DEVICE_RESET_LABELS } from "./settings/device-reset-setting";
+export type { DeviceResetSettingProps, DeviceResetLabels } from "./settings/device-reset-setting";
 // The language follows the account (§6.2); since 0.32 so do the text size and the
 // contrast (useAccountAppearance below, docs/text-size-harmonization.md §6).
 export { useAccountLanguage, resolveAccountLanguage, matchOfferedLanguage } from "./settings/use-account-language";
@@ -876,6 +883,49 @@ export type {
   UseAccountAppearanceOptions,
   AccountAppearance,
 } from "./settings/use-account-appearance";
+
+// ── notifications ────────────────────────────────────────────────────────────
+// 0.36.0 (docs/notifications-harmonization.md §4.2): the notification cards — the types
+// the server answers (the kit keeps no list of its own), quiet hours with the zone picker,
+// this device's push on its hook, the device list — and the signed-out unsubscribe page.
+// Each card takes the app's request functions; the kit makes no request itself.
+export { DEFAULT_NOTIFICATIONS_LABELS } from "./notifications/notifications-labels";
+export type { NotificationsLabels, NotificationRegionLabels } from "./notifications/notifications-labels";
+export type {
+  DigestCadence,
+  NotificationSwitches,
+  NotificationTypesValue,
+  NotificationTypeEntry,
+  NotificationTypeGroup,
+  NotificationSettingsPatch,
+  PushDeviceItem,
+} from "./notifications/notification-types";
+export { NotificationTypesSetting } from "./notifications/notification-types-setting";
+export type { NotificationTypesSettingProps } from "./notifications/notification-types-setting";
+export { QuietHoursSetting } from "./notifications/quiet-hours-setting";
+export type { QuietHoursSettingProps } from "./notifications/quiet-hours-setting";
+export { TimeZoneSelect, timeZoneOptions, deviceTimeZone } from "./notifications/time-zone-select";
+export type { TimeZoneSelectProps } from "./notifications/time-zone-select";
+export {
+  usePushDevice,
+  PUSH_SUBSCRIPTION_CHANGED,
+  notifyPushSubscriptionChanged,
+  pushSupported,
+  PushDeviceError,
+} from "./notifications/use-push-device";
+export type {
+  PushDevice,
+  UsePushDeviceOptions,
+  PushSubscriptionInput,
+  PushPermission,
+  PushDeviceErrorCode,
+} from "./notifications/use-push-device";
+export { PushDeviceSetting } from "./notifications/push-device-setting";
+export type { PushDeviceSettingProps, PushDeviceAction } from "./notifications/push-device-setting";
+export { PushDevicesSetting, describeUserAgent } from "./notifications/push-devices-setting";
+export type { PushDevicesSettingProps } from "./notifications/push-devices-setting";
+export { UnsubscribePanel, unsubscribeTokenType } from "./notifications/unsubscribe-panel";
+export type { UnsubscribePanelProps } from "./notifications/unsubscribe-panel";
 
 // ── landing ──────────────────────────────────────────────────────────────────
 // 0.31.0 (docs/landing-demo-harmonization.md): the public landing page. Its router-aware parts — the header and the resume (RootEntry,

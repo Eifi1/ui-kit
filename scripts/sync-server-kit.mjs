@@ -122,6 +122,41 @@ export function findSection(markdown, number) {
 const isStr = (v) => typeof v === "string";
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
+/**
+ * A module's name: the package and one or more lower-case segments. Nested is allowed
+ * (`eifi1_server_kit.feedback.router`, server-kit 0.9): a submodule an app imports on its
+ * own — there, because it needs the `fastapi` extra the package itself does not import.
+ */
+export const MODULE_NAME = /^eifi1_server_kit(?:\.[a-z_][a-z0-9_]*)+$/;
+/** A member's name: one Python identifier, never dotted. */
+export const MEMBER_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/**
+ * The showcase anchors a module by its dotted name minus the package (`#feedback.router`)
+ * and a member by `module.member` (`#feedback.FeedbackService`). A member's name is one
+ * identifier, so an anchor names a member of the module before its LAST dot — or, when the
+ * whole anchor is a module's name, that module. The two only meet where a module `a.b`
+ * sits beside a member `b` of `a`, and Python does not allow that either (the package's
+ * attribute `b` IS the submodule once imported). So the sync refuses it, and every anchor
+ * names exactly one thing: `#feedback.router` is the module, because `feedback` has no
+ * member `router`.
+ */
+export function anchorClashes(modules) {
+  const byName = new Map(modules.filter((m) => isObj(m) && isStr(m.name)).map((m) => [m.name, m]));
+  const out = [];
+  for (const name of byName.keys()) {
+    const cut = name.lastIndexOf(".");
+    const parent = byName.get(name.slice(0, cut));
+    const last = name.slice(cut + 1);
+    if (parent && Array.isArray(parent.members) && parent.members.some((m) => isObj(m) && m.name === last)) {
+      out.push(
+        `${name}: ${parent.name} has a member ${last} as well, and both would be the showcase's anchor #${name.slice("eifi1_server_kit.".length)}`,
+      );
+    }
+  }
+  return out;
+}
+
 /** Every problem with an export, as readable lines; empty when it can be rendered. */
 export function validate(api, { tag } = {}) {
   const errors = [];
@@ -149,7 +184,7 @@ export function validate(api, { tag } = {}) {
     api.modules.forEach((mod, i) => {
       const where = isObj(mod) && isStr(mod.name) ? mod.name : `modules[${i}]`;
       if (!isObj(mod)) return errors.push(`${where} is not an object`);
-      if (!isStr(mod.name) || !/^eifi1_server_kit\.[a-z_][a-z0-9_]*$/.test(mod.name)) {
+      if (!isStr(mod.name) || !MODULE_NAME.test(mod.name)) {
         errors.push(`${where}: name ${JSON.stringify(mod.name)} is not an eifi1_server_kit module`);
       } else if (names.has(mod.name)) errors.push(`${where} is listed twice`);
       names.add(mod.name);
@@ -176,6 +211,7 @@ export function validate(api, { tag } = {}) {
           if (!isStr(m[key])) errors.push(`${at}: ${key} is not a string`);
         }
         if (isStr(m.name)) {
+          if (!MEMBER_NAME.test(m.name)) errors.push(`${at}: name ${JSON.stringify(m.name)} is not a Python identifier`);
           if (seen.has(m.name)) errors.push(`${at} is listed twice`);
           seen.add(m.name);
         }
@@ -187,6 +223,7 @@ export function validate(api, { tag } = {}) {
         }
       });
     });
+    errors.push(...anchorClashes(api.modules));
   }
 
   if (!Array.isArray(api.mails)) {

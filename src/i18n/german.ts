@@ -268,6 +268,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       noResults: "Keine Ergebnisse",
       fieldValue: (field, value) => `${field}: ${value}`,
       opensInNewTab: "öffnet in einem neuen Tab",
+      aboutField: (field) => `Hilfe zu „${field}“`,
+      help: "Hilfe",
     },
     dataTable: {
       columns: "Spalten",
@@ -1072,6 +1074,102 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       rateLimited,
       failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
     },
+    // 0.36.0 — docs/notifications-harmonization.md §4.2: the notification cards. The push
+    // and device words follow keksdose's reviewed German, formal.
+    notifications: {
+      typesTitle: "Benachrichtigungen zu",
+      typesDescription: "Wählen Sie, worüber Sie benachrichtigt werden, und wie.",
+      byEmail: "Per E-Mail",
+      emailUnverified: "Bestätigen Sie Ihre Adresse, um diese zu erhalten.",
+      digestCadence: "Häufigkeit",
+      digestWeekly: "Wöchentlich",
+      digestMonthly: "Monatlich",
+      typesLoading: "Benachrichtigungseinstellungen werden geladen…",
+      typesEmpty: "Für dieses Konto gibt es keine Benachrichtigungen.",
+      quietTitle: "Ruhezeiten",
+      quietDescription: (inbox) =>
+        inbox
+          ? "In diesem Zeitfenster kommen keine Push-Benachrichtigungen. Im Posteingang kommen sie trotzdem an."
+          : "In diesem Zeitfenster kommen keine Push-Benachrichtigungen.",
+      quietFrom: "Von",
+      quietUntil: "Bis",
+      quietIncomplete: "Legen Sie eine Start- und eine Endzeit fest. Ruhezeiten gelten erst, wenn beide gesetzt sind.",
+      timeZone: "Zeitzone",
+      deviceZone: (zone) => `Dieses Gerät ist in der Zeitzone ${zone}.`,
+      useDeviceZone: "Übernehmen",
+      regions: {
+        Africa: "Afrika",
+        America: "Amerika",
+        Antarctica: "Antarktis",
+        Arctic: "Arktis",
+        Asia: "Asien",
+        Atlantic: "Atlantik",
+        Australia: "Australien",
+        Europe: "Europa",
+        Indian: "Indischer Ozean",
+        Pacific: "Pazifik",
+      },
+      pushTitle: "Push-Benachrichtigungen",
+      pushDescription: "Benachrichtigungen auf diesem Gerät, auch wenn die App geschlossen ist.",
+      unsupported: "Dieser Browser unterstützt keine Push-Benachrichtigungen.",
+      iosInstall: (app) =>
+        `Fügen Sie ${app} auf dem iPhone oder iPad zuerst zum Home-Bildschirm hinzu: iOS stellt Benachrichtigungen nur der installierten App zu.`,
+      notConfigured: "Push-Benachrichtigungen sind auf diesem Server nicht eingerichtet.",
+      blocked: "Benachrichtigungen sind in den Einstellungen dieses Browsers blockiert.",
+      on: "Benachrichtigungen sind für dieses Gerät eingeschaltet.",
+      off: "Benachrichtigungen sind für dieses Gerät ausgeschaltet.",
+      otherAccount:
+        "Dieser Browser erhält Benachrichtigungen für ein anderes Konto. Schalten Sie sie hier ein, um sie für das angemeldete Konto zu erhalten.",
+      enable: "Benachrichtigungen einschalten",
+      disable: "Ausschalten",
+      sendTest: "Test senden",
+      enableFailed: "Benachrichtigungen konnten nicht eingeschaltet werden.",
+      noServiceWorker:
+        "Der Service Worker der App ist nicht erreichbar. Laden Sie die Seite neu und versuchen Sie es erneut.",
+      pushTimeout:
+        "Der Push-Dienst des Browsers antwortet nicht. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+      testSent: (count) =>
+        count === 1 ? `Test an ${n(count)} Gerät gesendet` : `Test an ${n(count)} Geräte gesendet`,
+      testNone:
+        "Kein Gerät hat den Test angenommen. Schalten Sie zuerst die Benachrichtigungen für dieses Gerät ein.",
+      testFailed: "Die Test-Benachrichtigung konnte nicht gesendet werden.",
+      explainerTitle: "Benachrichtigungen einschalten?",
+      explainerBody: (app) =>
+        `${app} sendet nur Benachrichtigungen zu dem, was Sie auswählen, und Sie können sie jederzeit ausschalten.`,
+      explainerHint: "Als Nächstes fragt Ihr Browser nach der Berechtigung.",
+      explainerContinue: "Weiter",
+      devicesTitle: "Benachrichtigungsgeräte",
+      devicesDescription:
+        "Alle Geräte, die Push-Benachrichtigungen für Ihr Konto erhalten. Entfernen Sie die, die Sie nicht mehr nutzen.",
+      devicesLoading: "Geräte werden geladen…",
+      devicesEmpty: "Noch kein Gerät erhält Benachrichtigungen.",
+      unknownDevice: "Unbekanntes Gerät",
+      thisDevice: "Dieses Gerät",
+      added: (date) => `Hinzugefügt am ${date}`,
+      lastDelivery: (date) => `Letzte Zustellung am ${date}`,
+      noDelivery: "Noch keine Zustellung",
+      failures: (count) =>
+        count === 1
+          ? `${n(count)} fehlgeschlagene Zustellung in Folge`
+          : `${n(count)} fehlgeschlagene Zustellungen in Folge`,
+      remove: "Entfernen",
+      // Starts with `remove`, the button's visible text, for voice control.
+      removeItem: (device) => `Entfernen: ${device}`,
+      removePrompt: "Keine Benachrichtigungen mehr an dieses Gerät senden?",
+      unsubscribeTitle: "E-Mail-Benachrichtigungen",
+      unsubscribeAbout: (type) => `Sie erhalten E-Mails zu: ${type}.`,
+      unsubscribeGeneric: "Sie erhalten Benachrichtigungs-E-Mails.",
+      stopThese: "Diese E-Mails abbestellen",
+      stopAll: (app) => `Alle Benachrichtigungs-E-Mails von ${app} abbestellen`,
+      stoppedThese: "Erledigt. Sie erhalten diese E-Mails nicht mehr.",
+      stoppedAll: (app) => `Erledigt. Sie erhalten keine Benachrichtigungs-E-Mails von ${app} mehr.`,
+      accountMail: "E-Mails zu Ihrem Konto erhalten Sie weiterhin.",
+      turnBackOn: "Sie können sie jederzeit in den Einstellungen wieder einschalten.",
+      openSettings: "Einstellungen öffnen",
+      invalidLink:
+        "Dieser Link funktioniert nicht mehr. Sie können E-Mails stattdessen in den Einstellungen abbestellen.",
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+    },
     sessions: {
       title: "Sitzungen",
       description:
@@ -1633,6 +1731,21 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Mehr Kontrast macht dezente Texte und Linien dunkler und Fokusrahmen dicker. „System“ richtet sich nach diesem Gerät.",
       contrastModes: { system: "System", standard: "Standard", more: "Mehr" },
       saveFailed: "Konnte nicht in Ihrem Konto gespeichert werden. Auf diesem Gerät gilt es trotzdem.",
+    },
+    // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
+    // last card of "Darstellung". "Theme", as `topBar.theme`; "Bereiche" for the panels
+    // (the sidebar, folded groups).
+    deviceReset: {
+      title: "Dieses Gerät zurücksetzen",
+      description:
+        "Setzt die Darstellung auf diesem Gerät und die Ansicht seiner Tabellen und Bereiche auf die Standardwerte zurück. Ihr Konto, Ihre Daten und Ihre Anmeldung bleiben unberührt.",
+      action: "Einstellungen dieses Geräts zurücksetzen",
+      confirmTitle: "Einstellungen dieses Geräts zurücksetzen?",
+      confirmBody:
+        "Theme, Farben, Textgröße, Kontrast und Sprache kehren hier zu ihren Standardwerten zurück, und Tabellen und Bereiche öffnen sich wie beim ersten Mal. Wo Ihr Konto eine Sprache, eine Textgröße oder einen Kontrast festlegt, folgt dieses Gerät wieder dem Konto. Ihr Konto und Ihre anderen Geräte bleiben, wie sie sind.",
+      confirmAction: "Zurücksetzen",
+      done: "Die Einstellungen dieses Geräts sind auf die Standardwerte zurückgesetzt.",
+      keywords: "zurücksetzen standard standardwerte gerät wiederherstellen darstellung tabellen layout",
     },
     rowActions: {
       actions: "Aktionen",

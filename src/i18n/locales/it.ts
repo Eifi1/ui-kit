@@ -261,6 +261,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       noResults: "Nessun risultato",
       fieldValue: (field, value) => `${field}: ${value}`,
       opensInNewTab: "si apre in una nuova scheda",
+      aboutField: (field) => `Informazioni su «${field}»`,
+      help: "Aiuto",
     },
     dataTable: {
       columns: "Colonne",
@@ -1058,6 +1060,95 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       rateLimited,
       failed: "Non ha funzionato. Riprovi.",
     },
+    // 0.36.0 — docs/notifications-harmonization.md §4.2: the notification cards. The push
+    // and device words follow keksdose's reviewed Italian.
+    notifications: {
+      typesTitle: "Avvisami per",
+      typesDescription: "Scelga di cosa essere avvisato, e come.",
+      byEmail: "Per e-mail",
+      emailUnverified: "Confermi il Suo indirizzo per riceverle.",
+      digestCadence: "Frequenza",
+      digestWeekly: "Settimanale",
+      digestMonthly: "Mensile",
+      typesLoading: "Caricamento delle impostazioni di notifica…",
+      typesEmpty: "Non ci sono notifiche per questo account.",
+      quietTitle: "Ore di silenzio",
+      quietDescription: (inbox) =>
+        inbox
+          ? "Nessuna notifica push in questa fascia oraria. Arrivano comunque nella Sua casella."
+          : "Nessuna notifica push in questa fascia oraria.",
+      quietFrom: "Dalle",
+      quietUntil: "Alle",
+      quietIncomplete:
+        "Imposti sia l’ora di inizio sia quella di fine. Le ore di silenzio valgono solo quando sono impostate entrambe.",
+      timeZone: "Fuso orario",
+      deviceZone: (zone) => `Questo dispositivo è nel fuso ${zone}.`,
+      useDeviceZone: "Usa questo",
+      regions: {
+        Africa: "Africa",
+        America: "Americhe",
+        Antarctica: "Antartide",
+        Arctic: "Artide",
+        Asia: "Asia",
+        Atlantic: "Atlantico",
+        Australia: "Australia",
+        Europe: "Europa",
+        Indian: "Oceano Indiano",
+        Pacific: "Pacifico",
+      },
+      pushTitle: "Notifiche push",
+      pushDescription: "Notifiche su questo dispositivo, anche quando l’app è chiusa.",
+      unsupported: "Questo browser non supporta le notifiche push.",
+      iosInstall: (app) =>
+        `Su iPhone o iPad aggiunga prima ${app} alla schermata Home: iOS recapita le notifiche solo all’app installata.`,
+      notConfigured: "Le notifiche push non sono configurate su questo server.",
+      blocked: "Le notifiche sono bloccate nelle impostazioni di questo browser.",
+      on: "Le notifiche sono attive per questo dispositivo.",
+      off: "Le notifiche sono disattivate per questo dispositivo.",
+      otherAccount:
+        "Questo browser riceve le notifiche di un altro account. Le attivi qui per riceverle sull’account con cui ha effettuato l’accesso.",
+      enable: "Attiva notifiche",
+      disable: "Disattiva",
+      sendTest: "Invia un test",
+      enableFailed: "Impossibile attivare le notifiche.",
+      noServiceWorker: "Impossibile raggiungere il service worker dell’app. Ricarichi la pagina e riprovi.",
+      pushTimeout: "Il servizio push del browser non ha risposto. Controlli la connessione e riprovi.",
+      testSent: (count) => `Test inviato a ${n(count)} ${plural(count, "dispositivo", "dispositivi")}`,
+      testNone: "Nessun dispositivo ha accettato il test. Attivi prima le notifiche per questo dispositivo.",
+      testFailed: "Impossibile inviare la notifica di prova.",
+      explainerTitle: "Attivare le notifiche?",
+      explainerBody: (app) =>
+        `${app} invia notifiche solo per ciò che sceglie Lei, e può disattivarle in qualsiasi momento.`,
+      explainerHint: "Il browser Le chiederà poi il permesso.",
+      explainerContinue: "Continua",
+      devicesTitle: "Dispositivi di notifica",
+      devicesDescription:
+        "Tutti i dispositivi che ricevono notifiche push per il Suo account. Rimuova quelli che non usa più.",
+      devicesLoading: "Caricamento dei dispositivi…",
+      devicesEmpty: "Nessun dispositivo riceve ancora notifiche.",
+      unknownDevice: "Dispositivo sconosciuto",
+      thisDevice: "Questo dispositivo",
+      added: (date) => `Aggiunto il ${date}`,
+      lastDelivery: (date) => `Ultimo recapito il ${date}`,
+      noDelivery: "Ancora nessun recapito",
+      failures: (count) => `${n(count)} ${plural(count, "recapito fallito", "recapiti falliti")} di fila`,
+      remove: "Rimuovi",
+      // Starts with `remove`, the button's visible text, for voice control.
+      removeItem: (device) => `Rimuovi ${device}`,
+      removePrompt: "Smettere di inviare notifiche a questo dispositivo?",
+      unsubscribeTitle: "Notifiche via e-mail",
+      unsubscribeAbout: (type) => `Riceve e-mail su: ${type}.`,
+      unsubscribeGeneric: "Riceve e-mail di notifica.",
+      stopThese: "Non ricevere più queste e-mail",
+      stopAll: (app) => `Non ricevere più e-mail di notifica da ${app}`,
+      stoppedThese: "Fatto. Non riceverà più queste e-mail.",
+      stoppedAll: (app) => `Fatto. Non riceverà più e-mail di notifica da ${app}.`,
+      accountMail: "Le e-mail sul Suo account continuano ad arrivare.",
+      turnBackOn: "Può riattivarle in qualsiasi momento nelle impostazioni.",
+      openSettings: "Apri le impostazioni",
+      invalidLink: "Questo link non funziona più. Può disattivare le e-mail nelle impostazioni.",
+      failed: "Non ha funzionato. Riprovi.",
+    },
     sessions: {
       title: "Sessioni",
       description:
@@ -1602,6 +1693,20 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         "Il contrasto aumentato scurisce i testi tenui e le linee e ispessisce i riquadri di focus. «Sistema» segue l’impostazione di questo dispositivo.",
       contrastModes: { system: "Sistema", standard: "Standard", more: "Aumentato" },
       saveFailed: "Non è stato possibile salvarlo nel Suo account. Su questo dispositivo vale comunque.",
+    },
+    // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
+    // last card of "Aspetto". "Lei", capitalised as the rest of the catalogue.
+    deviceReset: {
+      title: "Ripristina questo dispositivo",
+      description:
+        "Riporta ai valori predefiniti l’aspetto di questo dispositivo e il modo in cui sono state lasciate le sue tabelle e i suoi pannelli. Il Suo account, i Suoi dati e il Suo accesso restano invariati.",
+      action: "Ripristina le impostazioni di questo dispositivo",
+      confirmTitle: "Ripristinare le impostazioni di questo dispositivo?",
+      confirmBody:
+        "Tema, colori, dimensione del testo, contrasto e lingua tornano qui ai valori predefiniti, e tabelle e pannelli si aprono come la prima volta. Se il Suo account ha una lingua, una dimensione del testo o un contrasto, questo dispositivo torna a seguirli. Il Suo account e i Suoi altri dispositivi restano come sono.",
+      confirmAction: "Ripristina",
+      done: "Le impostazioni di questo dispositivo sono tornate ai valori predefiniti.",
+      keywords: "ripristina predefiniti dispositivo reimposta aspetto tabelle layout",
     },
     rowActions: {
       actions: "Azioni",

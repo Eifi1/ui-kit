@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { contrast } from "../color";
-import { BRAND_BG_HOVER_SHARE, BRAND_BG_SHARE, BRAND_MUTED_SHARE, HOVER_INK } from "../contrast-tokens";
+import { contrast, hexToOklch } from "../color";
+import { BRAND_BG_HOVER_SHARE, BRAND_BG_SHARE, BRAND_MUTED_SHARE, HOVER_INK, WELL_STEP_MIN } from "../contrast-tokens";
 import { PALETTES } from "../palette-presets";
 import { SWIPE_TONE } from "../../components/swipeable-row";
-import { mixSrgb, over, resolveTokens, type ResolvedTokens, type Rgba } from "../../test/tokens-css";
+import { mixSrgb, over, resolveTokens, tokensCssDeclarations, type ResolvedTokens, type Rgba } from "../../test/tokens-css";
 
 /**
  * Every colour pair `tokens.css` sets up, measured in every shipped preset × light/dark ×
@@ -72,6 +72,10 @@ const VARIANTS = PALETTES.flatMap((preset) =>
   (["light", "dark"] as const).flatMap((mode) =>
     [false, true].map((more) => ({
       label: `${preset.id} ${mode}${more ? " +more" : ""}`,
+      mode,
+      more,
+      /** The same preset and mode at the other contrast level. */
+      standard: resolveTokens(CSS, preset[mode], mode, false),
       tokens: resolveTokens(CSS, preset[mode], mode, more),
     })),
   ),
@@ -247,6 +251,80 @@ describe("the hover rule (§12.2, §12.10)", () => {
         }
       }),
     ).toEqual([]);
+  });
+});
+
+describe("More contrast's light well (0.36, colour-roles §13)", () => {
+  const LIGHT_MORE = VARIANTS.filter((v) => v.mode === "light" && v.more);
+  const DARK_MORE = VARIANTS.filter((v) => v.mode === "dark" && v.more);
+
+  /** The literals the `:root[data-contrast="more"]:not(.dark)` block steps (§13.3). */
+  const MORE_LITERALS = ["--danger", "--warning", "--success", "--info", "--hue-teal", "--hue-orange", "--status-edited"];
+
+  it("steps the light well to stand 1.17:1 from the card, in every preset", () => {
+    expect(LIGHT_MORE).toHaveLength(PALETTES.length);
+    const failures: string[] = [];
+    for (const { label, tokens, standard } of LIGHT_MORE) {
+      const ratio = contrast(tokens.color("--bg-surface-2"), tokens.color("--bg-surface"));
+      if (ratio < WELL_STEP_MIN) failures.push(`${label}: the well ${ratio.toFixed(3)}:1 from the card`);
+      // Darker than the standard well, which is the page.
+      expect(contrast(tokens.color("--bg-surface-2"), standard.color("--bg-surface-2")), label).toBeGreaterThan(1.05);
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it("leaves dark alone: the well, the money and the literals are the standard ones", () => {
+    for (const { label, tokens, standard } of DARK_MORE) {
+      for (const name of ["--bg-surface-2", "--money-income", "--money-expense", "--money-net", "--money-neutral", "--bg-active", ...MORE_LITERALS]) {
+        expect(tokens.color(name), `${label} ${name}`).toEqual(standard.color(name));
+      }
+    }
+  });
+
+  it("keeps each More literal at its light value's OKLCH hue and chroma, and darker", () => {
+    const light = tokensCssDeclarations(CSS, "light");
+    const more = tokensCssDeclarations(CSS, "light", true);
+    // The block holds exactly these, and the dark cascade never reads it.
+    const dark = tokensCssDeclarations(CSS, "dark", true);
+    for (const name of MORE_LITERALS) {
+      const a = hexToOklch(light.get(name)!)!;
+      const b = hexToOklch(more.get(name)!)!;
+      expect(more.get(name), name).not.toBe(light.get(name));
+      expect(Math.abs(((a.h - b.h + 540) % 360) - 180), `${name} hue`).toBeLessThanOrEqual(1);
+      expect(Math.abs(a.c - b.c), `${name} chroma`).toBeLessThanOrEqual(0.01);
+      expect(b.l, `${name} lightness`).toBeLessThan(a.l);
+      expect(dark.get(name), `${name} in dark`).toBe(tokensCssDeclarations(CSS, "dark").get(name));
+    }
+    expect(more.get("--bg-active")).toBe("color-mix(in oklab, var(--text-primary) 16%, var(--bg-surface))");
+    expect(dark.get("--bg-active")).toBe("color-mix(in oklab, var(--text-primary) 12%, var(--bg-surface))");
+  });
+
+  it("holds the hover rule on the stepped well: the card, B′'s ink and --bg-active each 1.08:1 from it", () => {
+    expect(
+      audit((t, fail) => {
+        const well = t.color("--bg-surface-2");
+        pair(fail, t.color("--bg-surface"), well, 1.08 + SLACK, "a well row's hover (the card) against the well");
+        const ink = mixSrgb(t.color("--text-primary"), { r: 0, g: 0, b: 0, a: 0 }, B_PRIME_INK);
+        pair(fail, over(ink, well), well, 1.08 + SLACK, "B′'s ink against the well");
+        pair(fail, t.color("--bg-active"), well, 1.08 + SLACK, "--bg-active against the well");
+      }),
+    ).toEqual([]);
+    // Not vacuous: in light under More the well IS the stepped one.
+    for (const { label, tokens, standard } of LIGHT_MORE) {
+      expect(tokens.color("--bg-surface-2"), label).not.toEqual(standard.color("--bg-surface-2"));
+    }
+  });
+
+  it("prints the three text roles at 4.5:1 on --bg-active under More contrast", () => {
+    const failures: string[] = [];
+    for (const { label, tokens, more } of VARIANTS) {
+      if (!more) continue;
+      for (const fg of ["--text-primary", "--text-secondary", "--text-muted"]) {
+        const ratio = contrast(tokens.color(fg), tokens.color("--bg-active"));
+        if (ratio < 4.5 - SLACK) failures.push(`${label}: ${fg} on --bg-active ${ratio.toFixed(2)}:1`);
+      }
+    }
+    expect(failures).toEqual([]);
   });
 });
 

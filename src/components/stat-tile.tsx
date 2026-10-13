@@ -1,7 +1,9 @@
-import { createContext, isValidElement, useContext, useId, useLayoutEffect, useState } from "react";
+import { createContext, useContext, useId, useLayoutEffect, useState } from "react";
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
+// The sparkline's name: the label's text (lib since 0.36, which a field's `help` "?" shares).
+import { plainText } from "../lib/plain-text";
 import { useKitLabels, useKitLink, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 import { Card } from "./card";
@@ -610,23 +612,6 @@ function FigureRow({
       </dd>
     </div>
   );
-}
-
-/**
- * The text of a label node, for the sparkline's name: a string or number as is, an
- * element by its children, recursively. A `<Tooltip label="…">Spend</Tooltip>` label
- * yields "Spend" — the text the reader sees, not the bubble's. `undefined` when there
- * is no text to find (an icon), so the sparkline falls back to its unnamed summary.
- */
-function plainText(node: ReactNode): string | undefined {
-  const walk = (n: ReactNode): string => {
-    if (typeof n === "string" || typeof n === "number") return String(n);
-    if (Array.isArray(n)) return n.map(walk).join("");
-    if (isValidElement<{ children?: ReactNode }>(n)) return walk(n.props.children);
-    return "";
-  };
-  const text = walk(node).replace(/\s+/g, " ").trim();
-  return text === "" ? undefined : text;
 }
 
 /**

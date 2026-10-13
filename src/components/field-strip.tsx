@@ -1,6 +1,6 @@
 import { useId } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
-import { LabelStrip, useFieldMessages } from "./field-parts";
+import { LabelStrip, useFieldMessages, type FieldHelpProps } from "./field-parts";
 
 /** What a {@link FieldStrip} hands render-prop children. */
 export interface FieldStripIds {
@@ -18,7 +18,7 @@ export interface FieldStripIds {
  * it in 0.34, API-2): the ref is the root — the group, or the plain box under
  * `group={false}` — which a caller scrolls into view or measures.
  */
-export interface FieldStripProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
+export interface FieldStripProps extends Omit<ComponentPropsWithRef<"div">, "children">, FieldHelpProps {
   /** The 11px static label, on the line a labelled field's label sits on. */
   label: ReactNode;
   /**
@@ -86,6 +86,7 @@ export interface FieldStripProps extends Omit<ComponentPropsWithRef<"div">, "chi
 export function FieldStrip({
   label,
   hint,
+  help,
   error,
   disabled = false,
   group = true,
@@ -94,7 +95,7 @@ export function FieldStrip({
   ...rest
 }: FieldStripProps) {
   const labelId = useId();
-  const messages = useFieldMessages({ hint, error });
+  const messages = useFieldMessages({ hint, help, name: label, error });
   const content = typeof children === "function" ? children({ labelId, describedBy: messages.describedBy }) : children;
   // The caller's own description first, then the caption, then the error — the order
   // every kit field reads them in.

@@ -7,7 +7,7 @@ import type { TileItem, TileSize } from "./tile-radio";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
 import { hasContent } from "../lib/presence";
-import { LabelStrip, mergeDescribedBy, useFieldMessages } from "./field-parts";
+import { LabelStrip, mergeDescribedBy, useFieldMessages, type FieldHelpProps } from "./field-parts";
 import { DEFAULT_SWATCH_PICKER_LABELS } from "./swatch-picker-labels";
 
 export interface SwatchPickerLabels {
@@ -62,7 +62,8 @@ export interface SwatchOption<T extends string> {
  * is omitted rather than shadowed, as on {@link ToggleGroup}.
  */
 export interface SwatchPickerProps<T extends string>
-  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue">,
+    FieldHelpProps {
   options: SwatchOption<T>[];
   /** The chosen colour, or `null` for none. */
   value: T | null;
@@ -145,6 +146,7 @@ export function SwatchPicker<T extends string>({
   labels,
   label,
   hint,
+  help,
   disabledReason: ownDisabledReason,
   commit,
   className,
@@ -157,10 +159,13 @@ export function SwatchPicker<T extends string>({
   const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
   const labelled = hasContent(label);
-  // The label line's "?", or the caption under the swatches (DUP-2). Only with a label.
-  // The caller's ids, the caption, then the group's state: mixed, locked.
+  // The label line's "?", or the caption under the swatches (DUP-2). Only with a label,
+  // the help's "?" too (0.36). The caller's ids, the caption, then the group's state:
+  // mixed, locked.
   const messages = useFieldMessages({
     hint: labelled ? hint : undefined,
+    help: labelled ? help : undefined,
+    name: label,
     describedBy: rest["aria-describedby"],
     reasonId: mergeDescribedBy(mixed && mixedId, locked && reasonId),
   });

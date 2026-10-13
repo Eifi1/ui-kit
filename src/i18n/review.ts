@@ -119,6 +119,7 @@ const operatorSample = [[LEGAL_OPERATOR_SAMPLE]] as const;
  */
 export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unknown[])[]>> = {
   "common.fieldValue": [["{{field}}", "{{value}}"]],
+  "common.aboutField": [["{{field}}"]],
   "dataTable.filterResults": [
     [1, 1],
     [3, 12],
@@ -324,6 +325,18 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "sessions.lastActive": [["{{when}}"]],
   "sessions.ip": [["{{address}}"]],
   "sessions.revokeItem": [["{{device}}"]],
+  "notifications.quietDescription": [[false], [true]],
+  "notifications.deviceZone": [["{{zone}}"]],
+  "notifications.iosInstall": [["{{app}}"]],
+  "notifications.testSent": one,
+  "notifications.explainerBody": [["{{app}}"]],
+  "notifications.added": [["{{date}}"]],
+  "notifications.lastDelivery": [["{{date}}"]],
+  "notifications.failures": one,
+  "notifications.removeItem": [["{{device}}"]],
+  "notifications.unsubscribeAbout": [["{{type}}"]],
+  "notifications.stopAll": [["{{app}}"]],
+  "notifications.stoppedAll": [["{{app}}"]],
   "deleteAccount.afterDays": [[1], [30]],
   "deleteAccount.handOver": [[1], [3]],
   "deleteAccount.lastAdminOf": [["{{companies}}"]],

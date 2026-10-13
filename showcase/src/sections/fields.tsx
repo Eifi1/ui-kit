@@ -624,6 +624,56 @@ export function Fields() {
         </Note>
       </Example>
 
+      <Example
+        label="help beside hint — the fact as the caption, the help behind the one “?”"
+        hint="every field that takes hint takes help; the fact is printed at every text size, the help opens on a tap"
+      >
+        <Stage>
+          <div className="space-y-4">
+            {/* Round 0.36 (Kurvenschmiede's "How it was measured"): a field with a fact AND
+                help had one slot for both. Now the fact is `hint` and the help is `help`;
+                the help's "?" is the field's only one, so the FieldHint beside it is
+                printed as the caption at every size instead of drawing a second "?". */}
+            <Select
+              className="w-72 max-w-full"
+              label="How it was measured"
+              defaultValue="out_return"
+              hint={<FieldHint label="A loop fills two load columns: out and return." />}
+              help={
+                <>
+                  <p>
+                    <strong>Steer through</strong> — one stroke through the whole travel, logged on one rod; it
+                    describes both.
+                  </p>
+                  <p>
+                    <strong>Out and return</strong> — the wheel turned out and back, so the sheet holds the loop the
+                    rod draws, friction included.
+                  </p>
+                </>
+              }
+            >
+              <option value="steer_through">Steer through</option>
+              <option value="out_return">Out and return</option>
+            </Select>
+            <Input
+              className="w-72 max-w-full"
+              label="Reference"
+              hint="At most 35 characters."
+              help="The bank prints it on the other side's statement, so they can match the payment to an invoice. Leave it empty for a transfer between your own accounts."
+            />
+            <Input className="w-72 max-w-full" label="Payee" help="The name the bank shows on your statement." />
+          </div>
+        </Stage>
+        <Note>
+          <strong>One &ldquo;?&rdquo; per field</strong> (text size §4, round 0.36): <code className="font-mono">hint</code>{" "}
+          is the fact, a caption under the field that its <code className="font-mono">aria-describedby</code> names;{" "}
+          <code className="font-mono">help</code> is the help, a HelpPopover on the label line named &ldquo;About{" "}
+          <em>label</em>&rdquo; in the reader&apos;s language (pass a HelpPopover to name it yourself). While{" "}
+          <code className="font-mono">help</code> is set, a FieldHint hint draws no &ldquo;?&rdquo; of its own: two
+          marks that look the same would open different things.
+        </Note>
+      </Example>
+
       <Example label="Textarea" hint="type past 80 characters in the third to raise the ring">
         <Stage>
           <div data-stage="wide" className="grid gap-4 sm:grid-cols-2">

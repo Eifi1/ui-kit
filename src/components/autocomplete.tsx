@@ -32,6 +32,7 @@ import {
   useFieldHint,
   useLockReason,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
 } from "./field-parts";
 import type { CommitScope } from "./write-lock";
 
@@ -44,7 +45,8 @@ export interface AutocompleteProps<V extends string | number = string>
   extends Omit<
     ComponentPropsWithoutRef<"input">,
     "value" | "defaultValue" | "onChange" | "onSelect" | "children" | "type" | "size"
-  > {
+  >,
+    FieldHelpProps {
   /** What is in the field. Controlled, and never reset by the component: opening,
    *  closing and a failed lookup all leave it exactly as typed. */
   value: string;
@@ -220,6 +222,7 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
     invalid,
     error,
     hint,
+    help,
     status,
     emptyLabel,
     loadErrorLabel,
@@ -252,7 +255,7 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
     noResults: emptyLabel,
     loadError: loadErrorLabel,
   });
-  const hintParts = useFieldHint(hint, ariaDescribedBy);
+  const hintParts = useFieldHint(hint, ariaDescribedBy, { help, name: label ?? ariaLabel });
   // A form library's `aria-invalid` paints as well as announces (DUP-8: it only
   // announced, through the spread below).
   const field = useFieldError(error, invalid, hintParts.describedBy, rest["aria-invalid"]);

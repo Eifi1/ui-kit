@@ -21,6 +21,27 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.36.0](https://github.com/Eifi1/ui-kit/compare/v0.35.0...v0.36.0) (2026-10-13)
+
+Round 0.36: Kurvenschmiede's Select hints and every queued round, four contracts settled after
+the three apps' reviews — notifications (new), server-kit layer 2 (new; server-kit 0.9.0 ships
+beside it), reset this device's settings (settings §11) and the More-contrast light well
+(colour-roles §13) — plus a field's `help` beside its `hint` (text-size §4). The migration per
+app is `docs/adopt-0.36.md`. Nothing is removed.
+
+**What app tests may notice:** under More contrast in light, the well is darker and money,
+status and hue text on it deeper (colour decision 15 reversed); a link Button's and TextLink's
+brand read `--brand-muted` under More contrast; `UiKitProvider` joins the device-settings
+registry a microtask after mounting; an app that writes a whole `UiKitLabels` object needs
+`common.aboutField`, `common.help` and the `notifications` and `deviceReset` namespaces.
+
+### Added
+
+* a field's `help` beside its `hint` — the fact stays a caption, the help goes behind one "?" ([b45ae4e](https://github.com/Eifi1/ui-kit/commit/b45ae4e6e1f862be9719dafd49835e555aa6a2cd))
+* reset this device's settings, and More contrast steps the light well ([b267c48](https://github.com/Eifi1/ui-kit/commit/b267c48a04ddcc5c95bb27275a1ab38ee0afee99))
+* round 0.36's words in seven languages, its exports, and the showcase on server-kit 0.9 ([42e0f45](https://github.com/Eifi1/ui-kit/commit/42e0f45a65dbfd5bf9a18da238dd8ffb9bec3104))
+* the notification cards — types and switches, quiet hours, the zone, push devices, unsubscribe ([8aedef1](https://github.com/Eifi1/ui-kit/commit/8aedef1772411a068e55cee437e944b4a2d13096))
+
 ## [0.35.0](https://github.com/Eifi1/ui-kit/compare/v0.34.0...v0.35.0) (2026-10-13)
 
 Removes what 0.34 deprecated and finishes the refactor plan's open ends; carries the fixes

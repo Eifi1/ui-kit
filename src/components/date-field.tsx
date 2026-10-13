@@ -19,7 +19,7 @@ import {
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
-import { assignRef, FieldLabelLine, LABEL_ABOVE_BOX } from "./field-parts";
+import { assignRef, FieldLabelLine, LABEL_ABOVE_BOX, type FieldHelpProps } from "./field-parts";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import type { RemLength } from "../hooks/use-breakpoint";
 import type { MiniCalendarProps } from "./mini-calendar";
@@ -34,7 +34,7 @@ import { Popover } from "./popover";
  * `FormEvent`, while both pickers answer with ISO date strings. Each declares its own
  * (date-picker.tsx, date-range-picker.tsx).
  */
-export interface DatePickerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
+export interface DatePickerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange">, FieldHelpProps {
   /** BCP 47 tag for the trigger's date and the calendar. Falls back to
    *  `<UiKitProvider locale>`, then to the runtime's default. */
   locale?: string;

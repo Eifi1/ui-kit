@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { Card, Checkbox, cn, contrast } from "@eifi1/ui-kit";
+import { Button, Card, Checkbox, cn, contrast } from "@eifi1/ui-kit";
 import type { Rgb } from "@eifi1/ui-kit";
 // `@eifi1/ui-kit/testing` in an app. The showcase maps only the main entry and its
 // sub-paths `rhf`, `dates` and `table-text` (alias.ts and tsconfig.json's `paths`), so
@@ -386,6 +386,44 @@ function ZebraList() {
   );
 }
 
+/** What reads on the well, measured where it is painted: money, the status colours, the
+ *  stepped hues, and a link button (0.36, colour-roles §13). */
+const ON_THE_WELL = [
+  ["text-money-income", "+ 1’240.00"],
+  ["text-money-expense", "− 86.40"],
+  ["text-money-net", "1’153.60"],
+  ["text-money-neutral", "0.00"],
+  ["text-danger", "Overdue"],
+  ["text-warning", "Due soon"],
+  ["text-success", "Paid"],
+  ["text-info", "Draft"],
+  ["text-hue-teal", "Invoiced"],
+  ["text-hue-orange", "Terminated"],
+] as const;
+
+/** A link button on the well, its text measured against the well behind it. */
+function LinkOnWell() {
+  const link = useRef<HTMLButtonElement>(null);
+  const out = useRef<HTMLSpanElement>(null);
+  useEffect(
+    () =>
+      onHtmlChange(() => {
+        if (link.current && out.current) out.current.textContent = ratioText(ratioOf(link.current, "text"));
+      }),
+    [],
+  );
+  return (
+    <div className={cn(CELL, "flex flex-col items-start")}>
+      <Button ref={link} variant="link">
+        Resend code
+      </Button>
+      <span ref={out} className="block font-mono text-caption tabular-nums" data-ratio>
+        —
+      </span>
+    </div>
+  );
+}
+
 function WellDemo() {
   const tokens = useActiveTokenSet();
   const mode = useTheme((s) => s.mode);
@@ -414,17 +452,39 @@ function WellDemo() {
       </div>
       <OutTable
         rows={[
-          [`well / card  (${mode})`, ratio(tokens.bgSurface2, tokens.bgSurface)],
+          [`well / card  (${mode}, the preset's own)`, ratio(tokens.bgSurface2, tokens.bgSurface)],
           [`card / page  (${mode})`, ratio(tokens.bgSurface, tokens.bgPage)],
-          [`well / page  (${mode})`, ratio(tokens.bgSurface2, tokens.bgPage)],
+          [`well / page  (${mode}, the preset's own)`, ratio(tokens.bgSurface2, tokens.bgPage)],
         ]}
       />
+      <div className="space-y-2">
+        <p className="text-xs text-muted">
+          On the well, measured as painted — the card to the well, then money, status, two hues and a link button
+        </p>
+        <Card padding="sm" className="space-y-3">
+          <Step rest="bg-surface" hover="bg-surface-2" />
+          <div className="flex flex-wrap gap-1 rounded-md bg-surface-2 p-2">
+            {ON_THE_WELL.map(([cls, label]) => (
+              <Specimen key={cls} className={cn(CELL, cls)}>
+                {label}
+              </Specimen>
+            ))}
+            <LinkOnWell />
+          </div>
+        </Card>
+      </div>
       <Note>
         Before 0.33 the light well stood 1.02–1.05:1 off the card — invisible, and with it the kit&apos;s zebra
         rows, DataTable&apos;s header bands and Kurvenschmiede&apos;s selected rows. Now a well stands out from the
         card exactly as much as the card does from the page; dark keeps its 1.11–1.13. Nothing re-solved: every
         text role was already audited against the page. The price is on the right — a well straight on the page
         vanishes in light, so `Card variant="inset"` and a {code("DataTable frame={false}")} belong inside a card.
+      </Note>
+      <Note>
+        Under More contrast (0.36), in light, the well darkens to 10 % ink into the card, 1.19–1.24:1 from it, and
+        what reads on it steps with it: money is solved onto the well per preset, the status colours, teal, orange
+        and {code("--status-edited")} deepen, and {code("--bg-active")} mixes at 16 %. A link button reads{" "}
+        {code("--brand-muted")} there, in both modes. Dark keeps its well. Flip More contrast in the top bar.
       </Note>
     </Example>
   );

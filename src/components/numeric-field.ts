@@ -8,6 +8,7 @@ import {
   useFieldError,
   useFieldHint,
   useLockReason,
+  type FieldHelpProps,
   type FieldHintParts,
   type LockReason,
 } from "./field-parts";
@@ -28,7 +29,9 @@ import type { CommitScope } from "./write-lock";
  */
 
 /** The props both fields take and this engine reads. */
-export interface NumericFieldProps {
+export interface NumericFieldProps extends FieldHelpProps {
+  /** What names the `help` "?" — "About <label>" — with the `aria-label`. */
+  label?: ReactNode;
   hint?: ReactNode;
   error?: ReactNode;
   invalid?: boolean;
@@ -39,6 +42,7 @@ export interface NumericFieldProps {
   calculator?: boolean;
   variant?: "field" | "display";
   locale?: string;
+  "aria-label"?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean | "true" | "false";
 }
@@ -94,7 +98,11 @@ export function useNumericField(props: NumericFieldProps, { settle, display }: N
   const lock = useLockReason(props.commit, props.disabledReason);
   const locked = lock.locked;
   // §4: a FieldHint is the caption at Large and on touch, as on every field.
-  const hint = useFieldHint(props.hint, props["aria-describedby"]);
+  // A `help` is the label line's one "?" and turns the hint into the caption (0.36).
+  const hint = useFieldHint(props.hint, props["aria-describedby"], {
+    help: props.help,
+    name: props.label ?? props["aria-label"],
+  });
   // The standing advice first, the news second: the caller's ids, the caption, the
   // error — a lock's reason between the last two, as on Select.
   const field = useFieldError(

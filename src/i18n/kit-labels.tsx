@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import {
   DEFAULT_APP_SHELL_LABELS,
   DEFAULT_CALCULATOR_LABELS,
@@ -98,6 +98,7 @@ import type { DemoLabels } from "../demo/demo-labels";
 import type { BillingLabels } from "../billing/billing-labels";
 import type { PlanChangeLabels } from "../admin/plan-change";
 import type { AppearanceLabels } from "../components/appearance-labels";
+import type { DeviceResetLabels } from "../settings/device-reset-setting";
 import type { RowActionsLabels } from "../components/row-actions";
 import type { AppShellMoreLabels } from "../shell/app-shell";
 import type { AccountStateLabels } from "../components/account-chips";
@@ -111,6 +112,7 @@ import type { IbanInputLabels } from "../components/iban-input";
 import type { PhoneInputLabels } from "../components/phone-input";
 import type { SignChipLabels } from "../components/sign-chip";
 import type { ColumnMapperLabels } from "../components/column-mapper";
+import type { NotificationsLabels } from "../notifications/notifications-labels";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -168,6 +170,12 @@ export interface CommonLabels {
   /** Read after a link that opens a new tab (`<Button href external>`, TextLink):
    *  nothing else tells a screen reader the page is about to change tabs. */
   opensInNewTab: string;
+  /** The name of a field's `help` "?" and its panel (round 0.36): "About <field>", the
+   *  field's label as the argument — "About Jerk shape". A `HelpPopover` passed as
+   *  `help` keeps its own name. */
+  aboutField: (field: string) => string;
+  /** …and of a `help` "?" on a field with no label and no `aria-label` to name it by. */
+  help: string;
 }
 
 /** `DatePicker` / `DateRangePicker` chrome. The calendar inside has its own
@@ -421,6 +429,9 @@ export interface UiKitLabels {
   planChange: PlanChangeLabels;
   /** 0.32.0: the text-size and contrast settings (docs/text-size-harmonization.md §6). */
   appearance: AppearanceLabels;
+  /** 0.36.0: resetting this device's settings, the appearance group's last card
+   *  (docs/settings-harmonization.md §11.3). */
+  deviceReset: DeviceResetLabels;
   /** 0.32.0: a row's actions folded into a "⋯" menu at Large (text size §10.8). */
   rowActions: RowActionsLabels;
   /** 0.32.0: the phone bar's "More" cell and sheet (text size §10.7). */
@@ -440,6 +451,10 @@ export interface UiKitLabels {
   /** 0.23.0: `ColumnMapper` / `ColumnRoleTable` — a pasted or dropped table, a role per
    *  column. */
   columnMapper: ColumnMapperLabels;
+  /** 0.36.0: the notification cards — the types, quiet hours and the zone picker, this
+   *  device's push, the device list, and the unsubscribe page
+   *  (docs/notifications-harmonization.md §4.2). */
+  notifications: NotificationsLabels;
 }
 
 /**
@@ -660,7 +675,42 @@ export function UiKitProvider({
     }),
     [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement, formatDate, tableStorageKeyPrefix],
   );
+  useTableViewsJoin(value.tableStorageKeyPrefix ?? DEFAULT_TABLE_STORAGE_KEY_PREFIX);
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
+}
+
+/** The kit's own table prefix: `DEFAULT_PERSIST_PREFIX` of components/use-table-state,
+ *  restated because that module imports the router (a test pins the two equal). */
+const DEFAULT_TABLE_STORAGE_KEY_PREFIX = "hbui-table:";
+
+/**
+ * Reset this device's settings (docs/settings-harmonization.md §11.4): the tables below a
+ * provider keep their views under its prefix, so the provider joins the registry with
+ * that prefix — a view, no `reset`, since a table reads its view when it next mounts —
+ * while it is mounted. Nested providers with one prefix hold one entry.
+ *
+ * Through a literal `import()`, not a static import: every catalogue reaches this module,
+ * and a catalogue may reach nothing outside i18n/ (scripts/check-module-graph.mjs,
+ * english-catalogue-graph.test.ts). The theme stores and the shell import the registry
+ * statically, so it is loaded already and the join lands a microtask after the mount.
+ */
+function useTableViewsJoin(prefix: string): void {
+  useEffect(() => {
+    let leave: (() => void) | undefined;
+    let gone = false;
+    import("../lib/device-settings").then(
+      ({ registerDeviceSetting }) => {
+        if (!gone) leave = registerDeviceSetting({ key: prefix, prefix: true, kind: "view" });
+      },
+      // A module of the kit's own that fails to load has nothing to join; the provider
+      // and its tables work as before.
+      () => undefined,
+    );
+    return () => {
+      gone = true;
+      leave?.();
+    };
+  }, [prefix]);
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {

@@ -100,8 +100,13 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
   // the base's focus ring stays: those copies had `outline-none` and no ring, so
   // a keyboard user tabbing onto them saw nothing at all. `rounded-sm` keeps that
   // ring hugging the word instead of drawing a pill round it.
+  //
+  // Under More contrast the word reads `--brand-muted`, the brand AS TEXT (0.36,
+  // colour-roles §13.3 decision 8): `--brand` is solved as a mark (3:1), and on More
+  // contrast's darker light well Moss's read 3.68:1; the derived dark brands sit at 3.0
+  // as text too. Both modes, since `contrast:` does not split them.
   link:
-    "rounded-sm p-0 bg-transparent text-brand underline-offset-4 hover:underline focus-visible:ring-brand",
+    "rounded-sm p-0 bg-transparent text-brand underline-offset-4 hover:underline focus-visible:ring-brand contrast:text-brand-muted",
 };
 
 /**
@@ -132,11 +137,14 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
  */
 export type ButtonTone = "default" | "muted" | "danger";
 
+// `contrast:text-secondary` restates the tone's own colour under the `contrast:` variant,
+// so tailwind-merge drops the link's `contrast:text-brand-muted` (0.36): a quiet link
+// stays quiet under More contrast. On `ghost` it reads the same either way.
 const BUTTON_TONES: Record<Exclude<ButtonTone, "default">, string> = {
   muted:
-    "text-secondary hover:text-primary disabled:hover:text-secondary",
+    "text-secondary hover:text-primary disabled:hover:text-secondary contrast:text-secondary",
   danger:
-    "text-secondary hover:text-danger focus-visible:ring-danger-strong disabled:hover:text-secondary",
+    "text-secondary hover:text-danger focus-visible:ring-danger-strong disabled:hover:text-secondary contrast:text-secondary",
 };
 
 /** Only the two transparent variants take every tone; see {@link ButtonTone}. */
@@ -158,9 +166,11 @@ const BUTTON_BOXED_DANGER: Partial<Record<ButtonVariant, string>> = {
 
 // `pressed` on a `link`: the brand colour and a heavier weight, which is exactly what
 // lenkbank's "All speeds" toggle paints by hand (gear/hysteresis-charts.tsx:482). After
-// the tone, so a pressed muted link is brand, and an unpressed one is quiet grey.
+// the tone, so a pressed muted link is brand, and an unpressed one is quiet grey. Under
+// More contrast the brand as text, `--brand-muted`, at rest and hovered (0.36, as the
+// `link` variant), whatever the tone.
 export const BUTTON_LINK_PRESSED =
-  "font-medium text-brand hover:text-brand disabled:hover:text-brand";
+  "font-medium text-brand hover:text-brand disabled:hover:text-brand contrast:text-brand-muted contrast:hover:text-brand-muted contrast:disabled:hover:text-brand-muted";
 
 /** The second argument of {@link buttonClasses} in its options form. */
 export interface ButtonClassesOptions {

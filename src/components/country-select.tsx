@@ -19,6 +19,7 @@ import {
   useFieldMessages,
   useLockReason,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
 } from "./field-parts";
 import { CurrencyFlag } from "./currency-select";
 import { ComboboxPanel, useComboboxCore, type ComboOption } from "./combobox-core";
@@ -66,7 +67,8 @@ export { DEFAULT_COUNTRY_SELECT_LABELS };
  * `null` of a clear cannot reach a handler that was never told about it.
  */
 export interface CountrySelectProps<Clearable extends boolean = false>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "defaultValue"> {
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "defaultValue">,
+    FieldHelpProps {
   /** The chosen country as an ISO 3166-1 alpha-2 code ("CH"), in either case;
    *  `null`, `undefined` or `""` when none is. A code outside the list still shows
    *  its name — the list restricts what can be PICKED, not what can be shown. */
@@ -249,6 +251,7 @@ export function CountrySelect<Clearable extends boolean = false>({
   flags = false,
   label,
   hint,
+  help,
   error,
   invalid,
   placeholder,
@@ -359,6 +362,8 @@ export function CountrySelect<Clearable extends boolean = false>({
   // the error — Select's order. Through useFieldMessages since 0.34 (DUP-2, DUP-8).
   const field = useFieldMessages({
     hint,
+    help,
+    name: label ?? ariaLabel,
     error,
     invalid,
     describedBy: ariaDescribedBy,

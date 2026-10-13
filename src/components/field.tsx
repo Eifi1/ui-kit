@@ -40,7 +40,7 @@
 import { useId, type ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
-import { useInlineHint } from "./field-parts";
+import { fieldHelpMark, useInlineHint, type FieldHelpProps } from "./field-parts";
 import { Label } from "./field-base";
 
 /** What a `Field` hands its render-prop children, to spread on the control. */
@@ -91,7 +91,7 @@ const LABEL_VISIBILITY: Record<FieldLabelVisibility, string | undefined> = {
   "below-lg": "lg:sr-only",
 };
 
-export interface FieldProps {
+export interface FieldProps extends FieldHelpProps {
   /** The label above the control. Omit it for a group whose control is labelled
    *  some other way; the hint and error still render. */
   label?: ReactNode;
@@ -123,6 +123,7 @@ export function Field({
   label,
   required,
   hint: hintProp,
+  help,
   error,
   htmlFor,
   disabled,
@@ -138,7 +139,10 @@ export function Field({
   const labelId = `${generated}-label`;
   // §4: a FieldHint under the control is its words at Large and on a touch screen, not
   // a lone "?" (DUP-2, refactor audit 2026-10). A HelpPopover stays a "?".
-  const hint = useInlineHint(hintProp);
+  // With a `help` (0.36) its "?" follows the label, and a FieldHint is its words at
+  // every size: the help's is the field's only "?".
+  const helpMark = fieldHelpMark(help, label);
+  const hint = useInlineHint(hintProp, helpMark !== undefined);
   const hasHint = hasContent(hint);
   const hasError = hasContent(error);
   const describedBy = [hasHint && hintId, hasError && errorId].filter(Boolean).join(" ");
@@ -148,6 +152,19 @@ export function Field({
     "aria-invalid": hasError || undefined,
     "aria-required": required || undefined,
   };
+  const labelEl = label !== undefined && (
+    <Label
+      id={labelId}
+      htmlFor={id}
+      required={required}
+      disabled={disabled}
+      size={labelSize}
+      data-error={hasError || undefined}
+      className={cn("data-[error=true]:text-danger", LABEL_VISIBILITY[labelVisibility])}
+    >
+      {label}
+    </Label>
+  );
   return (
     <div
       data-slot="field"
@@ -162,18 +179,14 @@ export function Field({
         className,
       )}
     >
-      {label !== undefined && (
-        <Label
-          id={labelId}
-          htmlFor={id}
-          required={required}
-          disabled={disabled}
-          size={labelSize}
-          data-error={hasError || undefined}
-          className={cn("data-[error=true]:text-danger", LABEL_VISIBILITY[labelVisibility])}
-        >
-          {label}
-        </Label>
+      {helpMark === undefined && labelEl}
+      {helpMark !== undefined && (
+        // The label and its "?" on one line; the "?" stays visible where the label is
+        // hidden (`labelVisibility`) — a hidden button would still take the focus.
+        <div className="flex items-center gap-1">
+          {labelEl}
+          <span className="flex shrink-0 items-center">{helpMark}</span>
+        </div>
       )}
       {typeof children === "function"
         ? children(control, { labelId: label !== undefined ? labelId : undefined })

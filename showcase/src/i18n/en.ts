@@ -464,6 +464,12 @@ export const en: Dictionary = {
       short: "Shell",
       blurb: "The app frame you are looking at, taken apart.",
     },
+    notifications: {
+      title: "Notifications",
+      short: "Notifications",
+      blurb:
+        "The notification settings every app shares: the types the server answers with a switch in the app and one by e-mail, quiet hours and the time zone, push on this device and the list of devices, and the page an e-mail's unsubscribe link opens.",
+    },
     settings: {
       title: "Settings",
       short: "Settings",
@@ -550,11 +556,17 @@ export const en: Dictionary = {
       blurb:
         "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered.",
     },
+    "server-notifications": {
+      title: "Notifications",
+      short: "Notifications",
+      blurb:
+        "The app's notification types and each account's switches, the settings PATCH, who gets an inbox row, a push or a mail, quiet hours and the digest, the push payload and a push service's answer, and the signed one-click unsubscribe token.",
+    },
     "server-feedback": {
       title: "Feedback & uploads",
       short: "Feedback",
       blurb:
-        "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — and attachments judged by their bytes.",
+        "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — its routes as one router factory, and attachments judged by their bytes.",
     },
     "server-limits": {
       title: "Limits, errors & CORS",
@@ -1129,6 +1141,22 @@ export const en: Dictionary = {
       "collapse the sidebar",
       "account menu with avatar",
     ],
+    notifications: [
+      "notification settings",
+      "turn notifications on or off",
+      "choose which notifications to get",
+      "notify by e-mail",
+      "quiet hours",
+      "do not disturb at night",
+      "pick a time zone",
+      "push notifications on this device",
+      "send a test notification",
+      "list the devices that get notifications",
+      "remove a device",
+      "unsubscribe from e-mails",
+      "one-click unsubscribe link",
+      "weekly or monthly digest",
+    ],
     settings: [
       "account settings",
       "change the password",
@@ -1252,6 +1280,17 @@ export const en: Dictionary = {
       "log mail in development",
       "reply-to support address",
     ],
+    "server-notifications": [
+      "register the app's notification types",
+      "notification settings endpoint",
+      "who gets a push or a mail",
+      "check quiet hours on the server",
+      "when the digest is due",
+      "build a web push payload",
+      "drop a dead push subscription",
+      "sign a one-click unsubscribe link",
+      "notification inbox shapes",
+    ],
     "server-feedback": [
       "validate a feedback report",
       "feedback status rules",
@@ -1259,6 +1298,7 @@ export const en: Dictionary = {
       "check an uploaded file's type",
       "limit the attachment size",
       "erase feedback of a deleted user",
+      "mount the feedback routes",
     ],
     "server-limits": [
       "rate limit a route",
