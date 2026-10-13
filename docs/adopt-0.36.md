@@ -221,4 +221,4 @@ keksdose is their canon. Kurvenschmiede's Select hints are done (its four commit
   uv add "eifi1-server-kit[billing,fastapi,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.9.0/eifi1_server_kit-0.9.0-py3-none-any.whl"          # Kurvenschmiede
   ```
 
-  sha256: (written at release)
+  sha256: `226361ca6db53a3f80d7b955ca69317dcfa1b5f70321a6448f8ff6274e378211`
