@@ -25,8 +25,8 @@ import { Tooltip } from "../tooltip";
  * has to arrive AND not be clobbered by a name the component computes for itself, which
  * is the trap in `Popover` (its `labels.panel` default) and `FileDropzone` (`dropLabel`).
  *
- * `ariaLabel`, the kit's third spelling of the same thing, keeps working — see the
- * HoverMenu block at the bottom. Removing it is a later minor; three apps pass it today.
+ * `ariaLabel`, the kit's third spelling of the same thing, is gone (0.34; the last
+ * aliases in 0.35) — see the HoverMenu block at the bottom.
  */
 
 /** One attribute the kit knows nothing about, and one it must not intercept. */

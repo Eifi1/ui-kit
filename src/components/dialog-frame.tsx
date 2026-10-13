@@ -23,7 +23,9 @@ export { DEFAULT_DIALOG_FRAME_LABELS };
  * (`children` is the body here, not the whole panel) and `title`, which is the dialog's
  * HEADING and a ReactNode rather than the browser's tooltip string — the collision
  * `PickerSheet` met first. Everything else, `size`, `draggable`, `fullBleed`,
- * `onKeyDown`, a `data-tour` anchor, still reaches the `Modal`.
+ * `onKeyDown`, a `data-tour` anchor, still reaches the `Modal` — and since 0.35 `ref`
+ * (round 0.35 R4): the panel, the `role="dialog"` element the frame's header, body and
+ * actions sit in.
  */
 export interface DialogFrameProps extends Omit<ModalProps, "labelledBy" | "children" | "title"> {
   /** The heading, and therefore the dialog's accessible name (`aria-labelledby`). */

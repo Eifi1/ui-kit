@@ -180,23 +180,6 @@ function keepTabInsidePanel(e: ReactKeyboardEvent<HTMLUListElement>) {
 }
 
 /**
- * Names the trigger and the menu: one of the two spellings is required (API-1, refactor
- * audit 2026-10). `aria-label` wins when both are given. OptionSwitcherMenu has the same
- * type; both become a plain required `aria-label` when `ariaLabel` goes in 0.35.
- */
-type RequiredMenuName =
-  | {
-      "aria-label": string;
-      /** @deprecated 0.34 — use `aria-label`; removed in 0.35. */
-      ariaLabel?: string;
-    }
-  | {
-      "aria-label"?: string;
-      /** @deprecated 0.34 — use `aria-label`; removed in 0.35. */
-      ariaLabel: string;
-    };
-
-/**
  * A top-bar icon button that opens a {@link HoverMenu} of actions and/or links,
  * with an optional uppercase heading and divider rules. Generic glue over the
  * shared top-bar chrome — e.g. the feedback launcher or the guided-tours menu —
@@ -219,8 +202,7 @@ export function TopBarActionMenu({
   trigger,
   triggerClassName,
   href,
-  "aria-label": ariaLabelAttr,
-  ariaLabel: ariaLabelProp,
+  "aria-label": ariaLabel,
   heading,
   header,
   entries,
@@ -265,6 +247,9 @@ export function TopBarActionMenu({
    * inside interactive content.
    */
   href?: string;
+  /** Names the trigger and the menu. Required: the trigger is an icon (refactor audit
+   *  2026-10, API-1 — the `ariaLabel` spelling went in 0.35). */
+  "aria-label": string;
   heading?: string;
   /** A non-interactive identity block above the rows. */
   header?: TopBarMenuHeader;
@@ -283,13 +268,11 @@ export function TopBarActionMenu({
   footer?: ReactNode | ((close: () => void) => ReactNode);
   /** Wraps the footer in a `<nav>` with this name ("Legal"). Without it, a plain block. */
   footerLabel?: string;
-  /** Which edge of the trigger the panel lines up with (see `HoverMenu`, whose type this
-   *  is: `left`/`right` are deprecated 0.34). Default `end`. */
+  /** Which edge of the trigger the panel lines up with, `start` or `end` in the reading
+   *  direction (see `HoverMenu`, whose type this is). Default `end`. */
   align?: HoverMenuProps["align"];
   panelClassName?: string;
-} & RequiredMenuName) {
-  // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
-  const ariaLabel = ariaLabelAttr ?? ariaLabelProp;
+}) {
   // Names the groups' headings for `aria-labelledby`. Positional rather than from the
   // entry's `key`, which is the caller's text and may hold a space — and a space in
   // `aria-labelledby` is a list separator.

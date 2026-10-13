@@ -22,13 +22,13 @@ function Layer({
   ownKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
   children?: ReactNode;
 }) {
-  useDismissLayer(true, onEscape);
+  const layer = useDismissLayer(true, onEscape);
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a test layer: its onKeyDown is the Escape boundary
     <div
       data-testid={name}
       onKeyDown={(e) => {
-        runOwnKeyDown(e, ownKeyDown);
+        runOwnKeyDown(e, ownKeyDown, layer);
         takeEscape(e);
       }}
     >
@@ -156,6 +156,56 @@ describe("claims", () => {
     render(<Layer name="dialog" onEscape={onEscape} ownKeyDown={(e) => e.key === "Escape" && e.preventDefault()} />);
     escape(screen.getByLabelText("dialog field"));
     expect(onEscape).not.toHaveBeenCalled();
+  });
+
+  it("the owner's handler hears Escape only while its own layer is on top (0.35, KS)", () => {
+    // A tooltip over the dialog, focus on the dialog: the tooltip's press, and the
+    // owner's handler — which would have claimed it — is not asked until the next one.
+    const own = vi.fn();
+    const dialog = vi.fn();
+    const tooltip = vi.fn();
+    function Tip({ onEscape }: { onEscape: () => void }) {
+      useDismissLayer(true, onEscape);
+      return null;
+    }
+    function Host() {
+      // Opened after the dialog, as a tooltip is: layers opened in one commit stack
+      // child first.
+      const [tip, setTip] = useState(false);
+      return (
+        <Layer
+          name="dialog"
+          onEscape={dialog}
+          ownKeyDown={(e) => {
+            if (e.key !== "Escape") return;
+            own();
+            e.preventDefault();
+          }}
+        >
+          <button type="button" onClick={() => setTip(true)}>
+            show tip
+          </button>
+          {tip && (
+            <Tip
+              onEscape={() => {
+                tooltip();
+                setTip(false);
+              }}
+            />
+          )}
+        </Layer>
+      );
+    }
+    render(<Host />);
+    fireEvent.click(screen.getByRole("button", { name: "show tip" }));
+    escape(screen.getByLabelText("dialog field"));
+    expect(tooltip).toHaveBeenCalledTimes(1);
+    expect(own).not.toHaveBeenCalled();
+
+    escape(screen.getByLabelText("dialog field"));
+    expect(own).toHaveBeenCalledTimes(1);
+    // Its preventDefault is still the owner's claim.
+    expect(dialog).not.toHaveBeenCalled();
   });
 
   it("a claim also holds the layers ABOVE a claimant that is not in them", () => {

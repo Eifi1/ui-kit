@@ -38,13 +38,6 @@ export interface FieldSyncLabels {
 // Defined in ./field-sync-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_FIELD_SYNC_LABELS };
 
-/** @deprecated 0.34 — `useKitLabels("fieldSync", DEFAULT_FIELD_SYNC_LABELS, labels)`, which
- *  the provider reaches too, or the field's own `labels`; removed in 0.35 (refactor audit
- *  2026-10, API-6a). A merge from before the provider, which no kit component calls. */
-export function resolveFieldSyncLabels(labels?: Partial<FieldSyncLabels>): FieldSyncLabels {
-  return labels ? { ...DEFAULT_FIELD_SYNC_LABELS, ...labels } : DEFAULT_FIELD_SYNC_LABELS;
-}
-
 export interface UseFieldSyncOptions<T> {
   /** What the database currently holds. Changing it re-seeds a CLEAN field. */
   value: T;

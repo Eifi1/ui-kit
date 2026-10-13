@@ -84,7 +84,7 @@ describe("RTL: no physical sides in the field chrome", () => {
   it("the dropdown pickers — MultiSelect, CurrencySelect", () => {
     const { container } = rtl(
       <>
-        <MultiSelect label="Tags" options={[{ value: 1, label: "One" }]} values={[]} onChange={() => {}} error="Pick one" />
+        <MultiSelect label="Tags" options={[{ value: 1, label: "One" }]} value={[]} onChange={() => {}} error="Pick one" />
         <CurrencySelect label="Currency" value="EUR" onChange={() => {}} />
       </>,
     );
@@ -346,7 +346,7 @@ describe("MultiSelect error and disabled", () => {
     render(
       <>
         <p id="hint">Pick any</p>
-        <MultiSelect label="Tags" options={opts} values={[]} onChange={() => {}} error="Pick at least one" aria-describedby="hint" />
+        <MultiSelect label="Tags" options={opts} value={[]} onChange={() => {}} error="Pick at least one" aria-describedby="hint" />
       </>,
     );
     const trigger = screen.getByRole("combobox", { name: /Tags/ });
@@ -356,7 +356,7 @@ describe("MultiSelect error and disabled", () => {
   });
 
   it("renders nothing extra for an empty error", () => {
-    render(<MultiSelect label="Tags" options={opts} values={[]} onChange={() => {}} error="" />);
+    render(<MultiSelect label="Tags" options={opts} value={[]} onChange={() => {}} error="" />);
     const trigger = screen.getByRole("combobox", { name: /Tags/ });
     expect(trigger).not.toHaveAttribute("aria-invalid");
     expect(trigger).not.toHaveAttribute("aria-describedby");
@@ -364,7 +364,7 @@ describe("MultiSelect error and disabled", () => {
 
   it("disabled: no panel, no chevron, dimmed label", () => {
     const { container } = render(
-      <MultiSelect label="Tags" options={opts} values={[]} onChange={() => {}} disabled />,
+      <MultiSelect label="Tags" options={opts} value={[]} onChange={() => {}} disabled />,
     );
     const trigger = screen.getByRole("combobox", { name: /Tags/ });
     expect(trigger).toBeDisabled();

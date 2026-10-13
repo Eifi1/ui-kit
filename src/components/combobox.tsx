@@ -125,7 +125,7 @@ export interface ComboboxProps
   closeLabel?: string;
   /**
    * The phone sheet's heading — and, as a string, the dialog's accessible name — for a
-   * field whose label is drawn by someone else: a form's `FormLabel` above it,
+   * field whose label is drawn by someone else: a bound field's label above it,
    * which `RhfTextCombobox` hands over here (0.24). Default: `label`. Without either, the
    * full-screen sheet opened untitled and unnamed, the one screen on a phone that has to
    * say what it is asking for (live #200).

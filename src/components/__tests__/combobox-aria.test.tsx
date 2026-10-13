@@ -204,7 +204,7 @@ describe("MultiSelect's checked state is semantic, not a decorative span", () =>
     render(
       <MultiSelect
         label="Categories"
-        values={values}
+        value={values}
         onChange={onChange}
         options={[
           { value: "a", label: "Groceries" },

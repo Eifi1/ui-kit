@@ -8,9 +8,6 @@ export interface RoleSwitcherProps<R extends string> {
   onChange: (role: R) => void;
   /** Default: `topBar.switchRole` from the {@link UiKitProvider}, else English. */
   "aria-label"?: string;
-  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
-   *  Names the switcher only when `aria-label` is absent. */
-  ariaLabel?: string;
   heading?: string;
   /** The trigger's tooltip. Default: `topBar.role(value)`. */
   title?: string;
@@ -30,12 +27,11 @@ export function RoleSwitcher<R extends string>({
   roles,
   value,
   onChange,
-  "aria-label": ariaLabelAttr,
-  ariaLabel,
+  "aria-label": ariaLabel,
   heading,
   title,
 }: RoleSwitcherProps<R>) {
-  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { switchRole: ariaLabelAttr ?? ariaLabel });
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { switchRole: ariaLabel });
   return (
     <OptionSwitcherMenu<R>
       aria-label={labels.switchRole}

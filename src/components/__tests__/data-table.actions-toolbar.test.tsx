@@ -169,7 +169,7 @@ describe("DataTable rowActions", () => {
         rows: ROWS.slice(0, 1),
         rowActions: [{ kind: "edit", onAction: vi.fn() }],
         mobileSwipeActions: () => ({
-          end: [{ label: "Own", onCommit: vi.fn(), className: "", armedClassName: "" }],
+          end: [{ label: "Own", onCommit: vi.fn(), tone: "neutral" }],
         }),
       });
       const group = screen.getByRole("group", { name: "Row actions" });

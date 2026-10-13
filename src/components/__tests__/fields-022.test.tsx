@@ -300,7 +300,7 @@ describe("keksdose K4: hint on the combobox family", () => {
     render(
       <MultiSelect
         label="Accounts"
-        values={[]}
+        value={[]}
         onChange={() => {}}
         options={[{ value: 1, label: "Checking" }]}
         hint="Leave empty for all"
@@ -313,7 +313,7 @@ describe("keksdose K4: hint on the combobox family", () => {
     render(
       <MultiSelect
         aria-label="Accounts"
-        values={[]}
+        value={[]}
         onChange={() => {}}
         options={[{ value: 1, label: "Checking" }]}
         hint={<FieldHint label="Leave empty for all" />}

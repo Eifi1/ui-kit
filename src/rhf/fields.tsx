@@ -27,7 +27,7 @@
  *  - **The red border.** Every field gets `invalid` from the field state, so an errored
  *    field PAINTS as well as announces. kastlan's number, money, date and entity fields
  *    passed only `aria-invalid` through `FormControl`, or nothing, and `Input`, `Select`
- *    and `Textarea` paint only from the prop (see the note in ./form).
+ *    and `Textarea` paint only from the prop (see the note in ./form-core).
  *  - **Focus on error.** `field.ref` reaches the focusable element itself — the input,
  *    a picker's trigger, a toggle group whose `focus()` lands on its option (since 0.34
  *    every kit field takes a ref; the number field and the pickers were reached by an id
@@ -37,7 +37,7 @@
  *    through react-hook-form's context. Pass it for the field's value types
  *    (`control={form.control}` checks `name` against the form's values).
  *
- * The common props: `name`, `control`, `label` (a {@link FormLabel} above the field;
+ * The common props: `name`, `control`, `label` (the label above the field;
  * omitted, none — then give the field an `aria-label`), `hint` (standing advice under
  * the field, attached to it with `aria-describedby`), `required` (the label's mark,
  * and `aria-required` where the control takes it — validation is `rules`' or the
@@ -110,7 +110,7 @@ export interface RhfFieldBaseProps<
   control?: ControllerProps<TFieldValues, TName, TTransformed>["control"];
   /** react-hook-form's `rules` (`required`, `min`, `validate` …). */
   rules?: ControllerProps<TFieldValues, TName, TTransformed>["rules"];
-  /** A {@link FormLabel} above the field. Omitted: no label — name the control with
+  /** The label above the field. Omitted: no label — name the control with
    *  an `aria-label` instead. */
   label?: ReactNode;
   /** Standing advice under the field ("As printed on the card"), attached to the
@@ -146,8 +146,8 @@ export interface RhfFieldRenderContext<
   invalid: boolean;
   /** The error's message, if any. */
   error: string | undefined;
-  /** The control's id, which the label points at. `FormControl` sets it on the
-   *  rendered element already; this is for a control that routes it elsewhere. */
+  /** The control's id, which the label points at. The rendered element has it already
+   *  (unless `asControl` is false); this is for a control that routes it elsewhere. */
   id: string;
   /** The label's id, for a control that is named with `aria-labelledby`. */
   labelId: string;
@@ -160,16 +160,16 @@ export interface RhfFieldProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformed = TFieldValues,
 > extends RhfFieldBaseProps<TFieldValues, TName, TTransformed> {
-  /** The control. Wrapped in {@link FormControl} (its `id`, `aria-describedby` and
-   *  `aria-invalid`) unless `asControl` is false. */
+  /** The control. Given the field's `id`, `aria-describedby` and `aria-invalid` unless
+   *  `asControl` is false. */
   render: (ctx: RhfFieldRenderContext<TFieldValues, TName>) => ReactElement;
   /** `false`: render the control as is, for one that wires its own ids from the
    *  context. Default `true`. */
   asControl?: boolean;
-  /** `false`: no {@link FormMessage}, for a control that renders its own error (its
+  /** `false`: no error message under the field, for a control that renders its own (its
    *  `error` prop). Default `true`. */
   message?: boolean;
-  /** `false`: no {@link FormLabel}, for a control that carries its label itself (a
+  /** `false`: no label above the field, for a control that carries its label itself (a
    *  checkbox). Default `true`. */
   showLabel?: boolean;
 }
@@ -1622,7 +1622,7 @@ export type RhfToggleGroupProps<
  * asked for it with {@link RhfTimeInput} and {@link RhfDateRangePicker}: the controls
  * its forms still had to wire by hand through {@link RhfField}'s render.
  *
- * The label is the form's {@link FormLabel} above the bare group, as on every other
+ * The label is the field's own label above the bare group, as on every other
  * bound field — the `labelPlacement="above"` shape, not the group's own field chrome —
  * and it names the group (`aria-labelledby`); the hint and the message describe it,
  * and an error paints the group's border. Focus on error goes to the option a

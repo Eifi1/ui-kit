@@ -49,7 +49,7 @@ describe("currency rounding (M5)", () => {
   });
 
   it("shows a host-set value at the minor unit while the field rests, untouched while editing", () => {
-    render(<AmountInput ariaLabel="Amount" value="93.4213" onChange={() => {}} currency="CHF" />);
+    render(<AmountInput aria-label="Amount" value="93.4213" onChange={() => {}} currency="CHF" />);
     const input = screen.getByRole("textbox", { name: "Amount" });
     expect(input).toHaveValue("93.42");
     fireEvent.focus(input);
@@ -86,7 +86,7 @@ describe("NumberInput reserves the unit's own width (M4)", () => {
 
 describe("AmountInput draws `negative` without a handler (N4, 0.15.5)", () => {
   it("shows the minus on a read-only total", () => {
-    render(<AmountInput ariaLabel="Total" value="5.18" onChange={() => {}} negative disabled currency="CHF" />);
+    render(<AmountInput aria-label="Total" value="5.18" onChange={() => {}} negative disabled currency="CHF" />);
     expect(screen.getByRole("textbox", { name: "Total" })).toHaveValue("-5.18");
   });
 });

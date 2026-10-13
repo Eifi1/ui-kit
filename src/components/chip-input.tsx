@@ -32,13 +32,6 @@ export interface ChipInputLabels {
 // Defined in ./chip-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_CHIP_INPUT_LABELS };
 
-/** @deprecated 0.34 — `useKitLabels("chipInput", DEFAULT_CHIP_INPUT_LABELS, labels)`, which
- *  the provider reaches too, or ChipInput's own `labels`; removed in 0.35 (refactor audit
- *  2026-10, API-6a). A merge from before the provider, which no kit component calls. */
-export function resolveChipInputLabels(labels?: Partial<ChipInputLabels>): ChipInputLabels {
-  return labels ? { ...DEFAULT_CHIP_INPUT_LABELS, ...labels } : DEFAULT_CHIP_INPUT_LABELS;
-}
-
 /**
  * `onChange` is the field's own — the whole LIST, not a DOM event — so the wrapper
  * div's `onChange` is omitted rather than shadowed. `placeholder` is likewise this

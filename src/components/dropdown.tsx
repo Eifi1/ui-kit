@@ -11,12 +11,19 @@ import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
 import { anchoredInline, useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
+import type { DismissLayer } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
 import { FIELD_TOUCH_TEXT } from "./field-base";
 import { mergeRefs } from "./field-parts";
 import { FOCUS_RING } from "./focus-ring";
 import { useAnchorDir } from "./use-anchor-dir";
+
+/** Each list's Escape layer, filed under the refs {@link useDropdown} and
+ *  {@link useDropdownSearch} hand out (`panelRef`, `inputRef`), for the panel and the
+ *  search box those refs are passed to — see "The caller's own handler" on
+ *  {@link useDropdown} (round 0.35 R2). Weak: a list's refs go with its component. */
+const listLayers = new WeakMap<object, DismissLayer>();
 
 /**
  * Open state + close-on-outside-click for a custom dropdown — the two input-shaped
@@ -88,6 +95,16 @@ import { useAnchorDir } from "./use-anchor-dir";
  * and stop it there — so a caller passes nothing new, AmountInput's currency chip
  * included.
  *
+ * ## The caller's own handler (round 0.35 R2)
+ *
+ * A caller's `onKeyDown` on {@link DropdownPanel} or {@link DropdownSearchHeader} hears
+ * Escape only while this list is the layer on top — the rule the dialogs got first. A
+ * tooltip over a row takes that press first, and the next one is the handler's, whose
+ * `preventDefault()` still keeps the list. The two find the list's layer through the
+ * refs this hook hands out — the panel through `panelRef`, the search box through
+ * {@link useDropdownSearch}'s `inputRef` — so a caller passes nothing new. One handed
+ * neither (an un-anchored panel may leave `panelRef` off) hears every key, as before.
+ *
  * `escapeLayer: false` is for a caller that registers its own layer: the editable
  * comboboxes, whose list can be "open" with nothing in it to show — an Escape there
  * belongs to the dialog.
@@ -129,7 +146,11 @@ export function useDropdown<T extends HTMLElement = HTMLDivElement>({
   }, []);
   useOutsideClick([wrapperRef, panelRef], close, open && !panelIsSheet);
   // See "Escape inside a dialog" above.
-  useDismissLayer(open && escapeLayer, closeToTrigger);
+  const layer = useDismissLayer(open && escapeLayer, closeToTrigger);
+  // Filed under `panelRef` for the panel's own handler — "The caller's own handler" above.
+  useEffect(() => {
+    listLayers.set(panelRef, layer);
+  }, [panelRef, layer]);
   // Same close path Escape and an outside click take, so a list dismissed by Back
   // cannot end up in a different state from one dismissed any other way.
   useOverlayHistory(open && backCloses, close);
@@ -145,6 +166,12 @@ export function useDropdownSearch<T extends HTMLElement = HTMLDivElement>() {
     useDropdown<T>();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  // The list's layer again, under `inputRef` for the search box's handler (round 0.35
+  // R2). `useDropdown`'s effect, which runs first, has filed it under `panelRef`.
+  useEffect(() => {
+    const layer = listLayers.get(panelRef);
+    if (layer) listLayers.set(inputRef, layer);
+  }, [panelRef]);
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the query on open
@@ -237,7 +264,9 @@ export function DropdownSearchHeader({
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         onKeyDown={(e) => {
-          runOwnKeyDown(e, onKeyDown);
+          // The caller's handler hears Escape only while the list is on top (round 0.35
+          // R2) — the layer filed under `inputRef`, when {@link useDropdownSearch} made it.
+          runOwnKeyDown(e, onKeyDown, listLayers.get(inputRef));
           // Focus is in this box while the list is up, so this is where Escape lands
           // first — see "Escape inside a dialog" on {@link useDropdown}.
           takeEscape(e);
@@ -271,29 +300,22 @@ export interface DropdownPanelProps extends ComponentPropsWithoutRef<"div"> {
   anchorRef?: RefObject<HTMLElement | null>;
   /** {@link useDropdown}'s `panelRef`, so an outside-click sees this as inside. Escape
    *  anywhere in the panel, on a row as in the search box, closes the list rather than
-   *  a dialog around it. */
+   *  a dialog around it. It is also how the panel finds the list's Escape layer, for
+   *  its `onKeyDown` (round 0.35 R2: see "The caller's own handler" there). */
   panelRef?: RefObject<HTMLDivElement | null>;
   /** Panel width in px, for the anchored form (the CSS `w-*` cannot be measured). */
   width?: number;
-  /** Which of the panel's edges lines up with the trigger's, room permitting.
-   *  `start`/`end` follow the trigger's reading direction — `end` is the right edge
-   *  in a left-to-right form and the left one in a right-to-left form — and are what
-   *  the kit's own pickers pass; `left`/`right` are physical and deprecated
-   *  ({@link PhysicalAlign}). Default `end`, which is the old `right` in a
-   *  left-to-right page. */
-  align?: "start" | "end" | PhysicalAlign;
+  /** Which of the panel's edges lines up with the trigger's, room permitting, by the
+   *  trigger's reading direction — `end` is the right edge in a left-to-right form and
+   *  the left one in a right-to-left form. Default `end`. The physical `left` / `right`
+   *  went in 0.35 (round 0.35 R1, refactor audit 2026-10, API-6e): `right` is `end` in a
+   *  left-to-right page, `left` is `start`. */
+  align?: "start" | "end";
   children: ReactNode;
   /** The panel, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
    *  merged with `panelRef`, so the outside-click still sees it. */
   ref?: Ref<HTMLDivElement>;
 }
-
-/**
- * @deprecated 0.34 — `"start"` / `"end"`, which follow the reading direction: `"right"`
- * is `"end"` in a left-to-right page, the default; removed in 0.35 (refactor audit
- * 2026-10, API-6e). The physical edges DropdownPanel's `align` still takes.
- */
-type PhysicalAlign = "left" | "right";
 
 /**
  * The floating popover surface for the searchable dropdowns: bordered/shadowed
@@ -344,7 +366,9 @@ export function DropdownPanel({
   // A row the keyboard reached by Tab holds focus too, and its Escape has to close the
   // list as the search box's does (BUG-1). The caller's handler first, as everywhere.
   const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
-    runOwnKeyDown(e, onKeyDown);
+    // It hears Escape only while the list is on top, a tooltip over a row taking the
+    // press first (round 0.35 R2) — the layer filed under `panelRef`, when handed one.
+    runOwnKeyDown(e, onKeyDown, panelRef && listLayers.get(panelRef));
     takeEscape(e);
   };
   const body = (

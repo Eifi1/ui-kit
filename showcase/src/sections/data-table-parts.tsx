@@ -376,10 +376,7 @@ function LabelsSpecimen() {
           <code className="font-mono">missingKitLabels</code> is the other half of that
           lenient merge: it lists every key that would fall back to English (presets one by
           one), so a translated app can assert <code className="font-mono">toEqual([])</code>{" "}
-          in its own test. The table&apos;s own pair,{" "}
-          <code className="font-mono">resolveDataTableLabels</code> and{" "}
-          <code className="font-mono">missingDataTableLabels</code>, is deprecated in 0.34 and
-          goes in 0.35.
+          in its own test. It replaced the table&apos;s own pair of helpers, removed in 0.35.
         </Note>
       </div>
     </Example>

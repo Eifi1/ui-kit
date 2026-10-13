@@ -12,7 +12,9 @@ import * as wizard from "../wizard";
 import * as rhf from "../rhf";
 import * as tableText from "../table-text";
 import * as dates from "../lib/dates";
+import * as currencies from "../currencies";
 import * as testing from "../testing";
+import * as eslintPlugin from "../eslint";
 import * as i18nDeCh from "../i18n/locales/de-CH";
 import * as i18nEn from "../i18n/locales/en";
 import * as i18nEs from "../i18n/locales/es";
@@ -218,19 +220,31 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `attachSessionRefresh`, `isTransientRefreshFailure`, `isSignedOutStep`; and
   // `PHONE_QUERY` removed (deprecated since 0.32).
   // and later in 0.34 `foldForSearch`, `rankMatch` (lib/text-match: one search fold for every list).
-  ["@eifi1/ui-kit", barrel, 888],
+  // 0.35 (+1): `CURRENCY_COUNTRIES`, code → flag-icons country (keksdose's 0.34 report);
+  // also on the new /currencies.
+  // 0.35.0 (−15, refactor audit 2026-10, API-6, deprecated in 0.34): the chart-zoom maths
+  // and `withChartZoom`, 13 names (API-6b); `ALTERNATIVE_PRESETS` (API-6c);
+  // `FeedbackComposer` (API-6d).
+  // 0.35.0 (−6, round 0.35 R1, API-6a, deprecated in 0.34): the label helpers from before
+  // the provider — `resolveChipInputLabels`, `resolveFieldSyncLabels`,
+  // `resolvePasswordRevealLabels`, `resolveWizardLabels`, `resolveDataTableLabels` (now
+  // DataTable's own) and `missingDataTableLabels` (`missingKitLabels` checks every namespace).
+  ["@eifi1/ui-kit", barrel, 868],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
-  ["@eifi1/ui-kit/chart", chart, 59],
+  // 0.35.0 (−13): the zoom maths and `withChartZoom` are the kit's own (API-6b).
+  ["@eifi1/ui-kit/chart", chart, 46],
   // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
-  ["@eifi1/ui-kit/data-table", dataTable, 28],
+  // 0.35.0: `resolveDataTableLabels` and `missingDataTableLabels` removed (R1, API-6a) (−2).
+  ["@eifi1/ui-kit/data-table", dataTable, 26],
   // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS` (+1 here and in the barrel).
   // 0.22.0: ChatComposer, FeedbackComposer under a neutral name (keksdose K17) (+1).
   // 0.27.0: the feedback harmonization's 55 (see the barrel's note above).
-  ["@eifi1/ui-kit/feedback", feedback, 83],
+  // 0.35.0: `FeedbackComposer` removed, `ChatComposer` stays (API-6d) (−1).
+  ["@eifi1/ui-kit/feedback", feedback, 82],
   ["@eifi1/ui-kit/search", search, 9],
   // 0.31.0 (+26): the settings shell and its route, focus, context, heading and
   // catalogue helpers; PublicHeader, RootEntry, RedirectIfAuthed and the
@@ -244,7 +258,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // kastlan 51/52: `IntegerField` and `MoneyField` (+2). Showcase audit: `splitFileName` (+1).
   // 0.12.0: `useWizardStepValidate` and `useWizardNextGate` (+2 here and in the barrel),
   // the non-form step hooks kastlan kept in shared/components/wizard.
-  ["@eifi1/ui-kit/wizard", wizard, 12],
+  // 0.35.0: `resolveWizardLabels` removed (R1, API-6a) (−1).
+  ["@eifi1/ui-kit/wizard", wizard, 11],
   // 0.11.0: `useRhfWizardStep`, the react-hook-form bridge to the wizard's Next gate.
   // 0.12.0: the bound fields — `RhfField`, `RhfTextField`, `RhfTextarea`,
   // `RhfNumberField`, `RhfMoneyField`, `RhfDateField`, `RhfSelect`, `RhfCheckbox`,
@@ -255,18 +270,29 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // RhfPhoneInput (+5).
   // 0.23.0: RhfCountrySelect, RhfMonthPicker (kastlan) (+2).
   // 0.24.0: RhfInlineEntityCombobox (kastlan's AccountPicker, focus-on-error) (+1).
-  ["@eifi1/ui-kit/rhf", rhf, 29],
+  // 0.35.0: the shadcn scaffold — FormField, useFormField, FormItem, FormLabel,
+  // FormControl, FormDescription, FormMessage — is the bound fields' own (API-6f) (−7).
+  ["@eifi1/ui-kit/rhf", rhf, 22],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8
   // lines and keksdose on 2, and nothing counted it. The local-calendar ISO helpers.
   ["@eifi1/ui-kit/dates", dates, 20],
+  // 0.35: `CURRENCIES` and `CURRENCY_COUNTRIES` as plain data an app's build tooling
+  // imports in Node (keksdose's flag subset read them out of a dist/ file 0.34 moved). A
+  // slice of the barrel, not standalone in the sense below: both names are the barrel's
+  // too. It imports nothing at all — packaging-contract.test.ts pins that.
+  ["@eifi1/ui-kit/currencies", currencies, 2],
   // 0.33.0: the guard an app runs from its own suite — `undeclaredCssVariables`,
   // `KIT_CSS_VARIABLES` and the stylesheet rule they share, `declaredCustomProperties`
   // (docs/colour-roles-harmonization.md §8.3).
   // 0.34.0 (+3): the environment stubs (refactor audit 2026-10, TST-10) —
   // `stubViewportWidth`, `viewportMatchMedia`, `stubResizeObserver`.
-  ["@eifi1/ui-kit/testing", testing, 6],
+  // 0.35 (+1): `setViewportWidth`, a live resize of the active stub (keksdose's 0.34 report).
+  ["@eifi1/ui-kit/testing", testing, 7],
+  // 0.35: the ESLint plugin, its `default` export only (`role-utilities`, KS Q6): an app's
+  // lint config imports it in Node, so it imports nothing else of the kit.
+  ["@eifi1/ui-kit/eslint", eslintPlugin, 1],
   // 0.18.0: the only German left (see the history above); `uiKitLabelsDeCh` (+1).
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 2],
   // 0.17.0: `uiKitLabelsEn(numberLocale)`, the English defaults with grouped counts
@@ -292,6 +318,8 @@ const STANDALONE = new Set([
   "@eifi1/ui-kit/dates",
   // Test helpers, never part of an app's bundle.
   "@eifi1/ui-kit/testing",
+  // Lint tooling, the same.
+  "@eifi1/ui-kit/eslint",
   ...ENTRIES.map(([name]) => name).filter((name) => name.startsWith("@eifi1/ui-kit/i18n/")),
 ]);
 
@@ -344,7 +372,9 @@ describe("standalone entries", () => {
  * a bundler reads it — no type checker, which would load the whole kit for a list of names.
  */
 const SRC = join(process.cwd(), "src");
-const SLICES = ["chart", "data-table", "feedback", "search", "shell", "tour", "wizard"];
+// `currencies` is one module that re-exports nothing, so only the second rule bites:
+// `CurrencyOption`, a type, has to reach the barrel too (0.35).
+const SLICES = ["chart", "currencies", "data-table", "feedback", "search", "shell", "tour", "wizard"];
 
 const sourceOf = (base: string) =>
   [".ts", ".tsx", "/index.ts", "/index.tsx"].map((ext) => base + ext).find((f) => existsSync(f));

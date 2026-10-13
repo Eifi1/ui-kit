@@ -85,14 +85,91 @@ function condition(part: string, width: number, options: ViewportOptions): boole
   }
 }
 
+/** A whole query: comma lists are alternatives, `and` joins conditions, as in CSS. */
+function answer(query: string, width: number, options: ViewportOptions): boolean {
+  return query
+    .split(",")
+    .some((alternative) =>
+      alternative.split(/\s+and\s+/).every((part) => condition(part, width, options)),
+    );
+}
+
+/** A list {@link viewportMatchMedia} handed out: what {@link setViewportWidth} flips. */
+interface StubMediaQueryList {
+  matches: boolean;
+  readonly media: string;
+  onchange: ((this: MediaQueryList, event: MediaQueryListEvent) => unknown) | null;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject | null): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject | null): void;
+  addListener(listener: EventListenerOrEventListenerObject | null): void;
+  removeListener(listener: EventListenerOrEventListenerObject | null): void;
+  dispatchEvent(event: Event): boolean;
+}
+
+/** One stub's viewport: its width now, and every list it has handed out. */
+interface StubViewport {
+  width: number;
+  readonly options: ViewportOptions;
+  readonly lists: Set<StubMediaQueryList>;
+}
+
+/** Each `matchMedia` {@link viewportMatchMedia} made → its viewport. Keyed by the function,
+ *  so {@link setViewportWidth} finds whichever stub is in force however it was put in. */
+const VIEWPORTS = new WeakMap<object, StubViewport>();
+
+function mediaQueryList(query: string, viewport: StubViewport): StubMediaQueryList {
+  // One set for both APIs: in a browser `addListener(fn)` IS `addEventListener("change",
+  // fn)`, so adding the same function through both registers it once.
+  const listeners = new Set<EventListenerOrEventListenerObject>();
+  const list: StubMediaQueryList = {
+    matches: answer(query, viewport.width, viewport.options),
+    media: query,
+    onchange: null,
+    addEventListener(type, listener) {
+      if (type === "change" && listener) listeners.add(listener);
+    },
+    removeEventListener(type, listener) {
+      if (type === "change" && listener) listeners.delete(listener);
+    },
+    addListener(listener) {
+      if (listener) listeners.add(listener);
+    },
+    removeListener(listener) {
+      if (listener) listeners.delete(listener);
+    },
+    dispatchEvent(event) {
+      if (event.type !== "change") return true;
+      const self = list as unknown as MediaQueryList;
+      list.onchange?.call(self, event as MediaQueryListEvent);
+      for (const listener of [...listeners]) {
+        if (typeof listener === "function") listener.call(self, event);
+        else listener.handleEvent(event);
+      }
+      return !event.defaultPrevented;
+    },
+  };
+  return list;
+}
+
+/** The `change` a browser fires at a list whose answer flipped: a `MediaQueryListEvent`'s
+ *  `matches` and `media`, on an `Event` (jsdom has no `MediaQueryListEvent`). */
+function changeEvent(list: StubMediaQueryList): Event {
+  const event = new Event("change");
+  for (const [key, value] of Object.entries({ matches: list.matches, media: list.media, target: list, currentTarget: list })) {
+    Object.defineProperty(event, key, { value, enumerable: true });
+  }
+  return event;
+}
+
 /**
  * A `window.matchMedia` for a viewport `width` CSS px wide.
  *
  * Width queries answer from `width`: the range syntax the kit writes for `max-*`
  * (`(width < 768px)`) and every other comparison, `(min-width: …)` and `(max-width: …)`,
  * in px or rem; `and` and comma lists combine as in CSS. The features in `options` answer
- * as set there; every other query is false. The lists it returns never change, so
- * nothing fires `change`: a test that changes the width stubs again and renders again.
+ * as set there; every other query is false. The lists keep their listeners, and
+ * {@link setViewportWidth} resizes the viewport under them the way a browser window
+ * does: each list whose answer flips fires `change`.
  *
  * Hand it to the runner's own global stub where the suite undoes stubs that way —
  * `vi.stubGlobal("matchMedia", viewportMatchMedia(375))` — or use
@@ -102,23 +179,52 @@ export function viewportMatchMedia(
   width: number,
   options: ViewportOptions = {},
 ): (query: string) => MediaQueryList {
-  const answer = (query: string) =>
-    query
-      .split(",")
-      .some((alternative) =>
-        alternative.split(/\s+and\s+/).every((part) => condition(part, width, options)),
-      );
-  return (query: string) =>
-    ({
-      matches: answer(query),
-      media: query,
-      onchange: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
-      dispatchEvent: () => false,
-    }) as unknown as MediaQueryList;
+  const viewport: StubViewport = { width, options, lists: new Set() };
+  const matchMedia = (query: string) => {
+    const list = mediaQueryList(query, viewport);
+    viewport.lists.add(list);
+    return list as unknown as MediaQueryList;
+  };
+  VIEWPORTS.set(matchMedia, viewport);
+  return matchMedia;
+}
+
+/**
+ * Resize the stubbed viewport to `width` CSS px, live — the window being dragged narrower,
+ * a phone turned (0.35, keksdose's 0.34 report). Every list the stub in force has handed
+ * out answers from the new width, and each one whose answer flipped fires `change` to its
+ * `addEventListener` listeners, its legacy `addListener` ones and its `onchange`, as in a
+ * browser; a list whose answer stayed the same tells nobody. So a mounted component that
+ * listens to a breakpoint (`usePhoneLayout()`, `useBreakpoint()`) switches without being
+ * rendered again.
+ *
+ * The stub in force is whatever `window.matchMedia` is now — one {@link stubViewportWidth}
+ * or `vi.stubGlobal("matchMedia", viewportMatchMedia(…))` put in; its features
+ * (`options`) stay as they were. Throws when `matchMedia` is not one of these stubs, rather
+ * than resize nothing. Synchronous: wrap it in `act()` when a listener sets state.
+ *
+ * ```ts
+ * undo = stubViewportWidth(1280);
+ * render(<Page />);
+ * act(() => setViewportWidth(375));
+ * expect(screen.getByRole("list")).toBeInTheDocument(); // the cards
+ * ```
+ */
+export function setViewportWidth(width: number): void {
+  const viewport = typeof window === "undefined" ? undefined : VIEWPORTS.get(window.matchMedia);
+  if (!viewport) {
+    throw new Error(
+      "setViewportWidth: no viewport stub is in force — put one in first with " +
+        "stubViewportWidth(width), or vi.stubGlobal(\"matchMedia\", viewportMatchMedia(width)).",
+    );
+  }
+  viewport.width = width;
+  for (const list of [...viewport.lists]) {
+    const matches = answer(list.media, width, viewport.options);
+    if (matches === list.matches) continue;
+    list.matches = matches;
+    list.dispatchEvent(changeEvent(list));
+  }
 }
 
 /**

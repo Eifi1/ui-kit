@@ -457,17 +457,6 @@ export interface PasswordRevealLabels {
 // Defined in ./ui-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_PASSWORD_REVEAL_LABELS };
 
-/** @deprecated 0.34 — `useKitLabels("passwordReveal", DEFAULT_PASSWORD_REVEAL_LABELS, labels)`,
- *  which the provider reaches too, or Input's own `passwordLabels`; removed in 0.35
- *  (refactor audit 2026-10, API-6a). A merge from before the provider, which no kit
- *  component calls. */
-export function resolvePasswordRevealLabels(
-  partial?: Partial<PasswordRevealLabels>,
-): PasswordRevealLabels {
-  if (!partial) return DEFAULT_PASSWORD_REVEAL_LABELS;
-  return { ...DEFAULT_PASSWORD_REVEAL_LABELS, ...partial };
-}
-
 /**
  * What the character counter of {@link Input} and {@link Textarea} (`showCount`) says.
  * The visible "12/80" is digits and a slash and is not translated; these are the words

@@ -102,7 +102,7 @@ describe("FullBleedDialog and an autofocused field (0.33.1)", () => {
           </button>
           <FullBleedDialog open={open} onClose={() => setOpen(false)} closeLabel="Close" title="New transaction">
             {/* eslint-disable-next-line jsx-a11y/no-autofocus -- the case under test */}
-            <AmountInput value={amount} onChange={setAmount} ariaLabel="amount" autoFocus />
+            <AmountInput value={amount} onChange={setAmount} aria-label="amount" autoFocus />
           </FullBleedDialog>
         </div>
       );

@@ -21,6 +21,52 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.35.0](https://github.com/Eifi1/ui-kit/compare/v0.34.0...v0.35.0) (2026-10-13)
+
+Removes what 0.34 deprecated and finishes the refactor plan's open ends; carries the fixes
+from the three apps' 0.34 adoptions, built as 0.34.1 and shipped here instead. The migration
+per app is `docs/adopt-0.35.md`; no app has a call site of a removed name left. server-kit
+stays 0.8.0.
+
+### ⚠ BREAKING CHANGES
+
+Hand-collected, like 0.34.0's list (each was deprecated in 0.34, SwipeAction's in 0.33):
+
+* **`ariaLabel`** → `aria-label` on NumberInput, AmountInput, MoneyField, NumberField,
+  IntegerField, the Rhf number / integer / money fields, CalculatorButton, WizardStepper,
+  ThemeToggle, PaletteMenu, LanguageMenu, RoleSwitcher, OptionSwitcherMenu and
+  TopBarActionMenu (required on the last two).
+* **Props:** MultiSelect `values`, `allLabel`, `searchLabel`, `selectAllLabel`, `clearLabel`
+  (→ `value`, `labels.*`); FieldStrip `pad` and the `FieldStripPad` type; ServerWakeNotice
+  `navOffset`; SwipeAction `className` / `armedClassName` (→ `tone` or `paint`); `align`
+  `"left"` / `"right"` on HoverMenu, DropdownPanel, TopBarActionMenu and FeedbackMenu
+  (→ `"start"` / `"end"`).
+* **Exports:** the chart-zoom maths (`DEFAULT_Y_AXIS`, `ZOOM_SQUARE_ENOUGH`, `ZOOM_MIN_DRAG`,
+  `zoomAxesFor`, `selectionFromDrag`, `axisExtent`, `fitYToX`, `fitXToY`, `NO_ZOOM`,
+  `zoomAfter`, `zoomDomains`, `defaultZoomAxes`) and `withChartZoom`; `ALTERNATIVE_PRESETS`;
+  `FeedbackComposer` (→ `ChatComposer`); `resolveChipInputLabels`, `resolveFieldSyncLabels`,
+  `resolvePasswordRevealLabels`, `resolveWizardLabels`, `resolveDataTableLabels`,
+  `missingDataTableLabels` (→ `labels` props, `useKitLabels`, `missingKitLabels`); from
+  `/rhf` the scaffold `FormField`, `useFormField`, `FormItem`, `FormLabel`, `FormControl`,
+  `FormDescription`, `FormMessage` and their five `*Props` types (→ the bound `Rhf*` fields,
+  `RhfField`).
+* **Types:** `useKitLabelOverrides` returns a deep partial (`LabelOverride`).
+* **Behaviour app tests may notice:** a caller's `onKeyDown` on Popover, HoverMenu,
+  DropdownPanel or DropdownSearchHeader hears Escape only while that overlay is the top layer,
+  as on Modal and FullBleedDialog (none of the apps passes one).
+
+### Added
+
+* @eifi1/ui-kit/currencies (pure data), setViewportWidth for tests, keksdose's wake words ([94246da](https://github.com/Eifi1/ui-kit/commit/94246dac6485bf773ec32d37884b665b9293eadd))
+* @eifi1/ui-kit/eslint, the role-utilities rule for an app's own markup ([d53ad71](https://github.com/Eifi1/ui-kit/commit/d53ad71aec43c1c198a5a62a85212079071e26ee))
+* remove what 0.34 deprecated; overlays' own onKeyDown hears Escape only as the top layer ([74bb8e2](https://github.com/Eifi1/ui-kit/commit/74bb8e25a848a104f8bfca43f08119b1b1a5a933))
+* Tooltip, Modal, DialogFrame, CopyButton, StatTile and the banners take a ref ([8ff80f6](https://github.com/Eifi1/ui-kit/commit/8ff80f6eaccbee9a23986d3d52e030f36aa19990))
+
+### Fixed
+
+* DataTable's labels skip an undefined key, as useKitLabels does; 0.35's loose ends ([c77fff6](https://github.com/Eifi1/ui-kit/commit/c77fff6780888dac156194d9510faa8e147e1439))
+* Escape reaches a dialog's own handler only as the top layer; grouped review panels keep a view ([b477f4a](https://github.com/Eifi1/ui-kit/commit/b477f4ae9c94581dfc01c9ddc067b5ecf6ed459c))
+
 ## [0.34.0](https://github.com/Eifi1/ui-kit/compare/v0.33.1...v0.34.0) (2026-10-13)
 
 Round 0.34 (the apps' 0.33 reports, keksdose's feedback runs 77–78, Kurvenschmiede's asks;

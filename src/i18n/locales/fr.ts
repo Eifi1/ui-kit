@@ -774,10 +774,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       submit: "Continuer",
       cancel: "Annuler",
     },
+    // 0.35: keksdose's reviewed French (its `boot.slow` / `boot.waking`), which is canon.
     serverWake: {
-      slow: "Chargement en cours — cela prend plus de temps que d’habitude.",
+      slow: "Chargement en cours — c’est plus long que d’habitude.",
       waking: (appName) =>
-        `Le serveur se met en veille quand personne n’utilise ${appName ?? "l’application"}, donc la première requête après une pause doit le redémarrer. Cela peut prendre un moment — rien n’est perdu, la page se remplira d’elle-même.`,
+        `Le serveur se met en veille quand personne n’utilise ${appName ?? "l’application"}\u202f; la première requête après une pause doit donc le réveiller. Cela peut prendre un instant — rien n’est perdu, la page se remplit toute seule.`,
     },
     // 0.28.0 — docs/legal-harmonization.md §4.3/§4.4: keksdose's reviewed French, and
     // Kurvenschmiede's for the browser section and the beta notice; spaced as this

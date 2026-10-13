@@ -120,7 +120,7 @@ const CONTROLS: { name: string; render: (invalid: boolean) => ReactElement }[] =
     render: (invalid) => (
       <MultiSelect
         label="F"
-        values={[]}
+        value={[]}
         onChange={vi.fn()}
         options={[{ value: "a", label: "A" }]}
         invalid={invalid}

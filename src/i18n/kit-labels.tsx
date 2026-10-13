@@ -701,13 +701,23 @@ function mergeOverrides(
   return out as UiKitLabelOverrides;
 }
 
-/** What the nearest provider says about one namespace — `undefined` outside one.
- *  For a component whose own resolver does more than a merge (the data table
- *  derives `columnsCount` from `columns`): feed `{ ...overrides, ...props }` to it. */
+/**
+ * What the nearest provider says about one namespace — `undefined` outside one. Nested
+ * providers' words come merged, at every depth; no English default is filled in.
+ *
+ * A {@link LabelOverride}, partial at every depth, like the components' `labels` props
+ * that take it: a provider that names one key of a section (`accountSettings.passkeys`)
+ * or one preset (`dataTable.presets`) hands over just that (round 0.35 R3 — until then
+ * it was typed partial at the top only, so a nested section read as complete).
+ *
+ * For a component whose own resolver does more than a merge (the data table derives
+ * `columnsCount` from `columns`): merge the component's prop over it — a record key by
+ * key — and feed the result to that resolver.
+ */
 export function useKitLabelOverrides<K extends keyof UiKitLabels>(
   ns: K,
-): Partial<UiKitLabels[K]> | undefined {
-  return useContext(KitI18nContext).labels?.[ns] as Partial<UiKitLabels[K]> | undefined;
+): LabelOverride<UiKitLabels[K]> | undefined {
+  return useContext(KitI18nContext).labels?.[ns];
 }
 
 /**

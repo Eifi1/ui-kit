@@ -11,6 +11,7 @@ import { viewportMatchMedia, type ViewportOptions } from "../testing/viewport";
  * that wants the phone shape stubs it.
  */
 export {
+  setViewportWidth,
   stubResizeObserver,
   stubViewportWidth,
   viewportMatchMedia,

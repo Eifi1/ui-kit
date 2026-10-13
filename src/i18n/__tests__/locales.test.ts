@@ -95,6 +95,43 @@ describe("de-CH", () => {
   });
 });
 
+describe("serverWake is keksdose's reviewed wording (0.35)", () => {
+  // The cold-start notice is keksdose's (#199, kit 0.18), and its reviewed words are canon:
+  // its `boot.slow` / `boot.waking`, with the app's name where keksdose writes its own. The
+  // kit's fr and it had drifted ("cela prend plus de temps", "Caricamento in corso").
+  const KEKSDOSE = {
+    en: [
+      "Still loading — this is taking longer than usual.",
+      "The server goes to sleep when nobody is using Keksdose, so the first request after a break has to start it again. That can take a moment — nothing is lost, the page fills in by itself.",
+    ],
+    "de-CH": [
+      "Lädt noch – das dauert länger als sonst.",
+      "Der Server schläft ein, wenn Keksdose gerade niemand benutzt. Die erste Anfrage nach einer Pause muss ihn erst wieder starten. Das kann einen Moment dauern – es geht nichts verloren, die Seite füllt sich von selbst.",
+    ],
+    fr: [
+      "Chargement en cours — c’est plus long que d’habitude.",
+      "Le serveur se met en veille quand personne n’utilise Keksdose\u202f; la première requête après une pause doit donc le réveiller. Cela peut prendre un instant — rien n’est perdu, la page se remplit toute seule.",
+    ],
+    it: [
+      "Sta ancora caricando: ci vuole più del solito.",
+      "Il server si addormenta quando nessuno usa Keksdose, perciò la prima richiesta dopo una pausa deve prima riavviarlo. Può volerci un momento: non va perso nulla, la pagina si riempie da sola.",
+    ],
+  };
+  const CATALOGUES = { en: uiKitLabelsEn(), "de-CH": UI_KIT_LABELS_DE_CH, fr: UI_KIT_LABELS_FR, it: UI_KIT_LABELS_IT };
+
+  it.each(Object.entries(KEKSDOSE))("%s says what keksdose says, key for key", (code, [slow, waking]) => {
+    const { serverWake } = CATALOGUES[code as keyof typeof CATALOGUES];
+    expect(Object.keys(serverWake).sort()).toEqual(["slow", "waking"]);
+    expect(serverWake.slow).toBe(slow);
+    expect(serverWake.waking("Keksdose")).toBe(waking);
+  });
+
+  it("names no app where none is given, in the catalogue's own word for it", () => {
+    expect(UI_KIT_LABELS_FR.serverWake.waking()).toContain("personne n’utilise l’application\u202f;");
+    expect(UI_KIT_LABELS_IT.serverWake.waking()).toContain("nessuno usa l’app,");
+  });
+});
+
 /** Every function label, called once per parameter with 12345 there and 2 elsewhere:
  *  "path#parameter" → what it prints. A label that throws on a number (one that works on
  *  text) is left out. */

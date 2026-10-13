@@ -378,8 +378,7 @@ function PhoneTable() {
           label: "Done",
           icon: <Check className="size-4" />,
           onCommit: () => setStatus(r, "done"),
-          className: "bg-[var(--money-neutral)]",
-          armedClassName: "bg-[var(--money-income)]",
+          tone: "income",
         },
       ],
       start: [
@@ -387,8 +386,7 @@ function PhoneTable() {
           label: "Archive",
           icon: <Archive className="size-4" />,
           onCommit: () => setStatus(r, "archived"),
-          className: "bg-[var(--money-neutral)]",
-          armedClassName: "bg-[var(--money-expense)]",
+          tone: "expense",
         },
       ],
     };

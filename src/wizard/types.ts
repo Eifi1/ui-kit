@@ -255,11 +255,3 @@ export interface WizardLabels {
 
 // The English words live in ./wizard-labels, a module of words (round 0.34).
 export { DEFAULT_WIZARD_LABELS };
-
-/** @deprecated 0.34 — `useKitLabels("wizard", DEFAULT_WIZARD_LABELS, labels)`, which the
- *  provider reaches too, or StepperNav's and WizardSummary's own `labels`; removed in 0.35
- *  (refactor audit 2026-10, API-6a). A merge from before the provider, which no kit
- *  component calls. */
-export function resolveWizardLabels(labels?: Partial<WizardLabels>): WizardLabels {
-  return labels ? { ...DEFAULT_WIZARD_LABELS, ...labels } : DEFAULT_WIZARD_LABELS;
-}

@@ -92,7 +92,7 @@ export interface CurrentPasswordInputProps extends Omit<InputProps, "type" | "au
    * is named another way (`aria-label` / `aria-labelledby`), which then stays the only
    * name. Pass the app's own word on a sign-in form ("Password", "Your password"), or
    * `null` for a field whose `<label htmlFor>` is drawn elsewhere (a form library's
-   * `FormLabel`), which would otherwise be labelled twice.
+   * label), which would otherwise be labelled twice.
    */
   label?: ReactNode;
   /** The value as a string — the `(next) => …` shape, so a caller holding it in
@@ -125,8 +125,8 @@ export interface CurrentPasswordInputProps extends Omit<InputProps, "type" | "au
  *
  * Everything else is {@link Input}: the reveal toggle, `error` (under the field,
  * `aria-describedby`, `aria-invalid`), `invalid`, `name`, `id`, `autoFocus`, `required`.
- * The ref is the `<input>`, so it works with `@eifi1/ui-kit/rhf`'s `FormControl` /
- * a `register()` spread, and controlled or uncontrolled.
+ * The ref is the `<input>`, so it works with `@eifi1/ui-kit/rhf`'s `RhfField` / a
+ * `register()` spread, and controlled or uncontrolled.
  *
  * ```tsx
  * <CurrentPasswordInput name="password" label={t("password")} error={errors.password?.message}

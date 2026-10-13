@@ -9,7 +9,8 @@ import { dateRangePresets } from "../lib/dates";
 import { resolveFilter } from "./data-table-filters";
 import type { FilterValue } from "./data-table-filters";
 import type { DataTableColumn } from "./data-table";
-import { resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
+import type { DataTableLabels } from "./data-table-labels";
+import { resolveDataTableLabels } from "./data-table-shared";
 import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
 
 interface FilterPopoverProps<T> {

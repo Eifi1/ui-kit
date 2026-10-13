@@ -73,7 +73,7 @@ describe("UiKitProvider reaches the components", () => {
   it("MultiSelect: the summary and the two actions", () => {
     render(
       <German>
-        <MultiSelect options={OPTIONS} values={[]} onChange={() => {}} label="Konten" />
+        <MultiSelect options={OPTIONS} value={[]} onChange={() => {}} label="Konten" />
       </German>,
     );
     const trigger = screen.getByRole("combobox", { name: "Konten – Alle Konten" });
@@ -203,15 +203,15 @@ describe("a component's own prop beats the provider", () => {
     expect(screen.queryByRole("button", { name: "Leeren" })).not.toBeInTheDocument();
   });
 
-  it("MultiSelect selectAllLabel, while the unset clearLabel still comes from the provider", () => {
+  it("MultiSelect labels.selectAll, while the unset clear still comes from the provider", () => {
     function Picker() {
       const [values, setValues] = useState<(string | number)[]>([]);
       return (
         <MultiSelect
           options={OPTIONS}
-          values={values}
+          value={values}
           onChange={setValues}
-          selectAllLabel="Alle"
+          labels={{ selectAll: "Alle" }}
         />
       );
     }

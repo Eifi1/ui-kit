@@ -51,9 +51,8 @@ interface SwipeActionBase {
  * dark-mode pastel.
  *
  * **`paint`** follows the same rule for an app's documented exception (see
- * {@link SwipePaint}). **`className` / `armedClassName`** is the old path, kept so
- * existing call sites compile; there the label is white unless the classes set a
- * colour, and the idle panel is still dimmed.
+ * {@link SwipePaint}). The old path, a `className` / `armedClassName` pair under a white
+ * label and dimmed idle, was deprecated in 0.33 and removed in 0.35 (round 0.35 R1).
  */
 export type SwipeAction = SwipeActionBase &
   (
@@ -61,27 +60,12 @@ export type SwipeAction = SwipeActionBase &
         /** The kit paints the panel: the tone's wash idle, its fill and `-contrast` armed. */
         tone: SwipeTone;
         paint?: never;
-        className?: never;
-        armedClassName?: never;
       }
     | {
         /** A documented app exception: idle a 14 % wash of `fill` under the body ink,
          *  armed `fill` under `foreground`. */
         paint: SwipePaint;
         tone?: never;
-        className?: never;
-        armedClassName?: never;
-      }
-    | {
-        tone?: never;
-        paint?: never;
-        /** @deprecated 0.33 — pass `tone`, or `paint` for an exception; removed in 0.35.
-         *  Background utility class while the action is previewed but not yet armed; the
-         *  panel is dimmed then, and its text is white unless this sets a text colour. */
-        className: string;
-        /** @deprecated 0.33 — pass `tone`, or `paint`; removed in 0.35. Background
-         *  utility class once the drag has passed this action's threshold. */
-        armedClassName: string;
       }
   );
 
@@ -114,21 +98,16 @@ export const SWIPE_TONE: Record<SwipeTone, { idle: string; armed: string }> = {
 const PAINT_IDLE = "bg-[color-mix(in_oklab,var(--swipe-paint-fill)_14%,var(--bg-surface))] text-primary";
 const PAINT_ARMED = "bg-[var(--swipe-paint-fill)] text-[var(--swipe-paint-fg)]";
 
-/** The panel's colour classes, inline style and dimming for one action and state. */
-function panelLook(action: SwipeAction, armed: boolean): { className: string; style?: CSSProperties; dim: boolean } {
-  if (action.tone) return { className: SWIPE_TONE[action.tone][armed ? "armed" : "idle"], dim: false };
-  if (action.paint) {
-    return {
-      className: armed ? PAINT_ARMED : PAINT_IDLE,
-      style: {
-        "--swipe-paint-fill": action.paint.fill,
-        "--swipe-paint-fg": action.paint.foreground,
-      } as CSSProperties,
-      dim: false,
-    };
-  }
-  // The deprecated path, as it was: white text under the caller's fill, dimmed idle.
-  return { className: cn("text-white", armed ? action.armedClassName : action.className), dim: !armed };
+/** The panel's colour classes and inline style for one action and state. */
+function panelLook(action: SwipeAction, armed: boolean): { className: string; style?: CSSProperties } {
+  if (action.tone) return { className: SWIPE_TONE[action.tone][armed ? "armed" : "idle"] };
+  return {
+    className: armed ? PAINT_ARMED : PAINT_IDLE,
+    style: {
+      "--swipe-paint-fill": action.paint.fill,
+      "--swipe-paint-fg": action.paint.foreground,
+    } as CSSProperties,
+  };
 }
 
 /**
@@ -296,11 +275,10 @@ export function SwipeableRow({
           className={cn(
             "pointer-events-none absolute inset-0 flex items-center gap-2 px-4",
             "text-xs font-medium transition-all",
+            // No dimming: a tone or a paint says "not yet armed" with the soft→solid
+            // step, which keeps its label readable at both ends (the 0.33 rule; the
+            // dimmed path went with `className` / `armedClassName` in 0.35).
             look.className,
-            // The old path only: dimmed until the drag has passed a threshold. A tone
-            // or a paint says it with the soft→solid step instead, which keeps its
-            // label readable at both ends.
-            look.dim && "opacity-60",
             // The panel is anchored to the edge the row is uncovering, so the label
             // sits where the eye already is rather than across the screen. That edge is
             // physical, while a flex row starts at the INLINE start — so in RTL the two

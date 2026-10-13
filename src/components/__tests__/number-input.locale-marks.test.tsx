@@ -27,7 +27,7 @@ function Harness({ locale, initial = "", fieldLocale }: { locale?: string; initi
   const [committed, setCommitted] = useState<string | null>(null);
   return (
     <UiKitProvider locale={locale}>
-      <NumberInput ariaLabel="Value" value={value} onChange={setValue} onCommit={setCommitted} locale={fieldLocale} />
+      <NumberInput aria-label="Value" value={value} onChange={setValue} onCommit={setCommitted} locale={fieldLocale} />
       <output data-testid="value">{value}</output>
       <output data-testid="committed">{committed ?? ""}</output>
     </UiKitProvider>
@@ -144,7 +144,7 @@ describe("NumberInput reads grouping marks (keksdose K5, AmountInput's G1)", () 
       const [value, setValue] = useState("");
       return (
         <UiKitProvider locale="de-DE">
-          <NumberInput ariaLabel="Value" value={value} onChange={setValue} />
+          <NumberInput aria-label="Value" value={value} onChange={setValue} />
           <button type="button" onClick={() => setValue("7.5")}>
             Set
           </button>
@@ -286,7 +286,7 @@ describe("NumberInput money guard (kastlan 5, Kurvenschmiede)", () => {
     render(
       <>
         <NumberInput label="Amount" suffix="EUR" value="" onChange={vi.fn()} />
-        <NumberInput ariaLabel="Betrag in €" value="" onChange={vi.fn()} />
+        <NumberInput aria-label="Betrag in €" value="" onChange={vi.fn()} />
         <NumberField label="Rent" unit="CHF" value={null} nullable onCommit={vi.fn()} />
       </>,
     );
@@ -332,7 +332,7 @@ describe("AmountInput and MoneyField calculator={false} (keksdose K6)", () => {
     function Cell() {
       const [value, setValue] = useState("");
       return (
-        <AmountInput ariaLabel="Assigned" currency="EUR" calculator={false} value={value} onChange={setValue} onCommit={onCommit} />
+        <AmountInput aria-label="Assigned" currency="EUR" calculator={false} value={value} onChange={setValue} onCommit={onCommit} />
       );
     }
     render(<Cell />);
@@ -345,12 +345,12 @@ describe("AmountInput and MoneyField calculator={false} (keksdose K6)", () => {
   });
 
   it("keeps the trigger by default", () => {
-    render(<AmountInput ariaLabel="Assigned" value="" onChange={vi.fn()} />);
+    render(<AmountInput aria-label="Assigned" value="" onChange={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Open calculator" })).toBeInTheDocument();
   });
 
   it("passes through MoneyField", () => {
-    render(<MoneyField ariaLabel="VAT" currency="CHF" calculator={false} value={1} onCommit={vi.fn()} />);
+    render(<MoneyField aria-label="VAT" currency="CHF" calculator={false} value={1} onCommit={vi.fn()} />);
     expect(screen.queryByRole("button", { name: "Open calculator" })).not.toBeInTheDocument();
   });
 });
@@ -379,17 +379,17 @@ describe("AmountInput and MoneyField error (keksdose K4)", () => {
   });
 
   it("is no message when falsy, and keeps the input as it comes and goes", () => {
-    const { rerender } = render(<AmountInput ariaLabel="Payment" value="1" onChange={vi.fn()} error={false} />);
+    const { rerender } = render(<AmountInput aria-label="Payment" value="1" onChange={vi.fn()} error={false} />);
     const before = field("Payment");
     expect(before).not.toHaveAttribute("aria-invalid");
     expect(before).not.toHaveAttribute("aria-describedby");
-    rerender(<AmountInput ariaLabel="Payment" value="1" onChange={vi.fn()} error="Required" />);
+    rerender(<AmountInput aria-label="Payment" value="1" onChange={vi.fn()} error="Required" />);
     expect(field("Payment")).toBe(before);
     expect(before).toHaveAccessibleDescription("Required");
   });
 
   it("passes through MoneyField", () => {
-    render(<MoneyField ariaLabel="Amount" currency="CHF" value={null} onCommit={vi.fn()} error="Required" />);
+    render(<MoneyField aria-label="Amount" currency="CHF" value={null} onCommit={vi.fn()} error="Required" />);
     expect(field("Amount")).toHaveAttribute("aria-invalid", "true");
     expect(field("Amount")).toHaveAccessibleDescription("Required");
   });
@@ -397,7 +397,7 @@ describe("AmountInput and MoneyField error (keksdose K4)", () => {
   it("no longer shows a dropped letter while typing", () => {
     function Amount() {
       const [value, setValue] = useState("");
-      return <AmountInput ariaLabel="Amount" value={value} onChange={setValue} />;
+      return <AmountInput aria-label="Amount" value={value} onChange={setValue} />;
     }
     render(<Amount />);
     fireEvent.change(field("Amount"), { target: { value: "1a5" } });
@@ -470,7 +470,7 @@ describe("SignChip (keksdose K15)", () => {
     const [negative, setNegative] = useState(true);
     return (
       <>
-        <AmountInput ariaLabel="Amount" value="42.5" onChange={vi.fn()} negative={negative} onNegativeChange={setNegative} />
+        <AmountInput aria-label="Amount" value="42.5" onChange={vi.fn()} negative={negative} onNegativeChange={setNegative} />
         <SignChip negative={negative} onNegativeChange={setNegative} />
       </>
     );

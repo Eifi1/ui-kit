@@ -17,7 +17,7 @@ function Harness(props: { locale: string; initial?: string; currency?: string; n
   return (
     <UiKitProvider locale={locale}>
       <AmountInput
-        ariaLabel="Amount"
+        aria-label="Amount"
         value={value}
         onChange={setValue}
         currency={currency}
@@ -165,7 +165,7 @@ describe("AmountInput reads grouping marks (keksdose G1)", () => {
       const [value, setValue] = useState("");
       return (
         <UiKitProvider locale="de-DE">
-          <AmountInput ariaLabel="Amount" value={value} onChange={setValue} />
+          <AmountInput aria-label="Amount" value={value} onChange={setValue} />
           <button type="button" onClick={() => setValue("7.5")}>
             Set
           </button>
@@ -227,13 +227,13 @@ describe("AmountInput's own `locale` (0.34)", () => {
     render(
       <UiKitProvider locale="en-US">
         <AmountInput
-          ariaLabel="Amount"
+          aria-label="Amount"
           value="1.5"
           onChange={(v) => (reported = v)}
           locale="de-CH"
           calculator={false}
         />
-        <AmountInput ariaLabel="Price" value="1.5" onChange={() => {}} locale="fr-CH" calculator={false} />
+        <AmountInput aria-label="Price" value="1.5" onChange={() => {}} locale="fr-CH" calculator={false} />
       </UiKitProvider>,
     );
     // de-CH writes "." (CLDR), fr-CH ",".

@@ -69,12 +69,6 @@ export interface ServerWakeNoticeProps {
    *  label says "the app". */
   appName?: string;
   labels?: LabelOverride<ServerWakeLabels>;
-  /**
-   * @deprecated 0.34 — drop it; removed in 0.35. The notice sits at the TOP of the
-   * screen since 0.34, so there is no bottom nav to clear and this does nothing. It was
-   * the height kept clear at the bottom (AppShell's `--app-nav-h`).
-   */
-  navOffset?: string | number;
   /** Extra classes on the fixed anchor — a different width (`max-w-*`), or another
    *  `top-*` for an app that wants it under its top bar rather than over it. Merged, so
    *  a class given here replaces the kit's of the same kind. */

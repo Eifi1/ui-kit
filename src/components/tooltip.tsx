@@ -1,6 +1,7 @@
 import {
   cloneElement,
   isValidElement,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -12,6 +13,7 @@ import {
   type PointerEvent,
   type ReactElement,
   type ReactNode,
+  type Ref,
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
@@ -21,6 +23,7 @@ import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
 import { viewportSize } from "../hooks/use-anchored-panel";
 import { dirOf, type Direction } from "../lib/direction";
 import { hasClippingAncestor } from "../lib/clipping";
+import { assignRef } from "../lib/refs";
 
 /** The attribute that marks an element as a clipping container for {@link Tooltip}'s
  *  auto-portal, whatever its computed `overflow` — `<div data-clips>` or
@@ -129,6 +132,14 @@ export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
    */
   tap?: TooltipTap;
   children: ReactNode;
+  /**
+   * The trigger WRAPPER — the `<span>` the rest of the props go to, around the caller's
+   * child (round 0.35 R4, as Card and EmptyState took one in 0.34) — merged with its own
+   * ref, which the bubble is anchored to and dismissed by. Not the bubble: a portalled
+   * one exists only while it is up. On the empty-label branch there is no wrapper, so
+   * the ref stays `null` (see the ⚠️ above).
+   */
+  ref?: Ref<HTMLSpanElement>;
 }
 
 /** What each variant below takes: the resolved `side` and `tap`, and every span attribute
@@ -630,6 +641,22 @@ function useTooltipTrigger(
   return { open, dismissed, handlers };
 }
 
+/**
+ * The trigger wrapper's own ref, and one callback ref that hands the wrapper to the
+ * caller's `ref` as well (round 0.35 R4).
+ */
+function useTriggerRef(ref: Ref<HTMLSpanElement> | undefined) {
+  const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const setTrigger = useCallback(
+    (el: HTMLSpanElement | null) => {
+      triggerRef.current = el;
+      assignRef(ref, el);
+    },
+    [ref],
+  );
+  return { triggerRef, setTrigger };
+}
+
 /** The variant that lives next to its trigger, and — when `detect` is on, which is the
  *  default — moves its bubble to `<body>` when that turns out to be inside a clipping
  *  container (see "Inside a scroll container" on {@link Tooltip}).
@@ -656,10 +683,11 @@ function InPlaceTooltip({
   lazy,
   tap,
   children,
+  ref,
   ...rest
 }: TooltipVariantProps & { detect: boolean; lazy: boolean }) {
   const id = useId();
-  const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const { triggerRef, setTrigger } = useTriggerRef(ref);
   const [clipped, setClipped] = useState(false);
   const [dir, setDir] = useState<Direction>("ltr");
   // The reading direction on every request (the clamp keeps the start edge of a bubble
@@ -677,7 +705,8 @@ function InPlaceTooltip({
   // phantom-scroll bug whether or not anyone opens it.
   useLayoutEffect(() => {
     if (detect) setClipped(hasClippingAncestor(triggerRef.current));
-  }, [detect]);
+    // `triggerRef` is the same object for the component's life (useTriggerRef's useRef).
+  }, [detect, triggerRef]);
   return (
     // No role for this span: its handlers track whether the bubble is up and activate
     // nothing; the caller's child is the interactive element, keeps its own handlers,
@@ -687,7 +716,7 @@ function InPlaceTooltip({
       // a caller passing an `onFocus` of its own must not replace them (its pointer
       // handlers are called from them).
       {...rest}
-      ref={triggerRef}
+      ref={setTrigger}
       // Clipped for the one render in which the bubble is measured (see useViewportClamp):
       // that layout must not reach the page's width.
       style={measuring ? { ...rest.style, overflow: "clip" } : rest.style}
@@ -1041,9 +1070,10 @@ function PortalTooltip({
   redact,
   tap,
   children,
+  ref,
   ...rest
 }: TooltipVariantProps) {
-  const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const { triggerRef, setTrigger } = useTriggerRef(ref);
   // The trigger's reading direction, read when the bubble is asked for (an event, not a
   // render): it resolves `start` / `end`, and the portalled bubble — which has left the
   // subtree it would have inherited `dir` from — carries it too.
@@ -1062,9 +1092,10 @@ function PortalTooltip({
         // As in `InPlaceTooltip`: the caller's attributes first, the handlers that run
         // this component after them. The BUBBLE is deliberately not given them — it
         // is portalled to `<body>`, and an id or a tour anchor duplicated onto a node
-        // that only exists while hovered would match twice or match nothing.
+        // that only exists while hovered would match twice or match nothing. So, too,
+        // the caller's `ref` (round 0.35 R4).
         {...rest}
-        ref={triggerRef}
+        ref={setTrigger}
         className={cn("relative inline-flex", className)}
         {...handlers}
       >

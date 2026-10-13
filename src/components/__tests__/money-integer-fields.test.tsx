@@ -18,7 +18,7 @@ describe("AmountInput onCommit (kastlan 52)", () => {
     const onCommit = vi.fn();
     function Harness() {
       const [value, setValue] = useState("");
-      return <AmountInput ariaLabel="Amount" currency="CHF" value={value} onChange={setValue} onCommit={onCommit} />;
+      return <AmountInput aria-label="Amount" currency="CHF" value={value} onChange={setValue} onCommit={onCommit} />;
     }
     render(<Harness />);
     fireEvent.change(input(), { target: { value: "1200+" } });
@@ -35,7 +35,7 @@ describe("MoneyField (kastlan 52)", () => {
     return (
       <>
         <MoneyField
-          ariaLabel="Amount"
+          aria-label="Amount"
           currency="CHF"
           value={amount}
           max={5000}
@@ -100,7 +100,7 @@ describe("MoneyField (kastlan 52)", () => {
       const [amount, setAmount] = useState<number | null>(1);
       return (
         <>
-          <MoneyField ariaLabel="Amount" value={amount} onCommit={setAmount} />
+          <MoneyField aria-label="Amount" value={amount} onCommit={setAmount} />
           <button type="button" onClick={() => setAmount(42)}>
             Reset
           </button>

@@ -277,6 +277,35 @@ describe("@eifi1/ui-kit/dates is pure (MOD-6)", () => {
 });
 
 /**
+ * `@eifi1/ui-kit/currencies` is read by an app's BUILD, in Node, when Vite loads its config:
+ * keksdose's flag subset takes its country codes from it (0.35). Until then that plugin
+ * parsed `country: "xx"` out of dist/components/currency-select.js, 0.34 moved the list, and
+ * 91 of its test files failed at load. So the entry is data and nothing else — not even
+ * another kit module, whose own imports could reach React or a stylesheet later.
+ * scripts/verify-package.mjs imports it by package name in plain Node.
+ */
+describe("@eifi1/ui-kit/currencies is pure data (0.35)", () => {
+  it("imports nothing — no package, no stylesheet, no other kit module", () => {
+    expect(specifiersOf(join(ROOT, "src/currencies.ts"))).toEqual([]);
+    expect([...packagesReachedFrom("src/currencies.ts")]).toEqual([]);
+  });
+
+  it("is what the pickers read, so the data and the flags cannot drift", () => {
+    const readers = shippedSources(join(ROOT, "src"))
+      .filter((file) => specifiersOf(file).some((s) => isRelative(s) && resolveRelative(file, s) === join(ROOT, "src/currencies.ts")))
+      .map((file) => file.slice(ROOT.length + 1));
+    expect(readers).toEqual(expect.arrayContaining(["src/components/currency-option-list.tsx", "src/components/number-input.tsx"]));
+  });
+
+  it("is an exports entry", () => {
+    expect(pkg.exports["./currencies"]).toEqual({
+      types: "./dist/currencies.d.ts",
+      import: "./dist/currencies.js",
+    });
+  });
+});
+
+/**
  * recharts is ~433 KB, and keeping it out of every app's entry chunk is why the build is
  * unbundled at all (tsup.config.ts). The barrel re-exports the chart kit, so it does reach
  * recharts (asserted above) — but only through the chart kit's own modules. A component

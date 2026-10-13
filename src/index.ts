@@ -245,7 +245,6 @@ export {
   FloatingField,
   Label,
   DEFAULT_PASSWORD_REVEAL_LABELS,
-  resolvePasswordRevealLabels,
   DEFAULT_CHARACTER_COUNT_LABELS,
   type FieldChevronProps,
   type FloatingFieldProps,
@@ -291,6 +290,9 @@ export * from "./components/calculator";
 export * from "./components/numpad-sheet";
 export * from "./components/number-input";
 export * from "./components/currency-select";
+// 0.35: each currency's flag-icons country. `CURRENCIES` and it are also the pure-data
+// entry "@eifi1/ui-kit/currencies", which imports nothing, for an app's build in Node.
+export { CURRENCY_COUNTRIES } from "./currencies";
 export * from "./components/amount-input";
 export * from "./components/money-field";
 export * from "./components/combobox";

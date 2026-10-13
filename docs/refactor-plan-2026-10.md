@@ -6,6 +6,14 @@ Every finding below is built and committed on `feat/0.34.0`; the apps' side is i
 `docs/adopt-0.34.md`. Left on purpose: items each wave named as open (e.g. MOD-10's alias
 entries kept, 0.35's removals of what 0.34 deprecates).
 
+**0.35 (2026-10-13), built on `feat/0.35.0`:** every 0.34 deprecation removed (API-1, API-4,
+API-6a/b/c/d/f, the `align` aliases), and the open ends: the overlays' own `onKeyDown` under the
+Escape stack's top-layer rule (after DUP-1), refs on the components phase C1 left (StatTile,
+the banners, PlanLimitNotice, Modal/DialogFrame, Tooltip, CopyButton, FieldStrip),
+`useKitLabelOverrides` as a deep partial (API-6a's follow-up). `docs/adopt-0.35.md` has the
+apps' side. Still open: `gen-styling-inventory.mjs` keeps its own `@theme` parser beside
+`src/eslint/role-utilities.ts`.
+
 ### History
 
 Marcel, after Wave 0: "Wire all waves also into 0.34." So every wave ships in 0.34, and the

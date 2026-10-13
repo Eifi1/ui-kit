@@ -6,7 +6,6 @@
 // A type-only import: erased at build time, so this module stays free of the table
 // itself (and of react-router), which `i18n/defaults` relies on.
 import type { DataTableSortLabels } from "./data-table";
-import type { LabelOverride } from "../i18n/kit-labels";
 
 /** The phone sort control's four keys (`sortBy`, `sortDefault`, `sortAscending`,
  *  `sortDescending`, 0.22.0) are {@link DataTableSortLabels}', declared beside the
@@ -89,7 +88,7 @@ export interface DataTableLabels extends DataTableSortLabels {
    * A column's filter button and panel: "Filter Amount", and "Filter Amount (active)"
    * while the column is filtered (round 0.34 Wave 2, BUG-7c). Every column's used to be
    * "Filter" alike, and "filtered" was a colour. An app that translated only `filter`
-   * gets `"<filter>: <column>"` from it — see {@link resolveDataTableLabels}.
+   * gets `"<filter>: <column>"` from it: DataTable derives the one from the other.
    */
   filterColumn: (column: string, active: boolean) => string;
 
@@ -171,90 +170,9 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
   // The phone sort control (0.22.0). The same words as `DEFAULT_DATA_TABLE_SORT_LABELS`
   // in data-table.tsx, written out rather than spread in: importing that VALUE here
   // would make data-table.tsx and this module import each other (data-table.tsx reads
-  // its resolver from here), and would pull the whole table into `i18n/defaults`.
+  // these defaults from here), and would pull the whole table into `i18n/defaults`.
   sortBy: "Sort by",
   sortDefault: "Default order",
   sortAscending: "Ascending",
   sortDescending: "Descending",
 };
-
-/**
- * Merge caller overrides onto the English defaults (presets merged too, key by key, as
- * the provider merges them — so the parameter is a {@link LabelOverride}).
- *
- * The parameter is lenient on purpose — a table with no labels at all still
- * renders — but that is also how a translated app ends up half English and never
- * hears about it: lenkbank ships nineteen of these keys in English in a German UI
- * today, because every one of them is backfilled silently. The kit will not start
- * throwing over it (three apps depend on the lenient merge), so
- * {@link missingDataTableLabels} is the other half: it answers which keys fell back,
- * and an app asserts on that in its OWN test, where the answer is actionable.
- *
- * @deprecated 0.34 — pass `labels` to DataTable, or the provider's `dataTable`, which this
- * merge serves; removed in 0.35 from the public surface, where DataTable keeps it as its
- * own (refactor audit 2026-10, API-6a). One app test calls it.
- */
-export function resolveDataTableLabels(partial?: LabelOverride<DataTableLabels>): DataTableLabels {
-  if (!partial) return DEFAULT_DATA_TABLE_LABELS;
-  // An `undefined` preset is skipped, as the provider skips it, rather than blanking one.
-  const presets = { ...DEFAULT_DATA_TABLE_LABELS.presets };
-  for (const [key, text] of Object.entries(partial.presets ?? {})) if (text !== undefined) presets[key] = text;
-  const merged: DataTableLabels = { ...DEFAULT_DATA_TABLE_LABELS, ...partial, presets };
-  // `columnsCount` was split out of `columns` + a template literal. Consumers have
-  // been translating `columns` since 0.1, and backfilling the English default over
-  // that would hand them "Columns (4/9)" back for having translated the key that
-  // existed at the time — the same silent-English failure the audit records against
-  // this file. So the count is derived from the RESOLVED `columns` unless the caller
-  // states the whole sentence, which is the escape hatch for a language where the
-  // parenthetical does not fit.
-  if (partial.columns !== undefined && partial.columnsCount === undefined) {
-    merged.columnsCount = (visible, total) => `${merged.columns} (${visible}/${total})`;
-  }
-  // The same for `filterColumn` (0.34), from a translated `filter`: the app's own word
-  // with the column, rather than English for having translated the key that existed.
-  if (partial.filter !== undefined && partial.filterColumn === undefined) {
-    merged.filterColumn = (column) => `${merged.filter}: ${column}`;
-  }
-  return merged;
-}
-
-/**
- * The label keys `labels` does not supply, and which therefore come back English
- * from {@link resolveDataTableLabels}.
- *
- * For a consumer's own test:
- *
- * ```ts
- * expect(missingDataTableLabels(de.dataTable)).toEqual([]);
- * ```
- *
- * which fails the day the kit adds a key — which is the point. Adding a label is
- * additive here and a silent regression in a translated app, and nothing else in
- * either repository can tell the two apart.
- *
- * Preset labels are reported one at a time (`presets.yesterday`), because `presets`
- * is a `Record` merged key by key: answering `"presets"` would say nothing about
- * which of the eleven are still English.
- *
- * @deprecated 0.34 — `missingKitLabels(labels, DEFAULT_UI_KIT_LABELS)`, which checks every
- * namespace, the table's among them, and which all three apps' tests already call;
- * removed in 0.35 (refactor audit 2026-10, API-6a).
- */
-export function missingDataTableLabels(labels?: Partial<DataTableLabels>): string[] {
-  const missing: string[] = [];
-  for (const key of Object.keys(DEFAULT_DATA_TABLE_LABELS) as Array<keyof DataTableLabels>) {
-    if (key === "presets") continue;
-    if (labels?.[key] !== undefined) continue;
-    // `columnsCount` is DERIVED from a translated `columns` by the resolver above,
-    // so a caller who set that one is not leaking English here. Reporting it would
-    // send them to translate a key they have already covered, and an `toEqual([])`
-    // assertion built on this would never go green.
-    if (key === "columnsCount" && labels?.columns !== undefined) continue;
-    if (key === "filterColumn" && labels?.filter !== undefined) continue;
-    missing.push(key);
-  }
-  for (const preset of Object.keys(DEFAULT_DATA_TABLE_LABELS.presets)) {
-    if (labels?.presets?.[preset] === undefined) missing.push(`presets.${preset}`);
-  }
-  return missing;
-}

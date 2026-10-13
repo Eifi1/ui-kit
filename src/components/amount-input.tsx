@@ -100,9 +100,6 @@ export interface AmountInputProps {
   id?: string;
   /** Names the field when it has no visible `label` (a table cell, the display shape). */
   "aria-label"?: string;
-  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
-   *  Names the field only when `aria-label` is absent. */
-  ariaLabel?: string;
   /**
    * Set on the `<input>`, with `id` above. Declared so `Field`'s render-prop spread —
    * `{(ids) => <AmountInput {...ids} … />}` — is typed and reaches the input: the
@@ -382,7 +379,7 @@ function isResultOf(previous: string, text: string, settle: (text: string) => st
 }
 
 export function AmountInput(props: AmountInputProps) {
-  const { ref, value, onChange, currency, onCurrencyChange, placeholder, label, className, inputClassName, id, "aria-label": ariaLabelAttr, ariaLabel: ariaLabelProp, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, align = "start", labels, currencyNames, currencyOptions, digits: digitsProp, min, max, onCommit, disabledReasonDisplay } = props;
+  const { ref, value, onChange, currency, onCurrencyChange, placeholder, label, className, inputClassName, id, "aria-label": ariaLabel, "aria-required": ariaRequired, autoFocus, tone = "neutral", negative = false, onNegativeChange, align = "start", labels, currencyNames, currencyOptions, digits: digitsProp, min, max, onCommit, disabledReasonDisplay } = props;
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   // The sign is DISPLAYED, not stored (live #201 rework). `value` is the
@@ -556,8 +553,7 @@ export function AmountInput(props: AmountInputProps) {
       <input
         ref={setRefs}
         id={fieldId}
-        // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
-        aria-label={ariaLabelAttr ?? ariaLabelProp}
+        aria-label={ariaLabel}
         type="text"
         // eslint-disable-next-line jsx-a11y/no-autofocus -- opt-in per call site (feedback #70)
         autoFocus={autoFocus}

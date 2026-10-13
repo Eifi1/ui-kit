@@ -20,12 +20,13 @@ export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "c
   trigger: (state: { open: boolean; toggle: () => void; close: () => void }) => ReactNode;
   children: (close: () => void) => ReactNode;
   /**
-   * Which edge of the trigger the panel lines up with. `start`/`end` follow the
-   * reading direction (`end` is the right edge in LTR, the left in RTL); `left`/`right`
-   * are physical and deprecated ({@link PhysicalAlign}). Default `end` — the same
-   * right-aligned panel as before in LTR, mirrored in RTL.
+   * Which edge of the trigger the panel lines up with, by the reading direction: `end`
+   * is the right edge in LTR and the left in RTL. Default `end` — the same right-aligned
+   * panel as before in LTR, mirrored in RTL. The physical `left` / `right` went in 0.35
+   * (round 0.35 R1, refactor audit 2026-10, API-6e): `right` is `end` in a left-to-right
+   * page, `left` is `start`.
    */
-  align?: "start" | "end" | PhysicalAlign;
+  align?: "start" | "end";
   panelClassName?: string;
   /** Extra classes for the WRAPPER (the panel has {@link panelClassName}). */
   className?: string;
@@ -33,14 +34,6 @@ export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "c
    *  merged with its own ref, which the outside click and the hover are measured on. */
   ref?: Ref<HTMLDivElement>;
 }
-
-/**
- * @deprecated 0.34 — `"start"` / `"end"`, which follow the reading direction: `"right"`
- * is `"end"` in a left-to-right page, the default; removed in 0.35 (refactor audit
- * 2026-10, API-6e). The physical edges HoverMenu's `align` — and TopBarActionMenu's and
- * FeedbackMenu's, which hand it on — still take.
- */
-type PhysicalAlign = "left" | "right";
 
 // Hovering waits briefly before opening so sweeping the cursor across a row of
 // triggers doesn't flash menus; closing waits so the cursor can travel from
@@ -50,7 +43,7 @@ const CLOSE_DELAY_MS = 120;
 
 type Phase = "closed" | "opening" | "open" | "closing";
 
-const ALIGN_CLASS = { start: "start-0", end: "end-0", left: "left-0", right: "right-0" } as const;
+const ALIGN_CLASS = { start: "start-0", end: "end-0" } as const;
 
 /** Explicit menu-item roles a caller may already have written. */
 const ITEM_ROLES = '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]';
@@ -188,7 +181,7 @@ export function HoverMenu({
   // DUP-1). Focus goes back to the trigger only when it was inside the menu: a panel
   // opened by hover while the user is typing elsewhere must not yank the caret over
   // here on the way out.
-  useDismissLayer(open, () => {
+  const layer = useDismissLayer(open, () => {
     const hadFocus = wrapperRef.current?.contains(document.activeElement) ?? false;
     close();
     if (hadFocus) triggerEl()?.focus();
@@ -298,7 +291,10 @@ export function HoverMenu({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onKeyDown={(e) => {
-        runOwnKeyDown(e, rest.onKeyDown);
+        // The caller's handler sees Escape only while this menu is the layer on top: a
+        // tooltip on one of its rows takes that press first (round 0.35 R2, the rule
+        // the dialogs got first). Every other key, and a closed menu's, as before.
+        runOwnKeyDown(e, rest.onKeyDown, layer);
         // Focus on the trigger or in the menu: the key stops here, so a panel around
         // the menu does not close with it.
         if (open) takeEscape(e);

@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { ChatComposer, FeedbackComposer, type ChatComposerProps } from "../feedback-thread";
+import * as thread from "../feedback-thread";
+import { ChatComposer, type ChatComposerProps } from "../feedback-thread";
 
 /**
  * keksdose K17: the assistant's tour points at its chat box with
@@ -51,8 +52,8 @@ describe("ChatComposer root attributes (keksdose K17)", () => {
 });
 
 describe("ChatComposer", () => {
-  it("is the same function as FeedbackComposer, its old name (deprecated 0.34, removed in 0.35)", () => {
-    expect(FeedbackComposer).toBe(ChatComposer);
+  it("is the composer's one name: FeedbackComposer, the old one, went in 0.35 (API-6d)", () => {
+    expect(thread).not.toHaveProperty("FeedbackComposer");
     const onSend = vi.fn();
     render(<ChatComposer onSend={onSend} sendOn="enter" data-tour="assistant-ask" />);
     const box = screen.getByRole("textbox");

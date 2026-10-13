@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { ChevronDown, ChevronUp, Timer } from "lucide-react";
 
 import { cn } from "../lib/cn";
@@ -30,7 +30,12 @@ function timeText(countdown: DemoCountdown, labels: DemoLabels): string {
     : labels.hoursLeft(countdown.hours, countdown.minutes);
 }
 
-export interface DemoBannerProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onClick"> {
+/**
+ * A `div`'s props, `ref` included since 0.35 (round 0.35 R4, the follow-up to API-2). They
+ * go on to the {@link AlertBanner} strip, so the ref is the strip's own `<div>` — never a
+ * link or a button: the banner takes no `href` or `onClick` of its own.
+ */
+export interface DemoBannerProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onClick"> {
   /** The demo's end: `expires_at` from the `TokenResponse`, or `demo_expires_at` from
    *  `/auth/me` (§5.3). */
   expiresAt: DemoExpiry | null | undefined;

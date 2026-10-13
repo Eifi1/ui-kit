@@ -5,7 +5,15 @@ import { Spinner } from "./spinner";
 import { ROW_ACTIONS_KEY, useRowActionColumn } from "./data-table-row-actions";
 import { useColumnResize } from "./data-table-resize";
 import { useRangeSelection } from "./data-table-selection";
-import { RowLink, cleanAttrs, columnLabel, fromOutside, logicalAlign, splitCellProps } from "./data-table-shared";
+import {
+  RowLink,
+  cleanAttrs,
+  columnLabel,
+  fromOutside,
+  logicalAlign,
+  resolveDataTableLabels,
+  splitCellProps,
+} from "./data-table-shared";
 import { MobileFilters, MobileRow, MobileSort, StackedFields } from "./data-table-mobile";
 import { DataTableHead } from "./data-table-head";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
@@ -20,7 +28,7 @@ import type { SwipeAction } from "./swipeable-row";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
-import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
+import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
 import { useKitLabelOverrides, useKitLocale, useKitTableStorageKeyPrefix, type LabelOverride } from "../i18n/kit-labels";
 import { useEdgeFade } from "../lib/strip-fade";
 import { dirOf, type Direction } from "../lib/direction";
@@ -295,6 +303,16 @@ export interface DataTableProps<T> {
   sorts?: SortState[];
   onSortsChange?: (next: SortState[]) => void;
   /**
+   * Controlled page size, as `sorts` above: the table pages by it and hands its pager's
+   * choice to `onPageSizeChange` (`Infinity` is "All"). For tables that page ALIKE —
+   * `TranslationReviewPanel`'s groups share one page size as they share one sort
+   * (0.35). Left out, the table keeps its own, from `defaultPageSize`, the URL and
+   * `storageKey`. A change of value sends a client-side table back to page 1. In
+   * `serverPagination` mode the page size is `serverPagination.pageSize`.
+   */
+  pageSize?: number;
+  onPageSizeChange?: (pageSize: number) => void;
+  /**
    * Opt-in multi-row selection (desktop table only). When provided, a leading
    * checkbox column is rendered with a select-all box in the header; the owner
    * holds the selected set and reacts via the callbacks. Rows for which
@@ -556,7 +574,7 @@ export interface DataTableProps<T> {
    * On a phone it heads the summary card, which is also named by it.
    *
    * There is no built-in default word: a new kit label key is a silent English string
-   * in every translated app (see `missingDataTableLabels`), and the caller has the
+   * in every translated app (see `missingKitLabels`), and the caller has the
    * word in its own catalogue already. Without it the row is unlabelled on screen —
    * pass one.
    */
@@ -728,6 +746,8 @@ export function DataTable<T>({
   onFiltersChange,
   sorts: sortsProp,
   onSortsChange,
+  pageSize: pageSizeProp,
+  onPageSizeChange,
   selection,
   labels: labelsProp,
   locale: localeProp,
@@ -775,19 +795,7 @@ export function DataTable<T>({
   // prop to, `TranslationReviewPanel`'s among them.
   const providerStorageKeyPrefix = useKitTableStorageKeyPrefix();
   const storageKeyPrefix = storageKeyPrefixProp ?? providerStorageKeyPrefix ?? DEFAULT_PERSIST_PREFIX;
-  const labels = useMemo(
-    () =>
-      resolveDataTableLabels(
-        labelOverrides || labelsProp
-          ? {
-              ...labelOverrides,
-              ...labelsProp,
-              presets: { ...labelOverrides?.presets, ...labelsProp?.presets },
-            }
-          : undefined,
-      ),
-    [labelOverrides, labelsProp],
-  );
+  const labels = useMemo(() => resolveDataTableLabels(labelOverrides, labelsProp), [labelOverrides, labelsProp]);
   const locale = useKitLocale(localeProp);
 
   // ---- Row actions ---- (data-table-row-actions.tsx)
@@ -830,6 +838,8 @@ export function DataTable<T>({
     defaultPageSize,
     sortsProp,
     filtersProp,
+    // Ignored in `serverPagination` mode, where the owner's is the page size.
+    pageSizeProp: isServer ? undefined : pageSizeProp,
   });
 
   // With the controls that change them switched off, persisted widths and hidden
@@ -1841,7 +1851,9 @@ export function DataTable<T>({
                 isServer
                   ? serverPagination!.onPageSizeChange
                   : (n) => {
-                      setPageSize(n);
+                      // To the owner when it holds the page size, as `commitSorts` does.
+                      if (onPageSizeChange) onPageSizeChange(n);
+                      else setPageSize(n);
                       setPage(0);
                     }
               }

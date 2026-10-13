@@ -37,9 +37,6 @@ interface CalculatorButtonProps {
   className?: string;
   /** The trigger's accessible name; wins over `calculator.open` from the provider. */
   "aria-label"?: string;
-  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
-   *  Names the trigger only when `aria-label` is absent. */
-  ariaLabel?: string;
   /** Screen-reader names for the panel's own controls. `aria-label` above already
    *  covers the trigger; these three were hardcoded English inside the popover,
    *  which a translating host had no way to reach. */
@@ -229,13 +226,11 @@ export function CalculatorButton({
   value,
   onChange,
   className,
-  "aria-label": ariaLabelAttr,
-  ariaLabel: ariaLabelProp,
+  "aria-label": ariaLabel,
   labels: labelsProp,
 }: CalculatorButtonProps) {
   // prop > provider > English, with the name prop folded in as the `open` key it has
-  // always been. The DOM spelling wins over the deprecated `ariaLabel`.
-  const ariaLabel = ariaLabelAttr ?? ariaLabelProp;
+  // always been.
   const fromProps = useMemo(
     () => (ariaLabel === undefined ? labelsProp : { ...labelsProp, open: ariaLabel }),
     [ariaLabel, labelsProp],

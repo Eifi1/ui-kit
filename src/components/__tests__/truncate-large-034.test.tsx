@@ -59,7 +59,7 @@ describe("group 4 parts wrap from Large up", () => {
             { value: 2, label: "Asia" },
             { value: 3, label: "Africa" },
           ]}
-          values={[1, 2]}
+          value={[1, 2]}
           onChange={() => {}}
         />
         <CountrySelect label="Country" value="CH" onChange={() => {}} />

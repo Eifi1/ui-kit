@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router";
+import { useKitTableStorageKeyPrefix } from "../i18n/kit-labels";
 import { readStored, writeStored } from "../lib/safe-storage";
 import {
   decodeFilterValue,
@@ -43,6 +44,13 @@ function loadPersisted(storageKey: string | undefined, prefix: string): Partial<
  *  the comparison and the write can never disagree about what "unchanged" means. */
 function serializePersisted(state: PersistedState): string {
   return JSON.stringify(state);
+}
+
+/** A stored page size as a table holds it — `"all"` is `Infinity` — or `fallback`. */
+function storedPageSize(stored: Partial<PersistedState>, fallback: number): number {
+  if (stored.pageSize === "all") return Infinity;
+  if (typeof stored.pageSize === "number" && stored.pageSize > 0) return stored.pageSize;
+  return fallback;
 }
 
 // ---------- URL sync helpers ----------
@@ -251,8 +259,8 @@ function writeUrlState<T>(
  * * **Persistence writes on every change, the URL only when asked.** `storageKey` is the
  *   per-table identity; `urlSync` is opt-in because only some tables want their view in
  *   a shareable address.
- * * **A controlled filter or sort that changes sends the table back to page 1.** See
- *   the note at the reset below.
+ * * **A controlled filter, sort or page size that changes sends the table back to page
+ *   1.** See the note at the reset below.
  */
 export function useTableState<T>({
   columns,
@@ -262,6 +270,7 @@ export function useTableState<T>({
   defaultPageSize,
   sortsProp,
   filtersProp,
+  pageSizeProp,
 }: {
   columns: DataTableColumn<T>[];
   storageKey?: string;
@@ -270,6 +279,7 @@ export function useTableState<T>({
   defaultPageSize: number;
   sortsProp?: SortState[];
   filtersProp?: FilterState;
+  pageSizeProp?: number;
 }) {
   const { enabled: urlSync, prefix: urlPrefix } = resolveTableUrlSync(urlSyncOption);
   const keys = useMemo(() => urlKeys(urlPrefix), [urlPrefix]);
@@ -312,21 +322,21 @@ export function useTableState<T>({
   // is never painted and never written to the URL. Not on mount: a deep link's `p=3`
   // must survive the owner's first render. (In `serverPagination` mode this state is
   // unused — the owner's `page` is the page, and resetting it stays the owner's job.)
+  // A controlled page size counts too: the groups of `TranslationReviewPanel` share one,
+  // and a group paged deep into its rows starts over when another group's pager changes it.
   const controlledSig =
-    sortsProp !== undefined || filtersProp !== undefined
-      ? JSON.stringify([sortsProp ?? null, filtersProp ?? null])
+    sortsProp !== undefined || filtersProp !== undefined || pageSizeProp !== undefined
+      ? JSON.stringify([sortsProp ?? null, filtersProp ?? null, String(pageSizeProp)])
       : null;
   const [seenControlledSig, setSeenControlledSig] = useState(controlledSig);
   if (seenControlledSig !== controlledSig) {
     setSeenControlledSig(controlledSig);
     setPage(0);
   }
-  const [pageSize, setPageSize] = useState<number>(() => {
-    if (urlInitial.pageSize !== undefined) return urlInitial.pageSize;
-    if (initial.pageSize === "all") return Infinity;
-    if (typeof initial.pageSize === "number" && initial.pageSize > 0) return initial.pageSize;
-    return defaultPageSize;
-  });
+  const [internalPageSize, setPageSize] = useState<number>(() =>
+    urlInitial.pageSize !== undefined ? urlInitial.pageSize : storedPageSize(initial, defaultPageSize),
+  );
+  const pageSize = pageSizeProp ?? internalPageSize;
   const [widths, setWidths] = useState<Record<string, number>>(() => initial.widths ?? {});
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(() => new Set(initial.hidden ?? []));
   const [showSettings, setShowSettings] = useState(false);
@@ -395,6 +405,77 @@ export function useTableState<T>({
     showSettings,
     setShowSettings,
     headRefs,
+  };
+}
+
+// ---------- One view over several tables ----------
+
+/** What {@link useSharedTableView} keeps. */
+export interface SharedTableView {
+  sorts: SortState[];
+  setSorts: (next: SortState[]) => void;
+  /** `Infinity` for "all", as a table holds it. */
+  pageSize: number;
+  setPageSize: (next: number) => void;
+}
+
+/**
+ * One table view — the sort and the page size — for an owner that draws it as SEVERAL
+ * tables over one `storageKey`: `TranslationReviewPanel`'s groups, which sort and page
+ * alike (0.35, Kurvenschmiede: its grouped review stored no view at all). Pass them to
+ * each table as `sorts`/`onSortsChange` and `pageSize`/`onPageSizeChange`.
+ *
+ * Kept in the very blob a `DataTable` with that `storageKey` keeps, not in a format of
+ * its own, so the single table and the groups read each other's view. What the blob
+ * holds besides (filters, column widths, hidden columns) is carried over as stored, for
+ * the single table to find as it left it. Read when `active` turns on — on mount, or
+ * when the owner switches to this view — and written on a change, never on a read. The
+ * prefix resolves as DataTable's does: prop > provider > the kit's.
+ */
+export function useSharedTableView({
+  active,
+  storageKey,
+  storageKeyPrefix,
+  defaultPageSize,
+}: {
+  active: boolean;
+  storageKey?: string;
+  storageKeyPrefix?: string;
+  defaultPageSize: number;
+}): SharedTableView {
+  const providerPrefix = useKitTableStorageKeyPrefix();
+  const prefix = storageKeyPrefix ?? providerPrefix ?? DEFAULT_PERSIST_PREFIX;
+  const read = () => {
+    const stored = active ? loadPersisted(storageKey, prefix) : {};
+    return { sorts: normalizeSorts(stored.sort), pageSize: storedPageSize(stored, defaultPageSize) };
+  };
+  const [view, setView] = useState(read);
+  // Adjusted during render when `active` turns on, so the first render of the groups
+  // already has the view the single table left, not a frame of the default.
+  const [wasActive, setWasActive] = useState(active);
+  if (active !== wasActive) {
+    setWasActive(active);
+    if (active) setView(read());
+  }
+  const change = (patch: Partial<typeof view>) => {
+    const next = { ...view, ...patch };
+    setView(next);
+    if (!active || !storageKey) return;
+    const stored = loadPersisted(storageKey, prefix);
+    const blob: PersistedState = {
+      sort: next.sorts,
+      filters: stored.filters ?? {},
+      pageSize: next.pageSize === Infinity ? "all" : next.pageSize,
+      widths: stored.widths,
+      hidden: stored.hidden,
+    };
+    writeStored(prefix + storageKey, serializePersisted(blob));
+  };
+  return {
+    sorts: view.sorts,
+    setSorts: (sorts) => change({ sorts }),
+    pageSize: view.pageSize,
+    setPageSize: (pageSize) => change({ pageSize }),
   };
 }
 

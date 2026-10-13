@@ -12,10 +12,10 @@
  *
  * Inside a `<StepperNav>` the hook registers the step's validator with the wizard, so
  * Next (and Finish on a form-bearing last step) runs it: on success the values go to
- * `onValid` and the wizard advances; on failure react-hook-form shows its own inline
- * `<FormMessage>`s, focuses the first field in error, and the wizard stays put — and,
- * since the result carries no per-field errors, says its "fill in the required
- * fields" line so the button did not seem to do nothing. It also RETURNS the
+ * `onValid` and the wizard advances; on failure the bound fields show their inline
+ * messages, react-hook-form focuses the first field in error, and the wizard stays
+ * put — and, since the result carries no per-field errors, says its "fill in the
+ * required fields" line so the button did not seem to do nothing. It also RETURNS the
  * validator, for a nav of your own outside `<StepperNav>` (where there is no wizard
  * context to register with, so nothing is registered).
  *

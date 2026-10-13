@@ -47,6 +47,12 @@ import { isComposing } from "../lib/ime";
  * anywhere else claims nothing: a search box keeping Chromium from clearing itself
  * must not hold a dialog open (FullBleedDialog's 0.8.0 fix, which Modal never had).
  *
+ * The owner's handler hears Escape only while its own layer is on top (0.35, KS). It
+ * runs before the stack is asked, so with a tooltip, a hover menu or a list open over
+ * the dialog and focus on the panel, the gear wizard asked "Discard this gear?" and the
+ * tooltip stayed. Now the layer above takes that press, and the next one is the
+ * owner's. Every other key reaches the handler as before.
+ *
  * A handler that STOPS the key before it reaches a layer element has taken it too —
  * that is the DOM, and it is what the kit's cell editors and confirm buttons do.
  */
@@ -55,6 +61,10 @@ import { isComposing } from "../lib/ime";
 interface Layer {
   escape: (e: KeyboardEvent) => void;
 }
+
+/** What {@link useDismissLayer} hands back: its layer while open, for
+ *  {@link runOwnKeyDown} to tell whether that layer is the one on top. */
+export type DismissLayer = RefObject<Layer | null>;
 
 /** Open layers, oldest first. Module-level, because the order is ACROSS instances. */
 const layers: Layer[] = [];
@@ -123,10 +133,11 @@ function pop(layer: Layer): void {
  * Where focus can be INSIDE the layer, its element's `onKeyDown` calls
  * {@link takeEscape} too, so the key stops there — see the module note. `onEscape` is
  * read live, so it need not be memoised; the layer is pushed and popped only when
- * `open` flips.
+ * `open` flips. The layer it returns is for the owner's {@link runOwnKeyDown}.
  */
-export function useDismissLayer(open: boolean, onEscape: (e: KeyboardEvent) => void): void {
+export function useDismissLayer(open: boolean, onEscape: (e: KeyboardEvent) => void): DismissLayer {
   const handlerRef = useRef(onEscape);
+  const layerRef = useRef<Layer | null>(null);
   // Written in an effect, not during render, so it satisfies react-hooks/refs: a
   // render that React starts and then discards — a transition, a Suspense retry —
   // would otherwise leave this holding a handler from a tree that never committed,
@@ -138,9 +149,14 @@ export function useDismissLayer(open: boolean, onEscape: (e: KeyboardEvent) => v
   useEffect(() => {
     if (!open || typeof document === "undefined") return;
     const layer: Layer = { escape: (e) => handlerRef.current(e) };
+    layerRef.current = layer;
     push(layer);
-    return () => pop(layer);
+    return () => {
+      pop(layer);
+      layerRef.current = null;
+    };
   }, [open]);
+  return layerRef;
 }
 
 /**
@@ -167,12 +183,31 @@ export function claimEscape(e: KeyboardEvent | ReactKeyboardEvent): void {
  * Runs a layer owner's own key handler — a dialog's `onKeyDown` prop — and turns a
  * `preventDefault()` it makes on Escape into a claim: the one way, beside
  * {@link claimEscape}, to keep a layer open.
+ *
+ * Given the owner's `layer` (what {@link useDismissLayer} returned), an Escape that went
+ * down while another layer was above that one skips the handler: the press is the
+ * layer's on top, and the owner hears the next (0.35, KS). Without it, or while the
+ * owner's layer is not open, the handler sees every key, as before.
  */
-export function runOwnKeyDown<E extends ReactKeyboardEvent>(e: E, handler: ((e: E) => void) | undefined): void {
+export function runOwnKeyDown<E extends ReactKeyboardEvent>(
+  e: E,
+  handler: ((e: E) => void) | undefined,
+  layer?: DismissLayer,
+): void {
   if (!handler) return;
+  if (layer && aboveOwner(e, layer.current)) return;
   const before = e.defaultPrevented;
   handler(e);
   if (e.key === "Escape" && !before && e.defaultPrevented) claimed.add(nativeOf(e));
+}
+
+/** Whether this Escape went down with a layer above `owner` — the topmost one then was
+ *  another, and `owner` is on the stack. An Escape the stack did not note (one inside an
+ *  IME composition) is nobody else's. */
+function aboveOwner(e: ReactKeyboardEvent, owner: Layer | null): boolean {
+  const flight = inFlight;
+  if (e.key !== "Escape" || !owner || !flight || flight.event !== nativeOf(e)) return false;
+  return flight.layer !== owner && layers.includes(owner);
 }
 
 /**

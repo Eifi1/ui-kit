@@ -8,7 +8,7 @@ import { Form, FormField, FormItem } from "../../rhf/form-core";
 /** Two findings of the 2026-09-27 showcase audit, pinned by their classes (jsdom has no layout). */
 describe("showcase audit layout fixes", () => {
   it("dims a disabled MultiSelect's trigger like the other pickers", () => {
-    render(<MultiSelect label="Markets" options={[{ value: 1, label: "EU" }]} values={[1]} onChange={() => {}} disabled />);
+    render(<MultiSelect label="Markets" options={[{ value: 1, label: "EU" }]} value={[1]} onChange={() => {}} disabled />);
     const trigger = screen.getByRole("combobox", { name: /Markets/ });
     expect(trigger).toBeDisabled();
     expect(trigger.className).toContain("disabled:opacity-50");

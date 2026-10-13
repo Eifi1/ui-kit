@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_UI_KIT_LABELS } from "../defaults";
 import { DEFAULT_COLUMN_MAPPER_LABELS } from "../../components/column-mapper";
 import { DEFAULT_POPOVER_LABELS } from "../../components/popover";
-import { DEFAULT_WIZARD_LABELS, resolveWizardLabels } from "../../wizard/types";
+import { DEFAULT_WIZARD_LABELS } from "../../wizard/types";
 import { DEFAULT_COMMON_LABELS, DEFAULT_FILE_LABELS } from "../kit-labels";
 
 /**
@@ -96,7 +96,6 @@ describe("the English catalogue's module graph", () => {
     expect(DEFAULT_UI_KIT_LABELS.common).toBe(DEFAULT_COMMON_LABELS);
     expect(DEFAULT_UI_KIT_LABELS.file).toBe(DEFAULT_FILE_LABELS);
     expect(DEFAULT_UI_KIT_LABELS.wizard).toBe(DEFAULT_WIZARD_LABELS);
-    expect(resolveWizardLabels().next).toBe("Next");
   });
 
   it("keeps every DEFAULT_* in a *-labels.ts: the modules allowed for other reasons hold none", () => {

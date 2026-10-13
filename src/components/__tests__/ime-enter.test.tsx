@@ -106,7 +106,7 @@ describe("a composing Enter neither picks nor submits (BUG-9)", () => {
           { value: "a", label: "Alpha" },
           { value: "b", label: "Beta" },
         ]}
-        values={[]}
+        value={[]}
         onChange={onChange}
       />,
     );

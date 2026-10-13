@@ -40,8 +40,8 @@ import { MoneyField } from "../../../src/components/money-field";
  *
  * 0.34: built from the bound `Rhf*` fields. It was built from the shadcn scaffold
  * (`FormField` → `FormItem` → `FormLabel` → `FormControl` → … → `FormMessage`), which
- * 0.34 deprecates (refactor audit 2026-10, API-6f): no app writes a form that way any
- * more, and each bound field is those parts folded into one element.
+ * 0.34 deprecated and 0.35 removed (refactor audit 2026-10, API-6f): no app writes a form
+ * that way any more, and each bound field is those parts folded into one element.
  */
 export function FormsRhf() {
   return <RhfExample />;
@@ -174,8 +174,8 @@ function RhfExample() {
         The shadcn scaffold the adapter started as — <code className="font-mono">FormField</code>,{" "}
         <code className="font-mono">FormItem</code>, <code className="font-mono">FormLabel</code>,{" "}
         <code className="font-mono">FormControl</code>, <code className="font-mono">FormDescription</code>,{" "}
-        <code className="font-mono">FormMessage</code> and <code className="font-mono">useFormField</code> — is
-        deprecated in 0.34 and leaves the package in 0.35. Each bound field is those parts in one
+        <code className="font-mono">FormMessage</code> and <code className="font-mono">useFormField</code> — was
+        deprecated in 0.34 and left the package in 0.35. Each bound field is those parts in one
         element; <code className="font-mono">RhfField</code> wraps a control of your own the same way.
       </Note>
     </Example>

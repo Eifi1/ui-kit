@@ -279,7 +279,7 @@ describe("NumberField takes Field's render-prop spread", () => {
   });
 
   it("sets no aria-required when not required", () => {
-    render(<NumberField ariaLabel="Qty" value={1} onCommit={vi.fn()} calculator={false} />);
+    render(<NumberField aria-label="Qty" value={1} onCommit={vi.fn()} calculator={false} />);
     expect(screen.getByRole("textbox", { name: "Qty" })).not.toHaveAttribute("aria-required");
   });
 });

@@ -5,12 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { DataTable } from "../data-table";
 import type { DataTableColumn } from "../data-table";
-import {
-  DEFAULT_DATA_TABLE_LABELS,
-  missingDataTableLabels,
-  resolveDataTableLabels,
-  type DataTableLabels,
-} from "../data-table-labels";
+import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "../data-table-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
@@ -107,9 +102,8 @@ describe("each column's filter is named for its column (BUG-7c)", () => {
   });
 
   it("an app that translated only `filter` keeps its word, with the column", () => {
-    const labels = resolveDataTableLabels({ filter: "Filtern" });
-    expect(labels.filterColumn("Betrag", false)).toBe("Filtern: Betrag");
-    // …and is not told to translate a key its `filter` already covers.
-    expect(missingDataTableLabels({ ...DEFAULT_DATA_TABLE_LABELS, filterColumn: undefined, filter: "Filtern" } as never)).toEqual([]);
+    // Through the table, since its resolver left the public surface (round 0.35 R1).
+    renderTable({ filter: "Filtern" });
+    expect(screen.getByRole("button", { name: "Filtern: Name" })).toBeInTheDocument();
   });
 });

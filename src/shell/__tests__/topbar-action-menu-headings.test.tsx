@@ -15,18 +15,18 @@ import type { TopBarMenuEntry } from "../topbar-action-menu";
 function TourMenu({
   entries,
   onLaunch = () => {},
-  ariaLabel = "Guided tours",
+  name = "Guided tours",
 }: {
   entries?: TopBarMenuEntry[];
   onLaunch?: (id: string) => void;
-  ariaLabel?: string;
+  name?: string;
 }) {
   const row = (id: string, label: string): TopBarMenuEntry => ({ key: id, label, onSelect: () => onLaunch(id) });
   return (
     <MemoryRouter>
       <TopBarActionMenu
         icon={<span>?</span>}
-        ariaLabel={ariaLabel}
+        aria-label={name}
         entries={
           entries ?? [
             { kind: "heading", key: "here", label: "On this page" },
@@ -142,14 +142,14 @@ describe("TopBarActionMenu group headings", () => {
     render(
       <>
         <TourMenu
-          ariaLabel="One"
+          name="One"
           entries={[
             { kind: "heading", key: "a topic with spaces", label: "Topic" },
             { key: "x", label: "Row one", onSelect: () => {} },
           ]}
         />
         <TourMenu
-          ariaLabel="Two"
+          name="Two"
           entries={[
             { kind: "heading", key: "a topic with spaces", label: "Topic" },
             { key: "y", label: "Row two", onSelect: () => {} },
@@ -173,7 +173,7 @@ describe("TopBarActionMenu group headings", () => {
       <MemoryRouter>
         <TopBarActionMenu
           icon={<span>?</span>}
-          ariaLabel="Feedback"
+          aria-label="Feedback"
           heading="Send"
           entries={[
             { key: "bug", label: "Bug", onSelect: () => {} },

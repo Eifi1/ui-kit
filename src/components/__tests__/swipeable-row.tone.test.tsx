@@ -117,27 +117,15 @@ describe("SwipeAction paint (a documented app exception)", () => {
   });
 });
 
-describe("the deprecated className path", () => {
-  it("keeps the old look: the caller's fill, white text, dimmed until armed", () => {
-    renderRow([{ label: "Archive", onCommit: vi.fn(), className: "bg-[var(--money-neutral)]", armedClassName: "bg-danger" }]);
-    dragLeft(40);
-    let p = panel("Archive");
-    expect(p).toHaveClass("bg-[var(--money-neutral)]");
-    expect(p).toHaveClass("text-white");
-    expect(p).toHaveClass("opacity-60");
-    dragLeft(150);
-    p = panel("Archive");
-    expect(p).toHaveClass("bg-danger");
-    expect(p).not.toHaveClass("opacity-60");
-  });
-
-  it("lets the caller's classes set the text colour over the white default", () => {
-    renderRow([
-      { label: "Archive", onCommit: vi.fn(), className: "bg-danger text-danger-contrast", armedClassName: "bg-danger" },
-    ]);
-    dragLeft(40);
-    const p = panel("Archive");
-    expect(p).toHaveClass("text-danger-contrast");
-    expect(p).not.toHaveClass("text-white");
+describe("the className path is gone (deprecated 0.33, removed in 0.35 — round 0.35 R1)", () => {
+  it("takes `tone` or `paint`, never the old class pair", () => {
+    // Compile-time: `tsc --noEmit` fails if a directive below goes unused.
+    const gone: SwipeAction[] = [
+      // @ts-expect-error — `className` / `armedClassName` are gone: pass `tone`, or `paint`.
+      { label: "Archive", onCommit: vi.fn(), className: "bg-[var(--money-neutral)]", armedClassName: "bg-danger" },
+      // @ts-expect-error — not beside a tone either.
+      { label: "Archive", onCommit: vi.fn(), tone: "danger", className: "bg-danger" },
+    ];
+    expect(gone).toHaveLength(2);
   });
 });

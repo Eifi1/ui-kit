@@ -102,7 +102,7 @@ describe("WizardStepper (0.32.1)", () => {
   it("wraps its steps", () => {
     render(
       <WizardStepper
-        ariaLabel="Import"
+        aria-label="Import"
         current="upload"
         steps={[
           { key: "upload", label: "Upload" },

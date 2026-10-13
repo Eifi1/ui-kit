@@ -503,7 +503,7 @@ function sourceOf(p: PalettePreset): string {
 /**
  * Any preset in `PALETTES` written onto one element. `applyTokenSet` takes any element,
  * and the custom properties it writes cascade to the kit components inside. (The five
- * `ALTERNATIVE_PRESETS` this also showed are deprecated in 0.34: a reference bank that
+ * `ALTERNATIVE_PRESETS` this once also showed were removed in 0.35: a reference bank that
  * `presetById` never resolved, refactor audit 2026-10, API-6c.)
  */
 function PresetPreview() {

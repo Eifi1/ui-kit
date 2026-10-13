@@ -201,6 +201,53 @@ try {
   if (parsed === expected) ok("parseTable reads a German export by package name");
   else fail(`parseTable by package name answered ${parsed}`);
 
+  log("• currencies is data an app's build reads in plain Node");
+  // 0.34.1: keksdose's Vite plugin imports it while Vite loads its config — Node, no DOM,
+  // nothing but the module itself. It imports nothing at all, relative or bare: a kit
+  // module behind it could reach React or a stylesheet later (packaging-contract.test.ts
+  // holds the same rule on src/).
+  const currencies = join(installed, "dist", "currencies.js");
+  const currencyImports = [
+    ...readFileSync(currencies, "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+)["']/g),
+  ].map((m) => m[1]);
+  if (currencyImports.length === 0) ok("dist/currencies.js imports nothing");
+  else fail(`dist/currencies.js imports ${currencyImports.join(", ")}`);
+  const [countries] = runProbe(
+    `import { CURRENCIES, CURRENCY_COUNTRIES } from ${JSON.stringify(specifierOf("./currencies"))};\n` +
+      `console.log(JSON.stringify([typeof window, CURRENCY_COUNTRIES.CHF, CURRENCY_COUNTRIES.EUR, Object.keys(CURRENCY_COUNTRIES).length === CURRENCIES.length]));`,
+  );
+  if (countries === JSON.stringify(["undefined", "ch", "eu", true])) ok("CURRENCY_COUNTRIES loads by package name without a DOM");
+  else fail(`the currencies entry by package name answered ${countries}`);
+
+  log("• eslint is a plugin an app's ESLint config loads in plain Node");
+  // Round 0.35 R5: an app's eslint.config.js imports it — Node, no DOM, and no `eslint` of
+  // its own (that is the app's). It imports no package, carries this tarball's version
+  // (ESLint's cache keys on it) and its role table: the rule is driven here without
+  // ESLint, through the context it reads, on a class with a variant and an opacity.
+  const eslintDir = join(installed, "dist", "eslint");
+  const eslintImports = readdirSync(eslintDir)
+    .filter((f) => f.endsWith(".js"))
+    .flatMap((f) => [...readFileSync(join(eslintDir, f), "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^."'][^"']*)["']/g)])
+    .map((m) => m[1]);
+  if (eslintImports.length === 0) ok("dist/eslint imports no package");
+  else fail(`dist/eslint imports ${eslintImports.join(", ")}`);
+  const [lint] = runProbe(
+    `import plugin from ${JSON.stringify(specifierOf("./eslint"))};\n` +
+      `const text = '"p-2 hover:text-[var(--text-muted)]/70 bg-[var(--chart-1)]"', fixed = [];\n` +
+      `const rule = plugin.rules["role-utilities"];\n` +
+      `rule.create({ sourceCode: { text }, report: (r) => fixed.push(r.fix({ replaceTextRange: ([a, b], s) => text.slice(0, a) + s + text.slice(b) })) })\n` +
+      `  .Literal({ type: "Literal", value: text.slice(1, -1), range: [0, text.length], loc: { start: { line: 1, column: 0 }, end: { line: 1, column: text.length } } });\n` +
+      `console.log(JSON.stringify([typeof window, plugin.meta.version, plugin.configs.recommended.rules, fixed]));`,
+  );
+  const lintExpected = JSON.stringify([
+    "undefined",
+    pkg.version,
+    { "@eifi1/ui-kit/role-utilities": "error" },
+    ['"p-2 hover:text-muted/70 bg-[var(--chart-1)]"'],
+  ]);
+  if (lint === lintExpected) ok("the role-utilities rule fixes a class by package name without ESLint");
+  else fail(`the eslint entry by package name answered ${lint}`);
+
   log("• the pay page's bin writes an app's page, and refuses a wrong pairing");
   const bin = join(scratch, "node_modules", ".bin", "eifi1-pay-page");
   const payOut = join(scratch, "srv-pay");

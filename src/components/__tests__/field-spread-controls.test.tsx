@@ -179,7 +179,7 @@ describe("controls take Field's render-prop spread on their focusable element", 
             <MultiSelect
               {...ids}
               data-testid="wrapper"
-              values={[]}
+              value={[]}
               onChange={vi.fn()}
               options={[{ value: 1, label: "Anna" }]}
             />

@@ -40,7 +40,8 @@ session as it is. Once all three apps have adopted a release, its note moves to
 
 | Note | Release | What it was | Apps |
 |---|---|---|---|
-| [adopt-0.34](adopt-0.34.md) | ui-kit 0.34, server-kit 0.8 | Round 0.34: the apps' 0.33 reports, keksdose's run 77, Kurvenschmiede's asks; session refresh, groups in the audit; the refactor waves | being built |
+| [adopt-0.35](adopt-0.35.md) | ui-kit 0.35 (server-kit stays 0.8) | The 0.34 deprecations removed; the apps' 0.34 findings (the planned 0.34.1); the refactor plan's open ends; `@eifi1/ui-kit/eslint` | being built |
+| [adopt-0.34](adopt-0.34.md) | ui-kit 0.34, server-kit 0.8 | Round 0.34: the apps' 0.33 reports, keksdose's run 77, Kurvenschmiede's asks; session refresh, groups in the audit; the refactor waves | all three adopted locally |
 | [adopt-0.33](adopt-0.33.md) | ui-kit 0.33, server-kit 0.7 | Colour roles, billing §14 (Paddle client, checkout page), text size §10.16–§10.22 | all three on `^0.33.1` |
 | [adopt-0.32](adopt-0.32.md) | ui-kit 0.32, server-kit 0.6 | Text size and contrast; billing | all apps adopted |
 | [adopt-0.31](archive/adopt/adopt-0.31.md) | ui-kit 0.31, server-kit 0.5 | The settings page, the landing page and the demo; the server-kit pages in the showcase | all apps adopted |

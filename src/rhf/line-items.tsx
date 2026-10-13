@@ -27,7 +27,7 @@
  * `summary`, `fieldLabels`, `narrowColumns`, `removePlacement` and `removeAlign` pass
  * through to {@link LineItems}. With
  * `fieldLabels="floating"` a cell's `fieldLabel` is the column's name; the bound
- * fields' own `label` is a `FormLabel` ABOVE the control, so for the floating
+ * fields' own `label` is a label ABOVE the control, so for the floating
  * one render the kit field through `RhfField`:
  * `render={({ field, invalid }) => <Input label={fieldLabel} aria-label={label} {...field} invalid={invalid} />}`.
  */

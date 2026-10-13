@@ -1,4 +1,4 @@
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   ComponentPropsWithoutRef,
@@ -6,8 +6,10 @@ import type {
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
   ReactNode,
+  Ref,
 } from "react";
 import { cn } from "../lib/cn";
+import { mergeRefs } from "./field-parts";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
@@ -228,6 +230,14 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
    * `onClose` still runs, after the param is cleared. Requires a react-router Router.
    */
   urlParam?: DialogParam;
+  /**
+   * The PANEL — the `role="dialog"` element the rest of the props go on, not the
+   * backdrop around it (0.35, round 0.35 R4, the follow-up to API-2; as on
+   * `FullBleedDialog`). Merged with the panel's own ref, which the focus
+   * trap holds. Set while the panel is in the document: `null` while a dialog with
+   * `open={false}` is closed, and after a `urlParam` dialog's param is cleared.
+   */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /**
@@ -286,12 +296,16 @@ function ModalPanel({
   role = "dialog",
   urlParam: _urlParam,
   ownHistoryEntry = true,
+  ref,
   ...rest
 }: ModalProps & {
   /** False when the URL already holds an entry for this dialog — see `urlParam`. */
   ownHistoryEntry?: boolean;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  // The caller's `ref` beside the trap's (round 0.35 R4): memoised, so the panel is not
+  // detached and re-attached on every render.
+  const setPanel = useMemo(() => mergeRefs(panelRef, ref), [ref]);
   const drag = useDragOffset(Boolean(draggable));
   // Without `open`, mounted means open — the constant `true` every hook below used to
   // be given. With it, `open` itself.
@@ -357,9 +371,11 @@ function ModalPanel({
   // One layer on the Escape stack while open (Wave 2, DUP-1): a list, a popover or a
   // tooltip opened inside takes the key before the dialog does, wherever focus is —
   // and the dialog gets it even when focus is not in the panel.
-  useDismissLayer(active, requestClose);
+  const layer = useDismissLayer(active, requestClose);
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    runOwnKeyDown(e, onKeyDown);
+    // The caller's handler sees Escape only while this dialog is the layer on top: a
+    // tooltip or a list open over it takes that press first (0.35, KS's gear wizard).
+    runOwnKeyDown(e, onKeyDown, layer);
     // To whatever is on top — this dialog, unless something opened over it — and
     // stopped here. Tab containment lives in useFocusTrap, which listens on the panel.
     takeEscape(e);
@@ -399,7 +415,7 @@ function ModalPanel({
         // losing any of the three is silent, and the symptom (a dialog a screen reader
         // walks straight out of) shows up nowhere near the call site that caused it.
         {...rest}
-        ref={panelRef}
+        ref={setPanel}
         // Normalised at runtime too: an untyped caller's `role="presentation"` must not
         // take the dialog role away (props-passthrough pins that).
         role={role === "alertdialog" ? "alertdialog" : "dialog"}

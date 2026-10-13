@@ -33,12 +33,13 @@ import { BulkActionBar } from "./bulk-action-bar";
 import { Checkbox } from "./checkbox";
 import { Chip } from "./chip";
 import { DataTable } from "./data-table";
-import type { DataTableColumn, DataTableProps, MobileSwipeActions, SortState } from "./data-table";
+import type { DataTableColumn, DataTableProps, MobileSwipeActions } from "./data-table";
 import { Disclosure } from "./disclosure";
 import { SearchField } from "./search-field";
 import { toast } from "./toast";
 import type { SwipeAction } from "./swipeable-row";
 import { ToggleGroup } from "./toggle-group";
+import { useSharedTableView } from "./use-table-state";
 import { TranslationReviewEditor } from "./translation-review-editor";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS, reviewStatusLabel } from "./translation-review-labels";
 import type { TranslationReviewLabels } from "./translation-review-labels";
@@ -168,7 +169,8 @@ export interface TranslationReviewPanelProps {
   /** Rows per page. Default 50. */
   pageSize?: number;
   /** Persists the table's sort and page size (DataTable's `storageKey`), under the
-   *  prefix below. */
+   *  prefix below — under {@link groupBy}, the one sort and page size every group
+   *  shares, in the same place (0.35). */
   storageKey?: string;
   /**
    * The `localStorage` prefix in front of `storageKey` (DataTable's `storageKeyPrefix`).
@@ -257,7 +259,14 @@ export interface TranslationReviewPanelProps {
    * reference; a column sort orders the rows INSIDE every group alike. Each group pages
    * on its own, `pageSize` rows at a time — a header then always stands over its own
    * rows, and paging one area does not move another — rather than one pager cutting
-   * through the headers. `storageKey` keeps persisting the ungrouped table only.
+   * through the headers. The page SIZE is one for all of them, as the sort is: a
+   * group's pager changes it everywhere.
+   *
+   * `storageKey` persists that one view — the sort and the page size — in the place the
+   * ungrouped table keeps its own (same key, same prefix, same blob), read on mount and
+   * written on a change, so a reviewer switching the grouping on or off keeps both
+   * (0.35, Kurvenschmiede; before, it persisted the ungrouped table only). What only
+   * the ungrouped table has — column widths, hidden columns — stays in the blob for it.
    *
    * Groups fold (each on its own, remembered while the panel lives), and a folded group's
    * rows are not rendered at all — only its header. Which groups start open is
@@ -558,8 +567,15 @@ export function TranslationReviewPanel({
   // has mounted and taken focus, the group that asked.
   const [confirming, setConfirming] = useState<string | null>(null);
   const confirmFocus = useRef<string | null>(null);
-  // One sort for every group's table, so a header click orders all of them alike.
-  const [groupSorts, setGroupSorts] = useState<SortState[]>([]);
+  // One view for every group's table — one sort, so a header click orders all of them
+  // alike, and one page size — kept under `storageKey` in the single table's own blob, so
+  // switching the grouping keeps both (0.35, Kurvenschmiede).
+  const groupView = useSharedTableView({
+    active: groupBy !== undefined,
+    storageKey,
+    storageKeyPrefix,
+    defaultPageSize: pageSize,
+  });
 
   const setFilter = (patch: Partial<TranslationReviewFilter>) => {
     const next = { ...filter, ...patch };
@@ -870,8 +886,10 @@ export function TranslationReviewPanel({
             frame: false,
             chrome: "minimal" as const,
             maxBodyHeight: "none",
-            sorts: groupSorts,
-            onSortsChange: setGroupSorts,
+            sorts: groupView.sorts,
+            onSortsChange: groupView.setSorts,
+            pageSize: groupView.pageSize,
+            onPageSizeChange: groupView.setPageSize,
             labels: { table: group.name },
           }
         : { storageKey, storageKeyPrefix })}

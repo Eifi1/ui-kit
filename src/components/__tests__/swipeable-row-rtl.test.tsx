@@ -16,8 +16,7 @@ import { SwipeableRow, type SwipeAction } from "../swipeable-row";
 const action = (label: string, onCommit: () => void = vi.fn()): SwipeAction => ({
   onCommit,
   label,
-  className: "bg-[var(--money-neutral)]",
-  armedClassName: "bg-danger",
+  tone: "danger",
 });
 
 function renderRow(onRight = vi.fn(), onLeft = vi.fn()) {

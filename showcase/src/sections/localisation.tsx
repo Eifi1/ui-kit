@@ -498,13 +498,8 @@ function NamespaceConstantsExample() {
         The English default under its own name is the per-component half of the precedence:{" "}
         <code className="font-mono">useKitLabels(ns, DEFAULT_X_LABELS, labels)</code> merges a
         component&apos;s partial <code className="font-mono">labels</code> over the provider over
-        it. The resolvers from before the provider — <code className="font-mono">resolveChipInputLabels</code>,{" "}
-        <code className="font-mono">resolveFieldSyncLabels</code>,{" "}
-        <code className="font-mono">resolvePasswordRevealLabels</code>,{" "}
-        <code className="font-mono">resolveWizardLabels</code>,{" "}
-        <code className="font-mono">resolveDataTableLabels</code> — and{" "}
-        <code className="font-mono">missingDataTableLabels</code> are deprecated in 0.34 and go in
-        0.35; <code className="font-mono">missingKitLabels</code> checks every namespace at once.
+        it — the one merge since 0.35, which removed the per-component resolvers from before the
+        provider; <code className="font-mono">missingKitLabels</code> checks every namespace at once.
       </Note>
     </Example>
   );

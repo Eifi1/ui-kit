@@ -762,10 +762,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       submit: "Continua",
       cancel: "Annulla",
     },
+    // 0.35: keksdose's reviewed Italian (its `boot.slow` / `boot.waking`), which is canon.
     serverWake: {
-      slow: "Caricamento in corso: ci vuole più del solito.",
+      slow: "Sta ancora caricando: ci vuole più del solito.",
       waking: (appName) =>
-        `Il server va in sospensione quando nessuno usa ${appName ?? "l’app"}, quindi la prima richiesta dopo una pausa deve riavviarlo. Può volerci un momento: non si perde nulla, la pagina si completa da sola.`,
+        `Il server si addormenta quando nessuno usa ${appName ?? "l’app"}, perciò la prima richiesta dopo una pausa deve prima riavviarlo. Può volerci un momento: non va perso nulla, la pagina si riempie da sola.`,
     },
     // 0.28.0 — docs/legal-harmonization.md §4.3/§4.4: keksdose's reviewed Italian, and
     // Kurvenschmiede's for the browser section and the beta notice; formal, "Lei" and

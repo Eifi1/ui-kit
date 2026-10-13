@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, Ref } from "react";
 import { Check, Copy, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
@@ -62,6 +62,10 @@ export interface CopyButtonProps
   /** Called with the real outcome once the copy settles. */
   onCopied?: (ok: boolean) => void;
   labels?: LabelOverride<CopyButtonLabels>;
+  /** The `<button>` in either variant — the {@link IconButton}'s or the {@link Button}'s,
+   *  never the tooltip's wrapper round it (0.35, round 0.35 R4, the follow-up to API-2).
+   *  It rides the rest of the props on to that kit button, whose own ref it is. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 const ICONS: Record<CopyState, typeof Copy> = { idle: Copy, copied: Check, failed: X };

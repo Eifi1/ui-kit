@@ -66,7 +66,7 @@ describe("NumberInput suffix", () => {
 
 describe("NumberInput suffix padding (keksdose P9)", () => {
   it("pads the unit pe-2, not the input's pe-3", () => {
-    render(<NumberInput ariaLabel="Rate" value="1" suffix="%" calculator={false} onChange={vi.fn()} />);
+    render(<NumberInput aria-label="Rate" value="1" suffix="%" calculator={false} onChange={vi.fn()} />);
     expect(screen.getByText("%")).toHaveClass("pe-2");
     expect(screen.getByText("%")).not.toHaveClass("pe-3");
   });
@@ -74,11 +74,11 @@ describe("NumberInput suffix padding (keksdose P9)", () => {
   it("before measuring, reserves an estimate from the unit's length", () => {
     // jsdom has no layout, so this is the pre-measure state every browser starts in.
     const { container, rerender } = render(
-      <NumberInput ariaLabel="Speed" value="1" suffix="km/h" calculator={false} onChange={vi.fn()} />,
+      <NumberInput aria-label="Speed" value="1" suffix="km/h" calculator={false} onChange={vi.fn()} />,
     );
     const input = () => container.querySelector("input")!;
     expect(input().style.paddingInlineEnd).toBe("calc(4ch + 0.75rem)");
-    rerender(<NumberInput ariaLabel="Speed" value="1" suffix="%" onChange={vi.fn()} />);
+    rerender(<NumberInput aria-label="Speed" value="1" suffix="%" onChange={vi.fn()} />);
     expect(input().style.paddingInlineEnd).toBe("calc(1ch + 0.75rem + 2.25rem)");
   });
 });
