@@ -1,9 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { Spinner } from "./ui";
+import { Spinner } from "./spinner";
 import { FOCUS_RING } from "./focus-ring";
 
 /**
@@ -68,7 +68,7 @@ export interface TreeItemState {
 
 /* ── TreeRow ─────────────────────────────────────────────────────────────── */
 
-export interface TreeRowProps extends ComponentPropsWithoutRef<"div"> {
+export interface TreeRowProps extends ComponentPropsWithRef<"div"> {
   /** 1 for a top-level row. Sets the indent and the number of guides. */
   level: number;
   /** `true`/`false` for a row that can fold; leave it `undefined` for a leaf, which
@@ -154,8 +154,8 @@ export function TreeRow({
       className={cn(
         "relative flex min-h-8 items-center gap-1.5 rounded pe-2 text-sm",
         selected
-          ? "bg-[var(--bg-active)] font-medium text-[var(--text-primary)]"
-          : "text-[var(--text-secondary)]",
+          ? "bg-active font-medium text-primary"
+          : "text-secondary",
         className,
       )}
     >
@@ -183,12 +183,12 @@ export function TreeRow({
             e.stopPropagation();
             onToggle();
           }}
-          className={cn("flex size-4 shrink-0 items-center justify-center rounded text-[var(--text-muted)] outline-none hover:text-[var(--text-primary)]", FOCUS_RING)}
+          className={cn("flex size-4 shrink-0 items-center justify-center rounded text-muted outline-none hover:text-primary", FOCUS_RING)}
         >
           {chevron}
         </button>
       ) : expandable ? (
-        <span data-tree-toggle="" className="flex size-4 shrink-0 cursor-pointer items-center justify-center text-[var(--text-muted)]">
+        <span data-tree-toggle="" className="flex size-4 shrink-0 cursor-pointer items-center justify-center text-muted">
           {chevron}
         </span>
       ) : (
@@ -197,11 +197,13 @@ export function TreeRow({
       {children ?? (
         <>
           {icon && <span className="flex shrink-0 items-center">{icon}</span>}
-          <span id={labelId} data-tree-label="" className="min-w-0 flex-1 truncate">
+          {/* One line at Normal; from Large up it wraps and the `min-h-8` row grows
+              (text size §10.17, round 0.34 T1: the sweep read "1020 Operat…"). */}
+          <span id={labelId} data-tree-label="" className="min-w-0 flex-1 truncate-until-large">
             {label}
           </span>
           {trailing !== undefined && trailing !== null && (
-            <span className="ms-auto flex shrink-0 items-center gap-1 text-xs tabular-nums text-[var(--text-muted)]">
+            <span className="ms-auto flex shrink-0 items-center gap-1 text-xs tabular-nums text-muted">
               {trailing}
             </span>
           )}
@@ -214,7 +216,7 @@ export function TreeRow({
 /* ── TreeView ────────────────────────────────────────────────────────────── */
 
 export interface TreeViewProps<T = unknown>
-  extends Omit<ComponentPropsWithoutRef<"ul">, "onSelect" | "children" | "defaultValue"> {
+  extends Omit<ComponentPropsWithRef<"ul">, "onSelect" | "children" | "defaultValue"> {
   items: readonly TreeNode<T>[];
   /** Open nodes, controlled. */
   expanded?: readonly string[];
@@ -544,7 +546,7 @@ export function TreeView<T = unknown>({
           }}
           // The ring goes on this row's own box, not the <li>: the <li> contains the
           // whole open branch below it, and ringing that would outline a subtree.
-          className="outline-none [&:focus-visible>[data-tree-row]]:ring-[length:var(--focus-ring-width)] [&:focus-visible>[data-tree-row]]:ring-[var(--brand)]"
+          className="outline-none [&:focus-visible>[data-tree-row]]:ring-focus [&:focus-visible>[data-tree-row]]:ring-brand"
         >
           <TreeRow
             id={rowId}
@@ -558,7 +560,7 @@ export function TreeView<T = unknown>({
             selected={isSelected}
             loading={isLoading}
             className={cn(
-              node.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-[var(--bg-hover)]",
+              node.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-hover",
               rowClassName,
             )}
           >

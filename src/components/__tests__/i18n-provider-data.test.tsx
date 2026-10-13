@@ -85,8 +85,10 @@ describe("DataTable under a provider", () => {
 
   it("names the filter popover, and reaches the calendar nested in the date filter", () => {
     render(withKit(table()));
-    fireEvent.click(screen.getByRole("button", { name: "Filtern" }));
-    const panel = screen.getByRole("dialog", { name: "Filtern" });
+    // 0.34: the button names its column ("Filtern: Date" — the provider here translates
+    // only `filter`, so the kit's fallback joins it with the column).
+    fireEvent.click(screen.getByRole("button", { name: /^Filtern/ }));
+    const panel = screen.getByRole("dialog", { name: /^Filtern/ });
     // The calendar three components deep speaks the provider's language …
     expect(within(panel).getByRole("button", { name: "Voriger Monat" })).toBeInTheDocument();
     expect(within(panel).getByRole("button", { name: "Nächster Monat" })).toBeInTheDocument();

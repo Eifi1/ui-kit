@@ -1,17 +1,13 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Trash2 } from "lucide-react";
-import {
-  Button,
-  Card,
-  CompactControls,
-  FieldHint,
-  FOCUS_RING,
-  FOCUS_RING_WIDTH,
-  IconButton,
-  Input,
-  TOUCH_TARGET_LARGE,
-} from "../ui";
+import { Button } from "../button";
+import { Card } from "../card";
+import { CompactControls, FieldHint } from "../field-parts";
+import { FOCUS_RING, FOCUS_RING_WIDTH } from "../focus-ring";
+import { IconButton } from "../icon-button";
+import { Input } from "../input";
+import { TOUCH_TARGET_LARGE } from "../button-look";
 import { Switch } from "../switch";
 import { Checkbox } from "../checkbox";
 import { Slider } from "../slider";
@@ -23,6 +19,7 @@ import { DateMark } from "../account-chips";
 import { SignChip } from "../sign-chip";
 import { FieldSyncIndicator } from "../field-sync";
 import { applyTextSize, type TextSize } from "../../theme/text-size";
+import { viewportMatchMedia } from "../../test/viewport";
 
 /**
  * The component behaviours of 0.32 at the three text sizes
@@ -41,20 +38,9 @@ afterEach(() => {
 });
 
 /** A `matchMedia` for a viewport `width` px wide (min-width / width < evaluated as a browser
- *  would, as use-breakpoint-032 does) whose pointer is a finger when `coarse`. */
+ *  would, as use-breakpoint.text-size.test.tsx pins) whose pointer is a finger when `coarse`. */
 function media({ width = 1280, coarse = false }: { width?: number; coarse?: boolean } = {}) {
-  vi.stubGlobal("matchMedia", (query: string) => {
-    const min = /min-width:\s*(\d+)px/.exec(query);
-    const max = /width\s*<\s*(\d+)px/.exec(query);
-    const matches = /pointer:\s*coarse/.test(query)
-      ? coarse
-      : min
-        ? width >= Number(min[1])
-        : max
-          ? width < Number(max[1])
-          : false;
-    return { matches, media: query, addEventListener() {}, removeEventListener() {} };
-  });
+  vi.stubGlobal("matchMedia", viewportMatchMedia(width, { coarse }));
 }
 
 function size(s: TextSize) {
@@ -87,7 +73,7 @@ describe("Button at Large (§4 touch targets)", () => {
     render(<Button>Save</Button>);
     const cls = screen.getByRole("button").className;
     expect(cls).toContain(FOCUS_RING_WIDTH);
-    expect(cls).toContain("focus-visible:ring-[var(--brand)]");
+    expect(cls).toContain("focus-visible:ring-brand");
     expect(cls).not.toMatch(/(^|\s)focus:ring-/);
   });
 });
@@ -358,9 +344,10 @@ describe("Switch, Slider, ToggleGroup, Checkbox, ChoiceCard in rem (§3.2, §4)"
   });
 
   it("ChoiceCard: the radio's dot scales with its box, and the focus mark is the frame's width", () => {
-    const { container } = render(<ChoiceCard type="radio" name="plan" title="Monthly" />);
+    render(<ChoiceCard type="radio" name="plan" title="Monthly" />);
     expect(screen.getByRole("radio").className).toContain("checked:border-[0.3125rem]");
-    expect(container.innerHTML).toContain("has-[:focus-visible]:outline-[length:var(--focus-ring-width)]");
+    // `outline-focus` is `--focus-ring-width` wide (0.34, DOC-7); the card is the label.
+    expect(screen.getByRole("radio").closest("label")).toHaveClass("has-[:focus-visible]:outline-focus");
   });
 
   it("Card's strong frame pads one pixel short of p-3 / p-4, in rem", () => {

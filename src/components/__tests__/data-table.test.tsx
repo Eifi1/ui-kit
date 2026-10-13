@@ -113,7 +113,7 @@ describe("DataTable sorting", () => {
 /** Open a column's filter popover and type into it. The popover is reached through
  *  the header's own Filter button, which is how a user reaches it. */
 function filterColumn(column: string, text: string) {
-  fireEvent.click(within(header(column)).getByRole("button", { name: "Filter" }));
+  fireEvent.click(within(header(column)).getByRole("button", { name: `Filter ${column}` }));
   fireEvent.change(screen.getByPlaceholderText("Filter…"), { target: { value: text } });
 }
 

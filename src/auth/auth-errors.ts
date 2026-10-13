@@ -22,6 +22,10 @@
  *   account gets `invalid_credentials`, because a separate answer after a correct
  *   password would confirm a leaked one. It stays in the union only for a future server
  *   step that is past the password (an admin view, a signed-in refresh) and may say so.
+ * - `session_ended` — 0.34.0 (§11.2, decision 7; server-kit 0.8): every definitive
+ *   refusal of `POST /auth/refresh`, a `401`. No form shows it, so it has no label: the
+ *   kit's `attachSessionRefresh` decides by the STATUS, so an app whose server has not
+ *   switched yet keeps working.
  */
 export type AuthErrorCode =
   | "invalid_credentials"
@@ -30,10 +34,11 @@ export type AuthErrorCode =
   | "invitation_invalid"
   | "invitation_expired"
   | "token_invalid"
-  /** 0.29.1: a link that WAS valid and ran out (verification, reset) — keksdose's step-3
+  /** 0.30.0: a link that WAS valid and ran out (verification, reset) — keksdose's step-3
    *  refusals tell it from `token_invalid`, so a page can say "expired, ask for a new one". */
   | "token_expired"
-  | "account_inactive";
+  | "account_inactive"
+  | "session_ended";
 
 /**
  * 0.30.0: the coded refusals of user administration and the account's own settings
@@ -148,6 +153,7 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "token_invalid",
   "token_expired",
   "account_inactive",
+  "session_ended",
   "last_admin",
   "self_action",
   "other_companies",
@@ -270,18 +276,32 @@ function statusOf(value: unknown): number | undefined {
 }
 
 /**
+ * The HTTP status a thrown error carries, wherever the apps' HTTP clients put it —
+ * without depending on any of them:
+ *
+ *  1. `err.response.status` — axios (all three apps' clients);
+ *  2. `err.status` — ofetch's `FetchError`, the generated OpenAPI clients' `ApiError`, and
+ *     a `Response` thrown as it came;
+ *  3. `err.statusCode` — ofetch's alias, and Node-style errors.
+ *
+ * `undefined` when none is a whole number. Package-private — not re-exported from the
+ * barrel; {@link isRateLimited} and the session refresh's classifier read it (DUP-11,
+ * refactor audit 2026-10: the refresh carried its own copy of this probe).
+ */
+export function httpStatusOf(err: unknown): number | undefined {
+  if (!isBag(err)) return undefined;
+  const response = err.response;
+  return (isBag(response) ? statusOf(response.status) : undefined) ?? statusOf(err.status) ?? statusOf(err.statusCode);
+}
+
+/**
  * Whether `err` is a throttled request — HTTP `429 Too Many Requests` (0.30.0, from the
  * apps' 0.29 adoption: every app answered a throttled sign-in, sign-up or reset through
  * its own `describeError`, with three wordings of one sentence).
  *
  * A throttle carries no `code` in the contract — the STATUS is the answer, set by the
  * apps' limiters (server-kit's `AuthLimiters`, keksdose's per-IP limit) — so this reads
- * the status, wherever the apps' HTTP clients put it, without depending on any of them:
- *
- *  1. `err.response.status` — axios (all three apps' clients);
- *  2. `err.status` — ofetch's `FetchError`, the generated OpenAPI clients' `ApiError`, and
- *     a `Response` thrown as it came;
- *  3. `err.statusCode` — ofetch's alias, and Node-style errors.
+ * the status, wherever the apps' HTTP clients put it ({@link httpStatusOf}).
  *
  * There is no `rate_limited` code: keksdose answers its 429s uncoded, with a
  * `Retry-After` header, and the status is the one signal every limiter gives.
@@ -292,11 +312,7 @@ function statusOf(value: unknown): number | undefined {
  * {@link retryAfterSeconds}) or "… Wait a moment and try again." needs no app code.
  */
 export function isRateLimited(err: unknown): boolean {
-  if (!isBag(err)) return false;
-  const response = err.response;
-  const status =
-    (isBag(response) ? statusOf(response.status) : undefined) ?? statusOf(err.status) ?? statusOf(err.statusCode);
-  return status === 429;
+  return httpStatusOf(err) === 429;
 }
 
 /** A header's value from a `Headers` (fetch, ofetch's `response`), axios' `AxiosHeaders`

@@ -53,6 +53,16 @@ describe("FileDropzone structure", () => {
     fireEvent.click(root());
     expect(click).toHaveBeenCalledTimes(2);
   });
+
+  it("keeps its file input out of the tab order and the accessibility tree", () => {
+    // Round 0.34, the showcase's axe check: the sr-only input was a second, nameless
+    // tab stop beside Browse, which is the way in. useFilePicker and the attachment
+    // field's other modes had already taken theirs out.
+    const { container } = zone();
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    expect(input).toHaveAttribute("tabindex", "-1");
+    expect(input).toHaveAttribute("aria-hidden", "true");
+  });
 });
 
 describe("FileDropzone multiple mode", () => {

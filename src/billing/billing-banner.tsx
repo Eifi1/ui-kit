@@ -4,7 +4,8 @@ import { CreditCard, Hourglass, PencilOff } from "lucide-react";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import type { AlertSize, AlertTone } from "../components/alert-banner";
-import { Button, Spinner } from "../components/ui";
+import { Button } from "../components/button";
+import { Spinner } from "../components/spinner";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
 

@@ -3,6 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { NumberInput } from "./number-input";
 import { evaluateExpression, formatResult } from "../lib/calc";
 import { decimalMark } from "../lib/decimal-marks";
+import { roundHalfAway } from "../lib/round";
 import { useKitLocale } from "../i18n/kit-labels";
 
 type NumberInputProps = ComponentProps<typeof NumberInput>;
@@ -87,13 +88,14 @@ function parseLive(text: string): number | null | undefined {
   return evaluateExpression(t) ?? undefined;
 }
 
-/** `toFixed` rounding rather than `Math.round(n * 10^d)`, which turns 1.005 into
- *  1.00 by way of 100.49999999999999 — the same choice the lenkbank field made. */
+/** `n` at `digits` decimals, half away from zero as WRITTEN — lib/round's
+ *  `roundHalfAway`, shared with `roundToCurrency` and AmountInput (BUG-11 follow-up,
+ *  refactor audit 2026-10). The `toFixed` this was turned 1.005 into 1.00 (1.005 is
+ *  1.00499… in binary) and −0.004 into −0; neither `Math.round(n * 10^d)` nor `toFixed`
+ *  rounds the figure a person typed. `digits` is cut to a whole 0–100. */
 function roundTo(n: number, digits: number | undefined): number {
   if (digits === undefined) return n;
-  const d = Math.min(Math.max(Math.trunc(digits), 0), 100);
-  const rounded = Number(n.toFixed(d));
-  return Number.isFinite(rounded) ? rounded : n;
+  return roundHalfAway(n, Math.min(Math.max(Math.trunc(digits), 0), 100));
 }
 
 /**

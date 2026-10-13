@@ -10,11 +10,13 @@ import {
 import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Button } from "../components/ui";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Button } from "../components/button";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { sameRect } from "../hooks/use-anchored-rect";
 import { dirOf, horizontalStep } from "../lib/direction";
 import type { Direction } from "../lib/direction";
+import { DEFAULT_TOUR_LABELS } from "./tour-labels";
 
 /**
  * `start`/`end` follow the reading direction (`end` is the right side in LTR and the
@@ -60,14 +62,8 @@ export interface TourLabels {
   step: (current: number, total: number) => string;
 }
 
-export const DEFAULT_TOUR_LABELS: TourLabels = {
-  next: "Next",
-  back: "Back",
-  skip: "Skip",
-  done: "Done",
-  awaitClickHint: "Click the highlighted element to continue",
-  step: (c, t) => `${c} / ${t}`,
-};
+// Defined in ./tour-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_TOUR_LABELS };
 
 interface StartOptions {
   /** Stable id of the tour, surfaced as `activeId` so the app can mirror it to
@@ -146,7 +142,7 @@ export function TourProvider({
   labels,
 }: {
   children: ReactNode;
-  labels?: Partial<TourLabels>;
+  labels?: LabelOverride<TourLabels>;
 }) {
   // `labels` over the provider's `tour` over English. Resolved once here and handed
   // down: the step card is portalled, but context crosses portals anyway — this is
@@ -253,12 +249,6 @@ function queryVisibleTarget(selector: string): Element | null {
     if (isVisible(el)) return el;
   }
   return null;
-}
-
-function sameRect(a: Rect | null, b: Rect | null): boolean {
-  if (a === b) return true;
-  if (!a || !b) return false;
-  return a.top === b.top && a.left === b.left && a.width === b.width && a.height === b.height;
 }
 
 function rectOf(el: Element): Rect {
@@ -687,22 +677,22 @@ function TourCard({
       // trap silently does nothing.
       tabIndex={-1}
       style={style}
-      className="pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-xl outline-none transition-all duration-200 ease-out"
+      className="pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-subtle bg-surface p-4 shadow-xl outline-none transition-all duration-200 ease-out"
     >
-      <div className="text-sm font-semibold text-[var(--text-primary)]">{step.title}</div>
-      <div className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{step.body}</div>
+      <div className="text-sm font-semibold text-primary">{step.title}</div>
+      <div className="mt-1 text-sm leading-relaxed text-secondary">{step.body}</div>
       {step.action && <div className="mt-3">{step.action}</div>}
       <div className="mt-4 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={onSkip}
-            className="text-xs text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+            className="text-xs text-placeholder hover:text-secondary"
           >
             {labels.skip}
           </button>
           <div className="flex items-center gap-2">
-            <span className="whitespace-nowrap text-xs tabular-nums text-[var(--text-placeholder)]">
+            <span className="whitespace-nowrap text-xs tabular-nums text-placeholder">
               {labels.step(index + 1, total)}
             </span>
             {!isFirst && (
@@ -726,7 +716,7 @@ function TourCard({
           </div>
         </div>
         {step.awaitClick && step.target && rect && (
-          <div className="text-center text-xs italic text-[var(--text-placeholder)]">
+          <div className="text-center text-xs italic text-placeholder">
             {labels.awaitClickHint}
           </div>
         )}

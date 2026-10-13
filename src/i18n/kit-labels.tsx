@@ -1,4 +1,18 @@
 import { createContext, useContext, useMemo } from "react";
+import {
+  DEFAULT_APP_SHELL_LABELS,
+  DEFAULT_CALCULATOR_LABELS,
+  DEFAULT_COMBOBOX_LABELS,
+  DEFAULT_COMMON_LABELS,
+  DEFAULT_CURRENCY_LABELS,
+  DEFAULT_DATE_PICKER_LABELS,
+  DEFAULT_FILE_LABELS,
+  DEFAULT_MULTI_SELECT_LABELS,
+  DEFAULT_PICKER_SHEET_LABELS,
+  DEFAULT_SWIPEABLE_ROW_LABELS,
+  DEFAULT_TOP_BAR_LABELS,
+  formatFileSize,
+} from "./shared-labels";
 import type { AnchorHTMLAttributes, ReactElement, Ref } from "react";
 import type { ReactNode } from "react";
 import type { DataTableLabels } from "../components/data-table-labels";
@@ -7,7 +21,8 @@ import type { CalendarHeatmapLabels } from "../components/calendar-heatmap";
 import type { PopoverLabels } from "../components/popover";
 import type { ChipInputLabels } from "../components/chip";
 import type { FieldSyncLabels } from "../components/field-sync";
-import type { CharacterCountLabels, PasswordRevealLabels, TabsLabels } from "../components/ui";
+import type { CharacterCountLabels, PasswordRevealLabels } from "../components/field-base";
+import type { TabsLabels } from "../components/tabs";
 import type { WizardLabels } from "../wizard/types";
 import type { TourLabels } from "../tour/tour";
 import type { CommandPaletteLabels } from "../search/command-palette";
@@ -38,7 +53,7 @@ import type { FeedbackMenuLabels } from "../feedback/feedback-menu";
 import type { FeedbackContextLabels } from "../feedback/feedback-context";
 import type { FeedbackPageLabels } from "../feedback/feedback-table";
 import type { FeedbackDetailLabels } from "../feedback/feedback-row-detail";
-import type { AccountSettingsLabels } from "../components/account-settings-labels";
+import type { AccountSettingsLabels } from "../account/account-settings-labels";
 import type { ConfirmDialogLabels } from "../components/confirm-dialog";
 import type { FloatingPanelLabels } from "../components/floating-panel";
 import type { CopyButtonLabels } from "../components/copy-button";
@@ -101,8 +116,9 @@ import type { ColumnMapperLabels } from "../components/column-mapper";
  * EVERY string the kit renders, as one typed tree — and an optional provider that
  * hands it to every component at once.
  *
- * WHY THIS EXISTS. The kit ships no catalogue and resolves no strings, and that stays
- * true: the app supplies every word. What was wrong was HOW it had to supply them —
+ * WHY THIS EXISTS. The kit renders only labels; it ships seven catalogues (since 0.7.0,
+ * `@eifi1/ui-kit/i18n/<code>`); the app decides the language and hands the words in.
+ * What was wrong was HOW it had to hand them in —
  * one `labels` prop per component instance, under a different prop name per
  * component (`labels`, `calendarLabels`, `passwordLabels`, `clearLabel`,
  * `searchPlaceholder`, `ariaLabel` …). A translated app therefore rendered English
@@ -114,8 +130,9 @@ import type { ColumnMapperLabels } from "../components/column-mapper";
  *
  *     the component's own prop   >   <UiKitProvider labels>   >   English default
  *
- * A consumer writes its translation ONCE, as a `UiKitLabels` (or a partial of it),
- * mounts `<UiKitProvider labels={…} locale={…}>` at the root, and every kit component
+ * A consumer loads a shipped catalogue (`loadUiKitLabels(code)`) or writes its own
+ * `UiKitLabels` (or a partial of one), mounts `<UiKitProvider labels={…} locale={…}>`
+ * at the root, and every kit component
  * below speaks that language — including the ones nested inside other kit components
  * (the calendar inside the data table's date filter, the popover inside the date
  * picker), which no prop at the outer call site could reach before.
@@ -447,117 +464,23 @@ export type UiKitLabelOverrides = { [K in keyof UiKitLabels]?: LabelOverride<UiK
 
 /* ── English defaults for the namespaces defined here ────────────────────── */
 
-export const DEFAULT_COMMON_LABELS: CommonLabels = {
-  close: "Close",
-  clear: "Clear",
-  search: "Search",
-  done: "Done",
-  cancel: "Cancel",
-  save: "Save",
-  back: "Back",
-  next: "Next",
-  remove: "Remove",
-  loading: "Loading…",
-  noResults: "No results",
-  fieldValue: (field, value) => `${field}: ${value}`,
-  dismiss: "Dismiss",
-  opensInNewTab: "opens in a new tab",
+// They live in ./shared-labels, a module of words, as every component's defaults live in
+// its `*-labels.ts` (round 0.34). Imported and exported as this module's own, as each
+// component does with its defaults: the names, and where the README lists them, stay.
+export {
+  DEFAULT_APP_SHELL_LABELS,
+  DEFAULT_CALCULATOR_LABELS,
+  DEFAULT_COMBOBOX_LABELS,
+  DEFAULT_COMMON_LABELS,
+  DEFAULT_CURRENCY_LABELS,
+  DEFAULT_DATE_PICKER_LABELS,
+  DEFAULT_FILE_LABELS,
+  DEFAULT_MULTI_SELECT_LABELS,
+  DEFAULT_PICKER_SHEET_LABELS,
+  DEFAULT_SWIPEABLE_ROW_LABELS,
+  DEFAULT_TOP_BAR_LABELS,
+  formatFileSize,
 };
-
-export const DEFAULT_DATE_PICKER_LABELS: DatePickerLabels = {
-  panel: "Choose a date",
-  rangePanel: "Choose a date range",
-  clear: "Clear",
-  previousDay: "Previous day",
-  nextDay: "Next day",
-  today: "Today",
-  apply: "Apply",
-  cancel: "Cancel",
-  presets: "Quick ranges",
-};
-
-export const DEFAULT_COMBOBOX_LABELS: ComboboxLabels = {
-  search: "Search",
-  noResults: "No results",
-  clear: "Clear",
-  loading: "Loading…",
-  create: (query) => `Create “${query}”`,
-  selectedCount: (count) => `${count} selected`,
-  loadError: "Couldn’t load results",
-  resultCount: (count) => (count === 1 ? "1 result" : `${count} results`),
-  minChars: (count) =>
-    count === 1 ? "Type at least 1 character" : `Type at least ${count} characters`,
-};
-
-export const DEFAULT_MULTI_SELECT_LABELS: MultiSelectLabels = {
-  search: "Search",
-  selectAll: "Select all",
-  clear: "Clear",
-  all: "All",
-  selectedCount: (count) => String(count),
-};
-
-export const DEFAULT_CALCULATOR_LABELS: CalculatorLabels = {
-  open: "Open calculator",
-  panel: "Calculator",
-  calculation: "Calculation",
-  backspace: "Backspace",
-  clear: "Clear",
-  equals: "Equals",
-  done: "Done",
-  plus: "Plus",
-  minus: "Minus",
-  times: "Times",
-  divide: "Divide",
-  decimal: "Decimal point",
-};
-
-export const DEFAULT_CURRENCY_LABELS: CurrencyLabels = {
-  currency: "Currency",
-  search: "Search currency",
-};
-
-export const DEFAULT_APP_SHELL_LABELS: AppShellLabels = {
-  collapse: "Collapse sidebar",
-  expand: "Expand sidebar",
-  toggleGroup: (groupLabel) => `${groupLabel}: pages`,
-};
-
-export const DEFAULT_TOP_BAR_LABELS: TopBarLabels = {
-  theme: "Toggle theme",
-  palette: "Appearance preset",
-  language: "Language",
-  switchRole: "Switch role",
-  role: (value) => `Role: ${value}`,
-};
-
-export const DEFAULT_PICKER_SHEET_LABELS: PickerSheetLabels = { close: "Close" };
-
-export const DEFAULT_SWIPEABLE_ROW_LABELS: SwipeableRowLabels = { actions: "Row actions" };
-
-/** Formats with the locale the provider was given (see {@link useKitFileLabels}).
- *  This static default has no locale to hand and falls back to the runtime's. */
-export const DEFAULT_FILE_LABELS: FileLabels = {
-  size: (bytes) => formatFileSize(bytes),
-};
-
-/** "12 kB", "3.4 MB" — `Intl`'s unit formatting, so the digits, the decimal mark and
- *  the unit's spelling all follow `locale`. */
-export function formatFileSize(bytes: number, locale?: string): string {
-  const units = ["byte", "kilobyte", "megabyte", "gigabyte"] as const;
-  let value = bytes;
-  let i = 0;
-  while (value >= 1000 && i < units.length - 1) {
-    value /= 1000;
-    i += 1;
-  }
-  return new Intl.NumberFormat(locale, {
-    style: "unit",
-    unit: units[i],
-    unitDisplay: i === 0 ? "long" : "short",
-    maximumFractionDigits: value < 10 && i > 0 ? 1 : 0,
-  }).format(value);
-}
 
 /* ── The provider ────────────────────────────────────────────────────────── */
 
@@ -568,6 +491,7 @@ interface KitI18n {
   linkComponent?: KitLinkComponent;
   chartTooltipPlacement?: ChartTooltipPlacement;
   formatDate?: KitDateFormatter;
+  tableStorageKeyPrefix?: string;
 }
 
 /** What a {@link KitDateFormatter} is told about the date it is formatting. */
@@ -686,6 +610,22 @@ export interface UiKitProviderProps {
    * context value, so a new function every render re-renders every consumer.
    */
   formatDate?: KitDateFormatter;
+  /**
+   * The `localStorage` prefix every kit table below keeps its view under (sort, filters,
+   * page size, widths, hidden columns), when the table is not handed a
+   * `storageKeyPrefix` of its own — round 0.34 C5, KS U4. Left out, it is the kit's
+   * `"hbui-table:"`, as before.
+   *
+   * Set once here rather than per table because not every table is the app's to pass a
+   * prop to: `TranslationReviewPanel` wraps a `DataTable`, and until this the panel's
+   * view landed under the kit's prefix whatever the app's was — so an app that lists
+   * what it stores (a privacy page) had to list the kit's prefix as a key of its own.
+   * Resolves like every kit setting: the table's own prop > this > the default. The
+   * key is the prefix plus the table's `storageKey`, verbatim, so an app that wrapped
+   * `DataTable` to pass its prefix (Keksdose's `keksdose-table:`) keeps every stored
+   * view when it moves the prefix here.
+   */
+  tableStorageKeyPrefix?: string;
   children: ReactNode;
 }
 
@@ -704,6 +644,7 @@ export function UiKitProvider({
   linkComponent,
   chartTooltipPlacement,
   formatDate,
+  tableStorageKeyPrefix,
   children,
 }: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
@@ -715,8 +656,9 @@ export function UiKitProvider({
       linkComponent: linkComponent ?? outer.linkComponent,
       chartTooltipPlacement: chartTooltipPlacement ?? outer.chartTooltipPlacement,
       formatDate: formatDate ?? outer.formatDate,
+      tableStorageKeyPrefix: tableStorageKeyPrefix ?? outer.tableStorageKeyPrefix,
     }),
-    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement, formatDate],
+    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement, formatDate, tableStorageKeyPrefix],
   );
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
 }
@@ -770,12 +712,15 @@ export function useKitLabelOverrides<K extends keyof UiKitLabels>(
 
 /**
  * One namespace, resolved: `defaults`, then the provider, then the component's own
- * `prop`. Record-valued keys are merged key by key at each step.
+ * `prop`. Record-valued keys are merged key by key at each step — so `prop` is a
+ * {@link LabelOverride}, partial at every depth as the provider's labels are, and a
+ * component's `labels` prop, typed the same, is handed over without a cast (refactor
+ * audit 2026-10, API-9).
  */
 export function useKitLabels<K extends keyof UiKitLabels>(
   ns: K,
   defaults: UiKitLabels[K],
-  prop?: Partial<UiKitLabels[K]>,
+  prop?: LabelOverride<UiKitLabels[K]>,
 ): UiKitLabels[K] {
   const fromProvider = useKitLabelOverrides(ns);
   return useMemo(
@@ -813,6 +758,12 @@ export function useKitChartTooltipPlacement(): ChartTooltipPlacement | undefined
  *  `formatValue` / `formatOptions` wins over it. See {@link KitDateFormatter}. */
 export function useKitDateFormatter(): KitDateFormatter | undefined {
   return useContext(KitI18nContext).formatDate;
+}
+
+/** The nearest provider's `tableStorageKeyPrefix`, or `undefined` — a table's own
+ *  `storageKeyPrefix` wins over it, and the kit's `"hbui-table:"` comes after both. */
+export function useKitTableStorageKeyPrefix(): string | undefined {
+  return useContext(KitI18nContext).tableStorageKeyPrefix;
 }
 
 /** {@link DEFAULT_FILE_LABELS}, but formatting in the provider's locale. */

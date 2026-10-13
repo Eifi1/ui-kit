@@ -156,6 +156,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       reworkPlaceholder: "Min kell még finomítani? Új feltételek vagy irányváltás.",
       reworkUploadFailed: "A fájlt nem sikerült feltölteni. Az átdolgozási kérés nem ment el.",
       status: "Állapot",
+      note: "Megjegyzés",
     },
     accountSettings: {
       profile: {
@@ -177,6 +178,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         submit: "Jelszó módosítása",
         tooShort: "Az új jelszó túl rövid.",
         mismatch: "A jelszavak nem egyeznek.",
+        wrongPassword: "A jelszó helytelen.",
       },
       twoFactor: {
         status: "Kétlépcsős azonosítás",
@@ -236,8 +238,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       keyboardHint:
         "A nyílbillentyűk a cellák között mozognak. Gépeléssel felülírja a cellát, F2-vel szerkeszti, Escape-pel visszavonja a szerkesztést. Az Enter lefelé lép, és a végén új sort ad hozzá.",
       lineError: (line) => `A(z) ${line}. sor nem olvasható`,
-      points: (count) => `${count} pont`,
-      problems: (count) => `${count} cella nem szám`,
+      points: (count) => `${n(count)} pont`,
+      problems: (count) => `${n(count)} cella nem szám`,
     },
     pageContents: { title: "Ezen az oldalon" },
     common: {
@@ -263,6 +265,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       filter: "Szűrés",
       close: "Bezárás",
       selectRow: "Sor kijelölése",
+      rowDetails: "Részletek",
       autoSize: "Oszlopszélességek igazítása",
       loading: "Betöltés…",
       filters: "Szűrők",
@@ -305,6 +308,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Oszlopok (${n(visible)}/${n(total)})`,
+      filterColumn: (column, active) => (active ? `${column} szűrése (aktív)` : `${column} szűrése`),
       empty: "Nincsenek bejegyzések",
       actions: "Műveletek",
       edit: "Szerkesztés",
@@ -488,7 +492,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       rejectedPick: (count) =>
         count === 1
           ? "A fájl nem lett hozzáadva"
-          : `A(z) ${count} fájl közül egy sem lett hozzáadva`,
+          : `A(z) ${n(count)} fájl közül egy sem lett hozzáadva`,
       // Each message opens with the quoted name, so no a/az has to agree with it, and
       // keeps numerals and the formatted size bare (convention 3).
       rejectedType: (name) => `„${name}”: nem támogatott fájltípus`,
@@ -594,7 +598,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       strong: "Erős",
       announcement: (level) => `Jelszó erőssége: ${level}`,
       // Unformatted, as in the English default; no plural after a number.
-      ruleLength: (minLength) => `Legalább ${minLength} karakter`,
+      ruleLength: (minLength) => `Legalább ${n(minLength)} karakter`,
       ruleCase: "Kis- és nagybetűk",
       ruleDigit: "Számjegy",
       ruleSymbol: "Speciális karakter",
@@ -602,7 +606,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       met: "Teljesül:",
       notMet: "Nem teljesül:",
       tooLong: (maxBytes) =>
-        `Legfeljebb ${maxBytes} karakter (az ékezetes betűk és az emojik egynél többnek számítanak).`,
+        `Legfeljebb ${n(maxBytes)} karakter (az ékezetes betűk és az emojik egynél többnek számítanak).`,
     },
     seriesChart: {
       resetZoom: "Nagyítás visszaállítása",
@@ -1165,7 +1169,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         deactivate: "Inaktiválva",
         reactivate: "Újraaktiválva",
         role: "Szerepkör módosítva",
-        membership_remove: "Eltávolítva a cégből",
         password_change_require: "Új jelszó előírva",
         password_change_withdraw: "Jelszócsere-előírás visszavonva",
         mail_verification: "Megerősítő e-mail elküldve",
@@ -1179,6 +1182,47 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         deletion_cancel: "Törlés visszavonva",
         erase: "Fiók véglegesen törölve",
         plan: "Csomag módosítva",
+      },
+      // 0.34 (§11.5): whole phrases per noun, each noun with its own suffix ("a
+      // csapatból", "a cégből"). `team` is Kurvenschmiede's "csapat"; `company` keeps
+      // `actions.membership_remove`'s string.
+      groupActions: {
+        group: {
+          group_create: "Csoport létrehozva",
+          group_rename: "Csoport átnevezve",
+          group_delete: "Csoport törölve",
+          membership_add: "Hozzáadva a csoporthoz",
+          membership_role: "Szerepkör a csoportban módosítva",
+          membership_remove: "Eltávolítva a csoportból",
+          deleted: "egy törölt csoport",
+        },
+        team: {
+          group_create: "Csapat létrehozva",
+          group_rename: "Csapat átnevezve",
+          group_delete: "Csapat törölve",
+          membership_add: "Hozzáadva a csapathoz",
+          membership_role: "Szerepkör a csapatban módosítva",
+          membership_remove: "Eltávolítva a csapatból",
+          deleted: "egy törölt csapat",
+        },
+        company: {
+          group_create: "Cég létrehozva",
+          group_rename: "Cég átnevezve",
+          group_delete: "Cég törölve",
+          membership_add: "Hozzáadva a céghez",
+          membership_role: "Szerepkör a cégben módosítva",
+          membership_remove: "Eltávolítva a cégből",
+          deleted: "egy törölt cég",
+        },
+        budget: {
+          group_create: "Költségvetés létrehozva",
+          group_rename: "Költségvetés átnevezve",
+          group_delete: "Költségvetés törölve",
+          membership_add: "Hozzáadva a költségvetéshez",
+          membership_role: "Szerepkör a költségvetésben módosítva",
+          membership_remove: "Eltávolítva a költségvetésből",
+          deleted: "egy törölt költségvetés",
+        },
       },
     },
     transferOwnership: {

@@ -6,6 +6,7 @@ import { Lightbox } from "../lightbox";
 import type { ImageItem, LightboxProps } from "../lightbox";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
+import { viewportMatchMedia } from "../../test/viewport";
 
 const ITEMS: ImageItem[] = [
   { src: "/a.jpg", alt: "Kitchen", caption: "Sink leaks" },
@@ -228,12 +229,7 @@ describe("Lightbox", () => {
 describe("Lightbox's toolbar at Large (docs/text-size-harmonization.md §4, §10.8)", () => {
   /** A viewport `width` px wide, its width queries evaluated as a browser would. */
   function viewport(width: number) {
-    vi.stubGlobal("matchMedia", (query: string) => {
-      const min = /min-width:\s*(\d+)px/.exec(query);
-      const max = /width\s*<\s*(\d+)px/.exec(query);
-      const matches = min ? width >= Number(min[1]) : max ? width < Number(max[1]) : false;
-      return { matches, media: query, addEventListener() {}, removeEventListener() {} };
-    });
+    vi.stubGlobal("matchMedia", viewportMatchMedia(width));
   }
   const words = (name: string) =>
     screen.getByRole("button", { name }).querySelector("[data-slot=icon-button-label]");

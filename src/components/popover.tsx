@@ -1,14 +1,16 @@
-import { useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, RefObject } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref, RefObject } from "react";
 import { createPortal } from "react-dom";
-import { useAnchoredPanel } from "../hooks/use-anchored-panel";
-import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
+import { anchoredInline, useAnchoredPanel, viewportSize } from "../hooks/use-anchored-panel";
+import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { lengthPx, useRemPx, type RemLength } from "../hooks/use-breakpoint";
 import { cn } from "../lib/cn";
 import { dirOf } from "../lib/direction";
 import type { Direction } from "../lib/direction";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { DEFAULT_POPOVER_LABELS } from "./popover-labels";
+import { mergeRefs } from "./field-parts";
 
 /** The panel's accessible name. A `role="dialog"` with no name announces as "dialog"
  *  and nothing else, which is worse than the unlabelled div it replaced — so it is a
@@ -19,14 +21,8 @@ export interface PopoverLabels {
   panel: string;
 }
 
-// Exported since the kit grew one label tree (`UiKitLabels`, src/i18n): the complete
-// English reference a translator works from has to be able to name every namespace.
-export const DEFAULT_POPOVER_LABELS: PopoverLabels = {
-  // "Pop-up", not "Popover": the panel's accessible name is read to USERS, and
-  // "popover" is a developer's word for it (reported by keksdose, 0.5.0). Only a
-  // bare Popover falls back to this — the kit's own pickers name their panels.
-  panel: "Pop-up",
-};
+// Defined in ./popover-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_POPOVER_LABELS };
 
 /**
  * Exported, and extending the `<div>` attributes, so a consumer wrapping this — which is
@@ -48,13 +44,17 @@ export interface PopoverProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * 432 px at Extra large, more than a 360 px phone has.
    */
   width?: number | RemLength;
-  labels?: Partial<PopoverLabels>;
+  labels?: LabelOverride<PopoverLabels>;
   /** Id for the panel, so a trigger wearing `role="combobox"` can `aria-controls` it.
    *  Required by ARIA on that role, and the panel is rendered here rather than by the
    *  caller, so the id has to come in from outside. */
   panelId?: string;
   /** Extra classes for the PANEL. The trigger is the caller's own element. */
   className?: string;
+  /** The PANEL, while it is open — where the rest of the props go (0.34, API-2, refactor
+   *  audit 2026-10). Merged with the panel's own ref (focus trap, outside click), so
+   *  neither loses it. The trigger is the caller's own element, ref and all. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /** 288 px at Normal, in rem so it follows the text size (§3.2). */
@@ -111,10 +111,12 @@ export function Popover({
   style,
   "aria-label": ariaLabel,
   onKeyDown: onKeyDownProp,
+  ref,
   ...rest
 }: PopoverProps) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const setPanel = useMemo(() => mergeRefs(panelRef, ref), [ref]);
   const [open, setOpen] = useState(false);
   // The trigger's reading direction, read when it is pressed. The panel is portalled to
   // <body>, out of any `dir="rtl"` subtree the trigger sits in, so without carrying it
@@ -137,26 +139,27 @@ export function Popover({
   // of the screen (feedback #135). It re-measures on scroll/resize.
   const placement = useAnchoredPanel(triggerRef, open);
   const rect = placement.rect;
-  // In px for the arithmetic below, at the text size in force; capped at the viewport.
+  // In px for the arithmetic below, at the text size in force; capped at the glass — the
+  // root's client width, not `innerWidth`, which on a phone is the layout viewport grown
+  // by whatever overflows (live #381, Wave 2 DUP-7).
   const remPx = useRemPx();
-  const panelWidth = rect
-    ? Math.min(lengthPx(width, remPx), Math.max(0, window.innerWidth - 2 * EDGE))
-    : 0;
+  const glass = rect ? viewportSize().width : 0;
+  const panelWidth = rect ? Math.min(lengthPx(width, remPx), Math.max(0, glass - 2 * EDGE)) : 0;
   const pos = rect
     ? {
         // Flipped above, the panel hangs from its bottom edge, so one shorter than its
         // cap still meets the trigger (keksdose K1); the edge not in use is cleared.
         top: placement.above ? undefined : placement.top,
         bottom: placement.above ? placement.bottom : undefined,
-        left: Math.min(
-          Math.max(EDGE, dir === "rtl" ? rect.left : rect.right - panelWidth),
-          window.innerWidth - panelWidth - EDGE,
-        ),
+        left: anchoredInline(rect, panelWidth, { dir, align: "end", edge: EDGE, viewportWidth: glass }).left,
       }
     : null;
 
   useOutsideClick([triggerRef, panelRef], close, open);
-  useEscapeKey(close, open);
+  // A layer on the Escape stack while open (Wave 2, DUP-1): a list opened inside closes
+  // first, and the dialog this popover sits in only after it — the calculator on an
+  // amount field in a Modal is exactly that.
+  useDismissLayer(open, close);
 
   useFocusTrap(panelRef, {
     active: open && pos !== null,
@@ -174,18 +177,12 @@ export function Popover({
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // A caller's own handler first (0.32.2: RowActions stops Enter / Space at the panel);
-    // it used to be dropped, overwritten by this one.
-    onKeyDownProp?.(e);
-    if (e.key !== "Escape") return;
-    // `useEscapeKey` above listens on the document and still covers the case where
-    // focus somehow is not in here. This handler is for the case that focus IS, which
-    // is now the normal one — and it exists to STOP the key, because a popover opened
-    // from inside a `Modal` (the calculator on an amount field is exactly that) would
-    // otherwise have its Escape travel on up the React tree and close the dialog
-    // underneath as well. Closing twice is harmless — `close` is a state setter, not a
-    // caller's callback — so the two paths cannot double-fire anything.
-    e.stopPropagation();
-    close();
+    // it used to be dropped, overwritten by this one. A `preventDefault()` on Escape
+    // there keeps the popover open — the owner's claim, as on the dialogs.
+    runOwnKeyDown(e, onKeyDownProp);
+    // Focus is in here, the normal case: the key is handed to the top layer and STOPPED,
+    // so it does not travel on up the React tree to a dialog around the popover.
+    takeEscape(e);
   };
 
   return (
@@ -202,7 +199,7 @@ export function Popover({
             // a popover, and a caller reaching for a `data-tour` anchor must not be able
             // to remove one of them by accident.
             {...rest}
-            ref={panelRef}
+            ref={setPanel}
             role="dialog"
             id={panelId}
             // The caller's own `aria-label` wins over {@link PopoverLabels.panel}, which
@@ -228,7 +225,7 @@ export function Popover({
               maxHeight: placement.maxHeight,
             }}
             className={cn(
-              "z-50 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-3 shadow-lg outline-none",
+              "z-50 overflow-y-auto rounded-md border border-subtle bg-surface p-3 shadow-lg outline-none",
               className,
             )}
           >

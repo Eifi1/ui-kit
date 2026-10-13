@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { EmptyState } from "../ui";
+import { EmptyState } from "../empty-state";
 
 describe("EmptyState variant=inline (keksdose's hand-written muted lines)", () => {
   it("is one quiet row with no dashed box", () => {
@@ -37,22 +37,22 @@ describe("EmptyState tone (kastlan's error state and its no-defects note)", () =
     const { container } = render(
       <EmptyState tone="danger" icon={<svg />} title="Something went wrong" hint="Try again" />,
     );
-    expect(container.querySelector("[aria-hidden]")!.className).toContain("text-[var(--danger)]");
-    expect(screen.getByText("Something went wrong").className).toContain("text-[var(--danger)]");
-    expect(screen.getByText("Try again").className).not.toContain("--danger");
+    expect(container.querySelector("[aria-hidden]")!).toHaveClass("text-danger");
+    expect(screen.getByText("Something went wrong")).toHaveClass("text-danger");
+    expect(screen.getByText("Try again").className).not.toMatch(/-danger/); // `text-danger` or any `[var(--danger…)]`
   });
 
   it("colours icon and title for success, inline too", () => {
     const { container } = render(
       <EmptyState variant="inline" tone="success" icon={<svg />} title="No defects recorded" />,
     );
-    expect(container.querySelector("[aria-hidden]")!.className).toContain("text-[var(--success)]");
-    expect(screen.getByText("No defects recorded").className).toContain("text-[var(--success)]");
+    expect(container.querySelector("[aria-hidden]")!).toHaveClass("text-success");
+    expect(screen.getByText("No defects recorded")).toHaveClass("text-success");
   });
 
   it("stays muted without a tone", () => {
     render(<EmptyState title="Nothing here" />);
-    expect(screen.getByText("Nothing here").className).toContain("text-[var(--text-secondary)]");
+    expect(screen.getByText("Nothing here").className).toContain("text-secondary");
   });
 });
 

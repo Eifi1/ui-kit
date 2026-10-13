@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { MiniCalendar, MonthPicker, ToggleGroup } from "@eifi1/ui-kit";
 import { monthKey } from "@eifi1/ui-kit/dates";
-import { Example, Note, Row, Stage } from "../lib/section";
+import { Example, Note, Row, Stage, code } from "../lib/section";
 
 /**
  * 0.12 on the calendar pages: MiniCalendar's `showOutsideDays` (Calendars) and
  * MonthPicker's `variant="stepper"` (Month & time).
  */
 
-const READOUT = "mt-2 font-mono text-xs text-[var(--text-muted)]";
-const code = (s: string) => <code className="font-mono">{s}</code>;
+const READOUT = "mt-2 font-mono text-xs text-muted";
 
 export function OutsideDaysDemo() {
   const [day, setDay] = useState("2026-09-14");

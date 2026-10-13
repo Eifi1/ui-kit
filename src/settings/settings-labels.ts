@@ -1,4 +1,4 @@
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 
 /**
  * The `settings` namespace (docs/settings-harmonization.md §4.3): the settings page's
@@ -82,6 +82,6 @@ export const DEFAULT_SETTINGS_LABELS: SettingsLabels = {
  * page title "<group> · Settings · <app>" (settings contract §3.1), without restating
  * the namespace and its defaults (Kurvenschmiede's 0.31 adoption).
  */
-export function useSettingsLabels(labels?: Partial<SettingsLabels>): SettingsLabels {
+export function useSettingsLabels(labels?: LabelOverride<SettingsLabels>): SettingsLabels {
   return useKitLabels("settings", DEFAULT_SETTINGS_LABELS, labels);
 }

@@ -36,18 +36,18 @@ describe("StatTile", () => {
     expect(screen.getByText("Up 5")).toHaveClass("sr-only");
     expect(screen.getByText("vs last week")).toBeInTheDocument();
     expect(container.querySelector("svg[aria-hidden]")).not.toBeNull();
-    expect(screen.getByText("Up 5").parentElement!.className).toContain("--text-muted");
+    expect(screen.getByText("Up 5").parentElement!).toHaveClass("text-muted");
   });
 
   it("judges by goodDirection: a falling cost is good news", () => {
     render(<StatTile label="Cost" value={80} delta={-20} goodDirection="down" />);
     const spoken = screen.getByText("Down 20 (better)");
-    expect(spoken.parentElement!.className).toContain("--success");
+    expect(spoken.parentElement!).toHaveClass("text-success");
   });
 
   it("calls a rise bad when down is good", () => {
     render(<StatTile label="Errors" value={3} delta={2} goodDirection="down" />);
-    expect(screen.getByText("Up 2 (worse)").parentElement!.className).toContain("--danger");
+    expect(screen.getByText("Up 2 (worse)").parentElement!).toHaveClass("text-danger");
   });
 
   it("shows the figure at zero, like Delta (kastlan 48)", () => {
@@ -81,9 +81,9 @@ describe("StatTile", () => {
         ]}
       />,
     );
-    expect(screen.getByText("-50").className).toContain("--money-expense");
-    expect(screen.getByText("120").className).toContain("--money-income");
-    expect(screen.getByText("-30").className).toContain("--money-expense");
+    expect(screen.getByText("-50")).toHaveClass("text-money-expense");
+    expect(screen.getByText("120")).toHaveClass("text-money-income");
+    expect(screen.getByText("-30")).toHaveClass("text-money-expense");
     expect(screen.getByText("AUG").tagName).toBe("DT");
   });
 
@@ -192,7 +192,7 @@ describe("StatTile 0.8.0 (keksdose B22)", () => {
       />,
     );
     const tinted = screen.getByText("90");
-    expect(tinted.className).toContain("text-[var(--money-income)]");
+    expect(tinted).toHaveClass("text-money-income");
     const plain = screen.getByText("12");
     expect(plain.className).not.toMatch(/text-\[var/);
     expect(plain.className).not.toContain("opacity-75");

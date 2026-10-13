@@ -1,14 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { useBreakpoint } from "../hooks/use-breakpoint";
-import { OVERLAY_EXIT_MS, prefersReducedMotion } from "../hooks/use-close-transition";
-import { Button, IconButton } from "./ui";
+import { OVERLAY_EXIT_MS, skipsExitAnimation } from "../hooks/use-close-transition";
+import { Button } from "./button";
+import { IconButton } from "./icon-button";
+import { DEFAULT_BULK_ACTION_BAR_LABELS } from "./bulk-action-bar-labels";
 
 export interface BulkActionBarLabels {
   /** The count, shown in the bar, spoken by its live region and used as the toolbar's
@@ -21,11 +23,8 @@ export interface BulkActionBarLabels {
   cleared: string;
 }
 
-export const DEFAULT_BULK_ACTION_BAR_LABELS: BulkActionBarLabels = {
-  selected: (count) => `${count} selected`,
-  clear: "Clear selection",
-  cleared: "Selection cleared",
-};
+// Defined in ./bulk-action-bar-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_BULK_ACTION_BAR_LABELS };
 
 /**
  * `floating` — the phone's: fixed above `AppShell`'s bottom nav (`--app-nav-h`) and the
@@ -78,7 +77,7 @@ function useResolvedVariant(variant: BulkActionBarVariant | ResponsiveBulkAction
   return variant.base;
 }
 
-export interface BulkActionBarProps extends Omit<ComponentPropsWithoutRef<"div">, "role" | "children"> {
+export interface BulkActionBarProps extends Omit<ComponentPropsWithRef<"div">, "role" | "children"> {
   /** How many items are selected. The bar shows only while this is above zero —
    *  unless {@link open} says otherwise. */
   count: number;
@@ -124,7 +123,7 @@ export interface BulkActionBarProps extends Omit<ComponentPropsWithoutRef<"div">
    */
   panel?: ReactNode;
   /** Default: `bulkActionBar` from the {@link UiKitProvider}, else English. */
-  labels?: Partial<BulkActionBarLabels>;
+  labels?: LabelOverride<BulkActionBarLabels>;
 }
 
 /** Where the floating bar sits: clear of the phone nav and of the home indicator,
@@ -217,7 +216,7 @@ export function BulkActionBar({
       setShownCount(count);
       setLeaving(false);
     } else if (prev.shown) {
-      setLeaving(!prefersReducedMotion());
+      setLeaving(!skipsExitAnimation());
     }
   }
   useEffect(() => {
@@ -286,12 +285,12 @@ export function BulkActionBar({
   // one the surface wraps the row and the panel, so both share its tint and position.
   const surfaceClass = floating
     ? cn(
-        "fixed z-30 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+        "fixed z-30 rounded-2xl border border-subtle bg-surface shadow-lg",
         shown ? "animate-sheet" : "animate-sheet-out",
       )
     : cn(
         variant === "sticky" &&
-          "sticky top-0 z-20 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--brand)_8%,var(--bg-surface))] backdrop-blur",
+          "sticky top-0 z-20 border-b border-subtle bg-[color-mix(in_srgb,var(--brand)_8%,var(--bg-surface))] backdrop-blur",
         shown ? "animate-overlay" : "animate-overlay-out",
       );
   // `flex-wrap`: on a phone the count, three actions and a text "Clear selection" are
@@ -330,7 +329,7 @@ export function BulkActionBar({
           no room, so it was the item squeezed to nothing instead of a line breaking.
           Its own width is its basis now; `truncate` is left for a label too long for a
           line on its own. */}
-      <span className="min-w-0 flex-auto truncate text-sm font-medium text-[var(--text-primary)]">
+      <span className="min-w-0 flex-auto truncate text-sm font-medium text-primary">
         {labels.selected(shownCount)}
       </span>
       {/* `contents`, so the caller's controls are flex items of the bar itself. */}
@@ -354,7 +353,7 @@ export function BulkActionBar({
           <div
             data-bulk-action-bar-panel=""
             className={cn(
-              "border-t border-[var(--border)] px-3 py-3",
+              "border-t border-subtle px-3 py-3",
               floating && "max-h-[60dvh] overflow-y-auto",
             )}
           >

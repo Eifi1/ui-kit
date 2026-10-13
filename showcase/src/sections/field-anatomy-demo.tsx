@@ -62,7 +62,7 @@ function SheetStrip({ removeOn, wrap }: { removeOn?: "every" | "active"; wrap?: 
         }}
         addLabel="Add loop"
       />
-      <p className="text-sm text-[var(--text-secondary)]">
+      <p className="text-sm text-secondary">
         {sheets.length === 0 ? "No loops." : `Sheet ${active} km/h is open.`}
       </p>
     </div>
@@ -80,7 +80,7 @@ function RowActions() {
           <button
             type="button"
             onClick={() => setLog(`Opened ${name}`)}
-            className="flex h-10 w-full items-center rounded-md border border-[var(--border)] ps-3 pe-20 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]"
+            className="flex h-10 w-full items-center rounded-md border border-subtle ps-3 pe-20 text-start text-sm text-primary hover:bg-surface-2"
           >
             {name}
           </button>
@@ -104,7 +104,7 @@ function RowActions() {
           </div>
         </div>
       ))}
-      <p className="text-xs text-[var(--text-muted)]" aria-live="polite">
+      <p className="text-xs text-muted" aria-live="polite">
         {log}
       </p>
     </div>
@@ -173,7 +173,7 @@ export function FieldAnatomyDemo() {
 
       <Example label="Search as a header" hint='variant="inline" inherits the header’s type size'>
         <Stage>
-          <div className="flex items-center gap-2 border-b border-[var(--border)] pb-2 text-base">
+          <div className="flex items-center gap-2 border-b border-subtle pb-2 text-base">
             <SearchField
               variant="inline"
               value={headerQuery}

@@ -1,6 +1,5 @@
-import { DEFAULT_ATTACHMENT_ACCEPT } from "./feedback-attachment";
-import { FEEDBACK_CATEGORY_ORDER } from "./feedback-inbox";
-import type { FeedbackCategory, FeedbackStatus } from "./feedback-inbox";
+import { FEEDBACK_CATEGORY_ORDER } from "./feedback-vocabulary";
+import type { FeedbackCategory, FeedbackStatus } from "./feedback-vocabulary";
 
 /**
  * One feedback report as the three apps send it, and the facts the kit reads off it.
@@ -115,13 +114,28 @@ export interface FeedbackRecord {
 
 /* ── Constants (§3.4, §3.5, §4.3) ─────────────────────────────────────────── */
 
+// The attachment field's three defaults live here, not in feedback-attachment.tsx
+// (which re-exports them), since 0.34 (MOD-1, refactor audit 2026-10). This module is in
+// every app's top bar (the menu's categories), and FEEDBACK_ATTACHMENT_ACCEPT below is
+// built on DEFAULT_ATTACHMENT_ACCEPT: imported from the field's module, it tied the top
+// bar to the field, the lazily loaded dialog's heaviest part, for three values.
+
+/** The image types `FeedbackAttachmentField` takes when `accept` is not given. */
+export const DEFAULT_ATTACHMENT_ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+/** 10 MB, the contract's size limit for one file (§3.5). */
+export const DEFAULT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+/** How many files `<FeedbackAttachmentField multiple>` takes when `max` is not given
+ *  (0.15.5). Five photos of one problem is already a lot to look through; a report
+ *  that needs more is a conversation, which the thread is for. */
+export const DEFAULT_MAX_ATTACHMENTS = 5;
+
 /**
  * What a report may carry (§3.5, keksdose `upload_guards.py:197` and its
  * `attachment-options.ts`): the kit's four image types plus a PDF and a plain-text log
  * (keksdose feedback #87). SVG and HTML stay out — both are script-carrying documents in
  * an image's clothing. For `FeedbackAttachmentField` / `FeedbackDialog`'s `accept`, with
- * `DEFAULT_MAX_ATTACHMENTS` (5) and `DEFAULT_MAX_ATTACHMENT_BYTES` (10 MB) from
- * feedback-attachment.tsx, which already are the contract's limits.
+ * `DEFAULT_MAX_ATTACHMENTS` (5) and `DEFAULT_MAX_ATTACHMENT_BYTES` (10 MB) above, which
+ * already are the contract's limits.
  *
  * A plain array (not frozen) because `accept` takes `string[]`, as
  * `DEFAULT_ATTACHMENT_ACCEPT` does — copy it before changing it.
@@ -145,8 +159,8 @@ export const FEEDBACK_PICKABLE_CATEGORIES: readonly FeedbackCategory[] = Object.
 /**
  * The statuses a report can be sent back for **rework** from (§3.4): everything the team
  * has answered — `IN_EVALUATION`, `NEEDS_LIVE_TEST`, `POSTPONED`, `DONE`, `WONT_DO`. On
- * these the server reopens the row when the body grows by a rework block; on `OPEN` /
- * `IN_PROGRESS` there is nothing to send back yet.
+ * these the server reopens the row when the body grows by a rework block; on `OPEN`,
+ * `READY` and `IN_PROGRESS` there is nothing to send back yet.
  */
 export const FEEDBACK_REWORKABLE_STATUSES: readonly FeedbackStatus[] = Object.freeze([
   "IN_EVALUATION",

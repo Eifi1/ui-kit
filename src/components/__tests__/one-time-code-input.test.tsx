@@ -3,7 +3,7 @@ import { createEvent, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { OneTimeCodeInput } from "../one-time-code-input";
 import type { OneTimeCodeInputProps } from "../one-time-code-input";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 
 /** A controlled field, as an app holds it; `onChange` / `onComplete` spies optional. */
 function Harness({
@@ -207,7 +207,7 @@ describe("OneTimeCodeInput", () => {
       const input = screen.getByLabelText("Verification code");
       expect(input).toHaveAttribute("readonly");
       // FIELD_WRITABLE_LOOK cancels FIELD_BASE's read-only grey.
-      expect(input.className).toContain("[&[readonly]]:bg-[var(--bg-surface)]");
+      expect(input).toHaveClass("[&[readonly]]:bg-surface");
       await userEvent.click(input);
       expect(input).not.toHaveAttribute("readonly");
       await userEvent.type(input, "123");
@@ -227,7 +227,7 @@ describe("OneTimeCodeInput", () => {
       const locked = screen.getByLabelText("Locked");
       fireEvent.focus(locked);
       expect(locked).toHaveAttribute("readonly");
-      expect(locked.className).not.toContain("[&[readonly]]:bg-[var(--bg-surface)]");
+      expect(locked).not.toHaveClass("[&[readonly]]:bg-surface");
     });
 
     it("lets a read-only field ignore a pasted code", () => {

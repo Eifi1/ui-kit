@@ -5,9 +5,10 @@ import { AuthedImage } from "../components/authed-image";
 import { CopyButton } from "../components/copy-button";
 import { TextLink } from "../components/text-link";
 import { toast } from "../components/toast";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { filenameFromDisposition, saveBlob } from "../lib/download";
 import { formatDate } from "../lib/format";
 import { DEFAULT_MAX_ATTACHMENT_BYTES } from "./feedback-attachment";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog";
@@ -38,6 +39,7 @@ import type { FeedbackContext, FeedbackRecord } from "./feedback-record";
 import { useFeedbackStatusUndo } from "./feedback-status-undo";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "./feedback-row-detail-labels";
 
 /**
  * One report, opened — the panel a feedback table unfolds under its row (§4.4 of
@@ -144,36 +146,17 @@ export interface FeedbackDetailLabels {
   reworkUploadFailed: string;
   /** Section 6's heading. de-CH: "Status" */
   status: string;
+  /** A `FeedbackNoteEditor`'s box, named when no `placeholder` line names it and the
+   *  caller gives no `label` — without it the box was read out as just "edit text"
+   *  (round 0.34, the showcase's axe check). de-CH: "Notiz" */
+  note: string;
 }
 
-export const DEFAULT_FEEDBACK_DETAIL_LABELS: FeedbackDetailLabels = {
-  subject: "Subject",
-  body: "Description",
-  edit: "Edit",
-  editDescription: "Edit description",
-  save: "Save",
-  cancel: "Cancel",
-  url: "URL",
-  copyUrl: "Copy URL",
-  attachment: "Attachment",
-  download: (name) => `Download ${name}`,
-  downloadFailed: "The attachment could not be downloaded.",
-  outcome: "Outcome",
-  resolvedAt: (date) => `Resolved: ${date}`,
-  outcomeAdd: "Add outcome",
-  outcomeUpdate: "Update",
-  outcomePlaceholder: "What was done, decided, or why this won't be addressed.",
-  rework: "Rework",
-  openPage: "Open page",
-  reworkTitle: "Send for rework",
-  reworkSend: "Send rework",
-  reworkPlaceholder: "What still needs refinement? Any new constraints or change of direction.",
-  reworkUploadFailed: "The file could not be uploaded. The rework was not sent.",
-  status: "Status",
-};
+// Defined in ./feedback-row-detail-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_DETAIL_LABELS };
 
 /** `feedbackDetail` resolved: English, then `<UiKitProvider labels>`, then `labels`. */
-export function useFeedbackDetailLabels(labels?: Partial<FeedbackDetailLabels>): FeedbackDetailLabels {
+export function useFeedbackDetailLabels(labels?: LabelOverride<FeedbackDetailLabels>): FeedbackDetailLabels {
   return useKitLabels("feedbackDetail", DEFAULT_FEEDBACK_DETAIL_LABELS, labels);
 }
 
@@ -269,7 +252,12 @@ const plainFetch: AuthedFetcher = (url, { signal }) => fetch(url, { signal, cred
  * A PDF or a text log (keksdose `FeedbackFileDownload`, dev #578): the bytes sit behind
  * an authenticated route that serves them as `attachment`, never inline (§3.5), so a
  * plain link would be a 401 the moment it was opened. Fetched through the app's
- * fetcher and handed to a synthetic anchor; a failure says so in a toast.
+ * fetcher and saved with {@link saveBlob}; a failure says so in a toast.
+ *
+ * Saved under the name the server gives it when the fetcher answers with a `Response`
+ * (server-kit's `content_disposition` puts the uploader's own name in `filename*`), and
+ * under the URL's last segment — the name on the button — when it answers with a bare
+ * `Blob`, which has no headers to ask.
  */
 function AttachmentDownload({
   url,
@@ -287,14 +275,13 @@ function AttachmentDownload({
     event.stopPropagation();
     setBusy(true);
     try {
-      const blob = await toBlob(await fetcher(url, { signal: new AbortController().signal }));
-      const href = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = href;
-      anchor.download = name;
-      anchor.click();
-      // After the click has handed the URL to the download, not before.
-      setTimeout(() => URL.revokeObjectURL(href), 0);
+      const answer = await fetcher(url, { signal: new AbortController().signal });
+      const blob = await toBlob(answer);
+      const saveAs =
+        typeof Response !== "undefined" && answer instanceof Response
+          ? filenameFromDisposition(answer.headers.get("Content-Disposition"), name)
+          : name;
+      saveBlob(blob, saveAs);
     } catch {
       toast.error(labels.downloadFailed);
     } finally {
@@ -312,7 +299,7 @@ function AttachmentDownload({
       className="max-w-full"
     >
       <FileText className="size-3.5 shrink-0" aria-hidden />
-      <span className="min-w-0 max-w-[14rem] truncate">{name}</span>
+      <span className="min-w-0 max-w-[14rem] truncate-until-large">{name}</span>
       <Download className="size-3.5 shrink-0" aria-hidden />
     </Button>
   );
@@ -412,7 +399,7 @@ export interface FeedbackReworkSectionProps {
   attachment?: Partial<FeedbackNoteAttachment>;
   /** The send COMMITS — see `FeedbackNoteEditor`'s `commit`. */
   commit?: CommitScope;
-  labels?: Partial<FeedbackDetailLabels>;
+  labels?: LabelOverride<FeedbackDetailLabels>;
 }
 
 /**
@@ -577,7 +564,7 @@ export interface FeedbackRowDetailProps {
    * beside the detail.
    */
   showSubject?: boolean;
-  labels?: Partial<FeedbackDetailLabels>;
+  labels?: LabelOverride<FeedbackDetailLabels>;
   className?: string;
 }
 
@@ -672,7 +659,7 @@ export function FeedbackRowDetail({
         <FeedbackDetailSection title={labels.subject}>
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" data-feedback-subject="">
             <FeedbackCategoryBadge category={row.category} />
-            <span className="min-w-0 font-medium text-[var(--text-primary)] [overflow-wrap:anywhere]">
+            <span className="min-w-0 font-medium text-primary [overflow-wrap:anywhere]">
               {row.title}
             </span>
           </p>
@@ -743,7 +730,7 @@ export function FeedbackRowDetail({
                   // AuthedImage default) rather than a grey tile per failure.
                   errorFallback={null}
                   wrapperClassName="inline-block max-w-full"
-                  className="max-h-64 max-w-full rounded border border-[var(--border)]"
+                  className="max-h-64 max-w-full rounded border border-subtle"
                 />
               ) : (
                 <AttachmentDownload key={url} url={url} fetcher={fetchFile} labels={labels} />
@@ -758,7 +745,7 @@ export function FeedbackRowDetail({
         // When the row entered DONE / WONT_DO (keksdose feedback #96).
         action={
           row.resolved_at ? (
-            <span className="text-xs text-[var(--text-muted)]">{labels.resolvedAt(dateText(row.resolved_at))}</span>
+            <span className="text-xs text-muted">{labels.resolvedAt(dateText(row.resolved_at))}</span>
           ) : undefined
         }
       >

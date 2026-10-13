@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent as ReactKeyboardEvent, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
-import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
+import { mergeRefs } from "./field-parts";
+import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
+import { anchoredInline } from "../hooks/use-anchored-panel";
+import { dirOf } from "../lib/direction";
 
 /**
  * Exported and `<div>`-shaped: the top bar composes several of these side by side, and
@@ -19,20 +22,25 @@ export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "c
   /**
    * Which edge of the trigger the panel lines up with. `start`/`end` follow the
    * reading direction (`end` is the right edge in LTR, the left in RTL); `left`/`right`
-   * are physical and kept for existing callers. Default `end` — the same right-aligned
-   * panel as before in LTR, mirrored in RTL.
+   * are physical and deprecated ({@link PhysicalAlign}). Default `end` — the same
+   * right-aligned panel as before in LTR, mirrored in RTL.
    */
-  align?: "start" | "end" | "left" | "right";
+  align?: "start" | "end" | PhysicalAlign;
   panelClassName?: string;
   /** Extra classes for the WRAPPER (the panel has {@link panelClassName}). */
   className?: string;
-  /**
-   * @deprecated Use the DOM spelling `aria-label`, which names the `role="menu"` panel. Kept working because keksdose, kastlan and lenkbank all pass
-   * this today and a rename to save one line of resolution is not a patch release; it
-   * loses to `aria-label` wherever both are given. Removal is a later minor.
-   */
-  ariaLabel?: string;
+  /** The WRAPPER, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
+   *  merged with its own ref, which the outside click and the hover are measured on. */
+  ref?: Ref<HTMLDivElement>;
 }
+
+/**
+ * @deprecated 0.34 — `"start"` / `"end"`, which follow the reading direction: `"right"`
+ * is `"end"` in a left-to-right page, the default; removed in 0.35 (refactor audit
+ * 2026-10, API-6e). The physical edges HoverMenu's `align` — and TopBarActionMenu's and
+ * FeedbackMenu's, which hand it on — still take.
+ */
+type PhysicalAlign = "left" | "right";
 
 // Hovering waits briefly before opening so sweeping the cursor across a row of
 // triggers doesn't flash menus; closing waits so the cursor can travel from
@@ -89,11 +97,12 @@ export function HoverMenu({
   align = "end",
   panelClassName,
   className,
-  ariaLabel,
-  "aria-label": ariaLabelAttr,
+  "aria-label": ariaLabel,
+  ref,
   ...rest
 }: HoverMenuProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const setWrapper = useMemo(() => mergeRefs(wrapperRef, ref), [ref]);
   const [phase, setPhase] = useState<Phase>("closed");
   const open = phase === "open" || phase === "closing";
 
@@ -174,14 +183,16 @@ export function HoverMenu({
     ) ?? null;
   const items = () => (menuRef.current ? applyMenuSemantics(menuRef.current) : []);
 
-  // Escape closes, from anywhere — it did nothing at all before. Focus goes back to the
-  // trigger only when it was inside the menu: a panel opened by hover while the user is
-  // typing elsewhere must not yank the caret over here on the way out.
-  useEscapeKey(() => {
+  // Escape closes, from anywhere — it did nothing at all before — as a layer on the kit's
+  // Escape stack, so inside a dialog it closes the menu and not the dialog (Wave 2,
+  // DUP-1). Focus goes back to the trigger only when it was inside the menu: a panel
+  // opened by hover while the user is typing elsewhere must not yank the caret over
+  // here on the way out.
+  useDismissLayer(open, () => {
     const hadFocus = wrapperRef.current?.contains(document.activeElement) ?? false;
     close();
     if (hadFocus) triggerEl()?.focus();
-  }, open);
+  });
 
   // Upgrade the markup every render while open (the caller's rows can change), then
   // honour a pending keyboard open.
@@ -248,8 +259,11 @@ export function HoverMenu({
   // Keep the panel inside the viewport (feedback #85): a wide panel anchored to a
   // trigger near a screen edge would otherwise spill off it (on mobile the guided-
   // tours menu ran off the left). Once open, measure and translate it horizontally
-  // just enough to sit within an 8px margin. Recomputed on each open; `shiftX` is
-  // subtracted first so the measurement is against the natural position.
+  // just enough to sit within an 8px margin of the GLASS — `anchoredInline` against
+  // the panel's own natural box, as every anchored panel clamps (Wave 2, DUP-7; it
+  // measured against `innerWidth`, which on a phone is the grown layout viewport).
+  // Recomputed on each open; `shiftX` is subtracted first so the measurement is
+  // against the natural position.
   const panelRef = useRef<HTMLDivElement>(null);
   const [shiftX, setShiftX] = useState(0);
   // Back to 0 on close, adjusted while rendering against the previous `open`.
@@ -264,13 +278,9 @@ export function HoverMenu({
     if (!el) return;
     const rect = el.getBoundingClientRect();
     if (rect.width === 0) return; // unmeasured (e.g. jsdom) — leave as-is
-    const margin = 8;
-    const naturalLeft = rect.left - shiftX;
-    const naturalRight = rect.right - shiftX;
-    let next = 0;
-    if (naturalRight > window.innerWidth - margin) next = window.innerWidth - margin - naturalRight;
-    if (naturalLeft + next < margin) next = margin - naturalLeft;
-    setShiftX(next);
+    const natural = { left: rect.left - shiftX, right: rect.right - shiftX };
+    const { left } = anchoredInline(natural, rect.width, { dir: dirOf(el), align: "left" });
+    setShiftX(left - natural.left);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute only on open/close
   }, [open]);
 
@@ -283,12 +293,15 @@ export function HoverMenu({
       // `...rest` first: the hover handlers below are the whole component, and a caller
       // passing one of its own must not silently replace them.
       {...rest}
-      ref={wrapperRef}
+      ref={setWrapper}
       className={cn("relative", className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onKeyDown={(e) => {
-        rest.onKeyDown?.(e);
+        runOwnKeyDown(e, rest.onKeyDown);
+        // Focus on the trigger or in the menu: the key stops here, so a panel around
+        // the menu does not close with it.
+        if (open) takeEscape(e);
         onKeyDown(e);
       }}
     >
@@ -306,12 +319,10 @@ export function HoverMenu({
             ref={menuRef}
             role="menu"
             // On the element with the role. It used to sit on the role-less wrapper,
-            // where no screen reader reads a name. The DOM spelling wins;
-            // {@link HoverMenuProps.ariaLabel} is the deprecated alias three apps still
-            // pass, so it stays as the fallback rather than as the answer.
-            aria-label={ariaLabelAttr ?? ariaLabel}
+            // where no screen reader reads a name.
+            aria-label={ariaLabel}
             className={cn(
-              "min-w-44 max-w-[calc(100vw-1rem)] rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+              "min-w-44 max-w-[calc(100vw-1rem)] rounded-md border border-subtle bg-surface shadow-lg",
               panelClassName,
             )}
           >

@@ -1,4 +1,4 @@
-import { forwardRef, useId, useState } from "react";
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, Gauge } from "lucide-react";
 
@@ -10,7 +10,7 @@ import { ChoiceCard } from "../components/choice-card";
 import type { ChoiceCardProps } from "../components/choice-card";
 import { Chip } from "../components/chip";
 import { ToggleGroup } from "../components/toggle-group";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
 import { BILLING_INTERVALS, billingCurrencyFor, formatPlanPrice, planPrice } from "./plan-price";
@@ -100,8 +100,8 @@ function SpanList({ name, items, icon }: { name: string; items: ReactNode[]; ico
   return (
     <span role="list" aria-label={name} className="block space-y-1">
       {items.map((item, i) => (
-        <span role="listitem" key={i} className="flex items-start gap-1.5 text-[var(--text-secondary)]">
-          <span aria-hidden className="mt-[0.0625rem] flex shrink-0 text-[var(--text-muted)] [&_svg]:size-3.5">
+        <span role="listitem" key={i} className="flex items-start gap-1.5 text-secondary">
+          <span aria-hidden className="mt-[0.0625rem] flex shrink-0 text-muted [&_svg]:size-3.5">
             {icon}
           </span>
           <span className="min-w-0">
@@ -125,22 +125,22 @@ function SpanList({ name, items, icon }: { name: string; items: ReactNode[]; ico
  * and owns the choice. Everything else a `ChoiceCard` takes goes to it — `checked`,
  * `onCheckedChange`, `name`, `className`. Carries `data-plan` and `data-relation`.
  */
-export const PlanCard = forwardRef<HTMLInputElement, PlanCardProps>(function PlanCard(
-  {
-    plan,
-    relation,
-    pricePreview,
-    currency,
-    interval,
-    dimensionLabels,
-    formatLimit,
-    locale: localeProp,
-    labels: labelsProp,
-    disabled,
-    ...rest
-  },
+export function PlanCard({
+  // The radio `<input>` (ChoiceCard's): a React 19 ref prop since 0.34 (MOD-4, refactor
+  // audit 2026-10), where this was `forwardRef`.
   ref,
-) {
+  plan,
+  relation,
+  pricePreview,
+  currency,
+  interval,
+  dimensionLabels,
+  formatLimit,
+  locale: localeProp,
+  labels: labelsProp,
+  disabled,
+  ...rest
+}: PlanCardProps) {
   const labels = useBillingLabels(labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const locale = useKitLocale(localeProp);
@@ -170,8 +170,8 @@ export const PlanCard = forwardRef<HTMLInputElement, PlanCardProps>(function Pla
           className={cn(
             "tabular-nums",
             price.kind === "not-offered"
-              ? "text-xs text-[var(--text-muted)]"
-              : "text-lg font-semibold leading-tight text-[var(--text-primary)]",
+              ? "text-xs text-muted"
+              : "text-lg font-semibold leading-tight text-primary",
           )}
         >
           {figure}
@@ -179,15 +179,15 @@ export const PlanCard = forwardRef<HTMLInputElement, PlanCardProps>(function Pla
         {priced && (
           <>
             {" "}
-            <span className="text-xs text-[var(--text-secondary)]">
+            <span className="text-xs text-secondary">
               {interval === "year" ? labels.perYear : labels.perMonth}
             </span>{" "}
-            <span className="block text-xs text-[var(--text-muted)]">{labels.vatIncluded}</span>
+            <span className="block text-xs text-muted">{labels.vatIncluded}</span>
           </>
         )}{" "}
       </span>
       {plan.description !== undefined && plan.description !== null && (
-        <span className="block text-[var(--text-secondary)]">{plan.description} </span>
+        <span className="block text-secondary">{plan.description} </span>
       )}
       <SpanList name={labels.limits} items={limitLines} icon={<Gauge />} />
       <SpanList name={labels.features} items={[...(plan.features ?? [])]} icon={<Check />} />
@@ -219,8 +219,7 @@ export const PlanCard = forwardRef<HTMLInputElement, PlanCardProps>(function Pla
       description={body}
     />
   );
-});
-PlanCard.displayName = "PlanCard";
+}
 
 /** What {@link PlanPickerProps.onChoose} is handed: everything `POST /billing/checkout`
  *  takes (§4). */
@@ -416,7 +415,7 @@ export function PlanPicker({
         aria-label={legend === undefined ? labels.plans : undefined}
       >
         {legend !== undefined && (
-          <legend id={legendId} className="mb-2 text-sm font-medium text-[var(--text-primary)]">
+          <legend id={legendId} className="mb-2 text-sm font-medium text-primary">
             {legend}
           </legend>
         )}

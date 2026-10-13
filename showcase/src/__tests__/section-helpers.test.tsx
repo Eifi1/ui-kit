@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { ConstList, Example, Note, OutTable } from "../lib/section";
+import { ConstList, Example, Note, OutTable, StateLine, beat, code } from "../lib/section";
 
 /**
  * The shared specimen helpers. What is pinned here is the markup the phone layout
@@ -64,5 +64,39 @@ describe("inline code in plain strings", () => {
     expect([...container.querySelectorAll("code")].map((c) => c.textContent)).toEqual(["useWizard", "?step=N"]);
     const { container: stray } = render(<Note>{"one ` backtick"}</Note>);
     expect(stray.textContent).toBe("one ` backtick");
+  });
+});
+
+// The helpers the section files used to copy (refactor audit 2026-10, DOC-8).
+describe("the demos' shared helpers", () => {
+  it("writes code() as the same left-to-right span a backticked hint becomes", () => {
+    const { container } = render(<p>{code("onChange")}</p>);
+    const span = container.querySelector("code")!;
+    expect(span.textContent).toBe("onChange");
+    expect(span.getAttribute("dir")).toBe("ltr");
+  });
+
+  it("prints a StateLine's label before the value, and only when there is one", () => {
+    const { container } = render(
+      <>
+        <StateLine label="value">2700</StateLine>
+        <StateLine>{"{ hours: 9 }"}</StateLine>
+      </>,
+    );
+    expect([...container.querySelectorAll("p")].map((p) => p.textContent)).toEqual(["value = 2700", "{ hours: 9 }"]);
+  });
+
+  it("settles beat() after the given time, not before", async () => {
+    vi.useFakeTimers();
+    try {
+      let settled = false;
+      void beat(600).then(() => (settled = true));
+      await vi.advanceTimersByTimeAsync(599);
+      expect(settled).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(settled).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

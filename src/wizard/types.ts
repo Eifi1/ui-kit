@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { DEFAULT_WIZARD_LABELS } from "./wizard-labels";
 
 export type FieldErrors = Record<string, string>;
 
@@ -252,29 +253,13 @@ export interface WizardLabels {
   done?: string;
 }
 
-/** Typed with the two optional keys made required, so code reading the defaults
- *  directly (the fallback in `useWizard`) needs no `!`. */
-export const DEFAULT_WIZARD_LABELS: WizardLabels &
-  Required<Pick<WizardLabels, "missingRequired" | "genericError" | "done">> = {
-  cancel: "Cancel",
-  back: "Back",
-  next: "Next",
-  skip: "Skip",
-  finish: "Finish",
-  submitting: "Creating…",
-  steps: "Steps",
-  step: (current, total) => `Step ${current} of ${total}`,
-  cancelTitle: "Discard this form?",
-  confirmCancel: "Your entries will be lost.",
-  cancelConfirmLabel: "Discard",
-  cancelDismissLabel: "Keep editing",
-  reviewTitle: "Review",
-  edit: "Edit",
-  missingRequired: "Please fill in all required fields.",
-  genericError: "An error occurred",
-  done: "Done",
-};
+// The English words live in ./wizard-labels, a module of words (round 0.34).
+export { DEFAULT_WIZARD_LABELS };
 
+/** @deprecated 0.34 — `useKitLabels("wizard", DEFAULT_WIZARD_LABELS, labels)`, which the
+ *  provider reaches too, or StepperNav's and WizardSummary's own `labels`; removed in 0.35
+ *  (refactor audit 2026-10, API-6a). A merge from before the provider, which no kit
+ *  component calls. */
 export function resolveWizardLabels(labels?: Partial<WizardLabels>): WizardLabels {
   return labels ? { ...DEFAULT_WIZARD_LABELS, ...labels } : DEFAULT_WIZARD_LABELS;
 }

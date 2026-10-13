@@ -1,13 +1,15 @@
 import { useContext, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { usePromisePending } from "../components/danger-confirm";
 import { DialogFrame } from "../components/dialog-frame";
 import { ModalCloseContext } from "../components/modal";
-import { Button, Input } from "../components/ui";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
 import { personNameOk, PERSON_NAME_MAX_LENGTH } from "./form-rules";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { DEFAULT_COMPLETE_NAME_LABELS } from "./complete-name-dialog-labels";
 
 /** What `CompleteNameDialog` hands `onSave`: both names, trimmed, 1–120 characters —
  *  `PATCH /auth/me {first_name, last_name}` (§6.1). */
@@ -32,15 +34,8 @@ export interface CompleteNameLabels {
   failed: string;
 }
 
-export const DEFAULT_COMPLETE_NAME_LABELS: CompleteNameLabels = {
-  title: "Complete your name",
-  description: "First and last name are now asked for separately. Check what is filled in and add what is missing.",
-  firstName: "First name",
-  lastName: "Last name",
-  save: "Save",
-  later: "Later",
-  failed: "Your name could not be saved. Please try again.",
-};
+// Defined in ./complete-name-dialog-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_COMPLETE_NAME_LABELS };
 
 export interface CompleteNameDialogProps {
   /** What the account holds now — after the migration, the old display name (§3.3). */
@@ -64,7 +59,7 @@ export interface CompleteNameDialogProps {
   error?: ReactNode;
   /** Kept-mounted mode, as on `Modal`: left out, the dialog is open while mounted. */
   open?: boolean;
-  labels?: Partial<CompleteNameLabels>;
+  labels?: LabelOverride<CompleteNameLabels>;
 }
 
 /**
@@ -214,7 +209,7 @@ export function CompleteNameDialog({
           />
         </div>
         {message !== undefined && (
-          <p role="alert" className="text-xs text-[var(--danger)]">
+          <p role="alert" className="text-xs text-danger">
             {message}
           </p>
         )}

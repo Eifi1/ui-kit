@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.7.1";
+export const SERVER_KIT_VERSION = "0.8.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -22,6 +22,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
     module: "auth",
     summary: "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).",
     members: [
+      ["ABSENT_ACCOUNT_SECRET_BYTES", "constant"],
       ["ACCESS_TOKEN_EXPIRE_MINUTES", "constant"],
       ["ACCESS_TOKEN_LIFETIME", "constant"],
       ["ACCESS_TOKEN_TYPE", "constant"],
@@ -80,6 +81,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["PasswordChangeChallenge", "model"],
       ["PersonName", "constant"],
       ["ProfileUpdate", "model"],
+      ["RefreshRequest", "model"],
       ["RegisterRequest", "model"],
       ["RegistrationDecision", "enum"],
       ["TextSize", "constant"],
@@ -87,6 +89,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["TwoFactorChallenge", "model"],
       ["UserResponse", "model"],
       ["UtcDateTime", "constant"],
+      ["absent_account_check", "function"],
       ["access_claims", "function"],
       ["addresses_for_reset", "function"],
       ["challenge_claims", "function"],
@@ -156,6 +159,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["EmailChangeConfirm", "model"],
       ["EmailChangeRequest", "model"],
       ["ExportSecretError", "class"],
+      ["GroupRef", "model"],
       ["InvitationCreate", "model"],
       ["InvitationRow", "model"],
       ["InvitationStatus", "enum"],
@@ -238,7 +242,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
   {
     page: "server-billing",
     module: "billing",
-    summary: "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in ``Eifi1/ui-kit``; its §12 wins over the sections above it, and §14.16 over the rest of §14).",
+    summary: "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in ``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).",
     members: [
       ["APP_KEY", "constant"],
       ["BETA_FREE_MONTHS", "constant"],
@@ -247,9 +251,6 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["CHECKOUT_RETURN_PARAM", "constant"],
       ["CHECKOUT_RETURN_VALUE", "constant"],
       ["CURRENCY_EXPONENTS", "constant"],
-      ["LEMONSQUEEZY_EVENT_KINDS", "constant"],
-      ["LEMONSQUEEZY_SIGNATURE_HEADER", "constant"],
-      ["LEMONSQUEEZY_STATUSES", "constant"],
       ["NOTICE_AHEAD", "constant"],
       ["NOTICE_LATE_LIMIT", "constant"],
       ["NOTICE_STATUSES", "constant"],
@@ -328,7 +329,6 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["grant_holds", "function"],
       ["in_good_standing", "function"],
       ["is_beta", "function"],
-      ["map_lemonsqueezy_event", "function"],
       ["map_paddle_event", "function"],
       ["minor_to_decimal", "function"],
       ["normalize_plan", "function"],
@@ -343,10 +343,21 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["row_changes", "function"],
       ["sold_plan", "function"],
       ["trial_ends_at", "function"],
-      ["verify_lemonsqueezy_signature", "function"],
       ["verify_paddle_signature", "function"],
       ["verify_webhook_signature", "function"],
       ["webhook_answer", "function"],
+    ],
+  },
+  {
+    page: "server-limits",
+    module: "jobs",
+    summary: "The scheduler's calls: a route no account is behind, opened by ``X-Jobs-Token``.",
+    members: [
+      ["JOBS_TOKEN_HEADER", "constant"],
+      ["JobsSettings", "model"],
+      ["JobsTokenError", "class"],
+      ["check_jobs_token", "function"],
+      ["require_jobs_token", "function"],
     ],
   },
   {
@@ -358,6 +369,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["RESEND_ENDPOINT", "constant"],
       ["SUPPORT_LOCAL_PART", "constant"],
       ["TIMEOUT_SECONDS", "constant"],
+      ["AccountNoticeKind", "enum"],
       ["ConsoleMailer", "class"],
       ["MailMessage", "class"],
       ["MailText", "class"],

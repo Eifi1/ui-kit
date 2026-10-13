@@ -13,7 +13,7 @@ import {
   usePlanColumn,
 } from "@eifi1/ui-kit";
 import type { DataTableColumn, PlanChange, PlanChangeLine, PlanChangeOutcome, SubscriptionStatus } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, READOUT_WRAP, beat } from "../lib/section";
 
 /**
  * THE OPERATOR'S PLAN PARTS (0.33, docs/billing-harmonization.md §14.12, decision 27):
@@ -23,9 +23,6 @@ import { Example, Note } from "../lib/section";
  *
  * The accounts, the plans and the pretend server are SYNTHETIC; nothing is sent.
  */
-
-const beat = (ms = 600) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-const READOUT = "font-mono text-xs text-secondary [overflow-wrap:anywhere]";
 
 /** `GET /admin/plans`: the codes with their limits and sort, no prices — whatever the
  *  billing switch says. The display names are the app's (§3.1). */
@@ -116,7 +113,7 @@ export function PlanChange033Demo() {
 
   /** The pretend `POST /admin/users/{id}/plan` — server-kit 0.7's PlanChangeResponse. */
   const send = async (account: Account, change: PlanChange): Promise<PlanChangeOutcome> => {
-    await beat();
+    await beat(600);
     const previous = account.plan?.toLowerCase() ?? null;
     const limit = limitOf(change.plan);
     const res: PlanChangeOutcome = {
@@ -152,7 +149,8 @@ export function PlanChange033Demo() {
             target={{ id: changing.id, first: changing.name.split(" ")[0], last: changing.name.split(" ")[1], email: changing.email }}
             plans={PLANS}
             current={changing.plan}
-            usage={`${changing.beds} of ${limitOf(changing.plan?.toLowerCase() ?? null) ?? "unlimited"} beds`}
+            // The column's shape (0.34): the same sentence as its tooltip, "1 of 1 bed" on a plan of one.
+            usage={usage(changing)}
             grantEnd={billingOn}
             onConfirm={async (change) => {
               const res = await send(changing, change);
@@ -164,7 +162,7 @@ export function PlanChange033Demo() {
           />
         )}
       </WriteLockProvider>
-      <ul aria-label="The answer's lines" className={`mt-3 space-y-0.5 ${READOUT}`}>
+      <ul aria-label="The answer's lines" className={`mt-3 space-y-0.5 ${READOUT_WRAP}`}>
         {lines.length === 0 ? (
           <li>No change yet — try Ada to Seedling (over the limit), or Cleo (a running beta).</li>
         ) : (
@@ -183,7 +181,8 @@ export function PlanChange033Demo() {
         `onSortsChange` and the server sorts — and filters over `filterPlans`. The usage&apos;s `label` may give
         the word&apos;s plural forms (`one` &ldquo;bed&rdquo;, `other` &ldquo;beds&rdquo;), and the tooltip
         takes the limit&apos;s. `PlanChangeConfirm` is `AdminActionConfirm` at `acknowledge`: the current
-        plan and the app&apos;s usage sentence, a plan select, and — with `grantEnd`, only while billing is on —
+        plan and the usage — the column&apos;s `used`, `limit` and `label` in the column&apos;s sentence since 0.34,
+        or the app&apos;s own — a plan select, and — with `grantEnd`, only while billing is on —
         &ldquo;Free until&rdquo;, sent as the END of the picked day in the operator&apos;s time zone. The confirm
         is held while nothing would change, and it stays live under your own lapsed plan (`COMMIT_EXCEPT_BILLING`,
         built in); a demo lock still holds it. `usePlanChangeResult` turns the answer into lines with a tone each —

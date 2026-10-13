@@ -1,9 +1,10 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useNoIndex } from "../hooks/use-noindex";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import type { AuthHeadingLevel } from "./status-parts";
+import { DEFAULT_NOT_FOUND_LABELS } from "./not-found-page-labels";
 
 /** Every string the page renders — the `notFound` namespace. keksdose's words
  *  (`error.not_found_*`), which kastlan took over. */
@@ -18,14 +19,10 @@ export interface NotFoundLabels {
   app: string;
 }
 
-export const DEFAULT_NOT_FOUND_LABELS: NotFoundLabels = {
-  title: "Page not found",
-  body: "This address doesn’t exist (any more). It may be a typo, or the page has moved.",
-  home: "Go to the start page",
-  app: "Back to the app",
-};
+// Defined in ./not-found-page-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_NOT_FOUND_LABELS };
 
-export interface NotFoundPageProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
+export interface NotFoundPageProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** "Go to the start page". Default `/`, which takes a signed-in user into the app and
    *  anyone else to sign-in in all three apps. */
   homeHref?: string;
@@ -43,7 +40,7 @@ export interface NotFoundPageProps extends Omit<ComponentPropsWithoutRef<"div">,
   /** The heading's level. Default `h2`, under `AuthLayout`'s `h1`; `h1` where the page
    *  stands alone (inside the app shell). */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<NotFoundLabels>;
+  labels?: LabelOverride<NotFoundLabels>;
 }
 
 /**
@@ -77,11 +74,11 @@ export function NotFoundPage({
   useNoIndex(noIndex);
   return (
     <div {...rest} className={cn("flex flex-col items-center gap-2 py-4 text-center", className)}>
-      <p aria-hidden className="text-6xl font-bold leading-none tracking-tight text-[var(--text-placeholder)]">
+      <p aria-hidden className="text-6xl font-bold leading-none tracking-tight text-placeholder">
         404
       </p>
-      <Heading className="mt-2 text-xl font-semibold text-[var(--text-primary)]">{labels.title}</Heading>
-      <p className="max-w-prose text-sm text-[var(--text-secondary)]">{labels.body}</p>
+      <Heading className="mt-2 text-xl font-semibold text-primary">{labels.title}</Heading>
+      <p className="max-w-prose text-sm text-secondary">{labels.body}</p>
       {children}
       <div className="mt-4 flex flex-wrap justify-center gap-3">
         <Button href={homeHref} variant="brand">

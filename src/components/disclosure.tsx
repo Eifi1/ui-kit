@@ -1,12 +1,12 @@
 import { useEffect, useId, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 // Read at the moment of closing, as `useCloseTransition` does: the setting can change
 // under a long-lived page.
-import { prefersReducedMotion } from "../hooks/use-close-transition";
+import { skipsExitAnimation } from "../hooks/use-close-transition";
 
 /** How long the fold takes, in ms. The same number as the `duration-200` below and as
  *  the unmount timer, because they are the same movement. */
@@ -16,7 +16,7 @@ const COLLAPSE_MS = 200;
  * `extends` the div's props so an `id` (what a trigger's `aria-controls` points at), a
  * `data-tour` anchor or a test id reaches the element that folds.
  */
-export interface CollapseProps extends ComponentPropsWithoutRef<"div"> {
+export interface CollapseProps extends ComponentPropsWithRef<"div"> {
   open: boolean;
   /**
    * Keep the children mounted while shut (hidden and `inert`) instead of unmounting
@@ -63,7 +63,7 @@ export function Collapse({ open, keepMounted = false, children, className, style
   const [prevOpen, setPrevOpen] = useState(open);
   if (open !== prevOpen) {
     setPrevOpen(open);
-    setLingering(!open && !prefersReducedMotion());
+    setLingering(!open && !skipsExitAnimation());
   }
   useEffect(() => {
     if (!lingering) return;
@@ -113,7 +113,7 @@ export type DisclosureTriggerProps = Omit<
  * name: here it is the header's content (and a ReactNode), not the browser's tooltip.
  * Everything else reaches the outer element.
  */
-export interface DisclosureProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface DisclosureProps extends Omit<ComponentPropsWithRef<"div">, "title"> {
   /** What the header says. A node, so a status chip or a count can sit in it. */
   title: ReactNode;
   /** The smaller line under the title — what is inside, for a reader deciding whether
@@ -346,22 +346,22 @@ export function Disclosure({
             // card's hover paint on the stretched area / the row, not the text box.
             cn(
               "min-w-0 flex-1 after:absolute after:inset-0 after:content-['']",
-              "focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-inset focus-visible:after:ring-[var(--brand)]",
+              "focus-visible:after:ring-focus focus-visible:after:ring-inset focus-visible:after:ring-brand",
               card ? cn("after:rounded-lg", joined && "after:rounded-b-none") : !menu && "after:rounded-sm",
             )
           : FOCUS_RING,
         card
           ? cn(
               "items-center justify-between rounded-lg p-4",
-              trailingBeside ? "pe-0" : "hover:bg-[var(--bg-hover)] focus-visible:ring-inset",
+              trailingBeside ? "pe-0" : "hover:bg-hover focus-visible:ring-inset",
               joined && "rounded-b-none",
             )
           : menu
             ? // TOPBAR_MENU_ITEM_CLASS's row, spelled out rather than imported: a
               // component does not reach up into the shell. A test holds the two to
               // the same classes.
-              "items-center justify-between gap-3 px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] focus-visible:ring-inset"
-            : "items-center rounded-sm text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
+              "items-center justify-between gap-3 px-3 py-2 text-sm text-secondary hover:bg-hover focus-visible:ring-inset"
+            : "items-center rounded-sm text-sm font-medium text-secondary hover:text-primary",
         headerClassName,
       )}
     >
@@ -377,10 +377,10 @@ export function Disclosure({
             <Chevron open={open} small />
           </span>
         ) : (
-          <span className={cn("block", card && "text-sm font-semibold text-[var(--text-primary)]")}>{title}</span>
+          <span className={cn("block", card && "text-sm font-semibold text-primary")}>{title}</span>
         )}
         {hint !== undefined && (
-          <span className="mt-0.5 block text-xs font-normal text-[var(--text-muted)]">{hint}</span>
+          <span className="mt-0.5 block text-xs font-normal text-muted">{hint}</span>
         )}
       </span>
       {/* The space is for the accessible name — "Net profit 1,234.50", not
@@ -402,7 +402,7 @@ export function Disclosure({
   return (
     <div
       {...rest}
-      className={cn(card && "rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-sm", className)}
+      className={cn(card && "rounded-lg border border-subtle bg-surface shadow-sm", className)}
     >
       {trailingBeside ? (
         <div
@@ -410,7 +410,7 @@ export function Disclosure({
             "relative flex items-center gap-2",
             card &&
               cn(
-                "rounded-lg pe-4 has-[[data-disclosure-trigger]:enabled:hover]:bg-[var(--bg-hover)]",
+                "rounded-lg pe-4 has-[[data-disclosure-trigger]:enabled:hover]:bg-hover",
                 joined && "rounded-b-none",
               ),
           )}
@@ -454,7 +454,7 @@ function Chevron({
     <ChevronDown
       aria-hidden
       className={cn(
-        "shrink-0 text-[var(--text-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none",
+        "shrink-0 text-muted transition-transform duration-200 ease-out motion-reduce:transition-none",
         small ? "size-3.5" : "size-4",
         leading ? !open && "-rotate-90 rtl:rotate-90" : open && "rotate-180",
       )}

@@ -4,7 +4,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { Field } from "../field";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
 import { ToggleGroup } from "../toggle-group";
-import { Button, Card } from "../ui";
+import { Button } from "../button";
+import { Card } from "../card";
 import { List, ListItem } from "../list";
 import { NumberField } from "../number-field";
 
@@ -111,7 +112,7 @@ describe("ToggleGroup label placement and Field wiring", () => {
     const { container } = render(<Above />);
     const group = screen.getByRole("radiogroup", { name: "Cap" });
     // No field chrome: the group keeps its own box, the wrapper takes className.
-    expect(group.className).toContain("border-[var(--border-strong)]");
+    expect(group.className).toContain("border-strong");
     expect(group.className).not.toContain("outer");
     expect(container.firstElementChild!.className).toContain("outer");
     expect(screen.getByText("Cap").tagName).toBe("LABEL");
@@ -124,7 +125,7 @@ describe("ToggleGroup label placement and Field wiring", () => {
     const group = screen.getByRole("radiogroup", { name: "Cap" });
     expect(group).toHaveAttribute("aria-invalid", "true");
     expect(group).toHaveAccessibleDescription("Pick one");
-    expect(group.className).toContain("border-[var(--danger-border-strong)]");
+    expect(group.className).toContain("border-danger-strong");
   });
 
   it("takes Field's id, description, invalid and label id as a bare group", () => {
@@ -140,7 +141,7 @@ describe("ToggleGroup label placement and Field wiring", () => {
     expect(group).toHaveAttribute("aria-invalid", "true");
     expect(group).toHaveAccessibleDescription("Tight markets: 15% Required");
     // The border says what the attribute says.
-    expect(group.className).toContain("border-[var(--danger-border-strong)]");
+    expect(group.className).toContain("border-danger-strong");
   });
 });
 
@@ -152,19 +153,19 @@ describe("Button tone='danger' on the boxed variants", () => {
       </Button>,
     );
     const cls = screen.getByRole("button").className;
-    expect(cls).toContain("border-[var(--danger-border)]");
-    expect(cls).toContain("text-[var(--danger)]");
-    expect(cls).toContain("hover:bg-[var(--danger-bg)]");
-    expect(cls).not.toContain("text-[var(--text-primary)]");
-    expect(cls).not.toMatch(/(^|\s)border-\[var\(--border\)\]/);
+    expect(screen.getByRole("button")).toHaveClass("border-danger");
+    expect(screen.getByRole("button")).toHaveClass("text-danger");
+    expect(cls).toContain("hover:bg-danger-soft");
+    expect(cls).not.toContain("text-primary");
+    expect(screen.getByRole("button")).not.toHaveClass("border-subtle");
   });
 
   it("makes primary a soft destructive button that fills on hover", () => {
     render(<Button tone="danger">Delete</Button>);
     const cls = screen.getByRole("button").className;
-    expect(cls).toContain("bg-[var(--danger-bg)]");
-    expect(cls).toContain("hover:bg-[var(--danger)]");
-    expect(cls).not.toContain("bg-[var(--bg-surface-2)]");
+    expect(cls).toContain("bg-danger-soft");
+    expect(screen.getByRole("button")).toHaveClass("hover:bg-danger");
+    expect(cls).not.toContain("bg-surface-2");
   });
 
   it("leaves the solid danger and brand variants alone", () => {
@@ -178,9 +179,9 @@ describe("Button tone='danger' on the boxed variants", () => {
         </Button>
       </>,
     );
-    expect(screen.getByRole("button", { name: "A" }).className).toContain("bg-[var(--danger)]");
-    expect(screen.getByRole("button", { name: "A" }).className).not.toContain("bg-[var(--danger-bg)]");
-    expect(screen.getByRole("button", { name: "B" }).className).toContain("bg-[var(--brand)]");
+    expect(screen.getByRole("button", { name: "A" })).toHaveClass("bg-danger");
+    expect(screen.getByRole("button", { name: "A" }).className).not.toContain("bg-danger-soft");
+    expect(screen.getByRole("button", { name: "B" })).toHaveClass("bg-brand");
   });
 });
 
@@ -188,7 +189,7 @@ describe("Card variant='outline'", () => {
   it("is bordered, shadowless and padded p-4 by default", () => {
     render(<Card variant="outline" data-testid="c">x</Card>);
     const cls = screen.getByTestId("c").className;
-    expect(cls).toContain("border-[var(--border)]");
+    expect(cls).toContain("border-subtle");
     expect(cls).not.toContain("shadow");
     expect(cls).toContain("p-4");
   });
@@ -202,7 +203,7 @@ describe("Card variant='outline'", () => {
     const cls = screen.getByTestId("c").className;
     expect(cls).toContain("p-3");
     expect(cls).not.toContain("p-4");
-    expect(cls).toContain("border-[var(--warning-border)]");
+    expect(screen.getByTestId("c")).toHaveClass("border-warning");
     rerender(
       <Card variant="outline" padding="sm" className="p-1" data-testid="c">
         x
@@ -252,9 +253,9 @@ describe("ListItem body", () => {
       </ListItem>,
     );
     const target = screen.getByRole("button", { name: "Hall" });
-    expect(target.className).toContain("hover:bg-[var(--bg-hover)]");
+    expect(target.className).toContain("hover:bg-hover");
     const box = target.closest(".box")!;
-    expect(box.className).not.toContain("hover:bg-[var(--bg-hover)]");
+    expect(box.className).not.toContain("hover:bg-hover");
     expect(box.className).toContain("flex-col");
   });
 

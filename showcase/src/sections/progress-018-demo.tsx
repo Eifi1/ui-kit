@@ -35,8 +35,8 @@ export function ProgressLegendTone018Demo() {
       hint="the legend's figures in a text tone: one for every row, or one per row"
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-          <div className="text-xs text-[var(--text-muted)]">Tax owed</div>
+        <div className="rounded-lg border border-subtle bg-surface p-4">
+          <div className="text-xs text-muted">Tax owed</div>
           <div className="text-lg tabular-nums text-[var(--money-expense)]">{chf.format(4200)}</div>
           <ProgressBar
             className="mt-2"
@@ -50,8 +50,8 @@ export function ProgressLegendTone018Demo() {
             legendTone={tone}
           />
         </div>
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4">
-          <div className="text-xs text-[var(--text-muted)]">Refunds, toned by each part's sign</div>
+        <div className="rounded-lg border border-subtle bg-surface p-4">
+          <div className="text-xs text-muted">Refunds, toned by each part's sign</div>
           <div className="text-lg tabular-nums text-[var(--money-income)]">{chf.format(650)}</div>
           <ProgressBar
             className="mt-2"
@@ -65,7 +65,7 @@ export function ProgressLegendTone018Demo() {
           />
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[var(--text-secondary)]" role="group" aria-label="legendTone">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-secondary" role="group" aria-label="legendTone">
         <code className="font-mono text-xs">legendTone</code>
         {TONES.map((t) => (
           <label key={t} className="flex items-center gap-1">

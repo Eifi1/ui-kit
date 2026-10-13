@@ -42,26 +42,26 @@ function PageCard({ page }: { page: ShowcasePage }) {
   return (
     <Link
       to={`/${page.slug}`}
-      className="group flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4 transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+      className="group flex flex-col gap-3 rounded-lg border border-subtle bg-surface p-4 transition-colors hover:border-strong hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
       <div className="flex items-center gap-2.5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-[var(--bg-surface-2)] text-[var(--text-secondary)]">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2 text-secondary">
           <page.icon className="size-4" aria-hidden />
         </span>
-        <span className="flex-1 font-medium text-[var(--text-primary)]">{title}</span>
+        <span className="flex-1 font-medium text-primary">{title}</span>
         <ArrowRight
           aria-hidden
-          className="size-4 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100"
+          className="size-4 text-muted transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100"
         />
       </div>
-      <p className="text-sm text-[var(--text-secondary)]">{blurb}</p>
+      <p className="text-sm text-secondary">{blurb}</p>
       {page.components && (
         // Export names are identifiers, not words: never translated, always LTR.
         <ul dir="ltr" className="mt-auto flex flex-wrap gap-1.5">
           {page.components.map((name) => (
             <li
               key={name}
-              className="max-w-full rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1.5 py-0.5 font-mono text-caption text-[var(--text-secondary)] [overflow-wrap:anywhere]"
+              className="max-w-full rounded border border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-caption text-secondary [overflow-wrap:anywhere]"
             >
               {name}
             </li>
@@ -85,13 +85,14 @@ export function GettingStarted() {
   return (
     <>
       <Example label="What this is">
-        <div className="space-y-3 text-sm text-[var(--text-secondary)]">
+        <div className="space-y-3 text-sm text-secondary">
           <p>
-            <strong className="text-[var(--text-primary)]">@eifi1/ui-kit</strong> is the one
-            component library behind keksdose, lenkbank and kastlan. It is{" "}
+            <strong className="text-primary">@eifi1/ui-kit</strong> is the one
+            component library behind keksdose, kastlan and Kurvenschmiede. It is{" "}
             <em>domain-free</em>: a component takes its data as props and hands events back as
-            callbacks, and it never fetches, never routes on its own and never decides what a
-            word says. That is why every page here works without a backend.
+            callbacks, and it never fetches, never routes on its own and never picks the
+            language — it renders only labels, ships them in seven languages, and the app
+            decides which. That is why every page here works without a backend.
           </p>
           <p>
             This showcase renders the repository&rsquo;s <code className="font-mono">src/</code>{" "}
@@ -121,15 +122,15 @@ export function GettingStarted() {
         <dl className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2">
           {CONVENTIONS.map(([term, text]) => (
             <div key={term}>
-              <dt className="font-medium text-[var(--text-primary)]">{term}</dt>
-              <dd className="mt-0.5 text-[var(--text-secondary)]">{text}</dd>
+              <dt className="font-medium text-primary">{term}</dt>
+              <dd className="mt-0.5 text-secondary">{text}</dd>
             </div>
           ))}
         </dl>
       </Example>
 
       <Example label="How to read a page">
-        <ul className="list-disc space-y-1.5 ps-5 text-sm text-[var(--text-secondary)]">
+        <ul className="list-disc space-y-1.5 ps-5 text-sm text-secondary">
           <li>
             The <strong>chips</strong> under the title jump to each specimen on the page; Back
             returns to where you were.
@@ -154,16 +155,16 @@ export function GettingStarted() {
       <Example label="How the groups map to MUI" hint="for readers who know one library and are learning this one">
         <table className="w-full text-start text-sm">
           <thead>
-            <tr className="border-b border-[var(--border)] text-xs text-[var(--text-muted)]">
+            <tr className="border-b border-subtle text-xs text-muted">
               <th className="py-1.5 pe-4 text-start font-medium">MUI category</th>
               <th className="py-1.5 text-start font-medium">Here</th>
             </tr>
           </thead>
           <tbody>
             {MUI_MAP.map(([mui, here]) => (
-              <tr key={mui} className="border-b border-[var(--border)] last:border-b-0">
-                <td className="py-1.5 pe-4 align-top text-[var(--text-secondary)]">{mui}</td>
-                <td className="py-1.5 align-top text-[var(--text-primary)]">{here}</td>
+              <tr key={mui} className="border-b border-subtle last:border-b-0">
+                <td className="py-1.5 pe-4 align-top text-secondary">{mui}</td>
+                <td className="py-1.5 align-top text-primary">{here}</td>
               </tr>
             ))}
           </tbody>
@@ -179,16 +180,16 @@ function LayerCard({ group, index }: { group: ShowcaseGroup; index: number }) {
   const { blurb } = usePageText(target);
   return (
     <li>
-      <Link to={`/${target}`} className="block h-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
-        <Card className="h-full p-4 transition-colors hover:bg-[var(--bg-hover)]">
+      <Link to={`/${target}`} className="block h-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+        <Card className="h-full p-4 transition-colors hover:bg-hover">
           <div className="flex items-center gap-2.5">
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--bg-inverse)] text-xs font-semibold text-[var(--text-inverse)]">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-inverse text-xs font-semibold text-inverse">
               {index}
             </span>
-            <group.icon className="size-4 text-[var(--text-muted)]" aria-hidden />
-            <span className="font-medium text-[var(--text-primary)]">{label}</span>
+            <group.icon className="size-4 text-muted" aria-hidden />
+            <span className="font-medium text-primary">{label}</span>
           </div>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">{hasOverview(group) ? blurb : group.blurb}</p>
+          <p className="mt-2 text-sm text-secondary">{hasOverview(group) ? blurb : group.blurb}</p>
         </Card>
       </Link>
     </li>

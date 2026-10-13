@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { CalculatorButton } from "../calculator";
+import { NavPills } from "../nav-pills";
 import { NumberPadSheet } from "../numpad-sheet";
 import { DropdownSearchHeader } from "../dropdown";
 import { FilterPopover } from "../data-table-filter-popover";
@@ -22,9 +24,12 @@ import type { DataTableColumn } from "../data-table";
  * to the keyboard and does not flash on every tap of a touch control.
  */
 // The kit's one focus frame since 0.32 (`FOCUS_RING`, docs/text-size-harmonization.md
-// §5): its width is `--focus-ring-width`, 2 px, 3 px under More contrast.
-const RING = /focus-visible:ring-\[length:var\(--focus-ring-width\)\]/;
-const TOKEN_RING = /focus-visible:ring-\[var\(--[a-z-]+\)\]/;
+// §5): its width is `--focus-ring-width`, 2 px, 3 px under More contrast — the
+// `ring-focus` width utility since 0.34 (DOC-7).
+const RING = "focus-visible:ring-focus";
+// A token: a role utility (`ring-brand`, 0.34) or a `[var(--…)]` where none exists.
+const TOKEN_RING = /^focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|brand-contrast|subtle|strong|danger-strong|warning-strong|media-ink)$/;
+const hasTokenRing = (el: Element) => el.className.split(/\s+/).some((c) => TOKEN_RING.test(c));
 const noop = () => {};
 
 describe("the numpad's keys show where the keyboard is", () => {
@@ -34,17 +39,53 @@ describe("the numpad's keys show where the keyboard is", () => {
     expect(keys.length).toBeGreaterThan(16);
     for (const key of keys) {
       const name = key.getAttribute("aria-label") ?? key.textContent ?? "?";
-      expect(key.className, `the ${name} key has no focus ring`).toMatch(RING);
-      expect(key.className, `the ${name} key's ring is not a token`).toMatch(TOKEN_RING);
+      expect(key, `the ${name} key has no focus ring`).toHaveClass(RING);
+      expect(hasTokenRing(key), `the ${name} key's ring is not a token`).toBe(true);
     }
   });
 
   it("rings the primary key against its own fill, not in it", () => {
-    // "Done" is the one key wearing `bg-[var(--brand)]`, so a --brand ring on it is a
+    // "Done" is the one key wearing `bg-brand`, so a --brand ring on it is a
     // ring painted in the colour it sits on: present in the DOM, invisible on screen.
     render(<NumberPadSheet value="12" onChange={noop} onDone={noop} />);
     const done = screen.getByRole("button", { name: "Done" });
-    expect(done.className).toMatch(/focus-visible:ring-\[var\(--brand-contrast\)\]/);
+    expect(done).toHaveClass("focus-visible:ring-brand-contrast");
+    expect(done).not.toHaveClass("focus-visible:ring-brand");
+  });
+});
+
+describe("the calculator's keys and the nav pills draw the kit's one focus frame", () => {
+  // Both drew it in `ring-strong` — the calculator also on `focus:`, so a pointer click
+  // left a ring on the key — where every other control rings in brand on keyboard focus
+  // (text-size §5; refactor audit 2026-10, DOC-7).
+  const ONE_FRAME = ["focus-visible:outline-none", RING, "focus-visible:ring-brand"];
+  const offFrame = (el: Element) => el.className.split(/\s+/).filter((c) => /^focus:ring-|ring-strong$/.test(c));
+
+  it("rings every calculator key in brand, on keyboard focus only", () => {
+    render(<CalculatorButton value="" onChange={noop} />);
+    fireEvent.click(screen.getByRole("button", { name: "Open calculator" }));
+    const keys = within(screen.getByRole("dialog")).getAllByRole("button");
+    expect(keys.length).toBeGreaterThan(16);
+    for (const key of keys) {
+      const name = key.getAttribute("aria-label") ?? key.textContent ?? "?";
+      expect(key, name).toHaveClass(...ONE_FRAME);
+      expect(offFrame(key), name).toEqual([]);
+    }
+  });
+
+  it("rings every pill in brand, the current one too", () => {
+    render(
+      <NavPills
+        aria-label="Surface"
+        items={[{ value: "a", label: "A" }, { value: "b", label: "B" }]}
+        current="a"
+        onSelect={noop}
+      />,
+    );
+    for (const pill of screen.getAllByRole("button")) {
+      expect(pill).toHaveClass(...ONE_FRAME);
+      expect(offFrame(pill)).toEqual([]);
+    }
   });
 });
 
@@ -59,8 +100,8 @@ describe("the dropdown search box shows where the keyboard is", () => {
       />,
     );
     const input = screen.getByRole("textbox");
-    expect(input.className).toMatch(RING);
-    expect(input.className).toMatch(TOKEN_RING);
+    expect(input).toHaveClass(RING);
+    expect(hasTokenRing(input)).toBe(true);
   });
 });
 
@@ -82,6 +123,6 @@ describe("the column filter's fields show where the keyboard is", () => {
         selectOptions={[]}
       />,
     );
-    expect(screen.getByRole("textbox").className).toMatch(RING);
+    expect(screen.getByRole("textbox")).toHaveClass(RING);
   });
 });

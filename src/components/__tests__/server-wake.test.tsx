@@ -9,8 +9,8 @@ import { DEFAULT_SERVER_WAKE_LABELS, ServerWakeNotice, useServerWakeStage } from
 import type { ServerWakeWatcher } from "../../lib/server-wake";
 
 /**
- * keksdose's cold-start notice, as the kit's: one polite live region in the start
- * corner, silent while idle, "still loading" past 2 s and the explanation past 7 s.
+ * keksdose's cold-start notice, as the kit's: one polite live region at the top
+ * centre, silent while idle, "still loading" past 2 s and the explanation past 7 s.
  */
 
 beforeEach(() => vi.useFakeTimers());
@@ -73,11 +73,38 @@ describe("ServerWakeNotice", () => {
     expect(container.querySelectorAll("[aria-live]")).toHaveLength(1);
   });
 
-  it("clears the bottom nav by --app-nav-h by default, or by navOffset", () => {
-    const { rerender } = render(<ServerWakeNotice watcher={createServerWake()} />);
-    expect(screen.getByRole("status").style.bottom).toContain("var(--app-nav-h, 0px)");
-    rerender(<ServerWakeNotice watcher={createServerWake()} navOffset={64} />);
-    expect(screen.getByRole("status").style.bottom).toContain("64px");
+  /**
+   * keksdose live #399: *"Move the notification to the top where it can be better seen
+   * and not block any sticky elements."* jsdom lays nothing out, so this reads the
+   * placement off the classes: anchored to the top under the status bar, centred inside
+   * the side insets, never to the bottom where a phone keeps its floating actions and a
+   * dialog's sticky footer — and taking no taps in any stage, so whatever it covers
+   * still answers.
+   */
+  it.each(["idle", "slow", "waking"] as const)("sits centred at the top and takes no taps (%s, live #399)", (stage) => {
+    const w = createServerWake();
+    render(<ServerWakeNotice watcher={w} />);
+    act(() => {
+      if (stage !== "idle") w.start();
+    });
+    advance(stage === "waking" ? 7000 : 2000);
+    const region = screen.getByRole("status");
+    expect(region).toHaveAttribute("data-stage", stage);
+    expect(region).toHaveClass("fixed", "pointer-events-none", "mx-auto", "w-fit");
+    expect(region.className).toContain("top-[calc(env(safe-area-inset-top,0px)+0.375rem)]");
+    expect(region.className).toContain("left-[max(1rem,env(safe-area-inset-left,0px))]");
+    expect(region.className).toContain("right-[max(1rem,env(safe-area-inset-right,0px))]");
+    expect(region.className).not.toMatch(/(^|\s)(md:)?(bottom-|start-)/);
+    expect(region.style.bottom).toBe("");
+  });
+
+  it("lets a caller move it under its top bar or narrow it, and ignores the old navOffset", () => {
+    render(<ServerWakeNotice watcher={createServerWake()} navOffset={64} className="top-16 max-w-xs" />);
+    const region = screen.getByRole("status");
+    expect(region).toHaveClass("top-16", "max-w-xs");
+    expect(region.className).not.toContain("top-[calc(");
+    expect(region.className).not.toContain("max-w-[24rem]");
+    expect(region.style.bottom).toBe("");
   });
 
   it("follows the shared instance when no watcher is passed", () => {
@@ -112,102 +139,25 @@ describe("ServerWakeNotice", () => {
   });
 });
 
-describe("ServerWakeNotice over a FloatingActionButton (kastlan 0.18)", () => {
-  // jsdom lays nothing out: give the notice and the FAB the boxes a 390 × 844 phone
-  // would. The notice spans the width; the pill sits 16px in, 48px tall, 64px up.
-  const VIEWPORT_H = 844;
-  type Box = { left: number; right: number; top: number; height: number };
-  let fabBox: Box;
-
-  function rect({ left, right, top, height }: Box): DOMRect {
-    const r = { x: left, y: top, left, right, top, height, width: right - left, bottom: top + height };
-    return { ...r, toJSON: () => r } as DOMRect;
-  }
-
-  beforeEach(() => {
-    vi.stubGlobal("innerHeight", VIEWPORT_H);
-    fabBox = { left: 16, right: 196, top: VIEWPORT_H - 64 - 48, height: 48 };
-    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
-      if (this.getAttribute("role") === "status" && this.hasAttribute("data-stage")) {
-        return rect({ left: 16, right: 374, top: 700, height: 60 });
-      }
-      if (this.getAttribute("aria-label") === "Offline") {
-        return this.hidden ? rect({ left: 0, right: 0, top: 0, height: 0 }) : rect(fabBox);
-      }
-      return rect({ left: 0, right: 0, top: 0, height: 0 });
-    });
-  });
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
-
-  const notice = () => document.querySelector<HTMLElement>("[data-stage]")!;
-
-  function wake(w: ServerWakeWatcher) {
-    act(() => {
-      w.start("get", "/x");
-    });
-    advance(2000);
-  }
-
-  it("rises above a visible FAB under it, and settles back when the FAB goes", () => {
+describe("ServerWakeNotice beside a FloatingActionButton", () => {
+  // Until 0.34 the notice shared the bottom-start corner with kastlan's offline pill and
+  // measured its way above it (kastlan 0.18). At the top it shares no corner with any
+  // FAB, so a FAB that comes and goes no longer moves it.
+  it("stays where it is when a FAB appears under the start corner", () => {
     const w = createServerWake();
-    const { rerender } = render(
+    render(
       <>
         <FloatingActionButton label="Offline" icon={null} corner="bottom-start" extended />
         <ServerWakeNotice watcher={w} />
       </>,
     );
-    expect(notice().style.bottom).not.toContain("max(calc(max(");
-    wake(w);
-    // 844 − 732 = 112px from the bottom to the pill's top, plus the gap.
-    expect(notice().style.bottom).toContain("calc(112px + 0.5rem)");
-    rerender(<ServerWakeNotice watcher={w} />);
-    expect(notice().style.bottom).not.toContain("112px");
-  });
-
-  it("ignores a FAB in other columns and a hidden one", () => {
-    const w = createServerWake();
-    fabBox = { left: 380, right: 428, top: 732, height: 48 };
-    const { rerender } = render(
-      <>
-        <FloatingActionButton label="Offline" icon={null} corner="bottom-end" />
-        <ServerWakeNotice watcher={w} />
-      </>,
-    );
-    wake(w);
-    expect(notice().style.bottom).not.toContain("0.5rem");
-    fabBox = { left: 16, right: 196, top: 732, height: 48 };
-    rerender(
-      <>
-        <FloatingActionButton label="Offline" icon={null} corner="bottom-start" hidden />
-        <ServerWakeNotice watcher={w} />
-      </>,
-    );
     act(() => {
-      window.dispatchEvent(new Event("resize"));
+      w.start("get", "/x");
     });
-    expect(notice().style.bottom).not.toContain("0.5rem");
-  });
-
-  it("measures the tooltip wrapper when the FAB has one — the wrapper is what is fixed", () => {
-    const w = createServerWake();
-    vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockImplementation(function (this: HTMLElement) {
-      if (this.hasAttribute("data-stage")) return rect({ left: 16, right: 374, top: 700, height: 60 });
-      if (this.tagName === "DIV" && this.classList.contains("fixed") && this.classList.contains("z-40")) {
-        return rect({ left: 16, right: 64, top: 732, height: 48 });
-      }
-      return rect({ left: 0, right: 0, top: 0, height: 0 });
-    });
-    render(
-      <>
-        <FloatingActionButton label="Assistant" icon={null} corner="bottom-start" tooltip />
-        <ServerWakeNotice watcher={w} />
-      </>,
-    );
-    wake(w);
-    expect(notice().style.bottom).toContain("calc(112px + 0.5rem)");
+    advance(2000);
+    const notice = document.querySelector<HTMLElement>("[data-stage]")!;
+    expect(notice.style.bottom).toBe("");
+    expect(notice.className).toContain("top-[calc(");
   });
 });
 

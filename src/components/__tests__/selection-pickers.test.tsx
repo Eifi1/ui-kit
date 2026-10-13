@@ -196,7 +196,7 @@ describe("tileClassName (keksdose: tiles that follow a container query)", () => 
       <IconPicker aria-label="Symbol" options={ICONS} value="car" onChange={vi.fn()} tileClassName="@max-md:size-10" />,
     );
     const car = screen.getByRole("radio", { name: "Car" });
-    expect(car.className.split(/\s+/)).toEqual(expect.arrayContaining(["@max-md:size-10", "size-8", "text-[var(--text-primary)]"]));
+    expect(car.className.split(/\s+/)).toEqual(expect.arrayContaining(["@max-md:size-10", "size-8", "text-primary"]));
     expect(screen.getByRole("radio", { name: "Game controller" }).className).toContain("@max-md:size-10");
   });
 });

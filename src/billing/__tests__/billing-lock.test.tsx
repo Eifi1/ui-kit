@@ -1,7 +1,7 @@
 import { render, renderHook, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { Button } from "../../components/ui";
+import { Button } from "../../components/button";
 import { COMMIT_EXCEPT_BILLING, WriteLockProvider } from "../../components/write-lock";
 import { combineWriteLocks, useBillingLockReason, useBillingWriteLock } from "../billing-lock";
 import { billingDaysLeft, billingLockAt, isBillingReadOnly } from "../billing-standing";

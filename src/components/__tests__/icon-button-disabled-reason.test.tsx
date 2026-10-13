@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Trash2 } from "lucide-react";
-import { IconButton } from "../ui";
+import { IconButton } from "../icon-button";
 
 /** keksdose's accounts-page hide/delete and budgets-page delete: a disabled icon
  *  action that can say why, to a keyboard and a screen reader too. */

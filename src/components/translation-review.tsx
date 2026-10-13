@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Check, ListChecks, PencilLine, RotateCcw } from "lucide-react";
 
 import { usePhoneLayout } from "../hooks/use-breakpoint";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import {
   DEFAULT_TRANSLATION_REVIEW_FILTER,
@@ -43,7 +43,9 @@ import { TranslationReviewEditor } from "./translation-review-editor";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS, reviewStatusLabel } from "./translation-review-labels";
 import type { TranslationReviewLabels } from "./translation-review-labels";
 import { ReviewStatusChip, TranslationProgress } from "./translation-review-parts";
-import { Button, IconButton, Select } from "./ui";
+import { Button } from "./button";
+import { IconButton } from "./icon-button";
+import { Select } from "./select";
 import { COMMIT_EXCEPT_BILLING, useWriteLock } from "./write-lock";
 
 export {
@@ -165,8 +167,17 @@ export interface TranslationReviewPanelProps {
   progress?: boolean;
   /** Rows per page. Default 50. */
   pageSize?: number;
-  /** Persists the table's sort and page size (DataTable's `storageKey`). */
+  /** Persists the table's sort and page size (DataTable's `storageKey`), under the
+   *  prefix below. */
   storageKey?: string;
+  /**
+   * The `localStorage` prefix in front of `storageKey` (DataTable's `storageKeyPrefix`).
+   * Left out, it is the provider's `tableStorageKeyPrefix`, then the kit's
+   * `"hbui-table:"` — so an app that sets its prefix on `UiKitProvider` needs nothing
+   * here. Before 0.34 the panel took no prefix and its view always landed under the
+   * kit's, which an app listing what it stores had to list as its own (KS U4).
+   */
+  storageKeyPrefix?: string;
   /** How a verdict's date reads in the editor. */
   formatDate?: (iso: string) => string;
   /** Turns a callback's rejection into words. Default {@link TranslationReviewLabels.failed}. */
@@ -290,7 +301,7 @@ export interface TranslationReviewPanelProps {
    *  the page's `h1`. */
   groupHeadingAs?: "h2" | "h3" | "h4";
   className?: string;
-  labels?: Partial<TranslationReviewLabels>;
+  labels?: LabelOverride<TranslationReviewLabels>;
 }
 
 
@@ -399,9 +410,9 @@ function useFilterEchoCheck(filterProp: Partial<TranslationReviewFilter> | undef
 /** The row's text — or, for a missing string, the line that says so. */
 function TextCell({ row, labels, clamp }: { row: TranslationRow; labels: TranslationReviewLabels; clamp?: boolean }) {
   return row.text === "" ? (
-    <span className="italic text-[var(--text-muted)]">{labels.missingText}</span>
+    <span className="italic text-muted">{labels.missingText}</span>
   ) : (
-    <span lang={row.locale} className={cn("whitespace-pre-line break-words", clamp && "line-clamp-3")}>
+    <span lang={row.locale} className={cn("whitespace-pre-line break-words", clamp && "line-clamp-3 large:line-clamp-none")}>
       {row.text}
     </span>
   );
@@ -444,6 +455,7 @@ export function TranslationReviewPanel({
   progress = true,
   pageSize = 50,
   storageKey,
+  storageKeyPrefix,
   formatDate,
   formatError,
   swipe = false,
@@ -701,7 +713,7 @@ export function TranslationReviewPanel({
     {
       key: "key",
       header: labels.key,
-      cell: (r) => <code className="break-all text-xs text-[var(--text-secondary)]">{r.key}</code>,
+      cell: (r) => <code className="break-all text-xs text-secondary">{r.key}</code>,
       sortBy: (r) => r.key,
       mobileHidden: true,
     },
@@ -709,7 +721,7 @@ export function TranslationReviewPanel({
       key: "reference",
       header: referenceLabel,
       cell: (r) => (
-        <span className="line-clamp-3 whitespace-pre-line break-words text-[var(--text-secondary)]">{r.reference}</span>
+        <span className="line-clamp-3 whitespace-pre-line break-words text-secondary">{r.reference}</span>
       ),
       mobileHidden: true,
     },
@@ -862,7 +874,7 @@ export function TranslationReviewPanel({
             onSortsChange: setGroupSorts,
             labels: { table: group.name },
           }
-        : { storageKey })}
+        : { storageKey, storageKeyPrefix })}
       isExpanded={(r) => r.id === openId}
       onRowClick={(r) => {
         if (openId !== r.id) keepGroupOpen(group?.key);
@@ -890,8 +902,8 @@ export function TranslationReviewPanel({
       )}
       mobileCard={(r) => (
         <div className="min-w-0 space-y-1">
-          <code className="block break-all text-xs text-[var(--text-muted)]">{r.key}</code>
-          <div className="text-sm text-[var(--text-primary)]">
+          <code className="block break-all text-xs text-muted">{r.key}</code>
+          <div className="text-sm text-primary">
             <TextCell row={r} labels={labels} clamp />
           </div>
           <div className="flex flex-wrap gap-1">
@@ -951,10 +963,10 @@ export function TranslationReviewPanel({
             </Button>
           ) : undefined
         }
-        bodyClassName="space-y-0 px-0 pb-0 border-t border-[var(--border)]"
+        bodyClassName="space-y-0 px-0 pb-0 border-t border-subtle"
       >
         {body && confirming === g.key && targets.length > 0 && (
-          <div className="border-b border-[var(--border)] p-3">
+          <div className="border-b border-subtle p-3">
             <AlertBanner tone="warning" size="sm">
               <div className="min-w-0 space-y-2">
                 <p id={questionId}>{labels.confirmGroup(targets.length, name)}</p>
@@ -1050,7 +1062,7 @@ export function TranslationReviewPanel({
         </div>
         <SearchField
           className="min-w-0 md:flex-1"
-          label={labels.search}
+          aria-label={labels.search}
           value={filter.query}
           onChange={(next) => setFilter({ query: next })}
         />

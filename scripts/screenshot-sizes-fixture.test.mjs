@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 /**
- * The size sweep's two report-only checks against their fixture
- * (docs/text-size-harmonization.md §10.17, §10.22). Outside `npm run check`: it drives
- * Chromium, and jsdom lays nothing out, so the unit tests can only pin classes.
+ * The size sweep's two checks against their fixture (docs/text-size-harmonization.md
+ * §10.17, §10.22) — report-only by themselves, the release gate with `--gate-truncation`
+ * (`npm run check:sweep`, since 0.34, which runs this file first). Outside
+ * `npm run check`: it drives Chromium, and jsdom lays nothing out, so the unit tests can
+ * only pin classes.
  *
  *   node scripts/screenshot-sizes-fixture.test.mjs
  *
@@ -13,8 +15,10 @@
  * Normal, neither check runs. Report-only, the run exits 0; `--gate-truncation` makes it
  * 3. Exits 1 on a failed expectation.
  *
- * The browser is the sweep's: its PLAYWRIGHT_CORE, CHROMIUM and LD_LIBRARY_PATH (a
- * machine without libasound points it at a copy) are passed through.
+ * The browser is the sweep's (`npx playwright-core install chromium-headless-shell`, once);
+ * its CHROMIUM and LD_LIBRARY_PATH (a machine without libasound points it at a copy) are
+ * passed through. The four variants run at once there, and their blocks still come out
+ * in order, which the per-variant parse below relies on.
  */
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
@@ -38,9 +42,18 @@ const expect = (ok, what) => {
 };
 
 const report = sweep();
+// Exit 2 is the script failing, not a check: most often no browser, which its message
+// says how to install. That message is the whole report.
+if (report.code === 2) {
+  console.error(`✖ the sweep could not run:\n${report.out}`);
+  process.exit(1);
+}
 // One block per variant: the page line, then its findings until the next page line.
 const blocks = report.out.split(/\n(?=fixture--)/).filter((b) => b.startsWith("fixture--"));
 expect(blocks.length === 4, `four variants, got ${blocks.length}`);
+// Run at once, printed in order (TST-6): each variant's block whole, in VARIANTS order.
+const order = blocks.map((b) => b.split(/\s/)[0]).join(" ");
+expect(order === "fixture--360-xlarge fixture--390-normal fixture--390-large fixture--390-xlarge", `variants in order, got ${order}`);
 for (const block of blocks) {
   const name = block.split(/\s/)[0];
   const truncated = block.match(/^ {4}TRUNCATED .*$/gm) ?? [];
@@ -50,7 +63,7 @@ for (const block of blocks) {
     continue;
   }
   expect(truncated.length === 1, `${name}: one TRUNCATED, got ${truncated.length}`);
-  expect(/\[fixture-cut\] «An ellipsis that cuts» 120px ellipsis: "A label far too long/.test(truncated[0] ?? ""), `${name}: the cut one, named by slot and heading`);
+  expect(/\[fixture-cut\] «An ellipsis that cuts» 120px ellipsis <[a-z]+[^>]*>: "A label far too long/.test(truncated[0] ?? ""), `${name}: the cut one, named by slot and heading`);
   expect(pinned.length === 1, `${name}: one PINNED, got ${pinned.length}`);
   expect(/\[fixture-tall\] «A tall sticky box» sticky \d+px \(60 % of the viewport\)/.test(pinned[0] ?? ""), `${name}: the tall sticky box`);
 }

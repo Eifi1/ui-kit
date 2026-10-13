@@ -68,7 +68,7 @@ describe("keyboard-activatable rows", () => {
       expect(r.tagName).toBe("TR");
       expect(r).not.toHaveAttribute("role");
       // The kit's focus frame width (0.32, §5), still an outline on a <tr>.
-      expect(r.className).toContain("focus-visible:outline-[length:var(--focus-ring-width)]");
+      expect(r).toHaveClass("focus-visible:outline-focus");
     }
   });
 
@@ -132,14 +132,48 @@ describe("keyboard-activatable rows", () => {
     expect(onRowClick).toHaveBeenCalledTimes(1);
   });
 
-  it("says whether an expandable row is open", () => {
+  it("says whether an expandable row is open — on a disclosure button in the row, not on the <tr>", () => {
+    // Round 0.34, the showcase's axe check: ARIA allows `aria-expanded` on a row only in
+    // a treegrid, and this is a table. The state moved to a "Details" button in the
+    // row's first cell, which says what it opens through `aria-controls`.
+    const onRowClick = vi.fn();
     renderTable({
-      onRowClick: () => {},
+      onRowClick,
       expandedRow: (r) => `detail ${r.name}`,
       isExpanded: (r) => r.id === 2,
     });
-    expect(rowOf("Alpha")).toHaveAttribute("aria-expanded", "false");
-    expect(rowOf("Bravo")).toHaveAttribute("aria-expanded", "true");
+    for (const row of screen.getAllByRole("row")) expect(row).not.toHaveAttribute("aria-expanded");
+    const alpha = within(screen.getByText("Alpha").closest("tr")!).getByRole("button", { name: "Details" });
+    const bravo = within(screen.getByText("Bravo").closest("tr")!).getByRole("button", { name: "Details" });
+    expect(alpha).toHaveAttribute("aria-expanded", "false");
+    expect(alpha).not.toHaveAttribute("aria-controls");
+    expect(bravo).toHaveAttribute("aria-expanded", "true");
+    expect(document.getElementById(bravo.getAttribute("aria-controls")!)).toHaveTextContent("detail Bravo");
+    // Named by `aria-label`, so the cell's text is still just its own.
+    expect(screen.getByText("Alpha").closest("td")).toHaveTextContent(/^Alpha$/);
+    // Not a stop of its own: the row is still the one roving stop, Enter still opens it,
+    // and the button opens it for a screen reader's cursor.
+    expect(alpha).toHaveAttribute("tabindex", "-1");
+    fireEvent.click(alpha);
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+    expect(onRowClick).toHaveBeenCalledWith(ROWS[0]);
+    fireEvent.keyDown(screen.getByText("Charlie").closest("tr")!, { key: "Enter" });
+    expect(onRowClick).toHaveBeenLastCalledWith(ROWS[2]);
+  });
+
+  it("names the disclosure button from the dataTable namespace", () => {
+    renderTable({
+      onRowClick: () => {},
+      expandedRow: (r) => `detail ${r.name}`,
+      isExpanded: () => false,
+      labels: { rowDetails: "Einzelheiten" },
+    });
+    expect(screen.getAllByRole("button", { name: "Einzelheiten" })).toHaveLength(ROWS.length);
+  });
+
+  it("draws no disclosure button on a table whose rows do not expand", () => {
+    renderTable({ onRowClick: () => {} });
+    expect(screen.queryByRole("button", { name: "Details" })).toBeNull();
   });
 });
 
@@ -273,7 +307,7 @@ describe("frame", () => {
     const root = container.querySelector("[data-density]")!;
     expect(root).toHaveAttribute("data-frame", "none");
     expect(root).toHaveClass("group/table", "mt-4");
-    expect(root.className).not.toMatch(/border|shadow|rounded|bg-\[var\(--bg-surface\)\]/);
+    expect(root.className).not.toMatch(/border|shadow|rounded|bg-surface(?![\w-])/);
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 });

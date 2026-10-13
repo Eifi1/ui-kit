@@ -13,9 +13,10 @@ import {
   WizardStepper,
   WizardSummary,
   requiredFieldsValidator,
-  resolveWizardLabels,
   useWizard,
   useWizardContext,
+  Switch,
+  WriteLockProvider,
 } from "@eifi1/ui-kit";
 import type {
   SummarySection,
@@ -24,7 +25,7 @@ import type {
   WizardLabels,
   WizardStepConfig,
 } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
+import { ConstList, Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
  * WIZARD.
@@ -67,7 +68,7 @@ const SIZE_OPTIONS = [
   { value: "roomy" as const, label: "Roomy" },
 ];
 
-/** Partial, because `resolveWizardLabels` fills the rest — the point of the prop
+/** Partial, because the kit merges it over the defaults — the point of the prop
  *  is that a monolingual app overrides the two strings it cares about rather than
  *  restating fifteen English defaults. */
 const LABELS: Partial<WizardLabels> = {
@@ -183,7 +184,7 @@ export function Wizard() {
             ],
           ]}
         />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           Row four is the trap: the default check is a trimmed non-empty string OR{" "}
           <code className="font-mono">value != null</code>, so <code className="font-mono">0</code>{" "}
           and <code className="font-mono">false</code> pass it. Anything numeric needs the{" "}
@@ -221,36 +222,12 @@ export function Wizard() {
         />
       </Example>
 
-      <Example label="resolveWizardLabels" hint="what StepperNav and WizardSummary both call on their `labels` prop">
-        <OutTable
-          rows={[
-            ["resolveWizardLabels().next", resolveWizardLabels().next],
-            ['resolveWizardLabels({ next: "Weiter" }).next', resolveWizardLabels({ next: "Weiter" }).next],
-            [
-              // The merge is shallow and total: one override never drops the rest.
-              'resolveWizardLabels({ next: "Weiter" }).back',
-              resolveWizardLabels({ next: "Weiter" }).back,
-            ],
-            [
-              // Worth knowing before you mutate what you got back: with no argument
-              // the function hands out the shared constant itself, not a copy.
-              "resolveWizardLabels() === DEFAULT_WIZARD_LABELS",
-              String(resolveWizardLabels() === DEFAULT_WIZARD_LABELS),
-            ],
-            [
-              "resolveWizardLabels({}) === DEFAULT_WIZARD_LABELS",
-              String(resolveWizardLabels({}) === DEFAULT_WIZARD_LABELS),
-            ],
-          ]}
-        />
-      </Example>
-
       <Example
         label="WizardStepper — the other one"
         hint="components/wizard-stepper: an indicator, nothing else. No engine, no data, no gates."
       >
         <div className="space-y-4">
-          <WizardStepper steps={IMPORT_STEPS} current={importStep} ariaLabel="Import steps" />
+          <WizardStepper steps={IMPORT_STEPS} current={importStep} aria-label="Import steps" />
           <Row>
             <Button
               type="button"
@@ -268,7 +245,7 @@ export function Wizard() {
             >
               Next
             </Button>
-            <span className="font-mono text-xs text-[var(--text-muted)]">
+            <span className="font-mono text-xs text-muted">
               current={JSON.stringify(importStep)}
             </span>
           </Row>
@@ -308,7 +285,7 @@ function ImportWizardDemo() {
       label="A committing step, a step after it, and the chrome's options"
       hint="urlSync: false (no ?step= written) · commits · onDone · onExit · cancellable · confirmCancel · finishVariant · finishDisabled · doneDisabled · renderFinish · nextLabel"
     >
-      <Row className="mb-3 text-xs text-[var(--text-secondary)]">
+      <Row className="mb-3 text-xs text-secondary">
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={cancellable} onChange={(e) => setCancellable(e.target.checked)} />
           <code className="font-mono">cancellable</code>
@@ -335,7 +312,7 @@ function ImportWizardDemo() {
         onEvent={note}
         onRestart={() => setRun((n) => n + 1)}
       />
-      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">callbacks: {log.length ? log.join(" · ") : "—"}</p>
+      <p className="mt-2 font-mono text-xs text-secondary">callbacks: {log.length ? log.join(" · ") : "—"}</p>
       <div className="mt-3">
         <Note>
           Step 2 is flagged <code className="font-mono">commits</code>: its button is Finish (labelled by the
@@ -467,15 +444,15 @@ function ImportWizard({
     >
       {wizard.currentStepIndex === 0 && (
         <WizardStep>
-          <p className="text-sm text-[var(--text-secondary)]">
-            <span className="font-mono text-[var(--text-primary)]">{wizard.data.file}</span> — press
+          <p className="text-sm text-secondary">
+            <span className="font-mono text-primary">{wizard.data.file}</span> — press
             &ldquo;Analyse&rdquo; and watch it pend while the pretend server checks the file.
           </p>
         </WizardStep>
       )}
       {wizard.currentStepIndex === 1 && (
         <WizardStep>
-          <label className="mb-3 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <label className="mb-3 flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               checked={wizard.data.replace}
@@ -489,10 +466,10 @@ function ImportWizard({
       )}
       {wizard.currentStepIndex === 2 && (
         <WizardStep>
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-sm text-secondary">
             Imported. Set up rules for the 12 payees seen for the first time?
           </p>
-          <label className="mt-2 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <label className="mt-2 flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               checked={wizard.data.rules}
@@ -504,7 +481,7 @@ function ImportWizard({
             <Button size="sm" variant="secondary" onClick={convert} disabled={converting || rulesWritten === 12}>
               Create 12 rules
             </Button>
-            <span className="text-xs text-[var(--text-secondary)]" aria-live="polite">
+            <span className="text-xs text-secondary" aria-live="polite">
               {converting
                 ? `Writing rule ${rulesWritten} of 12… Done waits (doneDisabled).`
                 : rulesWritten === 12
@@ -514,7 +491,7 @@ function ImportWizard({
           </Row>
         </WizardStep>
       )}
-      <p className="mt-3 font-mono text-caption text-[var(--text-muted)]">
+      <p className="mt-3 font-mono text-caption text-muted">
         isCommitStep={String(wizard.isCommitStep)} · committed={String(wizard.committed)} · canGoBack=
         {String(wizard.canGoBack)} · canCancel={String(wizard.canCancel)} · canDone={String(wizard.canDone)} ·
         isValidating={String(wizard.isValidating)}
@@ -697,8 +674,8 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
             ["onComplete received", submitted ? JSON.stringify(submitted) : "(not submitted)"],
           ]}
         />
-        <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-3">
-          <p className="text-xs text-[var(--text-secondary)]">
+        <div className="mt-4 space-y-2 border-t border-subtle pt-3">
+          <p className="text-xs text-secondary">
             What Finish should do — the failing branches reject, which is how{" "}
             <code className="font-mono">wizard.error</code> and the alert inside{" "}
             <code className="font-mono">StepperNav</code> get populated. A rejection with no
@@ -708,7 +685,7 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
             <ToggleGroup<"succeed" | "fail" | "opaque">
               value={outcome}
               onChange={setOutcome}
-              ariaLabel="Submit outcome"
+              aria-label="Submit outcome"
               className="w-full sm:w-auto"
               // Short option words, the detail in the caption: the full sentences were each
               // cut to "onComplet…" / "rejects wit…" on a phone, two of them identically.
@@ -799,8 +776,8 @@ function NameStep({
         />
         {/* `fieldErrors` is populated by the LAST failed goNext and cleared for any
             key `updateData` touches, so this message disappears as you type. */}
-        {error && <p className="text-xs text-[var(--text-secondary)]">{error}</p>}
-        <p className="text-xs text-[var(--text-muted)]">
+        {error && <p className="text-xs text-secondary">{error}</p>}
+        <p className="text-xs text-muted">
           {value.length}/24 — over that, Next and Skip go dead via{" "}
           <code className="font-mono">setNextBlocked</code> rather than failing on click.
         </p>
@@ -826,14 +803,14 @@ function SizeStep({
   return (
     <WizardStep>
       <div className="space-y-2">
-        <p className="text-sm text-[var(--text-secondary)]">Pick a size.</p>
+        <p className="text-sm text-secondary">Pick a size.</p>
         {/* `""` is not one of the options, which is how "nothing picked yet"
             renders: the group shows with no segment pressed. */}
         <ToggleGroup<Draft["size"]>
           value={size}
           onChange={(value) => onChange({ size: value })}
           options={SIZE_OPTIONS}
-          ariaLabel="Size"
+          aria-label="Size"
         />
       </div>
       <Textarea
@@ -878,11 +855,81 @@ function ContextProbe() {
 }
 
 function Empty() {
-  return <span className="text-[var(--text-muted)]">—</span>;
+  return <span className="text-muted">—</span>;
 }
 
 /** The helper's return type is `boolean | { ok, errors? }`; print whichever came
  *  back rather than assuming the object form. */
 function show(result: ValidateResult): string {
   return JSON.stringify(result);
+}
+
+/* ── since 0.23 ─────────────────────────────────────────────────────────── */
+
+/**
+ * 0.23 for the Combobox family and the wizard (keksdose G1, G2, G9 and the kit's later
+ * list). Three parts, three pages:
+ *
+ *   - {@link ComboboxFamilyLock023Demo} — Entity pickers: the write lock on all five
+ *     pickers (Autocomplete included), and MultiEntityCombobox's `hint`;
+ *   - {@link InlineCreateRow023Demo} — Entity pickers: the create row;
+ *   - {@link StepperNavFinishLock023Demo} — Wizard: `finishCommit` on Finish.
+ *
+ * Synthetic data throughout.
+ */
+
+const STEPS: WizardStepConfig[] = [
+  { id: "map", label: "Map accounts" },
+  { id: "confirm", label: "Confirm", commits: true },
+  { id: "done", label: "Done" },
+];
+
+/** keksdose G1: Finish takes the write lock itself — no `renderFinish` clone. */
+export function StepperNavFinishLock023Demo() {
+  const [locked, setLocked] = useState(true);
+  // Done starts the demo wizard over: a fresh key is a fresh `useWizard`.
+  const [run, setRun] = useState(0);
+  return (
+    <Example label="Finish under a write lock" hint="`finishCommit` / `finishDisabledReason` on StepperNav">
+      <div className="flex flex-col gap-4">
+        <Switch checked={locked} onCheckedChange={setLocked} label="Read-only demo (WriteLockProvider locked)" />
+        <WriteLockProvider locked={locked} reason="Read-only demo — importing is disabled.">
+          <FinishLockWizard key={run} onDone={() => setRun((n) => n + 1)} />
+        </WriteLockProvider>
+        <Note>
+          With {code("finishCommit")}, Finish is the kit Button&apos;s {code("commit")}: under a locked provider it
+          is {code("aria-disabled")} but focusable, the reason is in its Tooltip, and {code("wizard.finish")} does
+          not run. Back, Next and Cancel stay live — the steps before the commit write nothing.{" "}
+          {code("finishDisabledReason")} is the same lock with a reason of the app&apos;s own. A{" "}
+          {code("renderFinish")} that clones {code("commit")} in keeps working.
+        </Note>
+      </div>
+      <Note>Since 0.23.</Note>
+    </Example>
+  );
+}
+
+function FinishLockWizard({ onDone }: { onDone: () => void }) {
+  const wizard = useWizard<Record<string, unknown>>({ steps: STEPS, onComplete: () => {}, onDone });
+  return (
+    <StepperNav wizard={wizard} finishCommit>
+      {wizard.currentStep.id === "map" && (
+        <WizardStep title="Map the accounts">
+          <p className="text-sm text-secondary">Nothing is written yet — Next stays live under the lock.</p>
+        </WizardStep>
+      )}
+      {wizard.currentStep.id === "confirm" && (
+        <WizardStep title="Confirm the import">
+          <p className="text-sm text-secondary">
+            Finish is the commit, and the only button the lock holds. Hover or focus it to read why.
+          </p>
+        </WizardStep>
+      )}
+      {wizard.currentStep.id === "done" && (
+        <WizardStep title="Imported">
+          <p className="text-sm text-secondary">Synthetic: nothing was sent anywhere. Done starts over.</p>
+        </WizardStep>
+      )}
+    </StepperNav>
+  );
 }

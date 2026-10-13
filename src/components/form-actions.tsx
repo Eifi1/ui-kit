@@ -1,4 +1,4 @@
-import { isValidElement, useCallback, useEffect, useRef } from "react";
+import { isValidElement, useEffect, useMemo, useRef } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -6,9 +6,13 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { useBreakpoint, usePhoneLayout } from "../hooks/use-breakpoint";
 import { useLargeText } from "../hooks/use-large-text";
 import { isApplePlatform } from "../hooks/use-hotkey";
-import { Button, Spinner, type ButtonProps, type ButtonSize, type ButtonVariant } from "./ui";
+import { Button, type ButtonProps } from "./button";
+import { Spinner } from "./spinner";
+import type { ButtonSize, ButtonVariant } from "./button-look";
+import { mergeRefs } from "./field-parts";
 import { useWriteLock } from "./write-lock";
 import type { CommitScope } from "./write-lock";
+import { DEFAULT_FORM_ACTIONS_LABELS } from "./form-actions-labels";
 
 /** The words {@link FormActions} renders on its own behalf — the `form` namespace. */
 export interface FormActionsLabels {
@@ -23,11 +27,8 @@ export interface FormActionsLabels {
   submitShortcut: (apple: boolean) => string;
 }
 
-export const DEFAULT_FORM_ACTIONS_LABELS: FormActionsLabels = {
-  save: "Save",
-  cancel: "Cancel",
-  submitShortcut: (apple) => (apple ? "⌘ Enter" : "Ctrl+Enter"),
-};
+// Defined in ./form-actions-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FORM_ACTIONS_LABELS };
 
 /** See {@link FormActionsProps.submitShortcut}. */
 export type FormActionsSubmitShortcut = "mod-enter";
@@ -148,7 +149,7 @@ const ALIGN_CLASS: Record<FormActionsAlign, string> = {
 
 const PLACEMENT_CLASS: Record<FormActionsPlacement, string> = {
   inline: "pt-4",
-  sticky: "sticky bottom-0 z-10 border-t border-[var(--border)] bg-[var(--bg-surface)] pt-3",
+  sticky: "sticky bottom-0 z-10 border-t border-subtle bg-surface pt-3",
   dialog: "",
 };
 
@@ -321,13 +322,12 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   stack?: FormActionsStack;
   /** Extra actions, placed before Cancel. */
   children?: ReactNode;
+  /** The row, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
+   *  merged with its own ref, which `submitShortcut` finds its form from. It rode the
+   *  rest props before, after the row's own, and a caller's ref took the shortcut's. */
+  ref?: Ref<HTMLDivElement>;
 }
 
-/** Hand `el` to a caller's ref, whichever kind it is. */
-function assignRef<E>(ref: Ref<E> | undefined, el: E | null): void {
-  if (typeof ref === "function") ref(el);
-  else if (ref) (ref as { current: E | null }).current = el;
-}
 
 /**
  * Where {@link FormActionsProps.submitShortcut} listens: the form Save submits (named
@@ -387,6 +387,7 @@ export function FormActions({
   children,
   className,
   style,
+  ref,
   ...rest
 }: FormActionsProps) {
   const phone = usePhoneLayout();
@@ -400,16 +401,11 @@ export function FormActions({
   // `COMMIT_EXCEPT_BILLING` form's shortcut live too.
   const lock = useWriteLock(commit);
   const rootRef = useRef<HTMLDivElement>(null);
+  const setRoot = useMemo(() => mergeRefs(rootRef, ref), [ref]);
   const saveRef = useRef<HTMLButtonElement | null>(null);
   // The caller's own `submitProps.ref` still gets the element.
   const callerSaveRef = submitProps?.ref;
-  const setSaveRef = useCallback(
-    (el: HTMLButtonElement | null) => {
-      saveRef.current = el;
-      assignRef(callerSaveRef, el);
-    },
-    [callerSaveRef],
-  );
+  const setSaveRef = useMemo(() => mergeRefs(saveRef, callerSaveRef), [callerSaveRef]);
   // The save settled and the form is still here — it failed, and the user retries. The
   // button was natively disabled while it ran, and a focused button that turns disabled
   // drops the focus to <body> (DangerConfirm's 0.24 fix, keksdose). Only after a press
@@ -476,7 +472,7 @@ export function FormActions({
 
   return (
     <div
-      ref={rootRef}
+      ref={setRoot}
       data-slot="form-actions"
       data-placement={placement}
       data-sticky-within={placement === "sticky" ? stickyWithin : undefined}

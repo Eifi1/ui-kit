@@ -1,11 +1,16 @@
-import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import { useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, PointerEvent as ReactPointerEvent, ReactNode, Ref } from "react";
 import { Eraser, Keyboard, PenLine, Undo2 } from "lucide-react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useAnnounce } from "../hooks/use-announce";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useTextSize } from "../theme/text-size";
-import { Button, FIELD_INVALID, Input } from "./ui";
+import { Button } from "./button";
+import { FIELD_INVALID } from "./field-base";
+import { Input } from "./input";
+import { FIELD_ERROR_CLASS } from "./field-parts";
+import { DEFAULT_SIGNATURE_PAD_LABELS } from "./signature-pad-labels";
 
 /**
  * A drawn signature, captured on a canvas and handed back as a PNG data URL.
@@ -81,24 +86,8 @@ export interface SignaturePadLabels {
   viewTyped: (name: string) => string;
 }
 
-export const DEFAULT_SIGNATURE_PAD_LABELS: SignaturePadLabels = {
-  label: "Signature",
-  instructions: "Sign in the box with a mouse, your finger or a pen.",
-  typedFallbackHint: "If you cannot draw, type your name instead.",
-  empty: "Nothing drawn yet",
-  signed: "Signature drawn",
-  undo: "Undo last stroke",
-  clear: "Clear",
-  save: "Save signature",
-  useTyped: "Type name instead",
-  useDrawn: "Draw instead",
-  typedName: "Full name",
-  cleared: "Signature cleared",
-  undone: "Last stroke removed",
-  viewEmpty: "Not signed",
-  viewDrawn: "Handwritten signature",
-  viewTyped: (name) => `Signed with the typed name ${name}`,
-};
+// Defined in ./signature-pad-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SIGNATURE_PAD_LABELS };
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -152,7 +141,10 @@ export interface SignaturePadProps extends Omit<ComponentPropsWithoutRef<"div">,
   /** Classes for the canvas — its height, chiefly (default `h-40`). */
   canvasClassName?: string;
   /** User-facing strings; see {@link SignaturePadLabels}. */
-  labels?: Partial<SignaturePadLabels>;
+  labels?: LabelOverride<SignaturePadLabels>;
+  /** The {@link SignaturePadHandle}, not an element. A React 19 ref prop since 0.34
+   *  (MOD-4, refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<SignaturePadHandle>;
 }
 
 /* ── Drawing ─────────────────────────────────────────────────────────────── */
@@ -238,26 +230,24 @@ function drawName(ctx: CanvasRenderingContext2D, name: string, w: number, h: num
 
 /* ── The component ───────────────────────────────────────────────────────── */
 
-export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(function SignaturePad(
-  {
-    label,
-    description,
-    onChange,
-    onSave,
-    disabled,
-    invalid,
-    error,
-    allowTypedName,
-    exportInk = DEFAULT_EXPORT_INK,
-    exportBackground,
-    lineWidth = 2.5,
-    canvasClassName,
-    labels: labelsProp,
-    className,
-    ...rest
-  },
+export function SignaturePad({
   ref,
-) {
+  label,
+  description,
+  onChange,
+  onSave,
+  disabled,
+  invalid,
+  error,
+  allowTypedName,
+  exportInk = DEFAULT_EXPORT_INK,
+  exportBackground,
+  lineWidth = 2.5,
+  canvasClassName,
+  labels: labelsProp,
+  className,
+  ...rest
+}: SignaturePadProps) {
   // Prop > <UiKitProvider> > English, like every labelled component in the kit.
   const labels = useKitLabels("signaturePad", DEFAULT_SIGNATURE_PAD_LABELS, labelsProp);
   const { announce, regionProps } = useAnnounce();
@@ -526,7 +516,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
     if (png) onSave?.(png, detail());
   };
 
-  const hasError = error !== undefined && error !== null && error !== false && error !== "";
+  const hasError = hasContent(error);
   const isInvalid = Boolean(invalid) || hasError;
   const describedBy = [descId, statusId, hasError ? errorId : null].filter(Boolean).join(" ");
 
@@ -538,10 +528,10 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
   return (
     <div {...rest} className={cn("relative space-y-1.5", className)} data-empty={isEmpty || undefined}>
       <div>
-        <span id={labelId} className="block text-sm font-medium text-[var(--text-primary)]">
+        <span id={labelId} className="block text-sm font-medium text-primary">
           {label ?? labels.label}
         </span>
-        <p id={descId} className="text-xs text-[var(--text-muted)]">
+        <p id={descId} className="text-xs text-muted">
           {description ?? labels.instructions}
           {allowTypedName && !typed ? ` ${labels.typedFallbackHint}` : null}
         </p>
@@ -564,7 +554,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
           onPointerCancel={endStroke}
           className={cn(
             // `touch-none` stops the page scrolling under a finger that is signing.
-            "block h-40 w-full touch-none select-none rounded-md border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)]",
+            "block h-40 w-full touch-none select-none rounded-md border border-subtle bg-surface text-primary",
             typed || disabled ? "cursor-default" : "cursor-crosshair",
             disabled && "opacity-60",
             isInvalid && FIELD_INVALID,
@@ -574,7 +564,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
         {/* The signing line — where people expect to sign. Decoration only. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-[var(--border-strong)]"
+          className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-strong"
         />
         <span id={statusId} className="sr-only">
           {isEmpty ? labels.empty : labels.signed}
@@ -633,7 +623,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
       </div>
 
       {hasError && (
-        <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
+        <p id={errorId} className={FIELD_ERROR_CLASS}>
           {error}
         </p>
       )}
@@ -641,12 +631,11 @@ export const SignaturePad = forwardRef<SignaturePadHandle, SignaturePadProps>(fu
       <div {...regionProps} />
     </div>
   );
-});
-SignaturePad.displayName = "SignaturePad";
+}
 
 /* ── Read-only ───────────────────────────────────────────────────────────── */
 
-export interface SignatureViewProps extends ComponentPropsWithoutRef<"figure"> {
+export interface SignatureViewProps extends ComponentPropsWithRef<"figure"> {
   /** The saved PNG — what `SignaturePad` handed to `onChange`/`onSave`, as stored. */
   value?: string | null;
   /**
@@ -669,7 +658,7 @@ export interface SignatureViewProps extends ComponentPropsWithoutRef<"figure"> {
   /** Classes for the frame — its height, chiefly (default `h-40`, the pad's). */
   frameClassName?: string;
   /** User-facing strings; see {@link SignaturePadLabels} (`view*`). */
-  labels?: Partial<SignaturePadLabels>;
+  labels?: LabelOverride<SignaturePadLabels>;
 }
 
 /**
@@ -707,11 +696,11 @@ export function SignatureView({
       data-empty={kind === "empty" || undefined}
     >
       {captioned && (
-        <figcaption id={captionId} className="block text-sm font-medium text-[var(--text-primary)]">{caption}</figcaption>
+        <figcaption id={captionId} className="block text-sm font-medium text-primary">{caption}</figcaption>
       )}
       <div
         className={cn(
-          "relative flex h-40 items-center justify-center overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)]",
+          "relative flex h-40 items-center justify-center overflow-hidden rounded-md border border-subtle bg-surface",
           frameClassName,
         )}
       >
@@ -728,19 +717,21 @@ export function SignatureView({
           <span
             role="img"
             aria-label={labels.viewTyped(name)}
-            className="relative max-w-[85%] truncate px-2 text-4xl italic text-[var(--text-primary)]"
+            // A name, so never cut at Large: it wraps inside the 10rem frame from Large
+            // up (`truncate-until-large`, text size §10.17; round 0.34 T1).
+            className="relative max-w-[85%] truncate-until-large px-2 text-4xl italic text-primary"
             style={{ fontFamily: SCRIPT_FONT }}
           >
             {name}
           </span>
         )}
         {kind === "empty" && (
-          <span className="relative text-xs text-[var(--text-muted)]">{labels.viewEmpty}</span>
+          <span className="relative text-xs text-muted">{labels.viewEmpty}</span>
         )}
         {/* The signing line, as on the pad. Decoration only. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-[var(--border-strong)]"
+          className="pointer-events-none absolute inset-x-6 bottom-8 border-b border-dashed border-strong"
         />
       </div>
     </figure>

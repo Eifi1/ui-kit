@@ -26,6 +26,9 @@ type Section<P = object> = ComponentType<P> & { preload: () => Promise<void> };
 type PropsOf<C> = C extends ComponentType<infer P> ? P : never;
 
 const registry: Section<never>[] = [];
+/** The same sections by the name routes.tsx gives them — unique there; the search index
+ *  generator fails a second section of one name. */
+const byName = new Map<string, Section<never>>();
 
 export function lazySection<M, K extends keyof M & string>(
   load: () => Promise<M>,
@@ -52,10 +55,27 @@ export function lazySection<M, K extends keyof M & string>(
   LazySection.displayName = `Lazy(${name})`;
   const section = Object.assign(LazySection, { preload });
   registry.push(section as Section<never>);
+  byName.set(name, section as Section<never>);
   return section;
 }
 
 /** Load every section module up front — for the tests, which render pages synchronously. */
 export function preloadAllSections(): Promise<void[]> {
   return Promise.all(registry.map((s) => s.preload()));
+}
+
+/**
+ * Load only the named sections — for a test file that mounts a few pages, which takes
+ * their names from `PAGE_SECTIONS` (search/examples.generated.ts). Loading all 250-odd
+ * made every page shard a 1.4 GB process for its ~20 pages (refactor audit 2026-10,
+ * TST-8). A name nothing registered rejects, so a stale index fails the file's setup
+ * instead of leaving a page to render its fallback.
+ */
+export function preloadSections(names: Iterable<string>): Promise<void[]> {
+  const unique = [...new Set(names)];
+  const missing = unique.filter((name) => !byName.has(name));
+  if (missing.length) {
+    return Promise.reject(new Error(`no lazy section named ${missing.join(", ")}: is examples.generated.ts stale?`));
+  }
+  return Promise.all(unique.map((name) => byName.get(name)!.preload()));
 }

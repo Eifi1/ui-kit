@@ -124,7 +124,7 @@ export const fr: Dictionary = {
       title: "Administration des utilisateurs",
       short: "Utilisateurs",
       blurb:
-        "Le côté administration des comptes\u00a0: la liste des utilisateurs avec leurs rôles et leurs états, les quatre actions d’administration avec la confirmation demandée par le serveur, le journal d’audit, les invitations, la transmission du travail, ainsi que la colonne de formule et le changement de formule par l’opérateur.",
+        "Le côté administration des comptes\u00a0: la liste des utilisateurs avec leurs rôles et leurs états, les quatre actions d’administration avec la confirmation demandée par le serveur, le journal d’audit avec ses actions de groupe, les invitations, la transmission du travail, ainsi que la colonne de formule et le changement de formule par l’opérateur.",
     },
     subscription: {
       title: "Abonnement",
@@ -371,7 +371,7 @@ export const fr: Dictionary = {
       title: "Graphique de séries",
       short: "Séries",
       blurb:
-        "Le graphique de séries zoomable que partagent les applications\u00a0: un axe par unité, une légende d’interrupteurs, un seul zoom pour une pile de graphiques, et les utilitaires en dessous.",
+        "Le graphique de séries zoomable que partagent les applications\u00a0: un axe par unité, une légende d’interrupteurs, un seul zoom pour une pile de graphiques, un budget de lignes pour les longues tables, et les utilitaires en dessous.",
     },
     "series-chart-marks": {
       title: "Graphique de séries\u00a0: barres, aires et temps",
@@ -539,7 +539,7 @@ export const fr: Dictionary = {
       title: "Facturation",
       short: "Facturation",
       blurb:
-        "Les formules et leurs limites, la situation de l’abonnement avec les dates de l’essai et de la bêta, le verrou de lecture seule à l’expiration, et les webhooks de Paddle et de Lemon Squeezy\u00a0: signatures vérifiées, événements normalisés, un seul dispatch.",
+        "Les formules et leurs limites, la situation de l’abonnement avec les dates de l’essai et de la bêta, le verrou de lecture seule à l’expiration, et les webhooks de Paddle\u00a0: signatures vérifiées, événements normalisés, un seul dispatch.",
     },
     "server-mail": {
       title: "E-mails",
@@ -557,7 +557,7 @@ export const fr: Dictionary = {
       title: "Limites, erreurs et CORS",
       short: "Limites",
       blurb:
-        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, et CORS pour quelques origines supplémentaires.",
+        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, CORS pour quelques origines supplémentaires, et le jeton du planificateur sur les routes de tâches.",
     },
     "server-translation-review": {
       title: "Relecture des traductions",
@@ -1236,7 +1236,7 @@ export const fr: Dictionary = {
     "server-billing": [
       "vérifier une limite de formule sur le serveur",
       "vérifier la signature d’un webhook",
-      "traiter les événements Paddle et Lemon Squeezy",
+      "traiter les événements Paddle",
       "l’abonnement est-il à jour",
       "dates de fin de l’essai et de la bêta",
       "refuser les écritures quand l’abonnement expire",

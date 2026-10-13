@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   ComponentPropsWithoutRef,
@@ -13,14 +13,18 @@ import { cn } from "../lib/cn";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
-import { usePhoneLayout } from "../hooks/use-breakpoint";
-import { FLOATING_LABEL_STATIC, Spinner } from "./ui";
+import { usePhoneLayout, useRemPx } from "../hooks/use-breakpoint";
+import { FLOATING_LABEL_STATIC } from "./field-parts";
+import { Spinner } from "./spinner";
 import { useAnchorDir } from "./use-anchor-dir";
 import { type AnchorRect } from "../hooks/use-anchored-rect";
-import { useAnchoredPanel, type AnchoredPanel } from "../hooks/use-anchored-panel";
-import { useEscapeKey, useOutsideClick } from "../hooks/use-dismiss";
-import { DEFAULT_COMBOBOX_LABELS, useKitLabels } from "../i18n/kit-labels";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { anchoredInline, useAnchoredPanel, viewportSize, type AnchoredPanel } from "../hooks/use-anchored-panel";
+import { takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
+import { useOverlayHistory } from "../hooks/use-overlay-history";
+import { isImeEnter } from "../lib/ime";
+import { foldForSearch } from "../lib/text-match";
+import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { hasContent } from "../lib/presence";
 
 /**
  * What an entity picker hands `onChange` when it is cleared — `clearValue` on
@@ -184,7 +188,8 @@ export interface OptionSourceOptions<V extends string | number> {
   /** External loading flag, OR-ed with the internal async state. */
   loading?: boolean;
   /**
-   * Narrow `options` by the query (label/sublabel substring). Default `true`.
+   * Narrow `options` by the query (label/sublabel substring, folded for search: no case,
+   * no accents, the locale's case rules — "zurich" finds Zürich, DUP-5). Default `true`.
    *
    * `false` shows `options` exactly as given, in the given order — for a list the
    * caller has already searched and ranked on a server (Keksdose's geocoder), which a
@@ -267,15 +272,18 @@ export function useOptionSource<V extends string | number>({
     return () => clearTimeout(t);
   }, [query, active, isAsync, tooShort, debounceMs]);
 
+  // Folded as every kit list folds (DUP-5, refactor audit 2026-10): plain `toLowerCase`
+  // here meant "zurich" found no Zürich in kastlan's eighteen entity pickers, and the
+  // Turkish "ı" no "IRMAK".
+  const locale = useKitLocale();
   const clientResults = useMemo(() => {
     if (isAsync) return [];
     const src = options ?? [];
-    const q = query.trim().toLowerCase();
+    const q = foldForSearch(query.trim(), locale);
     if (!filter || !q) return src;
-    return src.filter(
-      (o) => o.label.toLowerCase().includes(q) || (o.sublabel ?? "").toLowerCase().includes(q),
-    );
-  }, [isAsync, options, query, filter]);
+    const hit = (s: string | undefined) => s !== undefined && foldForSearch(s, locale).includes(q);
+    return src.filter((o) => hit(o.label) || hit(o.sublabel));
+  }, [isAsync, options, query, filter, locale]);
 
   const pending = isAsync && active && !tooShort && settled.query !== query;
   const failed = isAsync && !tooShort && settled.failed;
@@ -287,7 +295,16 @@ export function useOptionSource<V extends string | number>({
   };
 }
 
-export type ComboboxCoreOptions<V extends string | number> = OptionSourceOptions<V>;
+export interface ComboboxCoreOptions<V extends string | number> extends OptionSourceOptions<V> {
+  /**
+   * Back closes the open anchored list, not the page or the dialog behind it — the rule
+   * `useDropdown` keeps for its lists (keksdose live #309 rework). Default `false`, as the
+   * entity pickers have always been; CurrencySelect, MultiSelect, GroupedPicker and
+   * AmountInput's currency chip, which came over from `useDropdown` (DUP-4), pass `true`
+   * so they keep it. On a phone the `PickerSheet` registers Back itself.
+   */
+  backCloses?: boolean;
+}
 
 export interface ComboboxCore<V extends string | number> {
   triggerRef: RefObject<HTMLButtonElement | null>;
@@ -328,6 +345,7 @@ export interface ComboboxCore<V extends string | number> {
 export function useComboboxCore<V extends string | number>({
   options,
   minChars = 0,
+  backCloses = false,
   ...source
 }: ComboboxCoreOptions<V>): ComboboxCore<V> {
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -366,7 +384,12 @@ export function useComboboxCore<V extends string | number>({
   // `useDropdown`'s listener and never covered this hook.
   const isPhone = usePhoneLayout();
   useOutsideClick([triggerRef, panelRef], close, open && !isPhone);
-  useEscapeKey(closeToTrigger, open);
+  // A layer on the Escape stack while the anchored panel is open (Wave 2, DUP-1), so a
+  // dialog around the picker closes only after it (BUG-1). `ComboboxPanel` takes the key
+  // where focus is. On a phone the `PickerSheet` is the layer, as it is the outside.
+  useDismissLayer(open && !isPhone, closeToTrigger);
+  // See `backCloses`. The same close path a pointer dismissal takes.
+  useOverlayHistory(backCloses && open && !isPhone, close);
 
   // Reset the query each time the panel opens, and the highlighted row whenever the
   // visible set changes (a new query, or the panel opening or closing). Adjusted while
@@ -435,43 +458,20 @@ export function useComboboxCore<V extends string | number>({
   };
 }
 
-/** The error line under a field — the same type as `ui.tsx`'s (module-private) one,
- *  so a combobox's message is indistinguishable from an Input's. */
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
-
-/**
- * {@link Input}'s `error` for the combobox family: the message under the field, its
- * id on the control's `aria-describedby` (merged, never replacing — the hint the
- * caller pointed at stays first), and `invalid` implied. ui.tsx's `useFieldError` is
- * module-private, so this restates it on the same rules `choice-parts.ts` does.
- */
-export function useComboboxFieldError(
-  error: ReactNode,
-  invalid: boolean | undefined,
-  describedBy?: string,
-) {
-  const errorId = useId();
-  const has = hasMessage(error);
-  return {
-    isInvalid: Boolean(invalid) || has,
-    describedBy: mergeDescribedBy(describedBy, has && errorId),
-    errorEl: has ? (
-      <p id={errorId} className={FIELD_ERROR_CLASS}>
-        {error}
-      </p>
-    ) : null,
-  };
-}
+// The family's `error` is every field's `useFieldError` (field-parts) since 0.34 — the
+// restatement that stood here ignored a form library's `aria-invalid` (DUP-8).
 
 /** The anchored suggestion list's box and rows — one look for {@link Combobox},
  *  {@link InlineEntityCombobox} and {@link Autocomplete}. */
 export const SUGGESTION_LIST_CLASS =
-  "max-h-64 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] py-1 shadow-lg";
+  "max-h-64 overflow-y-auto rounded-md border border-subtle bg-surface py-1 shadow-lg";
 
+// One line at Normal; from Large up a long suggestion wraps and its row grows (text size
+// §10.17, round 0.34 T1), like every other option list of the kit.
 export const suggestionRowClass = (isActive: boolean) =>
   cn(
-    "block w-full truncate px-3 py-1.5 text-start text-sm text-[var(--text-primary)]",
-    isActive ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]",
+    "block w-full truncate-until-large px-3 py-1.5 text-start text-sm text-primary",
+    isActive ? "bg-active" : "hover:bg-hover",
   );
 
 /**
@@ -491,6 +491,34 @@ export function useActiveOptionScroll(activeId: string | undefined): void {
     if (!activeId) return;
     document.getElementById(activeId)?.scrollIntoView?.({ block: "nearest" });
   }, [activeId]);
+}
+
+/** The anchored panel's least width, in rem: 220 px at Normal (§3.2). */
+const PANEL_MIN_REM = 13.75;
+
+/** The room the anchored panel keeps from either edge of the glass, in px —
+ *  `anchoredInline`'s default. */
+const PANEL_EDGE = 8;
+
+/**
+ * How wide the anchored panel is. The phone sheet is the screen's width whatever this
+ * says.
+ */
+export interface ComboboxPanelWidth {
+  /** The least width, in rem — never under the trigger's own. Default 13.75 (220 px at
+   *  Normal, §3.2). */
+  minRem?: number;
+  /**
+   * As wide as the rows make it (`max-content`), between the least width and `maxRem`,
+   * instead of exactly the least — measured, so the clamp to the glass still knows it.
+   * CurrencySelect's list grows to show the full currency names (feedback #308);
+   * MultiSelect's rows to show their hints (keksdose #147). A `w-*` class in the panel's
+   * `className` does not apply: the panel is portalled to <body>, where `w-full` would be
+   * the screen.
+   */
+  fit?: boolean;
+  /** With `fit`, the most it grows to, in rem. Default: the glass. */
+  maxRem?: number;
 }
 
 export interface ComboboxPanelProps<V extends string | number>
@@ -523,6 +551,30 @@ export interface ComboboxPanelProps<V extends string | number>
   closeLabel?: string;
   /** Default: `combobox.loadError` from the {@link UiKitProvider}, else English. */
   loadErrorLabel?: string;
+  /**
+   * What a row shows in place of its label and sublabel — for a row that says more than
+   * two strings: CurrencySelect's symbol, code and name side by side. The option's
+   * `icon`, the multi checkbox and the check mark stay the panel's. Its text is the
+   * option's accessible name, so separate the parts with a space.
+   */
+  renderOption?: (o: ComboOption<V>) => ReactNode;
+  /** Controls between the search box and the list, in the anchored panel and the phone
+   *  sheet alike — MultiSelect's "Select all" and "Clear". */
+  toolbar?: ReactNode;
+  /** See {@link ComboboxPanelWidth}. */
+  width?: ComboboxPanelWidth;
+  /** Which of the trigger's edges the anchored panel hangs from, by reading direction.
+   *  Default `start`; `end` grows the panel toward the start, so a field with content
+   *  after it is not pushed past the page (CurrencySelect, feedback #308). */
+  align?: "start" | "end";
+  /**
+   * Lay the rows out in columns, one block per `group`, with the group's name above it —
+   * GroupedPicker's panel (feedback #267/#276): a large grouped set reads as a sheet of
+   * short lists side by side rather than one long one. Each block is a `role="group"`
+   * named by its heading. The arrow keys walk the rows in reading order, down each
+   * column. The phone sheet keeps one column with headings.
+   */
+  columns?: boolean;
 }
 
 /**
@@ -566,11 +618,16 @@ export function ComboboxPanel<V extends string | number>({
   sheetTitle,
   closeLabel,
   loadErrorLabel,
+  renderOption,
+  toolbar,
+  width,
+  align = "start",
+  columns,
   className,
   style,
   ...rest
 }: ComboboxPanelProps<V>) {
-  const createLocked = hasMessage(createDisabledReason);
+  const createLocked = hasContent(createDisabledReason);
   const {
     rect,
     placement,
@@ -610,11 +667,36 @@ export function ComboboxPanel<V extends string | number>({
   // Portalled to <body>, the panel leaves the subtree its `dir` came from — so the
   // direction is read off the trigger and put back on the panel below.
   const dir = useAnchorDir(core.triggerRef, core.open);
+  const remPx = useRemPx();
+  // A `fit` panel's measured width — what it takes to keep it on the glass (see
+  // `ComboboxPanelWidth.fit`). Observed rather than read once: the rows change under the
+  // search, and a filtered list of short names is a narrower panel. `null` where nothing
+  // is laid out (jsdom), and the least width is used.
+  const fit = width?.fit === true && !isPhone;
+  const [fitWidth, setFitWidth] = useState<number | null>(null);
+  const placed = core.open && rect !== null;
+  useLayoutEffect(() => {
+    const el = panelRef.current;
+    if (!fit || !placed || !el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      const measured = el.getBoundingClientRect().width;
+      setFitWidth(measured > 0 ? measured : null);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fit, placed, panelRef]);
 
   // The WAI-ARIA APG's listbox keyboard, in full: Up/Down step, Home/End jump, Enter
-  // commits, Tab leaves. Escape is the one key handled elsewhere — `useComboboxCore`
-  // registers it on the document, so it answers wherever focus has ended up.
+  // commits, Tab leaves, Escape closes. On the panel's search box — in the anchored
+  // panel and, through `onSearchKeyDown`, in the phone sheet's header (BUG-5).
   const onKeyDown = (e: ReactKeyboardEvent) => {
+    // Escape goes to the top of the kit's Escape stack — this list, which opened over
+    // any dialog it sits in — and stops HERE (round 0.34 BUG-1, Wave 2 DUP-1). The
+    // panel's events travel up the React tree through that dialog, portal or not, and
+    // one press used to close the dialog and throw the form away, list still open.
+    if (takeEscape(e)) return;
+    // The Enter that confirms an IME composition is the IME's (BUG-9).
+    if (isImeEnter(e)) return;
     // Disabled rows are passed over (`stepEnabled`), and each step starts from the
     // SETTLED highlight, not the raw index, so the first Down from a disabled row 0
     // goes to the row after the one already shown as highlighted.
@@ -635,11 +717,11 @@ export function ComboboxPanel<V extends string | number>({
       if (current < 0) return;
       if (current < results.length) onChoose(results[current]);
       else if (showCreate && !createLocked) onCreate();
-    } else if (e.key === "Tab") {
+    } else if (e.key === "Tab" && !isPhone) {
       // The panel is PORTALLED to <body>, so the browser's own Tab would move from
       // here to whatever follows the portal — i.e. off the end of the document. The
       // trade is one extra Tab (trigger, then onward) against never stranding focus
-      // at the bottom of the page.
+      // at the bottom of the page. The phone sheet is a dialog, and its trap keeps Tab.
       e.preventDefault();
       closeToTrigger();
     }
@@ -689,7 +771,7 @@ export function ComboboxPanel<V extends string | number>({
       className={cn(
         "relative",
         message !== null && cn("py-2 text-sm", isPhone ? "px-4" : "px-3"),
-        failed ? "text-[var(--danger)]" : "text-[var(--text-muted)]",
+        failed ? "text-danger" : "text-muted",
       )}
     >
       {message ??
@@ -700,6 +782,136 @@ export function ComboboxPanel<V extends string | number>({
   );
 
   if (!core.open || typeof document === "undefined") return null;
+
+  // One option row — the same in both containers and in both layouts.
+  const optionRow = (o: ComboOption<V>, i: number) => {
+    const selected = isSelected(o.value);
+    return (
+      <li role="presentation">
+        <button
+          type="button"
+          id={optionId(i)}
+          role="option"
+          aria-selected={selected}
+          aria-disabled={o.disabled || undefined}
+          tabIndex={-1}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            if (!o.disabled) onChoose(o);
+          }}
+          onMouseEnter={() => {
+            if (!o.disabled) setActive(i);
+          }}
+          className={cn(
+            isPhone
+              ? SHEET_ROW_CLASS
+              : columns
+                ? // A cell of a column (GroupedPicker): tighter, so four columns fit.
+                  "flex w-full items-center gap-1.5 rounded px-1.5 py-0.5 text-start text-sm"
+                : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
+            // The row the arrows are on shows it on a phone too: the sheet takes
+            // the keyboard (BUG-5), and a tablet or a desktop at Large has one.
+            o.disabled
+              ? DISABLED_ROW_CLASS
+              : i === current
+                ? "bg-active"
+                : !isPhone && "hover:bg-hover",
+            // After SHEET_ROW_CLASS, so its hover is the one cancelled.
+            o.disabled && isPhone && DISABLED_ROW_CLASS,
+          )}
+        >
+          {multi && (
+            <span
+              // The checkbox is a PICTURE of `aria-selected` above, so a reader
+              // that met both would be told twice.
+              aria-hidden
+              className={cn(
+                "flex size-4 shrink-0 items-center justify-center rounded border",
+                selected
+                  ? "border-[var(--bg-inverse)] bg-inverse text-inverse"
+                  : "border-strong bg-surface",
+              )}
+            >
+              {selected && <Check className="size-3" />}
+            </span>
+          )}
+          {o.icon && <span className="shrink-0">{o.icon}</span>}
+          {renderOption ? (
+            <span className="flex min-w-0 flex-1 items-center gap-2">{renderOption(o)}</span>
+          ) : (
+            /* Label and sublabel wrap from Large up (text size §10.17, round 0.34 T1). */
+            <span className="min-w-0 flex-1">
+              <span className={cn("block truncate-until-large text-primary", columns && selected && "font-medium")}>
+                {o.label}
+              </span>
+              {o.sublabel && (
+                <span className="block truncate-until-large text-xs text-placeholder">{o.sublabel}</span>
+              )}
+            </span>
+          )}
+          {!multi && selected && <Check className="size-4 shrink-0 text-brand" />}
+        </button>
+      </li>
+    );
+  };
+
+  const createRow = showCreate && (
+    <li role="presentation">
+      <button
+        type="button"
+        id={optionId(results.length)}
+        role="option"
+        // Never chosen — it is an action, and it disappears the moment it has
+        // been taken. Whether the keyboard is ON it is `aria-activedescendant`'s
+        // job to say.
+        aria-selected={false}
+        aria-disabled={createLocked || undefined}
+        tabIndex={-1}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          if (!createLocked) onCreate();
+        }}
+        onMouseEnter={() => {
+          if (!createLocked) setActive(results.length);
+        }}
+        className={cn(
+          isPhone
+            ? SHEET_ROW_CLASS
+            : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
+          "text-secondary",
+          createLocked
+            ? DISABLED_ROW_CLASS
+            : current === results.length
+              ? "bg-active"
+              : !isPhone && "hover:bg-hover",
+          // After SHEET_ROW_CLASS, so its hover is the one cancelled.
+          createLocked && isPhone && DISABLED_ROW_CLASS,
+        )}
+      >
+        <Plus className="size-4 shrink-0" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate-until-large">{createContent}</span>
+          {createLocked && (
+            <span className="block truncate-until-large text-xs text-placeholder">
+              {createDisabledReason}
+            </span>
+          )}
+        </span>
+      </button>
+    </li>
+  );
+
+  // In columns, a block per run of one group; `results` keeps its source order, so a
+  // run is the rows up to the next change of group.
+  const blocks: { group: string; rows: { o: ComboOption<V>; i: number }[] }[] = [];
+  if (columns && !isPhone) {
+    results.forEach((o, i) => {
+      const group = o.group ?? "";
+      const last = blocks[blocks.length - 1];
+      if (last && last.group === group) last.rows.push({ o, i });
+      else blocks.push({ group, rows: [{ o, i }] });
+    });
+  }
 
   const list = (
     <ul
@@ -713,136 +925,64 @@ export function ComboboxPanel<V extends string | number>({
       // Tooltip in a row then portals out in a test exactly as it does in the
       // browser, instead of joining the option's accessible name (keksdose E8).
       {...{ [CLIPS_ATTRIBUTE]: "" }}
-      className={cn("min-h-0 flex-1 overflow-y-auto py-1", isPhone && "flex-none")}
-    >
-      {results.map((o, i) => {
-        const selected = isSelected(o.value);
-        // One heading per group rather than a grey suffix on every row (#136), and
-        // the thing the native <select>'s <optgroup> used to give the account
-        // picker for free (live #200). `results` keeps its source order, so a
-        // boundary is simply "different from the row above".
-        const startsGroup = o.group != null && o.group !== results[i - 1]?.group;
-        return (
-          // Keyed by group AND value: an option may deliberately appear twice —
-          // Keksdose repeats recently-used categories in a "Recent" group at the
-          // top (live #203) — and a bare value key would collide.
-          <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>
-            {startsGroup && (
-              <li
-                role="presentation"
-                className={cn(
-                  "font-semibold uppercase tracking-wide text-[var(--text-muted)]",
-                  isPhone ? "px-4 pb-1 pt-3 text-xs" : "px-3 pb-0.5 pt-2 text-caption first:pt-1",
-                )}
-              >
-                {o.group}
-              </li>
-            )}
-          <li role="presentation">
-            <button
-              type="button"
-              id={optionId(i)}
-              role="option"
-              aria-selected={selected}
-              aria-disabled={o.disabled || undefined}
-              tabIndex={-1}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                if (!o.disabled) onChoose(o);
-              }}
-              onMouseEnter={() => {
-                if (!o.disabled) setActive(i);
-              }}
-              className={cn(
-                isPhone
-                  ? SHEET_ROW_CLASS
-                  : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
-                o.disabled
-                  ? DISABLED_ROW_CLASS
-                  : i === current && !isPhone
-                    ? "bg-[var(--bg-active)]"
-                    : !isPhone && "hover:bg-[var(--bg-hover)]",
-                // After SHEET_ROW_CLASS, so its hover is the one cancelled.
-                o.disabled && isPhone && DISABLED_ROW_CLASS,
-              )}
-            >
-              {multi && (
-                <span
-                  // The checkbox is a PICTURE of `aria-selected` above, so a reader
-                  // that met both would be told twice.
-                  aria-hidden
-                  className={cn(
-                    "flex size-4 shrink-0 items-center justify-center rounded border",
-                    selected
-                      ? "border-[var(--bg-inverse)] bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                      : "border-[var(--border-strong)] bg-[var(--bg-surface)]",
-                  )}
-                >
-                  {selected && <Check className="size-3" />}
-                </span>
-              )}
-              {o.icon && <span className="shrink-0">{o.icon}</span>}
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[var(--text-primary)]">{o.label}</span>
-                {o.sublabel && (
-                  <span className="block truncate text-xs text-[var(--text-placeholder)]">
-                    {o.sublabel}
-                  </span>
-                )}
-              </span>
-              {!multi && selected && <Check className="size-4 shrink-0 text-[var(--brand)]" />}
-            </button>
-          </li>
-          </Fragment>
-        );
-      })}
-      {showCreate && (
-        <li role="presentation">
-          <button
-            type="button"
-            id={optionId(results.length)}
-            role="option"
-            // Never chosen — it is an action, and it disappears the moment it has
-            // been taken. Whether the keyboard is ON it is `aria-activedescendant`'s
-            // job to say.
-            aria-selected={false}
-            aria-disabled={createLocked || undefined}
-            tabIndex={-1}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              if (!createLocked) onCreate();
-            }}
-            onMouseEnter={() => {
-              if (!createLocked) setActive(results.length);
-            }}
-            className={cn(
-              isPhone
-                ? SHEET_ROW_CLASS
-                : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
-              "text-[var(--text-secondary)]",
-              createLocked
-                ? DISABLED_ROW_CLASS
-                : current === results.length && !isPhone
-                  ? "bg-[var(--bg-active)]"
-                  : !isPhone && "hover:bg-[var(--bg-hover)]",
-              // After SHEET_ROW_CLASS, so its hover is the one cancelled.
-              createLocked && isPhone && DISABLED_ROW_CLASS,
-            )}
-          >
-            <Plus className="size-4 shrink-0" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate">{createContent}</span>
-              {createLocked && (
-                <span className="block truncate text-xs text-[var(--text-placeholder)]">
-                  {createDisabledReason}
-                </span>
-              )}
-            </span>
-          </button>
-        </li>
+      className={cn(
+        "min-h-0 flex-1 overflow-y-auto",
+        columns && !isPhone ? "columns-2 gap-4 p-3 md:columns-3 xl:columns-4" : "py-1",
+        isPhone && "flex-none",
       )}
+    >
+      {columns && !isPhone
+        ? blocks.map((block) => (
+            // A column block: its heading is a picture of the group's name, which the
+            // `role="group"` carries for a reader — the listbox may own options and
+            // groups, and a heading of loose text in it is neither.
+            <li key={`${block.group}|${block.rows[0].i}`} role="presentation" className="mb-3 break-inside-avoid">
+              {block.group && (
+                <div aria-hidden className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
+                  {block.group}
+                </div>
+              )}
+              <ul role="group" aria-label={block.group || undefined} className="space-y-0.5">
+                {block.rows.map(({ o, i }) => (
+                  <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>{optionRow(o, i)}</Fragment>
+                ))}
+              </ul>
+            </li>
+          ))
+        : results.map((o, i) => {
+            // One heading per group rather than a grey suffix on every row (#136), and
+            // the thing the native <select>'s <optgroup> used to give the account
+            // picker for free (live #200). `results` keeps its source order, so a
+            // boundary is simply "different from the row above".
+            const startsGroup = o.group != null && o.group !== results[i - 1]?.group;
+            return (
+              // Keyed by group AND value: an option may deliberately appear twice —
+              // Keksdose repeats recently-used categories in a "Recent" group at the
+              // top (live #203) — and a bare value key would collide.
+              <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>
+                {startsGroup && (
+                  <li
+                    role="presentation"
+                    className={cn(
+                      "font-semibold uppercase tracking-wide text-muted",
+                      isPhone ? "px-4 pb-1 pt-3 text-xs" : "px-3 pb-0.5 pt-2 text-caption first:pt-1",
+                    )}
+                  >
+                    {o.group}
+                  </li>
+                )}
+                {optionRow(o, i)}
+              </Fragment>
+            );
+          })}
+      {createRow}
     </ul>
   );
+
+  // The search box is NAMED, not only prompted: a placeholder is gone the moment a
+  // character is typed, and jsdom's readers and some real ones never took it for a name
+  // (BUG-12: GroupedPicker's filter had "no name beyond its placeholder").
+  const searchText = searchPlaceholder ?? labels.search;
 
   if (isPhone) {
     return (
@@ -859,14 +999,19 @@ export function ComboboxPanel<V extends string | number>({
         title={sheetTitle}
         query={query}
         onQueryChange={setQuery}
-        searchPlaceholder={searchPlaceholder ?? labels.search}
+        searchPlaceholder={searchText}
+        searchLabel={searchText}
         inputRef={inputRef}
         closeLabel={closeLabel}
+        // The sheet's search box is in its HEADER, outside the list: the keys go to it
+        // there, and it names the list and the active row (BUG-5). A div around the list
+        // used to catch them, and never did — focus is in the box, not in the list.
+        onSearchKeyDown={onKeyDown}
+        listboxId={listboxId}
+        activeId={activeId}
       >
-        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused
-            itself: it catches the listbox keys bubbling from the sheet's search <input>,
-            which holds focus while the list is up. */}
-        <div onKeyDown={onKeyDown} className="relative">
+        {toolbar}
+        <div className="relative">
           {list}
           {announcement}
         </div>
@@ -875,14 +1020,19 @@ export function ComboboxPanel<V extends string | number>({
   }
 
   if (!rect) return null;
-  // The panel hangs from the trigger's START edge: its left in a left-to-right form,
-  // its right in a right-to-left one (it may be wider than the trigger, `minWidth`).
-  // `clientWidth` rather than `innerWidth`, because a fixed box's `right` is measured
-  // from the edge of the viewport inside any scrollbar.
-  const inline =
-    dir === "rtl"
-      ? { right: (document.documentElement.clientWidth || window.innerWidth) - rect.right }
-      : { left: rect.left };
+  // The panel hangs from the trigger's START edge (or, `align="end"`, its end): its left
+  // in a left-to-right form, its right in a right-to-left one, at least 13.75rem wide
+  // (220 px at Normal, in rem so its text keeps its room at Large, §3.2; `width.minRem`)
+  // and never wider than the glass — and clamped to the glass, which in a left-to-right
+  // form it never was (Wave 2, DUP-7). It is placed by the edge it hangs from, so a `fit`
+  // panel grows away from the trigger's edge before its width is measured; a box hung by
+  // its `right` is measured from inside any scrollbar, as the glass's width is.
+  const glass = viewportSize().width - 2 * PANEL_EDGE;
+  const least = Math.min(Math.max(rect.width, (width?.minRem ?? PANEL_MIN_REM) * remPx), glass);
+  const most = Math.max(least, Math.min(width?.maxRem !== undefined ? width.maxRem * remPx : glass, glass));
+  const panelWidth = fit ? Math.min(Math.max(fitWidth ?? least, least), most) : least;
+  const at = anchoredInline(rect, panelWidth, { dir, align, edge: PANEL_EDGE });
+  const inline = (dir === "rtl") === (align === "start") ? { right: at.right } : { left: at.left };
 
   return createPortal(
     /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused
@@ -908,13 +1058,13 @@ export function ComboboxPanel<V extends string | number>({
         top: placement.above ? undefined : placement.top,
         bottom: placement.above ? placement.bottom : undefined,
         ...inline,
-        width: rect.width,
-        // 220 px at Normal, in rem so the panel's text keeps its room at Large (§3.2).
-        minWidth: "13.75rem",
+        // A `fit` panel takes its width from its rows between the two bounds; any other
+        // is exactly the least width.
+        ...(fit ? { width: "max-content", minWidth: least, maxWidth: most } : { width: panelWidth }),
         maxHeight: placement.maxHeight,
       }}
       className={cn(
-        "z-50 flex flex-col rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+        "z-50 flex flex-col rounded-md border border-subtle bg-surface shadow-lg",
         className,
       )}
     >
@@ -922,12 +1072,14 @@ export function ComboboxPanel<V extends string | number>({
         query={query}
         onQueryChange={setQuery}
         inputRef={inputRef}
-        placeholder={searchPlaceholder ?? labels.search}
+        placeholder={searchText}
+        aria-label={searchText}
         // Focus is in this box while the list is up, so this is what has to name the
         // list and the row the arrows are on.
         listboxId={listboxId}
         activeId={activeId}
       />
+      {toolbar}
       {/* One list, two containers: the desktop panel and the phone sheet render
           the same rows through the same handlers (live #200). */}
       {list}

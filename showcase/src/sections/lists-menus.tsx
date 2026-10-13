@@ -15,6 +15,7 @@ import {
   Tag,
   Trash2,
   Wallet,
+  Users,
 } from "lucide-react";
 import {
   Button,
@@ -29,6 +30,8 @@ import {
   StatusDot,
   ToggleGroup,
   UserAvatar,
+  Chip,
+  Select,
 } from "@eifi1/ui-kit";
 import type {
   BulkActionBarVariant,
@@ -37,7 +40,8 @@ import type {
   ListSeparator,
   MenuItemLinkProps,
 } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, READOUT, code } from "../lib/section";
+import type { ReactNode } from "react";
 
 /**
  * LISTS & MENUS — the row every app draws by hand a dozen times (`List` / `ListItem`),
@@ -48,8 +52,6 @@ import { Example, Note, Row } from "../lib/section";
  * page of this showcase, through the router — so what a click, a middle click and a
  * keyboard press do can be tried rather than read about.
  */
-
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
 
 /** react-router's Link takes `to`, not `href` — the one name the row's props need mapped. */
 const routerRow = ({ href, ...props }: ListItemLinkProps) => <Link to={href} {...props} />;
@@ -335,21 +337,21 @@ function ListLayout() {
         />
       </Row>
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-md border border-[var(--border)] p-1">
+        <div className="rounded-md border border-subtle p-1">
           <List density={density} separator={separator} aria-label="Accounts">
             {accounts.map((a) => (
               <ListItem
                 key={a}
                 icon={Wallet}
                 title={a}
-                trailing={picked === a ? <Check className="size-4 text-[var(--brand)]" aria-hidden /> : undefined}
+                trailing={picked === a ? <Check className="size-4 text-brand" aria-hidden /> : undefined}
                 selected={picked === a}
                 onClick={() => setPicked(a)}
               />
             ))}
           </List>
         </div>
-        <div className="rounded-md border border-[var(--border)] p-1">
+        <div className="rounded-md border border-subtle p-1">
           <List as="ol" density={density} separator={separator} aria-label="Ranked payees">
             {["Hausverwaltung Nord", "Rewe", "Deutsche Bahn"].map((p, i) => (
               <ListItem key={p} title={`${i + 1}. ${p}`} subtitle='as="ol" — the order means something' />
@@ -365,7 +367,7 @@ function ListLayout() {
           title='as="div" — a single row outside any list'
           subtitle="an <li> must sit in a list; a lone row is a div"
           onClick={() => {}}
-          className="max-w-md border-[var(--border)]"
+          className="max-w-md border-subtle"
         />
       </div>
       <p className={`mt-3 ${READOUT}`}>picked: {picked}</p>
@@ -629,7 +631,7 @@ function BulkInlineSticky() {
         </Button>
         <span className={READOUT}>last action: {log}</span>
       </Row>
-      <div className="max-h-64 overflow-auto rounded-md border border-[var(--border)]">
+      <div className="max-h-64 overflow-auto rounded-md border border-subtle">
         <BulkActionBar
           variant={variant}
           count={selected.length}
@@ -663,7 +665,7 @@ function BulkFloating() {
       label="BulkActionBar — floating, count, clear and labels"
       hint="the phone's bar: a rounded card fixed above the bottom nav — here held inside the box"
     >
-      <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+      <label className="mb-3 flex items-center gap-2 text-xs text-secondary">
         <input type="checkbox" checked={overPage} onChange={(e) => setOverPage(e.target.checked)} />
         let it float over the whole page (as in an app — above the phone&apos;s bottom nav)
       </label>
@@ -671,7 +673,7 @@ function BulkFloating() {
           so the floating bar is anchored to the box rather than to the window — and the
           box's own `--app-nav-h` of 0 drops the phone nav's offset. */}
       <div
-        className="relative h-80 overflow-hidden rounded-md border border-[var(--border)] [transform:translateZ(0)]"
+        className="relative h-80 overflow-hidden rounded-md border border-subtle [transform:translateZ(0)]"
         style={{ ["--app-nav-h" as string]: "0px" }}
       >
         <div className="h-full overflow-auto p-1 pb-20">
@@ -757,5 +759,179 @@ export function ListsMenus() {
       <BulkInlineSticky />
       <BulkFloating />
     </>
+  );
+}
+
+/* ── since 0.11 ─────────────────────────────────────────────────────────── */
+
+const LONG_BUDGETS: Array<{ name: string; badge?: ReactNode }> = [
+  { name: "Household" },
+  { name: "Holiday house on the coast, shared with the Lindqvist family", badge: <Chip size="xs" tone="teal">Shared</Chip> },
+  { name: "Parents' care costs, managed on behalf of Margarethe", badge: <Chip size="xs" tone="purple">Guest</Chip> },
+];
+
+export function MenuItemBadgeDemo() {
+  const [budget, setBudget] = useState(LONG_BUDGETS[1].name);
+  return (
+    <Example
+      label="MenuItem — badge beside a long, truncating label"
+      hint="the label truncates (and wraps from Large up), the badge never shrinks, and both are the row's name"
+    >
+      <Row>
+        {/* The cap on the menu's box, the trigger held to it: on the Button itself,
+            16rem ran 70 px past a 360 px phone at Extra large (0.32.1). */}
+        <HoverMenu
+          aria-label="Switch budget"
+          align="start"
+          panelClassName="w-72"
+          className="min-w-0 max-w-64"
+          trigger={({ open, toggle }) => (
+            <Button variant="secondary" onClick={toggle} aria-expanded={open} className="max-w-full">
+              <span className="truncate-until-large">{budget}</span>
+            </Button>
+          )}
+        >
+          {(close) => (
+            <ul className="py-1">
+              {LONG_BUDGETS.map((b) => (
+                <li key={b.name}>
+                  <MenuItem
+                    icon={b.badge ? Users : Wallet}
+                    badge={b.badge}
+                    checked={budget === b.name}
+                    onClick={() => {
+                      setBudget(b.name);
+                      close();
+                    }}
+                  >
+                    {b.name}
+                  </MenuItem>
+                </li>
+              ))}
+            </ul>
+          )}
+        </HoverMenu>
+        {/* The badges live in the panel, so closed the example showed only a truncated
+            button and nothing of what it is about — say where to look. */}
+        <span className="text-xs text-muted">
+          Open it: the last two rows carry the &ldquo;Shared&rdquo; and &ldquo;Guest&rdquo; badges.
+        </span>
+      </Row>
+      <div className="mt-3">
+        <Note>
+          {code("badge")} sits right after the label text, before the gap that pushes {code("trailing")} (and
+          the check mark) to the end. Hand-placed inside the label it was truncated with the name — here the
+          name gives way and &ldquo;Shared&rdquo; stays. The row is named &ldquo;Holiday house on the coast, shared
+          with the Lindqvist family Shared&rdquo;, so keep a badge text.
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
+  );
+}
+
+const RECEIPT_LINES = ["Bread", "Coffee beans", "Batteries (4)", "Dish soap", "Tomatoes", "Birthday card"];
+
+export function BulkActionBarPanelDemo() {
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [category, setCategory] = useState("groceries");
+  const [exclude, setExclude] = useState(false);
+  const [log, setLog] = useState("—");
+  const toggle = (name: string) =>
+    setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
+  const done = () => {
+    setSelected([]);
+    setSelecting(false);
+  };
+  const allSelected = selected.length === RECEIPT_LINES.length;
+  return (
+    <Example
+      label="BulkActionBar — panel, open at zero, responsive variant"
+      hint='a form under the toolbar; selection mode before the first tick; variant={{ base: "floating", md: "sticky" }}'
+    >
+      <Row className="mb-3">
+        <Button variant="secondary" size="sm" onClick={() => setSelecting(true)} disabled={selecting}>
+          Select
+        </Button>
+        <span className={READOUT}>
+          selecting: {String(selecting)} · count: {selected.length} · last: {log}
+        </span>
+      </Row>
+      {/* `transform` makes the box the containing block of the floating bar's `position:
+          fixed`, so below md the phone's card is held inside the box. */}
+      <div
+        className="relative h-96 overflow-hidden rounded-md border border-subtle [transform:translateZ(0)]"
+        style={{ ["--app-nav-h" as string]: "0px" }}
+      >
+        <div className="h-full overflow-auto">
+          <BulkActionBar
+            variant={{ base: "floating", md: "sticky" }}
+            open={selecting || selected.length > 0}
+            count={selected.length}
+            onClear={done}
+            labels={{ selected: (n) => `${n} line${n === 1 ? "" : "s"} selected` }}
+            panel={
+              selected.length > 0 ? (
+                <form
+                  className="flex flex-wrap items-end gap-3"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setLog(`${selected.length} → ${category}${exclude ? ", excluded" : ""}`);
+                  }}
+                >
+                  <div className="w-44">
+                    <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
+                      <option value="groceries">Groceries</option>
+                      <option value="household">Household</option>
+                      <option value="gifts">Gifts</option>
+                    </Select>
+                  </div>
+                  <Checkbox label="Exclude from reports" checked={exclude} onChange={(e) => setExclude(e.target.checked)} />
+                  <Button type="submit" size="sm">
+                    Apply
+                  </Button>
+                </form>
+              ) : null
+            }
+          >
+            <Button variant="ghost" size="sm" onClick={() => setSelected(allSelected ? [] : RECEIPT_LINES)}>
+              {allSelected ? "Select none" : "Select all"}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={done}>
+              Done
+            </Button>
+          </BulkActionBar>
+          <div className="p-1 pb-40 md:pb-1">
+            <List density="compact" separator="divider">
+              {RECEIPT_LINES.map((line) => (
+                <ListItem
+                  key={line}
+                  title={line}
+                  selected={selected.includes(line)}
+                  leading={
+                    selecting || selected.length > 0 ? (
+                      <Checkbox aria-label={`Select ${line}`} checked={selected.includes(line)} onChange={() => toggle(line)} />
+                    ) : undefined
+                  }
+                />
+              ))}
+            </List>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3">
+        <Note>
+          Press <strong>Select</strong>: {code("open")} brings the bar in at &ldquo;0 lines selected&rdquo; with
+          its way out (<strong>Done</strong>, and the clear) and a <strong>Select all</strong>, where a bar gated on
+          the count would have shown nothing until the first tick. Tick a line and the {code("panel")} appears
+          under the toolbar, in the same surface: its fields keep their own Tab stops, and the toolbar&apos;s
+          arrow keys never walk into them. Narrow the window below 768px and the same bar is the phone&apos;s
+          floating card — the variant is resolved per breakpoint, mobile first — with the panel scrolling inside
+          60% of the viewport&apos;s height.
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
   );
 }

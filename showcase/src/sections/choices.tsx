@@ -1,6 +1,19 @@
 import { useState } from "react";
-import { Button, Checkbox, FieldHint, Input, NumberInput, Slider, Switch } from "@eifi1/ui-kit";
-import { Example, Note, Stage } from "../lib/section";
+import {
+  Button,
+  Checkbox,
+  FieldHint,
+  Input,
+  NumberInput,
+  Slider,
+  Switch,
+  IconPicker,
+  SwatchPicker,
+  WriteLockProvider,
+} from "@eifi1/ui-kit";
+import { Example, Note, Stage, code } from "../lib/section";
+import { CheckboxGroup } from "../../../src/components/checkbox-group";
+import { Coffee, Home, ShoppingCart, Star } from "lucide-react";
 
 /**
  * CHOICES — checkbox, switch and slider.
@@ -93,7 +106,7 @@ export function Choices() {
                 its name from aria-label, and the caption would say it twice. */}
             <div className="flex items-center gap-2">
               <Checkbox aria-label="Bare box, named by aria-label" defaultChecked />
-              <span aria-hidden className="text-xs text-[var(--text-muted)]">
+              <span aria-hidden className="text-xs text-muted">
                 No visible label — named by <code className="font-mono">aria-label</code>
               </span>
             </div>
@@ -154,7 +167,7 @@ export function Choices() {
         hint="the switch at the far end; takes effect when flipped"
       >
         <Stage>
-          <div data-stage="wide" className="divide-y divide-[var(--border)]">
+          <div data-stage="wide" className="divide-y divide-subtle">
             <Switch
               className="py-3"
               label="Email notifications"
@@ -205,7 +218,7 @@ export function Choices() {
           <Switch label="Small, before the words" size="sm" switchPosition="start" defaultChecked />
           <div
             data-stage="wide"
-            className="flex items-center justify-center gap-3 text-sm text-[var(--text-primary)]"
+            className="flex items-center justify-center gap-3 text-sm text-primary"
           >
             <span>Row in a table:</span>
             <Switch
@@ -214,7 +227,7 @@ export function Choices() {
               checked={rowActive}
               onCheckedChange={setRowActive}
             />
-            <span className="text-[var(--text-muted)]">{rowActive ? "Active" : "Inactive"}</span>
+            <span className="text-muted">{rowActive ? "Active" : "Inactive"}</span>
           </div>
         </Stage>
       </Example>
@@ -270,7 +283,7 @@ export function Choices() {
               formatValue={(v) => `${v} percent`}
               onChange={setOpacity}
             />
-            <p className="text-xs text-[var(--text-muted)]">opacity: {opacity}%</p>
+            <p className="text-xs text-muted">opacity: {opacity}%</p>
           </div>
           <div className="space-y-2">
             {/* `onChange` fires on every movement; a request that should run once per
@@ -286,7 +299,7 @@ export function Choices() {
               onPointerUp={() => setReleased(threshold)}
               onKeyUp={() => setReleased(threshold)}
             />
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               live: {threshold}% · last released: {released}%
             </p>
           </div>
@@ -317,7 +330,7 @@ export function Choices() {
                 // chase every keystroke of "12.5".
                 <NumberInput
                   className="w-24"
-                  ariaLabel="Proportional gain value"
+                  aria-label="Proportional gain value"
                   calculator={false}
                   value={gainText}
                   onChange={setGainText}
@@ -381,5 +394,110 @@ export function Choices() {
         </div>
       </Example>
     </>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+const LANGUAGES = [
+  { value: "de", label: "Deutsch" },
+  { value: "en", label: "English" },
+  { value: "fr", label: "Français" },
+  { value: "it", label: "Italiano" },
+  { value: "es", label: "Español" },
+  { value: "hu", label: "Magyar" },
+  { value: "zh", label: "中文", hint: "Legal pages only" },
+];
+
+export function CheckboxGroup022Demo() {
+  const [locales, setLocales] = useState<string[]>(["de", "fr"]);
+  const [layout, setLayout] = useState<string[]>([]);
+  return (
+    <Example label="CheckboxGroup — a reviewer's languages" hint="Kurvenschmiede's reviewer dialog, for every app">
+      <div className="flex flex-col gap-6">
+        <CheckboxGroup
+          legend="Languages this reviewer may approve"
+          options={LANGUAGES}
+          value={locales}
+          onChange={setLocales}
+          columns={2}
+          hint="Ticking none takes the reviewer role back."
+        />
+        <CheckboxGroup
+          legend="Show on the card"
+          layout="horizontal"
+          options={[
+            { value: "balance", label: "Balance" },
+            { value: "limit", label: "Limit" },
+            { value: "iban", label: "IBAN" },
+          ]}
+          value={layout}
+          onChange={setLayout}
+          required
+          error={layout.length === 0 ? "Pick at least one" : undefined}
+        />
+      </div>
+      <Note>
+        A {code("<fieldset>")} named by its {code("legend")} ({code('legendVisibility="sr-only"')} keeps the name
+        without the ink), one kit {code("Checkbox")} per option. The value comes back in the options&apos; order, and a
+        value no option carries is kept. {code("required")} puts the star on the legend and the native{" "}
+        {code("required")} on every box while none is ticked.
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+const FLAGS = [
+  { value: "red", label: "Red", color: "var(--danger)" },
+  { value: "amber", label: "Amber", color: "var(--warning)" },
+  { value: "green", label: "Green", color: "var(--success)" },
+  { value: "blue", label: "Blue", color: "var(--brand)" },
+];
+
+const SYMBOLS = [
+  { value: "home", label: "Home", icon: Home },
+  { value: "cart", label: "Shopping", icon: ShoppingCart, keywords: ["groceries"] },
+  { value: "coffee", label: "Coffee", icon: Coffee },
+  { value: "star", label: "Favourite", icon: Star },
+];
+
+/** SwatchPicker / IconPicker: the strip label (K2) and the lock (K3). */
+export function Choices022Demo() {
+  const [flag, setFlag] = useState<string | null>("amber");
+  const [symbol, setSymbol] = useState<string | null>("cart");
+  const [locked, setLocked] = useState(false);
+  return (
+    <Example label="SwatchPicker and IconPicker with a label" hint="the strip over the tiles; commit under a lock">
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
+          <Input label="Memo" defaultValue="Coffee beans" />
+          <SwatchPicker
+            label="Flag"
+            hint={<FieldHint label="Your own marker, never shared" />}
+            allowNone
+            size="sm"
+            value={flag}
+            onChange={setFlag}
+            options={FLAGS}
+          />
+          <IconPicker label="Symbol" value={symbol} onChange={setSymbol} options={SYMBOLS} size="sm" />
+        </div>
+        <WriteLockProvider locked={locked} reason="Reconciled rows are final.">
+          <div className="flex flex-col gap-2">
+            <Switch checked={locked} onCheckedChange={setLocked} label="Lock the flag (commit)" />
+            <SwatchPicker aria-label="Flag (locked demo)" commit value={flag} onChange={setFlag} options={FLAGS} />
+          </div>
+        </WriteLockProvider>
+        <Note>
+          The label sits on the line of the field labels beside it; the tiles start 20px down, below its whole
+          line, because a selected tile&apos;s frame is its border. Locked, the swatches stay reachable — the arrow
+          keys still walk them — and the reason shows under the row.
+        </Note>
+      </div>
+      <Note>Since 0.22.</Note>
+    </Example>
   );
 }

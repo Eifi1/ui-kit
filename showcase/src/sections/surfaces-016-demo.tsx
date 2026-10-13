@@ -14,7 +14,7 @@ import {
   StatTile,
   StatTileGrid,
 } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code } from "../lib/section";
 
 /**
  * The 0.16 surface props from keksdose's 0.15.5 sweep: Card parts that follow the
@@ -22,8 +22,6 @@ import { Example, Note, Row } from "../lib/section";
  * IconButton `pending` (and its lazy label bubble), a FieldHint on an unlabelled
  * Select, and StatTile `variant` / StatTileGrid `stretch` and `loading`.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 function CardParts016() {
   return (
@@ -34,7 +32,7 @@ function CardParts016() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card padding="md">
           <CardHeader stackAction>
-            <CardTitle as="h3" className="text-[var(--text-primary)]">
+            <CardTitle as="h3" className="text-primary">
               Two-factor authentication
             </CardTitle>
             <CardDescription>An authenticator app or a passkey, asked at every sign-in.</CardDescription>
@@ -44,13 +42,13 @@ function CardParts016() {
               </Button>
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-3 text-sm text-[var(--text-secondary)]">
+          <CardContent className="pt-3 text-sm text-secondary">
             Not set up yet.
           </CardContent>
         </Card>
         <Card variant="outline" padding="sm">
           <CardHeader>
-            <CardTitle as="h3" className="text-sm text-[var(--text-primary)]">
+            <CardTitle as="h3" className="text-sm text-primary">
               Sessions
             </CardTitle>
             <CardDescription className="text-xs">Signed in on 3 devices.</CardDescription>
@@ -145,14 +143,14 @@ function StatTiles016() {
     >
       <div className="space-y-4">
         <Card padding="md">
-          <CardTitle className="mb-3 text-sm text-[var(--text-primary)]">September (inset, stretch=false)</CardTitle>
+          <CardTitle className="mb-3 text-sm text-primary">September (inset, stretch=false)</CardTitle>
           <StatTileGrid stretch={false} loading={loading}>
             <StatTile variant="inset" label="Income" value={4210} currency="EUR" tone="income" />
             <StatTile variant="inset" label="Spent" value={2895.5} currency="EUR" tone="expense" delta={-120} />
           </StatTileGrid>
         </Card>
         <Card padding="md">
-          <CardTitle className="mb-3 text-sm text-[var(--text-primary)]">Balance (plain, stretch=false)</CardTitle>
+          <CardTitle className="mb-3 text-sm text-primary">Balance (plain, stretch=false)</CardTitle>
           <StatTileGrid stretch={false} loading={loading}>
             <StatTile variant="plain" label="Balance" value={12840.12} currency="EUR" />
           </StatTileGrid>

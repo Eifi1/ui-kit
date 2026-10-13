@@ -22,6 +22,8 @@
  * the same contract, so the mapping is written once, here.
  */
 
+import { foldForSearch } from "./text-match";
+
 // ── Shapes ──────────────────────────────────────────────────────────────────────
 
 export type TranslationVerdict = "APPROVED" | "NEEDS_CHANGE";
@@ -394,7 +396,8 @@ export interface TranslationReviewFilter {
   status: ReviewStatus | "all";
   source: string;
   namespace: string;
-  /** Searched in the key, the text and the reference, case-insensitively. */
+  /** Searched in the key, the text and the reference, folded as every kit list's search
+   *  is (`foldForSearch`): no case, no accents — "uberweisung" finds "Überweisung". */
   query: string;
   placeholdersOnly: boolean;
 }
@@ -412,17 +415,15 @@ export function filterTranslationRows(
   filter: Partial<TranslationReviewFilter>,
 ): TranslationRow[] {
   const f = { ...DEFAULT_TRANSLATION_REVIEW_FILTER, ...filter };
-  const q = f.query.trim().toLowerCase();
+  // Folded as every kit list's search is (DUP-5, refactor audit 2026-10).
+  const q = foldForSearch(f.query.trim());
   return rows.filter(
     (row) =>
       (f.status === "all" || row.status === f.status) &&
       (f.source === "all" || row.source === f.source) &&
       (f.namespace === "all" || row.namespace === f.namespace) &&
       (!f.placeholdersOnly || row.placeholderMismatch) &&
-      (!q ||
-        row.key.toLowerCase().includes(q) ||
-        row.text.toLowerCase().includes(q) ||
-        row.reference.toLowerCase().includes(q)),
+      (!q || [row.key, row.text, row.reference].some((s) => foldForSearch(s).includes(q))),
   );
 }
 

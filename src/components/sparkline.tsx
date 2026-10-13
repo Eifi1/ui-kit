@@ -1,7 +1,8 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../lib/cn";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { useTextSize } from "../theme/text-size";
+import { DEFAULT_SPARKLINE_LABELS } from "./sparkline-labels";
 
 /**
  * The words a sparkline speaks. It has no axes, no tooltip and no legend, so its
@@ -24,14 +25,8 @@ export interface SparklineLabels {
   named: (name: string, summary: string) => string;
 }
 
-export const DEFAULT_SPARKLINE_LABELS: SparklineLabels = {
-  rising: (first, last) => `Rising from ${first} to ${last}`,
-  falling: (first, last) => `Falling from ${first} to ${last}`,
-  flat: (value) => `Unchanged at ${value}`,
-  single: (value) => `One value: ${value}`,
-  noData: "No data",
-  named: (name, summary) => `${name}: ${summary}`,
-};
+// Defined in ./sparkline-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SPARKLINE_LABELS };
 
 /**
  * What colours the marks. Token names, not colours: every one resolves to a variable
@@ -59,15 +54,15 @@ export type SparklineTone =
 // per element is enough and a signed bar chart needs no second lookup table.
 const TONE_CLASS: Record<Exclude<SparklineTone, "signed">, string> = {
   chart: "text-[var(--chart-1)]",
-  brand: "text-[var(--brand)]",
-  muted: "text-[var(--text-muted)]",
-  income: "text-[var(--money-income)]",
-  expense: "text-[var(--money-expense)]",
-  net: "text-[var(--money-net)]",
-  success: "text-[var(--success)]",
-  warning: "text-[var(--warning)]",
-  danger: "text-[var(--danger)]",
-  info: "text-[var(--info)]",
+  brand: "text-brand",
+  muted: "text-muted",
+  income: "text-money-income",
+  expense: "text-money-expense",
+  net: "text-money-net",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-danger",
+  info: "text-info",
 };
 
 const signedClass = (v: number) => (v < 0 ? TONE_CLASS.expense : TONE_CLASS.income);
@@ -75,7 +70,7 @@ const signedClass = (v: number) => (v < 0 ? TONE_CLASS.expense : TONE_CLASS.inco
 /** `children` is the marks and `width`/`height` are numbers here (or `fluid`), so
  *  those three are the sparkline's own; everything else lands on the `<svg>`. */
 export interface SparklineProps
-  extends Omit<ComponentPropsWithoutRef<"svg">, "children" | "width" | "height"> {
+  extends Omit<ComponentPropsWithRef<"svg">, "children" | "width" | "height"> {
   /** The series, oldest first. `null`/`undefined`/`NaN` is a GAP — the line breaks
    *  there rather than drawing a zero or bridging across the missing point. */
   data: ReadonlyArray<number | null | undefined>;
@@ -107,7 +102,7 @@ export interface SparklineProps
    *  kit's locale, at most two decimals. */
   formatValue?: (value: number) => string;
   locale?: string;
-  labels?: Partial<SparklineLabels>;
+  labels?: LabelOverride<SparklineLabels>;
 }
 
 const DEFAULT_WIDTH = 72;

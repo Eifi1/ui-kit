@@ -9,17 +9,17 @@ import { DEFAULT_TOP_BAR_LABELS, useKitLabels } from "../i18n/kit-labels";
 /** Shared square icon-button styling for top-bar triggers, so app-owned controls
  *  (account/feedback menus) line up with the shared ones. */
 export const TOPBAR_TRIGGER_CLASS =
-  "size-9 rounded-md flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]";
+  "size-9 rounded-md flex items-center justify-center text-secondary hover:text-primary hover:bg-hover";
 
 /** Shared row styling for the top-bar hover-menu items. `text-start`, so a label that
  *  wraps aligns to the reading edge in RTL too. */
 export const TOPBAR_MENU_ITEM_CLASS =
-  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-start text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
+  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-start text-secondary hover:bg-hover";
 
 /** The small uppercase heading row the top-bar menus share (`heading`). */
 function MenuHeading({ children }: { children: string }) {
   return (
-    <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
+    <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder">
       {children}
     </li>
   );
@@ -29,6 +29,7 @@ function MenuHeading({ children }: { children: string }) {
 export function ThemeToggle({
   mode,
   onToggle,
+  "aria-label": ariaLabelAttr,
   ariaLabel,
   title,
   className,
@@ -36,13 +37,16 @@ export function ThemeToggle({
   mode: ThemeMode;
   onToggle: () => void;
   /** Default: `topBar.theme` from the {@link UiKitProvider}, else English. */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the control only when `aria-label` is absent. */
   ariaLabel?: string;
   title?: string;
   className?: string;
 }) {
-  // This had no default at all, so a toggle rendered without `ariaLabel` was an
+  // This had no default at all, so a toggle rendered without `aria-label` was an
   // icon button with no name — a reader heard "button" and nothing else.
-  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { theme: ariaLabel });
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { theme: ariaLabelAttr ?? ariaLabel });
   const Icon = mode === "dark" ? Moon : Sun;
   return (
     <Tooltip label={title} portal>
@@ -65,6 +69,7 @@ export function PaletteMenu({
   activeId,
   mode,
   onSelect,
+  "aria-label": ariaLabelAttr,
   ariaLabel,
   heading,
 }: {
@@ -73,15 +78,18 @@ export function PaletteMenu({
   mode: ThemeMode;
   onSelect: (id: string) => void;
   /** Default: `topBar.palette` from the {@link UiKitProvider}, else English. */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the control only when `aria-label` is absent. */
   ariaLabel?: string;
   /** Optional small heading row above the list. */
   heading?: string;
 }) {
-  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { palette: ariaLabel });
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { palette: ariaLabelAttr ?? ariaLabel });
   const activeName = palettes.find((p) => p.id === activeId)?.name ?? activeId;
   return (
     <HoverMenu
-      ariaLabel={labels.palette}
+      aria-label={labels.palette}
       trigger={({ toggle }) => (
         <Tooltip label={activeName} portal>
           <button
@@ -131,13 +139,13 @@ export function PaletteMenu({
                     </span>
                     <span className="flex min-w-0 flex-col text-start">
                       <span className="truncate">{p.name}</span>
-                      <span className="truncate text-caption text-[var(--text-placeholder)]">
+                      <span className="truncate text-caption text-placeholder">
                         {p.blurb}
                       </span>
                     </span>
                   </span>
                   {activeId === p.id && (
-                    <Check className="size-4 shrink-0 text-[var(--text-secondary)]" />
+                    <Check className="size-4 shrink-0 text-secondary" />
                   )}
                 </button>
               </li>
@@ -169,6 +177,7 @@ export function LanguageMenu({
   options,
   current,
   onChange,
+  "aria-label": ariaLabelAttr,
   ariaLabel,
   heading,
 }: {
@@ -176,16 +185,19 @@ export function LanguageMenu({
   current: string | undefined;
   onChange: (code: string) => void;
   /** Default: `topBar.language` from the {@link UiKitProvider}, else English. */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the control only when `aria-label` is absent. */
   ariaLabel?: string;
   /** Optional small heading row above the list — as on `TopBarActionMenu`,
    *  `OptionSwitcherMenu` and `PaletteMenu`. */
   heading?: string;
 }) {
-  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { language: ariaLabel });
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { language: ariaLabelAttr ?? ariaLabel });
   const active = options.find((o) => o.code === current);
   return (
     <HoverMenu
-      ariaLabel={labels.language}
+      aria-label={labels.language}
       trigger={({ toggle }) => (
         <Tooltip label={active?.label ?? labels.language} portal>
           <button
@@ -228,7 +240,7 @@ export function LanguageMenu({
                     />
                     {lang.label}
                   </span>
-                  {isActive && <Check className="size-4 text-[var(--text-secondary)]" />}
+                  {isActive && <Check className="size-4 text-secondary" />}
                 </button>
               </li>
             );

@@ -17,7 +17,7 @@ import {
   formatPersonName,
 } from "@eifi1/ui-kit";
 import type { PersonName } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, beat } from "../lib/section";
 
 /**
  * 0.29.0 (docs/auth-harmonization.md §3.2, §5.3, §7): the signed-out pages besides
@@ -27,8 +27,6 @@ import { Example, Note, Row } from "../lib/section";
  * People and companies are SYNTHETIC.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 900) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 /** A coded refusal (§5.2) as an axios-style error, after a beat. */
 const refuse = (errorCode: string, ms = 900) =>
   beat(ms).then(() => Promise.reject({ response: { data: { code: errorCode } } }));
@@ -87,7 +85,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           headingAs={level}
           signInHref={HERE}
           defaultEmail="ada@example.com"
-          onSubmit={() => (answer === "throttled" ? beat().then(() => Promise.reject({ status: 429 })) : beat())}
+          onSubmit={() => (answer === "throttled" ? beat(900).then(() => Promise.reject({ status: 429 })) : beat(900))}
           describeError={() => "Too many requests from this address. Try again in an hour."}
         />
       );
@@ -100,7 +98,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           onCheck={() =>
             answer === "dead"
               ? refuse("token_invalid")
-              : beat().then(() => ({
+              : beat(900).then(() => ({
                   email: "ada@example.com",
                   notices: (
                     <AlertBanner tone="warning" size="sm">
@@ -112,9 +110,9 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           onSubmit={() =>
             answer === "stale"
               ? refuse("token_invalid")
-              : beat().then(() => ({
+              : beat(900).then(() => ({
                   email: "ada@example.com",
-                  notices: <p className="text-xs text-[var(--text-muted)]">Your 2 personal access tokens were revoked.</p>,
+                  notices: <p className="text-xs text-muted">Your 2 personal access tokens were revoked.</p>,
                 }))
           }
           onSignIn={onRestart}
@@ -126,7 +124,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           headingAs={level}
           token="demo-token"
           signedIn={answer === "expired"}
-          onVerify={() => (answer === "ok" ? beat() : refuse("token_invalid"))}
+          onVerify={() => (answer === "ok" ? beat(900) : refuse("token_invalid"))}
           classifyError={() => (answer === "expired" ? "expired" : "invalid")}
           onResend={() => beat(600)}
           cooldown={10}
@@ -141,7 +139,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           token="demo-invite"
           signedIn={answer !== "signedOut"}
           onAccept={() =>
-            answer === "expired" ? refuse("invitation_expired") : beat().then(() => ({ name: "Example Property Ltd" }))
+            answer === "expired" ? refuse("invitation_expired") : beat(900).then(() => ({ name: "Example Property Ltd" }))
           }
           continueHref={HERE}
           signInHref={HERE}
@@ -196,7 +194,7 @@ export function AuthPages029Demo() {
           }}
           options={ANSWERS[page]}
         />
-        <div className="overflow-hidden rounded-lg border border-[var(--border)]">
+        <div className="overflow-hidden rounded-lg border border-subtle">
           <AuthLayout
             key={`${page}-${answer}-${run}`}
             className="min-h-0"
@@ -240,7 +238,7 @@ export function EmailVerificationBanner029Demo() {
             { value: "fail", label: "Resend fails" },
           ]}
         />
-        <div className="overflow-hidden rounded-lg border border-[var(--border)]">
+        <div className="overflow-hidden rounded-lg border border-subtle">
           {shown ? (
             <EmailVerificationBanner
               onResend={() => (fail ? beat(600).then(() => Promise.reject(new Error("500"))) : beat(600))}
@@ -253,7 +251,7 @@ export function EmailVerificationBanner029Demo() {
             <Row className="p-3">
               <button
                 type="button"
-                className="text-sm text-[var(--brand)] underline"
+                className="text-sm text-brand underline"
                 onClick={() => setShown(true)}
               >
                 Show the banner again
@@ -287,7 +285,7 @@ export function PersonNames029Demo() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-start text-xs text-[var(--text-muted)]">
+            <tr className="text-start text-xs text-muted">
               <th className="py-1 pe-3 text-start font-medium">first / last</th>
               {LOCALES.map((l) => (
                 <th key={l} className="py-1 pe-3 text-start font-medium">
@@ -298,8 +296,8 @@ export function PersonNames029Demo() {
           </thead>
           <tbody>
             {PEOPLE.map(({ label, person }) => (
-              <tr key={label} className="border-t border-[var(--border)]">
-                <td className="py-2 pe-3 text-[var(--text-muted)]">{label}</td>
+              <tr key={label} className="border-t border-subtle">
+                <td className="py-2 pe-3 text-muted">{label}</td>
                 {LOCALES.map((locale) => (
                   <td key={locale} className="py-2 pe-3">
                     <UiKitProvider locale={locale}>
@@ -336,7 +334,7 @@ const COMPANIES = [
 
 function TopBarStrip({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center justify-end gap-1 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1">
+    <div className="flex items-center justify-end gap-1 rounded-md border border-subtle bg-surface px-2 py-1">
       {children}
     </div>
   );
@@ -354,13 +352,13 @@ export function CompanySwitcher029Demo() {
             onSwitch={(id) => beat(1200).then(() => setCurrent(id))}
           />
         </TopBarStrip>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           current: {COMPANIES.find((c) => c.id === current)?.name}
         </p>
-        <p className="text-xs text-[var(--text-muted)]">One company — the switcher renders nothing:</p>
+        <p className="text-xs text-muted">One company — the switcher renders nothing:</p>
         <TopBarStrip>
           <CompanySwitcher companies={[COMPANIES[0]!]} currentId={1} onSwitch={() => {}} />
-          <span className="text-xs text-[var(--text-muted)]">(nothing before this)</span>
+          <span className="text-xs text-muted">(nothing before this)</span>
         </TopBarStrip>
         <Note>
           {code("onSwitch(id)")} is the app&apos;s {code("POST /auth/switch-company")}: while its promise runs the

@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import type { ReactNode } from "react";
 import { useKitDateFormatter, useKitLocale } from "../i18n/kit-labels";
 import { formatDate, toDate } from "../lib/format";
 import type { DateInput } from "../lib/format";
@@ -31,12 +30,6 @@ export interface AdminPerson {
   /** A whole name, for an API that still sends `display_name` only. */
   name?: string | null;
   email?: string | null;
-}
-
-/** A label that is really there — `null`, `false` and `""` are what `cond && text`
- *  evaluates to on the path where there is none. */
-export function hasMessage(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
 }
 
 /**

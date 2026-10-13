@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import type { DateInput } from "../lib/format";
 import type { PersonName } from "../lib/person-name";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { AccountStateChip, RoleChip, dateColumn } from "../components/account-chips";
 import type { AccountState, RoleVocabulary } from "../components/account-chips";
 import type { ChipTone } from "../components/chip";
@@ -16,6 +16,7 @@ import { UserAvatar } from "../components/user-avatar";
 import { personLabel } from "./admin-parts";
 import { RoleSelect } from "./role-select";
 import type { RoleLock } from "./role-select";
+import { DEFAULT_USER_ROSTER_LABELS } from "./user-roster-labels";
 
 /**
  * The admin's user list (docs/user-admin-harmonization.md §3): a column preset for the
@@ -140,17 +141,8 @@ export interface UserRosterLabels {
   actionsFor: (name: string) => string;
 }
 
-export const DEFAULT_USER_ROSTER_LABELS: UserRosterLabels = {
-  name: "Name",
-  email: "Email",
-  role: "Role",
-  state: "State",
-  created: "Created",
-  lastLogin: "Last login",
-  never: "Never",
-  actions: "Actions",
-  actionsFor: (name) => `Actions for ${name}`,
-};
+// Defined in ./user-roster-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_USER_ROSTER_LABELS };
 
 /* ── UserIdentityCell ───────────────────────────────────────────────────────── */
 
@@ -196,13 +188,13 @@ export function UserIdentityCell({
       {avatar && <UserAvatar person={person} name={name} email={email} size="sm" />}
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span data-private className="truncate-until-large font-medium text-[var(--text-primary)]">
+          <span data-private className="truncate-until-large font-medium text-primary">
             {named || address}
           </span>
           {badge}
         </div>
         {named && address && (
-          <div data-private className="truncate-until-large text-xs text-[var(--text-muted)]">
+          <div data-private className="truncate-until-large text-xs text-muted">
             {address}
           </div>
         )}
@@ -225,7 +217,7 @@ export interface UserRowActionsProps {
   actions: UserRowActionList;
   /** The account's name, for the menu's name — "Actions for Ada Example". */
   name: string;
-  labels?: Partial<UserRosterLabels>;
+  labels?: LabelOverride<UserRosterLabels>;
 }
 
 /**
@@ -289,7 +281,7 @@ export interface UserRosterColumnsOptions<T extends UserRosterRow, R extends str
   emailColumn?: boolean;
   /** The words, already resolved. Default English; {@link useUserRosterColumns} reads
    *  the provider's `userRoster` namespace. */
-  labels?: Partial<UserRosterLabels>;
+  labels?: LabelOverride<UserRosterLabels>;
 }
 
 function rolesOf<T extends UserRosterRow, R extends string>(
@@ -390,7 +382,7 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
       header: labels.email,
       className: "whitespace-nowrap",
       cell: (row) => (
-        <span data-private className="text-[var(--text-secondary)]">
+        <span data-private className="text-secondary">
           {row.email}
         </span>
       ),

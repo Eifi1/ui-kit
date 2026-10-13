@@ -1,18 +1,19 @@
 import { useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, MouseEvent, ReactNode } from "react";
 import { Upload, X } from "lucide-react";
-import { Button, IconButton, Spinner } from "./ui";
+import { Button } from "./button";
+import { IconButton } from "./icon-button";
+import { Spinner } from "./spinner";
+import { FIELD_ERROR_CLASS } from "./field-parts";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useAnnounce } from "../hooks/use-announce";
-import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
-import {
-  DEFAULT_FILE_PICKER_LABELS,
-  formatAccept,
-  judgePick,
-  screenFiles,
-  summariseRejections,
-} from "./file-button";
-import type { FilePickHandler, FilePickerLabels, FileRejection } from "./file-button";
+import { useKitFileLabels, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+// The picker's words and screening from their own modules, not through FileButton's
+// re-export (MOD-8): the dropzone renders no FileButton.
+import { DEFAULT_FILE_PICKER_LABELS } from "../hooks/use-file-picker-labels";
+import { formatAccept, judgePick, screenFiles, summariseRejections } from "../hooks/use-file-picker";
+import type { FilePickHandler, FilePickerLabels, FileRejection } from "../hooks/use-file-picker";
 import { useDragTarget } from "../hooks/use-file-drop";
 import { toast } from "./toast";
 import { useCommitReason, type CommitScope } from "./write-lock";
@@ -65,7 +66,7 @@ export interface FileDropzoneState {
  * `FileDropzoneProps` stays an interface a caller can extend; a single-mode pick also
  * reaches `onFilesSelected` as a one-element array, so one handler can serve both.
  */
-export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">, "onInvalid"> {
+export interface FileDropzoneProps extends Omit<ComponentPropsWithRef<"div">, "onInvalid"> {
   /** Single mode: the chosen file, echoed with its size. */
   file?: File | null;
   /** Single mode: called with the accepted file. */
@@ -119,7 +120,7 @@ export interface FileDropzoneProps extends Omit<ComponentPropsWithoutRef<"div">,
    *  `onInvalid` nor `onReject` is given, `"none"` when one is. */
   rejectionFeedback?: FileDropzoneRejectionFeedback;
   /** Per-instance overrides of the `filePicker` label namespace. */
-  labels?: Partial<FilePickerLabels>;
+  labels?: LabelOverride<FilePickerLabels>;
   /** The dropzone's accessible name. A caller's own `aria-label` wins over it — see
    *  the root element below. Optional since 0.8, like the three below: each falls back
    *  to its `filePicker` string from `<UiKitProvider labels>`, then to English. They
@@ -214,7 +215,7 @@ export function FileDropzone({
 }: FileDropzoneProps) {
   const [error, setError] = useState<string | null>(null);
   const disabledReason = useCommitReason(commit, ownDisabledReason);
-  const locked = hasReason(disabledReason);
+  const locked = hasContent(disabledReason);
   // Locked counts as inert for every file path (drop, click, Browse, remove); only the
   // LOOK and the native `disabled` keep it apart, so its controls stay focusable.
   const inert = Boolean(disabled || busy) || locked;
@@ -313,7 +314,7 @@ export function FileDropzone({
   const controlDisabled = Boolean(disabled || busy);
   const controlReason = locked ? disabledReason : undefined;
   const reasonLine = locked && (
-    <div data-slot="file-dropzone-reason" className="text-xs text-[var(--text-muted)]">
+    <div data-slot="file-dropzone-reason" className="text-xs text-muted">
       {disabledReason}
     </div>
   );
@@ -371,16 +372,16 @@ export function FileDropzone({
           // Inert zones keep the resting hairline and lose the hover pull: a border that
           // answers the pointer promises a drop the zone will refuse.
           disabled
-            ? "cursor-not-allowed border-[var(--border)] opacity-60"
+            ? "cursor-not-allowed border-subtle opacity-60"
             : busy
-              ? "cursor-progress border-[var(--border)]"
+              ? "cursor-progress border-subtle"
               : locked
-                ? "cursor-not-allowed border-[var(--border)]"
+                ? "cursor-not-allowed border-subtle"
                 : dragOver
-                ? "cursor-pointer border-[var(--border-strong)] bg-[var(--bg-active)]"
+                ? "cursor-pointer border-strong bg-active"
                 : showError
-                  ? "cursor-pointer border-[var(--danger-border-strong)]"
-                  : "cursor-pointer border-[var(--border)] hover:border-[var(--border-strong)]",
+                  ? "cursor-pointer border-danger-strong"
+                  : "cursor-pointer border-subtle hover:border-strong",
           className,
         )}
       >
@@ -401,11 +402,11 @@ export function FileDropzone({
             {/* `label={null}`: the zone is `aria-busy` and the line below says the
                 same in words; a spoken "Loading" would only run into it. */}
             <Spinner label={null} className="size-5" />
-            <div className="text-sm text-[var(--text-secondary)]">{labels.busy}</div>
+            <div className="text-sm text-secondary">{labels.busy}</div>
           </>
         ) : (
           <>
-            <Upload aria-hidden className="size-5 text-[var(--text-muted)]" />
+            <Upload aria-hidden className="size-5 text-muted" />
             {multiple && chosen.length > 0 ? (
               <>
                 <ul className="flex w-full max-w-sm flex-col gap-1 text-start">
@@ -414,10 +415,10 @@ export function FileDropzone({
                       // Name + size + position: two files may share a name, and the index
                       // alone would re-key every row below a removal.
                       key={`${f.name}-${f.size}-${i}`}
-                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)]"
+                      className="flex items-center gap-2 text-sm text-secondary"
                     >
                       <span className="min-w-0 flex-1 truncate font-medium">{f.name}</span>
-                      <span className="shrink-0 text-xs text-[var(--text-muted)]">{fileText.size(f.size)}</span>
+                      <span className="shrink-0 text-xs text-muted">{fileText.size(f.size)}</span>
                       {onRemove && (
                         <IconButton
                           type="button"
@@ -441,7 +442,7 @@ export function FileDropzone({
               </>
             ) : (
               <>
-                <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+                <div className="flex items-center gap-1 text-sm text-secondary">
                   {/* `!multiple`: in multiple mode an empty `files` list is "nothing chosen",
                       whatever a stray `file` prop says — it used to show that file's name. */}
                   {!multiple && file ? <span className="font-medium">{file.name}</span> : emptyLabel}
@@ -467,7 +468,7 @@ export function FileDropzone({
                 {locked && !(file && !multiple) ? (
                   reasonLine
                 ) : (
-                  <div className="text-xs text-[var(--text-muted)]">
+                  <div className="text-xs text-muted">
                     {file && !multiple ? fileText.size(file.size) : hint}
                   </div>
                 )}
@@ -507,7 +508,9 @@ export function FileDropzone({
           )}
         </div>
         {showError && (
-          <p id={errorId} className="text-xs text-[var(--danger)]">
+          // Every field's error type (DUP-8: this was `text-xs`); the zone's `gap-2`
+          // spaces it, so not the class's own `mt-1` as well.
+          <p id={errorId} className={cn(FIELD_ERROR_CLASS, "mt-0")}>
             {error}
           </p>
         )}
@@ -536,6 +539,11 @@ export function FileDropzone({
           // handler again would open the dialog a second time.
           onClick={(e) => e.stopPropagation()}
           className="sr-only"
+          // Out of the tab order and the accessibility tree, as useFilePicker's: Browse
+          // is the way in, and this was a second, nameless stop beside it (round 0.34,
+          // the showcase's axe check).
+          tabIndex={-1}
+          aria-hidden
         />
       </div>
       {/* Outside the zone, where they have always been (the zone used to be a
@@ -545,11 +553,6 @@ export function FileDropzone({
       <span {...alert.regionProps} />
     </>
   );
-}
-
-/** A reason that is really there — `null`, `false` and `""` are no reason. */
-function hasReason(reason: ReactNode): boolean {
-  return reason !== undefined && reason !== null && reason !== false && reason !== "";
 }
 
 /** A click that landed on a control inside the zone (a custom body's own button, a

@@ -228,13 +228,13 @@ export interface TextLinkProps
 }
 
 const TONE: Record<TextLinkTone, string> = {
-  brand: "text-[var(--brand)] hover:text-[var(--brand-hover)]",
-  muted: "text-[var(--text-muted)] hover:text-[var(--text-primary)]",
-  danger: "text-[var(--danger)] hover:text-[var(--danger-hover)]",
+  brand: "text-brand hover:text-[var(--brand-hover)]",
+  muted: "text-muted hover:text-primary",
+  danger: "text-danger hover:text-[var(--danger-hover)]",
   inherit: "",
-  primary: "text-[var(--text-primary)] hover:decoration-2",
-  secondary: "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
-  warning: "text-[var(--warning)] hover:decoration-2",
+  primary: "text-primary hover:decoration-2",
+  secondary: "text-secondary hover:text-primary",
+  warning: "text-warning hover:decoration-2",
 };
 
 /** The tones whose colour is their surroundings' — underlined by default; see
@@ -288,7 +288,7 @@ export function TextLink({
 
   const look = cn(
     "rounded-sm underline-offset-2 transition-colors",
-    "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
+    "focus-visible:outline-focus focus-visible:outline-offset-2 focus-visible:outline-brand",
     TONE[tone],
     UNDERLINE[underline],
     ariaCurrent && "font-semibold",

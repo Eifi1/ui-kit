@@ -3,12 +3,15 @@ import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CornerDownLeft, Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FIELD_TOUCH_TEXT } from "../components/ui";
+import { FIELD_TOUCH_TEXT } from "../components/field-base";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
-import { useKitLabels } from "../i18n/kit-labels";
+import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
+import { isImeEnter } from "../lib/ime";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { DEFAULT_COMMAND_PALETTE_LABELS } from "./command-palette-labels";
 
 export interface CommandItem {
   id: string;
@@ -92,16 +95,8 @@ export interface CommandPaletteLabels {
   close?: string;
 }
 
-export const DEFAULT_COMMAND_PALETTE_LABELS: CommandPaletteLabels = {
-  placeholder: "Search…",
-  empty: "No results",
-  loading: "Searching…",
-  dialog: "Search",
-  error: "Search failed. Try again.",
-  clear: "Clear search",
-  submit: "Search",
-  close: "Close",
-};
+// Defined in ./command-palette-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_COMMAND_PALETTE_LABELS };
 
 /**
  * How tall the palette's rows are. `"compact"` (the default) is the desktop list the
@@ -200,22 +195,12 @@ interface CommandPaletteProps {
   fullScreenOnPhone?: boolean;
   /** Row height — see {@link CommandPaletteDensity}. Default `"compact"`. */
   density?: CommandPaletteDensity;
-  labels?: Partial<CommandPaletteLabels>;
+  labels?: LabelOverride<CommandPaletteLabels>;
 }
 
-/** Registers a global ⌘K / Ctrl-K shortcut that calls `onOpen`. */
-export function useCommandKey(onOpen: () => void): void {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
-        e.preventDefault();
-        onOpen();
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onOpen]);
-}
+// Defined in ./use-command-key, so `GlobalSearch` can listen for ⌘K without loading the
+// palette before it is opened (0.34, MOD-1).
+export { useCommandKey } from "./use-command-key";
 
 /**
  * A ⌘K-style command palette: a top-centred modal with a search field and a
@@ -389,19 +374,21 @@ export function CommandPalette({
       e.preventDefault();
       setActive((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
+      // The Enter that confirms an IME composition is the IME's (BUG-9).
+      if (isImeEnter(e)) return;
       e.preventDefault();
       if (dirty) commit(draft);
       else choose(flat[active]);
     }
   };
 
-  // Escape on the whole dialog, not only the field: once Tab has moved focus to a row
-  // (or a footer control), Escape used to do nothing at all.
+  // A layer on the kit's Escape stack while open (Wave 2, DUP-1), taken on the whole
+  // dialog, not only the field: once Tab has moved focus to a row (or a footer
+  // control), Escape used to do nothing at all. It closed without stopping the key, so
+  // a dialog the palette was opened from closed with it.
+  useDismissLayer(open, onClose);
   const onDialogKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
-    }
+    takeEscape(e);
   };
 
   // Keep the active row scrolled into view.
@@ -438,10 +425,10 @@ export function CommandPalette({
         onKeyDown={onDialogKeyDown}
         data-fullscreen={isPhone || undefined}
         className={cn(
-          "flex w-full flex-col overflow-hidden bg-[var(--bg-surface)] outline-none",
+          "flex w-full flex-col overflow-hidden bg-surface outline-none",
           isPhone
             ? "h-full"
-            : "max-h-[70vh] max-w-xl rounded-xl border border-[var(--border)] shadow-2xl",
+            : "max-h-[70vh] max-w-xl rounded-xl border border-subtle shadow-2xl",
         )}
         // Full screen means edge to edge, so the notch, the home indicator and the
         // rounded corners are the panel's to keep clear of.
@@ -456,8 +443,8 @@ export function CommandPalette({
             : undefined
         }
       >
-        <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3">
-          <Search className="size-4 shrink-0 text-[var(--text-placeholder)]" />
+        <div className="flex shrink-0 items-center gap-2 border-b border-subtle px-3">
+          <Search className="size-4 shrink-0 text-placeholder" />
           <input
             ref={inputRef}
             role="combobox"
@@ -470,13 +457,13 @@ export function CommandPalette({
             placeholder={l.placeholder}
             enterKeyHint={submitMode ? "search" : undefined}
             className={cn(
-              "w-full bg-transparent py-3 outline-none placeholder:text-[var(--text-placeholder)] text-[var(--text-primary)]",
+              "w-full bg-transparent py-3 outline-none placeholder:text-placeholder text-primary",
               // 16px on a phone, or iOS zooms the page in on focus — and on any other
               // touch screen too (a tablet's popover), FIELD_TOUCH_TEXT (§10.1).
               isPhone ? "text-base" : cn("text-sm", FIELD_TOUCH_TEXT),
             )}
           />
-          {loading && <span className="shrink-0 text-caption text-[var(--text-placeholder)]">{l.loading}</span>}
+          {loading && <span className="shrink-0 text-caption text-placeholder">{l.loading}</span>}
           {fieldText !== "" && (
             <button
               type="button"
@@ -486,7 +473,7 @@ export function CommandPalette({
                 // Clearing starts the next query far more often than it ends this one.
                 inputRef.current?.focus();
               }}
-              className="shrink-0 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+              className="shrink-0 rounded p-1 text-placeholder hover:text-secondary"
             >
               <X className="size-4" />
             </button>
@@ -499,7 +486,7 @@ export function CommandPalette({
                 commit(draft);
                 inputRef.current?.focus();
               }}
-              className="shrink-0 rounded p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              className="shrink-0 rounded p-1 text-secondary hover:text-primary"
             >
               <CornerDownLeft className="size-4" />
             </button>
@@ -508,7 +495,7 @@ export function CommandPalette({
             <button
               type="button"
               onClick={onClose}
-              className="-me-1 shrink-0 rounded px-1 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              className="-me-1 shrink-0 rounded px-1 py-2 text-sm text-secondary hover:text-primary"
             >
               {l.close ?? DEFAULT_COMMAND_PALETTE_LABELS.close}
             </button>
@@ -518,14 +505,14 @@ export function CommandPalette({
         {/* The status lines sit outside the listbox: a listbox owns options and groups,
             and "No results" is neither. */}
         {failed && !loading && (
-          <div role="alert" className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">
+          <div role="alert" className="px-3 py-6 text-center text-sm text-muted">
             {l.error ?? DEFAULT_COMMAND_PALETTE_LABELS.error}
           </div>
         )}
         {/* `results`, not `flat`: a group whose only row is its "Searching…" line is not
             an empty result. */}
         {!failed && results.length === 0 && !loading && (
-          <div className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">{l.empty}</div>
+          <div className="px-3 py-6 text-center text-sm text-muted">{l.empty}</div>
         )}
         {/* Listbox grouping: each group is a `role="group"` named by its heading, and
             the list markup in between is presentational so the listbox's children are
@@ -537,7 +524,7 @@ export function CommandPalette({
               <div
                 id={groupId(groupIndex)}
                 role="presentation"
-                className="px-3 pb-0.5 pt-2 text-micro font-semibold uppercase tracking-wide text-[var(--text-placeholder)]"
+                className="px-3 pb-0.5 pt-2 text-micro font-semibold uppercase tracking-wide text-placeholder"
               >
                 {group}
               </div>
@@ -549,7 +536,7 @@ export function CommandPalette({
                         key={item.id}
                         role="presentation"
                         className={cn(
-                          "flex items-center gap-2.5 px-3 text-xs text-[var(--text-placeholder)]",
+                          "flex items-center gap-2.5 px-3 text-xs text-placeholder",
                           comfortable ? "min-h-11 py-2.5" : "py-2",
                         )}
                       >
@@ -575,14 +562,14 @@ export function CommandPalette({
                       "flex w-full items-center gap-2.5 px-3 text-start",
                       comfortable ? "min-h-11 py-2.5 text-base" : "py-2 text-sm",
                       isActive
-                        ? "bg-[var(--bg-active)] text-[var(--text-primary)]"
-                        : "text-[var(--text-secondary)]",
+                        ? "bg-active text-primary"
+                        : "text-secondary",
                     ),
                   };
                   const inner = (
                     <>
                       {item.icon && (
-                        <span className="flex size-4 shrink-0 items-center justify-center text-[var(--text-placeholder)]">
+                        <span className="flex size-4 shrink-0 items-center justify-center text-placeholder">
                           {item.icon}
                         </span>
                       )}
@@ -590,7 +577,7 @@ export function CommandPalette({
                         {item.label}
                       </span>
                       {item.hint && (
-                        <span data-private={redact || undefined} className="shrink-0 text-xs text-[var(--text-placeholder)]">
+                        <span data-private={redact || undefined} className="shrink-0 text-xs text-placeholder">
                           {item.hint}
                         </span>
                       )}
@@ -636,7 +623,7 @@ export function CommandPalette({
         </ul>
 
         {l.hint && (
-          <div className="border-t border-[var(--border)] px-3 py-1.5 text-caption text-[var(--text-placeholder)]">
+          <div className="border-t border-subtle px-3 py-1.5 text-caption text-placeholder">
             {l.hint}
           </div>
         )}

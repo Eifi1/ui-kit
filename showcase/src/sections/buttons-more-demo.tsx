@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import {
@@ -14,18 +14,20 @@ import {
   RefreshCw,
   RotateCw,
   Trash2,
+  Eye,
 } from "lucide-react";
 import {
   Button,
   ButtonGroup,
   ButtonGroupLink,
+  DisabledReasonLine,
   IconButton,
   Input,
   ToggleGroup,
   UserAvatar,
 } from "@eifi1/ui-kit";
 import type { ButtonGroupLinkRenderProps, StatusDotTone } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, READOUT, code } from "../lib/section";
 
 /**
  * BUTTONS — the 0.11 additions: `ButtonGroup elevated` and `variant="gapped"` for a
@@ -34,8 +36,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * and the UserAvatar's `badge`.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const CAPTION = "font-mono text-caption text-[var(--text-muted)]";
+const CAPTION = "font-mono text-caption text-muted";
 
 /** A picture to float controls over, with no image request: a "map" drawn in CSS from
  *  the palette's own chart colours, so it follows the palette switch too. */
@@ -55,14 +56,14 @@ function GroupsOverContent() {
       hint="toolbars that float OVER content: a filled, shadowed frame, or separate discs"
     >
       <div
-        className="relative h-56 overflow-hidden rounded-md border border-[var(--border)]"
+        className="relative h-56 overflow-hidden rounded-md border border-subtle"
         style={{ background: MAP_GROUND }}
         role="img"
         aria-label={`A map at ${zoom}% zoom, rotated ${rotation}°`}
       >
         <div
           aria-hidden
-          className="absolute inset-0 grid place-items-center text-4xl font-bold text-[var(--text-inverse)] opacity-70 transition-transform"
+          className="absolute inset-0 grid place-items-center text-4xl font-bold text-inverse opacity-70 transition-transform"
           style={{ transform: `scale(${zoom / 100}) rotate(${rotation}deg)` }}
         >
           ⌖
@@ -387,5 +388,73 @@ export function ButtonsMore() {
       <IconButtonMore />
       <AvatarBadges />
     </>
+  );
+}
+
+/* ── since 0.11 ─────────────────────────────────────────────────────────── */
+
+export function IconButtonDisabledReasonDemo() {
+  const [balance, setBalance] = useState(120);
+  const [log, setLog] = useState("—");
+  const reason = balance === 0 ? undefined : "Only an account with a zero balance can be hidden";
+  return (
+    <Example
+      label="IconButton — disabledReason, with and without label"
+      hint="aria-disabled rather than disabled: it stays in the Tab order, and the reason is shown and described"
+    >
+      <Row>
+        <IconButton label="Hide account" disabledReason={reason} onClick={() => setLog("hidden")}>
+          <Eye />
+        </IconButton>
+        <IconButton
+          aria-label="Delete budget"
+          tone="danger"
+          quiet={false}
+          disabledReason="The active budget cannot be deleted"
+          onClick={() => setLog("deleted (should not happen)")}
+        >
+          <Trash2 />
+        </IconButton>
+        <Button variant="ghost" size="sm" onClick={() => setBalance((b) => (b === 0 ? 120 : 0))}>
+          {balance === 0 ? "Book €120 onto it" : "Clear the balance"}
+        </Button>
+        <span className={READOUT}>
+          balance: €{balance} · last action: {log}
+        </span>
+      </Row>
+      <div className="mt-3">
+        <Note>
+          Hover or Tab to either button. The first has a {code("label")}: its name stays &ldquo;Hide
+          account&rdquo;, and while it is locked the bubble shows the reason instead of the label — clear
+          the balance and it becomes an ordinary button with its usual tooltip. The second has only an{" "}
+          {code("aria-label")}, and still gets the bubble: a reason nobody can see is not one. Both are
+          described by the reason ({code("aria-describedby")}), and a click or Enter does nothing.
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
+  );
+}
+
+/** An app's own control with its reason as a line — the part the kit's controls draw a
+ *  `disabledReason` with (round 0.34: it had no specimen — refactor audit 2026-10, DOC-9). */
+export function DisabledReasonLineDemo() {
+  const id = useId();
+  return (
+    <Example
+      label="DisabledReasonLine — an app's own control and its reason"
+      hint="the line carries the id the control's aria-describedby names"
+    >
+      <DisabledReasonLine id={id} reason="A closed month cannot be exported again.">
+        <Button disabled aria-describedby={id}>
+          Export March
+        </Button>
+      </DisabledReasonLine>
+      <Note>
+        The kit&apos;s own controls draw their {code("disabledReason")} this way where a tooltip cannot be relied on —
+        on touch and at Large text ({code("useDisabledReasonLine")} decides). A control of the app&apos;s that has a
+        reason to give uses the part directly.
+      </Note>
+    </Example>
   );
 }

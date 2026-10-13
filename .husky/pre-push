@@ -1,1 +1,49 @@
+# The local gate before anything leaves the machine: `npm run check` (scripts/check.mjs).
+#
+# Git hands this hook one line per pushed ref on stdin: "<local ref> <local sha> <remote
+# ref> <remote sha>". Two kinds of push need no check (TST-2, refactor audit 2026-10):
+#   - tags and deletes only. A release tag sits on a merge commit whose tree the branch
+#     push already checked and CI already tested, and release.yml refuses to stage a commit
+#     whose CI is not green. Pushing v0.33.1 re-ran the whole check: 355 s for nothing.
+#   - a tree that already passed. A green `npm run check` on a clean tree stamps
+#     node_modules/.cache/check/<tree id>; when every pushed tip's tree has a stamp
+#     (a reworded commit, a re-push), only the commit messages are new, so only
+#     check:commits runs, over each pushed tip.
+#
+# Otherwise the full check runs, and it checks the WORKING TREE, not the pushed commits:
+# a modified tracked file is what gets tested. That is warned about, not refused.
+tips=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -n "$local_ref" ] || continue
+  # A delete pushes the all-zero id (SHA-1 or SHA-256 length).
+  case "$local_sha" in *[!0]*) ;; *) continue ;; esac
+  case "$local_ref" in refs/tags/*) continue ;; esac
+  tips="$tips $local_sha"
+done
+
+if [ -z "$tips" ]; then
+  echo "pre-push: only tags or deletes, nothing to check (their commits were checked when pushed; CI gates releases)."
+  exit 0
+fi
+
+stamped=yes
+for sha in $tips; do
+  tree=$(git rev-parse "$sha^{tree}")
+  [ -f "node_modules/.cache/check/$tree" ] || stamped=no
+done
+if [ "$stamped" = yes ]; then
+  echo "pre-push: this tree already passed npm run check; checking the commit messages only."
+  for sha in $tips; do HEAD_SHA="$sha" npm run -s check:commits || exit 1; done
+  exit 0
+fi
+
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "pre-push: warning: tracked files are modified. The check runs on the working tree, so it tests those edits, not only the commits you push."
+fi
+for sha in $tips; do
+  if [ "$(git rev-parse "$sha^{tree}")" != "$(git rev-parse "HEAD^{tree}")" ]; then
+    echo "pre-push: warning: a pushed commit ($(git rev-parse --short "$sha")) is not the checked-out one; the check runs on the checked-out tree."
+    break
+  fi
+done
 npm run check

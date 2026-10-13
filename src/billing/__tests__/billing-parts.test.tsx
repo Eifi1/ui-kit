@@ -79,12 +79,12 @@ describe("BillingBanner — the presets (§3.3, §12.6, §12.21)", () => {
     );
     const trial = banner("trial-ending");
     expect(trial).toHaveTextContent("Your trial ends in 5 days.");
-    expect(trial.className).toContain("--info-bg");
+    expect(trial.className).toContain("bg-info-soft");
     expect(within(trial).getByRole("link", { name: "Choose a plan" })).toHaveAttribute("href", "/settings/subscription");
 
     const grant = banner("grant-ending");
     expect(grant).toHaveTextContent("Your free access ends tomorrow.");
-    expect(grant.className).toContain("--warning-bg");
+    expect(grant.className).toContain("bg-warning-soft");
   });
 
   it("says today at zero", () => {
@@ -98,7 +98,7 @@ describe("BillingBanner — the presets (§3.3, §12.6, §12.21)", () => {
     render(<BillingBanner kind="payment-failed" onAction={openPortal} />);
     const failed = banner("payment-failed");
     expect(failed).toHaveTextContent("Your last payment didn’t go through.");
-    expect(failed.className).toContain("--danger-bg");
+    expect(failed.className).toContain("bg-danger-soft");
     await user.click(within(failed).getByRole("button", { name: "Update payment method" }));
     expect(openPortal).toHaveBeenCalledTimes(1);
   });
@@ -154,7 +154,7 @@ describe("BillingBanner — the presets (§3.3, §12.6, §12.21)", () => {
     expect(within(banner("plan-ended")).queryByRole("button")).toBeNull();
     expect(within(banner("plan-ended")).queryByRole("link")).toBeNull();
     expect(within(banner("guest")).getByRole("button", { name: "Ask the owner" })).toBeInTheDocument();
-    expect(banner("guest").className).toContain("--warning-bg");
+    expect(banner("guest").className).toContain("bg-warning-soft");
   });
 });
 

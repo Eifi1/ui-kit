@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ElementType, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 
 /* ── SectionLabel ─────────────────────────────────────────────────────────── */
@@ -41,9 +41,9 @@ export type SectionLabelSize = "xs" | "md" | "sm";
  * size like everything around it (docs/text-size-harmonization.md §3.2).
  */
 export const SECTION_LABEL_CLASS: Record<SectionLabelSize, string> = {
-  xs: "text-micro font-semibold uppercase tracking-wide text-[var(--text-muted)]",
-  md: "text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]",
-  sm: "text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]",
+  xs: "text-micro font-semibold uppercase tracking-wide text-muted",
+  md: "text-caption font-semibold uppercase tracking-wide text-muted",
+  sm: "text-xs font-semibold uppercase tracking-wide text-muted",
 };
 
 /**
@@ -70,7 +70,7 @@ const SECTION_LABEL_BAND_CLASS: Record<SectionLabelSize, string> = {
   sm: "text-xs",
 };
 const BAND =
-  "block border-b border-[var(--border)] bg-[var(--bg-surface-2)] px-4 py-2 font-medium uppercase tracking-wide text-[var(--text-secondary)]";
+  "block border-b border-subtle bg-surface-2 px-4 py-2 font-medium uppercase tracking-wide text-secondary";
 
 type SectionLabelElement = "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "div" | "legend";
 
@@ -87,6 +87,8 @@ export interface SectionLabelProps extends ComponentPropsWithoutRef<"h3"> {
    *  header. See {@link SectionLabelVariant}. */
   variant?: SectionLabelVariant;
   children: ReactNode;
+  /** The element `as` names — hence `HTMLElement` (0.34, API-2, refactor audit 2026-10). */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -124,12 +126,14 @@ export function SectionLabel({
  * differently (`mt-1`, `self-end pb-2`, `border-t`), and what must be one thing is the
  * type, not the box.
  */
-export const CAPTION_CLASS = "text-caption leading-snug text-[var(--text-muted)]";
+export const CAPTION_CLASS = "text-caption leading-snug text-muted";
 
 export interface CaptionProps extends ComponentPropsWithoutRef<"p"> {
   /** Default `p`; `span` for a caption inside a line of other content. */
   as?: "p" | "span" | "div";
   children: ReactNode;
+  /** The element `as` names — hence `HTMLElement` (0.34, API-2, refactor audit 2026-10). */
+  ref?: Ref<HTMLElement>;
 }
 
 /**

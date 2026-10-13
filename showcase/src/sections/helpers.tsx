@@ -54,10 +54,10 @@ export function Helpers() {
 
 function Group({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
   return (
-    <section className="space-y-6 border-t border-[var(--border)] pt-8 first:border-t-0 first:pt-0">
+    <section className="space-y-6 border-t border-subtle pt-8 first:border-t-0 first:pt-0">
       <div>
-        <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
-        <p className="mt-0.5 text-sm text-[var(--text-secondary)]">{hint}</p>
+        <h2 className="text-lg font-semibold text-primary">{title}</h2>
+        <p className="mt-0.5 text-sm text-secondary">{hint}</p>
       </div>
       {children}
     </section>
@@ -106,7 +106,7 @@ function OtherInputHelpers() {
             ['isTimeInRange("", "08:00")', q(isTimeInRange("", "08:00"))],
           ]}
         />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           A range whose <code className="font-mono">min</code> is after its{" "}
           <code className="font-mono">max</code> wraps midnight — a night shift.
         </p>
@@ -125,7 +125,7 @@ function OtherInputHelpers() {
             ["fromLogPosition(0.5, 1, 1000, false)", fromLogPosition(0.5, 1, 1000, false).toFixed(3)],
           ]}
         />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           A log scale cannot reach 0, so the first stretch of the track is reserved for it
           (<code className="font-mono">zeroStop</code>, default on).
         </p>
@@ -142,7 +142,7 @@ function OtherInputHelpers() {
             ['passwordByteLength("🔐🔐")', q(passwordByteLength("🔐🔐"))],
           ]}
         />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           Bytes, not characters: bcrypt reads only the first 72 bytes, and an umlaut or an
           emoji is more than one.
         </p>

@@ -49,9 +49,17 @@ describe("authErrorCode", () => {
   });
 });
 
-describe("authErrorCode — token_expired (0.29.1)", () => {
+describe("authErrorCode — token_expired (0.30.0)", () => {
   it("is a known code", () => {
     expect(authErrorCode({ response: { data: { code: "token_expired" } } })).toBe("token_expired");
+  });
+});
+
+describe("authErrorCode — session_ended (0.34.0, auth §11.2 decision 7)", () => {
+  it("is a known code: a definitive refusal of /auth/refresh", () => {
+    const refused = { response: { status: 401, data: { detail: "This session has ended.", code: "session_ended" } } };
+    expect(authErrorCode(refused)).toBe("session_ended");
+    expect(isAuthError(refused, "session_ended")).toBe(true);
   });
 });
 

@@ -12,7 +12,7 @@ import {
   type TranslationReviewSwipeBinding,
   type TranslationReviewWrite,
 } from "../../../src/lib/translation-review";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, beat } from "../lib/section";
 
 /**
  * 0.25 — swiping and grouping in the translation review (keksdose live #377, Marcel
@@ -28,8 +28,6 @@ import { Example, Note } from "../lib/section";
  * #377 rework: "Add the swipe options to be shown also to the settings
  * /settings#interaction area where the other swipe options are defined").
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const EN = {
   budget: {
@@ -110,8 +108,6 @@ const SEED: TranslationReview[] = [
   { locale: "fr", key: "legal.terms", text: "Conditions d’utilisation", referenceText: "Terms of Service", verdict: "NEEDS_CHANGE", note: "« conditions générales »", suggestion: "Conditions générales d’utilisation", reviewerName: null, reviewedAt: at },
 ];
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 /** keksdose's shape, in synthetic strings: 20 long areas and 102 short ones. Every ninth
  *  French string is missing, every seventh differs from the reference in a placeholder. */
 function manyAreas(): { en: Record<string, string>; fr: Record<string, string> } {
@@ -166,13 +162,13 @@ export function TranslationReview025Demo() {
   const note = (what: string, info: TranslationReviewSaveInfo) =>
     setLog((prev) => [`${what} — ${info.origin}${info.toasted ? ", the kit toasted" : ", the app would toast “Saved”"}`, ...prev].slice(0, 4));
   const save = async (writes: TranslationReviewWrite[], info: TranslationReviewSaveInfo) => {
-    await wait(300);
+    await beat(300);
     const now = new Date().toISOString();
     setReviews((prev) => mergeReviews(prev, writes.map((w) => ({ ...w, reviewerName: "You", reviewedAt: now }))));
     note(`${writes.length} saved`, info);
   };
   const clear = async (keys: TranslationReviewKey[], info: TranslationReviewSaveInfo) => {
-    await wait(300);
+    await beat(300);
     setReviews((prev) => dropReviews(prev, keys));
     note(`${keys.length} cleared`, info);
   };
@@ -214,7 +210,7 @@ export function TranslationReview025Demo() {
               { value: "off", label: "Off" },
             ]}
           />
-          <p className="break-words font-mono text-xs text-[var(--text-secondary)]">{SWIPES[swipe].source}</p>
+          <p className="break-words font-mono text-xs text-secondary">{SWIPES[swipe].source}</p>
         </div>
         {grouped && (
           <div className="max-w-sm">
@@ -251,7 +247,7 @@ export function TranslationReview025Demo() {
           </WriteLockProvider>
         </div>
         {log.length > 0 && (
-          <ul className="space-y-0.5 font-mono text-xs text-[var(--text-secondary)]" aria-label="Writes">
+          <ul className="space-y-0.5 font-mono text-xs text-secondary" aria-label="Writes">
             {log.map((line, i) => (
               <li key={`${i}-${line}`}>{line}</li>
             ))}

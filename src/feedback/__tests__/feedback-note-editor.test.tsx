@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { FeedbackNoteEditor } from "../feedback-inbox";
+import { UiKitProvider } from "../../i18n/kit-labels";
 
 /**
  * A draft belongs to the person writing it (audit 2026-09-22, §react-correctness).
@@ -98,5 +99,41 @@ describe("FeedbackNoteEditor's draft", () => {
     view.unmount();
     render(<Editor initial="a different note" />);
     expect(box()).toHaveValue("a different note");
+  });
+});
+
+/**
+ * Round 0.34, the showcase's axe check: the box was named only by the `placeholder` line,
+ * so an editor without one was read out as just "edit text".
+ */
+describe("FeedbackNoteEditor's name", () => {
+  const editor = (props: { placeholder?: string; label?: string } = {}) => (
+    <FeedbackNoteEditor
+      initial=""
+      pending={false}
+      onSave={vi.fn()}
+      onCancel={vi.fn()}
+      saveLabel="Save"
+      cancelLabel="Cancel"
+      {...props}
+    />
+  );
+
+  it("is the line above the box when there is one", () => {
+    render(editor({ placeholder: "What was done?" }));
+    expect(screen.getByRole("textbox", { name: "What was done?" })).toBeInTheDocument();
+  });
+
+  it("falls back to `feedbackDetail.note` without one: English, then the provider's", () => {
+    const { unmount } = render(editor());
+    expect(screen.getByRole("textbox", { name: "Note" })).toBeInTheDocument();
+    unmount();
+    render(<UiKitProvider labels={{ feedbackDetail: { note: "Notiz" } }}>{editor()}</UiKitProvider>);
+    expect(screen.getByRole("textbox", { name: "Notiz" })).toBeInTheDocument();
+  });
+
+  it("is `label` when the caller gives one, with the line as its description", () => {
+    render(editor({ label: "Outcome", placeholder: "What was done?" }));
+    expect(screen.getByRole("textbox", { name: "Outcome" })).toHaveAccessibleDescription("What was done?");
   });
 });

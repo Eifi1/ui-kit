@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { Minus, Plus } from "lucide-react";
 import { describe, expect, it, vi } from "vitest";
 import { ButtonGroup, ButtonGroupLink } from "../button-group";
-import { Button, IconButton } from "../ui";
+import { Button } from "../button";
+import { IconButton } from "../icon-button";
 import { Tooltip } from "../tooltip";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { KitLinkComponent } from "../../i18n/kit-labels";
@@ -87,7 +88,7 @@ describe("ButtonGroup — elevated, gapped, link members", () => {
       </ButtonGroup>,
     );
     const cls = screen.getByRole("group").className;
-    expect(cls).toContain("bg-[var(--bg-surface)]");
+    expect(screen.getByRole("group")).toHaveClass("bg-surface");
     expect(cls).toContain("shadow-lg");
     expect(cls).toContain("[&>*]:rounded-none");
   });
@@ -143,10 +144,10 @@ describe("ButtonGroup — elevated, gapped, link members", () => {
     const a = screen.getByRole("link", { name: "A" });
     expect(a).toHaveAttribute("href", "/a");
     expect(a).toHaveAttribute("aria-current", "page");
-    expect(a.className).toContain("bg-[var(--brand-bg)]");
+    expect(a).toHaveClass("bg-brand-soft");
     // The brand as text is `--brand-muted` (0.33): 4.5:1 on its wash, where `--brand` is not.
     expect(a.className.split(" ")).toContain("text-brand-muted");
-    expect(a.className).not.toContain("text-[var(--brand)]");
+    expect(a).not.toHaveClass("text-brand");
     expect(screen.getByRole("link", { name: "B" })).not.toHaveAttribute("aria-current");
   });
 

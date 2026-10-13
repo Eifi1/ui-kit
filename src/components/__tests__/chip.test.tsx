@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { MouseEvent } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { Chip, ChipInput } from "../chip";
+import { Chip } from "../chip";
+import { ChipInput } from "../chip-input";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { KitLinkComponent } from "../../i18n/kit-labels";
 
@@ -275,11 +276,11 @@ describe("Chip — touch size and money tones (0.6.0)", () => {
       </>,
     );
     const income = screen.getByText("In").parentElement!;
-    expect(income.className).toContain("text-[var(--money-income)]");
-    expect(income.className).toContain("bg-[var(--bg-surface-2)]");
+    expect(income).toHaveClass("text-money-income");
+    expect(income.className).toContain("bg-surface-2");
     const expense = screen.getByRole("button", { name: "Out" });
-    expect(expense.className).toContain("text-[var(--money-expense)]");
-    expect(expense.className).toContain("bg-[var(--bg-active)]");
+    expect(expense).toHaveClass("text-money-expense");
+    expect(expense.className).toContain("bg-active");
     expect(expense).toHaveAttribute("aria-pressed", "true");
   });
 });
@@ -319,7 +320,7 @@ describe("Chip — the combined link/button + dismiss shape (0.7.0)", () => {
     expect(link).not.toContainElement(remove);
     expect(pill.className).toContain("rounded-full");
     expect(pill.className).toContain("border");
-    expect(pill.className).toContain("bg-[var(--brand-bg)]");
+    expect(pill).toHaveClass("bg-brand-soft");
     expect(pill.className).toContain("custom");
     expect(link.className).not.toContain("border");
   });
@@ -385,6 +386,16 @@ describe("ChipInput — visible rejections and RTL (0.7.0)", () => {
     const input = type("a");
     fireEvent.keyDown(input, { key: "Enter" });
     expect(input).toHaveAccessibleDescription(/Pick wisely.*already in the list/);
+  });
+
+  it("prints its error and its refusal in every field's error type (DUP-8)", () => {
+    render(<Harness value={["a"]} error="Pick wisely" />);
+    fireEvent.keyDown(type("a"), { key: "Enter" });
+    for (const message of [screen.getByText("Pick wisely"), document.querySelector("[data-chip-input-rejected]")!]) {
+      // FIELD_ERROR_CLASS's type, not `text-xs`; the field's `space-y-1` spaces it.
+      expect(message).toHaveClass("text-caption", "leading-tight", "text-danger");
+      expect(message).not.toHaveClass("text-xs");
+    }
   });
 
   it("mirrors ← → between chips in RTL", () => {
@@ -500,13 +511,13 @@ describe("Chip 0.10.0", () => {
       </>,
     );
     const soft = screen.getByTestId("soft").className;
-    expect(soft).toContain("bg-[var(--hue-purple-bg)]");
-    expect(soft).toContain("text-[var(--hue-purple)]");
-    expect(soft).toContain("border-[var(--hue-purple-border)]");
+    expect(soft).toContain("bg-hue-purple-soft");
+    expect(screen.getByTestId("soft")).toHaveClass("text-hue-purple");
+    expect(soft).toContain("border-hue-purple");
     expect(screen.getByTestId("outline").className).toContain("bg-transparent");
-    expect(screen.getByTestId("outline").className).toContain("text-[var(--hue-teal)]");
+    expect(screen.getByTestId("outline")).toHaveClass("text-hue-teal");
     // The fill under its own foreground (0.33), as role utilities.
-    expect(screen.getByTestId("solid").className).toContain("bg-hue-orange");
+    expect(screen.getByTestId("solid")).toHaveClass("bg-hue-orange");
     expect(screen.getByTestId("solid").className).toContain("text-hue-orange-contrast");
     expect(screen.getByTestId("on").className).toContain("border-[var(--hue-indigo)]");
   });
@@ -556,10 +567,10 @@ describe("Chip 0.10.0", () => {
     expect(chip.className).toContain("bg-transparent");
     expect(chip.className).toContain("border-transparent");
     expect(chip.className).toContain("px-0");
-    expect(chip.className).toContain("text-[var(--text-secondary)]");
+    expect(chip.className).toContain("text-secondary");
     const dot = chip.querySelector("[data-chip-dot]")!;
     expect(dot).toHaveAttribute("aria-hidden");
-    expect(dot.className).toContain("bg-[var(--hue-blue)]");
+    expect(dot).toHaveClass("bg-hue-blue");
     expect(chip).toHaveTextContent("Rented");
   });
 });
@@ -585,5 +596,32 @@ describe("Chip — the provider's router link", () => {
     expect(screen.getByRole("link", { name: "Mail" })).not.toHaveAttribute("data-router");
     expect(screen.getByRole("link", { name: "Own" })).toHaveAttribute("data-own");
     expect(screen.getByRole("link", { name: "Own" })).not.toHaveAttribute("data-router");
+  });
+});
+
+describe("Chip data-tone (0.34, refactor audit 2026-10, TST-9)", () => {
+  it("carries its tone on the visible pill, whatever its shape, and a caller's own wins", () => {
+    render(
+      <>
+        <Chip tone="warning" data-testid="inert">Due</Chip>
+        <Chip tone="teal" href="#t">Link</Chip>
+        <Chip tone="danger" onClick={() => {}}>Toggle</Chip>
+        <Chip tone="info" href="#s" onRemove={() => {}}>Split</Chip>
+        <Chip tone="success" data-tone="mine" data-testid="own">Own</Chip>
+      </>,
+    );
+    expect(screen.getByTestId("inert")).toHaveAttribute("data-tone", "warning");
+    expect(screen.getByRole("link", { name: "Link" })).toHaveAttribute("data-tone", "teal");
+    expect(screen.getByRole("button", { name: "Toggle" })).toHaveAttribute("data-tone", "danger");
+    // A split chip's pill is the wrapper; the link inside it carries no second one.
+    const split = screen.getByRole("link", { name: "Split" });
+    expect(split.parentElement).toHaveAttribute("data-tone", "info");
+    expect(split).not.toHaveAttribute("data-tone");
+    expect(screen.getByTestId("own")).toHaveAttribute("data-tone", "mine");
+  });
+
+  it("says neutral when no tone is given", () => {
+    render(<Chip data-testid="plain">Plain</Chip>);
+    expect(screen.getByTestId("plain")).toHaveAttribute("data-tone", "neutral");
   });
 });

@@ -14,6 +14,8 @@ import type { UiKitLabels } from "../kit-labels";
  * Derived rather than copied: every word is the default's own, spread in, and only the
  * labels that print a number are restated — with the same wording and the same
  * singular/plural split — so a key added to the defaults is here the moment it lands.
+ * A new label that prints a count must be restated by hand; the catalogue parity test
+ * in `__tests__/locales.test.ts` fails until it is (round 0.34 DOC-6: eleven were not).
  * Row and line numbers (`lineItems.row`, `measuredGrid.cell`) are positions, not
  * counts, and stay as the defaults print them, as in the other catalogues.
  */
@@ -21,6 +23,9 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
   const d = DEFAULT_UI_KIT_LABELS;
+  // As `inDays` in src/billing/billing-labels.ts: 0 (or less) is today, 1 tomorrow.
+  const inDays = (days: number) =>
+    days <= 0 ? "today" : days === 1 ? "tomorrow" : `in ${n(days)} days`;
 
   return {
     ...d,
@@ -173,6 +178,47 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
         shown === 1
           ? `The first of ${n(total)} rows`
           : `The first ${n(shown)} of ${n(total)} rows`,
+    },
+    signIn: {
+      ...d.signIn,
+      recoveryCodeHint: (length) => `${n(length)} letters and digits. Dashes and spaces don’t matter.`,
+    },
+    verifyEmail: {
+      ...d.verifyEmail,
+      resendIn: (seconds) => `Send again in ${n(seconds)} s`,
+    },
+    deleteAccount: {
+      ...d.deleteAccount,
+      afterDays: (days) =>
+        days === 1
+          ? "Your account is deactivated at once and erased for good 1 day later."
+          : `Your account is deactivated at once and erased for good ${n(days)} days later.`,
+      handOver: (count) =>
+        count === 1
+          ? "1 item others can see will pass to an administrator."
+          : `${n(count)} items others can see will pass to an administrator.`,
+    },
+    settings: {
+      ...d.settings,
+      matchCount: (count) => (count === 1 ? "1 match" : `${n(count)} matches`),
+    },
+    demo: {
+      ...d.demo,
+      rateLimited: (minutes) =>
+        minutes
+          ? `Too many demos from this network. Try again in ${n(minutes)} min.`
+          : "Too many demos from this network. Try again later.",
+      hoursLeft: (hours, minutes) => `Demo · ${n(hours)} h ${n(minutes)} min left`,
+      minutesLeft: (minutes) => `Demo · ${n(minutes)} min left`,
+    },
+    billing: {
+      ...d.billing,
+      trialEnding: (days) =>
+        `Your trial ends ${inDays(days)}. After that you can still view everything, but changes need a plan.`,
+      grantEnding: (days) =>
+        `Your free access ends ${inDays(days)}. After that you can still view everything, but changes need a plan.`,
+      waitingChanges: (count) =>
+        count === 1 ? "1 change waiting for a plan" : `${n(count)} changes waiting for a plan`,
     },
   };
 }

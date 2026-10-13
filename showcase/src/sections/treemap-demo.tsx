@@ -135,7 +135,7 @@ export function TreemapDemo() {
         hint="the formatter is handed each tile's share of what is drawn as a second argument"
       >
         <Treemap data={SPEND} valueFormatter={moneyAndShare} height={320} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Hover a tile for its amount and share. The two smallest tiles have no label: under ~44×20px
           there is no room for a word, and a one-letter stub bleeding over the edge reads worse than
           none. The name is still in the tooltip.
@@ -146,12 +146,12 @@ export function TreemapDemo() {
         label="Treemap — clickable tiles, drilling down"
         hint="onNodeClick makes each tile a focusable button: Tab to it, Enter or Space to open"
       >
-        <Row className="mb-2 text-xs text-[var(--text-secondary)]">
+        <Row className="mb-2 text-xs text-secondary">
           {group ? (
             <button
               type="button"
               onClick={() => setGroup(null)}
-              className="rounded px-2 py-1 text-[var(--brand)] hover:bg-[var(--bg-hover)]"
+              className="rounded px-2 py-1 text-brand hover:bg-hover"
             >
               ← All groups
             </button>
@@ -175,10 +175,10 @@ export function TreemapDemo() {
             onNodeClick={(id, name) => (CHILDREN[id] ? setGroup(id) : setClicked(name))}
           />
         )}
-        <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">
+        <p className="mt-2 font-mono text-xs text-muted">
           last clicked: {clicked ?? "—"}
         </p>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The drilled map paints every child in its parent&apos;s colour with the node&apos;s own{" "}
           <code className="font-mono">fill</code>. That is a CSS var here, so the label takes{" "}
           <code className="font-mono">currentColor</code> ink — pass a concrete hex when the ink has
@@ -203,7 +203,7 @@ export function TreemapDemo() {
         hint='redactNames: tile labels and the tooltip bubble carry data-private'
       >
         <Treemap data={PAYEES} valueFormatter={moneyAndShare} height={240} redactNames />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The kit only sets the attribute; the host&apos;s own{" "}
           <code className="font-mono">[data-private]</code> rule decides what it looks like — the same
           contract as <code className="font-mono">Tooltip redact</code>. A category is a label of the
@@ -221,7 +221,7 @@ export function TreemapDemo() {
           maxTiles={3}
           valueFormatter={(v) => `${v} transactions`}
         />
-        <p className="mt-2 text-xs text-[var(--text-muted)]">
+        <p className="mt-2 text-xs text-muted">
           {COUNTS.length - 3} more not shown — the caller&apos;s line, since only it knows how many it
           passed.
         </p>
@@ -236,13 +236,13 @@ export function TreemapDemo() {
             type="button"
             aria-pressed={allZero}
             onClick={() => setAllZero((z) => !z)}
-            className="rounded border border-[var(--border)] px-2 py-1 text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+            className="rounded border border-subtle px-2 py-1 text-secondary hover:bg-hover"
           >
             {allZero ? "Restore the values" : "Set every value to 0"}
           </button>
         </Row>
         <Treemap data={allZero ? MIXED.map((n) => ({ ...n, value: 0 })) : MIXED} height={220} />
-        <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">
+        <p className="mt-2 font-mono text-xs text-muted">
           {allZero
             ? "Treemap rendered nothing: this sentence is the caller's."
             : `not drawn: ${DROPPED.map((n) => `${n.name} (${n.value})`).join(", ")}`}
@@ -298,7 +298,7 @@ function LabelColorTreemaps() {
   return (
     <>
       <Row className="mb-2">
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={withInk} onChange={(e) => setWithInk(e.target.checked)} />
           <span>
             <code className="font-mono">labelColor</code> per node
@@ -306,7 +306,7 @@ function LabelColorTreemaps() {
         </label>
       </Row>
       <Treemap data={data} valueFormatter={moneyAndShare} height={260} />
-      <p className="mt-2 text-xs text-[var(--text-secondary)]">
+      <p className="mt-2 text-xs text-secondary">
         Every tile is <code className="font-mono">color-mix(in srgb, var(--chart-1) N%, transparent)</code>.
         The kit measures a hex fill and picks black or white ink itself; a mix it cannot measure, so it
         falls back to <code className="font-mono">currentColor</code> — untick the box and the page&apos;s
@@ -323,18 +323,18 @@ function RtlTreemaps() {
     <>
       <div className="grid gap-4 md:grid-cols-2">
         <div dir="rtl" lang="ar" className="min-w-0">
-          <p className="mb-1 font-mono text-caption text-[var(--text-muted)]">&lt;Treemap&gt; under dir=&quot;rtl&quot;</p>
+          <p className="mb-1 font-mono text-caption text-muted">&lt;Treemap&gt; under dir=&quot;rtl&quot;</p>
           <Treemap data={SPEND_AR} valueFormatter={(v) => AR_MONEY.format(v)} height={220} />
         </div>
         <div className="min-w-0">
           <Row className="mb-1 text-xs">
-            <span className="font-mono text-caption text-[var(--text-muted)]">
+            <span className="font-mono text-caption text-muted">
               &lt;TreemapCell dir=&quot;{cellDir}&quot; /&gt;
             </span>
             <button
               type="button"
               onClick={() => setCellDir((d) => (d === "rtl" ? "ltr" : "rtl"))}
-              className="rounded border border-[var(--border)] px-2 py-0.5 text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+              className="rounded border border-subtle px-2 py-0.5 text-secondary hover:bg-hover"
             >
               Switch to {cellDir === "rtl" ? "ltr" : "rtl"}
             </button>

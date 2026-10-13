@@ -1,9 +1,10 @@
 import { useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
-import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { toneTextClass } from "./signed-amount";
 import type { TextTone } from "./signed-amount";
+import { DEFAULT_PROGRESS_BAR_LABELS } from "./progress-bar-labels";
 
 /** The words a progress bar adds of its own. */
 export interface ProgressBarLabels {
@@ -13,10 +14,8 @@ export interface ProgressBarLabels {
   overLimit: (amount: string) => string;
 }
 
-export const DEFAULT_PROGRESS_BAR_LABELS: ProgressBarLabels = {
-  unlimited: "Unlimited",
-  overLimit: (amount) => `${amount} over the limit`,
-};
+// Defined in ./progress-bar-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_PROGRESS_BAR_LABELS };
 
 /**
  * `income` / `expense` are the money pair (`--money-income` / `--money-expense`), the
@@ -44,14 +43,14 @@ export type ProgressBarTone =
 export type ProgressBarSize = "sm" | "slim" | "md" | "lg";
 
 const FILL: Record<ProgressBarTone, string> = {
-  brand: "bg-[var(--brand)]",
+  brand: "bg-brand",
   neutral: "bg-[var(--text-muted)]",
-  success: "bg-[var(--success)]",
-  warning: "bg-[var(--warning)]",
-  danger: "bg-[var(--danger)]",
-  info: "bg-[var(--info)]",
-  income: "bg-[var(--money-income)]",
-  expense: "bg-[var(--money-expense)]",
+  success: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger",
+  info: "bg-info",
+  income: "bg-money-income",
+  expense: "bg-money-expense",
 };
 
 const TRACK_HEIGHT: Record<ProgressBarSize, string> = { sm: "h-1", slim: "h-1.5", md: "h-2", lg: "h-3" };
@@ -204,7 +203,11 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * The `aria-valuetext` is not touched: a screen reader is not a screen-share.
    */
   sensitive?: boolean;
-  labels?: Partial<ProgressBarLabels>;
+  labels?: LabelOverride<ProgressBarLabels>;
+  /** The element the rest of the props go on — the `progressbar` (or `meter`) itself,
+   *  the box round the figure for an unlimited one — a `div` or a `span` as `as` says,
+   *  hence `HTMLElement` (0.34, API-2, refactor audit 2026-10). */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -248,12 +251,15 @@ export function ProgressBar({
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   "aria-describedby": ariaDescribedBy,
+  ref,
   ...rest
 }: ProgressBarProps) {
   // `as="span"`: the same bar from phrasing elements only, so it is valid inside a
   // <button> or <a> — ListItem's `content` puts a budget bar inside the row's target
   // (keksdose P2). Every span is made a block except those already laid out as flex.
   const Tag = as;
+  // Either element's ref, as List types its `ul`/`ol` one.
+  const tagRef = ref as Ref<HTMLDivElement & HTMLSpanElement> | undefined;
   const inlineClass = as === "span" ? "block [&_span:not(.flex):not(.inline-flex)]:block" : undefined;
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const text = useKitLabels("progressBar", DEFAULT_PROGRESS_BAR_LABELS, labels);
@@ -263,7 +269,7 @@ export function ProgressBar({
   const hintId = useId();
   const hintNode =
     hint != null ? (
-      <p id={hintId} data-part="hint" className="mt-1 text-xs text-[var(--text-muted)]">
+      <p id={hintId} data-part="hint" className="mt-1 text-xs text-muted">
         {hint}
       </p>
     ) : null;
@@ -278,14 +284,14 @@ export function ProgressBar({
           ? formatValue(value, Infinity, min)
           : new Intl.NumberFormat(kitLocale).format(value);
     return (
-      <Tag {...rest} className={cn("min-w-0", inlineClass, className)} data-state="unlimited">
+      <Tag {...rest} ref={tagRef} className={cn("min-w-0", inlineClass, className)} data-state="unlimited">
         <Tag className="flex items-baseline gap-2 text-sm">
           {label != null && (
-            <span id={labelId} className="min-w-0 text-[var(--text-secondary)]">
+            <span id={labelId} className="min-w-0 text-secondary">
               {label}
             </span>
           )}
-          <span data-part="unlimited" data-private={priv} className="ms-auto shrink-0 tabular-nums text-[var(--text-muted)]">
+          <span data-part="unlimited" data-private={priv} className="ms-auto shrink-0 tabular-nums text-muted">
             {shown !== undefined && `${shown} · `}
             {text.unlimited}
           </span>
@@ -347,7 +353,7 @@ export function ProgressBar({
     overage && !stacked && value !== undefined && Number.isFinite(value) && value > max ? value - max : 0;
   const overageNode =
     over > 0 ? (
-      <p id={`${hintId}-over`} data-part="overage" data-private={priv} className="mt-1 text-xs text-[var(--danger)]">
+      <p id={`${hintId}-over`} data-part="overage" data-private={priv} className="mt-1 text-xs text-danger">
         {typeof overage === "function"
           ? overage(over)
           : text.overLimit(new Intl.NumberFormat(kitLocale).format(over))}
@@ -364,14 +370,14 @@ export function ProgressBar({
       {(label != null || (showValue && valueText !== undefined)) && (
         <Tag className="mb-1 flex items-baseline gap-2 text-sm">
           {label != null && (
-            <span id={labelId} className="min-w-0 text-[var(--text-secondary)]">
+            <span id={labelId} className="min-w-0 text-secondary">
               {label}
             </span>
           )}
           {showValue && valueText !== undefined && (
             // Hidden: the same words are the bar's aria-valuetext, and reading them
             // twice in a row is noise.
-            <span aria-hidden data-part="value" data-private={priv} className="ms-auto shrink-0 tabular-nums text-[var(--text-muted)]">
+            <span aria-hidden data-part="value" data-private={priv} className="ms-auto shrink-0 tabular-nums text-muted">
               {valueText}
             </span>
           )}
@@ -379,6 +385,7 @@ export function ProgressBar({
       )}
       <Tag
         {...rest}
+        ref={tagRef}
         role={meter ? "meter" : "progressbar"}
         aria-label={name}
         aria-labelledby={labelledBy}
@@ -390,7 +397,7 @@ export function ProgressBar({
         aria-busy={!meter && indeterminate ? true : undefined}
         // `relative` + `overflow-hidden`: the indeterminate segment is positioned in
         // here and must not paint past the rounded ends.
-        className={cn("relative w-full overflow-hidden rounded-full bg-[var(--bg-active)]", TRACK_HEIGHT[size])}
+        className={cn("relative w-full overflow-hidden rounded-full bg-active", TRACK_HEIGHT[size])}
       >
         {stacked ? (
           // The parts in a flex row with a 2px gap, so two neighbouring steps of one
@@ -451,7 +458,9 @@ export function ProgressBar({
                 style={{ backgroundColor: seg.className ? undefined : seg.color }}
               />
               {seg.label != null && (
-                <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">{seg.label}</span>
+                // Wraps from Large up (text size §10.17, round 0.34 T1); the value
+                // beside it keeps its width.
+                <span className="min-w-0 flex-1 truncate-until-large text-secondary">{seg.label}</span>
               )}
               <span
                 data-part="legend-value"

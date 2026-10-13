@@ -28,12 +28,17 @@ import { defineConfig } from "tsup";
 // every entry point by package name. Rollup will warn `MODULE_LEVEL_DIRECTIVE` when it
 // inlines one of these into a chunk that has none — noise in the consumer's build log,
 // and the price of the directive being per-module.
+//
+// `dts: false`: the declarations come from `tsc` (scripts/build-dts.mjs, tsconfig.build.json),
+// one `.d.ts` per module like the `.js`. tsup's own declaration build was rollup-plugin-dts
+// over every entry, at 5.2 GB resident, and it hoisted shared declarations into hashed
+// chunks the unbundled graph has no use for (TST-3, refactor audit 2026-10).
 export default defineConfig({
   entry: ["src/**/*.ts", "src/**/*.tsx", "!src/**/*.test.*", "!src/test/**", "!src/vite-env.d.ts"],
   format: ["esm"],
   outDir: "dist",
   bundle: false,
-  dts: true,
+  dts: false,
   sourcemap: true,
   clean: true,
   target: "es2022",

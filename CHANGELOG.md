@@ -14,18 +14,110 @@ This package is pre-1.0 and three applications depend on it. The contract until 
   reach an app until it asks for it.
 
 An export is **deprecated for one minor before removal**: marked `@deprecated` in TSDoc
-with the replacement named, listed here, then removed in the next minor.
+with the replacement named, listed in the release's `docs/adopt-0.x.md` and in its commit
+body as `Deprecated: …` (this file has no section for it), then removed in the next minor.
 
 From 0.7.0 on, this file is generated from the Conventional Commits by `npm run release`
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.34.0](https://github.com/Eifi1/ui-kit/compare/v0.33.1...v0.34.0) (2026-10-13)
+
+Round 0.34 (the apps' 0.33 reports, keksdose's feedback runs 77–78, Kurvenschmiede's asks;
+two contracts settled after the apps' reviews: session refresh, groups in the audit) and the
+whole 2026-10 refactor plan (`docs/refactor-plan-2026-10.md`, 69 findings in six waves). The
+migration per app is `docs/adopt-0.34.md`; server-kit 0.8.0 ships beside it.
+
+### ⚠ BREAKING CHANGES
+
+Hand-collected from the round, like 0.33.0's list; the entries generated from commit footers
+follow it.
+
+* **Peers:** `react` and `react-dom` `>=19.2` (`useEffectEvent`).
+* **Removed** (deprecated in 0.32 or earlier): `ariaLabel` on ToggleGroup, ChipInput,
+  GroupedPicker, HoverMenu and the accessible-name `label` on Tabs and SearchField
+  (→ `aria-label`; SearchField requires it), `PHONE_QUERY`, `feedbackDialog.attachments`.
+* **Types:** `AdminActionKind` gains five members and `AdminActionLogEntry.target` widens to a
+  group or other target; `AdminActionConfirmProps` is a type alias; `AuthErrorCode` gains
+  `session_ended`; `ThemeSettingProps` is the union (the Select half is
+  `ThemeSettingSelectProps`); `LanguageSettingProps` drops `multiple`; 25 components are
+  function components taking `ref` as a prop, not `ForwardRefExoticComponent` (JSX,
+  `ComponentProps` and `ComponentRef` work as before; `X.displayName` is gone).
+* **Declarations** are one `.d.ts` per module (tsc), not hashed roll-up chunks; every entry
+  exports the same names and kinds.
+* **Kit class names** move to the role and new theme utilities (`text-muted`, `bg-surface`,
+  `ring-focus`, `ring-offset-surface`, `ring-brand-contrast`, `text-money-*`, …; same
+  colours); `FIELD_BASE`, `FIELD_DISPLAY`, `FOCUS_RING`, `FOCUS_RING_WIDTH`,
+  `SETTINGS_FOCUS_RING` and `toneTextClass()` change value; `.text-money-net` and
+  `.bg-money-neutral` are layered theme utilities now.
+* **Roles and timing app tests may notice:** Escape closes only the topmost layer, and a
+  field's bare `preventDefault` no longer holds a Modal open; picker rows (CurrencySelect, the
+  AmountInput chip, GroupedPicker, MultiSelect) are `role="option"` and pick on mousedown;
+  GroupedPicker's trigger is a combobox; DataTable's filter buttons are named per column, its
+  number bounds are textboxes, an expandable row's state is on a "Details" button, not the
+  `<tr>`; Tabs' "Remove" button sits after the tablist; the feedback dialog and the search
+  palette appear a render after opening.
+* **Colour presets** (Ink, Moss, Plum, Contrast) move about one hex step, so every derived pair
+  meets its contrast on the shipped hex.
+
+### Deprecated (removed in 0.35)
+
+`ariaLabel` on AmountInput, MoneyField, NumberInput, NumberField, IntegerField,
+CalculatorButton, the Rhf number twins, WizardStepper, ThemeToggle, PaletteMenu, LanguageMenu,
+OptionSwitcherMenu, RoleSwitcher, TopBarActionMenu (→ `aria-label`); MultiSelect `values`,
+`allLabel`, `searchLabel`, `selectAllLabel`, `clearLabel`; `resolveChipInputLabels`,
+`resolveFieldSyncLabels`, `resolveWizardLabels`, `resolvePasswordRevealLabels`,
+`resolveDataTableLabels`, `missingDataTableLabels`; the 13 chart-zoom maths exports;
+`ALTERNATIVE_PRESETS`; `FeedbackComposer` (→ `ChatComposer`); `align: "left" | "right"` on
+DropdownPanel, HoverMenu, TopBarActionMenu, FeedbackMenu; /rhf's `FormField`, `FormItem`,
+`FormLabel`, `FormControl`, `FormDescription`, `FormMessage`, `useFormField`; ServerWakeNotice
+`navOffset`; FieldStrip `pad`; and, from 0.33, SwipeAction `className` / `armedClassName`.
+
+* **admin:** AdminActionKind gains five members and AdminActionLogEntry.target widens to a
+  group or other target (an exhaustive switch or a person-only read needs a case);
+  AdminActionConfirmProps is a type alias, so an interface can no longer extend it.
+* pass `aria-label` where ToggleGroup, ChipInput, GroupedPicker and HoverMenu took
+  `ariaLabel`, and where Tabs and SearchField took `label` (SearchField now requires it);
+  PHONE_QUERY → usePhoneLayout(), or breakpointQuery("max-md", scale) for the query string;
+  feedbackDialog.attachments → attachmentList / feedbackAttachment.attachmentList.
+
+### Added
+
+* **admin:** groups in the audit log — five words, group targets, the app's noun in seven languages ([f6b8521](https://github.com/Eifi1/ui-kit/commit/f6b8521b37b598c449f3be7b056777758f9cbc1a))
+* **admin:** PlanChangeConfirm's usage takes planColumn's shape, so its plural can't disagree ([f7f37ea](https://github.com/Eifi1/ui-kit/commit/f7f37ea07c30e4d7e952910211ec45bfbcc87f08))
+* **auth:** attachSessionRefresh — one refresh per tab, a definitive end once, a transient one kept ([7ee9fb5](https://github.com/Eifi1/ui-kit/commit/7ee9fb524a044895ddb7137698b1d7d82fd56712))
+* HelpPopover for long help, write locks on text and money fields, PasswordSetting's own errors ([b636b92](https://github.com/Eifi1/ui-kit/commit/b636b929a61d59da0f12275cd35b6393cba334fe))
+* Modal 2xl, one table storage prefix, saveBlob, settings window titles, the wake notice on top ([56eb4f2](https://github.com/Eifi1/ui-kit/commit/56eb4f2790fa0ae983a698c2aeb6da34aae8b81a))
+* SeriesChart maxRows, the truncation sweep gates releases, wrap-at-Large across the pickers ([0bf08ee](https://github.com/Eifi1/ui-kit/commit/0bf08eebfb666bfe168b61b5245b45ba64f759fb))
+* the English catalogue in one chunk; aliases deprecated in 0.32 and earlier removed ([843762d](https://github.com/Eifi1/ui-kit/commit/843762d6366323d04b7485309c3f8d691ddb5cf4))
+
+### Fixed
+
+* a reopened photo shows no revoked URL; React >=19.2; the release's sweep runs in CI ([82db9b3](https://github.com/Eifi1/ui-kit/commit/82db9b352c5a3ed9f1a56ca3eb8de8e082e06ad0))
+* a strip's label clears its group's border; the stepper's focus line survives 125 % ([a200e06](https://github.com/Eifi1/ui-kit/commit/a200e066be5fb74d992df302b006ce5441a851f8))
+* **a11y:** the five kit findings of the showcase's axe check ([48f72da](https://github.com/Eifi1/ui-kit/commit/48f72dac37c8a916bd3139f210dcca8dba3ce7bb))
+* counts formatted alike in all seven catalogues; the colour deriver meets contrast on the hex ([fb925ac](https://github.com/Eifi1/ui-kit/commit/fb925ac9969262931590364c7b60e645b0425d0d))
+* Escape closes only a picker's list in a dialog; tabbable traps; the phone filter sheet ([4a096a8](https://github.com/Eifi1/ui-kit/commit/4a096a891235a8fbbc13be3015050a7a6904957c))
+* one lock-reason frame with its line on phones; aria-label on 16 more; "0.500" and rounding ([2d37551](https://github.com/Eifi1/ui-kit/commit/2d3755145e8eb80818f8b743f857673857e6f4cd))
+* **showcase:** the series-chart and user-admin page blurbs in all seven dictionaries ([4426662](https://github.com/Eifi1/ui-kit/commit/4426662e8fe74e8676e983e26abb6f527f4e753e))
+* the last five texts the truncation sweep cut at Large ([435992a](https://github.com/Eifi1/ui-kit/commit/435992ae583ba88a071e4d8698b22d3e3961b49e))
+
+### Changed
+
+* one Escape stack; shared field hint, error and lock plumbing; one numeric-field engine ([c7b9764](https://github.com/Eifi1/ui-kit/commit/c7b97644caed9d14cac5c03e83732368a430f3b7))
+* one picker foundation, one search fold; MultiSelect generic; the number filter reads marks ([a0ab857](https://github.com/Eifi1/ui-kit/commit/a0ab8572e749b1949fb359a2cba4ef51f3b63c8a))
+* React 19 ref-as-prop across the kit; every root and field takes a ref ([764386e](https://github.com/Eifi1/ui-kit/commit/764386eb4f26573a358b159e02265332abd1faff))
+* the barrel by folder, no ui.tsx; lazy feedback dialog and palette; API deprecations, types ([3ca096f](https://github.com/Eifi1/ui-kit/commit/3ca096f4212fca9b96e50368c69d5ec29e1407f8))
+* the kit's own markup on the role utilities; the role-class budget is 0 ([0b34633](https://github.com/Eifi1/ui-kit/commit/0b346330999a980cee94c73215cfc85df9fd1248))
+* ui.tsx, DataTable and four large files split along their seams; modules in their layer ([4cc112e](https://github.com/Eifi1/ui-kit/commit/4cc112ebe385e9b862b14366a532088ef6a79f6f))
+* utilities for the focus width, ring offsets, the ring on brand, and money ([e01cb42](https://github.com/Eifi1/ui-kit/commit/e01cb42d115c91027d7bc1ddfa0e2520ce40aa4a))
+
 ## [0.33.1](https://github.com/Eifi1/ui-kit/compare/v0.33.0...v0.33.1) (2026-10-12)
 
 ### Fixed
 
-* **anchored-panel:** a flipped panel hangs from its bottom edge, at any content height ([434c3ca](https://github.com/Eifi1/ui-kit/commit/434c3ca0b643e4ffeb876c0c52eefdabefbb6606)), references [#401](https://github.com/Eifi1/ui-kit/issues/401)
-* **focus-trap:** leave focus on an autofocused child; give it back to the opener on close ([b0ce972](https://github.com/Eifi1/ui-kit/commit/b0ce9720f35f08ed4355f2912b36fbe8a1bc4294)), references [#402](https://github.com/Eifi1/ui-kit/issues/402)
+* **anchored-panel:** a flipped panel hangs from its bottom edge, at any content height ([434c3ca](https://github.com/Eifi1/ui-kit/commit/434c3ca0b643e4ffeb876c0c52eefdabefbb6606)), live #401
+* **focus-trap:** leave focus on an autofocused child; give it back to the opener on close ([b0ce972](https://github.com/Eifi1/ui-kit/commit/b0ce9720f35f08ed4355f2912b36fbe8a1bc4294)), live #402
 * lockable composers and number fields, a ref on Skeleton, figures that wrap at spaces ([63e12aa](https://github.com/Eifi1/ui-kit/commit/63e12aa43ee24b18a5d5e92e64cfa9d369582e8a))
 
 ## [0.33.0](https://github.com/Eifi1/ui-kit/compare/v0.32.2...v0.33.0) (2026-10-09)
@@ -147,7 +239,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 * **feedback:** `FeedbackStatus` gains `"READY"` ("Ready to implement", feedback contract
   §8.2), so an app's own `Record<FeedbackStatus, …>` fails to compile until it has the
   entry, and a database status enum needs the value. `FEEDBACK_AWAITING_STATUSES` now
-  holds `OPEN` too. See `docs/adopt-0.31.md`.
+  holds `OPEN` too. See `docs/archive/adopt/adopt-0.31.md`.
 * **account settings:** `TwoFactorSetting` shows a title with an On/Off chip in place of
   its "Two-factor authentication: Off" line.
 
@@ -245,7 +337,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 
 * export the review panel's swipe binding types and helpers ([f623fad](https://github.com/Eifi1/ui-kit/commit/f623fad8f351e4d31346cea3d2f6b58503fa2f0c))
 * **i18n:** translationReview.clearedToast in every language ([dc8c7fa](https://github.com/Eifi1/ui-kit/commit/dc8c7faf85678301803ab999c17ed6125e3ae4de))
-* **translation-review:** swipe takes a binding — approve, edit, clear per side and stage ([517b401](https://github.com/Eifi1/ui-kit/commit/517b40103e1e4b76c444399726d1ccc86296b274)), references [#377](https://github.com/Eifi1/ui-kit/issues/377)
+* **translation-review:** swipe takes a binding — approve, edit, clear per side and stage ([517b401](https://github.com/Eifi1/ui-kit/commit/517b40103e1e4b76c444399726d1ccc86296b274)), live #377
 
 ### Fixed
 
@@ -265,7 +357,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 * export useSearchParamsState and the review groups' helpers; route the 0.25 demos ([fcc6002](https://github.com/Eifi1/ui-kit/commit/fcc60021ee890897092370455ffe9facbee9f75e))
 * **i18n:** the review groups' and approvals' words, and the short required mark, in every language ([096acdf](https://github.com/Eifi1/ui-kit/commit/096acdf051b2f710afb7189432a88fdf8f0736b9))
 * **table:** edgeFade on Table and DataTable — a sideways-scrolling table fades at the cut edge ([e22239f](https://github.com/Eifi1/ui-kit/commit/e22239f393fc9f42c81510a059901b77038ca86d))
-* **translation-review:** swipe on the phone cards; group by area with one approve each ([018f8fb](https://github.com/Eifi1/ui-kit/commit/018f8fb94c1da89da30e378d2232626a7ad91e84)), references [#377](https://github.com/Eifi1/ui-kit/issues/377)
+* **translation-review:** swipe on the phone cards; group by area with one approve each ([018f8fb](https://github.com/Eifi1/ui-kit/commit/018f8fb94c1da89da30e378d2232626a7ad91e84)), live #377
 
 ### Fixed
 
@@ -273,8 +365,8 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 * **field-hint:** the "?" toggles its bubble on a tap ([ff94531](https://github.com/Eifi1/ui-kit/commit/ff94531a0ad6361501699b12836ca4ca8c01ee77))
 * **scroll-lock:** lock <html> too when the app clips it ([4bf0dc9](https://github.com/Eifi1/ui-kit/commit/4bf0dc9419d00e657ae7799720aae3f3b7947639))
 * **textarea:** no half line under the label strip; ColumnMapper role names; attachment buttons ([2c62561](https://github.com/Eifi1/ui-kit/commit/2c62561c630a6e2e1be6498b1a7bdd80d8a328ac))
-* **tooltip:** a tap leaves no bubble; the in-place bubble never widens the page ([ae82194](https://github.com/Eifi1/ui-kit/commit/ae82194f2078d5e288bdf9d7220252f18f22fb12)), references [#379](https://github.com/Eifi1/ui-kit/issues/379) [#381](https://github.com/Eifi1/ui-kit/issues/381)
-* **url-state:** useSearchParamState setters compose; useSearchParamsState for several keys ([5838ebc](https://github.com/Eifi1/ui-kit/commit/5838ebc1af85dd93dfc6fe2b28b3209c5f8c2a25)), references [#378](https://github.com/Eifi1/ui-kit/issues/378)
+* **tooltip:** a tap leaves no bubble; the in-place bubble never widens the page ([ae82194](https://github.com/Eifi1/ui-kit/commit/ae82194f2078d5e288bdf9d7220252f18f22fb12)), live #379, #381
+* **url-state:** useSearchParamState setters compose; useSearchParamsState for several keys ([5838ebc](https://github.com/Eifi1/ui-kit/commit/5838ebc1af85dd93dfc6fe2b28b3209c5f8c2a25)), live #378
 
 ### Changed
 
@@ -291,7 +383,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 ### Added
 
 * /rhf exports RhfInlineEntityCombobox; showcase pages for the 0.24 demos ([1d2c3ec](https://github.com/Eifi1/ui-kit/commit/1d2c3ec7255e8d37cf7afbecaa73511358c9c00a))
-* **column-mapper:** bodyProps / rowProps; no "(required)" when every role is; edge fade ([05f1d31](https://github.com/Eifi1/ui-kit/commit/05f1d31439440dcf7d2b8a709a75a3775d3a899f)), references [#336](https://github.com/Eifi1/ui-kit/issues/336)
+* **column-mapper:** bodyProps / rowProps; no "(required)" when every role is; edge fade ([05f1d31](https://github.com/Eifi1/ui-kit/commit/05f1d31439440dcf7d2b8a709a75a3775d3a899f)), keksdose #336
 * **danger-confirm:** confirmVariant, a caller's guard, fields inside the tile ([34b583f](https://github.com/Eifi1/ui-kit/commit/34b583f12de398822d56474dff4eb234736b2ba5))
 * **feedback:** the composer hands its root to the attachment slot; button look ([d3bce1e](https://github.com/Eifi1/ui-kit/commit/d3bce1ed2f2fa91e10a647cca6eacace30dc3f51))
 * **rhf:** RhfInlineEntityCombobox; ref on the Combobox family; AmountInput class order ([ce8d2f9](https://github.com/Eifi1/ui-kit/commit/ce8d2f9491a7f995a3db0926636292ecd7768dee))
@@ -352,7 +444,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 
 ### Added
 
-* **topbar:** TopBarActionMenu href — the trigger is also a link (keksdose dev [#585](https://github.com/Eifi1/ui-kit/issues/585)) ([9b60254](https://github.com/Eifi1/ui-kit/commit/9b6025492316096194242dfd4ef31f7d7f9baf82))
+* **topbar:** TopBarActionMenu href — the trigger is also a link (keksdose dev #585) ([9b60254](https://github.com/Eifi1/ui-kit/commit/9b6025492316096194242dfd4ef31f7d7f9baf82))
 
 ## [0.20.1](https://github.com/Eifi1/ui-kit/compare/v0.20.0...v0.20.1) (2026-10-02)
 
@@ -393,7 +485,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 * **i18n:** @eifi1/ui-kit/i18n/de, /i18n/de-informal and /i18n/de-CH-informal
   are gone. UI_KIT_LABELS_DE / uiKitLabelsDe(n) become UI_KIT_LABELS_DE_CH /
   uiKitLabelsDeCh(n); the informal catalogues become UI_KIT_LABELS_DE_CH (an app
-  that said "du" moves its own text to "Sie"). See docs/adopt-0.18.md.
+  that said "du" moves its own text to "Sie"). See docs/archive/adopt/adopt-0.18.md.
 
 ### Added
 
@@ -412,7 +504,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 
 * **fields:** the control survives its error message coming and going — focus, caret, value ([3c7ff78](https://github.com/Eifi1/ui-kit/commit/3c7ff78f88d13f17071005f58259cfd342ea580d))
 * **i18n:** missingKitLabels names the missing reference; the doc example passes it (keksdose) ([6fc97c7](https://github.com/Eifi1/ui-kit/commit/6fc97c77820ea0d98953b9928bba6d7b8a14cba8))
-* **overlay-history:** an owner's URL rewrite that closes the overlay is not unwound (keksdose [#584](https://github.com/Eifi1/ui-kit/issues/584)) ([c66c7c8](https://github.com/Eifi1/ui-kit/commit/c66c7c813860ffd133179940c682121403a17a82))
+* **overlay-history:** an owner's URL rewrite that closes the overlay is not unwound (keksdose #584) ([c66c7c8](https://github.com/Eifi1/ui-kit/commit/c66c7c813860ffd133179940c682121403a17a82))
 * **toggle-group:** a disabled group keeps the chosen segment's fill under the pointer ([abe857d](https://github.com/Eifi1/ui-kit/commit/abe857d1507028b778b04a42f4f6c9e4b1a90900))
 
 ## [0.17.0](https://github.com/Eifi1/ui-kit/compare/v0.16.1...v0.17.0) (2026-10-01)
@@ -430,7 +522,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 
 ### Fixed
 
-* **file-button:** the picked names in the kit Tooltip, not a native title; guard the rule ([047e105](https://github.com/Eifi1/ui-kit/commit/047e10595159c9d239bfd0db00444d7ccbc3d4b0)), references [dev#523](https://github.com/Eifi1/ui-kit/issues/523)
+* **file-button:** the picked names in the kit Tooltip, not a native title; guard the rule ([047e105](https://github.com/Eifi1/ui-kit/commit/047e10595159c9d239bfd0db00444d7ccbc3d4b0)), dev#523
 
 ## [0.16.0](https://github.com/Eifi1/ui-kit/compare/v0.15.5...v0.16.0) (2026-10-01)
 
@@ -461,11 +553,11 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 
 ### Added
 
-* **series-chart:** tooltip.placement — a readout row above or below the plot on phones ([8f3d891](https://github.com/Eifi1/ui-kit/commit/8f3d8910513ee7451ebe45a958e86053cefb38d9)), references [#359](https://github.com/Eifi1/ui-kit/issues/359)
+* **series-chart:** tooltip.placement — a readout row above or below the plot on phones ([8f3d891](https://github.com/Eifi1/ui-kit/commit/8f3d8910513ee7451ebe45a958e86053cefb38d9)), live #359
 
 ### Fixed
 
-* sticky FormActions on the phone nav; Chip rows; unit-sized padding; currency rounding ([013c17f](https://github.com/Eifi1/ui-kit/commit/013c17ff07b00b12f56ea1bc6fae757af18fb86b)), closes [#367](https://github.com/Eifi1/ui-kit/issues/367), references [#361](https://github.com/Eifi1/ui-kit/issues/361) [#358](https://github.com/Eifi1/ui-kit/issues/358) [#356](https://github.com/Eifi1/ui-kit/issues/356)
+* sticky FormActions on the phone nav; Chip rows; unit-sized padding; currency rounding ([013c17f](https://github.com/Eifi1/ui-kit/commit/013c17ff07b00b12f56ea1bc6fae757af18fb86b)), live #367, #361, #358, #356
 
 ## [0.15.3](https://github.com/Eifi1/ui-kit/compare/v0.15.2...v0.15.3) (2026-09-28)
 
@@ -555,7 +647,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 ### Fixed
 
 * **amount-input:** settle money to the currency's minor unit; digits, min, max ([b988420](https://github.com/Eifi1/ui-kit/commit/b9884207bbd3c2840d8a7389daf240804a196fa0))
-* **feedback-thread:** full date in the kit Tooltip instead of a native title ([ffea4a0](https://github.com/Eifi1/ui-kit/commit/ffea4a005a2a74c4abfe844b0714d3ba78f70128)), references [dev#523](https://github.com/Eifi1/ui-kit/issues/523)
+* **feedback-thread:** full date in the kit Tooltip instead of a native title ([ffea4a0](https://github.com/Eifi1/ui-kit/commit/ffea4a005a2a74c4abfe844b0714d3ba78f70128)), dev#523
 * **rhf:** disabled keeps the value; excludeWhenDisabled opts into RHF's drop ([d72b886](https://github.com/Eifi1/ui-kit/commit/d72b8867745312d82f81e165d5a4aec1ffe365ef))
 
 ### Changed
@@ -576,7 +668,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 
 * **copy-button:** leave tooltipPortal unset so the Tooltip auto-portals in tables ([9305a79](https://github.com/Eifi1/ui-kit/commit/9305a799c2918ac1fcfa3763598773a7935b2c5c))
 * Field's id/aria spread lands on the focusable control in every picker ([8672a5e](https://github.com/Eifi1/ui-kit/commit/8672a5e6fd0adc9958d1176f56d6e30a7f2c58e9))
-* PieChart key warning, consistent link routing, ErrorBoundary resetKeys, deep label overrides ([2fc1522](https://github.com/Eifi1/ui-kit/commit/2fc1522d8f84942f94dc5edad0be108e55de3c3b)), references [#anchor](https://github.com/Eifi1/ui-kit/issues/anchor)
+* PieChart key warning, consistent link routing, ErrorBoundary resetKeys, deep label overrides ([2fc1522](https://github.com/Eifi1/ui-kit/commit/2fc1522d8f84942f94dc5edad0be108e55de3c3b))
 
 ## [0.11.0](https://github.com/Eifi1/ui-kit/compare/v0.10.0...v0.11.0) (2026-09-26)
 
@@ -605,7 +697,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 
 * **alert-banner:** a strip wraps its action under the text on narrow screens ([c3291d5](https://github.com/Eifi1/ui-kit/commit/c3291d5d905d785755fce6bcb79a73a48ef49976))
 * **command-palette:** optional-call scrollIntoView so jsdom test suites do not crash ([db3021d](https://github.com/Eifi1/ui-kit/commit/db3021d50545bd4f11621a62344dd46b8c304c67))
-* no native title on WizardSummary's edit button or the contents rail ([7203ffc](https://github.com/Eifi1/ui-kit/commit/7203ffce6e143a99e1c6fe8c66cd2a4f7e37129a)), references [dev#523](https://github.com/Eifi1/ui-kit/issues/523)
+* no native title on WizardSummary's edit button or the contents rail ([7203ffc](https://github.com/Eifi1/ui-kit/commit/7203ffce6e143a99e1c6fe8c66cd2a4f7e37129a)), dev#523
 
 ## [0.9.0](https://github.com/Eifi1/ui-kit/compare/v0.8.1...v0.9.0) (2026-09-25)
 
@@ -654,7 +746,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 
 ### ⚠ BREAKING CHANGES
 
-* **adopt:** 0.7.0 changes behaviour and types an app can depend on — migration per app in docs/adopt-0.7.md.
+* **adopt:** 0.7.0 changes behaviour and types an app can depend on — migration per app in docs/archive/adopt/adopt-0.7.md.
   - New required label keys `filePicker.rejectedTypeOnly` and the namespaces `measuredGrid` and `feedbackAttachment` for apps typing a complete `UiKitLabels` (or import `@eifi1/ui-kit/i18n/<code>`).
   - With `accept` set, a refused type reads "Only .pdf files" instead of naming the file (a host that translated only `rejectedType` keeps its sentence).
   - `HoverMenu` is a real menu: items are `role="menuitem"`, its `aria-label` is on `role="menu"`, default `align` is `"end"`.
@@ -708,7 +800,7 @@ the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
 
 The inputs keksdose, kastlan and lenkbank still hand-rolled after adopting 0.5 — proposed
 by each app from its own code, merged into one API each. Per-repository adoption:
-`docs/adopt-0.6.md`.
+`docs/archive/adopt/adopt-0.6.md`.
 
 ### Added
 
@@ -798,7 +890,7 @@ Fixes found by the three apps while adopting 0.5.0 — two accessibility regress
 - `popover.panel`'s English default is "Pop-up" (was "Popover", a developer's word read
   to users). The showcase's German and Italian dictionaries translate it.
 - `Chip`'s `selected` doc: a toggle's label must not change with its state.
-- `docs/adopt-0.5.md`: the notes the three apps found while adopting (Spinner, MultiSelect
+- `docs/archive/adopt/adopt-0.5.md`: the notes the three apps found while adopting (Spinner, MultiSelect
   rows as options, toggle-chip labels, the translating wrappers, naming the pickers).
 
 ## [0.5.0] — 2026-09-23
@@ -809,7 +901,7 @@ both.
 
 1. **Everything the three apps were hand-rolling that a design system should own**, and
    one mechanism for translating all of it — the sections immediately below.
-   Per-repository adoption steps: `docs/adopt-0.5.md`.
+   Per-repository adoption steps: `docs/archive/adopt/adopt-0.5.md`.
 2. **A full audit of the package *as a published module***
    (`docs/module-audit-2026-09-22.md`, 104 confirmed findings): every defect that reached
    consumers in 0.4.x, and the gate that should have caught it — from "Breaking" on.

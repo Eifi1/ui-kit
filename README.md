@@ -30,19 +30,19 @@ with its own Tailwind config.
 | | |
 |---|---|
 | [ADOPTING.md](https://github.com/Eifi1/ui-kit/blob/main/ADOPTING.md) | The brief for a new consuming app — hand it to that repo's agent |
-| [MIGRATING.md](https://github.com/Eifi1/ui-kit/blob/main/MIGRATING.md) | Moving an app off the old `@hb/ui` submodule onto the npm package |
 | [CHANGELOG.md](https://github.com/Eifi1/ui-kit/blob/main/CHANGELOG.md) | Every release, and the semver contract this package keeps below 1.0 |
-| [CONTRIBUTING.md](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md) | Repo layout, the house rules, the gates, how to cut a release |
+| [docs/](https://github.com/Eifi1/ui-kit/blob/main/docs/README.md) | The contracts the three apps build to, each release's adoption notes, the audits and plans |
+| [CONTRIBUTING.md](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md) | Repo layout, the house rules, the tests, the showcase, the gates, how to cut a release |
+| [Showcase](https://eifi1.github.io/ui-kit/) | The kit rendered page by page, deployed after every green CI run on `main` (see [Showcase](#showcase)) |
 | [Issues](https://github.com/Eifi1/ui-kit/issues) | Bugs and requests |
 
 The links are absolute because only this README is in the npm tarball — `files` ships
 `dist`, `src`, `tokens.css` and `LICENSE`, so a reader who arrived from npmjs.com has none
 of the others on disk and a relative link would be a 404.
 
-A rendered catalogue of every component, with the theme, palette and language switchers
-live, deploys to <https://eifi1.github.io/ui-kit/> on every push to `main`. It needs one
-manual repo setting to go live, named at the top of `.github/workflows/pages.yml`; until
-then, `npm run dev:showcase` from a checkout is the same page.
+Kurvenschmiede was called **lenkbank** until 2026-10-01 (repository `Eifi1/kurvenschmiede`,
+formerly `Eifi1/lenkbank`). The changelog, older adoption notes and code comments that cite
+its feedback ("lenkbank L2", "Lenkbank feedback #93") keep the name they were written with.
 
 ## Install
 
@@ -58,12 +58,14 @@ when it chooses. To work on the design system and an app together, use
 
 | Package | Declared as | Why |
 |---|---|---|
-| `react`, `react-dom` | peer, `>=19` | The kit is components and hooks; two copies of React break hooks and context. |
+| `react`, `react-dom` | peer, `>=19.2` | The kit is components and hooks; two copies of React break hooks and context. 19.2 for `useEffectEvent`. |
 | `react-router` | peer, `>=7` | Imported unconditionally by `DataTable`, `useTableState`, `AppShell` and `useWizard`. A Router has to be mounted even with `urlSync` off. |
-| `recharts` | peer, `>=3` | `@eifi1/ui-kit/chart` imports it statically. Only that subpath needs it — the main barrel no longer reaches it. |
-| `lucide-react` | peer, `>=0.400.0 <2` | Icons, in 33 modules. **Yours to version.** |
-| `sonner` | peer, `>=2`, **optional** | `FileDropzone` and the wizard's "fill in the required fields" toast, reached only through `await import()`. Pass `onValidationFailed` to route it elsewhere. |
-| `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the theme and palette stores are singletons. |
+| `recharts` | peer, `>=3.8` | The chart kit imports it statically, and the main barrel re-exports the chart kit, so `import { Button } from "@eifi1/ui-kit"` needs it installed too (required since 0.5.0). `@eifi1/ui-kit/chart` is about chunk size, not about avoiding the peer. 3.8 for `useXAxisInverseScale` (the zoom). |
+| `lucide-react` | peer, `>=0.400.0 <2` | Icons, imported by name throughout the kit. **Yours to version.** |
+| `sonner` | peer, `>=2`, **optional** | Under the kit's `toast` and `<Toaster>` (and through them `FileDropzone` and the wizard's "fill in the required fields" toast), reached only through `await import()`. Pass `onValidationFailed` to route the wizard's elsewhere. |
+| `react-hook-form` | peer, `^7.55.0`, **optional** | Only `@eifi1/ui-kit/rhf` imports it; the main barrel does not (see "Forms / refs" below). |
+| `modern-screenshot` | peer, `^4.7.0`, **optional** | The feedback dialog's "Capture screenshot" (`captureAppScreenshot`), reached only through `await import()`. Without it the capture rejects and the dialog toasts `feedbackToast.captureFailed`. |
+| `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the appearance stores are singletons. |
 | `flag-icons` | **nothing — you supply the stylesheet** | See below. |
 
 **`lucide-react` is a peer from 0.5.0, not a dependency.** All three consumers already
@@ -133,44 +135,65 @@ v0.5.0 the tarball also ships `src`, so `@source ".../@eifi1/ui-kit/src"` works 
 scans the original TSX rather than transpiled output — but it is not present in
 v0.4.x, and an `@source` pointing at a directory that does not exist fails silently.
 
-### 3. Theme + palette stores (own persistence keys)
+### 3. Appearance stores (own persistence keys)
 
-The stores are factories so each app namespaces its own `localStorage`:
+The stores are factories so each app namespaces its own `localStorage`: theme, palette,
+text size and contrast.
 
 ```ts
-import { createThemeStore, createPaletteStore } from "@eifi1/ui-kit";
+import { createContrastStore, createPaletteStore, createTextSizeStore, createThemeStore } from "@eifi1/ui-kit";
 export const { useTheme, useApplyTheme } = createThemeStore("myapp-theme");
 export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
   createPaletteStore("myapp-palette", useTheme);
+export const { useTextSizeStore, useApplyTextSize } = createTextSizeStore("myapp-text-size");
+export const { useContrastStore, useApplyContrast } = createContrastStore("myapp-contrast");
 ```
 
-Call `useApplyTheme()` + `useApplyPalette()` once near the root. For a no-flash
-first paint, apply the persisted theme class + token set **before** hydration —
-`applyPersistedTheme(key)` resolves the stored preference, toggles `.dark` and
-returns the mode, which `applyPersistedPalette(key, mode)` then uses:
+Call `useApplyTheme()`, `useApplyPalette()`, `useApplyTextSize({ account })` and
+`useApplyContrast({ account })` once near the root; `account` is the signed-in user's
+saved value, which applies while this device has no choice of its own. For a no-flash
+first paint, apply all four **before** hydration — `applyPersistedTheme(key)` resolves the
+stored preference, toggles `.dark` and returns the mode, which
+`applyPersistedPalette(key, mode)` then uses:
 
 ```ts
-// main.tsx, at module scope, before createRoot
+// main.tsx, at module scope, before createRoot (readPersistedUser is the app's own)
 const mode = applyPersistedTheme("myapp-theme");
 applyPersistedPalette("myapp-palette", mode);
+applyPersistedTextSize("myapp-text-size", { account: () => readPersistedUser()?.text_size });
+applyPersistedContrast("myapp-contrast", { account: () => readPersistedUser()?.contrast });
 ```
 
-Worked example: [`showcase/src/main.tsx`](showcase/src/main.tsx).
+Contrast and palette go in either order. A boot splash painted from `index.html` before any
+module runs needs the text size even earlier: see "Before the first paint" under
+[Styling](#styling). Worked example:
+[`showcase/src/main.tsx`](https://github.com/Eifi1/ui-kit/blob/main/showcase/src/main.tsx).
+
+### 4. Labels — one provider, the shipped catalogues
+
+Load the kit's words with `await loadUiKitLabels(code)` before the first render and hand
+them to ONE `<UiKitProvider labels={labels} locale={formatLocaleOf(code)}>` at the root;
+every kit component then speaks the app's language. See [i18n](#i18n).
 
 ## Tokens
 
 Everything the components paint with comes from `tokens.css`, so a consuming app
-re-skins the kit by changing values rather than by forking components. Three layers:
+re-skins the kit by changing values rather than by forking components. The families:
 
-| Layer | Tokens | Set by |
+| Family | Tokens | Set by |
 |---|---|---|
-| **Palette** | `--bg-page` `--bg-surface` `--bg-surface-2` `--border` `--text-primary` `--text-secondary` `--text-muted` `--brand` `--brand-hover` `--brand-contrast` `--money-income` `--money-expense` `--money-net` `--money-neutral` `--chart-1…9` | `applyTokenSet()`, written inline on `<html>` from the active `PalettePreset` |
-| **Derived** | `--text-placeholder` `--bg-hover` `--bg-active` `--bg-inverse` `--text-inverse` `--border-strong` `--brand-bg` `--brand-bg-hover` `--brand-muted` | `color-mix()` in `tokens.css`, from the layer above — so they follow the preset with no preset having to list them |
-| **Semantic** | `--danger*` `--warning*` `--info*`, and `--status-synced/-pending/-edited/-error` | literals in `tokens.css`, per theme |
+| **Palette** | `--bg-page` `--bg-surface` `--bg-surface-2` `--border` `--text-primary` `--text-secondary` `--text-muted` `--brand` `--brand-hover` `--brand-contrast` `--money-income` `--money-expense` `--money-net` `--money-neutral` `--chart-1…9` | `applyTokenSet()`, written inline on `<html>` from the active `PalettePreset` (More contrast steps four of them) |
+| **Derived** | `--text-placeholder` `--bg-hover` `--bg-active` `--bg-inverse` `--text-inverse` `--border-strong` `--brand-bg` `--brand-bg-hover` `--brand-muted`, and `--neutral` (`--text-muted` as a fill) | `color-mix()` or `var()` in `tokens.css`, from the layer above — so they follow the preset with no preset having to list them |
+| **Semantic** | `--danger*` `--warning*` `--info*` `--success*` — each the colour, `-contrast`, `-border` and `-bg`; danger and warning also `-border-strong`, danger `-hover` — and `--status-synced/-pending/-edited/-error` | literals in `tokens.css`, per theme |
+| **Categorical hues** | `--hue-blue` `--hue-indigo` `--hue-purple` `--hue-teal` `--hue-orange`, each with `-contrast`, `-border` and `-bg` | literals in `tokens.css`, per theme — values that mean only "a different value" (a status enum), at the semantic family's weight |
+| **Fill foregrounds** | `<fill>-contrast`: the text ON a fill — `--brand-contrast`, `--money-income-contrast` … `--money-neutral-contrast`, `--neutral-contrast`, and each tone's and hue's `-contrast` | with their family; money is white in light and the page in dark |
+| **Media** | `--media-ink` `--media-scrim` `--media-scrim-hover` | literals, the SAME in both themes: controls drawn on a photo or a camera picture, whose background is the picture, not the page |
+| **Size and focus** | `--focus-ring-width` (2px, 3px at More contrast), `--text-micro` `--text-caption`, `--z-toast` | `tokens.css`; see [Styling](#styling) |
 
-The semantic layer is deliberately **not** part of `TokenSet`: a destructive action and a
-failed save are fixed meanings, and they should not change because somebody picked a
-different appearance preset. Everything else does follow the preset.
+The semantic, hue and media families are deliberately **not** part of `TokenSet`: a
+destructive action and a failed save are fixed meanings, and they should not change because
+somebody picked a different appearance preset. The palette and what is derived from it
+follow the preset.
 
 To re-skin, override the tokens after importing the stylesheet:
 
@@ -185,8 +208,177 @@ To re-skin, override the tokens after importing the stylesheet:
 soft brand chips (an active filter, a selected day) follow that override automatically.
 
 `npm run check:tokens` fails if a component reaches for a raw Tailwind palette colour
-instead of a token. It is a ratchet: when the count drops, lower the budget in the same
-commit.
+instead of a token, or spells `[var(--role)]` where the role has a utility. How an app
+writes a token is the next section.
+
+## Styling
+
+### How to write a colour
+
+**Write the role utility: `text-muted`, not `text-[var(--text-muted)]`, and never
+`text-slate-500`.** `tokens.css` turns the colour tokens into Tailwind utilities through an
+`@theme inline` block, so a role is a class like any other, and variants and opacity work
+on it: `hover:bg-hover`, `md:text-secondary`, `text-muted/60`. The name is the token's
+name with the property's own prefix dropped (`--bg-surface` → `bg-surface`,
+`--danger-border` → `border-danger`); a tone's wash is `-soft` (`bg-danger-soft`), and
+`--border` is `subtle`.
+
+The names are **property-scoped**: a text role makes a `text-*` utility and nothing else,
+so `bg-muted` does not exist and a role cannot land on the wrong property by accident. An
+app's own `--color-*` names (shadcn-style) do not collide with them. Keep `[var(--…)]` for a
+role with no utility: the chart colours, `--status-*`, a ring offset, and a money colour
+that needs a variant (the money classes below are plain and take none). The kit's own
+markup follows this rule with no exceptions: `check:tokens` allows no `[var(--role)]` where
+a utility exists.
+
+An app guards the other direction — a `var(--x)` that nothing declares paints nothing — with
+`undeclaredCssVariables` from `@eifi1/ui-kit/testing`; ADOPTING.md has the test.
+
+<!-- BEGIN GENERATED: styling — node scripts/gen-styling-inventory.mjs -->
+
+**116 role utilities over 72 tokens.** Find the token, then take the utility in
+the column of the property you set. An empty cell is deliberate: the namespaces are
+property-scoped, so `bg-muted` and `text-surface` do not exist.
+
+Generated from `tokens.css` (its `@theme inline` block, variants and utilities) by
+`node scripts/gen-styling-inventory.mjs`; `--check` fails on a stale block. Do not edit
+between the markers.
+
+| Token | `text-*` | `bg-*` | `border-*` `divide-*` | `ring-offset-*` | `ring-*` | `ring-*` (width) | `outline-*` | `outline-*` (width) | `fill-*` | `stroke-*` |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `--focus-ring-width` |  |  |  |  |  | `ring-focus` |  | `outline-focus` |  |  |
+| `--bg-page` |  | `bg-page` |  | `ring-offset-page` |  |  |  |  |  |  |
+| `--bg-surface` |  | `bg-surface` |  | `ring-offset-surface` |  |  |  |  | `fill-surface` | `stroke-surface` |
+| `--bg-surface-2` |  | `bg-surface-2` |  |  |  |  |  |  |  |  |
+| `--border` |  |  | `border-subtle` |  | `ring-subtle` |  | `outline-subtle` |  | `fill-subtle` | `stroke-subtle` |
+| `--text-primary` | `text-primary` |  |  |  |  |  |  |  | `fill-primary` | `stroke-primary` |
+| `--text-secondary` | `text-secondary` |  |  |  |  |  |  |  | `fill-secondary` | `stroke-secondary` |
+| `--text-muted` | `text-muted` |  |  |  |  |  |  |  | `fill-muted` | `stroke-muted` |
+| `--brand` | `text-brand` | `bg-brand` | `border-brand` |  | `ring-brand` |  | `outline-brand` |  |  |  |
+| `--brand-hover` |  | `bg-brand-hover` |  |  |  |  |  |  |  |  |
+| `--brand-contrast` | `text-brand-contrast` |  |  |  | `ring-brand-contrast` |  |  |  |  |  |
+| `--money-income` | `text-money-income` | `bg-money-income` |  |  |  |  |  |  |  |  |
+| `--money-expense` | `text-money-expense` | `bg-money-expense` |  |  |  |  |  |  |  |  |
+| `--money-net` | `text-money-net` | `bg-money-net` |  |  |  |  |  |  |  |  |
+| `--money-neutral` | `text-money-neutral` | `bg-money-neutral` |  |  |  |  |  |  |  |  |
+| `--text-placeholder` | `text-placeholder` |  |  |  |  |  |  |  |  |  |
+| `--bg-hover` |  | `bg-hover` |  |  |  |  |  |  |  |  |
+| `--bg-active` |  | `bg-active` |  |  |  |  |  |  |  |  |
+| `--bg-inverse` |  | `bg-inverse` |  |  |  |  |  |  |  |  |
+| `--text-inverse` | `text-inverse` |  |  |  |  |  |  |  |  |  |
+| `--border-strong` |  |  | `border-strong` |  | `ring-strong` |  | `outline-strong` |  | `fill-strong` | `stroke-strong` |
+| `--brand-bg` |  | `bg-brand-soft` |  |  |  |  |  |  |  |  |
+| `--brand-bg-hover` |  | `bg-brand-soft-hover` |  |  |  |  |  |  |  |  |
+| `--brand-muted` | `text-brand-muted` |  |  |  |  |  |  |  |  |  |
+| `--money-income-contrast` | `text-money-income-contrast` |  |  |  |  |  |  |  |  |  |
+| `--money-expense-contrast` | `text-money-expense-contrast` |  |  |  |  |  |  |  |  |  |
+| `--money-net-contrast` | `text-money-net-contrast` |  |  |  |  |  |  |  |  |  |
+| `--money-neutral-contrast` | `text-money-neutral-contrast` |  |  |  |  |  |  |  |  |  |
+| `--neutral` |  | `bg-neutral` |  |  |  |  |  |  |  |  |
+| `--neutral-contrast` | `text-neutral-contrast` |  |  |  |  |  |  |  |  |  |
+| `--danger` | `text-danger` | `bg-danger` |  |  |  |  |  |  |  |  |
+| `--danger-hover` |  | `bg-danger-hover` |  |  |  |  |  |  |  |  |
+| `--danger-contrast` | `text-danger-contrast` |  |  |  |  |  |  |  |  |  |
+| `--danger-border` |  |  | `border-danger` |  |  |  |  |  |  |  |
+| `--danger-border-strong` |  |  | `border-danger-strong` |  | `ring-danger-strong` |  | `outline-danger-strong` |  |  |  |
+| `--danger-bg` |  | `bg-danger-soft` |  |  |  |  |  |  |  |  |
+| `--warning` | `text-warning` | `bg-warning` |  |  |  |  |  |  |  |  |
+| `--warning-contrast` | `text-warning-contrast` |  |  |  |  |  |  |  |  |  |
+| `--warning-border` |  |  | `border-warning` |  |  |  |  |  |  |  |
+| `--warning-border-strong` |  |  | `border-warning-strong` |  | `ring-warning-strong` |  | `outline-warning-strong` |  |  |  |
+| `--warning-bg` |  | `bg-warning-soft` |  |  |  |  |  |  |  |  |
+| `--info` | `text-info` | `bg-info` |  |  |  |  |  |  |  |  |
+| `--info-contrast` | `text-info-contrast` |  |  |  |  |  |  |  |  |  |
+| `--info-border` |  |  | `border-info` |  |  |  |  |  |  |  |
+| `--info-bg` |  | `bg-info-soft` |  |  |  |  |  |  |  |  |
+| `--success` | `text-success` | `bg-success` |  |  |  |  |  |  |  |  |
+| `--success-contrast` | `text-success-contrast` |  |  |  |  |  |  |  |  |  |
+| `--success-border` |  |  | `border-success` |  |  |  |  |  |  |  |
+| `--success-bg` |  | `bg-success-soft` |  |  |  |  |  |  |  |  |
+| `--media-ink` | `text-media-ink` |  | `border-media-ink` |  | `ring-media-ink` |  |  |  |  |  |
+| `--media-scrim` |  | `bg-media-scrim` |  |  |  |  |  |  |  |  |
+| `--media-scrim-hover` |  | `bg-media-scrim-hover` |  | `ring-offset-media-scrim-hover` |  |  |  |  |  |  |
+| `--hue-blue` | `text-hue-blue` | `bg-hue-blue` |  |  |  |  |  |  |  |  |
+| `--hue-blue-contrast` | `text-hue-blue-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-blue-border` |  |  | `border-hue-blue` |  |  |  |  |  |  |  |
+| `--hue-blue-bg` |  | `bg-hue-blue-soft` |  |  |  |  |  |  |  |  |
+| `--hue-indigo` | `text-hue-indigo` | `bg-hue-indigo` |  |  |  |  |  |  |  |  |
+| `--hue-indigo-contrast` | `text-hue-indigo-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-indigo-border` |  |  | `border-hue-indigo` |  |  |  |  |  |  |  |
+| `--hue-indigo-bg` |  | `bg-hue-indigo-soft` |  |  |  |  |  |  |  |  |
+| `--hue-purple` | `text-hue-purple` | `bg-hue-purple` |  |  |  |  |  |  |  |  |
+| `--hue-purple-contrast` | `text-hue-purple-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-purple-border` |  |  | `border-hue-purple` |  |  |  |  |  |  |  |
+| `--hue-purple-bg` |  | `bg-hue-purple-soft` |  |  |  |  |  |  |  |  |
+| `--hue-teal` | `text-hue-teal` | `bg-hue-teal` |  |  |  |  |  |  |  |  |
+| `--hue-teal-contrast` | `text-hue-teal-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-teal-border` |  |  | `border-hue-teal` |  |  |  |  |  |  |  |
+| `--hue-teal-bg` |  | `bg-hue-teal-soft` |  |  |  |  |  |  |  |  |
+| `--hue-orange` | `text-hue-orange` | `bg-hue-orange` |  |  |  |  |  |  |  |  |
+| `--hue-orange-contrast` | `text-hue-orange-contrast` |  |  |  |  |  |  |  |  |  |
+| `--hue-orange-border` |  |  | `border-hue-orange` |  |  |  |  |  |  |  |
+| `--hue-orange-bg` |  | `bg-hue-orange-soft` |  |  |  |  |  |  |  |  |
+
+Plain classes (unlayered, so they win over Tailwind's colour utilities and take **no** variants): `text-money-pos` (`--money-income`), `text-money-neg` (`--money-expense`), `text-money-pos-muted` (`--money-income`, opacity 0.72), `text-money-neg-muted` (`--money-expense`, opacity 0.72), `bg-money-pos` (`--money-income`), `bg-money-neg` (`--money-expense`).
+
+Variants: `dark:` `sm:` `md:` `lg:` `xl:` `2xl:` `3xl:` `max-3xl:` `max-2xl:` `max-xl:` `max-lg:` `max-md:` `max-sm:` `large:` `xlarge:` `contrast:`.
+
+Utilities: `truncate-until-large`, `truncate-until-large-words`.
+
+Theme values: `text-micro` (font size 0.625rem), `text-caption` (font size 0.6875rem), `3xl:` (breakpoint, 150rem at Normal).
+
+<!-- END GENERATED: styling -->
+
+### Text size and More contrast
+
+ONE scale on `<html>`: `data-text-size="normal" | "large" | "xlarge"` is 100 / 125 / 150 %
+of the browser's own font size, so Normal keeps whatever the reader set in the browser,
+and everything sized in rem (Tailwind's spacing and type) grows with it.
+`data-contrast="more"` is More contrast, from the setting or from `prefers-contrast: more`
+on "System"; it steps the colour tokens in JavaScript and widens `--focus-ring-width`. The
+stores in [Wiring](#wiring) put both attributes there; the attribute names are frozen.
+
+- **`large:`** applies at Large AND Extra large, **`xlarge:`** only at Extra large, and
+  **`contrast:`** under More contrast. Like `dark:`, they add no specificity, so
+  `large:text-base` beats `text-sm` by order alone, and a size wins over a breakpoint:
+  `max-sm:grid-cols-2 large:grid-cols-1` is one column on a phone at Large.
+- **The breakpoints follow the text size.** A media query's rem is the browser's default,
+  never `<html>`'s, so `tokens.css` redefines `sm` … `2xl` (and adds `3xl`, 150rem) as three
+  queries each, scaled × 1, 1.25 and 1.5: `md:` is 48rem at Normal, 60rem at Large and 72rem
+  at Extra large, so a tablet at Extra large gets the layout below `md:` instead of keeping
+  the desktop shell. The `max-*` variants scale the same way. Arbitrary `min-[…]` /
+  `max-[…]` media variants do **not** scale: use a name. `useBreakpoint` and
+  `usePhoneLayout` answer the same questions in JavaScript, with the same numbers.
+- **`truncate-until-large`** is `truncate` at Normal and wraps from Large up, breaking a
+  word only where nothing else fits — for prose: a name, a title. At Large and Extra large
+  nothing may cut its text. **`truncate-until-large-words`** is the same for a figure (an
+  amount, a date, a count with its unit): it wraps only at spaces, so a number is never
+  split in two; give its cell the room (`shrink-0`).
+- `text-micro` and `text-caption` (0.625 and 0.6875 rem) are the two small sizes, in place
+  of `text-[10px]` / `text-[11px]`, which did not grow with anything.
+
+### Before the first paint
+
+`applyPersistedTextSize` and `applyPersistedContrast` (Wiring, step 3) run before
+`createRoot`, so the first frame has the right size. A boot splash painted from
+`index.html` paints before any module runs, so it takes the inline form:
+`TEXT_SIZE_INLINE_SCRIPT` is the same pre-paint as a function expression. Paste the
+constant's value in place of `(function(k,a){…})`, with the root rules beside it, because
+the app's stylesheet arrives after the splash paints:
+
+```html
+<style>html[data-text-size=large]{font-size:125%}html[data-text-size=xlarge]{font-size:150%}</style>
+<script>
+  (function(k,a){…})("myapp-text-size", function () {
+    return JSON.parse(localStorage.getItem("myapp-auth")).state.user.text_size;
+  });
+</script>
+```
+
+It reads the frozen persisted format, never throws, and sets only `data-text-size`. Under
+a hash-based Content Security Policy (`script-src 'sha256-…'`) it is a second inline
+script with its own hash: add it to the policy, and recompute it whenever the storage key
+or the account function changes.
 
 ## Colour
 
@@ -289,85 +481,16 @@ derived from a formula.
 
 ## Showcase
 
-Every component in the package, rendered on one page, with the theme and palette
-switchers live:
-
-```bash
-npm run dev:showcase
-```
-
-and open **http://localhost:4170**.
-
-The port is harmonised with the sibling apps rather than left on Vite's default, so the
-showcase can run next to whatever you are testing it against:
-
-| Port | What |
-|---|---|
-| **4170** | **this showcase** (`dev:showcase`) |
-| **4171** | this showcase, built (`preview:showcase`) |
-| 4173 | keksdose frontend (backend 8000) |
-| 4175 | Kurvenschmiede frontend (backend 8001) |
-| 5173 | kastlan frontend (Vite's default) |
-
-Kurvenschmiede was called **lenkbank** until 2026-10-01 (repository `Eifi1/kurvenschmiede`,
-formerly `Eifi1/lenkbank`). The changelog, older adoption notes and code comments that
-cite its feedback ("lenkbank L2", "Lenkbank feedback #93") keep the name they were
-written with.
-
-`strictPort` is on: a collision fails loudly instead of silently moving to another port
-and printing a URL that is not the one documented here. For a throwaway instance that
-must not take the port your editor's build task wants:
-
-```bash
-SHOWCASE_PORT=4199 npm run dev:showcase
-```
-
-It renders **`src/`, not `dist/`** — no build step first, and an edit to a component
-is on screen on save. It is also the package's broadest test: `npm test` mounts the
-whole page under jsdom, so a component that throws on mount fails CI, and `tsc`
-covers it, so an export renamed out of the barrel is a compile error rather than a
-demo that quietly disappears.
-
-```
-showcase/
-  index.html
-  vite.config.ts        # root; aliases @eifi1/ui-kit → ../src
-  alias.ts              # that alias, shared with the root vitest.config.ts
-  src/
-    main.tsx            # the pre-hydration no-flash boot, as a worked example
-    app.css             # tailwind + tokens.css + the @source scan
-    stores.ts           # createThemeStore / createPaletteStore, showcase keys
-    showcase.tsx        # the AppShell frame + the SECTIONS registry
-    sections/*.tsx      # one file per section
-```
-
-Adding a component to the kit means adding it to a section — that is how the page
-stays true. `npm run build:showcase` produces a static site; CI builds it on every
-push and asserts the emitted CSS actually contains the kit's utility classes, which
-is the only automated check that the documented Tailwind `@source` step works.
+The kit rendered page by page, one component family per page and grouped by layer, with the
+theme, palette, text-size, contrast and language switchers live: <https://eifi1.github.io/ui-kit/>,
+or `npm run dev:showcase` (http://localhost:4170) from a checkout. How it is built and
+tested: [CONTRIBUTING.md → The showcase](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md#the-showcase).
 
 ## Tests
 
-```bash
-npm test          # vitest run
-npm run test:watch
-npm run typecheck
-npm run check     # everything CI runs; the pre-push hook runs it and blocks on failure
-```
-
-Local first: `npm run check` is the full gate, on your machine, before anything is pushed;
-CI calls the same script and only confirms. See CONTRIBUTING.md → "The gates".
-
-Vitest + jsdom, configured as a copy of the lead consumer's setup rather than a new
-dialect — so a test can move between this package and an app unchanged. The suite pins
-`TZ=Europe/Berlin`, which is load-bearing for `lib/dates.ts`: those helpers answer with
-the LOCAL calendar day, and on a UTC runner a broken UTC implementation and a correct
-local one agree.
-
-Start where the return on a line of test is highest and no DOM is needed — `lib/`,
-`theme/`, and the data-table's pure helpers. The house rule for a fix is that its
-regression test is **run against the old code first and observed to fail there**;
-a test written after the fix proves only that the fix is self-consistent.
+`npm run check` runs every gate locally (the pre-push hook) and CI runs the same script;
+`npm test` is the suite alone (Vitest + jsdom, `TZ=Europe/Berlin`). The house rules, the
+gates and failing-first: [CONTRIBUTING.md → Tests](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md#tests).
 
 ## What's exported
 
@@ -382,24 +505,24 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1877 names from 278 modules** — 879 values and 998 types. _Italic_ is a type-only export.
+**1899 names from 302 modules** — 888 values and 1011 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1877 |
+| `@eifi1/ui-kit` | 1899 |
 | `@eifi1/ui-kit/chart` | 105 |
-| `@eifi1/ui-kit/shell` | 76 |
-| `@eifi1/ui-kit/data-table` | 51 |
+| `@eifi1/ui-kit/shell` | 77 |
+| `@eifi1/ui-kit/data-table` | 53 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 7 |
 | `@eifi1/ui-kit/feedback` | 165 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
-| `@eifi1/ui-kit/testing` | 4 |
+| `@eifi1/ui-kit/testing` | 10 |
 | `@eifi1/ui-kit/rhf` | 60 |
 
 Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a
@@ -414,16 +537,20 @@ re-slicing of it, never a second API.
 | `lib/logger` | `logger`, `setStoreLog` |
 | `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
 | `lib/safe-storage` | `readStored`, `writeStored` |
+| `lib/download` | `filenameFromDisposition`, `saveBlob` |
+| `lib/text-match` | `foldForSearch`, `rankMatch`, _`MatchRank`_ |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
 | `lib/server-wake` | `attachServerWake`, `createServerWake`, `serverWake`, `watchReadsAnd`, `wrapFetch`, _`AxiosLikeInstance`_, _`ServerWakeAxiosConfig`_, _`ServerWakeFilter`_, _`ServerWakeOptions`_, _`ServerWakeRequest`_, _`ServerWakeStage`_, _`ServerWakeWatcher`_ |
-| `lib/translation-review` | `DEFAULT_TRANSLATION_REVIEW_FILTER`, `DEFAULT_TRANSLATION_REVIEW_SWIPE`, `dropReviews`, `filterTranslationRows`, `flattenStrings`, `fromApiReview`, `groupTranslationRows`, `keyInArea`, `keyInAreas`, `keyNamespace`, `mergeReviews`, `placeholderMismatch`, `placeholderTokens`, `REVIEW_STATUSES`, `reviewAreaOf`, `reviewStatus`, `reviewUndo`, `reviewWrite`, `summariseRows`, `toApiWrite`, `TRANSLATION_REVIEW_SWIPE_ACTIONS`, `translationCorrections`, `translationReviewSwipePlan`, `translationRows`, `unreviewedRows`, _`ApiTranslationReview`_, _`ApiTranslationReviewWrite`_, _`ReviewStatus`_, _`TranslationCorrection`_, _`TranslationReview`_, _`TranslationReviewFilter`_, _`TranslationReviewKey`_, _`TranslationReviewSwipeAction`_, _`TranslationReviewSwipeBinding`_, _`TranslationReviewUndo`_, _`TranslationReviewWrite`_, _`TranslationRow`_, _`TranslationRowGroup`_, _`TranslationRowsInput`_, _`TranslationSummary`_, _`TranslationVerdict`_ |
+| `lib/session-refresh` | `attachSessionRefresh`, `createSessionRefresh`, `isSignedOutStep`, `isTransientRefreshFailure`, _`SessionRefresh`_, _`SessionRefreshOptions`_, _`SessionRefreshOutcome`_, _`SessionRenewal`_ |
 | `lib/person-name` | `formatPersonName`, `personInitials`, _`PersonName`_ |
+| `lib/translation-review` | `DEFAULT_TRANSLATION_REVIEW_FILTER`, `DEFAULT_TRANSLATION_REVIEW_SWIPE`, `dropReviews`, `filterTranslationRows`, `flattenStrings`, `fromApiReview`, `groupTranslationRows`, `keyInArea`, `keyInAreas`, `keyNamespace`, `mergeReviews`, `placeholderMismatch`, `placeholderTokens`, `REVIEW_STATUSES`, `reviewAreaOf`, `reviewStatus`, `reviewUndo`, `reviewWrite`, `summariseRows`, `toApiWrite`, `TRANSLATION_REVIEW_SWIPE_ACTIONS`, `translationCorrections`, `translationReviewSwipePlan`, `translationRows`, `unreviewedRows`, _`ApiTranslationReview`_, _`ApiTranslationReviewWrite`_, _`ReviewStatus`_, _`TranslationCorrection`_, _`TranslationReview`_, _`TranslationReviewFilter`_, _`TranslationReviewKey`_, _`TranslationReviewSwipeAction`_, _`TranslationReviewSwipeBinding`_, _`TranslationReviewUndo`_, _`TranslationReviewWrite`_, _`TranslationRow`_, _`TranslationRowGroup`_, _`TranslationRowsInput`_, _`TranslationSummary`_, _`TranslationVerdict`_ |
 | `lib/countries` | `COUNTRY_CODES`, `countryName` |
 | `lib/iban` | `compactIban`, `formatIban`, `IBAN_LENGTHS`, `ibanCheckDigits`, `ibanProblem`, `isQrIban`, `isValidIban`, _`IbanKind`_, _`IbanProblem`_ |
 | `lib/isin` | `formatIsin`, `isinCheckDigit`, `isValidIsin` |
 | `lib/phone` | `formatNationalPhone`, `formatPhone`, `isE164`, `parsePhone`, `PHONE_COUNTRIES`, `PHONE_DIAL_CODES`, _`ParsedPhone`_, _`PhoneCountry`_, _`PhoneCountryCode`_ |
 | `lib/column-mapping` | `assignColumnRole`, `guessMapping`, `missingRoles`, `readMappedTable`, `readTextFile`, `roleOfColumn`, _`ColumnMapperResult`_, _`ColumnMapping`_, _`ColumnRole`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
+| `lib/chip-edge-snap` | `refreshChipEdges` |
 
 ### hooks
 
@@ -449,12 +576,12 @@ re-slicing of it, never a second API.
 | `hooks/use-windowed-rows` | `useWindowedRows`, `WINDOWED_ROW_INDEX`, _`WindowedRows`_ |
 | `hooks/use-breakpoint` | `BREAKPOINT_REM`, `breakpointQuery`, `remPx`, `useBreakpoint`, `usePhoneLayout`, `useRemPx`, _`Breakpoint`_, _`BreakpointVariant`_, _`RemLength`_ |
 | `hooks/use-large-text` | `useCoarsePointer`, `useInlineFacts`, `useLargeText` |
+| `hooks/use-file-picker` | `matchesAccept`, `useFilePicker`, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
 
 ### theme, palettes, colour
 
 | Module | Exports |
 |---|---|
-| `theme/chart-palette` | `CHART_COLORS`, `HEATMAP_HEX`, `lerpHex`, `PALETTE_HEX`, `paletteFor`, `textOn`, _`HeatStops`_ |
 | `theme/color` | `contrast`, `deltaE`, `hexToOklch`, `luminance`, `oklchToHex`, `oklchToRgb`, `parseHex`, `rgbToOklch`, `simulateCvd`, `solveLightness`, `toHex`, _`CvdType`_, _`Oklch`_, _`Rgb`_ |
 | `theme/palette-derive` | `auditChartRamp`, `auditPalette`, `deriveChartRamp`, `derivePalette`, `describe`, _`AnchorRole`_, _`ChartRampReport`_, _`ContrastCheck`_, _`ContrastReport`_, _`DerivedPalette`_, _`DeriveOptions`_, _`PaletteAnchors`_, _`SemanticTokens`_ |
 | `theme/palette-presets` | `ALTERNATIVE_PRESETS`, `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `IMPRINT_PRESET`, `PALETTES`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
@@ -462,99 +589,55 @@ re-slicing of it, never a second API.
 | `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
 | `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
 | `theme/contrast` | `applyContrast`, `applyPersistedContrast`, `CONTRAST_MODES`, `contrastLevel`, `createContrastStore`, `isContrastMode`, `prefersMoreContrast`, `readContrastLevel`, `readPersistedContrast`, `resolveContrastMode`, _`ApplyContrastOptions`_, _`ContrastLevel`_, _`ContrastMode`_, _`ContrastState`_, _`ContrastStore`_, _`PersistedContrast`_ |
-
-### admin
-
-| Module | Exports |
-|---|---|
-| `admin/admin-action-confirm` | `AdminActionConfirm`, `DEFAULT_ADMIN_ACTION_LABELS`, _`AdminActionConfirmProps`_, _`AdminActionConfirmValues`_, _`AdminActionLabels`_, _`AdminActionTarget`_, _`AdminConfirmLevel`_ |
-| `admin/user-roster` | `adminUserStates`, `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterColumns`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
-| `admin/invitations-panel` | `DEFAULT_INVITATIONS_LABELS`, `InvitationsPanel`, _`InvitationDraft`_, _`InvitationRow`_, _`InvitationScope`_, _`InvitationSentAnswer`_, _`InvitationsLabels`_, _`InvitationsPanelProps`_, _`InvitationStatus`_ |
-| `admin/plan-change` | `DEFAULT_PLAN_CHANGE_LABELS`, `PlanChangeConfirm`, `planColumn`, `usePlanChangeResult`, `usePlanColumn`, _`PlanChange`_, _`PlanChangeConfirmProps`_, _`PlanChangeLabels`_, _`PlanChangeLine`_, _`PlanChangeOutcome`_, _`PlanChangeResultOptions`_, _`PlanChangeTone`_, _`PlanColumnOptions`_, _`PlanColumnUsage`_ |
-| `admin/reviewer-scope-editor` | `DEFAULT_REVIEWER_SCOPE_LABELS`, `ReviewerScopeEditor`, _`ReviewerScope`_, _`ReviewerScopeArea`_, _`ReviewerScopeEditorProps`_, _`ReviewerScopeLabels`_, _`ReviewerScopeLanguage`_ |
-| `admin/role-select` | `DEFAULT_ROLE_SELECT_LABELS`, `RolesEditor`, `RoleSelect`, _`RoleLock`_, _`RoleLockCode`_, _`RolesEditorProps`_, _`RoleSelectLabels`_, _`RoleSelectProps`_ |
-| `admin/transfer-ownership-dialog` | `DEFAULT_TRANSFER_OWNERSHIP_LABELS`, `TransferOwnershipDialog`, _`TransferCandidate`_, _`TransferOwnershipDialogProps`_, _`TransferOwnershipLabels`_, _`TransferUnavailable`_, _`TransferValues`_ |
-| `admin/admin-action-log` | `ADMIN_ACTION_KINDS`, `AdminActionLog`, `DEFAULT_ADMIN_ACTION_LOG_LABELS`, _`AdminActionKind`_, _`AdminActionLogEntry`_, _`AdminActionLogLabels`_, _`AdminActionLogPaging`_, _`AdminActionLogProps`_ |
-| `admin/admin-parts` | _`AdminPerson`_ |
-
-### shell
-
-| Module | Exports |
-|---|---|
-| `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_BAR_MAX`, `splitMobileBar`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
-| `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageOption`_ |
-| `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
-| `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
-| `shell/role-switcher` | `RoleSwitcher`, _`RoleSwitcherProps`_ |
-| `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
-| `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
-| `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
-| `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
+| `theme/chart-palette` | `CHART_COLORS`, `HEATMAP_HEX`, `lerpHex`, `PALETTE_HEX`, `paletteFor`, `textOn`, _`HeatStops`_ |
 
 ### i18n
 
 | Module | Exports |
 |---|---|
-| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
-| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
+| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitTableStorageKeyPrefix`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
 | `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
 | `i18n/review` | `kitLabelStrings`, _`KitLabelStringsOptions`_ |
+| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
 | `i18n/plurals` | `withAllPlurals`, _`PluralForms`_ |
-
-### billing
-
-| Module | Exports |
-|---|---|
-| `billing/billing-labels` | `DEFAULT_BILLING_LABELS`, `SUBSCRIPTION_STATUSES`, `useBillingLabels`, _`BillingLabels`_, _`SubscriptionStatus`_ |
-| `billing/plan-price` | `BILLING_INTERVALS`, `billingCurrencyFor`, `formatPlanPrice`, `minorToMajor`, `planPrice`, _`BillingCurrency`_, _`BillingInterval`_, _`PlanIntervalPrices`_, _`PlanPriceAnswer`_, _`PlanPrices`_ |
-| `billing/plan-card` | `PlanCard`, `PlanPicker`, `planRelation`, _`BillingPlan`_, _`PlanCardProps`_, _`PlanChoice`_, _`PlanPickerProps`_, _`PlanRelation`_ |
-| `billing/subscription-status-chip` | `SUBSCRIPTION_STATUS_TONES`, `SubscriptionStatusChip`, _`SubscriptionStatusChipProps`_ |
-| `billing/billing-banner` | `BillingBanner`, _`BillingBannerKind`_, _`BillingBannerProps`_ |
-| `billing/plan-limit-notice` | `planLimitMailto`, `PlanLimitNotice`, _`PlanLimitNoticeProps`_ |
-| `billing/plan-limit` | `isPlanLimit`, _`PlanLimitRefusal`_ |
-| `billing/billing-lock` | `combineWriteLocks`, `useBillingLockReason`, `useBillingWriteLock`, _`BillingLockReasonOptions`_, _`CombinedWriteLock`_, _`WriteLockSource`_ |
-| `billing/billing-standing` | `billingDaysLeft`, `billingLockAt`, `isBillingReadOnly`, _`BillingStanding`_ |
-| `billing/subscription-actions` | `SubscriptionActions`, _`SubscriptionActionsProps`_ |
-| `billing/checkout-return` | `CHECKOUT_RETURN_PARAM`, `CHECKOUT_RETURN_VALUE`, `checkoutReturnUrl`, `isCheckoutReturn`, `withoutCheckoutReturn` |
-| `billing/checkout-processing` | `checkoutFingerprint`, `checkoutLanded`, `noteCheckoutStarted`, `useCheckoutProcessing`, _`CheckoutOverview`_, _`CheckoutProcessingOptions`_ |
-| `billing/pay-page` | `paddleLocale`, `PAY_PAGE_LANG_PARAM`, `payPageUrl`, _`PaddleEnvironment`_ |
-| `billing/billing-overview` | _`BillingOverview`_, _`PortalRequest`_, _`PortalTarget`_, _`SubscriptionSource`_ |
-| `billing/plan-limit-toast` | `usePlanLimitToast`, _`PlanLimitToastOptions`_ |
 
 ### components
 
 | Module | Exports |
 |---|---|
-| `components/ui` | `Button`, `buttonClasses`, `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, `DEFAULT_CHARACTER_COUNT_LABELS`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `DEFAULT_TABS_LABELS`, `EmptyState`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TOUCH_TEXT`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FloatingField`, `IconButton`, `Input`, `Label`, `PHONE_QUERY`, `resolvePasswordRevealLabels`, `Select`, `Spinner`, `Tabs`, `Textarea`, `TOUCH_TARGET_LARGE`, _`ButtonClassesOptions`_, _`ButtonLinkProps`_, _`ButtonProps`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_, _`CardActionProps`_, _`CardContentProps`_, _`CardDensity`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleLevel`_, _`CardTitleProps`_, _`CardTone`_, _`CharacterCountLabels`_, _`EmptyStateProps`_, _`FieldChevronProps`_, _`FloatingFieldProps`_, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_, _`InputProps`_, _`LabelProps`_, _`PasswordRevealLabels`_, _`SelectProps`_, _`SpinnerProps`_, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_, _`TextareaProps`_ |
-| `components/confirm-dialog` | `ConfirmProvider`, `DEFAULT_CONFIRM_DIALOG_LABELS`, `useConfirm`, _`ConfirmDialogLabels`_, _`ConfirmFn`_, _`ConfirmOptions`_, _`ConfirmProviderProps`_, _`ConfirmTone`_ |
-| `components/copy-button` | `CopyButton`, `DEFAULT_COPY_BUTTON_LABELS`, _`CopyButtonLabels`_, _`CopyButtonProps`_ |
-| `components/danger-confirm` | `CurrentPasswordInput`, `DangerConfirm`, `DEFAULT_DANGER_CONFIRM_LABELS`, `TypedConfirmField`, `typedMatches`, _`CurrentPasswordInputLabels`_, _`CurrentPasswordInputProps`_, _`DangerConfirmLabels`_, _`DangerConfirmProps`_, _`DangerConfirmValues`_, _`DangerConsequence`_, _`TypedConfirmFieldLabels`_, _`TypedConfirmFieldProps`_, _`TypedMatch`_ |
-| `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, `matchesAccept`, `useFilePicker`, _`FileButtonProps`_, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
-| `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_, _`FormActionsStack`_, _`FormActionsStickyWithin`_, _`FormActionsSubmitProps`_, _`FormActionsSubmitShortcut`_, _`ResponsiveFormActionsPlacement`_ |
-| `components/iban-input` | `DEFAULT_IBAN_INPUT_LABELS`, `IbanInput`, _`IbanInputLabels`_, _`IbanInputProps`_ |
-| `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalDisclaimerSectionLabels`_, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
-| `components/phone-input` | `DEFAULT_PHONE_INPUT_LABELS`, `PhoneInput`, _`PhoneInputLabels`_, _`PhoneInputProps`_ |
-| `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `RowActions`, `rowActionsColumn`, _`RowAction`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_, _`RowActionTone`_ |
-| `components/share-card` | `DEFAULT_SHARE_CARD_LABELS`, `ShareCard`, `ShareDialog`, `SharePanel`, _`ShareAddRequest`_, _`ShareCandidate`_, _`ShareCardLabels`_, _`ShareCardProps`_, _`ShareDialogProps`_, _`ShareGrantee`_, _`SharePanelProps`_, _`SharePendingGrant`_, _`ShareRole`_ |
+| `components/button` | `Button`, _`ButtonLinkProps`_, _`ButtonProps`_ |
+| `components/button-look` | `buttonClasses`, `TOUCH_TARGET_LARGE`, _`ButtonClassesOptions`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_ |
+| `components/icon-button` | `IconButton`, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_ |
+| `components/field-base` | `DEFAULT_CHARACTER_COUNT_LABELS`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TOUCH_TEXT`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FloatingField`, `Label`, `resolvePasswordRevealLabels`, _`CharacterCountLabels`_, _`FieldChevronProps`_, _`FloatingFieldProps`_, _`LabelProps`_, _`PasswordRevealLabels`_ |
+| `components/input` | `Input`, _`InputProps`_ |
+| `components/select` | `Select`, _`SelectProps`_ |
+| `components/textarea` | `Textarea`, _`TextareaProps`_ |
+| `components/card` | `Card`, `CardAction`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`, _`CardActionProps`_, _`CardContentProps`_, _`CardDensity`_, _`CardDescriptionProps`_, _`CardFooterProps`_, _`CardHeaderProps`_, _`CardProps`_, _`CardTitleLevel`_, _`CardTitleProps`_, _`CardTone`_ |
+| `components/spinner` | `Spinner`, _`SpinnerProps`_ |
+| `components/empty-state` | `EmptyState`, _`EmptyStateProps`_ |
+| `components/tabs` | `DEFAULT_TABS_LABELS`, `Tabs`, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_ |
+| `components/field-parts` | `CompactControls`, `DISABLED_REASON_LINE_CLASS`, `DisabledReasonLine`, `FieldHint`, `FieldLabel`, `FLOATING_LABEL_STATIC`, `useDisabledReasonLine`, _`DisabledReasonDisplay`_, _`FieldHintProps`_, _`FieldLabelProps`_ |
+| `components/focus-ring` | `FOCUS_RING`, `FOCUS_RING_WIDTH` |
 | `components/field` | `Field`, _`FieldControlProps`_, _`FieldLabelVisibility`_, _`FieldProps`_, _`FieldRenderMeta`_ |
 | `components/search-field` | `SearchField`, _`SearchFieldProps`_ |
 | `components/dropdown` | `DropdownPanel`, `DropdownSearchHeader`, `useDropdown`, `useDropdownSearch`, _`DropdownPanelProps`_, _`DropdownSearchHeaderProps`_ |
 | `components/popover` | `DEFAULT_POPOVER_LABELS`, `Popover`, _`PopoverLabels`_, _`PopoverProps`_ |
+| `components/help-popover` | `HelpPopover`, _`HelpPopoverProps`_ |
 | `components/swipeable-row` | `SwipeableRow`, _`SwipeableRowProps`_, _`SwipeAction`_, _`SwipePaint`_, _`SwipeTone`_ |
 | `components/calculator` | `CalculatorButton`, _`CalculatorButtonLabels`_ |
 | `components/numpad-sheet` | `NumberPadSheet`, _`NumberPadSheetLabels`_ |
-| `components/number-input` | `NumberInput`, `stepNumber` |
+| `components/number-input` | `NumberInput`, `stepNumber`, _`NumberInputProps`_ |
 | `components/currency-select` | `CURRENCIES`, `CurrencyFlag`, `currencyName`, `CurrencySelect`, `getCurrency`, _`CurrencyFlagProps`_, _`CurrencyOption`_, _`CurrencySelectProps`_ |
-| `components/amount-input` | `AmountInput` |
+| `components/amount-input` | `AmountInput`, _`AmountInputProps`_ |
 | `components/money-field` | `MoneyField`, _`MoneyFieldProps`_ |
-| `components/combobox` | `Combobox`, `InlineEntityCombobox`, _`ComboboxProps`_, _`InlineEntityComboboxProps`_ |
+| `components/combobox` | `Combobox`, _`ComboboxProps`_ |
 | `components/picker-sheet` | `PickerSheet`, `SHEET_ROW_CLASS`, _`PickerSheetProps`_ |
 | `components/entity-combobox` | `EntityCombobox`, _`EntityComboboxProps`_ |
 | `components/multi-entity-combobox` | `MultiEntityCombobox`, _`MultiEntityComboboxProps`_ |
 | `components/multi-select` | `MultiSelect`, _`MultiSelectOption`_, _`MultiSelectProps`_ |
 | `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipProps`_, _`TooltipSide`_, _`TooltipSize`_, _`TooltipTap`_, _`TooltipViewport`_ |
 | `components/user-avatar` | `avatarInitials`, `UserAvatar`, _`UserAvatarBadge`_, _`UserAvatarProps`_ |
-| `components/settings-fields` | `ContrastSetting`, `LanguageSetting`, `TextSizeSetting`, `ThemeSetting`, _`ContrastSettingProps`_, _`LanguageSettingProps`_, _`TextSizeSettingProps`_, _`ThemeSettingProps`_, _`ThemeSettingToggleProps`_ |
+| `components/settings-fields` | `ContrastSetting`, `LanguageSetting`, `TextSizeSetting`, `ThemeSetting`, _`ContrastSettingProps`_, _`LanguageSettingProps`_, _`TextSizeSettingProps`_, _`ThemeSettingProps`_, _`ThemeSettingSelectProps`_, _`ThemeSettingToggleProps`_ |
 | `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FIELD_SYNC_FRAME`, `FIELD_SYNC_SAVED_MS`, `FieldSyncIndicator`, `FieldSyncRow`, `resolveFieldSyncLabels`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
 | `components/month-picker` | `DEFAULT_MONTH_PICKER_LABELS`, `MonthPicker`, _`MonthPickerLabels`_, _`MonthPickerProps`_ |
 | `components/checkbox` | `Checkbox`, _`CheckboxProps`_ |
@@ -569,7 +652,9 @@ re-slicing of it, never a second API.
 | `components/page-contents` | `DEFAULT_PAGE_CONTENTS_LABELS`, `PageContents`, `PageContentsLayout`, `useScrollSpy`, _`PageContentsItem`_, _`PageContentsLabels`_, _`PageContentsLayoutProps`_, _`PageContentsProps`_, _`UseScrollSpyOptions`_ |
 | `components/disclosure` | `Collapse`, `Disclosure`, _`CollapseProps`_, _`DisclosureProps`_, _`DisclosureTriggerProps`_ |
 | `components/dialog-frame` | `DEFAULT_DIALOG_FRAME_LABELS`, `DialogFrame`, _`DialogFrameLabels`_, _`DialogFrameProps`_ |
+| `components/danger-confirm` | `CurrentPasswordInput`, `DangerConfirm`, `DEFAULT_DANGER_CONFIRM_LABELS`, `TypedConfirmField`, `typedMatches`, _`CurrentPasswordInputLabels`_, _`CurrentPasswordInputProps`_, _`DangerConfirmLabels`_, _`DangerConfirmProps`_, _`DangerConfirmValues`_, _`DangerConsequence`_, _`TypedConfirmFieldLabels`_, _`TypedConfirmFieldProps`_, _`TypedMatch`_ |
 | `components/reauth-dialog` | `DEFAULT_REAUTH_DIALOG_LABELS`, `ReauthDialog`, _`ReauthDialogLabels`_, _`ReauthDialogProps`_ |
+| `components/confirm-dialog` | `ConfirmProvider`, `DEFAULT_CONFIRM_DIALOG_LABELS`, `useConfirm`, _`ConfirmDialogLabels`_, _`ConfirmFn`_, _`ConfirmOptions`_, _`ConfirmProviderProps`_, _`ConfirmTone`_ |
 | `components/floating-panel` | `DEFAULT_FLOATING_PANEL_LABELS`, `FloatingAction`, `FloatingActionButton`, `FloatingActionGroup`, `FloatingPanel`, _`FloatingActionButtonProps`_, _`FloatingActionGroupProps`_, _`FloatingActionLinkProps`_, _`FloatingActionProps`_, _`FloatingCorner`_, _`FloatingPanelLabels`_, _`FloatingPanelProps`_ |
 | `components/bulk-action-bar` | `BulkActionBar`, `DEFAULT_BULK_ACTION_BAR_LABELS`, _`BulkActionBarLabels`_, _`BulkActionBarProps`_, _`BulkActionBarVariant`_, _`ResponsiveBulkActionBarVariant`_ |
 | `components/swatch-picker` | `DEFAULT_SWATCH_PICKER_LABELS`, `SwatchPicker`, _`SwatchOption`_, _`SwatchPickerLabels`_, _`SwatchPickerProps`_ |
@@ -577,22 +662,24 @@ re-slicing of it, never a second API.
 | `components/choice-card` | `ActionCard`, `ChoiceCard`, `ChoiceCardGroup`, _`ActionCardIconTone`_, _`ActionCardLinkProps`_, _`ActionCardMetaTone`_, _`ActionCardProps`_, _`ChoiceCardGroupProps`_, _`ChoiceCardMultipleProps`_, _`ChoiceCardOption`_, _`ChoiceCardProps`_, _`ChoiceCardSingleProps`_, _`ChoiceCardType`_ |
 | `components/autocomplete` | `Autocomplete`, _`AutocompleteProps`_ |
 | `components/measured-grid` | `DEFAULT_MEASURED_GRID_LABELS`, `MeasuredGrid`, `useMeasuredRows`, _`MeasuredGridColumn`_, _`MeasuredGridLabels`_, _`MeasuredGridProps`_, _`MeasuredGridView`_, _`MeasuredRows`_, _`UseMeasuredRowsOptions`_ |
+| `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, _`FileButtonProps`_ |
+| `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapNode`_, _`TreemapProps`_ |
-| `components/series-chart` | `anchoredBand`, `AXIS_TICK_WIDTH`, `AXIS_TITLE_STRIP`, `axisBandWidth`, `mergeSeries`, `oneAxis`, `padBand`, `paddedDomain`, `resolveTooltipPlacement`, `SeriesChart`, `seriesKey`, `seriesLegendEntries`, `soleSeriesColor`, `StaticSeriesChart`, `visibleSeries`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartTooltipPlacement`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesLegendAxes`_, _`SeriesSource`_ |
+| `components/series-chart` | `resolveTooltipPlacement`, `SeriesChart`, `seriesLegendEntries`, `StaticSeriesChart`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartTooltipPlacement`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesLegendAxes`_ |
 | `components/chart-height` | _`ChartHeight`_ |
-| `components/chart-zoom` | `axisExtent`, `DEFAULT_Y_AXIS`, `defaultZoomAxes`, `fitXToY`, `fitYToX`, `NO_ZOOM`, `selectionFromDrag`, `SharedXZoom`, `withChartZoom`, `ZOOM_MIN_DRAG`, `ZOOM_SQUARE_ENOUGH`, `zoomAfter`, `zoomAxesFor`, `zoomDomains`, _`ZoomAxes`_, _`ZoomAxesSetting`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSeries`_, _`ZoomFitSource`_, _`ZoomRow`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
+| `components/chart-zoom` | `axisExtent`, `DEFAULT_Y_AXIS`, `defaultZoomAxes`, `fitXToY`, `fitYToX`, `NO_ZOOM`, `selectionFromDrag`, `withChartZoom`, `ZOOM_MIN_DRAG`, `ZOOM_SQUARE_ENOUGH`, `zoomAfter`, `zoomAxesFor`, `zoomDomains` |
+| `components/chart-zoom-core` | `SharedXZoom`, _`ZoomAxes`_, _`ZoomAxesSetting`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSeries`_, _`ZoomFitSource`_, _`ZoomRow`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
 | `components/toggle-legend` | `LegendColumn`, `LegendGroup`, `StaticLegend`, `STEP_DASH`, `STROKE_PATTERNS`, `strokeDash`, `toggleHidden`, `ToggleLegend`, _`LegendEntry`_, _`StaticLegendProps`_, _`ToggleLegendProps`_ |
 | `components/facing-pair` | `FACING_SIDES`, `facingAxes`, `facingBand`, `facingHeadingPad`, _`FacingSide`_ |
 | `components/series-chart-labels` | `DEFAULT_SERIES_CHART_LABELS`, _`SeriesChartLabels`_ |
 | `components/pie-chart` | `PieChart`, _`PieChartProps`_, _`PieChartSlice`_ |
 | `components/pie-chart-labels` | `DEFAULT_PIE_CHART_LABELS`, _`PieChartLabels`_ |
-| `components/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingStrength`_, _`ProfileNameValues`_, _`ProfileSettingDisplayNameProps`_, _`ProfileSettingNamesProps`_, _`ProfileSettingProps`_, _`TwoFactorSetupData`_ |
-| `components/passkeys-setting` | `PasskeysSetting`, _`PasskeyDataAttributes`_, _`PasskeyId`_, _`PasskeyItem`_, _`PasskeysSettingProps`_ |
 | `components/qr-code` | `QrCode`, _`QrCodeProps`_ |
 | `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertSize`_, _`AlertTone`_ |
 | `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
 | `components/nav-pills` | `NavPills`, _`NavPillItem`_, _`NavPillLinkProps`_, _`NavPillsCurrent`_, _`NavPillsProps`_ |
-| `components/chip` | `Chip`, `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `refreshChipEdges`, `resolveChipInputLabels`, _`ChipHue`_, _`ChipInputLabels`_, _`ChipInputProps`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
+| `components/chip` | `Chip`, _`ChipHue`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
+| `components/chip-input` | `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `resolveChipInputLabels`, _`ChipInputLabels`_, _`ChipInputProps`_ |
 | `components/wizard-stepper` | `WizardStepper` |
 | `components/hover-menu` | `HoverMenu`, _`HoverMenuProps`_ |
 | `components/modal` | `Modal`, `ModalCloseContext`, `useBackdropClose`, _`ModalProps`_ |
@@ -601,19 +688,21 @@ re-slicing of it, never a second API.
 | `components/file-dropzone` | `FileDropzone`, _`FileDropzoneProps`_, _`FileDropzoneRejectionFeedback`_, _`FileDropzoneState`_ |
 | `components/mini-calendar` | `DEFAULT_MINI_CALENDAR_LABELS`, `MiniCalendar`, _`MiniCalendarDayState`_, _`MiniCalendarLabels`_, _`MiniCalendarProps`_, _`WeekDay`_ |
 | `components/calendar-heatmap` | `CalendarHeatmap`, `DEFAULT_CALENDAR_HEATMAP_LABELS`, `heatmapLevel`, `heatmapWindowEnd`, _`CalendarHeatmapDatum`_, _`CalendarHeatmapDay`_, _`CalendarHeatmapLabels`_, _`CalendarHeatmapProps`_ |
-| `components/date-picker` | `DatePicker`, `DateRangePicker`, _`DatePickerProps`_, _`DateRangeCommit`_, _`DateRangeDraftSummary`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_, _`DateRangeTriggerRenderProps`_, _`DateTriggerAttributes`_ |
+| `components/date-picker` | `DatePicker`, _`DatePickerProps`_ |
 | `components/tree-view` | `TreeRow`, `TreeView`, _`TreeItemState`_, _`TreeNode`_, _`TreeRowProps`_, _`TreeViewProps`_ |
-| `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/description-list` | `DEFAULT_DESCRIPTION_LIST_LABELS`, `DescriptionItem`, `DescriptionList`, _`DescriptionItemProps`_, _`DescriptionListColumns`_, _`DescriptionListDensity`_, _`DescriptionListLabels`_, _`DescriptionListLayout`_, _`DescriptionListProps`_ |
+| `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_, _`FormActionsStack`_, _`FormActionsStickyWithin`_, _`FormActionsSubmitProps`_, _`FormActionsSubmitShortcut`_, _`ResponsiveFormActionsPlacement`_ |
 | `components/write-lock` | `COMMIT_EXCEPT_BILLING`, `DEFAULT_WRITE_LOCK_LABELS`, `useWriteLock`, `writeLockFor`, `WriteLockProvider`, _`CommitScope`_, _`WriteLock`_, _`WriteLockHold`_, _`WriteLockKind`_, _`WriteLockLabels`_, _`WriteLockProviderProps`_ |
 | `components/account-chips` | `ACCOUNT_STATE_TONES`, `AccountStateChip`, `dateColumn`, `DateMark`, `DEFAULT_ACCOUNT_STATE_LABELS`, `RoleChip`, _`AccountState`_, _`AccountStateChipProps`_, _`AccountStateLabels`_, _`DateColumnOptions`_, _`DateMarkProps`_, _`RoleChipProps`_, _`RoleDefinition`_, _`RoleVocabulary`_ |
 | `components/server-wake` | `DEFAULT_SERVER_WAKE_LABELS`, `ServerWakeNotice`, `useServerWakeStage`, _`ServerWakeLabels`_, _`ServerWakeNoticeProps`_ |
+| `components/share-card` | `DEFAULT_SHARE_CARD_LABELS`, `ShareCard`, `ShareDialog`, `SharePanel`, _`ShareAddRequest`_, _`ShareCandidate`_, _`ShareCardLabels`_, _`ShareCardProps`_, _`ShareDialogProps`_, _`ShareGrantee`_, _`SharePanelProps`_, _`SharePendingGrant`_, _`ShareRole`_ |
 | `components/line-items` | `DEFAULT_LINE_ITEMS_LABELS`, `LineItems`, _`LineItemCellContext`_, _`LineItemsColumn`_, _`LineItemsFieldLabels`_, _`LineItemsLabels`_, _`LineItemsProps`_, _`LineItemsRemoveAlign`_, _`LineItemsRemovePlacement`_, _`LineItemsRowProps`_, _`LineItemsSummary`_, _`LineItemsSummaryTone`_ |
 | `components/progress-bar` | `DEFAULT_PROGRESS_BAR_LABELS`, `ProgressBar`, _`ProgressBarLabels`_, _`ProgressBarProps`_, _`ProgressBarSegment`_, _`ProgressBarSize`_, _`ProgressBarTone`_ |
 | `components/skeleton` | `Skeleton`, _`SkeletonProps`_, _`SkeletonShape`_ |
 | `components/loading-state` | `LoadingState`, _`LoadingStateLabelVisibility`_, _`LoadingStateProps`_, _`LoadingStateSize`_ |
 | `components/signed-amount` | `DEFAULT_SIGNED_AMOUNT_LABELS`, `Delta`, `SignedAmount`, `Tone`, `toneTextClass`, _`DeltaProps`_, _`GoodDirection`_, _`SignedAmountLabels`_, _`SignedAmountProps`_, _`SignedAmountTone`_, _`TextTone`_, _`ToneProps`_, _`VerdictPalette`_ |
 | `components/error-boundary` | `crashFingerprint`, `DEFAULT_ERROR_BOUNDARY_LABELS`, `describeThrown`, `ErrorBoundary`, `formatCrashReport`, `isChunkLoadError`, _`CrashReport`_, _`CrashReportResult`_, _`ErrorBoundaryDetails`_, _`ErrorBoundaryFallbackProps`_, _`ErrorBoundaryLabels`_, _`ErrorBoundaryProps`_ |
+| `components/copy-button` | `CopyButton`, `DEFAULT_COPY_BUTTON_LABELS`, _`CopyButtonLabels`_, _`CopyButtonProps`_ |
 | `components/authed-image` | `AuthedImage`, `DEFAULT_AUTHED_IMAGE_LABELS`, _`AuthedImageLabels`_, _`AuthedImageProps`_ |
 | `components/image-grid` | `DEFAULT_IMAGE_GRID_LABELS`, `ImageGrid`, `splitFileName`, _`ImageGridLabels`_, _`ImageGridProps`_ |
 | `components/lightbox` | `DEFAULT_LIGHTBOX_LABELS`, `imageItemKind`, `Lightbox`, _`ImageItem`_, _`ImageItemKind`_, _`LightboxLabels`_, _`LightboxProps`_ |
@@ -629,17 +718,11 @@ re-slicing of it, never a second API.
 | `components/breadcrumbs` | `Breadcrumbs`, `DEFAULT_BREADCRUMBS_LABELS`, _`BreadcrumbItem`_, _`BreadcrumbLinkProps`_, _`BreadcrumbsLabels`_, _`BreadcrumbsProps`_ |
 | `components/text-link` | `TextLink`, _`TextLinkCurrent`_, _`TextLinkProps`_, _`TextLinkRenderProps`_, _`TextLinkTone`_, _`TextLinkUnderline`_ |
 | `components/toast` | `DEFAULT_TOAST_LABELS`, `toast`, `TOAST_ACTION_DURATION`, `Toaster`, `TOASTER_OFFSET_BOTTOM`, `TOASTER_OFFSET_TOP`, _`ToastAction`_, _`ToasterOffset`_, _`ToasterProps`_, _`ToastId`_, _`ToastLabels`_, _`ToastOptions`_, _`ToastPosition`_, _`ToastPromiseOptions`_, _`ToastRedoOptions`_, _`ToastSwipeDirection`_, _`ToastUndoOptions`_ |
-| `components/data-table-filters` | `dateFilter`, `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `filterHref`, `isFilterActive`, `numberFilter`, `resolveFilter`, `rowMatches`, `selectFilter`, `textFilter`, _`ColumnFilter`_, _`FilterValue`_ |
-| `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, `missingDataTableLabels`, `resolveDataTableLabels`, _`DataTableLabels`_ |
-| `components/data-table` | `DataTable`, `DEFAULT_DATA_TABLE_SORT_LABELS`, _`DataTableCellProps`_, _`DataTableChrome`_, _`DataTableColumn`_, _`DataTableDensity`_, _`DataTableHeadProps`_, _`DataTableProps`_, _`DataTableRowAction`_, _`DataTableSortLabels`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
-| `components/use-table-state` | `readTableUrlState`, `useTableUrlState`, _`TableUrlState`_, _`TableUrlStateProps`_, _`TableUrlSync`_, _`UseTableUrlStateOptions`_, _`UseTableUrlStateReturn`_ |
-| `components/data-table-sort` | `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortCycle`_, _`SortDir`_, _`SortState`_, _`SortStepOptions`_ |
-| `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
-| `components/data-table-filter-popover` | `FilterPopover` |
-| `components/data-table-cells` | `booleanColumn`, `BooleanMark`, _`BooleanColumnOptions`_, _`BooleanMarkProps`_ |
 | `components/translation-review` | `TranslationReviewPanel`, _`TranslationReviewGroupBy`_, _`TranslationReviewOrigin`_, _`TranslationReviewPanelProps`_, _`TranslationReviewSaveInfo`_ |
+| `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalDisclaimerSectionLabels`_, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
 | `components/legal-page` | `LEGAL_SKELETON`, `LegalAcceptCheckbox`, `LegalKitSection`, `LegalPage`, _`LegalAcceptCheckboxProps`_, _`LegalDisclaimerVariant`_, _`LegalKitSectionKey`_, _`LegalKitSectionProps`_, _`LegalPageProps`_, _`LegalSectionOwner`_, _`LegalSkeletonEntry`_, _`LegalSkeletonPage`_ |
 | `components/appearance-labels` | `DEFAULT_APPEARANCE_LABELS`, `useAppearanceLabels`, _`AppearanceLabels`_ |
+| `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `RowActions`, `rowActionsColumn`, _`RowAction`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_, _`RowActionTone`_ |
 | `components/checkbox-group` | `CheckboxGroup`, _`CheckboxGroupLegendVisibility`_, _`CheckboxGroupOption`_, _`CheckboxGroupProps`_ |
 | `components/one-time-code-input` | `OneTimeCodeInput`, _`OneTimeCodeInputProps`_ |
 | `components/language-select` | `LanguageSelect`, _`LanguageSelectProps`_ |
@@ -647,62 +730,90 @@ re-slicing of it, never a second API.
 | `components/inline-edit-field` | `DEFAULT_INLINE_EDIT_LABELS`, `InlineEditField`, _`InlineEditFieldProps`_, _`InlineEditLabels`_, _`InlineEditorProps`_ |
 | `components/sign-chip` | `DEFAULT_SIGN_CHIP_LABELS`, `SignChip`, _`SignChipLabels`_, _`SignChipProps`_ |
 | `components/country-select` | `CountrySelect`, `DEFAULT_COUNTRY_SELECT_LABELS`, _`CountrySelectLabels`_, _`CountrySelectProps`_ |
+| `components/iban-input` | `DEFAULT_IBAN_INPUT_LABELS`, `IbanInput`, _`IbanInputLabels`_, _`IbanInputProps`_ |
+| `components/phone-input` | `DEFAULT_PHONE_INPUT_LABELS`, `PhoneInput`, _`PhoneInputLabels`_, _`PhoneInputProps`_ |
 | `components/field-strip` | `FieldStrip`, _`FieldStripIds`_, _`FieldStripPad`_, _`FieldStripProps`_ |
 | `components/column-mapper` | `ColumnMapper`, `ColumnRoleTable`, `DEFAULT_COLUMN_MAPPER_LABELS`, _`ColumnMapperLabels`_, _`ColumnMapperProps`_, _`ColumnRoleTableBodyProps`_, _`ColumnRoleTableProps`_, _`ColumnRoleTableRowProps`_ |
-| `components/account-settings-labels` | `DEFAULT_ACCOUNT_SETTINGS_LABELS`, _`AccountSettingsLabels`_, _`PasskeysSettingLabels`_, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
-| `components/combobox-core` | _`ComboClearValue`_, _`ComboOption`_ |
-| `components/field-parts` | `CompactControls`, `DISABLED_REASON_LINE_CLASS`, `DisabledReasonLine`, `FieldHint`, `FieldLabel`, `FLOATING_LABEL_STATIC`, `useDisabledReasonLine`, _`DisabledReasonDisplay`_, _`FieldHintProps`_, _`FieldLabelProps`_ |
-| `components/translation-review-labels` | `DEFAULT_TRANSLATION_REVIEW_LABELS`, _`TranslationReviewLabels`_ |
-| `components/focus-ring` | `FOCUS_RING`, `FOCUS_RING_WIDTH` |
-| `components/translation-review-parts` | `REVIEW_STATUS_TONES`, `ReviewStatusChip`, `TranslationExportButton`, `TranslationLocaleTabs`, `TranslationProgress`, _`ReviewStatusChipProps`_, _`TranslationExportButtonProps`_, _`TranslationLocaleTab`_, _`TranslationLocaleTabsProps`_, _`TranslationProgressProps`_ |
-| `components/series-chart-budget` | _`SeriesChartAxisBudget`_ |
-| `components/series-chart-ticks` | _`TimeTickUnit`_ |
+| `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, `missingDataTableLabels`, `resolveDataTableLabels`, _`DataTableLabels`_ |
+| `components/data-table-sort` | `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortCycle`_, _`SortDir`_, _`SortState`_, _`SortStepOptions`_ |
+| `components/data-table-filters` | `dateFilter`, `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `filterHref`, `isFilterActive`, `numberFilter`, `resolveFilter`, `rowMatches`, `selectFilter`, `textFilter`, _`ColumnFilter`_, _`FilterValue`_ |
+| `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
+| `components/data-table-filter-popover` | `FilterPopover` |
+| `components/data-table` | `DataTable`, `DEFAULT_DATA_TABLE_SORT_LABELS`, _`DataTableCellProps`_, _`DataTableChrome`_, _`DataTableColumn`_, _`DataTableDensity`_, _`DataTableHeadProps`_, _`DataTableProps`_, _`DataTableRowAction`_, _`DataTableSortLabels`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
+| `components/data-table-cells` | `booleanColumn`, `BooleanMark`, _`BooleanColumnOptions`_, _`BooleanMarkProps`_ |
+| `components/use-table-state` | `readTableUrlState`, `useTableUrlState`, _`TableUrlState`_, _`TableUrlStateProps`_, _`TableUrlSync`_, _`UseTableUrlStateOptions`_, _`UseTableUrlStateReturn`_ |
 | `components/translation-review-editor` | `TranslationReviewEditor`, _`TranslationReviewEditorProps`_ |
+| `components/translation-review-parts` | `REVIEW_STATUS_TONES`, `ReviewStatusChip`, `TranslationExportButton`, `TranslationLocaleTabs`, `TranslationProgress`, _`ReviewStatusChipProps`_, _`TranslationExportButtonProps`_, _`TranslationLocaleTab`_, _`TranslationLocaleTabsProps`_, _`TranslationProgressProps`_ |
+| `components/translation-review-labels` | `DEFAULT_TRANSLATION_REVIEW_LABELS`, _`TranslationReviewLabels`_ |
+| `components/inline-entity-combobox` | `InlineEntityCombobox`, _`InlineEntityComboboxProps`_ |
+| `components/combobox-core` | _`ComboClearValue`_, _`ComboOption`_ |
+| `components/series-chart-ticks` | _`TimeTickUnit`_ |
+| `components/series-chart-budget` | _`SeriesChartAxisBudget`_ |
+| `components/series-chart-axes` | `anchoredBand`, `AXIS_TICK_WIDTH`, `AXIS_TITLE_STRIP`, `axisBandWidth`, `mergeSeries`, `oneAxis`, `padBand`, `paddedDomain`, `seriesKey`, `soleSeriesColor`, `visibleSeries`, _`SeriesSource`_ |
+| `components/date-field` | _`DateTriggerAttributes`_ |
+| `components/date-range-picker` | `DateRangePicker`, _`DateRangeCommit`_, _`DateRangeDraftSummary`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_, _`DateRangeTriggerRenderProps`_ |
+
+### shell
+
+| Module | Exports |
+|---|---|
+| `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageOption`_ |
+| `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
+| `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_BAR_MAX`, `splitMobileBar`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
+| `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
+| `shell/role-switcher` | `RoleSwitcher`, _`RoleSwitcherProps`_ |
+| `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
+| `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
+| `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
+| `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
+
+### settings
+
+| Module | Exports |
+|---|---|
+| `settings/settings-layout` | `SETTINGS_SEARCH_THRESHOLD`, `SettingsLayout`, _`SettingsDocumentTitleParts`_, _`SettingsLayoutProps`_, _`SettingsLayoutWidth`_ |
+| `settings/use-settings-route` | `resolveSettingsLocation`, `SETTINGS_FROM_LIST_STATE`, `settingsFromListState`, `useSettingsRoute`, _`SettingsLayoutMode`_, _`SettingsLocation`_, _`SettingsLocationResult`_, _`SettingsLocationRules`_, _`SettingsRoute`_, _`UseSettingsRouteOptions`_ |
+| `settings/use-settings-focus` | `SETTINGS_FOCUS_MS`, `SETTINGS_FOCUS_RING`, `useSettingsFocus` |
+| `settings/settings-section` | `SettingsSection`, _`SettingsSectionProps`_ |
+| `settings/settings-context` | `useSettingsLayout`, _`SettingsLayoutContextValue`_ |
+| `settings/settings-heading` | `SettingsHeadingLevel`, `useSettingsHeadingLevel`, _`SettingsHeadingLevelProps`_, _`SettingsHeadingTag`_ |
+| `settings/settings-catalogue` | `settingsHref`, `settingsSearchEntries`, `visibleSettingsEntries`, `visibleSettingsGroups`, _`SettingsEntry`_, _`SettingsGroup`_, _`SettingsSearchEntriesOptions`_ |
+| `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, `useSettingsLabels`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
+| `settings/use-account-language` | `matchOfferedLanguage`, `resolveAccountLanguage`, `useAccountLanguage`, _`AccountLanguage`_, _`AccountLanguageSource`_, _`ResolveAccountLanguageInput`_, _`ResolvedAccountLanguage`_, _`UseAccountLanguageOptions`_ |
+| `settings/use-account-appearance` | `resolveAccountAppearance`, `useAccountAppearance`, _`AccountAppearance`_, _`AccountAppearanceFields`_, _`AccountAppearancePatch`_, _`AppearanceSource`_, _`DeviceAppearance`_, _`ResolvedAccountAppearance`_, _`UseAccountAppearanceOptions`_ |
+
+### landing
+
+| Module | Exports |
+|---|---|
+| `landing/routing` | `clearLastVisitedPage`, `DEFAULT_LAST_VISITED_EXCLUDES`, `NEXT_PARAM`, `readLastVisitedPage`, `RedirectIfAuthed`, `RootEntry`, `safeNextPath`, `useLastVisitedPage`, _`LastVisitedPageOptions`_, _`PathPattern`_, _`RedirectIfAuthedProps`_, _`RootEntryProps`_, _`RoutingSession`_ |
+| `landing/public-header` | `PublicHeader`, _`PublicHeaderBrand`_, _`PublicHeaderProps`_ |
+| `landing/landing-labels` | `DEFAULT_LANDING_LABELS`, `useLandingLabels`, _`LandingLabels`_ |
+| `landing/access` | `accessAction`, `useAccessAction`, _`AccessChoice`_, _`AccessLabels`_, _`AccessLink`_ |
+| `landing/landing-actions` | `LandingActions`, _`LandingActionsProps`_, _`LandingSession`_ |
+| `landing/landing-sections` | `CtaBand`, `FeatureRow`, `FeatureRows`, `Hero`, `PublicFooter`, `TrustStrip`, _`CtaBandProps`_, _`FeatureRowProps`_, _`FeatureRowsProps`_, _`HeroProps`_, _`PublicFooterProps`_, _`TrustItem`_, _`TrustStripProps`_ |
+| `landing/page-seo` | `metaContent`, `seoCopyProblems`, `usePageSeo`, _`SeoCopy`_, _`SeoCopyLimits`_, _`SeoCopyProblem`_, _`SeoCopyProblemCode`_ |
 
 ### feedback
 
 | Module | Exports |
 |---|---|
-| `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackComposer`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackComposerSlotContext`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
 | `feedback/feedback-attachment` | `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_FEEDBACK_ATTACHMENT_LABELS`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `DEFAULT_MAX_ATTACHMENTS`, `FeedbackAttachmentField`, `pastedName`, _`FeedbackAttachmentError`_, _`FeedbackAttachmentErrorInfo`_, _`FeedbackAttachmentFieldLabels`_, _`FeedbackAttachmentFieldMultipleProps`_, _`FeedbackAttachmentFieldProps`_, _`FeedbackAttachmentFieldRefsProps`_, _`FeedbackAttachmentFieldSingleProps`_, _`FeedbackAttachmentRef`_, _`FeedbackAttachmentRefsError`_ |
-| `feedback/feedback-labels` | `DEFAULT_FEEDBACK_CATEGORY_LABELS`, `DEFAULT_FEEDBACK_STATUS_LABELS`, `DEFAULT_FEEDBACK_TOAST_LABELS`, `useFeedbackCategoryLabels`, `useFeedbackStatusLabels`, `useFeedbackToastLabels`, _`FeedbackCategoryLabels`_, _`FeedbackStatusLabels`_, _`FeedbackToastLabels`_ |
-| `feedback/feedback-context` | `DEFAULT_FEEDBACK_CONTEXT_LABELS`, `feedbackContext`, `FeedbackContextBox`, _`FeedbackContextBoxProps`_, _`FeedbackContextInput`_, _`FeedbackContextLabels`_, _`FeedbackSubmitter`_ |
-| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `feedbackAttachmentUrls`, `feedbackPageHref`, `feedbackPagePath`, `feedbackPageUrl`, `FeedbackReworkSection`, `feedbackRowAccess`, `FeedbackRowDetail`, `useFeedbackDetailLabels`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdate`_, _`FeedbackReworkSectionProps`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
 | `feedback/feedback-dialog` | `DEFAULT_FEEDBACK_DIALOG_LABELS`, `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackDialogMultipleProps`_, _`FeedbackDialogProps`_, _`FeedbackDialogSingleProps`_, _`FeedbackDialogTextLabels`_, _`FeedbackMultipleSubmission`_, _`FeedbackSubmission`_, _`FeedbackSubmitHint`_ |
-| `feedback/feedback-menu` | `DEFAULT_FEEDBACK_MENU_LABELS`, `FeedbackMenu`, _`FeedbackMenuLabels`_, _`FeedbackMenuProps`_ |
-| `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `feedbackColumns`, `FeedbackEmptyState`, `feedbackEnvironment`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `feedbackSubmitter`, `feedbackSubmitterEmail`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
+| `feedback/feedback-inbox` | `FeedbackCategoryBadge`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, _`FeedbackNoteAttachment`_ |
+| `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackComposer`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackComposerSlotContext`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
 | `feedback/feedback-record` | `appendRework`, `attachmentName`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackAttachmentLine`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
-| `feedback/feedback-inbox` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `FeedbackCategoryBadge`, `feedbackCategoryRank`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackNoteAttachment`_, _`FeedbackStatus`_ |
+| `feedback/feedback-labels` | `DEFAULT_FEEDBACK_CATEGORY_LABELS`, `DEFAULT_FEEDBACK_STATUS_LABELS`, `DEFAULT_FEEDBACK_TOAST_LABELS`, `useFeedbackCategoryLabels`, `useFeedbackStatusLabels`, `useFeedbackToastLabels`, _`FeedbackCategoryLabels`_, _`FeedbackStatusLabels`_, _`FeedbackToastLabels`_ |
 | `feedback/feedback-status-undo` | `FEEDBACK_UNDO_DURATION`, `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutate`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
 | `feedback/feedback-swipe` | `DEFAULT_FEEDBACK_SWIPE`, `FEEDBACK_SWIPE_ACTIONS`, `feedbackSwipePlan`, _`FeedbackSwipeAction`_, _`FeedbackSwipeBinding`_, _`FeedbackSwipeOptions`_ |
+| `feedback/feedback-menu` | `DEFAULT_FEEDBACK_MENU_LABELS`, `FeedbackMenu`, _`FeedbackMenuLabels`_, _`FeedbackMenuProps`_ |
+| `feedback/feedback-context` | `DEFAULT_FEEDBACK_CONTEXT_LABELS`, `feedbackContext`, `FeedbackContextBox`, _`FeedbackContextBoxProps`_, _`FeedbackContextInput`_, _`FeedbackContextLabels`_, _`FeedbackSubmitter`_ |
 | `feedback/feedback-capture` | `captureAppScreenshot`, _`CaptureAppScreenshotOptions`_ |
 | `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`UseFeedbackSubmitOptions`_ |
+| `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `feedbackColumns`, `FeedbackEmptyState`, `feedbackEnvironment`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `feedbackSubmitter`, `feedbackSubmitterEmail`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
+| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `feedbackAttachmentUrls`, `feedbackPageHref`, `feedbackPagePath`, `feedbackPageUrl`, `FeedbackReworkSection`, `feedbackRowAccess`, `FeedbackRowDetail`, `useFeedbackDetailLabels`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdate`_, _`FeedbackReworkSectionProps`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
 | `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
-
-### account
-
-| Module | Exports |
-|---|---|
-| `account/delete-account-setting` | `DEFAULT_DELETE_ACCOUNT_LABELS`, `DeleteAccountSetting`, _`DeleteAccountConsequence`_, _`DeleteAccountLabels`_, _`DeleteAccountSettingProps`_, _`DeleteAccountValues`_, _`DeletionMode`_ |
-| `account/email-change-setting` | `DEFAULT_EMAIL_CHANGE_LABELS`, `EmailChangeSetting`, _`EmailChangeAction`_, _`EmailChangeLabels`_, _`EmailChangeSettingProps`_, _`EmailChangeValues`_ |
-| `account/sessions-setting` | `DEFAULT_SESSIONS_LABELS`, `SessionsSetting`, _`SessionId`_, _`SessionItem`_, _`SessionsAction`_, _`SessionsLabels`_, _`SessionsSettingProps`_ |
-| `account/data-export-setting` | `DataExportSetting`, `DEFAULT_DATA_EXPORT_LABELS`, _`DataExportFile`_, _`DataExportLabels`_, _`DataExportSettingProps`_ |
-
-### auth
-
-| Module | Exports |
-|---|---|
-| `auth/register-form` | `DEFAULT_REGISTER_LABELS`, `RegisterForm`, _`RegisterFormProps`_, _`RegisterLabels`_, _`RegisterValues`_ |
-| `auth/sign-in-form` | `DEFAULT_SIGN_IN_LABELS`, `SignInForm`, _`SignInAction`_, _`SignInAnswer`_, _`SignInCodeValues`_, _`SignInCredentials`_, _`SignInFormProps`_, _`SignInLabels`_, _`SignInNewPasswordValues`_, _`SignInStep`_ |
-| `auth/complete-name-dialog` | `CompleteNameDialog`, `DEFAULT_COMPLETE_NAME_LABELS`, _`CompleteNameDialogProps`_, _`CompleteNameLabels`_, _`CompleteNameValues`_ |
-| `auth/email-tag` | `taggedEmail` |
-| `auth/auth-errors` | `authErrorCode`, `isAuthError`, `isBillingError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`BillingErrorCode`_, _`DemoErrorCode`_, _`KitErrorCode`_ |
-| `auth/forgot-password-form` | `DEFAULT_FORGOT_PASSWORD_LABELS`, `ForgotPasswordForm`, _`ForgotPasswordFormProps`_, _`ForgotPasswordLabels`_ |
-| `auth/reset-password-form` | `DEFAULT_RESET_PASSWORD_LABELS`, `ResetPasswordForm`, _`ResetPasswordCheck`_, _`ResetPasswordFormProps`_, _`ResetPasswordLabels`_, _`ResetPasswordResult`_, _`ResetPasswordValues`_ |
-| `auth/verify-email` | `DEFAULT_VERIFY_EMAIL_LABELS`, `EmailVerificationBanner`, `VerifyEmailStatus`, _`EmailVerificationBannerProps`_, _`VerifyEmailFailure`_, _`VerifyEmailLabels`_, _`VerifyEmailStatusProps`_ |
-| `auth/not-found-page` | `DEFAULT_NOT_FOUND_LABELS`, `NotFoundPage`, _`NotFoundLabels`_, _`NotFoundPageProps`_ |
-| `auth/accept-invitation` | `AcceptInvitation`, `DEFAULT_ACCEPT_INVITATION_LABELS`, _`AcceptInvitationFailure`_, _`AcceptInvitationLabels`_, _`AcceptInvitationProps`_, _`AcceptInvitationResult`_ |
-| `auth/status-parts` | _`AuthHeadingLevel`_ |
+| `feedback/feedback-vocabulary` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `feedbackCategoryRank`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackStatus`_ |
 
 ### wizard
 
@@ -726,36 +837,72 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `search/command-palette` | `CommandPalette`, `DEFAULT_COMMAND_PALETTE_LABELS`, `useCommandKey`, _`CommandItem`_, _`CommandPaletteDensity`_, _`CommandPaletteLabels`_ |
+| `search/command-palette` | `CommandPalette`, `DEFAULT_COMMAND_PALETTE_LABELS`, _`CommandItem`_, _`CommandPaletteDensity`_, _`CommandPaletteLabels`_ |
 | `search/search-index` | `createSearchIndex`, `matchEntries`, `normalizeSearchText`, `SEARCH_TIER_POINTS`, _`SearchEntry`_, _`SearchHit`_, _`SearchIndex`_, _`SearchIndexOptions`_, _`SearchMatchField`_ |
 | `search/global-search` | `DEFAULT_GLOBAL_SEARCH_LABELS`, `GlobalSearch`, _`GlobalSearchLabels`_, _`GlobalSearchProps`_, _`GlobalSearchSource`_, _`GlobalSearchSourceGroup`_, _`GlobalSearchSuggestion`_, _`GlobalSearchTriggerProps`_ |
+| `search/use-command-key` | `useCommandKey` |
 
-### settings
-
-| Module | Exports |
-|---|---|
-| `settings/settings-layout` | `SETTINGS_SEARCH_THRESHOLD`, `SettingsLayout`, _`SettingsLayoutProps`_, _`SettingsLayoutWidth`_ |
-| `settings/use-settings-route` | `resolveSettingsLocation`, `SETTINGS_FROM_LIST_STATE`, `settingsFromListState`, `useSettingsRoute`, _`SettingsLayoutMode`_, _`SettingsLocation`_, _`SettingsLocationResult`_, _`SettingsLocationRules`_, _`SettingsRoute`_, _`UseSettingsRouteOptions`_ |
-| `settings/use-settings-focus` | `SETTINGS_FOCUS_MS`, `SETTINGS_FOCUS_RING`, `useSettingsFocus` |
-| `settings/settings-section` | `SettingsSection`, _`SettingsSectionProps`_ |
-| `settings/settings-context` | `useSettingsLayout`, _`SettingsLayoutContextValue`_ |
-| `settings/settings-heading` | `SettingsHeadingLevel`, `useSettingsHeadingLevel`, _`SettingsHeadingLevelProps`_, _`SettingsHeadingTag`_ |
-| `settings/settings-catalogue` | `settingsHref`, `settingsSearchEntries`, `visibleSettingsEntries`, `visibleSettingsGroups`, _`SettingsEntry`_, _`SettingsGroup`_, _`SettingsSearchEntriesOptions`_ |
-| `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, `useSettingsLabels`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
-| `settings/use-account-language` | `matchOfferedLanguage`, `resolveAccountLanguage`, `useAccountLanguage`, _`AccountLanguage`_, _`AccountLanguageSource`_, _`ResolveAccountLanguageInput`_, _`ResolvedAccountLanguage`_, _`UseAccountLanguageOptions`_ |
-| `settings/use-account-appearance` | `resolveAccountAppearance`, `useAccountAppearance`, _`AccountAppearance`_, _`AccountAppearanceFields`_, _`AccountAppearancePatch`_, _`AppearanceSource`_, _`DeviceAppearance`_, _`ResolvedAccountAppearance`_, _`UseAccountAppearanceOptions`_ |
-
-### landing
+### auth
 
 | Module | Exports |
 |---|---|
-| `landing/landing-labels` | `DEFAULT_LANDING_LABELS`, `useLandingLabels`, _`LandingLabels`_ |
-| `landing/access` | `accessAction`, `useAccessAction`, _`AccessChoice`_, _`AccessLabels`_, _`AccessLink`_ |
-| `landing/landing-actions` | `LandingActions`, _`LandingActionsProps`_, _`LandingSession`_ |
-| `landing/landing-sections` | `CtaBand`, `FeatureRow`, `FeatureRows`, `Hero`, `PublicFooter`, `TrustStrip`, _`CtaBandProps`_, _`FeatureRowProps`_, _`FeatureRowsProps`_, _`HeroProps`_, _`PublicFooterProps`_, _`TrustItem`_, _`TrustStripProps`_ |
-| `landing/page-seo` | `metaContent`, `seoCopyProblems`, `usePageSeo`, _`SeoCopy`_, _`SeoCopyLimits`_, _`SeoCopyProblem`_, _`SeoCopyProblemCode`_ |
-| `landing/routing` | `clearLastVisitedPage`, `DEFAULT_LAST_VISITED_EXCLUDES`, `NEXT_PARAM`, `readLastVisitedPage`, `RedirectIfAuthed`, `RootEntry`, `safeNextPath`, `useLastVisitedPage`, _`LastVisitedPageOptions`_, _`PathPattern`_, _`RedirectIfAuthedProps`_, _`RootEntryProps`_, _`RoutingSession`_ |
-| `landing/public-header` | `PublicHeader`, _`PublicHeaderBrand`_, _`PublicHeaderProps`_ |
+| `auth/sign-in-form` | `DEFAULT_SIGN_IN_LABELS`, `SignInForm`, _`SignInAction`_, _`SignInAnswer`_, _`SignInCodeValues`_, _`SignInCredentials`_, _`SignInFormProps`_, _`SignInLabels`_, _`SignInNewPasswordValues`_, _`SignInStep`_ |
+| `auth/register-form` | `DEFAULT_REGISTER_LABELS`, `RegisterForm`, _`RegisterFormProps`_, _`RegisterLabels`_, _`RegisterValues`_ |
+| `auth/complete-name-dialog` | `CompleteNameDialog`, `DEFAULT_COMPLETE_NAME_LABELS`, _`CompleteNameDialogProps`_, _`CompleteNameLabels`_, _`CompleteNameValues`_ |
+| `auth/email-tag` | `taggedEmail` |
+| `auth/auth-errors` | `authErrorCode`, `isAuthError`, `isBillingError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`BillingErrorCode`_, _`DemoErrorCode`_, _`KitErrorCode`_ |
+| `auth/forgot-password-form` | `DEFAULT_FORGOT_PASSWORD_LABELS`, `ForgotPasswordForm`, _`ForgotPasswordFormProps`_, _`ForgotPasswordLabels`_ |
+| `auth/reset-password-form` | `DEFAULT_RESET_PASSWORD_LABELS`, `ResetPasswordForm`, _`ResetPasswordCheck`_, _`ResetPasswordFormProps`_, _`ResetPasswordLabels`_, _`ResetPasswordResult`_, _`ResetPasswordValues`_ |
+| `auth/verify-email` | `DEFAULT_VERIFY_EMAIL_LABELS`, `EmailVerificationBanner`, `VerifyEmailStatus`, _`EmailVerificationBannerProps`_, _`VerifyEmailFailure`_, _`VerifyEmailLabels`_, _`VerifyEmailStatusProps`_ |
+| `auth/not-found-page` | `DEFAULT_NOT_FOUND_LABELS`, `NotFoundPage`, _`NotFoundLabels`_, _`NotFoundPageProps`_ |
+| `auth/accept-invitation` | `AcceptInvitation`, `DEFAULT_ACCEPT_INVITATION_LABELS`, _`AcceptInvitationFailure`_, _`AcceptInvitationLabels`_, _`AcceptInvitationProps`_, _`AcceptInvitationResult`_ |
+| `auth/status-parts` | _`AuthHeadingLevel`_ |
+
+### account
+
+| Module | Exports |
+|---|---|
+| `account/account-settings` | `PasswordSetting`, `ProfileSetting`, `TwoFactorSetting`, _`PasswordSettingStrength`_, _`ProfileNameValues`_, _`ProfileSettingDisplayNameProps`_, _`ProfileSettingNamesProps`_, _`ProfileSettingProps`_, _`TwoFactorSetupData`_ |
+| `account/passkeys-setting` | `PasskeysSetting`, _`PasskeyDataAttributes`_, _`PasskeyId`_, _`PasskeyItem`_, _`PasskeysSettingProps`_ |
+| `account/email-change-setting` | `DEFAULT_EMAIL_CHANGE_LABELS`, `EmailChangeSetting`, _`EmailChangeAction`_, _`EmailChangeLabels`_, _`EmailChangeSettingProps`_, _`EmailChangeValues`_ |
+| `account/sessions-setting` | `DEFAULT_SESSIONS_LABELS`, `SessionsSetting`, _`SessionId`_, _`SessionItem`_, _`SessionsAction`_, _`SessionsLabels`_, _`SessionsSettingProps`_ |
+| `account/delete-account-setting` | `DEFAULT_DELETE_ACCOUNT_LABELS`, `DeleteAccountSetting`, _`DeleteAccountConsequence`_, _`DeleteAccountLabels`_, _`DeleteAccountSettingProps`_, _`DeleteAccountValues`_, _`DeletionMode`_ |
+| `account/data-export-setting` | `DataExportSetting`, `DEFAULT_DATA_EXPORT_LABELS`, _`DataExportFile`_, _`DataExportLabels`_, _`DataExportSettingProps`_ |
+| `account/account-settings-labels` | `DEFAULT_ACCOUNT_SETTINGS_LABELS`, _`AccountSettingsLabels`_, _`PasskeysSettingLabels`_, _`PasswordSettingLabels`_, _`ProfileSettingLabels`_, _`TwoFactorSettingLabels`_ |
+
+### admin
+
+| Module | Exports |
+|---|---|
+| `admin/user-roster` | `adminUserStates`, `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterColumns`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
+| `admin/role-select` | `DEFAULT_ROLE_SELECT_LABELS`, `RolesEditor`, `RoleSelect`, _`RoleLock`_, _`RoleLockCode`_, _`RolesEditorProps`_, _`RoleSelectLabels`_, _`RoleSelectProps`_ |
+| `admin/reviewer-scope-editor` | `DEFAULT_REVIEWER_SCOPE_LABELS`, `ReviewerScopeEditor`, _`ReviewerScope`_, _`ReviewerScopeArea`_, _`ReviewerScopeEditorProps`_, _`ReviewerScopeLabels`_, _`ReviewerScopeLanguage`_ |
+| `admin/admin-action-confirm` | `AdminActionConfirm`, `DEFAULT_ADMIN_ACTION_LABELS`, _`AdminActionConfirmProps`_, _`AdminActionConfirmValues`_, _`AdminActionLabels`_, _`AdminActionTarget`_, _`AdminConfirmLevel`_ |
+| `admin/admin-action-log` | `ADMIN_ACTION_KINDS`, `AdminActionLog`, `DEFAULT_ADMIN_ACTION_LOG_LABELS`, _`AdminActionKind`_, _`AdminActionLogEntry`_, _`AdminActionLogLabels`_, _`AdminActionLogPaging`_, _`AdminActionLogProps`_, _`AdminGroupNoun`_, _`AdminGroupTarget`_, _`AdminOtherTarget`_ |
+| `admin/transfer-ownership-dialog` | `DEFAULT_TRANSFER_OWNERSHIP_LABELS`, `TransferOwnershipDialog`, _`TransferCandidate`_, _`TransferOwnershipDialogProps`_, _`TransferOwnershipLabels`_, _`TransferUnavailable`_, _`TransferValues`_ |
+| `admin/invitations-panel` | `DEFAULT_INVITATIONS_LABELS`, `InvitationsPanel`, _`InvitationDraft`_, _`InvitationRow`_, _`InvitationScope`_, _`InvitationSentAnswer`_, _`InvitationsLabels`_, _`InvitationsPanelProps`_, _`InvitationStatus`_ |
+| `admin/admin-parts` | _`AdminPerson`_ |
+| `admin/plan-change` | `DEFAULT_PLAN_CHANGE_LABELS`, `PlanChangeConfirm`, `planColumn`, `usePlanChangeResult`, `usePlanColumn`, _`PlanChange`_, _`PlanChangeConfirmProps`_, _`PlanChangeLabels`_, _`PlanChangeLine`_, _`PlanChangeOutcome`_, _`PlanChangeResultOptions`_, _`PlanChangeTone`_, _`PlanColumnOptions`_, _`PlanColumnUsage`_ |
+
+### billing
+
+| Module | Exports |
+|---|---|
+| `billing/billing-labels` | `DEFAULT_BILLING_LABELS`, `SUBSCRIPTION_STATUSES`, `useBillingLabels`, _`BillingLabels`_, _`SubscriptionStatus`_ |
+| `billing/plan-price` | `BILLING_INTERVALS`, `billingCurrencyFor`, `formatPlanPrice`, `minorToMajor`, `planPrice`, _`BillingCurrency`_, _`BillingInterval`_, _`PlanIntervalPrices`_, _`PlanPriceAnswer`_, _`PlanPrices`_ |
+| `billing/plan-card` | `PlanCard`, `PlanPicker`, `planRelation`, _`BillingPlan`_, _`PlanCardProps`_, _`PlanChoice`_, _`PlanPickerProps`_, _`PlanRelation`_ |
+| `billing/subscription-status-chip` | `SUBSCRIPTION_STATUS_TONES`, `SubscriptionStatusChip`, _`SubscriptionStatusChipProps`_ |
+| `billing/billing-banner` | `BillingBanner`, _`BillingBannerKind`_, _`BillingBannerProps`_ |
+| `billing/plan-limit-notice` | `planLimitMailto`, `PlanLimitNotice`, _`PlanLimitNoticeProps`_ |
+| `billing/plan-limit` | `isPlanLimit`, _`PlanLimitRefusal`_ |
+| `billing/billing-lock` | `combineWriteLocks`, `useBillingLockReason`, `useBillingWriteLock`, _`BillingLockReasonOptions`_, _`CombinedWriteLock`_, _`WriteLockSource`_ |
+| `billing/billing-standing` | `billingDaysLeft`, `billingLockAt`, `isBillingReadOnly`, _`BillingStanding`_ |
+| `billing/subscription-actions` | `SubscriptionActions`, _`SubscriptionActionsProps`_ |
+| `billing/checkout-return` | `CHECKOUT_RETURN_PARAM`, `CHECKOUT_RETURN_VALUE`, `checkoutReturnUrl`, `isCheckoutReturn`, `withoutCheckoutReturn` |
+| `billing/checkout-processing` | `checkoutFingerprint`, `checkoutLanded`, `noteCheckoutStarted`, `useCheckoutProcessing`, _`CheckoutOverview`_, _`CheckoutProcessingOptions`_ |
+| `billing/pay-page` | `paddleLocale`, `PAY_PAGE_LANG_PARAM`, `payPageUrl`, _`PaddleEnvironment`_ |
+| `billing/billing-overview` | _`BillingOverview`_, _`PortalRequest`_, _`PortalTarget`_, _`SubscriptionSource`_ |
+| `billing/plan-limit-toast` | `usePlanLimitToast`, _`PlanLimitToastOptions`_ |
 
 ### demo
 
@@ -772,11 +919,15 @@ re-slicing of it, never a second API.
 
 ## Forms / refs
 
-`Input`, `Select`, `Textarea` and `AmountInput` forward their `ref` to the
-underlying DOM element, so they work directly with react-hook-form:
+Every field takes a `ref` — a React 19 ref prop, no `forwardRef` (since 0.34) — to the
+element that takes focus: the `<input>` of `Input`, `NumberField`, `AmountInput`,
+`ChipInput`…, the trigger button of a picker (`DatePicker`, `MonthPicker`, `MultiSelect`,
+`CurrencySelect`, `CountrySelect`), and for `ToggleGroup` the group, whose `focus()` lands
+on its checked option. So they work directly with react-hook-form:
 `<Input {...field} />` (from `Controller`/`register`) attaches RHF's ref, giving
-focus-and-scroll-to-error for free. For the full `FormField`/`FormControl` scaffolding,
-see `@eifi1/ui-kit/rhf` below.
+focus-and-scroll-to-error for free. A component that spreads its props onto an element
+(`Card`, `EmptyState`, `PageHeader`, …) takes that element's `ref` too. For the full
+`FormField`/`FormControl` scaffolding, see `@eifi1/ui-kit/rhf` below.
 
 ### react-hook-form — `@eifi1/ui-kit/rhf` (optional)
 
@@ -828,14 +979,19 @@ empty cells held open as holes.
 
 ## i18n
 
-**The kit resolves no strings.** It carries no translation catalogue, no locale detection
-and no `t()`. Every string it renders is a key in one typed tree, `UiKitLabels`, with an
-English default — and the app hands its translation to every component at once:
+**The kit renders only labels; it ships seven catalogues; the app decides the language.**
+Every string the kit renders is a key in one typed tree, `UiKitLabels`, with an English
+default. The kit's own words come translated into seven languages (see "Shipped
+catalogues" below). What it does not do is choose: there is no locale detection and no
+`t()` for the app's own words. The app picks the language and hands the kit's words to
+every component at once:
 
 ```tsx
-import { UiKitProvider } from "@eifi1/ui-kit";
+import { formatLocaleOf, loadUiKitLabels, UiKitProvider } from "@eifi1/ui-kit";
 
-<UiKitProvider labels={de} locale="de-DE">   {/* de: UiKitLabels, or any part of it */}
+const labels = await loadUiKitLabels("de-CH"); // a shipped catalogue — or your own UiKitLabels, or any part of one
+
+<UiKitProvider labels={labels} locale={formatLocaleOf("de-CH")}>
   <App />
 </UiKitProvider>
 ```
@@ -953,21 +1109,28 @@ the flag CSS) and `LanguageSetting` (a native select: names only).
 `showcase/src/i18n/` runs the whole showcase in seven locales — English, German, French,
 Italian, Spanish, Hungarian and Chinese — and it is deliberately **not** an i18n library: a
 dictionary in context, a hook to read it, and ONE `<UiKitProvider labels={dict.kit}
-locale={dict.tag}>` at the root. Each dictionary's `kit` is typed as the full
-`UiKitLabels`, so a translation with a hole does not compile; the Localisation page shows
-the tree and the per-language completeness live. The long explanatory prose on each page is
-*not* translated: it is developer documentation about the kit's internals. The chrome, the
-navigation and every component label are.
+locale={dict.tag}>` at the root. Each dictionary's `kit` is the shipped catalogue,
+imported the way an app imports it (`@eifi1/ui-kit/i18n/de-CH`), and typed as the full
+`UiKitLabels`; the Localisation page shows the tree and the per-language completeness
+live. The long explanatory prose on each page is *not* translated: it is developer
+documentation about the kit's internals. The chrome, the navigation and every component
+label are.
 
-### Right-to-left is partial
+### Right-to-left
 
-Newer components (the sidebar's inline groups, the date range band, the month picker, the
-checkbox, switch and slider) use logical properties (`ms-*`, `pe-*`, `text-start`) and
-flip correctly under `dir="rtl"`. The older ones still carry roughly 130 physical-direction
-utilities plus pointer maths (column resize, row swipe) that assume left-to-right —
-`docs/module-audit-2026-09-22.md` §10 has the site-by-site detail. None of the showcase's
-seven locales is right-to-left, so nothing exercises it today; plan around that before
-shipping Arabic or Hebrew.
+The kit lays itself out right-to-left since 0.7.0. Components use logical utilities
+(`ms-*`, `pe-*`, `end-*`, `text-start`) and `rtl:` where a glyph or a reversed row has to
+flip, so they follow `dir="rtl"` on any ancestor with no prop. What CSS cannot do is done
+in JavaScript, from the nearest `[dir]`: arrow keys (← is "next" in RTL), the data
+table's column resize, a row's swipe panel, tooltips and portalled panels (which take
+their anchor's direction), the treemap's and the chart's labels. About forty physical
+classes remain, several of them deliberate: a calculator's right-aligned digits, a tooltip
+side that JavaScript has already resolved for the direction. Two things to know:
+
+- Since 0.7.0 the kit emits logical classes, so an app's physical override (`pr-4` on a
+  field) ADDS a side instead of replacing one: override with the logical name (`pe-4`).
+- None of the showcase's seven locales is right-to-left; the kit's RTL tests run in jsdom.
+  Check an Arabic or Hebrew screen in a browser before shipping one.
 
 ## Wizard
 
@@ -1002,11 +1165,10 @@ A step gates forward navigation two ways, and `goNext` runs both: its `validate`
 in the config above, and `useWizardStepValidate(fn)` for a step that checks by
 hand. `useWizardNextGate(blocked)` disables Next/Skip outright.
 
-Like the rest of the package it resolves **no strings**: a step carries a `label`
-node, and the chrome takes a `labels` object (`WizardLabels`, every key optional
-over an English default) — the same split `DataTable` and `TourProvider` use. An
-app with i18n wraps `useWizard`/`StepperNav`/`WizardSummary` once and maps its
-own keys; see Kastlan's `shared/components/wizard/app-wizard.tsx`.
+Like the rest of the package, its words are labels: a step carries a `label` node (the
+app's own words), and the chrome reads `wizard.*` from `UiKitProvider` — so a shipped
+catalogue translates it — with a `labels` prop (`WizardLabels`, every key optional) to
+override a few, the same split `DataTable` and `TourProvider` use.
 
 **Peers.** `react-router` backs the `?step=` sync in `useWizard` — and is imported
 unconditionally, so a wizard needs a Router mounted even if you never read the

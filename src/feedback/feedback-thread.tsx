@@ -3,17 +3,25 @@ import type { ReactNode, Ref, RefObject } from "react";
 import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime } from "../lib/format";
-import { Button, EmptyState, Spinner, Textarea } from "../components/ui";
-import type { CharacterCountLabels } from "../components/ui";
+import { hasContent } from "../lib/presence";
+import { Button } from "../components/button";
+import { EmptyState } from "../components/empty-state";
+import { Spinner } from "../components/spinner";
+import { Textarea } from "../components/textarea";
+import type { CharacterCountLabels } from "../components/field-base";
 import { Skeleton } from "../components/skeleton";
 import { Tooltip } from "../components/tooltip";
 import { useWriteLock } from "../components/write-lock";
 import type { CommitScope } from "../components/write-lock";
-import { useKitFileLabels, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitFileLabels, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { FeedbackAttachmentField } from "./feedback-attachment";
 import type { FeedbackAttachmentFieldSingleProps } from "./feedback-attachment";
 import type { FeedbackNoteAttachment } from "./feedback-inbox";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
+import {
+  DEFAULT_FEEDBACK_COMPOSER_LABELS,
+  DEFAULT_FEEDBACK_THREAD_LABELS,
+} from "./feedback-thread-labels";
 
 /**
  * The conversation under a report: who said what, when, with what attached — and the
@@ -64,14 +72,8 @@ export interface FeedbackThreadLabels {
   attachments: string;
 }
 
-export const DEFAULT_FEEDBACK_THREAD_LABELS: FeedbackThreadLabels = {
-  thread: "Comments",
-  empty: "No comments yet",
-  loading: "Loading comments…",
-  you: "You",
-  staff: "Staff",
-  attachments: "Attachments",
-};
+// Defined in ./feedback-thread-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_THREAD_LABELS };
 
 /** The `feedbackComposer` namespace of `<UiKitProvider labels>`. The attach buttons'
  *  words are `feedbackAttachment`'s, shared with the dialog and the note editor. */
@@ -87,13 +89,8 @@ export interface FeedbackComposerLabels {
   sendHintEnter: string;
 }
 
-export const DEFAULT_FEEDBACK_COMPOSER_LABELS: FeedbackComposerLabels = {
-  field: "Write a comment",
-  placeholder: "Write a comment…",
-  send: "Send",
-  sendHint: (modifier) => `${modifier} + Enter to send`,
-  sendHintEnter: "Enter to send, Shift + Enter for a new line",
-};
+// Defined in ./feedback-thread-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_COMPOSER_LABELS };
 
 /* ── Thread ───────────────────────────────────────────────────────────────── */
 
@@ -183,7 +180,7 @@ export interface FeedbackThreadProps {
   now?: Date | number;
   /** Overrides the provider's locale for the times. */
   locale?: string;
-  labels?: Partial<FeedbackThreadLabels>;
+  labels?: LabelOverride<FeedbackThreadLabels>;
   className?: string;
 }
 
@@ -264,7 +261,7 @@ export function FeedbackThread({
             <li
               key={message.id}
               data-event=""
-              className="flex flex-wrap items-baseline justify-center gap-x-2 px-4 text-center text-xs text-[var(--text-muted)]"
+              className="flex flex-wrap items-baseline justify-center gap-x-2 px-4 text-center text-xs text-muted"
             >
               <span>{message.body}</span>
               {time && <span className="text-caption">{time}</span>}
@@ -284,18 +281,18 @@ export function FeedbackThread({
               className={cn(
                 "max-w-[85%] min-w-0 rounded-lg px-3 py-2 text-sm",
                 message.own
-                  ? "rounded-ee-sm bg-[var(--brand-bg)]"
-                  : "rounded-es-sm bg-[var(--bg-surface-2)]",
+                  ? "rounded-ee-sm bg-brand-soft"
+                  : "rounded-es-sm bg-surface-2",
               )}
             >
-              <header className="mb-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-[var(--text-muted)]">
+              <header className="mb-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted">
                 {author != null && (
-                  <span data-private={priv} className="font-medium text-[var(--text-secondary)]">
+                  <span data-private={priv} className="font-medium text-secondary">
                     {author}
                   </span>
                 )}
                 {message.staff && (
-                  <span className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 text-micro font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+                  <span className="rounded border border-subtle bg-surface px-1 text-micro font-medium uppercase tracking-wide text-secondary">
                     {labels.staff}
                   </span>
                 )}
@@ -305,7 +302,7 @@ export function FeedbackThread({
                 <p
                   data-private={priv}
                   dir="auto"
-                  className="whitespace-pre-wrap break-words text-start text-[var(--text-primary)]"
+                  className="whitespace-pre-wrap break-words text-start text-primary"
                 >
                   {message.body}
                 </p>
@@ -344,16 +341,18 @@ function DefaultAttachment({
   const content = (
     <>
       <Paperclip className="size-3.5 shrink-0" aria-hidden />
-      <span className="truncate">{name}</span>
+      {/* A file name wraps from Large up, as the attachments of the composer do (text
+          size §10.17; round 0.34 T1: the sweep read "export-20…"). */}
+      <span className="min-w-0 truncate-until-large">{name}</span>
       {attachment.size !== undefined && (
-        <span className="shrink-0 text-[var(--text-muted)]">{size(attachment.size)}</span>
+        <span className="shrink-0 text-muted">{size(attachment.size)}</span>
       )}
     </>
   );
   const chip =
-    "inline-flex max-w-full items-center gap-1 rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-xs text-[var(--text-secondary)]";
+    "inline-flex max-w-full items-center gap-1 rounded border border-subtle bg-surface px-2 py-1 text-xs text-secondary";
   return url ? (
-    <a href={url} target="_blank" rel="noopener noreferrer" className={cn(chip, "hover:bg-[var(--bg-hover)]")}>
+    <a href={url} target="_blank" rel="noopener noreferrer" className={cn(chip, "hover:bg-hover")}>
       {content}
     </a>
   ) : (
@@ -376,9 +375,9 @@ function ImageThumbnail({ url, name }: { url: string; name: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="relative block h-20 w-20 overflow-hidden rounded border border-[var(--border)] bg-[var(--bg-surface-2)]"
+      className="relative block h-20 w-20 overflow-hidden rounded border border-subtle bg-surface-2"
     >
-      <Glyph aria-hidden className="absolute inset-0 m-auto size-6 text-[var(--text-muted)]" />
+      <Glyph aria-hidden className="absolute inset-0 m-auto size-6 text-muted" />
       {!failed && (
         // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- load/error are resource events, not interactions
         <img
@@ -449,7 +448,7 @@ function DaySeparator({ date, now, locale }: { date: Date; now: number; locale: 
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return (
-    <li data-day-separator="" className="flex items-center gap-3 py-1 text-xs text-[var(--text-muted)]">
+    <li data-day-separator="" className="flex items-center gap-3 py-1 text-xs text-muted">
       <span aria-hidden className="h-px flex-1 bg-[var(--border)]" />
       <time dateTime={`${y}-${m}-${d}`} className="font-medium">
         {label}
@@ -473,7 +472,7 @@ function toDate(value: Date | string | number): Date | null {
  *  0.24.0 also the field's `buttonVariant` / `buttonSize`, for a composer whose row
  *  wants smaller or quieter attach buttons than the bordered `md` default. */
 export type FeedbackComposerAttachment = Omit<FeedbackNoteAttachment, "labels" | "onError"> & {
-  labels?: Partial<FeedbackAttachmentLabels>;
+  labels?: LabelOverride<FeedbackAttachmentLabels>;
   onError?: FeedbackAttachmentFieldSingleProps["onError"];
 } & Pick<FeedbackAttachmentFieldSingleProps, "buttonVariant" | "buttonSize">;
 
@@ -625,7 +624,7 @@ export interface FeedbackComposerProps {
   /** {@link FeedbackComposerHandle}: put text into the draft from outside (canned-reply
    *  chips) or focus the box. */
   ref?: Ref<FeedbackComposerHandle>;
-  labels?: Partial<FeedbackComposerLabels>;
+  labels?: LabelOverride<FeedbackComposerLabels>;
   className?: string;
   /**
    * `"sm"` for a narrow host — keksdose's assistant launcher, a small floating panel
@@ -676,8 +675,13 @@ const isApple = () =>
  * and Send — Ctrl/⌘+Enter sends, the shortcut the report dialog and the note editor
  * use, so the habit carries across the feature. Plain Enter is a new line: feedback is
  * written in paragraphs, unlike a chat — which `sendOn="enter"` is for (keksdose G5).
+ *
+ * Named for what it is since 0.22 (keksdose K17): the component was never
+ * feedback-specific — a textarea, an optional picture or a host's upload slot, Send,
+ * `sendOn="enter"` for the chat way — and keksdose's assistant and support chat are
+ * chats, not reports. `FeedbackComposer` is its old name, deprecated in 0.34.
  */
-export function FeedbackComposer({
+export function ChatComposer({
   onSend,
   pending = false,
   attachment,
@@ -759,9 +763,10 @@ export function FeedbackComposer({
     () => "Ctrl",
   );
 
-  if (disabledReason != null && disabledReason !== false) {
+  // The kit's one presence rule (DUP-11): `""` is no reason either, so it keeps the box.
+  if (hasContent(disabledReason)) {
     return (
-      <p {...rootAttributes} className={cn("text-xs text-[var(--text-muted)]", className)}>
+      <p {...rootAttributes} className={cn("text-xs text-muted", className)}>
         {disabledReason}
       </p>
     );
@@ -855,7 +860,7 @@ export function FeedbackComposer({
         <div className="ms-auto flex items-center gap-2">
           <span
             id={hintId}
-            className={size === "sm" ? "sr-only" : "text-xs text-[var(--text-placeholder)]"}
+            className={size === "sm" ? "sr-only" : "text-xs text-placeholder"}
           >
             {sendOn === "enter" ? labels.sendHintEnter : labels.sendHint(modifier)}
           </span>
@@ -888,15 +893,11 @@ function dataAttributes(props: object): Record<string, unknown> {
 }
 
 /**
- * {@link FeedbackComposer} under a name that is not about feedback (keksdose K17).
- *
- * The component was never feedback-specific: a textarea, an optional picture or a
- * host's upload slot, Send, `sendOn="enter"` for the chat way. keksdose's assistant
- * and support chat are chats, not reports, and an import of `FeedbackComposer` there
- * reads as a mistake to the next person. The same function, not a wrapper, so the
- * two names cannot drift.
+ * @deprecated 0.34 — `ChatComposer`, the same function under the name that is not about
+ * feedback; removed in 0.35 (refactor audit 2026-10, API-6d). keksdose's support thread
+ * is the one app site.
  */
-export const ChatComposer = FeedbackComposer;
+export const FeedbackComposer = ChatComposer;
 /** {@link FeedbackComposerProps}, for {@link ChatComposer}. */
 export type ChatComposerProps = FeedbackComposerProps;
 /** {@link FeedbackComposerHandle}, for {@link ChatComposer}. */

@@ -1,11 +1,14 @@
-import { forwardRef, useCallback, useContext, useEffect, useId, useRef } from "react";
+import { useCallback, useContext, useEffect, useId, useRef } from "react";
 import { Check, Minus } from "lucide-react";
-import type { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
+import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
-import { assignRef, hasMessage, mergeDescribedBy } from "./choice-parts";
+import { hasContent } from "../lib/presence";
 import {
+  assignRef,
   DISABLED_REASON_LINE_CLASS,
+  FIELD_ERROR_CLASS,
   LockedReason,
+  mergeDescribedBy,
   RequiredStarOnLegend,
   useDisabledReasonLine,
   useLockReason,
@@ -38,9 +41,9 @@ import type { CommitScope } from "./write-lock";
 // touching a --brand-filled (checked) box would be a ring painted in the colour it sits
 // on — present in the DOM and invisible on screen. The offset is what separates the two.
 const BOX =
-  "peer size-4 shrink-0 cursor-pointer appearance-none rounded border border-[var(--border-strong)] bg-[var(--bg-surface)] shadow-sm transition-colors " +
-  "checked:border-[var(--brand)] checked:bg-[var(--brand)] " +
-  `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)] ` +
+  "peer size-4 shrink-0 cursor-pointer appearance-none rounded border border-strong bg-surface shadow-sm transition-colors " +
+  "checked:border-brand checked:bg-brand " +
+  `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-surface ` +
   "disabled:cursor-not-allowed";
 
 /**
@@ -58,15 +61,13 @@ const LABEL_TOUCH_LARGE =
 // A mixed box wears the checked fill whether or not the underlying input is checked:
 // `indeterminate` is a property the browser keeps separately from `checked`, and the
 // dash means "some", which is neither answer.
-const BOX_MIXED = "border-[var(--brand)] bg-[var(--brand)]";
+const BOX_MIXED = "border-brand bg-brand";
 
 // The same geometry as FIELD_INVALID — a border plus a 1px ring, so the highlight
-// survives fractional display scaling on every edge (see the note in ui.tsx). The
+// survives fractional display scaling on every edge (see the note on FIELD_BASE in field-base.tsx). The
 // focus ring turns danger too, so focusing a wrong box does not repaint it as fine.
 const BOX_INVALID =
-  "border-[var(--danger-border-strong)] ring-1 ring-[var(--danger-border-strong)] checked:border-[var(--danger-border-strong)] focus-visible:ring-[var(--danger)]";
-
-const ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+  "border-danger-strong ring-1 ring-danger-strong checked:border-danger-strong focus-visible:ring-[var(--danger)]";
 
 export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   /**
@@ -136,6 +137,9 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
    * No provider, or an unlocked one: no effect. Button's `commit`, for keksdose K3.
    */
   commit?: CommitScope;
+  /** The `<input type="checkbox">`. A React 19 ref prop since 0.34 (MOD-4, refactor
+   *  audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -148,28 +152,26 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
  * (`checked`, `defaultChecked`, `name`, `required`, `data-*`, `aria-*`), so it works
  * controlled, uncontrolled, and inside a plain `<form>`.
  */
-export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-  {
-    label,
-    description,
-    indeterminate = false,
-    invalid,
-    error,
-    onCheckedChange,
-    onChange,
-    className,
-    inputClassName,
-    id,
-    disabled,
-    required,
-    disabledReason,
-    disabledReasonDisplay,
-    commit,
-    onClick,
-    ...rest
-  },
+export function Checkbox({
   ref,
-) {
+  label,
+  description,
+  indeterminate = false,
+  invalid,
+  error,
+  onCheckedChange,
+  onChange,
+  className,
+  inputClassName,
+  id,
+  disabled,
+  required,
+  disabledReason,
+  disabledReasonDisplay,
+  commit,
+  onClick,
+  ...rest
+}: CheckboxProps) {
   const generated = useId();
   const inputId = id ?? generated;
   const lock = useLockReason(commit, disabledReason);
@@ -182,8 +184,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
   const starOnLegend = useContext(RequiredStarOnLegend);
   const descriptionId = `${inputId}-description`;
   const errorId = `${inputId}-error`;
-  const showError = hasMessage(error);
-  const showDescription = hasMessage(description);
+  const showError = hasContent(error);
+  const showDescription = hasContent(description);
   const isInvalid = Boolean(invalid) || showError;
   // Nothing to lay out beside the box: render the box alone, as the raw input was.
   const bare = label === undefined && !showDescription && !showError;
@@ -259,13 +261,13 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         <Minus
           aria-hidden
           strokeWidth={3}
-          className="pointer-events-none absolute inset-0 m-auto size-3 text-[var(--brand-contrast)]"
+          className="pointer-events-none absolute inset-0 m-auto size-3 text-brand-contrast"
         />
       ) : (
         <Check
           aria-hidden
           strokeWidth={3}
-          className="pointer-events-none invisible absolute inset-0 m-auto size-3 text-[var(--brand-contrast)] peer-checked:visible"
+          className="pointer-events-none invisible absolute inset-0 m-auto size-3 text-brand-contrast peer-checked:visible"
         />
       )}
     </span>
@@ -307,7 +309,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           <label
             htmlFor={inputId}
             className={cn(
-              "block text-sm leading-5 text-[var(--text-primary)]",
+              "block text-sm leading-5 text-primary",
               // `select-none`: a double-click to toggle twice would otherwise select the
               // words, and a drag that starts on them starts a native text drag.
               looksDisabled ? "cursor-not-allowed" : "cursor-pointer select-none",
@@ -317,14 +319,14 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           >
             {label}
             {required && !starOnLegend && (
-              <span aria-hidden className="ms-0.5 text-[var(--danger)]">
+              <span aria-hidden className="ms-0.5 text-danger">
                 *
               </span>
             )}
           </label>
         )}
         {showDescription && (
-          <span id={descriptionId} className={cn("mt-0.5 block text-xs text-[var(--text-muted)]", dimParts && "opacity-60")}>
+          <span id={descriptionId} className={cn("mt-0.5 block text-xs text-muted", dimParts && "opacity-60")}>
             {description}
           </span>
         )}
@@ -334,12 +336,11 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           </span>
         )}
         {showError && (
-          <span id={errorId} className={cn("block", ERROR_CLASS)}>
+          <span id={errorId} className={cn("block", FIELD_ERROR_CLASS)}>
             {error}
           </span>
         )}
       </span>
     </div>
   );
-});
-Checkbox.displayName = "Checkbox";
+}

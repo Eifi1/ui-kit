@@ -67,7 +67,7 @@ export default tseslint.config(
       // The kit deliberately uses `{}` and non-null assertions in a few measured places;
       // `tsc --noEmit` with `strict` already covers what matters here.
       "@typescript-eslint/no-non-null-assertion": "off",
-      // date-picker.tsx has a comment explaining a deliberate `\u00a0`, and the only way
+      // date-field.tsx has a comment explaining a deliberate `\u00a0`, and the only way
       // to explain a non-breaking space is to write one.
       "no-irregular-whitespace": ["error", { skipComments: true }],
       "@typescript-eslint/no-empty-object-type": "off",

@@ -1,5 +1,6 @@
 import { Children, Fragment } from "react";
-import type { ReactNode } from "react";
+import type { ContextType, ReactNode } from "react";
+import type { UNSAFE_LocationContext } from "react-router";
 import { cn } from "@eifi1/ui-kit";
 
 /**
@@ -25,9 +26,9 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-16 border-t border-[var(--border)] pt-8 first:border-t-0">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
-      {blurb && <p className="mt-1 max-w-3xl text-sm text-[var(--text-secondary)]">{inlineCode(blurb)}</p>}
+    <section id={id} className="scroll-mt-16 border-t border-subtle pt-8 first:border-t-0">
+      <h2 className="text-lg font-semibold text-primary">{title}</h2>
+      {blurb && <p className="mt-1 max-w-3xl text-sm text-secondary">{inlineCode(blurb)}</p>}
       <div className="mt-5 space-y-6">{children}</div>
     </section>
   );
@@ -66,14 +67,14 @@ export function Example({
         {/* `overflow-wrap: anywhere` for a label that is an identifier with no break of
             its own: "selectableFeedbackStatuses(current)" ran 16 px past a 360 px phone
             at Extra large (0.32.1). Words still break only at their spaces. */}
-        <h3 id={id} className="min-w-0 scroll-mt-6 text-sm font-medium text-[var(--text-primary)] [overflow-wrap:anywhere]">
+        <h3 id={id} className="min-w-0 scroll-mt-6 text-sm font-medium text-primary [overflow-wrap:anywhere]">
           {label}
         </h3>
-        {hint && <span className="text-xs text-[var(--text-muted)]">{inlineCode(hint)}</span>}
+        {hint && <span className="text-xs text-muted">{inlineCode(hint)}</span>}
       </div>
       <div
         className={cn(
-          "rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4",
+          "rounded-lg border border-subtle bg-surface p-4",
           className,
         )}
       >
@@ -98,7 +99,7 @@ export function Row({ children, className }: { children: ReactNode; className?: 
  *  margin collapses into the gap that is already there, so nothing doubles. */
 export function Note({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-3 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2 text-xs text-[var(--text-secondary)] first:mt-0">
+    <p className="mt-3 rounded-md border border-subtle bg-surface-2 px-3 py-2 text-xs text-secondary first:mt-0">
       {inlineCode(children)}
     </p>
   );
@@ -138,13 +139,69 @@ export function inlineCode(node: ReactNode): ReactNode {
   return node;
 }
 
+/* ── The demos' small helpers ──
+ *
+ * Each of these was copied into the section files that needed it — `code` into 81 of
+ * them, `READOUT` into 43, a timer promise into 21 under two names and six defaults —
+ * until the refactor audit of 2026-10 (DOC-8) moved them here. A demo that wants a
+ * different one writes its own under a different name. */
+
+/** A `code` span written inside JSX — `{code("onChange")}`; a string attribute uses
+ *  backticks instead (see {@link inlineCode}). `anywhere`: an identifier has no space to
+ *  break at, and at Extra large on a phone it is wider than the note it sits in. */
+export function code(s: string): ReactNode {
+  return (
+    <code dir="ltr" className="font-mono [overflow-wrap:anywhere]">
+      {s}
+    </code>
+  );
+}
+
+/** A live value under a specimen: what a callback last said, a hook's answer. */
+export const READOUT = "font-mono text-xs text-secondary";
+/** A readout holding long identifiers or JSON: it may break inside them. Not for a cell
+ *  of an `OutTable` (see `softBreaks`, which explains what `anywhere` does to a table). */
+export const READOUT_WRAP = `${READOUT} [overflow-wrap:anywhere]`;
+/** A readout whose line breaks and indents are part of the value (a payload, a log). */
+export const READOUT_PRE = `${READOUT} whitespace-pre-wrap [overflow-wrap:anywhere]`;
+
+/** The app's side of a pretend request: a promise that settles after `ms`. Each demo
+ *  names its own duration — long enough to see the pending state, short enough not to
+ *  wait for. */
+export function beat(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** The raw value under a specimen, so what the component emits is visible — a
+ *  controlled component is only demonstrably controlled once you can watch the state
+ *  it is driven by change underneath it. `label="value"` prints `value = …`. */
+export function StateLine({ children, label }: { children: ReactNode; label?: string }) {
+  return (
+    <p className="mt-2 font-mono text-xs text-muted [overflow-wrap:anywhere]">
+      {label && `${label} = `}
+      {children}
+    </p>
+  );
+}
+
+/**
+ * React Router refuses a router inside a router. `null` is what a `LocationContext` holds
+ * outside any router, so a specimen with a history of its own — a boxed-in AppShell, a
+ * landing page, the billing banners — renders
+ *
+ *   <UNSAFE_LocationContext.Provider value={NO_ROUTER}><MemoryRouter>…
+ *
+ * and its links move ITS router, not the showcase's. The documented escape hatch.
+ */
+export const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
+
 /** A single design token, shown as the colour plus the value that produced it. */
 export function Swatch({ name, value }: { name: string; value: string }) {
   return (
     <div className="flex min-w-0 items-center gap-2">
       <span
         aria-hidden
-        className="size-8 shrink-0 rounded-md border border-[var(--border)]"
+        className="size-8 shrink-0 rounded-md border border-subtle"
         style={{ background: value }}
       />
       {/* `truncate-until-large` (0.33): one line at Normal; at Large a token's name wraps
@@ -227,12 +284,12 @@ export function OutTable({ rows }: { rows: Array<[expression: string, result: Re
           {rows.map(([expr, result], i) => (
             <tr
               key={i}
-              className="border-b border-[var(--border)] last:border-b-0 max-md:@max-sm:block max-md:@max-sm:py-1.5"
+              className="border-b border-subtle last:border-b-0 max-md:@max-sm:block max-md:@max-sm:py-1.5"
             >
-              <td className="py-1.5 pr-4 align-top font-mono break-words text-[var(--text-secondary)] max-md:@max-sm:block max-md:@max-sm:p-0">
+              <td className="py-1.5 pr-4 align-top font-mono break-words text-secondary max-md:@max-sm:block max-md:@max-sm:p-0">
                 {breakable(expr)}
               </td>
-              <td className="py-1.5 align-top font-mono font-medium break-words text-[var(--text-primary)] max-md:@max-sm:block max-md:@max-sm:ps-3 max-md:@max-sm:pt-0.5 max-md:@max-sm:pb-0">
+              <td className="py-1.5 align-top font-mono font-medium break-words text-primary max-md:@max-sm:block max-md:@max-sm:ps-3 max-md:@max-sm:pt-0.5 max-md:@max-sm:pb-0">
                 {breakable(result)}
               </td>
             </tr>
@@ -252,10 +309,10 @@ export function ConstList({ items }: { items: Array<[name: string, value: string
     <dl className="space-y-2">
       {items.map(([name, value]) => (
         <div key={name}>
-          <dt className="font-mono text-xs font-medium break-words text-[var(--text-primary)]">
+          <dt className="font-mono text-xs font-medium break-words text-primary">
             {softBreaks(name)}
           </dt>
-          <dd className="break-words font-mono text-caption leading-relaxed text-[var(--text-muted)]">
+          <dd className="break-words font-mono text-caption leading-relaxed text-muted">
             {softBreaks(value)}
           </dd>
         </div>
@@ -280,7 +337,7 @@ export function Stage({ children, className }: { children: ReactNode; className?
   return (
     <div
       className={cn(
-        "mb-3 flex flex-wrap items-start justify-center gap-4 rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-page)] px-4 py-8",
+        "mb-3 flex flex-wrap items-start justify-center gap-4 rounded-md border border-dashed border-subtle bg-page px-4 py-8",
         "[&>*]:w-80 [&>*]:max-w-full [&>[data-stage=wide]]:w-full",
         className,
       )}

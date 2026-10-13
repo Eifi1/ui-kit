@@ -1,8 +1,9 @@
-import { forwardRef, useRef } from "react";
-import type { InputHTMLAttributes } from "react";
+import { useMemo, useRef } from "react";
+import type { InputHTMLAttributes, Ref } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FIELD_BASE, FIELD_TOUCH_TEXT } from "./ui";
+import { FIELD_BASE, FIELD_TOUCH_TEXT } from "./field-base";
+import { mergeRefs } from "./field-parts";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
 interface SearchFieldOwnProps
@@ -15,15 +16,6 @@ interface SearchFieldOwnProps
    *  four this replaced wanted the string, and one of them held it in a URL param
    *  rather than in state. */
   onChange: (value: string) => void;
-  /**
-   * The field's accessible name.
-   *
-   * @deprecated Pass `aria-label` instead — the DOM spelling this kit standardised on
-   * when it found three names for one idea (`ariaLabel`, `aria-label`, and this).
-   * Unchanged and still supported; it names the field only when `aria-label` is
-   * absent, so a consumer can migrate one call site at a time.
-   */
-  label?: string;
   /** Names the clear button. Default: the catalogue's `common.clear`, in the
    *  provider's language. */
   clearLabel?: string;
@@ -62,20 +54,22 @@ interface SearchFieldOwnProps
 // itself) without even its baseline, because the header it sits in already draws
 // the line. No `text-*` size, on purpose — the input inherits the caller's.
 const SEARCH_INLINE =
-  "block w-full min-w-0 border-0 bg-transparent py-1 text-[var(--text-primary)] shadow-none placeholder:text-[var(--text-placeholder)] focus:outline-none focus:ring-0 " +
+  "block w-full min-w-0 border-0 bg-transparent py-1 text-primary shadow-none placeholder:text-placeholder focus:outline-none focus:ring-0 " +
   // FIELD_BASE carries the 16 px touch floor (§10.1); the inline look needs it too.
   FIELD_TOUCH_TEXT;
 
 /**
- * One of the two spellings is REQUIRED, and the union is how that survives the
- * deprecation. Making `label` merely optional would have been the easy change and the
- * wrong one: the whole reason this component exists is that two of the four boxes it
- * replaced were named by nothing but their placeholder — which disappears the moment
- * someone types, i.e. exactly when a screen-reader user is working in the field. A
- * caller now has a choice of spelling; it still has no option to pass neither.
+ * `aria-label` is REQUIRED: the whole reason this component exists is that two of the
+ * four boxes it replaced were named by nothing but their placeholder — which disappears
+ * the moment someone types, i.e. exactly when a screen-reader user is working in the
+ * field. The `label` spelling it also took from 0.5 was removed in 0.34.
  */
-export type SearchFieldProps = SearchFieldOwnProps &
-  ({ "aria-label": string; label?: string } | { label: string; "aria-label"?: string });
+export type SearchFieldProps = SearchFieldOwnProps & {
+  "aria-label": string;
+  /** The `<input>`. A React 19 ref prop since 0.34 (MOD-4, refactor audit 2026-10); it
+   *  was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
+};
 
 /**
  * The page-level filter box: a search icon, a `type="search"` input, and a clear
@@ -106,47 +100,40 @@ export type SearchFieldProps = SearchFieldOwnProps &
  * and matches the app's other icon buttons, and it returns focus to the input so
  * the next query can be typed straight away.
  */
-export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(function SearchField(
-  {
-    value,
-    onChange,
-    label,
-    clearLabel: clearLabelProp,
-    clearable = true,
-    className,
-    inputClassName,
-    placeholder,
-    variant = "field",
-    "aria-label": ariaLabel,
-    ...rest
-  },
+export function SearchField({
   ref,
-) {
+  value,
+  onChange,
+  clearLabel: clearLabelProp,
+  clearable = true,
+  className,
+  inputClassName,
+  placeholder,
+  variant = "field",
+  "aria-label": ariaLabel,
+  ...rest
+}: SearchFieldProps) {
   const innerRef = useRef<HTMLInputElement>(null);
+  const setRef = useMemo(() => mergeRefs(innerRef, ref), [ref]);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const clearLabel = clearable ? (clearLabelProp ?? common.clear) : undefined;
-  // Whichever spelling the caller used. It is the accessible name AND the placeholder
-  // fallback, so a box named only by `aria-label` still says what it is before anyone
-  // has typed in it — the same deal `label` has always had.
-  const name = ariaLabel ?? label;
+  // The accessible name AND the placeholder fallback, so the box says what it is
+  // before anyone has typed in it.
+  const name = ariaLabel;
   const inline = variant === "inline";
   return (
     <div className={cn("relative", className)}>
       <Search
         aria-hidden
         className={cn(
-          "pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]",
+          "pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-placeholder",
           // Logical sides throughout, so a right-to-left page gets the icon at the
           // start of the line and the clear button at its end.
           inline ? "start-0" : "start-3",
         )}
       />
       <input
-        ref={(node) => {
-          innerRef.current = node;
-          if (typeof ref === "function") ref(node);
-          else if (ref) ref.current = node;
-        }}
+        ref={setRef}
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -194,7 +181,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
           }}
           aria-label={clearLabel}
           className={cn(
-            "absolute top-1/2 -translate-y-1/2 rounded p-1 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]",
+            "absolute top-1/2 -translate-y-1/2 rounded p-1 text-placeholder hover:text-secondary",
             inline ? "end-0" : "end-2",
           )}
         >
@@ -203,5 +190,4 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
       )}
     </div>
   );
-});
-SearchField.displayName = "SearchField";
+}

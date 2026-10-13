@@ -6,6 +6,9 @@ import { Combobox, InlineEntityCombobox } from "../combobox";
 import { AmountInput } from "../amount-input";
 import { DatePicker, DateRangePicker } from "../date-picker";
 import { NumberInput } from "../number-input";
+import { MultiSelect } from "../multi-select";
+import { Autocomplete } from "../autocomplete";
+import { FIELD_INVALID } from "../field-base";
 
 /**
  * `Field`'s render-prop hands `{ id, aria-describedby, aria-invalid, aria-required }`
@@ -162,6 +165,52 @@ describe("controls take Field's render-prop spread on their focusable element", 
     const input = screen.getByRole("textbox", { name: "Share" });
     expectWired(input, fieldId);
     expect(input.className).toMatch(/danger/);
+  });
+
+  // DUP-8 (refactor audit 2026-10): MultiSelect left the spread's id, aria-invalid and
+  // aria-required on its wrapper <div>, where its four siblings move them to the trigger.
+  it("MultiSelect: on the trigger, not the wrapper", () => {
+    let fieldId = "";
+    render(
+      <Field label="Accounts" hint="The hint" error="Required" required>
+        {(ids) => {
+          fieldId = ids.id;
+          return (
+            <MultiSelect
+              {...ids}
+              data-testid="wrapper"
+              values={[]}
+              onChange={vi.fn()}
+              options={[{ value: 1, label: "Anna" }]}
+            />
+          );
+        }}
+      </Field>,
+    );
+    const trigger = screen.getByRole("combobox", { name: /^Accounts/ });
+    expectWired(trigger, fieldId);
+    expect(trigger.className).toMatch(/danger/);
+    const wrapper = screen.getByTestId("wrapper");
+    for (const attr of ["id", "aria-describedby", "aria-invalid", "aria-required"]) {
+      expect(wrapper).not.toHaveAttribute(attr);
+    }
+  });
+
+  // DUP-8: Autocomplete announced a form library's aria-invalid and did not paint it —
+  // the defect useFieldError's fourth argument exists for.
+  it("Autocomplete: on the input, and aria-invalid paints", () => {
+    let fieldId = "";
+    render(
+      <Field label="Street" hint="The hint" error="Required" required>
+        {(ids) => {
+          fieldId = ids.id;
+          return <Autocomplete {...ids} value="" onChange={vi.fn()} />;
+        }}
+      </Field>,
+    );
+    const input = screen.getByRole("combobox", { name: "Street" });
+    expectWired(input, fieldId);
+    for (const token of FIELD_INVALID.split(" ")) expect(input).toHaveClass(token);
   });
 });
 

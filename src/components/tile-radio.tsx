@@ -136,17 +136,17 @@ const TILE_BASE =
   "relative inline-flex shrink-0 items-center justify-center rounded-md border transition-colors " +
   "focus:outline-none " +
   FOCUS_RING +
-  " focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] " +
+  " focus-visible:ring-offset-2 focus-visible:ring-offset-surface " +
   "disabled:cursor-not-allowed disabled:opacity-50";
 const TILE_IDLE =
-  "border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)]";
+  "border-subtle bg-surface hover:border-strong hover:bg-hover";
 const TILE_SELECTED =
-  "border-[var(--text-primary)] bg-[var(--bg-surface)] ring-1 ring-[var(--text-primary)]";
+  "border-[var(--text-primary)] bg-surface ring-1 ring-[var(--text-primary)]";
 /** A locked tile: the disabled look without `disabled` — dimmed, a not-allowed cursor. */
 const TILE_LOCKED = "cursor-not-allowed opacity-50";
 /** …and no hover offer on an idle one, which cannot be chosen. Not on the selected
  *  tile, whose frame IS its state. */
-const TILE_LOCKED_IDLE = "hover:border-[var(--border)] hover:bg-[var(--bg-surface)]";
+const TILE_LOCKED_IDLE = "hover:border-subtle hover:bg-surface";
 
 /** `undefined`, `null`, `false` and `""` are no reason — what `cond && "…"` gives. */
 function isLocked(item: TileItem<string>): boolean {
@@ -270,7 +270,7 @@ export function TileRadioGroup<T extends string>({
             )}
           >
             {item.key === null ? (
-              <Ban aria-hidden className={cn(s.glyph, "text-[var(--text-muted)]")} />
+              <Ban aria-hidden className={cn(s.glyph, "text-muted")} />
             ) : (
               renderTile(item, selected)
             )}
@@ -312,7 +312,7 @@ export function TileRadioGroup<T extends string>({
               item.note || locked ? (
                 <>
                   <span className="block">{item.label}</span>
-                  {item.note && <span className="block font-normal text-[var(--text-muted)]">{item.note}</span>}
+                  {item.note && <span className="block font-normal text-muted">{item.note}</span>}
                   {/* The reason in the body colour: it is the news, the note is
                       standing context. */}
                   {locked && <span className="block font-normal">{item.disabledReason}</span>}

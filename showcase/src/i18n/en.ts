@@ -132,7 +132,7 @@ export const en: Dictionary = {
       title: "User administration",
       short: "Users",
       blurb:
-        "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log, invitations, handing work on, and the operator's plan column and plan change.",
+        "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
     },
     subscription: {
       title: "Subscription",
@@ -377,7 +377,7 @@ export const en: Dictionary = {
       title: "Series chart",
       short: "Series",
       blurb:
-        "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, and the helpers underneath.",
+        "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, a row budget for long tables, and the helpers underneath.",
     },
     "series-chart-marks": {
       title: "Series chart: bars, areas & time",
@@ -542,7 +542,7 @@ export const en: Dictionary = {
       title: "Billing",
       short: "Billing",
       blurb:
-        "Plans and their limits, the subscription's standing with the trial's and the beta's dates, the read-only gate on lapse, and Paddle's and Lemon Squeezy's webhooks: signatures checked, events normalised, one dispatch.",
+        "Plans and their limits, the subscription's standing with the trial's and the beta's dates, the read-only gate on lapse, and Paddle's webhooks: signatures checked, events normalised, one dispatch.",
     },
     "server-mail": {
       title: "Mail",
@@ -560,7 +560,7 @@ export const en: Dictionary = {
       title: "Limits, errors & CORS",
       short: "Limits",
       blurb:
-        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, and CORS for a few extra origins.",
+        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, and the scheduler's token on job routes.",
     },
     "server-translation-review": {
       title: "Translation review",
@@ -1238,7 +1238,7 @@ export const en: Dictionary = {
     "server-billing": [
       "check a plan limit on the server",
       "verify a webhook signature",
-      "handle Paddle and Lemon Squeezy events",
+      "handle Paddle events",
       "is the subscription in good standing",
       "trial and beta end dates",
       "refuse writes when billing lapses",

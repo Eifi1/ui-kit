@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { KIT_LANGUAGES } from "../i18n/languages";
 import type { KitLanguageCode } from "../i18n/languages";
 import { AlertBanner } from "../components/alert-banner";
@@ -8,9 +8,10 @@ import { CheckboxGroup } from "../components/checkbox-group";
 import type { CheckboxGroupOption } from "../components/checkbox-group";
 import { FormActions } from "../components/form-actions";
 import { Caption } from "../components/text";
-import { hasMessage } from "./admin-parts";
+import { hasContent } from "../lib/presence";
 import type { MaybePromise } from "./admin-parts";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_REVIEWER_SCOPE_LABELS } from "./reviewer-scope-editor-labels";
 
 /**
  * Who may review which translations: the REVIEWER role and its scope, in one editor
@@ -71,15 +72,8 @@ export interface ReviewerScopeLabels {
   failed: string;
 }
 
-export const DEFAULT_REVIEWER_SCOPE_LABELS: ReviewerScopeLabels = {
-  languages: "Languages",
-  hint: "Tick the languages this person reviews.",
-  none: "No language: saving takes the reviewer role away.",
-  areas: "Limit to",
-  legalOnly: "Only the legal pages",
-  legalOnlyHint: "Imprint, Privacy Policy and Terms — for a lawyer rather than a native speaker.",
-  failed: "The reviewer scope couldn’t be saved. Please try again.",
-};
+// Defined in ./reviewer-scope-editor-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_REVIEWER_SCOPE_LABELS };
 
 export interface ReviewerScopeEditorProps {
   /** The scope the server has — the draft starts from it. Key the editor by the
@@ -109,7 +103,7 @@ export interface ReviewerScopeEditorProps {
   columns?: 1 | 2 | 3 | 4;
   /** Save COMMITS: under a locked `WriteLockProvider` it is held with the lock's reason. */
   commit?: CommitScope;
-  labels?: Partial<ReviewerScopeLabels>;
+  labels?: LabelOverride<ReviewerScopeLabels>;
 }
 
 function languageOptions(languages: ReviewerScopeEditorProps["languages"]): CheckboxGroupOption[] {
@@ -154,7 +148,7 @@ export function ReviewerScopeEditor({
   const [areas, setAreas] = useState<string[]>(savedAreas);
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<ReactNode>(null);
-  const locked = hasMessage(disabledReason);
+  const locked = hasContent(disabledReason);
 
   const nextAreas = locales.length === 0 ? [] : areas;
   const dirty = !sameSet(locales, savedLocales) || !sameSet(nextAreas, locales.length === 0 ? [] : savedAreas);
@@ -180,14 +174,14 @@ export function ReviewerScopeEditor({
       (error: unknown) => {
         setPending(false);
         const own = describeError?.(error);
-        setFailure(hasMessage(own) ? own : labels.failed);
+        setFailure(hasContent(own) ? own : labels.failed);
       },
     );
   };
 
   return (
     <div className="space-y-3">
-      {intro && <div className="text-sm text-[var(--text-secondary)]">{intro}</div>}
+      {intro && <div className="text-sm text-secondary">{intro}</div>}
       <CheckboxGroup
         legend={labels.languages}
         options={languageOptions(languages)}

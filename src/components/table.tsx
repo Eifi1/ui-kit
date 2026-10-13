@@ -2,7 +2,7 @@ import { Children, createContext, useCallback, useContext, useId, useLayoutEffec
 import type { ComponentPropsWithRef, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useEdgeFade } from "../lib/strip-fade";
-import { assignRef } from "./choice-parts";
+import { assignRef } from "./field-parts";
 import { THIN_SCROLLBAR_CLASS, useScrollOverflow } from "./scroll-area";
 
 /** `none` (0.10.0): no cell padding at all — keksdose's VAT summary, a table set
@@ -243,7 +243,7 @@ const STACK_PHONE_CLASSES = cn(
   "max-sm:[&_tbody_td]:block max-sm:[&_tbody_td]:px-0 max-sm:[&_tbody_td]:py-0.5 max-sm:[&_tbody_td]:text-start",
   "max-sm:[&_tfoot_td]:block max-sm:[&_tfoot_td]:px-0 max-sm:[&_tfoot_td]:py-0.5",
   "max-sm:[&_tbody_td:first-child]:font-medium",
-  "max-sm:[&_td[data-label]]:before:block max-sm:[&_td[data-label]]:before:text-caption max-sm:[&_td[data-label]]:before:font-medium max-sm:[&_td[data-label]]:before:text-[var(--text-muted)] max-sm:[&_td[data-label]]:before:content-[attr(data-label)]",
+  "max-sm:[&_td[data-label]]:before:block max-sm:[&_td[data-label]]:before:text-caption max-sm:[&_td[data-label]]:before:font-medium max-sm:[&_td[data-label]]:before:text-muted max-sm:[&_td[data-label]]:before:content-[attr(data-label)]",
 );
 
 /**
@@ -352,9 +352,9 @@ export function Table({
           "relative w-full overflow-x-auto",
           // On the scroll wrapper itself, so its clipping keeps the rows inside the
           // rounded corners.
-          framed && "rounded-md border border-[var(--border)]",
+          framed && "rounded-md border border-subtle",
           THIN_SCROLLBAR_CLASS,
-          "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
+          "focus-visible:outline-focus focus-visible:-outline-offset-2 focus-visible:outline-brand",
           wrapperClassName,
         )}
       >
@@ -363,7 +363,7 @@ export function Table({
           ref={setTableRef}
           aria-label={ariaLabel}
           className={cn(
-            "w-full caption-bottom border-collapse text-sm text-[var(--text-primary)]",
+            "w-full caption-bottom border-collapse text-sm text-primary",
             density === "compact" && "text-xs",
             layout === "fixed" && "table-fixed",
             layout === "auto" && "table-auto",
@@ -385,7 +385,7 @@ export interface TableHeadProps extends ComponentPropsWithRef<"thead"> {
 export function TableHead({ bordered = true, className, ...rest }: TableHeadProps) {
   return (
     <SectionContext.Provider value="head">
-      <thead {...rest} className={cn(bordered && "border-b border-[var(--border)]", className)} />
+      <thead {...rest} className={cn(bordered && "border-b border-subtle", className)} />
     </SectionContext.Provider>
   );
 }
@@ -461,7 +461,7 @@ export function TableEmpty({ children, colSpan, cellClassName, className, ...res
         className={cn(
           // `none` keeps the message off the edges regardless: it is text, not a figure.
           density === "none" ? "py-2" : CELL_PAD[density],
-          "text-center text-[var(--text-muted)]",
+          "text-center text-muted",
           cellClassName,
         )}
       >
@@ -478,18 +478,18 @@ export type TableFootProps = ComponentPropsWithRef<"tfoot">;
 export function TableFoot({ className, ...rest }: TableFootProps) {
   return (
     <SectionContext.Provider value="foot">
-      <tfoot {...rest} className={cn("border-t border-[var(--border-strong)] font-medium", className)} />
+      <tfoot {...rest} className={cn("border-t border-strong font-medium", className)} />
     </SectionContext.Provider>
   );
 }
 
 const ROW_VARIANT: Record<TableRowVariant, string | false> = {
   row: false,
-  group: "bg-[var(--bg-surface-2)] font-semibold",
+  group: "bg-surface-2 font-semibold",
   subtotal: "font-medium",
   // A 2px rule over the 1px divider the row above draws on its bottom: collapsed
   // borders meet on one line, the wider wins, and the heavier rule is what says "sum".
-  total: "border-t-2 border-t-[var(--border-strong)] font-semibold",
+  total: "border-t-2 border-t-strong font-semibold",
 };
 
 /** The deprecated HTML `valign` attribute is replaced by a class-backed one. */
@@ -516,9 +516,9 @@ export function TableRow({ valign, variant = "row", bordered, className, ref: re
       {...rest}
       data-variant={variant === "row" ? undefined : variant}
       className={cn(
-        body && (bordered ?? rowDividers) && "border-b border-[var(--border)]",
-        record && zebra && "even:bg-[var(--bg-surface-2)]",
-        record && hover && "transition-colors hover:bg-[var(--bg-hover)]",
+        body && (bordered ?? rowDividers) && "border-b border-subtle",
+        record && zebra && "even:bg-surface-2",
+        record && hover && "transition-colors hover:bg-hover",
         // A zebra row rests on the well, and `--bg-hover` sits only 1.00–1.02:1 from it
         // (0.33: the light well is the page colour): it hovers to the card instead, the
         // one fill that both steps 1.09–1.13:1 from the well and keeps every text role at
@@ -591,7 +591,7 @@ export function TableHeaderCell({
         numeric && "tabular-nums",
         VALIGN[valign ?? rowVAlign ?? (head ? "bottom" : "top")],
         HEADER_WEIGHT[weight],
-        head ? "text-[var(--text-muted)]" : "text-[var(--text-secondary)]",
+        head ? "text-muted" : "text-secondary",
         textSize && HEADER_SIZE[textSize],
         className,
       )}
@@ -637,7 +637,7 @@ export function TableCaption({ className, id, ...rest }: TableCaptionProps) {
     <caption
       {...rest}
       id={id ?? captionId}
-      className={cn("mt-2 text-start text-sm text-[var(--text-muted)]", className)}
+      className={cn("mt-2 text-start text-sm text-muted", className)}
     />
   );
 }

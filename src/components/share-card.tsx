@@ -2,8 +2,9 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Trash2, UserPlus, UsersRound } from "lucide-react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
+import { foldForSearch } from "../lib/text-match";
 import { AlertBanner } from "./alert-banner";
 import { Autocomplete } from "./autocomplete";
 import type { ComboOption } from "./combobox-core";
@@ -17,11 +18,15 @@ import type { DialogFrameProps } from "./dialog-frame";
 import { Caption, SectionLabel } from "./text";
 import { ToggleGroup } from "./toggle-group";
 import { Tooltip } from "./tooltip";
-import { Button, Card, IconButton, Spinner } from "./ui";
+import { Button } from "./button";
+import { Card } from "./card";
+import { IconButton } from "./icon-button";
+import { Spinner } from "./spinner";
 import { COMMIT_EXCEPT_BILLING, useWriteLock } from "./write-lock";
 import type { WriteLock } from "./write-lock";
-import type { CardProps } from "./ui";
+import type { CardProps } from "./card";
 import type { DisabledReasonDisplay } from "./field-parts";
+import { DEFAULT_SHARE_CARD_LABELS } from "./share-card-labels";
 
 /**
  * Who holds one record, and the owner's every way of changing that — Kurvenschmiede's
@@ -80,30 +85,8 @@ export interface ShareCardLabels {
   loading: string;
 }
 
-export const DEFAULT_SHARE_CARD_LABELS: ShareCardLabels = {
-  dialogTitle: "Share",
-  close: "Close",
-  email: "Email address",
-  emailOptional: "Email address (optional)",
-  emailPlaceholder: "name@example.com",
-  invalidEmail: "Enter a complete email address.",
-  role: "Role",
-  roleOf: (name) => `Role of ${name}`,
-  add: "Share",
-  whoHasAccess: "Who has access",
-  nobodyYet: "Nobody else has access yet.",
-  pending: "Pending",
-  openInvite: "Open invite link",
-  copyLink: "Copy link",
-  team: "Team",
-  teamHint: (name) => `Everyone in ${name} gets access.`,
-  remove: "Remove access",
-  removeConfirm: (name) => `Remove access for ${name}?`,
-  revokePending: "Withdraw invitation",
-  revokePendingConfirm: (name) => `Withdraw the invitation for ${name}?`,
-  failed: "That did not work. Please try again.",
-  loading: "Loading…",
-};
+// Defined in ./share-card-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SHARE_CARD_LABELS };
 
 // ── Data shapes ───────────────────────────────────────────────────────────────
 
@@ -214,7 +197,7 @@ export interface SharePanelProps {
   readOnly?: boolean;
   /** Focus the field on mount — a dialog that exists to add somebody. */
   autoFocus?: boolean;
-  labels?: Partial<ShareCardLabels>;
+  labels?: LabelOverride<ShareCardLabels>;
 }
 
 // Shape only. Whether the address exists, is allowed, or is the sharer's own is the
@@ -308,6 +291,7 @@ export function SharePanel({
 }: SharePanelProps) {
   // The `shareCard` namespace: prop > `<UiKitProvider labels>` > English.
   const labels = useKitLabels("shareCard", DEFAULT_SHARE_CARD_LABELS, labelsProp);
+  const locale = useKitLocale();
   const confirm = useConfirm();
   // Every commit below opts into the surrounding WriteLockProvider with `commit`; the
   // role choices save on change, cannot take it, and read the lock themselves. Adding
@@ -383,11 +367,12 @@ export function SharePanel({
 
   // The completion is a convenience, not a search: an address that matches nobody is
   // the ordinary case (somebody new), so no "No results" box opens over the field —
-  // and over its error. The same narrowing Autocomplete applies, asked first.
-  const needle = (target ? "" : email).trim().toLowerCase();
+  // and over its error. The same narrowing Autocomplete applies, asked first — folded as
+  // every kit list folds (DUP-5).
+  const needle = foldForSearch((target ? "" : email).trim(), locale);
   const offers =
     needle !== "" &&
-    options.some((o) => o.label.toLowerCase().includes(needle) || (o.sublabel ?? "").toLowerCase().includes(needle));
+    options.some((o) => [o.label, o.sublabel ?? ""].some((s) => foldForSearch(s, locale).includes(needle)));
 
   const captionNode = typeof caption === "function" ? caption(target) : caption;
   const shownError = error ?? failure;
@@ -395,7 +380,7 @@ export function SharePanel({
 
   return (
     <div className="space-y-3">
-      {intro && <div className="text-xs text-[var(--text-muted)]">{intro}</div>}
+      {intro && <div className="text-xs text-muted">{intro}</div>}
 
       {canAdd && (
         <div className="space-y-2">
@@ -491,7 +476,7 @@ export function SharePanel({
         <div className="space-y-2">
           <SectionLabel as="h4">{labels.whoHasAccess}</SectionLabel>
           {nobody && <Caption>{labels.nobodyYet}</Caption>}
-          <ul className="divide-y divide-[var(--border)]">
+          <ul className="divide-y divide-subtle">
             {grantees.map((g) => {
               const editable = !readOnly && !g.locked;
               const changeable = editable && onRoleChange !== undefined && choosable;
@@ -504,7 +489,7 @@ export function SharePanel({
                       the name, full row, instead of truncating it to a letter. */}
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
                     <div className="min-w-0 flex-1 basis-40">
-                      <div className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-[var(--text-primary)]">
+                      <div className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-primary">
                         {g.kind === "team" && <UsersRound className="size-4 shrink-0" aria-hidden />}
                         <span data-private className="truncate-until-large">
                           {g.name}
@@ -512,7 +497,7 @@ export function SharePanel({
                         {!changeable && <ShareRoleChip role={roleOf(g.role)} />}
                       </div>
                       {(g.kind === "team" || g.email) && (
-                        <div data-private className="truncate-until-large text-xs text-[var(--text-muted)]">
+                        <div data-private className="truncate-until-large text-xs text-muted">
                           {g.kind === "team" ? labels.team : g.email}
                         </div>
                       )}
@@ -587,7 +572,7 @@ export function SharePanel({
                         data-private={p.email ? true : undefined}
                         className={cn(
                           "truncate-until-large text-sm",
-                          p.email ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]",
+                          p.email ? "text-primary" : "text-muted",
                         )}
                       >
                         {name}
@@ -656,7 +641,7 @@ export interface ShareCardProps extends SharePanelProps {
 export function ShareCard({ title, variant = "outline", className, ...panel }: ShareCardProps) {
   return (
     <Card variant={variant} padding="sm" className={cn("space-y-3", className)}>
-      {title && <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>}
+      {title && <h3 className="text-sm font-semibold text-primary">{title}</h3>}
       <SharePanel {...panel} />
     </Card>
   );

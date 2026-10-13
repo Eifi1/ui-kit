@@ -7,17 +7,17 @@
  * wizard exports through 0.4.0 and 0.4.1 that had already been deleted. A list nobody can
  * finish is a list nobody can trust, and it is the npm landing page.
  *
- * `dist/index.d.ts` is already the answer: tsup's declaration rollup emits one
- * `export { … } from './<module>.js'` line per source module, in the barrel's own curated
- * order. So the inventory is a re-render of a file the build produces, not a document.
+ * `dist/index.d.ts` is already the answer: it is the barrel, compiled. So the inventory is
+ * a re-render of what the build produces, not a document. Each name is listed under the
+ * module that DECLARES it, in the order the barrel first reaches that module.
  *
- * Two wrinkles the rollup introduces, both handled below:
- *   - it hoists shared declarations into a CONTENT-HASHED chunk
- *     (`data-table-filters-aXyf0Xub.d.ts`) whose name changes whenever those declarations
- *     change. Printed raw it would be both meaningless to a reader and a source of README
- *     churn on every build, so each name is traced back to the module that re-exports it.
- *   - it drops the `type` markers in `index.d.ts` but keeps them in the per-module files,
- *     so the value/type split is recovered from those.
+ * The declarations are tsc's, one `.d.ts` per module (scripts/build-dts.mjs, TST-3), so
+ * the barrel is mostly `export * from "./components/button.js"`, and a module may re-export
+ * another's names. Following that by hand is what TypeScript's checker does: it answers
+ * which names an entry exports, where each is declared, and whether it is a value or a
+ * type (a `type`-only re-export counts as a type). Until 0.34 the declarations were
+ * rollup-plugin-dts chunks with content-hashed names, which this script had to trace back
+ * by regex; reading them through the checker does not care about the layout.
  *
  * Usage:
  *   node scripts/gen-export-inventory.mjs           rewrite the block in README.md
@@ -25,12 +25,12 @@
  *
  * Both need `npm run build` to have run: this reads `dist/`, which is gitignored.
  */
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
+import ts from "typescript";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const DIST = join(ROOT, "dist");
-const SRC = join(ROOT, "src");
 const README = join(ROOT, "README.md");
 
 const BEGIN = "<!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->";
@@ -50,122 +50,114 @@ const AREA_TITLES = {
   root: "root",
 };
 
-/* ── Parsing ──────────────────────────────────────────────────────────────── */
+/* ── The build, read through TypeScript ───────────────────────────────────── */
 
-/**
- * Every `export { … }` statement in a `.d.ts`, with its entries.
- *
- * `local` is the name as the declaring module knows it and `exported` the name the
- * importer sees — they differ only for the rollup chunk, where `type ColumnFilter as C`
- * mangles the alias. Both are needed: the type marker travels with `local`, and the chunk
- * is traced by `exported`.
- */
-function parseExports(text) {
-  const statements = [];
-  const re = /export\s+(type\s+)?\{([^}]*)\}\s*(?:from\s*['"]([^'"]+)['"])?\s*;/g;
-  let m;
-  while ((m = re.exec(text)) !== null) {
-    const allTypes = Boolean(m[1]);
-    const entries = [];
-    for (const raw of m[2].split(",")) {
-      const part = raw.trim();
-      if (!part) continue;
-      const entry = /^(type\s+)?([A-Za-z0-9_$]+)(?:\s+as\s+([A-Za-z0-9_$]+))?$/.exec(part);
-      if (!entry) continue;
-      entries.push({
-        local: entry[2],
-        exported: entry[3] ?? entry[2],
-        isType: allTypes || Boolean(entry[1]),
-      });
-    }
-    statements.push({ from: m[3] ?? null, entries });
-  }
-  return statements;
+/** `dist/components/ui.d.ts` → `components/ui`, POSIX-separated on every platform. */
+const moduleId = (fileName) => relative(DIST, fileName).replace(/\\/g, "/").replace(/\.d\.ts$/, "");
+
+/** The entry points with a declaration file of their own, in `exports` order (patterns left out). */
+function entryPoints() {
+  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+  return Object.entries(pkg.exports).flatMap(([subpath, target]) => {
+    const dts = typeof target === "object" ? target.types : null;
+    if (!dts || dts.includes("*") || !existsSync(join(ROOT, dts))) return [];
+    return [{ name: subpath === "." ? "@eifi1/ui-kit" : `@eifi1/ui-kit/${subpath.slice(2)}`, file: join(ROOT, dts) }];
+  });
 }
-
-function walk(dir, out = []) {
-  for (const name of readdirSync(dir)) {
-    const full = join(dir, name);
-    if (statSync(full).isDirectory()) walk(full, out);
-    else if (name.endsWith(".d.ts")) out.push(full);
-  }
-  return out;
-}
-
-/** `./components/ui.js` → `components/ui`. */
-function moduleId(specifier) {
-  return specifier.replace(/^\.\//, "").replace(/\.js$/, "");
-}
-
-/** A module id backed by a real source file; anything else is a rollup chunk. */
-function isSourceModule(id) {
-  return existsSync(join(SRC, `${id}.ts`)) || existsSync(join(SRC, `${id}.tsx`));
-}
-
-/* ── The build, read once ─────────────────────────────────────────────────── */
 
 function readBuild() {
   if (!existsSync(join(DIST, "index.d.ts"))) {
     console.error("dist/index.d.ts not found — run `npm run build` first.");
     process.exit(2);
   }
-
-  const files = walk(DIST).map((full) => ({
-    // POSIX-normalised so the chunk trace works the same on Windows.
-    id: relative(DIST, full).replace(/\\/g, "/").replace(/\.d\.ts$/, ""),
-    statements: parseExports(readFileSync(full, "utf8")),
-  }));
-
-  const types = new Set();
-  // chunk id + the alias it exports under → the module that re-exports it under a real name.
-  const fromChunk = new Map();
-
-  for (const file of files) {
-    // Top-level `dist/*.d.ts` are the package's own entry points (index, chart, shell, …).
-    // They re-export the chunk under the SAME mangled aliases as the module that owns it,
-    // so letting them answer the trace would attribute DataTable to `data-table` the
-    // subpath rather than to `components/data-table` the module it lives in.
-    const isEntryPoint = !file.id.includes("/");
-    for (const statement of file.statements) {
-      for (const entry of statement.entries) {
-        if (entry.isType) types.add(entry.local);
-      }
-      if (!statement.from || isEntryPoint) continue;
-      const target = moduleId(statement.from.replace(/^\.\.\//, "").replace(/^\.\//, ""));
-      if (isSourceModule(target)) continue;
-      for (const entry of statement.entries) {
-        const key = `${target}::${entry.local}`;
-        // Deterministic when two modules re-export the same declaration: shortest id wins,
-        // which is the one nearest the declaration rather than a barrel above it.
-        const held = fromChunk.get(key);
-        if (!held || file.id.length < held.length) fromChunk.set(key, file.id);
-      }
-    }
-  }
-
-  return { files, types, fromChunk };
+  const entries = entryPoints();
+  const program = ts.createProgram(
+    entries.map((e) => e.file),
+    {
+      noEmit: true,
+      skipLibCheck: true,
+      types: [],
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      target: ts.ScriptTarget.ES2022,
+      jsx: ts.JsxEmit.ReactJSX,
+    },
+  );
+  const checker = program.getTypeChecker();
+  const exportsOf = (file) => {
+    const symbol = checker.getSymbolAtLocation(program.getSourceFile(file));
+    return symbol ? checker.getExportsOfModule(symbol) : [];
+  };
+  return { program, checker, entries, exportsOf };
 }
 
-/** The barrel, as `[{ id, names: [{ name, isType }] }]` in `index.d.ts` order. */
-function inventory({ files, types, fromChunk }) {
-  const index = files.find((f) => f.id === "index");
-  const modules = new Map();
+/** A package entry point (`index`, `chart`, …): top-level in dist/, never a name's home. */
+const isEntryPoint = (id) => !id.includes("/");
 
-  for (const statement of index.statements) {
-    if (!statement.from) continue;
-    const declared = moduleId(statement.from);
-    for (const entry of statement.entries) {
-      // `entry.local` here is the chunk's mangled alias, which is what the owning module
-      // re-exports it under — the key the trace above was built with.
-      const id = isSourceModule(declared)
-        ? declared
-        : (fromChunk.get(`${declared}::${entry.local}`) ?? declared);
-      if (!modules.has(id)) modules.set(id, []);
-      modules.get(id).push({ name: entry.exported, isType: types.has(entry.exported) });
+/**
+ * The module an exported name is listed under, and whether the importer gets a type.
+ *
+ * A pass-through re-export (`export { X } from "../lib/clipping"`, or `export *`) is
+ * followed to the module that declares X. A module that imports a name and exports it as
+ * its own (`import { X } from "./x-labels"; export { X };` — how each component offers
+ * its `DEFAULT_*_LABELS` since 0.34) is where X is listed: that is the module an app reads
+ * it from. `export type` (or `import type`) anywhere on the way makes X a type for the
+ * importer, whatever X is.
+ */
+function describe(checker, symbol) {
+  let current = symbol;
+  let typeOnly = false;
+  let owner = null;
+  while (current.flags & ts.SymbolFlags.Alias) {
+    const declaration = current.declarations?.[0];
+    if (current.declarations?.some((d) => ts.isTypeOnlyImportOrExportDeclaration(d))) typeOnly = true;
+    if (!owner && declaration && ts.isExportSpecifier(declaration) && !declaration.parent.parent.moduleSpecifier) {
+      const id = moduleId(declaration.getSourceFile().fileName);
+      if (!isEntryPoint(id)) owner = id;
     }
+    const next = checker.getImmediateAliasedSymbol(current);
+    if (!next || next === current) break;
+    current = next;
   }
+  const declaration = current.declarations?.[0];
+  if (!declaration || current.flags & ts.SymbolFlags.Alias) {
+    // A re-export of something that is not there: the declarations are broken, and a
+    // README listing it would only hide that.
+    console.error(`✖ dist/index.d.ts exports \`${symbol.name}\`, which resolves to no declaration.`);
+    process.exit(2);
+  }
+  return {
+    id: owner ?? moduleId(declaration.getSourceFile().fileName),
+    isType: typeOnly || !(current.flags & ts.SymbolFlags.Value),
+  };
+}
 
-  return [...modules].map(([id, names]) => ({ id, names }));
+/**
+ * The barrel, as `[{ id, names: [{ name, isType }] }]`. Modules come in the order the
+ * barrel names them (its curated order). A subpath entry it re-exports whole
+ * (`export * from "./chart.js"`, since 0.34, MOD-5) is read in place, its modules in the
+ * order that entry names them. A module it reaches only through another module's
+ * re-export comes after those.
+ */
+function inventory({ program, checker, exportsOf }) {
+  const indexFile = join(DIST, "index.d.ts");
+  const modules = new Map();
+  const nameModules = (fileName) => {
+    for (const statement of program.getSourceFile(fileName).statements.filter(ts.isExportDeclaration)) {
+      const target = statement.moduleSpecifier && checker.getSymbolAtLocation(statement.moduleSpecifier);
+      const file = target?.declarations?.[0]?.getSourceFile().fileName;
+      if (!file) continue;
+      if (isEntryPoint(moduleId(file))) nameModules(file);
+      else if (!modules.has(moduleId(file))) modules.set(moduleId(file), []);
+    }
+  };
+  nameModules(indexFile);
+  for (const symbol of exportsOf(indexFile)) {
+    const { id, isType } = describe(checker, symbol);
+    if (!modules.has(id)) modules.set(id, []);
+    modules.get(id).push({ name: symbol.name, isType });
+  }
+  return [...modules].filter(([, names]) => names.length > 0).map(([id, names]) => ({ id, names }));
 }
 
 /* ── Rendering ────────────────────────────────────────────────────────────── */
@@ -181,22 +173,8 @@ function renderNames(names) {
   ].join(", ");
 }
 
-function renderEntryPoints(files) {
-  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
-  const rows = [];
-  for (const [subpath, target] of Object.entries(pkg.exports)) {
-    const dts = typeof target === "object" ? target.types : null;
-    if (!dts) continue;
-    const id = dts.replace(/^\.\/dist\//, "").replace(/\.d\.ts$/, "");
-    const file = files.find((f) => f.id === id);
-    if (!file) continue;
-    // Distinct names, across re-exports AND own declarations: the rollup entry points are
-    // all `export { … } from`, but a single-module subpath like `./dates` declares its
-    // exports in the same file and lists them with no `from` at all.
-    const names = new Set(file.statements.flatMap((s) => s.entries.map((e) => e.exported)));
-    const name = subpath === "." ? "@eifi1/ui-kit" : `@eifi1/ui-kit/${subpath.slice(2)}`;
-    rows.push(`| \`${name}\` | ${names.size} |`);
-  }
+function renderEntryPoints({ entries, exportsOf }) {
+  const rows = entries.map(({ name, file }) => `| \`${name}\` | ${exportsOf(file).length} |`);
   return ["| Entry point | Names |", "|---|---|", ...rows].join("\n");
 }
 
@@ -221,7 +199,7 @@ function render(build) {
     "Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count",
     "is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.",
     "",
-    renderEntryPoints(build.files),
+    renderEntryPoints(build),
     "",
     "Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a",
     "re-slicing of it, never a second API.",

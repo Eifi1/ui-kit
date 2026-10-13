@@ -17,10 +17,13 @@ import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { dirOf, type Direction } from "../lib/direction";
 import { registerFloating } from "../lib/floating-stack";
+import { isComposing } from "../lib/ime";
+import { takeEscape } from "../hooks/use-dismiss";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
-import { assignRef } from "./choice-parts";
+import { assignRef } from "./field-parts";
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip, type TooltipSide } from "./tooltip";
+import { DEFAULT_FLOATING_PANEL_LABELS } from "./floating-panel-labels";
 
 export interface FloatingPanelLabels {
   /** Accessible name of the panel header's X. */
@@ -33,10 +36,8 @@ export interface FloatingPanelLabels {
   badge: (count: number) => string;
 }
 
-export const DEFAULT_FLOATING_PANEL_LABELS: FloatingPanelLabels = {
-  close: "Close",
-  badge: (count) => `${count} new`,
-};
+// Defined in ./floating-panel-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FLOATING_PANEL_LABELS };
 
 /** A LOGICAL corner: `bottom-end` is bottom-right in LTR and bottom-left in RTL. */
 export type FloatingCorner = "bottom-end" | "bottom-start";
@@ -233,17 +234,17 @@ export function FloatingActionButton({
               "shadow-lg transition-colors disabled:cursor-default",
               !toggle &&
                 variant === "primary" &&
-                "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]",
+                "bg-brand text-brand-contrast hover:bg-brand-hover",
               !toggle &&
                 variant === "surface" &&
-                "border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:hover:bg-[var(--bg-surface)]",
+                "border border-subtle bg-surface text-primary hover:bg-hover disabled:hover:bg-surface",
               // A toggle sits on the page's surface — a solid brand disc would read as
               // "on" in both states — and says "on" in the brand family.
-              toggle && "border border-[var(--border)]",
+              toggle && "border border-subtle",
               pressed === false &&
-                "bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
+                "bg-surface text-secondary hover:bg-hover hover:text-primary",
               pressed === true &&
-                "border-[var(--brand)] bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-brand-muted",
+                "border-brand bg-brand-soft text-brand hover:bg-brand-soft-hover hover:text-brand-muted",
               "outline-none focus-visible:ring-offset-2",
               FOCUS_RING,
               className,
@@ -353,7 +354,8 @@ export interface FloatingPanelProps {
  * closed from the page (a controlled owner) never pulls focus out of the field the
  * user is typing in. Escape closes it while focus is inside, and only then: on the
  * panel element, not the document, so Escape in the page keeps meaning whatever the
- * page means by it.
+ * page means by it. A layer of the kit's Escape stack open over it — a tooltip, a list —
+ * is handed the key first.
  *
  * ## Layout
  *
@@ -427,7 +429,16 @@ export function FloatingPanel({
   }, [open]);
 
   const onPanelKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== "Escape" || e.defaultPrevented) return;
+    if (e.key !== "Escape") return;
+    // The kit's one Escape stack first (round 0.34 Wave 2, DUP-1): a layer open above the
+    // panel without focus — a tooltip, the numpad, a hover menu — is the topmost thing on
+    // screen and is handed the key. This took it for itself and stopped it, so the
+    // tooltip never heard it and one press closed the whole panel instead.
+    if (takeEscape(e)) return;
+    // Not a layer itself: it answers only while focus is inside it, and a layer would
+    // also be handed an Escape pressed in the page. Kept by a child's claim (ChipInput
+    // clearing its draft, `claimEscape`), and by an IME composition, as a layer is.
+    if (e.defaultPrevented || isComposing(e)) return;
     // Stopped here, so an overlay underneath with a document-level Escape listener does
     // not close too — the innermost thing that has focus is the one that closes.
     e.stopPropagation();
@@ -486,7 +497,7 @@ export function FloatingPanel({
             }
             className={cn(
               "animate-sheet fixed z-40 flex flex-col overflow-hidden outline-none",
-              "border border-[var(--border)] bg-[var(--bg-surface)] shadow-2xl",
+              "border border-subtle bg-surface shadow-2xl",
               // Phone: full width, docked, rounded only where it meets the page.
               "inset-x-0 bottom-[var(--fp-bottom)] max-h-[min(85dvh,calc(100dvh_-_var(--fp-bottom)_-_1rem))] rounded-t-xl border-x-0 border-b-0",
               "pb-[env(safe-area-inset-bottom,0px)] md:pb-0",
@@ -496,8 +507,8 @@ export function FloatingPanel({
               className,
             )}
           >
-            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-3">
-              <h2 id={titleId} className="min-w-0 truncate text-base font-semibold text-[var(--text-primary)]">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-subtle px-4 py-3">
+              <h2 id={titleId} className="min-w-0 truncate text-base font-semibold text-primary">
                 {title}
               </h2>
               <button
@@ -507,7 +518,7 @@ export function FloatingPanel({
                   setOpen(false);
                 }}
                 aria-label={labels.close}
-                className={cn("-me-1.5 shrink-0 rounded p-1.5 text-[var(--text-muted)] outline-none hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]", FOCUS_RING)}
+                className={cn("-me-1.5 shrink-0 rounded p-1.5 text-muted outline-none hover:bg-hover hover:text-secondary", FOCUS_RING)}
               >
                 <X aria-hidden className="size-5" />
               </button>
@@ -574,11 +585,11 @@ export function FloatingActionGroup({
             style={{ ...cornerStyle(corner, offset), ...style }}
             className={cn(
               "fixed z-40 inline-flex flex-row overflow-hidden rounded-2xl",
-              "border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg",
+              "border border-subtle bg-surface shadow-lg",
               // Dividers on the logical start edge of every member but the first, so
               // they sit between the same two members in RTL. The member is the
               // tooltip's wrapper span, which is the direct child.
-              "[&>*:not(:first-child)]:border-s [&>*]:border-[var(--border)]",
+              "[&>*:not(:first-child)]:border-s [&>*]:border-subtle",
               className,
             )}
           >
@@ -695,10 +706,10 @@ export function FloatingAction({
     FOCUS_RING,
     "disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-5",
     variant === "primary"
-      ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
+      ? "bg-brand text-brand-contrast hover:bg-brand-hover"
       : pressed && !isLink && pressedStyle === "tint"
-        ? "bg-[var(--brand-bg)] text-[var(--brand)] hover:bg-[var(--brand-bg-hover)] hover:text-brand-muted"
-        : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
+        ? "bg-brand-soft text-brand hover:bg-brand-soft-hover hover:text-brand-muted"
+        : "text-secondary hover:bg-hover hover:text-primary",
     className,
   );
   const body = (

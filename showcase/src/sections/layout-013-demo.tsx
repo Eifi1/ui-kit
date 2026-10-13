@@ -11,15 +11,13 @@ import {
   ToggleGroup,
 } from "@eifi1/ui-kit";
 import type { PageHeaderSize } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * The 0.13 layout props: PageHeader `size="compact"` and `mobileLayout="inline"`
  * (keksdose F4), SectionLabel `variant="band"` (keksdose F5) and `size="md"` over a
  * chart column (lenkbank P9), and ListItem `titleLines` (kastlan 44).
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /* ── PageHeader ───────────────────────────────────────────────────────────── */
 

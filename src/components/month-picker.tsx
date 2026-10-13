@@ -1,16 +1,20 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, RefObject } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref, RefObject } from "react";
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
 import { monthKey, pad } from "../lib/dates";
-import { Button, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, IconButton } from "./ui";
+import { Button } from "./button";
+import { FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER } from "./field-base";
+import { IconButton } from "./icon-button";
 import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { Popover } from "./popover";
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
-import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { FieldBox, FieldLabelLine, hasContent, LABEL_ABOVE_BOX, useFieldMessages } from "./field-parts";
+import { useKitDateFormatter, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { hasContent } from "../lib/presence";
+import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, mergeRefs, useFieldMessages } from "./field-parts";
+import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker-labels";
 
 /**
  * Every string the month picker can speak. The month and year names are NOT here —
@@ -45,22 +49,8 @@ export interface MonthPickerLabels {
   thisYear: string;
 }
 
-/** The English starting point every override is merged onto. Exported (unlike the
- *  calendar's) because it is asked for by name: a host building its own translation
- *  table can spread it rather than re-typing four keys to change one. */
-export const DEFAULT_MONTH_PICKER_LABELS: MonthPickerLabels = {
-  previousYear: "Previous year",
-  nextYear: "Next year",
-  panel: "Choose a month",
-  month: (monthYear) => monthYear,
-  previousMonth: "Previous month",
-  nextMonth: "Next month",
-  today: "Today",
-  yearPanel: "Choose a year",
-  earlierYears: "Earlier years",
-  laterYears: "Later years",
-  thisYear: "This year",
-};
+// Defined in ./month-picker-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_MONTH_PICKER_LABELS };
 
 /** Merge caller overrides onto the English defaults. */
 function useMonthPickerLabels(partial?: Partial<MonthPickerLabels>): MonthPickerLabels {
@@ -150,7 +140,7 @@ export interface MonthPickerProps extends Omit<ComponentPropsWithoutRef<"div">, 
    */
   currentMonth?: string;
   /** User-facing strings; see {@link MonthPickerLabels}. */
-  labels?: Partial<MonthPickerLabels>;
+  labels?: LabelOverride<MonthPickerLabels>;
   /** Extra classes for the field's root. */
   className?: string;
   /** Extra classes for the trigger button — e.g. a compact `h-9 w-auto` trigger
@@ -172,6 +162,13 @@ export interface MonthPickerProps extends Omit<ComponentPropsWithoutRef<"div">, 
   headingLevel?: 1 | 2 | 3 | 4 | 5 | 6 | false;
   /** `variant="stepper"`: draw the Today button. Default `true`. */
   showToday?: boolean;
+  /**
+   * The TRIGGER — the field's button, or the stepper's heading button — as a React 19
+   * ref prop (0.34, API-3, refactor audit 2026-10). The picker took none, so
+   * react-hook-form's focus-on-error reached it only through /rhf's id lookup. Not the
+   * wrapper, which takes the rest of the props.
+   */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 // ── Month keys ────────────────────────────────────────────────────────────
@@ -242,6 +239,11 @@ function useFocusBackOnClose(open: boolean, triggerRef: RefObject<HTMLButtonElem
   }, [open, triggerRef]);
 }
 
+/** The Popover's handle on the trigger and the picker's own `ref` prop (API-3), as one. */
+function useTriggerRef(triggerRef: RefObject<HTMLButtonElement | null>, fieldRef: Ref<HTMLButtonElement> | undefined) {
+  return useMemo(() => mergeRefs(triggerRef, fieldRef), [triggerRef, fieldRef]);
+}
+
 /**
  * The stepper's trigger: the month as a heading-sized button that opens the grid.
  *
@@ -255,6 +257,7 @@ function MonthHeadingTrigger({
   open,
   toggle,
   triggerRef,
+  fieldRef,
   text,
   panelId,
   disabled,
@@ -263,15 +266,17 @@ function MonthHeadingTrigger({
   open: boolean;
   toggle: () => void;
   triggerRef: RefObject<HTMLButtonElement | null>;
+  fieldRef?: Ref<HTMLButtonElement>;
   text: string;
   panelId: string;
   disabled?: boolean;
   aria: TriggerAria;
 }) {
   useFocusBackOnClose(open, triggerRef);
+  const setTrigger = useTriggerRef(triggerRef, fieldRef);
   return (
     <button
-      ref={triggerRef}
+      ref={setTrigger}
       type="button"
       disabled={disabled}
       onClick={toggle}
@@ -283,8 +288,8 @@ function MonthHeadingTrigger({
       aria-labelledby={aria["aria-labelledby"]}
       aria-describedby={aria["aria-describedby"]}
       className={cn(
-        "-ms-1.5 inline-flex h-9 min-w-0 items-center gap-1 rounded-md px-1.5 text-lg font-semibold text-[var(--text-primary)] transition-colors",
-        "hover:bg-[var(--bg-hover)]",
+        "-ms-1.5 inline-flex h-9 min-w-0 items-center gap-1 rounded-md px-1.5 text-lg font-semibold text-primary transition-colors",
+        "hover:bg-hover",
         FOCUS_RING,
         disabled && "cursor-not-allowed opacity-50",
       )}
@@ -292,7 +297,7 @@ function MonthHeadingTrigger({
       <span aria-live="polite" className="truncate">
         {text || "\u00a0"}
       </span>
-      <ChevronDown aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
+      <ChevronDown aria-hidden className="size-4 shrink-0 text-muted" />
     </button>
   );
 }
@@ -307,6 +312,7 @@ function MonthFieldTrigger({
   open,
   toggle,
   triggerRef,
+  fieldRef,
   triggerText,
   hasValue,
   labelledBy,
@@ -322,6 +328,7 @@ function MonthFieldTrigger({
   open: boolean;
   toggle: () => void;
   triggerRef: RefObject<HTMLButtonElement | null>;
+  fieldRef?: Ref<HTMLButtonElement>;
   triggerText: string;
   hasValue: boolean;
   labelledBy: string;
@@ -337,10 +344,11 @@ function MonthFieldTrigger({
   className?: string;
 }) {
   useFocusBackOnClose(open, triggerRef);
+  const setTrigger = useTriggerRef(triggerRef, fieldRef);
 
   return (
     <button
-      ref={triggerRef}
+      ref={setTrigger}
       type="button"
       disabled={disabled}
       onClick={toggle}
@@ -370,10 +378,12 @@ function MonthFieldTrigger({
       {/* The U+00A0 fallback keeps the line box when there is no text — see
           DatePicker. The value arrives capitalised (see `upperFirst`); this span does
           NOT use `capitalize`, which upper-cases every WORD — "Choose A Month",
-          "Septiembre De 2026". */}
+          "Septiembre De 2026". It wraps from Large up, as DatePicker's value does
+          (`truncate-until-large`, text size §10.17; round 0.34 T1: the sweep read
+          "Choose a mo…" at 360 px / Extra large). */}
       <span
         id={valueId}
-        className={cn("truncate", !hasValue && "text-[var(--text-placeholder)]")}
+        className={cn("truncate-until-large", !hasValue && "text-placeholder")}
       >
         {triggerText || " "}
       </span>
@@ -508,7 +518,7 @@ function MonthGrid({
   const selectedKey = value ? toKey(value) : null;
 
   const arrow =
-    "flex size-7 items-center justify-center rounded text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
+    "flex size-7 items-center justify-center rounded text-muted hover:bg-hover disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
 
   return (
     <div className="select-none">
@@ -529,7 +539,7 @@ function MonthGrid({
         <div
           id={captionId}
           aria-live="polite"
-          className="text-sm font-semibold tabular-nums text-[var(--text-primary)]"
+          className="text-sm font-semibold tabular-nums text-primary"
         >
           {yearCaption}
         </div>
@@ -576,14 +586,14 @@ function MonthGrid({
                     "focus-visible:outline-none focus-visible:ring-inset",
                     // A --brand ring on a --brand fill exists only in the DOM.
                     selected && !disabled
-                      ? "focus-visible:ring-[var(--brand-contrast)]"
-                      : "focus-visible:ring-[var(--brand)]",
+                      ? "focus-visible:ring-brand-contrast"
+                      : "focus-visible:ring-brand",
                     disabled
-                      ? "cursor-not-allowed text-[var(--text-placeholder)]"
+                      ? "cursor-not-allowed text-placeholder"
                       : selected
-                        ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
-                        : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
-                    current && !selected && !disabled && "ring-1 ring-inset ring-[var(--border-strong)]",
+                        ? "bg-brand text-brand-contrast hover:bg-brand-hover"
+                        : "text-primary hover:bg-hover",
+                    current && !selected && !disabled && "ring-1 ring-inset ring-strong",
                   )}
                 >
                   {shortNames[ym.month - 1]}
@@ -708,7 +718,7 @@ function YearGrid({
   const prevBlocked = minYear !== null && first - 1 < minYear;
   const nextBlocked = maxYear !== null && first + count > maxYear;
   const arrow =
-    "flex size-7 items-center justify-center rounded text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
+    "flex size-7 items-center justify-center rounded text-muted hover:bg-hover disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
 
   return (
     <div className="select-none">
@@ -724,7 +734,7 @@ function YearGrid({
             <ChevronLeft className="size-4 rtl:-scale-x-100" />
           </button>
         )}
-        <div id={captionId} aria-live="polite" className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">
+        <div id={captionId} aria-live="polite" className="text-sm font-semibold tabular-nums text-primary">
           {caption}
         </div>
         {!whole && (
@@ -767,14 +777,14 @@ function YearGrid({
                     FOCUS_RING_WIDTH,
                     "focus-visible:outline-none focus-visible:ring-inset",
                     selected && !disabled
-                      ? "focus-visible:ring-[var(--brand-contrast)]"
-                      : "focus-visible:ring-[var(--brand)]",
+                      ? "focus-visible:ring-brand-contrast"
+                      : "focus-visible:ring-brand",
                     disabled
-                      ? "cursor-not-allowed text-[var(--text-placeholder)]"
+                      ? "cursor-not-allowed text-placeholder"
                       : selected
-                        ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
-                        : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
-                    current && !selected && !disabled && "ring-1 ring-inset ring-[var(--border-strong)]",
+                        ? "bg-brand text-brand-contrast hover:bg-brand-hover"
+                        : "text-primary hover:bg-hover",
+                    current && !selected && !disabled && "ring-1 ring-inset ring-strong",
                   )}
                 >
                   {yearFormat.format(new Date(year, 0, 1))}
@@ -831,6 +841,8 @@ export function MonthPicker(props: MonthPickerProps) {
     variant = "field",
     headingLevel = 2,
     showToday = true,
+    // The trigger's (API-3); named apart from the Popover trigger's own `ref` below.
+    ref: fieldRef,
     ...rest
   } = props;
   const labels = useMonthPickerLabels(labelsProp);
@@ -951,6 +963,7 @@ export function MonthPicker(props: MonthPickerProps) {
               toggle();
             }}
             triggerRef={ref}
+            fieldRef={fieldRef}
             text={triggerText}
             panelId={panelId}
             disabled={disabled}
@@ -1033,6 +1046,7 @@ export function MonthPicker(props: MonthPickerProps) {
               toggle();
             }}
             triggerRef={ref}
+            fieldRef={fieldRef}
             triggerText={triggerText}
             hasValue={shownKey !== null}
             // As DatePicker: a caller's reference first; an `id` without a label of our
@@ -1059,7 +1073,7 @@ export function MonthPicker(props: MonthPickerProps) {
       </Popover>
       <Calendar
         aria-hidden
-        className="pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--text-placeholder)]"
+        className="pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-placeholder"
       />
     </div>
   );

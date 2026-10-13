@@ -1,18 +1,23 @@
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "../components/toast";
-import { DEFAULT_MAX_ATTACHMENTS } from "./feedback-attachment";
-import { captureAppScreenshot } from "./feedback-capture";
-import { FeedbackContextBox, feedbackContext, type FeedbackSubmitter } from "./feedback-context";
-import { FeedbackDialog, type FeedbackMultipleSubmission } from "./feedback-dialog";
-import type { FeedbackCategory } from "./feedback-inbox";
-import { useFeedbackCategoryLabels, useFeedbackToastLabels } from "./feedback-labels";
-import {
-  FEEDBACK_ATTACHMENT_ACCEPT,
-  FEEDBACK_PICKABLE_CATEGORIES,
-  type FeedbackContext,
-  type FeedbackEnvironment,
-} from "./feedback-record";
+// Types only, gone from the built module: the dialog's modules load with the dialog.
+import type { FeedbackSubmitter } from "./feedback-context";
+import type { FeedbackMultipleSubmission } from "./feedback-dialog";
+import { useFeedbackToastLabels } from "./feedback-labels";
+import { FEEDBACK_PICKABLE_CATEGORIES, type FeedbackContext, type FeedbackEnvironment } from "./feedback-record";
+import type { FeedbackCategory } from "./feedback-vocabulary";
+
+/**
+ * The dialog, loaded when it is first opened rather than with the top bar that mounts the
+ * hook (0.34, MOD-1 of the refactor audit 2026-10; see feedback-submit-dialog.tsx). A
+ * LITERAL relative `import()`, as the catalogue loaders are (i18n/languages.ts): the
+ * library build keeps the module its own (`bundle: false`), and a path an app's bundler
+ * can read is a chunk it can split off.
+ */
+const LazySubmitDialog = lazy(() =>
+  import("./feedback-submit-dialog").then((module) => ({ default: module.FeedbackSubmitDialog })),
+);
 
 /**
  * `FeedbackCreate` — the body of `POST /feedback` (keksdose `schemas/feedback.py:25`, §3.4
@@ -81,7 +86,11 @@ export interface FeedbackSubmit {
   open: (category?: FeedbackCategory) => void;
   /** Close it, as Cancel does. */
   close: () => void;
-  /** The dialog — render it once, anywhere (it portals). `null` while closed. */
+  /**
+   * The dialog — render it once, anywhere (it portals). `null` while closed. Since 0.34
+   * its module loads when it is first opened (MOD-1), so it appears a moment after
+   * `open`: a test finds it with `await screen.findBy…`, not `getBy…`.
+   */
   dialog: ReactNode;
 }
 
@@ -127,7 +136,6 @@ export interface FeedbackSubmit {
 export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions<R>): FeedbackSubmit {
   const { upload, create, user, environment, version, onSubmitted, errorMessage, capture } = options;
   const toastText = useFeedbackToastLabels();
-  const categoryLabels = useFeedbackCategoryLabels();
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<FeedbackCategory>("OTHER");
   const [url, setUrl] = useState("");
@@ -148,7 +156,8 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
   };
   const close = () => setIsOpen(false);
 
-  const submit = async (data: FeedbackMultipleSubmission) => {
+  // `context` comes from the dialog, built off the values its context box shows.
+  const submit = async (data: FeedbackMultipleSubmission, context: FeedbackContext) => {
     if (inFlight.current) return;
     inFlight.current = true;
     setSubmitting(true);
@@ -163,7 +172,7 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
         title: data.title.trim(),
         body: data.body.trim() ? data.body : "",
         category: data.category as FeedbackCategory,
-        context: feedbackContext({ user, attachUrl, url, environment, version }),
+        context,
         screenshot_url,
         attachment_urls,
       });
@@ -179,45 +188,26 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
     onSubmitted?.(result);
   };
 
-  const onCaptureScreenshot =
-    capture === false
-      ? undefined
-      : async () => {
-          try {
-            return await (capture ?? (() => captureAppScreenshot()))();
-          } catch {
-            toast.error(toastText.captureFailed);
-            return null;
-          }
-        };
-
+  // Nothing is drawn while the dialog's module is on its way — a few milliseconds, once per
+  // page load; a spinner would only flash. A load that fails (a deploy replaced the chunk)
+  // throws a chunk-load error to the app's error boundary, as a lazy route's does.
   const dialog = isOpen ? (
-    <FeedbackDialog
-      open
-      onClose={close}
-      categories={FEEDBACK_PICKABLE_CATEGORIES.map((value) => ({ value, label: categoryLabels[value] }))}
-      category={category}
-      onCategoryChange={(value) => setCategory(value as FeedbackCategory)}
-      submitting={submitting}
-      attachments="multiple"
-      maxAttachments={DEFAULT_MAX_ATTACHMENTS}
-      requireBody={false}
-      attachmentAccept={FEEDBACK_ATTACHMENT_ACCEPT}
-      onAttachmentError={(kind, info) =>
-        toast.error(
-          kind === "type"
-            ? toastText.attachmentUnsupported
-            : kind === "size"
-              ? toastText.attachmentTooLarge
-              : // More files at once than there was room for: the surplus was dropped, the
-                // rest kept. The count is how many fit, as keksdose says it.
-                toastText.attachmentTooMany(info.max ?? DEFAULT_MAX_ATTACHMENTS),
-        )
-      }
-      onCaptureScreenshot={onCaptureScreenshot}
-      onSubmit={submit}
-      contextSlot={<FeedbackContextBox user={user} url={url} attachUrl={attachUrl} onAttachUrlChange={setAttachUrl} />}
-    />
+    <Suspense fallback={null}>
+      <LazySubmitDialog
+        onClose={close}
+        category={category}
+        onCategoryChange={setCategory}
+        submitting={submitting}
+        onSubmit={submit}
+        user={user}
+        url={url}
+        attachUrl={attachUrl}
+        onAttachUrlChange={setAttachUrl}
+        environment={environment}
+        version={version}
+        capture={capture}
+      />
+    </Suspense>
   ) : null;
 
   return { open, close, dialog };

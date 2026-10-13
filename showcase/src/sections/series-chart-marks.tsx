@@ -4,7 +4,6 @@ import {
   SeriesChart,
   ToggleGroup,
   ToggleLegend,
-  defaultZoomAxes,
   seriesLegendEntries,
   toggleHidden,
   visibleSeries,
@@ -15,7 +14,7 @@ import type {
   SeriesChartSeries,
   ZoomAxesSetting,
 } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
  * SERIES CHART — BARS, AREAS & TIME. The 0.8.0 half of the series chart: per-series
@@ -314,7 +313,7 @@ function ZoomAxesDemo() {
     >
       <Row className="mb-3">
         <ToggleGroup<ZoomAxesSetting | "default"> aria-label="zoomAxes" value={zoom} onChange={setZoom} options={ZOOM_OPTIONS} />
-        <span className="font-mono text-xs text-[var(--text-muted)]">clicked: {clicked}</span>
+        <span className="font-mono text-xs text-muted">clicked: {clicked}</span>
       </Row>
       <SeriesChart
         rows={DAILY}
@@ -325,14 +324,12 @@ function ZoomAxesDemo() {
         onPointClick={(hit) => setClicked(`${String(hit.x)}${hit.key ? ` (${hit.key})` : ""}`)}
         height="h-56"
       />
-      <OutTable
-        rows={[
-          ['defaultZoomAxes([{ type: "line" }])', defaultZoomAxes([{ type: "line" }])],
-          ['defaultZoomAxes([{ type: "area" }])', defaultZoomAxes([{ type: "area" }])],
-          ['defaultZoomAxes([{ type: "bar" }, { type: "area" }])', defaultZoomAxes([{ type: "bar" }, { type: "area" }])],
-        ]}
-      />
       <div className="mt-3">
+        <Note>
+          Left out, <code className="font-mono">zoomAxes</code> follows what the series are:{" "}
+          <code className="font-mono">both</code> for lines only, <code className="font-mono">x</code>{" "}
+          with an area among them, <code className="font-mono">none</code> with a bar.
+        </Note>
         <Note>
           With <code className="font-mono">zoomAxes=&quot;x&quot;</code> a drag across the bars picks a
           stretch of days — the axis ticks whole slots and the bars at the edge are clipped — and a
@@ -439,7 +436,7 @@ function LateAdditions() {
       label="Tilted category ticks, a tooltip bounded by its scroller, whole-number ticks, a custom dash"
       hint="x.tickAngle · tooltip.boundary · height in px · x.integerTicks · dash: '4 3' · activeDot: false"
     >
-      <Row className="mb-2 text-xs text-[var(--text-secondary)]">
+      <Row className="mb-2 text-xs text-secondary">
         <span>x.tickAngle</span>
         <ToggleGroup<"0" | "-30" | "-45">
           aria-label="Tick angle"
@@ -452,7 +449,7 @@ function LateAdditions() {
           ]}
         />
       </Row>
-      <div ref={scroller} className="overflow-x-auto rounded-md border border-[var(--border)]">
+      <div ref={scroller} className="overflow-x-auto rounded-md border border-subtle">
         <div style={{ minWidth: LONG_CATEGORIES.length * 90 }}>
           <SeriesChart
             rows={LONG_CATEGORIES}
@@ -468,7 +465,7 @@ function LateAdditions() {
           />
         </div>
       </div>
-      <Row className="mb-2 mt-5 text-xs text-[var(--text-secondary)]">
+      <Row className="mb-2 mt-5 text-xs text-secondary">
         <span>x.integerTicks</span>
         <ToggleGroup<"auto" | "off">
           aria-label="Integer ticks"
@@ -525,5 +522,65 @@ export function SeriesChartMarks() {
       <StableLegend />
       <LateAdditions />
     </>
+  );
+}
+
+/* ── since 0.11 (keksdose's 0.10 feedback) ─────────────────────────────────── */
+
+const WEEKDAYS = [
+  { day: "Mon", thisWeek: 42, average: 38 },
+  { day: "Tue", thisWeek: 18, average: 25 },
+  { day: "Wed", thisWeek: 55, average: 31 },
+  { day: "Thu", thisWeek: 1, average: 29 },
+  { day: "Fri", thisWeek: 76, average: 64 },
+  { day: "Sat", thisWeek: 120, average: 88 },
+  { day: "Sun", thisWeek: 0, average: 0 },
+];
+
+export function MinBarLengthDemo() {
+  const [chartWide, setChartWide] = useState(true);
+  const [averageOff, setAverageOff] = useState(true);
+  return (
+    <Example
+      label="Bars — minBarLength, chart-wide and per series"
+      hint="a zero keeps a visible stub; the axis, tooltip and names still say 0"
+    >
+      <Row className="mb-3">
+        <label className="flex items-center gap-2 text-xs text-secondary">
+          <input type="checkbox" checked={chartWide} onChange={(e) => setChartWide(e.target.checked)} />
+          chart minBarLength={"{3}"}
+        </label>
+        <label className="flex items-center gap-2 text-xs text-secondary">
+          <input type="checkbox" checked={averageOff} onChange={(e) => setAverageOff(e.target.checked)} />
+          average: minBarLength={"{0}"} (off for that series)
+        </label>
+      </Row>
+      <SeriesChart
+        rows={WEEKDAYS}
+        x={{ type: "category", key: "day", title: "Weekday" }}
+        axes={[{ id: "y", title: "EUR" }]}
+        minBarLength={chartWide ? 3 : undefined}
+        series={[
+          { key: "thisWeek", label: "This week", type: "bar", color: "var(--chart-1)" },
+          {
+            key: "average",
+            label: "Average",
+            type: "bar",
+            color: "var(--chart-3)",
+            ...(averageOff ? { minBarLength: 0 } : {}),
+          },
+        ]}
+        valueFormat={(v) => `€${v}`}
+      />
+      <div className="mt-3">
+        <Note>
+          Sunday is 0 in both series and Thursday&apos;s €1 is too small to see. With the chart&apos;s{" "}
+          {code("minBarLength")} each is drawn as a 3px stub, so an empty slot still reads as a slot with a
+          value rather than a gap; the Average series sets {code("0")} to opt out. Only the drawing changes. The
+          axis is fitted to the values, and hovering Sunday still says €0.
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
   );
 }

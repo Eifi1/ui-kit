@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ContextType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import {
   BillingBanner,
@@ -20,7 +20,7 @@ import {
   useBillingLockReason,
 } from "@eifi1/ui-kit";
 import type { BillingPlan, LegalOperator, PlanChoice } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, beat, NO_ROUTER } from "../lib/section";
 
 /**
  * SUBSCRIPTION (0.32, docs/billing-harmonization.md §3.3, §3.4, §7, §8, §12): the plan
@@ -35,13 +35,6 @@ import { Example, Note } from "../lib/section";
 
 // `anywhere`: `billingDaysLeft(trial_ends_at)` has no space to break at, and at Extra large
 // on a phone it is wider than the note.
-const code = (s: string) => <code className="font-mono [overflow-wrap:anywhere]">{s}</code>;
-const beat = (ms = 1200) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-/** React Router refuses a router inside a router; resetting the location context is its
- *  documented escape hatch (the landing page's specimens do the same). The banners'
- *  links move THIS router, not the showcase's. */
-const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
 function Sandbox({ children, start = "/beds" }: { children: ReactNode; start?: string }) {
   return (
@@ -56,7 +49,7 @@ function Sandbox({ children, start = "/beds" }: { children: ReactNode; start?: s
 
 function Where() {
   const { pathname } = useLocation();
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">route: {pathname}</p>;
+  return <p className="mt-2 font-mono text-xs text-muted">route: {pathname}</p>;
 }
 
 /* ── The catalogue (server-kit PlanSpec, §3.1) ───────────────────────────── */
@@ -100,7 +93,7 @@ export function PlanPicker032Demo() {
   const [chosen, setChosen] = useState<PlanChoice | null>(null);
   const choose = async (choice: PlanChoice) => {
     setPending(true);
-    await beat();
+    await beat(1200);
     setPending(false);
     setChosen(choice);
   };
@@ -143,14 +136,14 @@ export function PlanPicker032Demo() {
                 return minor ? (
                   <span>
                     {formatPlanPrice(minor, currency)}
-                    <span className="ms-1 text-xs font-normal text-[var(--text-muted)]">(provider)</span>
+                    <span className="ms-1 text-xs font-normal text-muted">(provider)</span>
                   </span>
                 ) : undefined;
               }
             : undefined
         }
       />
-      <p className="mt-2 text-xs text-[var(--text-muted)]" aria-live="polite">
+      <p className="mt-2 text-xs text-muted" aria-live="polite">
         {chosen
           ? `onChoose(${JSON.stringify(chosen)}) — the app now calls POST /billing/checkout and follows its url.`
           : "Pick a plan and press the button."}
@@ -193,7 +186,7 @@ export function SubscriptionStatus032Demo() {
 function Labelled({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <p className="mb-1 text-xs text-[var(--text-muted)]">{label}</p>
+      <p className="mb-1 text-xs text-muted">{label}</p>
       {children}
     </div>
   );
@@ -205,12 +198,12 @@ export function BillingBanners032Demo() {
   const [checking, setChecking] = useState(false);
   const openPortal = async () => {
     setPortal(true);
-    await beat();
+    await beat(1200);
     setPortal(false);
   };
   const checkAgain = async () => {
     setChecking(true);
-    await beat();
+    await beat(1200);
     setChecking(false);
     setProcessing(false);
   };
@@ -326,7 +319,7 @@ export function BillingLock032Demo() {
           <Button commit variant="secondary">
             Add a bed
           </Button>
-          <span className="text-xs text-[var(--text-muted)]">
+          <span className="text-xs text-muted">
             {lock.locked ? "Locked — hover or focus a button for the reason." : "Unlocked."}
           </span>
         </div>
@@ -347,7 +340,7 @@ export function SubscriptionActions032Demo() {
   const [pending, setPending] = useState<"manage" | "cancel" | null>(null);
   const open = async (which: "manage" | "cancel") => {
     setPending(which);
-    await beat();
+    await beat(1200);
     setPending(null);
   };
   return (
@@ -392,7 +385,7 @@ export function CommercialDisclaimer032Demo() {
           ]}
         />
       </div>
-      <div className="rounded-lg border border-[var(--border)] p-4">
+      <div className="rounded-lg border border-subtle p-4">
         <LegalKitSection page="impressum" section="disclaimer" variant={variant} headingAs="h3" operator={OPERATOR} />
       </div>
       <Note>

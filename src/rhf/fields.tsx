@@ -20,7 +20,7 @@
  * ```
  *
  * Each folds the `FormField → FormItem → FormLabel → FormControl → field →
- * FormDescription → FormMessage` scaffold (see ./form) into one element, the way
+ * FormDescription → FormMessage` scaffold (see ./form-core) into one element, the way
  * kastlan's shared/components/form/fields.tsx does for its forms — with what that file
  * left out:
  *
@@ -28,10 +28,11 @@
  *    field PAINTS as well as announces. kastlan's number, money, date and entity fields
  *    passed only `aria-invalid` through `FormControl`, or nothing, and `Input`, `Select`
  *    and `Textarea` paint only from the prop (see the note in ./form).
- *  - **Focus on error.** `field.ref` reaches the focusable element — the element itself
- *    where the kit field forwards a ref, a focus handle on it where it does not (the
- *    number field, the pickers) — so `handleSubmit` and `trigger(…, { shouldFocus })`
- *    land the caret on the first field in error.
+ *  - **Focus on error.** `field.ref` reaches the focusable element itself — the input,
+ *    a picker's trigger, a toggle group whose `focus()` lands on its option (since 0.34
+ *    every kit field takes a ref; the number field and the pickers were reached by an id
+ *    lookup before, API-3) — so `handleSubmit` and `trigger(…, { shouldFocus })` land the
+ *    caret on the first field in error, and `setFocus`'s `shouldSelect` selects.
  *  - **`control` is optional**: under `<Form {...form}>` the fields find the form
  *    through react-hook-form's context. Pass it for the field's value types
  *    (`control={form.control}` checks `name` against the form's values).
@@ -47,7 +48,7 @@
  * {@link RhfField} is the shell they are all built on, for a control the kit does not
  * ship (an address autocomplete): it takes a `render` and wires the rest.
  */
-import { useLayoutEffect, useRef, useState, type FocusEvent, type ReactElement, type ReactNode } from "react";
+import { useLayoutEffect, useMemo, useRef, type FocusEvent, type ReactElement, type ReactNode } from "react";
 import {
   useController,
   type ControllerFieldState,
@@ -56,10 +57,14 @@ import {
   type FieldPath,
   type FieldValues,
 } from "react-hook-form";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, useFormField } from "./form";
-import { Input, Select, Textarea, type InputProps, type SelectProps, type TextareaProps } from "../components/ui";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, useFormField } from "./form-core";
+import { Input, type InputProps } from "../components/input";
+import { Select, type SelectProps } from "../components/select";
+import { Textarea, type TextareaProps } from "../components/textarea";
 import { NumberField, type NumberFieldProps } from "../components/number-field";
 import { AmountInput } from "../components/amount-input";
+import type { MoneyFieldProps } from "../components/money-field";
+import { useMoneyDraft } from "../components/money-draft";
 import {
   DatePicker,
   DateRangePicker,
@@ -86,7 +91,11 @@ import {
   type InlineEntityComboboxProps,
 } from "../components/combobox";
 import type { ComboClearValue } from "../components/combobox-core";
+import { mergeRefs, useInlineHint } from "../components/field-parts";
+import { useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
+import { decimalMark, readTyped } from "../lib/decimal-marks";
+import { hasContent } from "../lib/presence";
 
 // ── the shell ────────────────────────────────────────────────────────────────
 
@@ -105,7 +114,8 @@ export interface RhfFieldBaseProps<
    *  an `aria-label` instead. */
   label?: ReactNode;
   /** Standing advice under the field ("As printed on the card"), attached to the
-   *  control with `aria-describedby`. */
+   *  control with `aria-describedby`. A `FieldHint` is its words at Large and on a
+   *  touch screen (§4, DUP-2), not a lone "?"; a `HelpPopover` stays a "?". */
   hint?: ReactNode;
   /** Draws the label's required mark and sets `aria-required` where the control
    *  takes it. Whether the field IS required is `rules`' or the resolver's to say. */
@@ -162,10 +172,6 @@ export interface RhfFieldProps<
   /** `false`: no {@link FormLabel}, for a control that carries its label itself (a
    *  checkbox). Default `true`. */
   showLabel?: boolean;
-}
-
-function hasContent(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
 }
 
 /** The label, with an id the control can be named by. Inside the item, so it can read
@@ -232,6 +238,10 @@ export function RhfField<
   message = true,
   showLabel = true,
 }: RhfFieldProps<TFieldValues, TName, TTransformed>) {
+  // §4: a FieldHint is a fact, so at Large and on a touch screen it is its words under
+  // the field, not a lone "?" there (DUP-2, refactor audit 2026-10). A HelpPopover stays
+  // a "?" at every size.
+  const shownHint = useInlineHint(hint);
   return (
     <FormField
       control={control}
@@ -247,27 +257,12 @@ export function RhfField<
             render={render}
             asControl={asControl}
           />
-          {hasContent(hint) && <FormDescription>{hint}</FormDescription>}
+          {hasContent(shownHint) && <FormDescription>{shownHint}</FormDescription>}
           {message && <FormMessage />}
         </FormItem>
       )}
     />
   );
-}
-
-/**
- * Hands react-hook-form a focus handle for a control that forwards no ref: its
- * `shouldFocusError` calls `focus()` on whatever `field.ref` was given. `find` runs at
- * focus time, so it sees the element as it is then.
- */
-function useFocusHandle(ref: ControllerRenderProps["ref"], find: () => HTMLElement | null | undefined) {
-  const findRef = useRef(find);
-  useLayoutEffect(() => {
-    findRef.current = find;
-  });
-  useLayoutEffect(() => {
-    ref({ focus: () => findRef.current()?.focus() });
-  }, [ref]);
 }
 
 // ── text ─────────────────────────────────────────────────────────────────────
@@ -384,34 +379,39 @@ export function RhfTextarea<
 
 // ── numbers ──────────────────────────────────────────────────────────────────
 
-/** A form value → the number field's `number | null`. Defaults hold `""`, `null`, a
- *  number, or a numeric string. */
-function toNumber(value: unknown): number | null {
+/**
+ * A form value → the number field's `number | null`. Defaults hold `""`, `null`, a
+ * number, or a numeric string: a plain JS spelling ("12.5", "1e-7", what an API sends)
+ * as it is, anything else the way the field reads typing in `mark` — "1,234.5", or
+ * "1.234,56" in a comma locale (DUP-9, refactor audit 2026-10: a single
+ * `replace(",", ".")` read "1,234,567" as NaN, the U-14 pattern).
+ */
+function toNumber(value: unknown, mark: "," | "."): number | null {
   if (value === null || value === undefined || value === "") return null;
-  const n = typeof value === "number" ? value : Number(String(value).replace(",", "."));
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const text = String(value).trim();
+  const plain = text === "" ? NaN : Number(text);
+  const typed = readTyped(text, mark);
+  const n = Number.isFinite(plain) ? plain : typed === "" ? NaN : Number(typed);
   return Number.isFinite(n) ? n : null;
 }
+
+/** What a twin sets on its field itself — the value and its change, what the form
+ *  decides (`disabled`, `invalid`, the error, the ids) and what the shell draws (the
+ *  label, the hint, the item's `className`). Everything else of the field's passes
+ *  through (DUP-9, refactor audit 2026-10: a `Pick` allow-list dropped what the field
+ *  gained without a word). */
+type BoundByForm = "value" | "defaultValue" | "onChange" | "onBlur" | "ref" | "name" | "disabled" | "required"
+  | "invalid" | "error" | "label" | "hint" | "className" | "aria-describedby" | "aria-invalid" | "aria-required";
 
 export type RhfNumberFieldProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformed = TFieldValues,
 > = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
-  Pick<
-    NumberFieldProps,
-    | "digits"
-    | "min"
-    | "max"
-    | "step"
-    | "calculator"
-    | "unit"
-    | "unitPlacement"
-    | "placeholder"
-    | "inputClassName"
-    | "locale"
-    | "ariaLabel"
-    | "autoFocus"
-  > & {
+  // NumberField's own (the lock since 0.33.1, `onValueChange`, …), less the commit and
+  // the id the shell owns.
+  Omit<NumberFieldProps, BoundByForm | "onCommit" | "nullable" | "id"> & {
     /** What an emptied field stores. Default `null`; `""` for a schema written
      *  against a native number input (`z.coerce.number()` over `""`). */
     emptyValue?: null | "";
@@ -451,6 +451,7 @@ export function RhfNumberField<
         // `aria-invalid`, which NumberControl hands on to the field.
         <NumberControl
           field={field as unknown as ControllerRenderProps}
+          focusRef={field.ref}
           invalid={invalid}
           required={required}
           id={id}
@@ -465,6 +466,7 @@ export function RhfNumberField<
 
 function NumberControl({
   field,
+  focusRef,
   invalid,
   required,
   id,
@@ -474,6 +476,8 @@ function NumberControl({
   ...aria
 }: {
   field: ControllerRenderProps;
+  /** `field.ref`, handed over on its own so the compiler reads `field` as data. */
+  focusRef: ControllerRenderProps["ref"];
   invalid: boolean;
   required?: boolean;
   id: string;
@@ -483,17 +487,19 @@ function NumberControl({
   "aria-describedby"?: string;
   "aria-invalid"?: NumberFieldProps["aria-invalid"];
 }) {
-  // NumberField forwards no ref; it routes `id` to its <input>, where the handle
-  // finds it.
-  useFocusHandle(field.ref, () => document.getElementById(id));
+  // The field's own mark, for a stored text written the way it is typed.
+  const mark = decimalMark(useKitLocale(numberProps.locale));
   return (
     <NumberField
       {...numberProps}
+      // The <input> itself (API-3, refactor audit 2026-10): focus on error, and
+      // `setFocus`'s `shouldSelect`, which an id-found stand-in had no `select()` for.
+      ref={focusRef}
       aria-describedby={aria["aria-describedby"]}
       aria-invalid={aria["aria-invalid"]}
       aria-required={required || undefined}
       id={id}
-      value={toNumber(field.value)}
+      value={toNumber(field.value, mark)}
       onCommit={(n) => {
         field.onChange(n ?? emptyValue);
         field.onBlur();
@@ -551,50 +557,21 @@ export type RhfMoneyFieldProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformed = TFieldValues,
-> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> & {
-  placeholder?: string;
-  /** The currency chip's code ("CHF"). */
-  currency?: string;
-  /** Makes the chip a currency picker. Bind it to another field with
-   *  `useController`, or to state. */
-  onCurrencyChange?: (code: string) => void;
-  /** Colours the figure for the direction of money. */
-  tone?: "neutral" | "outflow" | "inflow";
-  align?: "start" | "center";
-  ariaLabel?: string;
-  autoFocus?: boolean;
-  /**
-   * What the form stores: `"number"` (default) — `12.5`, or `emptyValue` while the
-   * field is empty — or `"string"`, the field's own text ("12.50") for a schema that
-   * parses it itself. A half-typed sum ("12+") leaves the stored number as it was
-   * until it resolves.
-   */
-  valueAs?: "number" | "string";
-  /** What an emptied field stores when `valueAs` is `"number"`. Default `null`. */
-  emptyValue?: null | "";
-  /** Decimals the amount settles to on blur, Enter or a calculator result. Default:
-   *  the currency's minor unit (CHF 2, JPY 0). ⚠️ A unit price or a rate needs its
-   *  column's scale here (`digits={4}` for 1.789 €/l), or it is stored rounded to
-   *  cents without a word (keksdose G2). See {@link AmountInput}'s `digits`. */
-  digits?: number;
-  /** Clamp the settled amount (a release capped at the deposit's balance). Validate
-   *  with `rules` as well if a clamp needs explaining. */
-  min?: number;
-  max?: number;
-  /** Classes for the `<input>` — `className` is the item's box. {@link RhfTextField},
-   *  {@link RhfTextarea} and {@link RhfNumberField} take it; since 0.23 AmountInput
-   *  does too (keksdose G7: `text-end` for a money column). */
-  inputClassName?: string;
-};
-
-/** The amount a text reads as, or `undefined` for a draft that is not one yet. */
-function parseAmount(text: string): number | null | undefined {
-  const trimmed = text.trim();
-  if (trimmed === "") return null;
-  if (!/^-?\d*[.,]?\d*$/.test(trimmed)) return undefined;
-  const n = Number(trimmed.replace(",", "."));
-  return Number.isFinite(n) ? n : undefined;
-}
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
+  // MoneyField's — AmountInput's, with the lock, `calculator` (keksdose K6), `labels`,
+  // `currencyNames` and `variant` the hand-written list here had dropped (DUP-9) — less
+  // what the form binds and the commit, which is the form's store.
+  Omit<MoneyFieldProps, BoundByForm | "onCommit" | "id"> & {
+    /**
+     * What the form stores: `"number"` (default) — `12.5`, or `emptyValue` while the
+     * field is empty — or `"string"`, the field's own text ("12.50") for a schema that
+     * parses it itself. A half-typed sum ("12+") leaves the stored number as it was
+     * until it resolves; a lone "-" left on blur goes back to it, as on MoneyField.
+     */
+    valueAs?: "number" | "string";
+    /** What an emptied field stores when `valueAs` is `"number"`. Default `null`. */
+    emptyValue?: null | "";
+  };
 
 function MoneyControl({
   field,
@@ -611,20 +588,11 @@ function MoneyControl({
   describedBy: string | undefined;
   props: Omit<RhfMoneyFieldProps, keyof RhfFieldBaseProps>;
 }) {
-  const { valueAs = "number", emptyValue = null, ariaLabel, ...amountProps } = props;
-  const value: unknown = field.value;
-  const external = value === null || value === undefined ? "" : String(value);
-  // The text being typed. A stored NUMBER cannot hold "12." or "12+5", so the draft
-  // lives here and is re-read from the form only when the form's value moves away
-  // from what the draft already says (a reset, a setValue).
-  const [draft, setDraft] = useState(external);
-  const [seen, setSeen] = useState<unknown>(value);
-  if (seen !== value) {
-    setSeen(value);
-    const current = valueAs === "string" ? draft : parseAmount(draft);
-    const same = valueAs === "string" ? current === external : current === toNumber(value);
-    if (!same) setDraft(external);
-  }
+  const { valueAs = "number", emptyValue = null, ...amountProps } = props;
+  // MoneyField's draft and settle (DUP-9): the text being typed, re-read from the form
+  // only when its value moves away from what the draft says, and a lone "-" back on the
+  // stored amount when the figure settles.
+  const money = useMoneyDraft(field.value, valueAs);
   const input = useRef<HTMLInputElement | null>(null);
   // AmountInput reports no blur, and react-hook-form needs one to mark the field
   // touched: listen on its <input>.
@@ -639,7 +607,6 @@ function MoneyControl({
     <div>
       <AmountInput
         {...amountProps}
-        ariaLabel={ariaLabel}
         id={id}
         aria-describedby={describedBy}
         aria-required={required || undefined}
@@ -647,19 +614,19 @@ function MoneyControl({
           input.current = el;
           field.ref(el);
         }}
-        value={draft}
+        value={money.draft}
         disabled={field.disabled}
         invalid={invalid}
         onChange={(text) => {
-          setDraft(text);
+          const parsed = money.change(text);
           if (valueAs === "string") {
             field.onChange(text);
             return;
           }
-          const parsed = parseAmount(text);
           if (parsed === undefined) return;
           field.onChange(parsed ?? emptyValue);
         }}
+        onCommit={money.settle}
       />
     </div>
   );
@@ -723,6 +690,7 @@ export type RhfDateFieldProps<
 
 function DateControl({
   field,
+  focusRef,
   invalid,
   required,
   id,
@@ -732,6 +700,8 @@ function DateControl({
   ...aria
 }: {
   field: ControllerRenderProps;
+  /** `field.ref`, handed over on its own so the compiler reads `field` as data. */
+  focusRef: ControllerRenderProps["ref"];
   invalid: boolean;
   required?: boolean;
   id: string;
@@ -741,12 +711,13 @@ function DateControl({
   "aria-describedby"?: string;
   "aria-invalid"?: DatePickerProps["aria-invalid"];
 }) {
-  useFocusHandle(field.ref, () => document.getElementById(id));
   const value: unknown = field.value;
   return (
     <DatePicker
       {...pickerProps}
       {...aria}
+      // The trigger itself (API-3, refactor audit 2026-10), not an id lookup.
+      ref={focusRef}
       aria-required={required || undefined}
       id={id}
       value={typeof value === "string" ? value : ""}
@@ -788,6 +759,7 @@ export function RhfDateField<
         // which DateControl hands on to the picker's trigger.
         <DateControl
           field={field as unknown as ControllerRenderProps}
+          focusRef={field.ref}
           invalid={invalid}
           required={required}
           id={id}
@@ -952,10 +924,11 @@ function RangeBody({
   pickerProps: OwnDateRangeProps;
 }) {
   const { id, formItemId, formMessageId, describedBy } = useFormField();
-  // The trigger forwards no ref; both fields focus it, so `shouldFocusError` lands
-  // there whichever of the two is first in error.
-  useFocusHandle(from.ref, () => document.getElementById(formItemId));
-  useFocusHandle(to.ref, () => document.getElementById(formItemId));
+  // RhfField's rule: a FieldHint is its words at Large and on touch (DUP-2).
+  const shownHint = useInlineHint(hint);
+  // Both fields' refs go to the one trigger (API-3, refactor audit 2026-10), so
+  // `shouldFocusError` lands there whichever of the two is first in error.
+  const triggerRef = useMemo(() => mergeRefs(from.ref, to.ref), [from.ref, to.ref]);
   const invalid = fromState.invalid || toState.invalid;
   const messages = [fromState.error?.message, toState.error?.message].filter(
     (m, i, all): m is string => typeof m === "string" && m !== "" && all.indexOf(m) === i,
@@ -974,6 +947,7 @@ function RangeBody({
       )}
       <DateRangePicker
         {...pickerProps}
+        ref={triggerRef}
         id={formItemId}
         // Merged, never replaced — a caller's own reference first, as FormControl does.
         aria-describedby={
@@ -995,7 +969,7 @@ function RangeBody({
         invalid={invalid}
         className={inputClassName ?? "w-full"}
       />
-      {hasContent(hint) && <FormDescription>{hint}</FormDescription>}
+      {hasContent(shownHint) && <FormDescription>{shownHint}</FormDescription>}
       {messages.map((message, i) => (
         // FormMessage's look and its rule: no `role="alert"` — read when focus reaches
         // the trigger, which names these in its description.
@@ -1003,7 +977,7 @@ function RangeBody({
           key={message}
           id={messageIds[i]}
           data-slot="form-message"
-          className="text-caption leading-tight text-[var(--danger)]"
+          className="text-caption leading-tight text-danger"
         >
           {message}
         </p>
@@ -1354,6 +1328,7 @@ export type RhfMonthPickerProps<
 
 function MonthControl({
   field,
+  focusRef,
   invalid,
   id,
   valueAsNumber,
@@ -1364,6 +1339,8 @@ function MonthControl({
   ...aria
 }: {
   field: ControllerRenderProps;
+  /** `field.ref`, handed over on its own so the compiler reads `field` as data. */
+  focusRef: ControllerRenderProps["ref"];
   invalid: boolean;
   id: string;
   valueAsNumber?: boolean;
@@ -1374,14 +1351,13 @@ function MonthControl({
   "aria-describedby"?: string;
   "aria-invalid"?: MonthPickerProps["aria-invalid"];
 }) {
-  // MonthPicker forwards no ref; it routes `id` to its trigger, where the handle finds
-  // it — RhfDateField's way.
-  useFocusHandle(field.ref, () => document.getElementById(id));
   const value: unknown = field.value;
   return (
     <MonthPicker
       {...pickerProps}
       {...aria}
+      // The trigger itself (API-3, refactor audit 2026-10) — RhfDateField's way.
+      ref={focusRef}
       // MonthPicker routes `aria-required` to its trigger since 0.23.0.
       aria-required={required || undefined}
       id={id}
@@ -1407,10 +1383,10 @@ function MonthControl({
  * out, `invalid` by hand — and a failed submit could not focus it, because the picker
  * forwards no ref.
  *
- * Bound as {@link RhfDateField} is: a focus handle finds the trigger by its id, so
- * focus-on-error lands there; the form's error paints the trigger and is the shell's
- * message; the hint is the shell's description; neither is handed to the picker, so
- * its box never changes. Picking marks the field touched.
+ * Bound as {@link RhfDateField} is: `field.ref` is the picker's `ref`, its trigger (an id
+ * lookup until 0.34, API-3), so focus-on-error lands there; the form's error paints the
+ * trigger and is the shell's message; the hint is the shell's description; neither is
+ * handed to the picker, so its box never changes. Picking marks the field touched.
  *
  * ```tsx
  * <RhfMonthPicker name="fiscalYear" label="Fiscal year" mode="year" valueAsNumber
@@ -1444,6 +1420,7 @@ export function RhfMonthPicker<
         // which MonthControl hands on to the picker's trigger.
         <MonthControl
           field={field as unknown as ControllerRenderProps}
+          focusRef={field.ref}
           invalid={invalid}
           id={id}
           mode={mode}
@@ -1470,7 +1447,9 @@ export type RhfSelectProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformed = TFieldValues,
 > = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
-  Pick<SelectProps, "size" | "autoFocus" | "aria-label"> & {
+  // Select's own — its lock (`commit`, `disabledReason`), `size`, … — which a `Pick`
+  // list dropped until 0.34 (DUP-9). One value, so not `multiple`.
+  Omit<SelectProps, BoundByForm | "children" | "multiple" | "selectClassName"> & {
     /** The options, as data. Or pass `<option>` children. */
     options?: readonly RhfSelectOption[];
     children?: ReactNode;
@@ -1545,7 +1524,10 @@ export type RhfCheckboxProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformed = TFieldValues,
 > = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
-  Pick<CheckboxProps, "inputClassName" | "autoFocus" | "aria-label">;
+  // Checkbox's own — its lock (`commit`, `disabledReason`) among them, which a `Pick`
+  // list dropped until 0.34 (DUP-9) — less the box's state the form holds, and its
+  // `description`, which is the twin's `hint`.
+  Omit<CheckboxProps, BoundByForm | "checked" | "defaultChecked" | "onCheckedChange" | "description">;
 
 /**
  * The kit's {@link Checkbox}, label beside the box and `hint` under it (the
@@ -1568,6 +1550,9 @@ export function RhfCheckbox<
   className,
   ...boxProps
 }: RhfCheckboxProps<TFieldValues, TName, TTransformed>) {
+  // RhfField's rule for the box's own description: a FieldHint is its words at Large
+  // and on touch (DUP-2).
+  const description = useInlineHint(hint);
   return (
     <RhfField
       {...{ name, control, rules, required, disabled, excludeWhenDisabled, className }}
@@ -1584,7 +1569,7 @@ export function RhfCheckbox<
           required={required}
           invalid={invalid}
           label={label}
-          description={hint}
+          description={description}
         />
       )}
     />
@@ -1620,9 +1605,12 @@ export type RhfToggleGroupProps<
   T extends string = string,
   TTransformed = TFieldValues,
 > = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
-  Pick<
+  // The group's own (its `disabledReasonDisplay` was not on the `Pick` list this was
+  // until 0.34, DUP-9), less what the form binds, the ids, and the label's placement:
+  // the label is the form's, above.
+  Omit<
     ToggleGroupBaseProps<T>,
-    "options" | "optionClassName" | "overflow" | "size" | "aria-label" | "commit" | "disabledReason"
+    BoundByForm | "id" | "aria-labelledby" | "labelPlacement" | "chromeClassName"
   > & {
     /** Classes for the group itself — `className` is the item's box. */
     groupClassName?: string;
@@ -1702,15 +1690,6 @@ function ToggleControl<T extends string>({
   groupProps: Omit<RhfToggleGroupProps<FieldValues, string, T>, keyof RhfFieldBaseProps>;
 }) {
   const { groupClassName, emptyValue, allowEmpty, semantics, caption, ...rest } = groupProps;
-  // ToggleGroup forwards no ref. Its options are buttons: the radio shape's one tab
-  // stop (`tabindex="0"`), or in the pressed shape the pressed one — else the first.
-  useFocusHandle(field.ref, () => {
-    const group = document.getElementById(id);
-    return (
-      group?.querySelector<HTMLElement>('button[tabindex="0"], button[aria-pressed="true"]') ??
-      group?.querySelector<HTMLElement>("button")
-    );
-  });
   // React's onBlur is focusout: it fires on every move between options as well, and
   // only leaving the group is a blur of the FIELD.
   const onBlur = (e: FocusEvent<HTMLDivElement>) => {
@@ -1720,6 +1699,10 @@ function ToggleControl<T extends string>({
   const value = raw === null || raw === undefined || raw === "" ? null : (String(raw) as T);
   const common = {
     ...rest,
+    // The group (API-3, refactor audit 2026-10): its `focus()` lands on the radio shape's
+    // tab stop, or the pressed shape's pressed option — the rule this adapter carried
+    // as an id lookup until ToggleGroup took a ref.
+    ref: field.ref,
     id,
     className: groupClassName,
     "aria-labelledby": labelledBy,
@@ -1765,28 +1748,9 @@ export type RhfComboboxProps<
   V extends string | number = string | number,
   TTransformed = TFieldValues,
 > = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
-  Pick<
-    EntityComboboxProps<V>,
-    | "options"
-    | "loadOptions"
-    | "loading"
-    | "placeholder"
-    | "searchPlaceholder"
-    | "emptyLabel"
-    | "clearable"
-    | "clearLabel"
-    | "closeLabel"
-    | "onCreate"
-    | "createLabel"
-    | "createEmptyLabel"
-    | "createCommit"
-    | "commit"
-    | "disabledReason"
-    | "filter"
-    | "minChars"
-    | "debounceMs"
-    | "aria-label"
-  > & {
+  // The picker's own, as an `Omit` since 0.34 (DUP-9) rather than the `Pick` list it
+  // was, less what the form binds and the clear value, which is the twin's below.
+  Omit<EntityComboboxProps<V>, BoundByForm | "id" | "clearValue"> & {
     /** What a clear stores — the picker's `clearValue`. Default `null`; `""` for a
      *  schema that spells "no choice" as an empty string. */
     clearValue?: ComboClearValue;
@@ -2036,21 +2000,9 @@ export type RhfTextComboboxProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformed = TFieldValues,
 > = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
-  Pick<
-    ComboboxProps,
-    | "options"
-    | "placeholder"
-    | "groupBy"
-    | "maxSuggestions"
-    | "searchPlaceholder"
-    | "createLabel"
-    | "optionAdornment"
-    | "autoFocus"
-    | "aria-label"
-    | "closeLabel"
-    | "commit"
-    | "disabledReason"
-  > & {
+  // The combobox's own, as an `Omit` since 0.34 (DUP-9) rather than the `Pick` list it
+  // was, less what the form binds.
+  Omit<ComboboxProps, BoundByForm | "id"> & {
     /** Classes for the combobox. */
     comboClassName?: string;
   };

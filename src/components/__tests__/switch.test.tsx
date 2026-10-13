@@ -107,9 +107,11 @@ describe("Switch", () => {
   it("asks for a keyboard focus ring in a token colour", () => {
     render(<Switch aria-label="S" />);
     const cls = screen.getByRole("switch").className;
-    // The kit's focus frame (0.32, §5): `--focus-ring-width` wide.
-    expect(cls).toMatch(/focus-visible:ring-\[length:var\(--focus-ring-width\)\]/);
-    expect(cls).toMatch(/focus-visible:ring-\[var\(--[a-z-]+\)\]/);
+    // The kit's focus frame (0.32, §5): `--focus-ring-width` wide — `ring-focus` (0.34, DOC-7),
+    // stood off the track in the card's colour.
+    expect(screen.getByRole("switch")).toHaveClass("focus-visible:ring-focus", "focus-visible:ring-offset-surface");
+    // A token: a role utility (0.34) or a `[var(--…)]`.
+    expect(cls).toMatch(/focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/);
   });
 
   it("moves the thumb with a LOGICAL offset, so it travels the right way in RTL", () => {

@@ -67,7 +67,7 @@ function Uncontrolled() {
       label="TreeView — keyboard, icons, trailing figures"
       hint="uncontrolled (defaultExpanded, defaultSelected); Tab in once, then ↑ ↓ → ← Home End * and type-ahead"
     >
-      <div className="max-w-md rounded-md border border-[var(--border)] p-2">
+      <div className="max-w-md rounded-md border border-subtle p-2">
         <TreeView<Account>
           aria-label="Chart of accounts"
           items={ACCOUNTS}
@@ -78,7 +78,7 @@ function Uncontrolled() {
           }
         />
       </div>
-      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">onSelectedChange → {picked}</p>
+      <p className="mt-2 font-mono text-xs text-secondary">onSelectedChange → {picked}</p>
       <div className="mt-3">
         <Note>
           Type &ldquo;sav&rdquo; with focus in the tree and it jumps to the savings account: the
@@ -114,7 +114,7 @@ function Controlled() {
           Clear selection
         </Button>
       </Row>
-      <div className="max-w-md rounded-md border border-[var(--border)] p-2">
+      <div className="max-w-md rounded-md border border-subtle p-2">
         <TreeView
           aria-label="Chart of accounts, controlled"
           items={ACCOUNTS}
@@ -171,7 +171,7 @@ function Lazy() {
       label="TreeView — lazy children"
       hint="hasChildren draws a chevron; opening calls loadChildren, and the row spins (aria-busy) until it settles"
     >
-      <div className="max-w-md rounded-md border border-[var(--border)] p-2">
+      <div className="max-w-md rounded-md border border-subtle p-2">
         <TreeView
           aria-label="Files"
           items={items}
@@ -197,22 +197,24 @@ function Lazy() {
             <span className="flex min-w-0 flex-1 items-center gap-1.5">
               {state.expandable ? (
                 state.expanded ? (
-                  <FolderOpen aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
+                  <FolderOpen aria-hidden className="size-4 shrink-0 text-muted" />
                 ) : (
-                  <Folder aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
+                  <Folder aria-hidden className="size-4 shrink-0 text-muted" />
                 )
               ) : (
-                <FileText aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
+                <FileText aria-hidden className="size-4 shrink-0 text-muted" />
               )}
-              <span className="truncate">{node.label}</span>
-              <span className="ms-auto text-caption text-[var(--text-muted)]">
+              {/* A renderItem keeps its own classes: the row's label wraps from Large up
+                  as the kit's own does (text size §10.17). */}
+              <span className="min-w-0 truncate-until-large">{node.label}</span>
+              <span className="ms-auto shrink-0 text-caption text-muted">
                 {state.loading ? "loading…" : `level ${state.level}`}
               </span>
             </span>
           )}
         />
       </div>
-      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">loaded: {loads.length ? loads.join(", ") : "—"}</p>
+      <p className="mt-2 font-mono text-xs text-secondary">loaded: {loads.length ? loads.join(", ") : "—"}</p>
       <div className="mt-3">
         <Note>
           <code className="font-mono">selectionMode=&quot;none&quot;</code> makes it a navigation-only
@@ -242,7 +244,7 @@ const RTL_ITEMS: TreeNode[] = [
 function Rtl() {
   return (
     <Example label="TreeView — right-to-left" hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}>
-      <div dir="rtl" className="max-w-md rounded-md border border-[var(--border)] p-2">
+      <div dir="rtl" className="max-w-md rounded-md border border-subtle p-2">
         <TreeView aria-label="شجرة الحسابات" items={RTL_ITEMS} defaultExpanded={["r1"]} />
       </div>
       <div className="mt-3">
@@ -278,7 +280,7 @@ function StandaloneRows() {
       label="TreeRow — on its own"
       hint="the look without the widget: onToggle makes the chevron a real button, one per row"
     >
-      <div className="max-w-md rounded-md border border-[var(--border)] p-2">
+      <div className="max-w-md rounded-md border border-subtle p-2">
         {visible.map((row) =>
           "parent" in row ? (
             <TreeRow
@@ -287,7 +289,7 @@ function StandaloneRows() {
               label={row.label}
               expanded={open[row.id]}
               onToggle={() => setOpen((o) => ({ ...o, [row.id]: !o[row.id] }))}
-              icon={<FolderOpen aria-hidden className="size-4 text-[var(--text-muted)]" />}
+              icon={<FolderOpen aria-hidden className="size-4 text-muted" />}
               trailing="3 tasks"
               selected={selected === row.id}
               onClick={() => setSelected(row.id)}
@@ -307,8 +309,8 @@ function StandaloneRows() {
         <TreeRow level={2} expanded={false} loading label="Fetching subtasks…" />
         <TreeRow level={1} expanded={false} onToggle={() => undefined} label="Custom row" toggleLabel="Open the custom row">
           <span className="flex flex-1 items-center justify-between text-xs">
-            <span className="font-medium text-[var(--text-primary)]">children replace label + trailing</span>
-            <span className="rounded bg-[var(--bg-surface-2)] px-1.5 font-mono">custom</span>
+            <span className="font-medium text-primary">children replace label + trailing</span>
+            <span className="rounded bg-surface-2 px-1.5 font-mono">custom</span>
           </span>
         </TreeRow>
       </div>

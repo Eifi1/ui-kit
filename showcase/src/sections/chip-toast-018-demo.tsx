@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Chip, refreshChipEdges } from "../../../src/components/chip";
 import type { ChipTone } from "../../../src/components/chip";
 import { toast } from "../../../src/components/toast";
-import { Button } from "../../../src/components/ui";
+import { Button } from "../../../src/components/button";
 import { Switch } from "../../../src/components/switch";
 import { Example, Note, Row } from "../lib/section";
 
@@ -26,7 +26,7 @@ const OFFSETS = Array.from({ length: 8 }, (_, i) => i * 0.5);
 function Column({ snap }: { snap: boolean }) {
   return (
     <div className="space-y-1.5">
-      <div className="text-xs text-[var(--text-muted)]">{snap ? "snapEdges" : "default"}</div>
+      <div className="text-xs text-muted">{snap ? "snapEdges" : "default"}</div>
       {OFFSETS.map((o, i) => {
         const s = STATUSES[i % STATUSES.length];
         return (
@@ -75,7 +75,7 @@ export function ChipSnapEdges018Demo() {
           Re-snap now
         </Button>
         {took !== null && (
-          <span className="text-xs tabular-nums text-[var(--text-muted)]" data-snap-took={took.toFixed(2)}>
+          <span className="text-xs tabular-nums text-muted" data-snap-took={took.toFixed(2)}>
             one pass: {took.toFixed(1)} ms
           </span>
         )}

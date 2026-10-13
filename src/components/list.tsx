@@ -1,18 +1,19 @@
-import { createContext, forwardRef, useContext, useId, useState } from "react";
+import { createContext, useContext, useId, useState } from "react";
 import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { ChevronDown, ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FOCUS_RING, Spinner } from "./ui";
+import { FOCUS_RING } from "./focus-ring";
+import { Spinner } from "./spinner";
 import { StatusDot } from "./status-dot";
 import { Collapse } from "./disclosure";
 import { toneTextClass } from "./signed-amount";
 import type { TextTone } from "./signed-amount";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
-import { mergeDescribedBy } from "./choice-parts";
-import { LockedReason, useLockReason } from "./field-parts";
+import { LockedReason, mergeDescribedBy, useLockReason, type DisabledReasonDisplay } from "./field-parts";
 import type { CommitScope } from "./write-lock";
+import { DEFAULT_LIST_LABELS } from "./list-labels";
 
 /* ── Labels ───────────────────────────────────────────────────────────────── */
 
@@ -23,10 +24,8 @@ export interface ListLabels {
   opensInNewTab: string;
 }
 
-export const DEFAULT_LIST_LABELS: ListLabels = {
-  unread: "Unread",
-  opensInNewTab: "opens in a new tab",
-};
+// Defined in ./list-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_LIST_LABELS };
 
 /* ── List ─────────────────────────────────────────────────────────────────── */
 
@@ -51,6 +50,9 @@ export interface ListProps extends Omit<ComponentPropsWithoutRef<"ul">, "role"> 
   density?: ListDensity;
   /** Default `gap`. */
   separator?: ListSeparator;
+  /** The `<ul>` (or `<ol>`). A React 19 ref prop since 0.34 (MOD-4, refactor audit
+   *  2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLUListElement>;
 }
 
 /**
@@ -60,10 +62,15 @@ export interface ListProps extends Omit<ComponentPropsWithoutRef<"ul">, "role"> 
  * bullets are styled away, and "list, 7 items" is exactly what a screen-reader user
  * wants to hear before the first row.
  */
-export const List = forwardRef<HTMLUListElement, ListProps>(function List(
-  { as = "ul", density = "default", separator = "gap", className, children, ...rest },
+export function List({
   ref,
-) {
+  as = "ul",
+  density = "default",
+  separator = "gap",
+  className,
+  children,
+  ...rest
+}: ListProps) {
   const Tag = as;
   return (
     <ListContext.Provider value={{ density, separator }}>
@@ -81,7 +88,7 @@ export const List = forwardRef<HTMLUListElement, ListProps>(function List(
       </Tag>
     </ListContext.Provider>
   );
-});
+}
 
 /* ── ListItem ─────────────────────────────────────────────────────────────── */
 
@@ -313,6 +320,9 @@ interface ListItemBaseProps {
   id?: string;
   [key: `aria-${string}`]: string | boolean | number | undefined;
   [key: `data-${string}`]: unknown;
+  /** The main target — the row's `<a>`, `<button>` or `<div>`, where `id` goes. A React
+   *  19 ref prop since 0.34 (MOD-4, refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -332,11 +342,16 @@ export type ListItemProps = ListItemBaseProps &
          * explain it but not keep the row reachable.
          *
          * With a reason the row's button is `aria-disabled` instead: still focusable, a
-         * click does nothing, the reason is in the kit {@link Tooltip} over the row and on
-         * its `aria-describedby`, and the row wears the disabled look. It wins over
+         * click does nothing, the reason is a line under the row at Large and on a touch
+         * screen, else in the kit {@link Tooltip} over the row (`disabledReasonDisplay`),
+         * and on its `aria-describedby`, and the row wears the disabled look. It wins over
          * `disabled`. The row's `actions` are untouched — each control there is its own.
          */
         disabledReason?: ReactNode;
+        /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`. A long list
+         *  of locked rows under a banner that already says why can keep it to the
+         *  tooltip with `"tooltip"` (DUP-3). */
+        disabledReasonDisplay?: DisabledReasonDisplay;
         /**
          * The row's click COMMITS. Under a locked {@link WriteLockProvider} it is locked
          * the `disabledReason` way with the lock's reason (which wins over its own). No
@@ -372,6 +387,7 @@ export type ListItemProps = ListItemBaseProps &
          *  stay unread. */
         onAuxClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
         disabledReason?: never;
+        disabledReasonDisplay?: never;
         commit?: never;
       } & NotExpandable)
     | ({
@@ -381,6 +397,7 @@ export type ListItemProps = ListItemBaseProps &
         external?: never;
         onAuxClick?: never;
         disabledReason?: never;
+        disabledReasonDisplay?: never;
         commit?: never;
       } & NotExpandable)
     | {
@@ -408,6 +425,7 @@ export type ListItemProps = ListItemBaseProps &
         external?: never;
         onAuxClick?: never;
         disabledReason?: never;
+        disabledReasonDisplay?: never;
         commit?: never;
       }
   );
@@ -436,52 +454,51 @@ interface NotExpandable {
  * details that are easy to get wrong — which of them truncate, whether the actions
  * are nested in the button, whether a link row is a link at all.
  */
-export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem(
-  {
-    title,
-    titleLines = 1,
-    overline,
-    subtitle,
-    subtitleLines = 1,
-    meta,
-    metaWrap = false,
-    content,
-    icon: Icon,
-    leading,
-    trailing,
-    trailingTone = "muted",
-    actions,
-    leadingActions,
-    unread = false,
-    status,
-    selected = false,
-    disabled = false,
-    loading = false,
-    density: densityProp,
-    align = "center",
-    className,
-    targetClassName,
-    targetProps,
-    bordered = false,
-    as = "li",
-    renderRow,
-    children,
-    bodyClassName,
-    href,
-    renderLink,
-    external = false,
-    onClick,
-    onAuxClick,
-    disabledReason,
-    commit,
-    expandedContent,
-    expanded: expandedProp,
-    defaultExpanded = false,
-    onExpandedChange,
-    ...rest
-  },
+export function ListItem({
   ref,
-) {
+  title,
+  titleLines = 1,
+  overline,
+  subtitle,
+  subtitleLines = 1,
+  meta,
+  metaWrap = false,
+  content,
+  icon: Icon,
+  leading,
+  trailing,
+  trailingTone = "muted",
+  actions,
+  leadingActions,
+  unread = false,
+  status,
+  selected = false,
+  disabled = false,
+  loading = false,
+  density: densityProp,
+  align = "center",
+  className,
+  targetClassName,
+  targetProps,
+  bordered = false,
+  as = "li",
+  renderRow,
+  children,
+  bodyClassName,
+  href,
+  renderLink,
+  external = false,
+  onClick,
+  onAuxClick,
+  disabledReason,
+  disabledReasonDisplay,
+  commit,
+  expandedContent,
+  expanded: expandedProp,
+  defaultExpanded = false,
+  onExpandedChange,
+  ...rest
+}: ListItemProps) {
   const list = useContext(ListContext);
   const labels = useKitLabels("list", DEFAULT_LIST_LABELS);
   const kitLink = useKitLink();
@@ -519,7 +536,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     <>
       {Icon && (
         <Icon
-          className={cn("size-4 shrink-0 text-[var(--text-muted)]", align === "start" && "mt-0.5")}
+          className={cn("size-4 shrink-0 text-muted", align === "start" && "mt-0.5")}
           aria-hidden
         />
       )}
@@ -529,7 +546,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           now-wrapping title into a column one word wide (§4, 240 px effective width). */}
       <span className={cn("flex min-w-0 flex-1 flex-col", trailing != null && "large:basis-40")}>
         {overline != null && (
-          <span className="block truncate-until-large text-caption font-medium leading-snug text-[var(--text-muted)]">
+          <span className="block truncate-until-large text-caption font-medium leading-snug text-muted">
             {overline}
           </span>
         )}
@@ -537,7 +554,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
           // Names the body's and the expanded content's group; harmless without one.
           id={stacked ? titleId : undefined}
           className={cn(
-            "block text-sm text-[var(--text-primary)]",
+            "block text-sm text-primary",
             titleLines === 1
               ? "truncate-until-large"
               : titleLines === 2
@@ -553,7 +570,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         {subtitle != null && (
           <span
             className={cn(
-              "block text-xs text-[var(--text-muted)]",
+              "block text-xs text-muted",
               subtitleLines === 2 ? cn("line-clamp-2 break-words", UNCLAMP_AT_LARGE) : "truncate-until-large",
             )}
           >
@@ -563,7 +580,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         {meta != null && (
           <span
             className={cn(
-              "mt-0.5 text-caption leading-snug text-[var(--text-muted)]",
+              "mt-0.5 text-caption leading-snug text-muted",
               metaWrap ? "flex flex-wrap items-center gap-1" : "block truncate-until-large",
             )}
           >
@@ -586,7 +603,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         <Spinner label={null} className="size-3.5 shrink-0" />
       ) : (
         external && href !== undefined && (
-          <ExternalLink className="size-3.5 shrink-0 text-[var(--text-muted)] rtl:-scale-x-100" aria-hidden />
+          <ExternalLink className="size-3.5 shrink-0 text-muted rtl:-scale-x-100" aria-hidden />
         )
       )}
       {mark}
@@ -596,7 +613,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         <ChevronDown
           aria-hidden
           className={cn(
-            "size-4 shrink-0 text-[var(--text-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none",
+            "size-4 shrink-0 text-muted transition-transform duration-200 ease-out motion-reduce:transition-none",
             align === "start" && "mt-0.5",
             expanded && "rotate-180",
           )}
@@ -614,7 +631,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
     // When stacked the target is the top of the box, not all of it, so it takes its
     // own corners and its own hover fill (see `children`).
     stacked ? "rounded-md" : "rounded-[inherit]",
-    stacked && interactive && !inert && !selected && "transition-colors hover:bg-[var(--bg-hover)]",
+    stacked && interactive && !inert && !selected && "transition-colors hover:bg-hover",
     interactive && TARGET_RING,
     interactive && !inert && "cursor-pointer",
     loading && "cursor-progress",
@@ -685,10 +702,16 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       </button>
     );
     if (locked) {
-      // The Tooltip takes the target's place in the row, so it takes its flex sizing
-      // too; the button fills it.
+      // The frame takes the target's place in the row, so it takes its flex sizing too;
+      // the button fills it (`items-stretch` in the line's column). The line takes the
+      // row's body padding, so its words start where the title's do.
       main = (
-        <LockedReason lock={lock} className="flex min-w-0 flex-1">
+        <LockedReason
+          lock={lock}
+          display={disabledReasonDisplay}
+          className="flex min-w-0 flex-1 items-stretch"
+          lineClassName={pad.body}
+        >
           {main}
         </LockedReason>
       );
@@ -723,11 +746,11 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
         // See `renderRow`: the wrapper may be inline, the row is not.
         renderRow && "w-full",
         selected
-          ? "border-[var(--brand)] bg-[var(--bg-surface-2)]"
+          ? "border-brand bg-surface-2"
           : bordered
-            ? "border-[var(--border)]"
+            ? "border-subtle"
             : "border-transparent",
-        !stacked && interactive && !inert && !selected && "hover:bg-[var(--bg-hover)]",
+        !stacked && interactive && !inert && !selected && "hover:bg-hover",
         (disabled || locked) && "opacity-50",
         className,
       )}
@@ -766,7 +789,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
   return (
     <Tag
       className={cn(
-        list.separator === "divider" && "border-b border-[var(--border)] last:border-b-0",
+        list.separator === "divider" && "border-b border-subtle last:border-b-0",
         list.separator === "divider" && as === "li" && "py-0.5",
         renderRow && "flex flex-col",
       )}
@@ -774,7 +797,7 @@ export const ListItem = forwardRef<HTMLElement, ListItemProps>(function ListItem
       {renderRow ? renderRow(row) : row}
     </Tag>
   );
-});
+}
 
 function RenderedLink({
   render,

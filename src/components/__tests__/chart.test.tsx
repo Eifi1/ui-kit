@@ -328,6 +328,19 @@ describe("the key shows the colour the series is painted with", () => {
     expect(swatch("Bad key")).toBe("rgb(0, 0, 255)");
     expect(swatch("Bad colour")).toBe("rgb(0, 0, 255)");
   });
+
+  it("falls back to the muted text token, not a hex that ignores the theme (round 0.34)", () => {
+    // A series with no colour anywhere — not in the config, not from recharts.
+    render(
+      <ChartContainer id="nocol" config={{}}>
+        <ChartLegendContent payload={[{ dataKey: "plain" }]} />
+        <ChartTooltipContent active payload={[{ dataKey: "plain", name: "Plain", value: 1 }]} />
+      </ChartContainer>,
+    );
+    const swatches = [...document.querySelectorAll<HTMLElement>("span[style]")];
+    expect(swatches.length).toBe(2);
+    for (const s of swatches) expect(s.style.backgroundColor).toBe("var(--text-muted)");
+  });
 });
 
 describe("ChartTooltip — the missing-value path runs by default", () => {

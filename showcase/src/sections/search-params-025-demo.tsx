@@ -2,7 +2,7 @@ import { useLocation } from "react-router";
 import { Button, ToggleGroup, useSearchParamState, useSearchParamsState } from "@eifi1/ui-kit";
 // Until the barrel exports `useSearchParamsState` (0.25), straight from the module — the
 // same file the barrel re-exports, so both hooks share one queue of writes.
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
  * 0.25 — URL writes that compose (keksdose live #378), for the "State in the URL" page
@@ -15,8 +15,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * Keys `status`, `area`, `sort`, `from` and `to` — none of the page's other demos use
  * them, so they share its query string without stepping on each other.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 export function SearchParams025Demo() {
   return (
@@ -110,14 +108,14 @@ function FilterObjectDemo() {
             Clear filters
           </Button>
         </Row>
-        <ul className="divide-y divide-[var(--border)] rounded-md border border-[var(--border)] text-xs">
+        <ul className="divide-y divide-subtle rounded-md border border-subtle text-xs">
           {rows.length === 0 ? (
-            <li className="px-3 py-2 text-[var(--text-secondary)]">No key matches.</li>
+            <li className="px-3 py-2 text-secondary">No key matches.</li>
           ) : (
             rows.map((r) => (
               <li key={r.key} className="flex flex-wrap justify-between gap-x-3 px-3 py-2">
                 <span className="font-mono break-all">{r.key}</span>
-                <span className="text-[var(--text-secondary)]">{r.status}</span>
+                <span className="text-secondary">{r.status}</span>
               </li>
             ))
           )}

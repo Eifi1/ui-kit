@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { DatePicker, DateRangePicker, Switch, type DateRangePickerPreset } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * 0.23.0, kastlan: a long range is quick to pick. `monthJump` makes the panel's caption
  * open a month grid with year steps — a July-to-June service-charge period was eleven
  * month arrows past its start. Belongs on the `calendars` page.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 // Service-charge years run 1 July to 30 June. Synthetic, fixed dates: the demo does not
 // move with the calendar.

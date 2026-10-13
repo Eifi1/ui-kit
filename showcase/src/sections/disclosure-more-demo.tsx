@@ -22,7 +22,7 @@ function ResultRows() {
       hint="the figure is part of the button and its name; the chevron hugs the label so the labels keep one column"
     >
       <Stage>
-        <div data-stage="wide" className="mx-auto w-full max-w-md divide-y divide-[var(--border)] rounded-lg border border-[var(--border)]">
+        <div data-stage="wide" className="mx-auto w-full max-w-md divide-y divide-subtle rounded-lg border border-subtle">
           {RESULTS.map((r) => (
             <Disclosure
               key={r.label}
@@ -30,11 +30,11 @@ function ResultRows() {
               title={r.label}
               chevronPosition="after-title"
               trailingInTrigger
-              trailing={<span className="font-medium tabular-nums text-[var(--text-primary)]">{EUR.format(r.value)}</span>}
+              trailing={<span className="font-medium tabular-nums text-primary">{EUR.format(r.value)}</span>}
               className="px-3 py-2"
-              headerClassName="text-sm text-[var(--text-secondary)]"
+              headerClassName="text-sm text-secondary"
             >
-              <ul className="space-y-0.5 py-1 ps-3 text-xs text-[var(--text-muted)]">
+              <ul className="space-y-0.5 py-1 ps-3 text-xs text-muted">
                 {r.parts.map(([name, v]) => (
                   <li key={name} className="flex justify-between gap-3">
                     <span>{name}</span>
@@ -44,9 +44,9 @@ function ResultRows() {
               </ul>
             </Disclosure>
           ))}
-          <div className="flex justify-between px-3 py-2 text-sm text-[var(--text-secondary)]">
+          <div className="flex justify-between px-3 py-2 text-sm text-secondary">
             <span>Tax rate (not expandable)</span>
-            <span className="font-medium tabular-nums text-[var(--text-primary)]">15.8 %</span>
+            <span className="font-medium tabular-nums text-primary">15.8 %</span>
           </div>
         </div>
       </Stage>
@@ -99,7 +99,7 @@ function EmptyControls() {
             placeholder="Filter the rows (try “zzz”)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--brand)]"
+            className="w-full rounded-md border border-subtle bg-surface px-2 py-1.5 text-sm text-primary outline-none focus:ring-2 focus:ring-brand"
           />
           <div ref={headerRef}>
             <Disclosure
@@ -110,22 +110,22 @@ function EmptyControls() {
               onOpenChange={setOpen}
             />
           </div>
-          <ul className="overflow-hidden rounded-md border border-[var(--border)]">
+          <ul className="overflow-hidden rounded-md border border-subtle">
             {open &&
               shown.map((r, i) => (
                 <li
                   key={r}
                   id={`${base}-${r}`}
-                  className={cn("px-3 py-1.5 text-sm text-[var(--text-primary)]", i > 0 && "border-t border-[var(--border)]")}
+                  className={cn("px-3 py-1.5 text-sm text-primary", i > 0 && "border-t border-subtle")}
                 >
                   {r}
                 </li>
               ))}
             {(!open || shown.length === 0) && (
-              <li className="px-3 py-1.5 text-xs text-[var(--text-muted)]">{open ? "No rows match." : "Folded."}</li>
+              <li className="px-3 py-1.5 text-xs text-muted">{open ? "No rows match." : "Folded."}</li>
             )}
           </ul>
-          <p className="font-mono text-xs text-[var(--text-secondary)]">
+          <p className="font-mono text-xs text-secondary">
             aria-controls = {attr === null ? "(none)" : `"${attr}"`}
           </p>
         </div>

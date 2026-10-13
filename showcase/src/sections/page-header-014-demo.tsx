@@ -1,13 +1,11 @@
 import { ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, Plus } from "lucide-react";
 import { ButtonGroup, IconButton, PageHeader, SectionLabel, Select } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * The 0.14 PageHeader props, all from keksdose adopting 0.13: `truncateTitle` (G6a,
  * payees), `secondaryActions` (G6b, budget) and `actionsAlign` (G8, reports).
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 function PageHeaderTruncate() {
   const title = "Payees, merchants and everyone else money goes to or comes from";

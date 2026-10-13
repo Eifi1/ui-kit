@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 
-import { readStored, writeStored } from "../lib/safe-storage";
+import { readStored, removeStored, writeStored } from "../lib/safe-storage";
 import type { LandingSession } from "./landing-actions";
 import { LoadingState } from "../components/loading-state";
 
@@ -142,12 +142,7 @@ export function readLastVisitedPage(key: string, fallback: string | null = null)
 /** Forget the remembered page — on an explicit sign-out, so the next account does not
  *  resume on the previous one's page. */
 export function clearLastVisitedPage(key: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(key);
-  } catch {
-    // storage blocked: there is nothing to forget
-  }
+  removeStored(key);
 }
 
 /* ── RootEntry ───────────────────────────────────────────────────────────── */

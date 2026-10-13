@@ -1,9 +1,7 @@
 # The public landing page and the demo — harmonisation plan
 
-Status: **2026-10-07, reviewed.** All three apps answered the same day; §10 records
-what they settled, and the sections above already follow it. Led from ui-kit at Marcel's request. It ships in
-ui-kit **0.31** and server-kit **0.5**, together with the settings round
-(`docs/settings-harmonization.md`).
+Led from ui-kit at Marcel's request (2026-10-07). It shipped in ui-kit **0.31** and
+server-kit **0.5**, together with the settings round (`docs/settings-harmonization.md`).
 
 It is built from a read-only audit of the three apps (2026-10-07; kept outside the repo),
 Kurvenschmiede's and kastlan's proposals, and kastlan's demo backend (local,
@@ -15,25 +13,30 @@ It amends the legal round (`docs/legal-harmonization.md`) on robots and the site
 (§4.3), and builds on the sign-in round (`docs/auth-harmonization.md`): `is_demo`,
 `name_incomplete` never for a demo, the nullable `refresh_token`.
 
+## Status
+
+The body says what the build does as of ui-kit 0.34.0 and server-kit 0.8.0; the reviews
+and later rounds that amended a section are folded into it, and the table names them. The
+snapshot of the three apps, the per-repo to-dos, the order and the reviews' list as
+written are in [archive/landing-demo-history.md](archive/landing-demo-history.md).
+
+| § | Section | Shipped in | Amended by |
+|---|---|---|---|
+| 1 | Where each one stands | — (archived) | |
+| 2 | Decisions | — | §10.5, §10.10 |
+| 3 | Routes | ui-kit 0.31.0 | §10.10, §10.12; 0.31.1 (`RootEntry` waits for the session) |
+| 4 | The landing page | ui-kit 0.31.0 | §10.8, §10.10; 0.31.1 (`demoHref={null}`) |
+| 5 | The demo | ui-kit 0.31.0, server-kit 0.5.0 | §10.1–§10.3, §10.7; 0.31.1 (the signed-out steps, §5.5); round 0.34 (auth §11: the session refresh ends a demo) |
+| 6 | The backend | server-kit 0.5.0 | §10.4–§10.6, §10.11 |
+| 7 | What the kits add, what stays app-side | ui-kit 0.31.0, server-kit 0.5.0 | §10.9 |
+| 8 | Per repo | — (archived) | |
+| 9 | Order | — (archived) | |
+| 10 | Settled after the reviews | — | index; folded items point to their § |
+
 ## 1. Where each one stands
 
-| | keksdose | kastlan | Kurvenschmiede |
-|---|---|---|---|
-| `/` signed out | the landing (`RootEntry`) | `/login` | the public dashboard in the app shell |
-| `/` signed in | resumes the last page, else the landing | `/dashboard` | the same dashboard |
-| Landing | hero, three job rows with mock visuals, trust strip, CTA band, footer; hard-coded teal | none | none |
-| SEO | `usePageSeo` (canonical, title, description, JSON-LD), a length test for de and en | none | none; a stale index.html description |
-| robots / sitemap | Disallow `/demo`; sitemap `/` | branch `fix/robots-txt`, no sitemap | commit 853e22b (not merged), sitemap `/`, `/control`, `/steering` |
-| Demo | `/demo` → throwaway user, viewer share on a system budget (editor while an admin has the demo open), 60-min token, no refresh, nightly reap; a disabled demo answers 403 | backend done locally: ADMIN of a shared demo company, read-only in two layers, reap on create | none |
-| Demo → account | none; `RedirectIfAuthed` sends a demo back into the app | none | — |
-| Demo end | the first 401 after 60 min lands on `/login`, unexplained | — | — |
-| Registration | invitation-only with the sign-in round (its step 5, in progress; `main` still has the allow-list) | invitation-only | invitation-only |
-
-The kit has `LegalFooter`, `useNoIndex`, `ThemeToggle` / `LanguageMenu`, `TopBar` /
-`TopBarBrand`, `AuthLayout`, `WriteLockProvider`, `AlertBanner`, `ServerWakeNotice` and
-the crash reporter's `suppress`. It has **no** landing sections, `usePageSeo`, SEO test
-helper, `RootEntry`, demo parts or demo labels. server-kit has the nullable
-`refresh_token`, `access_claims(lifetime=)` and the limiter, and **no** demo module.
+Moved to [archive/landing-demo-history.md](archive/landing-demo-history.md): the three
+apps' landing pages, SEO and demos before the 0.31 round, and what the kits had then.
 
 ## 2. Decisions (Marcel, 2026-10-07)
 
@@ -53,7 +56,7 @@ helper, `RootEntry`, demo parts or demo labels. server-kit has the nullable
 5. **The countdown runs to the demo account's end: 24 hours.** The demo session
    therefore lives as long as the account (§5.3), not 60 minutes.
 
-Settled by the kit in this draft; the reviews may object:
+Settled by the kit in the draft, and kept by the reviews:
 
 6. **A disabled demo answers 404** (`demo_disabled`), as kastlan has it: it is "not
    there", not "forbidden". **The switch is off by default** in server-kit; keksdose sets
@@ -62,9 +65,10 @@ Settled by the kit in this draft; the reviews may object:
 8. **Seeding never runs on the request path.** A deploy step or a one-off job fills the
    demo data. Until it has run, the mint answers 503 `demo_not_ready`.
 9. **A demo user can't add a way in or out:** passkeys, API tokens, 2FA, E2EE
-   enrolment, email or password change, deletion and export are all refused (§6.4).
+   enrolment, email or password change, deletion and the account export are all refused
+   (§6.4). The app's own data exports stay allowed.
 10. **"Demo" means the demo session and the shared demo data it shows**, never the
-    blur toggle: keksdose renames that (today "demo mode") to "Presentation mode".
+    blur toggle: keksdose renames that (its old "demo mode") to "Presentation mode".
     keksdose's "Load demo data" and "Preview demo" for signed-in users keep their
     names.
 11. **Landing colours come from the kit's tokens** (`--brand` and so on). keksdose's
@@ -82,21 +86,27 @@ Settled by the kit in this draft; the reviews may object:
 | `/demo` | no session, or a demo session | start a demo, or continue the live one (§5.2). noindex, robots Disallow |
 | `/demo` | a real session | back into the app (`RedirectIfAuthed`) |
 | `/demo/ended` | anyone | the demo's end page (§5.5). noindex |
-| `/login`, `/register`, the app's invitation pages | a demo session | **shown**, not redirected (§5.6). A real session is redirected as today |
+| `/login`, `/register`, the app's invitation pages | a demo session | **shown**, not redirected (§5.6). A real session is redirected (`RedirectIfAuthed`) |
 
 **The app's home after the move:**
 - keksdose: `/budget` (unchanged).
 - kastlan: `/dashboard` (unchanged).
 - **Kurvenschmiede:** the dashboard moves from `/` to **`/dashboard`**. Its public tools
   (`/control`, `/steering`) stay public and keep their nav entries. A signed-out
-  visitor at `/` now sees the landing, and the landing links the public tools.
+  visitor at `/` sees the landing, which links the public tools from their feature rows
+  ("Open — no account needed"), not from the header.
+
+While the app is still restoring a session, `RootEntry` takes `session="loading"` and
+shows its `loading` (default: the kit's `LoadingState`) instead of guessing (0.31.1).
 
 ### 3.2 Resume (keksdose's `RootEntry` and last-visited page)
 
 - The last visited page is kept on the device (`<app>.lastVisitedPage`). It is written
   on every route change except the excluded paths: `/`, `/welcome`, the auth pages,
-  `/demo*`, legal pages, the 404, plus the app's own (keksdose `/banks/callback`,
-  `/join`, `/share-target`).
+  `/demo*`, legal pages (`DEFAULT_LAST_VISITED_EXCLUDES`), the 404, plus the app's own
+  through `exclude` (keksdose `/banks/callback`, `/join`, `/share-target`). The 404 has
+  no path of its own: `useLastVisitedPage` runs inside the signed-in layout and never
+  sees it.
 - The invitation pages are each app's own: keksdose `/register?invite=<token>` and
   `/join?token=<token>`; kastlan and KS as built in the sign-in round.
 - `?next=` is honoured only for a safe same-origin path (`safeNextPath`).
@@ -120,7 +130,8 @@ One page, top to bottom (keksdose's):
    The same header serves the auth pages, the legal pages and the 404, as in keksdose.
 2. **`Hero`**: an optional badge ("Beta"), the `h1`, a subtitle, the action pair
    (**"Request access"** and **"Try the demo"**; "Open app" for a session), a trust line,
-   and a visual.
+   and a visual. An app without a demo passes `demoHref={null}`, and "Try the demo" is
+   left out (`LandingActions`, so `Hero` and `CtaBand` alike).
 3. **`FeatureRows`**: two to four rows, alternating sides. Each has an icon eyebrow, an
    `h2`, a description, up to three bullets, and a visual.
 4. **`TrustStrip`**: three or four items (icon, `h3`, one sentence): hosting, security,
@@ -154,8 +165,8 @@ One page, top to bottom (keksdose's):
 
 - **The landing calls `usePageSeo`** (lifted from keksdose, same API):
   - `canonicalPath: "/"` on both `/` and `/welcome`;
-  - the title, the description, and the JSON-LD (`SoftwareApplication`; the app writes
-    it).
+  - the title, the description, and the JSON-LD (the app writes it, `@type` included,
+    §4.1).
   It restores everything on unmount.
 - **One URL for all languages** (`/`). The page renders in the visitor's language. There
   are no per-language URLs and no hreflang.
@@ -167,7 +178,7 @@ One page, top to bottom (keksdose's):
   - the parity with index.html above.
 - **noindex** (`useNoIndex` plus `X-Robots-Tag` from Caddy): the auth pages, the legal
   pages, the 404, **`/demo` and `/demo/ended`**.
-- **robots.txt (amends the legal contract):**
+- **robots.txt (amends the legal contract, legal §3.2):**
   - `Disallow: /demo$` and `Disallow: /demo?`, because rendering `/demo` creates a user.
     Not the plain prefix `/demo`: that would also block `/demo/ended`, whose noindex a
     crawler must be able to fetch (`$` and `?` are RFC 9309 patterns);
@@ -176,8 +187,8 @@ One page, top to bottom (keksdose's):
   - never the noindex pages: a crawler must fetch them to see the noindex.
 - **sitemap.xml** lists only the indexable public pages:
   - keksdose `/`;
-  - kastlan `/`. This reverses the legal round's "no sitemap where no page is
-    indexable", because `/` now is;
+  - kastlan `/`: its landing made `/` indexable, so it serves a sitemap after all
+    (legal §3.2);
   - Kurvenschmiede `/`, `/control`, `/steering`.
 
 ## 5. The demo
@@ -199,8 +210,7 @@ and **`expires_at`**. The checks run in this order (kastlan's):
 - **The IP is counted from the right**: `client_ip(headers, peer, trusted_hops=N)`
   (server-kit), where N is the number of proxies the app runs behind. Never the
   left-most `X-Forwarded-For`, which the client writes: a random header would bypass the
-  per-IP window, and 500 starts would close the demo for a day (keksdose's
-  `client_ip` does this today).
+  per-IP window, and 500 starts would close the demo for a day.
 - **The cap counts live users only**, so a user the reap can't delete doesn't hold a
   place for ever.
 - **"Ready" means the demo data exists in any version**, not only the current one, so a
@@ -211,9 +221,10 @@ and **`expires_at`**. The checks run in this order (kastlan's):
     rule, so nothing can ever reach it;
   - a random password nobody holds;
   - pre-verified, `is_demo = true` (indexed);
-  - first name "Demo", no last name. **Every app MUST pass `is_demo` to
-    `name_incomplete(first, last, is_demo=…)`** (server-kit 0.4), or every demo would
-    get the complete-your-name prompt (kastlan's `MeResponse` doesn't yet);
+  - first name "Demo" (`DEMO_FIRST_NAME`), no last name. **Every app MUST pass `is_demo`
+    to `name_incomplete(first, last, is_demo=…)`** (server-kit 0.4), or every demo would
+    get the complete-your-name prompt. On `UserResponse` that is an override of
+    `name_completion_exempt()` returning `is_demo`;
   - the locale from the body (canonical, §6.2 of the settings contract).
 - **Model R:** keksdose gives a viewer share on the system demo budget; kastlan makes
   the user an ADMIN of the shared demo company. **Model S:** KS makes a MEMBER with
@@ -233,29 +244,28 @@ and **`expires_at`**. The checks run in this order (kastlan's):
   - `demo_capacity`: "The demo is full right now. Try again later.";
   - `demo_disabled` and `demo_not_ready`: "The demo isn't available right now.";
   - anything else: the kit's generic error.
-  Each one offers "Request access" and "Back to the start page". keksdose's fallback to
-  `/register` goes, because registration is invitation-only.
+  Each one offers "Request access" and "Back to the start page". There is no fallback to
+  `/register`: registration is invitation-only.
 
 ### 5.3 The session (§2.5)
 
 - **The demo's access token lives until the demo account's end:** `created_at` plus the
   maximum age (24 h). There is no refresh token. `expires_at` in the `TokenResponse`, and
   `demo_expires_at` in `/auth/me`, say when.
-  - This replaces the 60-minute token. A token that ended at 60 minutes while the
-    countdown showed 23 h left would contradict the banner, and a refresh token would
-    add a second credential to a throwaway account.
+  - Not a 60-minute token: one that ended at 60 minutes while the countdown showed 23 h
+    left would contradict the banner, and a refresh token would add a second credential
+    to a throwaway account.
   - The risk stays small: a demo user can't write (model R) or can only write its own
     throwaway sandbox (model S), and can't add any way in (§6.4).
-  - `demo_session_token_minutes` goes away.
+  - There is no `demo_session_token_minutes` setting.
 - **The client keeps the demo session across a reload.** kastlan holds its access token
   in memory and rehydrates from the refresh token, so a demo would be lost on every
   reload. It stores the demo's access token (and only the demo's) under a key of its
   own (`kastlan.demoSession = {access_token, expires_at}`), read when there is no
   refresh token. Its 401 → refresh path skips a demo.
 - **The 24-hour token ships only together with the refusals of §6.4**, in the same app
-  release. Until those are in, a demo token can create API tokens, register passkeys,
-  enable 2FA and subscribe to push (keksdose today), and a day-long token makes that
-  worse.
+  release. Without them a demo token can create API tokens, register passkeys, enable
+  2FA and subscribe to push, and a day-long token makes that worse.
 - **The countdown and the end are the client's**, from `expires_at`. It never decodes the
   JWT.
 
@@ -297,6 +307,12 @@ and **`expires_at`**. The checks run in this order (kastlan's):
   `/login`. **The signed-out sign-in steps are excluded** (0.31.1, keksdose): a demo may
   open `/login` (§5.6), and a wrong password there answers `401 invalid_credentials`,
   which must not end the demo.
+  - With the kit's session refresh (auth §11, ui-kit 0.34) this is built in:
+    `createSessionRefresh`'s `isDemo` makes a demo's 401 end the session with no refresh
+    tried, `onEnded({ demo: true })` is where the app clears it and replaces to
+    `/demo/ended`, and `isSignedOutStep` (`src/lib/session-refresh.ts`) is the list of
+    signed-out steps whose 401 never ends anything. A request sent for an older token is
+    replayed with the current one instead.
 - **`DemoEnded`** (on `AuthLayout`, noindex): "The demo has ended.", one line ("Sample
   data is reset regularly; your own work from the demo is deleted." for model S), and
   three actions: **"Start a new demo"** (`/demo`), **"Request access"**, **"Sign in"**.
@@ -320,7 +336,7 @@ and **`expires_at`**. The checks run in this order (kastlan's):
   ends.
 - **How:** first delete or detach every row that would block the user's deletion, then
   delete the users. Each app lists its rows:
-  - keksdose: shares and comments today. Pinning demo users to viewer (§5.4) keeps the
+  - keksdose: shares and comments. Pinning demo users to viewer (§5.4) keeps the
     list short; the reap test must create every row a demo user still can;
   - kastlan: sessions and audit rows (a sign-out is logged), feedback and contact links
     set to null;
@@ -349,7 +365,8 @@ and **`expires_at`**. The checks run in this order (kastlan's):
 | `demo_session_rate_max` | 5 (0 or less turns the per-IP window off) |
 | `demo_session_rate_window_seconds` | 3600 |
 
-plus the app's own (kastlan `demo_company_slug`). `demo_session_token_minutes` goes away.
+plus the app's own (kastlan `demo_company_slug`). There is no
+`demo_session_token_minutes` (§5.3).
 
 ### 6.2 The codes
 
@@ -435,14 +452,15 @@ the mint. Landing views before the demo count as usual.
 
 ### 7.1 ui-kit 0.31
 
-**Landing** (main entry):
+**Landing** (main entry; `src/landing/`):
 - `PublicHeader({brand, homeHref, session: "none" | "demo" | "user", access, signInHref,
-  openAppHref, demoHref, labels})`, built on `TopBar` and `TopBarBrand`, with the
-  language menu and theme toggle;
+  openAppHref, demoHref, languageMenu, themeToggle, labels})`, built on `TopBar` and
+  `TopBarBrand`, with the app's language menu and theme toggle (also in `./shell`);
 - `Hero`, `FeatureRows` / `FeatureRow`, `TrustStrip`, `CtaBand`, `PublicFooter`;
-- `accessAction(access)`: the mailto (subject and body in the language) or the register
-  link;
-- `LandingActions`: the action pair for the session state, used by `Hero` and `CtaBand`.
+- `accessAction(access, labels?)` and `useAccessAction`: the mailto (subject and body in
+  the language) or the register link;
+- `LandingActions`: the action pair for the session state, used by `Hero` and `CtaBand`;
+  `demoHref={null}` leaves the demo out (0.31.1).
 - `SignInForm access`: its "Create an account" link becomes "Request access" (§4.2).
 
 **SEO:**
@@ -450,17 +468,20 @@ the mint. Landing views before the demo count as usual.
 - `seoCopyProblems({title, description, brand}, {maxTitle: 60, maxDescription: 155})` and
   `metaContent(html, selector)`, for the app's test.
 
-**Routing** (`./shell` slice):
-- `RootEntry({session, resumePath, landing, home})`;
+**Routing** (main entry and `./shell`):
+- `RootEntry({session, resumePath, landing, home, loading})`, `session` `"loading"` while
+  the app restores one (0.31.1);
 - `RedirectIfAuthed({session, allowDemo, fallback})`;
-- `useLastVisitedPage({key, exclude})`, `readLastVisitedPage`, `safeNextPath`.
+- `useLastVisitedPage({key, exclude, enabled})`, `readLastVisitedPage`,
+  `clearLastVisitedPage`, `DEFAULT_LAST_VISITED_EXCLUDES`, `safeNextPath`, `NEXT_PARAM`.
 
-**Demo:**
-- `DemoStart({start, onStarted, access, labels})`: §5.2;
-- `DemoBanner({expiresAt, model: "read-only" | "sandbox", access, signInHref})`:
-  §5.4, with `useDemoCountdown(expiresAt)`;
+**Demo** (`src/demo/`):
+- `DemoStart({start, onStarted, access, backHref, labels})`: §5.2;
+- `DemoBanner({expiresAt, model: "read-only" | "sandbox", access, signInHref, onEnded})`:
+  §5.4, with `useDemoCountdown(expiresAt)` (`demoCountdown` for the pure reading);
 - `DemoEnded({restartHref, access, signInHref, model})`: §5.5;
-- `DemoErrorCode`, and `isDemoSession(me)`.
+- `DemoErrorCode` (`src/auth/auth-errors.ts`), and `isDemoSession(me)`, which reads
+  `is_demo` or `isDemo`.
 
 **Labels:** new `landing` and `demo` namespaces in seven languages, kit words only.
 
@@ -472,16 +493,19 @@ the banner at 23 h / 50 min / 4 min, and `DemoEnded`.
 
 `eifi1_server_kit.demo`:
 - `DemoSettings` (§6.1);
-- `DemoGate`: the order of §5.1 around the app's three callbacks (`reap(limit=20)`,
-  `count_live`, `is_ready`), using a per-IP `Budget(5, 3600)` from the settings; it
-  raises `DemoError` with the code, status and `Retry-After`;
+- `DemoGate(settings, reap_limit=20).admit(ip, *, reap, count_live, is_ready)`: the order
+  of §5.1 around the app's three async callbacks (`reap(cutoff=, limit=)`,
+  `count_live(cutoff=)`, `is_ready()`), using a per-IP `Budget(5, 3600)` from the
+  settings; it answers a `DemoAdmission(now, cutoff, reaped)` or raises `DemoError` with
+  the code, status and `Retry-After`;
 - `client_ip(headers, peer, *, trusted_hops)` (§5.1), for the demo window and every
   other per-IP limit. It lives in `eifi1_server_kit.limiter`, beside the limiter;
-- `demo_address(domain)`, `is_demo_address(email)`, `demo_password()`;
+- `demo_address(domain)`, `is_demo_address(email, domain=None)`, `demo_password()`,
+  `DEMO_FIRST_NAME`;
 - `demo_expires_at(created_at, settings)` and `stale_cutoff(now, settings)`;
 - `demo_write_allowed(method, path, allow=…)` (§6.3) and `refuse_demo(user_is_demo, what)` →
   `DemoError("demo_refused")`;
-- `DemoErrorCode`, handled by `install_contract_error_handlers`.
+- `DemoErrorCode`; `DemoError` is answered by `install_contract_error_handlers`.
 
 In `auth`:
 - `TokenResponse.expires_at: datetime | None`;
@@ -501,102 +525,32 @@ In `auth`:
 
 ## 8. Per repo
 
-- **keksdose:**
-  - the landing onto the kit parts (header, hero, rows, trust, CTA band, footer), with
-    kit tokens for its about ten hard-coded teal sites;
-  - "Get started → /register" becomes "Request access": the header, the hero, the CTA
-    band, the demo start's fallback and the sign-in page's register link;
-  - `usePageSeo` and the SEO test from the kit, for all shipped languages;
-  - `DemoStart`, `DemoBanner` (with `PreviewBanner` skipping a demo), `DemoEnded`, the
-    401 → `/demo/ended` rule (today a hard navigation to `/login`), and
-    `RedirectIfAuthed` and the header treating a demo as a demo;
-  - Plausible: `plausible_ignore` for a demo, plus "Demo started" from the backend;
-  - backend:
-    - the token to the account's end, with `expires_at` and `demo_expires_at`,
-      **shipped together with the missing refusals of §6.4** (passkeys, API tokens, 2FA,
-      E2EE, push, email and password change), now coded `demo_refused`;
-    - the switch: ON in its own settings subclass; 404 when off;
-    - the gate: readiness by any demo stamp, the cap counting live users, `client_ip`
-      from the right;
-    - the reap on start (20 oldest, a savepoint per user), its row list taken from the
-      erasure's foreign-key plan;
-    - the seeder off every request path: `demo_cleanup` reaps then converges (creating
-      the budget when missing), Cloud Build runs it once after each deploy, both entry
-      paths only grant the share, and the dev setup and test fixtures seed first;
-    - demo users pinned to viewer (`enter_preview`, and the admin's editable switch
-      skipping them);
-    - layer 1 of §6.3 with its assistant allow-list (RLS is its database layer);
-  - "demo mode" (blur) renamed "Presentation mode".
-- **kastlan:**
-  - a landing at `/` (signed out); `/` for a session resumes; `/welcome`;
-  - robots and sitemap: `/` indexed, `Disallow: /demo$` and `/demo?` (the held
-    `fix/robots-txt` branch, updated);
-  - the client: a null refresh token, `kastlan.demoSession`, the refresh path skipping a
-    demo;
-  - `/demo`, the banner, the end, the 401 rule, and the crash reporter's `suppress`;
-  - backend:
-    - the token to the account's end, `expires_at`, the codes;
-    - `DemoGate` and `demo_write_allowed` from server-kit in place of the local order;
-    - `name_incomplete(…, is_demo=…)`, and "Demo" with an empty last name;
-    - `refuse_demo` on the GET routes of §6.4 (the account export);
-    - 20 PDFs an hour per demo user;
-    - the reap with a savepoint per user;
-  - the demo backend ships with the landing in 0.31 (Marcel).
-- **Kurvenschmiede:**
-  - the landing at `/`, the dashboard to `/dashboard` (the sidebar's Home follows),
-    the brand link to `/welcome` when signed in, the resume;
-  - the public tools linked from their feature rows ("Open — no account needed"), not
-    the header;
-  - `usePageSeo`, the SEO test, and a new index.html description;
-  - robots (853e22b merged, plus `Disallow: /demo$` and `/demo?`) and the sitemap;
-  - the demo, model S:
-    - `is_demo`, the endpoint through `DemoGate`;
-    - the system account, its worked examples and the hidden "Demo" team, converged in
-      the migrate job;
-    - the sandbox; app data exports allowed;
-    - the refusals (sharing, inviting, teams, feedback, uploads, mail, the account
-      export);
-    - the reap on start (it has no job runner since its deletion went to `operator`
-      mode);
-  - the frontend parts as above, and `FeedbackMenu` hidden for a demo.
+Moved to [archive/landing-demo-history.md](archive/landing-demo-history.md): the 0.31
+round's per-repo to-dos for the three apps, all adopted.
 
 ## 9. Order
 
-The parts need ui-kit 0.31 and server-kit 0.5. kastlan ships its demo backend together
-with its landing page. keksdose adopts after its sign-in round and 0.30;
-Kurvenschmiede after its 0.30 adoption.
+Moved to [archive/landing-demo-history.md](archive/landing-demo-history.md): the order the
+0.31 round shipped in (the kits first, then each app).
 
 ## 10. Settled after the reviews (2026-10-07)
 
-All three apps reviewed the draft (4a2940f) the same day. The sections above follow
-what they settled; this is the list.
+The reviews' items keep their numbers, which the code cites. An item that amended a
+section above is folded into it and points there; an item that is a rule of its own
+stands here. The reviews' wording is in
+[archive/landing-demo-history.md](archive/landing-demo-history.md).
 
-1. **24 hours for the account and the token** (all three). keksdose: only together with
-   the §6.4 refusals, in the same release (§5.3).
-2. **The gate** (keksdose):
-   - readiness by any version of the demo data;
-   - the cap counts live users only;
-   - the IP counted from the right (`client_ip(trusted_hops)`), never the left-most
-     header;
-   - the start reaps at most 20 (§5.1, §5.7).
-3. **Every app passes `is_demo` to `name_incomplete`** (kastlan; §5.1).
-4. **The allow-list of layer 1 is the app's**, empty by default (keksdose: no logout
-   route, but its assistant; §6.3).
-5. **GET routes on the never-list refuse explicitly** (kastlan); **app data exports
-   stay allowed**, only the account export is refused (KS, keksdose); **expensive reads
-   get a per-demo budget** (kastlan; §6.4).
-6. **A demo's language pick stays on the device** (KS; §6.4, settings §6.2).
-7. **KS's "Demo" team is a hidden system team** (KS; §5.4).
-8. **robots:** `Disallow: /demo$` and `/demo?`, so `/demo/ended`'s noindex stays
-   fetchable (keksdose; §4.3).
-9. **The seeder:** keksdose's existing cleanup job reaps and converges, run once after
-   each deploy; KS converges in its migrate job (§7.3). keksdose's job runs at 04:30 UTC,
-   so between midnight on the 1st and 04:30 the current month looks empty; moving the
-   trigger to 00:05 UTC is one manual `gcloud scheduler jobs update`, Marcel's to run
-   if wanted.
-10. **Wording:** "demo" covers the demo session and its shared data; mock amounts use
-    the demo data's currency; invitation pages are each app's own; the `access` choice
-    reaches the sign-in page (§2.10, §3, §4.1, §4.2).
-11. **Analytics:** `plausible_ignore` for a demo, "Demo started" from the backend
-    (keksdose; §6.6).
-12. **The public tools** are linked from the feature rows only (KS; §8).
+1. **24 hours for the account and the token**, only together with the refusals → §5.3.
+2. **The gate** (readiness, the live cap, the IP from the right, 20 reaped per start)
+   → §5.1, §5.7.
+3. **Every app passes `is_demo` to `name_incomplete`** → §5.1.
+4. **The allow-list of layer 1 is the app's** → §6.3.
+5. **GET routes on the never-list refuse explicitly; app data exports stay allowed;
+   expensive reads get a budget** → §6.4.
+6. **A demo's language pick stays on the device** → §6.4.
+7. **KS's "Demo" team is a hidden system team** → §5.4.
+8. **robots: `Disallow: /demo$` and `/demo?`** → §4.3.
+9. **The seeder** → §7.3; keksdose's scheduler time → archive.
+10. **Wording** → §2 (decision 10), §3.2, §4.1, §4.2.
+11. **Analytics** → §6.6.
+12. **The public tools, from the feature rows only** → §3.1.

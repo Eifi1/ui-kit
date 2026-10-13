@@ -1,9 +1,10 @@
 import { Pencil } from "lucide-react";
-import { Card, CardAction, CardContent, CardHeader, CardTitle, IconButton } from "../components/ui";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "../components/card";
+import { IconButton } from "../components/icon-button";
 import { Tooltip } from "../components/tooltip";
 import type { SummarySection, WizardLabels } from "./types";
 import { DEFAULT_WIZARD_LABELS } from "./types";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 
 /**
  * The review step: one card per section, each row a label/value pair, each card
@@ -29,13 +30,13 @@ export function WizardSummary({
   onEditStep?: (stepIndex: number) => void;
   /** Disable every edit button (e.g. `wizard.isSubmitting`). */
   disabled?: boolean;
-  labels?: Partial<WizardLabels>;
+  labels?: LabelOverride<WizardLabels>;
 }) {
   const l = useKitLabels("wizard", DEFAULT_WIZARD_LABELS, labels);
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)]">{l.reviewTitle}</h2>
+      <h2 className="text-lg font-semibold text-primary">{l.reviewTitle}</h2>
       {sections.map((section, sIdx) => (
         <Card key={sIdx}>
           {/* CardHeader is a grid, and CardAction is the top-right column it
@@ -68,11 +69,11 @@ export function WizardSummary({
               {section.items.map((item, iIdx) => (
                 <div key={iIdx}>
                   {iIdx > 0 && (
-                    <div className="mb-2 border-t border-[var(--border)]" role="presentation" />
+                    <div className="mb-2 border-t border-subtle" role="presentation" />
                   )}
                   <div className="flex items-start justify-between gap-4">
-                    <dt className="text-[var(--text-muted)]">{item.label}</dt>
-                    <dd className="text-end font-medium text-[var(--text-primary)]">
+                    <dt className="text-muted">{item.label}</dt>
+                    <dd className="text-end font-medium text-primary">
                       {item.value}
                     </dd>
                   </div>

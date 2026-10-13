@@ -2,7 +2,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { DEFAULT_MONTH_PICKER_LABELS, MonthPicker, type MonthPickerProps } from "../month-picker";
-import { FIELD_INVALID } from "../ui";
+import { FIELD_INVALID } from "../field-base";
 
 /**
  * The month picker that replaces keksdose's budget-header popover and kastlan's
@@ -37,7 +37,7 @@ describe("MonthPicker trigger", () => {
 
   it("shows the placeholder, muted, when there is no value", () => {
     renderPicker({ value: "", placeholder: "Pick a month" });
-    expect(screen.getByText("Pick a month")).toHaveClass("text-[var(--text-placeholder)]");
+    expect(screen.getByText("Pick a month")).toHaveClass("text-placeholder");
   });
 
   it("is named by its label AND its value", () => {

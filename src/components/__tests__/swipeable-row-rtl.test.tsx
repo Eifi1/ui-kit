@@ -17,7 +17,7 @@ const action = (label: string, onCommit: () => void = vi.fn()): SwipeAction => (
   onCommit,
   label,
   className: "bg-[var(--money-neutral)]",
-  armedClassName: "bg-[var(--danger)]",
+  armedClassName: "bg-danger",
 });
 
 function renderRow(onRight = vi.fn(), onLeft = vi.fn()) {

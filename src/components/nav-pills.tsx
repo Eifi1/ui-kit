@@ -1,6 +1,7 @@
-import type { ComponentPropsWithoutRef, ComponentType, MouseEvent, ReactElement, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ComponentType, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useKitLink } from "../i18n/kit-labels";
+import { FOCUS_RING } from "./focus-ring";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 
 export interface NavPillItem<T extends string> {
@@ -49,17 +50,21 @@ export interface NavPillsProps<T extends string> extends Omit<ComponentPropsWith
   landmark?: boolean;
   /** Classes for every pill. */
   itemClassName?: string;
+  /** The `<nav>` (or the `<div role="group">`) — hence `HTMLElement` (0.34, API-2,
+   *  refactor audit 2026-10). */
+  ref?: Ref<HTMLElement>;
 }
 
 // The pill is a ToggleGroup segment's (`rounded`, `px-3 py-1.5`, the inverse fill for
 // the current one), so a strip of these beside a segmented control reads as the same
-// family. Unlike the segments, a pill never truncates: the strip WRAPS instead.
-const PILL =
-  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-[length:var(--focus-ring-width)] focus-visible:ring-[var(--border-strong)] [&_svg]:size-4 [&_svg]:shrink-0";
+// family. Unlike the segments, a pill never truncates: the strip WRAPS instead. Its focus
+// ring is the kit's one focus frame (text-size §5), in brand; until 0.34 it copied the
+// segment's `ring-strong` too (refactor audit 2026-10, DOC-7).
+const PILL = `inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none ${FOCUS_RING} [&_svg]:size-4 [&_svg]:shrink-0`;
 const PILL_SM = "gap-1 px-2 py-1 text-xs [&_svg]:size-3.5";
-const PILL_CURRENT = "bg-[var(--bg-inverse)] text-[var(--text-inverse)]";
-const PILL_IDLE = "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]";
-const PILL_DISABLED = "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-[var(--text-secondary)]";
+const PILL_CURRENT = "bg-inverse text-inverse";
+const PILL_IDLE = "text-secondary hover:bg-hover hover:text-primary";
+const PILL_DISABLED = "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-secondary";
 
 /**
  * A set of links or buttons that WRAPS onto as many rows as it needs, the current one
@@ -85,12 +90,18 @@ export function NavPills<T extends string>({
   landmark = true,
   itemClassName,
   className,
+  ref,
   ...rest
 }: NavPillsProps<T>) {
   const kitLink = useKitLink();
   const Root = landmark ? "nav" : "div";
   return (
-    <Root {...rest} role={landmark ? undefined : "group"} className={cn("min-w-0", className)}>
+    <Root
+      {...rest}
+      ref={ref as Ref<HTMLDivElement> | undefined}
+      role={landmark ? undefined : "group"}
+      className={cn("min-w-0", className)}
+    >
       <ul className="m-0 flex list-none flex-wrap gap-1 p-0">
         {items.map((item) => {
           const isCurrent = item.value === current;

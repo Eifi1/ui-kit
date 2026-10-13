@@ -37,10 +37,10 @@ function DraggableRows() {
             key={s}
             title={s}
             subtitle={`Segment ${i + 1}`}
-            leading={<GripVertical className="size-4 text-[var(--text-muted)]" aria-hidden />}
+            leading={<GripVertical className="size-4 text-muted" aria-hidden />}
             selected={s === selected}
             onClick={() => setSelected(s)}
-            className={over === i && dragging !== null && dragging !== i ? "ring-2 ring-[var(--brand)] rounded-md" : undefined}
+            className={over === i && dragging !== null && dragging !== i ? "ring-2 ring-brand rounded-md" : undefined}
             targetProps={{
               draggable: true,
               // A role here is IGNORED: the row keeps its own (a button).
@@ -105,7 +105,7 @@ function BorderedStrip() {
   const [bordered, setBordered] = useState(true);
   return (
     <Example label="ListItem — bordered, in a wrapping strip" hint="rows laid out side by side, each a visible box">
-      <label className="mb-3 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+      <label className="mb-3 flex items-center gap-2 text-sm text-secondary">
         <input type="checkbox" checked={bordered} onChange={(e) => setBordered(e.target.checked)} />
         <code className="font-mono">bordered</code>
       </label>

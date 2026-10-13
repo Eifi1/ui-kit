@@ -35,11 +35,13 @@
  * `@eifi1/ui-kit/rhf` do the same job with the ids taken from the form.)
  *
  * The error is NOT `role="alert"`, for the reason the kit's `error` prop gives (see
- * `useFieldError` in components/ui.tsx): it is read when focus reaches the control.
+ * `useFieldError` in components/field-parts.tsx): it is read when focus reaches the control.
  */
 import { useId, type ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { Label } from "./ui";
+import { hasContent } from "../lib/presence";
+import { useInlineHint } from "./field-parts";
+import { Label } from "./field-base";
 
 /** What a `Field` hands its render-prop children, to spread on the control. */
 export interface FieldControlProps {
@@ -117,13 +119,10 @@ export interface FieldProps {
   children: ReactNode | ((control: FieldControlProps, meta: FieldRenderMeta) => ReactNode);
 }
 
-const isShown = (node: ReactNode) =>
-  node !== undefined && node !== null && node !== false && node !== "";
-
 export function Field({
   label,
   required,
-  hint,
+  hint: hintProp,
   error,
   htmlFor,
   disabled,
@@ -137,8 +136,11 @@ export function Field({
   const hintId = `${generated}-hint`;
   const errorId = `${generated}-error`;
   const labelId = `${generated}-label`;
-  const hasHint = isShown(hint);
-  const hasError = isShown(error);
+  // §4: a FieldHint under the control is its words at Large and on a touch screen, not
+  // a lone "?" (DUP-2, refactor audit 2026-10). A HelpPopover stays a "?".
+  const hint = useInlineHint(hintProp);
+  const hasHint = hasContent(hint);
+  const hasError = hasContent(error);
   const describedBy = [hasHint && hintId, hasError && errorId].filter(Boolean).join(" ");
   const control: FieldControlProps = {
     id,
@@ -168,7 +170,7 @@ export function Field({
           disabled={disabled}
           size={labelSize}
           data-error={hasError || undefined}
-          className={cn("data-[error=true]:text-[var(--danger)]", LABEL_VISIBILITY[labelVisibility])}
+          className={cn("data-[error=true]:text-danger", LABEL_VISIBILITY[labelVisibility])}
         >
           {label}
         </Label>
@@ -177,12 +179,12 @@ export function Field({
         ? children(control, { labelId: label !== undefined ? labelId : undefined })
         : children}
       {hasHint && (
-        <p id={hintId} className="text-caption leading-tight text-[var(--text-muted)]">
+        <p id={hintId} className="text-caption leading-tight text-muted">
           {hint}
         </p>
       )}
       {hasError && (
-        <p id={errorId} className="text-caption leading-tight text-[var(--danger)]">
+        <p id={errorId} className="text-caption leading-tight text-danger">
           {error}
         </p>
       )}

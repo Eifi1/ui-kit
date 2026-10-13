@@ -126,10 +126,12 @@ export function parseIsoDate(s: string): Date | null {
 
 /** Format a "YYYY-MM-DD" string for display in `locale` (empty string when
  *  unparseable). Defaults to the locale's short numeric date; pass `options` to
- *  override (e.g. `{ dateStyle: "medium" }`). */
+ *  override (e.g. `{ dateStyle: "medium" }`). `locale` may be `undefined` since 0.34 —
+ *  the runtime's default, as `Intl` reads it and as every other kit formatter takes it
+ *  (DUP-11: DatePicker re-wrapped this function only to pass none). */
 export function formatIsoDate(
   iso: string,
-  locale: string,
+  locale: string | undefined,
   options?: Intl.DateTimeFormatOptions,
 ): string {
   const d = parseIsoDate(iso);

@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Save } from "lucide-react";
-import { Button, IconButton } from "../ui";
+import { Button } from "../button";
+import { IconButton } from "../icon-button";
 import { FormActions } from "../form-actions";
 import { COMMIT_EXCEPT_BILLING, DEFAULT_WRITE_LOCK_LABELS, WriteLockProvider, useWriteLock, writeLockFor } from "../write-lock";
 import type { CommitScope, WriteLock, WriteLockHold } from "../write-lock";

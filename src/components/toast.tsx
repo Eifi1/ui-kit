@@ -1,7 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
+import { DEFAULT_TOAST_LABELS } from "./toast-labels";
 
 /**
  * The kit's toast layer: a `toast` API and a `<Toaster>`, over sonner.
@@ -75,12 +76,8 @@ export interface ToastLabels {
   redo: string;
 }
 
-export const DEFAULT_TOAST_LABELS: ToastLabels = {
-  close: "Close notification",
-  notifications: "Notifications",
-  undo: "Undo",
-  redo: "Redo",
-};
+// Defined in ./toast-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_TOAST_LABELS };
 
 /** What the mounted `<Toaster>` resolved from `<UiKitProvider>` — so `toast.undo()`,
  *  which is called from mutation callbacks and not from a component, still says
@@ -316,7 +313,7 @@ export interface ToasterProps {
   /** Default: follows the `.dark` class the kit's theme store (`useApplyTheme`) puts
    *  on `<html>` — whichever store the app built, with nothing passed. */
   theme?: "light" | "dark" | "system";
-  labels?: Partial<ToastLabels>;
+  labels?: LabelOverride<ToastLabels>;
   /** Default 4s (8s for a toast with an action). */
   duration?: number;
   visibleToasts?: number;

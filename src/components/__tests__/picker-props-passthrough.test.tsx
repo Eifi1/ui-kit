@@ -248,34 +248,13 @@ describe("GroupedPicker passes DOM props through", () => {
         aria-label="Category"
       />,
     );
-    expect(screen.getByRole("button", { name: "Category" })).toBeInTheDocument();
+    // A combobox over its listbox since round 0.34 Wave 2 (BUG-12); the name is the same.
+    expect(screen.getByRole("combobox", { name: "Category" })).toBeInTheDocument();
   });
 
-  it("still names its trigger from the deprecated ariaLabel", () => {
-    render(
-      <GroupedPicker
-        groups={GROUPS}
-        buttonLabel="Pick"
-        selected={null}
-        onSelect={vi.fn()}
-        ariaLabel="Category"
-      />,
-    );
-    expect(screen.getByRole("button", { name: "Category" })).toBeInTheDocument();
-  });
-
-  it("lets aria-label win when both spellings are given", () => {
-    render(
-      <GroupedPicker
-        groups={GROUPS}
-        buttonLabel="Pick"
-        selected={null}
-        onSelect={vi.fn()}
-        ariaLabel="Old"
-        aria-label="New"
-      />,
-    );
-    expect(screen.getByRole("button", { name: "New" })).toBeInTheDocument();
+  it("takes no other spelling: the deprecated ariaLabel went in 0.34", () => {
+    // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+    void (<GroupedPicker groups={GROUPS} buttonLabel="Pick" selected={null} onSelect={vi.fn()} ariaLabel="Category" />);
   });
 });
 

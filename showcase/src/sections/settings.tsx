@@ -16,7 +16,7 @@ import type {
   ProfileSettingLabels,
   TwoFactorSettingLabels,
 } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, beat } from "../lib/section";
 import { useTheme } from "../stores";
 
 /**
@@ -36,8 +36,6 @@ import { useTheme } from "../stores";
 
 /** Long enough to read the disabled button, short enough not to feel broken. */
 const BEAT_MS = 800;
-
-const beat = (ms = BEAT_MS) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
  * A placeholder for whatever the app's `/2fa/setup` call returns. It is a real
@@ -106,9 +104,9 @@ function ThemeRow() {
           optionLabels={{ system: "Match system", light: "Light", dark: "Dark" }}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-secondary)]">
-        preference <code className="font-mono text-[var(--brand)]">{preference}</code> → resolved
-        mode <code className="font-mono text-[var(--brand)]">{mode}</code>
+      <p className="mt-3 text-xs text-secondary">
+        preference <code className="font-mono text-brand">{preference}</code> → resolved
+        mode <code className="font-mono text-brand">{mode}</code>
       </p>
       <div className="mt-3">
         <Note>
@@ -150,8 +148,8 @@ function LanguageRow() {
           ]}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-secondary)]">
-        value <code className="font-mono text-[var(--brand)]">{lang}</code>
+      <p className="mt-3 text-xs text-secondary">
+        value <code className="font-mono text-brand">{lang}</code>
       </p>
       <div className="mt-3">
         <Note>
@@ -187,7 +185,7 @@ function ProfileRow() {
 
   const save = async () => {
     setSaving(true);
-    await beat();
+    await beat(BEAT_MS);
     setName(draft.trim());
     setSaving(false);
   };
@@ -256,16 +254,21 @@ function PasswordRow() {
   const submit = async (current: string, next: string) => {
     setPending(true);
     setReceipt(null);
-    await beat();
+    await beat(BEAT_MS);
     setPending(false);
     setReceipt(`onSubmit(current: ${current.length} chars, new: ${next.length} chars)`);
   };
 
-  const submitAndFail = async () => {
+  // Rejects the way an app's client does — an axios-shaped error with server-kit's coded
+  // body. "offline" as the current password stands for a failure the card cannot read.
+  const submitAndFail = async (current: string) => {
     setFailPending(true);
-    await beat();
+    await beat(BEAT_MS);
     setFailPending(false);
-    throw new Error("wrong current password");
+    if (current === "offline") throw new Error("Network Error");
+    throw Object.assign(new Error("Request failed with status code 400"), {
+      response: { status: 400, data: { detail: "The current password is not correct", code: "password_incorrect" } },
+    });
   };
 
   return (
@@ -283,7 +286,7 @@ function PasswordRow() {
           />
         </div>
         {receipt && (
-          <p className="mt-3 font-mono text-xs text-[var(--text-secondary)]">{receipt}</p>
+          <p className="mt-3 font-mono text-xs text-secondary">{receipt}</p>
         )}
         <div className="mt-3 space-y-2">
           <Note>
@@ -291,7 +294,7 @@ function PasswordRow() {
             <code className="font-mono">tooShort</code> and{" "}
             <code className="font-mono">mismatch</code> — because the card has no strings of its
             own and no way to translate one. The check runs on click, not while typing, so the
-            message appears once and clears on the next attempt.
+            message stands under the field it is about (0.34) and clears as that field is typed in.
           </Note>
           <Note>
             The card holds the three passwords itself and never lifts them; the app sees them
@@ -305,22 +308,29 @@ function PasswordRow() {
 
       <Example
         label="PasswordSetting — rejecting handler"
-        hint="fill in three fields (10+ chars, matching) and submit: the values stay for a retry"
+        hint="fill in three fields (10+ chars, matching) and submit: a wrong password is said under its field; “offline” as the current password goes through describeError"
       >
         <div className="max-w-md">
           <PasswordSetting
-            onSubmit={submitAndFail}
+            onSubmit={(current) => submitAndFail(current)}
             pending={failPending}
             minLength={10}
             labels={PASSWORD_LABELS}
+            describeError={(error) =>
+              error instanceof Error && error.message === "Network Error"
+                ? "You are offline. Your new password was not saved."
+                : undefined
+            }
           />
         </div>
         <div className="mt-3">
           <Note>
-            The rejection is swallowed deliberately: the comment in the source says the app
-            surfaces the failure. So a consumer that passes a handler which throws and shows no
-            toast gets a button that visibly does nothing — this card reports success by
-            emptying itself and failure not at all.
+            Since 0.34 (Kurvenschmiede&apos;s U3) the card reads a rejection by its code: server-kit&apos;s{" "}
+            <code className="font-mono">400 password_incorrect</code> is said under the current password, in{" "}
+            <code className="font-mono">labels.wrongPassword</code> — the words the email-change and deletion cards
+            use — and that field takes the focus. <code className="font-mono">describeError</code> is asked first, for
+            every failure, and its words stand in the card; anything else stays the app&apos;s to say, in its own
+            toast, as before. The typed values stay for a retry either way.
           </Note>
         </div>
       </Example>
@@ -363,14 +373,14 @@ function TwoFactorRow() {
   const startSetup = async () => {
     setBusy(true);
     setLog(null);
-    await beat();
+    await beat(BEAT_MS);
     setSetup({ qrSvg: QR_SVG_BASE64, secret: FAKE_SECRET });
     setBusy(false);
   };
 
   const enable = async (code: string) => {
     setBusy(true);
-    await beat();
+    await beat(BEAT_MS);
     setEnabled(true);
     setSetup(null);
     setBusy(false);
@@ -379,7 +389,7 @@ function TwoFactorRow() {
 
   const disable = async (password: string, code: string) => {
     setBusy(true);
-    await beat();
+    await beat(BEAT_MS);
     setEnabled(false);
     setSetup(null);
     setBusy(false);
@@ -403,7 +413,7 @@ function TwoFactorRow() {
         />
       </div>
       <Row className="mt-3">
-        {log && <span className="font-mono text-xs text-[var(--text-secondary)]">{log}</span>}
+        {log && <span className="font-mono text-xs text-secondary">{log}</span>}
         {stuck && (
           <Button
             variant="secondary"
@@ -496,7 +506,7 @@ function ProfileLoadingRow() {
           name={null}
           email={null}
           role={
-            <span className="rounded bg-[var(--bg-surface-2)] px-1.5 py-0.5 text-xs font-medium">
+            <span className="rounded bg-surface-2 px-1.5 py-0.5 text-xs font-medium">
               Owner
             </span>
           }

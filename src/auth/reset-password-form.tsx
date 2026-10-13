@@ -1,12 +1,13 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import { LoadingState } from "../components/loading-state";
-import { Button, EmptyState } from "../components/ui";
-import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
+import { Button } from "../components/button";
+import { EmptyState } from "../components/empty-state";
+import { authErrorCode, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import { newPasswordProblem } from "./form-rules";
 import { NewPasswordFields } from "./new-password-fields";
 import {
@@ -19,6 +20,7 @@ import {
   withQuery,
 } from "./status-parts";
 import type { AuthHeadingLevel } from "./status-parts";
+import { DEFAULT_RESET_PASSWORD_LABELS } from "./reset-password-form-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -60,25 +62,8 @@ export interface ResetPasswordLabels {
   rateLimited?: (seconds?: number) => string;
 }
 
-/** `Required`: every key, the 0.30 one included, has its English here. */
-export const DEFAULT_RESET_PASSWORD_LABELS: Required<ResetPasswordLabels> = {
-  title: "Choose a new password",
-  checking: "Checking the link…",
-  intro: (email) => `You’re setting a new password for ${email}.`,
-  newPassword: "New password",
-  confirmPassword: "Repeat new password",
-  mismatch: "The passwords don’t match.",
-  submit: "Save password",
-  failed: "The password could not be changed.",
-  noToken: "This link is incomplete.",
-  invalid: "This link is invalid or has expired.",
-  invalidHint: "Links are valid for one hour and work only once. Just request a new one.",
-  requestNew: "Request a new link",
-  success: "Your password has been changed. You can sign in with it now.",
-  sessionsEnded: "Signed-in devices were signed out — you’ll need to sign in again there.",
-  signIn: "Go to sign in",
-  rateLimited: englishRateLimited,
-};
+// Defined in ./reset-password-form-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_RESET_PASSWORD_LABELS };
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -114,7 +99,7 @@ type Phase =
   | { kind: "done"; result: ResetPasswordResult };
 
 export interface ResetPasswordFormProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit" | "children" | "title"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children" | "title"> {
   /** The link's token — the app's `?token=` (keksdose, kastlan: `/reset-password?token=…`).
    *  Empty: the link was cut short, and the page says so without asking anyone. */
   token: string;
@@ -151,7 +136,7 @@ export interface ResetPasswordFormProps
   title?: ReactNode;
   /** The heading's level. Default `h2`, under the page's `h1`. */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<ResetPasswordLabels>;
+  labels?: LabelOverride<ResetPasswordLabels>;
 }
 
 /**
@@ -262,11 +247,11 @@ export function ResetPasswordForm({
     return (
       <div {...rest} data-state="done" className={rootClass}>
         {heading}
-        <OutcomeMessage icon={<CheckCircle2 className="text-[var(--success)]" />} focusRef={doneRef}>
+        <OutcomeMessage icon={<CheckCircle2 className="text-success" />} focusRef={doneRef}>
           <p className={INTRO_CLASS}>{labels.success}</p>
         </OutcomeMessage>
         {notices}
-        <p className="text-xs text-[var(--text-muted)]">{labels.sessionsEnded}</p>
+        <p className="text-xs text-muted">{labels.sessionsEnded}</p>
         {onSignIn ? (
           <Button type="button" variant="brand" className="w-full" onClick={() => onSignIn(email)}>
             {labels.signIn}

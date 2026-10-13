@@ -1,14 +1,16 @@
 import { useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { MailCheck } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import { TextLink } from "../components/text-link";
-import { Button, Input } from "../components/ui";
-import { englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
+import { isRateLimited, retryAfterSeconds } from "./auth-errors";
 import { FORM_HEADING_CLASS, INTRO_CLASS, OutcomeMessage, isThenable, useFocusWhen } from "./status-parts";
 import type { AuthHeadingLevel } from "./status-parts";
+import { DEFAULT_FORGOT_PASSWORD_LABELS } from "./forgot-password-form-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -38,23 +40,13 @@ export interface ForgotPasswordLabels {
   rateLimited?: (seconds?: number) => string;
 }
 
-/** `Required`: every key, the 0.30 one included, has its English here. */
-export const DEFAULT_FORGOT_PASSWORD_LABELS: Required<ForgotPasswordLabels> = {
-  title: "Forgot password",
-  intro: "Enter your account’s email address. We’ll send you a link to choose a new password.",
-  email: "Email",
-  submit: "Send the link",
-  sent: (email) => `If an account exists for ${email}, the link is on its way.`,
-  sentHint: "The link is valid for one hour and works exactly once. Check your spam folder too.",
-  backToSignIn: "Back to sign in",
-  error: "The request failed. Please try again later.",
-  rateLimited: englishRateLimited,
-};
+// Defined in ./forgot-password-form-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FORGOT_PASSWORD_LABELS };
 
 /* ── The form ────────────────────────────────────────────────────────────── */
 
 export interface ForgotPasswordFormProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit" | "children" | "title"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children" | "title"> {
   /**
    * The address was submitted, trimmed: send `POST /auth/password-reset/request`.
    * Resolve when the server answered — whatever it answered: it is `204` whether or not
@@ -81,7 +73,7 @@ export interface ForgotPasswordFormProps
   title?: ReactNode;
   /** The heading's level. Default `h2`, under the page's `h1`. */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<ForgotPasswordLabels>;
+  labels?: LabelOverride<ForgotPasswordLabels>;
 }
 
 /**
@@ -146,9 +138,9 @@ export function ForgotPasswordForm({
     return (
       <div {...rest} data-state="sent" className={cn("space-y-3", className)}>
         {heading}
-        <OutcomeMessage icon={<MailCheck className="text-[var(--success)]" />} focusRef={sentRef}>
+        <OutcomeMessage icon={<MailCheck className="text-success" />} focusRef={sentRef}>
           <p className={INTRO_CLASS}>{labels.sent(sentTo)}</p>
-          <p className="text-xs text-[var(--text-muted)]">{labels.sentHint}</p>
+          <p className="text-xs text-muted">{labels.sentHint}</p>
         </OutcomeMessage>
         {back}
       </div>

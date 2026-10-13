@@ -1,13 +1,13 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 
 import type { LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
 import type { PortalTarget } from "./billing-overview";
 
-export interface SubscriptionActionsProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface SubscriptionActionsProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** "Payment and invoices", as a link — or {@link onManage}. Without either, none. */
   manageHref?: string;
   /** "Payment and invoices", as the app's call: `POST /billing/portal` with
@@ -72,7 +72,7 @@ export function SubscriptionActions({
   const labels = useBillingLabels(labelsProp);
   if (!atProvider) {
     return (
-      <div {...rest} data-at-provider="false" className={cn("text-sm text-[var(--text-muted)]", className)}>
+      <div {...rest} data-at-provider="false" className={cn("text-sm text-muted", className)}>
         <p>{labels.notAtProvider}</p>
       </div>
     );

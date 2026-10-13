@@ -129,7 +129,7 @@ export const de: Dictionary = {
       title: "Benutzerverwaltung",
       short: "Benutzer",
       blurb:
-        "Die Admin-Seite der Konten: die Benutzerliste mit Rollen und Status, die vier Admin-Aktionen mit der Bestätigung, die der Server verlangt, das Audit-Log, Einladungen, das Übergeben von Arbeit sowie die Tarifspalte und der Tarifwechsel durch den Betreiber.",
+        "Die Admin-Seite der Konten: die Benutzerliste mit Rollen und Status, die vier Admin-Aktionen mit der Bestätigung, die der Server verlangt, das Audit-Log mit seinen Gruppenaktionen, Einladungen, das Übergeben von Arbeit sowie die Tarifspalte und der Tarifwechsel durch den Betreiber.",
     },
     subscription: {
       title: "Abonnement",
@@ -376,7 +376,7 @@ export const de: Dictionary = {
       title: "Reihendiagramm",
       short: "Reihen",
       blurb:
-        "Das zoombare Reihendiagramm, das die Apps teilen: eine Achse pro Einheit, eine Legende aus Schaltern, ein Zoom für einen ganzen Stapel Diagramme und die Hilfsfunktionen darunter.",
+        "Das zoombare Reihendiagramm, das die Apps teilen: eine Achse pro Einheit, eine Legende aus Schaltern, ein Zoom für einen ganzen Stapel Diagramme, ein Zeilenbudget für lange Tabellen und die Hilfsfunktionen darunter.",
     },
     "series-chart-marks": {
       title: "Reihendiagramm: Balken, Flächen & Zeit",
@@ -544,7 +544,7 @@ export const de: Dictionary = {
       title: "Abrechnung",
       short: "Abrechnung",
       blurb:
-        "Tarife und ihre Limits, der Stand des Abonnements mit den Daten der Testphase und der Beta, die Nur-Lesen-Sperre bei Ablauf und die Webhooks von Paddle und Lemon Squeezy: Signaturen geprüft, Ereignisse vereinheitlicht, ein Dispatch.",
+        "Tarife und ihre Limits, der Stand des Abonnements mit den Daten der Testphase und der Beta, die Nur-Lesen-Sperre bei Ablauf und die Webhooks von Paddle: Signaturen geprüft, Ereignisse vereinheitlicht, ein Dispatch.",
     },
     "server-mail": {
       title: "E-Mail",
@@ -562,7 +562,7 @@ export const de: Dictionary = {
       title: "Limits, Fehler & CORS",
       short: "Limits",
       blurb:
-        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, und CORS für einige zusätzliche Origins.",
+        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, CORS für einige zusätzliche Origins und das Token des Schedulers auf Job-Routen.",
     },
     "server-translation-review": {
       title: "Übersetzungsprüfung",
@@ -1241,7 +1241,7 @@ export const de: Dictionary = {
     "server-billing": [
       "Tariflimit auf dem Server prüfen",
       "Webhook-Signatur prüfen",
-      "Ereignisse von Paddle und Lemon Squeezy verarbeiten",
+      "Ereignisse von Paddle verarbeiten",
       "ist das Abonnement in Ordnung",
       "Enddaten von Testphase und Beta",
       "Schreibzugriffe nach Ablauf des Abonnements ablehnen",

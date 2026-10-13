@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import type { ProgressBarTone } from "./progress-bar";
 import type { ChipHue } from "./chip";
@@ -18,19 +18,19 @@ export type StatusDotTone = ProgressBarTone | ChipHue;
 export type StatusDotSize = "sm" | "md" | "lg";
 
 const FILL: Record<StatusDotTone, string> = {
-  brand: "bg-[var(--brand)]",
+  brand: "bg-brand",
   neutral: "bg-[var(--text-muted)]",
-  success: "bg-[var(--success)]",
-  warning: "bg-[var(--warning)]",
-  danger: "bg-[var(--danger)]",
-  info: "bg-[var(--info)]",
-  income: "bg-[var(--money-income)]",
-  expense: "bg-[var(--money-expense)]",
-  blue: "bg-[var(--hue-blue)]",
-  indigo: "bg-[var(--hue-indigo)]",
-  purple: "bg-[var(--hue-purple)]",
-  teal: "bg-[var(--hue-teal)]",
-  orange: "bg-[var(--hue-orange)]",
+  success: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger",
+  info: "bg-info",
+  income: "bg-money-income",
+  expense: "bg-money-expense",
+  blue: "bg-hue-blue",
+  indigo: "bg-hue-indigo",
+  purple: "bg-hue-purple",
+  teal: "bg-hue-teal",
+  orange: "bg-hue-orange",
 };
 
 /**
@@ -88,7 +88,7 @@ const DOT_ON_FIRST_LINE: Record<StatusDotSize, string> = {
   lg: "large:mt-[calc((1lh_-_0.75rem)/2)]",
 };
 
-export interface StatusDotProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
+export interface StatusDotProps extends Omit<ComponentPropsWithRef<"span">, "children"> {
   tone?: StatusDotTone;
   size?: StatusDotSize;
   /**
@@ -133,6 +133,9 @@ export function StatusDot({
 }: StatusDotProps) {
   const dot = (
     <span
+      // The tone as data (0.34, refactor audit 2026-10, TST-9): a stable hook for a test or
+      // a caller's selector, where the fill class is the kit's to change.
+      data-tone={tone}
       className={cn(
         "inline-block shrink-0 rounded-full",
         SIZE[size],

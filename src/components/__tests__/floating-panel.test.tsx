@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { FloatingActionButton, FloatingPanel } from "../floating-panel";
+import { Tooltip } from "../tooltip";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
 /**
@@ -81,6 +82,33 @@ describe("FloatingPanel", () => {
     fireEvent.keyDown(message, { key: "Escape" });
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(fab()).toHaveFocus();
+  });
+
+  // Wave 2 (refactor audit 2026-10, DUP-1's one Escape stack): the panel took Escape on
+  // its own element and stopped it, so a layer open ABOVE it without focus — a tooltip, a
+  // numpad, a hover menu — never got the key, and one press closed the whole panel
+  // instead. The topmost layer is handed the key first now; the panel the next one.
+  it("hands Escape to a layer open above it first — a tooltip shown by focus", async () => {
+    render(
+      <FloatingPanel defaultOpen title="Ask the assistant" fabLabel="Assistant" fabIcon={<span>?</span>}>
+        <Tooltip label="Send the question" portal>
+          <button type="button">Send</button>
+        </Tooltip>
+      </FloatingPanel>,
+    );
+    const send = screen.getByRole("button", { name: "Send" });
+    act(() => send.focus());
+    await waitFor(() => expect(screen.getByRole("tooltip")).toBeInTheDocument());
+
+    fireEvent.keyDown(send, { key: "Escape" });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    expect(screen.getByRole("dialog", { name: "Ask the assistant" })).toBeInTheDocument();
+
+    fireEvent.keyDown(send, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("does not take focus when it renders open, nor steal it back when closed from the page", () => {
@@ -225,20 +253,20 @@ describe("FloatingActionButton — native title and toggle", () => {
     const { rerender } = render(<FloatingActionButton label="Awaiting only" icon="?" pressed={false} />);
     const off = screen.getByRole("button", { name: "Awaiting only" });
     expect(off).toHaveAttribute("aria-pressed", "false");
-    expect(off.className).toContain("bg-[var(--bg-surface)]");
-    expect(off.className).not.toContain("bg-[var(--brand)]");
+    expect(off).toHaveClass("bg-surface");
+    expect(off).not.toHaveClass("bg-brand");
 
     rerender(<FloatingActionButton label="Awaiting only" icon="?" pressed />);
     const on = screen.getByRole("button", { name: "Awaiting only" });
     expect(on).toHaveAttribute("aria-pressed", "true");
-    expect(on.className).toContain("bg-[var(--brand-bg)]");
-    expect(on.className).toContain("text-[var(--brand)]");
+    expect(on).toHaveClass("bg-brand-soft");
+    expect(on).toHaveClass("text-brand");
   });
 
   it("stays an action button, with no aria-pressed, when pressed is left out", () => {
     render(<FloatingActionButton label="New" icon="+" />);
     const button = screen.getByRole("button", { name: "New" });
     expect(button).not.toHaveAttribute("aria-pressed");
-    expect(button.className).toContain("bg-[var(--brand)]");
+    expect(button).toHaveClass("bg-brand");
   });
 });

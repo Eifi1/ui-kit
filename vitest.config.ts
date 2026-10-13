@@ -94,23 +94,25 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/test/**", "**/__tests__/**", "showcase/**"],
       /**
-       * A RATCHET, not a target. Measured 2026-09-22 against the whole suite:
-       * lines 77.16%, statements 74.53%, functions 68.90%, branches 67.98%. Each
-       * floor sits ~1pp under what was actually achieved, which is enough room for
-       * an ordinary refactor and not enough to lose a suite.
+       * A RATCHET, not a target. Measured on 0.33.1's whole-suite run (its
+       * coverage/lcov.info and HTML summary, 320 files): lines 96.65%, statements
+       * 94.84%, functions 95.71%, branches 91.48%. Each floor is that figure less 1pp,
+       * rounded down, which is enough room for an ordinary refactor and not enough to
+       * lose a suite.
        *
-       * Deliberately not a round 80: a threshold the suite fails on the day it lands
-       * is deleted the week after, and the number is then worse than none — it
+       * Deliberately not a round number: a threshold the suite fails on the day it
+       * lands is deleted the week after, and the number is then worse than none — it
        * taught everyone that this check is noise. Raise these when the real figure
        * rises, in the same commit that earns it, exactly like
        * `scripts/check-token-discipline.mjs`'s BUDGET.
        *
-       * Functions and branches are the low pair on purpose: the untested remainder
-       * is mostly event handlers on components nothing renders here (the audit's
-       * list), so the honest way up is rendering those components, not asserting
-       * harder on the ones already covered.
+       * They sat at 76/73/67/66 from 0.5.0 (2026-09-22) to 0.34, ~20pp under the real
+       * figures, so the suite could lose a fifth of its coverage and stay green
+       * (refactor audit 2026-10, TST-4). Raised in 0.34 with the tests for the
+       * modules the old remainder listed first: theme-store and the DataTable filter
+       * popover (TST-12).
        */
-      thresholds: { lines: 76, statements: 73, functions: 67, branches: 66 },
+      thresholds: { lines: 95, statements: 93, functions: 94, branches: 90 },
     },
   },
 });

@@ -1,47 +1,29 @@
-import { Fragment, isValidElement, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { CSSProperties, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
-import { createPortal } from "react-dom";
-import {
-  ArrowDown,
-  ArrowDownWideNarrow,
-  ArrowUp,
-  ArrowUpDown,
-  ArrowUpNarrowWide,
-  ChevronDown,
-  ChevronRight,
-  Filter,
-  Pencil,
-  Trash2,
-  X,
-} from "lucide-react";
-import { Card, FOCUS_RING, IconButton, Select, Spinner } from "./ui";
-import { RowActions, type RowAction } from "./row-actions";
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
+import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
+import { Card } from "./card";
+import { Spinner } from "./spinner";
+import { ROW_ACTIONS_KEY, useRowActionColumn } from "./data-table-row-actions";
+import { useColumnResize } from "./data-table-resize";
+import { useRangeSelection } from "./data-table-selection";
+import { RowLink, cleanAttrs, columnLabel, fromOutside, logicalAlign, splitCellProps } from "./data-table-shared";
+import { MobileFilters, MobileRow, MobileSort, StackedFields } from "./data-table-mobile";
+import { DataTableHead } from "./data-table-head";
+import { ColumnSettingsPanel } from "./data-table-column-settings";
 import { useLargeText } from "../hooks/use-large-text";
 import { cn } from "../lib/cn";
-import {
-  defaultFilterState,
-  isFilterActive,
-  resolveFilter,
-  rowMatches,
-} from "./data-table-filters";
+import { isFilterActive, resolveFilter, rowMatches } from "./data-table-filters";
 import type { ColumnFilter, FilterValue } from "./data-table-filters";
 import { nextSorts } from "./data-table-sort";
 import type { SortCycle, SortDir, SortState } from "./data-table-sort";
-import { FilterPopover } from "./data-table-filter-popover";
 import { Pagination } from "./data-table-pagination";
-import { SwipeableRow, type SwipeAction } from "./swipeable-row";
-import { useBackdropClose } from "./modal";
-import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
-import { useOverlayHistory } from "../hooks/use-overlay-history";
+import type { SwipeAction } from "./swipeable-row";
 import { FullBleedDialog } from "./full-bleed-dialog";
-import { Popover } from "./popover";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
 import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
-import { useKitLabelOverrides, useKitLocale } from "../i18n/kit-labels";
-import { Tooltip } from "./tooltip";
+import { useKitLabelOverrides, useKitLocale, useKitTableStorageKeyPrefix, type LabelOverride } from "../i18n/kit-labels";
 import { useEdgeFade } from "../lib/strip-fade";
-import { dirOf, isRtl, type Direction } from "../lib/direction";
+import { dirOf, type Direction } from "../lib/direction";
 
 // ---------- Types ----------
 
@@ -145,58 +127,6 @@ export type DataTableCellProps = TdHTMLAttributes<HTMLTableCellElement> & DataAt
 /** What {@link DataTableColumn.headProps} takes. */
 export type DataTableHeadProps = ThHTMLAttributes<HTMLTableCellElement> & DataAttributes;
 
-/**
- * Split a caller's cell attributes into what may reach the element and what the kit
- * owns. `role` and `data-col` are dropped outright (see `cellProps`); `className` and
- * `style` come back separately so the kit can merge rather than replace them.
- */
-function splitCellProps(
-  props: DataTableCellProps | DataTableHeadProps | undefined,
-): { attrs: Record<string, unknown>; className?: string; style?: CSSProperties } {
-  if (!props) return { attrs: {} };
-  const {
-    className,
-    style,
-    role: _role,
-    "data-col": _col,
-    ...attrs
-  } = props as DataTableCellProps & { "data-col"?: unknown };
-  return { attrs, className, style };
-}
-
-/** Only the `data-*` attributes of a cell's props — what a phone card field takes. */
-function dataAttrsOf(props: DataTableCellProps | undefined): Record<string, unknown> | undefined {
-  if (!props) return undefined;
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(props)) if (k.startsWith("data-") && k !== "data-col") out[k] = v;
-  return out;
-}
-
-/** A column resize in flight. Held in a ref rather than in state: the live width is
- *  written straight onto the column's cells, so a drag costs zero renders and the
- *  one `setWidths` happens when the pointer comes up. */
-interface Resize {
-  key: string;
-  pointerId: number;
-  startX: number;
-  startWidth: number;
-  /** +1 when a drag to the right widens the column, -1 in a right-to-left table,
-   *  where the handle sits on the column's LEFT edge and widening is a drag left. */
-  sign: 1 | -1;
-  /** What React last rendered this column at, so a CANCELLED drag can put the header
-   *  back — React cannot, it never saw the inline width the drag wrote. */
-  hadWidth: number | undefined;
-  /** The header and the body cells under it, collected ONCE when the drag starts.
-   *  A `<th>` alone cannot shrink a column whose `<td>`s already carry a pinned
-   *  width — and nothing re-renders during a drag, so the list cannot go stale. */
-  cells: HTMLElement[];
-  width: number;
-  /** A press with no drag in it is not a resize — the handle is also the
-   *  double-click target that CLEARS a width, and committing the header's current
-   *  size on the way past would pin every column the user ever brushed. */
-  moved: boolean;
-}
-
 export interface ServerPagination {
   page: number; // 0-based
   pageSize: number;
@@ -248,7 +178,7 @@ export interface DataTableProps<T> {
   isExpanded?: (row: T) => boolean;
   /**
    * Extra classes for a row — the `<tr>` on desktop, the card on mobile. Merged last,
-   * so a `hover:` fill here replaces the row's own `hover:bg-[var(--bg-hover)]`.
+   * so a `hover:` fill here replaces the row's own `hover:bg-hover`.
    *
    * **A row you paint has to pick its own hover** (0.33, docs/colour-roles-harmonization.md
    * §12.2): the kit cannot see your rest colour, and `--bg-hover` is mixed against the
@@ -302,6 +232,10 @@ export interface DataTableProps<T> {
    * phone the card list is the scroller instead, with the filter button pinned above
    * it; an unbounded parent simply lets either layout grow to its content. The parent must give it a bounded height (e.g. a flex
    * column inside the viewport-locked app shell). See feedback #207.
+   *
+   * The cure for TWO SCROLLBARS (round 0.34 C14, kastlan feedback 55): the default
+   * `maxBodyHeight` scrolls the body inside a page that scrolls too. How a page fills
+   * the height is in {@link DataTableProps.maxBodyHeight}'s note.
    */
   fillHeight?: boolean;
   /** How tall the scrolling body may get before it scrolls, as a CSS length.
@@ -314,7 +248,25 @@ export interface DataTableProps<T> {
    *  elements there should in best case be no scrolling necessary".
    *
    *  Ignored under `fillHeight`, which bounds the body by its flex parent
-   *  instead and is the stronger statement of the same intent. */
+   *  instead and is the stronger statement of the same intent.
+   *
+   *  **Two scrollbars** (round 0.34 C14, kastlan feedback 55). The cap scrolls the
+   *  body INSIDE a page that, in most shells, scrolls itself: a table taller than
+   *  the cap on a page with anything else on it shows two scrollbars side by side,
+   *  and the wheel moves whichever is under the pointer. For a list page whose table
+   *  is the point, fill the height instead, from `md` up (a phone scrolls the page
+   *  and its card list as one):
+   *
+   *  1. the shell's content column becomes a flex column of the main area's height
+   *     when the page asks — kastlan's
+   *     `md:has-[>[data-fill-height]]:flex md:has-[>[data-fill-height]]:h-full md:has-[>[data-fill-height]]:flex-col`;
+   *  2. the page's root asks, and is a flex column that may shrink:
+   *     `data-fill-height` and `md:flex md:min-h-0 md:flex-1 md:flex-col`;
+   *  3. the table takes the rest: `<DataTable fillHeight>`.
+   *
+   *  Only the body then scrolls, under its pinned header, and every other page grows
+   *  with its content as before (kastlan e3985c9, its leases list). A short table that
+   *  is the last thing on its page can instead drop the cap: `maxBodyHeight="none"`. */
   maxBodyHeight?: string;
   /**
    * When provided, the table renders the supplied rows as-is (no client-side
@@ -373,12 +325,13 @@ export interface DataTableProps<T> {
   /** User-facing strings (English defaults); pass translated overrides. Merged over
    *  `dataTable` from `<UiKitProvider labels>`, so a call site only states what
    *  differs for THIS table — typically `table`, its accessible name. */
-  labels?: Partial<DataTableLabels>;
+  labels?: LabelOverride<DataTableLabels>;
   /** BCP-47 locale for the date filter's calendar and the pager's numbers. Falls
    *  back to `<UiKitProvider locale>`, then to the runtime's default. */
   locale?: string;
-  /** localStorage namespace prefix for `storageKey` persistence. Defaults to
-   *  "hbui-table:"; pass your app's own prefix to keep a stable namespace. */
+  /** localStorage namespace prefix for `storageKey` persistence: the stored key is this
+   *  plus `storageKey`. Falls back to `<UiKitProvider tableStorageKeyPrefix>` (0.34, set
+   *  your app's prefix there once), then to "hbui-table:". This prop wins over both. */
   storageKeyPrefix?: string;
   /**
    * On phones, surface the expanded row's detail in a full-screen dialog instead
@@ -643,56 +596,6 @@ export interface DataTableRowAction<T> {
   swipe?: "start" | "end" | false;
 }
 
-/** The actions column's key. Not a column a caller declares, so it is kept out of the
- *  column-settings panel. */
-const ROW_ACTIONS_KEY = "__rowActions";
-
-interface ResolvedRowAction<T> {
-  key: string;
-  label: string;
-  icon: ReactNode;
-  tone: "default" | "danger";
-  swipe: "start" | "end" | false;
-  action: DataTableRowAction<T>;
-}
-
-function resolveRowAction<T>(
-  action: DataTableRowAction<T>,
-  index: number,
-  labels: DataTableLabels,
-): ResolvedRowAction<T> {
-  const tone = action.tone ?? (action.kind === "delete" ? "danger" : "default");
-  return {
-    key: action.kind ?? `${index}:${action.label ?? ""}`,
-    label: action.label ?? (action.kind === "edit" ? labels.edit : action.kind === "delete" ? labels.delete : ""),
-    icon:
-      action.icon ??
-      (action.kind === "edit" ? <Pencil /> : action.kind === "delete" ? <Trash2 /> : null),
-    tone,
-    swipe: action.swipe ?? (tone === "danger" ? "start" : "end"),
-    action,
-  };
-}
-
-/** Ask, then act. */
-async function runRowAction<T>(action: DataTableRowAction<T>, row: T): Promise<void> {
-  if (action.confirm && !(await action.confirm(row))) return;
-  action.onAction(row);
-}
-
-/** A resolved row action as {@link RowActions} takes it. Its `icon` is any node; a
- *  non-element one (a string glyph) is wrapped, since RowAction wants an element. */
-function toRowAction<T>(a: ResolvedRowAction<T>, row: T): RowAction {
-  return {
-    key: a.key,
-    label: a.label,
-    icon: isValidElement(a.icon) ? a.icon : a.icon != null && a.icon !== false ? <>{a.icon}</> : undefined,
-    tone: a.tone,
-    disabledReason: a.action.disabledReason?.(row),
-    onSelect: () => void runRowAction(a.action, row),
-  };
-}
-
 /** See {@link DataTableProps.chrome}. */
 export type DataTableChrome = "full" | "minimal";
 
@@ -714,44 +617,6 @@ export interface MobileSwipeActions {
   right?: SwipeAction[];
 }
 
-/** The logical sides onto the physical drag directions {@link SwipeableRow} takes. */
-function physicalSwipe(
-  actions: MobileSwipeActions,
-  dir: Direction,
-): { left?: SwipeAction[]; right?: SwipeAction[] } {
-  const rtl = dir === "rtl";
-  return {
-    left: (rtl ? actions.end : actions.start) ?? actions.left,
-    right: (rtl ? actions.start : actions.end) ?? actions.right,
-  };
-}
-
-// A bare `text-right` / `text-left` token, with or without variant prefixes
-// (`md:text-right`). Deliberately NOT `text-right-…` or an arbitrary value.
-const PHYSICAL_ALIGN = /(^|\s)((?:[\w-]+:)*)text-(left|right)(?=\s|$)/g;
-
-/**
- * A column's `className`/`headClassName` with physical text alignment rewritten to
- * logical: `text-right` → `text-end`, `text-left` → `text-start`.
- *
- * Every numeric column written before 0.7.0 says `text-right`, and that is what it
- * MEANT: the end of the line, where digits line up. Rendered as written, a
- * right-to-left table puts those numbers on the far side from their own header's
- * sort button. Rewriting keeps each existing call site correct in both directions
- * with no change on its side; a caller who genuinely wants the physical side in RTL
- * too can say `ltr:text-right rtl:text-right`, which this leaves alone.
- */
-function logicalAlign(className: string | undefined): string | undefined {
-  return className?.replace(
-    PHYSICAL_ALIGN,
-    (token: string, lead: string, variants: string, side: string) =>
-      // Already scoped to one direction: that is a caller choosing the physical side.
-      /(^|:)(ltr|rtl):/.test(variants)
-        ? token
-        : `${lead}${variants}text-${side === "right" ? "end" : "start"}`,
-  );
-}
-
 /**
  * A totals-row cell: pinned to the scroller's bottom edge, on the header's surface.
  * The rule above it is an inset shadow rather than a `border-t`: the table collapses
@@ -759,83 +624,15 @@ function logicalAlign(className: string | undefined): string | undefined {
  * behind at the bottom of the rows while the sticky cell rides over them.
  */
 const FOOTER_CELL =
-  "sticky bottom-0 z-10 bg-[var(--bg-surface-2)] shadow-[inset_0_2px_0_var(--border-strong)]";
-
-/** Whether a column is end-aligned — the header then puts its filter button first. */
-const END_ALIGN = /(^|\s)text-end(?=\s|$)/;
-
-/** Drop the undefined entries of a {@link DataTableProps.rowAttributes} map, so a
- *  caller can write `{ "data-x": cond ? "y" : undefined }` and get no attribute
- *  at all rather than the string "undefined" in the DOM. */
-function cleanAttrs(
-  attrs: Record<string, string | undefined> | undefined,
-): Record<string, string> | undefined {
-  if (!attrs) return undefined;
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(attrs)) if (v !== undefined) out[k] = v;
-  return out;
-}
-
-/**
- * A column's name as a plain string.
- *
- * `header` is a ReactNode — an icon, a unit suffix, a tooltip-wrapped span — and
- * neither a live region nor the column-settings checklist can speak a React element.
- * The `key` fallback is the one the settings panel has always used; a column whose
- * header is not a string and whose key is not human-readable is a call site that
- * should pass a string header, and that is visible in what gets announced.
- */
-function columnLabel<T>(col: DataTableColumn<T>, labels?: DataTableLabels): string {
-  if (col.key === ROW_ACTIONS_KEY && labels) return labels.actions;
-  return col.headerText ?? (typeof col.header === "string" ? col.header : col.key);
-}
-
-// ---------- Phone card at Large (0.32) ----------
-
-/**
- * §4 "nothing truncates" in a phone card at Large and Extra large: a cell's own
- * `truncate` (a kit cell, a chip, the app's span) wraps instead — and breaks inside a
- * word too long for the card rather than running out of it. A descendant rule, so it
- * reaches the cells without the table knowing what they render; `large:`, so Normal
- * keeps every ellipsis it had.
- */
-const CARD_NO_TRUNCATE =
-  "large:[&_.truncate]:whitespace-normal large:[&_.truncate]:[overflow-wrap:anywhere]";
-
-/**
- * Columns as label-above-value pairs: the phone card's fields at Large (§4), and the
- * opened row's `mobileDetailsInRow` at every size. Each pair is a `<div>` in the
- * `<dl>` — the grouping HTML allows — so a pair keeps together and the gap falls
- * BETWEEN facts rather than between a label and its own value. `relative` holds a
- * header's `sr-only` text (an actions column's), as every kit container must.
- */
-function StackedFields<T>({ columns, row, compact }: { columns: DataTableColumn<T>[]; row: T; compact: boolean }) {
-  return (
-    <dl
-      data-card-fields="stacked"
-      className={cn("relative flex min-w-0 flex-col", compact ? "gap-1.5 text-xs" : "gap-2.5 text-sm", CARD_NO_TRUNCATE)}
-    >
-      {columns.map((col) => (
-        <div key={col.key} className="min-w-0">
-          <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)]">{col.header}</dt>
-          <dd
-            {...dataAttrsOf(col.cellProps?.(row))}
-            className="mt-0.5 min-w-0 break-words text-[var(--text-secondary)]"
-          >
-            {col.cell(row)}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
+  "sticky bottom-0 z-10 bg-surface-2 shadow-[inset_0_2px_0_var(--border-strong)]";
 
 // ---------- Phone sort control (keksdose K10) ----------
 
 /**
  * The phone sort control's strings (keksdose K10). They are `dataTable` strings —
  * read from the table's resolved labels, so the `labels` prop and the provider's
- * `dataTable` namespace reach them — and are declared here, beside the control, with
+ * `dataTable` namespace reach them — and are declared here, with the table's other
+ * public types (the control itself, `MobileSort`, is in data-table-mobile.tsx), with
  * English defaults until `DataTableLabels` declares them itself.
  */
 export interface DataTableSortLabels {
@@ -861,111 +658,12 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
 
 /**
- * The card list's sort control: a "Sort by" select and a direction button.
- *
- * keksdose K10 (inputs audit 2026-10-02 §5; its aggregated report tables, #258): a
- * table is sorted by its header row and the phone card list has none, so the two
- * decisions the header carries — which column, which direction — were unreachable
- * below the breakpoint. keksdose hand-built this row over its DataTable to answer
- * "who did I pay the most" on the device it was asked on; this is that row, driven by
- * the SAME sort state as the headers (controlled `sorts` included), so turning the
- * phone sideways keeps the order and a sort chosen here is the one the URL and the
- * storage key hold.
- *
- * The rules are the header's: a newly picked column starts in its `firstSort`, the
- * direction button flips the primary sort (secondary ones stay), and "Default order"
- * — the third click of a `"tri"` cycle — is offered only under `"tri"`, since a
- * `"toggle"` table promises it is always ranked by something. The select's label is
- * a real `<label>` beside it, and the button sits outside that label: a click inside
- * a label is forwarded to the control it names, so a nested button would flip AND
- * open the select.
- */
-function MobileSort<T>({
-  columns,
-  sorts,
-  sortCycle,
-  compact,
-  labels,
-  onPick,
-  onFlip,
-}: {
-  columns: DataTableColumn<T>[];
-  sorts: SortState[];
-  sortCycle: SortCycle;
-  compact: boolean;
-  labels: DataTableLabels;
-  onPick: (key: string | null) => void;
-  onFlip: () => void;
-}) {
-  const selectId = useId();
-  const sortLabels: DataTableSortLabels = labels;
-  if (columns.length === 0) return null;
-  // A persisted or URL sort can name a column with no `sortBy` (or a hidden one): the
-  // sort chain drops it, and so does the control rather than claiming it.
-  const primary = sorts[0] && columns.some((c) => c.key === sorts[0].key) ? sorts[0] : null;
-  const offerDefault = sortCycle === "tri" || primary === null;
-  const desc = primary?.dir === "desc";
-  return (
-    <div
-      data-table-mobile-sort=""
-      className={cn(
-        // At Large the direction button shows its words (IconButton's label, §4); the
-        // row wraps so the select keeps a usable width on a 240 px card.
-        "flex flex-wrap items-center gap-2 border-b border-[var(--border)]",
-        compact ? "px-3 py-1.5" : "px-4 py-2",
-      )}
-    >
-      <label htmlFor={selectId} className="shrink-0 text-xs text-[var(--text-muted)]">
-        {sortLabels.sortBy}
-      </label>
-      <Select
-        id={selectId}
-        size={compact ? "sm" : "md"}
-        className="min-w-0 flex-1 large:basis-40"
-        value={primary?.key ?? ""}
-        onChange={(e) => onPick(e.target.value || null)}
-      >
-        {offerDefault && <option value="">{sortLabels.sortDefault}</option>}
-        {columns.map((col) => (
-          <option key={col.key} value={col.key}>
-            {columnLabel(col, labels)}
-          </option>
-        ))}
-      </Select>
-      <IconButton
-        size={compact ? "xs" : "md"}
-        variant="secondary"
-        label={desc ? sortLabels.sortDescending : sortLabels.sortAscending}
-        disabled={primary === null}
-        onClick={onFlip}
-      >
-        {desc ? <ArrowDownWideNarrow /> : <ArrowUpNarrowWide />}
-      </IconButton>
-    </div>
-  );
-}
-
-/**
  * What counts as a control of its own inside a clickable row: a click or key press
  * that lands on one of these belongs to it, not to the row's `onRowClick`. The row's
  * own link (`rowHref`, marked `data-row-link`) is the exception — it IS the row.
  */
 const OWN_CONTROL =
   'a[href],button,input,select,textarea,label,summary,[role="button"],[role="link"],[role="checkbox"],[role="switch"],[role="menuitem"],[role="option"],[contenteditable=""],[contenteditable="true"],[tabindex]:not([tabindex="-1"])';
-
-/**
- * Whether a click that reached `row`'s handler did not start in the row's own DOM.
- *
- * React bubbles an event through the COMPONENT tree, portals included: a popover, a
- * menu or a dialog a cell (or the expansion under it) opens renders at `<body>` but
- * still reports its clicks to every React ancestor — the row among them. So a click
- * in a cell's portalled date picker opened the row it came from, and a page wrapped
- * such content in `<div onClick={(e) => e.stopPropagation()}>` to stop it (kastlan's
- * feedback page did, round its comments). The row owns the clicks on the row.
- */
-function fromOutside(target: EventTarget | null, row: HTMLElement): boolean {
-  return !(target instanceof Node) || !row.contains(target);
-}
 
 /** Whether an event on `row` started on a control nested inside it. */
 function fromOwnControl(target: EventTarget | null, row: HTMLElement): boolean {
@@ -1001,83 +699,6 @@ function moveRowFocus(from: HTMLElement, key: string): boolean {
 }
 const ROW_NAV_KEYS = { ArrowDown: 1, ArrowUp: 1, Home: 1, End: 1 } as const;
 
-/** A click the APP owns. Anything else — middle, ⌘/Ctrl, Shift, Alt — belongs to
- *  the browser, and the whole feature is not touching it. */
-const isPlainLeftClick = (e: React.MouseEvent) =>
-  e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
-
-/**
- * The anchor a linkable row is opened through (Keksdose feedback #451).
- *
- * The plain left click is OURS: cancelled, then handed to the row's own handler, so
- * clicking a row still expands it in place instead of reloading the page. Every
- * other click — middle, ⌘/Ctrl, Shift, Alt — is left completely untouched, which is
- * the entire point of using an anchor rather than an `onAuxClick` + `window.open`:
- * that imitation buys back the middle click and still loses ⌘/Ctrl-click, "copy link
- * address", the status-bar preview and the phone's long-press menu.
- *
- * Modified clicks DO stop propagating: on a table with `selection`, ⌘/Ctrl-click and
- * Shift-click on a row mean "select" (feedback #289), and a row must not change its
- * selection while the browser is opening a tab. The rest of the row still selects —
- * the link is one cell, not the row.
- *
- * `draggable={false}` because an anchor otherwise hijacks a horizontal mouse drag as
- * a link-drag: that is both drag-to-select-text on the desktop table and the mouse
- * path through SwipeableRow's gesture on the mobile card.
- */
-function RowLink({
-  href,
-  onActivate,
-  className,
-  children,
-  ...rest
-}: {
-  href: string;
-  /** Runs on a plain left click. Omit it where an ANCESTOR already handles the
-   *  click (the desktop `<tr>`), or the row would toggle twice. */
-  onActivate?: () => void;
-  className?: string;
-  children: ReactNode;
-} & Omit<
-  React.AnchorHTMLAttributes<HTMLAnchorElement>,
-  "href" | "className" | "children" | "onClick" | "onClickCapture"
->) {
-  return (
-    <a
-      {...rest}
-      href={href}
-      draggable={false}
-      className={className}
-      // CAPTURE phase, and it has to be: on the mobile card the whole card is the
-      // anchor, so a nested control sits INSIDE it — and the ones that matter
-      // (the feedback row's status toggles) stop the click propagating so the row
-      // won't also expand. A bubble-phase handler would never run for those, and
-      // the browser would follow the link out from under the button press. Cancelling
-      // here happens before any descendant can silence the event; `stopPropagation`
-      // does not undo a `preventDefault`.
-      onClickCapture={(e) => {
-        // A click in a portal a descendant opened is not a click on the link: leave
-        // it (and a link inside it) alone. See `fromOutside`.
-        if (fromOutside(e.target, e.currentTarget)) return;
-        if (isPlainLeftClick(e)) e.preventDefault();
-      }}
-      onClick={(e) => {
-        if (fromOutside(e.target, e.currentTarget)) return;
-        if (!isPlainLeftClick(e)) {
-          e.stopPropagation();
-          return;
-        }
-        // Already cancelled above; this phase only decides what opens. A nested
-        // control that stopped propagation deliberately never reaches it, which is
-        // exactly how the row behaved before it became a link.
-        onActivate?.();
-      }}
-    >
-      {children}
-    </a>
-  );
-}
-
 // ---------- Main DataTable ----------
 
 
@@ -1110,7 +731,7 @@ export function DataTable<T>({
   selection,
   labels: labelsProp,
   locale: localeProp,
-  storageKeyPrefix = DEFAULT_PERSIST_PREFIX,
+  storageKeyPrefix: storageKeyPrefixProp,
   mobileExpandAsDialog = false,
   mobileDetailsInRow = false,
   rowName,
@@ -1149,6 +770,11 @@ export function DataTable<T>({
   // other ten. Memoised because the announcement effects below list `labels` as a
   // dependency, and a fresh object every render would re-run them for nothing.
   const labelOverrides = useKitLabelOverrides("dataTable");
+  // prop > provider > the kit's default, the order every kit setting resolves in (round
+  // 0.34 C5, KS U4): one prefix on the provider reaches the tables an app cannot pass a
+  // prop to, `TranslationReviewPanel`'s among them.
+  const providerStorageKeyPrefix = useKitTableStorageKeyPrefix();
+  const storageKeyPrefix = storageKeyPrefixProp ?? providerStorageKeyPrefix ?? DEFAULT_PERSIST_PREFIX;
   const labels = useMemo(
     () =>
       resolveDataTableLabels(
@@ -1164,67 +790,16 @@ export function DataTable<T>({
   );
   const locale = useKitLocale(localeProp);
 
-  // ---- Row actions ----
-  // The actions column is appended to the caller's columns rather than drawn as a
-  // second special case beside the selection column: it then gets the cell padding,
-  // the widths and the phone rules (`mobileHidden`) every other column gets.
-  const rowActionsFor = useCallback(
-    (row: T): ResolvedRowAction<T>[] =>
-      rowActions
-        ? (typeof rowActions === "function" ? rowActions(row) : rowActions)
-            .filter((a) => !a.hidden?.(row))
-            .map((a, i) => resolveRowAction(a, i, labels))
-        : [],
-    [rowActions, labels],
-  );
-  const columns = useMemo<DataTableColumn<T>[]>(
-    () =>
-      rowActions
-        ? [
-            ...columnsProp,
-            {
-              key: ROW_ACTIONS_KEY,
-              header: <span className="sr-only">{labels.actions}</span>,
-              // Through RowActions (0.32, §10.8): the icons inline at Normal, one "⋯"
-              // menu at Large once there are two — every label at once does not fit a
-              // row. Each control stops its own click: the row's handler already skips
-              // its controls, and this is for the caller who wraps the table in a
-              // clickable element of their own.
-              cell: (row) => (
-                <RowActions
-                  actions={rowActionsFor(row).map((a) => toRowAction(a, row))}
-                  name={rowName?.(row)}
-                  size={density === "compact" ? "2xs" : "xs"}
-                  labels={{ actions: labels.actions }}
-                  className="justify-end"
-                />
-              ),
-              className: "w-px whitespace-nowrap text-end",
-              headClassName: "w-px",
-              // On a phone the same actions are the card's swipes.
-              mobileHidden: true,
-              noRowLink: true,
-            },
-          ]
-        : columnsProp,
-    [columnsProp, rowActions, rowActionsFor, rowName, labels.actions, density],
-  );
-  const swipesFromActions = (row: T): MobileSwipeActions | null => {
-    const swipes = rowActionsFor(row).filter((a) => a.swipe && !a.action.disabledReason?.(row));
-    if (!swipes.length) return null;
-    const toSwipe = (a: ResolvedRowAction<T>): SwipeAction => ({
-      label: a.label,
-      icon: a.icon,
-      onCommit: () => void runRowAction(a.action, row),
-      // The row action's tone, painted by SwipeableRow: its soft wash idle, its fill
-      // and that fill's foreground armed (0.33).
-      tone: a.tone === "danger" ? "danger" : "brand",
-    });
-    return {
-      start: swipes.filter((a) => a.swipe === "start").map(toSwipe),
-      end: swipes.filter((a) => a.swipe === "end").map(toSwipe),
-    };
-  };
+  // ---- Row actions ---- (data-table-row-actions.tsx)
+  // The actions column joins the caller's columns; on a phone the same actions are the
+  // card's swipes, unless the caller's own `mobileSwipeActions` says otherwise.
+  const { columns, swipesFromActions } = useRowActionColumn({
+    columns: columnsProp,
+    rowActions,
+    rowName,
+    labels,
+    density,
+  });
   const swipeActionsFor = mobileSwipeActions ?? (rowActions ? swipesFromActions : undefined);
 
   // Sorting, filtering and paging all change WHICH rows are on screen without
@@ -1507,139 +1082,15 @@ export function DataTable<T>({
       visibleColumns.find((c) => !c.noRowLink))
     : undefined;
 
-  // ---- Column resize ----
-  //
-  // Pointer events with capture, rather than a `mousemove`/`mouseup` pair on `window`.
-  // Three defects in one eleven-line handler (audit 2026-09-22):
-  //
-  //  * a `setWidths` per `mousemove` re-rendered every row of the table on every pixel
-  //    of the drag — on a 500-row table that is the whole body, sixty times a second;
-  //  * the two `window` listeners were added from inside an event handler, so nothing
-  //    removed them if the table unmounted mid-drag (the row beneath opens a route),
-  //    and `document.body.style` stayed at `user-select: none; cursor: col-resize` for
-  //    the rest of the session — the whole page unselectable, with the wrong cursor;
-  //  * `mousedown` is a mouse. Under a finger the handle did nothing at all.
-  //
-  // `setPointerCapture` answers all three: the handle itself receives every move and
-  // the terminating `pointerup`/`pointercancel` wherever the pointer travels, so there
-  // is nothing global to leak, and a touch drag works because a finger is a pointer.
-  // The live width is written straight onto the column's own cells — the same three
-  // properties the render sets, so the drag and the commit cannot disagree — and
-  // `setWidths` is called once, when the drag ends.
-  const resizing = useRef<Resize | null>(null);
-
-  /** Every cell in one column, header first, totals row included. `data-col` rather than a cell index:
-   *  an expanded row holds a single `colSpan` cell, so the nth `<td>` of a row is
-   *  not reliably the nth column. */
-  const columnCells = (key: string): HTMLElement[] => {
-    const th = headRefs.get(key);
-    if (!th) return [];
-    const table = th.closest("table");
-    if (!table) return [th];
-    return [
-      th,
-      ...Array.from(table.querySelectorAll<HTMLElement>("tbody [data-col], tfoot [data-col]")).filter(
-        (el) => el.dataset.col === key,
-      ),
-    ];
-  };
-
-  const applyLiveWidth = (cells: HTMLElement[], width: number | undefined) => {
-    const px = width == null ? "" : `${width}px`;
-    for (const el of cells) {
-      el.style.width = px;
-      el.style.minWidth = px;
-      el.style.maxWidth = px;
-    }
-  };
-
-  const releaseResizeChrome = (handle: Element, pointerId: number) => {
-    document.body.style.userSelect = "";
-    document.body.style.cursor = "";
-    // Optional calls: jsdom implements neither, and the handlers sit on the handle
-    // itself, so a run without capture behaves the same for anything that stays
-    // inside the element.
-    if (handle.hasPointerCapture?.(pointerId)) handle.releasePointerCapture?.(pointerId);
-  };
-
-  const startResize = (e: React.PointerEvent<HTMLElement>, key: string) => {
-    // Secondary buttons open menus; only a primary press starts a drag.
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const th = headRefs.get(key);
-    const startWidth = th?.getBoundingClientRect().width ?? 100;
-    resizing.current = {
-      key,
-      pointerId: e.pointerId,
-      startX: e.clientX,
-      startWidth,
-      sign: isRtl(e.currentTarget) ? -1 : 1,
-      hadWidth: widths[key],
-      cells: columnCells(key),
-      width: startWidth,
-      moved: false,
-    };
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-    document.body.style.userSelect = "none";
-    document.body.style.cursor = "col-resize";
-  };
-
-  const moveResize = (e: React.PointerEvent<HTMLElement>) => {
-    const drag = resizing.current;
-    if (!drag || drag.pointerId !== e.pointerId) return;
-    drag.width = Math.max(40, Math.round(drag.startWidth + drag.sign * (e.clientX - drag.startX)));
-    drag.moved = true;
-    applyLiveWidth(drag.cells, drag.width);
-  };
-
-  const finishResize = (e: React.PointerEvent<HTMLElement>, commit: boolean) => {
-    const drag = resizing.current;
-    // Before the early return: the page gets its selection and its cursor back even
-    // for a pointer we were not tracking.
-    releaseResizeChrome(e.currentTarget, e.pointerId);
-    if (!drag || drag.pointerId !== e.pointerId) return;
-    resizing.current = null;
-    if (commit && drag.moved) {
-      setWidths((w) => ({ ...w, [drag.key]: drag.width }));
-      return;
-    }
-    // Cancelled — the browser took the pointer for a system gesture — or the press
-    // never became a drag. Either way the column goes back to the width React last
-    // rendered it at, which nothing else can do: the inline width the drag wrote is
-    // invisible to React, so a re-render with an unchanged `widths` would keep it.
-    applyLiveWidth(drag.cells, drag.hadWidth);
-  };
-
-  // The last exit path. A table that unmounts mid-drag takes the handle, and with it
-  // every handler above, out of the document — this is the only place left to hand the
-  // page back its text selection and its cursor.
-  useEffect(
-    () => () => {
-      if (!resizing.current) return;
-      resizing.current = null;
-      document.body.style.userSelect = "";
-      document.body.style.cursor = "";
-    },
-    [],
-  );
-
-  const autoSizeAll = () => {
-    // Clear widths so the table reflows to natural sizes, then snapshot each
-    // column's width and write it back — except for the last visible column,
-    // which is left unconstrained so it absorbs any remaining horizontal space.
-    setWidths({});
-    requestAnimationFrame(() => {
-      const next: Record<string, number> = {};
-      const cols = columns.filter((c) => !hiddenCols.has(c.key));
-      cols.forEach((col, idx) => {
-        if (idx === cols.length - 1) return;
-        const th = headRefs.get(col.key);
-        if (th) next[col.key] = Math.ceil(th.getBoundingClientRect().width);
-      });
-      setWidths(next);
-    });
-  };
+  // ---- Column resize ---- (data-table-resize.ts: pointer capture, one `setWidths` per
+  // drag, and the page's cursor and selection handed back on an unmount mid-drag)
+  const { startResize, moveResize, finishResize, autoSizeAll } = useColumnResize({
+    headRefs,
+    widths,
+    setWidths,
+    columns,
+    hiddenCols,
+  });
 
   const visibleCount = visibleColumns.length;
   const totalCount = columns.length;
@@ -1660,6 +1111,8 @@ export function DataTable<T>({
     : undefined;
   const footerValue = (col: DataTableColumn<T>) => col.footer?.(sorted, slice);
   const footerHeadingId = useId();
+  // Each open row's detail row, for its disclosure button's `aria-controls`.
+  const detailIdBase = useId();
   // The actions column is the table's own, not one the user can hide: out of the count.
   const columnsCountLabel = rowActions
     ? labels.columnsCount(visibleCount - 1, totalCount - 1)
@@ -1734,12 +1187,13 @@ export function DataTable<T>({
     unpaged,
     defaultPageSize,
   });
-  // The row whose selection was last toggled, so Shift+click can select the range up
-  // to it (feedback #289). Held as its KEY, not as an index into `slice`: the slice is
-  // re-derived from the current sort, filter and page, so an index taken before a
-  // header was clicked addresses a different row afterwards — and the range then ran
-  // from a row the user had never touched.
-  const selectionAnchor = useRef<string | number | null>(null);
+  // ---- Shift+click range selection ---- (data-table-selection.ts; feedback #289,
+  // anchored on the row's KEY so a sort, filter or page change cannot move it)
+  const { selectionAnchor, rangeClick, canSelect, selectRange } = useRangeSelection({
+    selection,
+    slice,
+    rowKey,
+  });
   // ---- Keyboard-activatable rows ----
   //
   // A desktop row with `onRowClick` opened on a mouse click and on nothing else: no
@@ -1767,28 +1221,6 @@ export function DataTable<T>({
       : slice.length
         ? rowKey(slice[0])
         : null;
-  /** The checkbox click that drew a range, so its `onChange` can be told apart. */
-  const rangeClick = useRef<Event | null>(null);
-  const canSelect = (row: T) => !!selection && (selection.isSelectable?.(row) ?? true);
-  const selectRange = (toIndex: number) => {
-    if (!selection || selectionAnchor.current === null) return false;
-    const fromIndex = slice.findIndex((r) => rowKey(r) === selectionAnchor.current);
-    // The anchor has been filtered, sorted or paged off the screen: there is no range
-    // on display to draw, so the click falls through to the plain single-row toggle.
-    if (fromIndex < 0) return false;
-    const [lo, hi] = [fromIndex, toIndex].sort((a, b) => a - b);
-    const range: T[] = [];
-    for (let i = lo; i <= hi; i++) {
-      const r = slice[i];
-      if (r && canSelect(r)) range.push(r);
-    }
-    // One call where the owner can take one. See `selection.onToggleMany`: the row-by-
-    // row loop below is the fallback for an owner that has not adopted it, not the
-    // shape this should be in.
-    if (selection.onToggleMany) selection.onToggleMany(range, true);
-    else for (const r of range) selection.onToggle(r, true);
-    return true;
-  };
 
   // When dialog-mode is on, the expanded row's detail goes into a bottom-sheet
   // modal instead of unfolding inline. Only one row is ever expanded at a time.
@@ -1804,205 +1236,30 @@ export function DataTable<T>({
     if (mobileDialogRow) onRowClick?.(mobileDialogRow);
   };
 
-  // One mobile card. Extracted so the flat list and the grouped list (below)
-  // share identical row markup.
-  const renderMobileRow = (row: T) => {
-    const expanded = isExpanded?.(row) ?? false;
-    const expansion = expanded ? openedRowContent(row) : null;
-    const tint = rowClassName?.(row);
-    // Use div+role="button" rather than a real <button> so cells that
-    // contain their own interactive controls (status toggles, action
-    // icons) don't end up as illegal nested buttons.
-    const interactive = !!onRowClick;
-    // Say that the card OPENS something (Keksdose feedback #163). A phone card had
-    // only a cursor and a tap-tint to advertise its editor — on the invoice review
-    // screen, whose entire purpose is correcting mis-read lines, that read as "these
-    // values are not editable". A chevron is the affordance every list on a phone
-    // uses for exactly this, and it points the way the row actually opens: right into
-    // a sheet, or down into an inline panel that flips it when expanded.
-    const opensDetail = interactive && opensRow;
-    const swipeActions = swipeActionsFor?.(row);
-    const swipe = swipeActions ? physicalSwipe(swipeActions, mobileDir) : null;
-    // An expanded row never swipes: the editor below it owns the horizontal space,
-    // and dragging the header away from its own form reads as a glitch.
-    const swipeEnabled = !!swipe && !expanded;
-    const href = mobileCardLinkable ? rowHref?.(row) : undefined;
-    const cardClass = cn(
-      "w-full text-start flex items-center",
-      // §4: more room per row at Large — a taller row is a bigger tap target too.
-      compact ? "px-3 py-2 gap-2 text-sm large:py-3" : "px-4 py-3 gap-3 large:py-4",
-      // Live #320's other half: the card acknowledges the touch before the sheet
-      // arrives. On a cold route the data can take a beat, and an unacknowledged tap
-      // reads as "did that register?" — which is most of what "abrupt" means here.
-      // `origin-center` + a 0.5% squeeze is deliberately almost subliminal: this fires
-      // on every row of a long list, so anything larger becomes the list's personality
-      // rather than feedback. `transition-transform` alone, so the existing background
-      // flip stays instant.
-      interactive &&
-        "cursor-pointer transition-transform duration-100 active:scale-[0.995] active:bg-[var(--bg-active)] motion-reduce:transition-none motion-reduce:active:scale-100",
-      // The keyboard's frame drawn INSIDE the card, as the desktop row's is (keksdose live
-      // #394): the browser's own ring and tap highlight sit on the card's outer edge, and
-      // three ancestors clip it — SwipeableRow's `overflow-hidden`, the card list, and
-      // AppShell main's `overflow-x-clip` — so the frame went missing on one side. A press
-      // keeps the fill and the squeeze above; an outline on every tap of a long list would
-      // be louder than the acknowledgement it replaces.
-      interactive && cn("[-webkit-tap-highlight-color:transparent] focus-visible:ring-inset", FOCUS_RING),
-    );
-    // The card's content is written once and worn by either tag below. Note that
-    // the primary cell is rendered RAW here, never through `linkColumn` — the card
-    // itself is the anchor, and routing it through `linkColumn` too would nest an
-    // <a> inside an <a>. Desktop and mobile are mutually exclusive (`isMdUp`), so
-    // exactly one anchor exists per row.
-    const cardInner = (
-      <>
-        {/* The card's own content keeps the column it always had; the chevron sits
-            beside it rather than inside, so a caller's `mobileCard` is untouched. */}
-        <div
-          className={cn(
-            "flex min-w-0 flex-1 flex-col",
-            compact ? "gap-1 large:gap-2" : "gap-2 large:gap-3",
-            // §4 "nothing truncates": at Large a cell's own `truncate` wraps instead —
-            // the reader who chose bigger type is the one an ellipsis fails. A caller's
-            // `mobileCard` is its own layout and keeps what it chose.
-            !mobileCard && CARD_NO_TRUNCATE,
-          )}
-        >
-          {mobileCard ? (
-            mobileCard(row)
-          ) : (
-            <>
-              {/* Only the `data-*` half of `cellProps` — see its note. */}
-              {mobilePrimaryCol && (
-                <div {...dataAttrsOf(mobilePrimaryCol.cellProps?.(row))} className="min-w-0 break-words font-medium">
-                  {mobilePrimaryCol.cell(row)}
-                </div>
-              )}
-              {mobileSecondaryColumns.length > 0 && large ? (
-                // §4: each label ABOVE its value at Large. Side by side, a label column
-                // sized to the widest label leaves a value a sliver of a 240 px card.
-                <StackedFields columns={mobileSecondaryColumns} row={row} compact={compact} />
-              ) : mobileSecondaryColumns.length > 0 && (
-                <dl
-                  className={cn(
-                    "grid grid-cols-[auto_1fr] gap-x-3",
-                    compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm",
-                  )}
-                >
-                  {mobileSecondaryColumns.map((col) => (
-                    <Fragment key={col.key}>
-                      <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)] self-center">
-                        {col.header}
-                      </dt>
-                      <dd
-                        {...dataAttrsOf(col.cellProps?.(row))}
-                        className="min-w-0 text-[var(--text-secondary)] self-center"
-                      >
-                        {col.cell(row)}
-                      </dd>
-                    </Fragment>
-                  ))}
-                </dl>
-              )}
-            </>
-          )}
-        </div>
-        {opensDetail &&
-          // `aria-hidden`: the row already announces itself as a button with
-          // `aria-expanded`, so the icon would only add a second, wordless stop.
-          (mobileExpandAsDialog ? (
-            // Points INTO the sheet, which is the reading-forward direction.
-            <ChevronRight
-              aria-hidden
-              className="size-4 shrink-0 text-[var(--text-placeholder)] rtl:-scale-x-100"
-            />
-          ) : (
-            <ChevronDown
-              aria-hidden
-              className={cn(
-                "size-4 shrink-0 text-[var(--text-placeholder)] transition-transform",
-                expanded && "rotate-180",
-              )}
-            />
-          ))}
-      </>
-    );
-    const body =
-      interactive && href ? (
-        // A card with a URL of its own is a LINK, not a div wearing role="button"
-        // (feedback #451): the phone's long-press "open in new tab" and a screen
-        // reader's link semantics both come free, and the fake role goes away.
-        <RowLink
-          href={href}
-          onActivate={() => onRowClick!(row)}
-          aria-expanded={opensRow ? expanded : undefined}
-          className={cardClass}
-          // Enter already activates a link natively, and that routes through
-          // RowLink's own onClick — handling it here too would open the row twice.
-          // Space is the only key left, and only so it opens the row instead of
-          // scrolling the list.
-          onKeyDown={(e) => {
-            if (e.key !== " ") return;
-            e.preventDefault();
-            onRowClick!(row);
-          }}
-        >
-          {cardInner}
-        </RowLink>
-      ) : (
-        /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- the handlers are
-           only attached when `interactive`, and then so are role="button", tabIndex 0 and the
-           Enter/Space handler below; the rule cannot follow the conditional role. */
-        <div
-          role={interactive ? "button" : undefined}
-          tabIndex={interactive ? 0 : undefined}
-          onClick={
-            interactive
-              ? (e) => {
-                  if (fromOutside(e.target, e.currentTarget)) return;
-                  onRowClick!(row);
-                }
-              : undefined
-          }
-          onKeyDown={
-            interactive
-              ? (e) => {
-                  // A key press inside a nested control is that control's.
-                  if (e.target !== e.currentTarget) return;
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onRowClick!(row);
-                  }
-                }
-              : undefined
-          }
-          aria-expanded={opensRow ? expanded : undefined}
-          className={cardClass}
-        >
-          {cardInner}
-        </div>
-      );
-    return (
-      <li key={rowKey(row)} className={cn(tint)} {...cleanAttrs(rowAttributes?.(row))}>
-        {swipeEnabled ? (
-          <SwipeableRow enabled left={swipe!.left} right={swipe!.right}>
-            {body}
-          </SwipeableRow>
-        ) : (
-          body
-        )}
-        {expansion && !mobileExpandAsDialog && (
-          <div
-            className={cn(
-              "bg-[var(--bg-surface-2)] border-t border-[var(--border)]",
-              compact ? "px-3 py-2" : "px-4 py-3",
-            )}
-          >
-            {expansion}
-          </div>
-        )}
-      </li>
-    );
-  };
+  // One mobile card (`MobileRow`, data-table-mobile.tsx). A function so the flat list
+  // and the grouped list (below) share identical row markup.
+  const renderMobileRow = (row: T) => (
+    <MobileRow
+      key={rowKey(row)}
+      row={row}
+      isExpanded={isExpanded}
+      openedRowContent={openedRowContent}
+      opensRow={opensRow}
+      rowClassName={rowClassName}
+      rowAttributes={rowAttributes}
+      onRowClick={onRowClick}
+      rowHref={rowHref}
+      swipeActionsFor={swipeActionsFor}
+      mobileDir={mobileDir}
+      mobileCardLinkable={mobileCardLinkable}
+      mobileCard={mobileCard}
+      mobilePrimaryCol={mobilePrimaryCol}
+      mobileSecondaryColumns={mobileSecondaryColumns}
+      mobileExpandAsDialog={mobileExpandAsDialog}
+      compact={compact}
+      large={large}
+    />
+  );
 
   // Consecutive grouping of the (already-sorted) mobile slice into labelled
   // sections for the "assistance"-style list (feedback #317). Null unless the
@@ -2054,7 +1311,7 @@ export function DataTable<T>({
           className={cn(
             "flex flex-wrap items-center gap-2",
             frame
-              ? cn("border-b border-[var(--border)]", compact ? "px-2 py-1.5" : "px-3 py-2")
+              ? cn("border-b border-subtle", compact ? "px-2 py-1.5" : "px-3 py-2")
               : "pb-3",
           )}
         >
@@ -2108,7 +1365,7 @@ export function DataTable<T>({
         )}
         <ul
           className={cn(
-            "divide-y divide-[var(--border)]",
+            "divide-y divide-subtle",
             // Under `fillHeight` the list is the scroller, as the table body is on a
             // wide screen: the filter button stays above it and a server pager below.
             // The endless-scroll sentinel still fires in here — an
@@ -2122,7 +1379,7 @@ export function DataTable<T>({
           {mobileGroups
             ? mobileGroups.map((g) => (
                 <Fragment key={`hb-group:${g.key}`}>
-                  <li className="sticky top-0 z-10 bg-[var(--bg-surface-2)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] backdrop-blur">
+                  <li className="sticky top-0 z-10 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur">
                     {mobileGroupLabel ? mobileGroupLabel(g.key) : g.key}
                   </li>
                   {g.rows.map(renderMobileRow)}
@@ -2132,7 +1389,7 @@ export function DataTable<T>({
           {mobileSlice.length === 0 && (
             <li
               className={cn(
-                "text-center text-[var(--text-muted)]",
+                "text-center text-muted",
                 compact ? "px-3 py-3 text-xs" : "px-4 py-6 text-sm",
               )}
             >
@@ -2144,7 +1401,7 @@ export function DataTable<T>({
           {canRevealMoreMobile && (
             <li
               ref={loadMoreRef}
-              className="px-4 py-4 text-center text-xs text-[var(--text-placeholder)]"
+              className="px-4 py-4 text-center text-xs text-placeholder"
             >
               {/* Isolated for the reason spelled out on LoadingText. */}
               <bdi>{labels.loading}</bdi>
@@ -2163,7 +1420,7 @@ export function DataTable<T>({
             data-table-footer=""
             aria-labelledby={footerLabel != null ? footerHeadingId : undefined}
             className={cn(
-              "border-t-2 border-[var(--border-strong)] bg-[var(--bg-surface-2)]",
+              "border-t-2 border-strong bg-surface-2",
               compact ? "px-3 py-2" : "px-4 py-3",
               isLoading && "opacity-60 transition-opacity",
             )}
@@ -2183,10 +1440,10 @@ export function DataTable<T>({
                 .filter((c) => c.footer)
                 .map((col) => (
                   <Fragment key={col.key}>
-                    <dt className="self-center text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                    <dt className="self-center text-xs uppercase tracking-wide text-muted">
                       {col.header}
                     </dt>
-                    <dd className="min-w-0 self-center font-semibold text-[var(--text-primary)]">
+                    <dd className="min-w-0 self-center font-semibold text-primary">
                       {footerValue(col)}
                     </dd>
                   </Fragment>
@@ -2263,189 +1520,36 @@ export function DataTable<T>({
               only sideways and lets the header ride away on page scroll). The
               header then stays put as you scroll the rows. position:sticky on
               <thead> isn't reliable across browsers, so we put it on each <th>
-              (see headClassName below). */}
-          <thead className="bg-[var(--bg-surface-2)] text-[var(--text-secondary)]">
-            <tr className="text-start">
-              {selection && (
-                <th
-                  scope="col"
-                  className={cn(
-                    "sticky top-0 z-10 bg-[var(--bg-surface-2)] align-middle backdrop-blur-sm",
-                    compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2",
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    className={cn("align-middle accent-indigo-600", compact ? "size-3.5" : "size-4")}
-                    checked={selection.allSelected}
-                    ref={(el) => {
-                      if (el) el.indeterminate = selection.someSelected && !selection.allSelected;
-                    }}
-                    onChange={(e) => selection.onToggleAll(e.target.checked)}
-                    aria-label={labels.selectAllRows}
-                  />
-                </th>
-              )}
-              {visibleColumns.map((col) => {
-                // In server mode the utilities stay hidden unless the caller
-                // takes them over and feeds them back into the server query.
-                const sortable = (!isServer || !!onSortsChange) && !!col.sortBy;
-                const filter = !isServer || onFiltersChange ? resolveFilter(col) : null;
-                const filterState = filters[col.key] ?? (filter ? defaultFilterState(filter) : undefined);
-                const sortIdx = sorts.findIndex((s) => s.key === col.key);
-                const active = sortIdx !== -1;
-                const Icon = active ? (sorts[sortIdx].dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
-                const filterActive = filterState && isFilterActive(filterState);
-                // Logical, and a legacy `text-right` still counts — see `logicalAlign`.
-                const headClass = logicalAlign(col.headClassName);
-                const isEndAligned = !!headClass && END_ALIGN.test(headClass);
-                const width = widths[col.key];
-                const ownHead = splitCellProps(col.headProps);
-                const pinnedHead = width ? { width, minWidth: width, maxWidth: width } : undefined;
-                return (
-                  <th
-                    {...ownHead.attrs}
-                    key={col.key}
-                    ref={(el) => {
-                      if (el) headRefs.set(col.key, el);
-                      else headRefs.delete(col.key);
-                    }}
-                    scope="col"
-                    // Only a header the user can actually sort says anything: an
-                    // `aria-sort` on a plain column is a control that is not there,
-                    // and a persisted or URL sort can name a column with no `sortBy`
-                    // (the sort chain drops it silently) — which would otherwise
-                    // claim a sort the table is not applying.
-                    //
-                    // "none" on the rest is the half that was missing. Without it a
-                    // sortable header is indistinguishable from a plain one until the
-                    // user presses it. Secondary criteria read "none" too: ARIA allows
-                    // exactly one sorted column, and the priority is carried by the
-                    // badge and by what the header button announces on press.
-                    aria-sort={
-                      sortable
-                        ? sortIdx === 0
-                          ? sorts[0].dir === "asc"
-                            ? "ascending"
-                            : "descending"
-                          : "none"
-                        : undefined
-                    }
-                    style={ownHead.style || pinnedHead ? { ...ownHead.style, ...pinnedHead } : undefined}
-                    className={cn(
-                      "relative font-medium align-middle whitespace-nowrap",
-                      compact ? "px-2 py-1" : "px-3 py-2",
-                      // Keep the header visible while the user scrolls the page.
-                      // Each <th> carries its own bg so the row doesn't render
-                      // transparent over the data rows underneath.
-                      "sticky top-0 z-10 bg-[var(--bg-surface-2)] backdrop-blur-sm",
-                      logicalAlign(ownHead.className),
-                      headClass,
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "flex items-center gap-1",
-                        isEndAligned && "flex-row-reverse",
-                      )}
-                    >
-                      <Tooltip label={sortable && multiSort ? labels.sortHint : undefined} portal>
-                        <button
-                          type="button"
-                          onClick={(e) => sortable && toggleSort(col.key, e.shiftKey)}
-                          disabled={!sortable}
-                          className={cn(
-                            "flex items-center gap-1 text-start",
-                            sortable && "hover:text-[var(--text-primary)]",
-                          )}
-                        >
-                          <span>{col.header}</span>
-                          {sortable && (
-                            <Icon className={cn("size-3", active ? "opacity-100" : "opacity-40")} />
-                          )}
-                          {/* Priority badge, only meaningful with 2+ sort keys */}
-                          {active && sorts.length > 1 && (
-                            <span className="text-micro font-semibold leading-none text-brand">
-                              {sortIdx + 1}
-                            </span>
-                          )}
-                        </button>
-                      </Tooltip>
-                      {filter && (
-                        <Popover
-                          // 420 px at Normal, in rem so the calendar grows with its
-                          // text (§3.2); Popover caps it at the viewport.
-                          width={filter.type === "date" ? "26.25rem" : undefined}
-                          // The panel is the column's filter, and says so. Unnamed it
-                          // was announced as the kit-wide fallback, "Popover".
-                          labels={{ panel: labels.filter }}
-                          trigger={({ toggle, ref }) => (
-                            <button
-                              type="button"
-                              ref={ref}
-                              onClick={toggle}
-                              aria-label={labels.filter}
-                              className={cn(
-                                "rounded p-1 transition-colors",
-                                filterActive
-                                  ? "bg-[var(--brand-bg)] text-[var(--brand-muted)]"
-                                  : "text-[var(--text-placeholder)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
-                              )}
-                            >
-                              <Filter className="size-3" />
-                            </button>
-                          )}
-                        >
-                          {() => (
-                            <FilterPopover
-                              column={col}
-                              state={filterState ?? defaultFilterState(filter)}
-                              onChange={(next) => setFilterValue(col.key, next)}
-                              onClear={() => clearFilter(col.key)}
-                              selectOptions={selectOptionsByKey[col.key] ?? []}
-                              labels={labels}
-                              locale={locale}
-                            />
-                          )}
-                        </Popover>
-                      )}
-                    </div>
-                    {resizable && col.key !== ROW_ACTIONS_KEY && (
-                    /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a
-                       pointer-only drag handle for a visual preference (column width); it is
-                       deliberately not a tab stop, and no content or action depends on it. */
-                    <span
-                      role="separator"
-                      aria-orientation="vertical"
-                      onPointerDown={(e) => startResize(e, col.key)}
-                      onPointerMove={moveResize}
-                      onPointerUp={(e) => finishResize(e, true)}
-                      onPointerCancel={(e) => finishResize(e, false)}
-                      onDoubleClick={(e) => {
-                        e.preventDefault();
-                        setWidths((w) => {
-                          const next = { ...w };
-                          delete next[col.key];
-                          return next;
-                        });
-                      }}
-                      // `touch-none`: without it the browser claims a finger drag for
-                      // scrolling before the first `pointermove` ever arrives.
-                      // `end-0` and a translate that flips with it: the handle sits on the column's
-                      // trailing edge, which is its left one in a right-to-left table.
-                      className="absolute end-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 rtl:translate-x-1/2 cursor-col-resize select-none touch-none hover:bg-[var(--brand-bg-hover)]"
-                    />
-                    )}
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
+              (see DataTableHead, data-table-head.tsx). */}
+          <DataTableHead
+            visibleColumns={visibleColumns}
+            selection={selection}
+            compact={compact}
+            labels={labels}
+            locale={locale}
+            isServer={isServer}
+            hasSortCallback={!!onSortsChange}
+            hasFilterCallback={!!onFiltersChange}
+            sorts={sorts}
+            filters={filters}
+            selectOptionsByKey={selectOptionsByKey}
+            multiSort={multiSort}
+            resizable={resizable}
+            widths={widths}
+            setWidths={setWidths}
+            headRefs={headRefs}
+            toggleSort={toggleSort}
+            setFilterValue={setFilterValue}
+            clearFilter={clearFilter}
+            startResize={startResize}
+            moveResize={moveResize}
+            finishResize={finishResize}
+          />
           <tbody
             className={cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity")}
           >
             {leadingRow && (
-              <tr className="border-t border-[var(--border)]">
+              <tr className="border-t border-subtle">
                 <td colSpan={totalColSpan} className="p-0">
                   {leadingRow}
                 </td>
@@ -2457,13 +1561,34 @@ export function DataTable<T>({
               const rowInteractive = !!onRowClick || !!selection;
               const href = rowHref?.(row);
               const key = rowKey(row);
+              const detailId = `${detailIdBase}-${rowIndex}`;
+              // Whether the row is open, said where ARIA allows it (round 0.34, the
+              // showcase's axe check): `aria-expanded` belongs to a treegrid's row, not a
+              // table's, and the <tr> wore it. A disclosure button in the first cell carries
+              // it now, with `aria-controls` on the detail row while that is there.
+              // Visually hidden and not a tab stop: the row stays the one roving stop, with
+              // Enter/Space and the whole-row click — this is the screen reader cursor's
+              // way in, and where it hears the state. Named by `aria-label`, so the cell's
+              // text stays the cell's own.
+              const disclosure =
+                rowsFocusable && expandedRow ? (
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="sr-only-fixed"
+                    aria-label={labels.rowDetails}
+                    aria-expanded={expanded}
+                    aria-controls={expansion ? detailId : undefined}
+                    // The row's own handler leaves a click on a control inside it alone.
+                    onClick={() => onRowClick!(row)}
+                  />
+                ) : null;
               return (
                 <Fragment key={key}>
                   <tr
                     {...cleanAttrs(rowAttributes?.(row))}
                     data-row-nav={rowsFocusable ? "" : undefined}
                     tabIndex={rowsFocusable ? (key === tabRowKey ? 0 : -1) : undefined}
-                    aria-expanded={rowsFocusable && expandedRow ? expanded : undefined}
                     onFocus={
                       rowsFocusable
                         ? (e) => {
@@ -2491,13 +1616,13 @@ export function DataTable<T>({
                         : undefined
                     }
                     className={cn(
-                      "border-t border-[var(--border)]",
-                      rowInteractive && "cursor-pointer hover:bg-[var(--bg-hover)]",
+                      "border-t border-subtle",
+                      rowInteractive && "cursor-pointer hover:bg-hover",
                       // The kit's focus frame width (§5, `--focus-ring-width`), drawn as an
                       // OUTLINE rather than FOCUS_RING's box-shadow: a shadow on a `<tr>`
                       // is not painted by every engine, an outline is.
                       rowsFocusable &&
-                        "focus-visible:bg-[var(--bg-hover)] focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]",
+                        "focus-visible:bg-hover focus-visible:outline-focus focus-visible:-outline-offset-2 focus-visible:outline-brand",
                       rowClassName?.(row),
                     )}
                     onClick={
@@ -2580,7 +1705,7 @@ export function DataTable<T>({
                         )}
                       </td>
                     )}
-                    {visibleColumns.map((col) => {
+                    {visibleColumns.map((col, colIndex) => {
                       const width = widths[col.key];
                       // The caller's first, the table's over it — see `cellProps`.
                       const own = splitCellProps(col.cellProps?.(row));
@@ -2599,6 +1724,7 @@ export function DataTable<T>({
                             logicalAlign(col.className),
                           )}
                         >
+                          {colIndex === 0 && disclosure}
                           {col === linkColumn && href ? (
                             // No `onActivate`: the click is left to bubble to the
                             // <tr> handler above, which already owns expand-vs-select.
@@ -2614,7 +1740,7 @@ export function DataTable<T>({
                     })}
                   </tr>
                   {expansion && (
-                    <tr className="bg-[var(--bg-surface-2)] border-t border-[var(--border)]">
+                    <tr id={disclosure ? detailId : undefined} className="bg-surface-2 border-t border-subtle">
                       {/* The detail panel spans every column. In an `auto` table
                           layout (the default here — columns only get fixed style
                           widths once the user resizes/auto-sizes them) the cell's
@@ -2640,7 +1766,7 @@ export function DataTable<T>({
               <tr>
                 <td
                   colSpan={totalColSpan}
-                  className={cn("text-center text-[var(--text-muted)]", compact ? "px-2 py-2" : "px-3 py-4")}
+                  className={cn("text-center text-muted", compact ? "px-2 py-2" : "px-3 py-4")}
                 >
                   {/* Nothing is not the same as not-yet: "no results" while the first
                       page is still in flight is a claim the table cannot make. */}
@@ -2658,7 +1784,7 @@ export function DataTable<T>({
             <tfoot
               data-table-footer=""
               className={cn(
-                "font-semibold text-[var(--text-primary)]",
+                "font-semibold text-primary",
                 isLoading && "opacity-60 transition-opacity",
               )}
             >
@@ -2726,89 +1852,16 @@ export function DataTable<T>({
           )}
         </div>
         {columnSettings && (
-        <>
-        <Tooltip label={columnsCountLabel} portal>
-          <button
-            type="button"
-            onClick={() => setShowSettings(true)}
-            aria-label={columnsCountLabel}
-            aria-hidden={showSettings}
-            tabIndex={showSettings ? -1 : 0}
-            className={cn(
-              "group flex shrink-0 items-start justify-center overflow-hidden pt-3 transition-[width] duration-200 ease-out",
-              "border-s border-[var(--border)]",
-              "hover:bg-[var(--bg-hover)]",
-              showSettings ? "w-0 border-s-0" : "w-8 cursor-pointer",
-            )}
-          >
-            <span
-              className="whitespace-nowrap text-xs font-medium tracking-wide text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
-              style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-            >
-              {columnsCountLabel}
-            </span>
-          </button>
-        </Tooltip>
-        <div
-          className={cn(
-            "shrink-0 overflow-hidden transition-[width] duration-200 ease-out",
-            showSettings ? "w-56" : "w-0",
-          )}
-        >
-          <div className="flex w-56 flex-col border-s border-[var(--border)] p-2">
-            <div className="mb-2 flex items-center justify-between gap-1">
-              <div className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                {columnsCountLabel}
-              </div>
-              <Tooltip label={labels.close} portal>
-                <button
-                  type="button"
-                  onClick={() => setShowSettings(false)}
-                  aria-label={labels.close}
-                  className="rounded p-0.5 text-[var(--text-placeholder)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
-                >
-                  <X className="size-4" />
-                </button>
-              </Tooltip>
-            </div>
-            <button
-              type="button"
-              onClick={autoSizeAll}
-              className="mb-2 rounded border border-[var(--border)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
-            >
-              {labels.autoSize}
-            </button>
-            <div className="flex flex-col gap-0.5">
-              {columns.map((col) => {
-                if (col.key === ROW_ACTIONS_KEY) return null;
-                const checked = !hiddenCols.has(col.key);
-                const headerLabel = columnLabel(col);
-                return (
-                  <label
-                    key={col.key}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs hover:bg-[var(--bg-hover)]"
-                  >
-                    <input
-                      type="checkbox"
-                      className="size-3.5"
-                      checked={checked}
-                      onChange={(e) => {
-                        setHiddenCols((s) => {
-                          const next = new Set(s);
-                          if (e.target.checked) next.delete(col.key);
-                          else next.add(col.key);
-                          return next;
-                        });
-                      }}
-                    />
-                    <span className="truncate">{headerLabel}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-        </>
+          <ColumnSettingsPanel
+            columns={columns}
+            hiddenCols={hiddenCols}
+            setHiddenCols={setHiddenCols}
+            showSettings={showSettings}
+            setShowSettings={setShowSettings}
+            columnsCountLabel={columnsCountLabel}
+            labels={labels}
+            autoSizeAll={autoSizeAll}
+          />
         )}
       </div>
       )}
@@ -2842,180 +1895,5 @@ function LoadingText({ label }: { label: string }) {
       <Spinner label={null} className="size-4" />
       <bdi>{label}</bdi>
     </span>
-  );
-}
-
-// ---------- Mobile filter sheet ----------
-
-/**
- * Filter access for the mobile card list (feedback #299). The desktop table
- * houses per-column filters in its header; the card list has no header, so the
- * same filters were unreachable on phones. This renders a compact "Filters" bar
- * that opens a bottom sheet listing each filterable column as a collapsible
- * section, reusing the very same {@link FilterPopover} and filter state the
- * desktop table drives — so it filters identically and stays URL-synced.
- */
-function MobileFilters<T>({
-  columns,
-  filters,
-  selectOptionsByKey,
-  isServer,
-  hasFilterCallback,
-  onSetFilter,
-  onClearFilter,
-  onClearAll,
-  labels,
-  locale,
-}: {
-  columns: DataTableColumn<T>[];
-  filters: FilterState;
-  selectOptionsByKey: Record<string, { value: string; label: string }[]>;
-  isServer: boolean;
-  hasFilterCallback: boolean;
-  onSetFilter: (key: string, value: FilterValue) => void;
-  onClearFilter: (key: string) => void;
-  onClearAll: () => void;
-  labels: DataTableLabels;
-  locale?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  // The sheet is portalled to <body>, out from under whatever `dir` the table sits
-  // in, so it carries the trigger's direction with it — read at the moment of opening,
-  // from the element the user actually pressed.
-  const [dir, setDir] = useState<Direction>("ltr");
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const backdropClose = useBackdropClose(() => setOpen(false));
-  useBodyScrollLock(open);
-  // Back dismisses the filter sheet too (Keksdose feedback #172) — it is the same
-  // full-screen surface, and the filters it sets are already in the URL, so closing
-  // it never loses anything.
-  useOverlayHistory(open, () => setOpen(false));
-
-  const filterable = useMemo(
-    () =>
-      columns
-        .map((col) => ({ col, filter: !isServer || hasFilterCallback ? resolveFilter(col) : null }))
-        .filter((x): x is { col: DataTableColumn<T>; filter: ColumnFilter<T> } => !!x.filter),
-    [columns, isServer, hasFilterCallback],
-  );
-
-  if (filterable.length === 0) return null;
-
-  const activeCount = filterable.filter(({ col }) => {
-    const s = filters[col.key];
-    return s && isFilterActive(s);
-  }).length;
-
-  return (
-    <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-2">
-      <button
-        type="button"
-        onClick={(e) => {
-          setDir(dirOf(e.currentTarget));
-          setOpen(true);
-        }}
-        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
-      >
-        <Filter className="size-4" />
-        <span>{labels.filters}</span>
-        {activeCount > 0 && (
-          <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--info-bg)] px-1 text-caption font-semibold text-[var(--info)]">
-            {activeCount}
-          </span>
-        )}
-      </button>
-      {activeCount > 0 && (
-        <button
-          type="button"
-          onClick={onClearAll}
-          className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-        >
-          {labels.clearAll}
-        </button>
-      )}
-      {open &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
-            role="dialog"
-            aria-modal="true"
-            dir={dir}
-            {...backdropClose}
-          >
-            <div className="flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl bg-[var(--bg-surface)] shadow-xl">
-              <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-3">
-                <div className="font-medium">{labels.filters}</div>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  aria-label={labels.close}
-                  className="-me-1 rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-              <div className="flex-1 divide-y divide-[var(--border)] overflow-y-auto overscroll-contain">
-                {filterable.map(({ col, filter }) => {
-                  const state = filters[col.key];
-                  const active = !!state && isFilterActive(state);
-                  const isItemOpen = expanded === col.key;
-                  return (
-                    <div key={col.key}>
-                      <button
-                        type="button"
-                        onClick={() => setExpanded(isItemOpen ? null : col.key)}
-                        aria-expanded={isItemOpen}
-                        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-start"
-                      >
-                        <span className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
-                          {col.header}
-                          {active && <span className="size-1.5 rounded-full bg-brand" />}
-                        </span>
-                        <ChevronDown
-                          className={cn(
-                            "size-4 shrink-0 text-[var(--text-placeholder)] transition-transform",
-                            isItemOpen && "rotate-180",
-                          )}
-                        />
-                      </button>
-                      {isItemOpen && (
-                        <div className="px-4 pb-3">
-                          <FilterPopover
-                            column={col}
-                            state={state ?? defaultFilterState(filter)}
-                            onChange={(next) => onSetFilter(col.key, next)}
-                            onClear={() => onClearFilter(col.key)}
-                            selectOptions={selectOptionsByKey[col.key] ?? []}
-                            labels={labels}
-                            locale={locale}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-4 py-3">
-                <button
-                  type="button"
-                  onClick={onClearAll}
-                  disabled={activeCount === 0}
-                  className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] disabled:opacity-40"
-                >
-                  {labels.clearAll}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded-md bg-[var(--bg-inverse)] px-4 py-2 text-sm font-medium text-[var(--text-inverse)]"
-                >
-                  {labels.done}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-    </div>
   );
 }

@@ -4,13 +4,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { SignInForm } from "../sign-in-form";
 import type { SignInAnswer, SignInFormProps } from "../sign-in-form";
+import { fill } from "../../test/fill";
+import { refusal } from "../../test/fixtures";
 
 /**
  * §5 / §8: the form never sends a request — it hands each step's input to a callback
  * and renders the answer it resolves with (keksdose's three shapes).
  */
-
-const refusal = (code: string) => ({ response: { status: 401, data: { detail: "nope", code } } });
 
 /** A promise the test settles by hand. */
 function deferred<T>() {
@@ -32,9 +32,11 @@ function setup(props: Partial<SignInFormProps> = {}) {
   return { user, onSubmit, onCode, onSetPassword, ...utils };
 }
 
+// The credentials are pasted (`fill`, TST-13): these tests are about the values the form
+// hands over. The code fields, which clean as you type, are still typed into.
 async function signIn(user: ReturnType<typeof userEvent.setup>, email = "ada@example.com", password = "correct horse") {
-  await user.type(screen.getByLabelText("Email"), email);
-  await user.type(screen.getByLabelText("Password"), password);
+  await fill(user, screen.getByLabelText("Email"), email);
+  await fill(user, screen.getByLabelText("Password"), password);
   await user.click(screen.getByRole("button", { name: "Sign in" }));
 }
 
@@ -55,7 +57,7 @@ describe("SignInForm — credentials", () => {
 
   it("sends nothing while a field is empty", async () => {
     const { user, onSubmit } = setup();
-    await user.type(screen.getByLabelText("Email"), "ada@example.com");
+    await fill(user, screen.getByLabelText("Email"), "ada@example.com");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -70,7 +72,7 @@ describe("SignInForm — credentials", () => {
 
   it("after invalid_credentials: one sentence, the deactivated hint and the tag hint", async () => {
     const { user } = setup({
-      onSubmit: async () => Promise.reject(refusal("invalid_credentials")),
+      onSubmit: async () => Promise.reject(refusal(401, "invalid_credentials")),
       deactivatedContact: "support@example.com",
       emailTag: "kastlan",
     });
@@ -86,7 +88,7 @@ describe("SignInForm — credentials", () => {
   });
 
   it("shows no hint the app did not ask for, and none after a failure that is not a refused credential", async () => {
-    let answer: unknown = refusal("invalid_credentials");
+    let answer: unknown = refusal(401, "invalid_credentials");
     const { user } = setup({ onSubmit: async () => Promise.reject(answer) });
     await signIn(user);
     const alert = await screen.findByRole("alert");
@@ -100,13 +102,13 @@ describe("SignInForm — credentials", () => {
   });
 
   it("no tag hint when the typed address already carries a tag", async () => {
-    const { user } = setup({ onSubmit: async () => Promise.reject(refusal("invalid_credentials")), emailTag: "kastlan" });
+    const { user } = setup({ onSubmit: async () => Promise.reject(refusal(401, "invalid_credentials")), emailTag: "kastlan" });
     await signIn(user, "ada+kastlan@example.com");
     expect(await screen.findByRole("alert")).not.toHaveTextContent("Signed up with");
   });
 
   it("puts the app's words on a failure through describeError, the hints still following", async () => {
-    const throttled = { response: { status: 429, data: { detail: "slow down" } } };
+    const throttled = refusal(429, undefined, "slow down");
     const { user } = setup({
       onSubmit: async () => Promise.reject(throttled),
       describeError: (error, action) => (error === throttled && action === "password" ? "Too many attempts." : undefined),
@@ -153,7 +155,7 @@ describe("SignInForm — the second factor", () => {
   it("token_invalid: the challenge expired — back to the credentials, saying so", async () => {
     const { user } = setup({
       onSubmit: async () => ({ kind: "2fa", challengeToken: "c" }),
-      onCode: async () => Promise.reject(refusal("token_invalid")),
+      onCode: async () => Promise.reject(refusal(401, "token_invalid")),
     });
     await signIn(user);
     await user.type(await screen.findByLabelText("2FA code"), "123456{Enter}");
@@ -273,7 +275,7 @@ describe("SignInForm — a backup code (0.30.0)", () => {
 });
 
 describe("SignInForm — a throttled request (0.30.0)", () => {
-  const throttled = { response: { status: 429, data: { detail: "Too many requests" } } };
+  const throttled = refusal(429, undefined, "Too many requests");
   const TEXT = "Too many attempts. Wait a moment and try again.";
 
   it("says so on the credentials, with no credential hint under it", async () => {
@@ -341,7 +343,7 @@ describe("SignInForm — a throttled request (0.30.0)", () => {
   it("names the wait a Retry-After asks for — keksdose's uncoded 429", async () => {
     const { user } = setup({
       onSubmit: async () =>
-        Promise.reject({ response: { status: 429, headers: { "retry-after": "30" }, data: { detail: "x" } } }),
+        Promise.reject(refusal(429, undefined, "x", { "retry-after": "30" })),
     });
     await signIn(user);
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Try again in 30 s.");
@@ -467,7 +469,7 @@ describe("SignInForm — labels", () => {
 
   it("puts a contact node of the app's where the template says", async () => {
     const { user } = setup({
-      onSubmit: async () => Promise.reject(refusal("invalid_credentials")),
+      onSubmit: async () => Promise.reject(refusal(401, "invalid_credentials")),
       deactivatedContact: <a href="/contact">your administrator</a>,
       labels: { deactivatedHint: "Konto deaktiviert? Schreiben Sie {contact}." },
     });

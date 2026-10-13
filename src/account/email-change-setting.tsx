@@ -1,18 +1,21 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { MailCheck } from "lucide-react";
 
-import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import { CurrentPasswordInput } from "../components/danger-confirm";
-import { Button, Card, Input } from "../components/ui";
-import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
+import { Button } from "../components/button";
+import { Card } from "../components/card";
+import { Input } from "../components/input";
+import { authErrorCode, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { emailParts, taggedEmail } from "../auth/email-tag";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { DEFAULT_EMAIL_CHANGE_LABELS } from "./email-change-setting-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -64,30 +67,8 @@ export interface EmailChangeLabels {
   failed: string;
 }
 
-export const DEFAULT_EMAIL_CHANGE_LABELS: EmailChangeLabels = {
-  title: "Email address",
-  current: "Current address",
-  newEmail: "New email address",
-  password: "Current password",
-  passwordHint: "Your address is how you sign in, so changing it takes your password.",
-  emailTagUse: (address) => `Use ${address}`,
-  emailTagHint:
-    "Many providers deliver name+tag@… to the same inbox, so mail from this app is easy to filter and trace. Check yours does before you rely on it: you would sign in with the tagged address.",
-  submit: "Change email address",
-  sameAsCurrent: "This is already your address.",
-  emailTaken: "An account with this email address already exists.",
-  wrongPassword: "The password is incorrect.",
-  pending: (newEmail) => `Confirm the link we sent to ${newEmail}.`,
-  pendingHint: (currentEmail) =>
-    `Until you do, you keep signing in with ${currentEmail}. Check your spam folder too.`,
-  resend: "Send the link again",
-  resent: "We sent the link again.",
-  cancel: "Cancel the change",
-  confirmed: (email) => `Your email address is now ${email}.`,
-  passkeyNote: "Your passkeys keep working. Your device may still list them under your old address.",
-  rateLimited: englishRateLimited,
-  failed: "That didn’t work. Please try again.",
-};
+// Defined in ./email-change-setting-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_EMAIL_CHANGE_LABELS };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 
@@ -103,7 +84,7 @@ export interface EmailChangeValues {
  *  argument. */
 export type EmailChangeAction = "request" | "resend" | "cancel";
 
-export interface EmailChangeSettingProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onSubmit"> {
+export interface EmailChangeSettingProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onSubmit"> {
   /** The account's address now. */
   currentEmail: string;
   /**
@@ -145,7 +126,7 @@ export interface EmailChangeSettingProps extends Omit<ComponentPropsWithoutRef<"
   /** The app's own words for a failure, or `undefined` for the kit's. Asked first, for
    *  every failure (a demo account's 403, the device offline). */
   describeError?: (error: unknown, action: EmailChangeAction) => ReactNode | undefined;
-  labels?: Partial<EmailChangeLabels>;
+  labels?: LabelOverride<EmailChangeLabels>;
 }
 
 interface Failure {
@@ -238,7 +219,7 @@ export function EmailChangeSetting({
 
   const messageFor = (error: unknown, action: EmailChangeAction): ReactNode => {
     const own = describeError?.(error, action);
-    if (hasMessage(own)) return own;
+    if (hasContent(own)) return own;
     return isRateLimited(error) ? labels.rateLimited(retryAfterSeconds(error)) : labels.failed;
   };
 
@@ -276,7 +257,7 @@ export function EmailChangeSetting({
         {/* Focusable, not a control: the request's answer is read out when it takes the
             focus from the submit that went with the form. */}
         <div ref={pendingRef} tabIndex={-1} className="flex gap-2 outline-none">
-          <MailCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--success)]" />
+          <MailCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-success" />
           <div className="min-w-0 space-y-1">
             <p className="break-words text-sm">{labels.pending(pending)}</p>
             <p className={CARD_DESCRIPTION_CLASS}>{labels.pendingHint(currentEmail)}</p>
@@ -312,7 +293,7 @@ export function EmailChangeSetting({
             )}
             {/* Always in the tree, so the "sent again" that appears in it is announced
                 (VerifyEmailStatus's resend line). */}
-            <span role="status" className="text-xs text-[var(--success)]">
+            <span role="status" className="text-xs text-success">
               {resent ? labels.resent : null}
             </span>
           </div>
@@ -357,7 +338,7 @@ export function EmailChangeSetting({
         if (!mounted.current) return;
         setBusy(null);
         const own = describeError?.(error, "request");
-        if (hasMessage(own)) {
+        if (hasContent(own)) {
           setFailure({ action: "request", message: own });
           return;
         }
@@ -415,7 +396,7 @@ export function EmailChangeSetting({
           {/* RegisterForm's offer (auth §4.5): one click, the exact address on the
               button, reversible by typing. */}
           {suggestion && (
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
+            <p className="mt-1 text-xs text-muted">
               <Button
                 type="button"
                 variant="link"

@@ -1,11 +1,11 @@
 import { isValidElement, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { UserX } from "lucide-react";
 
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import {
   CurrentPasswordInput,
   DangerConfirm,
@@ -14,12 +14,13 @@ import {
   typedMatches,
 } from "../components/danger-confirm";
 import type { DangerConsequence } from "../components/danger-confirm";
-import { Card } from "../components/ui";
-import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
+import { Card } from "../components/card";
+import { authErrorCode, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { useFocusWhen } from "../auth/status-parts";
 import { CARD_DESCRIPTION_CLASS, refusalCompanies, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { DEFAULT_DELETE_ACCOUNT_LABELS } from "./delete-account-setting-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -66,31 +67,8 @@ export interface DeleteAccountLabels {
   failed: string;
 }
 
-export const DEFAULT_DELETE_ACCOUNT_LABELS: DeleteAccountLabels = {
-  title: "Delete account",
-  afterDays: (days) =>
-    days === 1
-      ? "Your account is deactivated at once and erased for good 1 day later."
-      : `Your account is deactivated at once and erased for good ${days} days later.`,
-  operator: "Your account is deactivated at once, and an operator will erase it for good.",
-  arm: "Delete account…",
-  prompt: "You will be signed out on every device, and your account can no longer be used.",
-  handOver: (count) =>
-    count === 1
-      ? "1 item others can see will pass to an administrator."
-      : `${count} items others can see will pass to an administrator.`,
-  confirm: "Delete my account",
-  done: "Your account is deactivated. You are being signed out.",
-  wrongPassword: "The password is incorrect.",
-  confirmationMismatch: "This is not your account’s address.",
-  lastAdmin: "You are the last administrator. Make someone else an administrator first.",
-  lastAdminOf: (companies) =>
-    `You are the last administrator of ${companies}. Make someone else an administrator there first.`,
-  householdHasMembers:
-    "Your household has other members, so the account can’t be deleted here. Please write to the operator.",
-  rateLimited: englishRateLimited,
-  failed: "Your account could not be deleted. Please try again.",
-};
+// Defined in ./delete-account-setting-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_DELETE_ACCOUNT_LABELS };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 
@@ -111,7 +89,7 @@ export interface DeleteAccountValues {
  *  for a key of its own and the `severe` mark. */
 export type DeleteAccountConsequence = ReactNode | DangerConsequence;
 
-export interface DeleteAccountSettingProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface DeleteAccountSettingProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** The account's address — the text to type. */
   email: string;
   /** `"after_days"` (keksdose, Kurvenschmiede: erased by a scheduled job) or
@@ -144,7 +122,7 @@ export interface DeleteAccountSettingProps extends Omit<ComponentPropsWithoutRef
   /** The app's own words for a failure, or `undefined` for the kit's. Asked first, for
    *  every failure — kastlan's `last_admin` names the companies. */
   describeError?: (error: unknown) => ReactNode | undefined;
-  labels?: Partial<DeleteAccountLabels>;
+  labels?: LabelOverride<DeleteAccountLabels>;
 }
 
 /** Whether an item is a `{ text }` line rather than a node — a React element is an
@@ -239,7 +217,7 @@ export function DeleteAccountSetting({
 
   const present = (error: unknown) => {
     const own = describeError?.(error);
-    if (hasMessage(own)) {
+    if (hasContent(own)) {
       setFailure(own);
       return;
     }
@@ -317,7 +295,7 @@ export function DeleteAccountSetting({
       </div>
       {done ? (
         <div ref={doneRef} tabIndex={-1} role="status" className="flex items-start gap-2 text-sm outline-none">
-          <UserX aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--text-muted)]" />
+          <UserX aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
           <span>{labels.done}</span>
         </div>
       ) : (
@@ -356,7 +334,7 @@ export function DeleteAccountSetting({
               busy={busy}
             />
           </DangerConfirm>
-          {hasMessage(failure) && (
+          {hasContent(failure) && (
             <AlertBanner tone="danger" size="sm" role="alert">
               {failure}
             </AlertBanner>

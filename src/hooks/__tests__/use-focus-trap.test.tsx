@@ -165,6 +165,55 @@ describe("useFocusTrap", () => {
     expect(screen.getByRole("button", { name: "two" })).toHaveFocus();
   });
 
+  // Round 0.34 BUG-4: a roving grid — one cell at tabIndex 0, the rest at -1 — ends the
+  // panel, as in the calendar popover and the picker sheet. The -1 cells are no stops.
+  function RovingPanel() {
+    return (
+      <Panel>
+        <button>prev</button>
+        <button>next</button>
+        <button tabIndex={0}>day 6</button>
+        <button tabIndex={-1}>day 7</button>
+        <a href="#x" tabIndex={-1}>
+          more
+        </a>
+        <input aria-label="skipped field" tabIndex={-1} />
+      </Panel>
+    );
+  }
+
+  it("wraps Tab from the last REAL stop, past controls taken out of the tab order", () => {
+    render(<RovingPanel />);
+    screen.getByRole("button", { name: "day 6" }).focus();
+    fireEvent.keyDown(screen.getByTestId("panel"), { key: "Tab" });
+    expect(screen.getByRole("button", { name: "prev" })).toHaveFocus();
+  });
+
+  it("wraps Shift+Tab from the first stop onto the last real one, not a -1 control", () => {
+    render(<RovingPanel />);
+    screen.getByRole("button", { name: "prev" }).focus();
+    fireEvent.keyDown(screen.getByTestId("panel"), { key: "Tab", shiftKey: true });
+    expect(screen.getByRole("button", { name: "day 6" })).toHaveFocus();
+  });
+
+  it("does not count controls inside something hidden or inert", () => {
+    render(
+      <Panel>
+        <button>one</button>
+        <button>two</button>
+        <div hidden>
+          <button>in hidden</button>
+        </div>
+        <div inert>
+          <button>in inert</button>
+        </div>
+      </Panel>,
+    );
+    screen.getByRole("button", { name: "two" }).focus();
+    fireEvent.keyDown(screen.getByTestId("panel"), { key: "Tab" });
+    expect(screen.getByRole("button", { name: "one" })).toHaveFocus();
+  });
+
   it("keeps focus on the container when there is nothing tabbable inside", () => {
     render(
       <Panel>

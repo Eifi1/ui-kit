@@ -36,7 +36,7 @@ import type {
   LegalTextSectionLabels,
 } from "./legal";
 import { TextLink } from "./text-link";
-import { Button } from "./ui";
+import { Button } from "./button";
 
 /**
  * The legal pages' frame and the kit's own sections — docs/legal-harmonization.md §3
@@ -510,7 +510,7 @@ export function LegalPage({
   const translated =
     operator.bindingLanguage !== undefined && baseLanguage(operator.bindingLanguage) !== baseLanguage(locale);
   const translationNote = translated ? (
-    <p className="text-sm text-[var(--text-secondary)]">
+    <p className="text-sm text-secondary">
       {labels.translation.note(operatorText)}
       {onShowBindingLanguage && (
         <>

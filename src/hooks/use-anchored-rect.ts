@@ -11,17 +11,19 @@ export interface AnchorRect {
   height: number;
 }
 
-function sameRect(a: AnchorRect | null, b: AnchorRect | null): boolean {
+/**
+ * Whether two measurements are the same box, so a re-measure that moved nothing keeps the
+ * state it had (no render). Top, left, width and height decide it: an `AnchorRect`'s
+ * right and bottom are those sums. The kit's one copy — the tour's spotlight asks it too
+ * (DUP-11, refactor audit 2026-10).
+ */
+export function sameRect<R extends { top: number; left: number; width: number; height: number }>(
+  a: R | null,
+  b: R | null,
+): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
-  return (
-    a.top === b.top &&
-    a.left === b.left &&
-    a.right === b.right &&
-    a.bottom === b.bottom &&
-    a.width === b.width &&
-    a.height === b.height
-  );
+  return a.top === b.top && a.left === b.left && a.width === b.width && a.height === b.height;
 }
 
 /**

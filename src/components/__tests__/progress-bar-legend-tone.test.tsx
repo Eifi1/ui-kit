@@ -16,7 +16,7 @@ describe("ProgressBar legendTone (keksdose tax-tab Bucket)", () => {
   it("leaves every legend figure muted by default", () => {
     render(<ProgressBar segments={PARTS} max={100} aria-label="x" legend />);
     for (const f of figures()) {
-      expect(f.className).toContain("text-[var(--text-muted)]");
+      expect(f.className).toContain("text-muted");
       expect(f.className).not.toContain("money");
     }
   });
@@ -25,7 +25,7 @@ describe("ProgressBar legendTone (keksdose tax-tab Bucket)", () => {
     render(<ProgressBar segments={PARTS} max={100} aria-label="x" legend legendTone="expense" />);
     for (const f of figures()) {
       expect(f.className).toContain(toneTextClass("expense"));
-      expect(f.className).not.toContain("text-[var(--text-muted)]");
+      expect(f.className).not.toContain("text-muted");
     }
   });
 
@@ -40,9 +40,9 @@ describe("ProgressBar legendTone (keksdose tax-tab Bucket)", () => {
       />,
     );
     const [a, b, c] = figures();
-    expect(a.className).toContain("text-[var(--money-income)]");
-    expect(b.className).toContain("text-[var(--money-income)]");
-    expect(c.className).toContain("text-[var(--text-muted)]");
+    expect(a).toHaveClass("text-money-income");
+    expect(b).toHaveClass("text-money-income");
+    expect(c.className).toContain("text-muted");
   });
 
   it("hands the function the segment and its index, legend-only rows included", () => {
@@ -83,7 +83,7 @@ describe("ProgressBar legendTone (keksdose tax-tab Bucket)", () => {
     expect(fs.map((f) => f.textContent)).toEqual(["CHF 60", "CHF 30", "CHF -10"]);
     for (const f of fs) {
       expect(f).toHaveAttribute("data-private");
-      expect(f.className).toContain("text-[var(--money-income)]");
+      expect(f).toHaveClass("text-money-income");
     }
   });
 
@@ -91,6 +91,6 @@ describe("ProgressBar legendTone (keksdose tax-tab Bucket)", () => {
     render(<ProgressBar segments={PARTS} max={100} aria-label="x" legend legendTone="expense" />);
     const row = document.querySelector('[data-part="legend"] li')!;
     expect(row.children[0].className).toContain("bg-[var(--chart-1)]");
-    expect(row.children[1].className).toContain("text-[var(--text-secondary)]");
+    expect(row.children[1].className).toContain("text-secondary");
   });
 });

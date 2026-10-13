@@ -10,7 +10,7 @@ import {
   useSearchParamState,
   useTabParam,
 } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
  * URL STATE — 0.12.0's search-param hooks: one param as React state
@@ -21,8 +21,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * demos share the page's query string without stepping on each other — which is the
  * contract of the hooks: every OTHER param is left as it is.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** The router's query, which under the HashRouter lives after the `#`. */
 function QueryReadout({ extra = [] }: { extra?: Array<[string, React.ReactNode]> }) {
@@ -81,7 +79,7 @@ function SearchParamStateDemo() {
           <Button variant="secondary" size="sm" disabled={zoom <= 50} onClick={() => setZoom((z) => z - 25)}>
             Zoom out
           </Button>
-          <span className="font-mono text-xs tabular-nums text-[var(--text-secondary)]">{zoom}%</span>
+          <span className="font-mono text-xs tabular-nums text-secondary">{zoom}%</span>
           <Button variant="secondary" size="sm" disabled={zoom >= 200} onClick={() => setZoom((z) => z + 25)}>
             Zoom in
           </Button>
@@ -119,7 +117,7 @@ function TabParamDemo() {
   return (
     <Example label="useTabParam — the open tab in ?tab" hint="replaces the entry; an unknown tab reads as the default">
       <Tabs<Tab>
-        label="Unit sections"
+        aria-label="Unit sections"
         active={tab}
         onChange={setTab}
         panelId={panelId}
@@ -134,7 +132,7 @@ function TabParamDemo() {
         role="tabpanel"
         aria-labelledby={`${panelId}-tab`}
         tabIndex={-1}
-        className="mt-3 rounded-md border border-[var(--border)] p-3 text-sm text-[var(--text-secondary)]"
+        className="mt-3 rounded-md border border-subtle p-3 text-sm text-secondary"
       >
         {PANEL_TEXT[tab]}
       </div>
@@ -174,15 +172,15 @@ function EditDialogDemo() {
         >
           Edit “{name}”
         </Button>
-        <Link to={`${pathname}?edit=1`} className="text-sm text-[var(--brand)] underline underline-offset-2">
+        <Link to={`${pathname}?edit=1`} className="text-sm text-brand underline underline-offset-2">
           A plain link to ?edit=1
         </Link>
-        <span className="font-mono text-xs text-[var(--text-secondary)]">
+        <span className="font-mono text-xs text-secondary">
           open={String(open)} · onClose ran {closes}×
         </span>
       </Row>
       <Modal urlParam="edit" labelledBy={headingId} className="space-y-3" onClose={() => setCloses((n) => n + 1)}>
-        <h4 id={headingId} className="text-sm font-semibold text-[var(--text-primary)]">
+        <h4 id={headingId} className="text-sm font-semibold text-primary">
           Rename the unit
         </h4>
         <Input label="Name" value={draft} onChange={(e) => setDraft(e.target.value)} />
@@ -237,7 +235,7 @@ function SharedDialogParamDemo() {
         <Button variant="secondary" tone="danger" onClick={() => setArchiveOpen(true)}>
           Archive the unit
         </Button>
-        <span className="font-mono text-xs text-[var(--text-secondary)]">
+        <span className="font-mono text-xs text-secondary">
           invite={String(inviteOpen)} · archive={String(archiveOpen)}
         </span>
       </Row>
@@ -247,7 +245,7 @@ function SharedDialogParamDemo() {
         className="space-y-3"
         onClose={() => {}}
       >
-        <h4 id={inviteId} className="text-sm font-semibold text-[var(--text-primary)]">
+        <h4 id={inviteId} className="text-sm font-semibold text-primary">
           Invite a tenant
         </h4>
         <Input label="Email" type="email" placeholder="name@example.com" />
@@ -264,10 +262,10 @@ function SharedDialogParamDemo() {
         className="space-y-3"
         onClose={() => {}}
       >
-        <h4 id={archiveId} className="text-sm font-semibold text-[var(--text-primary)]">
+        <h4 id={archiveId} className="text-sm font-semibold text-primary">
           Archive Flat 3B?
         </h4>
-        <p className="text-sm text-[var(--text-secondary)]">It leaves every list but keeps its history.</p>
+        <p className="text-sm text-secondary">It leaves every list but keeps its history.</p>
         <Row className="justify-end">
           <Button variant="secondary" onClick={() => setArchiveOpen(false)}>
             Keep

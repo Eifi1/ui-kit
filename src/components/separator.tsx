@@ -1,7 +1,7 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../lib/cn";
 
-export interface SeparatorProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "role"> {
+export interface SeparatorProps extends Omit<ComponentPropsWithRef<"div">, "children" | "role"> {
   orientation?: "horizontal" | "vertical";
   /**
    * `false` (default, as in Radix): a real `role="separator"`, which a reader

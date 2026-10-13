@@ -1,12 +1,12 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.7.1",
+  "kit_version": "0.8.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
       "summary": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).",
-      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change) and the session's claims;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
+      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change), the session's claims, and what a refresh answers;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.passwords` — :func:`absent_account_check`, the dummy hash an\n  address with no account is checked against, so it costs what one with an account costs;\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -20,6 +20,12 @@
         ]
       },
       "members": [
+        {
+          "name": "ABSENT_ACCOUNT_SECRET_BYTES",
+          "kind": "constant",
+          "signature": "ABSENT_ACCOUNT_SECRET_BYTES = 32",
+          "doc": "The random bytes behind the dummy hash's password (keksdose ``secrets.token_urlsafe(32)``)."
+        },
         {
           "name": "ACCESS_TOKEN_EXPIRE_MINUTES",
           "kind": "constant",
@@ -41,14 +47,14 @@
         {
           "name": "AUTH_ERROR_DETAIL",
           "kind": "constant",
-          "signature": "AUTH_ERROR_DETAIL: Mapping[AuthErrorCode, str] = {\n    AuthErrorCode.INVALID_CREDENTIALS: \"Invalid credentials\",\n    AuthErrorCode.REGISTRATION_CLOSED: \"Registration is by invitation only\",\n    AuthErrorCode.EMAIL_TAKEN: \"Email already registered\",\n    AuthErrorCode.INVITATION_INVALID: \"This invitation is not valid\",\n    AuthErrorCode.INVITATION_EXPIRED: \"This invitation has expired\",\n    AuthErrorCode.TOKEN_INVALID: \"This link is invalid or has expired\",\n    AuthErrorCode.TOKEN_EXPIRED: \"This link has expired\",\n}",
+          "signature": "AUTH_ERROR_DETAIL: Mapping[AuthErrorCode, str] = {\n    AuthErrorCode.INVALID_CREDENTIALS: \"Invalid credentials\",\n    AuthErrorCode.REGISTRATION_CLOSED: \"Registration is by invitation only\",\n    AuthErrorCode.EMAIL_TAKEN: \"Email already registered\",\n    AuthErrorCode.INVITATION_INVALID: \"This invitation is not valid\",\n    AuthErrorCode.INVITATION_EXPIRED: \"This invitation has expired\",\n    AuthErrorCode.TOKEN_INVALID: \"This link is invalid or has expired\",\n    AuthErrorCode.TOKEN_EXPIRED: \"This link has expired\",\n    # Kurvenschmiede's ``TokenRefusal.ENDED`` (``auth_service.py:187``).\n    AuthErrorCode.SESSION_ENDED: \"This session has ended. Please sign in again.\",\n}",
           "doc": "The English ``detail`` of each code, keksdose's words where it had them. The pages\nshow the kit's own text for the code; this is for logs and API clients."
         },
         {
           "name": "AUTH_ERROR_STATUS",
           "kind": "constant",
-          "signature": "AUTH_ERROR_STATUS: Mapping[AuthErrorCode, int] = {\n    AuthErrorCode.INVALID_CREDENTIALS: 401,\n    AuthErrorCode.REGISTRATION_CLOSED: 403,\n    AuthErrorCode.EMAIL_TAKEN: 409,\n    AuthErrorCode.INVITATION_INVALID: 400,\n    AuthErrorCode.INVITATION_EXPIRED: 400,\n    AuthErrorCode.TOKEN_INVALID: 400,\n    AuthErrorCode.TOKEN_EXPIRED: 400,\n}",
-          "doc": "Each code's status. The token codes are ``400`` as keksdose answers a bad reset or\nverification link today; the page tells them apart by ``code``, not by status."
+          "signature": "AUTH_ERROR_STATUS: Mapping[AuthErrorCode, int] = {\n    AuthErrorCode.INVALID_CREDENTIALS: 401,\n    AuthErrorCode.REGISTRATION_CLOSED: 403,\n    AuthErrorCode.EMAIL_TAKEN: 409,\n    AuthErrorCode.INVITATION_INVALID: 400,\n    AuthErrorCode.INVITATION_EXPIRED: 400,\n    AuthErrorCode.TOKEN_INVALID: 400,\n    AuthErrorCode.TOKEN_EXPIRED: 400,\n    AuthErrorCode.SESSION_ENDED: 401,\n}",
+          "doc": "Each code's status. The token codes are ``400`` as keksdose answers a bad reset or\nverification link today; the page tells them apart by ``code``, not by status. A\nrefresh's refusal is ``401``, never ``403``: the three apps' refresh routes already\nanswer so (auth §11.1)."
         },
         {
           "name": "CHALLENGE_LIFETIMES",
@@ -312,6 +318,10 @@
             {
               "name": "TOKEN_EXPIRED",
               "value": "token_expired"
+            },
+            {
+              "name": "SESSION_ENDED",
+              "value": "session_ended"
             }
           ]
         },
@@ -579,6 +589,20 @@
           ]
         },
         {
+          "name": "RefreshRequest",
+          "kind": "model",
+          "signature": "class RefreshRequest(BaseModel)",
+          "doc": "``POST /auth/refresh {refresh_token}`` (auth §6.2, §11; keksdose, kastlan and\nKurvenschmiede ``RefreshRequest``, field for field).\n\nThe token is plain text, with no length rule: an empty or malformed one is the\nroute's ``401 {code: \"session_ended\"}``, never a 422. ui-kit's\n``attachSessionRefresh`` reads a 422 as a client fault that a sign-out would not mend\n(transient), so a 422 here would leave a device that holds a broken token signed in,\nrefreshing at every request. What the route answers is\n:mod:`~eifi1_server_kit.auth.tokens`' \"Refreshing a session\".",
+          "fields": [
+            {
+              "name": "refresh_token",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "RegisterRequest",
           "kind": "model",
           "signature": "class RegisterRequest(BaseModel)",
@@ -828,6 +852,12 @@
           "doc": "An instant on the wire, always ISO-8601 in UTC (``2026-10-08T09:00:00Z``): the client\ncounts down to it (landing-demo §5.3), so it must never be a local time without an\noffset, which a browser would read in ITS zone."
         },
         {
+          "name": "absent_account_check",
+          "kind": "function",
+          "signature": "absent_account_check[H](hash_password: Callable[[str], H], verify_password: Callable[[str, H], object], *, cost: Callable[[], Hashable] | None = None) -> Callable[[str], bool]",
+          "doc": "A check for the address with no account: the same work a real check does, and\n``False``, always. Built from the app's own two functions::\n\n    check_absent = absent_account_check(hash_password, verify_password)\n    ...\n    user = await get_user_by_email(session, email)\n    if user is None:\n        check_absent(password)  # False, after one verify against the dummy hash\n        return None\n    password_ok = verify_password(password, user.password_hash)\n\nFour rules, which the three apps each kept in their own way (KS S3):\n\n* the dummy is the hash of a **random** secret (:data:`ABSENT_ACCOUNT_SECRET_BYTES`,\n  keksdose's), never a string in a source file (kastlan's\n  ``\"kastlan-no-such-account\"``), which a seed or a fixture could one day make\n  somebody's password (Kurvenschmiede: \"so it can never be mistaken for a\n  credential\");\n* it is built **lazily**, at the first unknown address, so it carries the cost\n  ``hash_password`` hashes at then, not at import — keksdose's suite lowers bcrypt's\n  rounds once it has started. ``cost`` is the app's cost, read at every call\n  (``cost=lambda: get_settings().bcrypt_rounds``, Kurvenschmiede's): when it changes\n  the dummy is built again, so a dummy at a cost the real rows aren't checked at can't\n  bring the difference back. Without it, the dummy is built once;\n* it goes through the app's **own** ``verify_password``, so whatever that refuses\n  without hashing — a password past bcrypt's 72 bytes — is refused here without\n  hashing too: a short-circuit on one path only is the same oracle in a narrower\n  doorway;\n* it answers **False**, whatever the password, so it can stand where the real check\n  stands.\n\nTwo threads at the first unknown address may each build a dummy; the last one stays,\nand both are random. The returned callable holds one dummy at a time."
+        },
+        {
           "name": "access_claims",
           "kind": "function",
           "signature": "access_claims(sub: int | str, *, now: datetime, lifetime: timedelta = ACCESS_TOKEN_LIFETIME, extra: Mapping[str, Any] | None = None) -> dict[str, Any]",
@@ -981,8 +1011,8 @@
         {
           "name": "CONFIRMATION_LEVELS",
           "kind": "constant",
-          "signature": "CONFIRMATION_LEVELS: Mapping[AdminAction, ConfirmationLevel] = {\n    AdminAction.DEACTIVATE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.REACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.ROLE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_REMOVE: ConfirmationLevel.NONE,\n    AdminAction.PASSWORD_CHANGE_REQUIRE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.PASSWORD_CHANGE_WITHDRAW: ConfirmationLevel.NONE,\n    AdminAction.MAIL_VERIFICATION: ConfirmationLevel.NONE,\n    AdminAction.MAIL_RESET: ConfirmationLevel.NONE,\n    AdminAction.REVIEWER: ConfirmationLevel.NONE,\n    AdminAction.INVITE: ConfirmationLevel.NONE,\n    AdminAction.INVITE_RESEND: ConfirmationLevel.NONE,\n    AdminAction.INVITE_REVOKE: ConfirmationLevel.NONE,\n    AdminAction.TRANSFER: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_REQUEST: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_CANCEL: ConfirmationLevel.NONE,\n    AdminAction.ERASE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.PLAN: ConfirmationLevel.ACKNOWLEDGE,\n}",
-          "doc": "The contract's level per action (§4.2). ``type_email``: deactivate, erase (the\noperator's \"erase now\"), transfer — and the user's own deletion request, whose body\ncarries the typed address (§6.4). ``acknowledge``: force a password change, change a\nrole, change a plan (billing §6). Everything else: ``none``."
+          "signature": "CONFIRMATION_LEVELS: Mapping[AdminAction, ConfirmationLevel] = {\n    AdminAction.DEACTIVATE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.REACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.ROLE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_REMOVE: ConfirmationLevel.NONE,\n    AdminAction.PASSWORD_CHANGE_REQUIRE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.PASSWORD_CHANGE_WITHDRAW: ConfirmationLevel.NONE,\n    AdminAction.MAIL_VERIFICATION: ConfirmationLevel.NONE,\n    AdminAction.MAIL_RESET: ConfirmationLevel.NONE,\n    AdminAction.REVIEWER: ConfirmationLevel.NONE,\n    AdminAction.INVITE: ConfirmationLevel.NONE,\n    AdminAction.INVITE_RESEND: ConfirmationLevel.NONE,\n    AdminAction.INVITE_REVOKE: ConfirmationLevel.NONE,\n    AdminAction.TRANSFER: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_REQUEST: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_CANCEL: ConfirmationLevel.NONE,\n    AdminAction.ERASE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.PLAN: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.GROUP_CREATE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_RENAME: ConfirmationLevel.NONE,\n    AdminAction.GROUP_DELETE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_ADD: ConfirmationLevel.NONE,\n    AdminAction.MEMBERSHIP_ROLE: ConfirmationLevel.NONE,\n}",
+          "doc": "The contract's level per action (§4.2). ``type_email``: deactivate, erase (the\noperator's \"erase now\"), transfer — and the user's own deletion request, whose body\ncarries the typed address (§6.4). ``acknowledge``: force a password change, change a\nrole, change a plan (billing §6), delete a group (§11.2 decision 5: what goes with it\nis what nobody can see afterwards). Everything else: ``none``. No group's action is\n``type_email``: a group has no address to type."
         },
         {
           "name": "DEFAULT_DELETION_DAYS",
@@ -1302,6 +1332,26 @@
             {
               "name": "PLAN",
               "value": "plan"
+            },
+            {
+              "name": "GROUP_CREATE",
+              "value": "group_create"
+            },
+            {
+              "name": "GROUP_RENAME",
+              "value": "group_rename"
+            },
+            {
+              "name": "GROUP_DELETE",
+              "value": "group_delete"
+            },
+            {
+              "name": "MEMBERSHIP_ADD",
+              "value": "membership_add"
+            },
+            {
+              "name": "MEMBERSHIP_ROLE",
+              "value": "membership_role"
             }
           ]
         },
@@ -1309,7 +1359,7 @@
           "name": "AdminActionRow",
           "kind": "model",
           "signature": "class AdminActionRow(BaseModel)",
-          "doc": "One row of ``GET /admin/actions?limit=&offset=&target=``, newest first (§4.3): the\ntable's columns, plus the actor joined for display.\n\n``actor_id`` is ``None`` for the erasure job; ``target_user_id`` for an invitation and\nafter an erasure, when ``target_email`` is scrubbed too. ``company_id`` is kastlan's.",
+          "doc": "One row of ``GET /admin/actions?limit=&offset=&target=``, newest first (§4.3): the\ntable's columns, plus the actor and the group joined for display.\n\n``actor_id`` is ``None`` for the erasure job; ``target_user_id`` for an invitation and\nafter an erasure, when ``target_email`` is scrubbed too. ``company_id`` is kastlan's.\n``target_group_id`` (0.8, §11.3) is the group a ``group_*`` row is about, or a\n``membership_*`` or invitation row happened in; ui-kit's log takes ``target_group`` as\nthe entry's ``target`` for the first and as its ``group`` for the second (§11.4). The\n``group_delete`` row's ``target_group_name`` is not a field of its own: it is read\nback through ``target_group``. The group is not a filter: ``?target=`` stays a\nperson's.",
           "fields": [
             {
               "name": "id",
@@ -1360,8 +1410,20 @@
               "doc": ""
             },
             {
+              "name": "target_group_id",
+              "type": "int | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
               "name": "actor",
               "type": "PersonRef | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "target_group",
+              "type": "GroupRef | None",
               "default": "None",
               "doc": ""
             }
@@ -1607,6 +1669,26 @@
             {
               "name": "__init__",
               "signature": "__init__(paths: list[str]) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "GroupRef",
+          "kind": "model",
+          "signature": "class GroupRef(BaseModel)",
+          "doc": "A group a row names (§11.4): a Kurvenschmiede team, a kastlan company, a keksdose\nbudget. Joined by the app as :class:`PersonRef` is, from the live group — else, for\na group that no longer exists, from its ``group_delete`` row's ``target_group_name``\n(decision 6); kastlan's from ``company_id``. ``name`` ``None``: nothing left to say,\nand the page reads \"a deleted team\".",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "name",
+              "type": "str | None",
+              "default": "None",
               "doc": ""
             }
           ]
@@ -2050,8 +2132,8 @@
         {
           "name": "admin_action_record",
           "kind": "function",
-          "signature": "admin_action_record(action: AdminAction | str, *, actor_id: int | None, target_user_id: int | None, target_email: str | None, detail: Mapping[str, object] | None = None, company_id: int | None = None, now: datetime) -> dict[str, Any]",
-          "doc": "The fields of one ``admin_actions`` row (§4.3), for the app's model:\n``AdminActionModel(**record)``.\n\n``{\"at\", \"actor_id\", \"action\", \"target_user_id\", \"target_email\", \"detail\"}`` — plus\n``\"company_id\"`` when one is given (kastlan's company admins; its platform actions and\nevery other app leave it out, so a table without the column takes the record as it\nis). No ``id``: the database assigns it.\n\n* ``action`` — an :class:`~eifi1_server_kit.user_admin.AdminAction` or its value,\n  stored as the plain string — or the app's own action (``\"reseed_demo\"``), kept as\n  written, as :class:`~eifi1_server_kit.user_admin.AdminActionRow` reads it back\n  (0.5.1). An empty or blank action is a :class:`ValueError`.\n* ``actor_id`` — who acted; ``None`` for the erasure job (its ``erase`` and\n  Kurvenschmiede's day-30 ``transfer``). A ``deletion_request`` names the user\n  themselves (§6.4).\n* ``target_user_id`` — ``None`` for an invitation to an address with no account.\n  After an erasure the app nulls it and scrubs ``target_email``; the row stays.\n* ``target_email`` — the address as it was at the time, normalised; kept so an\n  invitation's row names its invitee.\n* ``detail`` — checked by :func:`audit_detail`.\n* ``now`` — stored as given, so an app with naive UTC columns (kastlan) passes a\n  naive one."
+          "signature": "admin_action_record(action: AdminAction | str, *, actor_id: int | None, target_user_id: int | None, target_email: str | None, detail: Mapping[str, object] | None = None, company_id: int | None = None, target_group_id: int | None = None, target_group_name: str | None = None, now: datetime) -> dict[str, Any]",
+          "doc": "The fields of one ``admin_actions`` row (§4.3), for the app's model:\n``AdminActionModel(**record)``.\n\n``{\"at\", \"actor_id\", \"action\", \"target_user_id\", \"target_email\", \"detail\"}`` — plus\n``\"company_id\"``, ``\"target_group_id\"`` and ``\"target_group_name\"`` each only when it\nis given (kastlan's company admins; Kurvenschmiede's groups), so a table without the\ncolumn takes the record as it is. No ``id``: the database assigns it.\n\n* ``action`` — an :class:`~eifi1_server_kit.user_admin.AdminAction` or its value,\n  stored as the plain string — or the app's own action (``\"reseed_demo\"``), kept as\n  written, as :class:`~eifi1_server_kit.user_admin.AdminActionRow` reads it back\n  (0.5.1). An empty or blank action is a :class:`ValueError`.\n* ``actor_id`` — who acted; ``None`` for the erasure job (its ``erase`` and\n  Kurvenschmiede's day-30 ``transfer``). A ``deletion_request`` names the user\n  themselves (§6.4).\n* ``target_user_id`` — ``None`` for an invitation to an address with no account.\n  After an erasure the app nulls it and scrubs ``target_email``; the row stays.\n* ``target_email`` — the address as it was at the time, normalised; kept so an\n  invitation's row names its invitee.\n* ``detail`` — checked by :func:`audit_detail`.\n* ``target_group_id`` — the group the row is about (``group_*``) or happened in\n  (``membership_*``, ``invite``, ``invite_resend``, ``invite_revoke``) (§11.3).\n  kastlan passes none: its ``company_id`` already names the company, and it fills the\n  read's group from that.\n* ``target_group_name`` — the name a group had, on its ``group_delete`` row only, and\n  with its ``target_group_id`` (decision 6); anywhere else a :class:`ValueError`. Kept\n  as written: the log reads it back for a group that no longer exists.\n* ``now`` — stored as given, so an app with naive UTC columns (kastlan) passes a\n  naive one."
         },
         {
           "name": "assert_no_secrets",
@@ -2164,8 +2246,8 @@
         {
           "name": "require_confirmation",
           "kind": "function",
-          "signature": "require_confirmation(level: ConfirmationLevel | str, *, target_email: str, acknowledged: bool = False, confirm_email: str | None = None) -> None",
-          "doc": "Refuse a request that lacks the confirmation ``level`` asks for (§4.2; keksdose\n``assert_confirmed``).\n\n* ``none`` — passes.\n* ``acknowledge`` — the request's ``acknowledged`` is true, or it carries the\n  target's typed address (the stronger confirmation covers the weaker one).\n* ``type_email`` — the request carries the target's address\n  (:func:`confirm_email_matches`); ``acknowledged`` alone is not enough.\n\nNothing given: ``409 {code: \"confirmation_required\"}``. A typed address that is not\nthe target's: ``409 {code: \"confirmation_mismatch\"}`` — the page keeps the dialog open\nand says the address is wrong, rather than asking again from scratch."
+          "signature": "require_confirmation(level: ConfirmationLevel | str, *, target_email: str | None, acknowledged: bool = False, confirm_email: str | None = None) -> None",
+          "doc": "Refuse a request that lacks the confirmation ``level`` asks for (§4.2; keksdose\n``assert_confirmed``).\n\n* ``none`` — passes.\n* ``acknowledge`` — the request's ``acknowledged`` is true, or it carries the\n  target's typed address (the stronger confirmation covers the weaker one).\n* ``type_email`` — the request carries the target's address\n  (:func:`confirm_email_matches`); ``acknowledged`` alone is not enough.\n\nNothing given: ``409 {code: \"confirmation_required\"}``. A typed address that is not\nthe target's: ``409 {code: \"confirmation_mismatch\"}`` — the page keeps the dialog open\nand says the address is wrong, rather than asking again from scratch.\n\n``target_email=None`` is a group (0.8, §11.8; KS 10), which has no address: ``none``\npasses; ``acknowledge`` passes on ``acknowledged`` alone, since no typed address can\nmatch, and is ``confirmation_required`` without it; ``type_email`` is a\n:class:`ValueError` — a programming error, as no level table gives a group's action\n``type_email``. kastlan's company plan change may pass ``None`` in place of ``\"\"``."
         },
         {
           "name": "secret_paths",
@@ -2522,8 +2604,8 @@
     },
     {
       "name": "eifi1_server_kit.billing",
-      "summary": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in ``Eifi1/ui-kit``; its §12 wins over the sections above it, and §14.16 over the rest of §14).",
-      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in\n``Eifi1/ui-kit``; its §12 wins over the sections above it, and §14.16 over the rest of §14).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables and\nno routes, and one request each for checkout, portal, cancel and undoing a cancel, through\n:mod:`~eifi1_server_kit.billing.paddle`, only with the ``billing`` extra\n(``eifi1-server-kit[billing]``, httpx; imported lazily, so importing this package never\nneeds it). The subscription row and the event table, the routes, the read-only gate's\nallow-list, the notice job's query, mail and trigger, and the provider seam stay in each\napp. Marcel's decisions (§2): all three apps charge, through a Merchant of Record —\nPaddle (decision 16), one account for the three apps, each checkout tagged with its app\n(decision 18) — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets\na 30-day trial without a card, a beta payer 12 free months. Lemon Squeezy is deprecated in\n0.7 and goes in 0.8 (decision 25).\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets, the price ids, the app's tag, Paddle's environment\n  and where the checkout opens;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates\n  (:func:`effective_comped_until` for a beta row stored before the launch date was known);\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — each provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, a mapper per provider, and the app's tag that drops another\n  app's events (:func:`parse_webhook_event`'s ``app``);\n* :mod:`~eifi1_server_kit.billing.provider` — the provider's port\n  (:class:`BillingProviderClient`), the deployment's client\n  (:func:`billing_provider_client`), and what a route checks first (:func:`sold_plan`,\n  :func:`require_new_checkout`); a deletion's cancellation and its undoing\n  (:func:`cancel_for_deletion`, :func:`resume_after_withdrawal`); the checkout's way back\n  (:func:`checkout_return_url`);\n* :mod:`~eifi1_server_kit.billing.paddle` — :class:`PaddleClient`, Paddle Billing's API\n  (the ``billing`` extra), :class:`PaddleError`, and the buyer's language as Paddle's\n  checkout names it (:func:`paddle_locale`);\n* :mod:`~eifi1_server_kit.billing.notices` — which payer is owed a trial or grant end\n  notice (:func:`billing_notice_due`);\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, the plans\n  (:class:`PlanOut` with :class:`PlanPrices`, :func:`plans_out`), checkout, the operator's plans\n  (:class:`AdminPlan`, :func:`admin_plans_out`) and plan change, and a sync reply's refused\n  changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\n\nNot re-exported: :mod:`eifi1_server_kit.billing.testing`, the signed fixture events and the\nprovider fakes for the apps' tests and local CLIs (§14.9).",
+      "summary": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in ``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).",
+      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in\n``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables and\nno routes, and one request each for checkout, portal, cancel and undoing a cancel, through\n:mod:`~eifi1_server_kit.billing.paddle`, only with the ``billing`` extra\n(``eifi1-server-kit[billing]``, httpx; imported lazily, so importing this package never\nneeds it). The subscription row and the event table, the routes, the read-only gate's\nallow-list, the notice job's query, mail and trigger, and the provider seam stay in each\napp. Marcel's decisions (§2): all three apps charge, through a Merchant of Record —\nPaddle (decision 16), one account for the three apps, each checkout tagged with its app\n(decision 18) — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets\na 30-day trial without a card, a beta payer 12 free months. Lemon Squeezy, deprecated in\n0.7, went in 0.8 (decision 25).\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets, the price ids, the app's tag, Paddle's environment\n  and where the checkout opens;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates\n  (:func:`effective_comped_until` for a beta row stored before the launch date was known);\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — the provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, a mapper per provider, and the app's tag that drops another\n  app's events (:func:`parse_webhook_event`'s ``app``);\n* :mod:`~eifi1_server_kit.billing.provider` — the provider's port\n  (:class:`BillingProviderClient`), the deployment's client\n  (:func:`billing_provider_client`), and what a route checks first (:func:`sold_plan`,\n  :func:`require_new_checkout`); a deletion's cancellation and its undoing\n  (:func:`cancel_for_deletion`, :func:`resume_after_withdrawal`); the checkout's way back\n  (:func:`checkout_return_url`);\n* :mod:`~eifi1_server_kit.billing.paddle` — :class:`PaddleClient`, Paddle Billing's API\n  (the ``billing`` extra), :class:`PaddleError`, and the buyer's language as Paddle's\n  checkout names it (:func:`paddle_locale`);\n* :mod:`~eifi1_server_kit.billing.notices` — which payer is owed a trial or grant end\n  notice (:func:`billing_notice_due`);\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, the plans\n  (:class:`PlanOut` with :class:`PlanPrices`, :func:`plans_out`), checkout, the operator's plans\n  (:class:`AdminPlan`, :func:`admin_plans_out`) and plan change, and a sync reply's refused\n  changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\n\nNot re-exported: :mod:`eifi1_server_kit.billing.testing`, the signed fixture events and the\nprovider fakes for the apps' tests and local CLIs (§14.9).",
       "contract": {
         "doc": "docs/billing-harmonization.md",
         "section": "§10, §14",
@@ -2583,24 +2665,6 @@
           "kind": "constant",
           "signature": "CURRENCY_EXPONENTS: Mapping[str, int] = types.MappingProxyType({\"CHF\": 2, \"EUR\": 2})",
           "doc": "ISO 4217's minor-unit exponent per currency: how many decimal places one minor unit is.\nCHF and EUR are 2 (rappen and cents). A currency the apps don't charge in is not here,\nand :func:`minor_to_decimal` refuses it rather than guessing 2."
-        },
-        {
-          "name": "LEMONSQUEEZY_EVENT_KINDS",
-          "kind": "constant",
-          "signature": "LEMONSQUEEZY_EVENT_KINDS: Mapping[str, EventKind] = {\n    \"subscription_created\": EventKind.SUBSCRIPTION_STARTED,\n    \"subscription_updated\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_resumed\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_paused\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_unpaused\": EventKind.SUBSCRIPTION_UPDATED,\n    \"subscription_cancelled\": EventKind.SUBSCRIPTION_CANCELED,\n    \"subscription_expired\": EventKind.SUBSCRIPTION_EXPIRED,\n    \"subscription_payment_failed\": EventKind.PAYMENT_FAILED,\n}",
-          "doc": "Lemon Squeezy's subscription events and their kinds; any other event is not used.\nDeprecated in 0.7.0, removed in 0.8 (§14.13)."
-        },
-        {
-          "name": "LEMONSQUEEZY_SIGNATURE_HEADER",
-          "kind": "constant",
-          "signature": "LEMONSQUEEZY_SIGNATURE_HEADER = \"X-Signature\"",
-          "doc": "Lemon Squeezy's signature header (deprecated in 0.7.0, removed in 0.8)."
-        },
-        {
-          "name": "LEMONSQUEEZY_STATUSES",
-          "kind": "constant",
-          "signature": "LEMONSQUEEZY_STATUSES: Mapping[str, SubscriptionStatus] = {\n    \"on_trial\": SubscriptionStatus.TRIALING,\n    \"active\": SubscriptionStatus.ACTIVE,\n    \"past_due\": SubscriptionStatus.PAST_DUE,\n    \"unpaid\": SubscriptionStatus.EXPIRED,\n    \"paused\": SubscriptionStatus.EXPIRED,\n    \"cancelled\": SubscriptionStatus.ACTIVE,\n    \"expired\": SubscriptionStatus.EXPIRED,\n}",
-          "doc": "Lemon Squeezy's subscription statuses and the row's. ``cancelled`` is still running\nuntil ``ends_at``, so it stays ``active`` with ``cancel_at_period_end``. Deprecated in\n0.7.0, removed in 0.8 (§14.13)."
         },
         {
           "name": "NOTICE_AHEAD",
@@ -2677,7 +2741,7 @@
         {
           "name": "SIGNATURE_HEADERS",
           "kind": "constant",
-          "signature": "SIGNATURE_HEADERS: Mapping[BillingProvider, str] = {\n    BillingProvider.PADDLE: PADDLE_SIGNATURE_HEADER,\n    BillingProvider.LEMONSQUEEZY: LEMONSQUEEZY_SIGNATURE_HEADER,\n}",
+          "signature": "SIGNATURE_HEADERS: Mapping[BillingProvider, str] = {\n    BillingProvider.PADDLE: PADDLE_SIGNATURE_HEADER,\n}",
           "doc": "Each provider's header, for :func:`verify_webhook_signature`."
         },
         {
@@ -2689,7 +2753,7 @@
         {
           "name": "WEBHOOK_MAPPERS",
           "kind": "constant",
-          "signature": "WEBHOOK_MAPPERS: Mapping[BillingProvider, Callable[[bytes], NormalisedEvent | None]] = {\n    BillingProvider.PADDLE: map_paddle_event,\n    BillingProvider.LEMONSQUEEZY: map_lemonsqueezy_event,\n}",
+          "signature": "WEBHOOK_MAPPERS: Mapping[BillingProvider, Callable[[bytes], NormalisedEvent | None]] = {\n    BillingProvider.PADDLE: map_paddle_event,\n}",
           "doc": "The mapper per provider: a second provider is a new entry, not new app code (§5)."
         },
         {
@@ -2958,15 +3022,11 @@
           "name": "BillingProvider",
           "kind": "enum",
           "signature": "class BillingProvider(enum.StrEnum)",
-          "doc": "The Merchants of Record the kit speaks (§2.2, §9). Paddle is the one Marcel chose\n(decision 16, 2026-10-09); the kit's provider client speaks Paddle only (§14.2).\n\n.. deprecated:: 0.7.0\n   ``LEMONSQUEEZY``, its event mapper and statuses, its signature check and the\n   numeric variant ids in ``billing_price_ids`` are deprecated and go in 0.8 (decision\n   25, §14.13). Nothing sells through it.",
+          "doc": "The Merchants of Record the kit speaks (§2.2, §9): Paddle, the one Marcel chose\n(decision 16, 2026-10-09). A second provider is a new member, a mapper and a\nsignature check (§5).\n\n.. versionchanged:: 0.8.0\n   ``LEMONSQUEEZY`` is gone with its event mapper and statuses, its signature check\n   and the numeric variant ids ``billing_price_ids`` took (decision 25, §14.13);\n   deprecated since 0.7.0, and nothing sold through it. ``\"lemonsqueezy\"`` is no\n   provider any more: the settings refuse it, and a route that types its path\n   parameter as ``BillingProvider`` answers 422.",
           "values": [
             {
               "name": "PADDLE",
               "value": "paddle"
-            },
-            {
-              "name": "LEMONSQUEEZY",
-              "value": "lemonsqueezy"
             }
           ]
         },
@@ -3002,7 +3062,7 @@
           "name": "BillingSettings",
           "kind": "model",
           "signature": "class BillingSettings(BaseModel)",
-          "doc": "Billing's settings (§4, §10), named for ``<APP>_BILLING_*``.\n\nMeant to be INHERITED by the app's settings::\n\n    class Settings(BaseSettings, DemoSettings, BillingSettings):\n        model_config = SettingsConfigDict(env_prefix=\"KEKSDOSE_\")\n\nAn app that keeps its own fields builds one from them instead:\n``BillingSettings.model_validate(settings, from_attributes=True)``.\n\n``billing_price_ids`` is plan → currency → interval → the provider's price id (§3.1;\nPaddle's ``pri_…``, Lemon Squeezy's variant id), JSON in the environment::\n\n    KEKSDOSE_BILLING_PRICE_IDS='{\"pro\": {\"CHF\": {\"year\": \"pri_01h…\", \"month\": \"pri_01j…\"}}}'\n\nA combination may hold a LIST instead: the current id first — what a new checkout uses\n— then retired ids whose subscriptions still run, so their webhooks still find the plan\n(``[\"pri_new\", \"pri_old\"]``). An id may stand for one combination only.\n\nThe one id becoming a list, the keys' normalisation and that check are the field's\nVALIDATION: they run when the settings are built or validated, not on assignment (no\n``validate_assignment``). A test that monkeypatches ``billing_price_ids`` passes the\nparsed shape — ``{\"pro\": {\"CHF\": {\"year\": [\"pri_test\"]}}}`` — or a bare string is read\ncharacter by character (:meth:`billing_price_id` answers ``\"p\"``).",
+          "doc": "Billing's settings (§4, §10), named for ``<APP>_BILLING_*``.\n\nMeant to be INHERITED by the app's settings::\n\n    class Settings(BaseSettings, DemoSettings, BillingSettings):\n        model_config = SettingsConfigDict(env_prefix=\"KEKSDOSE_\")\n\nAn app that keeps its own fields builds one from them instead:\n``BillingSettings.model_validate(settings, from_attributes=True)``.\n\n``billing_price_ids`` is plan → currency → interval → the provider's price id (§3.1;\nPaddle's ``pri_…``), JSON in the environment::\n\n    KEKSDOSE_BILLING_PRICE_IDS='{\"pro\": {\"CHF\": {\"year\": \"pri_01h…\", \"month\": \"pri_01j…\"}}}'\n\nA combination may hold a LIST instead: the current id first — what a new checkout uses\n— then retired ids whose subscriptions still run, so their webhooks still find the plan\n(``[\"pri_new\", \"pri_old\"]``). An id may stand for one combination only.\n\nThe one id becoming a list, the keys' normalisation and that check are the field's\nVALIDATION: they run when the settings are built or validated, not on assignment (no\n``validate_assignment``). A test that monkeypatches ``billing_price_ids`` passes the\nparsed shape — ``{\"pro\": {\"CHF\": {\"year\": [\"pri_test\"]}}}`` — or a bare string is read\ncharacter by character (:meth:`billing_price_id` answers ``\"p\"``).",
           "fields": [
             {
               "name": "billing_enabled",
@@ -3026,13 +3086,13 @@
               "name": "billing_webhook_secret",
               "type": "SecretStr | None",
               "default": "None",
-              "doc": "The webhook's signing secret (§5): Paddle's endpoint secret key (``pdl_ntfset_…``),\nLemon Squeezy's signing secret."
+              "doc": "The webhook's signing secret (§5): Paddle's endpoint secret key (``pdl_ntfset_…``)."
             },
             {
               "name": "billing_signature_tolerance",
               "type": "float",
               "default": "5.0",
-              "doc": "How far, in seconds, Paddle's signature timestamp may be from now (§5): the\n``tolerance`` the app passes to\n:func:`~eifi1_server_kit.billing.verify_webhook_signature`. Paddle's default, five\nseconds (:data:`PADDLE_SIGNATURE_TOLERANCE`), unless the deployment widens it: on a\nscale-to-zero host (Cloud Run at min-instances 0) a cold start can eat the five\nseconds, and every first delivery after a quiet spell answers 400 until Paddle's\nretry lands warm. keksdose runs 60 (``KEKSDOSE_BILLING_SIGNATURE_TOLERANCE=60``). A\nreplay inside the window is still a duplicate to the event store (§5). Lemon\nSqueezy signs no timestamp, so it ignores this."
+              "doc": "How far, in seconds, Paddle's signature timestamp may be from now (§5): the\n``tolerance`` the app passes to\n:func:`~eifi1_server_kit.billing.verify_webhook_signature`. Paddle's default, five\nseconds (:data:`PADDLE_SIGNATURE_TOLERANCE`), unless the deployment widens it: on a\nscale-to-zero host (Cloud Run at min-instances 0) a cold start can eat the five\nseconds, and every first delivery after a quiet spell answers 400 until Paddle's\nretry lands warm. keksdose runs 60 (``KEKSDOSE_BILLING_SIGNATURE_TOLERANCE=60``). A\nreplay inside the window is still a duplicate to the event store (§5)."
             },
             {
               "name": "billing_price_ids",
@@ -3285,7 +3345,7 @@
           "name": "NoProviderClient",
           "kind": "class",
           "signature": "class NoProviderClient",
-          "doc": "No provider client for this deployment — no provider, no key, or an environment the\nsettings can't name: every call is 503 ``billing_not_configured``, the deployment's\nfault. Billing switched on can only reach it with a provider the kit has no client for\n(the deprecated Lemon Squeezy, §14.13); with billing off the routes answer 404 first.\n\n``reason`` is the refusal's detail, for the log; the page reads the code.",
+          "doc": "No provider client for this deployment — no provider, no key, or an environment the\nsettings can't name: every call is 503 ``billing_not_configured``, the deployment's\nfault. Billing switched on never reaches it for want of a provider: since 0.8 Paddle is\nthe one the settings take (§14.13); with billing off the routes answer 404 first.\n\n``reason`` is the refusal's detail, for the log; the page reads the code.",
           "methods": [
             {
               "name": "__init__",
@@ -3318,7 +3378,7 @@
           "name": "NormalisedEvent",
           "kind": "model",
           "signature": "class NormalisedEvent(BaseModel)",
-          "doc": "One provider event in the kit's vocabulary (§5) — what the event store records and\nthe app applies.\n\nA field that is ``None`` is one the event does not carry: leave the row's value. A\nSNAPSHOT (``status`` set) is the subscription's whole state at ``occurred_at``; a notice\n(``status`` ``None``, Lemon Squeezy's ``payment_failed``) only says something happened.",
+          "doc": "One provider event in the kit's vocabulary (§5) — what the event store records and\nthe app applies.\n\nA field that is ``None`` is one the event does not carry: leave the row's value. A\nSNAPSHOT (``status`` set) is the subscription's whole state at ``occurred_at``; a notice\n(``status`` ``None``) only says something happened.",
           "fields": [
             {
               "name": "provider",
@@ -3330,7 +3390,7 @@
               "name": "event_id",
               "type": "str",
               "default": null,
-              "doc": "Unique per provider: Paddle's ``evt_…``; for Lemon Squeezy, which sends no event id,\nthe SHA-256 of the raw body — a redelivery resends the same body."
+              "doc": "Unique per provider: Paddle's ``evt_…``."
             },
             {
               "name": "provider_type",
@@ -3348,7 +3408,7 @@
               "name": "occurred_at",
               "type": "UtcDateTime",
               "default": null,
-              "doc": "When it happened, for the ordering guard (§5): Paddle's ``occurred_at``; Lemon\nSqueezy's ``updated_at`` of the object sent."
+              "doc": "When it happened, for the ordering guard (§5): Paddle's ``occurred_at``."
             },
             {
               "name": "customer_ref",
@@ -3366,7 +3426,7 @@
               "name": "plan_price_id",
               "type": "str | None",
               "default": "None",
-              "doc": "The price the subscription runs on: Paddle's first recurring item's ``pri_…``, Lemon\nSqueezy's variant id. The settings say which plan it is."
+              "doc": "The price the subscription runs on: Paddle's first recurring item's ``pri_…``. The\nsettings say which plan it is."
             },
             {
               "name": "status",
@@ -3762,7 +3822,7 @@
           "name": "PoisonEventError",
           "kind": "class",
           "signature": "class PoisonEventError(ValueError)",
-          "doc": "An event that can never be applied — unreadable JSON, a field missing or of the wrong\ntype, a status nobody knows. Answered 2xx and logged (§5, keksdose's Pub/Sub rule): a\n5xx would make the provider redeliver the same bytes, for days (Paddle retries 60 times\nover 3 days).\n\nThe message names the field, never a value: Lemon Squeezy's attributes carry the\nbuyer's name and address, so a log line must never quote the body."
+          "doc": "An event that can never be applied — unreadable JSON, a field missing or of the wrong\ntype, a status nobody knows. Answered 2xx and logged (§5, keksdose's Pub/Sub rule): a\n5xx would make the provider redeliver the same bytes, for days (Paddle retries 60 times\nover 3 days).\n\nThe message names the field, never a value: a provider's body may carry the buyer's\nname and address, so a log line must never quote it."
         },
         {
           "name": "PortalRequest",
@@ -4028,7 +4088,7 @@
           "name": "checkout_custom_data",
           "kind": "function",
           "signature": "checkout_custom_data(payer_ref: str, *, app: str | None = None) -> dict[str, str]",
-          "doc": "The custom data to put into a checkout, so its webhooks find the payer and the app:\n``{\"payer_ref\": \"user:42\", \"app\": \"keksdose\"}`` (or ``\"company:7\"``, ``\"kastlan\"``).\n\nPaddle keeps a checkout's ``custom_data`` on the transaction and copies it to the\nsubscription it creates, so every subscription event carries it; Lemon Squeezy sends a\ncheckout's ``checkout_data.custom`` as ``meta.custom_data`` with every subscription\nevent. The reference is the app's own and opaque to the provider — never an address.\nFlat, because Paddle's dashboard shows nested custom data badly.\n\n``app`` is the settings' ``billing_app`` (§14.3): on one Paddle account every app's\nwebhook receives every app's events, and the tag is how each keeps only its own\n(:func:`parse_webhook_event`). The kit's client adds its own tag whatever is passed\nhere (:class:`~eifi1_server_kit.billing.PaddleClient`), so an app can't forget it."
+          "doc": "The custom data to put into a checkout, so its webhooks find the payer and the app:\n``{\"payer_ref\": \"user:42\", \"app\": \"keksdose\"}`` (or ``\"company:7\"``, ``\"kastlan\"``).\n\nPaddle keeps a checkout's ``custom_data`` on the transaction and copies it to the\nsubscription it creates, so every subscription event carries it. The reference is the\napp's own and opaque to the provider — never an address.\nFlat, because Paddle's dashboard shows nested custom data badly.\n\n``app`` is the settings' ``billing_app`` (§14.3): on one Paddle account every app's\nwebhook receives every app's events, and the tag is how each keeps only its own\n(:func:`parse_webhook_event`). The kit's client adds its own tag whatever is passed\nhere (:class:`~eifi1_server_kit.billing.PaddleClient`), so an app can't forget it."
         },
         {
           "name": "checkout_return_url",
@@ -4064,19 +4124,13 @@
           "name": "in_good_standing",
           "kind": "function",
           "signature": "in_good_standing(row: SubscriptionRow | None, now: datetime, *, retry_grace: timedelta | None = None, launch: datetime | None = None) -> bool",
-          "doc": "May the payer's data change at ``now``? §3.3, with §12.7 and §12.11.\n\n* **No row: always** (§12.7) — demo users, the demo's system account, ownerless items\n  such as keksdose's preview budget. They are never gated and never counted. Every real\n  payer has a row (§12.12), so ``None`` means one of these, never \"forgotten\".\n\n  **This FAILS OPEN when the row is there but hidden.** With row-level security on the\n  subscription table, a guest's request — keksdose's guest in the owner's budget,\n  kastlan's staff of another company — reads the PAYER's row back as nothing, and a\n  lapsed owner's data stays writable through every guest (keksdose's 0.32 report).\n  Read the payer's row with the RLS bypass, as the webhook does (§12.20), or, where a\n  row must exist — any payer, §12.12 — treat a missing one as an error rather than\n  pass ``None`` here.\n* ``active`` — yes; but a subscription set to cancel at its period's end is out once\n  that end has passed, even before the provider's final event arrives (it may be late;\n  a cancelled period cannot renew).\n* ``trialing`` — the cardless trial (``source`` ``trial``) before ``trial_ends_at``, or\n  while it is empty: a pure guest's row waits for their first owned item to start it\n  (§12.9). A provider's own trial counts as ``active``.\n* ``comped`` — before its end, or without one; after it, while the provider's paid\n  period runs (``current_period_end``): a payer who subscribed during the grant —\n  whose provider events left the grant in place (§12.11) — is in good standing from\n  the grant's end on, as the provider says. The end is\n  :func:`effective_comped_until`: ``comped_until``, else for a beta row stored without\n  one the launch plus 12 months, given ``launch`` (the settings'\n  ``billing_launch_at``); without ``launch`` such a row has no end, as in 0.6.0.\n* ``past_due`` — yes: the provider retries, and moves it on when it gives up (Paddle to\n  ``canceled`` or ``paused``, Lemon Squeezy after 4 retries over 2 weeks to ``unpaid``).\n  With ``retry_grace``, also no later than ``current_period_end`` plus the grace — a\n  backstop for a provider event that never arrived.\n* ``canceled``, ``expired`` — no.\n\nBilling switched off means everyone is in good standing (§4):\n:meth:`~eifi1_server_kit.billing.BillingSettings.billing_standing` asks the switch\nfirst, and passes its ``billing_launch_at`` as ``launch``. An unknown ``status`` is a\n:class:`ValueError`."
+          "doc": "May the payer's data change at ``now``? §3.3, with §12.7 and §12.11.\n\n* **No row: always** (§12.7) — demo users, the demo's system account, ownerless items\n  such as keksdose's preview budget. They are never gated and never counted. Every real\n  payer has a row (§12.12), so ``None`` means one of these, never \"forgotten\".\n\n  **This FAILS OPEN when the row is there but hidden.** With row-level security on the\n  subscription table, a guest's request — keksdose's guest in the owner's budget,\n  kastlan's staff of another company — reads the PAYER's row back as nothing, and a\n  lapsed owner's data stays writable through every guest (keksdose's 0.32 report).\n  Read the payer's row with the RLS bypass, as the webhook does (§12.20), or, where a\n  row must exist — any payer, §12.12 — treat a missing one as an error rather than\n  pass ``None`` here.\n* ``active`` — yes; but a subscription set to cancel at its period's end is out once\n  that end has passed, even before the provider's final event arrives (it may be late;\n  a cancelled period cannot renew).\n* ``trialing`` — the cardless trial (``source`` ``trial``) before ``trial_ends_at``, or\n  while it is empty: a pure guest's row waits for their first owned item to start it\n  (§12.9). A provider's own trial counts as ``active``.\n* ``comped`` — before its end, or without one; after it, while the provider's paid\n  period runs (``current_period_end``): a payer who subscribed during the grant —\n  whose provider events left the grant in place (§12.11) — is in good standing from\n  the grant's end on, as the provider says. The end is\n  :func:`effective_comped_until`: ``comped_until``, else for a beta row stored without\n  one the launch plus 12 months, given ``launch`` (the settings'\n  ``billing_launch_at``); without ``launch`` such a row has no end, as in 0.6.0.\n* ``past_due`` — yes: the provider retries, and moves it on when it gives up (Paddle to\n  ``canceled`` or ``paused``).\n  With ``retry_grace``, also no later than ``current_period_end`` plus the grace — a\n  backstop for a provider event that never arrived.\n* ``canceled``, ``expired`` — no.\n\nBilling switched off means everyone is in good standing (§4):\n:meth:`~eifi1_server_kit.billing.BillingSettings.billing_standing` asks the switch\nfirst, and passes its ``billing_launch_at`` as ``launch``. An unknown ``status`` is a\n:class:`ValueError`."
         },
         {
           "name": "is_beta",
           "kind": "function",
           "signature": "is_beta(invitation_created_at: datetime | None, launch: datetime) -> bool",
           "doc": "Does a payer registering now count as beta (§12.10)? Yes when their invitation was\nCREATED before the launch, even if it is accepted after — the last week's invitees get\n12 months, not 30 days. No invitation (open registration after launch): no.\n\nThe payers who exist when billing goes on are beta by the migration (§3.2), which needs\nno question."
-        },
-        {
-          "name": "map_lemonsqueezy_event",
-          "kind": "function",
-          "signature": "map_lemonsqueezy_event(raw_body: bytes) -> NormalisedEvent | None",
-          "doc": "A Lemon Squeezy webhook as a :class:`NormalisedEvent`; ``None`` for an event billing\ndoesn't use; :class:`PoisonEventError` for a body it cannot read.\n\n.. deprecated:: 0.7.0\n   Removed in 0.8 with the rest of Lemon Squeezy (§14.13).\n\nThe body is JSON:API: ``{meta: {event_name, custom_data?}, data: {type, id,\nattributes}}``. A subscription's attributes carry ``status``, ``customer_id``,\n``variant_id``, ``cancelled``, ``renews_at``, ``ends_at`` and ``updated_at``;\n``subscription_payment_failed`` sends a ``subscription-invoices`` object instead, with\n``subscription_id`` and ``customer_id`` but no status.\n\nThe event id is the body's SHA-256: Lemon Squeezy documents no event id, and a retry\n(it retries three times, after 5, 25 and 125 seconds) resends the event."
         },
         {
           "name": "map_paddle_event",
@@ -4163,12 +4217,6 @@
           "doc": "When a trial started at ``now`` ends: 30 days on (§2.7, :data:`TRIAL_LENGTH`).\n\nSet where the payer is created (§12.12) — except for keksdose's pure guest, whose row is\ncreated with an empty ``trial_ends_at`` and given one at their first OWNED item\n(§12.9). Naive in, naive out."
         },
         {
-          "name": "verify_lemonsqueezy_signature",
-          "kind": "function",
-          "signature": "verify_lemonsqueezy_signature(raw_body: bytes, header: str | None, secret: str) -> None",
-          "doc": "Check a Lemon Squeezy webhook's ``X-Signature`` — the hex HMAC-SHA256 of the raw\nbody — or raise 400 ``invalid_signature``.\n\n.. deprecated:: 0.7.0\n   Removed in 0.8 with the rest of Lemon Squeezy (§14.13)."
-        },
-        {
           "name": "verify_paddle_signature",
           "kind": "function",
           "signature": "verify_paddle_signature(raw_body: bytes, header: str | None, secret: str, *, now: float | None = None, tolerance: float = PADDLE_SIGNATURE_TOLERANCE) -> None",
@@ -4178,20 +4226,84 @@
           "name": "verify_webhook_signature",
           "kind": "function",
           "signature": "verify_webhook_signature(provider: BillingProvider | str, raw_body: bytes, headers: Mapping[str, str], secret: str, *, now: float | None = None, tolerance: float = PADDLE_SIGNATURE_TOLERANCE) -> None",
-          "doc": "Check the signature of a webhook from ``provider``, reading its header from\n``headers`` (§5)::\n\n    settings.require_billing_enabled()                  # 404 billing_disabled\n    raw = await request.body()\n    verify_webhook_signature(\n        BillingProvider.PADDLE, raw, request.headers, settings.billing_webhook_key(),\n        tolerance=settings.billing_signature_tolerance,\n    )\n\n``now`` and ``tolerance`` are Paddle's (:func:`verify_paddle_signature`); pass the\nsettings' ``billing_signature_tolerance``, so a deployment widens it in its\nenvironment — or call\n:meth:`~eifi1_server_kit.billing.BillingSettings.verify_billing_webhook`, which does\n(§14.2). Lemon Squeezy's signature has no timestamp. An unknown provider is a\n:class:`ValueError`."
+          "doc": "Check the signature of a webhook from ``provider``, reading its header from\n``headers`` (§5)::\n\n    settings.require_billing_enabled()                  # 404 billing_disabled\n    raw = await request.body()\n    verify_webhook_signature(\n        BillingProvider.PADDLE, raw, request.headers, settings.billing_webhook_key(),\n        tolerance=settings.billing_signature_tolerance,\n    )\n\n``now`` and ``tolerance`` are Paddle's (:func:`verify_paddle_signature`); pass the\nsettings' ``billing_signature_tolerance``, so a deployment widens it in its\nenvironment — or call\n:meth:`~eifi1_server_kit.billing.BillingSettings.verify_billing_webhook`, which does\n(§14.2). An unknown provider — ``\"lemonsqueezy\"`` since 0.8 — is a :class:`ValueError`."
         },
         {
           "name": "webhook_answer",
           "kind": "function",
           "signature": "webhook_answer(result: DispatchOutcome | BaseException | None) -> WebhookAnswer",
-          "doc": "The answer policy (§5): what the webhook route answers for what happened.\n\n* ``None`` — an event billing doesn't use — and every :class:`DispatchOutcome`: 200.\n  Paddle and Lemon Squeezy both ask for a 200; anything else is retried. So is a\n  :class:`DuplicateEventError` that reaches the route (a store that raises it at the\n  commit): the event is in the table, a retry would only find it there.\n* :attr:`DispatchOutcome.NO_PAYER` and a\n  :class:`~eifi1_server_kit.billing.PoisonEventError`: 200 and logged — a retry would\n  bring the same bytes (keksdose's Pub/Sub rule).\n* A :class:`~eifi1_server_kit.billing.BillingError`: its own status — 400 for a bad\n  signature, 404 with billing off, 503 for a missing setting (retried) — logged, but\n  for the 404.\n* Anything else is transient: 500 and logged, so the provider retries (Paddle 60 times\n  over 3 days, Lemon Squeezy 3 times within minutes).\n\nLog the result's type and message, never the body: it carries the buyer's details."
+          "doc": "The answer policy (§5): what the webhook route answers for what happened.\n\n* ``None`` — an event billing doesn't use — and every :class:`DispatchOutcome`: 200.\n  Paddle asks for a 200; anything else is retried. So is a\n  :class:`DuplicateEventError` that reaches the route (a store that raises it at the\n  commit): the event is in the table, a retry would only find it there.\n* :attr:`DispatchOutcome.NO_PAYER` and a\n  :class:`~eifi1_server_kit.billing.PoisonEventError`: 200 and logged — a retry would\n  bring the same bytes (keksdose's Pub/Sub rule).\n* A :class:`~eifi1_server_kit.billing.BillingError`: its own status — 400 for a bad\n  signature, 404 with billing off, 503 for a missing setting (retried) — logged, but\n  for the 404.\n* Anything else is transient: 500 and logged, so the provider retries (Paddle 60 times\n  over 3 days).\n\nLog the result's type and message, never the body: it carries the buyer's details."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.jobs",
+      "summary": "The scheduler's calls: a route no account is behind, opened by ``X-Jobs-Token``.",
+      "doc": "The scheduler's calls: a route no account is behind, opened by ``X-Jobs-Token``.\n\n``docs/billing-harmonization.md`` §14.7 in ``Eifi1/ui-kit``: a daily job — the trial and\ngrant end notices, and kastlan's every daily job — is ``POST /api/v1/ops/…``, called by a\nCloud Scheduler HTTP job. No account is behind the call, so there is no session and no\nrole: the caller proves it is the job with **a header, never a query parameter** (Cloud\nRun's request log records the URL with its query), compared **in constant time** with the\napp's ``<APP>_JOBS_TOKEN`` secret. Missing, wrong, or no token set: **401**, one answer for\nall three; the last is logged too, because then the operator has something to do.\n\nkastlan (``adapters/api/ops_router.py:35``) and Kurvenschmiede\n(``adapters/api/ops_router.py:39``) each wrote that dependency; this is it once (round\n0.34 S5). keksdose runs its jobs in-process and has no token route.",
+      "contract": {
+        "doc": "docs/billing-harmonization.md",
+        "section": "§14.7",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/billing-harmonization.md#147-trial-and-grant-end-notices-decision-23-1222",
+        "links": [
+          {
+            "section": "§14.7",
+            "heading": "14.7 Trial and grant end notices (decision 23, §12.22)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/billing-harmonization.md#147-trial-and-grant-end-notices-decision-23-1222"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "JOBS_TOKEN_HEADER",
+          "kind": "constant",
+          "signature": "JOBS_TOKEN_HEADER = \"X-Jobs-Token\"",
+          "doc": "The header the scheduler sends the token in (Cloud Scheduler's ``--headers``)."
+        },
+        {
+          "name": "JobsSettings",
+          "kind": "model",
+          "signature": "class JobsSettings(BaseModel)",
+          "doc": "The token setting, for the app's settings to INHERIT, so each reads its own\nvariable (``KASTLAN_JOBS_TOKEN``, ``KURVENSCHMIEDE_JOBS_TOKEN``)::\n\n    class Settings(BaseSettings, DemoSettings, BillingSettings, JobsSettings):\n        model_config = SettingsConfigDict(env_prefix=\"KASTLAN_\")",
+          "fields": [
+            {
+              "name": "jobs_token",
+              "type": "SecretStr | None",
+              "default": "None",
+              "doc": "The scheduler's token: Secret Manager in production, never a deploy literal. Unset —\nor blank, as an ``.env`` template leaves it — every token route answers 401."
+            }
+          ]
+        },
+        {
+          "name": "JobsTokenError",
+          "kind": "class",
+          "signature": "class JobsTokenError(ValueError)",
+          "doc": "The call isn't the scheduler's (→ 401): ``X-Jobs-Token`` missing or wrong, or no\ntoken set. One answer for the three, as kastlan's ``AuthError`` and Kurvenschmiede's\n``HTTPException`` gave it; answered through\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers`.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(detail: str = f'A valid {JOBS_TOKEN_HEADER} is required') -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "check_jobs_token",
+          "kind": "function",
+          "signature": "check_jobs_token(presented: str | None, expected: SecretStr | str | None) -> None",
+          "doc": "Refuse unless ``presented`` — the request's ``X-Jobs-Token`` — is the app's token:\n:class:`JobsTokenError` (401) for a missing or wrong one, and for no token set (logged\nat WARNING: the operator's to fix). ``expected`` is the setting as the app holds it,\na ``SecretStr`` (kastlan) or text (Kurvenschmiede's ``str = \"\"``); blank is unset.\n\n:func:`hmac.compare_digest` on BYTES: two ``str`` with a non-ASCII character raise\n``TypeError`` there, which an unauthenticated caller could turn into a 500 at will."
+        },
+        {
+          "name": "require_jobs_token",
+          "kind": "function",
+          "signature": "require_jobs_token(token: Callable[[], SecretStr | str | None]) -> Callable[[Request], None]",
+          "doc": "The FastAPI dependency for a token route, reading the app's token through ``token``\nat every call — so a test that sets the setting is heard::\n\n    @router.post(\n        \"/ops/jobs/{name}\",\n        dependencies=[Depends(require_jobs_token(lambda: settings.jobs_token))],\n    )\n\nIt reads ``X-Jobs-Token`` from the request (Starlette's ``Request``, which FastAPI\nhands a dependency; the kit doesn't import FastAPI) and calls\n:func:`check_jobs_token`. So the header is not a parameter in the app's OpenAPI\nschema — nobody but the scheduler calls these routes."
         }
       ]
     },
     {
       "name": "eifi1_server_kit.mail",
       "summary": "Outbound account mail: the words per language, one layout, two transports.",
-      "doc": "Outbound account mail: the words per language, one layout, two transports.\n\n``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``. Lifted from keksdose\n``backend/keksdose/infrastructure/email.py`` and ``domain/server_text.py`` and from\nKurvenschmiede ``infrastructure/email.py`` (``MailText``), which agree on everything\nhere; kastlan built its own on the same shape.\n\n* **The words are the app's.** A mail's texts are a table per language of\n  :class:`MailText` rows — the subject and the five parts :func:`render_message` lays\n  out — and :func:`pick` chooses the row for the recipient's locale. Which mails exist\n  and what they say stays in each app (§8 \"App-side: the texts of the mails\").\n* **One layout, escaped at the boundary** (:func:`render_message`): a greeting is built\n  from a person's name, and a name is free text, so an account called\n  ``<a href=\"…\">Reset here</a>`` must not put that anchor into the app's own mail.\n* **A whole HTML document**, with the language and a title: Outlook junked a fully\n  authenticated Kurvenschmiede reset mail (SCL 5 — a new domain on shared sending IPs),\n  and a bare fragment with no ``<html lang>`` and no ``<title>`` is one more mark against\n  a mail. :func:`render_mail` picks the row AND its language in one call.\n* **A ``Reply-To``** (:class:`ResendClient`'s ``reply_to``): the mails come from a\n  ``noreply@`` address, and a reply must reach a person. Each app's ``*_EMAIL_REPLY_TO``\n  setting defaults to ``support@<its domain>`` (:func:`support_address`), which\n  Cloudflare Email Routing forwards on all three domains.\n* **Two transports behind one protocol** (:class:`Mailer`): :class:`ResendClient` for\n  production — the ``mail`` extra (``eifi1-server-kit[mail]``, httpx) — and\n  :class:`ConsoleMailer` for a fresh checkout, which logs the message, link and all.\n  **Sending never raises**: a sign-up must not fail because a provider is down, and every\n  link can be asked for again. ``send`` answers whether the mail went; the caller decides\n  who is told.\n\nNot here yet: ``List-Unsubscribe`` and anything else a NOTIFICATION mail needs — that is\nthe notifications round. These are transactional mails the recipient asked for.",
+      "doc": "Outbound account mail: the words per language, one layout, two transports.\n\n``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``. Lifted from keksdose\n``backend/keksdose/infrastructure/email.py`` and ``domain/server_text.py`` and from\nKurvenschmiede ``infrastructure/email.py`` (``MailText``), which agree on everything\nhere; kastlan built its own on the same shape.\n\n* **The words are the app's.** A mail's texts are a table per language of\n  :class:`MailText` rows — the subject and the five parts :func:`render_message` lays\n  out — and :func:`pick` chooses the row for the recipient's locale. Which mails exist\n  and what they say stays in each app (§8 \"App-side: the texts of the mails\").\n* **One layout, escaped at the boundary** (:func:`render_message`): a greeting is built\n  from a person's name, and a name is free text, so an account called\n  ``<a href=\"…\">Reset here</a>`` must not put that anchor into the app's own mail.\n* **A whole HTML document**, with the language and a title: Outlook junked a fully\n  authenticated Kurvenschmiede reset mail (SCL 5 — a new domain on shared sending IPs),\n  and a bare fragment with no ``<html lang>`` and no ``<title>`` is one more mark against\n  a mail. :func:`render_mail` picks the row AND its language in one call.\n* **A ``Reply-To``** (:class:`ResendClient`'s ``reply_to``): the mails come from a\n  ``noreply@`` address, and a reply must reach a person. Each app's ``*_EMAIL_REPLY_TO``\n  setting defaults to ``support@<its domain>`` (:func:`support_address`), which\n  Cloudflare Email Routing forwards on all three domains.\n* **Two transports behind one protocol** (:class:`Mailer`): :class:`ResendClient` for\n  production — the ``mail`` extra (``eifi1-server-kit[mail]``, httpx) — and\n  :class:`ConsoleMailer` for a fresh checkout, which logs the message, link and all.\n  **Sending never raises**: a sign-up must not fail because a provider is down, and every\n  link can be asked for again. ``send`` answers whether the mail went; the caller decides\n  who is told.\n* **A word for every mail** — the ``kind`` it is sent and logged under, which an\n  operator greps three apps' logs for: a mail with a one-time link by its token's\n  :class:`~eifi1_server_kit.auth.OneTimeTokenKind`, billing's notices by\n  :class:`~eifi1_server_kit.billing.BillingNoticeKind`, and the two account notices with\n  no token by :class:`AccountNoticeKind`.\n\nNot here yet: ``List-Unsubscribe`` and anything else a NOTIFICATION mail needs — that is\nthe notifications round. These are transactional mails the recipient asked for.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -4228,6 +4340,22 @@
           "kind": "constant",
           "signature": "TIMEOUT_SECONDS = 10.0",
           "doc": "Per attempt (keksdose ``TIMEOUT_SECONDS``)."
+        },
+        {
+          "name": "AccountNoticeKind",
+          "kind": "enum",
+          "signature": "class AccountNoticeKind(enum.StrEnum)",
+          "doc": "The account mails that carry no one-time token, as the ``kind`` they are sent and\nlogged under (KS S5): each TELLS an address something rather than asking it to prove\nanything, so :class:`~eifi1_server_kit.auth.OneTimeTokenKind` has no word for them.\nNot ``MailKind``, which is :mod:`~eifi1_server_kit.user_admin`'s word for the mail an\nadmin sends again.\n\nThe user-admin contract requires both of every app with an email change and an\naccount deletion::\n\n    await mailer.send(user.email, message, kind=AccountNoticeKind.ACCOUNT_DELETION)",
+          "values": [
+            {
+              "name": "EMAIL_CHANGE_NOTICE",
+              "value": "email_change_notice"
+            },
+            {
+              "name": "ACCOUNT_DELETION",
+              "value": "account_deletion"
+            }
+          ]
         },
         {
           "name": "ConsoleMailer",
@@ -4327,7 +4455,7 @@
             {
               "name": "send",
               "signature": "async send(to: str, message: MailMessage, *, kind: str = 'other') -> bool",
-              "doc": "Send one mail; whether it went out. Never raises.\n\n``kind`` (``verification``, ``password_reset``, ``invitation``) is what the mail\nis FOR — a small enum fit for a log line or a metric label, which the recipient's\naddress never is."
+              "doc": "Send one mail; whether it went out. Never raises.\n\n``kind`` is what the mail is FOR — a small enum fit for a log line or a metric\nlabel, which the recipient's address never is: a\n:class:`~eifi1_server_kit.auth.OneTimeTokenKind` (``verification``,\n``password_reset``, ``invitation``, ``email_change``), an\n:class:`AccountNoticeKind` (``email_change_notice``, ``account_deletion``) or a\n:class:`~eifi1_server_kit.billing.BillingNoticeKind`."
             }
           ]
         },
@@ -5525,8 +5653,8 @@
         {
           "name": "content_disposition",
           "kind": "function",
-          "signature": "content_disposition(filename: str, disposition: Disposition = 'attachment') -> str",
-          "doc": "A ``Content-Disposition`` value whose filename cannot break the header.\n\nThe name is whatever the client called the file. For the plain ``filename=`` quotes,\nbackslashes and anything not printable are dropped, it is cut to 100 characters and\nnarrowed to ASCII — Starlette encodes header values as latin-1, so an en dash or a CJK\ncharacter there was a 500 out of a plain GET (keksdose ``upload_guards.py:277``, on its\nobject-store branch only). The ORIGINAL name follows in the RFC 5987 ``filename*``,\npercent-encoded, so nothing is lost; every browser prefers that one. keksdose's\n``content_disposition`` and Kurvenschmiede's ``_disposition``\n(``feedback_router.py:156``), merged."
+          "signature": "content_disposition(filename: str, disposition: Disposition = 'attachment', *, fallback: str | None = None) -> str",
+          "doc": "A ``Content-Disposition`` value whose filename cannot break the header, and whose\nplain name is a file name every system will write.\n\nThe name is whatever the client called the file. The ORIGINAL goes into the RFC 5987\n``filename*``, percent-encoded, so nothing is lost; every browser prefers that one, and\nso does ui-kit's ``filenameFromDisposition`` (0.34). The plain ``filename=`` is for a\nreader that takes nothing else — ``curl -J`` among them — and is narrowed to ASCII:\nStarlette encodes header values as latin-1, so an en dash or a CJK character there was\na 500 out of a plain GET (keksdose ``upload_guards.py:277``, on its object-store branch\nonly). Quotes, backslashes and anything not printable are dropped; accents are folded\n(``Débattement-à-gauche.csv`` → ``Debattement-a-gauche.csv``), and what still isn't\nsafe ASCII becomes ``_`` (``停车扫描-1.csv`` → ``____-1.csv``) — never ``?``, which\nWindows refuses in a file name (KS S2; 0.7 wrote ``D?battement-?-gauche.csv``). Cut to\n100 characters; nothing left is ``attachment``.\n\n``fallback`` is the plain name an app would rather offer — ``curve-12.csv``, a record's\nid — narrowed the same way; ``filename*`` keeps the original either way. keksdose's\n``content_disposition`` and Kurvenschmiede's ``_disposition``\n(``feedback_router.py:156``), merged."
         },
         {
           "name": "ensure_decodable_image",
@@ -5707,7 +5835,7 @@
     {
       "name": "eifi1_server_kit.errors",
       "summary": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.",
-      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
+      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, and a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.7",
@@ -5724,7 +5852,7 @@
         {
           "name": "CONTRACT_ERRORS",
           "kind": "constant",
-          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    BillingError,\n    PlanLimitError,\n)",
+          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n)",
           "doc": "Every kit exception base that carries a ``status_code``; subclasses are covered by MRO."
         },
         {

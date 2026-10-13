@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, matchPath, useHref, useLocation } from "react-router";
 import { ChevronRight, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -11,14 +11,17 @@ import { readStored, writeStored } from "../lib/safe-storage";
 import { Tooltip } from "../components/tooltip";
 import { pickLinkRenderer } from "../components/text-link";
 import { DialogFrame } from "../components/dialog-frame";
-import { CompactControls } from "../components/ui";
+import { CompactControls } from "../components/field-parts";
+import { mergeRefs } from "../components/field-parts";
 import { useAnchoredRect } from "../hooks/use-anchored-rect";
-import { useEscapeKey } from "../hooks/use-dismiss";
+import { anchoredInline } from "../hooks/use-anchored-panel";
+import { useDismissLayer } from "../hooks/use-dismiss";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useTextSize } from "../theme/text-size";
 import type { TextSize } from "../theme/text-size";
-import { DEFAULT_APP_SHELL_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
+import { DEFAULT_APP_SHELL_LABELS, useKitLabels, useKitLink, type LabelOverride } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
+import { DEFAULT_APP_SHELL_MORE_LABELS } from "./app-shell-labels";
 
 export interface AppShellSubItem {
   to: string;
@@ -111,10 +114,8 @@ export interface AppShellMoreLabels {
   moreTitle: string;
 }
 
-export const DEFAULT_APP_SHELL_MORE_LABELS: AppShellMoreLabels = {
-  more: "More",
-  moreTitle: "More pages",
-};
+// Defined in ./app-shell-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_APP_SHELL_MORE_LABELS };
 
 /**
  * The most entries the phone bar shows before the rest go under "More", per text size
@@ -232,6 +233,9 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    * the outer one over it, and remove it on unmount from under the outer app.
    */
   embedded?: boolean;
+  /** The shell's root, where the rest of the props go (0.34, API-2, refactor audit
+   *  2026-10) — merged with its own ref, which `--app-nav-h` is published on. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /** True below an AppShell — how a nested shell knows it is one. */
@@ -342,6 +346,7 @@ export function AppShell({
   toggleGroupLabel,
   embedded: embeddedProp,
   className,
+  ref,
   ...rest
 }: AppShellProps) {
   const embedded = useContext(AppShellNesting) || !!embeddedProp;
@@ -384,6 +389,7 @@ export function AppShell({
   // Publishes `--app-nav-h` for anything that has to sit on the bottom bar.
   const navRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const setRoot = useMemo(() => mergeRefs(rootRef, ref), [ref]);
   useNavHeightVar(navRef, rootRef, embedded);
   useEffect(() => {
     if (collapseStorageKey !== null) writeStored(collapseStorageKey, collapsed ? "1" : "0");
@@ -402,7 +408,7 @@ export function AppShell({
     <AppShellNesting.Provider value={true}>
       <div
         {...rest}
-        ref={rootRef}
+        ref={setRoot}
         data-app-shell=""
         className={cn(
           "relative flex flex-col",
@@ -422,7 +428,7 @@ export function AppShell({
           <aside
             className={cn(
               // `border-e`: the sidebar sits at the START, which is the right in RTL.
-              "hidden md:flex md:flex-col border-e border-[var(--border)] bg-[var(--bg-surface)] transition-[width] duration-200 ease-out overflow-hidden",
+              "hidden md:flex md:flex-col border-e border-subtle bg-surface transition-[width] duration-200 ease-out overflow-hidden",
               // Embedded, the row it sits in is already the shell's height; the sticky
               // offsets below are measured against the window's top bar.
               embedded ? "md:self-stretch" : "md:sticky md:top-12 md:self-start md:h-[calc(100vh-3rem)]",
@@ -456,14 +462,14 @@ export function AppShell({
             {sidebarFooter?.(iconOnly)}
             {/* No toggle at Large: the sidebar cannot collapse there (see `iconOnly`). */}
             {!large && (
-              <div className="border-t border-[var(--border)] p-2">
+              <div className="border-t border-subtle p-2">
                 {collapsed ? (
                   <Tooltip label={labels.expand} side="end" portal className="block">
                     <button
                       type="button"
                       onClick={() => setCollapsed(false)}
                       aria-label={labels.expand}
-                      className="flex w-full items-center justify-center min-h-9 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                      className="flex w-full items-center justify-center min-h-9 rounded-md text-muted hover:bg-hover hover:text-secondary"
                     >
                       <PanelLeftOpen className="size-4 shrink-0 rtl:-scale-x-100" />
                     </button>
@@ -473,10 +479,12 @@ export function AppShell({
                     type="button"
                     onClick={() => setCollapsed(true)}
                     aria-label={labels.collapse}
-                    className="flex w-full items-center gap-3 min-h-9 px-3 py-2 rounded-md text-sm text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                    className="flex w-full items-center gap-3 min-h-9 px-3 py-2 rounded-md text-sm text-muted hover:bg-hover hover:text-secondary"
                   >
                     <PanelLeftClose className="size-4 shrink-0 rtl:-scale-x-100" />
-                    <span className="truncate">{labels.collapse}</span>
+                    {/* Never drawn at Large (the toggle is not), so the class matters at
+                        Normal only — the kit's one name for it all the same (round 0.34 T1). */}
+                    <span className="truncate-until-large">{labels.collapse}</span>
                   </button>
                 )}
               </div>
@@ -539,7 +547,7 @@ export function AppShell({
             whole of it. */}
         <div
           ref={navRef}
-          className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-[var(--border)] bg-[var(--bg-surface)]"
+          className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-subtle bg-surface"
         >
           {mobileSubNav && <MobileSubNav nav={nav} layout={mobileSubNavLayout} />}
           <nav
@@ -562,7 +570,7 @@ const routerLink: KitLinkComponent = ({ href, ...p }) => <Link to={href} {...p} 
 const plainLink: KitLinkComponent = ({ children, ...p }) => <a {...p}>{children}</a>;
 
 const FOOTER_ICON_LINK =
-  "flex min-h-8 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]";
+  "flex min-h-8 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-secondary";
 
 /** Calls the link renderer as a component, so a router link's hooks are its own. */
 function RenderedLink({ render, ...props }: KitLinkProps & { render: KitLinkComponent }) {
@@ -617,12 +625,12 @@ function SidebarFooterItems({
             <nav
               key={item.key}
               aria-label={item.label}
-              className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-caption text-[var(--text-muted)]"
+              className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-caption text-muted"
             >
               {item.links.map((l) => (
                 <span key={l.to}>
                   {linkTo(l.to, l.external, {
-                    className: "rounded-sm hover:text-[var(--text-secondary)] hover:underline",
+                    className: "rounded-sm hover:text-secondary hover:underline",
                     children: l.label,
                   })}
                 </span>
@@ -635,7 +643,9 @@ function SidebarFooterItems({
           children: (
             <>
               <item.icon className="size-3.5 shrink-0" aria-hidden />
-              <span className="min-w-0 truncate">{item.text ?? item.label}</span>
+              {/* Wraps from Large up (text size §10.17, round 0.34 T1): the link is
+                  `min-h-8`, so it grows a line rather than cut "Feedb…". */}
+              <span className="min-w-0 truncate-until-large">{item.text ?? item.label}</span>
             </>
           ),
         });
@@ -663,8 +673,8 @@ const mobileCellClass = (active: boolean) =>
     "relative flex h-full w-full flex-col items-center justify-start py-2 text-caption gap-0.5 transition-colors",
     "before:absolute before:content-[''] before:inset-x-4 before:top-0 before:h-0.5 before:rounded-full before:transition-colors",
     active
-      ? "font-semibold text-[var(--brand)] before:bg-[var(--brand)]"
-      : "text-[var(--text-muted)] before:bg-transparent",
+      ? "font-semibold text-brand before:bg-brand"
+      : "text-muted before:bg-transparent",
   );
 
 /**
@@ -673,10 +683,19 @@ const mobileCellClass = (active: boolean) =>
  * "Transactions" to "Trans…" in every app (Kurvenschmiede). Two lines and then a clamp,
  * centred, a long word broken (and hyphenated where the page's `lang` allows) rather
  * than overflowing into the next cell. `shortLabel` still wins where the app has one.
+ *
+ * `data-truncate-ok` (text size §10.17, round 0.34 T1): the clamp is that decision, not
+ * an accident — the size sweep finds "Sowing calen…" in a 65 px cell at 360 px / Extra
+ * large, and a third line would make every cell of the bar taller for one long word.
+ * The whole label stays the link's accessible name; an app with a long one gives the bar
+ * a `shortLabel`.
  */
 function MobileCellLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="line-clamp-2 max-w-full break-words px-0.5 text-center leading-tight hyphens-auto">
+    <span
+      data-truncate-ok=""
+      className="line-clamp-2 max-w-full break-words px-0.5 text-center leading-tight hyphens-auto"
+    >
       {children}
     </span>
   );
@@ -748,7 +767,7 @@ function MobileMoreCell({
   labels: labelsProp,
 }: {
   hidden: AppShellNavItem[];
-  labels?: Partial<AppShellMoreLabels>;
+  labels?: LabelOverride<AppShellMoreLabels>;
 }) {
   const labels: AppShellMoreLabels = useKitLabels("appShellMore", DEFAULT_APP_SHELL_MORE_LABELS, labelsProp);
   const { pathname } = useLocation();
@@ -785,8 +804,8 @@ function MobileMoreCell({
                   cn(
                     "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                     isActive
-                      ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                      : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
+                      ? "bg-inverse text-inverse"
+                      : "text-primary hover:bg-hover",
                   )
                 }
               >
@@ -794,7 +813,7 @@ function MobileMoreCell({
                 <span className="min-w-0 break-words leading-snug">{item.label}</span>
               </NavLink>
               {!!item.items?.length && (
-                <ul aria-label={item.label} className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-[var(--border)] ps-2">
+                <ul aria-label={item.label} className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-subtle ps-2">
                   {item.items.map((sub) => (
                     <li key={sub.to}>
                       <NavLink
@@ -805,8 +824,8 @@ function MobileMoreCell({
                           cn(
                             "flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                             isActive
-                              ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                              : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                              ? "bg-inverse text-inverse"
+                              : "text-secondary hover:bg-hover",
                           )
                         }
                       >
@@ -858,7 +877,7 @@ function MobileSubNav({ nav, layout }: { nav: AppShellNavItem[]; layout: "wrap" 
       aria-label={group.label}
       // Keyed by group so switching groups replays the entrance.
       key={group.to}
-      className="animate-subnav border-b border-[var(--border)]"
+      className="animate-subnav border-b border-subtle"
     >
       <ul
         ref={listRef}
@@ -882,8 +901,8 @@ function MobileSubNav({ nav, layout }: { nav: AppShellNavItem[]; layout: "wrap" 
                 cn(
                   "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
                   isActive
-                    ? "border-[var(--brand)] bg-[var(--brand)] font-medium text-[var(--brand-contrast)]"
-                    : "border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                    ? "border-brand bg-brand font-medium text-brand-contrast"
+                    : "border-subtle text-secondary hover:bg-hover",
                 )
               }
             >
@@ -903,10 +922,10 @@ const navLinkClass = (collapsed: boolean, forceActive: boolean, trail = false) =
   ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 min-h-9 ${collapsed ? "justify-center px-2" : "px-3"} py-2 rounded-md text-sm transition-colors duration-150 ${
       isActive || (forceActive && !trail)
-        ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
+        ? "bg-inverse text-inverse"
         : forceActive
-          ? "font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
-          : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+          ? "font-medium text-primary hover:bg-hover"
+          : "text-secondary hover:bg-hover"
     }`;
 
 /** Whether any of an entry's sub-items is the current route. NavLink only knows about
@@ -1064,7 +1083,7 @@ function SidebarGroup({
             aria-controls={listId}
             aria-label={toggleGroupLabel(item.label)}
             onClick={() => setOpenGroup(open ? null : item.to)}
-            className="flex size-9 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+            className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-secondary"
           >
             <ChevronRight
               aria-hidden
@@ -1098,7 +1117,7 @@ function SidebarGroup({
           {/* The rule and indent live on the list INSIDE the clipping box: margin or
               padding on the element whose row is collapsing to 0fr would hold it open
               by that much. */}
-          <ul className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-[var(--border)] ps-2">
+          <ul className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-subtle ps-2">
             {item.items!.map((sub) => (
               <li key={sub.to}>
                 <NavLink
@@ -1108,8 +1127,8 @@ function SidebarGroup({
                     cn(
                       "flex min-h-8 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                       isActive
-                        ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                        : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                        ? "bg-inverse text-inverse"
+                        : "text-secondary hover:bg-hover",
                     )
                   }
                 >
@@ -1146,14 +1165,20 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
   const [dir, setDir] = useState<Direction>("ltr");
 
   // Anchor the flyout to the item's END edge — its right, or its left in RTL, where
-  // the sidebar sits on the right of the window. The hook re-measures on
-  // scroll/resize (the nav list can scroll).
+  // the sidebar sits on the right of the window — and keep it on the glass (Wave 2,
+  // DUP-7). Right to left it hangs by its `right`, which a fixed box measures from
+  // inside the scrollbar: `innerWidth` counted the bar and put the flyout a bar's width
+  // off its item. The hook re-measures on scroll/resize (the nav list can scroll); the
+  // panel's own width is measured once it is up, before paint.
   const rect = useAnchoredRect(wrapperRef, open);
-  const pos = rect
-    ? dir === "rtl"
-      ? { top: rect.top, right: window.innerWidth - rect.left }
-      : { top: rect.top, left: rect.right }
-    : null;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panelWidth, setPanelWidth] = useState(0);
+  const placed = rect !== null;
+  useLayoutEffect(() => {
+    if (open && placed) setPanelWidth(panelRef.current?.offsetWidth ?? 0);
+  }, [open, placed]);
+  const at = rect ? anchoredInline(rect, panelWidth, { dir, align: "after" }) : null;
+  const pos = rect && at ? { top: rect.top, ...(dir === "rtl" ? { right: at.right } : { left: at.left }) } : null;
 
   const cancelClose = useCallback(() => {
     if (closeTimer.current) {
@@ -1182,8 +1207,8 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
     }, 140);
   }, [cancelClose, closeNow]);
 
-  // Close on Escape while open.
-  useEscapeKey(() => setOpen(false), open);
+  // Close on Escape while open — a layer on the kit's Escape stack (Wave 2, DUP-1).
+  useDismissLayer(open, () => setOpen(false));
 
   useEffect(
     () => () => {
@@ -1213,6 +1238,7 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
           // reach it by focus, which the wrapper above already handles.
           // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- pointer-only hover bridge
           <div
+            ref={panelRef}
             dir={dir}
             style={{ position: "fixed", ...pos }}
             className="z-40 ps-1"
@@ -1222,9 +1248,9 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
             <div
               role="menu"
               aria-label={item.label}
-              className="animate-flyout min-w-52 overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg"
+              className="animate-flyout min-w-52 overflow-hidden rounded-md border border-subtle bg-surface shadow-lg"
             >
-              <div className="border-b border-[var(--border)] px-3 py-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              <div className="border-b border-subtle px-3 py-2 text-caption font-semibold uppercase tracking-wide text-muted">
                 {item.label}
               </div>
               <ul className="py-1">
@@ -1239,12 +1265,12 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
                         cn(
                           "flex items-center gap-2.5 px-3 py-2 text-sm",
                           isActive
-                            ? "bg-[var(--bg-active)] font-medium text-[var(--text-primary)]"
-                            : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+                            ? "bg-active font-medium text-primary"
+                            : "text-secondary hover:bg-hover",
                         )
                       }
                     >
-                      <sub.icon className="size-4 shrink-0 text-[var(--text-placeholder)]" />
+                      <sub.icon className="size-4 shrink-0 text-placeholder" />
                       <span className="min-w-0 break-words leading-snug">{sub.label}</span>
                     </NavLink>
                   </li>

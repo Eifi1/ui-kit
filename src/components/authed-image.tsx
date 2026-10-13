@@ -3,10 +3,11 @@ import type { ImgHTMLAttributes, ReactNode } from "react";
 import { ImageOff } from "lucide-react";
 
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { SKELETON_CLASS } from "./skeleton";
 import { useAuthedSrc } from "../hooks/use-authed-src";
 import type { AuthedFetcher, UseAuthedSrcResult } from "../hooks/use-authed-src";
+import { DEFAULT_AUTHED_IMAGE_LABELS } from "./authed-image-labels";
 
 /** The two states an image can be in besides "there". */
 export interface AuthedImageLabels {
@@ -18,11 +19,8 @@ export interface AuthedImageLabels {
   failedImage: (alt: string) => string;
 }
 
-export const DEFAULT_AUTHED_IMAGE_LABELS: AuthedImageLabels = {
-  loading: "Loading image…",
-  loadError: "Image couldn’t be loaded",
-  failedImage: (alt) => `${alt}: image couldn’t be loaded`,
-};
+// Defined in ./authed-image-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_AUTHED_IMAGE_LABELS };
 
 export interface AuthedImageProps
   extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt" | "children"> {
@@ -56,7 +54,7 @@ export interface AuthedImageProps
    * of also running the row's action. As TextLink's and IconButton's `stopPropagation`.
    */
   stopPropagation?: boolean;
-  labels?: Partial<AuthedImageLabels>;
+  labels?: LabelOverride<AuthedImageLabels>;
 }
 
 /**
@@ -197,7 +195,7 @@ export function ImageStates({
             // the one fact a reader needs about it.
             role="img"
             aria-label={alt ? labels.failedImage(alt) : labels.loadError}
-            className="flex h-full min-h-16 w-full flex-col items-center justify-center gap-1 bg-[var(--bg-hover)] p-2 text-center text-xs text-[var(--text-muted)]"
+            className="flex h-full min-h-16 w-full flex-col items-center justify-center gap-1 bg-hover p-2 text-center text-xs text-muted"
           >
             <ImageOff aria-hidden className="size-5 shrink-0" />
             <span aria-hidden className="line-clamp-2">{labels.loadError}</span>

@@ -1,13 +1,14 @@
 import { useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { FileText } from "lucide-react";
 
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { AuthedImage } from "./authed-image";
 import { Lightbox, imageItemKind } from "./lightbox";
 import type { ImageItem, LightboxLabels } from "./lightbox";
+import { DEFAULT_IMAGE_GRID_LABELS } from "./image-grid-labels";
 
 export interface ImageGridLabels {
   /** The list's accessible name. */
@@ -18,13 +19,10 @@ export interface ImageGridLabels {
   actions: (name: string) => string;
 }
 
-export const DEFAULT_IMAGE_GRID_LABELS: ImageGridLabels = {
-  list: "Images",
-  item: (index, count) => `Image ${index} of ${count}`,
-  actions: (name) => `Actions for ${name}`,
-};
+// Defined in ./image-grid-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_IMAGE_GRID_LABELS };
 
-export interface ImageGridProps extends Omit<ComponentPropsWithoutRef<"ul">, "children"> {
+export interface ImageGridProps extends Omit<ComponentPropsWithRef<"ul">, "children"> {
   items: readonly ImageItem[];
   /** The app's authenticated GET — thumbnails and the lightbox fetch through it. Only
    *  images are fetched for the grid; a file (PDF) tile shows its icon and name. */
@@ -59,9 +57,9 @@ export interface ImageGridProps extends Omit<ComponentPropsWithoutRef<"ul">, "ch
     zoom?: boolean;
     download?: boolean;
     onDownload?: (item: ImageItem, index: number) => void;
-    labels?: Partial<LightboxLabels>;
+    labels?: LabelOverride<LightboxLabels>;
   };
-  labels?: Partial<ImageGridLabels>;
+  labels?: LabelOverride<ImageGridLabels>;
 }
 
 const ASPECT_CLASS = {
@@ -138,14 +136,14 @@ export function ImageGrid({
                 aria-label={name}
                 onClick={() => (onOpen ? onOpen(i) : setOpenIndex(i))}
                 className={cn(
-                  "block w-full overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-hover)]",
-                  "focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]",
+                  "block w-full overflow-hidden rounded-md border border-subtle bg-hover",
+                  "focus-visible:outline-focus focus-visible:outline-offset-2 focus-visible:outline-brand",
                   ASPECT_CLASS[aspect],
                 )}
               >
                 {kind === "file" ? (
-                  <span className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-xs text-[var(--text-secondary)]">
-                    <FileText aria-hidden className="size-6 shrink-0 text-[var(--text-muted)]" />
+                  <span className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-xs text-secondary">
+                    <FileText aria-hidden className="size-6 shrink-0 text-muted" />
                     <FileNameLabel name={item.fileName ?? item.alt ?? ""} />
                   </span>
                 ) : (
@@ -176,7 +174,7 @@ export function ImageGrid({
                 </div>
               )}
               {item.caption !== undefined && item.caption !== null && item.caption !== false && (
-                <div className="mt-1 line-clamp-2 text-xs text-[var(--text-secondary)]">{item.caption}</div>
+                <div className="mt-1 line-clamp-2 text-xs text-secondary">{item.caption}</div>
               )}
             </li>
           );

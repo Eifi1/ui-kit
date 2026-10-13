@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Command, FileText, Layers, Moon, Palette, Plus, Receipt, Table2, User } from "lucide-react";
 import { Button, CommandPalette, GlobalSearch, Input, ToggleGroup, useCommandKey } from "@eifi1/ui-kit";
 import type { CommandItem, GlobalSearchSource, SearchEntry } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, READOUT } from "../lib/section";
 
 /**
  * COMMAND PALETTE — `CommandPalette` and `useCommandKey`.
@@ -17,7 +17,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
 
 // Live readouts share one class so a reader can tell "this is state" from "this is
 // chrome" at a glance.
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
 
 export function CommandPaletteDemo() {
   return (
@@ -300,11 +299,11 @@ function FailingPaletteDemo() {
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Open, then type anything
         </Button>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={down} onChange={(e) => setDown(e.target.checked)} />
           search backend down
         </label>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input
             type="checkbox"
             checked={customError}
@@ -356,7 +355,7 @@ function SubmitPaletteDemo() {
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Open the submit-mode palette
         </Button>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={fullScreen} onChange={(e) => setFullScreen(e.target.checked)} />
           <code className="font-mono">fullScreenOnPhone</code>
         </label>
@@ -422,11 +421,11 @@ function RedactPaletteDemo() {
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Open the redacting palette
         </Button>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={redact} onChange={(e) => setRedact(e.target.checked)} />
           <code className="font-mono">redactLabels</code>
         </label>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
           <span>
             demo mode (blur <code className="font-mono">[data-private]</code>)
@@ -593,10 +592,10 @@ function GlobalSearchDemo() {
           navigate={setWent}
           hrefFor={(href) => href}
           shortcut={false}
-          triggerClassName="border border-[var(--border)]"
+          triggerClassName="border border-subtle"
         />
-        <span className="text-xs text-[var(--text-secondary)]">← the trigger (tooltip names the shortcut)</span>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <span className="text-xs text-secondary">← the trigger (tooltip names the shortcut)</span>
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={fail} onChange={(e) => setFail(e.target.checked)} />
           the server is down
         </label>
@@ -732,18 +731,18 @@ function GlobalSearchGroupsDemo() {
             navigate={setWent}
             hrefFor={(href) => href}
             shortcut={false}
-            triggerClassName="border border-[var(--border)]"
+            triggerClassName="border border-subtle"
           />
         </span>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={keepGroups} onChange={(e) => setKeepGroups(e.target.checked)} />
           <code className="font-mono">suggestionsKeepGroups</code>
         </label>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={big} onChange={(e) => setBig(e.target.checked)} />
           <code className="font-mono">triggerIconSize={"{20}"}</code>
         </label>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={withShortcut} onChange={(e) => setWithShortcut(e.target.checked)} />
           <code className="font-mono">triggerName=&quot;withShortcut&quot;</code>
         </label>

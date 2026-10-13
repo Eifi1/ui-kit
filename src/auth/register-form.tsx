@@ -1,20 +1,22 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { KIT_LANGUAGES, resolveLanguage } from "../i18n/languages";
 import type { KitLanguageCode } from "../i18n/languages";
 import { cn } from "../lib/cn";
 import { AlertBanner } from "../components/alert-banner";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import { LanguageSelect } from "../components/language-select";
 import { LegalAcceptCheckbox } from "../components/legal-page";
 import { TextLink } from "../components/text-link";
-import { Button, Input } from "../components/ui";
-import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
+import { authErrorCode, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import { emailParts, taggedEmail } from "./email-tag";
 import { newPasswordProblem, personNameOk, PERSON_NAME_MAX_LENGTH } from "./form-rules";
 import { NewPasswordFields } from "./new-password-fields";
+import { DEFAULT_REGISTER_LABELS } from "./register-form-labels";
 
 /** What `RegisterForm` hands `onSubmit` — the core of `POST /auth/register` (§4.2). The
  *  app adds its own fields (kastlan's company, keksdose's currency) and the
@@ -78,32 +80,10 @@ export interface RegisterLabels {
   rateLimited?: (seconds?: number) => string;
 }
 
-/** `Required`: every key, the 0.30 one included, has its English here. */
-export const DEFAULT_REGISTER_LABELS: Required<RegisterLabels> = {
-  firstName: "First name",
-  lastName: "Last name",
-  email: "Email",
-  emailTagUse: (address) => `Use ${address}`,
-  emailTagHint:
-    "Many providers deliver name+tag@… to the same inbox, so mail from this app is easy to filter and trace. Check yours does before you rely on it: you would sign in with the tagged address.",
-  invitedEmailHint: "The address your invitation was sent to.",
-  invitedTagNote: "The tagged address gets a confirmation mail of its own.",
-  password: "Password",
-  confirmPassword: "Repeat password",
-  passwordMismatch: "The passwords don't match.",
-  language: "Language",
-  submit: "Create account",
-  haveAccount: "Already have an account?",
-  signIn: "Sign in",
-  emailTaken: "An account with this email address already exists.",
-  registrationClosed: "New accounts are by invitation only. Ask the operator to invite your email address.",
-  invitationInvalid: "This invitation link is not valid.",
-  invitationExpired: "This invitation has expired. Ask for a new one.",
-  failed: "Registration failed. Please try again.",
-  rateLimited: englishRateLimited,
-};
+// Defined in ./register-form-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_REGISTER_LABELS };
 
-export interface RegisterFormProps extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit" | "children"> {
+export interface RegisterFormProps extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children"> {
   /**
    * The form was submitted with everything filled in. Send it (`POST /auth/register`,
    * §4.2) and resolve once the user is signed in, or reject with the client's error:
@@ -127,7 +107,7 @@ export interface RegisterFormProps extends Omit<ComponentPropsWithoutRef<"div">,
    */
   invitedEmail?: string;
   /**
-   * 0.29.1: an address to start with that stays EDITABLE, with the `+tag` suggestion still
+   * 0.30.0: an address to start with that stays EDITABLE, with the `+tag` suggestion still
    * offered — for a link anyone can build (keksdose's token-free `/register?email=…`
    * beta link, kept while an app moves to invitations). Unlike `invitedEmail` it proves
    * nothing, so it locks nothing. `invitedEmail` wins when both are given.
@@ -176,7 +156,7 @@ export interface RegisterFormProps extends Omit<ComponentPropsWithoutRef<"div">,
    *  throttle with its wait), or `undefined` for the kit's. Asked first, for every
    *  failure; a bare `429` needs none since 0.30.0 — the kit says `rateLimited`. */
   describeError?: (error: unknown) => ReactNode | undefined;
-  labels?: Partial<RegisterLabels>;
+  labels?: LabelOverride<RegisterLabels>;
 }
 
 const ALL_CODES: readonly KitLanguageCode[] = KIT_LANGUAGES.map((language) => language.code);
@@ -320,13 +300,13 @@ export function RegisterForm({
         setBusy(null);
         const own = describeError?.(error);
         const code = authErrorCode(error);
-        if (code === "email_taken" && !hasMessage(own)) {
+        if (code === "email_taken" && !hasContent(own)) {
           setTaken(values.email);
           emailRef.current?.focus();
           return;
         }
         setFailure(
-          hasMessage(own)
+          hasContent(own)
             ? own
             : isRateLimited(error)
               ? (labels.rateLimited ?? DEFAULT_REGISTER_LABELS.rateLimited)(retryAfterSeconds(error))
@@ -386,7 +366,7 @@ export function RegisterForm({
           {/* The tag, offered rather than applied (§4.5): one click, the exact address
               on the button, reversible by typing — or, invited, by the button back. */}
           {suggestion && (
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
+            <p className="mt-1 text-xs text-muted">
               <Button
                 type="button"
                 variant="link"
@@ -402,7 +382,7 @@ export function RegisterForm({
             </p>
           )}
           {backToInvited !== null && (
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
+            <p className="mt-1 text-xs text-muted">
               <span>{labels.invitedTagNote}</span>{" "}
               <Button
                 type="button"
@@ -454,7 +434,7 @@ export function RegisterForm({
           disabled={working}
         />
 
-        {hasMessage(failure) && (
+        {hasContent(failure) && (
           <AlertBanner tone="danger" size="sm" role="alert">
             {failure}
           </AlertBanner>
@@ -465,7 +445,7 @@ export function RegisterForm({
         </Button>
       </form>
       {signInHref !== undefined && (
-        <p className="text-center text-sm text-[var(--text-secondary)]">
+        <p className="text-center text-sm text-secondary">
           {labels.haveAccount}{" "}
           <TextLink href={signInHref} tone="primary">
             {labels.signIn}

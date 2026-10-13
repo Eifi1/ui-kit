@@ -8,10 +8,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  FieldHint,
-  IconButton,
-  Select,
-} from "../ui";
+} from "../card";
+import { FieldHint } from "../field-parts";
+import { IconButton } from "../icon-button";
+import { Select } from "../select";
 import { StatTile, StatTileGrid } from "../stat-tile";
 
 /**
@@ -80,7 +80,7 @@ describe("CardDescription colour (P4)", () => {
   it("uses the muted text token, not a money one", () => {
     const { container } = render(<CardDescription>Help</CardDescription>);
     const cls = slot(container, "card-description").className;
-    expect(cls).toContain("text-[var(--text-muted)]");
+    expect(cls).toContain("text-muted");
     expect(cls).not.toContain("money");
   });
 });
@@ -123,7 +123,7 @@ describe("Card toneStrength (P9)", () => {
     );
     const card = container.firstElementChild as HTMLElement;
     expect(card.className).toContain("border-2");
-    expect(card.className).toContain("border-[var(--danger-border-strong)]");
+    expect(card.className).toContain("border-danger-strong");
     expect(card.className).toContain("p-[calc(1rem-1px)]");
     expect(card.className).not.toMatch(/\bp-4\b/);
     expect(card).toHaveAttribute("data-tone-strength", "strong");
@@ -132,7 +132,7 @@ describe("Card toneStrength (P9)", () => {
   it("is the soft 1px frame by default and does nothing on inset", () => {
     const { container, rerender } = render(<Card tone="danger">x</Card>);
     let card = container.firstElementChild as HTMLElement;
-    expect(card.className).toContain("border-[var(--danger-border)]");
+    expect(card).toHaveClass("border-danger");
     expect(card.className).not.toContain("border-2");
     rerender(
       <Card tone="danger" toneStrength="strong" variant="inset">
@@ -259,7 +259,7 @@ describe("StatTile variant (P9)", () => {
   it("drops the frame inset and plain", () => {
     const { container, rerender } = render(<StatTile label="Revenue" value={1} variant="inset" />);
     let tile = container.firstElementChild as HTMLElement;
-    expect(tile.className).toContain("bg-[var(--bg-surface-2)]");
+    expect(tile.className).toContain("bg-surface-2");
     expect(tile.className).not.toContain("shadow-sm");
     expect(tile.className).not.toMatch(/(^| )border( |$)/);
     rerender(<StatTile label="Revenue" value={1} variant="plain" />);

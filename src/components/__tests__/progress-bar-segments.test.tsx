@@ -6,7 +6,7 @@ describe("ProgressBar segments (keksdose cut-card:133)", () => {
   const PARTS = [
     { value: 0.4, label: "Rent", tone: "danger" as const },
     { value: 0.25, label: "Food" },
-    { value: 0.1, label: "Fun", className: "bg-[var(--brand)]" },
+    { value: 0.1, label: "Fun", className: "bg-brand" },
   ];
 
   it("is a meter whose value is the sum and whose valuetext names every part", () => {
@@ -21,10 +21,10 @@ describe("ProgressBar segments (keksdose cut-card:133)", () => {
     const segs = screen.getByRole("meter").querySelectorAll<HTMLElement>('[data-part="segment"]');
     expect(segs).toHaveLength(3);
     expect(segs[0]).toHaveStyle({ width: "40%" });
-    expect(segs[0].className).toContain("bg-[var(--danger)]");
+    expect(segs[0]).toHaveClass("bg-danger");
     // The first part WITHOUT a colour of its own: --chart-1, though it is second.
     expect(segs[1].className).toContain("bg-[var(--chart-1)]");
-    expect(segs[2].className).toContain("bg-[var(--brand)]");
+    expect(segs[2]).toHaveClass("bg-brand");
   });
 
   it("counts the chart-colour fallback among uncoloured parts only, in the bar and the legend", () => {
@@ -37,7 +37,7 @@ describe("ProgressBar segments (keksdose cut-card:133)", () => {
           { value: 0.1, label: "Tone", tone: "danger" },
           { value: 0.1, label: "A" },
           { value: 0.1, label: "Colour", color: "var(--text-muted)" },
-          { value: 0.1, label: "Class", className: "bg-[var(--brand)]" },
+          { value: 0.1, label: "Class", className: "bg-brand" },
           { value: 0.1, label: "B" },
         ]}
       />,

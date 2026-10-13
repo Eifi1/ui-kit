@@ -83,8 +83,8 @@ describe("Table", () => {
   it("zebra and hover tint body rows only", () => {
     render(<Ledger zebra hover />);
     const [headRow, bodyRow, , footRow] = screen.getAllByRole("row");
-    expect(bodyRow.className).toMatch(/even:bg-\[var\(--bg-surface-2\)\]/);
-    expect(bodyRow.className).toMatch(/hover:bg-\[var\(--bg-hover\)\]/);
+    expect(bodyRow).toHaveClass("even:bg-surface-2");
+    expect(bodyRow).toHaveClass("hover:bg-hover");
     expect(headRow.className).not.toMatch(/hover:/);
     expect(footRow.className).not.toMatch(/even:/);
   });
@@ -95,7 +95,7 @@ describe("Table", () => {
     const { unmount } = render(<Ledger zebra hover />);
     const bodyRow = screen.getAllByRole("row")[1];
     expect(bodyRow.className.split(" ")).toEqual(
-      expect.arrayContaining(["even:bg-[var(--bg-surface-2)]", "hover:bg-[var(--bg-hover)]", "even:hover:bg-surface"]),
+      expect.arrayContaining(["even:bg-surface-2", "hover:bg-hover", "even:hover:bg-surface"]),
     );
     unmount();
     // No zebra, no well to leave; no hover, nothing to tint.
@@ -164,7 +164,7 @@ describe("Table 0.10.0", () => {
     // Measured from the head row: three columns, counted, not hand-written.
     expect(cell).toHaveAttribute("colspan", "3");
     expect(cell.className).toContain("text-center");
-    expect(cell.className).toContain("text-[var(--text-muted)]");
+    expect(cell.className).toContain("text-muted");
   });
 
   it("shows the rows, not `empty`, once there are rows", () => {

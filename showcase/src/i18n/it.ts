@@ -118,7 +118,7 @@ export const it: Dictionary = {
       title: "Amministrazione utenti",
       short: "Utenti",
       blurb:
-        "Il lato amministrativo degli account: l’elenco utenti con ruoli e stati, le quattro azioni di amministrazione con la conferma richiesta dal server, il registro di audit, gli inviti, il passaggio del lavoro, e la colonna del piano e il cambio di piano da parte dell’operatore.",
+        "Il lato amministrativo degli account: l’elenco utenti con ruoli e stati, le quattro azioni di amministrazione con la conferma richiesta dal server, il registro di audit con le sue azioni di gruppo, gli inviti, il passaggio del lavoro, e la colonna del piano e il cambio di piano da parte dell’operatore.",
     },
     subscription: {
       title: "Abbonamento",
@@ -365,7 +365,7 @@ export const it: Dictionary = {
       title: "Grafico a serie",
       short: "Serie",
       blurb:
-        "Il grafico a serie con zoom condiviso dalle app: un asse per unità, una legenda di interruttori, un solo zoom per una pila di grafici e le funzioni sottostanti.",
+        "Il grafico a serie con zoom condiviso dalle app: un asse per unità, una legenda di interruttori, un solo zoom per una pila di grafici, un budget di righe per le tabelle lunghe e le funzioni sottostanti.",
     },
     "series-chart-marks": {
       title: "Grafico a serie: barre, aree e tempo",
@@ -533,7 +533,7 @@ export const it: Dictionary = {
       title: "Fatturazione",
       short: "Fatturazione",
       blurb:
-        "I piani e i loro limiti, la posizione dell’abbonamento con le date della prova e della beta, il blocco di sola lettura alla scadenza, e i webhook di Paddle e Lemon Squeezy: firme verificate, eventi normalizzati, un solo dispatch.",
+        "I piani e i loro limiti, la posizione dell’abbonamento con le date della prova e della beta, il blocco di sola lettura alla scadenza, e i webhook di Paddle: firme verificate, eventi normalizzati, un solo dispatch.",
     },
     "server-mail": {
       title: "Email",
@@ -551,7 +551,7 @@ export const it: Dictionary = {
       title: "Limiti, errori e CORS",
       short: "Limiti",
       blurb:
-        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, e CORS per qualche origine in più.",
+        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, CORS per qualche origine in più e il token dello scheduler sulle rotte dei job.",
     },
     "server-translation-review": {
       title: "Revisione delle traduzioni",
@@ -1230,7 +1230,7 @@ export const it: Dictionary = {
     "server-billing": [
       "controllare il limite del piano sul server",
       "verificare la firma di un webhook",
-      "gestire gli eventi di Paddle e Lemon Squeezy",
+      "gestire gli eventi di Paddle",
       "l’abbonamento è in regola",
       "date di fine della prova e della beta",
       "rifiutare le scritture quando l’abbonamento scade",

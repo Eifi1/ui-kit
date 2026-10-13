@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, MouseEvent, ReactNode, Ref } from "react";
 import { AlertTriangle, CheckCircle2, ChevronRight, Info, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
@@ -29,11 +29,11 @@ export type AlertSize = "sm" | "md";
  * at any offset. Callers compensate the extra pixel in their own padding so
  * switching tones never shifts the layout. */
 const TONE_FRAME: Record<AlertTone, string> = {
-  danger: "border-2 border-[var(--danger-border-strong)] bg-[var(--danger-bg)]",
-  warning: "border-2 border-[var(--warning-border)] bg-[var(--warning-bg)]",
-  info: "border-2 border-[var(--info-border)] bg-[var(--info-bg)]",
-  success: "border-2 border-[var(--success-border)] bg-[var(--success-bg)]",
-  neutral: "border border-[var(--border)]",
+  danger: "border-2 border-danger-strong bg-danger-soft",
+  warning: "border-2 border-warning bg-warning-soft",
+  info: "border-2 border-info bg-info-soft",
+  success: "border-2 border-success bg-success-soft",
+  neutral: "border border-subtle",
 };
 
 /** `elevated`: the same frame on an OPAQUE surface. The dark tone washes are
@@ -50,7 +50,7 @@ const TONE_ELEVATED: Record<AlertTone, string> = {
   success: "bg-[image:linear-gradient(var(--success-bg),var(--success-bg))]",
   neutral: "",
 };
-const ELEVATED = "bg-[var(--bg-surface)] shadow-lg";
+const ELEVATED = "bg-surface shadow-lg";
 
 /** The tone's border + surface on their own — for a caller that already has a box
  * with its own radius and padding (e.g. a Card). Remember to shave 1px off that
@@ -91,19 +91,19 @@ function stripFrameClass(tone: AlertTone, size: AlertSize): string {
 }
 
 const TONE_TEXT: Record<AlertTone, string> = {
-  danger: "text-[var(--danger)]",
-  warning: "text-[var(--warning)]",
-  info: "text-[var(--info)]",
-  success: "text-[var(--success)]",
-  neutral: "text-[var(--text-secondary)]",
+  danger: "text-danger",
+  warning: "text-warning",
+  info: "text-info",
+  success: "text-success",
+  neutral: "text-secondary",
 };
 
 const TONE_ICON: Record<AlertTone, string> = {
-  danger: "text-[var(--danger)]",
-  warning: "text-[var(--warning)]",
-  info: "text-[var(--info)]",
-  success: "text-[var(--success)]",
-  neutral: "text-[var(--text-muted)]",
+  danger: "text-danger",
+  warning: "text-warning",
+  info: "text-info",
+  success: "text-success",
+  neutral: "text-muted",
 };
 
 /** Which glyph a tone draws when the caller names none. The triangle belongs to the
@@ -196,6 +196,13 @@ interface AlertBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "on
    *  {@link UiKitProvider}, else "Dismiss". */
   dismissLabel?: string;
   children: ReactNode;
+  /**
+   * The banner's frame — where the rest of the props go (0.34, API-2, refactor audit
+   * 2026-10). Which element that is depends on the mode: the `<div>`; with `href` or
+   * `onClick` the `<a>` or `<button>` that IS the row; with an × or an `action` beside
+   * that row, the `<div>` holding the two. Hence `HTMLElement`.
+   */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -243,6 +250,7 @@ export function AlertBanner({
   className,
   children,
   role,
+  ref,
   ...rest
 }: AlertBannerProps) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { dismiss: dismissLabel });
@@ -299,7 +307,7 @@ export function AlertBanner({
         strip ? stripFrameClass(tone, size) : alertFrameClass(tone, size),
         elevated && cn(ELEVATED, TONE_ELEVATED[tone]),
       );
-  const focusRing = cn(FOCUS_RING, "focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]");
+  const focusRing = cn(FOCUS_RING, "focus-visible:ring-offset-1 focus-visible:ring-offset-surface");
 
   const content = (
     <>
@@ -358,11 +366,15 @@ export function AlertBanner({
   if (!interactive) {
     return (
       <div
+        // The tone as data (0.34, refactor audit 2026-10, TST-9): a stable hook for a
+        // test or a caller's selector, where the frame classes are the kit's to change.
+        data-tone={tone}
         // Arbitrary attributes first — a `data-tour` anchor, a test id, an
         // `aria-describedby` — then the layout and tone classes, which are merged
         // through `cn` rather than spread so a caller's `className` refines the box
         // instead of replacing it.
         {...rest}
+        ref={ref as Ref<HTMLDivElement>}
         role={resolvedRole}
         className={cn(row, frame, TONE_TEXT[tone], className)}
       >
@@ -385,18 +397,22 @@ export function AlertBanner({
         inlineRow || strip ? "items-center" : "items-start",
         "outline-none after:absolute after:inset-0 after:content-['']",
         strip ? "after:rounded-none" : "after:rounded-md",
-        "focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-[var(--brand)]",
+        "focus-visible:after:ring-focus focus-visible:after:ring-brand",
       )
     : cn(row, !inlineRow && "w-full", frame, TONE_TEXT[tone], hover, focusRing, className);
   // The div's attributes are the row element's: an `id`, a test id or an
   // `aria-describedby` belongs on the thing that takes focus. The live-region role is
   // NOT carried over — a button or a link that is also a `status` is neither.
   const actionRest = split ? {} : rest;
+  // The `ref` goes with the rest: to the row element when it is the frame.
+  const rowRef = split ? undefined : ref;
 
   const rowAction =
     href !== undefined ? (
       <a
+        data-tone={split ? undefined : tone}
         {...(actionRest as ComponentPropsWithoutRef<"a">)}
+        ref={rowRef as Ref<HTMLAnchorElement> | undefined}
         href={href}
         className={actionClass}
       >
@@ -404,7 +420,9 @@ export function AlertBanner({
       </a>
     ) : (
       <button
+        data-tone={split ? undefined : tone}
         {...(actionRest as ComponentPropsWithoutRef<"button">)}
+        ref={rowRef as Ref<HTMLButtonElement> | undefined}
         type="button"
         onClick={onClick}
         className={actionClass}
@@ -416,7 +434,9 @@ export function AlertBanner({
   if (!split) return rowAction;
   return (
     <div
+      data-tone={tone}
       {...rest}
+      ref={ref as Ref<HTMLDivElement>}
       role={resolvedRole}
       className={cn("relative", row, frame, TONE_TEXT[tone], hover, className)}
     >

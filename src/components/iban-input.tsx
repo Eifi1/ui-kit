@@ -1,11 +1,13 @@
-import { forwardRef, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { ChangeEvent, FocusEvent, ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { IBAN_LENGTHS, compactIban, formatIban, ibanProblem } from "../lib/iban";
 import type { IbanKind, IbanProblem } from "../lib/iban";
-import { assignRef, hasMessage } from "./choice-parts";
-import { Input, type InputProps } from "./ui";
+import { hasContent } from "../lib/presence";
+import { assignRef } from "./field-parts";
+import { Input, type InputProps } from "./input";
+import { DEFAULT_IBAN_INPUT_LABELS } from "./iban-input-labels";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -27,15 +29,8 @@ export interface IbanInputLabels {
   qrNotAllowed: string;
 }
 
-export const DEFAULT_IBAN_INPUT_LABELS: IbanInputLabels = {
-  format: "An IBAN starts with a two-letter country code and two check digits.",
-  country: (code) => `“${code}” is not the country code of an IBAN.`,
-  length: (actual, expected) =>
-    `An IBAN from this country has ${expected} characters — this one has ${actual}.`,
-  checksum: "The check digits don’t match — a character is probably mistyped.",
-  qrRequired: "This is a regular IBAN. A QR-bill needs the account’s QR-IBAN.",
-  qrNotAllowed: "This is a QR-IBAN, which only receives QR-bill payments. Enter the account’s regular IBAN.",
-};
+// Defined in ./iban-input-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_IBAN_INPUT_LABELS };
 
 /**
  * The `ibanInput` namespace: prop > `<UiKitProvider labels>` > English (0.22.0).
@@ -109,7 +104,7 @@ export interface IbanInputProps extends Omit<InputProps, "type" | "value" | "def
    *  {@link IbanKind} — and why the difference matters, {@link isQrIban}. */
   kind?: IbanKind;
   /** The messages, per field. See {@link IbanInputLabels}. */
-  labels?: Partial<IbanInputLabels>;
+  labels?: LabelOverride<IbanInputLabels>;
   /** The caller's own message, shown INSTEAD of the built-in one while it is set (a
    *  server's "this account is already on file"). `null`, `false` and `""` are no
    *  message, so `touched && errors.iban` can be passed as it is. */
@@ -146,10 +141,21 @@ export interface IbanInputProps extends Omit<InputProps, "type" | "value" | "def
  * an invalid IBAN checks {@link isValidIban} / {@link ibanProblem} itself — the field
  * shows the problem but does not own the submit.
  */
-export const IbanInput = forwardRef<HTMLInputElement, IbanInputProps>(function IbanInput(
-  { value, onValueChange, onChange, onFocus, onBlur, kind = "any", labels, error, inputClassName, ...rest },
+export function IbanInput({
+  // The `<input>` (InputProps'): a React 19 ref prop since 0.34 (MOD-4, refactor audit
+  // 2026-10), where this was `forwardRef`.
   ref,
-) {
+  value,
+  onValueChange,
+  onChange,
+  onFocus,
+  onBlur,
+  kind = "any",
+  labels,
+  error,
+  inputClassName,
+  ...rest
+}: IbanInputProps) {
   const text = useIbanInputLabels(labels);
   const compact = compactIban(value);
   const shown = formatIban(compact);
@@ -222,10 +228,9 @@ export const IbanInput = forwardRef<HTMLInputElement, IbanInputProps>(function I
       // ALWAYS passed, even while there is no message: a field that takes `error`
       // keeps its box, so the message coming and going under the caret never remounts
       // the input (see Input's FieldGroup) — this one comes and goes as you type.
-      error={hasMessage(error) ? error : problem ? messageFor(problem, compact, text) : undefined}
+      error={hasContent(error) ? error : problem ? messageFor(problem, compact, text) : undefined}
       // Groups of four line up only when every digit is the same width.
       inputClassName={cn("tabular-nums", inputClassName)}
     />
   );
-});
-IbanInput.displayName = "IbanInput";
+}

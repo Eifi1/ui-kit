@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../lib/cn";
 import { useAnnounce } from "../hooks/use-announce";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { DEFAULT_PASSWORD_STRENGTH_LABELS } from "./password-strength-labels";
 
 /**
  * The bar, the word and the advisory checklist under a field where someone is
@@ -117,23 +118,8 @@ export interface PasswordStrengthLabels {
   tooLong: (maxBytes: number) => string;
 }
 
-export const DEFAULT_PASSWORD_STRENGTH_LABELS: PasswordStrengthLabels = {
-  tooShort: "Too short",
-  weak: "Weak",
-  fair: "Fair",
-  good: "Good",
-  strong: "Strong",
-  announcement: (level) => `Password strength: ${level}`,
-  ruleLength: (minLength) => `At least ${minLength} characters`,
-  ruleCase: "Upper and lower case",
-  ruleDigit: "A number",
-  ruleSymbol: "A symbol",
-  optional: (rule) => `${rule} (optional)`,
-  met: "Met:",
-  notMet: "Not met:",
-  tooLong: (maxBytes) =>
-    `At most ${maxBytes} characters (accents and emoji count for more than one).`,
-};
+// Defined in ./password-strength-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_PASSWORD_STRENGTH_LABELS };
 
 const LEVEL_KEYS = ["tooShort", "weak", "fair", "good", "strong"] as const;
 
@@ -144,13 +130,13 @@ const LEVEL_KEYS = ["tooShort", "weak", "fair", "good", "strong"] as const;
 // segment count. Index 0 is never drawn — a too-short secret fills no segment.
 const FILL: Record<PasswordStrengthScore, string> = {
   0: "",
-  1: "bg-[var(--danger)]",
-  2: "bg-[var(--warning)]",
+  1: "bg-danger",
+  2: "bg-warning",
   3: "bg-[color-mix(in_oklab,var(--success)_60%,var(--warning))]",
-  4: "bg-[var(--success)]",
+  4: "bg-success",
 };
 
-export interface PasswordStrengthMeterProps extends ComponentPropsWithoutRef<"div"> {
+export interface PasswordStrengthMeterProps extends ComponentPropsWithRef<"div"> {
   /** The secret being chosen. Nothing visible renders while it is empty. */
   value: string;
   /** Replace the built-in scorer (e.g. with zxcvbn's `score`). Must be pure. */
@@ -167,7 +153,7 @@ export interface PasswordStrengthMeterProps extends ComponentPropsWithoutRef<"di
    */
   maxBytes?: number;
   /** User-facing strings; see {@link PasswordStrengthLabels}. */
-  labels?: Partial<PasswordStrengthLabels>;
+  labels?: LabelOverride<PasswordStrengthLabels>;
 }
 
 /**
@@ -229,7 +215,7 @@ export function PasswordStrengthMeter({
                 />
               ))}
             </div>
-            <p className="min-w-[4.5rem] text-end text-xs text-[var(--text-secondary)]">{level}</p>
+            <p className="min-w-[4.5rem] text-end text-xs text-secondary">{level}</p>
           </div>
           {showRequirements && (
             <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
@@ -239,7 +225,7 @@ export function PasswordStrengthMeter({
                   // `relative`: the sr-only state needs a local containing block.
                   className={cn(
                     "relative",
-                    r.met ? "text-[var(--success)]" : "text-[var(--text-muted)]",
+                    r.met ? "text-success" : "text-muted",
                   )}
                   data-met={r.met}
                 >
@@ -250,7 +236,7 @@ export function PasswordStrengthMeter({
               ))}
             </ul>
           )}
-          {tooLong && <p className="text-xs text-[var(--danger)]">{labels.tooLong(maxBytes)}</p>}
+          {tooLong && <p className="text-xs text-danger">{labels.tooLong(maxBytes)}</p>}
         </>
       )}
     </div>

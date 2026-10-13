@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { Tabs } from "../ui";
+import { Tabs } from "../tabs";
 
 /**
  * Keksdose live #262, round 3: *"I would rather keep the tabs but have multirow tabs
@@ -31,7 +31,6 @@ const TABS = [
 
 const LINKED = TABS.map((t) => ({ ...t, href: `/x/${t.id}` }));
 
-const classes = (el: Element) => el.className.split(/\s+/);
 const list = () => screen.getByRole("tablist");
 
 describe("Tabs", () => {
@@ -39,19 +38,15 @@ describe("Tabs", () => {
     it("stays the single-row underline strip, character for character", () => {
       render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} />);
       // The scroller and its bottom rule.
-      expect(classes(list())).toEqual(
-        "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-[var(--border)]".split(
-          " ",
-        ),
-      );
+      expect(list()).toHaveAttribute("class", "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-subtle");
       // The active marker is the underline riding that rule, not a fill.
       const active = screen.getByRole("tab", { name: "Two" });
-      expect(classes(active)).toContain("border-b-2");
-      expect(classes(active)).toContain("-mb-px");
-      expect(classes(active)).toContain("border-[var(--text-primary)]");
-      expect(active.className).not.toContain("bg-[var(--brand)]");
+      expect(active).toHaveClass("border-b-2");
+      expect(active).toHaveClass("-mb-px");
+      expect(active).toHaveClass("border-[var(--text-primary)]");
+      expect(active).not.toHaveClass("bg-brand");
       // …and nothing wraps.
-      expect(classes(list())).not.toContain("flex-wrap");
+      expect(list()).not.toHaveClass("flex-wrap");
     });
 
     it("names the tablist only when asked to", () => {
@@ -63,57 +58,57 @@ describe("Tabs", () => {
   describe("with `wrap`", () => {
     it("wraps the strip instead of scrolling it, and puts the row back at md", () => {
       render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} wrap />);
-      const cls = classes(list());
+      const el = list();
       // The point of the row: every tab is laid out, none is pushed out of frame.
-      expect(cls).toContain("flex-wrap");
+      expect(el).toHaveClass("flex-wrap");
       // Not a scroller. Asserted as a TOKEN, because `md:overflow-x-auto` contains
       // the substring and a `toContain` on the raw string would pass either way.
-      expect(cls).not.toContain("overflow-x-auto");
-      expect(cls).not.toContain("border-b");
+      expect(el).not.toHaveClass("overflow-x-auto");
+      expect(el).not.toHaveClass("border-b");
       // …and from 768px up it is the default strip again, rule and all.
-      expect(cls).toContain("md:flex-nowrap");
-      expect(cls).toContain("md:overflow-x-auto");
-      expect(cls).toContain("md:border-b");
-      expect(cls).toContain("md:border-[var(--border)]");
+      expect(el).toHaveClass("md:flex-nowrap");
+      expect(el).toHaveClass("md:overflow-x-auto");
+      expect(el).toHaveClass("md:border-b");
+      expect(el).toHaveClass("md:border-subtle");
     });
 
     it("marks the active tab with a filled brand chip, not a floating underline", () => {
       render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} wrap />);
-      const active = classes(screen.getByRole("tab", { name: "Two" }));
+      const active = screen.getByRole("tab", { name: "Two" });
       // Theme- and palette-proof: the store writes `--brand` and `--brand-contrast`
       // together for every preset, so this pair cannot end up unreadable.
-      expect(active).toContain("bg-[var(--brand)]");
-      expect(active).toContain("text-[var(--brand-contrast)]");
+      expect(active).toHaveClass("bg-brand");
+      expect(active).toHaveClass("text-brand-contrast");
       // An underline attached to the container's bottom rule would mark only the
       // LAST row, and `-mb-px` would pull every other chip into the row beneath it.
-      expect(active).not.toContain("border-b-2");
-      expect(active).not.toContain("-mb-px");
+      expect(active).not.toHaveClass("border-b-2");
+      expect(active).not.toHaveClass("-mb-px");
       // Above the breakpoint the underline is exactly the default one again.
-      expect(active).toContain("md:border-b-2");
-      expect(active).toContain("md:-mb-px");
-      expect(active).toContain("md:border-[var(--text-primary)]");
-      expect(active).toContain("md:bg-transparent");
+      expect(active).toHaveClass("md:border-b-2");
+      expect(active).toHaveClass("md:-mb-px");
+      expect(active).toHaveClass("md:border-[var(--text-primary)]");
+      expect(active).toHaveClass("md:bg-transparent");
     });
 
     it("keeps every inactive tab readable, on the raised surface", () => {
       render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} wrap />);
-      const idle = classes(screen.getByRole("tab", { name: "Three" }));
-      expect(idle).toContain("bg-[var(--bg-surface)]");
-      expect(idle).toContain("text-[var(--text-primary)]");
-      expect(idle).not.toContain("bg-[var(--brand)]");
+      const idle = screen.getByRole("tab", { name: "Three" });
+      expect(idle).toHaveClass("bg-surface");
+      expect(idle).toHaveClass("text-primary");
+      expect(idle).not.toHaveClass("bg-brand");
       // Ten labels have to fit three rows on a 406px phone: 32px chips (py-2 on
       // text-xs), the desktop sizing restored at md.
-      expect(idle).toContain("text-xs");
-      expect(idle).toContain("px-2.5");
-      expect(idle).toContain("py-2");
-      expect(idle).toContain("rounded-md");
-      expect(idle).toContain("md:text-sm");
-      expect(idle).toContain("md:px-3");
-      expect(idle).toContain("md:rounded-none");
+      expect(idle).toHaveClass("text-xs");
+      expect(idle).toHaveClass("px-2.5");
+      expect(idle).toHaveClass("py-2");
+      expect(idle).toHaveClass("rounded-md");
+      expect(idle).toHaveClass("md:text-sm");
+      expect(idle).toHaveClass("md:px-3");
+      expect(idle).toHaveClass("md:rounded-none");
     });
 
     it("gives the tablist an accessible name and keeps the roles", () => {
-      render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} wrap label="Report" />);
+      render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} wrap aria-label="Report" />);
       expect(screen.getByRole("tablist", { name: "Report" })).toBeInTheDocument();
       expect(screen.getAllByRole("tab")).toHaveLength(3);
       expect(screen.getByRole("tab", { name: "One" })).toHaveAttribute("aria-selected", "true");
@@ -163,7 +158,7 @@ describe("Tabs", () => {
 
     it("walks the strip with the arrow keys, wrapping at both ends", () => {
       const onChange = vi.fn();
-      render(<Tabs tabs={LINKED} active="one" onChange={onChange} wrap label="Report" />);
+      render(<Tabs tabs={LINKED} active="one" onChange={onChange} wrap aria-label="Report" />);
       const [one, two, three] = screen.getAllByRole("tab");
       one.focus();
       arrow("ArrowRight");

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { ContextType } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import {
   ArrowLeftRight,
@@ -32,6 +31,8 @@ import {
   TopBar,
   TopBarActionMenu,
   cn,
+  Chip,
+  UserAvatar,
 } from "@eifi1/ui-kit";
 import type {
   AppShellNavItem,
@@ -47,7 +48,7 @@ import {
   ToggleGroup,
   useScrollSpy,
 } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
+import { ConstList, Example, Note, OutTable, Row, NO_ROUTER, code, READOUT } from "../lib/section";
 import { usePalette, useTheme } from "../stores";
 
 /**
@@ -114,11 +115,11 @@ const NAV_REFERENCE: AppShellNavItem[] = [
 // Anything this page draws for itself is painted in tokens — a control panel in
 // `slate-*` would keep looking right while the palette switch beside it did nothing.
 const MINI_BUTTON =
-  "rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-2 py-1 text-xs text-[var(--text-primary)] hover:border-[var(--brand)]";
+  "rounded-md border border-subtle bg-surface-2 px-2 py-1 text-xs text-primary hover:border-brand";
 
-const READOUT = "font-mono text-xs text-[var(--text-primary)]";
+const READOUT_STRONG = "font-mono text-xs text-primary";
 
-const PROSE = "font-sans font-normal text-[var(--text-secondary)]";
+const PROSE = "font-sans font-normal text-secondary";
 
 export function ShellSection() {
   return (
@@ -172,7 +173,7 @@ export function ShellSection() {
           <Row>
             <TopBarActionMenu
               icon={<Compass className="size-5" />}
-              ariaLabel="Guided tours"
+              aria-label="Guided tours"
               heading="Tours"
               href="/shell"
               entries={[
@@ -272,9 +273,10 @@ function TopBarSpecimen() {
         className="static"
         brand={
           <>
-            <Wallet className="size-5 shrink-0 text-[var(--brand)]" aria-hidden />
-            <span className="truncate font-semibold text-[var(--text-primary)]">Acme Books</span>
-            <span className="hidden truncate text-xs text-[var(--text-muted)] sm:inline">
+            <Wallet className="size-5 shrink-0 text-brand" aria-hidden />
+            {/* Wraps from Large up rather than reading "Acme Bo…" (text size §10.17). */}
+            <span className="truncate-until-large font-semibold text-primary">Acme Books</span>
+            <span className="hidden truncate text-xs text-muted sm:inline">
               / Q3 2026
             </span>
           </>
@@ -289,7 +291,7 @@ function TopBarSpecimen() {
             >
               <Bell className="size-5" />
               {unread > 0 && (
-                <span className="absolute end-1 top-1 min-w-4 rounded-full bg-[var(--brand)] px-1 text-micro font-semibold leading-4 text-[var(--brand-contrast)]">
+                <span className="absolute end-1 top-1 min-w-4 rounded-full bg-brand px-1 text-micro font-semibold leading-4 text-brand-contrast">
                   {unread}
                 </span>
               )}
@@ -297,14 +299,14 @@ function TopBarSpecimen() {
             <ThemeToggle
               mode={mode}
               onToggle={toggle}
-              ariaLabel="Toggle theme"
+              aria-label="Toggle theme"
               title={mode === "dark" ? "Dark" : "Light"}
             />
           </>
         }
       />
       <div className="space-y-2 px-4 py-3">
-        <p className="text-xs text-[var(--text-secondary)]">
+        <p className="text-xs text-secondary">
           The bell is app-owned markup wearing{" "}
           <code className="font-mono">TOPBAR_TRIGGER_CLASS</code>; the sun/moon is the kit's{" "}
           <code className="font-mono">ThemeToggle</code>. Same box, same hover, same rhythm.
@@ -337,7 +339,7 @@ function ThemeAndPalette() {
         <ThemeToggle
           mode={mode}
           onToggle={toggle}
-          ariaLabel="Toggle theme (specimen)"
+          aria-label="Toggle theme (specimen)"
           title={mode === "dark" ? "Dark" : "Light"}
         />
         <PaletteMenu
@@ -345,7 +347,7 @@ function ThemeAndPalette() {
           activeId={paletteId}
           mode={mode}
           onSelect={setPaletteId}
-          ariaLabel="Appearance preset (specimen)"
+          aria-label="Appearance preset (specimen)"
           heading="Palette"
         />
         {/* `toggle` only ever produces an explicit light or dark, so nothing in the
@@ -356,7 +358,7 @@ function ThemeAndPalette() {
           Follow the system
         </button>
       </Row>
-      <p className={READOUT}>
+      <p className={READOUT_STRONG}>
         mode: {mode} · preference: {preference} · palette: {paletteId} ({activeName})
       </p>
       <Note>
@@ -371,10 +373,8 @@ function ThemeAndPalette() {
         <code className="font-mono">PaletteMenu</code> indexes each preset by{" "}
         <code className="font-mono">mode</code> to draw its swatches, so the menu's own colours
         change when you flip the theme.{" "}
-        <code className="font-mono">PALETTES</code> is {PALETTES.length} presets;{" "}
-        <code className="font-mono">ALTERNATIVE_PRESETS</code> is exported separately and is not
-        in it, so passing <code className="font-mono">PALETTES</code> is a choice about which
-        presets an app offers, not the whole catalogue.
+        <code className="font-mono">PALETTES</code> is {PALETTES.length} presets, and passing it
+        is a choice about which presets an app offers: a list of its own works the same.
       </Note>
     </div>
   );
@@ -394,14 +394,14 @@ function Languages() {
           options={LANGUAGES}
           current={lang}
           onChange={setLang}
-          ariaLabel="Language"
+          aria-label="Language"
           heading={withHeading ? "Language" : undefined}
         />
         <Switch label="heading" checked={withHeading} onCheckedChange={setWithHeading} />
         <button type="button" className={MINI_BUTTON} onClick={() => setLang(undefined)}>
           Clear the selection
         </button>
-        <span className={READOUT}>current: {lang ?? "undefined"}</span>
+        <span className={READOUT_STRONG}>current: {lang ?? "undefined"}</span>
       </Row>
       <Note>
         The flags are <code className="font-mono">flag-icons</code> spans (
@@ -433,14 +433,14 @@ function Environments() {
       <Row>
         <OptionSwitcherMenu<Env>
           icon={<Server className="size-5" />}
-          ariaLabel="Environment"
+          aria-label="Environment"
           title={`Environment: ${env}`}
           heading="Environment"
           options={ENVIRONMENTS}
           value={env}
           onSelect={setEnv}
         />
-        <span className={READOUT}>value: {env}</span>
+        <span className={READOUT_STRONG}>value: {env}</span>
       </Row>
       <Note>
         Generic in the option type, so <code className="font-mono">onSelect</code> hands back the
@@ -461,7 +461,7 @@ function Roles() {
     <div className="space-y-3">
       <Row>
         <RoleSwitcher roles={ROLES} value={role} onChange={setRole} heading="Act as" />
-        <span className={READOUT}>value: {role}</span>
+        <span className={READOUT_STRONG}>value: {role}</span>
       </Row>
       <Note>
         A thin wrapper: the flask icon, and a default{" "}
@@ -491,7 +491,7 @@ function ActionMenu() {
       key: "support",
       icon: <LifeBuoy className="size-4" />,
       label: "Contact support",
-      trailing: <span className="text-micro text-[var(--text-muted)]">24h</span>,
+      trailing: <span className="text-micro text-muted">24h</span>,
       onSelect: () => setChosen("Contact support"),
     },
     { kind: "divider", key: "sep" },
@@ -516,12 +516,12 @@ function ActionMenu() {
       <Row>
         <TopBarActionMenu
           icon={<LifeBuoy className="size-5" />}
-          ariaLabel="Help and feedback"
+          aria-label="Help and feedback"
           heading="Help"
           entries={entries}
           panelClassName="w-64"
         />
-        <span className={READOUT}>last chosen: {chosen}</span>
+        <span className={READOUT_STRONG}>last chosen: {chosen}</span>
       </Row>
       <Note>
         The <code className="font-mono">link</code> row renders a react-router{" "}
@@ -543,13 +543,13 @@ function ActionMenu() {
 function NavItemReference() {
   return (
     <div className="space-y-3">
-      <ul className="divide-y divide-[var(--border)]">
+      <ul className="divide-y divide-subtle">
         {NAV_REFERENCE.map((item) => (
           <li key={item.to} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
-            <item.icon className="size-4 shrink-0 text-[var(--text-muted)]" aria-hidden />
-            <span className="text-sm text-[var(--text-primary)]">{item.label}</span>
-            <span className="font-mono text-caption text-[var(--text-muted)]">{item.to}</span>
-            <span className="ms-auto flex flex-wrap items-center gap-2 text-caption text-[var(--text-secondary)]">
+            <item.icon className="size-4 shrink-0 text-muted" aria-hidden />
+            <span className="text-sm text-primary">{item.label}</span>
+            <span className="font-mono text-caption text-muted">{item.to}</span>
+            <span className="ms-auto flex flex-wrap items-center gap-2 text-caption text-secondary">
               <span>
                 bar: <span className="font-mono">{item.shortLabel ?? item.label}</span>
               </span>
@@ -601,7 +601,7 @@ function AppShellNotes() {
         >
           Read --app-nav-h
         </button>
-        <span className={READOUT}>{navHeight ?? "press to read"}</span>
+        <span className={READOUT_STRONG}>{navHeight ?? "press to read"}</span>
       </Row>
       <Note>
         <code className="font-mono">--app-nav-h</code> is the mobile bar's MEASURED height,
@@ -690,9 +690,6 @@ const DEMO_FOOTER_ITEMS: AppShellSidebarFooterItem[] = [
   },
 ];
 
-/** `null` is what a `LocationContext` holds outside any router. See the playground. */
-const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
-
 /**
  * A second `AppShell`, in a box.
  *
@@ -724,9 +721,9 @@ function AppShellPlayground() {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <span className="text-xs text-[var(--text-muted)]">subNav</span>
+          <span className="text-xs text-muted">subNav</span>
           <ToggleGroup<"flyout" | "inline">
-            ariaLabel="subNav"
+            aria-label="subNav"
             value={subNav}
             onChange={setSubNav}
             options={[
@@ -781,7 +778,7 @@ function AppShellPlayground() {
 
       {/* A plain box with a height: no transform, no class overrides reaching into the
           shell. The nested shell fills it and docks its phone bar on it by itself. */}
-      <div className="h-[26rem] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)]">
+      <div className="h-[26rem] overflow-hidden rounded-md border border-subtle bg-page">
         <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
           <MemoryRouter initialEntries={["/books/ledger"]}>
             <AppShell
@@ -803,8 +800,8 @@ function AppShellPlayground() {
                 <TopBar
                   brand={
                     <>
-                      <Wallet className="size-5 shrink-0 text-[var(--brand)]" aria-hidden />
-                      <span className="truncate font-semibold text-[var(--text-primary)]">
+                      <Wallet className="size-5 shrink-0 text-brand" aria-hidden />
+                      <span className="truncate-until-large font-semibold text-primary">
                         Acme Books
                       </span>
                     </>
@@ -813,7 +810,7 @@ function AppShellPlayground() {
               }
               footer={
                 withFooter ? (
-                  <footer className="border-t border-[var(--border)] px-4 py-2 text-xs text-[var(--text-muted)]">
+                  <footer className="border-t border-subtle px-4 py-2 text-xs text-muted">
                     footer — v2.4.1 · © Acme
                   </footer>
                 ) : undefined
@@ -822,7 +819,7 @@ function AppShellPlayground() {
               sidebarFooter={
                 withSidebarFooter
                   ? (collapsed) => (
-                      <div className="border-t border-[var(--border)] px-3 py-2 text-caption text-[var(--text-muted)]">
+                      <div className="border-t border-subtle px-3 py-2 text-caption text-muted">
                         {collapsed ? "v2" : "sidebarFooter(collapsed=false) · v2.4.1"}
                       </div>
                     )
@@ -847,7 +844,7 @@ function AppShellPlayground() {
         >
           Read --app-nav-h on both
         </button>
-        <span className={READOUT}>{navVars ?? "press to read"}</span>
+        <span className={READOUT_STRONG}>{navVars ?? "press to read"}</span>
       </Row>
       <Note>
         Narrow the window below 768px and read again: the box&apos;s own bar is measured onto{" "}
@@ -884,11 +881,11 @@ function DemoShellPage() {
   const { pathname } = useLocation();
   return (
     <div className="space-y-2 p-4">
-      <p className="text-sm text-[var(--text-primary)]">
+      <p className="text-sm text-primary">
         children — the current route is{" "}
-        <code className="font-mono text-[var(--brand)]">{pathname}</code>
+        <code className="font-mono text-brand">{pathname}</code>
       </p>
-      <p className="text-xs text-[var(--text-secondary)]">
+      <p className="text-xs text-secondary">
         A real app renders its <code className="font-mono">&lt;Outlet /&gt;</code> here. The
         group holding this page stays marked in the sidebar while one of its pages is open.
       </p>
@@ -949,7 +946,7 @@ function PageContentsExample() {
     >
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <ToggleGroup<"start" | "end">
-          ariaLabel="position"
+          aria-label="position"
           value={position}
           onChange={setPosition}
           options={[
@@ -958,7 +955,7 @@ function PageContentsExample() {
           ]}
         />
         <ToggleGroup<"rail" | "disclosure">
-          ariaLabel="variant"
+          aria-label="variant"
           value={variant}
           onChange={setVariant}
           options={[
@@ -966,7 +963,7 @@ function PageContentsExample() {
             { value: "disclosure", label: 'variant="disclosure"' },
           ]}
         />
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           line
           <input
             type="range"
@@ -983,42 +980,103 @@ function PageContentsExample() {
           disclosure is not a rail, so it goes above the page instead. */}
       <PageContentsLayout
         position={position}
-        className="rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-page)] p-4 [&_aside]:block"
+        className="rounded-md border border-dashed border-subtle bg-page p-4 [&_aside]:block"
         contents={variant === "rail" ? contents : null}
       >
         {variant === "disclosure" && <div className="mb-3">{contents}</div>}
         <div
           ref={setBox}
-          className="relative h-48 overflow-y-auto rounded border border-[var(--border)] px-3"
+          className="relative h-48 overflow-y-auto rounded border border-subtle px-3"
         >
           {/* The reading line, drawn where the spy puts it. */}
           <div
             aria-hidden
-            className="pointer-events-none sticky z-10 h-0 border-t border-dashed border-[var(--brand)]"
+            className="pointer-events-none sticky z-10 h-0 border-t border-dashed border-brand"
             style={{ top: `${line * 12}rem` }}
           />
           {CONTENTS_SAMPLE.map((item) => (
             <section key={item.id} className="py-3">
-              <h4 id={item.id} className="text-sm font-medium text-[var(--text-primary)]">
+              <h4 id={item.id} className="text-sm font-medium text-primary">
                 {item.label}
               </h4>
-              <p className="mt-1 h-24 text-xs text-[var(--text-muted)]">
+              <p className="mt-1 h-24 text-xs text-muted">
                 Scroll this box: the entry whose heading last crossed the dashed line is marked.
               </p>
             </section>
           ))}
         </div>
       </PageContentsLayout>
-      <p className="mt-3 font-mono text-xs text-[var(--text-secondary)]">
+      <p className="mt-3 font-mono text-xs text-secondary">
         useScrollSpy(ids, {"{"} root: box, line: {line.toFixed(2)} {"}"}) → {JSON.stringify(activeId)}
       </p>
-      <p className="mt-2 text-xs text-[var(--text-secondary)]">
+      <p className="mt-2 text-xs text-secondary">
         Below <code className="font-mono">xl</code> the page&apos;s rail has no room; the same
         entries go in <code className="font-mono">{'<PageContents variant="disclosure">'}</code>{" "}
         under the title, as on this page at a narrower window.{" "}
         <code className="font-mono">labels.title</code> overrides the provider&apos;s{" "}
         <code className="font-mono">pageContents.title</code> for one instance.
       </p>
+    </Example>
+  );
+}
+
+/* ── since 0.13 ─────────────────────────────────────────────────────────── */
+
+/**
+ * The 0.13 follow-ups from keksdose: a header link that can close the account menu
+ * (F7), and a support composer that canned-reply chips can write into, with a hint of
+ * the caller's own (F9).
+ */
+
+/** keksdose F7: the admin role chip in the account header links to the admin area. */
+export function AccountHeaderLinkDemo() {
+  const [log, setLog] = useState("—");
+  return (
+    <Example
+      label="TopBarActionMenu — a link in the header that closes the menu"
+      hint="header.extra takes (close) => ReactNode, like footer"
+    >
+      <div className="flex justify-end rounded-md border border-subtle bg-surface-2 p-2">
+        <TopBarActionMenu
+          aria-label="Account menu"
+          triggerClassName="rounded-full"
+          trigger={() => <UserAvatar name="Marcel Eifert" email="marcel@example.com" />}
+          header={{
+            title: "Marcel Eifert",
+            subtitle: "marcel@example.com",
+            extra: (close) => (
+              <Chip
+                size="xs"
+                tone="info"
+                href="/shell"
+                renderLink={({ href, children, ...p }) => (
+                  <a {...p} href={`#${href}`}>
+                    {children}
+                  </a>
+                )}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setLog("admin chip → menu closed");
+                  close();
+                }}
+              >
+                Admin
+              </Chip>
+            ),
+          }}
+          entries={[{ key: "logout", label: "Log out", tone: "danger", onSelect: () => setLog("log out") }]}
+          panelClassName="w-64"
+        />
+      </div>
+      <Row className="mt-2">
+        <span className={READOUT}>{log}</span>
+      </Row>
+      <Note>
+        A router link does not unmount the menu, so a header link that is handed nothing
+        leaves the panel open over the page it navigated to. The plain {code("ReactNode")}{" "}
+        form still works for a chip that is only a label.
+      </Note>
+      <Note>Since 0.13.</Note>
     </Example>
   );
 }

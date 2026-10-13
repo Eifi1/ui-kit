@@ -1,10 +1,19 @@
-import { useMemo, useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { Check } from "lucide-react";
-import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./ui";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
+import { useCallback, useId } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
+import { FieldChevron, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./field-base";
+import { FieldLabel } from "./field-parts";
+import { assignRef, EndHintRow, useFieldMessages } from "./field-parts";
 import { cn } from "../lib/cn";
-import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "./dropdown";
+import { useComboboxCore } from "./combobox-core";
+import {
+  CURRENCIES,
+  CurrencyFlag,
+  CurrencyOptionList,
+  currencyName,
+  getCurrency,
+  type CurrencyFlagProps,
+  type CurrencyOption,
+} from "./currency-option-list";
 import {
   DEFAULT_COMMON_LABELS,
   DEFAULT_CURRENCY_LABELS,
@@ -12,93 +21,11 @@ import {
   useKitLocale,
 } from "../i18n/kit-labels";
 
-export interface CurrencyOption {
-  code: string;
-  name: string;
-  symbol: string;
-  /** ISO 3166-1 alpha-2 country code (lowercase) used by flag-icons. */
-  country: string;
-}
-
-export const CURRENCIES: CurrencyOption[] = [
-  { code: "EUR", name: "Euro", symbol: "€", country: "eu" },
-  { code: "USD", name: "US Dollar", symbol: "$", country: "us" },
-  { code: "GBP", name: "British Pound", symbol: "£", country: "gb" },
-  { code: "CHF", name: "Swiss Franc", symbol: "CHF", country: "ch" },
-  { code: "JPY", name: "Japanese Yen", symbol: "¥", country: "jp" },
-  { code: "CAD", name: "Canadian Dollar", symbol: "CA$", country: "ca" },
-  { code: "AUD", name: "Australian Dollar", symbol: "A$", country: "au" },
-  { code: "NZD", name: "New Zealand Dollar", symbol: "NZ$", country: "nz" },
-  { code: "SEK", name: "Swedish Krona", symbol: "kr", country: "se" },
-  { code: "NOK", name: "Norwegian Krone", symbol: "kr", country: "no" },
-  { code: "DKK", name: "Danish Krone", symbol: "kr", country: "dk" },
-  { code: "PLN", name: "Polish Zloty", symbol: "zł", country: "pl" },
-  { code: "CZK", name: "Czech Koruna", symbol: "Kč", country: "cz" },
-  { code: "HUF", name: "Hungarian Forint", symbol: "Ft", country: "hu" },
-  { code: "RON", name: "Romanian Leu", symbol: "lei", country: "ro" },
-  { code: "BGN", name: "Bulgarian Lev", symbol: "лв", country: "bg" },
-  { code: "TRY", name: "Turkish Lira", symbol: "₺", country: "tr" },
-  { code: "RUB", name: "Russian Ruble", symbol: "₽", country: "ru" },
-  { code: "CNY", name: "Chinese Yuan", symbol: "¥", country: "cn" },
-  { code: "HKD", name: "Hong Kong Dollar", symbol: "HK$", country: "hk" },
-  { code: "SGD", name: "Singapore Dollar", symbol: "S$", country: "sg" },
-  { code: "INR", name: "Indian Rupee", symbol: "₹", country: "in" },
-  { code: "BRL", name: "Brazilian Real", symbol: "R$", country: "br" },
-  { code: "MXN", name: "Mexican Peso", symbol: "MX$", country: "mx" },
-  { code: "ZAR", name: "South African Rand", symbol: "R", country: "za" },
-  { code: "ILS", name: "Israeli Shekel", symbol: "₪", country: "il" },
-  { code: "AED", name: "UAE Dirham", symbol: "د.إ", country: "ae" },
-];
-
-export interface CurrencyFlagProps extends ComponentPropsWithoutRef<"span"> {
-  /** ISO 3166-1 alpha-2, lowercase — the class flag-icons keys its sprite by. */
-  country: string;
-}
-
-export function CurrencyFlag({ country, className, ...rest }: CurrencyFlagProps) {
-  return (
-    <span
-      {...rest}
-      // Stays `aria-hidden` whatever a caller passes: the flag is a picture of the
-      // code printed next to it, and a reader that met both would hear the currency
-      // twice.
-      aria-hidden
-      className={cn("fi inline-block w-5 h-[0.9375rem] rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)] shrink-0", `fi-${country}`, className)}
-    />
-  );
-}
-
-const CURRENCY_BY_CODE = new Map(CURRENCIES.map((c) => [c.code, c]));
-
-export function getCurrency(code: string | null | undefined): CurrencyOption | undefined {
-  return code ? CURRENCY_BY_CODE.get(code.toUpperCase()) : undefined;
-}
-
-/** The name to SHOW for a currency: the caller's translation if they have one for
- *  that code; else, when a `locale` is known, the name `Intl.DisplayNames` has for
- *  it in that locale; else the English name {@link CURRENCIES} carries. Shared with
- *  AmountInput, which renders the same list from the same data.
- *
- *  `Intl` only when a locale was actually GIVEN (by prop or `<UiKitProvider>`): an
- *  app that never set one keeps the shipped English names it has always shown,
- *  rather than whatever language the test runner or the browser happens to be in. */
-export function currencyName(
-  c: CurrencyOption,
-  names?: Record<string, string>,
-  locale?: string,
-): string {
-  const own = names?.[c.code];
-  if (own !== undefined) return own;
-  if (locale) {
-    try {
-      const shown = new Intl.DisplayNames([locale], { type: "currency" }).of(c.code);
-      if (shown && shown !== c.code) return shown;
-    } catch {
-      // A malformed tag, or a runtime without `DisplayNames`: the shipped name.
-    }
-  }
-  return c.name;
-}
+// The data and the flag are declared beside the one list both currency pickers render
+// (./currency-option-list, round 0.34 Wave 2, DUP-4) and are this module's exports, as
+// they always were.
+export { CURRENCIES, CurrencyFlag, currencyName, getCurrency };
+export type { CurrencyFlagProps, CurrencyOption };
 
 /** `onChange` is the kit's — "a currency was picked", carrying the code — rather
  *  than the div's form event. */
@@ -163,6 +90,10 @@ export interface CurrencySelectProps extends Omit<ComponentPropsWithoutRef<"div"
    * filter that only matches the hidden English name is worse than no filter.
    */
   currencyNames?: Record<string, string>;
+  /** The TRIGGER — the focusable `<button>` — as a React 19 ref prop, as on
+   *  {@link MultiSelect} and {@link CountrySelect}: react-hook-form's focus-on-error
+   *  calls `focus()` on it (0.34, API-3, refactor audit 2026-10). Not the wrapper. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function CurrencySelect({
@@ -180,44 +111,40 @@ export function CurrencySelect({
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
+  ref,
   ...rest
 }: CurrencySelectProps) {
-  const { open, setOpen, wrapperRef, query, setQuery, inputRef } = useDropdownSearch();
+  // The picker family's foundation (round 0.34 Wave 2, DUP-4): open state, the query,
+  // the highlighted row, portal anchoring, outside press, Escape on the kit's stack and
+  // Back — what `useDropdownSearch` gave it, and the rest it did not. `filter: false`:
+  // the list's own currency filter hands the panel its rows.
+  const core = useComboboxCore<string>({ filter: false, backCloses: true });
+  const { open, setOpen, triggerRef, closeToTrigger } = core;
+  // The core anchors the panel to the trigger and hands focus back to it; the caller's
+  // `ref` wants the same element. One callback feeds both, as on MultiSelect.
+  const setTrigger = useCallback(
+    (el: HTMLButtonElement | null) => {
+      triggerRef.current = el;
+      assignRef(ref, el);
+    },
+    [ref, triggerRef],
+  );
   // `labels` > `currency` from the provider > English.
   const text = useKitLabels("currency", DEFAULT_CURRENCY_LABELS, labels);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const locale = useKitLocale();
 
   const selected = getCurrency(value);
-  const pool = useMemo(() => {
-    if (!options) return CURRENCIES;
-    // Keep the caller's order; drop codes we don't have a definition for.
-    return options.map((code) => getCurrency(code)).filter((c): c is CurrencyOption => !!c);
-  }, [options]);
-  const filtered = useMemo(() => {
-    const q = query.trim().toLocaleLowerCase(locale);
-    if (!q) return pool;
-    return pool.filter(
-      (c) =>
-        c.code.toLowerCase().includes(q) ||
-        currencyName(c, currencyNames, locale).toLocaleLowerCase(locale).includes(q) ||
-        c.symbol.toLowerCase().includes(q),
-    );
-  }, [query, pool, currencyNames, locale]);
 
   const listboxId = `${useId()}-listbox`;
-  const hintId = useId();
-  const errorId = useId();
   // Text is a caption under the field; anything else (a FieldHint) rides the label
-  // line. See `hint`.
-  const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
-  const labelHint = !textHint && hasMessage(hint) ? hint : undefined;
-  const hasError = hasMessage(error);
-  // On the TRIGGER, which is the control with a role: a caller's description used to
-  // land on the wrapper `<div>` through the spread, where nothing reads it. The
-  // caller's ids first, then the caption, then the error — Select's order.
-  const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, hasError && errorId);
-  const isInvalid = Boolean(invalid) || hasError || ariaInvalid === true || ariaInvalid === "true";
+  // line — and a FieldHint is that caption at Large and on touch (§4). See `hint`. On
+  // the TRIGGER, which is the control with a role: a caller's description used to land
+  // on the wrapper `<div>` through the spread, where nothing reads it. The caller's ids
+  // first, then the caption, then the error — Select's order, through useFieldMessages
+  // since 0.34 (DUP-2, DUP-8).
+  const field = useFieldMessages({ hint, error, invalid, describedBy: ariaDescribedBy, ariaInvalid });
+  const { labelHint, describedBy, isInvalid } = field;
 
   // The trigger's NAME. A combobox does not take its name from its content, and the
   // floating label is a <span>, not a <label for> — so without `aria-label` from the
@@ -229,15 +156,26 @@ export function CurrencySelect({
 
   const trigger = (
     <button
+      // Where Escape on the open list hands focus back to (round 0.34 BUG-1).
+      ref={setTrigger}
       type="button"
       aria-label={name}
       onClick={() => setOpen((v) => !v)}
+      // Down/Up opens the list from the closed trigger, per the APG; Enter and Space
+      // already do through the button's own click.
+      onKeyDown={(e) => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          setOpen(true);
+        }
+      }}
       // The implicit `button` role supports neither `aria-expanded` nor
       // `aria-invalid`, so this trigger previously wore a red border and announced
       // nothing about being invalid or about there being a list behind it. The role
       // that DESCRIBES it is the one that also supports the attributes — the same
       // treatment its siblings (MultiSelect, the entity comboboxes) now carry, so a
-      // form row of pickers reads the same way throughout.
+      // form row of pickers reads the same way throughout. And since Wave 2 the popup
+      // IS the listbox it promises, of options with the chosen one selected (BUG-12).
       role="combobox"
       aria-haspopup="listbox"
       aria-controls={listboxId}
@@ -249,7 +187,7 @@ export function CurrencySelect({
       {/* The trigger stays COMPACT — flag + code only — so it never clips in a
           narrow field; the full names live in the (wider) popup (feedback
           #308). */}
-      <span className={cn("flex items-center gap-2 min-w-0", selected ? "text-[var(--text-primary)]" : "text-[var(--text-placeholder)]")}>
+      <span className={cn("flex items-center gap-2 min-w-0", selected ? "text-primary" : "text-placeholder")}>
         {selected ? (
           <>
             <CurrencyFlag country={selected.country} />
@@ -267,7 +205,7 @@ export function CurrencySelect({
     // The wrapper takes `rest`; the trigger takes the name. This field's label is a
     // floating <span> rather than a <label for>, so a caller who wants the control to
     // announce more than the code inside it has nowhere else to put it.
-    <div {...rest} ref={wrapperRef} className={cn("relative", className)}>
+    <div {...rest} className={cn("relative", className)}>
       {label !== undefined &&
         (labelHint === undefined ? (
           <FieldLabel>{label}</FieldLabel>
@@ -281,79 +219,30 @@ export function CurrencySelect({
             <span className="pointer-events-auto flex shrink-0 items-center">{labelHint}</span>
           </div>
         ))}
-      {label === undefined && labelHint !== undefined ? (
-        // No label line to ride: at the field's end edge, outside the box, as an
-        // unlabelled Select places its FieldHint.
-        <div className="flex items-center gap-1.5">
-          <div className="min-w-0 flex-1">{trigger}</div>
-          <span className="flex shrink-0 items-center">{labelHint}</span>
-        </div>
-      ) : (
-        trigger
-      )}
-      {open && (
-        <DropdownPanel
-          // At least as wide as the trigger, but grows to fit the full currency
-          // names and caps so it never runs off-screen. END-aligned so it grows
-          // toward the start instead of pushing the page width when there's content
-          // after the field (feedback #308).
-          className="end-0 min-w-full w-max max-w-[min(20rem,calc(100vw-2rem))]"
-          empty={filtered.length === 0}
-          listProps={{ id: listboxId }}
-          header={
-            <DropdownSearchHeader
-              query={query}
-              onQueryChange={setQuery}
-              inputRef={inputRef}
-              placeholder={text.search}
-            />
-          }
-        >
-          {filtered.map((c) => {
-              const active = c.code === selected?.code;
-              return (
-                <li key={c.code}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChange(c.code);
-                      setOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full items-center justify-between gap-2 px-3 py-2 text-sm text-start hover:bg-[var(--bg-hover)]",
-                      active && "bg-[var(--bg-active)]",
-                    )}
-                  >
-                    <span className="flex items-center gap-2 min-w-0">
-                      <CurrencyFlag country={c.country} />
-                      <span className="font-mono text-[var(--text-muted)] w-8 shrink-0">{c.symbol}</span>
-                      <span className="font-medium text-[var(--text-primary)]">{c.code}</span>
-                      <span className="text-[var(--text-muted)] truncate">{currencyName(c, currencyNames, locale)}</span>
-                    </span>
-                    {active && <Check className="size-4 text-[var(--text-secondary)] shrink-0" />}
-                  </button>
-                </li>
-              );
-            })}
-        </DropdownPanel>
-      )}
-      {/* After the panel, not before it, as MultiSelect places its message: the panel
-          is `absolute` with no `top`, so it opens at its place in the flow — under the
-          caption, had the caption come first. */}
-      {textHint && (
-        <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
-          {hint}
-        </p>
-      )}
-      {hasError && (
-        <p id={errorId} className={FIELD_ERROR_CLASS}>
-          {error}
-        </p>
-      )}
+      {/* No label line to ride: at the field's end edge, outside the box, as an
+          unlabelled Select places its FieldHint. */}
+      <EndHintRow hint={label === undefined ? labelHint : undefined}>{trigger}</EndHintRow>
+      {field.below}
+      {/* Portalled to <body> and anchored to the trigger (dev#548), so where it stands
+          in the flow no longer moves it. */}
+      <CurrencyOptionList
+        core={core}
+        listboxId={listboxId}
+        value={value}
+        codes={options}
+        currencyNames={currencyNames}
+        locale={locale}
+        searchPlaceholder={text.search}
+        // On a phone the list is a full-screen sheet, which needs the field's own name
+        // to say what it asks for (live #200).
+        sheetTitle={label ?? text.currency}
+        onChoose={(code) => {
+          onChange(code);
+          // Back to the trigger: the panel holding focus is about to unmount, and a
+          // keyboard user who has answered the field should stand on it, ready to Tab on.
+          closeToTrigger();
+        }}
+      />
     </div>
   );
 }
-
-// The error line under a field — the type of `ui.tsx`'s (module-private) one, so a
-// CurrencySelect's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";

@@ -47,12 +47,14 @@ jobs:
           sparse-checkout: .nvmrc
           sparse-checkout-cone-mode: false
       # The CI run of the tagged commit, on its push to main. A tag is pushed right
-      # after the merge, so that run is usually still going: wait for it (20 min cap).
+      # after the merge, so that run is usually still going: wait for it (45 min cap —
+      # a release merge that cannot reuse its PR's run sweeps there too, and the sweep
+      # job may take 40; its result is part of the run this requires green).
       - name: Find the green CI run for this commit
         id: ci
         run: |
           set -euo pipefail
-          for i in $(seq 1 80); do
+          for i in $(seq 1 180); do
             run="$(gh run list -R "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" \
               --event push --json databaseId,status,conclusion --jq '.[0] // empty')"
             if [ -n "$run" ]; then

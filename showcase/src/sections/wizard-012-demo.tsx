@@ -11,16 +11,13 @@ import {
   useWizardStepValidate,
 } from "@eifi1/ui-kit";
 import type { WizardStepConfig } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * 0.12 on the Wizard page: `WizardStep`'s own `title` / `description`, and the two
  * gates a step that is NOT a react-hook-form uses — `useWizardNextGate` (Next greyed
  * out before a click) and `useWizardStepValidate` (a validator Next runs).
  */
-
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 type Share = { name: string; pct: number | null };
 type Payee = string;
@@ -105,7 +102,7 @@ function PayeesStep({
             Add
           </Button>
         </Row>
-        <ul className="space-y-1 text-sm text-[var(--text-primary)]">
+        <ul className="space-y-1 text-sm text-primary">
           {payees.map((p, i) => (
             <li key={`${p}-${i}`} className="flex items-center justify-between gap-2">
               <span className="truncate">{p}</span>
@@ -114,7 +111,7 @@ function PayeesStep({
               </Button>
             </li>
           ))}
-          {payees.length === 0 && <li className="text-[var(--text-muted)]">No payees yet.</li>}
+          {payees.length === 0 && <li className="text-muted">No payees yet.</li>}
         </ul>
         {error && <AlertBanner tone="danger">{error}</AlertBanner>}
       </div>
@@ -143,7 +140,7 @@ function GatedWizard({ onLog, onRestart }: { onLog: (line: string) => void; onRe
   if (finished) {
     return (
       <Row>
-        <span className="text-sm text-[var(--text-primary)]">Tenancy saved.</span>
+        <span className="text-sm text-primary">Tenancy saved.</span>
         <Button type="button" variant="secondary" onClick={onRestart}>
           Start over
         </Button>
@@ -166,7 +163,7 @@ function GatedWizard({ onLog, onRestart }: { onLog: (line: string) => void; onRe
       )}
       {wizard.currentStepIndex === 2 && (
         <WizardStep title="Review" description="A step with a heading and nothing to gate." headingLevel={3}>
-          <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+          <ul className="space-y-1 text-sm text-secondary">
             {shares.map((s) => (
               <li key={s.name}>
                 {s.name}: {s.pct ?? 0} %

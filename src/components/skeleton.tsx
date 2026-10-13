@@ -10,7 +10,7 @@ import { cn } from "../lib/cn";
  * is exactly what `prefers-reduced-motion` asks to be dropped. The fill stays, so the
  * shape of what is coming is still there.
  */
-export const SKELETON_CLASS = "animate-pulse rounded bg-[var(--bg-active)] motion-reduce:animate-none";
+export const SKELETON_CLASS = "animate-pulse rounded bg-active motion-reduce:animate-none";
 
 export type SkeletonShape = "line" | "block" | "circle";
 

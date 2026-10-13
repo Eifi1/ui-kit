@@ -1,9 +1,9 @@
 import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../form-core";
 import { useRhfWizardStep, type RhfWizardStepOptions } from "../use-rhf-wizard-step";
-import { Input } from "../../components/ui";
+import { Input } from "../../components/input";
 import { useWizard } from "../../wizard/use-wizard";
 import { StepperNav } from "../../wizard/stepper-nav";
 import type { WizardStepConfig } from "../../wizard/types";

@@ -1,12 +1,15 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Button, Card, IconButton } from "../ui";
+import { Button } from "../button";
+import { Card } from "../card";
+import { IconButton } from "../icon-button";
 import { Chip } from "../chip";
 import { CalculatorButton } from "../calculator";
 import { NumberPadSheet } from "../numpad-sheet";
 import { DataTable } from "../data-table";
 import type { DataTableColumn } from "../data-table";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * 0.33's colour roles in the kit's own components (docs/colour-roles-harmonization.md
@@ -15,8 +18,6 @@ import type { DataTableColumn } from "../data-table";
  * that the components paint with those pairs.
  */
 
-const cls = (el: Element) => el.className.split(/\s+/);
-
 /** B′'s hover (§12.1, §12.10): the body ink at 7 %, translucent. */
 const HOVER_INK = "hover:bg-[color-mix(in_srgb,var(--text-primary)_7%,transparent)]";
 
@@ -24,9 +25,9 @@ describe("B′: a control that can sit on any surface hovers with the translucen
   it("Button secondary and ghost — no longer the well, which is the page in light", () => {
     for (const variant of ["secondary", "ghost"] as const) {
       const { unmount } = render(<Button variant={variant}>Save</Button>);
-      const c = cls(screen.getByRole("button"));
-      expect(c, variant).toContain(HOVER_INK);
-      expect(c, variant).not.toContain("hover:bg-[var(--bg-surface-2)]");
+      const el = screen.getByRole("button");
+      expect(el, variant).toHaveClass(HOVER_INK);
+      expect(el, variant).not.toHaveClass("hover:bg-surface-2");
       unmount();
     }
   });
@@ -38,24 +39,24 @@ describe("B′: a control that can sit on any surface hovers with the translucen
         <IconButton aria-label="Edit">x</IconButton>
       </>,
     );
-    expect(cls(screen.getByRole("button", { name: "More" }))).toContain(HOVER_INK);
-    expect(cls(screen.getByRole("button", { name: "Edit" }))).toContain(HOVER_INK);
+    expect(screen.getByRole("button", { name: "More" })).toHaveClass(HOVER_INK);
+    expect(screen.getByRole("button", { name: "Edit" })).toHaveClass(HOVER_INK);
   });
 
   it("a danger ghost hovers onto the danger wash, where its red text keeps 4.5:1", () => {
     render(<Button variant="ghost" tone="danger">Remove</Button>);
-    const c = cls(screen.getByRole("button"));
-    expect(c).toContain("hover:bg-[var(--danger-bg)]");
-    expect(c).not.toContain(HOVER_INK);
+    const el = screen.getByRole("button");
+    expect(el).toHaveClass("hover:bg-danger-soft");
+    expect(el).not.toHaveClass(HOVER_INK);
   });
 });
 
 describe("--border is a line, not a fill under text (§12.9)", () => {
   it("Button primary hovers onto --bg-active", () => {
     render(<Button>Save</Button>);
-    const c = cls(screen.getByRole("button"));
-    expect(c).toContain("hover:bg-active");
-    expect(c).not.toContain("hover:bg-[var(--border)]");
+    const el = screen.getByRole("button");
+    expect(el).toHaveClass("hover:bg-active");
+    expect(el).not.toHaveClass("hover:bg-[var(--border)]");
   });
 
   it("the calculator: digits hover onto --bg-active, operators rest on it", () => {
@@ -63,22 +64,19 @@ describe("--border is a line, not a fill under text (§12.9)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open calculator" }));
     const panel = screen.getByRole("dialog");
     const digit = within(panel).getByRole("button", { name: "7" });
-    expect(cls(digit)).toEqual(expect.arrayContaining(["bg-surface-2", "text-primary", "hover:bg-active"]));
+    expect(digit).toHaveClass("bg-surface-2", "text-primary", "hover:bg-active");
     for (const name of ["Plus", "Clear"]) {
       const key = within(panel).getByRole("button", { name });
-      expect(cls(key), name).toEqual(expect.arrayContaining(["bg-active", "hover:bg-surface-2"]));
-      expect(key.className, name).not.toContain("var(--border)]");
+      expect(key, name).toHaveClass("bg-active", "hover:bg-surface-2");
+      // `--border` in any form: `[var(--border)]`, or a role utility's `subtle` (0.34).
+      expect(key.className, name).not.toMatch(/var\(--border\)\]|-subtle(?![\w-])/);
     }
   });
 
   it("the phone pad: operators on --bg-active, a pressed digit too", () => {
     render(<NumberPadSheet value="1" onChange={() => {}} onDone={() => {}} />);
-    expect(cls(screen.getByRole("button", { name: "Plus" }))).toEqual(
-      expect.arrayContaining(["bg-active", "active:bg-surface-2"]),
-    );
-    expect(cls(screen.getByRole("button", { name: "7" }))).toEqual(
-      expect.arrayContaining(["bg-surface-2", "active:bg-active"]),
-    );
+    expect(screen.getByRole("button", { name: "Plus" })).toHaveClass("bg-active", "active:bg-surface-2");
+    expect(screen.getByRole("button", { name: "7" })).toHaveClass("bg-surface-2", "active:bg-active");
     expect(document.body.innerHTML).not.toContain("bg-[var(--border)]");
   });
 });
@@ -92,19 +90,17 @@ describe("every fill under its own foreground (§5.1)", () => {
         <Chip tone="neutral" variant="solid" data-testid="neutral">9</Chip>
       </>,
     );
-    expect(cls(screen.getByTestId("warning"))).toEqual(expect.arrayContaining(["bg-warning", "text-warning-contrast"]));
-    expect(cls(screen.getByTestId("income"))).toEqual(
-      expect.arrayContaining(["bg-money-pos", "text-money-income-contrast"]),
-    );
+    expect(screen.getByTestId("warning")).toHaveClass("bg-warning", "text-warning-contrast");
+    expect(screen.getByTestId("income")).toHaveClass("bg-money-pos", "text-money-income-contrast");
     // A count pill keeps the inverse pair — louder than the neutral fill, on purpose.
-    expect(cls(screen.getByTestId("neutral"))).toEqual(expect.arrayContaining(["bg-inverse", "text-inverse"]));
+    expect(screen.getByTestId("neutral")).toHaveClass("bg-inverse", "text-inverse");
   });
 
   it("Chip outline brand writes the brand as text: --brand-muted", () => {
     render(<Chip tone="brand" variant="outline" data-testid="brand">New</Chip>);
-    const c = cls(screen.getByTestId("brand"));
-    expect(c).toContain("text-brand-muted");
-    expect(c).not.toContain("text-[var(--brand)]");
+    const el = screen.getByTestId("brand");
+    expect(el).toHaveClass("text-brand-muted");
+    expect(el).not.toHaveClass("text-brand");
   });
 });
 
@@ -116,9 +112,9 @@ describe("warning's loud line (§5.2)", () => {
         Payment overdue
       </Card>,
     );
-    const c = cls(screen.getByTestId("card"));
-    expect(c).toEqual(expect.arrayContaining(["border-2", "border-warning-strong"]));
-    expect(c).not.toContain("border-[var(--warning)]");
+    const el = screen.getByTestId("card");
+    expect(el).toHaveClass("border-2", "border-warning-strong");
+    expect(el).not.toHaveClass("border-[var(--warning)]");
   });
 });
 
@@ -132,7 +128,7 @@ describe("DataTable", () => {
 
   it("lets a selected row keep its well and draw the outline on hover (§12.2)", () => {
     // Kurvenschmiede's selected rows: rowClassName merges last, so its `hover:` fill
-    // replaces the row's own `hover:bg-[var(--bg-hover)]`, which would read as "not
+    // replaces the row's own `hover:bg-hover`, which would read as "not
     // selected" — and sits 1.04:1 from a light well.
     const selected = "bg-surface-2 hover:bg-surface-2 hover:outline hover:-outline-offset-1 hover:outline-strong";
     render(
@@ -141,18 +137,13 @@ describe("DataTable", () => {
       </MemoryRouter>,
     );
     const row = screen.getAllByRole("row")[1];
-    expect(cls(row)).toEqual(expect.arrayContaining(selected.split(" ")));
-    expect(cls(row)).not.toContain("hover:bg-[var(--bg-hover)]");
+    expect(row).toHaveClass(...selected.split(" "));
+    expect(row).not.toHaveClass("hover:bg-hover");
   });
 
   describe("on a phone, the row actions' swipes", () => {
     beforeEach(() => {
-      vi.stubGlobal("matchMedia", (query: string) => ({
-        matches: query.includes("width <"),
-        media: query,
-        addEventListener: () => {},
-        removeEventListener: () => {},
-      }));
+      stubPhone();
     });
     afterEach(() => vi.unstubAllGlobals());
 
@@ -181,8 +172,8 @@ describe("DataTable", () => {
         </MemoryRouter>,
       );
       // Edit is the end action (a drag right in LTR), delete the start one.
-      expect(cls(dragTo(60, "Edit"))).toEqual(expect.arrayContaining(["bg-brand-soft", "text-brand-muted"]));
-      expect(cls(dragTo(-60, "Delete"))).toEqual(expect.arrayContaining(["bg-danger-soft", "text-danger"]));
+      expect(dragTo(60, "Edit")).toHaveClass("bg-brand-soft", "text-brand-muted");
+      expect(dragTo(-60, "Delete")).toHaveClass("bg-danger-soft", "text-danger");
     });
   });
 });

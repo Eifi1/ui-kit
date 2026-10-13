@@ -1,4 +1,4 @@
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import type { ContrastMode } from "../theme/contrast";
 import type { TextSize } from "../theme/text-size";
 
@@ -42,6 +42,6 @@ export const DEFAULT_APPEARANCE_LABELS: AppearanceLabels = {
 
 /** The `appearance` namespace, resolved — English, then the provider, then `labels`. For
  *  an app's catalogue entries and quick switches, without restating the defaults. */
-export function useAppearanceLabels(labels?: Partial<AppearanceLabels>): AppearanceLabels {
+export function useAppearanceLabels(labels?: LabelOverride<AppearanceLabels>): AppearanceLabels {
   return useKitLabels("appearance", DEFAULT_APPEARANCE_LABELS, labels);
 }

@@ -24,7 +24,6 @@ import {
   strokeDash,
   toggleHidden,
   visibleSeries,
-  zoomAxesFor,
 } from "@eifi1/ui-kit";
 import type {
   LegendEntry,
@@ -209,7 +208,7 @@ export function SeriesChartDemo() {
           x={SWEEP_X}
           valueFormat={(v) => ONE.format(v)}
           animationMs={180}
-          empty={<p className="text-xs text-[var(--text-muted)]">Every channel is switched off.</p>}
+          empty={<p className="text-xs text-muted">Every channel is switched off.</p>}
         />
         <ToggleLegend
           entries={legend}
@@ -260,7 +259,7 @@ export function SeriesChartDemo() {
           hidden={hiddenCurve}
           onToggle={(key) => setHiddenCurve(toggleHidden(hiddenCurve, key))}
         />
-        <p className="mt-2 font-mono text-caption text-[var(--text-muted)]">
+        <p className="mt-2 font-mono text-caption text-muted">
           onAxisBudget: [{budgeted.map((id) => `"${id}"`).join(", ")}]
         </p>
         <div className="mt-3">
@@ -407,7 +406,7 @@ export function SeriesChartDemo() {
             {FACING_SIDES.map((side) => (
               <section key={side} className="min-w-0">
                 <h4
-                  className="mb-1 text-center text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                  className="mb-1 text-center text-caption font-semibold uppercase tracking-wide text-muted"
                   style={facingHeadingPad(side, undefined, scale)}
                 >
                   {side === "left" ? "Left side" : "Right side"}
@@ -429,14 +428,14 @@ export function SeriesChartDemo() {
       <Example label="SeriesChart — nothing to draw" hint="the empty state keeps the chart's height, so nothing under it moves">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="mb-1 font-mono text-caption text-[var(--text-muted)]">empty omitted: the label</p>
-            <div className="rounded border border-dashed border-[var(--border)]">
+            <p className="mb-1 font-mono text-caption text-muted">empty omitted: the label</p>
+            <div className="rounded border border-dashed border-subtle">
               <SeriesChart rows={[]} series={[]} height="h-32" />
             </div>
           </div>
           <div>
-            <p className="mb-1 font-mono text-caption text-[var(--text-muted)]">empty=&#123;null&#125;: nothing, same height</p>
-            <div className="rounded border border-dashed border-[var(--border)]">
+            <p className="mb-1 font-mono text-caption text-muted">empty=&#123;null&#125;: nothing, same height</p>
+            <div className="rounded border border-dashed border-subtle">
               <SeriesChart rows={[]} series={[]} height="h-32" empty={null} />
             </div>
           </div>
@@ -451,7 +450,7 @@ export function SeriesChartDemo() {
           type="button"
           aria-pressed={bridged}
           onClick={() => setBridged((b) => !b)}
-          className="mb-2 rounded border border-[var(--border)] px-2 py-1 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+          className="mb-2 rounded border border-subtle px-2 py-1 text-xs text-secondary hover:bg-hover"
         >
           connectNulls: {String(bridged)}
         </button>
@@ -548,9 +547,6 @@ export function SeriesChartDemo() {
             ["strokeDash(3)", show(strokeDash(3))],
             ["strokeDash(5)  // wraps", show(strokeDash(5))],
             ["STEP_DASH", show(STEP_DASH)],
-            ["zoomAxesFor(150, 40, 300, 100)", show(zoomAxesFor(150, 40, 300, 100))],
-            ["zoomAxesFor(240, 10, 300, 100)", show(zoomAxesFor(240, 10, 300, 100))],
-            ["zoomAxesFor(3, 1, 300, 100)", show(zoomAxesFor(3, 1, 300, 100))],
           ]}
         />
       </Example>

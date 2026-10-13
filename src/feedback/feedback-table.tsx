@@ -4,7 +4,7 @@ import { ExternalLink } from "lucide-react";
 import { cn } from "../lib/cn";
 import { toLocalIso } from "../lib/dates";
 import { EMPTY_FORMATTED_VALUE, formatDate, toDate } from "../lib/format";
-import { useKitDateFormatter, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
+import { useKitDateFormatter, useKitLabels, useKitLink, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import type { KitLinkProps } from "../i18n/kit-labels";
 import { Chip } from "../components/chip";
 import { FloatingAction, FloatingActionGroup } from "../components/floating-panel";
@@ -32,6 +32,7 @@ import { FEEDBACK_AWAITING_STATUSES, reworkCount, type FeedbackContext, type Fee
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import { feedbackPageHref, feedbackPagePath } from "./feedback-row-detail";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_FEEDBACK_PAGE_LABELS } from "./feedback-table-labels";
 
 /**
  * The two feedback pages' TABLE — `/feedback` (the admin inbox) and `/my-feedback` (the
@@ -46,7 +47,7 @@ import type { CommitScope } from "../components/write-lock";
  * items — had a latent bug of its own: its subject cell carries the environment and
  * rework chips "so a second attempt is marked on every surface at once" (:760), but the
  * phone card is a `mobileCard`, and `DataTable` never renders the `mobilePrimary` cell
- * when `mobileCard` is set (data-table.tsx, `cardInner`). Its phone cards showed neither
+ * when `mobileCard` is set (data-table-mobile.tsx, `cardInner`). Its phone cards showed neither
  * chip. {@link FeedbackMobileCard} draws both itself, from the same
  * {@link FeedbackSubject} the column uses, so the two surfaces cannot part again.
  *
@@ -119,31 +120,12 @@ export interface FeedbackPageLabels {
   phoneActions: string;
 }
 
-export const DEFAULT_FEEDBACK_PAGE_LABELS: FeedbackPageLabels = {
-  title: "Feedback",
-  myTitle: "My feedback",
-  columnId: "#",
-  columnDate: "Date",
-  columnCategory: "Category",
-  columnSubject: "Subject",
-  columnUser: "User",
-  columnEmail: "Email",
-  columnUrl: "URL",
-  columnStatus: "Status",
-  columnResolved: "Resolved",
-  openPage: "Open page",
-  empty: "None",
-  deletedUser: "<deleted user>",
-  userFallback: (id) => `user #${id}`,
-  environment: (environment) => String(environment ?? "").toUpperCase(),
-  reworkChip: (count) => (count === 1 ? "Rework" : `Rework ×${count}`),
-  awaitingFilter: "Only what is waiting for you",
-  phoneActions: "Feedback actions",
-};
+// Defined in ./feedback-table-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_PAGE_LABELS };
 
 /** `feedbackPage` resolved: English, then `<UiKitProvider labels>`, then `labels`. The
  *  page's title comes from here too: `mine ? labels.myTitle : labels.title`. */
-export function useFeedbackPageLabels(labels?: Partial<FeedbackPageLabels>): FeedbackPageLabels {
+export function useFeedbackPageLabels(labels?: LabelOverride<FeedbackPageLabels>): FeedbackPageLabels {
   return useKitLabels("feedbackPage", DEFAULT_FEEDBACK_PAGE_LABELS, labels);
 }
 
@@ -258,9 +240,9 @@ export function useFeedbackRenderDate(renderDate?: FeedbackRenderDate, locale?: 
 
 /** A date in a cell: `<time>`, nowrap, tabular figures; "—" when there is none. */
 function FeedbackDate({ value, renderDate }: { value: string | null | undefined; renderDate: FeedbackRenderDate }) {
-  if (!value) return <span className="text-[var(--text-placeholder)]">{EMPTY_FORMATTED_VALUE}</span>;
+  if (!value) return <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>;
   return (
-    <time dateTime={value} className="whitespace-nowrap tabular-nums text-[var(--text-muted)]">
+    <time dateTime={value} className="whitespace-nowrap tabular-nums text-muted">
       {renderDate(value)}
     </time>
   );
@@ -283,7 +265,7 @@ export interface FeedbackSubjectProps {
    */
   wrap?: boolean;
   /** Over the `feedbackPage` namespace. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
   className?: string;
 }
 
@@ -324,8 +306,10 @@ export function FeedbackSubject({ row, wrap = false, labels: labelsProp, classNa
     );
   }
   return (
-    <span className={cn("inline-flex min-w-0 max-w-full items-center gap-1.5", className)}>
-      <span className="min-w-0 truncate font-medium">{row.title}</span>
+    <span className={cn("inline-flex min-w-0 max-w-full items-center gap-1.5 large:items-start", className)}>
+      {/* One line at Normal; from Large up the title wraps rather than losing its end (text
+          size §10.17 — the release sweep's first CI run found it cut on the showcase). */}
+      <span className="min-w-0 truncate-until-large font-medium">{row.title}</span>
       {chips}
     </span>
   );
@@ -350,9 +334,9 @@ function FeedbackPageLinkCell({ context, openPage }: { context: FeedbackContext 
   const kitLink = useKitLink();
   const href = feedbackPageHref(context);
   const path = feedbackPagePath(context);
-  if (!href || !path) return <span className="text-[var(--text-placeholder)]">{EMPTY_FORMATTED_VALUE}</span>;
+  if (!href || !path) return <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>;
   const className =
-    "inline-flex min-w-0 max-w-full items-center gap-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:underline";
+    "inline-flex min-w-0 max-w-full items-center gap-1 text-secondary hover:text-primary hover:underline";
   const children = (
     <>
       {/* The space outside the hidden span: a flex container drops it from the layout,
@@ -456,7 +440,7 @@ export function feedbackColumns<T extends FeedbackTableRow>({
     {
       key: "id",
       header: labels.columnId,
-      cell: (row) => <span className="font-mono text-xs text-[var(--text-muted)]">{row.id}</span>,
+      cell: (row) => <span className="font-mono text-xs text-muted">{row.id}</span>,
       sortBy: (row) => row.id,
       filter: { type: "number", getValue: (row) => row.id },
       mobileHidden: true,
@@ -495,7 +479,7 @@ export function feedbackColumns<T extends FeedbackTableRow>({
     {
       key: "user",
       header: labels.columnUser,
-      cell: (row) => <span className="text-[var(--text-secondary)]">{feedbackSubmitter(row, labels)}</span>,
+      cell: (row) => <span className="text-secondary">{feedbackSubmitter(row, labels)}</span>,
       sortBy: (row) => feedbackSubmitter(row, labels),
       // Name AND email, so either finds the person; the erased ones by the placeholder
       // (their context holds no name any more).
@@ -514,9 +498,9 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       cell: (row) => {
         const email = feedbackSubmitterEmail(row);
         return email ? (
-          <span className="text-[var(--text-secondary)]">{email}</span>
+          <span className="text-secondary">{email}</span>
         ) : (
-          <span className="text-[var(--text-placeholder)]">{EMPTY_FORMATTED_VALUE}</span>
+          <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>
         );
       },
       sortBy: feedbackSubmitterEmail,
@@ -581,7 +565,7 @@ export interface UseFeedbackColumnsOptions
   renderDate?: FeedbackRenderDate;
   /** Over the `feedbackPage` namespace. Keep it stable (module scope or memoised): it is
    *  a dependency of the memo. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
 }
 
 /**
@@ -634,7 +618,7 @@ export interface FeedbackMobileCardProps {
    *  headers'. Default: the kit's ({@link useFeedbackRenderDate}). */
   renderDate?: FeedbackRenderDate;
   /** Over the `feedbackPage` namespace. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
 }
 
 /**
@@ -658,7 +642,7 @@ export function FeedbackMobileCard({ row, showSubmitter = false, renderDate: ren
             glyph on both layouts. */}
         <FeedbackStatusBadge status={row.status} className="shrink-0" />
       </div>
-      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--text-muted)]">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
         <FeedbackCategoryBadge category={row.category} compact />
         <FeedbackDate value={row.created_at} renderDate={renderDate} />
         {showSubmitter && (
@@ -687,7 +671,7 @@ export interface FeedbackAwaitingToggleProps {
    *  filter, the same question asked where there is room for it. */
   className?: string;
   /** Over the `feedbackPage` namespace. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
 }
 
 /**
@@ -739,7 +723,7 @@ export function FeedbackAwaitingToggle({
 
 export interface FeedbackEmptyStateProps {
   /** Over the `feedbackPage` namespace. */
-  labels?: Partial<FeedbackPageLabels>;
+  labels?: LabelOverride<FeedbackPageLabels>;
 }
 
 /**

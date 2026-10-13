@@ -2,7 +2,9 @@ import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import { Input, Select, Textarea } from "../ui";
+import { Input } from "../input";
+import { Select } from "../select";
+import { Textarea } from "../textarea";
 import { TimeInput } from "../time-input";
 import { NumberInput } from "../number-input";
 import { AmountInput } from "../amount-input";

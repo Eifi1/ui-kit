@@ -75,12 +75,12 @@ export type SwipeAction = SwipeActionBase &
     | {
         tone?: never;
         paint?: never;
-        /** @deprecated 0.33 — pass `tone`, or `paint` for an exception. Background
-         *  utility class while the action is previewed but not yet armed; the panel is
-         *  dimmed then, and its text is white unless this sets a text colour. */
+        /** @deprecated 0.33 — pass `tone`, or `paint` for an exception; removed in 0.35.
+         *  Background utility class while the action is previewed but not yet armed; the
+         *  panel is dimmed then, and its text is white unless this sets a text colour. */
         className: string;
-        /** @deprecated 0.33 — pass `tone`, or `paint`. Background utility class once
-         *  the drag has passed this action's threshold. */
+        /** @deprecated 0.33 — pass `tone`, or `paint`; removed in 0.35. Background
+         *  utility class once the drag has passed this action's threshold. */
         armedClassName: string;
       }
   );
@@ -337,7 +337,7 @@ export function SwipeableRow({
           e.stopPropagation();
         }}
         className={cn(
-          "relative bg-[var(--bg-surface)]",
+          "relative bg-surface",
           // A mouse drag is a supported way to swipe (use-row-swipe gates only on
           // the button, not the pointer type), and a horizontal mouse drag over
           // text also SELECTS that text — so committing an action left the row
@@ -380,7 +380,7 @@ export function SwipeableRow({
               type="button"
               onClick={action.onCommit}
               className={cn(
-                "sr-only whitespace-nowrap rounded-md border-[var(--border)] bg-[var(--bg-surface)] text-xs font-medium text-[var(--text-primary)] shadow-sm",
+                "sr-only whitespace-nowrap rounded-md border-subtle bg-surface text-xs font-medium text-primary shadow-sm",
                 "focus:not-sr-only focus:pointer-events-auto focus:inline-flex focus:items-center focus:gap-1.5",
                 // The box's padding and border only once it shows (0.32.1, keksdose's
                 // 0.32 report). Unconditional, `px-2` and `border` beat `sr-only`'s

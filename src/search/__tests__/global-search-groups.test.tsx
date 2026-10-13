@@ -13,6 +13,12 @@ import type { SearchEntry } from "../search-index";
 
 const PROTO = Element.prototype as unknown as { scrollIntoView?: () => void };
 const JSDOM_HAS_IT = "scrollIntoView" in Element.prototype;
+// The palette loads on the first open (0.34, MOD-1). Loaded once up front so the first
+// test's `findBy` does not spend its second compiling it under a full parallel run;
+// React.lazy still resolves it a render later, so the waits stay.
+beforeAll(async () => {
+  await import("../command-palette");
+});
 beforeAll(() => {
   if (!JSDOM_HAS_IT) PROTO.scrollIntoView = () => {};
 });
@@ -30,10 +36,14 @@ function renderSearch(props: Partial<GlobalSearchProps>) {
   );
 }
 
-const open = () =>
+/** ⌘K, and wait for the field: the palette's module loads on the first open (0.34,
+ *  MOD-1), so it is found with `findBy…`. */
+const open = async () => {
   act(() => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
   });
+  await screen.findByRole("combobox");
+};
 const type = (text: string) => fireEvent.change(screen.getByRole("combobox"), { target: { value: text } });
 const headings = () =>
   screen.getAllByRole("group").map((g) => document.getElementById(g.getAttribute("aria-labelledby")!)?.textContent);
@@ -70,7 +80,7 @@ describe("GlobalSearch: one source, several groups", () => {
     ]);
     const source: GlobalSearchSource = { id: "records", group: "Other records", groups: GROUPS, debounceMs: 0, search };
     renderSearch({ sources: [source] });
-    open();
+    await open();
     type("müller");
 
     await screen.findByRole("option", { name: "Müller, Ben" });
@@ -101,7 +111,7 @@ describe("GlobalSearch: one source, several groups", () => {
         },
       ],
     });
-    open();
+    await open();
     type("müller");
     await screen.findByRole("option", { name: "Müller, Anna" });
     const seen = [active()];
@@ -128,7 +138,7 @@ describe("GlobalSearch: one source, several groups", () => {
         },
       ],
     });
-    open();
+    await open();
     type("xx");
     await screen.findByRole("option", { name: "Contact 2" });
     expect(within(screen.getByRole("group", { name: "Units" })).getAllByRole("option")).toHaveLength(2);
@@ -141,7 +151,7 @@ describe("GlobalSearch: one source, several groups", () => {
     renderSearch({
       sources: [{ id: "records", group: "Records", groups: GROUPS, debounceMs: 0, onError, search: () => pending.promise }],
     });
-    open();
+    await open();
     type("müller");
     await screen.findByRole("option", { name: "Müller page" });
     expect(screen.getAllByText("Searching…")).toHaveLength(1);
@@ -163,7 +173,7 @@ describe("GlobalSearch: one source, several groups", () => {
       return answers[q].promise;
     });
     renderSearch({ sources: [{ id: "records", group: "Records", groups: GROUPS, debounceMs: 0, search }] });
-    open();
+    await open();
     type("mü");
     await waitFor(() => expect(search).toHaveBeenCalledWith("mü", expect.any(AbortSignal)));
     type("mül");
@@ -181,7 +191,7 @@ describe("GlobalSearch: one source, several groups", () => {
         { id: "tx", group: "Transactions", debounceMs: 0, search: async () => [{ id: "t", title: "Müller rent", group: "unit" }] },
       ],
     });
-    open();
+    await open();
     type("müller");
     // Wait for the ROW, not the group. The group exists before the answer does: it heads
     // the source's "Searching…" line from the palette's first paint of this query. This
@@ -207,7 +217,7 @@ describe("GlobalSearch: one source, several groups", () => {
         { id: "tx", group: "Transactions", debounceMs: 0, search: async () => [{ id: "t", title: "Müller rent" }] },
       ],
     });
-    open();
+    await open();
     type("müller");
     const until = Date.now() + 200;
     while (Date.now() < until) {

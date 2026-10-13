@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 
 import { cn } from "../lib/cn";
 import { Chip } from "../components/chip";
@@ -8,6 +8,7 @@ import { LandingActions } from "./landing-actions";
 import type { LandingActionsProps } from "./landing-actions";
 import { useLandingLabels } from "./landing-labels";
 import type { LandingLabels } from "./landing-labels";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 /**
  * The sections of the public landing page (docs/landing-demo-harmonization.md §4.1),
@@ -40,7 +41,7 @@ type ActionProps = Pick<LandingActionsProps, "session" | "access" | "demoHref" |
 
 /* ── Hero ────────────────────────────────────────────────────────────────── */
 
-export interface HeroProps extends Omit<ComponentPropsWithoutRef<"section">, "title" | "children">, ActionProps {
+export interface HeroProps extends Omit<ComponentPropsWithRef<"section">, "title" | "children">, ActionProps {
   /** The page's `h1`: what the app does, in a line. */
   title: ReactNode;
   /** Under it: for whom, and why. */
@@ -57,7 +58,7 @@ export interface HeroProps extends Omit<ComponentPropsWithoutRef<"section">, "ti
   actions?: ReactNode;
   /** Default `h1`; lower where the hero is embedded in another page. */
   headingAs?: HeadingLevel;
-  labels?: Partial<LandingLabels>;
+  labels?: LabelOverride<LandingLabels>;
 }
 
 /**
@@ -108,10 +109,10 @@ export function Hero({
     >
       <div>
         {shownBadge != null && <div className="mb-4">{shownBadge}</div>}
-        <Heading className="text-4xl font-bold tracking-tight text-balance text-[var(--text-primary)] sm:text-5xl">
+        <Heading className="text-4xl font-bold tracking-tight text-balance text-primary sm:text-5xl">
           {title}
         </Heading>
-        {subtitle != null && <p className="mt-4 max-w-xl text-lg text-[var(--text-secondary)]">{subtitle}</p>}
+        {subtitle != null && <p className="mt-4 max-w-xl text-lg text-secondary">{subtitle}</p>}
         <div className="mt-8">
           {actions ?? (
             <LandingActions
@@ -123,7 +124,7 @@ export function Hero({
             />
           )}
         </div>
-        {trust != null && <p className="mt-4 text-sm text-[var(--text-muted)]">{trust}</p>}
+        {trust != null && <p className="mt-4 text-sm text-muted">{trust}</p>}
       </div>
       {visual != null && <Visual className="max-w-sm">{visual}</Visual>}
     </section>
@@ -132,7 +133,7 @@ export function Hero({
 
 /* ── Feature rows ────────────────────────────────────────────────────────── */
 
-export type FeatureRowsProps = ComponentPropsWithoutRef<"section">;
+export type FeatureRowsProps = ComponentPropsWithRef<"section">;
 
 /**
  * The band that holds the feature rows (§4.1.3): two to four {@link FeatureRow}s on the
@@ -145,14 +146,14 @@ export function FeatureRows({ className, children, ...rest }: FeatureRowsProps) 
     <section
       {...rest}
       data-slot="landing-feature-rows"
-      className={cn("border-t border-[var(--border)] bg-[var(--bg-surface)]", className)}
+      className={cn("border-t border-subtle bg-surface", className)}
     >
       <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">{children}</div>
     </section>
   );
 }
 
-export interface FeatureRowProps extends Omit<ComponentPropsWithoutRef<"div">, "title" | "children"> {
+export interface FeatureRowProps extends Omit<ComponentPropsWithRef<"div">, "title" | "children"> {
   /** A lucide icon (or any SVG) before the eyebrow. Decorative. */
   icon?: ReactNode;
   /** The small uppercase line above the heading: "Capture", "Plan". */
@@ -194,7 +195,7 @@ export function FeatureRow({
     >
       <div className="lg:group-even/feature:order-last">
         {(icon != null || eyebrow != null) && (
-          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand)]">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand">
             {icon != null && (
               <span aria-hidden className="flex shrink-0 [&_svg]:size-4">
                 {icon}
@@ -203,15 +204,15 @@ export function FeatureRow({
             {eyebrow}
           </p>
         )}
-        <Heading className="mt-2 text-2xl font-semibold tracking-tight text-balance text-[var(--text-primary)] sm:text-3xl">
+        <Heading className="mt-2 text-2xl font-semibold tracking-tight text-balance text-primary sm:text-3xl">
           {title}
         </Heading>
-        {description != null && <p className="mt-3 max-w-xl text-[var(--text-secondary)]">{description}</p>}
+        {description != null && <p className="mt-3 max-w-xl text-secondary">{description}</p>}
         {shown.length > 0 && (
           <ul className="mt-4 space-y-2">
             {shown.map((bullet, i) => (
-              <li key={i} className="flex gap-2.5 text-sm text-[var(--text-secondary)]">
-                <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--brand)]" />
+              <li key={i} className="flex gap-2.5 text-sm text-secondary">
+                <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
                 <span className="min-w-0">{bullet}</span>
               </li>
             ))}
@@ -234,7 +235,7 @@ export interface TrustItem {
   description: ReactNode;
 }
 
-export interface TrustStripProps extends Omit<ComponentPropsWithoutRef<"section">, "children"> {
+export interface TrustStripProps extends Omit<ComponentPropsWithRef<"section">, "children"> {
   /** Three or four (§4.1.4): hosting, security, data ownership, sharing. */
   items: readonly TrustItem[];
   /** The items' heading level. Default `h3`. */
@@ -253,12 +254,12 @@ export function TrustStrip({ items, headingAs: Heading = "h3", className, ...res
         {items.map((item, i) => (
           <li key={i}>
             {item.icon != null && (
-              <span aria-hidden className="flex text-[var(--brand)] [&_svg]:size-5">
+              <span aria-hidden className="flex text-brand [&_svg]:size-5">
                 {item.icon}
               </span>
             )}
-            <Heading className="mt-2 text-sm font-semibold text-[var(--text-primary)]">{item.title}</Heading>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">{item.description}</p>
+            <Heading className="mt-2 text-sm font-semibold text-primary">{item.title}</Heading>
+            <p className="mt-1 text-sm text-secondary">{item.description}</p>
           </li>
         ))}
       </ul>
@@ -268,7 +269,7 @@ export function TrustStrip({ items, headingAs: Heading = "h3", className, ...res
 
 /* ── CTA band ────────────────────────────────────────────────────────────── */
 
-export interface CtaBandProps extends Omit<ComponentPropsWithoutRef<"section">, "title" | "children">, ActionProps {
+export interface CtaBandProps extends Omit<ComponentPropsWithRef<"section">, "title" | "children">, ActionProps {
   /** The band's `h2`: the last ask. */
   title: ReactNode;
   subtitle?: ReactNode;
@@ -276,7 +277,7 @@ export interface CtaBandProps extends Omit<ComponentPropsWithoutRef<"section">, 
   actions?: ReactNode;
   /** Default `h2`. */
   headingAs?: HeadingLevel;
-  labels?: Partial<LandingLabels>;
+  labels?: LabelOverride<LandingLabels>;
 }
 
 /**
@@ -300,13 +301,13 @@ export function CtaBand({
     <section
       {...rest}
       data-slot="landing-cta"
-      className={cn("border-t border-[var(--border)] bg-[var(--bg-surface)]", className)}
+      className={cn("border-t border-subtle bg-surface", className)}
     >
       <div className="mx-auto max-w-5xl px-4 py-16 text-center">
-        <Heading className="text-2xl font-semibold tracking-tight text-balance text-[var(--text-primary)] sm:text-3xl">
+        <Heading className="text-2xl font-semibold tracking-tight text-balance text-primary sm:text-3xl">
           {title}
         </Heading>
-        {subtitle != null && <p className="mx-auto mt-3 max-w-xl text-[var(--text-secondary)]">{subtitle}</p>}
+        {subtitle != null && <p className="mx-auto mt-3 max-w-xl text-secondary">{subtitle}</p>}
         <div className="mt-8">
           {actions ?? (
             <LandingActions

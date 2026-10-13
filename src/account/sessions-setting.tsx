@@ -1,20 +1,22 @@
 import { useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { MonitorSmartphone } from "lucide-react";
 
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { formatRelativeTime, toDate } from "../lib/format";
 import type { DateInput } from "../lib/format";
 import { AlertBanner } from "../components/alert-banner";
 import { Chip } from "../components/chip";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import { DangerConfirm } from "../components/danger-confirm";
 import { Skeleton } from "../components/skeleton";
-import { Button, Card } from "../components/ui";
+import { Button } from "../components/button";
+import { Card } from "../components/card";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { DEFAULT_SESSIONS_LABELS } from "./sessions-setting-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -55,24 +57,8 @@ export interface SessionsLabels {
   failed: string;
 }
 
-export const DEFAULT_SESSIONS_LABELS: SessionsLabels = {
-  title: "Sessions",
-  description: "Signed in on a device you no longer use, or don’t trust? Sign out everywhere.",
-  signOutEverywhere: "Sign out everywhere…",
-  signOutEverywherePrompt:
-    "This ends every session, including this one: you will be signed out on this device too, and sign in again from here.",
-  confirmSignOutEverywhere: "Sign out everywhere",
-  list: "Where you’re signed in",
-  loading: "Loading sessions…",
-  empty: "No sessions to show.",
-  current: "This device",
-  unknownDevice: "Unknown device",
-  lastActive: (when) => `Last active ${when}`,
-  ip: (address) => `IP ${address}`,
-  revoke: "Sign out",
-  revokeItem: (device) => `Sign out ${device}`,
-  failed: "That didn’t work. Please try again.",
-};
+// Defined in ./sessions-setting-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SESSIONS_LABELS };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 
@@ -98,7 +84,7 @@ export interface SessionItem<Id extends SessionId = SessionId> {
 export type SessionsAction = "sign-out-everywhere" | "revoke";
 
 export interface SessionsSettingProps<Id extends SessionId = SessionId>
-  extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /**
    * End every session (`POST /auth/logout`, auth §6.3) — this one included. Asked
    * first; resolve once the server answered, then sign this page out: the card says
@@ -124,7 +110,7 @@ export interface SessionsSettingProps<Id extends SessionId = SessionId>
   formatLastActive?: (date: Date) => string;
   /** Overrides the provider's locale for the default format. */
   locale?: string;
-  labels?: Partial<SessionsLabels>;
+  labels?: LabelOverride<SessionsLabels>;
 }
 
 /**
@@ -171,7 +157,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
 
   const describe = (error: unknown, action: SessionsAction): ReactNode => {
     const own = describeError?.(error, action);
-    return hasMessage(own) ? own : labels.failed;
+    return hasContent(own) ? own : labels.failed;
   };
 
   const lastActive = (value: DateInput): string | null => {
@@ -221,7 +207,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
         ) : sessions.length === 0 ? (
           <p className={CARD_DESCRIPTION_CLASS}>{labels.empty}</p>
         ) : (
-          <ul aria-label={labels.list} className="divide-y divide-[var(--border)]">
+          <ul aria-label={labels.list} className="divide-y divide-subtle">
             {sessions.map((session) => {
               const device = session.device?.trim() || labels.unknownDevice;
               const when = lastActive(session.lastActiveAt);
@@ -233,7 +219,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
                   data-current={session.current || undefined}
                   className="flex items-center gap-3 py-2"
                 >
-                  <MonitorSmartphone aria-hidden className="size-4 shrink-0 text-[var(--text-muted)]" />
+                  <MonitorSmartphone aria-hidden className="size-4 shrink-0 text-muted" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="min-w-0 break-words text-sm font-medium">{device}</span>
@@ -279,7 +265,7 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
         confirmLabel={labels.confirmSignOutEverywhere}
         onConfirm={signOutEverywhere}
       />
-      {hasMessage(failure) && (
+      {hasContent(failure) && (
         <AlertBanner tone="danger" size="sm" role="alert">
           {failure}
         </AlertBanner>

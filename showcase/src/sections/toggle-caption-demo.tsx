@@ -52,7 +52,7 @@ export function ToggleCaptionDemo() {
           ]}
         />
         <div className="space-y-1">
-          <span className="text-xs text-[var(--text-muted)]">no label, a static caption</span>
+          <span className="text-xs text-muted">no label, a static caption</span>
           <ToggleGroup<"metric" | "imperial">
             aria-label="Units"
             size="sm"

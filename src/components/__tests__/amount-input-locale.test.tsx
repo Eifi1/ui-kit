@@ -178,3 +178,69 @@ describe("AmountInput reads grouping marks (keksdose G1)", () => {
     expect(input()).toHaveValue("7,5");
   });
 });
+
+/**
+ * BUG-6 (refactor audit 2026-10): in a "," locale "0.500" read as five hundred — the
+ * thousands shape took a leading 0 for a group. keksdose's provider locale is German.
+ */
+describe("AmountInput reads a leading-zero dot as a decimal (BUG-6)", () => {
+  it("reads '0.500' as a half in de-DE", () => {
+    render(<Harness locale="de-DE" currency="EUR" />);
+    fireEvent.focus(input());
+    fireEvent.change(input(), { target: { value: "0.500" } });
+    fireEvent.blur(input());
+    // The settle keeps the typist's own spelling of an unchanged figure.
+    expect(Number(state())).toBe(0.5);
+  });
+});
+
+/**
+ * BUG-11 (refactor audit 2026-10): the settle rounded through `${n}e${d}`, and
+ * `String(n)` is exponent form below 1e-6 and from 1e21 — NaN, so the field blanked a
+ * typed "0.0000001" or a 22-digit figure on blur.
+ */
+describe("AmountInput settles a figure of any size (BUG-11)", () => {
+  const typeAndBlur = (text: string) => {
+    fireEvent.focus(input());
+    fireEvent.change(input(), { target: { value: text } });
+    fireEvent.blur(input());
+  };
+
+  it("rounds a figure below a millionth to 0 rather than blanking it", () => {
+    render(<Harness locale="en-US" currency="EUR" />);
+    typeAndBlur("0.0000001");
+    expect(state()).toBe("0");
+  });
+
+  it("keeps a 22-digit figure", () => {
+    render(<Harness locale="en-US" currency="EUR" />);
+    typeAndBlur("1000000000000000000000");
+    expect(state()).toBe("1000000000000000000000");
+  });
+});
+
+// DUP-10 (refactor audit 2026-10): NumberInput took a `locale` prop and AmountInput read
+// only the provider's — one field engine now, and the prop is AmountInput's too.
+describe("AmountInput's own `locale` (0.34)", () => {
+  it("decides the mark over the provider's, and the value stays dot-decimal", () => {
+    let reported = "";
+    render(
+      <UiKitProvider locale="en-US">
+        <AmountInput
+          ariaLabel="Amount"
+          value="1.5"
+          onChange={(v) => (reported = v)}
+          locale="de-CH"
+          calculator={false}
+        />
+        <AmountInput ariaLabel="Price" value="1.5" onChange={() => {}} locale="fr-CH" calculator={false} />
+      </UiKitProvider>,
+    );
+    // de-CH writes "." (CLDR), fr-CH ",".
+    expect(screen.getByRole("textbox", { name: "Amount" })).toHaveValue("1.5");
+    const price = screen.getByRole("textbox", { name: "Price" });
+    expect(price).toHaveValue("1,5");
+    fireEvent.change(screen.getByRole("textbox", { name: "Amount" }), { target: { value: "2.25" } });
+    expect(reported).toBe("2.25");
+  });
+});

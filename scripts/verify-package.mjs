@@ -86,6 +86,21 @@ for (const dir of ["dist", "src"]) {
   if ([...shipped].some((f) => f.startsWith(`${dir}/`))) ok(`${dir}/ ships (a documented @source target)`);
   else fail(`${dir}/ is not in the tarball, but the docs name it as an @source target`);
 }
+// One declaration file per module, beside its .js: since 0.34 tsc emits them per module
+// (scripts/build-dts.mjs, TST-3), where tsup's roll-up hoisted them into hashed chunks. A
+// .js without its .d.ts is a module a consumer's typecheck cannot see; a .d.ts without
+// its .js is a leftover the build should not have shipped.
+{
+  const isModule = (f) => /^dist\/.+\.js$/.test(f) && !/^dist\/(pay|bin)\//.test(f);
+  const modules = [...shipped].filter(isModule);
+  const noDts = modules.filter((f) => !shipped.has(f.replace(/\.js$/, ".d.ts")));
+  const noJs = [...shipped].filter((f) => /^dist\/.+\.d\.ts$/.test(f) && !shipped.has(f.replace(/\.d\.ts$/, ".js")));
+  if (noDts.length === 0 && noJs.length === 0) ok(`${modules.length} modules, each with its own .d.ts`);
+  else {
+    if (noDts.length) fail(`${noDts.length} module(s) ship without a .d.ts: ${noDts.slice(0, 5).join(", ")}`);
+    if (noJs.length) fail(`${noJs.length} .d.ts file(s) ship without a module: ${noJs.slice(0, 5).join(", ")}`);
+  }
+}
 
 log("• installing into a scratch project with ONLY the required peers");
 const required = Object.keys(pkg.peerDependencies ?? {}).filter(

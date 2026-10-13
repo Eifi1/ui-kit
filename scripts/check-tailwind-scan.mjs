@@ -83,6 +83,11 @@ const COLOUR_ROLES_CSS = [
   ["a text role utility", /\.text-danger-contrast\{color:var\(--danger-contrast\)\}/],
   ["a background role utility", /\.bg-danger-soft\{background-color:var\(--danger-bg\)\}/],
   ["a ring role utility", /\.focus-visible\\:ring-warning-strong:focus-visible\{--tw-ring-color:var\(--warning-border-strong\)\}/],
+  // 0.34 (refactor audit 2026-10, DOC-7): the focus frame's width, a ring offset and a
+  // money colour, as the kit's own markup writes them.
+  ["the focus frame's width utility", /\.focus-visible\\:ring-focus:focus-visible\{--tw-ring-shadow:[^;}]*calc\(var\(--focus-ring-width\) ?\+ ?var\(--tw-ring-offset-width\)\)/],
+  ["a ring-offset role utility", /\.focus-visible\\:ring-offset-surface:focus-visible\{--tw-ring-offset-color:var\(--bg-surface\)\}/],
+  ["a money role utility", /\.text-money-income\{color:var\(--money-income\)\}/],
 ];
 for (const [what, re] of COLOUR_ROLES_CSS) {
   if (!re.test(text)) {
@@ -123,6 +128,12 @@ const NAMESPACES = [
   ["truncate-until-large (text-size §10.17)", /\.truncate-until-large\s*\{[^}]*white-space:\s*nowrap;[\s\S]*?\[data-text-size\$=large\][^{]*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*anywhere;/],
   // 0.33.1: the figures' sibling wraps at spaces only, so an amount never splits.
   ["truncate-until-large-words (figures, 0.33.1)", /\.truncate-until-large-words\s*\{[^}]*white-space:\s*nowrap;[\s\S]*?\[data-text-size\$=large\][^{]*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*normal;/],
+  // 0.34 (DOC-7): the width namespaces — `ring-focus` must stay a WIDTH, which Tailwind
+  // tries only after finding no colour of that name — the ring offsets, and money.
+  ["ring-focus", /\.ring-focus\s*\{\s*--tw-ring-shadow:[^;]*calc\(var\(--focus-ring-width\) \+ var\(--tw-ring-offset-width\)\)/],
+  ["outline-focus", /\.outline-focus\s*\{[^}]*outline-width:\s*var\(--focus-ring-width\);/],
+  ["ring-offset-surface", /\.ring-offset-surface\s*\{\s*--tw-ring-offset-color:\s*var\(--bg-surface\);/],
+  ["hover:text-money-income (a money colour with a variant)", /\.hover\\:text-money-income:hover\s*\{\s*color:\s*var\(--money-income\);/],
 ];
 const NOT_NAMES = ["bg-muted", "text-surface", "text-subtle", "fill-brand"];
 const probe = compiler.build([...NAMESPACES.map(([cls]) => cls.split(" ")[0]), ...NOT_NAMES]);

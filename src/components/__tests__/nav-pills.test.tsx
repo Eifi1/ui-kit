@@ -20,7 +20,7 @@ describe("NavPills (keksdose swipe-settings-card:152)", () => {
     expect(screen.queryByRole("tab")).toBeNull();
     const current = screen.getByRole("button", { name: "Budgets" });
     expect(current).toHaveAttribute("aria-current", "true");
-    expect(current.className).toContain("bg-[var(--bg-inverse)]");
+    expect(current.className).toContain("bg-inverse");
     expect(screen.getByRole("button", { name: "Transactions" })).not.toHaveAttribute("aria-current");
     fireEvent.click(screen.getByRole("button", { name: "Transactions" }));
     expect(onSelect).toHaveBeenCalledWith("tx");

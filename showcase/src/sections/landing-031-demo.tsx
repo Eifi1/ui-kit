@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import type { ContextType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import { CalendarDays, Droplets, Leaf, Server, ShieldCheck, Sprout, Users } from "lucide-react";
 import { AuthLayout, Button, ProgressBar, ToggleGroup } from "@eifi1/ui-kit";
@@ -11,7 +11,7 @@ import { DemoStart } from "../../../src/demo/demo-start";
 import { DemoBanner } from "../../../src/demo/demo-banner";
 import { DemoEnded } from "../../../src/demo/demo-ended";
 import type { DemoModel } from "../../../src/demo/demo-session";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, beat, NO_ROUTER } from "../lib/section";
 
 /**
  * THE PUBLIC LANDING PAGE AND THE DEMO (0.31, docs/landing-demo-harmonization.md §4, §5):
@@ -23,17 +23,9 @@ import { Example, Note } from "../lib/section";
  * is the app's part, played by a timer: the kit sends no request.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 900) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
 const APP = "Ada's Garden Planner";
 const ACCESS_REQUEST: AccessChoice = { kind: "request", email: "support@example.com", app: APP };
 const ACCESS_REGISTER: AccessChoice = { kind: "register", href: "/register" };
-
-/** React Router refuses a router inside a router; resetting the location context is its
- *  documented escape hatch (see the shell page's nested AppShell). Each specimen gets a
- *  router of its own, so its links move IT, not this page. */
-const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
 function Sandbox({ children, start = "/" }: { children: ReactNode; start?: string }) {
   return (
@@ -50,14 +42,14 @@ function Sandbox({ children, start = "/" }: { children: ReactNode; start?: strin
 function Where() {
   const { pathname, search } = useLocation();
   return (
-    <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">
+    <p className="mt-2 font-mono text-xs text-muted">
       route: {pathname}
       {search}
     </p>
   );
 }
 
-const Logo = () => <Sprout className="text-[var(--brand)]" />;
+const Logo = () => <Sprout className="text-brand" />;
 const BRAND = { logo: <Logo />, name: APP };
 
 /* ── The mock visuals (decorative, kit tokens only) ──────────────────────── */
@@ -73,8 +65,8 @@ const BEDS = [
 
 function BedPlanMock() {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-xl">
-      <p className="text-xs font-semibold text-[var(--text-secondary)]">Spring plan · plot A</p>
+    <div className="rounded-xl border border-subtle bg-surface p-4 shadow-xl">
+      <p className="text-xs font-semibold text-secondary">Spring plan · plot A</p>
       <div className="mt-3 grid grid-cols-3 gap-2">
         {BEDS.map((bed) => (
           <div
@@ -92,17 +84,17 @@ function BedPlanMock() {
 
 function WateringMock() {
   return (
-    <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] text-sm shadow-lg">
+    <ul className="divide-y divide-subtle rounded-xl border border-subtle bg-surface text-sm shadow-lg">
       {[
         ["Mon", "Tomatoes", "2 l"],
         ["Tue", "Lettuce", "1 l"],
         ["Thu", "Beans", "1.5 l"],
       ].map(([day, bed, amount]) => (
         <li key={day} className="flex items-center gap-3 px-4 py-2.5">
-          <Droplets className="size-4 text-[var(--info)]" />
-          <span className="w-10 text-[var(--text-muted)]">{day}</span>
-          <span className="flex-1 text-[var(--text-primary)]">{bed}</span>
-          <span className="tabular-nums text-[var(--text-secondary)]">{amount}</span>
+          <Droplets className="size-4 text-info" />
+          <span className="w-10 text-muted">{day}</span>
+          <span className="flex-1 text-primary">{bed}</span>
+          <span className="tabular-nums text-secondary">{amount}</span>
         </li>
       ))}
     </ul>
@@ -111,7 +103,7 @@ function WateringMock() {
 
 function HarvestMock() {
   return (
-    <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-lg">
+    <div className="space-y-3 rounded-xl border border-subtle bg-surface p-4 shadow-lg">
       {[
         ["Tomatoes", 72],
         ["Beans", 45],
@@ -141,9 +133,9 @@ export function SampleLanding031Demo() {
       hint="PublicHeader · Hero · FeatureRows / FeatureRow · TrustStrip · CtaBand · PublicFooter"
     >
       <div className="mb-3 flex flex-wrap gap-3">
-        <ToggleGroup<LandingSession> ariaLabel="session" value={session} onChange={setSession} options={SESSIONS} />
+        <ToggleGroup<LandingSession> aria-label="session" value={session} onChange={setSession} options={SESSIONS} />
         <ToggleGroup<AccessChoice["kind"]>
-          ariaLabel="access"
+          aria-label="access"
           value={kind}
           onChange={setKind}
           options={[
@@ -153,7 +145,7 @@ export function SampleLanding031Demo() {
         />
       </div>
       <Sandbox>
-        <div className="overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)]">
+        <div className="overflow-hidden rounded-md border border-subtle bg-page">
           <PublicHeader brand={BRAND} session={session} access={access} openAppHref="/beds" className="static" />
           <Hero
             beta
@@ -234,11 +226,11 @@ export function PublicHeaderStates031Demo() {
       <div className="space-y-3">
         {SESSIONS.map(({ value, label }) => (
           <div key={value}>
-            <p className="mb-1 text-xs text-[var(--text-muted)]">
+            <p className="mb-1 text-xs text-muted">
               {code(`session="${value}"`)} — {label}
             </p>
             <Sandbox>
-              <div className="overflow-hidden rounded-md border border-[var(--border)]">
+              <div className="overflow-hidden rounded-md border border-subtle">
                 <PublicHeader brand={BRAND} session={value} access={ACCESS_REQUEST} openAppHref="/beds" className="static" />
               </div>
             </Sandbox>
@@ -276,7 +268,7 @@ export function DemoStart031Demo() {
     <Example label="DemoStart — starting, and each refusal" hint="start() once, StrictMode included; §5.2">
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <ToggleGroup<StartAnswer>
-          ariaLabel="server answer"
+          aria-label="server answer"
           value={answer}
           onChange={(value) => {
             setAnswer(value);
@@ -303,7 +295,7 @@ export function DemoStart031Demo() {
             access={ACCESS_REQUEST}
             start={async () => {
               note(`start() → POST /auth/demo-session`);
-              await beat();
+              await beat(900);
               if (answer === "created") return { access_token: "…", refresh_token: null, expires_at: "…" };
               throw ANSWERS[answer];
             }}
@@ -311,7 +303,7 @@ export function DemoStart031Demo() {
           />
         </div>
       </Sandbox>
-      <pre className="mt-3 overflow-x-auto rounded-md bg-[var(--bg-surface-2)] p-2 font-mono text-xs text-[var(--text-secondary)]">
+      <pre className="mt-3 overflow-x-auto rounded-md bg-surface-2 p-2 font-mono text-xs text-secondary">
         {log.length ? log.join("\n") : "—"}
       </pre>
       <Note>
@@ -345,7 +337,7 @@ export function DemoBanner031Demo() {
     <Example label="DemoBanner — at 23 h, 50 min and 4 min" hint="AlertBanner strip; useDemoCountdown; §5.4">
       <div className="mb-3">
         <ToggleGroup<DemoModel>
-          ariaLabel="model"
+          aria-label="model"
           value={model}
           onChange={setModel}
           options={[
@@ -358,7 +350,7 @@ export function DemoBanner031Demo() {
         <div className="space-y-3">
           {MOMENTS.map((moment) => (
             <div key={moment.key}>
-              <p className="mb-1 text-xs text-[var(--text-muted)]">{moment.label}</p>
+              <p className="mb-1 text-xs text-muted">{moment.label}</p>
               <DemoBanner
                 expiresAt={NOW + moment.left}
                 now={frozen}
@@ -369,7 +361,7 @@ export function DemoBanner031Demo() {
             </div>
           ))}
           <div>
-            <p className="mb-1 text-xs text-[var(--text-muted)]">
+            <p className="mb-1 text-xs text-muted">
               Live, on the real clock: ends 90 s after this page opened {ended && "— onEnded() was called"}
             </p>
             <DemoBanner
@@ -412,7 +404,7 @@ export function DemoEnded031Demo() {
     <Example label="DemoEnded — on AuthLayout" hint="/demo/ended, noindex; §5.5">
       <div className="mb-3">
         <ToggleGroup<DemoModel>
-          ariaLabel="model"
+          aria-label="model"
           value={model}
           onChange={setModel}
           options={[
@@ -422,7 +414,7 @@ export function DemoEnded031Demo() {
         />
       </div>
       <Sandbox start="/demo/ended">
-        <div className="overflow-hidden rounded-md border border-[var(--border)]">
+        <div className="overflow-hidden rounded-md border border-subtle">
           <AuthLayout logo={<Sprout />} title={APP} landmark={false} headingAs="h4" className="min-h-0">
             <DemoEnded model={model} access={ACCESS_REQUEST} headingAs="h5" noIndex={false} />
           </AuthLayout>
@@ -434,18 +426,5 @@ export function DemoEnded031Demo() {
         read its {code("noindex")}.
       </Note>
     </Example>
-  );
-}
-
-/** The whole "Landing & demo" page. */
-export function Landing031Demo() {
-  return (
-    <>
-      <SampleLanding031Demo />
-      <PublicHeaderStates031Demo />
-      <DemoStart031Demo />
-      <DemoBanner031Demo />
-      <DemoEnded031Demo />
-    </>
   );
 }

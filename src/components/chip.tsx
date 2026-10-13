@@ -1,16 +1,22 @@
-import { forwardRef, isValidElement, useCallback, useId, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref } from "react";
+import { isValidElement, useCallback, useId } from "react";
+import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
-import { horizontalStep } from "../lib/direction";
-import { FIELD_INVALID, FIELD_TOUCH_TEXT, TOUCH_TARGET_LARGE } from "./ui";
+import { TOUCH_TARGET_LARGE } from "./button-look";
 import { FOCUS_RING } from "./focus-ring";
-import { DisabledReasonLine, useDisabledReasonLine, type DisabledReasonDisplay } from "./field-parts";
-import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
+import { assignRef, LockedReason, type DisabledReasonDisplay } from "./field-parts";
+import { hasContent } from "../lib/presence";
+import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
-import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
+import { useSnapEdges } from "../lib/chip-edge-snap";
+// The edge-snap engine lives in lib/chip-edge-snap.ts and ChipInput in chip-input.tsx
+// (MOD-9). `refreshChipEdges` is still this module's; of ChipInput only the types are,
+// since a runtime re-export would make chip ⇄ chip-input a cycle — the barrel exports
+// chip-input itself.
+export { refreshChipEdges } from "../lib/chip-edge-snap";
+export type { ChipInputLabels, ChipInputProps } from "./chip-input";
 
 /**
  * A chip: a compact pill carrying one value.
@@ -73,62 +79,62 @@ export type ChipShape = "pill" | "square";
 
 const TONE: Record<ChipTone, { idle: string; selected: string }> = {
   neutral: {
-    idle: "border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-secondary)]",
-    selected: "border-[var(--border-strong)] bg-[var(--bg-active)] text-[var(--text-primary)]",
+    idle: "border-subtle bg-surface-2 text-secondary",
+    selected: "border-strong bg-active text-primary",
   },
   brand: {
-    idle: "border-[var(--border)] bg-[var(--brand-bg)] text-[var(--brand-muted)]",
-    selected: "border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-contrast)]",
+    idle: "border-subtle bg-brand-soft text-brand-muted",
+    selected: "border-brand bg-brand text-brand-contrast",
   },
   danger: {
-    idle: "border-[var(--danger-border)] bg-[var(--danger-bg)] text-[var(--danger)]",
-    selected: "border-[var(--danger)] bg-[var(--danger)] text-[var(--danger-contrast)]",
+    idle: "border-danger bg-danger-soft text-danger",
+    selected: "border-[var(--danger)] bg-danger text-danger-contrast",
   },
   warning: {
-    idle: "border-[var(--warning-border)] bg-[var(--warning-bg)] text-[var(--warning)]",
-    selected: "border-[var(--warning)] bg-[var(--warning-bg)] text-[var(--warning)]",
+    idle: "border-warning bg-warning-soft text-warning",
+    selected: "border-[var(--warning)] bg-warning-soft text-warning",
   },
   success: {
-    idle: "border-[var(--success-border)] bg-[var(--success-bg)] text-[var(--success)]",
-    selected: "border-[var(--success)] bg-[var(--success-bg)] text-[var(--success)]",
+    idle: "border-success bg-success-soft text-success",
+    selected: "border-[var(--success)] bg-success-soft text-success",
   },
   info: {
-    idle: "border-[var(--info-border)] bg-[var(--info-bg)] text-[var(--info)]",
-    selected: "border-[var(--info)] bg-[var(--info-bg)] text-[var(--info)]",
+    idle: "border-info bg-info-soft text-info",
+    selected: "border-[var(--info)] bg-info-soft text-info",
   },
   // The money pair (Keksdose's direction toggle). Only the TEXT and the BORDER carry
   // the tint, on the neutral chip's own surfaces: the money tokens are chosen for text
   // contrast, and a filled amber pill beside an amber figure reads as one smear.
   // `border-current` takes its hue from the text, so the two cannot drift apart.
   income: {
-    idle: "border-current/40 bg-[var(--bg-surface-2)] text-[var(--money-income)]",
-    selected: "border-current bg-[var(--bg-active)] text-[var(--money-income)]",
+    idle: "border-current/40 bg-surface-2 text-money-income",
+    selected: "border-current bg-active text-money-income",
   },
   expense: {
-    idle: "border-current/40 bg-[var(--bg-surface-2)] text-[var(--money-expense)]",
-    selected: "border-current bg-[var(--bg-active)] text-[var(--money-expense)]",
+    idle: "border-current/40 bg-surface-2 text-money-expense",
+    selected: "border-current bg-active text-money-expense",
   },
   // The categorical hues: the `info` recipe with its own token triple, so a hue chip
   // and a status chip in one row carry the same weight.
   blue: {
-    idle: "border-[var(--hue-blue-border)] bg-[var(--hue-blue-bg)] text-[var(--hue-blue)]",
-    selected: "border-[var(--hue-blue)] bg-[var(--hue-blue-bg)] text-[var(--hue-blue)]",
+    idle: "border-hue-blue bg-hue-blue-soft text-hue-blue",
+    selected: "border-[var(--hue-blue)] bg-hue-blue-soft text-hue-blue",
   },
   indigo: {
-    idle: "border-[var(--hue-indigo-border)] bg-[var(--hue-indigo-bg)] text-[var(--hue-indigo)]",
-    selected: "border-[var(--hue-indigo)] bg-[var(--hue-indigo-bg)] text-[var(--hue-indigo)]",
+    idle: "border-hue-indigo bg-hue-indigo-soft text-hue-indigo",
+    selected: "border-[var(--hue-indigo)] bg-hue-indigo-soft text-hue-indigo",
   },
   purple: {
-    idle: "border-[var(--hue-purple-border)] bg-[var(--hue-purple-bg)] text-[var(--hue-purple)]",
-    selected: "border-[var(--hue-purple)] bg-[var(--hue-purple-bg)] text-[var(--hue-purple)]",
+    idle: "border-hue-purple bg-hue-purple-soft text-hue-purple",
+    selected: "border-[var(--hue-purple)] bg-hue-purple-soft text-hue-purple",
   },
   teal: {
-    idle: "border-[var(--hue-teal-border)] bg-[var(--hue-teal-bg)] text-[var(--hue-teal)]",
-    selected: "border-[var(--hue-teal)] bg-[var(--hue-teal-bg)] text-[var(--hue-teal)]",
+    idle: "border-hue-teal bg-hue-teal-soft text-hue-teal",
+    selected: "border-[var(--hue-teal)] bg-hue-teal-soft text-hue-teal",
   },
   orange: {
-    idle: "border-[var(--hue-orange-border)] bg-[var(--hue-orange-bg)] text-[var(--hue-orange)]",
-    selected: "border-[var(--hue-orange)] bg-[var(--hue-orange-bg)] text-[var(--hue-orange)]",
+    idle: "border-hue-orange bg-hue-orange-soft text-hue-orange",
+    selected: "border-[var(--hue-orange)] bg-hue-orange-soft text-hue-orange",
   },
 };
 
@@ -136,21 +142,21 @@ const TONE: Record<ChipTone, { idle: string; selected: string }> = {
 // chip sits on. Selected still takes the tone's `selected` look (below), because an
 // outline toggle that stays an outline when on has no visible state.
 const OUTLINE: Record<ChipTone, string> = {
-  neutral: "border-[var(--border-strong)] bg-transparent text-[var(--text-secondary)]",
+  neutral: "border-strong bg-transparent text-secondary",
   // The brand AS TEXT is `--brand-muted` (0.33): `--brand` itself is solved to 3:1, a
   // fill's boundary, and as text it fell to 3.0:1 in the derived dark presets.
-  brand: "border-[var(--brand)] bg-transparent text-brand-muted",
-  danger: "border-[var(--danger-border)] bg-transparent text-[var(--danger)]",
-  warning: "border-[var(--warning-border)] bg-transparent text-[var(--warning)]",
-  success: "border-[var(--success-border)] bg-transparent text-[var(--success)]",
-  info: "border-[var(--info-border)] bg-transparent text-[var(--info)]",
-  income: "border-current/60 bg-transparent text-[var(--money-income)]",
-  expense: "border-current/60 bg-transparent text-[var(--money-expense)]",
-  blue: "border-[var(--hue-blue-border)] bg-transparent text-[var(--hue-blue)]",
-  indigo: "border-[var(--hue-indigo-border)] bg-transparent text-[var(--hue-indigo)]",
-  purple: "border-[var(--hue-purple-border)] bg-transparent text-[var(--hue-purple)]",
-  teal: "border-[var(--hue-teal-border)] bg-transparent text-[var(--hue-teal)]",
-  orange: "border-[var(--hue-orange-border)] bg-transparent text-[var(--hue-orange)]",
+  brand: "border-brand bg-transparent text-brand-muted",
+  danger: "border-danger bg-transparent text-danger",
+  warning: "border-warning bg-transparent text-warning",
+  success: "border-success bg-transparent text-success",
+  info: "border-info bg-transparent text-info",
+  income: "border-current/60 bg-transparent text-money-income",
+  expense: "border-current/60 bg-transparent text-money-expense",
+  blue: "border-hue-blue bg-transparent text-hue-blue",
+  indigo: "border-hue-indigo bg-transparent text-hue-indigo",
+  purple: "border-hue-purple bg-transparent text-hue-purple",
+  teal: "border-hue-teal bg-transparent text-hue-teal",
+  orange: "border-hue-orange bg-transparent text-hue-orange",
 };
 
 // `solid`: the fill under its own foreground, `<fill>-contrast` (0.33, colour-roles
@@ -181,18 +187,18 @@ const SOLID: Record<ChipTone, string> = {
  *  grey dot is "no particular state", not a darker black. */
 const DOT: Record<ChipTone, string> = {
   neutral: "bg-[var(--text-muted)]",
-  brand: "bg-[var(--brand)]",
-  danger: "bg-[var(--danger)]",
-  warning: "bg-[var(--warning)]",
-  success: "bg-[var(--success)]",
-  info: "bg-[var(--info)]",
-  income: "bg-[var(--money-income)]",
-  expense: "bg-[var(--money-expense)]",
-  blue: "bg-[var(--hue-blue)]",
-  indigo: "bg-[var(--hue-indigo)]",
-  purple: "bg-[var(--hue-purple)]",
-  teal: "bg-[var(--hue-teal)]",
-  orange: "bg-[var(--hue-orange)]",
+  brand: "bg-brand",
+  danger: "bg-danger",
+  warning: "bg-warning",
+  success: "bg-success",
+  info: "bg-info",
+  income: "bg-money-income",
+  expense: "bg-money-expense",
+  blue: "bg-hue-blue",
+  indigo: "bg-hue-indigo",
+  purple: "bg-hue-purple",
+  teal: "bg-hue-teal",
+  orange: "bg-hue-orange",
 };
 
 /** Per size: the dot's diameter. */
@@ -214,12 +220,12 @@ function surfaceOf(tone: ChipTone, variant: ChipVariant, selected: boolean | und
     // No surface and no border colour: the dot carries the tone, the text stays ink.
     // The border goes transparent rather than away, so a dot chip lines up with a pill.
     return selected
-      ? "border-transparent bg-transparent font-medium text-[var(--text-primary)]"
-      : "border-transparent bg-transparent text-[var(--text-secondary)]";
+      ? "border-transparent bg-transparent font-medium text-primary"
+      : "border-transparent bg-transparent text-secondary";
   }
   if (variant === "solid") {
     // A solid chip is already the strongest look there is, so "on" is a ring round it.
-    return cn(SOLID[tone], selected && "ring-2 ring-[var(--border-strong)] ring-offset-1 ring-offset-[var(--bg-surface)]");
+    return cn(SOLID[tone], selected && "ring-2 ring-strong ring-offset-1 ring-offset-surface");
   }
   if (selected) return palette.selected;
   return variant === "outline" ? OUTLINE[tone] : palette.idle;
@@ -290,224 +296,12 @@ const SIZE: Record<
   },
 };
 
-/* ── Edge snapping (fractional device-pixel ratios) ──────────────────────────
- *
- * WHY. At a device-pixel ratio of 1.25 (a 125 % Windows display, or 125 % browser
- * zoom) Chrome snaps a box to whole CSS pixels and only then scales it, so a 1px
- * border is 1.25 device pixels wide and starts at a quarter-pixel phase that depends
- * on where the edge lands. A chip's left edge follows whatever stands before it, its
- * right edge follows its own text, so the two land on unrelated phases: one rasterises
- * as a crisp pixel, the other as a two-pixel smear at half strength — and a 60 %-alpha
- * border (`--danger-border`) makes the smeared side read as a THINNER line (keksdose
- * dev #576).
- *
- * WHAT FIXES IT. The two edges rasterise as mirror images exactly when their device
- * positions sum to a whole number: `(2·left + width) · dpr` integral, `left` being the
- * edge's snapped CSS x. Rounding the WIDTH alone to the ratio's grid (4px at 1.25)
- * makes the phases EQUAL, which is not the same thing: measured with keksdose's
- * playwright harness across every left phase at 1.25, width-only rounding mirrored the
- * edges at two of the four phases and left the other two as lopsided as before (mean
- * peak asymmetry 16.5, worse than the unsnapped 10.9 a random width gets by luck); the
- * position-aware width below took it to 0 at every phase. Inset rings, whole-pixel
- * starts, compositing hints and fractional border widths were measured by keksdose
- * and do not help — Chrome rounds a sub-pixel border back up to 1px.
- *
- * So the fix needs the chip's position, which is why it is opt-in (`snapEdges`): it
- * reads layout. Cheaply — every snapped chip on the page shares one ResizeObserver,
- * one `resize` listener and one resolution media query, and a pass is batched into a
- * frame as read-all / write-all, not a forced layout per chip. At an integer ratio,
- * and at a half one (1.5, 2.5: grid 2 — measured symmetric already, both edges a
- * pixel and a half on the same pattern), there is nothing to fix and a pass
- * writes nothing.
- */
-
-/** The smallest whole CSS-pixel count `n` with `n × dpr` whole — 4 at 1.25, 2 at 1.5,
- *  1 at an integer ratio. 0 for a ratio no step up to 4px fits (110 % zoom wants 10px;
- *  a chip growing by up to 9px is a layout change, not a hairline fix). */
-function chipEdgeGrid(dpr: number): number {
-  for (let n = 1; n <= 4; n++) if (Math.abs(n * dpr - Math.round(n * dpr)) < 1e-3) return n;
-  return 0;
-}
-
-/**
- * The width (whole CSS px, at least `natural`) that mirrors a box's two edges at
- * `dpr`, for a box whose left edge sits at CSS x `left`. `natural` back when the ratio
- * needs nothing.
- */
-function snappedChipEdgeWidth(natural: number, left: number, dpr: number): number {
-  const n = chipEdgeGrid(dpr);
-  if (n <= 2) return natural;
-  const l = Math.round(left);
-  // A hair under a whole pixel is that pixel: 59.999 is a 60px chip, not a 61px one.
-  let w = Math.ceil(natural - 0.01);
-  while ((((2 * l + w) % n) + n) % n !== 0) w++;
-  return w;
-}
-
-const snapped = new Set<HTMLElement>();
-/** The min-width each chip was given by a pass — so a pass only ever clears its own. */
-const written = new WeakMap<HTMLElement, string>();
-let snapFrame = 0;
-let snapObserver: ResizeObserver | null = null;
-let ratioQuery: MediaQueryList | null = null;
-
-function clearOwn(el: HTMLElement) {
-  const own = written.get(el);
-  if (own !== undefined && el.style.minWidth === own) el.style.minWidth = "";
-  written.delete(el);
-}
-
-/**
- * Re-snap every chip rendered with `snapEdges`, now. The kit already re-snaps when a
- * chip renders, resizes, or the window or the ratio changes; call this after moving
- * chips some other way (a side panel sliding in beside a table of status chips),
- * since a move is not something an observer can see.
- */
-export function refreshChipEdges(): void {
-  if (snapFrame) {
-    cancelAnimationFrame(snapFrame);
-    snapFrame = 0;
-  }
-  if (typeof window === "undefined" || !snapped.size) return;
-  const dpr = window.devicePixelRatio || 1;
-  const els = [...snapped];
-  // Write: back to the natural width, so what is read below is the chip, not our pin.
-  for (const el of els) clearOwn(el);
-  const n = chipEdgeGrid(dpr);
-  if (n <= 2) return;
-  // A chip whose own end decides where it starts (RTL, `justify-end`) moves when it
-  // grows, so a pass re-reads what it wrote and steps on by a pixel until the edges
-  // agree — `n` steps cover every residue. Each pass is ONE layout for every chip
-  // together. A chip that never agrees (a centred one moves both edges at once) is
-  // given its natural width back rather than kept wider for nothing.
-  let pending = els;
-  for (let pass = 0; pass <= n && pending.length; pass++) {
-    const reads = pending.map((el) => {
-      const r = el.getBoundingClientRect();
-      // The text label (CHIP_LABEL_TRUNCATE; `.truncate` before 0.33).
-      const label = el.querySelector<HTMLElement>(".truncate-until-large");
-      // Not laid out (a hidden ancestor, jsdom), or truncated at its container's edge,
-      // where a wider chip would overflow: leave it alone. So too a label wrapped onto
-      // a second line at Large (0.32.1): the chip is already as wide as its row lets it
-      // be, and a min-width past that would push it over the edge just the same.
-      if (!r.width || (label && (label.scrollWidth > label.clientWidth || labelWraps(label)))) return null;
-      const width = Math.round(r.width * 64) / 64;
-      const target = snappedChipEdgeWidth(width, r.left + window.scrollX, dpr);
-      return target === width ? null : target;
-    });
-    const next: HTMLElement[] = [];
-    pending.forEach((el, i) => {
-      const target = reads[i];
-      if (target == null) return;
-      if (pass === n) {
-        clearOwn(el);
-        return;
-      }
-      const own = written.get(el);
-      const value = `${pass > 0 && own !== undefined ? parseFloat(own) + 1 : target}px`;
-      el.style.minWidth = value;
-      written.set(el, value);
-      next.push(el);
-    });
-    pending = next;
-  }
-}
-
-/** Whether a chip's label runs to more than one line — taller than one and a half of
- *  its line height. A line height of `normal` (no number to compare) counts as one line. */
-function labelWraps(label: HTMLElement): boolean {
-  const line = Number.parseFloat(getComputedStyle(label).lineHeight);
-  return line > 0 && label.clientHeight > 1.5 * line;
-}
-
-function scheduleChipEdges() {
-  if (snapFrame || typeof requestAnimationFrame === "undefined") return;
-  snapFrame = requestAnimationFrame(() => {
-    snapFrame = 0;
-    refreshChipEdges();
-  });
-}
-
-/** The resolution query for the CURRENT ratio: it stops matching when the ratio
- *  changes (a window dragged to another display), which a `resize` need not fire. */
-function watchRatio() {
-  ratioQuery?.removeEventListener("change", onRatioChange);
-  ratioQuery =
-    typeof window.matchMedia === "function"
-      ? window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`)
-      : null;
-  ratioQuery?.addEventListener("change", onRatioChange);
-}
-
-function onRatioChange() {
-  watchRatio();
-  scheduleChipEdges();
-}
-
-function registerSnap(el: HTMLElement) {
-  if (snapped.has(el)) return;
-  if (!snapped.size) {
-    if (typeof ResizeObserver !== "undefined") snapObserver = new ResizeObserver(scheduleChipEdges);
-    window.addEventListener("resize", scheduleChipEdges);
-    watchRatio();
-  }
-  snapped.add(el);
-  snapObserver?.observe(el);
-  scheduleChipEdges();
-}
-
-function unregisterSnap(el: HTMLElement) {
-  if (!snapped.delete(el)) return;
-  snapObserver?.unobserve(el);
-  clearOwn(el);
-  if (snapped.size) return;
-  snapObserver?.disconnect();
-  snapObserver = null;
-  window.removeEventListener("resize", scheduleChipEdges);
-  ratioQuery?.removeEventListener("change", onRatioChange);
-  ratioQuery = null;
-}
-
-/** The ref a chip hangs on its visible pill, plus a re-snap after every render (its
- *  label or its neighbours may have changed). */
-function useSnapEdges(on: boolean) {
-  const node = useRef<HTMLElement | null>(null);
-  const ref = useCallback(
-    (el: HTMLElement | null) => {
-      if (el === node.current) return;
-      const prev = node.current;
-      node.current = el;
-      // React detaches and re-attaches a ref whose callback changed identity (a
-      // consumer's inline ref) — the same element, a moment apart. Unregistering on
-      // the detach would clear the pin and paint one frame unsnapped, so the drop
-      // waits a microtask and is skipped if the element came straight back.
-      if (prev) queueMicrotask(() => node.current !== prev && unregisterSnap(prev));
-      if (el && on) registerSnap(el);
-    },
-    [on],
-  );
-  useLayoutEffect(() => {
-    const el = node.current;
-    if (!el) return;
-    if (on) {
-      registerSnap(el);
-      scheduleChipEdges();
-    } else unregisterSnap(el);
-  });
-  return ref;
-}
-
-function assignRef<T>(target: Ref<T> | undefined, value: T | null) {
-  if (typeof target === "function") target(value);
-  else if (target) (target as { current: T | null }).current = value;
-}
-
 const CHIP_PILL = "inline-flex max-w-full items-center rounded-full border transition-colors";
 
 // `focus-visible`, not `focus`: a chip commonly receives focus programmatically (the
 // ChipInput moves focus onto one after a removal) and a ring that appears on a
 // pointer click reads as a stuck selection.
-const CHIP_RING = `${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-surface)]`;
+const CHIP_RING = `${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-surface`;
 const CHIP_BASE = `${CHIP_PILL} ${CHIP_RING}`;
 
 /**
@@ -564,7 +358,7 @@ interface ChipBaseProps {
   caps?: boolean;
   /**
    * The leading glyph: a lucide component (`icon={Check}`, drawn at the chip's size), or
-   * — since 0.15.4 — a ready element (`icon={<Check className="text-[var(--success)]" />}`)
+   * — since 0.15.4 — a ready element (`icon={<Check className="text-success" />}`)
    * for a glyph whose colour or stroke carries a state; it is sized to the same box
    * (keksdose live #358 built that slot by hand inside `children`).
    */
@@ -644,6 +438,9 @@ interface ChipBaseProps {
    * nothing to snap.
    */
   snapEdges?: boolean;
+  /** The interactive element — the pill, or a split pill's body. A React 19 ref prop
+   *  since 0.34 (MOD-4, refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -737,42 +534,40 @@ export type ChipProps = ChipBaseProps &
  * focus ring is drawn on the body alone, and `ref`, `id` and the ARIA props still reach
  * the body — the interactive element.
  */
-export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
-  {
-    children,
-    tone = "neutral",
-    size = "md",
-    variant = "soft",
-    shape = "pill",
-    caps = false,
-    icon: Icon,
-    selected,
-    checkbox = false,
-    href,
-    renderLink,
-    onClick,
-    onRemove,
-    removeLabel,
-    removeDisabled = false,
-    disabled = false,
-    className,
-    tabIndex,
-    role,
-    onKeyDown,
-    onFocus,
-    snapEdges = false,
-    disabledReason: ownDisabledReason,
-    disabledReasonDisplay,
-    commit,
-    ...rest
-  },
+export function Chip({
   ref,
-) {
+  children,
+  tone = "neutral",
+  size = "md",
+  variant = "soft",
+  shape = "pill",
+  caps = false,
+  icon: Icon,
+  selected,
+  checkbox = false,
+  href,
+  renderLink,
+  onClick,
+  onRemove,
+  removeLabel,
+  removeDisabled = false,
+  disabled = false,
+  className,
+  tabIndex,
+  role,
+  onKeyDown,
+  onFocus,
+  snapEdges = false,
+  disabledReason: ownDisabledReason,
+  disabledReasonDisplay,
+  commit,
+  ...rest
+}: ChipProps) {
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { remove: removeLabel });
   const reasonId = useId();
   const disabledReason = useCommitReason(commit, ownDisabledReason);
   // Only the BUTTON shape commits: a link navigates, an inert chip does nothing.
-  const locked = Boolean(onClick) && !href && hasReason(disabledReason);
+  const locked = Boolean(onClick) && !href && hasContent(disabledReason);
   const kitLink = useKitLink();
   const s = SIZE[size];
   const interactive = !!href || !!onClick;
@@ -819,6 +614,12 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     snap && "justify-center",
     className,
   );
+
+  // The tone as data on the visible pill (0.34, refactor audit 2026-10, TST-9): a stable
+  // hook for a test or a caller's selector, where the surface classes are the kit's to
+  // change. On the pill wrapper of a split chip, else on the chip itself; before the
+  // caller's props, so a `data-tone` of their own wins.
+  const toneData = { "data-tone": onRemove ? undefined : tone } as Record<string, string | undefined>;
 
   // The checkbox box, only on the toggle shape it has meaning on.
   const isCheckbox = checkbox && !!onClick && !href;
@@ -895,7 +696,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         FOCUS_RING,
         // §4: the × is a 48 px target at Large without growing the chip around it.
         REMOVE_HIT_AREA_LARGE,
-        !locked && "hover:bg-[var(--bg-active)]",
+        !locked && "hover:bg-active",
         locked && "cursor-not-allowed",
         ((disabled && !locked) || removeDisabled) && "pointer-events-none",
         // A disabled chip is already dimmed as a whole; dimming the × again on top
@@ -911,6 +712,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   const pill = (inner: ReactNode) => (
     <span
       ref={snap ? snapRef : undefined}
+      data-tone={tone}
       // The pill is the target's box here (§4): the body inside stretches to its height.
       className={cn(CHIP_PILL, s.tail, radius, surface, target && CHIP_TOUCH_LARGE, snap && "justify-center", className)}
     >
@@ -936,6 +738,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     // On this shape `onClick` is the link shape's, typed for the anchor.
     const onLinkClick = onClick as ChipLinkProps["onClick"];
     const linkProps: ChipLinkProps = {
+      ...toneData,
       ...rest,
       ref: (remove ? ref : ownRef) as Ref<HTMLAnchorElement>,
       href,
@@ -952,6 +755,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     ) : (
       <a
         ref={(remove ? ref : ownRef) as React.Ref<HTMLAnchorElement>}
+        {...toneData}
         href={href}
         aria-current={selected ? "true" : undefined}
         onClick={onLinkClick}
@@ -972,6 +776,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     const button = (
       <button
         ref={(remove ? ref : ownRef) as React.Ref<HTMLButtonElement>}
+        {...toneData}
         type="button"
         onClick={(e) => {
           // Locked: the press is swallowed — the chip saves on press, and a lock that
@@ -1006,9 +811,9 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     const shaped = remove ? pill(button) : button;
     if (!locked) return shaped;
     return (
-      <ChipReasonFrame reason={disabledReason} reasonId={reasonId} display={disabledReasonDisplay}>
+      <LockedReason lock={{ reason: disabledReason, reasonId }} display={disabledReasonDisplay}>
         {shaped}
-      </ChipReasonFrame>
+      </LockedReason>
     );
   }
 
@@ -1018,6 +823,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
        (ChipInput does); the role is a prop, so the rule cannot see it. */
     <span
       ref={ownRef as React.Ref<HTMLSpanElement>}
+      {...toneData}
       className={look}
       tabIndex={tabIndex}
       role={role}
@@ -1029,53 +835,6 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
       {remove}
     </span>
   );
-});
-
-/**
- * A locked chip and its reason (0.32, docs/text-size-harmonization.md §4): a line under
- * the chip at Large and on touch, else the kit {@link Tooltip} — Button's `ReasonFrame`,
- * see {@link DisabledReasonDisplay}. A component of its own so only a LOCKED chip asks
- * the text size and the pointer; the unlocked chips of a filter row subscribe to nothing.
- *
- * Tooltip form: the chip in a FRAGMENT, as a locked Button is — the bubble is visual, and
- * the hidden copy beside it is what the chip (and its ×) is described by. Line form: the
- * line is that description, under the chip, and no bubble repeats it.
- */
-function ChipReasonFrame({
-  reason,
-  reasonId,
-  display,
-  children,
-}: {
-  reason: ReactNode;
-  reasonId: string;
-  display: DisabledReasonDisplay | undefined;
-  children: ReactNode;
-}) {
-  const line = useDisabledReasonLine(display);
-  if (line) {
-    return (
-      <DisabledReasonLine id={reasonId} reason={reason}>
-        {children}
-      </DisabledReasonLine>
-    );
-  }
-  return (
-    <Tooltip label={reason}>
-      <>
-        {children}
-        <span id={reasonId} hidden>
-          {reason}
-        </span>
-      </>
-    </Tooltip>
-  );
-}
-
-/** `null`, `false` and `""` are what a `cond && reason` gives on the happy path — no
- *  reason, so no lock. */
-function hasReason(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
 }
 
 /** Calls a chip's `renderLink` with the props it was given — see its call site. */
@@ -1084,359 +843,4 @@ function RenderedLink({
   ...props
 }: ChipLinkProps & { render: (props: ChipLinkProps) => ReactElement }) {
   return render(props);
-}
-
-/* ── ChipInput ────────────────────────────────────────────────────────────── */
-
-export interface ChipInputLabels {
-  /** Announced after a value is added. Receives the value. */
-  added: (value: string) => string;
-  /** Announced after a value is removed. Receives the value. */
-  removed: (value: string) => string;
-  /** Accessible name for each chip's dismiss button. */
-  remove: string;
-  /** Shown when `max` is reached. Receives the limit. */
-  atLimit: (max: number) => string;
-  /** Shown when a duplicate is rejected. Receives the value. */
-  duplicate: (value: string) => string;
-}
-
-export const DEFAULT_CHIP_INPUT_LABELS: ChipInputLabels = {
-  added: (v) => `${v} added`,
-  removed: (v) => `${v} removed`,
-  remove: "Remove",
-  atLimit: (max) => `Limit of ${max} reached`,
-  duplicate: (v) => `${v} is already in the list`,
-};
-
-export function resolveChipInputLabels(labels?: Partial<ChipInputLabels>): ChipInputLabels {
-  return labels ? { ...DEFAULT_CHIP_INPUT_LABELS, ...labels } : DEFAULT_CHIP_INPUT_LABELS;
-}
-
-/**
- * `onChange` is the field's own — the whole LIST, not a DOM event — so the wrapper
- * div's `onChange` is omitted rather than shadowed. `placeholder` is likewise this
- * component's, forwarded to the inner `<input>`; the div has none of its own.
- */
-export interface ChipInputProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "placeholder" | "children"> {
-  value: string[];
-  onChange: (next: string[]) => void;
-  placeholder?: string;
-  /** Visible label, rendered above the field. Without one, name the field with
-   *  `aria-label`. */
-  label?: string;
-  /**
-   * @deprecated Pass `aria-label` instead — the DOM spelling the rest of this kit
-   * now uses. Still honoured, and still second to `aria-label` when both are given.
-   */
-  ariaLabel?: string;
-  /** Reject or rewrite a value on commit. Return a string to reject WITH that message. */
-  validate?: (raw: string) => string | null;
-  /** Characters that commit the current text, besides Enter. Default: comma. */
-  separators?: string[];
-  allowDuplicates?: boolean;
-  max?: number;
-  tone?: ChipTone;
-  size?: ChipSize;
-  disabled?: boolean;
-  invalid?: boolean;
-  /** Error text. Wires `aria-describedby` and implies `invalid`. */
-  error?: ReactNode;
-  labels?: Partial<ChipInputLabels>;
-  className?: string;
-}
-
-/**
- * A field whose value is a LIST, entered as chips.
- *
- * The keyboard model is the whole component; the pills are the easy part. Per the WAI
- * pattern for a "tag" input:
- *
- *   Enter, or any separator  commit the typed text
- *   Backspace on empty text  move focus to the last chip (does NOT delete it)
- *   ← →  while on a chip     move between chips, in reading order (mirrored in RTL)
- *   Backspace / Delete       remove the focused chip, focus its neighbour
- *   Escape                   clear what is typed but keep the committed chips
- *   paste                    splits on the separators, so a pasted CSV becomes chips
- *
- * The Backspace-on-empty behaviour is the one worth arguing about. Deleting immediately
- * is more common and is a trap: it is a destructive action with no feedback on a key
- * people hit by reflex, and the value it destroys may have taken a while to type. Moving
- * focus first makes the second Backspace a deliberate one, and it is what lets a
- * keyboard user reach a chip at all.
- */
-export function ChipInput({
-  value,
-  onChange,
-  placeholder,
-  label,
-  ariaLabel,
-  validate,
-  separators = [","],
-  allowDuplicates = false,
-  max,
-  tone = "neutral",
-  size = "md",
-  disabled = false,
-  invalid = false,
-  error,
-  labels,
-  className,
-  "aria-label": ariaLabelAttr,
-  ...rest
-}: ChipInputProps) {
-  // `labels` over the provider's `chipInput` over English — the same order
-  // `resolveChipInputLabels` gives outside a provider.
-  const text = useKitLabels("chipInput", DEFAULT_CHIP_INPUT_LABELS, labels);
-  // A batch of pasted values is announced as one list, joined the way the language
-  // joins a list in a sentence ("a, b and c added") — hence the long conjunction,
-  // where a trigger's summary would use the narrow one.
-  const locale = useKitLocale();
-  const [draft, setDraft] = useState("");
-  const [message, setMessage] = useState("");
-  // The last refusal, shown under the field until the next edit. The live region alone
-  // told only a screen-reader user why Enter did nothing; everyone else saw the text
-  // simply stay put.
-  const [rejected, setRejected] = useState<string | null>(null);
-  const [focusedChip, setFocusedChip] = useState<number | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const chipRefs = useRef<Array<HTMLElement | null>>([]);
-  const id = useId();
-  const listId = `${id}-list`;
-  const errorId = `${id}-error`;
-  const rejectedId = `${id}-rejected`;
-  const isInvalid = invalid || !!error;
-  const describedBy = [error ? errorId : null, rejected ? rejectedId : null]
-    .filter(Boolean)
-    .join(" ");
-
-  const focusChip = (index: number | null) => {
-    setFocusedChip(index);
-    if (index === null) inputRef.current?.focus();
-    else chipRefs.current[index]?.focus();
-  };
-
-  /**
-   * Try to add every candidate, as ONE change.
-   *
-   * Batched rather than looped for a reason that bites immediately: `commit` closes over
-   * `value`, so calling it once per pasted item makes every call compute its result from
-   * the list as it was BEFORE the paste, and each `onChange` overwrites the last. A
-   * pasted "one,two,three" left only "three". Accumulating locally and emitting once is
-   * also the correct behaviour for an undo stack — a paste is one action.
-   */
-  const commitMany = (raws: string[]): { added: string[]; rejection: string | null } => {
-    const next = [...value];
-    const added: string[] = [];
-    let rejection: string | null = null;
-
-    for (const raw of raws) {
-      const candidate = raw.trim();
-      if (!candidate) continue;
-      if (max !== undefined && next.length >= max) {
-        rejection ??= text.atLimit(max);
-        break;
-      }
-      if (!allowDuplicates && next.includes(candidate)) {
-        rejection ??= text.duplicate(candidate);
-        continue;
-      }
-      const invalidReason = validate?.(candidate);
-      if (invalidReason) {
-        rejection ??= invalidReason;
-        continue;
-      }
-      next.push(candidate);
-      added.push(candidate);
-    }
-
-    if (added.length) onChange(next);
-    // A rejection is the more useful thing to say: "three added" is obvious from the
-    // chips appearing, whereas "already in the list" is the only sign of what did not.
-    const addedList = new Intl.ListFormat(locale, { type: "conjunction", style: "long" });
-    setMessage(rejection ?? (added.length ? text.added(addedList.format(added)) : ""));
-    setRejected(rejection);
-    return { added, rejection };
-  };
-
-  const commit = (raw: string): boolean => commitMany([raw]).added.length > 0;
-
-  const removeAt = (index: number) => {
-    const removed = value[index];
-    onChange(value.filter((_, i) => i !== index));
-    setMessage(text.removed(removed));
-    setRejected(null);
-    // Focus the neighbour that takes its place, or the input when the list empties —
-    // dropping focus to <body> here is how a keyboard user loses the field entirely.
-    const next = index >= value.length - 1 ? null : index;
-    requestAnimationFrame(() => focusChip(value.length - 1 === 0 ? null : next));
-  };
-
-  const onInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      // Only when there is something to commit: an empty Enter belongs to the form.
-      if (draft.trim()) {
-        e.preventDefault();
-        if (commit(draft)) setDraft("");
-      }
-      return;
-    }
-    if (separators.includes(e.key)) {
-      e.preventDefault();
-      if (commit(draft)) setDraft("");
-      return;
-    }
-    if (e.key === "Escape" && draft) {
-      e.preventDefault();
-      setDraft("");
-      return;
-    }
-    if (e.key === "Backspace" && !draft && value.length) {
-      e.preventDefault();
-      focusChip(value.length - 1);
-    }
-  };
-
-  const onChipKeyDown = (e: KeyboardEvent<HTMLElement>, index: number) => {
-    if (e.key === "Backspace" || e.key === "Delete") {
-      e.preventDefault();
-      removeAt(index);
-      return;
-    }
-    // ←/→ follow the reading direction, not DOM order: in RTL the previous chip is to
-    // the RIGHT, and ArrowLeft moves on towards the input.
-    const step = horizontalStep(e.key, e.currentTarget);
-    if (step === -1 && index > 0) {
-      e.preventDefault();
-      focusChip(index - 1);
-      return;
-    }
-    if (step === 1) {
-      e.preventDefault();
-      focusChip(index === value.length - 1 ? null : index + 1);
-      return;
-    }
-    if (e.key === "Escape") {
-      e.preventDefault();
-      focusChip(null);
-    }
-  };
-
-  return (
-    // The rest lands on the OUTER box — the thing a `data-tour` step or a test id
-    // wants to point at — while the accessible name below goes on the `<input>`,
-    // because that is what a screen-reader user actually lands in. Spreading the two
-    // to the same element would have named a decorative wrapper and left the field
-    // anonymous.
-    <div {...rest} className={cn("space-y-1", className)}>
-      {label && (
-        <label htmlFor={`${id}-input`} className="block text-sm text-[var(--text-secondary)]">
-          {label}
-        </label>
-      )}
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a
-          pointer convenience that widens the input's hit area to the whole field; the
-          keyboard path is the <input> itself, which is in the tab order. */}
-      <div
-        // `relative` so the live region below can be `sr-only` without escaping to the
-        // initial containing block and inflating the document height.
-        className={cn(
-          "relative flex flex-wrap items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 shadow-sm",
-          "focus-within:border-[var(--brand)] focus-within:ring-1 focus-within:ring-[var(--brand)]",
-          disabled && "cursor-default bg-[var(--bg-surface-2)]",
-          isInvalid && FIELD_INVALID,
-        )}
-        onClick={() => !disabled && inputRef.current?.focus()}
-      >
-        {/* `display: contents` on the wrappers so the chips participate in the field's
-            own flex wrap rather than forming a nested row. The list semantics are
-            restored with explicit roles, because `contents` removes the ul/li boxes from
-            the accessibility tree in several engines. */}
-        {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- NOT redundant here: the
-            `contents` display below removes the ul and li boxes from the box tree, and
-            several engines drop the list semantics with them. The explicit role is what
-            puts "list, 3 items" back. */}
-        <ul id={listId} role="list" className="contents">
-          {value.map((v, i) => (
-            <li key={`${v}-${i}`} role="presentation" className="contents">
-              <Chip
-                ref={(el: HTMLElement | null) => {
-                  chipRefs.current[i] = el;
-                }}
-                tone={tone}
-                size={size}
-                disabled={disabled}
-                removeLabel={text.remove}
-                onRemove={disabled ? undefined : () => removeAt(i)}
-                // A ROVING tabIndex: only the focused chip is tabbable, so Tab leaves
-                // the field instead of walking through every value in it — the reason a
-                // list of twenty tags is otherwise a twenty-stop detour for a keyboard.
-                tabIndex={focusedChip === i ? 0 : -1}
-                role="listitem"
-                aria-label={v}
-                onKeyDown={(e) => onChipKeyDown(e, i)}
-                onFocus={() => setFocusedChip(i)}
-                data-chip-index={i}
-              >
-                {v}
-              </Chip>
-            </li>
-          ))}
-        </ul>
-        <input
-          id={`${id}-input`}
-          ref={inputRef}
-          value={draft}
-          onChange={(e) => {
-            setDraft(e.target.value);
-            setMessage("");
-            setRejected(null);
-          }}
-          onKeyDown={onInputKeyDown}
-          onBlur={() => {
-            // Commit on blur: a value typed and then clicked away from is a value the
-            // user meant to add, and losing it silently is the commonest complaint
-            // about this pattern.
-            if (draft.trim() && commit(draft)) setDraft("");
-          }}
-          onPaste={(e) => {
-            const pasted = e.clipboardData.getData("text");
-            const pattern = new RegExp(`[${separators.map((s) => `\\${s}`).join("")}\n\r]`);
-            if (!pattern.test(pasted)) return;
-            e.preventDefault();
-            if (commitMany(pasted.split(pattern)).added.length) setDraft("");
-          }}
-          placeholder={value.length ? undefined : placeholder}
-          disabled={disabled}
-          // A visible `label` is already wired through `htmlFor`, so adding a name
-          // here would give the field two. Failing that, the DOM spelling wins and
-          // the deprecated `ariaLabel` is the fallback.
-          aria-label={label ? undefined : (ariaLabelAttr ?? ariaLabel)}
-          aria-describedby={describedBy || undefined}
-          aria-invalid={isInvalid || !!rejected || undefined}
-          // `w-0` with flex-1: without a width the browser's default input size (20
-          // characters) became the field's minimum width and pushed it past a 240 px
-          // phone at 150 % (0.32's screenshot run).
-          className={cn("w-0 min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] disabled:cursor-default", FIELD_TOUCH_TEXT)}
-        />
-        {/* Additions, removals and rejections move no focus, so nothing would announce
-            them. `sr-only-fixed` rather than `sr-only`: this sits inside a consumer's
-            markup and must not extend the document height. */}
-        <span role="status" aria-live="polite" aria-atomic className="sr-only-fixed">
-          {message}
-        </span>
-      </div>
-      {error && (
-        <p id={errorId} className="text-xs text-[var(--danger)]">
-          {error}
-        </p>
-      )}
-      {rejected && (
-        <p id={rejectedId} className="text-xs text-[var(--danger)]" data-chip-input-rejected="">
-          {rejected}
-        </p>
-      )}
-    </div>
-  );
 }

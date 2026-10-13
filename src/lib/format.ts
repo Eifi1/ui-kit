@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useKitLocale } from "../i18n/kit-labels";
 import { parseIsoDate } from "./dates";
+import { roundHalfAway } from "./round";
 
 /**
  * Number, money, percentage, date and relative-time formatting — `Intl`, in one place,
@@ -387,6 +388,8 @@ export interface RoundToCurrencyOptions {
  * FX estimate set into an AmountInput showed four decimals) — unless the options form
  * gives `fallbackDigits`: `roundToCurrency(v, code, { fallbackDigits: 2 })` rounds a
  * figure whose currency is not chosen yet to cents rather than leaving 0.1 + 0.2 as is.
+ * A finite value never comes back NaN or -0, however small or large (BUG-11):
+ * 0.1 + 0.2 - 0.3 → 0, -0.004 → 0.
  */
 export function roundToCurrency(
   value: number,
@@ -395,7 +398,6 @@ export function roundToCurrency(
 ): number {
   const options = typeof digits === "object" && digits !== null ? digits : { digits };
   const places = options.digits ?? currencyMinorDigits(currency) ?? options.fallbackDigits;
-  if (places === undefined || !Number.isFinite(value)) return value;
-  const magnitude = Number(`${Math.round(Number(`${Math.abs(value)}e${places}`))}e-${places}`);
-  return value < 0 ? -magnitude : magnitude;
+  if (places === undefined) return value;
+  return roundHalfAway(value, places);
 }

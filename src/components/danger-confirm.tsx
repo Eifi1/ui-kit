@@ -1,12 +1,18 @@
-import { Children, forwardRef, useCallback, useEffect, useId, useRef, useState } from "react";
-import type { ChangeEvent, ComponentPropsWithoutRef, FormEvent, ReactNode } from "react";
+import { Children, useCallback, useEffect, useId, useRef, useState } from "react";
+import type { ChangeEvent, ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Button, Input, Label, Spinner } from "./ui";
-import type { ButtonVariant, InputProps } from "./ui";
+import { hasContent } from "../lib/presence";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Button } from "./button";
+import { Input } from "./input";
+import { Label } from "./field-base";
+import { Spinner } from "./spinner";
+import type { ButtonVariant } from "./button-look";
+import type { InputProps } from "./input";
 import { Checkbox } from "./checkbox";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
+import { DEFAULT_DANGER_CONFIRM_LABELS } from "./danger-confirm-labels";
 
 /**
  * How typed text is compared with the text it has to repeat — shared by
@@ -70,11 +76,6 @@ export function usePromisePending() {
   return { pending, run };
 }
 
-/** A label that is really there — `null`, `false` and `""` are what a caller's
- *  `cond && reason` evaluates to on the path where there is none. */
-function hasContent(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
-}
 
 /** The one word {@link CurrentPasswordInput} says on its own behalf — the
  *  `dangerConfirm.password` label, shared with DangerConfirm's password field, so an
@@ -106,7 +107,7 @@ export interface CurrentPasswordInputProps extends Omit<InputProps, "type" | "au
    */
   busy?: boolean;
   /** Per-instance override of `dangerConfirm.password`. */
-  labels?: Partial<CurrentPasswordInputLabels>;
+  labels?: LabelOverride<CurrentPasswordInputLabels>;
 }
 
 /**
@@ -132,29 +133,35 @@ export interface CurrentPasswordInputProps extends Omit<InputProps, "type" | "au
  *   busy={isSubmitting} {...register("password")} />
  * ```
  */
-export const CurrentPasswordInput = forwardRef<HTMLInputElement, CurrentPasswordInputProps>(
-  function CurrentPasswordInput({ label, onValueChange, onChange, busy, readOnly, labels: labelsProp, ...rest }, ref) {
-    const labels = useKitLabels("dangerConfirm", DEFAULT_DANGER_CONFIRM_LABELS, labelsProp);
-    const namedOtherwise = rest["aria-label"] !== undefined || rest["aria-labelledby"] !== undefined;
-    return (
-      <Input
-        {...rest}
-        ref={ref}
-        // After the spread: a props object spread at the field must not turn it into a
-        // text field, or into one the password manager offers a new password for.
-        type="password"
-        autoComplete="current-password"
-        label={label === undefined ? (namedOtherwise ? undefined : labels.password) : hasContent(label) ? label : undefined}
-        readOnly={Boolean(busy) || readOnly}
-        onChange={(e) => {
-          onChange?.(e);
-          onValueChange?.(e.target.value);
-        }}
-      />
-    );
-  },
-);
-CurrentPasswordInput.displayName = "CurrentPasswordInput";
+export function CurrentPasswordInput({
+  label,
+  onValueChange,
+  onChange,
+  busy,
+  readOnly,
+  labels: labelsProp,
+  ...rest
+}: CurrentPasswordInputProps) {
+  const labels = useKitLabels("dangerConfirm", DEFAULT_DANGER_CONFIRM_LABELS, labelsProp);
+  const namedOtherwise = rest["aria-label"] !== undefined || rest["aria-labelledby"] !== undefined;
+  return (
+    <Input
+      // `ref` (the `<input>`) rides along: a React 19 ref prop since 0.34 (MOD-4, refactor
+      // audit 2026-10), where this was `forwardRef`.
+      {...rest}
+      // After the spread: a props object spread at the field must not turn it into a
+      // text field, or into one the password manager offers a new password for.
+      type="password"
+      autoComplete="current-password"
+      label={label === undefined ? (namedOtherwise ? undefined : labels.password) : hasContent(label) ? label : undefined}
+      readOnly={Boolean(busy) || readOnly}
+      onChange={(e) => {
+        onChange?.(e);
+        onValueChange?.(e.target.value);
+      }}
+    />
+  );
+}
 
 /** The words {@link TypedConfirmField} says on its own behalf — the `dangerConfirm`
  *  namespace's `phrase` and `phrasePlaceholder`, shared with DangerConfirm's own field,
@@ -190,7 +197,7 @@ export interface TypedConfirmFieldProps
   /** The guarded action is running: the field turns `readOnly` (not `disabled`, which
    *  would drop the focus Enter left in it). */
   busy?: boolean;
-  labels?: Partial<TypedConfirmFieldLabels>;
+  labels?: LabelOverride<TypedConfirmFieldLabels>;
 }
 
 /**
@@ -219,26 +226,24 @@ export interface TypedConfirmFieldProps
  * {ok && <KeyDoorsForm … />}
  * ```
  */
-export const TypedConfirmField = forwardRef<HTMLInputElement, TypedConfirmFieldProps>(function TypedConfirmField(
-  {
-    target,
-    match = "trim",
-    value: valueProp,
-    defaultValue = "",
-    onValueChange,
-    onMatchedChange,
-    onChange,
-    label: labelProp,
-    placeholder: placeholderProp,
-    busy,
-    readOnly,
-    labels: labelsProp,
-    id,
-    className,
-    ...rest
-  },
+export function TypedConfirmField({
   ref,
-) {
+  target,
+  match = "trim",
+  value: valueProp,
+  defaultValue = "",
+  onValueChange,
+  onMatchedChange,
+  onChange,
+  label: labelProp,
+  placeholder: placeholderProp,
+  busy,
+  readOnly,
+  labels: labelsProp,
+  id,
+  className,
+  ...rest
+}: TypedConfirmFieldProps) {
   const labels = useKitLabels("dangerConfirm", DEFAULT_DANGER_CONFIRM_LABELS, labelsProp);
   const [own, setOwn] = useState(defaultValue);
   const value = valueProp ?? own;
@@ -290,8 +295,7 @@ export const TypedConfirmField = forwardRef<HTMLInputElement, TypedConfirmFieldP
     );
   }
   return <Input {...fieldProps} label={label} className={className} />;
-});
-TypedConfirmField.displayName = "TypedConfirmField";
+}
 
 /**
  * Every string the tile renders — the `dangerConfirm` namespace of
@@ -338,20 +342,8 @@ export interface DangerConfirmLabels {
   needsPassword: string;
 }
 
-/** `satisfies` rather than a type annotation, so `DEFAULT_DANGER_CONFIRM_LABELS.phrase`
- *  stays callable for a caller that composes its own label from it. */
-export const DEFAULT_DANGER_CONFIRM_LABELS = {
-  arm: "Delete…",
-  confirm: "Delete",
-  cancel: "Cancel",
-  prompt: "This cannot be undone.",
-  password: "Password",
-  phrase: (phrase: string) => `Type “${phrase}” to confirm`,
-  acknowledge: "I have read what this does and want to continue.",
-  needsPhrase: (phrase: string) => `Type “${phrase}” to confirm`,
-  needsAcknowledge: "Tick the box to confirm",
-  needsPassword: "Enter your password to confirm",
-} satisfies DangerConfirmLabels;
+// Defined in ./danger-confirm-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_DANGER_CONFIRM_LABELS };
 
 /**
  * What the guards were answered with — the second argument of
@@ -389,7 +381,7 @@ export interface DangerConsequence {
   severe?: boolean;
 }
 
-export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
+export interface DangerConfirmProps extends Omit<ComponentPropsWithRef<"div">, "onChange"> {
   /**
    * Runs the action, with the entered password when `requirePassword` is on.
    *
@@ -574,7 +566,7 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithoutRef<"div">
   /** Called with the next armed state — on arm, cancel, and a resolved `onConfirm`. */
   onArmedChange?: (armed: boolean) => void;
   /** User-facing strings; see {@link DangerConfirmLabels}. */
-  labels?: Partial<DangerConfirmLabels>;
+  labels?: LabelOverride<DangerConfirmLabels>;
 }
 
 /** What counts as a FIELD among the caller's `children` — what arming focuses. Not
@@ -808,7 +800,7 @@ export function DangerConfirm({
       : { key: item.key ?? String(index), text: item.text, severe: Boolean(item.severe) },
   );
 
-  const toneText = tone === "warning" ? "text-[var(--warning)]" : "text-[var(--danger)]";
+  const toneText = tone === "warning" ? "text-warning" : "text-danger";
 
   if (!armed) {
     const arm = (
@@ -845,7 +837,7 @@ export function DangerConfirm({
           arm
         )}
         {locked && (
-          <p id={reasonId} className="text-xs text-[var(--text-muted)]">
+          <p id={reasonId} className="text-xs text-muted">
             {lockedReason}
           </p>
         )}
@@ -866,9 +858,9 @@ export function DangerConfirm({
           {prompt ?? labels.prompt}
         </p>
         {lines.length > 0 && (
-          <ul id={consequencesId} className="list-disc space-y-1 ps-5 text-xs text-[var(--text-secondary)]">
+          <ul id={consequencesId} className="list-disc space-y-1 ps-5 text-xs text-secondary">
             {lines.map((line) => (
-              <li key={line.key} className={line.severe ? "text-[var(--danger)]" : undefined}>
+              <li key={line.key} className={line.severe ? "text-danger" : undefined}>
                 {line.text}
               </li>
             ))}
@@ -936,7 +928,7 @@ export function DangerConfirm({
             {confirmLabel ?? labels.confirm}
           </Button>
         </div>
-        {locked && <p className="text-xs text-[var(--text-muted)]">{lockedReason}</p>}
+        {locked && <p className="text-xs text-muted">{lockedReason}</p>}
       </form>
     </div>
   );

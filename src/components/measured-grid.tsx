@@ -1,16 +1,23 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 import { ClipboardPaste, Eraser, Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
+// The locale's mark as far as a cell can hold it — the fields' answer, the same reason
+// (DUP-11, refactor audit 2026-10: a verbatim copy lived here).
+import { decimalMark } from "../lib/decimal-marks";
 // The cell pair reads ONE cell, where a comma has no columns to separate and so is
 // always a decimal mark; `splitRow` and `parseRows` read a pasted table, where it may
 // be either and the line decides. See the three named rules at the top of table-text.
 import { cellNumber, isCellNumber, parseRows, splitRow } from "../lib/table-text";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { useWindowedRows, WINDOWED_ROW_INDEX } from "../hooks/use-windowed-rows";
 import { ToggleGroup } from "./toggle-group";
-import { Button, FIELD_INVALID, FIELD_TOUCH_TEXT, FOCUS_RING, Textarea } from "./ui";
+import { Button } from "./button";
+import { FIELD_INVALID, FIELD_TOUCH_TEXT } from "./field-base";
+import { FOCUS_RING } from "./focus-ring";
+import { Textarea } from "./textarea";
+import { DEFAULT_MEASURED_GRID_LABELS } from "./measured-grid-labels";
 
 /**
  * A measured table: a fixed set of numeric columns, typed cell by cell or pasted as a
@@ -66,25 +73,8 @@ export interface MeasuredGridLabels {
   problems: (count: number) => string;
 }
 
-/** English defaults. Exported as the `measuredGrid` namespace of `UiKitLabels`
- *  (src/i18n), the complete reference a translation is written against. */
-export const DEFAULT_MEASURED_GRID_LABELS: MeasuredGridLabels = {
-  view: "Table view",
-  cellsView: "Cells",
-  textView: "Text",
-  addRow: "Add row",
-  removeRow: (row) => `Remove row ${row}`,
-  clear: "Clear table",
-  pasteHint: "Paste a block from a spreadsheet into any cell",
-  cell: (column, row) => `${column}, row ${row}`,
-  rowNumber: "Row",
-  rowActions: "Row actions",
-  keyboardHint:
-    "Arrow keys move between cells. Type to replace a cell, F2 to edit it, Escape to undo the edit. Enter moves down and adds a row at the end.",
-  lineError: (line) => `Line ${line} could not be read`,
-  points: (count) => (count === 1 ? "1 point" : `${count} points`),
-  problems: (count) => (count === 1 ? "1 cell is not a number" : `${count} cells are not numbers`),
-};
+// Defined in ./measured-grid-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_MEASURED_GRID_LABELS };
 
 /** One column of a measured table: what it holds and what it is measured in. The unit
  *  is separate from the name because the header shows it small and underneath, and
@@ -108,19 +98,6 @@ const BLANK = "";
 const DEFAULT_ROW_HEIGHT = 28;
 
 const ALL_VIEWS: readonly MeasuredGridView[] = ["cells", "text"];
-
-/** The locale's decimal mark, as far as a cell can hold it: "," or ".". A mark outside
- *  those two (Arabic's "٫") is not one `cellNumber` reads, so those locales keep the
- *  dot. The same answer `NumberField` gives, for the same reason. */
-function decimalMark(locale: string | undefined): "," | "." {
-  try {
-    const part = new Intl.NumberFormat(locale).formatToParts(1.5).find((p) => p.type === "decimal");
-    return part?.value === "," ? "," : ".";
-  } catch {
-    // An invalid tag throws a RangeError; a typo in a locale must not take the grid down.
-    return ".";
-  }
-}
 
 /** A number-shaped cell written with the locale's mark. The lexer hands back points;
  *  a German user typed commas and should read commas back. Anything that is not a
@@ -205,7 +182,7 @@ export function useMeasuredRows(
 }
 
 export interface MeasuredGridProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onChange"> {
+  extends Omit<ComponentPropsWithRef<"div">, "children" | "onChange"> {
   /** What the table is — shown above it, and the grid's accessible name. */
   label: string;
   /** A note under the table (which columns a layout expects, say). Also the grid's
@@ -227,7 +204,7 @@ export interface MeasuredGridProps
   /** BCP 47 tag for the decimal mark of cells written by a paste or the text view,
    *  and for the row numbers; else the `<UiKitProvider locale>`. */
   locale?: string;
-  labels?: Partial<MeasuredGridLabels>;
+  labels?: LabelOverride<MeasuredGridLabels>;
 }
 
 /**
@@ -292,7 +269,7 @@ export function MeasuredGrid({
     // to the initial containing block (see sr-only-containment.test).
     <div {...rest} className={cn("relative", className)}>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <span id={labelId} className="text-caption font-medium text-[var(--text-muted)]">
+        <span id={labelId} className="text-caption font-medium text-muted">
           {label}
         </span>
         {offered.length > 1 && (
@@ -334,7 +311,7 @@ export function MeasuredGrid({
         />
       )}
       {hint && (
-        <p id={hintId} className="mt-1 px-1 text-caption text-[var(--text-muted)]">
+        <p id={hintId} className="mt-1 px-1 text-caption text-muted">
           {hint}
         </p>
       )}
@@ -587,7 +564,7 @@ function CellGrid({
   const problems = filled.flat().filter((cell) => cell.trim() !== "" && !isCellNumber(cell)).length;
 
   return (
-    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="rounded-md border border-subtle bg-surface">
       <div ref={scrollRef} className="max-h-72 overflow-auto">
         <div
           role="grid"
@@ -603,17 +580,17 @@ function CellGrid({
         >
           {/* The header stays put vertically and scrolls sideways with the body, so a
               fifteen-column linkage can be read without losing which column is which. */}
-          <div ref={headRef} role="rowgroup" className="sticky top-0 z-10 bg-[var(--bg-surface-2)]">
+          <div ref={headRef} role="rowgroup" className="sticky top-0 z-10 bg-surface-2">
             <div
               role="row"
               aria-rowindex={1}
-              className="grid border-b border-[var(--border)]"
+              className="grid border-b border-subtle"
               style={{ gridTemplateColumns: template }}
             >
               <div
                 role="columnheader"
                 aria-label={labels.rowNumber}
-                className="flex items-end justify-end px-1 py-1 text-micro text-[var(--text-placeholder)]"
+                className="flex items-end justify-end px-1 py-1 text-micro text-placeholder"
               >
                 #
               </div>
@@ -621,13 +598,13 @@ function CellGrid({
                 <div
                   key={index}
                   role="columnheader"
-                  className="min-w-0 border-s border-[var(--border)] px-2 py-1 text-end"
+                  className="min-w-0 border-s border-subtle px-2 py-1 text-end"
                 >
-                  <span className="block truncate font-medium text-[var(--text-primary)]">
+                  <span className="block truncate font-medium text-primary">
                     {column.label}
                   </span>
                   {column.unit && (
-                    <span className="block truncate text-micro text-[var(--text-muted)]">
+                    <span className="block truncate text-micro text-muted">
                       {column.unit}
                     </span>
                   )}
@@ -636,7 +613,7 @@ function CellGrid({
               <div
                 role="columnheader"
                 aria-label={labels.rowActions}
-                className="border-s border-[var(--border)]"
+                className="border-s border-subtle"
               />
             </div>
           </div>
@@ -655,12 +632,12 @@ function CellGrid({
                   {...{ [WINDOWED_ROW_INDEX]: index }}
                   role="row"
                   aria-rowindex={index + 2}
-                  className="absolute inset-x-0 grid hover:bg-[var(--bg-hover)]"
+                  className="absolute inset-x-0 grid hover:bg-hover"
                   style={{ top: offsetOf(index), minHeight: estimate, gridTemplateColumns: template }}
                 >
                   <div
                     role="rowheader"
-                    className="flex items-center justify-end px-1 text-micro tabular-nums text-[var(--text-placeholder)]"
+                    className="flex items-center justify-end px-1 text-micro tabular-nums text-placeholder"
                   >
                     {rowNumber.format(index + 1)}
                   </div>
@@ -669,7 +646,7 @@ function CellGrid({
                     const bad = value.trim() !== "" && !isCellNumber(value);
                     const isCaret = at.row === index && at.column === columnIndex;
                     return (
-                      <div key={columnIndex} role="gridcell" className="min-w-0 border-s border-[var(--border)]">
+                      <div key={columnIndex} role="gridcell" className="min-w-0 border-s border-subtle">
                         <input
                           data-cell={`${index}:${columnIndex}`}
                           value={value}
@@ -685,7 +662,7 @@ function CellGrid({
                           // sees, `aria-invalid` is what a screen reader reads.
                           aria-invalid={bad || undefined}
                           className={cn(
-                            "block size-full bg-transparent px-2 text-end tabular-nums text-[var(--text-primary)] outline-none",
+                            "block size-full bg-transparent px-2 text-end tabular-nums text-primary outline-none",
                             // A cell is a field: 16 px on touch, or iOS zooms on focus (§10.1).
                             FIELD_TOUCH_TEXT,
                             // Arriving selects the text (typing replaces it); editing
@@ -693,11 +670,11 @@ function CellGrid({
                             // The kit's focus frame (§5), inset so the next cell's
                             // border does not paint over it. A text input is
                             // `:focus-visible` however it was focused.
-                            "focus:bg-[var(--brand-bg)]",
+                            "focus:bg-brand-soft",
                             FOCUS_RING,
                             "focus-visible:ring-inset",
-                            isCaret && editing && "focus:bg-[var(--bg-surface)]",
-                            disabled && "text-[var(--text-muted)]",
+                            isCaret && editing && "focus:bg-surface",
+                            disabled && "text-muted",
                             bad && cn(FIELD_INVALID, "ring-inset"),
                           )}
                           onMouseDown={(event) => {
@@ -736,7 +713,7 @@ function CellGrid({
                   })}
                   <div
                     role="gridcell"
-                    className="flex items-center justify-center border-s border-[var(--border)]"
+                    className="flex items-center justify-center border-s border-subtle"
                   >
                     <button
                       type="button"
@@ -745,7 +722,7 @@ function CellGrid({
                       tabIndex={at.row === index && at.column === width ? 0 : -1}
                       aria-label={labels.removeRow(index + 1)}
                       className={cn(
-                        "rounded p-1 text-[var(--text-placeholder)] outline-none hover:text-[var(--danger)] disabled:cursor-default disabled:hover:text-[var(--text-placeholder)]",
+                        "rounded p-1 text-placeholder outline-none hover:text-danger disabled:cursor-default disabled:hover:text-placeholder",
                         FOCUS_RING,
                       )}
                       onKeyDown={(event) => onCellKeyDown(event, index, width)}
@@ -770,7 +747,7 @@ function CellGrid({
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--border)] px-2 py-1.5">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-subtle px-2 py-1.5">
         <Button
           variant="ghost"
           size="sm"
@@ -785,7 +762,7 @@ function CellGrid({
         <Button
           variant="ghost"
           size="sm"
-          className="text-[var(--text-muted)]"
+          className="text-muted"
           disabled={disabled || !cells.length}
           onClick={() => {
             onCells([]);
@@ -795,14 +772,14 @@ function CellGrid({
         >
           <Eraser aria-hidden className="size-3.5" /> {labels.clear}
         </Button>
-        <span className="text-caption tabular-nums text-[var(--text-muted)]">
+        <span className="text-caption tabular-nums text-muted">
           {/* bdi: an LTR label ("3 points") in an RTL grid would reorder to "points 3". */}
           <bdi>{labels.points(filled.length)}</bdi>
         </span>
         {problems > 0 && (
-          <span className="text-caption text-[var(--danger)]">{labels.problems(problems)}</span>
+          <span className="text-caption text-danger">{labels.problems(problems)}</span>
         )}
-        <span className="ms-auto flex items-center gap-1 text-caption text-[var(--text-muted)]">
+        <span className="ms-auto flex items-center gap-1 text-caption text-muted">
           <ClipboardPaste aria-hidden className="size-3.5" /> {labels.pasteHint}
         </span>
       </div>
@@ -868,7 +845,7 @@ function TextView({ columns, cells, onCells, disabled, mark, labels, labelledBy,
         onChange={(event) => setDraft(event.target.value)}
         onBlur={commit}
       />
-      <p className="mt-1 px-1 text-caption text-[var(--text-muted)]">
+      <p className="mt-1 px-1 text-caption text-muted">
         {columns.map((column) => column.label).join(" · ")}
         {" — "}
         <bdi>{labels.points(lines)}</bdi>

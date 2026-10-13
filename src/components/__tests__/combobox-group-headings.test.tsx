@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Combobox } from "../combobox";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * One group-boundary calculation, shared by both branches (audit 2026-09-22,
@@ -41,16 +42,7 @@ const GROUPS: Record<string, string> = {
 /** The sheet only exists on a phone, and jsdom's matchMedia is undefined (the
  *  desktop fallback), so the field never reaches its sheet branch otherwise. */
 function asPhone() {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: true,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
+  stubViewportWidth(PHONE_WIDTH, { coarse: true, reducedMotion: true });
 }
 
 function Host({ groupBy }: { groupBy: (o: string) => string }) {

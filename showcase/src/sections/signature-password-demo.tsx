@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { Button, Input, PasswordStrengthMeter, SignaturePad, scorePassword } from "@eifi1/ui-kit";
 import type { PasswordStrengthScore, SignatureDetail, SignaturePadHandle } from "@eifi1/ui-kit";
-import { Example, Note, Row, Stage } from "../lib/section";
+import { Example, Note, Row, Stage, StateLine, code, beat } from "../lib/section";
+import { CurrentPasswordInput } from "../../../src/components/danger-confirm";
 
 /**
  * SignaturePad and PasswordStrengthMeter.
@@ -12,11 +13,6 @@ import { Example, Note, Row, Stage } from "../lib/section";
  * be legible on paper, a score a form may gate on.
  */
 
-/** The raw value under a specimen, so what the component emits is visible. */
-function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">{children}</p>;
-}
-
 /** The exported PNG on WHITE — where it will end up — whatever the page's theme. */
 function Preview({ src }: { src: string | null }) {
   if (!src) return <StateLine>value = null</StateLine>;
@@ -26,7 +22,7 @@ function Preview({ src }: { src: string | null }) {
     <img
       src={src}
       alt="Exported signature"
-      className="mt-2 h-20 rounded-md border border-[var(--border)] p-1"
+      className="mt-2 h-20 rounded-md border border-subtle p-1"
       style={{ background: "white" }}
     />
   );
@@ -154,7 +150,7 @@ function SignatureSpecimens() {
             onChange={(url) => setStyled(url)}
           />
         </Stage>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           The ink on screen follows the theme; the PNG below is drawn in{" "}
           <code className="font-mono">exportInk</code> (dark blue) on an opaque{" "}
           <code className="font-mono">exportBackground</code>, with a 4px base stroke.
@@ -267,7 +263,7 @@ function PasswordSpecimens() {
           }}
         />
         <StateLine>{`lengthScore(value) = ${custom ? lengthScore(custom) : 0}   built-in = ${scorePassword(custom)}`}</StateLine>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           The checklist still lists the built-in rules — it describes what a password looks like,
           while <code className="font-mono">score</code> alone decides the bar and the level. Type
           &quot;aaaaaaaaaaaaaaaa&quot;: strong by length, weak by the built-in rules.
@@ -284,4 +280,59 @@ export function SignaturePasswordDemo() {
       <PasswordSpecimens />
     </>
   );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+function SignIn() {
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
+  return (
+    <Example label="CurrentPasswordInput" hint="a sign-in or re-auth field the password manager fills — never offers a new one for">
+      <Stage>
+        <form
+          className="flex flex-col gap-3"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            setBusy(true);
+            setError(undefined);
+            void beat(700).then(() => {
+              setBusy(false);
+              if (password !== "letmein") setError("That password is not right. (Try “letmein”.)");
+            });
+          }}
+        >
+          <Input type="email" label="E-mail" autoComplete="username" defaultValue="anna@example.org" />
+          <CurrentPasswordInput
+            name="password"
+            value={password}
+            onValueChange={(v) => {
+              setPassword(v);
+              setError(undefined);
+            }}
+            busy={busy}
+            error={error}
+          />
+          <Button type="submit" variant="brand" pending={busy}>
+            Sign in
+          </Button>
+        </form>
+      </Stage>
+      <Note>
+        {code('type="password"')} and {code('autoComplete="current-password"')} are fixed; everything else is{" "}
+        {code("Input")} — {code("error")}, {code("name")}, the reveal toggle, a forwarded ref for{" "}
+        {code("@eifi1/ui-kit/rhf")}. {code("busy")} makes it read-only, not disabled, so the focus Enter left in it
+        is still there when the answer comes. Not for a NEW password: that is {code("new-password")}.
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
+  );
+}
+
+/** Signature, password & confirmation (`signature-password`). Its DangerConfirm and
+ *  TypedConfirmField specimens are in confirm.tsx. */
+export function Guards022Demo() {
+  return <SignIn />;
 }

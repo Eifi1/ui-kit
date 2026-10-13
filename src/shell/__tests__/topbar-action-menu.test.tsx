@@ -106,7 +106,7 @@ describe("TopBarActionMenu as an account menu", () => {
     render(<AccountMenu onLogout={onLogout} />);
     fireEvent.click(trigger());
     const logout = screen.getByRole("menuitem", { name: "Log out" });
-    expect(logout.className).toContain("text-[var(--danger)]");
+    expect(logout).toHaveClass("text-danger");
     expect(screen.getByRole("menuitemcheckbox", { name: "Demo mode" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("menuitem", { name: "Profile" })).toHaveAttribute("href", "/profile");
     fireEvent.click(logout);
@@ -255,13 +255,13 @@ describe("TopBarActionMenu iconBadge", () => {
   it("uses the badge tone", () => {
     renderFeedback({ label: "New", tone: "info" });
     const btn = screen.getByRole("button", { name: "Send feedback New" });
-    expect(btn.querySelector(".rounded-full")!.className).toContain("bg-[var(--info)]");
+    expect(btn.querySelector(".rounded-full")!).toHaveClass("bg-info");
   });
 
   it("defaults to the danger tone, the unread dot", () => {
     renderFeedback({ label: "2 unread" });
     const btn = screen.getByRole("button", { name: "Send feedback 2 unread" });
-    expect(btn.querySelector(".rounded-full")!.className).toContain("bg-[var(--danger)]");
+    expect(btn.querySelector(".rounded-full")!).toHaveClass("bg-danger");
   });
 
   it("without a badge keeps the plain aria-labelled icon button", () => {

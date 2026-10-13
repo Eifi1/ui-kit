@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { CARD_TITLE_CLASS } from "../account/account-parts";
+import { CARD_TITLE_CLASS } from "./settings-card-classes";
 
 /** The heading a settings card's title becomes. */
 export type SettingsHeadingTag = "h2" | "h3" | "h4";

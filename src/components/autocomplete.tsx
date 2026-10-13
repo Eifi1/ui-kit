@@ -1,15 +1,12 @@
-import { Fragment, forwardRef, useId, useRef, useState } from "react";
-import type {
-  ComponentPropsWithoutRef,
-  ForwardedRef,
-  ReactElement,
-  ReactNode,
-  RefAttributes,
-} from "react";
+import { Fragment, useId, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
-import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID, Spinner } from "./ui";
+import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
+import { Spinner } from "./spinner";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
+import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
+import { isImeEnter } from "../lib/ime";
 import { useAnchorDir } from "./use-anchor-dir";
 import {
   ComboboxFieldLabel,
@@ -17,8 +14,9 @@ import {
   endHintRowProps,
   isOptionEnabled,
   stepEnabled,
+  SUGGESTION_LIST_CLASS,
+  suggestionRowClass,
   useActiveOptionScroll,
-  useComboboxFieldError,
   useOptionSource,
   type ComboOption,
 } from "./combobox-core";
@@ -28,11 +26,13 @@ import {
   FieldCaption,
   LABEL_IN_ROW,
   LockedReason,
+  mergeDescribedBy,
   StaticLabelRow,
+  useFieldError,
   useFieldHint,
   useLockReason,
+  type DisabledReasonDisplay,
 } from "./field-parts";
-import { mergeDescribedBy } from "./choice-parts";
 import type { CommitScope } from "./write-lock";
 
 /**
@@ -163,13 +163,48 @@ export interface AutocompleteProps<V extends string | number = string>
    * stays live under the lock. No provider, or an unlocked one: no effect.
    */
   commit?: CommitScope;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise (DUP-3). */
+  disabledReasonDisplay?: DisabledReasonDisplay;
+  /** The `<input>`. A React 19 ref prop since 0.34 (MOD-4, refactor audit 2026-10): it was
+   *  `forwardRef`, cast back to a generic function, with a `displayName` line beside it. */
+  ref?: Ref<HTMLInputElement>;
 }
 
-function AutocompleteInner<V extends string | number = string>(
-  props: AutocompleteProps<V>,
-  ref: ForwardedRef<HTMLInputElement>,
-) {
+/**
+ * An inline, async-capable text field with a suggestion list under it — the
+ * WAI-ARIA APG "editable combobox with list autocomplete".
+ *
+ * Two jobs, one control:
+ *  - **free text** (kastlan's address field): the text is the value, the list only
+ *    offers completions, and taking one fills the field (`fillOnSelect`, default);
+ *  - **search-then-act** (keksdose's address search): the text is a query, taking a
+ *    row calls `onSelect` and nothing is held (`fillOnSelect={false}`).
+ *
+ * How it differs from its siblings: {@link Combobox} is free text over a STATIC
+ * string pool and opens on focus; {@link EntityCombobox} is a trigger holding an id.
+ * This one keeps no value of its own, never resets the text, asks nothing below
+ * `minChars`, and reports a failed lookup instead of showing stale rows.
+ *
+ * Focus never leaves the `<input>`: `aria-activedescendant` names the highlighted
+ * row, `aria-controls` the list, and a polite live region says what the list now
+ * holds. Keyboard: ↓/↑ move (↓ opens) over every row but a `disabled` one, Enter
+ * takes the highlighted row (with none,
+ * Enter is left to the form), Escape closes, Tab closes and moves on; Home/End stay
+ * with the caret. An Escape that closes an open list is consumed and never reaches the
+ * caller; with the list closed it does. For every other key a caller's `onKeyDown`
+ * runs first and may `preventDefault()` to
+ * keep a key for itself.
+ *
+ * The list is portalled and anchored under the field on every screen size: the
+ * field already carries the keyboard, and `useAnchoredPanel` keeps the list clear
+ * of it on a phone. There is no full-screen sheet as {@link Combobox} has.
+ *
+ * Generic over the option value (`ComboOption<V>`); the ref is the `<input>`'s.
+ */
+export function Autocomplete<V extends string | number = string>(props: AutocompleteProps<V>) {
   const {
+    ref,
     value,
     onChange,
     options,
@@ -196,6 +231,7 @@ function AutocompleteInner<V extends string | number = string>(
     id,
     disabled,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     onKeyDown,
     onFocus,
@@ -217,7 +253,9 @@ function AutocompleteInner<V extends string | number = string>(
     loadError: loadErrorLabel,
   });
   const hintParts = useFieldHint(hint, ariaDescribedBy);
-  const field = useComboboxFieldError(error, invalid, hintParts.describedBy);
+  // A form library's `aria-invalid` paints as well as announces (DUP-8: it only
+  // announced, through the spread below).
+  const field = useFieldError(error, invalid, hintParts.describedBy, rest["aria-invalid"]);
 
   /** The user's intent: the field is focused and the list has not been dismissed.
    *  Whether anything SHOWS is decided below, from what there is to show. */
@@ -273,6 +311,8 @@ function AutocompleteInner<V extends string | number = string>(
     setOpen(false);
     setActive(-1);
   };
+  // The list is a layer on the kit's Escape stack while it shows (Wave 2, DUP-1).
+  useDismissLayer(expanded, close);
   const take = (o: ComboOption<V>) => {
     if (o.disabled || locked) return;
     if (fillOnSelect) onChange(o.label);
@@ -293,7 +333,7 @@ function AutocompleteInner<V extends string | number = string>(
   // copy of the reason, Button's anatomy; `block` so a full-width field stays full width.
   const withLock = (box: ReactNode) =>
     locked ? (
-      <LockedReason lock={lock} className="block">
+      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
         {box}
       </LockedReason>
     ) : (
@@ -322,7 +362,7 @@ function AutocompleteInner<V extends string | number = string>(
               <span
                 aria-hidden
                 className={cn(
-                  "pointer-events-none absolute flex text-[var(--text-muted)]",
+                  "pointer-events-none absolute flex text-muted",
                   small ? "start-2 [&>svg]:size-3.5" : "start-2.5 [&>svg]:size-4",
                   // Labelled, the icon sits on the VALUE's line — the one line box below
                   // FIELD_FLOATING_PAD's `pt-4` and the 1px border — not on the middle of
@@ -392,12 +432,7 @@ function AutocompleteInner<V extends string | number = string>(
                 // the caller sees it. A caller whose Escape means "close the panel" (keksdose's
                 // address search) otherwise closed the whole panel when the user only meant
                 // to dismiss the suggestions — the opposite of what the docs promised.
-                if (e.key === "Escape" && expanded) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  close();
-                  return;
-                }
+                if (e.key === "Escape" && expanded && takeEscape(e)) return;
                 onKeyDown?.(e);
                 if (e.defaultPrevented) return;
                 // Disabled rows are passed over; at either end the highlight stays put.
@@ -412,8 +447,9 @@ function AutocompleteInner<V extends string | number = string>(
                   else setActive((i) => stepEnabled(results, i < 0 ? results.length : i, -1));
                 } else if (e.key === "Enter") {
                   // No row highlighted: the text is the answer, and a form's own submit
-                  // is left alone.
-                  if (expanded && activeId) {
+                  // is left alone. Nor is a row taken by the Enter that confirms an IME
+                  // composition, which is the IME's (BUG-9).
+                  if (expanded && activeId && !isImeEnter(e)) {
                     e.preventDefault();
                     take(results[active]);
                   }
@@ -483,7 +519,9 @@ function AutocompleteInner<V extends string | number = string>(
             // exactly the field's width, so `left` places it in either direction.
             dir={dir}
             onMouseDown={(e) => e.preventDefault()}
-            className="fixed z-50 flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-surface)] shadow-lg"
+            // The family's suggestion box (DUP-4), as a column: the list scrolls inside
+            // it and the status line stays under the rows.
+            className={cn(SUGGESTION_LIST_CLASS, "fixed z-50 flex flex-col overflow-hidden py-0")}
             // Flipped above, the list hangs from its bottom edge: three rows under a
             // 256 px cap, placed by `top`, floated ~176 px above the field (keksdose K1),
             // and the rows come and go as the user types.
@@ -506,7 +544,7 @@ function AutocompleteInner<V extends string | number = string>(
                       {startsGroup && (
                         <li
                           role="presentation"
-                          className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] first:pt-1"
+                          className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1"
                         >
                           {o.group}
                         </li>
@@ -529,29 +567,30 @@ function AutocompleteInner<V extends string | number = string>(
                             if (!o.disabled) setActive(i);
                           }}
                           className={cn(
-                            "flex w-full items-center gap-2 px-3 text-start",
-                            small ? "py-1 text-xs" : "py-1.5 text-sm",
-                            o.disabled
-                              ? DISABLED_ROW_CLASS
-                              : i === active
-                                ? "bg-[var(--bg-active)]"
-                                : "hover:bg-[var(--bg-hover)]",
+                            // The family's suggestion row (DUP-4): it hand-rolled its
+                            // own with a plain `truncate`, so a long address was cut at
+                            // Large, where Combobox's rows wrap (text size §10.17, T1).
+                            // A flex row here, for the icon and the two lines.
+                            suggestionRowClass(i === active && !o.disabled),
+                            "flex items-center gap-2",
+                            small && "py-1 text-xs",
+                            o.disabled && DISABLED_ROW_CLASS,
                             o.group != null && "ps-6",
                           )}
                         >
                           {o.icon && (
-                            <span aria-hidden className="shrink-0 text-[var(--text-muted)]">
+                            <span aria-hidden className="shrink-0 text-muted">
                               {o.icon}
                             </span>
                           )}
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[var(--text-primary)]">
+                            <span className="block truncate-until-large text-primary">
                               {o.label}
                             </span>
                             {o.sublabel && (
                               <span
                                 className={cn(
-                                  "block truncate text-[var(--text-placeholder)]",
+                                  "block truncate-until-large text-placeholder",
                                   small ? "text-caption" : "text-xs",
                                 )}
                               >
@@ -572,8 +611,8 @@ function AutocompleteInner<V extends string | number = string>(
                 aria-hidden
                 className={cn(
                   small ? "px-3 py-1.5 text-xs" : "px-3 py-2 text-sm",
-                  failed && !hasStatus ? "text-[var(--danger)]" : "text-[var(--text-muted)]",
-                  results.length > 0 && "border-t border-[var(--border)] text-xs",
+                  failed && !hasStatus ? "text-danger" : "text-muted",
+                  results.length > 0 && "border-t border-subtle text-xs",
                 )}
               >
                 {statusLine}
@@ -585,41 +624,3 @@ function AutocompleteInner<V extends string | number = string>(
     </div>
   );
 }
-
-const AutocompleteBase = forwardRef(AutocompleteInner);
-AutocompleteBase.displayName = "Autocomplete";
-
-/**
- * An inline, async-capable text field with a suggestion list under it — the
- * WAI-ARIA APG "editable combobox with list autocomplete".
- *
- * Two jobs, one control:
- *  - **free text** (kastlan's address field): the text is the value, the list only
- *    offers completions, and taking one fills the field (`fillOnSelect`, default);
- *  - **search-then-act** (keksdose's address search): the text is a query, taking a
- *    row calls `onSelect` and nothing is held (`fillOnSelect={false}`).
- *
- * How it differs from its siblings: {@link Combobox} is free text over a STATIC
- * string pool and opens on focus; {@link EntityCombobox} is a trigger holding an id.
- * This one keeps no value of its own, never resets the text, asks nothing below
- * `minChars`, and reports a failed lookup instead of showing stale rows.
- *
- * Focus never leaves the `<input>`: `aria-activedescendant` names the highlighted
- * row, `aria-controls` the list, and a polite live region says what the list now
- * holds. Keyboard: ↓/↑ move (↓ opens) over every row but a `disabled` one, Enter
- * takes the highlighted row (with none,
- * Enter is left to the form), Escape closes, Tab closes and moves on; Home/End stay
- * with the caret. An Escape that closes an open list is consumed and never reaches the
- * caller; with the list closed it does. For every other key a caller's `onKeyDown`
- * runs first and may `preventDefault()` to
- * keep a key for itself.
- *
- * The list is portalled and anchored under the field on every screen size: the
- * field already carries the keyboard, and `useAnchoredPanel` keeps the list clear
- * of it on a phone. There is no full-screen sheet as {@link Combobox} has.
-
- * Generic over the option value (`ComboOption<V>`); the ref is the `<input>`'s.
- */
-export const Autocomplete = AutocompleteBase as <V extends string | number = string>(
-  props: AutocompleteProps<V> & RefAttributes<HTMLInputElement>,
-) => ReactElement | null;

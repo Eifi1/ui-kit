@@ -3,16 +3,13 @@ import { useForm } from "react-hook-form";
 import { AmountInput, Button, UiKitProvider, WizardStep, formatNumber } from "@eifi1/ui-kit";
 // See forms-rhf.tsx: the showcase alias maps "@eifi1/ui-kit/rhf" to src/rhf.ts.
 import { Form, RhfIntegerField, RhfMoneyField, RhfTextField } from "@eifi1/ui-kit/rhf";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT_PRE } from "../lib/section";
 
 /**
  * 0.13 on the Forms page: the amount field in the locale's decimal mark (kastlan 40),
  * `RhfIntegerField` (41), `RhfTextField`'s `inputClassName` (42), `WizardStep`'s
  * header `actions` (43) and `formatNumber`'s `unit` (lenkbank P8).
  */
-
-const READOUT = "font-mono text-xs text-[var(--text-secondary)] whitespace-pre-wrap [overflow-wrap:anywhere]";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const LOCALES = ["fr-CH", "de-DE", "de-CH", "en-US"] as const;
 
@@ -37,7 +34,7 @@ function AmountLocaleDemo() {
             <AmountInput label="Rent" value={value} onChange={setValue} currency="CHF" />
           </div>
         </UiKitProvider>
-        <p className={READOUT}>onChange: {JSON.stringify(value)}</p>
+        <p className={READOUT_PRE}>onChange: {JSON.stringify(value)}</p>
         <Note>
           The display follows {code("Intl")}: de-CH and it-CH write a point, fr-CH and de-DE a
           comma. No digit grouping while editing, so the caret never jumps.
@@ -74,7 +71,7 @@ function RhfPresetsDemo() {
           </div>
         </form>
       </Form>
-      <p className={READOUT}>submitted: {submitted}</p>
+      <p className={READOUT_PRE}>submitted: {submitted}</p>
     </Example>
   );
 }
@@ -92,7 +89,7 @@ function WizardStepActionsDemo() {
           </Button>
         }
       >
-        <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+        <ul className="space-y-1 text-sm text-secondary">
           {buildings.map((b) => (
             <li key={b}>{b}</li>
           ))}
@@ -113,7 +110,7 @@ function FormatUnitDemo() {
       <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[auto_1fr]">
         {rows.map(([call, out]) => (
           <div key={call} className="contents">
-            <dt className={READOUT}>{call}</dt>
+            <dt className={READOUT_PRE}>{call}</dt>
             <dd className="tabular-nums">{out}</dd>
           </div>
         ))}

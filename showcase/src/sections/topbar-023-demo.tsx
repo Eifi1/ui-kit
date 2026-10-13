@@ -2,16 +2,13 @@ import { useState } from "react";
 import { Check, Compass, PiggyBank, Upload, Users, Wallet } from "lucide-react";
 import { Chip, ToggleGroup, TopBarActionMenu } from "@eifi1/ui-kit";
 import type { TopBarMenuEntry } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * Group headings in `TopBarActionMenu` (0.23, keksdose's guided-tours menu): the tours
  * filed by topic, each block named by a heading instead of fenced off by a bare divider.
  * The tours here are made up; an app's are its own.
  */
-
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 type Mode = "headings" | "dividers";
 
@@ -25,7 +22,7 @@ export function TopBarMenuHeadingsDemo() {
     icon: <Icon className="size-4" />,
     label,
     trailing: done.includes(key) ? (
-      <Check className="size-4 text-[var(--text-secondary)]" />
+      <Check className="size-4 text-secondary" />
     ) : fresh ? (
       <Chip size="sm" tone="brand" caps className="px-1.5">
         New
@@ -75,10 +72,10 @@ export function TopBarMenuHeadingsDemo() {
             { value: "dividers", label: "Dividers only (before)" },
           ]}
         />
-        <div className="flex justify-end rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-2">
+        <div className="flex justify-end rounded-md border border-subtle bg-surface-2 p-2">
           <TopBarActionMenu
             icon={<Compass className="size-5" />}
-            ariaLabel="Guided tours"
+            aria-label="Guided tours"
             panelClassName="w-72 max-h-[70vh] overflow-y-auto"
             entries={entries}
           />

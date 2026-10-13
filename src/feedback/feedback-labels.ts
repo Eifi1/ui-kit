@@ -1,5 +1,5 @@
-import { useKitLabels } from "../i18n/kit-labels";
-import type { FeedbackCategory, FeedbackStatus } from "./feedback-inbox";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import type { FeedbackCategory, FeedbackStatus } from "./feedback-vocabulary";
 
 /**
  * The words of a report's status and category, and the toasts a feedback page shows —
@@ -113,16 +113,16 @@ export const DEFAULT_FEEDBACK_TOAST_LABELS: FeedbackToastLabels = {
 /** `feedbackStatus` resolved: English, then `<UiKitProvider labels>`, then `labels`. For
  *  the places that need a status's name outside the kit's own parts — a filter's options,
  *  `feedbackSwipePlan`'s panels, an app's overview tile. */
-export function useFeedbackStatusLabels(labels?: Partial<FeedbackStatusLabels>): FeedbackStatusLabels {
+export function useFeedbackStatusLabels(labels?: LabelOverride<FeedbackStatusLabels>): FeedbackStatusLabels {
   return useKitLabels("feedbackStatus", DEFAULT_FEEDBACK_STATUS_LABELS, labels);
 }
 
 /** `feedbackCategory` resolved: English, then the provider, then `labels`. */
-export function useFeedbackCategoryLabels(labels?: Partial<FeedbackCategoryLabels>): FeedbackCategoryLabels {
+export function useFeedbackCategoryLabels(labels?: LabelOverride<FeedbackCategoryLabels>): FeedbackCategoryLabels {
   return useKitLabels("feedbackCategory", DEFAULT_FEEDBACK_CATEGORY_LABELS, labels);
 }
 
 /** `feedbackToast` resolved: English, then the provider, then `labels`. */
-export function useFeedbackToastLabels(labels?: Partial<FeedbackToastLabels>): FeedbackToastLabels {
+export function useFeedbackToastLabels(labels?: LabelOverride<FeedbackToastLabels>): FeedbackToastLabels {
   return useKitLabels("feedbackToast", DEFAULT_FEEDBACK_TOAST_LABELS, labels);
 }

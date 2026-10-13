@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useLargeText } from "../hooks/use-large-text";
 
@@ -25,7 +25,7 @@ interface PaginationProps {
    *  the select is then not rendered at all, rather than rendered and inert. */
   onPageSize?: (n: number) => void;
   /** Over `dataTable` from `<UiKitProvider labels>`, over the English defaults. */
-  labels?: Partial<DataTableLabels>;
+  labels?: LabelOverride<DataTableLabels>;
   /** For the page numbers and page-size options; falls back to the provider's. */
   locale?: string;
   /** `"compact"` for a pager under a compact {@link DataTable} (lenkbank's in-card
@@ -104,13 +104,14 @@ export function Pagination({
     <div
       data-density={density}
       className={cn(
-        "flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] text-xs text-[var(--text-secondary)]",
+        "flex flex-wrap items-center justify-between gap-2 border-t border-subtle text-xs text-secondary",
         compact ? "px-2 py-1" : "px-3 py-2",
       )}
     >
       <div className="flex items-center gap-2">
         <span>
-          {pageSize === Infinity
+          {/* No rows is a count, not a range: the range read "1–0 / 0" (round 0.34 BUG-14). */}
+          {pageSize === Infinity || total === 0
             ? labels.rowCount(total)
             : labels.pageRange(page * pageSize + 1, Math.min(total, (page + 1) * pageSize), total)}
         </span>
@@ -120,7 +121,7 @@ export function Pagination({
             onChange={(e) =>
               onPageSize(e.target.value === "all" ? Infinity : Number(e.target.value))
             }
-            className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 py-0.5 text-xs"
+            className="rounded border border-subtle bg-surface px-1 py-0.5 text-xs"
             aria-label={labels.pageSize}
           >
             {/* A `defaultPageSize` that is not one of the steps (keksdose's 5) is offered
@@ -140,7 +141,7 @@ export function Pagination({
             type="button"
             onClick={() => onPage(Math.max(0, page - 1))}
             disabled={page === 0}
-            className={cn("rounded hover:bg-[var(--bg-hover)] disabled:opacity-40", compact ? "p-0.5" : "p-1")}
+            className={cn("rounded hover:bg-hover disabled:opacity-40", compact ? "p-0.5" : "p-1")}
             aria-label={labels.prevPage}
           >
             {/* "Previous" points back along the line — left in LTR, right in RTL. */}
@@ -149,7 +150,7 @@ export function Pagination({
           <div data-slot="page-numbers" className={PAGE_NUMBERS}>
             {items.map((it, i) =>
               it === "ellipsis" ? (
-                <span key={`e${i}`} className="px-1 text-[var(--text-placeholder)]">
+                <span key={`e${i}`} className="px-1 text-placeholder">
                   …
                 </span>
               ) : (
@@ -165,8 +166,8 @@ export function Pagination({
                     "rounded",
                     compact ? "min-w-6 px-1.5 py-0" : "min-w-7 px-2 py-0.5",
                     it === page
-                      ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-                      : "hover:bg-[var(--bg-hover)]",
+                      ? "bg-inverse text-inverse"
+                      : "hover:bg-hover",
                   )}
                 >
                   {num.format(it + 1)}
@@ -178,7 +179,7 @@ export function Pagination({
             type="button"
             onClick={() => onPage(Math.min(totalPages - 1, page + 1))}
             disabled={page >= totalPages - 1}
-            className={cn("rounded hover:bg-[var(--bg-hover)] disabled:opacity-40", compact ? "p-0.5" : "p-1")}
+            className={cn("rounded hover:bg-hover disabled:opacity-40", compact ? "p-0.5" : "p-1")}
             aria-label={labels.nextPage}
           >
             <ChevronRight className={cn("rtl:-scale-x-100", compact ? "size-3.5" : "size-4")} />

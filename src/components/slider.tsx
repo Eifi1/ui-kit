@@ -1,6 +1,7 @@
-import { forwardRef, useId } from "react";
-import type { CSSProperties, ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
+import { useId } from "react";
+import type { CSSProperties, ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
+import { useFieldMessages } from "./field-parts";
 
 /**
  * A range control on a native `<input type="range">`.
@@ -92,16 +93,16 @@ const TRACK = [
   "[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--brand)_var(--slider-fill),var(--border-strong)_var(--slider-fill))]",
   "rtl:[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_left,var(--brand)_var(--slider-fill),var(--border-strong)_var(--slider-fill))]",
   "[&::-webkit-slider-thumb]:-mt-[0.3125rem] [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none",
-  "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--brand)] [&::-webkit-slider-thumb]:shadow",
-  "focus-visible:[&::-webkit-slider-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-webkit-slider-thumb]:ring-[var(--brand)]",
-  "focus-visible:[&::-webkit-slider-thumb]:ring-offset-2 focus-visible:[&::-webkit-slider-thumb]:ring-offset-[var(--bg-surface)]",
+  "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:shadow",
+  "focus-visible:[&::-webkit-slider-thumb]:ring-focus focus-visible:[&::-webkit-slider-thumb]:ring-brand",
+  "focus-visible:[&::-webkit-slider-thumb]:ring-offset-2 focus-visible:[&::-webkit-slider-thumb]:ring-offset-surface",
   // Firefox
   "[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-[var(--border-strong)]",
-  "[&::-moz-range-progress]:h-1.5 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-[var(--brand)]",
+  "[&::-moz-range-progress]:h-1.5 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-brand",
   "[&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0",
-  "[&::-moz-range-thumb]:bg-[var(--brand)] [&::-moz-range-thumb]:shadow",
-  "focus-visible:[&::-moz-range-thumb]:ring-[length:var(--focus-ring-width)] focus-visible:[&::-moz-range-thumb]:ring-[var(--brand)]",
-  "focus-visible:[&::-moz-range-thumb]:ring-offset-2 focus-visible:[&::-moz-range-thumb]:ring-offset-[var(--bg-surface)]",
+  "[&::-moz-range-thumb]:bg-brand [&::-moz-range-thumb]:shadow",
+  "focus-visible:[&::-moz-range-thumb]:ring-focus focus-visible:[&::-moz-range-thumb]:ring-brand",
+  "focus-visible:[&::-moz-range-thumb]:ring-offset-2 focus-visible:[&::-moz-range-thumb]:ring-offset-surface",
 ].join(" ");
 
 // The marks row sits `-mt-1.5` under a 1.5rem box, tucked against the track. In the 48 px
@@ -161,7 +162,13 @@ export interface SliderProps
   label?: ReactNode;
   /** Something that belongs to the label rather than the value — in practice a
    *  `FieldHint` "?". Rendered beside the label, outside the `<label>` element, so it
-   *  never becomes part of the slider's accessible name. */
+   *  never becomes part of the slider's accessible name.
+   *
+   *  {@link Select}'s rule since 0.34 (DUP-2, refactor audit 2026-10): plain TEXT is a
+   *  caption under the track, on the slider's `aria-describedby`, and so is a FieldHint
+   *  at Large and on a touch screen, where a "?" cannot be hovered open (§4) — the
+   *  Kurvenschmiede controller panel's Kp/Ki/Kd facts were a lone "?" on a phone. A
+   *  `HelpPopover` stays beside the label at every size. */
   hint?: ReactNode;
   /** The value as the reader sees it, at the end of the label line — a formatted
    *  number, or a `NumberInput` for typing one. Rendered as given. */
@@ -170,6 +177,9 @@ export interface SliderProps
   marks?: ReadonlyArray<number | SliderMark>;
   /** Classes for the `<input>`. `className` styles the outer wrapper. */
   inputClassName?: string;
+  /** The `<input type="range">`. A React 19 ref prop since 0.34 (MOD-4, refactor audit
+   *  2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -179,29 +189,27 @@ export interface SliderProps
  * Every other prop reaches the `<input>` — `name`, `id`, `aria-*`, `data-*`, `onBlur`,
  * `onPointerUp` for commit-on-release — and `disabled` also fades the label line.
  */
-export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
-  {
-    value,
-    onChange,
-    min,
-    max,
-    step,
-    scale = "linear",
-    zeroStop = true,
-    formatValue,
-    label,
-    hint,
-    readout,
-    marks,
-    className,
-    inputClassName,
-    id,
-    disabled,
-    style,
-    ...rest
-  },
+export function Slider({
   ref,
-) {
+  value,
+  onChange,
+  min,
+  max,
+  step,
+  scale = "linear",
+  zeroStop = true,
+  formatValue,
+  label,
+  hint,
+  readout,
+  marks,
+  className,
+  inputClassName,
+  id,
+  disabled,
+  style,
+  ...rest
+}: SliderProps) {
   const generated = useId();
   const inputId = id ?? generated;
   const log = scale === "log" && min > 0 && max > min;
@@ -245,7 +253,10 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
     .filter((m) => m.value >= min && m.value <= max);
   const hasMarkLabels = normalizedMarks.some((m) => m.label !== undefined);
 
-  const hasHeader = label !== undefined || hint !== undefined || readout !== undefined;
+  // The label line's "?", or the caption under the track (DUP-2).
+  const messages = useFieldMessages({ hint, describedBy: rest["aria-describedby"] });
+  const labelHint = messages.labelHint;
+  const hasHeader = label !== undefined || labelHint !== undefined || readout !== undefined;
   const plainReadout = typeof readout === "string" || typeof readout === "number";
 
   return (
@@ -264,16 +275,16 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
           {label !== undefined && (
             <label
               htmlFor={inputId}
-              className="min-w-0 select-none text-xs font-medium text-[var(--text-secondary)]"
+              className="min-w-0 select-none text-xs font-medium text-secondary"
             >
               {label}
             </label>
           )}
-          {hint !== undefined && <span className="flex shrink-0 items-center">{hint}</span>}
+          {labelHint !== undefined && <span className="flex shrink-0 items-center">{labelHint}</span>}
           {readout !== undefined && (
             <span
               className={cn(
-                "ms-auto max-w-full text-xs tabular-nums text-[var(--text-primary)]",
+                "ms-auto max-w-full text-xs tabular-nums text-primary",
                 plainReadout && "select-none",
               )}
             >
@@ -293,6 +304,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
         step={log ? LOG_STEP : step}
         value={current}
         aria-valuetext={valueText}
+        aria-describedby={messages.describedBy}
         onChange={handleChange}
         // The fill's break point, merged under the caller's own style.
         style={{ ...style, "--slider-fill": `${share(current) * 100}%` } as CSSProperties}
@@ -316,7 +328,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
             >
               <span className="h-1.5 w-px shrink-0 bg-[var(--border-strong)]" />
               {m.label !== undefined && (
-                <span className="mt-0.5 select-none whitespace-nowrap text-caption leading-tight text-[var(--text-muted)]">
+                <span className="mt-0.5 select-none whitespace-nowrap text-caption leading-tight text-muted">
                   {m.label}
                 </span>
               )}
@@ -324,7 +336,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
           ))}
         </div>
       )}
+      {messages.below}
     </div>
   );
-});
-Slider.displayName = "Slider";
+}

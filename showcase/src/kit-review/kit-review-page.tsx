@@ -311,7 +311,7 @@ export function KitReviewPage() {
   return (
     <Shell base={base} onClearDevBase={clearDevBase}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-[var(--text-secondary)]">
+        <p className="text-sm text-secondary">
           {allRows.length.toLocaleString(tag)} kit strings in {allowed.length === 1 ? "one language" : `${allowed.length} languages`}
           , as keksdose&rsquo;s Translations page lists them.
         </p>
@@ -393,7 +393,7 @@ export function KitReviewPage() {
 function Titled({ title, children }: { title: string; children: ReactNode }) {
   return (
     <span className="block">
-      <span className="block font-medium text-[var(--text-primary)]">{title}</span>
+      <span className="block font-medium text-primary">{title}</span>
       <span className="mt-0.5 block">{children}</span>
     </span>
   );
@@ -412,7 +412,7 @@ function Shell({
   return (
     <div className="min-w-0 space-y-4">
       {children}
-      <p className="text-xs text-[var(--text-muted)]">
+      <p className="text-xs text-muted">
         Talking to <code className="break-all font-mono">{base}</code>
         {onClearDevBase && (
           <>
@@ -430,7 +430,7 @@ function Shell({
 
 function Intro() {
   return (
-    <div className="max-w-3xl space-y-2 text-sm text-[var(--text-secondary)]">
+    <div className="max-w-3xl space-y-2 text-sm text-secondary">
       <p>
         Every string the kit renders, in each language keksdose ships, as the rows keksdose&rsquo;s{" "}
         <code className="font-mono">/translations</code> page lists under <code className="font-mono">kit.</code> —
@@ -481,7 +481,7 @@ function ServerLine({ state }: { state: "waking" | "awake" | "unreachable" }) {
         ? `keksdose did not answer within ${BUDGET_S} s — it may still be starting, or be down.`
         : "Waking keksdose — it sleeps when nobody uses it, so it is started now, while you read.";
   return (
-    <p className="flex items-center gap-2 text-xs text-[var(--text-muted)]" data-server={state}>
+    <p className="flex items-center gap-2 text-xs text-muted" data-server={state}>
       {state === "waking" && <Spinner label={null} className="size-3" />}
       {text}
     </p>

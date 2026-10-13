@@ -30,11 +30,12 @@ import {
   type FeedbackRenderDate,
   type UseFeedbackColumnsOptions,
 } from "../feedback-table";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * §4.3 of the feedback contract: the two pages' table as kit parts — keksdose's nine
  * columns (feedback-page.tsx:711–963), its phone card with the chips it lost to
- * `mobileCard` (data-table.tsx `cardInner`), the awaiting toggle, the §7.13 empty state.
+ * `mobileCard` (data-table-mobile.tsx `cardInner`), the awaiting toggle, the §7.13 empty state.
  * Synthetic rows only.
  */
 
@@ -123,15 +124,7 @@ function renderTable(
   return render(<MemoryRouter>{wrap(<Table options={options} extra={extra} />)}</MemoryRouter>);
 }
 
-/** jsdom has no matchMedia, so the desktop table renders unless a phone is stubbed. */
-function stubPhone() {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("width <"), // the phone layout's `(width < 768px)`
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  }));
-}
+// jsdom has no matchMedia, so the desktop table renders unless a phone is stubbed.
 afterEach(() => vi.unstubAllGlobals());
 
 describe("feedbackPage labels", () => {

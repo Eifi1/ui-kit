@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { ContextType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation, useNavigate } from "react-router";
 import {
   Activity,
@@ -38,7 +38,7 @@ import { settingsSearchEntries } from "../../../src/settings/settings-catalogue"
 import type { SettingsEntry, SettingsGroup } from "../../../src/settings/settings-catalogue";
 import { DEFAULT_SETTINGS_LABELS } from "../../../src/settings/settings-labels";
 import { useAccountLanguage } from "../../../src/settings/use-account-language";
-import { Example, Note, OutTable } from "../lib/section";
+import { Example, Note, OutTable, code, beat, NO_ROUTER } from "../lib/section";
 
 /**
  * THE SETTINGS PAGE (0.31, docs/settings-harmonization.md §3–§5): one settings page for
@@ -54,13 +54,7 @@ import { Example, Note, OutTable } from "../lib/section";
  * ThemeSetting.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 600) => new Promise((resolve) => setTimeout(resolve, ms));
 const PASSWORD = "correct horse";
-
-/** `null` is what a `LocationContext` holds outside any router — the escape hatch the
- *  shell demo uses for a widget with its own history inside the showcase's router. */
-const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationContext>;
 
 /* ── The catalogue ──────────────────────────────────────────────────────── */
 
@@ -105,11 +99,11 @@ function AddressBar({ links }: { links: [label: string, to: string][] }) {
   const location = useLocation();
   const navigate = useNavigate();
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2 text-xs">
+    <div className="flex flex-wrap items-center gap-2 border-b border-subtle bg-surface-2 px-3 py-2 text-xs">
       <Button size="sm" variant="ghost" onClick={() => void navigate(-1)}>
         ‹ Back
       </Button>
-      <code className="min-w-0 flex-1 truncate font-mono text-[var(--text-secondary)]" data-private>
+      <code className="min-w-0 flex-1 truncate-until-large font-mono text-secondary" data-private>
         {location.pathname}
         {location.search}
         {location.hash}
@@ -135,7 +129,7 @@ function Frame({
   children: ReactNode;
 }) {
   return (
-    <div className={`overflow-hidden rounded-md border border-[var(--border)] bg-[var(--bg-page)] ${className ?? ""}`}>
+    <div className={`overflow-hidden rounded-md border border-subtle bg-page ${className ?? ""}`}>
       <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
         {/* `/elsewhere` behind the page, so back past settings is visible. */}
         <MemoryRouter initialEntries={["/elsewhere", initial]} initialIndex={1}>
@@ -211,7 +205,7 @@ function LookCard({ account, demo }: { account: GardenAccount; demo: boolean }) 
         onChange={(lang) => void language.pick(lang)}
         options={OFFERED}
       />
-      <p className="text-xs text-[var(--text-muted)]">
+      <p className="text-xs text-muted">
         From the {language.source} · device {code(account.deviceLang ?? "—")} · account{" "}
         {code(account.accountLang ?? "—")}
         {demo && " · a demo never writes the account"}
@@ -234,7 +228,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
             firstName={account.names.first}
             lastName={account.names.last}
             onSave={async (values) => {
-              await beat();
+              await beat(600);
               account.setNames({ first: values.firstName, last: values.lastName });
             }}
           />
@@ -243,7 +237,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
               id="email-card"
               currentEmail="ada@example.com"
               onRequest={async ({ password }) => {
-                await beat();
+                await beat(600);
                 if (password !== PASSWORD) throw new Error("password_incorrect");
               }}
             />
@@ -253,7 +247,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
     case "security":
       return (
         <>
-          <PasswordSetting id="password-card" onSubmit={() => beat()} />
+          <PasswordSetting id="password-card" onSubmit={() => beat(600)} />
           <TwoFactorSetting
             id="twofactor-card"
             enabled={account.twoFactor}
@@ -273,7 +267,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
               ]);
             }}
             onDelete={async (id) => {
-              await beat();
+              await beat(600);
               account.setPasskeys((rows) => rows.filter((row) => row.id !== id));
             }}
           />
@@ -281,10 +275,10 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
             id="sessions-card"
             sessions={account.sessions}
             onRevoke={async (id) => {
-              await beat();
+              await beat(600);
               account.setSessions((rows) => rows.filter((row) => row.id !== id));
             }}
-            onSignOutEverywhere={() => beat()}
+            onSignOutEverywhere={() => beat(600)}
           />
         </>
       );
@@ -294,7 +288,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
           <DataExportSetting
             id="export-card"
             onExport={async () => {
-              await beat();
+              await beat(600);
               return new Blob([JSON.stringify({ format: "eifi1-account-export", app: "garden-planner" }, null, 2)], {
                 type: "application/json",
               });
@@ -306,7 +300,7 @@ function GardenGroup({ group, account, demo }: { group: Group; account: GardenAc
             mode="after_days"
             consequences={["Your 3 garden beds and their planting plans are deleted."]}
             onRequest={async ({ password }) => {
-              await beat();
+              await beat(600);
               if (password !== PASSWORD) throw new Error("password_incorrect");
             }}
           />
@@ -334,7 +328,11 @@ function GardenSettings({ layout, demo, account }: { layout: "desktop" | "phone"
       entries={entries}
       basePath="/settings"
       renderGroup={(group) => <GardenGroup group={group} account={account} demo={demo} />}
-      phoneFooter={<ListItem href="/admin" title="Administration" subtitle="Leaves settings" leading={<Users className="size-4 text-[var(--text-muted)]" aria-hidden />} />}
+      phoneFooter={<ListItem href="/admin" title="Administration" subtitle="Leaves settings" leading={<Users className="size-4 text-muted" aria-hidden />} />}
+      // The window's title (0.34, §3.1): the desktop specimen writes it, the other two
+      // pass `false`, so three specimens on one page do not take turns at one tab.
+      appName="Garden Planner"
+      documentTitle={layout === "desktop" ? undefined : false}
     />
   );
 }
@@ -361,7 +359,10 @@ export function SettingsDesktop031Demo() {
         settings. Ten entries are over the threshold of eight, so the search shows: try “dark”, “2fa” or “sécurité”
         — accents fold, and a group&rsquo;s name finds its settings. “Legacy link” is keksdose&rsquo;s old
         {code("#security")} URL, converted with the whole query while the page stays mounted. “Mail link” rings the
-        passkeys card, focuses its heading and removes only {code("focus")}.
+        passkeys card, focuses its heading and removes only {code("focus")}. Since 0.34 the browser tab follows the
+        open group — “Security · Garden Planner settings · Garden Planner”, from {code("appName")} — and gets its
+        old title back when the layout unmounts; {code("documentTitle")} takes a function for another order, or{" "}
+        {code("false")}, which the phone and admin specimens pass.
       </Note>
     </Example>
   );
@@ -370,7 +371,7 @@ export function SettingsDesktop031Demo() {
 export function SettingsPhone031Demo() {
   const account = useGardenAccount();
   return (
-    <Example label="SettingsLayout — phone" hint={`layout="phone" pins it here; "auto" follows PHONE_QUERY`}>
+    <Example label="SettingsLayout — phone" hint={`layout="phone" pins it here; "auto" follows usePhoneLayout()`}>
       <Frame initial="/settings" links={SETTINGS_LINKS.slice(1)} className="mx-auto max-w-[390px]">
         <GardenSettings layout="phone" demo={false} account={account} />
       </Frame>
@@ -445,8 +446,9 @@ export function SettingsAdmin031Demo() {
           basePath="/admin"
           width="7xl"
           search={false}
+          documentTitle={false}
           aliases={{ overview: "metrics" }}
-          phoneFooter={<ListItem href="/import" title="Import" leading={<Upload className="size-4 text-[var(--text-muted)]" aria-hidden />} />}
+          phoneFooter={<ListItem href="/import" title="Import" leading={<Upload className="size-4 text-muted" aria-hidden />} />}
           renderGroup={(section) => {
             switch (section) {
               case "metrics":

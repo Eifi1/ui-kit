@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { CloudOff } from "lucide-react";
-import { Button, Input } from "../../../src/components/ui";
+import { Button } from "../../../src/components/button";
+import { Input } from "../../../src/components/input";
 import { Field } from "../../../src/components/field";
 import { FloatingActionButton } from "../../../src/components/floating-panel";
 import { ServerWakeNotice, useServerWakeStage } from "../../../src/components/server-wake";
 import { createServerWake } from "../../../src/lib/server-wake";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * ServerWakeNotice (0.18): keksdose's cold-start notice, for every app. A demo watcher
@@ -13,8 +14,6 @@ import { Example, Note } from "../lib/section";
  */
 
 const demo = createServerWake();
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** A request that takes `ms` — what a sleeping Cloud Run container does to a GET. */
 const simulate = (ms: number) =>
@@ -43,11 +42,13 @@ export function ServerWake018Demo() {
           <Button variant="ghost" aria-pressed={pill} onClick={() => setPill((on) => !on)}>
             {pill ? "Hide the offline pill" : "Show an offline pill"}
           </Button>
+          {/* The render prop wires the label to the input; a plain child would need an
+              `htmlFor` id of its own (axe "label", refactor audit 2026-10, DOC-10). */}
           <Field label="App name" className="w-40">
-            <Input value={appName} onChange={(e) => setAppName(e.target.value)} />
+            {(control) => <Input {...control} value={appName} onChange={(e) => setAppName(e.target.value)} />}
           </Field>
         </div>
-        <p className="text-sm text-[var(--text-secondary)]">
+        <p className="text-sm text-secondary">
           Stage: <span className="font-mono">{stage}</span>
         </p>
         <ServerWakeNotice watcher={demo} appName={appName || undefined} />
@@ -61,13 +62,14 @@ export function ServerWake018Demo() {
           />
         )}
         <Note>
-          The notice is fixed in the start corner, above AppShell&apos;s bottom nav ({code("--app-nav-h")}, or{" "}
-          {code("navOffset")}). Wire it once: {code("attachServerWake(api)")} on the axios instance (or{" "}
+          The notice is fixed at the top, centred under the status bar, and takes no taps (0.34, keksdose live
+          #399): until then it sat in the bottom-start corner, which on a phone is where a sticky Create footer and
+          the floating buttons live. Wire it once: {code("attachServerWake(api)")} on the axios instance (or{" "}
           {code("wrapFetch(fetch)")}) and {code("<ServerWakeNotice appName=\"…\" />")} next to the router. GETs only by
           default; {code("createServerWake({ shouldWatch: watchReadsAnd(/\\/auth\\/login\\b/) })")} adds the login POST.
           Never while offline, never an upload, never a download ({code("responseType")} {code("blob")},{" "}
-          {code("arraybuffer")} or {code("stream")}; 0.19.0). A visible FloatingActionButton under it — kastlan&apos;s
-          offline pill — lifts it above (0.19.0): show the pill, then simulate a request.
+          {code("arraybuffer")} or {code("stream")}; 0.19.0). kastlan&apos;s offline pill no longer meets it: show
+          the pill, then simulate a request — they stand at opposite ends of the screen.
         </Note>
       </div>
     </Example>

@@ -149,6 +149,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       reworkPlaceholder: "还有哪些需要完善？如有新的限制或方向调整，请一并说明。",
       reworkUploadFailed: "无法上传文件，返工请求未发送。",
       status: "状态",
+      note: "备注",
     },
     accountSettings: {
       profile: {
@@ -170,6 +171,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         submit: "修改密码",
         tooShort: "新密码太短。",
         mismatch: "两次输入的密码不一致。",
+        wrongPassword: "密码不正确。",
       },
       twoFactor: {
         status: "双重验证",
@@ -227,8 +229,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       keyboardHint:
         "方向键在单元格之间移动。直接输入替换单元格内容，F2 编辑，Esc 撤销编辑。回车向下移动，并在末尾添加一行。",
       lineError: (line) => `无法读取第 ${line} 行`,
-      points: (count) => `${count} 个点`,
-      problems: (count) => `${count} 个单元格不是数字`,
+      points: (count) => `${n(count)} 个点`,
+      problems: (count) => `${n(count)} 个单元格不是数字`,
     },
     pageContents: { title: "本页目录" },
     common: {
@@ -255,6 +257,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       filter: "筛选",
       close: "关闭",
       selectRow: "选择行",
+      rowDetails: "详情",
       autoSize: "自动调整列宽",
       loading: "加载中…",
       filters: "筛选条件",
@@ -296,6 +299,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `列（${n(visible)}/${n(total)}）`,
+      filterColumn: (column, active) => (active ? `筛选${column}（已启用）` : `筛选${column}`),
       empty: "暂无条目",
       actions: "操作",
       edit: "编辑",
@@ -473,7 +477,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       emptyMultiple: "将文件拖放到此处",
       hint: (accept) => (accept ? `支持：${accept}` : "任意文件类型"),
       busy: "正在上传…",
-      rejectedPick: (count) => (count === 1 ? "未添加该文件" : `${count} 个文件均未添加`),
+      rejectedPick: (count) => (count === 1 ? "未添加该文件" : `${n(count)} 个文件均未添加`),
       rejectedType: (name) => `“${name}”的文件类型不受支持`,
       rejectedTypeOnly: (accept) => `仅限 ${accept} 文件`,
       rejectedSize: (name, maxSize) => `“${name}”超过 ${maxSize}`,
@@ -575,14 +579,14 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       strong: "强",
       announcement: (level) => `密码强度：${level}`,
       // Unformatted, as in the English default.
-      ruleLength: (minLength) => `至少 ${minLength} 个字符`,
+      ruleLength: (minLength) => `至少 ${n(minLength)} 个字符`,
       ruleCase: "包含大写和小写字母",
       ruleDigit: "包含数字",
       ruleSymbol: "包含符号",
       optional: (rule) => `${rule}（可选）`,
       met: "已满足：",
       notMet: "未满足：",
-      tooLong: (maxBytes) => `最多 ${maxBytes} 个字符（带重音的字母和表情符号按多个字符计算）。`,
+      tooLong: (maxBytes) => `最多 ${n(maxBytes)} 个字符（带重音的字母和表情符号按多个字符计算）。`,
     },
     seriesChart: {
       resetZoom: "重置缩放",
@@ -1118,7 +1122,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         deactivate: "已停用",
         reactivate: "已重新激活",
         role: "角色已更改",
-        membership_remove: "已从公司移除",
         password_change_require: "已要求设置新密码",
         password_change_withdraw: "已撤回新密码要求",
         mail_verification: "已发送确认邮件",
@@ -1132,6 +1135,46 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         deletion_cancel: "已取消删除",
         erase: "账户已永久删除",
         plan: "套餐已更改",
+      },
+      // 0.34 (§11.5): whole phrases per noun. `team` is Kurvenschmiede's "团队"; `company`
+      // keeps `actions.membership_remove`'s string.
+      groupActions: {
+        group: {
+          group_create: "群组已创建",
+          group_rename: "群组已重命名",
+          group_delete: "群组已删除",
+          membership_add: "已添加到群组",
+          membership_role: "群组中的角色已更改",
+          membership_remove: "已从群组移除",
+          deleted: "已删除的群组",
+        },
+        team: {
+          group_create: "团队已创建",
+          group_rename: "团队已重命名",
+          group_delete: "团队已删除",
+          membership_add: "已添加到团队",
+          membership_role: "团队中的角色已更改",
+          membership_remove: "已从团队移除",
+          deleted: "已删除的团队",
+        },
+        company: {
+          group_create: "公司已创建",
+          group_rename: "公司已重命名",
+          group_delete: "公司已删除",
+          membership_add: "已添加到公司",
+          membership_role: "公司中的角色已更改",
+          membership_remove: "已从公司移除",
+          deleted: "已删除的公司",
+        },
+        budget: {
+          group_create: "预算已创建",
+          group_rename: "预算已重命名",
+          group_delete: "预算已删除",
+          membership_add: "已添加到预算",
+          membership_role: "预算中的角色已更改",
+          membership_remove: "已从预算移除",
+          deleted: "已删除的预算",
+        },
       },
     },
     transferOwnership: {

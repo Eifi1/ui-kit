@@ -4,14 +4,16 @@ import { ChevronLeft, ChevronRight, Download, ExternalLink, FileText, ZoomIn } f
 
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAuthedSrc } from "../hooks/use-authed-src";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { FullBleedDialog } from "./full-bleed-dialog";
-import { IconButton, buttonClasses } from "./ui";
+import { IconButton } from "./icon-button";
+import { buttonClasses } from "./button-look";
 import { ImageStates, DEFAULT_AUTHED_IMAGE_LABELS } from "./authed-image";
 import { useAnchorDir } from "./use-anchor-dir";
+import { DEFAULT_LIGHTBOX_LABELS } from "./lightbox-labels";
 
 /* ── The item both the grid and the lightbox show ────────────────────────── */
 
@@ -73,18 +75,8 @@ export interface LightboxLabels {
   openInNewTab: string;
 }
 
-export const DEFAULT_LIGHTBOX_LABELS: LightboxLabels = {
-  dialog: "Image viewer",
-  close: "Close",
-  previous: "Previous image",
-  next: "Next image",
-  counter: (index, count) => `${index} / ${count}`,
-  position: (index, count) => `Image ${index} of ${count}`,
-  download: "Download",
-  zoom: "Zoom",
-  noPreview: "No preview available for this file",
-  openInNewTab: "Open in new tab",
-};
+// Defined in ./lightbox-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_LIGHTBOX_LABELS };
 
 /* ── The component ───────────────────────────────────────────────────────── */
 
@@ -116,7 +108,7 @@ export interface LightboxProps {
   /** Push a history entry so Back closes the viewer. Default `true`; see
    *  `FullBleedDialog`'s `backCloses` for when to turn it off. */
   backCloses?: boolean;
-  labels?: Partial<LightboxLabels>;
+  labels?: LabelOverride<LightboxLabels>;
 }
 
 /** Swipes shorter than this are taps, and a drag that is mostly vertical is a scroll. */
@@ -270,7 +262,7 @@ export function Lightbox({
 
   const header = item ? (
     <div className="flex min-w-0 items-center gap-2">
-      <span aria-hidden className="shrink-0 text-sm tabular-nums text-[var(--text-secondary)]">
+      <span aria-hidden className="shrink-0 text-sm tabular-nums text-secondary">
         {labels.counter(index + 1, count)}
       </span>
       {/* The page turn, said — focus does not move when the picture changes, so
@@ -295,10 +287,10 @@ export function Lightbox({
   ) : null;
 
   const slide = !item ? null : kind === "file" ? (
-    <div className="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-[var(--border)] p-6 text-center">
-      <FileText aria-hidden className="size-10 text-[var(--text-muted)]" />
-      <p className="break-all font-medium text-[var(--text-primary)]">{item.fileName ?? item.alt}</p>
-      <p className="text-sm text-[var(--text-muted)]">{labels.noPreview}</p>
+    <div className="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-subtle p-6 text-center">
+      <FileText aria-hidden className="size-10 text-muted" />
+      <p className="break-all font-medium text-primary">{item.fileName ?? item.alt}</p>
+      <p className="text-sm text-muted">{labels.noPreview}</p>
       {fetched.src && (
         <a
           href={fetched.src}
@@ -347,7 +339,7 @@ export function Lightbox({
         data-lightbox=""
         footer={
           item?.caption !== undefined && item.caption !== null && item.caption !== false ? (
-            <p className="me-auto min-w-0 text-sm text-[var(--text-secondary)]">{item.caption}</p>
+            <p className="me-auto min-w-0 text-sm text-secondary">{item.caption}</p>
           ) : undefined
         }
       >

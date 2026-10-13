@@ -4,6 +4,7 @@ import { AccountStateChip, DateMark, RoleChip, dateColumn } from "../account-chi
 import type { RoleVocabulary } from "../account-chips";
 import { MemoryRouter } from "react-router";
 import { DataTable } from "../data-table";
+import { rowMatches } from "../data-table-filters";
 
 type Role = "ADMIN" | "MEMBER" | "CUSTOMER";
 const ROLES: RoleVocabulary<Role> = {
@@ -113,5 +114,19 @@ describe("DateMark / dateColumn", () => {
       </MemoryRouter>,
     );
     expect(within(screen.getAllByRole("table")[0]).getByText("Never")).toBeInTheDocument();
+  });
+
+  // Round 0.34 BUG-2: a Date or epoch value went to the filter as `toISOString()`, the
+  // UTC day, while the cell shows the local one. Pinned in Berlin (vitest.config.ts),
+  // where 22:30 UTC on the 11th is 00:30 on the 12th.
+  it("hands the filter a Date or epoch value as the LOCAL day the cell shows", () => {
+    const instant = new Date("2026-10-11T22:30:00Z");
+    expect(instant.getDate()).toBe(12);
+    type Row = { at: Date | number };
+    const col = dateColumn<Row>({ key: "at", header: "Created", value: (r) => r.at, filter: true });
+    if (col.filter?.type !== "date") throw new Error("expected a date filter");
+    expect(col.filter.getValue({ at: instant })).toBe("2026-10-12");
+    expect(col.filter.getValue({ at: instant.getTime() })).toBe("2026-10-12");
+    expect(rowMatches(col, { at: instant }, { type: "date", from: "2026-10-12", to: "2026-10-12" })).toBe(true);
   });
 });

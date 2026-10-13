@@ -4,13 +4,16 @@ import { MoreHorizontal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useLargeText } from "../hooks/use-large-text";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { Popover } from "./popover";
-import { Button, CompactControls, IconButton } from "./ui";
+import { Button } from "./button";
+import { CompactControls } from "./field-parts";
+import { IconButton } from "./icon-button";
 import { useCommitReason, type CommitScope } from "./write-lock";
-import type { IconButtonGlyphSize, IconButtonSize } from "./ui";
+import type { IconButtonGlyphSize, IconButtonSize } from "./icon-button";
 import type { TooltipSide } from "./tooltip";
 import type { DataTableColumn } from "./data-table";
+import { DEFAULT_ROW_ACTIONS_LABELS } from "./row-actions-labels";
 
 /**
  * A row's actions — inline icons at Normal, one "⋯" menu at Large and above
@@ -141,10 +144,8 @@ export interface RowActionsLabels {
   actionsFor: (name: string) => string;
 }
 
-export const DEFAULT_ROW_ACTIONS_LABELS: RowActionsLabels = {
-  actions: "Actions",
-  actionsFor: (name) => `Actions for ${name}`,
-};
+// Defined in ./row-actions-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ROW_ACTIONS_LABELS };
 
 /**
  * - `"auto"` (default): the icons inline at Normal; the "⋯" menu at Large and Extra
@@ -181,7 +182,7 @@ export interface RowActionsProps {
   /** The inline tooltips' side, IconButton's `tooltipSide` — `"start"` for a table's last
    *  column, so a bubble does not run off the row's end. Per row: every inline action. */
   tooltipSide?: TooltipSide;
-  labels?: Partial<RowActionsLabels>;
+  labels?: LabelOverride<RowActionsLabels>;
 }
 
 function visibleActions(actions: RowActionList): RowAction[] {
@@ -522,7 +523,7 @@ function InlineAction({
 }
 
 /** The actions column's hidden header, in the provider's words. */
-function RowActionsHeader({ text, labels }: { text?: string; labels?: Partial<RowActionsLabels> }) {
+function RowActionsHeader({ text, labels }: { text?: string; labels?: LabelOverride<RowActionsLabels> }) {
   const resolved = useKitLabels("rowActions", DEFAULT_ROW_ACTIONS_LABELS, labels);
   return <span className="sr-only">{text ?? resolved.actions}</span>;
 }
@@ -549,7 +550,7 @@ export interface RowActionsColumnOptions<T> {
    * the plain-text places fall back to the column's `key`.
    */
   headerText?: string;
-  labels?: Partial<RowActionsLabels>;
+  labels?: LabelOverride<RowActionsLabels>;
   /** Anything else for the column (`mobileHidden`, `cellProps`…), merged last. */
   column?: Partial<DataTableColumn<T>>;
 }

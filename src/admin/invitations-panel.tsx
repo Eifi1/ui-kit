@@ -3,7 +3,7 @@ import type { FormEvent, ReactNode } from "react";
 import { RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { cn } from "../lib/cn";
 import type { DateInput } from "../lib/format";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { KIT_LANGUAGES, resolveLanguage } from "../i18n/languages";
 import type { KitLanguageCode } from "../i18n/languages";
 import { RoleChip } from "../components/account-chips";
@@ -15,11 +15,16 @@ import { CopyButton } from "../components/copy-button";
 import { LanguageSelect } from "../components/language-select";
 import { SectionLabel, Caption } from "../components/text";
 import { RowActions } from "../components/row-actions";
-import { Button, Input, Select, Spinner } from "../components/ui";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
+import { Select } from "../components/select";
+import { Spinner } from "../components/spinner";
 import { COMMIT_EXCEPT_BILLING, useWriteLock } from "../components/write-lock";
-import { hasMessage, settle, useDayText, usePersonLabel } from "./admin-parts";
+import { settle, useDayText, usePersonLabel } from "./admin-parts";
+import { hasContent } from "../lib/presence";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
 import { RoleSelect } from "./role-select";
+import { DEFAULT_INVITATIONS_LABELS } from "./invitations-panel-labels";
 
 /**
  * Who is invited, and the form that invites (docs/user-admin-harmonization.md §5; auth
@@ -144,31 +149,8 @@ export interface InvitationsLabels {
   failed: string;
 }
 
-export const DEFAULT_INVITATIONS_LABELS: InvitationsLabels = {
-  email: "Email address",
-  invalidEmail: "Enter a complete email address.",
-  role: "Role",
-  scope: "Scope",
-  scopeNone: "None",
-  language: "Language of the invitation",
-  note: "Note",
-  invite: "Invite",
-  listTitle: "Invitations",
-  empty: "Nobody has been invited yet.",
-  loading: "Loading…",
-  status: { open: "Open", accepted: "Accepted", expired: "Expired", revoked: "Revoked" },
-  sent: (date) => `Sent ${date}`,
-  expires: (date) => `Expires ${date}`,
-  invitedBy: (name) => `by ${name}`,
-  resend: (email) => `Send ${email} a new link`,
-  copyLink: "Copy invitation link",
-  revoke: (email) => `Revoke the invitation for ${email}`,
-  consoleHint:
-    "Mail isn’t sent on this server — it is written to the server log. Copy each invitation link from here and pass it on yourself: it is shown only once.",
-  linkReady: (email) => `The invitation link for ${email}, shown only this once:`,
-  notSent: (email) => `${email} is invited, but the mail couldn’t be sent. Resend it.`,
-  failed: "That didn’t work. Please try again.",
-};
+// Defined in ./invitations-panel-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_INVITATIONS_LABELS };
 
 /** The tone of each status. */
 const STATUS_TONES: Readonly<Record<InvitationStatus, ChipTone>> = {
@@ -218,7 +200,7 @@ export interface InvitationsPanelProps<R extends string = string> {
    *  adoption); the list keeps the label as its accessible name either way. */
   listTitle?: ReactNode | null;
   className?: string;
-  labels?: Partial<InvitationsLabels>;
+  labels?: LabelOverride<InvitationsLabels>;
 }
 
 // Shape only — whether the address may be invited is the server's question.
@@ -280,7 +262,7 @@ export function InvitationsPanel<R extends string = string>({
       return await settle(call);
     } catch (error) {
       const own = describeError?.(error);
-      setFailure(hasMessage(own) ? own : labels.failed);
+      setFailure(hasContent(own) ? own : labels.failed);
       return FAILED;
     } finally {
       setBusy(null);
@@ -332,7 +314,7 @@ export function InvitationsPanel<R extends string = string>({
 
   return (
     <div className={cn("space-y-3", className)}>
-      {intro && <div className="text-sm text-[var(--text-secondary)]">{intro}</div>}
+      {intro && <div className="text-sm text-secondary">{intro}</div>}
       {mailBackend === "console" && (
         <AlertBanner tone="info" size="sm">
           {labels.consoleHint}
@@ -439,7 +421,7 @@ export function InvitationsPanel<R extends string = string>({
         ) : invitations.length === 0 ? (
           <Caption>{labels.empty}</Caption>
         ) : (
-          <ul aria-label={labels.listTitle} className="divide-y divide-[var(--border)]">
+          <ul aria-label={labels.listTitle} className="divide-y divide-subtle">
             {invitations.map((invitation) => {
               const key = String(invitation.id);
               const link = invitation.link ?? links[key];
@@ -458,7 +440,7 @@ export function InvitationsPanel<R extends string = string>({
                 <li key={key} data-status={invitation.status} className="py-2 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
                     <div className="min-w-0 flex-1 basis-48 space-y-1">
-                      <div data-private className="truncate-until-large text-sm font-medium text-[var(--text-primary)]">
+                      <div data-private className="truncate-until-large text-sm font-medium text-primary">
                         {invitation.email}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
@@ -473,7 +455,7 @@ export function InvitationsPanel<R extends string = string>({
                         )}
                       </div>
                       {(facts.length > 0 || invitation.note) && (
-                        <div className="text-xs text-[var(--text-muted)]">
+                        <div className="text-xs text-muted">
                           {facts.join(" · ")}
                           {invitation.note && (
                             <>

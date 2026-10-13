@@ -1,7 +1,11 @@
 import { createRef, useRef, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { Button, IconButton, Input, Select, Textarea } from "../ui";
+import { Button } from "../button";
+import { IconButton } from "../icon-button";
+import { Input } from "../input";
+import { Select } from "../select";
+import { Textarea } from "../textarea";
 import { MultiSelect } from "../multi-select";
 import { CurrencySelect } from "../currency-select";
 import { EntityCombobox } from "../entity-combobox";
@@ -348,7 +352,7 @@ describe("MultiSelect error and disabled", () => {
     const trigger = screen.getByRole("combobox", { name: /Tags/ });
     expect(trigger).toHaveAttribute("aria-invalid", "true");
     expect(trigger).toHaveAccessibleDescription("Pick any Pick at least one");
-    expect(trigger.className).toContain("ring-[var(--danger-border-strong)]");
+    expect(trigger.className).toContain("ring-danger-strong");
   });
 
   it("renders nothing extra for an empty error", () => {

@@ -3,11 +3,12 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime, toDate, EMPTY_FORMATTED_VALUE } from "../lib/format";
 import type { DateInput, FormatDateStyle, FormatRelativeTimeOptions } from "../lib/format";
-import { useKitDateFormatter, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitDateFormatter, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { toLocalIso } from "../lib/dates";
 import { Chip } from "./chip";
 import type { ChipShape, ChipSize, ChipTone, ChipVariant } from "./chip";
 import type { DataTableColumn } from "./data-table";
+import { DEFAULT_ACCOUNT_STATE_LABELS } from "./account-chips-labels";
 
 /**
  * The parts an admin roster repeats (0.18.0) — and only those.
@@ -152,16 +153,8 @@ export interface AccountStateLabels extends Record<Exclude<AccountState, "deleti
   deletionOn?: (date: string) => string;
 }
 
-export const DEFAULT_ACCOUNT_STATE_LABELS = {
-  active: "Active",
-  inactive: "Inactive",
-  invited: "Invited",
-  registered: "Registered",
-  unverified: "Unverified",
-  passwordChange: "Must change password",
-  deletion: "Deletion requested",
-  deletionOn: (date: string) => `Deletion on ${date}`,
-} satisfies Required<AccountStateLabels>;
+// Defined in ./account-chips-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ACCOUNT_STATE_LABELS };
 
 /** The default tone of each state: green for the normal case, red for switched off
  *  (and for going, `deletion`), amber for something the user still has to do, blue for
@@ -194,7 +187,7 @@ export interface AccountStateChipProps extends AccountChipLook {
   /** Over the label, for an app whose word for the state is its own ("Deactivated"). */
   children?: ReactNode;
   /** Prop > `<UiKitProvider labels={{ accountState }}>` > English. */
-  labels?: Partial<AccountStateLabels>;
+  labels?: LabelOverride<AccountStateLabels>;
 }
 
 /**
@@ -304,7 +297,7 @@ export function DateMark({
   const fromProvider = useKitDateFormatter();
   const date = toDate(value);
   const cls = cn("whitespace-nowrap tabular-nums", className);
-  if (!date) return <span className={cn(cls, "text-[var(--text-muted)]")}>{empty}</span>;
+  if (!date) return <span className={cn(cls, "text-muted")}>{empty}</span>;
   if (display === "date") {
     const own =
       dateStyle === undefined && fromProvider
@@ -339,7 +332,7 @@ export function DateMark({
     >
       <span className="whitespace-nowrap tabular-nums">{text}</span>
       {absolute === "inline" && " · "}
-      <span className={cn("whitespace-nowrap tabular-nums text-[var(--text-muted)]", absolute === "below" && "text-xs")}>
+      <span className={cn("whitespace-nowrap tabular-nums text-muted", absolute === "below" && "text-xs")}>
         {exact}
       </span>
     </time>
@@ -386,11 +379,15 @@ export function dateColumn<T>({
     filter: filter
       ? {
           type: "date",
-          // The filter compares the first ten characters, so hand it an ISO string.
+          // A string goes as it is: the filter reads a timestamp's local day itself.
+          // A Date or epoch value goes as its LOCAL day, the one the cell shows —
+          // `toISOString()` handed over the UTC day, and in Berlin a 00:30 row was
+          // filtered under the day before (round 0.34 BUG-2).
           getValue: (row) => {
             const raw = value(row);
             if (typeof raw === "string") return raw;
-            return toDate(raw)?.toISOString() ?? null;
+            const date = toDate(raw);
+            return date ? toLocalIso(date) : null;
           },
         }
       : undefined,

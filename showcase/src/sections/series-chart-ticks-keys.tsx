@@ -32,7 +32,7 @@ export function IntegerTicksDemo() {
       <div className="grid gap-6 md:grid-cols-2">
         <div>
           <Row className="mb-2">
-            <span className="text-xs text-[var(--text-muted)]">Users (counts)</span>
+            <span className="text-xs text-muted">Users (counts)</span>
             <ToggleGroup<Forced>
               aria-label="integerTicks for the users axis"
               size="sm"
@@ -54,7 +54,7 @@ export function IntegerTicksDemo() {
         </div>
         <div>
           <Row className="mb-2">
-            <span className="text-xs text-[var(--text-muted)]">Runway (days, fractional)</span>
+            <span className="text-xs text-muted">Runway (days, fractional)</span>
             <ToggleGroup<Forced>
               aria-label="integerTicks for the runway axis"
               size="sm"

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Select } from "../components/ui";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Select } from "../components/select";
 import { Caption } from "../components/text";
 import { AdminActionConfirm } from "./admin-action-confirm";
 import type { AdminActionTarget, AdminConfirmLevel } from "./admin-action-confirm";
 import { usePersonLabel } from "./admin-parts";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
+import { DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "./transfer-ownership-dialog-labels";
 
 /**
  * Hand an account's owned work to another account — Kurvenschmiede's `TypedConfirm`
@@ -68,19 +69,8 @@ export interface TransferOwnershipLabels {
   noCandidates: string;
 }
 
-export const DEFAULT_TRANSFER_OWNERSHIP_LABELS: TransferOwnershipLabels = {
-  title: (name) => `Hand on ${name}’s work`,
-  body: "Everything this account owns moves to the account you choose, in one step.",
-  recipient: "Hand it to",
-  choose: "Choose an account…",
-  chooseFirst: "Choose who receives the work",
-  confirm: "Hand it on",
-  customer: "a customer",
-  deactivated: "deactivated",
-  self: "the same account",
-  unavailable: (account, reason) => `${account} (${reason})`,
-  noCandidates: "No other account can receive it.",
-};
+// Defined in ./transfer-ownership-dialog-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_TRANSFER_OWNERSHIP_LABELS };
 
 export interface TransferOwnershipDialogProps {
   /** The account whose work moves — its address is what the admin types. */
@@ -99,7 +89,7 @@ export interface TransferOwnershipDialogProps {
   describeError?: (error: unknown) => ReactNode | undefined;
   /** Kept-mounted mode. */
   open?: boolean;
-  labels?: Partial<TransferOwnershipLabels>;
+  labels?: LabelOverride<TransferOwnershipLabels>;
 }
 
 export function TransferOwnershipDialog({
@@ -157,7 +147,7 @@ export function TransferOwnershipDialog({
       onClose={onClose}
       describeError={describeError}
     >
-      {summary && <div className="text-sm text-[var(--text-secondary)]">{summary}</div>}
+      {summary && <div className="text-sm text-secondary">{summary}</div>}
       <Select label={labels.recipient} value={chosen} onChange={(event) => setChosen(event.target.value)}>
         <option value="">{labels.choose}</option>
         {rows.map((row) => (

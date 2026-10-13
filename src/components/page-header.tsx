@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
+import type { ComponentPropsWithRef, ElementType, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { SECTION_LABEL_CLASS } from "./text";
 
@@ -64,7 +64,7 @@ const ROW_ALIGN: Record<PageHeaderMobileLayout, Record<PageHeaderActionsAlign, s
   inline: { start: "items-start", center: "items-center", end: "items-end" },
 };
 
-export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface PageHeaderProps extends Omit<ComponentPropsWithRef<"div">, "title"> {
   title: ReactNode;
   /** A sentence under the title. */
   description?: ReactNode;
@@ -139,6 +139,10 @@ export interface PageHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * The full title stays in the DOM as the heading's text, so a screen reader and the
    * document outline read all of it. There is deliberately no native `title` tooltip:
    * the kit does not use them (not on touch, not on keyboard focus, not styled).
+   *
+   * At Normal only: from Large up the title wraps (`truncate-until-large`, text size
+   * §10.17; round 0.34 T1), as nothing is cut at Large — the actions then share the row
+   * with a taller title block.
    */
   truncateTitle?: boolean;
 }
@@ -230,14 +234,14 @@ export function PageHeader({
           {eyebrow != null && <p className={cn(SECTION_LABEL_CLASS.xs, "mb-1")}>{eyebrow}</p>}
           <Heading
             className={cn(
-              truncateTitle ? "truncate" : "break-words",
-              "text-[var(--text-primary)]",
+              truncateTitle ? "truncate-until-large" : "break-words",
+              "text-primary",
               TITLE[size],
             )}
           >
             {title}
           </Heading>
-          {description != null && <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>}
+          {description != null && <p className="mt-1 text-sm text-muted">{description}</p>}
         </div>
         {actions != null && (
           <div

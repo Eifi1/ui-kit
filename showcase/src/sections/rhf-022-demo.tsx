@@ -3,16 +3,13 @@ import { useForm } from "react-hook-form";
 import { Button, isTimeInRange } from "@eifi1/ui-kit";
 // See forms-rhf.tsx: the showcase alias maps "@eifi1/ui-kit/rhf" to src/rhf.ts.
 import { Form, RhfDateRangePicker, RhfTimeInput, RhfToggleGroup } from "@eifi1/ui-kit/rhf";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, READOUT_PRE } from "../lib/section";
 
 /**
  * 0.22 on the Forms page (kastlan 4): the three controls kastlan's forms still wired
  * by hand through RhfField's render — a meeting time, a period stored as two fields,
  * and a segmented choice — bound in one line each.
  */
-
-const READOUT = "font-mono text-xs text-[var(--text-secondary)] whitespace-pre-wrap [overflow-wrap:anywhere]";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 type Meeting = {
   meetingTime: string;
@@ -100,7 +97,7 @@ export function Rhf022Demo() {
           </div>
         </form>
       </Form>
-      <p className={READOUT}>submitted: {submitted}</p>
+      <p className={READOUT_PRE}>submitted: {submitted}</p>
       <Note>
         {code("RhfDateRangePicker")} binds TWO fields, {code("fromName")} and {code("toName")}: one pick writes both, a
         clear empties both, and an error on either paints the trigger and is listed under it — the end&apos;s own

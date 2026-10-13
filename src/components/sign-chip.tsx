@@ -2,8 +2,9 @@ import { ArrowUpDown, Minus, Plus } from "lucide-react";
 import { Chip } from "./chip";
 import { Tooltip } from "./tooltip";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useLargeText } from "../hooks/use-large-text";
+import { DEFAULT_SIGN_CHIP_LABELS } from "./sign-chip-labels";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -24,12 +25,8 @@ export interface SignChipLabels {
   switchTo: (next: string) => string;
 }
 
-export const DEFAULT_SIGN_CHIP_LABELS: SignChipLabels = {
-  outflow: "Outflow",
-  inflow: "Inflow",
-  direction: (current, next) => `Direction: ${current} — switch to ${next}`,
-  switchTo: (next) => `Switch to ${next}`,
-};
+// Defined in ./sign-chip-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SIGN_CHIP_LABELS };
 
 export interface SignChipProps {
   /** The figure is negative (an outflow) — the same flag {@link AmountInput}'s
@@ -41,7 +38,7 @@ export interface SignChipProps {
   onNegativeChange: (negative: boolean) => void;
   disabled?: boolean;
   /** Per-chip overrides of the `signChip` namespace. */
-  labels?: Partial<SignChipLabels>;
+  labels?: LabelOverride<SignChipLabels>;
   /** On the chip. Place it in its row from here — keksdose's form passes `self-end`
    *  to sit it on the display figure's baseline strip. */
   className?: string;
@@ -119,7 +116,7 @@ export function SignChip({ negative, onNegativeChange, disabled, labels: labelsP
     <span data-slot="sign-chip" className={cn("inline-flex shrink-0 flex-col items-start gap-0.5", className)}>
       {chip}
       {/* Hidden from the accessibility tree: the chip's name already says it. */}
-      <span aria-hidden className="text-xs text-[var(--text-muted)]">
+      <span aria-hidden className="text-xs text-muted">
         {labels.switchTo(next)}
       </span>
     </span>

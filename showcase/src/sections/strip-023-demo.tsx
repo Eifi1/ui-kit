@@ -12,15 +12,13 @@ import {
   TileRadioGroup,
   ToggleGroup,
 } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * 0.23.0: the label strip on its own (keksdose G8) and a lock reason per option on the
  * tile pickers (the kit's later list). Two specimens: `FieldStrip023Demo` (page:
  * fields) and `TileLock023Demo` (page: choices). Every value is synthetic.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const STATUSES = [
   { value: "open", label: "Open" },
@@ -43,9 +41,9 @@ function MapPlaceholder({ pinned }: { pinned: boolean }) {
   return (
     <div
       aria-hidden
-      className="flex h-28 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-muted)]"
+      className="flex h-28 items-center justify-center rounded-md border border-subtle bg-surface-2 text-muted"
     >
-      <MapPin className={pinned ? "size-6 text-[var(--danger)]" : "size-5"} />
+      <MapPin className={pinned ? "size-6 text-danger" : "size-5"} />
     </div>
   );
 }
@@ -95,7 +93,7 @@ export function FieldStrip023Demo() {
                     )}
                   </div>
                 )}
-                {readOnly && !pinned && <p className="text-sm text-[var(--text-muted)]">No location</p>}
+                {readOnly && !pinned && <p className="text-sm text-muted">No location</p>}
               </div>
             </FieldStrip>
           </div>
@@ -103,10 +101,10 @@ export function FieldStrip023Demo() {
         <Note>
           The four labels share one line. The location cell is a {code("role=\"group\"")} named by its label, so a
           screen reader entering &ldquo;Locate me&rdquo; hears &ldquo;Location, group&rdquo; first. Its content
-          starts 20px down ({code('pad="clear"')}, the default) like the swatches; {code('pad="field"')} is the 16px
-          strip the status group uses, where the strip plus a 26px bordered group is a labelled Input&apos;s 42px. A
-          text {code("hint")} becomes a caption under the content, an {code("error")} a message, both describing the
-          group.
+          starts 20px down like the swatches and the status group: the label and its &ldquo;?&rdquo; end 18px down, so
+          the content&apos;s border stays clear of them. For a row of 42px fields, make the content 22px tall, as the
+          status group is (20 + 22 = 42; {code("pad")} is deprecated since 0.34, one strip for all). A text{" "}
+          {code("hint")} becomes a caption under the content, an {code("error")} a message, both describing the group.
         </Note>
       </Example>
       <Example label="FieldStrip group={false}" hint="content that is a labelled group itself takes the label's id">

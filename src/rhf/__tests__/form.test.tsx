@@ -11,8 +11,10 @@ import {
   FormLabel,
   FormMessage,
   useFormField,
-} from "../form";
-import { Input } from "../../components/ui";
+} from "../form-core";
+import * as core from "../form-core";
+import * as publicFace from "../form";
+import { Input } from "../../components/input";
 import { NumberField } from "../../components/number-field";
 import { DatePicker } from "../../components/date-picker";
 
@@ -288,5 +290,23 @@ describe("useFormField", () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
     expect(() => render(<Harness>{() => <Probe />}</Harness>)).toThrow(/inside <FormField>/);
     log.mockRestore();
+  });
+});
+
+describe("./form, the public face (0.34, refactor audit 2026-10, API-6f)", () => {
+  it("hands out Form, and the core's own scaffold under the deprecated names", () => {
+    // Deprecated until 0.35: the same functions, not copies. The bound fields import the core.
+    const names = [
+      "Form",
+      "FormField",
+      "FormItem",
+      "FormLabel",
+      "FormControl",
+      "FormDescription",
+      "FormMessage",
+      "useFormField",
+    ] as const;
+    for (const name of names) expect(publicFace[name], name).toBe(core[name]);
+    expect(Object.keys(publicFace).sort()).toEqual([...names].sort());
   });
 });

@@ -8,7 +8,7 @@ import type { Rgb } from "@eifi1/ui-kit";
 // package name an app writes.
 import { KIT_CSS_VARIABLES, undeclaredCssVariables } from "@eifi1/ui-kit/testing";
 import type { UndeclaredCssVariablesOptions } from "@eifi1/ui-kit/testing";
-import { Example, Note, OutTable } from "../lib/section";
+import { Example, Note, OutTable, code } from "../lib/section";
 import { useActiveTokenSet, useTheme } from "../stores";
 
 /**
@@ -25,8 +25,6 @@ import { useActiveTokenSet, useTheme } from "../stores";
  * New code here uses the role utilities (`text-muted`, `bg-surface`, `border-subtle`),
  * never `[var(--…)]` — the page is their specimen.
  */
-
-const code = (s: string) => <code className="font-mono [overflow-wrap:anywhere]">{s}</code>;
 
 /* ── Measuring what is on screen ───────────────────────────────────────────── */
 
@@ -546,9 +544,9 @@ function UtilitiesDemo() {
         so a local override still works, and an unused name costs nothing. `hover:`, `md:`, `dark:` and `/60` work
         on every one — `hover:bg-brand` generated nothing while `.bg-brand` was a plain class. The money classes
         stay plain (`.text-money-pos`, `.bg-money-neg` …): a site that needs a variant keeps the `[var()]` form.
-        The kit&apos;s own ~1,580 `[var(--role)]` classes stay too, under a ratchet that only lets the count fall
-        (`npm run check:tokens`); new and touched code uses the names. In kastlan, `text-primary` is now the ink,
-        not its shadcn brand.
+        Since 0.34 the kit&apos;s own markup uses the names too: every `[var(--role)]` class with a name of the same
+        role and property moved, and a ratchet keeps the count at zero (`npm run check:tokens`). In kastlan,
+        `text-primary` is now the ink, not its shadcn brand.
       </Note>
     </Example>
   );

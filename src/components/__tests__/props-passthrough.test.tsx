@@ -277,16 +277,13 @@ describe("the accessible name on a root that has a role", () => {
 });
 
 /**
- * `HoverMenu` is the one component in this wave that already had the kit's own spelling.
- * It is deprecated, not removed: keksdose, kastlan and lenkbank all pass `ariaLabel`
- * today, and a rename that breaks three apps to save one line of resolution is not a
- * patch release. The DOM spelling wins where both are given — that is the direction the
- * deprecation moves in.
+ * `HoverMenu` was the one component in this wave that already had the kit's own spelling,
+ * `ariaLabel`. It was deprecated in 0.5 for the DOM's and removed in 0.34.
  */
-describe("HoverMenu's deprecated ariaLabel", () => {
+describe("HoverMenu's accessible name", () => {
   // Asserted on the open `role="menu"` panel: the name used to sit on the role-less
   // wrapper, where it was never read (and these tests pinned that).
-  const menu = (props: { ariaLabel?: string; "aria-label"?: string }) => {
+  const menu = (props: { "aria-label"?: string }) => {
     render(
       <HoverMenu
         {...props}
@@ -303,12 +300,13 @@ describe("HoverMenu's deprecated ariaLabel", () => {
     return screen.getByRole("menu");
   };
 
-  it("still names the menu", () => {
-    expect(menu({ ariaLabel: "Tours" })).toHaveAttribute("aria-label", "Tours");
+  it("names the menu from aria-label", () => {
+    expect(menu({ "aria-label": NAME })).toHaveAttribute("aria-label", NAME);
   });
 
-  it("gives way to aria-label when both are passed", () => {
-    expect(menu({ ariaLabel: "Tours", "aria-label": NAME })).toHaveAttribute("aria-label", NAME);
+  it("takes no other spelling: the deprecated ariaLabel went in 0.34", () => {
+    // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+    void (<HoverMenu ariaLabel="Tours" trigger={() => null}>{() => null}</HoverMenu>);
   });
 });
 

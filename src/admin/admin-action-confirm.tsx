@@ -1,18 +1,22 @@
 import { Children, useContext, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import { Checkbox } from "../components/checkbox";
 import { DEFAULT_DANGER_CONFIRM_LABELS, TypedConfirmField, typedMatches } from "../components/danger-confirm";
 import type { DangerConsequence } from "../components/danger-confirm";
 import { DialogFrame } from "../components/dialog-frame";
 import { ModalCloseContext } from "../components/modal";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { authErrorCode } from "../auth/auth-errors";
 import type { KitErrorCode } from "../auth/auth-errors";
-import { hasMessage, usePersonLabel } from "./admin-parts";
+import { usePersonLabel } from "./admin-parts";
+import { hasContent } from "../lib/presence";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
+import { isGroupTarget } from "./admin-action-log";
+import type { AdminGroupTarget } from "./admin-action-log";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_ADMIN_ACTION_LABELS } from "./admin-action-confirm-labels";
 
 /**
  * The confirmation in front of an admin action, at the level the SERVER states
@@ -21,8 +25,15 @@ import type { CommitScope } from "../components/write-lock";
  * | level | what it asks | actions |
  * |---|---|---|
  * | `none` | nothing: it confirms at once and renders nothing | resend a mail, reactivate, the reviewer scope… |
- * | `acknowledge` | a tick under the consequence | force a password change, change a role |
+ * | `acknowledge` | a tick under the consequence | force a password change, change a role, delete a group |
  * | `type_email` | the target's address, typed | deactivate, erase now, transfer |
+ *
+ * A GROUP (round 0.34, §11.8) is a target at `none` and `acknowledge` only, said by its
+ * name: it has no address to type, and no level table gives a group's action
+ * `type_email` (server-kit's `require_confirmation` raises for one). The props' types
+ * say so. Deleting one (`group_delete`) is `acknowledge` — a tick under the app's own
+ * sentence of what goes with it, Kurvenschmiede's "3 members, 2 grants and 1 invitation
+ * go with it" (decision 5): the cascade is what nobody can see afterwards.
  *
  * keksdose decides the level per action and per account on the server
  * (`admin_user_actions_service`) and Kurvenschmiede asks for the typed address on its
@@ -63,7 +74,7 @@ export interface AdminActionConfirmValues {
   acknowledged?: true;
 }
 
-/** The account the action is about. */
+/** The account the action is about. A group is an {@link AdminGroupTarget}. */
 export type AdminActionTarget = AdminPerson & { email: string };
 
 /** The `adminAction` namespace. The tick, the typed field and their held-button reasons
@@ -89,24 +100,27 @@ export interface AdminActionLabels {
   failed: string;
 }
 
-export const DEFAULT_ADMIN_ACTION_LABELS: AdminActionLabels = {
-  confirm: "Confirm",
-  cancel: "Cancel",
-  close: "Close",
-  lastAdmin: "This is the last active administrator. Make someone else an administrator first.",
-  self: "You can’t do this to your own account.",
-  confirmationMismatch: "The address doesn’t match this account. Check which account you are on.",
-  otherCompanies:
-    "This account also belongs to other companies, so only the platform operator can do this. You can remove it from this company instead.",
-  removeFromCompany: "Remove from company",
-  failed: "That didn’t work. Please try again.",
-};
+// Defined in ./admin-action-confirm-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ADMIN_ACTION_LABELS };
 
-export interface AdminActionConfirmProps {
-  /** The level the server states for this action on this account (§4.2). */
-  level: AdminConfirmLevel;
-  /** Whom it is about: the address (typed at `type_email`) and the name parts. */
-  target: AdminActionTarget;
+/** What the action is about, and the level the server states for it. A union, so a group
+ *  can't be given `type_email` (§11.8). */
+type AdminActionConfirmTarget =
+  | {
+      /** The level the server states for this action on this account (§4.2). */
+      level: AdminConfirmLevel;
+      /** Whom it is about: the address (typed at `type_email`) and the name parts. */
+      target: AdminActionTarget;
+    }
+  | {
+      /** A group's action: `none`, or `acknowledge` for `group_delete` (decision 5). */
+      level: Exclude<AdminConfirmLevel, "type_email">;
+      /** The group it is about, said by its name (0.34, §11.8). */
+      target: AdminGroupTarget;
+    };
+
+/** The props whatever the target. */
+interface AdminActionConfirmCommonProps {
   /** The confirm button — "Deactivate". Also the title when no `title` is given. */
   confirmLabel?: ReactNode;
   /** The dialog's heading — "Deactivate Ada Example?". Default `confirmLabel`. */
@@ -155,8 +169,12 @@ export interface AdminActionConfirmProps {
   /** The confirm COMMITS: under a locked `WriteLockProvider` it is held with the lock's
    *  reason. Off by default — an admin action is not a write to the open record. */
   commit?: CommitScope;
-  labels?: Partial<AdminActionLabels>;
+  labels?: LabelOverride<AdminActionLabels>;
 }
+
+/** A type since 0.34 (an interface before): a person at any level, or a group at `none`
+ *  and `acknowledge`. */
+export type AdminActionConfirmProps = AdminActionConfirmCommonProps & AdminActionConfirmTarget;
 
 /** Whether a callback answered a promise. */
 function isThenable(value: unknown): value is PromiseLike<unknown> {
@@ -173,7 +191,7 @@ function refusalOf(
   if (!present) return null;
   const code = authErrorCode(error);
   const own = describeError?.(error);
-  if (hasMessage(own)) return { text: own, code };
+  if (hasContent(own)) return { text: own, code };
   const text =
     code === "last_admin"
       ? labels.lastAdmin
@@ -319,10 +337,13 @@ export function AdminActionConfirm({
   const refusal = refusalOf(failure ? failure.error : errorProp, hasRefusal, describeError, labels);
   const offerRemoval = refusal?.code === "other_companies" && onRemoveFromCompany !== undefined;
 
-  const name = nameOf(target);
-  const identity = (
-    <span data-private>{name && name !== target.email ? `${name} · ${target.email}` : target.email}</span>
-  );
+  // A group has no address: it is said by its name, and nothing is typed for it — not
+  // even when a caller outside the types passes `type_email` (the server refuses that).
+  const group = isGroupTarget(target);
+  const email = group ? "" : target.email;
+  const name = group ? (target.name ?? "").trim() : nameOf(target);
+  const said = !name || name === email ? email : email ? `${name} · ${email}` : name;
+  const identity = <span data-private>{said}</span>;
   const heading = title ?? confirmLabel ?? labels.confirm;
 
   const refusalBanner = refusal && (
@@ -370,16 +391,16 @@ export function AdminActionConfirm({
   }
 
   const tone = toneProp ?? (level === "type_email" ? "danger" : "warning");
-  const askTyped = level === "type_email";
-  const typedOk = !askTyped || typedMatches(typed, target.email, "caseless");
+  const askTyped = level === "type_email" && !group;
+  const typedOk = !askTyped || typedMatches(typed, email, "caseless");
   const tickOk = askTyped || ticked;
-  const guardReason: ReactNode = hasMessage(confirmDisabledReason)
+  const guardReason: ReactNode = hasContent(confirmDisabledReason)
     ? confirmDisabledReason
     : !tickOk
       ? guardLabels.needsAcknowledge
       : !typedOk
         ? typeof guardLabels.needsPhrase === "function"
-          ? guardLabels.needsPhrase(target.email)
+          ? guardLabels.needsPhrase(email)
           : guardLabels.needsPhrase
         : undefined;
 
@@ -438,19 +459,19 @@ export function AdminActionConfirm({
         }}
       >
         {lines ? (
-          <ul className="list-disc space-y-1 ps-5 text-sm text-[var(--text-secondary)]">
+          <ul className="list-disc space-y-1 ps-5 text-sm text-secondary">
             {lines.map((line) => (
-              <li key={line.key} className={line.severe ? "text-[var(--danger)]" : undefined}>
+              <li key={line.key} className={line.severe ? "text-danger" : undefined}>
                 {line.text}
               </li>
             ))}
           </ul>
         ) : (
-          hasMessage(consequence as ReactNode) && (
-            <p className="text-sm text-[var(--text-secondary)]">{consequence as ReactNode}</p>
+          hasContent(consequence as ReactNode) && (
+            <p className="text-sm text-secondary">{consequence as ReactNode}</p>
           )
         )}
-        {Children.toArray(children).some(hasMessage) && (
+        {Children.toArray(children).some(hasContent) && (
           <div ref={slotRef} className="space-y-3">
             {children}
           </div>
@@ -458,7 +479,7 @@ export function AdminActionConfirm({
         {askTyped ? (
           <TypedConfirmField
             ref={guardRef}
-            target={target.email}
+            target={email}
             match="caseless"
             value={typed}
             onValueChange={setTyped}

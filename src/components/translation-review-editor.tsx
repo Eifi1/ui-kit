@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { useKitFormat } from "../lib/format";
 import { placeholderTokens, reviewWrite } from "../lib/translation-review";
@@ -15,7 +15,8 @@ import { AlertBanner } from "./alert-banner";
 import { Caption, SectionLabel } from "./text";
 import { DEFAULT_TRANSLATION_REVIEW_LABELS } from "./translation-review-labels";
 import type { TranslationReviewLabels } from "./translation-review-labels";
-import { Button, Textarea } from "./ui";
+import { Button } from "./button";
+import { Textarea } from "./textarea";
 import { COMMIT_EXCEPT_BILLING } from "./write-lock";
 
 /** A callback may return a promise: resolve and the editor closes, reject and it stays
@@ -53,7 +54,7 @@ export interface TranslationReviewEditorProps {
   /** Turns a rejection into words. Default {@link TranslationReviewLabels.failed}. */
   formatError?: (error: unknown) => ReactNode;
   className?: string;
-  labels?: Partial<TranslationReviewLabels>;
+  labels?: LabelOverride<TranslationReviewLabels>;
 }
 
 /** The wording a verdict was given on, under the line that says it changed. */
@@ -61,7 +62,7 @@ function Then({ label, text }: { label: string; text: string }) {
   return (
     <div className="mt-1.5 min-w-0">
       <span className="text-xs font-medium">{label}</span>
-      <p className="whitespace-pre-line break-words text-[var(--text-secondary)]">{text}</p>
+      <p className="whitespace-pre-line break-words text-secondary">{text}</p>
     </div>
   );
 }
@@ -153,21 +154,21 @@ export function TranslationReviewEditor({
 
   return (
     <div className={cn("min-w-0 space-y-3 text-sm", className)}>
-      <code className="block break-all text-xs text-[var(--text-muted)]">{row.key}</code>
+      <code className="block break-all text-xs text-muted">{row.key}</code>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="min-w-0">
           <SectionLabel as="span" size="xs">
             {referenceLabel}
           </SectionLabel>
-          <p className="mt-1 whitespace-pre-line break-words text-[var(--text-secondary)]">{row.reference}</p>
+          <p className="mt-1 whitespace-pre-line break-words text-secondary">{row.reference}</p>
         </div>
         <div className="min-w-0">
           <SectionLabel as="span" size="xs">
             {localeLabel}
           </SectionLabel>
           {missing ? (
-            <p className="mt-1 italic text-[var(--text-muted)]">{labels.missingText}</p>
+            <p className="mt-1 italic text-muted">{labels.missingText}</p>
           ) : (
             <p lang={row.locale} className="mt-1 whitespace-pre-line break-words">
               {row.text}

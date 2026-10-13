@@ -1,11 +1,14 @@
 import { useId, useMemo, useState } from "react";
-import type { ComponentPropsWithoutRef, ComponentType, ReactNode } from "react";
+import type { ComponentPropsWithRef, ComponentType, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { SearchField } from "./search-field";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
-import { hasContent, LabelStrip } from "./field-parts";
+import { hasContent } from "../lib/presence";
+import { foldForSearch } from "../lib/text-match";
+import { LabelStrip, useFieldMessages } from "./field-parts";
+import { DEFAULT_ICON_PICKER_LABELS } from "./icon-picker-labels";
 
 export interface IconPickerLabels {
   /** The "no icon" tile's name, when `allowNone` is set. */
@@ -20,13 +23,8 @@ export interface IconPickerLabels {
   resultCount: (count: number) => string;
 }
 
-export const DEFAULT_ICON_PICKER_LABELS: IconPickerLabels = {
-  none: "No icon",
-  mixed: "Mixed: the selected items have different icons",
-  search: "Search icons",
-  noResults: "No icons match",
-  resultCount: (count) => (count === 1 ? "1 icon" : `${count} icons`),
-};
+// Defined in ./icon-picker-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ICON_PICKER_LABELS };
 
 export interface IconOption<T extends string> {
   value: T;
@@ -54,7 +52,7 @@ export interface IconOption<T extends string> {
 }
 
 export interface IconPickerProps<T extends string>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children" | "defaultValue"> {
+  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue"> {
   options: IconOption<T>[];
   /** The chosen icon, or `null` for none. */
   value: T | null;
@@ -85,7 +83,7 @@ export interface IconPickerProps<T extends string>
    */
   tileClassName?: string;
   disabled?: boolean;
-  labels?: Partial<IconPickerLabels>;
+  labels?: LabelOverride<IconPickerLabels>;
   /**
    * An 11px static label in a strip over the picker, naming the grid — keksdose K2,
    * {@link SwatchPickerProps.label}'s twin: a symbol picker standing in a form row
@@ -94,13 +92,10 @@ export interface IconPickerProps<T extends string>
    * styles the wrapper.
    */
   label?: ReactNode;
-  /** A {@link FieldHint} beside the label. Only with `label`. */
+  /** A {@link FieldHint} beside the label. Only with `label`. {@link Select}'s rule since
+   *  0.34 (DUP-2, refactor audit 2026-10): plain TEXT, and a FieldHint at Large and on a
+   *  touch screen (§4), is a caption under the grid, describing it. */
   hint?: ReactNode;
-}
-
-/** Case- and accent-insensitive, so "cafe" finds "Café". */
-function fold(text: string, locale: string | undefined): string {
-  return text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase(locale);
 }
 
 /**
@@ -139,14 +134,21 @@ export function IconPicker<T extends string>({
   const mixedId = useId();
   const labelId = useId();
   const labelled = hasContent(label);
+  // The label line's "?", or the caption under the grid (DUP-2). Only with a label.
+  const messages = useFieldMessages({
+    hint: labelled ? hint : undefined,
+    describedBy: ariaDescribedBy,
+    reasonId: mixed && mixedId,
+  });
   const [query, setQuery] = useState("");
-  const needle = fold(query.trim(), locale);
+  // Case- and accent-insensitive, so "cafe" finds "Café" — every kit list's fold (DUP-5).
+  const needle = foldForSearch(query.trim(), locale);
 
   const visible = useMemo(
     () =>
       needle
         ? options.filter((o) =>
-            [o.label, ...(o.keywords ?? [])].some((w) => fold(w, locale).includes(needle)),
+            [o.label, ...(o.keywords ?? [])].some((w) => foldForSearch(w, locale).includes(needle)),
           )
         : options,
     [options, needle, locale],
@@ -181,7 +183,7 @@ export function IconPicker<T extends string>({
         aria-label={ariaLabel}
         // The strip's label names the GRID, unless the caller named it already.
         aria-labelledby={labelled && ariaLabel === undefined && ariaLabelledBy === undefined ? labelId : ariaLabelledBy}
-        aria-describedby={[ariaDescribedBy, mixed && mixedId].filter(Boolean).join(" ") || undefined}
+        aria-describedby={messages.describedBy}
         aria-disabled={disabled || undefined}
         className="flex flex-wrap items-center gap-1.5"
       >
@@ -202,14 +204,14 @@ export function IconPicker<T extends string>({
           }}
           tileClassName={(_item, selected) =>
             cn(
-              selected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
+              selected ? "text-primary" : "text-secondary",
               tileClassName,
             )
           }
         />
       </div>
       {needle && visible.length === 0 && (
-        <p className="text-xs text-[var(--text-muted)]">{text.noResults}</p>
+        <p className="text-xs text-muted">{text.noResults}</p>
       )}
       {mixed && (
         <span id={mixedId} hidden>
@@ -228,8 +230,9 @@ export function IconPicker<T extends string>({
   );
   if (!labelled) return picker;
   return (
-    <LabelStrip labelId={labelId} label={label} hint={hint} disabled={disabled} pad="clear" className={className}>
+    <LabelStrip labelId={labelId} label={label} hint={messages.labelHint} disabled={disabled} className={className}>
       {picker}
+      {messages.below}
     </LabelStrip>
   );
 }

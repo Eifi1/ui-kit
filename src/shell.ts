@@ -12,7 +12,7 @@ export * from "./shell/top-bar-brand";
 export * from "./shell/auth-layout";
 // 0.31.0: the settings and admin pages' shell (docs/settings-harmonization.md §3, §5).
 export { SettingsLayout, SETTINGS_SEARCH_THRESHOLD } from "./settings/settings-layout";
-export type { SettingsLayoutProps, SettingsLayoutWidth } from "./settings/settings-layout";
+export type { SettingsLayoutProps, SettingsLayoutWidth, SettingsDocumentTitleParts } from "./settings/settings-layout";
 export {
   useSettingsRoute,
   resolveSettingsLocation,

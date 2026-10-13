@@ -1,7 +1,7 @@
 import { createRef, useState } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { FeedbackComposer } from "../feedback-thread";
+import { ChatComposer } from "../feedback-thread";
 import type { FeedbackComposerHandle } from "../feedback-thread";
 
 /**
@@ -12,10 +12,10 @@ import type { FeedbackComposerHandle } from "../feedback-thread";
  */
 const box = () => screen.getByRole("textbox", { name: "Write a comment" }) as HTMLTextAreaElement;
 
-describe("FeedbackComposer insertText", () => {
+describe("ChatComposer insertText", () => {
   it("inserts at the caret, replacing the selection, and leaves the caret after it, focused", () => {
     const ref = createRef<FeedbackComposerHandle>();
-    render(<FeedbackComposer ref={ref} onSend={vi.fn()} />);
+    render(<ChatComposer ref={ref} onSend={vi.fn()} />);
     fireEvent.change(box(), { target: { value: "Hello , bye" } });
     box().setSelectionRange(6, 6);
     act(() => ref.current!.insertText("Anna"));
@@ -31,7 +31,7 @@ describe("FeedbackComposer insertText", () => {
 
   it("two inserts in one tick land in order", () => {
     const ref = createRef<FeedbackComposerHandle>();
-    render(<FeedbackComposer ref={ref} onSend={vi.fn()} />);
+    render(<ChatComposer ref={ref} onSend={vi.fn()} />);
     box().setSelectionRange(0, 0);
     act(() => {
       ref.current!.insertText("a");
@@ -42,16 +42,16 @@ describe("FeedbackComposer insertText", () => {
 
   it("is a no-op while disabledReason replaces the box", () => {
     const ref = createRef<FeedbackComposerHandle>();
-    render(<FeedbackComposer ref={ref} onSend={vi.fn()} disabledReason="Closed." />);
+    render(<ChatComposer ref={ref} onSend={vi.fn()} disabledReason="Closed." />);
     expect(() => act(() => ref.current!.insertText("x"))).not.toThrow();
   });
 });
 
-describe("FeedbackComposer controlled draft", () => {
+describe("ChatComposer controlled draft", () => {
   function Host({ onSend, onValue }: { onSend: (b: string) => Promise<void>; onValue?: (v: string) => void }) {
     const [value, setValue] = useState("Draft");
     return (
-      <FeedbackComposer
+      <ChatComposer
         onSend={onSend}
         value={value}
         onValueChange={(v) => {
@@ -91,7 +91,7 @@ describe("FeedbackComposer controlled draft", () => {
     const ref = createRef<FeedbackComposerHandle>();
     function Controlled() {
       const [value, setValue] = useState("Hi ");
-      return <FeedbackComposer ref={ref} onSend={vi.fn()} value={value} onValueChange={setValue} />;
+      return <ChatComposer ref={ref} onSend={vi.fn()} value={value} onValueChange={setValue} />;
     }
     render(<Controlled />);
     box().setSelectionRange(3, 3);
@@ -100,11 +100,11 @@ describe("FeedbackComposer controlled draft", () => {
   });
 });
 
-describe("FeedbackComposer placeholder", () => {
+describe("ChatComposer placeholder", () => {
   it("takes the caller's hint over the label default", () => {
-    const { rerender } = render(<FeedbackComposer onSend={vi.fn()} />);
+    const { rerender } = render(<ChatComposer onSend={vi.fn()} />);
     expect(box()).toHaveAttribute("placeholder", "Write a comment…");
-    rerender(<FeedbackComposer onSend={vi.fn()} placeholder="Reply to Anna…" />);
+    rerender(<ChatComposer onSend={vi.fn()} placeholder="Reply to Anna…" />);
     expect(box()).toHaveAttribute("placeholder", "Reply to Anna…");
   });
 });

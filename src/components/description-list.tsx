@@ -1,8 +1,10 @@
 import { createContext, useContext } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
-import { FieldHint } from "./ui";
+import { FieldHint } from "./field-parts";
+import { useInlineHint } from "./field-parts";
+import { DEFAULT_DESCRIPTION_LIST_LABELS } from "./description-list-labels";
 
 /** The words a {@link DescriptionList} renders on its own behalf. */
 export interface DescriptionListLabels {
@@ -11,9 +13,8 @@ export interface DescriptionListLabels {
   empty: string;
 }
 
-export const DEFAULT_DESCRIPTION_LIST_LABELS: DescriptionListLabels = {
-  empty: "—",
-};
+// Defined in ./description-list-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_DESCRIPTION_LIST_LABELS };
 
 export type DescriptionListLayout = "rows" | "cards" | "stacked";
 export type DescriptionListDensity = "comfortable" | "compact" | "tight";
@@ -73,7 +74,7 @@ const CARD_GAP: Record<DescriptionListDensity, { cls: string; len: string }> = {
   tight: { cls: "gap-1", len: "0.25rem" },
 };
 
-export interface DescriptionListProps extends ComponentPropsWithoutRef<"dl"> {
+export interface DescriptionListProps extends ComponentPropsWithRef<"dl"> {
   /**
    * `rows` (default): term beside detail, a two-column list that stacks the pair
    * when the LIST is narrower than 24rem — a container query, so a detail panel
@@ -200,7 +201,7 @@ export function DescriptionList({
             ? cn("grid", gap.cls)
             : // Tight rows carry no rules: at a 2px rhythm a line under every row
               // turns a block of small print into a ruled table.
-              cn("@container", density !== "tight" && "divide-y divide-[var(--border)]"),
+              cn("@container", density !== "tight" && "divide-y divide-subtle"),
           text,
           className,
         )}
@@ -209,13 +210,14 @@ export function DescriptionList({
   );
 }
 
-export interface DescriptionItemProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface DescriptionItemProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** What is described: "Opened", "IBAN", "Net rent". */
   term: ReactNode;
   /** The description itself. */
   children?: ReactNode;
   /** The explanation behind a "?" beside the term (a {@link FieldHint}) — the same
-   *  meaning `hint` has on `StatTile` and the labelled fields. */
+   *  meaning `hint` has on `StatTile` and the labelled fields. At Large and on a touch
+   *  screen it is the term's caption instead, in words (§4 "No fact only in a tooltip"). */
   hint?: string;
   /** This detail is a figure (see {@link DescriptionListProps.numeric}); overrides
    *  the list's setting either way. */
@@ -288,6 +290,12 @@ export function DescriptionItem({
   const prose = proseProp ?? listProse;
   const cards = layout === "cards";
   const stacked = layout === "stacked";
+  // A hint is a fact: on a touch screen and at Large it is words under the term, not a
+  // 14 px "?" nobody can hover open — the fields' rule (DUP-2, refactor audit 2026-10),
+  // which this string hint had been left out of. Elsewhere the "?" as before.
+  const shownHint = useInlineHint(
+    hint ? <FieldHint label={hint} side="top" className="shrink-0" /> : undefined,
+  );
   const spanClass =
     span === "full"
       ? "col-span-full"
@@ -298,7 +306,7 @@ export function DescriptionItem({
   const termNode = (
     <dt
       className={cn(
-        "flex min-w-0 items-center gap-1 text-[var(--text-muted)]",
+        "flex min-w-0 flex-wrap items-center gap-x-1 text-muted",
         cards && (density === "tight" ? "text-micro uppercase tracking-wide" : "text-xs uppercase tracking-wide"),
         // Stacked terms are a step smaller than the detail, as kastlan's dialogs set
         // them; in a list that is already small they stay the list's own size.
@@ -306,22 +314,30 @@ export function DescriptionItem({
       )}
     >
       <span className="min-w-0 break-words">{term}</span>
-      {hint && <FieldHint label={hint} side="top" className="shrink-0" />}
+      {typeof shownHint === "string" ? (
+        // Its own line under the term, in the reading case of a sentence rather than a
+        // card term's capitals — StatTile's inline hint.
+        <span data-slot="description-hint" className="basis-full text-caption leading-tight normal-case tracking-normal">
+          {shownHint}
+        </span>
+      ) : (
+        shownHint
+      )}
     </dt>
   );
   const detail = (
     <dd
       className={cn(
-        "min-w-0 break-words text-[var(--text-primary)]",
+        "min-w-0 break-words text-primary",
         // A stacked figure sits under its term, so it keeps the term's start edge.
         numeric && (stacked ? "tabular-nums" : "tabular-nums text-end"),
         (cards || stacked) && "mt-0.5 font-medium",
-        prose && "font-normal text-[var(--text-secondary)]",
+        prose && "font-normal text-secondary",
         detailClassName,
       )}
     >
       {empty && !isEmptyValue(placeholder) ? (
-        <span data-slot="description-empty" className="font-normal text-[var(--text-muted)]">
+        <span data-slot="description-empty" className="font-normal text-muted">
           {placeholder}
         </span>
       ) : (
@@ -335,7 +351,7 @@ export function DescriptionItem({
       <div
         {...rest}
         className={cn(
-          "min-w-0 rounded-md border border-[var(--border)] bg-[var(--bg-surface)]",
+          "min-w-0 rounded-md border border-subtle bg-surface",
           CARD_PAD[density],
           spanClass,
           className,

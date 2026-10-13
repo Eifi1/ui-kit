@@ -1,4 +1,6 @@
 import type { DataTableColumn } from "./data-table";
+import { toLocalIso } from "../lib/dates";
+import { foldForSearch } from "../lib/text-match";
 
 /** How a column is filtered. `text`/`select`/`date`/`number` each read a value
  *  off the row and compare it against the user's {@link FilterValue}. */
@@ -33,16 +35,49 @@ export function isFilterActive(v: FilterValue | undefined): boolean {
     case "date":
       return !!v.from || !!v.to;
     case "number":
-      return v.min !== "" || v.max !== "" || v.abs;
+      return numberBound(v.min) !== null || numberBound(v.max) !== null || v.abs;
   }
+}
+
+/**
+ * A number filter's bound as a number, or `null` for none: blank, or not a finite
+ * number (BUG-10, refactor audit 2026-10). `Number("abc")` is NaN, and every comparison
+ * with NaN is false, so a broken bound — `f.amount=abc..` in a shared link — used to
+ * match every row while the column showed its filter as active; `Number(" ")` is 0, and
+ * a blank bound kept every negative row out. The popover hands in the dot-decimal text
+ * its locale's marks read (`readTyped`); anything else is no bound.
+ */
+function numberBound(raw: string): number | null {
+  if (raw.trim() === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * The calendar day a date filter compares, as "YYYY-MM-DD" — the LOCAL day, the one
+ * the cell, the DatePicker and the presets show (round 0.34 BUG-2).
+ *
+ * A bare "YYYY-MM-DD" is a calendar day already and is kept as it is. Anything with a
+ * time part is an instant: its first ten characters were the UTC day for a server
+ * timestamp ("…Z", "+00:00"), so in Berlin a report filed at 00:30 showed as the 12th
+ * and was filtered as the 11th. It is read as the instant it names and put on the
+ * local calendar. A string `Date` cannot read keeps the old first-ten-characters
+ * answer rather than matching nothing.
+ */
+function localDay(raw: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? raw.slice(0, 10) : toLocalIso(d);
 }
 
 /**
  * Whether `row` passes column `col`'s filter given the user's `state`.
  *
  * `locale` is for the text filter's case folding. Plain `toLowerCase` folds by the
- * root rules, under which a Turkish user typing "istanbul" does not find "İSTANBUL";
+ * root rules, under which a Turkish user typing "ırmak" does not find "IRMAK";
  * `toLocaleLowerCase(locale)` does. Optional, and `undefined` is the runtime's default.
+ * The text filter folds as every kit list does ({@link foldForSearch}, DUP-5): accents
+ * off too, so "zurich" finds Zürich.
  */
 export function rowMatches<T>(
   col: DataTableColumn<T>,
@@ -55,10 +90,7 @@ export function rowMatches<T>(
   switch (filter.type) {
     case "text": {
       if (state.type !== "text" || !state.q.trim()) return true;
-      return filter
-        .getValue(row)
-        .toLocaleLowerCase(locale)
-        .includes(state.q.trim().toLocaleLowerCase(locale));
+      return foldForSearch(filter.getValue(row), locale).includes(foldForSearch(state.q.trim(), locale));
     }
     case "select": {
       if (state.type !== "select" || state.values.length === 0) return true;
@@ -68,7 +100,7 @@ export function rowMatches<T>(
       if (state.type !== "date") return true;
       const raw = filter.getValue(row);
       if (!raw) return !state.from && !state.to;
-      const v = raw.slice(0, 10);
+      const v = localDay(raw);
       if (state.from && v < state.from) return false;
       if (state.to && v > state.to) return false;
       return true;
@@ -76,10 +108,12 @@ export function rowMatches<T>(
     case "number": {
       if (state.type !== "number") return true;
       const raw = filter.getValue(row);
-      if (raw == null || Number.isNaN(raw)) return !state.min && !state.max;
+      const min = numberBound(state.min);
+      const max = numberBound(state.max);
+      if (raw == null || Number.isNaN(raw)) return min === null && max === null;
       const x = state.abs ? Math.abs(raw) : raw;
-      if (state.min !== "" && x < Number(state.min)) return false;
-      if (state.max !== "" && x > Number(state.max)) return false;
+      if (min !== null && x < min) return false;
+      if (max !== null && x > max) return false;
       return true;
     }
   }
@@ -165,7 +199,10 @@ export function decodeFilterValueOfType(type: FilterValue["type"], raw: string):
       const abs = body.endsWith("!");
       if (abs) body = body.slice(0, -1);
       const [min = "", max = ""] = body.split("..");
-      return { type: "number", min, max, abs };
+      // A bound that is not a finite number is dropped here, so a broken link leaves the
+      // filter off rather than active and matching everything (BUG-10).
+      const kept = (s: string) => (numberBound(s) === null ? "" : s);
+      return { type: "number", min: kept(min), max: kept(max), abs };
     }
   }
 }

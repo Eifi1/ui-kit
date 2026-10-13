@@ -144,6 +144,11 @@ describe("formatIsoDate", () => {
   it("blanks a date that does not exist rather than inventing one (U-8)", () => {
     expect(formatIsoDate("2026-02-30", "en-GB")).toBe("");
   });
+
+  it("takes no locale as the runtime's default, as Intl does (DUP-11, 0.34)", () => {
+    expect(formatIsoDate("2026-07-15", undefined)).toBe(new Date(2026, 6, 15).toLocaleDateString(undefined));
+    expect(formatIsoDate("nonsense", undefined)).toBe("");
+  });
 });
 
 describe("addDaysIso", () => {

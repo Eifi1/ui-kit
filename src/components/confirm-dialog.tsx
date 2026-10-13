@@ -5,8 +5,9 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { TypedConfirmField, typedMatches } from "./danger-confirm";
 import type { TypedMatch } from "./danger-confirm";
 import { DialogFrame } from "./dialog-frame";
-import { Button } from "./ui";
+import { Button } from "./button";
 import { useWriteLock, writeLockFor, type CommitScope } from "./write-lock";
+import { DEFAULT_CONFIRM_DIALOG_LABELS } from "./confirm-dialog-labels";
 
 /**
  * The `confirmDialog` namespace of `<UiKitProvider labels>`: the two buttons' fallback
@@ -28,13 +29,8 @@ export interface ConfirmDialogLabels {
   typed: string | ((text: string) => string);
 }
 
-/** `satisfies` rather than a type annotation, so `.typed` stays known-callable for a
- *  caller composing its own label from it. */
-export const DEFAULT_CONFIRM_DIALOG_LABELS = {
-  confirm: "Confirm",
-  cancel: "Cancel",
-  typed: (text: string) => `Type “${text}” to confirm`,
-} satisfies ConfirmDialogLabels;
+// Defined in ./confirm-dialog-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_CONFIRM_DIALOG_LABELS };
 
 export type ConfirmTone = "danger" | "warning" | "neutral";
 

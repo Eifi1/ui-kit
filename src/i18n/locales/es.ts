@@ -159,6 +159,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       reworkPlaceholder: "¿Qué falta por pulir? Nuevos requisitos o cambios de rumbo.",
       reworkUploadFailed: "No se ha podido subir el archivo. La solicitud de corrección no se ha enviado.",
       status: "Estado",
+      note: "Nota",
     },
     accountSettings: {
       profile: {
@@ -180,6 +181,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         submit: "Cambiar contraseña",
         tooShort: "La nueva contraseña es demasiado corta.",
         mismatch: "Las contraseñas no coinciden.",
+        wrongPassword: "La contraseña no es correcta.",
       },
       twoFactor: {
         status: "Verificación en dos pasos",
@@ -237,9 +239,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       keyboardHint:
         "Las flechas mueven entre celdas. Escriba para reemplazar una celda, F2 para editarla, Escape para deshacer la edición. Intro baja y añade una fila al final.",
       lineError: (line) => `No se pudo leer la línea ${line}`,
-      points: (count) => (count === 1 ? "1 punto" : `${count} puntos`),
+      points: (count) => (count === 1 ? "1 punto" : `${n(count)} puntos`),
       problems: (count) =>
-        count === 1 ? "1 celda no es un número" : `${count} celdas no son números`,
+        count === 1 ? "1 celda no es un número" : `${n(count)} celdas no son números`,
     },
     pageContents: { title: "En esta página" },
     common: {
@@ -265,6 +267,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       filter: "Filtrar",
       close: "Cerrar",
       selectRow: "Seleccionar fila",
+      rowDetails: "Detalles",
       autoSize: "Ajustar ancho de columnas",
       loading: "Cargando…",
       filters: "Filtros",
@@ -307,6 +310,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Columnas (${n(visible)}/${n(total)})`,
+      filterColumn: (column, active) => (active ? `Filtrar ${column} (activo)` : `Filtrar ${column}`),
       empty: "No hay entradas",
       actions: "Acciones",
       edit: "Editar",
@@ -488,7 +492,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       hint: (accept) => (accept ? `Aceptados: ${accept}` : "Cualquier tipo de archivo"),
       busy: "Subiendo…",
       rejectedPick: (count) =>
-        count === 1 ? "El archivo no se añadió" : `No se añadió ninguno de los ${count} archivos`,
+        count === 1 ? "El archivo no se añadió" : `No se añadió ninguno de los ${n(count)} archivos`,
       rejectedType: (name) => `El tipo de archivo de «${name}» no es compatible`,
       rejectedTypeOnly: (accept) => `Solo archivos ${accept}`,
       rejectedSize: (name, maxSize) => `«${name}» supera ${maxSize}`,
@@ -593,7 +597,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       announcement: (level) => `Seguridad de la contraseña: ${level}`,
       // Unformatted, as in the English default.
       ruleLength: (minLength) =>
-        `Al menos ${minLength} ${plural(minLength, "carácter", "caracteres")}`,
+        `Al menos ${n(minLength)} ${plural(minLength, "carácter", "caracteres")}`,
       ruleCase: "Mayúsculas y minúsculas",
       ruleDigit: "Un número",
       ruleSymbol: "Un símbolo",
@@ -601,7 +605,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       met: "Cumplido:",
       notMet: "No cumplido:",
       tooLong: (maxBytes) =>
-        `Como máximo ${maxBytes} ${plural(maxBytes, "carácter", "caracteres")} (las letras con tilde y los emojis cuentan como más de uno).`,
+        `Como máximo ${n(maxBytes)} ${plural(maxBytes, "carácter", "caracteres")} (las letras con tilde y los emojis cuentan como más de uno).`,
     },
     seriesChart: {
       resetZoom: "Restablecer zoom",
@@ -1162,7 +1166,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         deactivate: "Desactivada",
         reactivate: "Reactivada",
         role: "Rol cambiado",
-        membership_remove: "Quitada de la empresa",
         password_change_require: "Nueva contraseña exigida",
         password_change_withdraw: "Exigencia de contraseña retirada",
         mail_verification: "Correo de confirmación enviado",
@@ -1176,6 +1179,47 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         deletion_cancel: "Eliminación cancelada",
         erase: "Cuenta borrada",
         plan: "Plan cambiado",
+      },
+      // 0.34 (§11.5): whole phrases per noun. The group's own agree with the noun
+      // ("Empresa creada"), a member's with "cuenta", as `actions` do. `team` is
+      // Kurvenschmiede's "equipo"; `company` keeps `actions.membership_remove`'s string.
+      groupActions: {
+        group: {
+          group_create: "Grupo creado",
+          group_rename: "Grupo renombrado",
+          group_delete: "Grupo eliminado",
+          membership_add: "Añadida al grupo",
+          membership_role: "Rol en el grupo cambiado",
+          membership_remove: "Quitada del grupo",
+          deleted: "un grupo eliminado",
+        },
+        team: {
+          group_create: "Equipo creado",
+          group_rename: "Equipo renombrado",
+          group_delete: "Equipo eliminado",
+          membership_add: "Añadida al equipo",
+          membership_role: "Rol en el equipo cambiado",
+          membership_remove: "Quitada del equipo",
+          deleted: "un equipo eliminado",
+        },
+        company: {
+          group_create: "Empresa creada",
+          group_rename: "Empresa renombrada",
+          group_delete: "Empresa eliminada",
+          membership_add: "Añadida a la empresa",
+          membership_role: "Rol en la empresa cambiado",
+          membership_remove: "Quitada de la empresa",
+          deleted: "una empresa eliminada",
+        },
+        budget: {
+          group_create: "Presupuesto creado",
+          group_rename: "Presupuesto renombrado",
+          group_delete: "Presupuesto eliminado",
+          membership_add: "Añadida al presupuesto",
+          membership_role: "Rol en el presupuesto cambiado",
+          membership_remove: "Quitada del presupuesto",
+          deleted: "un presupuesto eliminado",
+        },
       },
     },
     transferOwnership: {

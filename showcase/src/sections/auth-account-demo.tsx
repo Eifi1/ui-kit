@@ -15,25 +15,21 @@ import {
 } from "@eifi1/ui-kit";
 import type { PasskeyItem, TwoFactorSetupData, UiKitLabelOverrides } from "@eifi1/ui-kit";
 import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code, READOUT, beat } from "../lib/section";
 
 /**
  * AUTH & ACCOUNT — the page frame outside the app (sign-in, the legal pages) and the
  * two account sections added in 0.12: two-factor from an `otpauth://` URI, and passkeys.
  */
 
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const beat = (ms = 900) => new Promise((r) => setTimeout(r, ms));
-
 /* ── AuthLayout ──────────────────────────────────────────────────────────── */
 
 const LINK_BUTTON =
-  "rounded-sm text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]";
+  "rounded-sm text-xs text-muted hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand";
 
 function LegalText() {
   return (
-    <div className="space-y-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+    <div className="space-y-3 text-sm leading-relaxed text-secondary">
       <p>
         Acme Books GmbH, Musterstraße 1, 10115 Berlin. Managing director: Erika Mustermann. Registered at
         Amtsgericht Charlottenburg, HRB 000000.
@@ -81,9 +77,9 @@ function AuthLayoutSpecimen() {
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <span className="text-xs text-[var(--text-muted)]">screen</span>
+          <span className="text-xs text-muted">screen</span>
           <ToggleGroup<"sign-in" | "imprint">
-            ariaLabel="screen"
+            aria-label="screen"
             value={screen}
             onChange={setScreen}
             options={[
@@ -104,7 +100,7 @@ function AuthLayoutSpecimen() {
 
       {/* The frame: a fixed height and its own scroll. `min-h-full` replaces the layout's
           `min-h-dvh` (cn merges them — later wins), so it fills the box, not the window. */}
-      <div className="mt-4 h-[32rem] overflow-auto rounded-md border border-[var(--border)]">
+      <div className="mt-4 h-[32rem] overflow-auto rounded-md border border-subtle">
         <AuthLayout
           className="min-h-full"
           data-demo="auth-layout"
@@ -122,7 +118,7 @@ function AuthLayoutSpecimen() {
             wide ? (
               <button
                 type="button"
-                className="inline-flex items-center gap-1 text-sm text-[var(--brand)] hover:underline"
+                className="inline-flex items-center gap-1 text-sm text-brand hover:underline"
                 onClick={() => setScreen("sign-in")}
               >
                 <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden /> Back to sign in
@@ -203,7 +199,7 @@ function TwoFactorOtpauthSpecimen() {
 
   const start = async () => {
     setBusy(true);
-    await beat();
+    await beat(900);
     setSetup(explicitSecret ? { otpauthUri: OTPAUTH, secret: "JBSW Y3DP EHPK 3PXP" } : { otpauthUri: OTPAUTH });
     setBusy(false);
     setLog("onStartSetup() → { otpauthUri }");
@@ -234,7 +230,7 @@ function TwoFactorOtpauthSpecimen() {
           onStartSetup={() => void start()}
           onEnable={async (otp) => {
             setBusy(true);
-            await beat();
+            await beat(900);
             setBusy(false);
             setSetup(null);
             setEnabled(true);
@@ -242,7 +238,7 @@ function TwoFactorOtpauthSpecimen() {
           }}
           onDisable={async (password, otp) => {
             setBusy(true);
-            await beat();
+            await beat(900);
             setBusy(false);
             setEnabled(false);
             setLog(`onDisable(${password.length} chars, "${otp}") → off`);
@@ -250,7 +246,7 @@ function TwoFactorOtpauthSpecimen() {
           renderQr={
             customQr
               ? (uri) => (
-                  <div className="flex size-48 items-center justify-center bg-[var(--bg-surface-2)] p-3 text-center font-mono text-micro break-all text-[var(--text-secondary)]">
+                  <div className="flex size-48 items-center justify-center bg-surface-2 p-3 text-center font-mono text-micro break-all text-secondary">
                     renderQr({uri.slice(0, 40)}…)
                   </div>
                 )
@@ -318,7 +314,7 @@ function PasskeysSpecimen() {
     >
       <Row>
         <ToggleGroup<PasskeyState>
-          ariaLabel="state"
+          aria-label="state"
           value={state}
           onChange={setState}
           options={[
@@ -356,14 +352,14 @@ function PasskeysSpecimen() {
           }}
           onRename={async (id, name) => {
             setBusyId(id);
-            await beat();
+            await beat(900);
             setBusyId(null);
             setItems((all) => all.map((p) => (p.id === id ? { ...p, name } : p)));
             setLog(`onRename(${id}, "${name}")`);
           }}
           onDelete={async (id) => {
             setBusyId(id);
-            await beat();
+            await beat(900);
             setBusyId(null);
             setItems((all) => all.filter((p) => p.id !== id));
             setLog(`onDelete(${id})`);
@@ -423,7 +419,7 @@ function AccountLabelsSpecimen() {
       hint="every labels prop is optional since 0.12: prop > provider > English"
     >
       <ToggleGroup<"page" | "house" | "de">
-        ariaLabel="label source"
+        aria-label="label source"
         value={source}
         onChange={setSource}
         // Short option words, the detail in the caption: at phone width three long labels

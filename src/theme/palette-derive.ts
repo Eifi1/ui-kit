@@ -187,8 +187,21 @@ const BORDER_CONTRAST = 1.5;
 /** The most tint a surface can carry before it stops reading as a neutral ground. */
 const MAX_SURFACE_CHROMA = 0.034;
 
-function surfaceSet(hue: number, mode: ThemeMode, tint: number) {
-  const c = MAX_SURFACE_CHROMA * Math.max(0, Math.min(1, tint));
+/**
+ * The brand chroma from which the surfaces and the greys carry the brand's hue in full;
+ * below it they carry it in proportion, down to none for a grey (round 0.34 BUG-8). A
+ * grey has no hue — OKLCH reports 0, which is pink — and at full tint #808080 painted
+ * every surface #eddde1.
+ */
+const FULL_HUE_CHROMA = 0.06;
+
+/** How much of the brand's hue the neutrals may carry: 0 for a grey, 1 from {@link FULL_HUE_CHROMA}. */
+function hueWeight(brand: Oklch): number {
+  return Math.min(1, brand.c / FULL_HUE_CHROMA);
+}
+
+function surfaceSet(hue: number, mode: ThemeMode, tint: number, weight: number) {
+  const c = MAX_SURFACE_CHROMA * Math.max(0, Math.min(1, tint)) * weight;
   const L = SURFACE_L[mode];
   const bgPage = oklchToHex({ l: L.page, c, h: hue });
   const bgSurface = oklchToHex({ l: L.surface, c, h: hue });
@@ -263,7 +276,8 @@ export function derivePalette({
   const targets = { primary: 10, secondary: 7, muted: 4.6, ...textContrast };
 
   // ── Surfaces, from the brand's hue.
-  const surfaces = surfaceSet(brand.h, mode, surfaceTint);
+  const weight = hueWeight(brand);
+  const surfaces = surfaceSet(brand.h, mode, surfaceTint, weight);
   // Every text role is solved against the WORST of the three, so a token is legible
   // wherever it lands. Solving against `bgSurface` alone is the mistake that makes a
   // muted label fail on the page background it also sits on.
@@ -275,7 +289,7 @@ export function derivePalette({
   );
 
   // ── Text. A trace of the brand hue keeps the greys from reading cold on a warm page.
-  const textChroma = 0.014;
+  const textChroma = 0.014 * weight;
   const textPrimary = solveAgainst(brand.h, textChroma, targets.primary, worstSurface, mode);
   const textSecondary = solveAgainst(brand.h, textChroma, targets.secondary, worstSurface, mode);
   const textMuted = solveAgainst(brand.h, textChroma, targets.muted, worstSurface, mode);
@@ -479,10 +493,11 @@ export function derivePalette({
   // "No money has moved": a quiet grey at a fixed lightness, but printed as TEXT (the
   // numpad's sign, a future row's figure), so it gets the text floor too (0.33). The
   // fixed lightness left it at 4.24:1 on four light pages.
-  const neutralFloor = solveLightness(4.5, parseHex(worstText)!, brand.h, 0.012, mode === "light" ? "darker" : "lighter");
+  const neutralChroma = 0.012 * weight;
+  const neutralFloor = solveLightness(4.5, parseHex(worstText)!, brand.h, neutralChroma, mode === "light" ? "darker" : "lighter");
   const moneyNeutral = oklchToHex({
     l: mode === "light" ? Math.min(0.52, neutralFloor) : Math.max(0.72, neutralFloor),
-    c: 0.012,
+    c: neutralChroma,
     h: brand.h,
   });
 
@@ -561,9 +576,16 @@ export function auditPalette(t: TokenSet, semantic?: SemanticTokens): ContrastRe
   // `--brand-muted`, `--brand-bg` and `--brand-bg-hover`, mixed as tokens.css mixes them.
   const { brandMuted, brandBg, brandBgHover } = brandSoft(t);
 
+  // The 0.05 of slack is for a pair with a color-mix on one side, and only for that: the
+  // browser mixes in float and paints the result, where this mixes and rounds to hex, so
+  // the two can differ by a hair. Hex against hex is what the page paints, measured
+  // exactly — the slack used to cover those too, and passed the Contrast preset's dark
+  // brand fill at 2.998:1 (round 0.34 BUG-8).
+  const MIXED = /\b(bgHover|brandMuted|brandBg|brandBgHover)\b/;
   const add = (pair: string, fg: string, bg: string, required: number, rule: string) => {
     const ratio = contrast(fg, bg);
-    checks.push({ pair, ratio, required, rule, passes: ratio >= required - 0.05 });
+    const slack = MIXED.test(pair) ? 0.05 : 0;
+    checks.push({ pair, ratio, required, rule, passes: ratio >= required - slack });
   };
 
   for (const [name, bg] of surfaces) {

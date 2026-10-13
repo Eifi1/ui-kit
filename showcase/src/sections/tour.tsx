@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, DEFAULT_TOUR_LABELS, TourProvider, useTour, useTourOptional } from "@eifi1/ui-kit";
 import type { TourLabels, TourStep } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, beat } from "../lib/section";
 
 /**
  * GUIDED TOUR — `TourProvider`, `useTour` and the shape of a step.
@@ -208,8 +208,6 @@ const TOUR_LABELS_DE: Partial<TourLabels> = {
   step: (c, t) => `Schritt ${c} von ${t}`,
 };
 
-const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
 function PlacementTour() {
   // The NESTED provider's engine — the page-level one above is untouched.
   const { start, active, index, total, next, prev } = useTour();
@@ -269,7 +267,7 @@ function PlacementTour() {
             className="px-2.5 py-1 text-xs"
             onClick={async () => {
               // e.g. after a save resolves — `next()` is how app code moves the tour on.
-              await wait(400);
+              await beat(400);
               next();
             }}
           >
@@ -286,7 +284,7 @@ function PlacementTour() {
       beforeStep: async () => {
         setBeforeCalls((n) => n + 1);
         setRevealed(true);
-        await wait(500);
+        await beat(500);
       },
     },
     {
@@ -302,21 +300,21 @@ function PlacementTour() {
       <div className="flex items-center justify-between gap-3">
         <span
           data-tour="showcase-place-a"
-          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+          className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary"
         >
           Target A
         </span>
         {revealed && (
           <span
             data-tour="showcase-place-c"
-            className="rounded-md border border-[var(--brand)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+            className="rounded-md border border-brand px-3 py-1.5 text-xs text-primary"
           >
             Target C (revealed by beforeStep)
           </span>
         )}
         <span
           data-tour="showcase-place-b"
-          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+          className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary"
         >
           Target B
         </span>
@@ -324,7 +322,7 @@ function PlacementTour() {
       <div dir="rtl" className="flex justify-center">
         <span
           data-tour="showcase-place-rtl"
-          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+          className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary"
         >
           الهدف د — <bdi dir="ltr">Target D, dir=&quot;rtl&quot;</bdi>
         </span>
@@ -332,12 +330,12 @@ function PlacementTour() {
       <Row>
         {/* The select is as wide as its longest option; held to the row, it ran 73 px
             past a 360 px phone at Extra large otherwise (0.32.1). */}
-        <label className="flex min-w-0 max-w-full flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex min-w-0 max-w-full flex-wrap items-center gap-2 text-xs text-secondary">
           startIndex
           <select
             value={from}
             onChange={(e) => setFrom(Number(e.target.value))}
-            className="min-w-0 max-w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-1 py-0.5 text-[var(--text-primary)]"
+            className="min-w-0 max-w-full rounded-md border border-subtle bg-surface-2 px-1 py-0.5 text-primary"
           >
             {steps.map((st, i) => (
               <option key={st.title} value={i}>
@@ -393,3 +391,42 @@ function PlacementTour() {
   );
 }
 
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+const STALE_STEPS: TourStep[] = [
+  {
+    target: '[data-tour="showcase-stale-a"]',
+    title: "A spotlighted step",
+    body: "Next goes to a step with no target.",
+  },
+  { title: "A centred step", body: "Centred, with no hole left over from the step before." },
+  {
+    target: '[data-tour="showcase-stale-missing"]',
+    title: "A missing anchor",
+    body: "Its target is not on the page: it reads as untargeted, not as the last thing that was lit.",
+  },
+  { target: '[data-tour="showcase-stale-a"]', title: "Lit again", body: "Back and Next keep each step its own." },
+];
+
+export function TourStaleSpotlight022Demo() {
+  const { start } = useTour();
+  return (
+    <Example
+      label="Tour — the step after a spotlighted one"
+      hint="keksdose tours audit §1.0 A: the old hole stayed, and the card sat beside it"
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="secondary" data-tour="showcase-stale-a" onClick={() => start(STALE_STEPS)}>
+          Run: spotlit → centred → missing → spotlit
+        </Button>
+      </div>
+      <Note>
+        Before 0.22 a step with no target (or a missing one) right after a spotlighted step kept that step&apos;s hole and
+        parked its card beside it — in 15 steps of keksdose&apos;s 16 tours — and Back→Next kept it indefinitely. React 19
+        dropped the overlay&apos;s render-phase reset while the follow interval had an update queued; the located rect now
+        carries the step it was found for, and a rect from another step is never drawn. Walk it with the arrows too.
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
+  );
+}

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { MonthPicker, ToggleGroup } from "@eifi1/ui-kit";
+import { MonthPicker, ToggleGroup, IconButton } from "@eifi1/ui-kit";
 import { monthKey } from "@eifi1/ui-kit/dates";
-import { Example, Note, Row, Stage } from "../lib/section";
+import { Example, Note, Row, Stage, StateLine, code } from "../lib/section";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
  * MonthPicker.
@@ -25,11 +26,6 @@ const LOCALES: { value: Loc; label: string }[] = [
 function shiftKey(key: string, delta: number): string {
   const [y, m] = key.split("-").map(Number);
   return monthKey(new Date(y!, m! - 1 + delta, 1));
-}
-
-/** The raw value under a specimen, so what the component emits is visible. */
-function StateLine({ children }: { children: string }) {
-  return <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">value = {children}</p>;
 }
 
 export function MonthPickerDemo() {
@@ -66,7 +62,7 @@ export function MonthPickerDemo() {
         <Stage>
           <MonthPicker label="Statement month" value={plain} onChange={setPlain} locale={LOCALE} />
         </Stage>
-        <StateLine>{`"${plain}"`}</StateLine>
+        <StateLine label="value">{`"${plain}"`}</StateLine>
       </Example>
 
       <Example
@@ -83,7 +79,7 @@ export function MonthPickerDemo() {
             max={ceiling}
           />
         </Stage>
-        <StateLine>{`"${bounded}"  (min ${floor}, max ${ceiling})`}</StateLine>
+        <StateLine label="value">{`"${bounded}"  (min ${floor}, max ${ceiling})`}</StateLine>
       </Example>
 
       <Example
@@ -97,7 +93,7 @@ export function MonthPickerDemo() {
               aria-label="Previous month"
               disabled={atFloor}
               onClick={() => setToolbar((k) => shiftKey(k, -1))}
-              className="flex size-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-40"
+              className="flex size-9 items-center justify-center rounded-md border border-subtle text-muted hover:bg-hover disabled:opacity-40"
             >
               <span aria-hidden className="rtl:-scale-x-100">
                 ‹
@@ -114,7 +110,7 @@ export function MonthPickerDemo() {
               type="button"
               aria-label="Next month"
               onClick={() => setToolbar((k) => shiftKey(k, 1))}
-              className="flex size-9 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
+              className="flex size-9 items-center justify-center rounded-md border border-subtle text-muted hover:bg-hover"
             >
               <span aria-hidden className="rtl:-scale-x-100">
                 ›
@@ -122,8 +118,8 @@ export function MonthPickerDemo() {
             </button>
           </Row>
         </Stage>
-        <StateLine>{`"${toolbar}"`}</StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <StateLine label="value">{`"${toolbar}"`}</StateLine>
+        <p className="mt-2 text-xs text-secondary">
           Step a few months with the buttons, then open the picker: it lands on the year the value
           is in now, not the one it was last opened on.
         </p>
@@ -143,7 +139,7 @@ export function MonthPickerDemo() {
             invalid={!empty}
           />
         </Stage>
-        <StateLine>{`"${empty}"`}</StateLine>
+        <StateLine label="value">{`"${empty}"`}</StateLine>
       </Example>
 
       <Example
@@ -175,7 +171,7 @@ export function MonthPickerDemo() {
             disabled
           />
         </Stage>
-        <StateLine>{`"${short}" · "${fiscal}" (currentMonth ${openBooks})`}</StateLine>
+        <StateLine label="value">{`"${short}" · "${fiscal}" (currentMonth ${openBooks})`}</StateLine>
       </Example>
 
       <Example
@@ -207,7 +203,7 @@ export function MonthPickerDemo() {
             />
           </div>
         </Stage>
-        <StateLine>{`"${localised}"`}</StateLine>
+        <StateLine label="value">{`"${localised}"`}</StateLine>
       </Example>
 
       <Example
@@ -225,13 +221,108 @@ export function MonthPickerDemo() {
             />
           </div>
         </Stage>
-        <StateLine>{`"${rtlMonth}"`}</StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <StateLine label="value">{`"${rtlMonth}"`}</StateLine>
+        <p className="mt-2 text-xs text-secondary">
           The panel is portalled out of this <code className="font-mono">dir</code> but reads it off
           the field when it opens and carries it: the months run from the right, the year chevrons
           are mirrored, and ← moves to the NEXT month (the one to its left). Before 0.7.0 the panel
           opened left-to-right and only the arrow keys were reversed.
         </p>
+      </Example>
+    </>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+/** MonthPicker: year mode (kastlan 7, keksdose tax tab), size sm (K13), error (K4). */
+export function Month022Demo() {
+  const thisYear = 2026;
+  const [taxYear, setTaxYear] = useState(String(thisYear));
+  const [fiscal, setFiscal] = useState("2027");
+  const [month, setMonth] = useState("2026-09");
+  const step = (delta: number) => {
+    const [y, m] = month.split("-").map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  };
+  return (
+    <>
+      <Example label='MonthPicker mode="year"' hint='value and bounds are "YYYY"; a short bounded span is shown whole'>
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
+          <MonthPicker
+            mode="year"
+            label="Tax year"
+            min={String(thisYear - 4)}
+            max={String(thisYear)}
+            currentMonth="2026-10"
+            value={taxYear}
+            onChange={setTaxYear}
+          />
+          <MonthPicker
+            mode="year"
+            label="Fiscal year"
+            min="2020"
+            hint="From 2020 on; budgets can be planned ahead."
+            currentMonth="2026-10"
+            value={fiscal}
+            onChange={setFiscal}
+          />
+          <MonthPicker
+            mode="year"
+            variant="stepper"
+            headingLevel={false}
+            min={String(thisYear - 4)}
+            max={String(thisYear)}
+            currentMonth="2026-10"
+            value={taxYear}
+            onChange={setTaxYear}
+          />
+        </div>
+        <Note>
+          keksdose&apos;s tax tab (this year and four before) opens on five years and no paging; kastlan&apos;s
+          fiscal year pages twelve at a time from {code("min")}. The stepper steps a year; its Today reads
+          &ldquo;This year&rdquo;. Values are strings: {code("String(year)")} in, {code("Number(key)")} out.
+        </Note>
+        <Note>Since 0.22.</Note>
+      </Example>
+      <Example label='MonthPicker size="sm" and error' hint="the 36px toolbar trigger between two icon buttons">
+        <div className="flex flex-col gap-4">
+          {/* On a phone at Large the month goes first and the two arrows share the line
+              under it: in one row they ran 25 px past a 360 px phone at Extra large, and a
+              plain wrap stranded each arrow on a line of its own (0.32.1). */}
+          <div className="flex flex-wrap items-center gap-1">
+            <IconButton aria-label="Previous month" onClick={() => step(-1)}>
+              <ChevronLeft className="rtl:-scale-x-100" />
+            </IconButton>
+            <MonthPicker
+              aria-label="Budget month"
+              size="sm"
+              currentMonth="2026-10"
+              value={month}
+              onChange={setMonth}
+              className="large:max-sm:order-first"
+            />
+            <IconButton aria-label="Next month" onClick={() => step(1)}>
+              <ChevronRight className="rtl:-scale-x-100" />
+            </IconButton>
+          </div>
+          <div className="sm:w-64">
+            <MonthPicker
+              label="Statement month"
+              currentMonth="2026-10"
+              value={month}
+              onChange={setMonth}
+              error={month > "2026-10" ? "That month has not started yet." : undefined}
+            />
+          </div>
+        </div>
+        <Note>
+          {code('size="sm"')} is an {code("IconButton")}&apos;s 36px and only as wide as the month (keksdose live
+          #260 wrote {code("h-9 w-auto py-0")} by hand). Unlabelled only, as on {code("Select")}. Step past October
+          to see the error.
+        </Note>
+        <Note>Since 0.22.</Note>
       </Example>
     </>
   );

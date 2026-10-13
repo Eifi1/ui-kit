@@ -127,7 +127,7 @@ export const hu: Dictionary = {
       title: "Felhasználókezelés",
       short: "Felhasználók",
       blurb:
-        "A fiókok adminisztrátori oldala: a felhasználólista szerepkörökkel és állapotokkal, a négy adminisztrátori művelet a szerver által kért megerősítéssel, az auditnapló, a meghívók, a munka továbbadása, valamint a csomagoszlop és a csomag üzemeltetői módosítása.",
+        "A fiókok adminisztrátori oldala: a felhasználólista szerepkörökkel és állapotokkal, a négy adminisztrátori művelet a szerver által kért megerősítéssel, az auditnapló a csoportműveletekkel, a meghívók, a munka továbbadása, valamint a csomagoszlop és a csomag üzemeltetői módosítása.",
     },
     subscription: {
       title: "Előfizetés",
@@ -374,7 +374,7 @@ export const hu: Dictionary = {
       title: "Adatsor-diagram",
       short: "Adatsorok",
       blurb:
-        "Az alkalmazások közös, nagyítható adatsor-diagramja: mértékegységenként egy tengely, kapcsolókból álló jelmagyarázat, egyetlen nagyítás diagramok egész sorára, és az alattuk lévő segédfüggvények.",
+        "Az alkalmazások közös, nagyítható adatsor-diagramja: mértékegységenként egy tengely, kapcsolókból álló jelmagyarázat, egyetlen nagyítás diagramok egész sorára, sorkeret a hosszú táblázatokhoz, és az alattuk lévő segédfüggvények.",
     },
     "series-chart-marks": {
       title: "Adatsor-diagram: oszlopok, területek és idő",
@@ -542,7 +542,7 @@ export const hu: Dictionary = {
       title: "Számlázás",
       short: "Számlázás",
       blurb:
-        "A csomagok és korlátaik, az előfizetés helyzete a próbaidő és a béta dátumaival, a csak olvasható zár lejáratkor, valamint a Paddle és a Lemon Squeezy webhookjai: ellenőrzött aláírások, egységesített események, egyetlen dispatch.",
+        "A csomagok és korlátaik, az előfizetés helyzete a próbaidő és a béta dátumaival, a csak olvasható zár lejáratkor, valamint a Paddle webhookjai: ellenőrzött aláírások, egységesített események, egyetlen dispatch.",
     },
     "server-mail": {
       title: "E-mail",
@@ -560,7 +560,7 @@ export const hu: Dictionary = {
       title: "Korlátok, hibák és CORS",
       short: "Korlátok",
       blurb:
-        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, és CORS néhány további originre.",
+        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, és az ütemező tokenje a feladatútvonalakon.",
     },
     "server-translation-review": {
       title: "Fordítások ellenőrzése",
@@ -1239,7 +1239,7 @@ export const hu: Dictionary = {
     "server-billing": [
       "csomagkorlát ellenőrzése a szerveren",
       "webhook aláírásának ellenőrzése",
-      "Paddle és Lemon Squeezy események kezelése",
+      "Paddle-események kezelése",
       "rendben van-e az előfizetés",
       "a próbaidő és a béta záró dátuma",
       "írások elutasítása lejárt előfizetésnél",

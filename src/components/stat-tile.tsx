@@ -1,10 +1,11 @@
 import { createContext, isValidElement, useContext, useId, useLayoutEffect, useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels, useKitLink, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLink, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
-import { Card, FieldHint } from "./ui";
+import { Card } from "./card";
+import { FieldHint } from "./field-parts";
 import { useInlineFacts, useLargeText } from "../hooks/use-large-text";
 import { Sparkline } from "./sparkline";
 import { Tooltip } from "./tooltip";
@@ -12,6 +13,7 @@ import { Tooltip } from "./tooltip";
 // shimmer as one surface — and both stop under `prefers-reduced-motion`, which this
 // tile's private copy of the string did not.
 import { SKELETON_CLASS } from "./skeleton";
+import { DEFAULT_STAT_TILE_LABELS } from "./stat-tile-labels";
 
 /**
  * The words a stat tile speaks. The delta's arrow is an icon, and an icon is not a
@@ -33,15 +35,8 @@ export interface StatTileLabels {
   loading: string;
 }
 
-export const DEFAULT_STAT_TILE_LABELS: StatTileLabels = {
-  increase: (amount) => `Up ${amount}`,
-  decrease: (amount) => `Down ${amount}`,
-  unchanged: "No change",
-  better: (change) => `${change} (better)`,
-  worse: (change) => `${change} (worse)`,
-  noValue: "No data",
-  loading: "Loading…",
-};
+// Defined in ./stat-tile-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_STAT_TILE_LABELS };
 
 /**
  * What colours a figure. Token-backed like everything else in the kit.
@@ -66,15 +61,15 @@ export type StatTileTone =
   | "info";
 
 const TONE_CLASS: Record<Exclude<StatTileTone, "signed">, string> = {
-  neutral: "text-[var(--text-primary)]",
-  brand: "text-[var(--brand)]",
-  income: "text-[var(--money-income)]",
-  expense: "text-[var(--money-expense)]",
-  net: "text-[var(--money-net)]",
-  success: "text-[var(--success)]",
-  warning: "text-[var(--warning)]",
-  danger: "text-[var(--danger)]",
-  info: "text-[var(--info)]",
+  neutral: "text-primary",
+  brand: "text-brand",
+  income: "text-money-income",
+  expense: "text-money-expense",
+  net: "text-money-net",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-danger",
+  info: "text-info",
 };
 
 function toneClass(tone: StatTileTone, value: unknown): string {
@@ -252,7 +247,7 @@ export interface StatTileProps
   renderLink?: (props: StatTileLinkProps) => ReactElement;
   /** Makes the tile a button (ignored when `href` is given). */
   onClick?: () => void;
-  labels?: Partial<StatTileLabels>;
+  labels?: LabelOverride<StatTileLabels>;
 }
 
 // One formatter per option set: a metrics wall is twenty of these.
@@ -366,7 +361,7 @@ export function StatTile({
     "after:absolute after:inset-0 after:rounded-lg after:content-['']",
     // The kit's focus frame (0.32, §5), on the overlay — `FOCUS_RING`'s classes cannot
     // carry the `after:`, so its width is spelt out.
-    "focus-visible:outline-none focus-visible:after:ring-[length:var(--focus-ring-width)] focus-visible:after:ring-inset focus-visible:after:ring-[var(--brand)]",
+    "focus-visible:outline-none focus-visible:after:ring-focus focus-visible:after:ring-inset focus-visible:after:ring-brand",
   );
   const describedBy = d ? `${valueId} ${deltaId}` : valueId;
   let labelNode: ReactNode = label;
@@ -407,11 +402,11 @@ export function StatTile({
     const dir = d.value > 0 ? "up" : d.value < 0 ? "down" : "flat";
     const Icon = dir === "up" ? ArrowUp : dir === "down" ? ArrowDown : Minus;
     let spoken = dir === "up" ? text.increase(amount) : dir === "down" ? text.decrease(amount) : text.unchanged;
-    let deltaTone = "text-[var(--text-muted)]";
+    let deltaTone = "text-muted";
     if (goodDirection && dir !== "flat") {
       const good = dir === goodDirection;
       spoken = good ? text.better(spoken) : text.worse(spoken);
-      deltaTone = good ? "text-[var(--success)]" : "text-[var(--danger)]";
+      deltaTone = good ? "text-success" : "text-danger";
     }
     deltaNode = (
       // `relative`: the containing block for the sr-only sentence (see the
@@ -424,7 +419,7 @@ export function StatTile({
           <span aria-hidden>{amount}</span>
           <span className="sr-only">{spoken}</span>
         </span>
-        {d.label != null && <span className="text-[var(--text-muted)]">{d.label}</span>}
+        {d.label != null && <span className="text-muted">{d.label}</span>}
       </div>
     );
   }
@@ -444,11 +439,11 @@ export function StatTile({
     <span id={valueId} data-private={priv} className={cn(valueClass, valueLabel != null && !large && "ms-auto")}>
       {show(value)}
       {unit != null && (
-        <span className="ms-1 text-[0.7em] font-medium text-[var(--text-muted)]">{unit}</span>
+        <span className="ms-1 text-[0.7em] font-medium text-muted">{unit}</span>
       )}
     </span>
   ) : (
-    <span id={valueId} className={cn("relative", valueClass, "text-[var(--text-muted)]")}>
+    <span id={valueId} className={cn("relative", valueClass, "text-muted")}>
       <span aria-hidden>—</span>
       <span className="sr-only">{text.noValue}</span>
     </span>
@@ -484,12 +479,12 @@ export function StatTile({
         // align with the content edge of the card they sit in. (Not `p-0` over the
         // padding: the padding's `sm:p-4` would still win from `sm` up.)
         variant === "plain" ? "rounded-none bg-transparent p-0" : PADDING[size],
-        interactive && "transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)]",
+        interactive && "transition-colors hover:border-strong hover:bg-hover",
         className,
       )}
     >
       <div className="flex items-start gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-1 break-words text-xs uppercase tracking-wide text-[var(--text-muted)]">
+        <div className="flex min-w-0 flex-1 items-center gap-1 break-words text-xs uppercase tracking-wide text-muted">
           {truncateLabel && labelCut ? (
             // Portalled: the tile is `overflow-hidden`, and a bubble inside it would be
             // clipped by the very box whose edge cut the label.
@@ -507,7 +502,7 @@ export function StatTile({
           {hint && !inlineHint && <FieldHint label={hint} side="top" className="relative z-10 shrink-0" />}
         </div>
         {icon != null && (
-          <span aria-hidden className="shrink-0 text-[var(--text-muted)] [&_svg]:size-4">
+          <span aria-hidden className="shrink-0 text-muted [&_svg]:size-4">
             {icon}
           </span>
         )}
@@ -516,7 +511,7 @@ export function StatTile({
       {inlineHint && (
         // §4: the hint as words under the label — the same muted type as `description`,
         // in the reading case of a sentence rather than the label's capitals.
-        <p data-slot="stat-tile-hint" className="mt-0.5 text-xs text-[var(--text-muted)]">
+        <p data-slot="stat-tile-hint" className="mt-0.5 text-xs text-muted">
           {hint}
         </p>
       )}
@@ -526,7 +521,7 @@ export function StatTile({
         // too-long amount drop to its own end-aligned line instead of overflowing. At
         // Large the period goes over the figure, which then has the tile's width.
         <div className={cn("mt-1 flex items-baseline gap-x-1.5", large ? "flex-col items-start" : "flex-wrap")}>
-          <span className="shrink-0 text-xs uppercase tracking-wide text-[var(--text-muted)]">{valueLabel}</span>
+          <span className="shrink-0 text-xs uppercase tracking-wide text-muted">{valueLabel}</span>
           {headline}
         </div>
       ) : (
@@ -542,7 +537,7 @@ export function StatTile({
       )}
 
       {deltaNode}
-      {description != null && <div className="mt-1 text-xs text-[var(--text-muted)]">{description}</div>}
+      {description != null && <div className="mt-1 text-xs text-muted">{description}</div>}
       {!large && graphic && <div className="mt-2">{graphic}</div>}
 
       {!loading && ((large && projection) || (subValues && subValues.length > 0)) && (
@@ -592,7 +587,7 @@ function FigureRow({
   return (
     <div
       className={cn(
-        "flex text-xs tabular-nums text-[var(--text-muted)]",
+        "flex text-xs tabular-nums text-muted",
         stacked ? "flex-col items-start" : "items-baseline gap-x-2",
       )}
     >
@@ -650,7 +645,7 @@ function useIsTruncated(el: HTMLElement | null): boolean {
   return cut;
 }
 
-export interface StatTileGridProps extends ComponentPropsWithoutRef<"div"> {
+export interface StatTileGridProps extends ComponentPropsWithRef<"div"> {
   /** The narrowest a tile may get before the grid drops a column. The default fits
    *  two tiles on a 320px phone. */
   minTileWidth?: string;
@@ -672,7 +667,7 @@ export interface StatTileGridProps extends ComponentPropsWithoutRef<"div"> {
    */
   loading?: boolean;
   /** The grid's one sentence — `loading` from {@link StatTileLabels}. */
-  labels?: Partial<Pick<StatTileLabels, "loading">>;
+  labels?: LabelOverride<Pick<StatTileLabels, "loading">>;
 }
 
 /** Set by a loading {@link StatTileGrid}; read by each tile in it. */

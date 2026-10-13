@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { hasContent } from "../lib/presence";
 import type { RoleVocabulary } from "../components/account-chips";
 import { CheckboxGroup } from "../components/checkbox-group";
 import type { CheckboxGroupOption } from "../components/checkbox-group";
-import { Select } from "../components/ui";
-import type { SelectProps } from "../components/ui";
+import { Select } from "../components/select";
+import type { SelectProps } from "../components/select";
 import type { CommitScope } from "../components/write-lock";
+import { DEFAULT_ROLE_SELECT_LABELS } from "./role-select-labels";
 
 /**
  * The role of an account, chosen by an admin (docs/user-admin-harmonization.md §3.3,
@@ -58,16 +60,8 @@ export interface RoleSelectLabels {
   unavailable: (role: string, reason: string) => string;
 }
 
-export const DEFAULT_ROLE_SELECT_LABELS: RoleSelectLabels = {
-  label: "Role",
-  rolesLegend: "Roles",
-  roleOf: (name) => `Role of ${name}`,
-  lockedLastAdmin: "The last active administrator keeps this role.",
-  lockedSelf: "You can’t change your own role.",
-  notForLastAdmin: "not for the last administrator",
-  notForSelf: "not for your own account",
-  unavailable: (role, reason) => `${role} (${reason})`,
-};
+// Defined in ./role-select-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ROLE_SELECT_LABELS };
 
 /** The whole-control reason, the kit's codes in the kit's words. */
 function lockText(reason: RoleLock, labels: RoleSelectLabels): ReactNode {
@@ -81,10 +75,6 @@ function optionReasonText(reason: string, labels: RoleSelectLabels): string {
   if (reason === "last_admin") return labels.notForLastAdmin;
   if (reason === "self" || reason === "self_action") return labels.notForSelf;
   return reason;
-}
-
-function present(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
 }
 
 /** The vocabulary's keys, in its own order. */
@@ -126,7 +116,7 @@ export interface RoleSelectProps<R extends string = string>
   /** The account's name, for the select's accessible name in a roster row ("Role of
    *  Ada Example") where no `label` is drawn. */
   name?: string;
-  labels?: Partial<RoleSelectLabels>;
+  labels?: LabelOverride<RoleSelectLabels>;
 }
 
 /**
@@ -163,7 +153,7 @@ export function RoleSelect<R extends string = string>({
       label={label}
       aria-label={ariaLabel}
       value={held ?? ""}
-      disabledReason={present(disabledReason) ? lockText(disabledReason, labels) : undefined}
+      disabledReason={hasContent(disabledReason) ? lockText(disabledReason, labels) : undefined}
       onChange={(event) => {
         const next = event.target.value as R;
         if (next && next !== held) onChange(next);
@@ -175,7 +165,7 @@ export function RoleSelect<R extends string = string>({
         .map((role) => {
           const word = roles[role].label;
           const reason = role === held ? undefined : optionDisabledReason?.(role);
-          const unavailable = !choosable.has(role) || present(reason);
+          const unavailable = !choosable.has(role) || hasContent(reason);
           return (
             <option key={role} value={role} disabled={unavailable && role !== held}>
               {reason ? labels.unavailable(word, optionReasonText(reason, labels)) : word}
@@ -222,7 +212,7 @@ export interface RolesEditorProps<R extends string = string> {
   /** The editor SAVES on change — the write lock's opt-in (CheckboxGroup's `commit`). */
   commit?: CommitScope;
   className?: string;
-  labels?: Partial<RoleSelectLabels>;
+  labels?: LabelOverride<RoleSelectLabels>;
 }
 
 /**
@@ -260,7 +250,7 @@ export function RolesEditor<R extends string = string>({
     .filter((role) => choosable.has(role) || held.has(role))
     .map((role) => {
       const reason = optionDisabledReason?.(role);
-      const locked = present(reason);
+      const locked = hasContent(reason);
       return {
         value: role,
         label: roles[role].label,
@@ -280,7 +270,7 @@ export function RolesEditor<R extends string = string>({
       error={error}
       columns={columns}
       commit={commit}
-      disabledReason={present(disabledReason) ? lockText(disabledReason, labels) : undefined}
+      disabledReason={hasContent(disabledReason) ? lockText(disabledReason, labels) : undefined}
       className={className}
     />
   );

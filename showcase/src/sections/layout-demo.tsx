@@ -25,7 +25,7 @@ import { Example, Note, Row, Stage } from "../lib/section";
  *  open it again, and the time moves — the body really went away. */
 function MountStamp() {
   const [at] = useState(() => new Date().toLocaleTimeString());
-  return <p className="text-xs text-[var(--text-muted)]">Body mounted at {at} — a fetch here would run again on every open.</p>;
+  return <p className="text-xs text-muted">Body mounted at {at} — a fetch here would run again on every open.</p>;
 }
 
 const COMPARE = ["Hysteresis", "Kinematics", "Transmission"];
@@ -183,7 +183,7 @@ function CardSpecimens() {
         </Row>
       </Disclosure>
       <Disclosure title="Corner guide" hint="Open by default: this card is the page" defaultOpen headingAs="h4">
-        <p className="text-sm text-[var(--text-secondary)]">
+        <p className="text-sm text-secondary">
           Closed is right for detail beside the thing itself; open is right where the card IS the
           thing.
         </p>
@@ -205,10 +205,10 @@ function ControlledSet() {
           open={open === name}
           onOpenChange={(next) => setOpen(next ? name : null)}
         >
-          <div className="h-24 rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-surface-2)]" />
+          <div className="h-24 rounded-md border border-dashed border-subtle bg-surface-2" />
         </Disclosure>
       ))}
-      <p className="font-mono text-xs text-[var(--text-muted)]">open = {open ?? "null"}</p>
+      <p className="font-mono text-xs text-muted">open = {open ?? "null"}</p>
     </div>
   );
 }
@@ -216,10 +216,10 @@ function ControlledSet() {
 function BareSpecimen() {
   const hidden = ["Old savings", "Closed card", "Travel wallet"];
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3">
-      <p className="text-sm text-[var(--text-primary)]">Checking · Savings · Cash</p>
+    <div className="rounded-lg border border-subtle bg-surface p-3">
+      <p className="text-sm text-primary">Checking · Savings · Cash</p>
       <Disclosure variant="bare" title={`Show ${hidden.length} hidden accounts`} className="mt-2">
-        <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+        <ul className="space-y-1 text-sm text-secondary">
           {hidden.map((h) => (
             <li key={h}>{h}</li>
           ))}
@@ -242,11 +242,11 @@ function TriggerPropsSpecimen() {
         <Disclosure
           key={g.name}
           title={g.name}
-          trailing={<span className="text-xs text-[var(--text-muted)]">{g.items.length} lines</span>}
+          trailing={<span className="text-xs text-muted">{g.items.length} lines</span>}
           triggerProps={(open) => ({ "aria-label": `${open ? "Collapse" : "Expand"} group ${g.name}` })}
           onOpenChange={(open) => setNames((n) => ({ ...n, [g.name]: `${open ? "Collapse" : "Expand"} group ${g.name}` }))}
         >
-          <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+          <ul className="space-y-1 text-sm text-secondary">
             {g.items.map((i) => (
               <li key={i}>{i}</li>
             ))}
@@ -258,9 +258,9 @@ function TriggerPropsSpecimen() {
         title="Archived groups"
         triggerProps={{ id: "archived-groups-toggle", "data-tour": "archived-groups" }}
       >
-        <p className="text-xs text-[var(--text-muted)]">The header button carries id=&quot;archived-groups-toggle&quot;.</p>
+        <p className="text-xs text-muted">The header button carries id=&quot;archived-groups-toggle&quot;.</p>
       </Disclosure>
-      <p className="font-mono text-xs text-[var(--text-muted)]">
+      <p className="font-mono text-xs text-muted">
         toggle names now: {BUDGET_GROUPS.map((g) => names[g.name] ?? `Expand group ${g.name}`).join(" · ")}
       </p>
     </div>
@@ -270,15 +270,15 @@ function TriggerPropsSpecimen() {
 function ChevronEndSpecimen() {
   const [lang, setLang] = useState("Deutsch");
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-2 text-sm">
-      <p className="rounded px-2 py-1.5 text-[var(--text-primary)]">Profile</p>
+    <div className="rounded-lg border border-subtle bg-surface p-2 text-sm">
+      <p className="rounded px-2 py-1.5 text-primary">Profile</p>
       <Disclosure
         variant="bare"
         chevronPosition="end"
         title="Language"
         className="px-2 py-1.5"
-        headerClassName="text-[var(--text-primary)]"
-        trailing={<span className="text-xs text-[var(--text-muted)]">{lang}</span>}
+        headerClassName="text-primary"
+        trailing={<span className="text-xs text-muted">{lang}</span>}
       >
         <ul className="mt-1 space-y-0.5 ps-2">
           {["Deutsch", "English", "Français"].map((l) => (
@@ -287,8 +287,8 @@ function ChevronEndSpecimen() {
                 type="button"
                 onClick={() => setLang(l)}
                 className={cn(
-                  "w-full rounded px-2 py-1 text-start hover:bg-[var(--bg-hover)]",
-                  l === lang ? "font-medium text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
+                  "w-full rounded px-2 py-1 text-start hover:bg-hover",
+                  l === lang ? "font-medium text-primary" : "text-secondary",
                 )}
               >
                 {l}
@@ -298,10 +298,10 @@ function ChevronEndSpecimen() {
         </ul>
       </Disclosure>
       <Disclosure variant="bare" chevronPosition="end" title="Hidden accounts" className="px-2 py-1.5">
-        <p className="text-xs text-[var(--text-muted)]">No trailing: the chevron alone at the end.</p>
+        <p className="text-xs text-muted">No trailing: the chevron alone at the end.</p>
       </Disclosure>
       <Disclosure variant="bare" title="Default: chevron at the start" className="px-2 py-1.5">
-        <p className="text-xs text-[var(--text-muted)]">chevronPosition=&quot;start&quot;.</p>
+        <p className="text-xs text-muted">chevronPosition=&quot;start&quot;.</p>
       </Disclosure>
     </div>
   );
@@ -344,7 +344,7 @@ function MenuVariantSpecimen() {
               <Disclosure
                 variant="menu"
                 title="Language"
-                trailing={<span className="text-xs text-[var(--text-muted)]">{lang}</span>}
+                trailing={<span className="text-xs text-muted">{lang}</span>}
               >
                 <ul>
                   {["Deutsch", "English", "Français"].map((l) => (
@@ -352,7 +352,7 @@ function MenuVariantSpecimen() {
                       <button
                         type="button"
                         aria-current={l === lang || undefined}
-                        className={cn(TOPBAR_MENU_ITEM_CLASS, "ps-6", l === lang && "font-medium text-[var(--text-primary)]")}
+                        className={cn(TOPBAR_MENU_ITEM_CLASS, "ps-6", l === lang && "font-medium text-primary")}
                         onClick={() => {
                           setLang(l);
                           setLast(`Language → ${l}`);
@@ -370,7 +370,7 @@ function MenuVariantSpecimen() {
           </ul>
         )}
       </HoverMenu>
-      <span className="text-xs text-[var(--text-muted)]">Chosen: {last}</span>
+      <span className="text-xs text-muted">Chosen: {last}</span>
     </Row>
   );
 }
@@ -389,7 +389,7 @@ function TrailingSpecimens() {
         headingAs="h4"
         trailing={
           <>
-            <span className="rounded-full bg-[var(--bg-surface-2)] px-2 text-xs tabular-nums text-[var(--text-secondary)]">
+            <span className="rounded-full bg-surface-2 px-2 text-xs tabular-nums text-secondary">
               4
             </span>
             <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setEdits((n) => n + 1)}>
@@ -399,19 +399,19 @@ function TrailingSpecimens() {
         }
       >
         <MountStamp />
-        <p className="font-mono text-xs text-[var(--text-muted)]">edit clicks = {edits} (the fold did not move)</p>
+        <p className="font-mono text-xs text-muted">edit clicks = {edits} (the fold did not move)</p>
       </Disclosure>
-      <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-surface)]">
+      <div className="overflow-hidden rounded-lg border border-subtle bg-surface">
         {threads.map((t, i) => (
           <Disclosure
             key={t.subject}
             variant="bare"
             title={t.subject}
-            className={cn("px-3 py-2.5", i > 0 && "border-t border-[var(--border)]")}
-            headerClassName="text-[var(--text-primary)]"
-            trailing={<span className="text-xs tabular-nums text-[var(--text-muted)]">{t.when}</span>}
+            className={cn("px-3 py-2.5", i > 0 && "border-t border-subtle")}
+            headerClassName="text-primary"
+            trailing={<span className="text-xs tabular-nums text-muted">{t.when}</span>}
           >
-            <p className="text-sm text-[var(--text-secondary)]">The thread&apos;s messages.</p>
+            <p className="text-sm text-secondary">The thread&apos;s messages.</p>
           </Disclosure>
         ))}
       </div>
@@ -433,25 +433,25 @@ function TriggerOnlySpecimen() {
         open={open}
         onOpenChange={setOpen}
         trailing={
-          <span className="text-xs text-[var(--text-muted)] max-sm:hidden">aria-controls → the table&apos;s rows</span>
+          <span className="text-xs text-muted max-sm:hidden">aria-controls → the table&apos;s rows</span>
         }
       />
       {/* On a phone the caption beside the title pushed "Show 3 hidden accounts" onto
           two lines; there it goes under the header instead (only one is ever shown). */}
-      <p className="text-xs text-[var(--text-muted)] sm:hidden">aria-controls → the table&apos;s rows</p>
-      <table className="w-full overflow-hidden rounded-lg border border-[var(--border)] text-sm">
-        <tbody className="divide-y divide-[var(--border)]">
+      <p className="text-xs text-muted sm:hidden">aria-controls → the table&apos;s rows</p>
+      <table className="w-full overflow-hidden rounded-lg border border-subtle text-sm">
+        <tbody className="divide-y divide-subtle">
           {visible.map((a) => (
             <tr key={a}>
-              <td className="px-3 py-2 text-[var(--text-primary)]">{a}</td>
+              <td className="px-3 py-2 text-primary">{a}</td>
             </tr>
           ))}
         </tbody>
-        <tbody id={rowsId} className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
+        <tbody id={rowsId} className="divide-y divide-subtle border-t border-subtle">
           {open &&
             hidden.map((a) => (
               <tr key={a}>
-                <td className="px-3 py-2 text-[var(--text-muted)]">{a}</td>
+                <td className="px-3 py-2 text-muted">{a}</td>
               </tr>
             ))}
         </tbody>
@@ -472,7 +472,7 @@ function MoreDisclosureSpecimens() {
           defaultOpen
           disabled={locked}
         >
-          <p className="text-sm text-[var(--text-secondary)]">Hauptstraße 5, 10115 Berlin</p>
+          <p className="text-sm text-secondary">Hauptstraße 5, 10115 Berlin</p>
         </Disclosure>
         <Button variant="ghost" onClick={() => setLocked((v) => !v)}>
           {locked ? "Unlock the header" : "Lock the header"}
@@ -483,17 +483,17 @@ function MoreDisclosureSpecimens() {
         hint="keepMounted — the text survives a close"
         headingAs="h4"
         keepMounted
-        bodyClassName="space-y-2 bg-[var(--bg-surface-2)] px-4 py-3 rounded-b-lg"
+        bodyClassName="space-y-2 bg-surface-2 px-4 py-3 rounded-b-lg"
       >
         <MountStamp />
         <Input aria-label="Draft note" placeholder="Type, close, reopen" />
       </Disclosure>
       <div dir="rtl" className="space-y-3">
         <Disclosure title="الإعدادات المتقدمة" hint="بطاقة: السهم في الطرف" headingAs="h4">
-          <p className="text-sm text-[var(--text-secondary)]">المحتوى</p>
+          <p className="text-sm text-secondary">المحتوى</p>
         </Disclosure>
         <Disclosure variant="bare" title="إظهار ٣ حسابات مخفية">
-          <p className="text-sm text-[var(--text-secondary)]">حساب التوفير القديم</p>
+          <p className="text-sm text-secondary">حساب التوفير القديم</p>
         </Disclosure>
       </div>
     </>
@@ -550,7 +550,7 @@ function DialogSpecimens() {
           headerActions (node and function)
         </Button>
       </Row>
-      <p className="mt-2 font-mono text-xs text-[var(--text-muted)]">open = {kind ?? "null"}</p>
+      <p className="mt-2 font-mono text-xs text-muted">open = {kind ?? "null"}</p>
 
       {kind === "wide" && (
         <DialogFrame
@@ -564,13 +564,13 @@ function DialogSpecimens() {
           closeLabel="Dismiss the comparison"
           aria-describedby="dialogframe-extra-note"
         >
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-sm text-secondary">
             <code className="font-mono">size</code> is the panel&apos;s max width —{" "}
             <code className="font-mono">md</code> 28rem (default), <code className="font-mono">lg</code>{" "}
             32rem, <code className="font-mono">xl</code> 48rem. On a phone all three are the same
             full-width bottom sheet, and dragging is off.
           </p>
-          <p id="dialogframe-extra-note" className="text-sm text-[var(--text-secondary)]">
+          <p id="dialogframe-extra-note" className="text-sm text-secondary">
             This paragraph is joined to the description through the caller&apos;s own{" "}
             <code className="font-mono">aria-describedby</code>; the X is named by{" "}
             <code className="font-mono">closeLabel</code>.
@@ -602,7 +602,7 @@ function DialogSpecimens() {
             </Button>
           )}
         >
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-sm text-secondary">
             <code className="font-mono">headerActions</code> render beside the title, before the X.
             On a phone, where title and controls do not fit on one line, they wrap under the title
             and the X keeps its corner — try the phone preview.
@@ -668,7 +668,7 @@ function DialogSpecimens() {
             </Button>
           )}
         >
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-sm text-secondary">
             Every change here saves as it is made, so there is no actions row — the X is the way
             out, and so is the header&apos;s own <strong>Done</strong>: a{" "}
             <code className="font-mono">headerActions</code> function handed the animated close.
@@ -703,7 +703,7 @@ function DialogSpecimens() {
           )}
         >
           {Array.from({ length: 24 }, (_, i) => (
-            <p key={i} className="text-sm text-[var(--text-secondary)]">
+            <p key={i} className="text-sm text-secondary">
               Line {i + 1} of a body taller than the screen.
             </p>
           ))}

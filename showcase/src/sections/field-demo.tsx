@@ -14,7 +14,7 @@ const IBAN = /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/;
 /** Prints what the render prop handed the control, so the wiring is visible. */
 function Wiring({ ids }: { ids: FieldControlProps }) {
   return (
-    <span className="block font-mono text-micro text-[var(--text-muted)] [overflow-wrap:anywhere]">
+    <span className="block font-mono text-micro text-muted [overflow-wrap:anywhere]">
       {JSON.stringify(ids)}
     </span>
   );
@@ -67,7 +67,7 @@ function RenderProp() {
       <Row className="mt-3">
         <button
           type="button"
-          className="text-sm text-[var(--brand)] underline"
+          className="text-sm text-brand underline"
           onClick={() => setTouched((t) => !t)}
         >
           {touched ? "Hide the errors" : "Show the errors"}
@@ -110,11 +110,11 @@ function PlainChildren() {
       hint="for a control that wires itself: a range input, a native control, a group"
     >
       <Row className="mb-3">
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={dense} onChange={(e) => setDense(e.target.checked)} />
           <code className="font-mono">labelSize=&quot;sm&quot;</code>
         </label>
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={disabled} onChange={(e) => setDisabled(e.target.checked)} />
           <code className="font-mono">disabled</code>
         </label>

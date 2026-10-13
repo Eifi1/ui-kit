@@ -1,11 +1,14 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Button, Input, Select, Textarea } from "../components/ui";
-import type { ButtonSize, ButtonVariant } from "../components/ui";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
+import { Select } from "../components/select";
+import { Textarea } from "../components/textarea";
+import type { ButtonSize, ButtonVariant } from "../components/button-look";
 import { Modal } from "../components/modal";
 import { isApplePlatform } from "../hooks/use-hotkey";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import {
   DEFAULT_ATTACHMENT_ACCEPT,
   DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
@@ -14,6 +17,7 @@ import {
   type FeedbackAttachmentError,
   type FeedbackAttachmentErrorInfo,
 } from "./feedback-attachment";
+import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog-labels";
 
 export interface FeedbackCategoryOption {
   value: string;
@@ -57,10 +61,6 @@ export interface FeedbackDialogLabels extends FeedbackAttachmentLabels {
   submitHint: FeedbackSubmitHint;
   cancel: string;
   save: string;
-  /** @deprecated since 0.16.0 — use `attachmentList`, the one key for the heading and
-   *  the chip list it names. Still honoured: set, it wins over the provider's
-   *  `attachmentList` (but not over an `attachmentList` passed beside it). */
-  attachments?: string;
 }
 
 /** The submit hint: a string, or the line for the platform (`apple`: Mac, iPhone, iPad). */
@@ -93,37 +93,10 @@ export interface FeedbackDialogTextLabels {
   submitHint: FeedbackSubmitHint;
   cancel: string;
   save: string;
-  /** @deprecated since 0.16.0 — use `feedbackAttachment.attachmentList`. It and this
-   *  key were two names for one heading ("Attachments" over the chips that list names
-   *  "Attachments"), and a catalogue that translated one left the other English. Still
-   *  honoured when set: it wins over `feedbackAttachment.attachmentList`. */
-  attachments?: string;
 }
 
-/**
- * English. The feedback contract's wording (docs/feedback-harmonization.md §4.2, 0.27.0):
- * "Send", not keksdose's "Save", and the body asks "What happened?" (Marcel's two calls);
- * the rest is keksdose's. Since 0.27.0 `attachment`, the single-mode heading, is keksdose's
- * `feedback.attachment` **"Attachment"** (it said "Screenshot" over a button that says "Add
- * attachment" and a picker that may offer a PDF), and `submitHint` is keksdose's
- * **"Ctrl+Enter to send"** — "⌘ Enter to send" on Apple platforms, where the old
- * "Ctrl/⌘ + Enter" made every reader parse both. The `attachments="multiple"` heading is
- * `feedbackAttachment.attachmentList` ("Attachments") and did not change.
- */
-export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
-  title: "Send feedback",
-  category: "Category",
-  subject: "Subject",
-  body: "What happened?",
-  bodyOptional: "What happened? (optional)",
-  attachment: "Attachment",
-  // No `attachments`: the multiple-mode heading is `feedbackAttachment.attachmentList`,
-  // and a default here would shadow a provider that translated only that one.
-  // The modifier as `form.submitShortcut` writes it: "⌘ Enter" on Apple, "Ctrl+Enter" elsewhere.
-  submitHint: (apple) => (apple ? "⌘ Enter to send" : "Ctrl+Enter to send"),
-  cancel: "Cancel",
-  save: "Send",
-};
+// Defined in ./feedback-dialog-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_DIALOG_LABELS };
 
 export interface FeedbackSubmission {
   title: string;
@@ -156,7 +129,7 @@ interface FeedbackDialogBaseProps {
   onCategoryChange: (value: string) => void;
   /** Prop > `<UiKitProvider labels={{ feedbackDialog, feedbackAttachment }}>` >
    *  English. Optional since 0.12.0; a whole `FeedbackDialogLabels` still fits. */
-  labels?: Partial<FeedbackDialogLabels>;
+  labels?: LabelOverride<FeedbackDialogLabels>;
   submitting?: boolean;
   contextSlot?: ReactNode;
   attachmentAccept?: string[];
@@ -266,13 +239,10 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
   const labels = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS, labelsProp);
   const attachmentText = useKitLabels("feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS, labelsProp);
   // Under `multiple` the heading is `attachmentList` — a screenshot AND photos — which
-  // also names the chip list beneath it: one string, so the two cannot disagree. The
-  // deprecated `feedbackDialog.attachments` (prop or provider) still wins over the
-  // provider's `attachmentList`, as it did before 0.16.0; an `attachmentList` prop wins
-  // over both.
+  // also names the chip list beneath it: one string, so the two cannot disagree. Its old
+  // second name, `feedbackDialog.attachments`, went in 0.34.
   const listHeading =
     labelsProp?.attachmentList ??
-    labels.attachments ??
     attachmentText.attachmentList ??
     DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentList!;
   // The attachment field resolves its own keys from `feedbackAttachment`; it gets the
@@ -398,7 +368,7 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           <>
             {subjectField}
             {bodyField}
-            <div className="space-y-3 border-t border-[var(--border)] pt-3">
+            <div className="space-y-3 border-t border-subtle pt-3">
               {categoryField}
               {attachmentField}
               {contextSlot}
@@ -414,7 +384,7 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           </>
         )}
         <div className="flex items-center justify-between gap-2">
-          <div className="text-xs text-[var(--text-placeholder)]">
+          <div className="text-xs text-placeholder">
             {typeof labels.submitHint === "function" ? labels.submitHint(isApplePlatform()) : labels.submitHint}
           </div>
           <div className="flex gap-2">

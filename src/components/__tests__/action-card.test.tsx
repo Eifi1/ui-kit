@@ -20,7 +20,7 @@ describe("ActionCard (keksdose CustodyOption)", () => {
     const button = screen.getByRole("button", { name: "Keep the key yourself" });
     expect(button).toHaveAttribute("type", "button");
     expect(button).toHaveAccessibleDescription("Only you can read your data. Lose the key and the data is gone.");
-    expect(screen.getByText("Lose the key and the data is gone.").className).toContain("text-[var(--warning)]");
+    expect(screen.getByText("Lose the key and the data is gone.")).toHaveClass("text-warning");
     expect(button.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   });
 
@@ -75,8 +75,8 @@ describe("ActionCard — link card and icon tone", () => {
     const icon = screen.getByRole("button").querySelector("svg")!;
     // The brand as text, `--brand-muted` (0.33): `--brand` is solved to 3:1 only.
     expect(icon.getAttribute("class")).toContain("text-brand-muted");
-    expect(icon.getAttribute("class")).not.toContain("text-[var(--brand)]");
+    expect(icon).not.toHaveClass("text-brand");
     expect(icon.getAttribute("class")).toContain("size-6");
-    expect(icon.getAttribute("class")).not.toContain("text-[var(--text-secondary)]");
+    expect(icon.getAttribute("class")).not.toContain("text-secondary");
   });
 });

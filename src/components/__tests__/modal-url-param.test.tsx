@@ -6,6 +6,7 @@ import { Modal } from "../modal";
 import { DialogFrame } from "../dialog-frame";
 import { useDialogParam } from "../../hooks/use-search-param-state";
 import { OVERLAY_EXIT_MS } from "../../hooks/use-close-transition";
+import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * `Modal urlParam` (0.12.0): the open state is a search param, the opener pushes an
@@ -14,15 +15,7 @@ import { OVERLAY_EXIT_MS } from "../../hooks/use-close-transition";
  */
 
 const motion = (reduced: boolean) =>
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes("prefers-reduced-motion") ? reduced : false,
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
+  stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
 
 let loc: ReturnType<typeof useLocation> | null = null;
 let nav: ReturnType<typeof useNavigate> | null = null;

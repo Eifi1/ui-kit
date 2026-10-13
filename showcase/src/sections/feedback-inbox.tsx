@@ -18,25 +18,27 @@ import {
   visibleFeedbackStatuses,
 } from "@eifi1/ui-kit";
 import type { FeedbackCategory, FeedbackNoteAttachment, FeedbackStatus } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, beat } from "../lib/section";
 
 /**
  * FEEDBACK — INBOX.
  *
  * The module's own header says what the split is, and it is the thing to hold on to
- * while reading this section: the kit owns the VOCABULARY (seven statuses, five
- * categories, shared value for value across both consuming apps), the POLICY about
- * what a row may move to from where it stands, and the LOOK of a status control, a
- * category badge and an opened report. The app owns the data, the API, the columns,
- * the permissions and every string.
+ * while reading this section: the kit owns the VOCABULARY (eight statuses, five
+ * categories, shared value for value across the three apps), the POLICY about what a
+ * row may move to from where it stands, the LOOK of a status control, a category badge
+ * and an opened report, and their WORDS — `feedbackStatus`, `feedbackCategory`,
+ * `feedbackDetail` … in all seven shipped catalogues. The app owns the data, the API,
+ * the columns, the permissions and the language.
  *
  * So there is no `Feedback` type to import and nothing below takes one. Every
  * component here takes the values it draws — which is why this page can fabricate a
  * report out of a plain object and get a real detail panel out of it.
  *
  * Two consequences worth expecting before you scroll:
- *   • Every label on this page is the SHOWCASE'S. The kit ships no strings, not even
- *     English ones, because both apps translate.
+ *   • The status and category names below are the SHOWCASE'S own `Record`s, written
+ *     out to show the shape; an app takes the kit's (the catalogue it hands
+ *     `UiKitProvider` carries them) and overrides only the words it wants different.
  *   • The colours are the kit's semantic tokens (warning, info, success, danger…),
  *     so they follow the palette switch in the top bar like everything else.
  */
@@ -98,7 +100,6 @@ const CHAIN: FeedbackStatus[] = (() => {
 /** Long enough to read the `pending` state, short enough not to feel broken. A save
  *  that resolves in the same tick renders "saving" for zero frames. */
 const BEAT_MS = 700;
-const beat = () => new Promise<void>((resolve) => setTimeout(resolve, BEAT_MS));
 
 /** A report as one of the consuming apps happens to shape it. Deliberately a plain
  *  object: nothing in the kit knows this type, which is the whole point of the
@@ -132,28 +133,28 @@ export function FeedbackInbox() {
           {FEEDBACK_STATUS_ORDER.map((status) => (
             <div
               key={status}
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[var(--border)] py-2 last:border-b-0"
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-subtle py-2 last:border-b-0"
             >
               <span className="w-36 shrink-0">
                 <FeedbackStatusBadge status={status} label={STATUS_LABEL[status]} />
               </span>
-              <code className="w-36 shrink-0 font-mono text-caption text-[var(--text-muted)]">
+              <code className="w-36 shrink-0 font-mono text-caption text-muted">
                 {status}
               </code>
-              <span className="text-caption text-[var(--text-secondary)]">
+              <span className="text-caption text-secondary">
                 {CHAIN.includes(status)
                   ? `chain ${CHAIN.indexOf(status) + 1}/${CHAIN.length}`
                   : "off the chain"}
               </span>
               {/* The treatment the kit ships, printed so it is checkable rather than
                   asserted: a semantic token, not a fixed colour. */}
-              <code className="ml-auto font-mono text-caption text-[var(--text-muted)]">
+              <code className="ml-auto font-mono text-caption text-muted">
                 {FEEDBACK_STATUS_META[status].activeBg}
               </code>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           Four are a chain and three sit off it. Every one carries its own glyph as well as
           its own tone, because two of them share the neutral tone and colour alone is not a
           label.
@@ -168,37 +169,37 @@ export function FeedbackInbox() {
           {FEEDBACK_CATEGORY_ORDER.map((category) => (
             <div
               key={category}
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[var(--border)] py-2 last:border-b-0"
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-subtle py-2 last:border-b-0"
             >
               <span className="w-28 shrink-0">
                 <FeedbackCategoryBadge category={category} label={CATEGORY_LABEL[category]} />
               </span>
               {/* `compact` is the table-cell size: same pill, one step down. */}
               <FeedbackCategoryBadge category={category} label={CATEGORY_LABEL[category]} compact />
-              <code className="font-mono text-caption text-[var(--text-muted)]">{category}</code>
-              <span className="text-caption text-[var(--text-secondary)]">
+              <code className="font-mono text-caption text-muted">{category}</code>
+              <span className="text-caption text-secondary">
                 rank {feedbackCategoryRank(category)}
               </span>
-              <code className="ml-auto font-mono text-caption text-[var(--text-muted)]">
+              <code className="ml-auto font-mono text-caption text-muted">
                 {FEEDBACK_CATEGORY_META[category].badgeBg}
               </code>
             </div>
           ))}
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border border-dashed border-[var(--border)] px-3 py-2">
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border border-dashed border-subtle px-3 py-2">
           {/* The degradation path, rendered rather than described: an unknown value
               falls back to OTHER's treatment instead of throwing on `meta.icon`. The
               LABEL is the caller's and needs the same guard — a crash report must not
               be able to cause one. */}
           <FeedbackCategoryBadge category={UNKNOWN_CATEGORY} label={CATEGORY_LABEL.OTHER} />
-          <span className="text-xs text-[var(--text-secondary)]">
+          <span className="text-xs text-secondary">
             <code className="font-mono">category=&quot;ESCALATION&quot;</code> — a value this
             build has never heard of, drawn with OTHER&apos;s pill and OTHER&apos;s name, and
             ranked {feedbackCategoryRank(UNKNOWN_CATEGORY)} so it sorts last rather than above
             CRASH.
           </span>
         </div>
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           CRASH is filed by an error boundary and never chosen, which is why it is loud here
           and absent from every picker. The hand-filed four stay quiet so that the loud one
           means something.
@@ -239,19 +240,19 @@ export function FeedbackInbox() {
       >
         <div className="space-y-4">
           <div>
-            <p className="mb-1 text-xs text-[var(--text-secondary)]">
+            <p className="mb-1 text-xs text-secondary">
               Two paragraphs separated by a blank line:
             </p>
             <FeedbackProse>{PROSE}</FeedbackProse>
           </div>
           <div>
-            <p className="mb-1 text-xs text-[var(--text-secondary)]">
+            <p className="mb-1 text-xs text-secondary">
               No text and no <code className="font-mono">empty</code>:
             </p>
             <FeedbackProse />
           </div>
           <div>
-            <p className="mb-1 text-xs text-[var(--text-secondary)]">
+            <p className="mb-1 text-xs text-secondary">
               No text, with <code className="font-mono">empty</code>:
             </p>
             <FeedbackProse empty="No outcome has been written yet." />
@@ -269,7 +270,7 @@ export function FeedbackInbox() {
             nextFeedbackStatus(status) ?? "null",
           ])}
         />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           The three off-chain states answer <code className="font-mono">null</code> because they
           are not in the chain at all. Putting them in it would mean an &ldquo;advance&rdquo;
           gesture could park an item, and every row would have to pass through them to reach
@@ -287,7 +288,7 @@ export function FeedbackInbox() {
             <StatusTokens statuses={visibleFeedbackStatuses(status)} />,
           ])}
         />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           Read the two parking rows against each other: NEEDS_LIVE_TEST and POSTPONED each offer
           the step that resumes work and the two that close it, but deliberately{" "}
           <em>not each other</em> — moving between them directly is a re-triage, which starts by
@@ -310,7 +311,7 @@ export function FeedbackInbox() {
             ],
           ]}
         />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           The narrowing that is right for a table cell is wrong once the row is open in front of
           you: OPEN to DONE meant three round trips, and WONT_DO could not be left at all. The
           argument is ignored today and taken anyway, so the two policies read as one pair at the
@@ -373,7 +374,7 @@ function StatusControls() {
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <p className="text-xs text-[var(--text-secondary)]">
+        <p className="text-xs text-secondary">
           <code className="font-mono">variant=&quot;icon&quot;</code> — a table cell, over{" "}
           <code className="font-mono">visibleFeedbackStatuses(status)</code>. Hover an icon for
           its name; the bubble is portalled and sits <em>above</em>, because in a queue you
@@ -390,7 +391,7 @@ function StatusControls() {
       </div>
 
       <div className="space-y-1.5">
-        <p className="text-xs text-[var(--text-secondary)]">
+        <p className="text-xs text-secondary">
           <code className="font-mono">variant=&quot;pill&quot;</code> — an expanded row, over{" "}
           <code className="font-mono">selectableFeedbackStatuses(status)</code>. Same component,
           same state, every status reachable in one move.
@@ -405,8 +406,8 @@ function StatusControls() {
         />
       </div>
 
-      <Row className="border-t border-[var(--border)] pt-3">
-        <span className="text-xs text-[var(--text-secondary)]">Where the row stands:</span>
+      <Row className="border-t border-subtle pt-3">
+        <span className="text-xs text-secondary">Where the row stands:</span>
         <FeedbackStatusBadge status={status} label={STATUS_LABEL[status]} />
         <Button
           variant="secondary"
@@ -415,7 +416,7 @@ function StatusControls() {
         >
           {advance ? `Advance to ${STATUS_LABEL[advance]}` : "Nothing to advance to"}
         </Button>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input
             type="checkbox"
             checked={canEdit}
@@ -424,7 +425,7 @@ function StatusControls() {
           <code className="font-mono">canEdit</code>
         </label>
       </Row>
-      <p className="text-xs text-[var(--text-secondary)]">
+      <p className="text-xs text-secondary">
         Two kinds of unclickable, and only one of them is dimmed: the whole row fades when{" "}
         <code className="font-mono">canEdit</code> is off, but the <em>current</em> status keeps
         its full contrast, because among seven pills a faded active one reads as
@@ -468,7 +469,7 @@ function OutcomeEditor() {
         setPending(true);
         // `.then` rather than an async handler: `onSave` returns void, and a promise
         // handed to a void callback is a promise nobody is watching for a rejection.
-        void beat().then(() => {
+        void beat(BEAT_MS).then(() => {
           setSaved(value);
           setPending(false);
           setEditing(false);
@@ -533,7 +534,7 @@ function ReplyEditor() {
         onSave={(value, file) => {
           setPending(true);
           setRejected(null);
-          void beat().then(() => {
+          void beat(BEAT_MS).then(() => {
             setSent(file ? `${value}  [+ ${file.name}]` : value);
             setPending(false);
             setSentCount((n) => n + 1);
@@ -549,10 +550,10 @@ function ReplyEditor() {
         attachment={attachment}
         resetKey={sentCount}
       />
-      {rejected && <p className="text-xs text-[var(--text-secondary)]">{rejected}</p>}
-      <p className="text-xs text-[var(--text-muted)]">
+      {rejected && <p className="text-xs text-secondary">{rejected}</p>}
+      <p className="text-xs text-muted">
         Last sent:{" "}
-        <span className="font-mono text-[var(--text-secondary)]">{sent ?? "— nothing yet —"}</span>
+        <span className="font-mono text-secondary">{sent ?? "— nothing yet —"}</span>
       </p>
       <Note>
         The box empties after a send because <code className="font-mono">resetKey</code> changes:
@@ -601,7 +602,7 @@ function DetailPanel() {
         title="Report"
         // `action` is the title's own line: an edit button, a resolved-at date, an id.
         action={
-          <span className="font-mono text-xs text-[var(--text-muted)]">
+          <span className="font-mono text-xs text-muted">
             {REPORT.id} · {REPORT.filed}
           </span>
         }
@@ -615,7 +616,7 @@ function DetailPanel() {
             label={CATEGORY_LABEL[REPORT.category]}
             compact
           />
-          <code className="font-mono text-xs text-[var(--text-muted)]">{REPORT.page}</code>
+          <code className="font-mono text-xs text-muted">{REPORT.page}</code>
         </Row>
       </FeedbackDetailSection>
 
@@ -625,7 +626,7 @@ function DetailPanel() {
 
       <FeedbackDetailSection
         title="Outcome"
-        action={<span className="text-xs text-[var(--text-muted)]">resolved {REPORT.resolved}</span>}
+        action={<span className="text-xs text-muted">resolved {REPORT.resolved}</span>}
       >
         <FeedbackProse>{REPORT.outcome}</FeedbackProse>
       </FeedbackDetailSection>
@@ -646,7 +647,7 @@ function StatusTokens({ statuses }: { statuses: readonly string[] }) {
       {statuses.map((s) => (
         <span
           key={s}
-          className="rounded border border-[var(--border)] bg-[var(--bg-surface-2)] px-1 whitespace-nowrap"
+          className="rounded border border-subtle bg-surface-2 px-1 whitespace-nowrap"
         >
           {s}
         </span>

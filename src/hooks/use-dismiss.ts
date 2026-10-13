@@ -1,31 +1,188 @@
 import { useEffect, useRef } from "react";
-import type { RefObject } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from "react";
+import { isComposing } from "../lib/ime";
+
+/*
+ * # One Escape stack (round 0.34 Wave 2, DUP-1)
+ *
+ * Escape closes the TOPMOST thing on screen, and only that: a list open in a dialog
+ * closes and the dialog stays; the next press closes the dialog.
+ *
+ * "Who owns Escape" used to be decided five ways. The anchored pickers listened on the
+ * document; Modal, FullBleedDialog, PickerSheet and Popover closed in their own panel's
+ * `onKeyDown` and stopped the key; CommandPalette closed without stopping it. A dialog's
+ * handler sits earlier on the key's path than any document listener, so Escape in an
+ * open list inside a Modal closed the MODAL and threw the form away (BUG-1, sev 4,
+ * kastlan's lease dialog), and HoverMenu, the numpad and a tooltip could not be
+ * dismissed inside a dialog at all. And Modal and FullBleedDialog disagreed on when a
+ * child had "claimed" the key: a ChipInput clearing its draft kept a Modal open and
+ * closed a FullBleedDialog.
+ *
+ * Now every overlay and picker pushes a layer while it is open ({@link useDismissLayer}),
+ * last in, first out, the way `use-overlay-history` stacks the Back gesture. One
+ * capture-phase listener on the document notes which layer is on top as each Escape
+ * goes down — before any handler on the page runs, so a layer that closes on the way
+ * cannot pass the key on to the one beneath it. That layer, and only that one, is
+ * handed the key:
+ *
+ * - at the first layer element the key passes on its way back up ({@link takeEscape},
+ *   which Modal's panel, a picker's search box and the rest call from their
+ *   `onKeyDown`). The key is stopped there, so nothing around the layers — a
+ *   FloatingPanel, an app's own panel — closes with it;
+ * - or, when focus is in none of them (a hover menu, a tooltip, the numpad over its
+ *   field, a press on the page), at the document once the key has been everywhere else.
+ *
+ * Layers stack in the order they OPEN, which is the order their effects run. Two that
+ * open in the same commit stack child first — the one case that order gets wrong, and
+ * one no overlay in the kit does: each opens on a press, after whatever it sits in.
+ *
+ * ## Claiming the key: one rule
+ *
+ * An Escape that means "undo this step" is not a dismissal: ChipInput clearing its
+ * draft, InlineEditField cancelling its edit, the date picker's month grid going back to
+ * the days. Those call {@link claimEscape}, and no layer is handed the key. The only
+ * other claim is the layer owner's OWN handler — a dialog's `onKeyDown` prop calling
+ * `preventDefault()` on Escape (a busy reauth dialog holding itself open, Kurvenschmiede's
+ * gear wizard asking first), through {@link runOwnKeyDown}. A `preventDefault()`
+ * anywhere else claims nothing: a search box keeping Chromium from clearing itself
+ * must not hold a dialog open (FullBleedDialog's 0.8.0 fix, which Modal never had).
+ *
+ * A handler that STOPS the key before it reaches a layer element has taken it too —
+ * that is the DOM, and it is what the kit's cell editors and confirm buttons do.
+ */
+
+/** A layer's handler, read through a ref so the stack holds one stable entry per open. */
+interface Layer {
+  escape: (e: KeyboardEvent) => void;
+}
+
+/** Open layers, oldest first. Module-level, because the order is ACROSS instances. */
+const layers: Layer[] = [];
+
+/** Escapes a claimant has taken — see {@link claimEscape}. Weak: an event is garbage
+ *  once its dispatch is over. */
+const claimed = new WeakSet<Event>();
+
+/** The Escape on its way through the page: the layer that was topmost as it went down,
+ *  and whether that layer has been handed it yet. */
+let inFlight: { event: KeyboardEvent; layer: Layer; done: boolean } | null = null;
+
+function nativeOf(e: KeyboardEvent | ReactKeyboardEvent): KeyboardEvent {
+  return "nativeEvent" in e ? e.nativeEvent : e;
+}
+
+function onCapture(e: KeyboardEvent): void {
+  if (e.key !== "Escape") return;
+  // An Escape inside an IME composition cancels the composition and nothing else.
+  const top = isComposing(e) ? undefined : layers[layers.length - 1];
+  inFlight = top ? { event: e, layer: top, done: false } : null;
+}
+
+/** The fallback: no layer element was on the key's path, or none took it. */
+function onBubble(e: KeyboardEvent): void {
+  handOver(e, false);
+}
+
+function handOver(e: KeyboardEvent | ReactKeyboardEvent, stop: boolean): boolean {
+  const native = nativeOf(e);
+  const flight = inFlight;
+  if (native.key !== "Escape" || !flight || flight.event !== native || flight.done) return false;
+  if (claimed.has(native)) return false;
+  flight.done = true;
+  // Consumed: a type="search" box does not clear itself as well, and a handler further
+  // out that checks `defaultPrevented` (FloatingPanel, an app's own panel) leaves it.
+  e.preventDefault();
+  if (stop) e.stopPropagation();
+  // A layer that closed on the way, by a handler of its own, has had its Escape.
+  if (layers.includes(flight.layer)) flight.layer.escape(native);
+  return true;
+}
+
+function push(layer: Layer): void {
+  if (layers.length === 0) {
+    document.addEventListener("keydown", onCapture, true);
+    document.addEventListener("keydown", onBubble);
+  }
+  layers.push(layer);
+}
+
+function pop(layer: Layer): void {
+  const at = layers.indexOf(layer);
+  if (at >= 0) layers.splice(at, 1);
+  if (layers.length > 0) return;
+  document.removeEventListener("keydown", onCapture, true);
+  document.removeEventListener("keydown", onBubble);
+  inFlight = null;
+}
 
 /**
- * Calls `handler` on an Escape keydown while `enabled`. A single document-level
- * listener owns the "press Escape to dismiss" behaviour that popovers, flyouts
- * and menus otherwise each re-implement. `handler` is read live at event time,
- * so it need not be memoised and the listener only re-subscribes when `enabled`
- * flips (typically the open/closed transition).
+ * An Escape layer on the stack while `open`: the topmost layer is handed the next
+ * Escape and calls `onEscape`, every layer under it waits its turn. A list opened inside
+ * a dialog is above the dialog; a popover opened from a list, above the list.
+ *
+ * Where focus can be INSIDE the layer, its element's `onKeyDown` calls
+ * {@link takeEscape} too, so the key stops there — see the module note. `onEscape` is
+ * read live, so it need not be memoised; the layer is pushed and popped only when
+ * `open` flips.
  */
-export function useEscapeKey(handler: () => void, enabled = true): void {
-  const handlerRef = useRef(handler);
+export function useDismissLayer(open: boolean, onEscape: (e: KeyboardEvent) => void): void {
+  const handlerRef = useRef(onEscape);
   // Written in an effect, not during render, so it satisfies react-hooks/refs: a
   // render that React starts and then discards — a transition, a Suspense retry —
   // would otherwise leave this holding a handler from a tree that never committed,
-  // and the document listener below would go on to call it. Keydown events fire
-  // after the commit, so the ref is always current by the time one arrives.
+  // and the stack would go on to call it. Keydown events fire after the commit, so
+  // the ref is always current by the time one arrives.
   useEffect(() => {
-    handlerRef.current = handler;
+    handlerRef.current = onEscape;
   });
   useEffect(() => {
-    if (!enabled) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handlerRef.current();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [enabled]);
+    if (!open || typeof document === "undefined") return;
+    const layer: Layer = { escape: (e) => handlerRef.current(e) };
+    push(layer);
+    return () => pop(layer);
+  }, [open]);
+}
+
+/**
+ * For a layer's own element, in its `onKeyDown`: hands an Escape on its way up to the
+ * topmost layer — this one, unless something opened over it without taking focus (a
+ * tooltip, the numpad) — and stops it here. True when it did; false for any other key,
+ * a claimed Escape, or one already handed over.
+ */
+export function takeEscape(e: KeyboardEvent | ReactKeyboardEvent): boolean {
+  return handOver(e, true);
+}
+
+/**
+ * For an Escape that means "undo this step", not "close": the key is the caller's, and
+ * no layer is handed it. `preventDefault()`s it as well, so a handler further out that
+ * checks `defaultPrevented` leaves it alone, as before.
+ */
+export function claimEscape(e: KeyboardEvent | ReactKeyboardEvent): void {
+  claimed.add(nativeOf(e));
+  e.preventDefault();
+}
+
+/**
+ * Runs a layer owner's own key handler — a dialog's `onKeyDown` prop — and turns a
+ * `preventDefault()` it makes on Escape into a claim: the one way, beside
+ * {@link claimEscape}, to keep a layer open.
+ */
+export function runOwnKeyDown<E extends ReactKeyboardEvent>(e: E, handler: ((e: E) => void) | undefined): void {
+  if (!handler) return;
+  const before = e.defaultPrevented;
+  handler(e);
+  if (e.key === "Escape" && !before && e.defaultPrevented) claimed.add(nativeOf(e));
+}
+
+/**
+ * Calls `handler` on an Escape while `enabled` — as an Escape layer. Since 0.34 this is
+ * {@link useDismissLayer} with its arguments the other way round: it hears the key only
+ * while nothing opened above it, and inside a dialog it no longer loses the key to the
+ * dialog (Wave 2, DUP-1). `handler` is read live, so it need not be memoised.
+ */
+export function useEscapeKey(handler: () => void, enabled = true): void {
+  useDismissLayer(enabled, handler);
 }
 
 /**
@@ -56,7 +213,7 @@ export function useOutsideClick(
 ): void {
   const refsRef = useRef(refs);
   const handlerRef = useRef(handler);
-  // In an effect rather than during render — see the note on useEscapeKey.
+  // In an effect rather than during render — see the note in useDismissLayer.
   useEffect(() => {
     refsRef.current = refs;
     handlerRef.current = handler;

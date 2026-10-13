@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { personInitials } from "../lib/person-name";
 import type { PersonName } from "../lib/person-name";
@@ -31,7 +31,7 @@ const AVATAR_SIZES = {
 } as const;
 
 const CHIP =
-  "inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--bg-inverse)] font-semibold text-[var(--text-inverse)]";
+  "inline-flex shrink-0 items-center justify-center rounded-full bg-inverse font-semibold text-inverse";
 
 /** The dot grows with the avatar: 8px on `sm`, 10px on `md` (keksdose's), 12px on `lg`. */
 const BADGE_SIZES: Record<keyof typeof AVATAR_SIZES, StatusDotSize> = { sm: "sm", md: "md", lg: "lg" };
@@ -47,7 +47,7 @@ export interface UserAvatarBadge {
 
 /** A `<span>`'s props, minus `children`: the content is the initials this computes
  *  from `person`/`name`/`email`, so there is nothing for a caller to put inside. */
-export interface UserAvatarProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
+export interface UserAvatarProps extends Omit<ComponentPropsWithRef<"span">, "children"> {
   name?: string | null;
   email?: string | null;
   /**

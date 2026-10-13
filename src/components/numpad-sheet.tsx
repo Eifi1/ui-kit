@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
-import { useEscapeKey } from "../hooks/use-dismiss";
+import { useDismissLayer } from "../hooks/use-dismiss";
 import { evaluateExpression, formatResult, sanitizeLive } from "../lib/calc";
 import {
   DEFAULT_CALCULATOR_LABELS,
@@ -179,17 +179,17 @@ export function NumberPadSheet({
   // `role="group"`, not a dialog. A keyboard does not trap focus; it is what you type
   // WITH.
   //
-  // What was genuinely missing is a way OUT that is not a tap. `useEscapeKey` and not
-  // a handler on the sheet, because the sheet never has the focus a keydown would
-  // bubble from — the host does, and the host is not this component. Escape does what
-  // the Done key does rather than cancelling, because committing on blur is the
-  // host's contract and a cancel would have to be the host's to offer.
+  // What was genuinely missing is a way OUT that is not a tap. A layer on the kit's
+  // Escape stack and not a handler on the sheet, because the sheet never has the focus
+  // a keydown would bubble from — the host does, and the host is not this component.
+  // Escape does what the Done key does rather than cancelling, because committing on
+  // blur is the host's contract and a cancel would have to be the host's to offer.
   //
-  // The limit, since it is better written down than discovered: inside a `Modal` the
-  // dialog's own Escape handler sits on the focus path and stops the event before a
-  // document listener sees it, so there the press closes the dialog — which it did
-  // before this line existed too, and which takes the pad with it either way.
-  useEscapeKey(onDone);
+  // Inside a `Modal` the pad opened over the dialog, so the stack hands the first
+  // Escape to the pad and the next to the dialog (Wave 2, DUP-1). It used to be the
+  // other way round, written down here as the limit: the dialog's own handler stopped
+  // the key before a document listener saw it, and the press closed the dialog.
+  useDismissLayer(true, onDone);
 
   const result = evaluateExpression(value);
   const preview = result !== null && formatResult(result) !== value.trim() ? `= ${formatResult(result)}` : "";
@@ -212,20 +212,20 @@ export function NumberPadSheet({
       // Keep the host input focused when tapping the pad: preventDefault on
       // pointerdown blocks the focus/blur, while the buttons' click still fires.
       onPointerDown={(e) => e.preventDefault()}
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--border)] bg-[var(--bg-surface)] px-2 pt-2 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-subtle bg-surface px-2 pt-2 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
     >
       {/* Header display: which field + the running expression and live result, so
           the value stays visible even when the sheet covers the field. */}
       <div className="flex items-end justify-between gap-3 px-2 pb-2">
         {label != null && (
-          <span className="truncate pb-1 text-xs font-medium text-[var(--money-neutral)]">{label}</span>
+          <span className="truncate pb-1 text-xs font-medium text-money-neutral">{label}</span>
         )}
         {/* At the logical end, opposite the label; the figures themselves stay
             left-to-right and right-aligned, like the desktop calculator's. */}
         <div className="ms-auto min-w-0">
-          <div dir="ltr" className="truncate text-right font-mono text-lg leading-tight text-[var(--text-primary)]">{value || "0"}</div>
-          <div dir="ltr" className="h-4 text-right font-mono text-xs text-[var(--money-neutral)]">{preview}</div>
+          <div dir="ltr" className="truncate text-right font-mono text-lg leading-tight text-primary">{value || "0"}</div>
+          <div dir="ltr" className="h-4 text-right font-mono text-xs text-money-neutral">{preview}</div>
         </div>
       </div>
 
@@ -271,7 +271,7 @@ export function NumberPadSheet({
           // on screen, which is the defect this change exists to fix.
           className={cn(
             PAD_BTN,
-            "col-span-2 bg-[var(--brand)] text-[var(--brand-contrast)] focus-visible:ring-[var(--brand-contrast)] active:bg-[var(--brand-hover)]",
+            "col-span-2 bg-brand text-brand-contrast focus-visible:ring-brand-contrast active:bg-brand-hover",
           )}
         >
           {text.done}

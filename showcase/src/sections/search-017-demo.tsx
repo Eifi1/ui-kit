@@ -2,15 +2,13 @@ import { useState } from "react";
 import { Building2, FileText, Home, Users } from "lucide-react";
 import { GlobalSearch } from "@eifi1/ui-kit";
 import type { GlobalSearchSource, SearchEntry } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, READOUT } from "../lib/section";
 
 /**
  * 0.17.0 — a `GlobalSearch` source that fills several groups from ONE request
  * (`groups`), as kastlan's record search does: one server call answers with properties,
  * units, contacts and leases at once.
  */
-
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
 
 type Kind = "estate" | "unit" | "contact" | "lease";
 
@@ -87,9 +85,9 @@ export function Search017Demo() {
             navigate={setWent}
             hrefFor={(href) => href}
             shortcut={false}
-            triggerClassName="border border-[var(--border)]"
+            triggerClassName="border border-subtle"
           />
-          <span className="text-xs text-[var(--text-secondary)]">← open, then type “müller” or “park”</span>
+          <span className="text-xs text-secondary">← open, then type “müller” or “park”</span>
         </Row>
         <OutTable
           rows={[

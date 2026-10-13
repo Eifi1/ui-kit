@@ -56,9 +56,9 @@ describe("FloatingActionButton — extended, live, surface", () => {
 
   it("variant=surface paints the page surface instead of the brand", () => {
     render(<FloatingActionButton variant="surface" extended label="Offline" icon="·" disabled />);
-    const cls = screen.getByRole("button", { name: "Offline" }).className;
-    expect(cls).toContain("bg-[var(--bg-surface)]");
-    expect(cls).not.toContain("bg-[var(--brand)]");
+    const button = screen.getByRole("button", { name: "Offline" });
+    expect(button).toHaveClass("bg-surface");
+    expect(button).not.toHaveClass("bg-brand");
   });
 
   it("pins an extended pill to the logical start corner in RTL", () => {
@@ -188,7 +188,7 @@ describe("FloatingActionGroup", () => {
     expect(toggle).toHaveAttribute("aria-pressed", "false");
     await user.keyboard(" ");
     expect(toggle).toHaveAttribute("aria-pressed", "true");
-    expect(toggle.className).toContain("bg-[var(--brand-bg)]");
+    expect(toggle).toHaveClass("bg-brand-soft");
     // Each member its own tab stop, in reading order.
     await user.tab();
     expect(screen.getByRole("link", { name: "Invoices" })).toHaveFocus();
@@ -196,7 +196,7 @@ describe("FloatingActionGroup", () => {
     const add = screen.getByRole("button", { name: "Add" });
     expect(add).toHaveFocus();
     expect(add).not.toHaveAttribute("aria-pressed");
-    expect(add.className).toContain("bg-[var(--brand)]");
+    expect(add).toHaveClass("bg-brand");
     await user.keyboard("{Enter}");
     expect(onAdd).toHaveBeenCalledTimes(1);
   });
@@ -238,7 +238,7 @@ describe("FloatingActionGroup", () => {
     );
     expect(screen.getByRole("button", { name: "Rechnungen, 2 neu" })).toBeInTheDocument();
     const inbox = screen.getByRole("button", { name: "Inbox, 5 unread" });
-    expect(inbox.querySelector("[data-badge]")!.className).toContain("bg-danger");
+    expect(inbox.querySelector("[data-badge]")!).toHaveClass("bg-danger");
     expect(inbox.querySelector("[data-badge]")!.className).toContain("text-danger-contrast");
   });
 
@@ -250,7 +250,7 @@ describe("FloatingActionGroup", () => {
       </FloatingActionGroup>,
     );
     const badge = screen.getByRole("button", { name: /^Review/ }).querySelector("[data-badge]")!;
-    expect(badge.className).toContain("bg-warning");
+    expect(badge).toHaveClass("bg-warning");
     expect(badge.className).toContain("text-warning-contrast");
     expect(badge.className).not.toContain("text-inverse");
   });
@@ -335,12 +335,12 @@ describe("FloatingAction — the provider's router link and pressedStyle", () =>
         <FloatingAction label="Passed" icon="◉" aria-pressed tooltip={false} />
       </FloatingActionGroup>,
     );
-    expect(screen.getByRole("button", { name: "Tinted" }).className).toContain("bg-[var(--brand-bg)]");
+    expect(screen.getByRole("button", { name: "Tinted" })).toHaveClass("bg-brand-soft");
     const plain = screen.getByRole("button", { name: "Plain" });
     expect(plain).toHaveAttribute("aria-pressed", "true");
-    expect(plain.className).not.toContain("bg-[var(--brand-bg)]");
+    expect(plain).not.toHaveClass("bg-brand-soft");
     const passed = screen.getByRole("button", { name: "Passed" });
     expect(passed).toHaveAttribute("aria-pressed", "true");
-    expect(passed.className).not.toContain("bg-[var(--brand-bg)]");
+    expect(passed).not.toHaveClass("bg-brand-soft");
   });
 });

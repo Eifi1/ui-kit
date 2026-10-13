@@ -49,23 +49,28 @@ describe("CommandPalette revision", () => {
   });
 
   it("does not re-search merely because the caller rebuilt the callback", async () => {
-    const search = vi.fn(() => [{ id: "a", label: "Only page", group: "Pages", onSelect: () => {} }]);
-    const { rerender } = render(
-      <CommandPalette open onClose={vi.fn()} search={search} revision={1} />,
-    );
-    await screen.findByText("Only page");
-    const before = search.mock.calls.length;
+    // Fake timers: a search runs behind the debounce's timer, and a real 50 ms sleep before
+    // asserting "no re-run" passed under load whether or not one was on its way (TST-11).
+    // Running every timer settles it either way.
+    vi.useFakeTimers();
+    try {
+      const page = () => [{ id: "a", label: "Only page", group: "Pages", onSelect: () => {} }];
+      const search = vi.fn(page);
+      const { rerender } = render(<CommandPalette open onClose={vi.fn()} search={search} revision={1} />);
+      await act(() => vi.runAllTimersAsync());
+      expect(screen.getByText("Only page")).toBeInTheDocument();
+      const before = search.mock.calls.length;
 
-    // Same revision, brand-new callback identity — the case the ref exists for.
-    rerender(
-      <CommandPalette
-        open
-        onClose={vi.fn()}
-        search={vi.fn(() => [{ id: "a", label: "Only page", group: "Pages", onSelect: () => {} }])}
-        revision={1}
-      />,
-    );
-    await new Promise((r) => setTimeout(r, 50));
-    expect(search.mock.calls.length).toBe(before);
+      // Same revision, brand-new callback identity — the case the ref exists for. The
+      // palette reads its provider through that ref, so a re-run would call THIS one: the
+      // assertion is on it, not on the old one, which no re-run would reach.
+      const rebuilt = vi.fn(page);
+      rerender(<CommandPalette open onClose={vi.fn()} search={rebuilt} revision={1} />);
+      await act(() => vi.runAllTimersAsync());
+      expect(rebuilt).not.toHaveBeenCalled();
+      expect(search).toHaveBeenCalledTimes(before);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

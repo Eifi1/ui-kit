@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { TopBar } from "../shell/top-bar";
 import type { TopBarProps } from "../shell/top-bar";
@@ -10,6 +10,7 @@ import type { AccessChoice } from "./access";
 import { useLandingLabels } from "./landing-labels";
 import type { LandingLabels } from "./landing-labels";
 import type { LandingSession } from "./landing-actions";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 /** The header's brand: what `TopBarBrand` draws. */
 export interface PublicHeaderBrand {
@@ -40,7 +41,7 @@ export interface PublicHeaderProps extends Omit<TopBarProps, "brand" | "actions"
   languageMenu?: ReactNode;
   /** The app's `ThemeToggle`, before the language menu. */
   themeToggle?: ReactNode;
-  labels?: Partial<LandingLabels>;
+  labels?: LabelOverride<LandingLabels>;
 }
 
 /**

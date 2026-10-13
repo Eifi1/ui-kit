@@ -1,15 +1,16 @@
-import { useId, useState } from "react";
+import { useId, useState, useRef } from "react";
 import {
   cn,
   FieldChevron,
   FieldHint,
   FieldLabel,
   FloatingField,
+  HelpPopover,
   Input,
   SearchField,
   Select,
   Textarea,
-  useMediaQuery,
+  usePhoneLayout,
   FIELD_BASE,
   FIELD_DISPLAY,
   FIELD_FLOATING_PAD,
@@ -19,9 +20,10 @@ import {
   FLOATING_INPUT_CLASS,
   FLOATING_LABEL_CLASS,
   FLOATING_LABEL_STATIC,
-  PHONE_QUERY,
+  ToggleGroup,
 } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, Row, Stage } from "../lib/section";
+import { ConstList, Example, Note, Row, Stage, code } from "../lib/section";
+import { TimeInput } from "../../../src/components/time-input";
 
 /** The three the trigger specimen cycles through — a stand-in for a real menu, so
  *  the trigger is something you can actually operate rather than a still. */
@@ -65,6 +67,7 @@ export function Fields() {
   const [staticRef, setStaticRef] = useState("INV-2026-0142");
   const [period, setPeriod] = useState("q3");
   const [listPick, setListPick] = useState("eur");
+  const [status, setStatus] = useState("cleared");
 
   // Ids are ours to mint here because these specimens assemble FloatingField by
   // hand; the Input/Select/Textarea wrappers generate their own.
@@ -77,7 +80,7 @@ export function Fields() {
 
   // The display treatment is not a style you choose, it is a style the VIEWPORT
   // chooses — so the specimen says out loud whether it is switched on right now.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
 
   const emailInvalid = email.trim() !== "" && !email.includes("@");
   const reasonInvalid = reason.length > 80;
@@ -110,7 +113,7 @@ export function Fields() {
               keeps React from warning about a value with no onChange. */}
           <Input className="w-56 max-w-full" label="Closed on" disabled readOnly value="12 March 2024" />
         </Row>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           Clear the second field and click away: the label drops back to the centre. The float is
           driven by <code className="font-mono">:placeholder-shown</code>, which is why a labelled
           Input forces its placeholder to a single space — pass your own and it is ignored.
@@ -137,7 +140,7 @@ export function Fields() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           The highlight is a border <em>plus</em> a 1px ring, not a thicker border. A ring is a
           box-shadow, so it adds no layout and nothing beside the field moves when the value arrives
           — and at 125% display scaling the two together guarantee one fully covered device pixel on
@@ -184,7 +187,7 @@ export function Fields() {
             value="hunter2"
           />
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           The third field passes{" "}
           <code className="font-mono">
             passwordLabels={"{{"} show, hide {"}}"}
@@ -255,13 +258,13 @@ export function Fields() {
                 error={statesReason.trim() === "" ? "Say why the entry is returned." : undefined}
               />
             </div>
-            <p id={ibanHintId} className="text-xs text-[var(--text-muted)]">
+            <p id={ibanHintId} className="text-xs text-muted">
               IBAN hint: 22 characters for a German account — this line is the IBAN field&apos;s
               own <code className="font-mono">aria-describedby</code>.
             </p>
           </div>
         </Stage>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           The last column passes <code className="font-mono">error</code>: the message renders under
           the field, implies <code className="font-mono">invalid</code>, and is attached through{" "}
           <code className="font-mono">aria-describedby</code> — MERGED with one the caller passed
@@ -275,7 +278,7 @@ export function Fields() {
 
       <Example
         label='Input — variant="display"'
-        hint={`applies only below 768px; PHONE_QUERY matches right now: ${String(isPhone)}`}
+        hint={`applies only in the phone layout; usePhoneLayout() says ${String(isPhone)} right now`}
       >
         <Stage>
           <div className="space-y-4">
@@ -300,7 +303,7 @@ export function Fields() {
             </FloatingField>
           </div>
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           Narrow the window past 768px and the first field becomes the second. The chrome goes so
           the one field a form is about reads as the thing itself; a hairline baseline stays, and
           the label goes <code className="font-mono">sr-only</code> rather than away — display type
@@ -322,7 +325,7 @@ export function Fields() {
             value={TWO_FACTOR_CODE}
           />
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           The grey is matched on the <code className="font-mono">[readonly]</code> ATTRIBUTE, never
           the <code className="font-mono">:read-only</code> pseudo-class — per Selectors 4 that
           pseudo-class matches everything that is not <code className="font-mono">:read-write</code>
@@ -352,7 +355,7 @@ export function Fields() {
             onChange={(e) => setAmount(e.target.value)}
           />
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           <code className="font-mono">className</code> and{" "}
           <code className="font-mono">inputClassName</code> are not interchangeable: once a{" "}
           <code className="font-mono">label</code> turns an Input into a FloatingField,{" "}
@@ -402,7 +405,7 @@ export function Fields() {
             <option value="personal">Personal</option>
           </Select>
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           Pick an account and the rose ring goes. The third select is disabled and has{" "}
           <em>dropped its chevron</em> on purpose: the arrow is the one thing on the control that
           promises a choice, and a read-only account type that still looked like a picker is what
@@ -425,7 +428,7 @@ export function Fields() {
               <option value="q3">Q3 2026</option>
               <option value="q2">Q2 2026</option>
             </Select>
-            <span className="text-xs text-[var(--text-muted)]">size=&quot;sm&quot; · {period}</span>
+            <span className="text-xs text-muted">size=&quot;sm&quot; · {period}</span>
           </div>
           {/* `selectClassName` reaches the <select>; `className` (the width here) stays
               on the wrapper the chevron is positioned against. */}
@@ -469,7 +472,7 @@ export function Fields() {
             <option value="it">Italy</option>
           </Select>
         </Stage>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           <code className="font-mono">size=&quot;sm&quot;</code> is honoured by unlabelled selects
           only — a floating label needs the tall box to float in, so a labelled Select ignores it.{" "}
           <code className="font-mono">size={"{4}"}</code> passes straight through as the HTML
@@ -535,7 +538,7 @@ export function Fields() {
               <option value="booking">Booking date</option>
             </Select>
             <div>
-              <p className="mb-2 text-xs text-[var(--text-muted)]">
+              <p className="mb-2 text-xs text-muted">
                 Every side — hover or tab to each. <code>start</code> (the default) and{" "}
                 <code>end</code> follow the reading direction; <code>left</code>/<code>right</code>{" "}
                 are the screen&apos;s. The bubble is portalled, so it measures
@@ -545,13 +548,80 @@ export function Fields() {
                 {(["start", "end", "left", "right", "top", "bottom"] as const).map((side) => (
                   <span key={side} className="inline-flex items-center gap-1.5">
                     <FieldHint label={`side="${side}"`} side={side} />
-                    <code className="font-mono text-xs text-[var(--text-secondary)]">{side}</code>
+                    <code className="font-mono text-xs text-secondary">{side}</code>
                   </span>
                 ))}
               </Row>
             </div>
           </div>
         </Stage>
+      </Example>
+
+      <Example
+        label="HelpPopover — paragraph-long help behind “?”"
+        hint="tap, click or Enter opens it; Escape, a second press or a press outside closes it — at every text size and on a phone"
+      >
+        <Stage>
+          <div className="space-y-4">
+            {/* keksdose K3 (live #400): the status explanation, ~500 characters, was a
+                FieldHint, and since 0.32 a FieldHint prints its words under the field on a
+                touch screen and at Large — the longest thing in the form. Help the field
+                is usable without goes behind this "?" instead; a fact stays a FieldHint. */}
+            <Select
+              className="w-64 max-w-full"
+              label="Status"
+              hint={
+                <HelpPopover label="What do the statuses mean?">
+                  <p>
+                    <strong>Pending</strong> — entered here, not yet seen by the bank.
+                  </p>
+                  <p>
+                    <strong>Accepted</strong> — the bank has it, but it has not been booked.
+                  </p>
+                  <p>
+                    <strong>Cleared</strong> — booked: it is on the statement.
+                  </p>
+                  <p>
+                    <strong>Reconciled</strong> — checked against the statement and locked.
+                  </p>
+                </HelpPopover>
+              }
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="pending">Pending</option>
+              <option value="accepted">Accepted</option>
+              <option value="cleared">Cleared</option>
+              <option value="reconciled">Reconciled</option>
+            </Select>
+            {/* The pair side by side: the FACT stays a FieldHint (a caption at Large and
+                on touch), the HELP is a HelpPopover (a "?" at every size). */}
+            <Input
+              className="w-64 max-w-full"
+              label="Settlement date"
+              hint={<FieldHint label="Two working days after the trade." />}
+            />
+            <Input
+              className="w-64 max-w-full"
+              label="Reference"
+              hint={
+                <HelpPopover label="About the reference">
+                  The bank prints it on the counterparty&apos;s statement, so they can match the payment to an
+                  invoice. Leave it empty for a transfer between your own accounts.
+                </HelpPopover>
+              }
+            />
+          </div>
+        </Stage>
+        <Note>
+          <strong>Help, not a fact</strong> (text size §10.23): a FieldHint holds a fact — a format, a limit, a
+          consequence — and turns into the field&apos;s caption at Large and on a touch screen, because a fact a finger
+          cannot hover open is a fact the reader does not have. Help the field is usable without — why, how, what the
+          options mean — may sit behind this &ldquo;?&rdquo;, which stays a &ldquo;?&rdquo; at every size and opens the
+          kit Popover: a dialog named by <code className="font-mono">label</code> (a short question, or &ldquo;About
+          …&rdquo;) and described by the help, with the focus inside it. Any field that takes a{" "}
+          <code className="font-mono">hint</code> puts it on its label line.
+        </Note>
       </Example>
 
       <Example label="Textarea" hint="type past 80 characters in the third to raise the ring">
@@ -572,11 +642,11 @@ export function Fields() {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
-              <p className="mt-1 text-xs text-[var(--text-muted)]">{reason.length} / 80</p>
+              <p className="mt-1 text-xs text-muted">{reason.length} / 80</p>
             </div>
           </div>
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
+        <p className="mt-3 text-xs text-muted">
           Textarea has no <code className="font-mono">inputClassName</code> escape hatch and no{" "}
           <code className="font-mono">hint</code> slot — on a labelled one,{" "}
           <code className="font-mono">className</code> reaches the wrapper only. Compose with{" "}
@@ -694,13 +764,6 @@ export function Fields() {
               clearLabel="Clear filter"
               disabled
             />
-            {/* The deprecated spelling still works, and names the field only when
-                `aria-label` is absent. */}
-            <SearchField
-              value={plainQuery}
-              onChange={setPlainQuery}
-              label="Deprecated label= spelling"
-            />
             <div dir="rtl">
               <SearchField
                 value={rtlQuery}
@@ -709,14 +772,13 @@ export function Fields() {
                 clearLabel="مسح"
               />
             </div>
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               Current value: <code className="font-mono">{JSON.stringify(query)}</code>
             </p>
           </div>
         </Stage>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
-          A name is required — <code className="font-mono">aria-label</code>, or the deprecated{" "}
-          <code className="font-mono">label</code> — and the placeholder falls back to it, never the
+        <p className="mt-3 text-xs text-muted">
+          A name is required — <code className="font-mono">aria-label</code> — and the placeholder falls back to it, never the
           other way round — a placeholder vanishes the moment someone types, so a field named only
           by one is unnamed exactly when a screen-reader user is working in it. Omitting{" "}
           <code className="font-mono">clearLabel</code> removes the clear button entirely, and the
@@ -777,10 +839,165 @@ export function FieldClassConstants() {
             ["FLOATING_INPUT_CLASS", FLOATING_INPUT_CLASS],
             ["FLOATING_LABEL_CLASS", FLOATING_LABEL_CLASS],
             ["FLOATING_LABEL_STATIC", FLOATING_LABEL_STATIC],
-            ["PHONE_QUERY", PHONE_QUERY],
           ]}
         />
       </Example>
     </>
+  );
+}
+
+/* ── since 0.25 ─────────────────────────────────────────────────────────── */
+
+// A recorder export with decimal commas — every row has the commas whose tails the
+// report was about.
+const TABLE = [
+  "zeit;soll;ist",
+  ...Array.from({ length: 40 }, (_, i) => {
+    const t = (i * 0.5).toFixed(1).replace(".", ",");
+    const set = (i < 8 ? 20 : 22).toFixed(1).replace(".", ",");
+    const act = (i < 8 ? 19.8 : 22 - 2.2 * Math.exp(-(i - 8) / 5)).toFixed(2).replace(".", ",");
+    return `${t};${set};${act}`;
+  }),
+].join("\n");
+
+const NOTES = Array.from(
+  { length: 12 },
+  (_, i) => `Run ${i + 1}: gently quiet, typography by jumping glyphs; quality kept, yields okay.`,
+).join("\n");
+
+/** Where to put the fields: so many pixels of the line on its way out left below the
+ *  strip. The field's lines are 20px (text-sm), and three lines are scrolled past. */
+const POSITIONS = {
+  tails: 4,
+  half: 10,
+  more: 13,
+  boundary: 0,
+  top: -1,
+} as const;
+
+type Position = keyof typeof POSITIONS;
+
+const scrollFor = (position: Position) => {
+  const left = POSITIONS[position];
+  if (left < 0) return 0;
+  return left === 0 ? 60 : 60 + (20 - left);
+};
+
+/** Open in the state the report was about — a line scrolled all but its tails away.
+ *  Module-level, so it is one stable ref and runs on mount only, never under typing. */
+const opened = (el: HTMLTextAreaElement | null) => {
+  if (el) el.scrollTop = scrollFor("tails");
+};
+
+export function TextareaEdge025Demo() {
+  const [table, setTable] = useState(TABLE);
+  const [notes, setNotes] = useState(NOTES);
+  const [position, setPosition] = useState<Position>("tails");
+  const box = useRef<HTMLDivElement>(null);
+  const place = (next: Position) => {
+    setPosition(next);
+    for (const field of box.current?.querySelectorAll("textarea") ?? []) field.scrollTop = scrollFor(next);
+  };
+  return (
+    <Example
+      label="Textarea — the label strip's lower edge"
+      hint="both fields open with a line scrolled all but its tails under the label; pick another position"
+    >
+      <div className="flex flex-col gap-4">
+        <ToggleGroup
+          aria-label="Scroll position"
+          size="sm"
+          value={position}
+          onChange={(v) => place(v as Position)}
+          options={[
+            { value: "tails", label: "4px left" },
+            { value: "half", label: "Half a line" },
+            { value: "more", label: "13px left" },
+            { value: "boundary", label: "On a line" },
+            { value: "top", label: "At rest" },
+          ]}
+        />
+        <div ref={box} className="grid gap-4 md:grid-cols-2">
+          <Textarea
+            ref={opened}
+            label="Paste a table"
+            rows={5}
+            wrap="off"
+            spellCheck={false}
+            className="font-mono"
+            value={table}
+            onChange={(e) => setTable(e.target.value)}
+          />
+          <Textarea
+            ref={opened}
+            label="Notes on the runs"
+            rows={5}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </div>
+        <Note>
+          Kurvenschmiede, on 0.24: under the label strip, a line scrolled most of the way out
+          left a row of comma tails above the first whole line. The strip&apos;s edge now follows
+          the scroll. Half a line or less left: covered, solid, to exactly where that line ends —
+          the strip snaps to the line box, and the next line is untouched. More than half: a 3px
+          soft edge instead of a cut. On a line boundary, and at rest, nothing at all — an
+          unscrolled first line is never covered. It is a pseudo-element of the strip, so it
+          inherits the strip&apos;s surface ({code("--bg-surface")}, {code("--bg-surface-2")} when
+          disabled or read-only, both themes), its scrollbar inset and its RTL side.
+        </Note>
+      </div>
+      <Note>Since 0.25.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+export function Fields022Demo() {
+  const [note, setNote] = useState("");
+  const [subject, setSubject] = useState("Maintenance on Saturday");
+  const [start, setStart] = useState("08:30");
+  return (
+    <Example
+      label="Placeholder, hint and counter on a labelled field"
+      hint="kastlan 8, keksdose K4 and K11"
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input label="Access note" placeholder="e.g. the key is with the caretaker" />
+        <Input label="IBAN" hint="22 characters, spaces allowed" />
+        <Input label="Interest rate" hint={<FieldHint label="Per year, before tax" />} />
+        <TimeInput label="Start" value={start} onValueChange={setStart} hint="Local time at the site" />
+        <Input
+          label="Subject"
+          maxLength={60}
+          showCount
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+        />
+        <Input aria-label="Reference" placeholder="Reference" hint={<FieldHint label="From the letter, top right" />} />
+        <div className="sm:col-span-2">
+          <Textarea
+            label="Note for the tenant"
+            placeholder="Anything they should know before the visit"
+            hint="Shown in the tenant's inbox"
+            maxLength={120}
+            showCount
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
+      </div>
+      <Note>
+        A labelled field keeps a caller&apos;s {code("placeholder")} and shows it once the label has floated up (focus
+        the first field). {code("hint")} follows Select&apos;s rule: text is a caption under the field, on its{" "}
+        {code("aria-describedby")} before any error; a {code("FieldHint")} rides the label line, or the end edge when
+        there is no label. {code("showCount")} with {code("maxLength")} reads as &quot;12 of 60 characters&quot; with the
+        field and is announced only on entering the last tenth and at the limit — type into Subject to see the colours
+        turn.
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
   );
 }

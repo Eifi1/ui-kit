@@ -2,7 +2,7 @@ import { useId, useLayoutEffect, useRef } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { Link } from "react-router";
 import { cn } from "../lib/cn";
-import { HoverMenu } from "../components/hover-menu";
+import { HoverMenu, type HoverMenuProps } from "../components/hover-menu";
 import { MenuItem } from "../components/menu-item";
 import type { MenuItemTone } from "../components/menu-item";
 import { StatusDot } from "../components/status-dot";
@@ -68,7 +68,7 @@ export type TopBarMenuEntry =
        *
        * The menu-wide `heading` prop is the panel's title, drawn once above everything;
        * with group headings it is usually redundant (two stacked caps lines read as one),
-       * and the trigger's `ariaLabel` already names the menu.
+       * and the trigger's `aria-label` already names the menu.
        */
       kind: "heading";
       key: string;
@@ -180,6 +180,23 @@ function keepTabInsidePanel(e: ReactKeyboardEvent<HTMLUListElement>) {
 }
 
 /**
+ * Names the trigger and the menu: one of the two spellings is required (API-1, refactor
+ * audit 2026-10). `aria-label` wins when both are given. OptionSwitcherMenu has the same
+ * type; both become a plain required `aria-label` when `ariaLabel` goes in 0.35.
+ */
+type RequiredMenuName =
+  | {
+      "aria-label": string;
+      /** @deprecated 0.34 — use `aria-label`; removed in 0.35. */
+      ariaLabel?: string;
+    }
+  | {
+      "aria-label"?: string;
+      /** @deprecated 0.34 — use `aria-label`; removed in 0.35. */
+      ariaLabel: string;
+    };
+
+/**
  * A top-bar icon button that opens a {@link HoverMenu} of actions and/or links,
  * with an optional uppercase heading and divider rules. Generic glue over the
  * shared top-bar chrome — e.g. the feedback launcher or the guided-tours menu —
@@ -202,7 +219,8 @@ export function TopBarActionMenu({
   trigger,
   triggerClassName,
   href,
-  ariaLabel,
+  "aria-label": ariaLabelAttr,
+  ariaLabel: ariaLabelProp,
   heading,
   header,
   entries,
@@ -226,11 +244,11 @@ export function TopBarActionMenu({
    * INSIDE the kit's button, which keeps the wiring: `aria-haspopup`, `aria-expanded`,
    * the toggle, the keyboard. `open` is there for a chevron that turns.
    *
-   * The button is named by `ariaLabel` followed by any readable text in the face — a
+   * The button is named by `aria-label` followed by any readable text in the face — a
    * `UserAvatar` `badge` label reaches a screen reader that way ("Account menu 3
    * unread"), where an `aria-label` on the button would have hidden it. A
    * `UserAvatar`'s initials are `aria-hidden`, so the person's name is only in the
-   * name if `ariaLabel` carries it ("Marcel Eifert, account menu").
+   * name if `aria-label` carries it ("Marcel Eifert, account menu").
    */
   trigger?: (state: { open: boolean }) => ReactNode;
   /** Extra classes for the trigger button — `rounded-full` round an avatar. */
@@ -243,12 +261,10 @@ export function TopBarActionMenu({
    * row, so the rows stay reachable by keyboard. A tap on a touch screen follows the
    * link — so use it where the destination offers everything the menu does. Rendered as
    * an `<a>` (the router's `Link`) with `aria-haspopup="menu"` and `aria-expanded`,
-   * named by `ariaLabel`: a link inside the kit's button would be interactive content
+   * named by `aria-label`: a link inside the kit's button would be interactive content
    * inside interactive content.
    */
   href?: string;
-  /** Names the trigger and the menu. */
-  ariaLabel: string;
   heading?: string;
   /** A non-interactive identity block above the rows. */
   header?: TopBarMenuHeader;
@@ -267,17 +283,20 @@ export function TopBarActionMenu({
   footer?: ReactNode | ((close: () => void) => ReactNode);
   /** Wraps the footer in a `<nav>` with this name ("Legal"). Without it, a plain block. */
   footerLabel?: string;
-  /** Which edge of the trigger the panel lines up with (see `HoverMenu`). Default `end`. */
-  align?: "start" | "end" | "left" | "right";
+  /** Which edge of the trigger the panel lines up with (see `HoverMenu`, whose type this
+   *  is: `left`/`right` are deprecated 0.34). Default `end`. */
+  align?: HoverMenuProps["align"];
   panelClassName?: string;
-}) {
+} & RequiredMenuName) {
+  // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
+  const ariaLabel = ariaLabelAttr ?? ariaLabelProp;
   // Names the groups' headings for `aria-labelledby`. Positional rather than from the
   // entry's `key`, which is the caller's text and may hold a space — and a space in
   // `aria-labelledby` is a list separator.
   const uid = useId();
   return (
     <HoverMenu
-      ariaLabel={ariaLabel}
+      aria-label={ariaLabel}
       align={align}
       trigger={({ open, toggle, close }) => {
         // One element for both kinds: the router's link when `href` is set, else the
@@ -326,7 +345,7 @@ export function TopBarActionMenu({
         const footerBody = typeof footer === "function" ? footer(close) : footer;
         const headerExtra = typeof header?.extra === "function" ? header.extra(close) : header?.extra;
         const footerClass =
-          "flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--text-muted)] [&_a:hover]:text-[var(--text-primary)] [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-[length:var(--focus-ring-width)] [&_a:focus-visible]:ring-[var(--brand)]";
+          "flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted [&_a:hover]:text-primary [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-focus [&_a:focus-visible]:ring-brand";
         /** One action or link row — loose, or inside a heading's group. */
         const row = (entry: RowEntry) => (
           <li key={entry.key}>
@@ -365,16 +384,16 @@ export function TopBarActionMenu({
           // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a Tab bubbling up from a row or footer link, see keepTabInsidePanel
           <ul className={cn("py-1", panelClassName)} onKeyDown={keepTabInsidePanel}>
             {header && (
-              <MenuSection className="mb-1 border-b border-[var(--border)] px-3 py-2">
-                <div className="truncate text-sm font-medium text-[var(--text-primary)]">{header.title}</div>
+              <MenuSection className="mb-1 border-b border-subtle px-3 py-2">
+                <div className="truncate text-sm font-medium text-primary">{header.title}</div>
                 {header.subtitle != null && (
-                  <div className="truncate text-xs text-[var(--text-muted)]">{header.subtitle}</div>
+                  <div className="truncate text-xs text-muted">{header.subtitle}</div>
                 )}
                 {headerExtra != null && headerExtra !== false && <div className="mt-1">{headerExtra}</div>}
               </MenuSection>
             )}
             {heading && (
-              <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-[var(--text-placeholder)]">
+              <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder">
                 {heading}
               </li>
             )}
@@ -382,7 +401,7 @@ export function TopBarActionMenu({
               if (block.kind === "loose") {
                 const entry = block.entry;
                 if (entry.kind === "divider") {
-                  return <li key={entry.key} className="my-1 border-t border-[var(--border)]" />;
+                  return <li key={entry.key} className="my-1 border-t border-subtle" />;
                 }
                 return row(entry);
               }
@@ -397,7 +416,7 @@ export function TopBarActionMenu({
                     id={headingId}
                     role="presentation"
                     className={cn(
-                      "px-3 pb-0.5 text-caption font-semibold uppercase tracking-wide text-[var(--text-muted)] [overflow-wrap:anywhere]",
+                      "px-3 pb-0.5 text-caption font-semibold uppercase tracking-wide text-muted [overflow-wrap:anywhere]",
                       tight ? "pt-1" : "pt-2.5",
                     )}
                   >
@@ -411,7 +430,7 @@ export function TopBarActionMenu({
             })}
             {children?.(close)}
             {footerBody != null && footerBody !== false && (
-              <MenuSection className="mt-1 border-t border-[var(--border)] px-3 py-2">
+              <MenuSection className="mt-1 border-t border-subtle px-3 py-2">
                 {footerLabel ? (
                   <nav aria-label={footerLabel} className={footerClass}>
                     {footerBody}

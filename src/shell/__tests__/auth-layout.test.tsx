@@ -32,7 +32,7 @@ describe("AuthLayout", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Kastlan" })).toBeInTheDocument();
     expect(screen.getByText("Sign in to your account")).toBeInTheDocument();
     const tile = screen.getByTestId("mark").parentElement!;
-    expect(tile.className).toContain("bg-[var(--brand)]");
+    expect(tile).toHaveClass("bg-brand");
 
     const main = screen.getByRole("main");
     expect(within(main).getByRole("form", { name: "Sign in" })).toBeInTheDocument();
@@ -81,7 +81,7 @@ describe("AuthLayout", () => {
         x
       </AuthLayout>,
     );
-    expect(screen.getByRole("img", { name: "Acme" }).parentElement!.className).not.toContain("bg-[var(--brand)]");
+    expect(screen.getByRole("img", { name: "Acme" }).parentElement!).not.toHaveClass("bg-brand");
   });
 
   it("renders the legal variant: wide column, start-aligned header, back link, no card, plain footer", () => {

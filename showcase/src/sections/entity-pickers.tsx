@@ -79,14 +79,14 @@ export function EntityPickers() {
           />
         </Stage>
         <Current label="value" value={account === null ? "null" : `"${account}"`} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The text is transient: picking a row commits it, typing an exact label that names exactly
           one account commits it, emptying the field commits <code className="font-mono">null</code>
           , and anything else reverts to the selected label on blur or Escape. “Old savings” is a{" "}
           <code className="font-mono">disabled</code> option: listed and dimmed, skipped by the
           arrows, and typing its name in full reverts rather than commits.
         </p>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The floating label — here and on <code className="font-mono">Combobox</code> — is a
           real <code className="font-mono">{"<label for>"}</code>, so{" "}
           <code className="font-mono">getByLabelText(&quot;Account&quot;)</code> finds the input.
@@ -123,7 +123,7 @@ export function EntityPickers() {
           />
         </Stage>
         <Current label="value" value={category === null ? "null" : `"${category}"`} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           This is the one family that draws <code className="font-mono">ComboOption.icon</code> —{" "}
           <code className="font-mono">InlineEntityCombobox</code> above carries the same option type
           but renders label and sublabel only. “Bank fees” is{" "}
@@ -154,7 +154,7 @@ export function EntityPickers() {
           />
         </Stage>
         <Current label="value" value={customer === null ? "null" : `"${customer}"`} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Open it and type quickly: only the last query's answer lands. Clear the query and the list
           is re-fetched immediately (the debounce is skipped for an empty query, because an empty
           query is the open itself, not typing).
@@ -233,7 +233,7 @@ export function EntityPickers() {
           </Button>
         </div>
         <Current label="value" value={rankedPick === null ? "null" : `"${rankedPick}"`} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Open it and type anything: with <code className="font-mono">filter={"{false}"}</code> the
           three rows stay, in their order. Press &quot;rows cleared&quot; and open it: while the
           caller&apos;s <code className="font-mono">loading</code> is up and there are no rows, the
@@ -318,7 +318,7 @@ export function EntityPickers() {
             disabled
           />
         </Stage>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Answer each field and its mark goes away. <code className="font-mono">error</code> is
           rendered under the field and tied to it with{" "}
           <code className="font-mono">aria-describedby</code>;{" "}
@@ -360,7 +360,7 @@ export function EntityPickers() {
         </Stage>
         <Current label="category" value={JSON.stringify(emptyCategory)} />
         <Current label="account" value={JSON.stringify(emptyAccount)} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Press × (or empty the inline field&apos;s text): the readout shows{" "}
           <code className="font-mono">&quot;&quot;</code>, where the pickers above emit{" "}
           <code className="font-mono">null</code>. The state here is a plain{" "}
@@ -389,7 +389,7 @@ export function EntityPickers() {
           </div>
         </Stage>
         <Current label="value" value={rtlCategory === null ? "null" : `"${rtlCategory}"`} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The × and the chevron sit at the logical end (the left), the text starts at the right,
           and the panel — portalled to <code className="font-mono">&lt;body&gt;</code> — reads the
           trigger&apos;s direction, carries it, and hangs from the trigger&apos;s start (right) edge
@@ -445,7 +445,7 @@ export function EntityPickers() {
         </Stage>
         <Current label="tags" value={tags.length ? JSON.stringify(tags) : "[]"} />
         <Current label="recipients" value={people.length ? JSON.stringify(people) : "[]"} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The second field has no <code className="font-mono">itemLabel</code>, so its trigger
           lists the picked names, joined the locale&apos;s way (<code className="font-mono">
             Intl.ListFormat

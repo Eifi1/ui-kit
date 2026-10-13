@@ -1,13 +1,15 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, RefObject } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref, RefObject } from "react";
 import { cn } from "../lib/cn";
+import { mergeRefs } from "./field-parts";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { useVisualViewport } from "../hooks/use-anchored-panel";
 import { DEFAULT_PICKER_SHEET_LABELS, useKitLabels } from "../i18n/kit-labels";
 
@@ -27,10 +29,26 @@ export interface PickerSheetProps
   query: string;
   onQueryChange: (value: string) => void;
   searchPlaceholder?: string;
+  /** The search box's accessible name. Default: `searchPlaceholder` — a placeholder is
+   *  gone the moment a character is typed, and is no name to many readers at all. */
+  searchLabel?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
   /** Default: `pickerSheet.close` from the {@link UiKitProvider}, else "Close". */
   closeLabel?: string;
+  /**
+   * The list's keyboard, on the search box — where focus is while the sheet is up:
+   * Up/Down/Home/End/Enter (round 0.34 Wave 2, BUG-5). `ComboboxPanel` passes its own;
+   * without it arrows and Enter in the sheet did nothing at all.
+   */
+  onSearchKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+  /** The `role="listbox"` the search box filters, for its `aria-controls`. */
+  listboxId?: string;
+  /** The option the arrow keys are on, for the search box's `aria-activedescendant`. */
+  activeId?: string;
   children: ReactNode;
+  /** The sheet, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
+   *  merged with the sheet's own ref, which its focus trap holds. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /**
@@ -63,12 +81,17 @@ export function PickerSheet({
   query,
   onQueryChange,
   searchPlaceholder,
+  searchLabel,
   inputRef,
   closeLabel,
+  onSearchKeyDown,
+  listboxId,
+  activeId,
   children,
   "aria-label": ariaLabel,
   className,
   style,
+  ref,
   ...rest
 }: PickerSheetProps) {
   // Every picker in the kit opens one of these on a phone, and most of them pass
@@ -107,6 +130,7 @@ export function PickerSheet({
   const searchRef = inputRef ?? ownRef;
 
   const sheetRef = useRef<HTMLDivElement>(null);
+  const setSheet = useMemo(() => mergeRefs(sheetRef, ref), [ref]);
   /**
    * The sheet said `aria-modal="true"` and then left focus on the field behind it, so
    * a screen reader was told to hide the page the user's cursor was still standing in
@@ -139,17 +163,16 @@ export function PickerSheet({
     initialFocus: () => searchRef.current,
   });
 
+  // The sheet is almost always the INNERMOST overlay — it opens from a field inside a
+  // `Modal` or a `FullBleedDialog`. It is a layer on the Escape stack (Wave 2, DUP-1),
+  // above the dialog, and takes the key on its own element: one press dismissing this
+  // list and the dialog underneath with it was Keksdose live #309 (*"Mouse Back does
+  // not only close the select but also the whole edit or create dialog which is
+  // cumbersome"*), which the Back gesture already learned, on the key a desktop user
+  // reaches for instead.
+  useDismissLayer(open, onClose);
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== "Escape") return;
-    // The sheet is almost always the INNERMOST overlay — it opens from a field inside a
-    // `Modal` or a `FullBleedDialog`, both of which take Escape on their own panel. A
-    // React portal's events still travel up the React tree, so without stopping it here
-    // one press would dismiss this list and the dialog underneath with it: Keksdose
-    // live #309 (*"Mouse Back does not only close the select but also the whole edit or
-    // create dialog which is cumbersome"*), which the Back gesture already learned, on
-    // the key a desktop user reaches for instead.
-    e.stopPropagation();
-    onClose();
+    takeEscape(e);
   };
 
   if (!open || typeof document === "undefined") return null;
@@ -165,7 +188,7 @@ export function PickerSheet({
       // MERGED rather than won outright (see below), which is the one case where a
       // caller has something to add.
       {...rest}
-      ref={sheetRef}
+      ref={setSheet}
       role="dialog"
       aria-modal="true"
       // Without it the container cannot take focus, and `useFocusTrap` has nothing to
@@ -218,17 +241,17 @@ export function PickerSheet({
       // or a transition from outside has nothing to do with them. Without a visual
       // viewport to correct for this is character-for-character what the caller passed.
       style={vv ? { ...style, top: vv.top, height: vv.height, bottom: "auto" } : style}
-      className={cn("fixed inset-0 z-50 flex flex-col bg-[var(--bg-surface)] outline-none", className)}
+      className={cn("fixed inset-0 z-50 flex flex-col bg-surface outline-none", className)}
     >
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--text-primary)]">
+      <div className="flex items-center gap-2 border-b border-subtle px-3 py-2">
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">
           {title}
         </span>
         <button
           type="button"
           aria-label={labels.close}
           onClick={onClose}
-          className="rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
+          className="rounded p-1.5 text-muted hover:bg-hover"
         >
           <X className="size-5" />
         </button>
@@ -238,6 +261,12 @@ export function PickerSheet({
         onQueryChange={onQueryChange}
         inputRef={searchRef}
         placeholder={searchPlaceholder}
+        aria-label={searchLabel ?? searchPlaceholder}
+        // Focus is in this box while the sheet is up, so this is where the list's keys
+        // land and what has to name the list and the row the arrows are on (BUG-5).
+        onKeyDown={onSearchKeyDown}
+        listboxId={listboxId}
+        activeId={activeId}
       />
       {/* min-h-0 so the LIST scrolls rather than the dialog growing past the
           viewport — a flex child defaults to min-height:auto. */}
@@ -256,5 +285,5 @@ export function PickerSheet({
  *  so a list is comfortable to hit with a thumb rather than merely legible. */
 export const SHEET_ROW_CLASS = cn(
   "flex min-h-11 w-full items-center gap-2 px-4 py-2 text-start text-base",
-  "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
+  "text-primary hover:bg-hover",
 );

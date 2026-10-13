@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, ErrorBoundary, formatCrashReport } from "@eifi1/ui-kit";
 import type { CrashReport, CrashReportResult } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * The 0.13 crash screen on the Feedback page: the one fallback lenkbank, keksdose and
@@ -10,14 +10,12 @@ import { Example, Note, Row } from "../lib/section";
  * screen, the `actions` slot, and the chunk-load title.
  */
 
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const CAPTION = "text-xs text-[var(--text-muted)]";
+const CAPTION = "text-xs text-muted";
 
 /** Throws the given value during render, so the boundary above it catches. */
 function Thrower({ error }: { error: unknown }): React.ReactNode {
   if (error !== undefined) throw error;
-  return <p className="text-sm text-[var(--text-primary)]">The account list would be here — all fine.</p>;
+  return <p className="text-sm text-primary">The account list would be here — all fine.</p>;
 }
 
 /* ── The default screen ──────────────────────────────────────────────────── */
@@ -40,7 +38,7 @@ function DefaultScreenDemo() {
           Break the page
         </Button>
       </Row>
-      <div className="mt-3 rounded-md border border-[var(--border)] p-2">
+      <div className="mt-3 rounded-md border border-subtle p-2">
         <ErrorBoundary
           headingAs="h4"
           appVersion="0.13.0-showcase"
@@ -134,7 +132,7 @@ function OnReportDemo() {
           Start a new page load
         </Button>
       </Row>
-      <div className="mt-3 rounded-md border border-[var(--border)] p-2">
+      <div className="mt-3 rounded-md border border-subtle p-2">
         <ErrorBoundary
           headingAs="h4"
           appVersion="0.13.0-showcase"
@@ -198,7 +196,7 @@ function ChunkLoadDemo() {
           Put it back
         </Button>
       </Row>
-      <div className="mt-3 rounded-md border border-[var(--border)] p-2">
+      <div className="mt-3 rounded-md border border-subtle p-2">
         <ErrorBoundary headingAs="h4" resetKeys={[error === undefined]}>
           <Thrower error={error} />
         </ErrorBoundary>

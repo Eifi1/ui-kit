@@ -4,13 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import { DemoStart } from "../demo-start";
 import type { AccessChoice } from "../../landing/access";
+import { refusal } from "../../test/fixtures";
 
 const ACCESS: AccessChoice = { kind: "request", email: "support@example.com", app: "Ada's Garden Planner" };
-
-/** An axios-shaped refusal: `{detail, code}` and, where the server sends it, `Retry-After`. */
-const refusal = (status: number, code?: string, headers: Record<string, string> = {}) => ({
-  response: { status, headers, data: { detail: "refused", ...(code && { code }) } },
-});
 
 function start<T>(run: () => Promise<T>, onStarted = vi.fn()) {
   const spy = vi.fn(run);
@@ -35,10 +31,10 @@ describe("DemoStart — §5.2", () => {
   });
 
   it.each([
-    ["demo_rate_limited with Retry-After", refusal(429, "demo_rate_limited", { "retry-after": "1200" }), "Too many demos from this network. Try again in 20 min."],
-    ["demo_rate_limited, a part minute rounded up", refusal(429, "demo_rate_limited", { "Retry-After": "61" }), "Too many demos from this network. Try again in 2 min."],
+    ["demo_rate_limited with Retry-After", refusal(429, "demo_rate_limited", undefined, { "retry-after": "1200" }), "Too many demos from this network. Try again in 20 min."],
+    ["demo_rate_limited, a part minute rounded up", refusal(429, "demo_rate_limited", undefined, { "Retry-After": "61" }), "Too many demos from this network. Try again in 2 min."],
     ["demo_rate_limited without Retry-After", refusal(429, "demo_rate_limited"), "Too many demos from this network. Try again later."],
-    ["a bare 429", refusal(429, undefined, { "retry-after": "30" }), "Too many demos from this network. Try again in 1 min."],
+    ["a bare 429", refusal(429, undefined, undefined, { "retry-after": "30" }), "Too many demos from this network. Try again in 1 min."],
     ["demo_capacity", refusal(429, "demo_capacity"), "The demo is full right now. Try again later."],
     ["demo_disabled", refusal(404, "demo_disabled"), "The demo isn’t available right now."],
     ["demo_not_ready", refusal(503, "demo_not_ready"), "The demo isn’t available right now."],

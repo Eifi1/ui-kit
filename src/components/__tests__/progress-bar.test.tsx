@@ -73,7 +73,7 @@ describe("ProgressBar", () => {
     render(<ProgressBar value={10} tone="danger" size="lg" aria-label="x" />);
     const bar = screen.getByRole("progressbar");
     expect(bar.className).toMatch(/\bh-3\b/);
-    expect(bar.querySelector('[data-part="fill"]')!.className).toMatch(/bg-\[var\(--danger\)\]/);
+    expect(bar.querySelector('[data-part="fill"]')!).toHaveClass("bg-danger");
   });
 });
 
@@ -81,9 +81,9 @@ describe("ProgressBar money tones and the slim size", () => {
   it("fills in the money tokens for income and expense", () => {
     const { rerender } = render(<ProgressBar variant="meter" value={40} tone="income" aria-label="In" />);
     const fill = () => screen.getByRole("meter").querySelector("[data-part=fill]")!;
-    expect(fill().className).toContain("bg-[var(--money-income)]");
+    expect(fill()).toHaveClass("bg-money-income");
     rerender(<ProgressBar variant="meter" value={40} tone="expense" aria-label="In" />);
-    expect(fill().className).toContain("bg-[var(--money-expense)]");
+    expect(fill()).toHaveClass("bg-money-expense");
   });
 
   it("draws a 6px track at size slim, between sm and md", () => {

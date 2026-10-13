@@ -10,7 +10,7 @@ import {
   ToggleGroup,
   UiKitProvider,
 } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, READOUT_WRAP } from "../lib/section";
 
 /**
  * 0.22 on the Numbers & money page: NumberInput's locale marks and grouping parse
@@ -18,9 +18,6 @@ import { Example, Note } from "../lib/section";
  * (keksdose K6), `error` and `hint` where the field anatomy had gaps (keksdose K4), and
  * the exported sign chip (keksdose K15).
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-[var(--text-secondary)] [overflow-wrap:anywhere]";
 
 const LOCALES = [
   { value: "fr-CH", label: "fr-CH" },
@@ -46,11 +43,11 @@ function LocaleMarks() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="min-w-0">
               <NumberInput label="Quantity" suffix="kg" value={quantity} onChange={setQuantity} />
-              <p className={READOUT}>value: {JSON.stringify(quantity)}</p>
+              <p className={READOUT_WRAP}>value: {JSON.stringify(quantity)}</p>
             </div>
             <div className="min-w-0">
               <NumberField label="Stock" unit="pcs" value={committed} nullable onCommit={setCommitted} />
-              <p className={READOUT}>committed: {String(committed)}</p>
+              <p className={READOUT_WRAP}>committed: {String(committed)}</p>
             </div>
           </div>
         </UiKitProvider>
@@ -78,11 +75,11 @@ function MoneyNotNumber() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="min-w-0">
           <NumberInput label="Estimated cost (CHF)" value={cost} onChange={setCost} />
-          <p className={READOUT}>NumberInput keeps: {JSON.stringify(cost)}</p>
+          <p className={READOUT_WRAP}>NumberInput keeps: {JSON.stringify(cost)}</p>
         </div>
         <div className="min-w-0">
           <AmountInput label="Estimated cost" currency="CHF" value={amount} onChange={setAmount} />
-          <p className={READOUT}>AmountInput settles: {JSON.stringify(amount)}</p>
+          <p className={READOUT_WRAP}>AmountInput settles: {JSON.stringify(amount)}</p>
         </div>
       </div>
       <Note>
@@ -105,16 +102,16 @@ function InlineCell() {
   return (
     <Example label="AmountInput / MoneyField calculator={false}" hint="for an inline editor that closes on blur">
       <div className="flex max-w-md flex-col gap-2">
-        <div className="flex items-center justify-between gap-3">
-          <span className="min-w-0 truncate text-sm text-[var(--text-secondary)]">Groceries — assigned</span>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="min-w-0 truncate-until-large text-sm text-secondary">Groceries — assigned</span>
           <div className="w-36 shrink-0">
-            <MoneyField ariaLabel="Assigned" currency="EUR" calculator={false} value={assigned} onCommit={setAssigned} />
+            <MoneyField aria-label="Assigned" currency="EUR" calculator={false} value={assigned} onCommit={setAssigned} />
           </div>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="min-w-0 truncate text-sm text-[var(--text-secondary)]">With the calculator (default)</span>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="min-w-0 truncate-until-large text-sm text-secondary">With the calculator (default)</span>
           <div className="w-36 shrink-0">
-            <MoneyField ariaLabel="VAT" currency="EUR" value={vat} onCommit={setVat} />
+            <MoneyField aria-label="VAT" currency="EUR" value={vat} onCommit={setVat} />
           </div>
         </div>
       </div>

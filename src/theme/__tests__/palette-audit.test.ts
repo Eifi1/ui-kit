@@ -1,4 +1,4 @@
-import { contrast } from "../color";
+import { contrast, hexToOklch } from "../color";
 import { auditChartRamp, auditPalette, derivePalette, type SemanticTokens } from "../palette-derive";
 import { DEFAULT_PRESET, DERIVED_PRESETS, IMPRINT_PRESET, PALETTES } from "../palette-presets";
 import { hexOf, over, resolveTokens } from "../../test/tokens-css";
@@ -181,6 +181,45 @@ describe("derivePalette", () => {
         expect(failures, `${brand} ${mode}`).toEqual([]);
       }
     }
+  });
+
+  it("meets every threshold on the hex it ships, over 218 brands (round 0.34 BUG-8)", () => {
+    // Solved on the float and rounded after, 1,474 pairs here sat just under their target
+    // while the audit's 0.05 slack called them passing (the Contrast preset's dark brand
+    // fill at 2.998:1). The slack stays only where a side is a color-mix (`--bg-hover`,
+    // `--brand-muted`, `--brand-bg*`): the browser mixes in float, the audit in hex.
+    const mixed = /bgHover|brandMuted|brandBg/;
+    // Not solved but chosen (white or the dark ink): a mid-lightness brand cannot carry
+    // text at any ink, and the deriver says so in a warning and fails it in the audit.
+    const chosen = /^(brandContrast|dangerContrast) on /;
+    const levels = [0, 51, 102, 153, 204, 255].map((v) => v.toString(16).padStart(2, "0"));
+    const brands = ["#808080", ...levels.flatMap((r) => levels.flatMap((g) => levels.map((b) => `#${r}${g}${b}`)))];
+    const short: string[] = [];
+    for (const brand of brands) {
+      for (const mode of ["light", "dark"] as const) {
+        const p = derivePalette({ anchors: { brand }, mode });
+        for (const c of p.audit.checks) {
+          if (mixed.test(c.pair) || c.ratio >= c.required) continue;
+          if (c.passes || !chosen.test(c.pair) || p.warnings.length === 0) {
+            short.push(`${brand} ${mode} ${c.pair} ${c.ratio.toFixed(3)} < ${c.required}`);
+          }
+        }
+      }
+    }
+    expect(short).toEqual([]);
+  });
+
+  it("derives a neutral page from a grey brand, not a pink one (round 0.34 BUG-8)", () => {
+    // A grey has no hue (OKLCH gives it 0, which is pink), so its surfaces and text carry
+    // the brand's tint only as far as the brand has chroma: #808080 painted #eddde1.
+    for (const mode of ["light", "dark"] as const) {
+      const t = derivePalette({ anchors: { brand: "#808080" }, mode }).tokens;
+      for (const role of ["bgPage", "bgSurface", "bgSurface2", "border", "textPrimary", "textMuted", "moneyNeutral"] as const) {
+        expect(hexToOklch(t[role])!.c, `${mode} ${role} ${t[role]}`).toBeLessThan(0.002);
+      }
+    }
+    // A coloured brand keeps its warmth.
+    expect(hexToOklch(derivePalette({ anchors: { brand: "#2f5fd0" }, mode: "light" }).tokens.bgPage)!.c).toBeGreaterThan(0.01);
   });
 
   it("honours a pinned hue exactly instead of moving it", () => {

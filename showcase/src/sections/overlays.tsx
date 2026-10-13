@@ -1,5 +1,5 @@
 import { useContext, useId, useState } from "react";
-import { Info, Keyboard, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import {
   Button,
   FullBleedDialog,
@@ -13,11 +13,9 @@ import {
   Tooltip,
   buttonClasses,
   cn,
-  placeTooltip,
   useBackdropClose,
   useCloseTransition,
 } from "@eifi1/ui-kit";
-import type { AnchorRect, TooltipPlacement, TooltipSize, TooltipViewport } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
 /**
@@ -34,21 +32,19 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * from here covers the whole showcase rather than the section.
  */
 
-// Panel sizes as a list so the three specimens cannot drift from the prop's union.
-const MODAL_SIZES = ["md", "lg", "xl"] as const;
+// Panel sizes as a list so the four specimens cannot drift from the prop's union.
+const MODAL_SIZES = ["md", "lg", "xl", "2xl"] as const;
 type ModalSize = (typeof MODAL_SIZES)[number];
-
-const TOOLTIP_SIDES = ["top", "right", "bottom", "left", "start", "end"] as const;
 
 const MENU_ITEMS = ["Duplicate", "Export as CSV", "Archive"];
 
 // Token-styled field: the kit's panels are painted with the tokens, and anything this
 // page draws itself has to follow the palette too, or the palette switch proves nothing.
 const FIELD =
-  "w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-2 py-1.5 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--brand)]";
+  "w-full rounded-md border border-subtle bg-surface-2 px-2 py-1.5 text-sm text-primary outline-none focus:ring-2 focus:ring-brand";
 
 const MENU_ITEM =
-  "block w-full px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]";
+  "block w-full px-3 py-1.5 text-start text-sm text-primary hover:bg-surface-2";
 
 /** The "Dialogs" page: the two modal surfaces, the backdrop rule they share, and the
  *  exit timing every overlay closes on. The notes at the end cover all five overlays. */
@@ -205,36 +201,11 @@ export function PopoversMenusTooltips() {
         for a top bar; it is worth knowing before you file it as a bug here.
       </Note>
 
-      <Example label="Tooltip — side" hint="The CSS-only variant. `side` is absolute here: it never flips.">
-        <TooltipSides />
-      </Example>
-
-      <Example
-        label="Tooltip — portal, redact and the empty label"
-        hint="`portal` forces the portalled bubble; left out, a tooltip inside a scroll container portals on its own (see the auto-portal example below)."
-      >
-        <TooltipPortal />
-      </Example>
-
-      <Example
-        label="Tooltip — rich labels, className and the portal flip"
-        hint="Focus a trigger with Tab and press Escape: the bubble goes (WCAG 1.4.13) and comes back on the next focus."
-      >
-        <TooltipMore />
-      </Example>
-
       <Example
         label="Right-to-left — which placements flip"
         hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}
       >
         <OverlaysRtl />
-      </Example>
-
-      <Example
-        label="placeTooltip"
-        hint="Pure, viewport pixels in and out — which is why it can be shown as a table at all."
-      >
-        <OutTable rows={PLACEMENT_ROWS} />
       </Example>
     </>
   );
@@ -262,12 +233,15 @@ function ModalSizes() {
           `open` prop fixes (see "Modal — open" further down this page). */}
       {size && (
         <Modal size={size} labelledBy={headingId} className="space-y-3" onClose={() => setSize(null)}>
-          <h4 id={headingId} className="text-sm font-semibold text-[var(--text-primary)]">
-            size=&quot;{size}&quot; — md 28rem, lg 32rem, xl 48rem
+          <h4 id={headingId} className="text-sm font-semibold text-primary">
+            size=&quot;{size}&quot; — md 28rem, lg 32rem, xl 48rem, 2xl the display less a margin
+            (110rem at most)
           </h4>
-          <p className="text-xs text-[var(--text-secondary)]">
+          <p className="text-xs text-secondary">
             The panel is <code className="font-mono">w-full</code> under every cap, so on a phone
-            all three are the same full-width bottom sheet and only the desktop widths differ.
+            all four are the same full-width bottom sheet and only the desktop widths differ.{" "}
+            <code className="font-mono">2xl</code> (0.34) is for a dialog whose content is a table
+            to be read — a pasted measurement table, a report drilldown.
           </p>
           <input
             aria-label="Scratch field"
@@ -308,7 +282,7 @@ function ModalOptions() {
           Open fullBleed
         </Button>
         {submitted && (
-          <span className="text-xs text-[var(--text-muted)]">Submitted via {submitted}</span>
+          <span className="text-xs text-muted">Submitted via {submitted}</span>
         )}
       </Row>
       {option && (
@@ -333,16 +307,16 @@ function ModalOptions() {
           }}
           onClose={() => setOption(null)}
         >
-          <h4 id={headingId} className="text-sm font-semibold text-[var(--text-primary)]">
+          <h4 id={headingId} className="text-sm font-semibold text-primary">
             {option === "draggable" ? "draggable" : "fullBleed"} — and a custom onKeyDown
           </h4>
-          <p className="text-xs text-[var(--text-secondary)]">
+          <p className="text-xs text-secondary">
             {option === "draggable"
               ? "Press the heading or any bare part of the panel and drag. A press that lands on a field, a button or a link belongs to that control, so selecting the text below never starts a drag. Nothing is persisted — the offset dies with the dialog."
               : "The backdrop's mobile margin is gone, so the panel can reach the screen edges. The desktop md:p-4 margin is kept, which is why this still looks inset above 768px."}
           </p>
           <input aria-label="A field, which never starts a drag" className={FIELD} defaultValue="Drag me and nothing moves." />
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-muted">
             Ctrl/Cmd+Enter submits — <code className="font-mono">onKeyDown</code> runs before the
             built-in Escape/Tab handling, and calling{" "}
             <code className="font-mono">preventDefault()</code> suppresses it for that event.
@@ -381,7 +355,7 @@ function ModalTall() {
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Open a tall size=&quot;lg&quot; modal
         </Button>
-        <span className="text-xs text-[var(--text-muted)]">
+        <span className="text-xs text-muted">
           onClose calls: {closes} · picked in the popover: {picked}
         </span>
       </Row>
@@ -400,10 +374,10 @@ function ModalTall() {
             setCloses((n) => n + 1);
           }}
         >
-          <h4 id={headingId} className="text-sm font-semibold text-[var(--text-primary)]">
+          <h4 id={headingId} className="text-sm font-semibold text-primary">
             A panel taller than the window
           </h4>
-          <p id={descId} className="text-xs text-[var(--text-secondary)]">
+          <p id={descId} className="text-xs text-secondary">
             The panel scrolls itself (<code className="font-mono">max-h-full overflow-y-auto</code>);
             the page behind is scroll-locked. The brand stripe on top is the caller&apos;s{" "}
             <code className="font-mono">style</code>, and this paragraph is the dialog&apos;s{" "}
@@ -441,7 +415,7 @@ function ModalTall() {
               </Row>
             )}
           </Popover>
-          <ul className="space-y-1 text-xs text-[var(--text-muted)]">
+          <ul className="space-y-1 text-xs text-muted">
             {TALL_LINES.map((line) => (
               <li key={line}>{line}</li>
             ))}
@@ -462,7 +436,7 @@ function BackdropClose() {
   if (dismissed) {
     return (
       <Row>
-        <span className="text-xs text-[var(--text-secondary)]">
+        <span className="text-xs text-secondary">
           Dismissed — the press started and ended on the backdrop.
         </span>
         <Button variant="secondary" onClick={() => setDismissed(false)}>
@@ -478,14 +452,14 @@ function BackdropClose() {
     // and it is exported for an app rolling its own.
     <div
       {...backdrop}
-      className="flex min-h-44 items-center justify-center rounded-md bg-[var(--bg-surface-2)] p-6"
+      className="flex min-h-44 items-center justify-center rounded-md bg-surface-2 p-6"
     >
-      <div className="max-w-md space-y-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-3">
-        <p className="text-xs text-[var(--text-secondary)]">
+      <div className="max-w-md space-y-2 rounded-md border border-subtle bg-surface p-3">
+        <p className="text-xs text-secondary">
           Click the grey area around this panel and it dismisses. Now select this sentence,
           keep the button held, and release out on the grey: it does <em>not</em> dismiss.
         </p>
-        <p className="text-xs text-[var(--text-muted)]">
+        <p className="text-xs text-muted">
           A plain <code className="font-mono">onClick</code> fires on mouseup and targets the
           common ancestor of the down and up elements, so both directions of that drag used to
           close a dialog mid-edit (feedback #254).
@@ -510,7 +484,7 @@ function FullBleed() {
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Open full-bleed dialog
         </Button>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input
             type="checkbox"
             checked={backCloses}
@@ -518,11 +492,11 @@ function FullBleed() {
           />
           <code className="font-mono">backCloses</code>
         </label>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={capped} onChange={(e) => setCapped(e.target.checked)} />
           <code className="font-mono">className=&quot;md:max-w-2xl&quot;</code>
         </label>
-        <span className="text-xs text-[var(--text-muted)]">onClose calls: {closes}</span>
+        <span className="text-xs text-muted">onClose calls: {closes}</span>
       </Row>
       {/* Rendered unconditionally with an `open` prop — the opposite of Modal. It early
           returns null while closed, AFTER its hooks, so it stays mounted and its
@@ -543,7 +517,7 @@ function FullBleed() {
         header={<span className="truncate text-sm">Row editor — Ada Lovelace</span>}
       >
         <div className="space-y-3">
-          <p className="text-xs text-[var(--text-secondary)]">
+          <p className="text-xs text-secondary">
             No strip of page shows beside this panel, so there is nothing to mis-tap — which is
             why it is not a <code className="font-mono">Modal</code> with a wider width. The
             backdrop handlers stay wired for layouts that do leave one visible.
@@ -556,12 +530,12 @@ function FullBleed() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-muted">
             <code className="font-mono">backCloses</code> is off for a caller whose open state is
             already in the URL — a sentinel on top of a router entry costs two presses to close
             one dialog. Toggle it and try the browser's Back.
           </p>
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-muted">
             With the <code className="font-mono">md:max-w-2xl</code> class the panel is capped on a
             wide screen, so the dimmed backdrop shows beside it — and a press that starts and ends
             there closes the dialog. On a phone the cap does not bite and nothing is exposed.
@@ -589,7 +563,7 @@ function AlertDialogModal() {
         <Button variant="danger" onClick={() => setOpen(true)}>
           Discard the draft…
         </Button>
-        <span className="text-xs text-[var(--text-muted)]">answer: {answer}</span>
+        <span className="text-xs text-muted">answer: {answer}</span>
       </Row>
       {open && (
         <Modal
@@ -602,10 +576,10 @@ function AlertDialogModal() {
             setOpen(false);
           }}
         >
-          <h4 id={titleId} className="text-sm font-semibold text-[var(--text-primary)]">
+          <h4 id={titleId} className="text-sm font-semibold text-primary">
             Discard the unsent report?
           </h4>
-          <p id={bodyId} className="text-xs text-[var(--text-secondary)]">
+          <p id={bodyId} className="text-xs text-secondary">
             The text and both attachments will be lost.
           </p>
           <Row className="justify-end">
@@ -654,7 +628,7 @@ function FullBleedFooter() {
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Pick a report range
         </Button>
-        <span className="text-xs text-[var(--text-muted)]">applied: {applied ?? "—"}</span>
+        <span className="text-xs text-muted">applied: {applied ?? "—"}</span>
       </Row>
       <FullBleedDialog
         open={open}
@@ -681,12 +655,12 @@ function FullBleedFooter() {
       >
         <div className="space-y-2">
           {options.map((o) => (
-            <label key={o} className="flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-3 text-sm text-[var(--text-primary)]">
+            <label key={o} className="flex items-center gap-2 rounded-md border border-subtle px-3 py-3 text-sm text-primary">
               <input type="radio" name="report-range" checked={pick === o} onChange={() => setPick(o)} />
               {o}
             </label>
           ))}
-          <p className="pt-2 text-xs text-[var(--text-muted)]">
+          <p className="pt-2 text-xs text-muted">
             On a phone this list is longer than the screen: scroll it and the Apply row stays put.
           </p>
           <div aria-hidden className="h-96" />
@@ -729,7 +703,7 @@ function FullBleedSearch() {
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Search transactions
         </Button>
-        <span className="text-xs text-[var(--text-muted)]">
+        <span className="text-xs text-muted">
           picked: {picked ?? "—"} · Escapes claimed: {claimed}
         </span>
       </Row>
@@ -781,13 +755,13 @@ function FullBleedSearch() {
               }}
               className={cn(
                 "cursor-pointer rounded-md px-3 py-2 text-sm",
-                i === active ? "bg-[var(--bg-active)] text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
+                i === active ? "bg-active text-primary" : "text-secondary",
               )}
             >
               {t}
             </li>
           ))}
-          {hits.length === 0 && <li className="px-3 py-2 text-sm text-[var(--text-muted)]">No match</li>}
+          {hits.length === 0 && <li className="px-3 py-2 text-sm text-muted">No match</li>}
         </ul>
       </FullBleedDialog>
       <div className="mt-3">
@@ -824,7 +798,7 @@ function Popovers() {
       >
         {(close) => (
           <div className="space-y-2">
-            <p className="text-xs text-[var(--text-secondary)]">
+            <p className="text-xs text-secondary">
               The panel's END edge is aligned to the trigger's (right in LTR, left in RTL) and clamped 8px from the window;
               the vertical half is the anchored-panel hook's, which flips it above the trigger and
               caps its height when that is where the room is.
@@ -858,11 +832,11 @@ function Popovers() {
       >
         {(close) => (
           <div className="space-y-2">
-            <p className="text-xs text-[var(--text-secondary)]">
+            <p className="text-xs text-secondary">
               <code className="font-mono">width</code> is a number, not a class, because the
               horizontal clamp has to do arithmetic with it.
             </p>
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-muted">
               Outside-click listens on <code className="font-mono">pointerdown</code>, so a
               touch-drag that starts outside dismisses at touch-down.
             </p>
@@ -873,7 +847,7 @@ function Popovers() {
         )}
       </Popover>
 
-      <span className="text-xs text-[var(--text-muted)]">Tag: {tag}</span>
+      <span className="text-xs text-muted">Tag: {tag}</span>
     </Row>
   );
 }
@@ -900,6 +874,9 @@ function PopoverNaming() {
               ref={ref}
               type="button"
               role="combobox"
+              // A combobox takes no name from its content (that is its value), so it
+              // needs one of its own (axe "button-name", refactor audit 2026-10, DOC-10).
+              aria-label="Category"
               aria-expanded={open}
               aria-controls={open ? panelId : undefined}
               aria-haspopup="dialog"
@@ -990,7 +967,7 @@ function HoverMenus() {
         <HoverMenu
           key={align}
           align={align}
-          ariaLabel={`Example actions, ${align}-aligned`}
+          aria-label={`Example actions, ${align}-aligned`}
           // Only one of the two, so the difference between the default width and a set
           // one is visible side by side rather than described.
           panelClassName={align === "end" ? "w-56" : undefined}
@@ -1020,7 +997,7 @@ function HoverMenus() {
           )}
         </HoverMenu>
       ))}
-      <span className="text-xs text-[var(--text-muted)]">Chosen: {chosen}</span>
+      <span className="text-xs text-muted">Chosen: {chosen}</span>
     </Row>
   );
 }
@@ -1052,10 +1029,9 @@ function HoverMenuClamp() {
       {/* Wraps: at Extra large the two triggers ran past a 360 px phone (0.32.1). */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <HoverMenu
-          // The DOM spelling; the deprecated `ariaLabel` (above) loses to it when both
-          // are given. `className` is the WRAPPER's, `panelClassName` the panel's.
+          // `className` is the WRAPPER's, `panelClassName` the panel's.
           aria-label="Sort options"
-          className="rounded-md ring-1 ring-[var(--border)]"
+          className="rounded-md ring-1 ring-subtle"
           data-testid="showcase-sort-menu"
           align="start"
           trigger={({ open, toggle }) => (
@@ -1081,127 +1057,7 @@ function HoverMenuClamp() {
           {items}
         </HoverMenu>
       </div>
-      <span className="text-xs text-[var(--text-muted)]">Chosen: {chosen}</span>
-    </div>
-  );
-}
-
-/* ── Tooltip ──────────────────────────────────────────────────────────────── */
-
-function TooltipSides() {
-  const [pressed, setPressed] = useState("—");
-
-  return (
-    <Row>
-      {TOOLTIP_SIDES.map((side) => (
-        <Tooltip key={side} side={side} label={`side="${side}"`}>
-          <button
-            type="button"
-            onClick={() => setPressed(side)}
-            className={buttonClasses("secondary")}
-          >
-            {side}
-          </button>
-        </Tooltip>
-      ))}
-      <span className="text-xs text-[var(--text-muted)]">Last pressed: {pressed}</span>
-    </Row>
-  );
-}
-
-function TooltipPortal() {
-  const [redact, setRedact] = useState(true);
-  const [pressed, setPressed] = useState("—");
-
-  return (
-    <Row>
-      <Tooltip
-        portal
-        side="right"
-        redact={redact}
-        label={redact ? "Ada Lovelace — the user's own data" : "Just a UI string"}
-      >
-        <IconButton aria-label="Toggle the redact prop" onClick={() => setRedact((v) => !v)}>
-          <Info />
-        </IconButton>
-      </Tooltip>
-      <span className="text-xs text-[var(--text-secondary)]">
-        <code className="font-mono">redact={String(redact)}</code> — the bubble carries{" "}
-        <code className="font-mono">data-private</code>. The blur rule itself lives in the
-        consuming app (a <code className="font-mono">demo-mode</code> class on{" "}
-        <code className="font-mono">&lt;html&gt;</code>), so here it only tags; inspect the
-        element to see it.
-      </span>
-      <Tooltip label="">
-        <button
-          type="button"
-          onClick={() => setPressed("empty label")}
-          className={buttonClasses("ghost")}
-        >
-          label=&quot;&quot; — no bubble and no wrapper
-        </button>
-      </Tooltip>
-      <span className="text-xs text-[var(--text-muted)]">Last pressed: {pressed}</span>
-    </Row>
-  );
-}
-
-function TooltipMore() {
-  const helpId = useId();
-
-  return (
-    <div className="space-y-3">
-      <Row>
-        {/* A ReactNode label, not only a string. */}
-        <Tooltip
-          label={
-            <span className="inline-flex items-center gap-1">
-              Open the palette: <kbd className="font-mono">Ctrl</kbd>+<kbd className="font-mono">K</kbd>
-            </span>
-          }
-        >
-          <IconButton aria-label="Keyboard shortcut">
-            <Keyboard />
-          </IconButton>
-        </Tooltip>
-
-        {/* `0` is a real label; only "", null, undefined and false count as empty. */}
-        <Tooltip label={0} side="bottom">
-          <button type="button" className={buttonClasses("secondary")}>
-            label={"{0}"}
-          </button>
-        </Tooltip>
-
-        {/* The caller's own description is APPENDED to, never replaced: the button ends
-            up described by the hint text below AND the bubble. `className` and any other
-            span attribute land on the wrapper. */}
-        <Tooltip
-          label="…and the bubble, appended"
-          className="rounded-md ring-1 ring-[var(--brand)]"
-          data-testid="showcase-tooltip-wrapper"
-        >
-          <button type="button" aria-describedby={helpId} className={buttonClasses("secondary")}>
-            Own aria-describedby
-          </button>
-        </Tooltip>
-        <span id={helpId} className="text-xs text-[var(--text-muted)]">
-          Described by this text…
-        </span>
-      </Row>
-      <Row>
-        <Tooltip
-          portal
-          side="left"
-          label="side='left' is a preference for the portal variant: with no room on the left, this bubble turns round to the right and is clamped into the window."
-        >
-          <button type="button" className={buttonClasses("secondary")}>
-            portal, side=&quot;left&quot;
-          </button>
-        </Tooltip>
-        <span className="text-xs text-[var(--text-muted)]">
-          Needs the window&apos;s left edge within ~20rem to flip — the phone preview shows it.
-        </span>
-      </Row>
+      <span className="text-xs text-muted">Chosen: {chosen}</span>
     </div>
   );
 }
@@ -1298,7 +1154,7 @@ function OverlaysRtl() {
           )}
         >
           {() => (
-            <p className="text-xs text-[var(--text-secondary)]">
+            <p className="text-xs text-secondary">
               هذه اللوحة تقرأ من اليمين — portalled to &lt;body&gt;, yet it carries the
               trigger&apos;s dir=&quot;rtl&quot;, and its end (left) edge lines up with the
               trigger&apos;s.
@@ -1306,7 +1162,7 @@ function OverlaysRtl() {
           )}
         </Popover>
       </div>
-      <span className="text-xs text-[var(--text-muted)]">Picked: {picked}</span>
+      <span className="text-xs text-muted">Picked: {picked}</span>
       <Note>
         <code className="font-mono">Tooltip</code> takes{" "}
         <code className="font-mono">side=&quot;start&quot;</code>/
@@ -1330,41 +1186,6 @@ function OverlaysRtl() {
   );
 }
 
-/* ── placeTooltip ─────────────────────────────────────────────────────────── */
-
-// Fixed rects rather than measured ones: the helper is pure, so the table is the same
-// on every screen, and a reader can check the arithmetic against the source.
-const NEAR_TOP: AnchorRect = { top: 8, left: 120, right: 160, bottom: 28, width: 40, height: 20 };
-const NEAR_LEFT: AnchorRect = { top: 200, left: 4, right: 44, bottom: 220, width: 40, height: 20 };
-const BUBBLE: TooltipSize = { width: 160, height: 32 };
-const SCREEN: TooltipViewport = { width: 400, height: 600 };
-const NARROW: TooltipViewport = { width: 180, height: 600 };
-
-function show(p: TooltipPlacement): string {
-  return `{ left: ${p.left}, top: ${p.top}, side: "${p.side}" }`;
-}
-
-// Computed at module scope by calling the real export, so the table cannot go stale the
-// way a transcribed one would.
-const PLACEMENT_ROWS: Array<[string, string]> = [
-  [
-    'placeTooltip(nearTop, "top", bubble, screen)',
-    show(placeTooltip(NEAR_TOP, "top", BUBBLE, SCREEN)),
-  ],
-  [
-    'placeTooltip(nearLeft, "top", bubble, screen)',
-    show(placeTooltip(NEAR_LEFT, "top", BUBBLE, SCREEN)),
-  ],
-  [
-    'placeTooltip(nearLeft, "left", bubble, screen)',
-    show(placeTooltip(NEAR_LEFT, "left", BUBBLE, SCREEN)),
-  ],
-  [
-    'placeTooltip(nearLeft, "left", bubble, narrow)',
-    show(placeTooltip(NEAR_LEFT, "left", BUBBLE, NARROW)),
-  ],
-];
-
 /* ── OVERLAY_EXIT_MS / useCloseTransition ─────────────────────────────────── */
 
 function CloseTransition() {
@@ -1382,11 +1203,11 @@ function CloseTransition() {
       {present ? (
         <div
           className={cn(
-            "space-y-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3",
+            "space-y-2 rounded-md border border-subtle bg-surface-2 p-3",
             closing ? "animate-sheet-out" : "animate-sheet",
           )}
         >
-          <p className="text-xs text-[var(--text-secondary)]">
+          <p className="text-xs text-secondary">
             Dismiss lowers this panel and only then unmounts it. An exit animation needs
             something to hold the element on screen for exactly its own length, and by the time
             a caller's state says “closed” the element is already gone — so the overlays call{" "}

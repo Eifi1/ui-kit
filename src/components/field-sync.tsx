@@ -4,8 +4,9 @@ import { AlertCircle, Check, Loader2, Pencil, PencilLine } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Tooltip } from "./tooltip";
 import { FOCUS_RING } from "./focus-ring";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useLargeText } from "../hooks/use-large-text";
+import { DEFAULT_FIELD_SYNC_LABELS } from "./field-sync-labels";
 
 /**
  * Sync state for a field backed by a database row.
@@ -34,14 +35,12 @@ export interface FieldSyncLabels {
   retry: string;
 }
 
-export const DEFAULT_FIELD_SYNC_LABELS: FieldSyncLabels = {
-  synced: "Saved",
-  edited: "Unsaved changes",
-  pending: "Saving…",
-  error: "Could not save",
-  retry: "Retry",
-};
+// Defined in ./field-sync-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FIELD_SYNC_LABELS };
 
+/** @deprecated 0.34 — `useKitLabels("fieldSync", DEFAULT_FIELD_SYNC_LABELS, labels)`, which
+ *  the provider reaches too, or the field's own `labels`; removed in 0.35 (refactor audit
+ *  2026-10, API-6a). A merge from before the provider, which no kit component calls. */
 export function resolveFieldSyncLabels(labels?: Partial<FieldSyncLabels>): FieldSyncLabels {
   return labels ? { ...DEFAULT_FIELD_SYNC_LABELS, ...labels } : DEFAULT_FIELD_SYNC_LABELS;
 }
@@ -253,7 +252,7 @@ export interface FieldSyncIndicatorProps {
   /** The failure. Its message becomes the tooltip when `state === "error"`. */
   error?: Error | null;
   /** Override any of the five English defaults. */
-  labels?: Partial<FieldSyncLabels>;
+  labels?: LabelOverride<FieldSyncLabels>;
   /** Render the label beside the icon instead of only in the tooltip. Always on at
    *  Large and Extra large (0.32, docs/text-size-harmonization.md §4 "No fact only in a
    *  tooltip"): the reader who asked for bigger type gets the words, not a 14 px glyph
@@ -297,7 +296,7 @@ export function FieldSyncIndicator({
     <span
       // The ICON carries the status colour; the words are `--text-secondary`, because
       // the amber of `edited` is a graphic colour (3:1), not a text colour (4.5:1).
-      className={cn("inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)]", className)}
+      className={cn("inline-flex items-center gap-1.5 text-xs text-secondary", className)}
       // Polite for the three ordinary states so save chatter does not interrupt
       // typing; assertive for a failure, which the user has to know about now.
       role={state === "error" ? "alert" : "status"}
@@ -321,7 +320,7 @@ export function FieldSyncIndicator({
           onClick={onRetry}
           // The kit's focus frame (0.32, §5), stood off the word.
           className={cn(
-            "rounded underline underline-offset-2 hover:no-underline focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]",
+            "rounded underline underline-offset-2 hover:no-underline focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
             FOCUS_RING,
           )}
           style={{ color }}
@@ -473,7 +472,7 @@ export function FieldSyncRow<T>({
               onClick={retry}
               aria-label={l.retry}
               className={cn(
-                "pointer-events-auto flex rounded-full text-[var(--status-error)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]",
+                "pointer-events-auto flex rounded-full text-[var(--status-error)] focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
                 FOCUS_RING,
               )}
             >

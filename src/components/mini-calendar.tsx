@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { horizontalStep } from "../lib/direction";
 import { useAnnounce } from "../hooks/use-announce";
@@ -13,7 +14,8 @@ import {
   sameYmd,
   toLocalIso,
 } from "../lib/dates";
-import { useKitLabels, useKitLocale, useKitWeekStart } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, useKitWeekStart, type LabelOverride } from "../i18n/kit-labels";
+import { DEFAULT_MINI_CALENDAR_LABELS } from "./mini-calendar-labels";
 
 /**
  * Every string this calendar can speak — the `miniCalendar` namespace of
@@ -56,17 +58,8 @@ export interface MiniCalendarLabels {
   rangeSelected: (from: string, to: string) => string;
 }
 
-/** English defaults. Exported as the `miniCalendar` namespace of `UiKitLabels`
- *  (src/i18n), the complete reference a translation is written against. */
-export const DEFAULT_MINI_CALENDAR_LABELS: MiniCalendarLabels = {
-  previousMonth: "Previous month",
-  nextMonth: "Next month",
-  day: (date) => date,
-  chooseStart: "Choose a start date",
-  chooseEnd: "Choose an end date",
-  startSelected: (date) => `${date} selected as the start. Choose an end date.`,
-  rangeSelected: (from, to) => `${from} to ${to} selected. Choose a start date to begin again.`,
-};
+// Defined in ./mini-calendar-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_MINI_CALENDAR_LABELS };
 
 /**
  * How a day is spoken. The weekday is in there on purpose: picking a date is very
@@ -87,7 +80,7 @@ const DAY_NAME_FORMAT: Intl.DateTimeFormatOptions = {
  * passes through to the root, so a tour anchor or a test id can find the calendar —
  * before this, a closed prop list dropped both (audit §api-design).
  */
-export interface MiniCalendarProps extends Omit<ComponentPropsWithoutRef<"div">, "onSelect"> {
+export interface MiniCalendarProps extends Omit<ComponentPropsWithRef<"div">, "onSelect"> {
   /** The selection's start as "YYYY-MM-DD"; `""` (the default) for none. */
   from?: string;
   /** The selection's end; `""` (the default) for none. */
@@ -119,7 +112,7 @@ export interface MiniCalendarProps extends Omit<ComponentPropsWithoutRef<"div">,
   min?: string;
   max?: string;
   /** User-facing strings; see {@link MiniCalendarLabels}. */
-  labels?: Partial<MiniCalendarLabels>;
+  labels?: LabelOverride<MiniCalendarLabels>;
   /**
    * Take focus to the day the grid opens on — the selected one, or today — when this
    * calendar mounts. For a panel that opened BECAUSE the user asked to pick a date:
@@ -526,7 +519,7 @@ export function MiniCalendar({
           type="button"
           onClick={() => moveMonth(-1)}
           aria-label={labels.previousMonth}
-          className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
+          className="rounded p-1 text-muted hover:bg-hover"
         >
           {/* Mirrored in RTL: "previous" points to the reading START, which is right. */}
           <ChevronLeft className="size-4 rtl:-scale-x-100" aria-hidden />
@@ -541,8 +534,8 @@ export function MiniCalendar({
           className={cn(
             "capitalize",
             lg
-              ? "text-base font-semibold text-[var(--text-primary)]"
-              : "text-xs font-medium text-[var(--text-secondary)]",
+              ? "text-base font-semibold text-primary"
+              : "text-xs font-medium text-secondary",
           )}
         >
           {monthLabel}
@@ -551,7 +544,7 @@ export function MiniCalendar({
           type="button"
           onClick={() => moveMonth(1)}
           aria-label={labels.nextMonth}
-          className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]"
+          className="rounded p-1 text-muted hover:bg-hover"
         >
           <ChevronRight className="size-4 rtl:-scale-x-100" aria-hidden />
         </button>
@@ -567,7 +560,7 @@ export function MiniCalendar({
           // The month view is RULED: a 1px gap over a border-coloured ground draws the
           // lines between the cells, the way a wall calendar does.
           lg
-            ? "gap-px overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--border)]"
+            ? "gap-px overflow-hidden rounded-lg border border-subtle bg-[var(--border)]"
             : "gap-y-0.5",
         )}
       >
@@ -576,8 +569,8 @@ export function MiniCalendar({
           className={cn(
             "grid grid-cols-7 text-center font-medium",
             lg
-              ? "gap-px text-xs text-[var(--text-muted)]"
-              : "text-micro uppercase text-[var(--text-placeholder)]",
+              ? "gap-px text-xs text-muted"
+              : "text-micro uppercase text-placeholder",
           )}
         >
           {weekdayLabels.map((w, i) => (
@@ -585,7 +578,7 @@ export function MiniCalendar({
               key={i}
               role="columnheader"
               aria-label={w.long}
-              className={lg ? "bg-[var(--bg-surface)] py-2" : "py-0.5"}
+              className={lg ? "bg-surface py-2" : "py-0.5"}
             >
               {lg ? w.short : w.narrow}
             </div>
@@ -603,7 +596,7 @@ export function MiniCalendar({
                   <div
                     key={di}
                     role="gridcell"
-                    className={lg ? cn(LG_CELL_HEIGHT, "bg-[var(--bg-surface-2)]") : "h-8"}
+                    className={lg ? cn(LG_CELL_HEIGHT, "bg-surface-2") : "h-8"}
                   />
                 );
               }
@@ -639,12 +632,12 @@ export function MiniCalendar({
                       }}
                       onKeyDown={onDayKeyDown}
                       className={cn(
-                        "text-xs tabular-nums text-[var(--text-placeholder)] transition-colors",
+                        "text-xs tabular-nums text-placeholder transition-colors",
                         FOCUS_RING,
                         "focus-visible:ring-inset",
-                        disabled ? "cursor-not-allowed opacity-60" : "hover:bg-[var(--bg-hover)]",
+                        disabled ? "cursor-not-allowed opacity-60" : "hover:bg-hover",
                         lg
-                          ? cn("flex w-full min-w-0 items-start bg-[var(--bg-surface-2)] p-1.5", LG_CELL_HEIGHT)
+                          ? cn("flex w-full min-w-0 items-start bg-surface-2 p-1.5", LG_CELL_HEIGHT)
                           : "size-8 rounded-full",
                       )}
                     >
@@ -678,7 +671,7 @@ export function MiniCalendar({
                 active: isActive,
                 size,
               });
-              const hasContent = content != null && content !== false && content !== "";
+              const filled = hasContent(content);
               const contentId = `${id}-day-${iso}`;
               // The band behind the day: full width between the ends, half width at an
               // end (so the round endpoint sits ON the band's tip), rounded where a row
@@ -690,7 +683,7 @@ export function MiniCalendar({
               const lastOfMonth = d.getDate() === daysInMonth(d);
               const band = banded
                 ? cn(
-                    "pointer-events-none absolute inset-y-0 bg-[var(--brand-bg)]",
+                    "pointer-events-none absolute inset-y-0 bg-brand-soft",
                     isStart ? "start-1/2 end-0" : isEnd ? "start-0 end-1/2" : "inset-x-0",
                     isInRange && (di === 0 || d.getDate() === 1) && "rounded-s-full",
                     isInRange && (di === 6 || lastOfMonth) && "rounded-e-full",
@@ -721,7 +714,7 @@ export function MiniCalendar({
                   // The custom content is the day's DESCRIPTION: `aria-label` replaces
                   // the button's text as its name, so without this link a screen
                   // reader would hear the date and never the events drawn under it.
-                  aria-describedby={hasContent ? contentId : undefined}
+                  aria-describedby={filled ? contentId : undefined}
                   aria-selected={isSelected}
                   aria-disabled={disabled || undefined}
                   aria-current={isToday ? "date" : undefined}
@@ -735,10 +728,10 @@ export function MiniCalendar({
                           FOCUS_RING,
                         "focus-visible:ring-inset",
                           disabled
-                            ? "cursor-not-allowed bg-[var(--bg-surface)] text-[var(--text-placeholder)]"
+                            ? "cursor-not-allowed bg-surface text-placeholder"
                             : isSelected
-                              ? "bg-[var(--brand-bg)] text-[var(--text-primary)] hover:bg-[var(--brand-bg-hover)]"
-                              : "bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
+                              ? "bg-brand-soft text-primary hover:bg-brand-soft-hover"
+                              : "bg-surface text-primary hover:bg-hover",
                         )
                       : cn(
                     "relative size-8 rounded-full text-xs tabular-nums transition-colors",
@@ -751,10 +744,10 @@ export function MiniCalendar({
                     FOCUS_RING_WIDTH,
                     "focus-visible:outline-none focus-visible:ring-inset",
                     isStart || isEnd
-                      ? "focus-visible:ring-[var(--brand-contrast)]"
-                      : "focus-visible:ring-[var(--brand)]",
+                      ? "focus-visible:ring-brand-contrast"
+                      : "focus-visible:ring-brand",
                     disabled
-                      ? "cursor-not-allowed text-[var(--text-placeholder)]"
+                      ? "cursor-not-allowed text-placeholder"
                       // The two selected states are the BRAND, not a fixed sky: the endpoints
                       // are the solid fill and the days between them its soft tint. Hardcoding
                       // them left an app that changed `--brand` with a calendar in the old
@@ -762,11 +755,11 @@ export function MiniCalendar({
                       // flip light/dark themselves, so there is no `dark:` partner to carry —
                       // one would override the token and bring the hardcoded hue back.
                       : isStart || isEnd
-                        ? "bg-[var(--brand)] text-[var(--brand-contrast)] hover:bg-[var(--brand-hover)]"
+                        ? "bg-brand text-brand-contrast hover:bg-brand-hover"
                         : isInRange
-                          ? "font-medium text-[var(--brand-muted)] hover:bg-[var(--brand-bg-hover)]"
-                          : "text-[var(--text-primary)] hover:bg-[var(--bg-hover)]",
-                    isToday && !isStart && !isEnd && !isInRange && !disabled && "ring-1 ring-inset ring-[var(--border-strong)]",
+                          ? "font-medium text-brand-muted hover:bg-brand-soft-hover"
+                          : "text-primary hover:bg-hover",
+                    isToday && !isStart && !isEnd && !isInRange && !disabled && "ring-1 ring-inset ring-strong",
                   )
                   }
                 >
@@ -776,15 +769,15 @@ export function MiniCalendar({
                         className={cn(
                           "inline-flex size-6 shrink-0 items-center justify-center self-start rounded-full tabular-nums",
                           isStart || isEnd
-                            ? "bg-[var(--brand)] font-semibold text-[var(--brand-contrast)]"
+                            ? "bg-brand font-semibold text-brand-contrast"
                             : isToday && !disabled
-                              ? "font-semibold text-[var(--brand)] ring-1 ring-inset ring-[var(--brand)]"
-                              : isInRange && "font-medium text-[var(--brand-muted)]",
+                              ? "font-semibold text-brand ring-1 ring-inset ring-brand"
+                              : isInRange && "font-medium text-brand-muted",
                         )}
                       >
                         {label}
                       </span>
-                      {hasContent && (
+                      {filled && (
                         <span id={contentId} className="flex min-w-0 flex-col gap-0.5">
                           {content}
                         </span>
@@ -794,7 +787,7 @@ export function MiniCalendar({
                     <>
                       {label}
                       {/* Under the number, inside the circle: room for a dot or two. */}
-                      {hasContent && (
+                      {filled && (
                         <span
                           id={contentId}
                           className="pointer-events-none absolute inset-x-0 bottom-0.5 flex justify-center gap-px leading-none"

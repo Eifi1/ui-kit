@@ -1,12 +1,13 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 
 import { cn } from "../lib/cn";
-import { Button } from "../components/ui";
-import type { ButtonSize } from "../components/ui";
+import { Button } from "../components/button";
+import type { ButtonSize } from "../components/button-look";
 import { useAccessAction } from "./access";
 import type { AccessChoice } from "./access";
 import { useLandingLabels } from "./landing-labels";
 import type { LandingLabels } from "./landing-labels";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 /**
  * Who is looking at a public page (docs/landing-demo-harmonization.md §3.1, §4.1):
@@ -19,7 +20,7 @@ export type LandingSession = "none" | "demo" | "user";
  *  largest actions. */
 const LARGE = "px-5 py-2.5";
 
-export interface LandingActionsProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface LandingActionsProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   session: LandingSession;
   access: AccessChoice;
   /** "Try the demo" without a session, "Continue the demo" with a demo one. Default
@@ -34,7 +35,7 @@ export interface LandingActionsProps extends Omit<ComponentPropsWithoutRef<"div"
   size?: ButtonSize | "large";
   /** `start` (default) under the hero's copy; `center` in the CTA band. */
   align?: "start" | "center";
-  labels?: Partial<LandingLabels>;
+  labels?: LabelOverride<LandingLabels>;
 }
 
 /**

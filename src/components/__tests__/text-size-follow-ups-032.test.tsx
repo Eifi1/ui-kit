@@ -5,7 +5,9 @@ import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Chip } from "../chip";
 import { NumberInput } from "../number-input";
-import { CompactControls, FieldHint, Input, TOUCH_TARGET_LARGE } from "../ui";
+import { CompactControls, FieldHint } from "../field-parts";
+import { Input } from "../input";
+import { TOUCH_TARGET_LARGE } from "../button-look";
 import { ToggleGroup } from "../toggle-group";
 import { LineItems, type LineItemsColumn } from "../line-items";
 import { ConfirmProvider } from "../confirm-dialog";
@@ -17,6 +19,7 @@ import { DemoBanner } from "../../demo/demo-banner";
 import { InvitationsPanel } from "../../admin/invitations-panel";
 import type { InvitationRow } from "../../admin/invitations-panel";
 import { applyTextSize, type TextSize } from "../../theme/text-size";
+import { viewportMatchMedia } from "../../test/viewport";
 
 /**
  * The text-size follow-ups of 0.32 (docs/text-size-harmonization.md §4, §10.8): Chip's
@@ -38,18 +41,7 @@ afterEach(() => {
 /** A `matchMedia` for a viewport `width` px wide whose pointer is a finger when `coarse`
  *  (as text-size-behaviours-032 stubs it). */
 function media({ width = 1280, coarse = false }: { width?: number; coarse?: boolean } = {}) {
-  vi.stubGlobal("matchMedia", (query: string) => {
-    const min = /min-width:\s*(\d+)px/.exec(query);
-    const max = /width\s*<\s*(\d+)px/.exec(query);
-    const matches = /pointer:\s*coarse/.test(query)
-      ? coarse
-      : min
-        ? width >= Number(min[1])
-        : max
-          ? width < Number(max[1])
-          : false;
-    return { matches, media: query, addEventListener() {}, removeEventListener() {} };
-  });
+  vi.stubGlobal("matchMedia", viewportMatchMedia(width, { coarse }));
 }
 
 function size(s: TextSize) {
@@ -354,7 +346,7 @@ describe("ToggleGroup at Large (§4)", () => {
     const group = screen.getByRole("radiogroup", { name: "Group by" });
     expect(group.className.split(" ")).toContain("large:flex-wrap");
     // Still inside the field's chrome: the bordered box round the segments.
-    expect(group.parentElement!.className).toContain("border-[var(--border)]");
+    expect(group.parentElement!.className).toContain("border-subtle");
     // A label wider than a whole row still truncates as the last resort.
     expect(screen.getByRole("radio", { name: "Half-year" }).className).toContain("truncate");
   });
@@ -373,7 +365,7 @@ describe("ToggleGroup at Large (§4)", () => {
     expect(onChange).toHaveBeenLastCalledWith("month");
   });
 
-  it("wraps with three options and outside the field chrome too, but not in the strip (0.32.1)", () => {
+  it("wraps with three options, outside the field chrome and in the strip too (0.32.1, 0.34)", () => {
     at312(
       <>
         <ToggleGroup label="Three" value="month" onChange={() => {}} options={GRAINS.slice(0, 3)} />
@@ -383,11 +375,12 @@ describe("ToggleGroup at Large (§4)", () => {
         <ToggleGroup label="Wrap" overflow="wrap" value="month" onChange={() => {}} options={GRAINS} />
       </>,
     );
-    for (const name of ["Three", "Bare", "Above"]) {
+    // The strip since 0.34 (round 0.34 T1): its one row cut "Open" to "Op…" at 360 px /
+    // Extra large, which the size sweep reports. At Normal it is still one row.
+    for (const name of ["Three", "Bare", "Above", "Strip"]) {
       expect(screen.getByRole("radiogroup", { name }).className.split(" "), name).toContain("large:flex-wrap");
     }
-    // The strip's 26 px group lines up with the 42 px fields beside it: one row.
-    expect(screen.getByRole("radiogroup", { name: "Strip" }).className).not.toContain("flex-wrap");
+    expect(screen.getByRole("radiogroup", { name: "Strip" }).className.split(" ")).not.toContain("flex-wrap");
     // overflow="wrap" always wraps, so it needs no Large class.
     const wrap = screen.getByRole("radiogroup", { name: "Wrap" }).className.split(" ");
     expect(wrap).toContain("flex-wrap");

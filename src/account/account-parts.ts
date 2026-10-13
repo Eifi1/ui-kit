@@ -62,6 +62,6 @@ export function settle(call: () => unknown): Promise<unknown> {
   }
 }
 
-/** The settings cards' type scale, PasskeysSetting's: a small title and a muted line. */
-export const CARD_TITLE_CLASS = "text-sm font-medium";
-export const CARD_DESCRIPTION_CLASS = "text-xs text-[var(--text-muted)]";
+/** The settings cards' type scale, PasskeysSetting's: a small title and a muted line.
+ *  Defined with the card look in settings/ since 0.34 (MOD-8, refactor audit 2026-10). */
+export { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS } from "../settings/settings-card-classes";

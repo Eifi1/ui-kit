@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import type { MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { Check } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -14,11 +13,11 @@ import { pickLinkRenderer } from "./text-link";
  * rows (`TopBarActionMenu`, `OptionSwitcherMenu`) cannot drift into two looks.
  */
 const MENU_ITEM_ROW =
-  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-start text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]";
+  "flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-start text-secondary hover:bg-hover";
 
 /** HoverMenu moves focus onto items with the arrow keys; a pointer user never sees the
  *  ring, a keyboard user always does. Inset, because the panel clips its children. */
-const MENU_ITEM_FOCUS = `${FOCUS_RING} focus-visible:bg-[var(--bg-hover)] focus-visible:ring-inset`;
+const MENU_ITEM_FOCUS = `${FOCUS_RING} focus-visible:bg-hover focus-visible:ring-inset`;
 
 export type MenuItemTone = "default" | "danger";
 
@@ -65,6 +64,9 @@ interface MenuItemBaseProps {
   id?: string;
   [key: `aria-${string}`]: string | boolean | number | undefined;
   [key: `data-${string}`]: unknown;
+  /** The row — the `<button>`, or the `<a>` with `href`. A React 19 ref prop since 0.34
+   *  (MOD-4, refactor audit 2026-10); it was `forwardRef`. */
+  ref?: Ref<HTMLElement>;
 }
 
 /**
@@ -131,32 +133,30 @@ export type MenuItemProps = MenuItemBaseProps &
  * with the rest. Render it inside an `<li>` like the shell's own rows; `HoverMenu`
  * turns the list markup into `role="none"`.
  */
-export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem(
-  {
-    children,
-    icon: Icon,
-    leading,
-    badge,
-    trailing,
-    tone = "default",
-    disabled = false,
-    className,
-    href,
-    renderLink,
-    onClick,
-    checked,
-    checkable,
-    current,
-    ...rest
-  },
+export function MenuItem({
   ref,
-) {
+  children,
+  icon: Icon,
+  leading,
+  badge,
+  trailing,
+  tone = "default",
+  disabled = false,
+  className,
+  href,
+  renderLink,
+  onClick,
+  checked,
+  checkable,
+  current,
+  ...rest
+}: MenuItemProps) {
   const kitLink = useKitLink();
   const on = href !== undefined ? !!current : !!checked;
   const look = cn(
     MENU_ITEM_ROW,
     MENU_ITEM_FOCUS,
-    tone === "danger" && "text-[var(--danger)] hover:bg-[var(--danger-bg)] focus-visible:bg-[var(--danger-bg)]",
+    tone === "danger" && "text-danger hover:bg-danger-soft focus-visible:bg-danger-soft",
     disabled && "cursor-default opacity-50 hover:bg-transparent",
     className,
   );
@@ -165,7 +165,10 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       <span className="flex min-w-0 items-center gap-2">
         {Icon && <Icon className="size-4 shrink-0" aria-hidden />}
         {leading}
-        <span className="min-w-0 truncate">{children}</span>
+        {/* An ellipsis at Normal; from Large up the label wraps and the row grows
+            (text size §10.17, round 0.34 T1) — a menu row cut to "Househ…" at 150 %
+            is a choice the reader cannot read. */}
+        <span className="min-w-0 truncate-until-large">{children}</span>
         {badge != null && badge !== false && (
           <>
             {/* A space between the name and the badge in the accessible name ("Household
@@ -180,7 +183,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       {(trailing != null || on) && (
         <span className="flex shrink-0 items-center gap-2">
           {trailing}
-          {on && <Check className="size-4 text-[var(--text-secondary)]" aria-hidden />}
+          {on && <Check className="size-4 text-secondary" aria-hidden />}
         </span>
       )}
     </>
@@ -230,7 +233,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       {body}
     </button>
   );
-});
+}
 
 function RenderedLink({
   render,

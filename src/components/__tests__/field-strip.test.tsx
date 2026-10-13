@@ -5,7 +5,7 @@ import { FieldStrip } from "../field-strip";
 import { ToggleGroup } from "../toggle-group";
 import { SwatchPicker } from "../swatch-picker";
 import { IconPicker } from "../icon-picker";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 
 /**
  * 0.23.0, keksdose G8: the label strip the kit's groups wear (0.22, K2), public for
@@ -36,28 +36,30 @@ describe("FieldStrip (keksdose G8)", () => {
     expect(group).toContainElement(screen.getByRole("button", { name: "Locate me" }));
   });
 
-  it('pad="field" is the 16px strip; a className merges after the pad (responsive strip)', () => {
+  // keksdose dev#593 (kk K4): the label row ends 18px down (4 + the 14px "?"), so a 16px
+  // strip put it across the content's top border. Since 0.34 there is one strip.
+  it('pad="field" is the same 20px strip, kept so a caller compiles; a className merges after it', () => {
     const { rerender } = render(
       <FieldStrip label="Status" pad="field">
         <span>Done</span>
       </FieldStrip>,
     );
     const group = screen.getByRole("group", { name: "Status" });
-    expect(group.className).toContain("pt-4");
-    expect(group.className).not.toContain("pt-5");
-    // keksdose's status cell: 20px on a phone, 16px in the desktop row.
+    expect(group.className).toContain("pt-5");
+    expect(group.className).not.toContain("pt-4");
+    expect(group).not.toHaveAttribute("pad");
     rerender(
-      <FieldStrip label="Status" pad="field" className="pt-5 @3xl:pt-4">
+      <FieldStrip label="Status" pad="field" className="pt-6 md:pt-7">
         <span>Done</span>
       </FieldStrip>,
     );
     const tokens = screen.getByRole("group").className.split(/\s+/);
-    expect(tokens).toContain("pt-5");
-    expect(tokens).toContain("@3xl:pt-4");
-    expect(tokens).not.toContain("pt-4");
+    expect(tokens).toContain("pt-6");
+    expect(tokens).toContain("md:pt-7");
+    expect(tokens).not.toContain("pt-5");
   });
 
-  it("is the strip ToggleGroup, SwatchPicker and IconPicker draw: same wrapper, same label row", () => {
+  it("is the strip ToggleGroup, SwatchPicker and IconPicker draw: one wrapper, one label row", () => {
     const { container: toggle } = render(
       <ToggleGroup
         label="Status"
@@ -92,6 +94,8 @@ describe("FieldStrip (keksdose G8)", () => {
     expect(row(field).outerHTML.replace(/id="[^"]*"/g, "")).toBe(row(toggle).outerHTML.replace(/id="[^"]*"/g, ""));
     expect(wrapper(clear).className).toBe(wrapper(swatch).className);
     expect(wrapper(clear).className).toBe(wrapper(icon).className);
+    // One strip since 0.34 (dev#593): the status group's is the swatches' 20px.
+    expect(wrapper(toggle).className).toBe(wrapper(swatch).className);
     // The kit's own groups name themselves; their strip stays a bare box.
     expect(wrapper(toggle)).not.toHaveAttribute("role");
     expect(wrapper(swatch)).not.toHaveAttribute("role");
@@ -130,7 +134,7 @@ describe("FieldStrip (keksdose G8)", () => {
     );
     const group = screen.getByRole("group", { name: "Location" });
     expect(group).toHaveAccessibleDescription("Optional. Stays on this device. The position could not be read.");
-    expect(screen.getByText("The position could not be read.").className).toContain("text-[var(--danger)]");
+    expect(screen.getByText("The position could not be read.")).toHaveClass("text-danger");
     // A group cannot be invalid; its controls are the caller's to mark.
     expect(group).not.toHaveAttribute("aria-invalid");
   });

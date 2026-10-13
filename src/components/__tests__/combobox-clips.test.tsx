@@ -1,11 +1,12 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { Combobox } from "../combobox";
 import { EntityCombobox } from "../entity-combobox";
 import { PickerSheet } from "../picker-sheet";
 import { Tooltip } from "../tooltip";
 import { CLIPS_ATTRIBUTE } from "../../lib/clipping";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * keksdose E8: the option lists are scrollers, and now say so where jsdom can see it
@@ -17,15 +18,7 @@ import { CLIPS_ATTRIBUTE } from "../../lib/clipping";
  */
 
 function mockPhone() {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes("width < 768px"),
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
+  stubViewportWidth(PHONE_WIDTH);
 }
 
 afterEach(() => {

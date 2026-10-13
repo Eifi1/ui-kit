@@ -16,8 +16,15 @@ import {
   ToggleGroup,
   UserAvatar,
 } from "@eifi1/ui-kit";
-import type { BreadcrumbItem, BreadcrumbLinkProps, PageHeaderSize, StatusDotSize, StatusDotTone } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, Row, Stage } from "../lib/section";
+import type {
+  BreadcrumbItem,
+  BreadcrumbLinkProps,
+  PageHeaderSize,
+  StatusDotSize,
+  StatusDotTone,
+  ChipHue,
+} from "@eifi1/ui-kit";
+import { ConstList, Example, Note, Row, Stage, READOUT, code } from "../lib/section";
 
 /**
  * PAGE STRUCTURE — the pieces of a page that are not its content: the header with its
@@ -25,8 +32,6 @@ import { ConstList, Example, Note, Row, Stage } from "../lib/section";
  * (section label, caption, status dot) the apps spelled in Tailwind classes. All
  * 0.10.0. Every link below goes to a real page of this showcase through the router.
  */
-
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
 
 /** react-router's Link takes `to`, not `href`. */
 const routerCrumb = ({ href, ...props }: BreadcrumbLinkProps) => <Link to={href} {...props} />;
@@ -149,7 +154,7 @@ function BreadcrumbCollapse() {
       hint="below 768px only: narrow the window or open the screen-size preview in the top bar"
     >
       <Row className="mb-4">
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={collapse} onChange={(e) => setCollapse(e.target.checked)} />
           <code className="font-mono">collapse</code>
         </label>
@@ -256,19 +261,19 @@ function TextPrimitives() {
         <div data-stage="wide" className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-3">
             <SectionLabel>Heating (size sm, as h3)</SectionLabel>
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-sm text-secondary">
               The default: 12px, above a block of page content — a heading, since it is an{" "}
               <code className="font-mono">h3</code> unless told otherwise.
             </p>
             <SectionLabel size="xs" as="p">
               Legend group (size xs, as p)
             </SectionLabel>
-            <p className="text-sm text-[var(--text-secondary)]">10px, for inside a dense panel — a legend, a menu row.</p>
-            <fieldset className="rounded-md border border-[var(--border)] px-3 pb-3">
+            <p className="text-sm text-secondary">10px, for inside a dense panel — a legend, a menu row.</p>
+            <fieldset className="rounded-md border border-subtle px-3 pb-3">
               <SectionLabel as="legend" className="px-1">
                 as legend
               </SectionLabel>
-              <p className="text-sm text-[var(--text-secondary)]">The label of a fieldset.</p>
+              <p className="text-sm text-secondary">The label of a fieldset.</p>
             </fieldset>
           </div>
           <div className="space-y-3">
@@ -276,7 +281,7 @@ function TextPrimitives() {
             <Caption className="mt-1">
               Invoices go to this address as PDF. Leave it empty to send them to the account&apos;s owner.
             </Caption>
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-sm text-secondary">
               Total due <strong>€ 1,425.50</strong>{" "}
               <Caption as="span">(incl. 19 % VAT — a caption as=&quot;span&quot;, inside a line)</Caption>
             </p>
@@ -320,7 +325,7 @@ function StatusDots() {
     >
       <div className="space-y-4">
         <div className="overflow-x-auto">
-          <table className="text-xs text-[var(--text-secondary)]">
+          <table className="text-xs text-secondary">
             <thead>
               <tr>
                 <th className="pe-4 text-start font-medium">tone</th>
@@ -355,11 +360,11 @@ function StatusDots() {
             {unread > 0 && <StatusDot tone="danger" size="md" ring className="absolute -end-0.5 -top-0.5" />}
           </span>
           <span className="relative inline-flex">
-            <Bell className="size-5 text-[var(--text-secondary)]" aria-hidden />
+            <Bell className="size-5 text-secondary" aria-hidden />
             <StatusDot tone="brand" ring className="absolute -end-0.5 -top-0.5" />
           </span>
           <span className="relative inline-flex">
-            <Bell className="size-5 text-[var(--text-secondary)]" aria-hidden />
+            <Bell className="size-5 text-secondary" aria-hidden />
             <StatusDot tone="brand" className="absolute -end-0.5 -top-0.5" />
           </span>
           <Button variant="ghost" size="sm" onClick={() => setUnread((n) => (n > 0 ? 0 : 3))}>
@@ -403,5 +408,72 @@ export function PageStructure() {
       <TextPrimitives />
       <StatusDots />
     </>
+  );
+}
+
+/* ── since 0.11 ─────────────────────────────────────────────────────────── */
+
+export function SectionLabelMdDemo() {
+  const figures: Array<[string, string]> = [
+    ["Assigned", "€ 2,340"],
+    ["Activity", "−€ 1,812"],
+    ["Available", "€ 528"],
+  ];
+  return (
+    <Example label="SectionLabel — size md" hint="11px, the rung between xs (10px) and sm (12px): the label over a figure">
+      <div className="grid grid-cols-3 gap-4">
+        {figures.map(([label, value]) => (
+          <div key={label}>
+            <SectionLabel as="p" size="md">
+              {label}
+            </SectionLabel>
+            <p className="text-lg font-semibold tabular-nums text-primary">{value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3">
+        <Note>
+          10px reads as a footnote under a figure this size and 12px competes with it. It is named{" "}
+          {code("md")} rather than slotted into order because {code("sm")} was already the default.
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
+  );
+}
+
+const HUES: ChipHue[] = ["blue", "indigo", "purple", "teal", "orange"];
+
+const HUE_STATES: Record<ChipHue, string> = {
+  blue: "Sent",
+  indigo: "Accepted",
+  purple: "Invoiced",
+  teal: "Scheduled",
+  orange: "On hold",
+};
+
+export function StatusDotHuesDemo() {
+  return (
+    <Example label="StatusDot — hues beside matching Chips" hint="Chip's five categorical hues, name for name">
+      <div className="flex flex-col gap-2">
+        {HUES.map((hue) => (
+          <Row key={hue}>
+            <span className="w-16 font-mono text-xs text-secondary">{hue}</span>
+            <StatusDot tone={hue} size="lg" label={HUE_STATES[hue]} />
+            <Chip tone={hue} size="xs">
+              {HUE_STATES[hue]}
+            </Chip>
+          </Row>
+        ))}
+      </div>
+      <div className="mt-3">
+        <Note>
+          A dot in a legend and the Chip in the table it explains are the same colour, because both paint with
+          the {code("--hue-*")} tokens. Use a hue for values that only need telling apart, and a semantic tone
+          for values that mean something (overdue is {code("danger")}).
+        </Note>
+      </div>
+      <Note>Since 0.11.</Note>
+    </Example>
   );
 }

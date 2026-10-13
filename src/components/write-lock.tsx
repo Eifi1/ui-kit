@@ -1,6 +1,8 @@
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { hasContent } from "../lib/presence";
+import { DEFAULT_WRITE_LOCK_LABELS } from "./write-lock-labels";
 
 /** The words {@link WriteLockProvider} renders on its own behalf. */
 export interface WriteLockLabels {
@@ -8,9 +10,8 @@ export interface WriteLockLabels {
   reason: string;
 }
 
-export const DEFAULT_WRITE_LOCK_LABELS: WriteLockLabels = {
-  reason: "You can view this but not change it.",
-};
+// Defined in ./write-lock-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_WRITE_LOCK_LABELS };
 
 /**
  * What kind of lock a source is (docs/billing-harmonization.md §12.36, ui-kit 0.33).
@@ -96,15 +97,12 @@ export interface WriteLockProviderProps {
    * `labels.reason`.
    */
   holds?: readonly WriteLockHold[];
-  labels?: Partial<WriteLockLabels>;
+  labels?: LabelOverride<WriteLockLabels>;
   children?: ReactNode;
 }
 
-// `null`/`""`/`false` count as "no reason given": a lock whose tooltip is empty would be
-// a disabled button that cannot say why, the thing this replaces.
-function given(reason: ReactNode): boolean {
-  return reason !== undefined && reason !== null && reason !== false && reason !== "";
-}
+// `null`/`""`/`false` count as "no reason given" (`hasContent`): a lock whose tooltip is
+// empty would be a disabled button that cannot say why, the thing this replaces.
 
 /**
  * The read-only lock — **everything renders; only the commit is locked.**
@@ -150,7 +148,7 @@ export function WriteLockProvider({ locked, reason, kind, holds, labels, childre
   const several = locked && holds !== undefined && holds.length > 0 ? holds : undefined;
   const firstKind = several ? several[0].kind : kind;
   const firstGiven = several ? several[0].reason : reason;
-  const firstReason = given(firstGiven) ? firstGiven : fallback;
+  const firstReason = hasContent(firstGiven) ? firstGiven : fallback;
   // Memoised on the first hold's kind and sentence — the strings an app passes — so a
   // one-source lock keeps one context value across renders; a list of several is
   // memoised on its own identity.
@@ -158,7 +156,7 @@ export function WriteLockProvider({ locked, reason, kind, holds, labels, childre
   const value = useMemo<WriteLock>(() => {
     if (!locked) return UNLOCKED;
     const all = many
-      ? many.map((hold) => ({ kind: hold.kind, reason: given(hold.reason) ? hold.reason : fallback }))
+      ? many.map((hold) => ({ kind: hold.kind, reason: hasContent(hold.reason) ? hold.reason : fallback }))
       : [{ kind: firstKind, reason: firstReason }];
     return { locked: true, reason: firstReason, kind: firstKind, holds: all };
   }, [locked, many, firstKind, firstReason, fallback]);

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { DragEvent, ReactElement } from "react";
-import { useFilePicker } from "../components/file-button";
-import type { UseFilePickerOptions } from "../components/file-button";
+import { useFilePicker } from "./use-file-picker";
+import type { UseFilePickerOptions } from "./use-file-picker";
 
 /**
  * Turn ANY element into a file drop target — kastlan's ask, for the document list of

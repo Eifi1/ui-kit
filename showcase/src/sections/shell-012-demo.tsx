@@ -2,15 +2,12 @@ import { useState } from "react";
 import { Bell, CloudOff, MessageSquarePlus, RefreshCw } from "lucide-react";
 import { Switch, ToggleGroup, TopBar, TopBarActionMenu, TopBarBrand } from "@eifi1/ui-kit";
 import type { KitLinkComponent, StatusDotTone, TopBarMenuEntry } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
  * The 0.12 top-bar parts: the brand link that collapses to its logo on a phone, and the
  * unread dot on a menu's icon trigger.
  */
-
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /** A made-up brand mark: an SVG with no size of its own, so TopBarBrand's `h-6` sizes it. */
 function AcmeMark() {
@@ -50,9 +47,9 @@ function TopBarBrandSpecimen() {
       hint="pass it as TopBar's brand; it is a router link to `to`"
     >
       <Row>
-        <span className="text-xs text-[var(--text-muted)]">collapseBelow</span>
+        <span className="text-xs text-muted">collapseBelow</span>
         <ToggleGroup<Collapse>
-          ariaLabel="collapseBelow"
+          aria-label="collapseBelow"
           value={collapse}
           onChange={setCollapse}
           options={[
@@ -63,7 +60,7 @@ function TopBarBrandSpecimen() {
         />
         <Switch label="renderLink of its own" checked={own} onCheckedChange={setOwn} />
       </Row>
-      <div className="mt-4 overflow-hidden rounded-md border border-[var(--border)]">
+      <div className="mt-4 overflow-hidden rounded-md border border-subtle">
         <TopBar
           className="static"
           brand={
@@ -130,7 +127,7 @@ function IconBadgeSpecimen() {
         <TopBarActionMenu
           icon={<Bell className="size-5" />}
           iconBadge={unread ? { label: `${unread} unread`, tone } : null}
-          ariaLabel="Feedback"
+          aria-label="Feedback"
           heading="Feedback"
           entries={feedbackEntries}
           panelClassName="w-56"
@@ -138,13 +135,13 @@ function IconBadgeSpecimen() {
         <TopBarActionMenu
           icon={<CloudOff className="size-5" />}
           iconBadge={offline ? { label: "sync failed", tone: "warning" } : undefined}
-          ariaLabel="Sync status"
+          aria-label="Sync status"
           heading="Sync"
           entries={syncEntries}
           panelClassName="w-56"
         />
         <ToggleGroup<StatusDotTone>
-          ariaLabel="tone"
+          aria-label="tone"
           value={tone}
           onChange={setTone}
           options={[
@@ -157,7 +154,7 @@ function IconBadgeSpecimen() {
       <Row className="mt-3">
         <button
           type="button"
-          className="rounded-md border border-[var(--border)] px-2 py-1 text-xs"
+          className="rounded-md border border-subtle px-2 py-1 text-xs"
           onClick={() => {
             setUnread((n) => n + 1);
             setOffline(true);
@@ -171,7 +168,7 @@ function IconBadgeSpecimen() {
       </Row>
       <div className="mt-3">
         <Note>
-          With a badge the trigger is named by its content — {code("ariaLabel")} and the badge&apos;s {code("label")}{" "}
+          With a badge the trigger is named by its content — {code("aria-label")} and the badge&apos;s {code("label")}{" "}
           as {code("sr-only")} text — so it is read &ldquo;Feedback 2 unread&rdquo;; an {code("aria-label")} would
           have hidden the count. {code("tone")} defaults to {code("danger")}. {code("null")} or {code("undefined")}{" "}
           draws the plain trigger. Choose the menu&apos;s row to clear each dot.

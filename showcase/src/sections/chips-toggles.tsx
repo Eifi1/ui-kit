@@ -1,9 +1,22 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Bell, CreditCard, Hash, Pin, Settings2, Star, Tag, User } from "lucide-react";
-import { Button, Chip, ChipInput, HoverMenu, TOPBAR_MENU_ITEM_CLASS, Tabs, ToggleGroup } from "@eifi1/ui-kit";
+import {
+  Button,
+  Chip,
+  ChipInput,
+  HoverMenu,
+  TOPBAR_MENU_ITEM_CLASS,
+  Tabs,
+  ToggleGroup,
+  FieldHint,
+  Input,
+  Select,
+  Switch,
+  WriteLockProvider,
+} from "@eifi1/ui-kit";
 import type { ChipLinkProps, ToggleOption } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Example, Note, Row, code } from "../lib/section";
 import { useT } from "../i18n";
 import { TabControls } from "./field-anatomy-demo";
 
@@ -21,7 +34,7 @@ import { TabControls } from "./field-anatomy-demo";
  *  opinion about what a badge looks like, so the showcase has to bring its own. */
 function CountPill({ children }: { children: number }) {
   return (
-    <span className="rounded-full bg-[var(--bg-surface-2)] px-1.5 py-0.5 text-caption font-medium text-[var(--text-secondary)]">
+    <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-caption font-medium text-secondary">
       {children}
     </span>
   );
@@ -37,7 +50,7 @@ function TabStrip() {
       hint="underline strip; the last tab is a real <a> you can ⌘/middle-click"
     >
       <Tabs<PlainTab>
-        label="Workspace sections"
+        aria-label="Workspace sections"
         active={active}
         onChange={setActive}
         tabs={[
@@ -51,8 +64,8 @@ function TabStrip() {
           { id: "docs", label: "Docs", href: "#/chips-toggles" },
         ]}
       />
-      <div className="pt-3 text-sm text-[var(--text-secondary)]">
-        Panel for <span className="font-mono text-[var(--text-primary)]">{active}</span>.
+      <div className="pt-3 text-sm text-secondary">
+        Panel for <span className="font-mono text-primary">{active}</span>.
       </div>
       <div className="mt-3">
         <Note>
@@ -94,7 +107,7 @@ function WrappedTabStrip() {
     >
       <Tabs<ReportTab>
         wrap
-        label="Report queues"
+        aria-label="Report queues"
         active={active}
         onChange={setActive}
         tabs={REPORT_TABS.map((tab) => ({
@@ -103,8 +116,8 @@ function WrappedTabStrip() {
           badge: <CountPill>{tab.count}</CountPill>,
         }))}
       />
-      <div className="pt-3 text-sm text-[var(--text-secondary)]">
-        Showing <span className="font-mono text-[var(--text-primary)]">{active}</span>.
+      <div className="pt-3 text-sm text-secondary">
+        Showing <span className="font-mono text-primary">{active}</span>.
       </div>
       <div className="mt-3">
         <Note>
@@ -145,8 +158,8 @@ function ToggleGroups() {
           ]}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
-        showing: <span className="font-mono text-[var(--text-secondary)]">{view}</span>
+      <p className="mt-3 text-xs text-muted">
+        showing: <span className="font-mono text-secondary">{view}</span>
       </p>
       <div className="mt-3">
         <Button variant="ghost" onClick={() => setLocked((v) => !v)}>
@@ -242,12 +255,12 @@ function ToggleGroupClearable() {
           options={QUEUE_OPTIONS}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
-        filter: <span className="font-mono text-[var(--text-secondary)]">{String(filter)}</span>
+      <p className="mt-3 text-xs text-muted">
+        filter: <span className="font-mono text-secondary">{String(filter)}</span>
         {log.length > 0 && (
           <>
             {" "}· onChange calls, newest first:{" "}
-            <span className="font-mono text-[var(--text-secondary)]">{log.join(", ")}</span>
+            <span className="font-mono text-secondary">{log.join(", ")}</span>
           </>
         )}
       </p>
@@ -313,7 +326,7 @@ function ChipVariants() {
       <div className="space-y-3">
         {(["soft", "outline", "solid"] as const).map((variant) => (
           <Row key={variant}>
-            <span className="w-16 font-mono text-caption text-[var(--text-muted)]">{variant}</span>
+            <span className="w-16 font-mono text-caption text-muted">{variant}</span>
             {CHIP_TONES.map((t) => (
               <Chip key={t} tone={t} variant={variant}>
                 {t}
@@ -322,7 +335,7 @@ function ChipVariants() {
           </Row>
         ))}
         <Row>
-          <span className="w-16 font-mono text-caption text-[var(--text-muted)]">caps</span>
+          <span className="w-16 font-mono text-caption text-muted">caps</span>
           {STATUS_BADGES.map((b) => (
             <Chip key={b.text} tone={b.tone} size="sm" caps>
               {b.text}
@@ -335,7 +348,7 @@ function ChipVariants() {
           ))}
         </Row>
         <Row>
-          <span className="w-16 font-mono text-caption text-[var(--text-muted)]">square</span>
+          <span className="w-16 font-mono text-caption text-muted">square</span>
           {["Overdue", "EUR", "Q3"].map((v) => (
             <Chip key={v} shape="square" tone="brand" variant="outline" selected={on.includes(v)} onClick={() => toggle(v)}>
               {v}
@@ -349,8 +362,8 @@ function ChipVariants() {
           </Chip>
         </Row>
         <Row>
-          <span className="w-16 font-mono text-caption text-[var(--text-muted)]">count</span>
-          <span className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
+          <span className="w-16 font-mono text-caption text-muted">count</span>
+          <span className="inline-flex items-center gap-1.5 text-sm text-secondary">
             <Bell className="size-4" aria-hidden /> Inbox
             <Chip tone="danger" variant="solid" size="sm" aria-label={`${unread} unread`}>
               {unread}
@@ -396,7 +409,7 @@ function ChipLinkOnClick() {
           {(close) => (
             <ul className="py-1">
               <li className="flex items-center justify-between gap-2 px-3 py-2">
-                <span className="text-sm text-[var(--text-primary)]">Marcel</span>
+                <span className="text-sm text-primary">Marcel</span>
                 <Chip
                   href="/chips-toggles"
                   renderLink={routerLink}
@@ -419,7 +432,7 @@ function ChipLinkOnClick() {
             </ul>
           )}
         </HoverMenu>
-        <span className="font-mono text-xs text-[var(--text-muted)]">chip onClick ran {clicks}×</span>
+        <span className="font-mono text-xs text-muted">chip onClick ran {clicks}×</span>
       </Row>
       <Note>
         Open the menu and press &ldquo;Admin&rdquo;: the chip is still a link (a router{" "}
@@ -467,7 +480,7 @@ function ChipLinksAndRemove() {
             {f}
           </Chip>
         ))}
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-secondary">
           <input type="checkbox" checked={removeLocked} onChange={(e) => setRemoveLocked(e.target.checked)} />
           <span>
             <code className="font-mono">removeDisabled</code> on the first
@@ -511,7 +524,7 @@ function VerticalTabs() {
       <div className="grid gap-4 md:grid-cols-[14rem_1fr]">
         <Tabs<SettingsTab>
           orientation="vertical"
-          label="Settings sections"
+          aria-label="Settings sections"
           active={active}
           onChange={setActive}
           tabs={[
@@ -525,8 +538,8 @@ function VerticalTabs() {
             { id: "advanced", label: <span className="inline-flex items-center gap-2"><Settings2 className="size-4" aria-hidden /> Advanced</span>, href: "#/chips-toggles" },
           ]}
         />
-        <div className="rounded-md border border-[var(--border)] p-4 text-sm text-[var(--text-secondary)]">
-          The <span className="font-medium text-[var(--text-primary)]">{labels[active]}</span> panel.
+        <div className="rounded-md border border-subtle p-4 text-sm text-secondary">
+          The <span className="font-medium text-primary">{labels[active]}</span> panel.
         </div>
       </div>
       <div className="mt-3">
@@ -732,8 +745,8 @@ function ChipStates() {
           </Button>
         </Row>
       </div>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
-        last event: <span className="font-mono text-[var(--text-secondary)]">{log}</span>
+      <p className="mt-3 text-xs text-muted">
+        last event: <span className="font-mono text-secondary">{log}</span>
       </p>
       <Note>
         The first chip is the <em>action</em> shape: with <code className="font-mono">onClick</code>{" "}
@@ -758,7 +771,7 @@ function ChipStates() {
 function ChipInputDemo() {
   // The translated label bundle, threaded into the component exactly as a consuming app
   // has to do it. The page frame being French while the components stayed English was the
-  // gap this closes: the kit ships no catalogue, so the app owns every string it shows.
+  // gap this closes: the kit renders only labels, and the app decides the language.
   const t = useT();
   const [tags, setTags] = useState(["invoices", "2026"]);
   const [emails, setEmails] = useState<string[]>([]);
@@ -847,9 +860,9 @@ function ChipInputOptions() {
           error={missing ? "Add at least one recipient." : undefined}
         />
       </div>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">
+      <p className="mt-3 text-xs text-muted">
         values:{" "}
-        <span className="font-mono text-[var(--text-secondary)]">
+        <span className="font-mono text-secondary">
           {JSON.stringify({ keywords, codes, cc })}
         </span>
       </p>
@@ -896,5 +909,133 @@ function ChipsRtl() {
         previous one (to its right), ← to move on towards the input.
       </Note>
     </Example>
+  );
+}
+
+/* ── since 0.16 ─────────────────────────────────────────────────────────── */
+
+export function Chips016Demo() {
+  return (
+    <Example label="Chip — xs with an icon" hint="the icon at the xs text's cap height">
+      <Row>
+        <Chip size="xs" icon={Tag}>
+          Groceries
+        </Chip>
+        <Chip size="xs" icon={Star} tone="warning">
+          Pinned
+        </Chip>
+        <Chip size="xs" icon={Tag} caps tone="success">
+          Paid
+        </Chip>
+        <Chip size="sm" icon={Tag}>
+          sm for scale
+        </Chip>
+      </Row>
+      <Note>Since 0.16.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+const GRAINS = [
+  { value: "month", label: "Month" },
+  { value: "quarter", label: "Quarter" },
+  { value: "half", label: "Half-year" },
+  { value: "year", label: "Year" },
+];
+
+const STATUSES = [
+  { value: "open", label: "Open" },
+  { value: "cleared", label: "Cleared" },
+  { value: "reconciled", label: "Done" },
+];
+
+/** ToggleGroup: the chrome clears its label (K1), the strip (K2), the lock (K3). */
+export function ToggleGroup022Demo() {
+  const [grain, setGrain] = useState("month");
+  const [status, setStatus] = useState("open");
+  const [locked, setLocked] = useState(true);
+  const [chip, setChip] = useState(true);
+  return (
+    <>
+      <Example
+        label="ToggleGroup as a field — the label is clear of the fill"
+        hint="42px beside a labelled Select, md and sm; chromeClassName joins it flush"
+      >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <Select label="Range" defaultValue="12">
+            <option value="12">Last 12 months</option>
+            <option value="24">Last 24 months</option>
+          </Select>
+          <ToggleGroup label="Group by" value={grain} onChange={setGrain} options={GRAINS} />
+          <ToggleGroup label="Group by" size="sm" value={grain} onChange={setGrain} options={GRAINS} />
+        </div>
+        <div className="mt-4 flex flex-col md:flex-row">
+          <Select label="Range" defaultValue="12" className="md:w-52" selectClassName="md:rounded-e-none">
+            <option value="12">Last 12 months</option>
+            <option value="24">Last 24 months</option>
+          </Select>
+          <ToggleGroup
+            label="Group by"
+            size="sm"
+            className="mt-3 md:mt-0 md:-ms-px"
+            chromeClassName="md:rounded-s-none"
+            value={grain}
+            onChange={setGrain}
+            options={GRAINS}
+          />
+        </div>
+        <Note>
+          The active fill starts 21px down, 3.25px below the 11px label&apos;s line (it was 17px, touching it —
+          keksdose feedback #117). {code('size="sm"')} keeps its 12px type inside the chrome. The joined pair
+          squares the shared edge from {code("md")} up with {code('chromeClassName="md:rounded-s-none"')} and{" "}
+          {code('className="md:-ms-px"')}; on a phone the two stack.
+        </Note>
+        <Note>Since 0.22.</Note>
+      </Example>
+      <Example label='ToggleGroup labelPlacement="strip"' hint="a group that is not a field, on its neighbours' label line">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
+          <Input label="Memo" defaultValue="Rent September" />
+          <ToggleGroup
+            label="Status"
+            labelPlacement="strip"
+            hint={<FieldHint label="What the bank statement says" />}
+            value={status}
+            onChange={setStatus}
+            options={STATUSES}
+          />
+          <Input label="Amount" defaultValue="1,250.00" />
+        </div>
+        <Note>
+          20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line
+          (keksdose&apos;s measured {code("ClearedStatusPicker")}, live #288 / #431), and the label and its
+          &ldquo;?&rdquo; clear of the group&apos;s border (dev#593: over the 16px strip it had, they crossed it by
+          2px).
+        </Note>
+        <Note>Since 0.22.</Note>
+      </Example>
+      <Example label="commit / disabledReason on a group and a chip" hint="under a WriteLockProvider: reachable, refusing, saying why">
+        <div className="flex flex-col gap-3">
+          <Switch checked={locked} onCheckedChange={setLocked} label="Read-only (WriteLockProvider locked)" />
+          <WriteLockProvider locked={locked} reason="This is a shared budget: you can look, not change.">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-full sm:w-72">
+                <ToggleGroup label="Status" commit value={status} onChange={setStatus} options={STATUSES} />
+              </div>
+              <Chip commit onClick={() => setChip((v) => !v)} selected={chip} checkbox>
+                Include in report
+              </Chip>
+            </div>
+          </WriteLockProvider>
+        </div>
+        <Note>
+          Hover or Tab onto a segment or the chip: the lock&apos;s reason shows and is read out; a press changes
+          nothing. Without the lock (or the {code("commit")} prop) both behave as before. {code("disabledReason")}{" "}
+          is the same refusal with a reason of the control&apos;s own.
+        </Note>
+        <Note>Since 0.22.</Note>
+      </Example>
+    </>
   );
 }

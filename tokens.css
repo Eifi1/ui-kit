@@ -658,14 +658,21 @@ html[data-text-size="xlarge"] {
  * file uses it, and variants and opacity work on all of them (`hover:bg-hover`,
  * `md:text-secondary`, `text-muted/60`).
  *
- * The kit's own ~1,750 `[var(--…)]` classes stay where they are (a rewrite would change
- * hundreds of class assertions here and in the apps); `scripts/check-token-discipline.mjs`
- * counts them wherever one of these exists and lets the number only fall. New and
- * touched code uses these. `check:tailwind` asserts one per namespace survives a build.
+ * The kit's own markup uses these wherever one exists (0.34 moved its ~1,750
+ * `[var(--…)]` classes over, then the focus width, the ring offsets and the money colours
+ * once they had names here — refactor audit 2026-10, DOC-7): `scripts/check-token-discipline.mjs`
+ * counts a `[var(--role)]` class, and a `ring-[length:var(--…)]` width, for any token that
+ * has a utility here and allows none (`ROLE_BUDGET` 0). What stays `[var()]` has no
+ * utility on purpose: the chart colours (lookup tables of `--chart-N`), `--status-*`
+ * (FieldSync's own four), and the cross-property one-offs (`bg-[var(--border)]` as a
+ * divider, `ring-[var(--text-primary)]`) — a utility there would undo the property
+ * scoping above. `check:tailwind` asserts one per namespace survives a build, and the
+ * README's "Styling" table is generated from this block (`scripts/gen-styling-inventory.mjs`).
  *
  * `text-brand`, `bg-brand` and `border-brand` were plain classes until 0.33, which
  * Tailwind gives no variants (`hover:bg-brand` generated nothing); they are theme names
- * now. The money classes below stay plain: `-muted` is an opacity, not a colour. */
+ * now, and so are the money colours since 0.34 (`text-money-income`, `hover:bg-money-expense`).
+ * The plain `.text-money-pos`-style classes below stay as aliases. */
 @theme inline {
   /* text-* — the text roles, the tone colours as text, and every fill's foreground */
   --text-color-primary: var(--text-primary);
@@ -679,6 +686,10 @@ html[data-text-size="xlarge"] {
   --text-color-warning: var(--warning);
   --text-color-success: var(--success);
   --text-color-info: var(--info);
+  --text-color-money-income: var(--money-income);
+  --text-color-money-expense: var(--money-expense);
+  --text-color-money-net: var(--money-net);
+  --text-color-money-neutral: var(--money-neutral);
   --text-color-hue-blue: var(--hue-blue);
   --text-color-hue-indigo: var(--hue-indigo);
   --text-color-hue-purple: var(--hue-purple);
@@ -718,6 +729,13 @@ html[data-text-size="xlarge"] {
   --background-color-success: var(--success);
   --background-color-info: var(--info);
   --background-color-neutral: var(--neutral);
+  --background-color-money-income: var(--money-income);
+  --background-color-money-expense: var(--money-expense);
+  --background-color-money-net: var(--money-net);
+  /* "No money has moved": the fill for markers on rows that are not real yet (scheduled
+     or future-dated). Deliberately not brand and not money-income, which both mean
+     settled: a future row wearing one of them reads as done. */
+  --background-color-money-neutral: var(--money-neutral);
   --background-color-danger-soft: var(--danger-bg);
   --background-color-warning-soft: var(--warning-bg);
   --background-color-success-soft: var(--success-bg);
@@ -756,6 +774,8 @@ html[data-text-size="xlarge"] {
   --ring-color-subtle: var(--border);
   --ring-color-strong: var(--border-strong);
   --ring-color-brand: var(--brand);
+  /* A ring on a filled brand control: a --brand ring on a --brand fill is drawn but unseen */
+  --ring-color-brand-contrast: var(--brand-contrast);
   --ring-color-danger-strong: var(--danger-border-strong);
   --ring-color-warning-strong: var(--warning-border-strong);
   --outline-color-subtle: var(--border);
@@ -764,6 +784,17 @@ html[data-text-size="xlarge"] {
   --outline-color-danger-strong: var(--danger-border-strong);
   --outline-color-warning-strong: var(--warning-border-strong);
   --ring-color-media-ink: var(--media-ink);
+
+  /* The focus frame's width (§5) as `ring-focus` / `outline-focus`, which compose with any
+     variant (`focus-visible:after:ring-focus`, `has-[:focus-visible]:outline-focus`) where
+     `FOCUS_RING` fixes both variant and colour. Tailwind tries a colour first, so these
+     hold while nothing declares a `--color-focus`. And `ring-offset-*`, the colour a ring
+     stands off in: the surface the control sits on. */
+  --ring-width-focus: var(--focus-ring-width);
+  --outline-width-focus: var(--focus-ring-width);
+  --ring-offset-color-page: var(--bg-page);
+  --ring-offset-color-surface: var(--bg-surface);
+  --ring-offset-color-media-scrim-hover: var(--media-scrim-hover);
 
   /* fill-* and stroke-* — for SVG: the text roles, the card, and the two lines */
   --fill-primary: var(--text-primary);
@@ -780,21 +811,21 @@ html[data-text-size="xlarge"] {
   --stroke-strong: var(--border-strong);
 }
 
-/* Money utilities backed by the tokens above. Unlayered so they win over Tailwind's
-   layered colour utilities, and theme-aware for free (the var flips under .dark) — no
-   dark: variant needed at the call site. Plain classes, so no variants: a site that
-   needs one keeps `[var(--money-…)]` (no money theme names this round, §12.4). */
+/* The money classes from before the theme names above, kept as aliases because apps use
+   them. Unlayered so they win over Tailwind's layered colour utilities, and theme-aware
+   for free (the var flips under .dark). Plain classes, so no variants: the theme names
+   take them (`text-money-income`, `hover:bg-money-expense`), and the kit's own markup
+   uses those (0.34, DOC-7). `-muted` is an opacity, not a colour, so it has no theme name.
+   `.text-money-net` and `.bg-money-neutral` were plain classes here too until 0.34; the
+   theme now makes those very names with the same colour, layered. A second, unlayered
+   rule of the same name would beat the layered one, so `text-money-net` would no longer
+   be the `text-[var(--money-net)]` it replaced in the kit. */
 .text-money-pos { color: var(--money-income); }
 .text-money-neg { color: var(--money-expense); }
-.text-money-net { color: var(--money-net); }
 .text-money-pos-muted { color: var(--money-income); opacity: 0.72; }
 .text-money-neg-muted { color: var(--money-expense); opacity: 0.72; }
 .bg-money-pos { background-color: var(--money-income); }
 .bg-money-neg { background-color: var(--money-expense); }
-/* "No money has moved" — the fill for markers on rows that are not real yet
-   (scheduled / future-dated). Deliberately NOT brand and NOT money-pos: those
-   two mean settled, and a future row wearing one of them reads as done. */
-.bg-money-neutral { background-color: var(--money-neutral); }
 
 /* Visually hidden, like Tailwind's `sr-only`, but POSITION: FIXED rather than absolute.
  *

@@ -1,8 +1,32 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
-import { Button, Card, CardContent, CardHeader, CardTitle, DataTable, Pagination, ToggleGroup } from "@eifi1/ui-kit";
-import type { DataTableChrome, DataTableColumn, DataTableDensity, FilterState, SortCycle, SortState } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { ChevronDown, ChevronRight, ExternalLink, Archive } from "lucide-react";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  DataTable,
+  Pagination,
+  ToggleGroup,
+  BooleanMark,
+  CopyButton,
+  SearchField,
+  booleanColumn,
+  useConfirm,
+  Checkbox,
+  numberFilter,
+} from "@eifi1/ui-kit";
+import type {
+  DataTableChrome,
+  DataTableColumn,
+  DataTableDensity,
+  FilterState,
+  SortCycle,
+  SortState,
+  DataTableRowAction,
+} from "@eifi1/ui-kit";
+import { Example, Note, OutTable, Row, code, READOUT } from "../lib/section";
 import {
   AMOUNT_FMT,
   ARCHIVED_COUNT,
@@ -26,7 +50,7 @@ import type { Status } from "./data-table-fixture";
  * the labels and the pure helpers on "Data table: parts & helpers" (data-table-parts.tsx).
  * The fixture all three share is data-table-fixture.tsx.
  */
-export function DataTableSection() {
+function DataTableSection() {
   return (
     <>
       <Note>
@@ -78,7 +102,7 @@ function MainTable() {
       hint="click a row to expand · ⌘/Ctrl- or Shift-click to select · the header sticks because the body is capped · on a phone the rows become cards and the detail opens full-screen"
     >
       <Row className="mb-3 justify-between">
-        <span className="text-xs text-[var(--text-secondary)]">
+        <span className="text-xs text-secondary">
           {selectedCount} of {selectable.length} selectable rows selected
           {ARCHIVED_COUNT > 0 && ` · ${ARCHIVED_COUNT} archived rows carry no checkbox`}
         </span>
@@ -108,14 +132,14 @@ function MainTable() {
         isExpanded={(r) => r.id === expandedId}
         expandedRow={(r) => (
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
-            <dt className="text-[var(--text-muted)]">Identifier</dt>
-            <dd className="font-mono text-[var(--text-primary)]">{r.id}</dd>
-            <dt className="text-[var(--text-muted)]">Opened</dt>
-            <dd className="text-[var(--text-primary)]">{r.opened}</dd>
-            <dt className="text-[var(--text-muted)]">Status</dt>
-            <dd className="text-[var(--text-primary)]">{STATUS_LABEL[r.status]}</dd>
-            <dt className="text-[var(--text-muted)]">Amount</dt>
-            <dd className="text-[var(--text-primary)]">{AMOUNT_FMT.format(r.amount)}</dd>
+            <dt className="text-muted">Identifier</dt>
+            <dd className="font-mono text-primary">{r.id}</dd>
+            <dt className="text-muted">Opened</dt>
+            <dd className="text-primary">{r.opened}</dd>
+            <dt className="text-muted">Status</dt>
+            <dd className="text-primary">{STATUS_LABEL[r.status]}</dd>
+            <dt className="text-muted">Amount</dt>
+            <dd className="text-primary">{AMOUNT_FMT.format(r.amount)}</dd>
           </dl>
         )}
         // The expansion is local component state, so it has no address — except
@@ -136,7 +160,7 @@ function MainTable() {
             type="button"
             onClick={() => setHideArchived((v) => !v)}
             aria-expanded={!hideArchived}
-            className="flex w-full items-center gap-1.5 px-3 py-1.5 text-start text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]"
+            className="flex w-full items-center gap-1.5 px-3 py-1.5 text-start text-xs text-secondary hover:bg-surface-2"
           >
             {hideArchived ? (
               <ChevronRight aria-hidden className="size-3.5 rtl:-scale-x-100" />
@@ -167,7 +191,7 @@ function MainTable() {
         // under the row; desktop always unfolds. Nothing to see above 768px.
         mobileExpandAsDialog
         empty={
-          <span className="text-[var(--text-secondary)]">
+          <span className="text-secondary">
             No rows match the current filters.
           </span>
         }
@@ -190,7 +214,13 @@ function MainTable() {
           reload. If you return to this page and a column is missing, that is the feature —
           re-tick it in the panel. The default prefix is{" "}
           <code className="font-mono">hbui-table:</code>; it is a prop so several apps can
-          share one localStorage origin without colliding.
+          share one localStorage origin without colliding. Since 0.34 an app sets its prefix
+          once, on <code className="font-mono">{"<UiKitProvider tableStorageKeyPrefix>"}</code>,
+          and every kit table below takes it — <code className="font-mono">TranslationReviewPanel</code>
+          too, which took none — while a table&apos;s own prop still wins. The stored key is the
+          prefix plus <code className="font-mono">storageKey</code>, so an app that wrapped
+          DataTable to pass its prefix keeps every reader&apos;s saved view when it moves the
+          prefix to the provider.
         </Note>
         <Note>
           Selection and the row link share the modifier keys, and the link wins:{" "}
@@ -380,7 +410,7 @@ const LINE_COLUMNS: DataTableColumn<LineItem>[] = [
         target="_blank"
         rel="noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="inline-flex items-center gap-1 text-[var(--brand)] hover:underline"
+        className="inline-flex items-center gap-1 text-brand hover:underline"
       >
         {r.spec} <ExternalLink aria-hidden className="size-3" />
       </a>
@@ -442,7 +472,7 @@ function ShortTable() {
           autoSize: "Fit fields to content",
         }}
         empty={
-          <span className="text-[var(--text-secondary)]">
+          <span className="text-secondary">
             No line items yet — the <code className="font-mono">empty</code> prop, not a “—”.
           </span>
         }
@@ -500,7 +530,7 @@ function DensityTable() {
       </Row>
       <Card className="max-w-xl">
         <CardHeader>
-          <CardTitle className="text-[var(--text-primary)]">Measurements in a card</CardTitle>
+          <CardTitle className="text-primary">Measurements in a card</CardTitle>
         </CardHeader>
         <CardContent className="pt-3">
           <DataTable
@@ -526,7 +556,7 @@ function DensityTable() {
           />
         </CardContent>
       </Card>
-      <div className="mt-4 max-w-xl rounded-md border border-[var(--border)]">
+      <div className="mt-4 max-w-xl rounded-md border border-subtle">
         <Pagination page={page} totalPages={8} pageSize={25} total={187} onPage={setPage} density={density} />
       </div>
       <div className="mt-3">
@@ -615,7 +645,7 @@ function ReportTable() {
       label="A report table — firstSort, sortCycle, chrome, frame={false}, keyboard rows"
       hint="the half-width summary keksdose's reports need: ranked by size, no power-user chrome, inside the app's own card"
     >
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-secondary">
         <span className={CONTROL}>
           <code className={TRI_LABEL}>chrome</code>
           <ToggleGroup<DataTableChrome>
@@ -645,7 +675,7 @@ function ReportTable() {
           <code className="font-mono">frame</code>
         </label>
       </div>
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-secondary">
         {(
           [
             ["columnSettings", columnSettings, setColumnSettings],
@@ -661,7 +691,7 @@ function ReportTable() {
       </div>
       <Card className="max-w-lg">
         <CardHeader>
-          <CardTitle className="text-[var(--text-primary)]">Top payees, September</CardTitle>
+          <CardTitle className="text-primary">Top payees, September</CardTitle>
         </CardHeader>
         <CardContent className="pt-3">
           <DataTable
@@ -675,14 +705,14 @@ function ReportTable() {
             resizable={tri(resizable)}
             multiSort={tri(multiSort)}
             frame={framed}
-            className={framed ? undefined : "rounded-md border border-[var(--border)]"}
+            className={framed ? undefined : "rounded-md border border-subtle"}
             density="compact"
             onRowClick={(r) => setOpened(r.payee)}
             labels={{ table: "Top payees" }}
           />
         </CardContent>
       </Card>
-      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">onRowClick → {opened}</p>
+      <p className="mt-2 font-mono text-xs text-secondary">onRowClick → {opened}</p>
       <div className="mt-3">
         <Note>
           Bookings and Total are <code className="font-mono">firstSort: &quot;desc&quot;</code>: the first
@@ -768,7 +798,7 @@ function PrivateCellsTable() {
       label="Column cellProps and headProps"
       hint="attributes for a column's <td> per row, and for its <th> once — here data-private for a demo mode"
     >
-      <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+      <label className="mb-3 flex items-center gap-2 text-xs text-secondary">
         <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
         {/* One span: bare text beside the <code> made three flex items, three ragged columns. */}
         <span>
@@ -786,7 +816,7 @@ function PrivateCellsTable() {
           labels={{ table: "Accounts" }}
         />
       </div>
-      <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">
+      <p className="mt-2 font-mono text-xs text-secondary">
         [data-private] elements = {counts.cells} · th[data-col-kind] = {counts.heads}
       </p>
       <div className="mt-3">
@@ -817,8 +847,8 @@ function FillHeightTable() {
       label="fillHeight — a table in a bounded pane"
       hint="the dashed box is a fixed 18rem flex column; the table — or the card list on a phone — fills it and scrolls inside"
     >
-      <div className="flex h-72 flex-col rounded-md border border-dashed border-[var(--border)] p-2">
-        <div className="pb-2 text-xs text-[var(--text-muted)]">A toolbar above the table</div>
+      <div className="flex h-72 flex-col rounded-md border border-dashed border-subtle p-2">
+        <div className="pb-2 text-xs text-muted">A toolbar above the table</div>
         <DataTable
           rows={ROWS}
           columns={SMALL_COLUMNS}
@@ -839,6 +869,21 @@ function FillHeightTable() {
           flex parent (a viewport-locked app shell, a split pane) there is nothing to fill
           and the prop does nothing — which is why the main table above uses{" "}
           <code className="font-mono">maxBodyHeight</code> instead.
+        </Note>
+        <Note>
+          <strong>Two scrollbars</strong> (0.34, kastlan feedback 55): the default{" "}
+          <code className="font-mono">maxBodyHeight</code>,{" "}
+          <code className="font-mono">calc(100dvh - 12rem)</code>, scrolls the body inside a
+          page that scrolls itself, so a long table under a page header shows two scrollbars
+          side by side. A list page whose table is the point fills the height from{" "}
+          <code className="font-mono">md</code> up instead: the shell&apos;s content column turns
+          into a full-height flex column when its page asks (
+          <code className="font-mono">md:has-[&gt;[data-fill-height]]:flex … :h-full … :flex-col</code>
+          ), the page root asks (<code className="font-mono">data-fill-height</code>,{" "}
+          <code className="font-mono">md:flex md:min-h-0 md:flex-1 md:flex-col</code>) and the
+          table takes the rest (<code className="font-mono">fillHeight</code>). Only the body
+          scrolls then, under its pinned header; every other page grows as before (kastlan
+          e3985c9).
         </Note>
       </div>
     </Example>
@@ -877,3 +922,362 @@ function RtlTable() {
   );
 }
 
+/* ── since 0.12 ─────────────────────────────────────────────────────────── */
+
+/**
+ * DATA TABLE 0.12 — per-row actions, the toolbar, the translated empty label, yes/no
+ * columns and a copy button in a cell (the "data-table" page); and the owner-held URL
+ * state with `filterHref` links and the filter builders (the "data-table-server" page).
+ */
+
+/* ── Tenants: rowActions, toolbar, empty, BooleanMark, CopyButton ──────────── */
+
+interface Tenant {
+  id: string;
+  name: string;
+  email: string;
+  autopay: boolean;
+  /** `null`: the check has not been run yet. */
+  verified: boolean | null;
+  /** A tenant with open arrears cannot be archived. */
+  arrears: number;
+}
+
+const TENANTS: Tenant[] = [
+  { id: "T-01", name: "Ada Brandt", email: "ada.brandt@example.com", autopay: true, verified: true, arrears: 0 },
+  { id: "T-02", name: "Kemal Aydın", email: "kemal@example.org", autopay: false, verified: true, arrears: 420 },
+  { id: "T-03", name: "Léa Moreau", email: "lea.moreau@example.fr", autopay: true, verified: null, arrears: 0 },
+  { id: "T-04", name: "Zsófia Kiss", email: "zsofia.kiss@example.hu", autopay: false, verified: false, arrears: 0 },
+  { id: "T-05", name: "Wang Fang", email: "wang.fang@example.cn", autopay: true, verified: true, arrears: 0 },
+];
+
+const TENANT_COLUMNS: DataTableColumn<Tenant>[] = [
+  {
+    key: "name",
+    header: "Tenant",
+    cell: (r) => r.name,
+    sortBy: (r) => r.name.toLowerCase(),
+    mobilePrimary: true,
+  },
+  {
+    key: "email",
+    header: "Email",
+    cell: (r) => (
+      <span className="inline-flex items-center gap-1">
+        <span className="truncate">{r.email}</span>
+        {/* No `tooltipPortal`: left unset, the Tooltip notices the table's data-clips
+            scroller and portals itself, so the bubble is not cut off at the edge. */}
+        <CopyButton text={r.email} label={`Copy ${r.email}`} size="2xs" stopPropagation />
+      </span>
+    ),
+    className: "whitespace-nowrap",
+  },
+  booleanColumn<Tenant>({
+    key: "autopay",
+    header: "Autopay",
+    value: (r) => r.autopay,
+    // Mostly-true is news only when it is false: dashes read as "the rest".
+    falseAs: "dash",
+    filterOptions: { true: "On", false: "Off" },
+  }),
+  booleanColumn<Tenant>({
+    key: "verified",
+    header: "ID checked",
+    value: (r) => r.verified,
+    filterOptions: { true: "Checked", false: "Failed", unset: "Not yet" },
+  }),
+];
+
+function DataTableActionsDemo() {
+  const confirm = useConfirm();
+  const [rows, setRows] = useState(TENANTS);
+  const [query, setQuery] = useState("");
+  const [log, setLog] = useState("—");
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? rows.filter((r) => `${r.name} ${r.email}`.toLowerCase().includes(q)) : rows;
+  }, [rows, query]);
+
+  const rowActions: DataTableRowAction<Tenant>[] = [
+    { kind: "edit", onAction: (r) => setLog(`edit ${r.id}`) },
+    {
+      label: "Archive",
+      icon: <Archive />,
+      onAction: (r) => {
+        setRows((all) => all.filter((x) => x.id !== r.id));
+        setLog(`archived ${r.id}`);
+      },
+      disabledReason: (r) => (r.arrears > 0 ? `€${r.arrears} in arrears — settle before archiving` : undefined),
+    },
+    {
+      kind: "delete",
+      onAction: (r) => {
+        setRows((all) => all.filter((x) => x.id !== r.id));
+        setLog(`deleted ${r.id}`);
+      },
+      confirm: (r) =>
+        confirm({
+          title: `Delete ${r.name}?`,
+          body: "The tenant and their payment history are removed. This cannot be undone.",
+          confirmLabel: "Delete",
+          tone: "danger",
+        }),
+    },
+  ];
+
+  return (
+    <Example
+      label="rowActions, toolbar and the empty label"
+      hint={<>{code("rowActions")} · {code("toolbar")} · {code("booleanColumn")} · a {code("CopyButton")} in a cell</>}
+    >
+      <DataTable
+        rows={visible}
+        columns={TENANT_COLUMNS}
+        rowKey={(r) => r.id}
+        paginated={false}
+        rowActions={rowActions}
+        onRowClick={(r) => setLog(`row ${r.id} opened`)}
+        toolbar={
+          <>
+            <SearchField
+              variant="inline"
+              aria-label="Search tenants"
+              placeholder="Search tenants"
+              value={query}
+              onChange={setQuery}
+              className="min-w-0 flex-1 basis-40"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setRows(TENANTS);
+                setQuery("");
+              }}
+            >
+              Restore all
+            </Button>
+          </>
+        }
+      />
+      <div className="mt-3 space-y-2">
+        <p className={READOUT}>last: {log}</p>
+        <OutTable
+          rows={[
+            ["BooleanMark value={true}", <BooleanMark key="t" value />],
+            ["BooleanMark value={false}", <BooleanMark key="f" value={false} />],
+            ['BooleanMark value={false} falseAs="dash"', <BooleanMark key="d" value={false} falseAs="dash" />],
+            ["BooleanMark value={null}", <BooleanMark key="n" value={null} />],
+          ]}
+        />
+        <Note>
+          The pencil and the bin are the {code('kind: "edit"')} / {code('"delete"')} presets — icon, translated
+          label and tone included; <em>Archive</em> states its own label and icon, and is locked with a{" "}
+          {code("disabledReason")} for Kemal, who owes rent. The delete runs only after{" "}
+          {code("useConfirm()")} says yes. A press on an action never opens the row. On a phone the column
+          disappears and the same actions become the card&apos;s swipes.
+        </Note>
+        <Note>
+          The search lives in the {code("toolbar")}, inside the table&apos;s frame. Type{" "}
+          {code("nobody")} — the empty body now says {code("labels.empty")} (&ldquo;No entries&rdquo;, in the
+          page&apos;s language) instead of a bare dash. {code("booleanColumn")} gives each yes/no column a
+          check-first sort and a Yes/No filter; the screen reader hears the word, not a glyph. Hover a copy
+          button: its tooltip leaves the scroller rather than being clipped by it.
+        </Note>
+      </div>
+      <Note>Since 0.12.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.17 ─────────────────────────────────────────────────────────── */
+
+/**
+ * DATA TABLE 0.17 — the totals row: a column's `footer` and the table's `footerLabel`
+ * (kastlan 54, the trial balance that hand-built its totals under the table).
+ */
+
+interface Account {
+  no: string;
+  name: string;
+  debit: number;
+  credit: number;
+}
+
+const ACCOUNTS_017: Account[] = [
+  { no: "1000", name: "Cash", debit: 4_250, credit: 0 },
+  { no: "1020", name: "Bank", debit: 38_910.4, credit: 0 },
+  { no: "1100", name: "Accounts receivable", debit: 12_480, credit: 0 },
+  { no: "1500", name: "Equipment", debit: 22_000, credit: 0 },
+  { no: "2000", name: "Accounts payable", debit: 0, credit: 9_640.4 },
+  { no: "2100", name: "VAT payable", debit: 0, credit: 3_120 },
+  { no: "2800", name: "Share capital", debit: 0, credit: 50_000 },
+  { no: "3000", name: "Revenue", debit: 0, credit: 61_380 },
+  { no: "4000", name: "Cost of materials", debit: 18_200, credit: 0 },
+  { no: "5000", name: "Salaries", debit: 24_600, credit: 0 },
+  { no: "6000", name: "Rent", debit: 3_600, credit: 0 },
+  { no: "6500", name: "Office supplies", debit: 100, credit: 0 },
+];
+
+const money = new Intl.NumberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const fmt = (n: number) => money.format(n);
+
+const sum = (rows: Account[], pick: (r: Account) => number) => rows.reduce((t, r) => t + pick(r), 0);
+
+const AMOUNT = "text-end tabular-nums whitespace-nowrap";
+
+const TOTALS_COLUMNS: DataTableColumn<Account>[] = [
+  { key: "no", header: "Account", cell: (r) => r.no, sortBy: (r) => r.no, className: "tabular-nums" },
+  { key: "name", header: "Name", cell: (r) => r.name, sortBy: (r) => r.name, mobilePrimary: true },
+  {
+    key: "debit",
+    header: "Debit",
+    cell: (r) => (r.debit ? fmt(r.debit) : ""),
+    sortBy: (r) => r.debit,
+    filter: numberFilter((r) => r.debit),
+    className: AMOUNT,
+    headClassName: "text-end",
+    firstSort: "desc",
+    // Every row the filters let through, not the page: paging does not move a total.
+    footer: (rows) => fmt(sum(rows, (r) => r.debit)),
+  },
+  {
+    key: "credit",
+    header: "Credit",
+    cell: (r) => (r.credit ? fmt(r.credit) : ""),
+    sortBy: (r) => r.credit,
+    filter: numberFilter((r) => r.credit),
+    className: AMOUNT,
+    headClassName: "text-end",
+    firstSort: "desc",
+    footer: (rows) => fmt(sum(rows, (r) => r.credit)),
+  },
+  {
+    key: "balance",
+    header: "Balance",
+    cell: (r) => fmt(r.debit - r.credit),
+    sortBy: (r) => r.debit - r.credit,
+    className: AMOUNT,
+    headClassName: "text-end",
+    footer: (rows) => fmt(sum(rows, (r) => r.debit - r.credit)),
+  },
+];
+
+function DataTableTotalsDemo() {
+  const [showTotals, setShowTotals] = useState(true);
+  return (
+    <Example
+      label="Totals row: a trial balance"
+      hint={
+        <>
+          {code("footer")} per column, {code("footerLabel")} for the row. Totals are of every
+          filtered row, not the page; on a phone they are a summary card under the list.
+        </>
+      }
+    >
+      <div className="mb-2">
+        <Checkbox label="Show totals" checked={showTotals} onChange={(e) => setShowTotals(e.target.checked)} />
+      </div>
+      <DataTable
+        rows={ACCOUNTS_017}
+        columns={TOTALS_COLUMNS}
+        rowKey={(r) => r.no}
+        defaultPageSize={5}
+        footer={showTotals}
+        footerLabel="Total"
+        labels={{ table: "Trial balance" }}
+      />
+      <Note>
+        Page through it: the totals stay those of all twelve accounts and still balance to
+        zero. Filter the debit column and they follow the filter. Hide the Account column from
+        the column panel and the &quot;Total&quot; row header moves into Name. A server-paged
+        table returns its totals with the page and ignores the {code("rows")} argument:{" "}
+        {code("footer: () => fmt(page.totalDebit)")}.
+      </Note>
+      <Note>Since 0.17.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+interface Payee {
+  id: number;
+  name: string;
+  total: number;
+  count: number;
+}
+
+const PAYEES_022: Payee[] = [
+  { id: 1, name: "Migros", total: 1240.5, count: 38 },
+  { id: 2, name: "SBB", total: 860, count: 12 },
+  { id: 3, name: "Coop", total: 990.2, count: 41 },
+  { id: 4, name: "Swisscom", total: 420, count: 6 },
+];
+
+const PAYEE_COLUMNS_022: DataTableColumn<Payee>[] = [
+  { key: "name", header: "Payee", cell: (p) => p.name, sortBy: (p) => p.name, mobilePrimary: true },
+  {
+    key: "total",
+    header: <span>Paid (CHF)</span>,
+    headerText: "Paid",
+    cell: (p) => p.total.toFixed(2),
+    sortBy: (p) => p.total,
+    firstSort: "desc",
+    className: "text-end tabular-nums",
+    headClassName: "text-end",
+  },
+  {
+    key: "count",
+    header: "Payments",
+    cell: (p) => p.count,
+    sortBy: (p) => p.count,
+    firstSort: "desc",
+    className: "text-end tabular-nums",
+    headClassName: "text-end",
+  },
+];
+
+function DataTableMobileSort022Demo() {
+  return (
+    <Example
+      label="DataTable — a Sort by row on the phone"
+      hint="`mobileSort`: the card list has no header row, so the sort gets its own control"
+    >
+      <DataTable
+        rows={PAYEES_022}
+        columns={PAYEE_COLUMNS_022}
+        rowKey={(p) => p.id}
+        mobileSort
+        sortCycle="toggle"
+        chrome="minimal"
+        paginated={false}
+        labels={{ table: "Payees" }}
+      />
+      <Note>
+        Narrow the window below 768px: the cards get a &ldquo;Sort by&rdquo; select and a direction button above
+        them. They drive the table&apos;s own sort, so the header shows what the phone chose and the other way round,
+        a picked column starts in its {code("firstSort")} like a header click, and under {code('sortCycle="toggle"')}
+        &ldquo;Default order&rdquo; is offered only until the table is ranked. A column whose header is not text names
+        its option with {code("headerText")}. keksdose K10 (its aggregated report tables, #258). Off by default.
+      </Note>
+      <Note>Since 0.22.</Note>
+    </Example>
+  );
+}
+
+/* ── the page's section ───────────────────────────────────────────────────── */
+
+/** The Data table page */
+export function DataTableDemo() {
+  return (
+    <>
+      <DataTableSection />
+      <DataTableActionsDemo />
+      <DataTableTotalsDemo />
+      <DataTableMobileSort022Demo />
+    </>
+  );
+}

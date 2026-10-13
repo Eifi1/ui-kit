@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { foldForSearch } from "../lib/text-match";
 
 /**
  * The matcher behind {@link GlobalSearch} — pure, React-free, testable on its own.
@@ -107,14 +108,12 @@ const FIELD_FACTOR: Record<SearchMatchField, number> = { title: 3, keywords: 2, 
 
 /**
  * Lower case, accents off, punctuation to spaces — the form both sides are compared in.
- * Exported so an app can normalise its own keys the same way.
+ * Exported so an app can normalise its own keys the same way. The fold is every kit
+ * list's {@link foldForSearch} (DUP-5, refactor audit 2026-10); the index adds the
+ * punctuation-to-space step its word split needs.
  */
 export function normalizeSearchText(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/\p{M}+/gu, "")
-    .toLowerCase()
-    .replace(/ß/g, "ss")
+  return foldForSearch(text)
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
 }

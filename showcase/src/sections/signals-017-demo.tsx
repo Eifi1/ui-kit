@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Delta, FormActions, Input, ProgressBar, SignedAmount, Switch } from "@eifi1/ui-kit";
-import { Example, Note, Row } from "../lib/section";
+import { Delta, ProgressBar, SignedAmount, Switch } from "@eifi1/ui-kit";
+import { Example, Note, Row, code } from "../lib/section";
 
 /**
  * 0.17 additions from keksdose's adoption of 0.16 (Q4, Q6, Q7): a percent change in
@@ -8,8 +8,6 @@ import { Example, Note, Row } from "../lib/section";
  * demo-mode blur (`sensitive`), and a FormActions row that is sticky on a phone only
  * and bleeds over its pane's padding (`placement` per breakpoint, `bleed`).
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 /* ── Formatting page ──────────────────────────────────────────────────────── */
 
@@ -31,7 +29,7 @@ export function Signals017Demo() {
         <div className="space-y-2 text-sm">
           {PRICE_CHANGES.map((p) => (
             <div key={p.item} className="flex items-center justify-between gap-4">
-              <span className="min-w-0 truncate text-[var(--text-secondary)]">{p.item}</span>
+              <span className="min-w-0 truncate-until-large text-secondary">{p.item}</span>
               <Row className="shrink-0 gap-4">
                 <SignedAmount value={p.pct} unit="percent" ratio={false} flatWithin={0.5} goodDirection="down" />
                 <Delta
@@ -82,37 +80,5 @@ export function Signals017Demo() {
         </Note>
       </Example>
     </>
-  );
-}
-
-/* ── Forms page ───────────────────────────────────────────────────────────── */
-
-export function FormActions017Demo() {
-  return (
-    <Example
-      label="FormActions — sticky on a phone, inline from md up, bled to the pane's edges"
-      hint={'`placement={{ base: "sticky", md: "inline" }}` · `bleed="0.75rem"`'}
-    >
-      <div className="h-64 max-w-xl overflow-y-auto rounded-md border border-[var(--border)] px-3">
-        <div className="space-y-3 py-3">
-          {Array.from({ length: 6 }, (_, i) => (
-            <Input key={i} label={`Field ${i + 1}`} value="" onChange={() => {}} />
-          ))}
-        </div>
-        <FormActions
-          placement={{ base: "sticky", md: "inline" }}
-          stickyWithin="container"
-          bleed="0.75rem"
-          className="pb-3"
-          onSubmit={() => {}}
-          onCancel={() => {}}
-        />
-      </div>
-      <Note>
-        Narrower than 768px the row sticks to the pane&apos;s bottom and its rule and surface run under the pane&apos;s{" "}
-        {code("px-3")} to both edges, the buttons still on the fields&apos; line. From md up it is the inline row under
-        the last field, and {code("bleed")} does nothing. The breakpoints are BulkActionBar&apos;s.
-      </Note>
-    </Example>
   );
 }

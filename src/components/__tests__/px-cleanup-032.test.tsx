@@ -20,6 +20,9 @@ describe("the named sizes merge as sizes", () => {
     // Unregistered, `text-caption` read as a COLOUR and the later colour replaced it.
     expect(cn("text-caption text-[var(--text-muted)]")).toBe("text-caption text-[var(--text-muted)]");
     expect(cn("text-micro", "text-[var(--brand)]")).toBe("text-micro text-[var(--brand)]");
+    // The role utilities the kit's own markup writes since 0.34 (round 0.34 Q1) are colours too.
+    expect(cn("text-caption", "text-muted")).toBe("text-caption text-muted");
+    expect(cn("text-micro text-brand", "text-danger")).toBe("text-micro text-danger");
   });
 
   it("lets a later size replace an earlier one, both ways", () => {

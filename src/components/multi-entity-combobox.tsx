@@ -1,13 +1,13 @@
 import { useCallback, useId, useMemo, type ComponentPropsWithoutRef, type ReactNode, type Ref } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { FieldChevron, FieldLabel, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./ui";
+import { FieldChevron, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
+import { FieldLabel } from "./field-parts";
 import {
   ComboboxPanel,
   endHintRowProps,
   offersCreate,
   useComboboxCore,
-  useComboboxFieldError,
   type ComboOption,
 } from "./combobox-core";
 import {
@@ -17,15 +17,18 @@ import {
   useKitLocale,
 } from "../i18n/kit-labels";
 import {
+  assignRef,
   EndHintRow,
   FieldCaption,
   LABEL_IN_ROW,
   LockedReason,
+  mergeDescribedBy,
   StaticLabelRow,
+  useFieldError,
   useFieldHint,
   useLockReason,
+  type DisabledReasonDisplay,
 } from "./field-parts";
-import { assignRef, mergeDescribedBy } from "./choice-parts";
 import { useCommitReason, type CommitScope } from "./write-lock";
 
 /** `onChange` is the kit's — "a selection was made", carrying values — rather
@@ -66,6 +69,9 @@ export interface MultiEntityComboboxProps<V extends string | number>
   /** This picker COMMITS — toggling saves. Locked the `disabledReason` way under a
    *  locked {@link WriteLockProvider}. See {@link EntityCombobox}'s `commit`. */
   commit?: CommitScope;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise (DUP-3). */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /** When set, a "create" row appears for a non-empty query with no exact match.
    *  The panel stays open (adding the new entity to `value` is the caller's job). */
   onCreate?: (query: string) => void;
@@ -128,6 +134,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
     closeLabel,
     disabled,
     disabledReason,
+    disabledReasonDisplay,
     commit,
     onCreate,
     createLabel,
@@ -163,11 +170,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
     debounceMs,
   });
   const hintParts = useFieldHint(hint, ariaDescribedBy);
-  const field = useComboboxFieldError(
-    error,
-    invalid || ariaInvalid === true || ariaInvalid === "true",
-    hintParts.describedBy,
-  );
+  const field = useFieldError(error, invalid, hintParts.describedBy, ariaInvalid);
   // The props are the per-instance overrides, the provider the app-wide ones; a
   // prop left `undefined` falls through to the provider rather than masking it.
   const labels = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS, {
@@ -220,7 +223,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
   // While locked the trigger sits in the reason's Tooltip, as on EntityCombobox.
   const withLock = (trigger: ReactNode) =>
     lock.locked ? (
-      <LockedReason lock={lock} className="block">
+      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
         {trigger}
       </LockedReason>
     ) : (
@@ -312,11 +315,13 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
           >
             <span
               className={cn(
-                "min-w-0 truncate",
+                // Wraps from Large up, as MultiSelect's summary does (text size §10.17,
+                // round 0.34 T1).
+                "min-w-0 truncate-until-large",
                 // Inherit FIELD_BASE's ink for a value, keep the placeholder tone
                 // (`--text-placeholder`) — the same rule every field on a form row
                 // follows (Keksdose dev#477).
-                !value.length && "text-[var(--text-placeholder)]",
+                !value.length && "text-placeholder",
               )}
             >
               {summary}
@@ -334,7 +339,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
                   e.stopPropagation();
                   onChange([]);
                 }}
-                className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--text-placeholder)] hover:text-[var(--text-secondary)]"
+                className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-placeholder hover:text-secondary"
               >
                 <X className="size-4" />
               </span>

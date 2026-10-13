@@ -199,8 +199,8 @@ export const STORES = [
  *  it — the trigger shows a label either way, and only the state says which. */
 export function Current({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <p className="mt-3 text-xs text-[var(--text-muted)]">
-      {label}: <span className="font-mono text-[var(--text-secondary)]">{value}</span>
+    <p className="mt-3 text-xs text-muted">
+      {label}: <span className="font-mono text-secondary">{value}</span>
     </p>
   );
 }

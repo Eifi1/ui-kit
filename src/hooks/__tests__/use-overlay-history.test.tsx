@@ -426,7 +426,8 @@ describe("useOverlayHistory under a router, navigating from inside the overlay",
     // deferred traversal has run.
     expect(window.location.pathname).toBe("/budget");
     expect(screen.getByTestId("where")).toHaveTextContent("/budget");
-    await new Promise((r) => setTimeout(r, 50));
+    // A second drain, not a sleep: a 50 ms sleep here passed under load before a stray
+    // unwind's traversal had run (TST-11). Turns cannot be outrun that way.
     await settle();
     expect(window.location.pathname).toBe("/budget");
     expect(screen.getByTestId("where")).toHaveTextContent("/budget");
@@ -569,11 +570,17 @@ describe("useOverlayHistory when the owner's address change is what closed it", 
     expect(window.location.search).toBe("?row=x");
     expect(liveSentinel()).not.toBeNull();
 
-    // A real press: pointerdown, then the click whose handler replaces the URL.
-    fireEvent.pointerDown(screen.getByText("cancel"));
-    fireEvent.click(screen.getByText("cancel"));
-    await settle();
-    await new Promise((r) => setTimeout(r, 30));
+    // A real press: pointerdown, then the click whose handler replaces the URL. Under fake
+    // timers, so the unwind the overlay's cleanup would schedule is RUN before the
+    // assertion rather than raced by a 30 ms sleep, which it outlasted under load (TST-11).
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(screen.getByText("cancel"));
+      fireEvent.click(screen.getByText("cancel"));
+      act(() => vi.runAllTimers());
+    } finally {
+      vi.useRealTimers();
+    }
     await settle();
 
     expect(go).not.toHaveBeenCalled();

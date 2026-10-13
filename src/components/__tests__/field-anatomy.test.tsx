@@ -3,8 +3,12 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { IconButton, Input, Label, Select, Tabs } from "../ui";
-import type { TabItem } from "../ui";
+import { IconButton } from "../icon-button";
+import { Input } from "../input";
+import { Label } from "../field-base";
+import { Select } from "../select";
+import { Tabs } from "../tabs";
+import type { TabItem } from "../tabs";
 import { SearchField } from "../search-field";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
@@ -14,8 +18,6 @@ import { UiKitProvider } from "../../i18n/kit-labels";
  * label above a field and its toolbar select, lenkbank's row/chip icon actions and its
  * sheet tabs, keksdose's header search.
  */
-
-const classes = (el: Element) => el.className.split(/\s+/);
 
 describe("Label", () => {
   it("is a real label: a click on it focuses its control", async () => {
@@ -48,7 +50,7 @@ describe("Label", () => {
 
   it("has a compact size for a toolbar", () => {
     render(<Label size="sm">As of</Label>);
-    expect(classes(screen.getByText("As of"))).toContain("text-xs");
+    expect(screen.getByText("As of")).toHaveClass("text-xs");
   });
 });
 
@@ -60,7 +62,7 @@ describe("Select size", () => {
       </Select>,
     );
     const select = screen.getByRole("combobox", { name: "Period" });
-    expect(classes(select)).toEqual(expect.arrayContaining(["h-7", "text-xs", "py-0"]));
+    expect(select).toHaveClass("h-7", "text-xs", "py-0");
     // The word never reaches the DOM — `size="sm"` on a <select> is not a number.
     expect(select).not.toHaveAttribute("size");
   });
@@ -81,9 +83,9 @@ describe("Select size", () => {
       </Select>,
     );
     const select = screen.getByRole("combobox", { name: "Sort" });
-    expect(classes(select)).toContain("font-mono");
-    expect(classes(select)).not.toContain("w-40");
-    expect(classes(select.parentElement!)).toContain("w-40");
+    expect(select).toHaveClass("font-mono");
+    expect(select).not.toHaveClass("w-40");
+    expect(select.parentElement!).toHaveClass("w-40");
   });
 
   it("ignores `sm` on a labelled select, which needs the tall box for its label", () => {
@@ -92,7 +94,7 @@ describe("Select size", () => {
         <option>Month</option>
       </Select>,
     );
-    expect(classes(screen.getByRole("combobox", { name: "Period" }))).not.toContain("h-7");
+    expect(screen.getByRole("combobox", { name: "Period" })).not.toHaveClass("h-7");
   });
 });
 
@@ -106,17 +108,17 @@ describe("IconButton", () => {
         <IconButton aria-label="2xs" size="2xs" />
       </>,
     );
-    expect(classes(screen.getByRole("button", { name: "md" }))).toContain("size-9");
-    expect(classes(screen.getByRole("button", { name: "sm" }))).toContain("size-8");
-    expect(classes(screen.getByRole("button", { name: "xs" }))).toContain("size-7");
-    expect(classes(screen.getByRole("button", { name: "2xs" }))).toContain("size-6");
+    expect(screen.getByRole("button", { name: "md" })).toHaveClass("size-9");
+    expect(screen.getByRole("button", { name: "sm" })).toHaveClass("size-8");
+    expect(screen.getByRole("button", { name: "xs" })).toHaveClass("size-7");
+    expect(screen.getByRole("button", { name: "2xs" })).toHaveClass("size-6");
   });
 
   it("turns red on hover with tone=danger, from the danger tokens", () => {
     render(<IconButton aria-label="Delete" tone="danger" />);
-    const cls = classes(screen.getByRole("button", { name: "Delete" }));
-    expect(cls).toContain("hover:text-[var(--danger)]");
-    expect(cls).toContain("hover:bg-[var(--danger-bg)]");
+    const el = screen.getByRole("button", { name: "Delete" });
+    expect(el).toHaveClass("hover:text-danger");
+    expect(el).toHaveClass("hover:bg-danger-soft");
   });
 
   it("keeps a click and its Enter from reaching a clickable row", async () => {
@@ -193,7 +195,7 @@ describe("Tabs — add, remove, adornments", () => {
 
   it("reserves the ×'s room on every removable tab, so opening one moves nothing", () => {
     render(<Workbook />);
-    for (const t of screen.getAllByRole("tab")) expect(classes(t)).toContain("pe-8");
+    for (const t of screen.getAllByRole("tab")) expect(t).toHaveClass("pe-8");
   });
 
   it("removes through the × and puts focus on the caller's new selection", async () => {
@@ -256,7 +258,7 @@ describe("Tabs — add, remove, adornments", () => {
         "Delete",
       );
       expect(screen.getByRole("tab", { name: "40 km/h" })).not.toHaveAttribute("aria-keyshortcuts");
-      for (const t of screen.getAllByRole("tab")) expect(classes(t)).toContain("pe-8");
+      for (const t of screen.getAllByRole("tab")) expect(t).toHaveClass("pe-8");
       expect(screen.getAllByRole("button", { name: /^Remove / })).toHaveLength(1);
     });
   });
@@ -280,6 +282,34 @@ describe("Tabs — add, remove, adornments", () => {
     await user.tab();
     // Not the ×: the add button, which is an ordinary action after the strip.
     expect(screen.getByRole("button", { name: "Add loop" })).toHaveFocus();
+  });
+
+  // Round 0.34, the showcase's axe check: the × was a button inside the tablist, which
+  // may own tabs only. The named remove button is after the strip now; the × drawn on
+  // the open tab is the pointer's, hidden from assistive tech.
+  it("keeps the remove button OUTSIDE the tablist too, and the drawn × still removes", async () => {
+    const user = userEvent.setup();
+    const spy = vi.fn();
+    render(<Workbook onRemove={spy} />);
+    const list = screen.getByRole("tablist", { name: "Sheets" });
+    expect(within(list).queryAllByRole("button")).toHaveLength(0);
+    expect(list).not.toContainElement(screen.getByRole("button", { name: "Remove 80 km/h" }));
+    const drawn = list.querySelector<HTMLButtonElement>("[data-tab-remove]")!;
+    expect(drawn).toHaveAttribute("aria-hidden", "true");
+    expect(drawn).toHaveAttribute("tabindex", "-1");
+    await user.click(drawn);
+    expect(spy).toHaveBeenCalledWith("b");
+    expect(screen.getByRole("tab", { name: "40 km/h" })).toHaveFocus();
+  });
+
+  it("keeps the strip the root without an add button, the remove button right after it", () => {
+    const { container } = render(
+      <Tabs tabs={SHEETS} active="b" onChange={vi.fn()} onRemove={vi.fn()} className="mb-4" />,
+    );
+    const list = screen.getByRole("tablist");
+    expect(container.firstElementChild).toBe(list);
+    expect(list).toHaveClass("mb-4");
+    expect(list.nextElementSibling).toBe(screen.getByRole("button", { name: "Remove 80 km/h" }));
   });
 
   it("adds through a button OUTSIDE the tablist, since a tablist owns only tabs", async () => {
@@ -335,7 +365,7 @@ describe("Tabs — add, remove, adornments", () => {
     );
     const list = screen.getByRole("tablist");
     expect(container.firstElementChild).toBe(list);
-    expect(classes(list)).toContain("mb-4");
+    expect(list).toHaveClass("mb-4");
     expect(screen.getByRole("tab", { name: "X" }).parentElement).toBe(list);
   });
 });
@@ -344,11 +374,10 @@ describe("SearchField — inline variant", () => {
   it("drops the field chrome and its type size, keeping the searchbox", () => {
     render(<SearchField variant="inline" value="" onChange={vi.fn()} aria-label="Search" />);
     const box = screen.getByRole("searchbox", { name: "Search" });
-    const cls = classes(box);
-    expect(cls).toContain("border-0");
-    expect(cls).toContain("bg-transparent");
-    expect(cls).not.toContain("text-sm");
-    expect(cls).not.toContain("shadow-sm");
+    expect(box).toHaveClass("border-0");
+    expect(box).toHaveClass("bg-transparent");
+    expect(box).not.toHaveClass("text-sm");
+    expect(box).not.toHaveClass("shadow-sm");
   });
 
   it("puts inputClassName on the input, className on the wrapper", () => {
@@ -362,9 +391,9 @@ describe("SearchField — inline variant", () => {
       />,
     );
     const box = screen.getByRole("searchbox", { name: "Search" });
-    expect(classes(box)).toContain("text-base");
-    expect(classes(box)).not.toContain("text-sm");
-    expect(classes(box.parentElement!)).toContain("flex-1");
+    expect(box).toHaveClass("text-base");
+    expect(box).not.toHaveClass("text-sm");
+    expect(box.parentElement!).toHaveClass("flex-1");
   });
 
   it("keeps its clear button in the inline form", () => {

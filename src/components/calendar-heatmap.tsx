@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep } from "../lib/direction";
 import { addMonthsClamped, localeWeekStart, parseIsoDate, toLocalIso } from "../lib/dates";
-import { useKitLabels, useKitLocale, useKitWeekStart } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, useKitWeekStart, type LabelOverride } from "../i18n/kit-labels";
 import { lerpHex, textOn } from "../theme/chart-palette";
 import { parseHex } from "../theme/color";
 import { Tooltip } from "./tooltip";
 import type { WeekDay } from "./mini-calendar";
+import { DEFAULT_CALENDAR_HEATMAP_LABELS } from "./calendar-heatmap-labels";
 
 /**
  * Every string the heatmap speaks — the `calendarHeatmap` namespace of
@@ -31,15 +32,8 @@ export interface CalendarHeatmapLabels {
   truncated: (count: number) => string;
 }
 
-/** English defaults, exported as the `calendarHeatmap` namespace of `UiKitLabels`. */
-export const DEFAULT_CALENDAR_HEATMAP_LABELS: CalendarHeatmapLabels = {
-  grid: "Daily values",
-  day: (date, value) => `${date}: ${value}`,
-  less: "Less",
-  more: "More",
-  truncated: (count) =>
-    `Showing the most recent days; ${count} earlier ${count === 1 ? "day is" : "days are"} not shown.`,
-};
+// Defined in ./calendar-heatmap-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_CALENDAR_HEATMAP_LABELS };
 
 /** One day's figure. Several entries for one date are added up. */
 export interface CalendarHeatmapDatum {
@@ -67,7 +61,7 @@ export interface CalendarHeatmapDay {
  * `onSelect` is omitted from the `<div>` attributes for the reason `MiniCalendar` gives:
  * the DOM event of that name is a text-selection event, and this one answers with a date.
  */
-export interface CalendarHeatmapProps extends Omit<ComponentPropsWithoutRef<"div">, "onSelect"> {
+export interface CalendarHeatmapProps extends Omit<ComponentPropsWithRef<"div">, "onSelect"> {
   data: readonly CalendarHeatmapDatum[];
   /** The window, inclusive, as "YYYY-MM-DD". */
   from: string;
@@ -149,7 +143,7 @@ export interface CalendarHeatmapProps extends Omit<ComponentPropsWithoutRef<"div
   locale?: string;
   /** `0` = Sunday … `6` = Saturday. Default: the provider's, else the locale's. */
   weekStartsOn?: WeekDay;
-  labels?: Partial<CalendarHeatmapLabels>;
+  labels?: LabelOverride<CalendarHeatmapLabels>;
   className?: string;
 }
 
@@ -474,7 +468,7 @@ export function CalendarHeatmap({
       className: cn(
         cellClass,
         isSelected && "ring-2 ring-[var(--text-primary)]",
-        onSelect && "cursor-pointer hover:ring-1 hover:ring-[var(--brand)]",
+        onSelect && "cursor-pointer hover:ring-1 hover:ring-brand",
       ),
     } as const;
     const inner = withNumber ? (
@@ -515,7 +509,7 @@ export function CalendarHeatmap({
       <div ref={scrollerRef} className="overflow-x-auto pb-1">
         <div ref={gridRef} role="grid" aria-label={gridName} className="inline-grid gap-0.5">
           {/* Decoration: every cell's name already carries its month. */}
-          <div aria-hidden className="grid gap-0.5 text-micro leading-3 text-[var(--text-muted)]" style={columns}>
+          <div aria-hidden className="grid gap-0.5 text-micro leading-3 text-muted" style={columns}>
             <span />
             {monthLabels.map((m, w) => (
               <span key={w} className="overflow-visible whitespace-nowrap">
@@ -528,7 +522,7 @@ export function CalendarHeatmap({
               <div
                 role="rowheader"
                 aria-label={weekdayLabels[r].long}
-                className="overflow-hidden pe-1 text-micro leading-3 text-[var(--text-muted)]"
+                className="overflow-hidden pe-1 text-micro leading-3 text-muted"
               >
                 {/* Every other weekday, as a contribution graph does: seven labels
                     at this size are a smear. The name is there for all seven. */}
@@ -557,7 +551,7 @@ export function CalendarHeatmap({
               key={i}
               role="columnheader"
               aria-label={w.long}
-              className="pb-0.5 text-center text-micro uppercase tracking-wide text-[var(--text-muted)]"
+              className="pb-0.5 text-center text-micro uppercase tracking-wide text-muted"
             >
               {w.short}
             </div>
@@ -582,11 +576,11 @@ export function CalendarHeatmap({
   return (
     <div {...rest} className={cn("min-w-0", className)}>
       {dropped > 0 && (
-        <div className="mb-2 text-xs text-[var(--text-muted)]">{labels.truncated(dropped)}</div>
+        <div className="mb-2 text-xs text-muted">{labels.truncated(dropped)}</div>
       )}
       {body}
       {legend && (
-        <div aria-hidden className="mt-2 flex items-center justify-end gap-1 text-micro text-[var(--text-muted)]">
+        <div aria-hidden className="mt-2 flex items-center justify-end gap-1 text-micro text-muted">
           <span className="me-0.5">{labels.less}</span>
           {legendLevels.map((l) => (
             <span

@@ -65,6 +65,9 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       .filter(([k, v]) => k !== "file.size" && english.get(k) !== v)
       .map(([k]) => k);
     expect(changed.sort()).toEqual([
+      "billing.grantEnding",
+      "billing.trialEnding",
+      "billing.waitingChanges",
       "bulkActionBar.selected",
       "calendarHeatmap.truncated",
       "characterCount.count",
@@ -82,6 +85,11 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "dataTable.pageChanged",
       "dataTable.pageRange",
       "dataTable.rowCount",
+      "deleteAccount.afterDays",
+      "deleteAccount.handOver",
+      "demo.hoursLeft",
+      "demo.minutesLeft",
+      "demo.rateLimited",
       "feedbackAttachment.attachmentLimit",
       "feedbackPage.reworkChip",
       "feedbackToast.attachmentTooMany",
@@ -100,6 +108,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "multiSelect.selectedCount",
       "passwordStrength.ruleLength",
       "passwordStrength.tooLong",
+      "settings.matchCount",
+      "signIn.recoveryCodeHint",
       "tour.step",
       "translationReview.approveGroup",
       "translationReview.approvedToast",
@@ -111,6 +121,7 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "translationReview.localeProgress",
       "translationReview.placeholdersOnly",
       "translationReview.progress",
+      "verifyEmail.resendIn",
       "wizard.step",
     ]);
   });

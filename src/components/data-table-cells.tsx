@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Check, Minus, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
 import type { DataTableColumn } from "./data-table";
 
@@ -18,7 +18,7 @@ export interface BooleanMarkProps {
   falseAs?: "cross" | "dash";
   /** The spoken words, over `dataTable.booleanTrue` / `booleanFalse` / `booleanUnset`
    *  from `<UiKitProvider labels>`. */
-  labels?: Partial<Pick<DataTableLabels, "booleanTrue" | "booleanFalse" | "booleanUnset">>;
+  labels?: LabelOverride<Pick<DataTableLabels, "booleanTrue" | "booleanFalse" | "booleanUnset">>;
   className?: string;
 }
 
@@ -44,10 +44,10 @@ export function BooleanMark({ value, falseAs = "cross", labels: labelsProp, clas
         className={cn(
           "size-4",
           state === "true"
-            ? "text-[var(--success)]"
+            ? "text-success"
             : state === "false" && falseAs === "cross"
-              ? "text-[var(--text-muted)]"
-              : "text-[var(--text-placeholder)]",
+              ? "text-muted"
+              : "text-placeholder",
         )}
       />
       <span className="sr-only">{text}</span>

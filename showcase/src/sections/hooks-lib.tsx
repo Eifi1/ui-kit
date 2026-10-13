@@ -5,11 +5,13 @@ import { create } from "zustand";
 import {
   Button,
   OVERLAY_EXIT_MS,
-  PHONE_QUERY,
   anchoredPanelPlacement,
+  breakpointQuery,
   buttonClasses,
   cn,
+  filenameFromDisposition,
   logger,
+  saveBlob,
   setStoreLog,
   useAnchoredPanel,
   useAnchoredRect,
@@ -47,7 +49,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
 
 /** Panel chrome shared by the four specimens that open something. */
 const PANEL =
-  "rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 text-sm text-[var(--text-primary)]";
+  "rounded-md border border-subtle bg-surface-2 p-3 text-sm text-primary";
 
 /** Rects are fractional in a real browser (device pixel ratios that are not whole
  *  numbers) and exactly 0 in jsdom. One decimal keeps the first readable without
@@ -64,7 +66,7 @@ function Bool({ value }: { value: boolean }) {
         aria-hidden
         className={cn(
           "inline-block size-2 rounded-full",
-          value ? "bg-[var(--brand)]" : "bg-[var(--border)]",
+          value ? "bg-brand" : "bg-[var(--border)]",
         )}
       />
       {String(value)}
@@ -74,7 +76,7 @@ function Bool({ value }: { value: boolean }) {
 
 /** Trailing prose inside an `OutTable` cell, which is otherwise monospaced. */
 function Aside({ children }: { children: ReactNode }) {
-  return <span className="font-sans font-normal text-[var(--text-muted)]">{children}</span>;
+  return <span className="font-sans font-normal text-muted">{children}</span>;
 }
 
 /**
@@ -102,7 +104,10 @@ function useLiveWidth(): number {
 /* ── useMediaQuery ──────────────────────────────────────────────────────────── */
 
 function MediaQueryReadout() {
-  const phone = useMediaQuery(PHONE_QUERY, false);
+  // The phone query at the text size in force is `usePhoneLayout()`; this spells it out
+  // to show the hook underneath (PHONE_QUERY, the fixed-px string, went in 0.34).
+  const phoneQuery = breakpointQuery("max-md");
+  const phone = useMediaQuery(phoneQuery, false);
   const coarse = useMediaQuery("(pointer: coarse)", false);
   const dark = useMediaQuery("(prefers-color-scheme: dark)", false);
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)", false);
@@ -112,8 +117,8 @@ function MediaQueryReadout() {
     <OutTable
       rows={[
         ["window.innerWidth", px(width)],
-        ["PHONE_QUERY", `"${PHONE_QUERY}"`],
-        ["useMediaQuery(PHONE_QUERY, false)", <Bool value={phone} />],
+        ['breakpointQuery("max-md")', `"${phoneQuery}"`],
+        ['useMediaQuery(breakpointQuery("max-md"), false)', <Bool value={phone} />],
         ["useMediaQuery('(pointer: coarse)', false)", <Bool value={coarse} />],
         [
           "useMediaQuery('(prefers-color-scheme: dark)', false)",
@@ -247,13 +252,13 @@ function AnchoredPanelSpecimen() {
               maxHeight: panel.maxHeight,
               zIndex: 50,
             }}
-            className="overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-2 shadow-lg"
+            className="overflow-y-auto rounded-md border border-subtle bg-surface p-2 shadow-lg"
           >
             <ul className="space-y-1">
               {Array.from({ length: 12 }, (_, i) => (
                 <li
                   key={i}
-                  className="rounded px-2 py-1 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]"
+                  className="rounded px-2 py-1 text-sm text-secondary hover:bg-surface-2"
                 >
                   Row {i + 1}
                 </li>
@@ -377,7 +382,7 @@ function DismissSpecimen() {
         >
           {open ? "Close" : "Open a dismissible panel"}
         </button>
-        <span className="text-xs text-[var(--text-muted)]">
+        <span className="text-xs text-muted">
           then press Escape, or click anywhere off the panel
         </span>
       </Row>
@@ -528,7 +533,7 @@ function FocusTrapSpecimen() {
         <Button variant="secondary" onClick={() => setOpen(true)} disabled={open}>
           Open a trapped panel
         </Button>
-        <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-1.5 text-xs text-secondary">
           <input
             type="checkbox"
             checked={restoreFocus}
@@ -536,12 +541,12 @@ function FocusTrapSpecimen() {
           />
           restoreFocus
         </label>
-        <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-1.5 text-xs text-secondary">
           initialFocus
           <select
             value={initialFocus}
             onChange={(e) => setInitialFocus(e.target.value as typeof initialFocus)}
-            className="rounded border border-[var(--border)] bg-[var(--bg-surface)] px-1 py-0.5 text-xs"
+            className="rounded border border-subtle bg-surface px-1 py-0.5 text-xs"
           >
             <option value="container">&quot;container&quot;</option>
             <option value="first">&quot;first&quot;</option>
@@ -552,13 +557,13 @@ function FocusTrapSpecimen() {
       {open && (
         // tabIndex -1: the default `initialFocus` focuses the container itself.
         <div ref={panel} tabIndex={-1} className={cn(PANEL, "max-w-md space-y-2 outline-none")}>
-          <p className="text-xs text-[var(--text-secondary)]">
+          <p className="text-xs text-secondary">
             Tab and Shift+Tab cycle inside this box; Escape closes it.
           </p>
           <input
             aria-label="Name"
             placeholder="A field"
-            className="w-full rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-sm"
+            className="w-full rounded border border-subtle bg-surface px-2 py-1 text-sm"
           />
           <Row>
             {/* The kit's Button takes a ref (0.7.0), which the thunk needs. */}
@@ -573,8 +578,8 @@ function FocusTrapSpecimen() {
             </Button>
           </Row>
           {nested && (
-            <div ref={inner} className={cn(PANEL, "space-y-2 bg-[var(--bg-surface)]")}>
-              <p className="text-xs text-[var(--text-secondary)]">
+            <div ref={inner} className={cn(PANEL, "space-y-2 bg-surface")}>
+              <p className="text-xs text-secondary">
                 The innermost trap owns Tab now; closing it hands control back.
               </p>
               <Row>
@@ -678,7 +683,7 @@ function LoggerSpecimen() {
       >
         setStoreLog(false)
       </Button>
-      <span className="font-mono text-xs text-[var(--text-muted)]">
+      <span className="font-mono text-xs text-muted">
         {enabled === null ? "default for this build" : `logging ${enabled ? "on" : "off"}`} — open
         the console and bump
       </span>
@@ -765,8 +770,8 @@ const CN_CASES: Array<[string, string]> = [
   ['cn("px-2", "px-4")', cn("px-2", "px-4")],
   ['cn("px-2 py-1", "p-4")', cn("px-2 py-1", "p-4")],
   [
-    'cn("text-[var(--text-muted)]", "text-[var(--text-primary)]")',
-    cn("text-[var(--text-muted)]", "text-[var(--text-primary)]"),
+    'cn("text-muted", "text-primary")',
+    cn("text-muted", "text-primary"),
   ],
   [
     'cn("rounded-md", false && "shadow-lg", undefined)',
@@ -775,13 +780,40 @@ const CN_CASES: Array<[string, string]> = [
     cn("rounded-md", false && "shadow-lg", undefined),
   ],
   [
-    'cn(["border", { "border-[var(--border)]": true, "opacity-50": false }])',
-    cn(["border", { "border-[var(--border)]": true, "opacity-50": false }]),
+    'cn(["border", { "border-subtle": true, "opacity-50": false }])',
+    cn(["border", { "border-subtle": true, "opacity-50": false }]),
   ],
   ['cn("p-2", "")', cn("p-2", "")],
 ];
 
 /* ── the section ────────────────────────────────────────────────────────────── */
+
+/** Live: each row is the helper's answer to the header on the left. */
+const DISPOSITION_CASES: Array<[string, string]> = [
+  // What server-kit 0.8's `content_disposition("Grün – Bericht.pdf")` writes.
+  `attachment; filename="Grun - Bericht.pdf"; filename*=UTF-8''Gr%C3%BCn%20%E2%80%93%20Bericht.pdf`,
+  `attachment; filename="__.pdf"; filename*=UTF-8''%E6%8A%A5%E5%91%8A.pdf`,
+  "attachment; filename=report.csv",
+  `attachment; filename="../../etc/passwd"`,
+  `attachment; filename*=UTF-8''bad%E2%80.txt; filename="plain.txt"`,
+  "attachment",
+].map((header): [string, string] => [`filenameFromDisposition(${JSON.stringify(header)}, "export.json")`, filenameFromDisposition(header, "export.json")]);
+
+function SaveBlobSpecimen() {
+  return (
+    <Button
+      variant="secondary"
+      onClick={() =>
+        saveBlob(
+          new Blob([JSON.stringify({ saved_at: new Date().toISOString() }, null, 2)], { type: "application/json" }),
+          "ui-kit-showcase.json",
+        )
+      }
+    >
+      Save a small JSON file
+    </Button>
+  );
+}
 
 export function HooksLib() {
   return (
@@ -796,7 +828,7 @@ export function HooksLib() {
           a real moment when there is no answer: SSR, and any environment without{" "}
           <code className="font-mono">matchMedia</code>. Every phone branch in the kit —
           the sheet pickers, the numpad, the mobile feedback dialog — reads{" "}
-          <code className="font-mono">PHONE_QUERY</code> through this hook with{" "}
+          <code className="font-mono">usePhoneLayout()</code>, which asks this hook with{" "}
           <code className="font-mono">false</code>, so &ldquo;not known yet&rdquo; renders the
           desktop path rather than flashing a sheet.
         </Note>
@@ -980,7 +1012,7 @@ export function HooksLib() {
         hint="Its only output is a console.debug line per set — open devtools."
       >
         <LoggerSpecimen />
-        <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-3 font-mono text-xs text-[var(--text-secondary)]">
+        <pre className="overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary">
           {`import { create } from "zustand";
 import { logger } from "@eifi1/ui-kit";
 
@@ -1011,6 +1043,28 @@ export const useTx = create<TxState>()(
           stores this wraps transition per pointer event, and the override cannot change without
           a reload anyway. <code className="font-mono">setStoreLog</code> is the console escape
           hatch that per-call read was really buying.
+        </Note>
+      </Example>
+
+      <Example
+        label="saveBlob(blob, filename) · filenameFromDisposition(header, fallback)"
+        hint="0.34: one download for a file the page fetched itself, and the name the server asked for."
+      >
+        <SaveBlobSpecimen />
+        <OutTable rows={DISPOSITION_CASES} />
+        <Note>
+          An <code className="font-mono">{"<a href>"}</code> to an API route carries no{" "}
+          <code className="font-mono">Authorization</code> header, so an app behind a token
+          fetches the file and hands it over: <code className="font-mono">saveBlob</code> clicks
+          one hidden link, attached to the page while it is clicked, and revokes the object URL
+          a minute later — the click only starts the download, and the browser reads the URL
+          after the call has returned. <code className="font-mono">filenameFromDisposition</code>{" "}
+          reads the RFC 8187 <code className="font-mono">filename*</code> first, because
+          server-kit writes the original name only there and an ASCII stand-in in{" "}
+          <code className="font-mono">filename=</code>; it drops directory parts and never
+          throws. The kit&rsquo;s own downloads — the corrections export, a feedback attachment,
+          the account data export — use them. Across origins the header reaches the page only
+          when the server lists it in <code className="font-mono">Access-Control-Expose-Headers</code>.
         </Note>
       </Example>
 

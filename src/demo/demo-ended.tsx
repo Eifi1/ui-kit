@@ -1,8 +1,8 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Hourglass } from "lucide-react";
 
 import { cn } from "../lib/cn";
-import { Button } from "../components/ui";
+import { Button } from "../components/button";
 import { useNoIndex } from "../hooks/use-noindex";
 import type { AuthHeadingLevel } from "../auth/status-parts";
 import { useAccessAction } from "../landing/access";
@@ -12,8 +12,9 @@ import type { LandingLabels } from "../landing/landing-labels";
 import { useDemoLabels } from "./demo-labels";
 import type { DemoLabels } from "./demo-labels";
 import type { DemoModel } from "./demo-session";
+import type { LabelOverride } from "../i18n/kit-labels";
 
-export interface DemoEndedProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
+export interface DemoEndedProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** Which line the page says about the data (§2.3). */
   model: DemoModel;
   /** "Request access". */
@@ -29,7 +30,7 @@ export interface DemoEndedProps extends Omit<ComponentPropsWithoutRef<"div">, "c
   noIndex?: boolean;
   /** Default `h2`, under `AuthLayout`'s `h1`. */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<DemoLabels>;
+  labels?: LabelOverride<DemoLabels>;
   /** The access words (`landing` namespace) for this instance. */
   landingLabels?: Partial<LandingLabels>;
 }
@@ -67,9 +68,9 @@ export function DemoEnded({
   useNoIndex(noIndex);
   return (
     <div {...rest} className={cn("flex flex-col items-center gap-2 py-4 text-center", className)}>
-      <Hourglass aria-hidden className="size-10 text-[var(--text-placeholder)]" />
-      <Heading className="mt-2 text-xl font-semibold text-[var(--text-primary)]">{labels.endedTitle}</Heading>
-      <p className="max-w-prose text-sm text-[var(--text-secondary)]">
+      <Hourglass aria-hidden className="size-10 text-placeholder" />
+      <Heading className="mt-2 text-xl font-semibold text-primary">{labels.endedTitle}</Heading>
+      <p className="max-w-prose text-sm text-secondary">
         {model === "sandbox" ? labels.endedSandbox : labels.endedReadOnly}
       </p>
       {children}

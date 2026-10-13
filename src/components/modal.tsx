@@ -12,7 +12,8 @@ import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useDialogParam, type DialogParam } from "../hooks/use-search-param-state";
-import { OVERLAY_EXIT_MS, prefersReducedMotion, useCloseTransition } from "../hooks/use-close-transition";
+import { OVERLAY_EXIT_MS, skipsExitAnimation, useCloseTransition } from "../hooks/use-close-transition";
+import { runOwnKeyDown, takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 
 /**
  * Drag the panel by its top strip, in pointer space (dev#460).
@@ -152,7 +153,8 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
   role?: "dialog" | "alertdialog";
   children: ReactNode;
   /**
-   * Panel max-width: `md` (28rem), `lg` (32rem), `xl` (48rem).
+   * Panel max-width: `md` (28rem), `lg` (32rem), `xl` (48rem), `2xl` (the display less
+   * the backdrop's margin, capped at 110rem).
    *
    * `xl` exists because two callers had already written `className="max-w-3xl"` to
    * reach it — the payee backfill's preview table and the price-merge dialog, both
@@ -160,19 +162,30 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
    * patching a missing size IS the signal that the size is missing, and a
    * hand-written width in a `className` is a width nothing else can line up with.
    *
+   * `2xl` is the same signal one size up (round 0.34 C3, KS U1): a dialog whose
+   * content is a TABLE to be read. Kurvenschmiede's five part dialogs hold a measured
+   * table pasted from a spreadsheet and had patched themselves to
+   * `w-[min(110rem,94vw)] max-w-none`; Keksdose's report drilldown passed `size="lg"`
+   * and then `max-w-5xl`. The cap is the generous one of the two, because a table
+   * squeezed into a box in the middle of a wide screen is a table scrolled sideways
+   * (KS feedback #16); below the cap the panel is as wide as the backdrop lets it be.
+   * In rem, so it grows with the text size until the screen stops it.
+   *
    * The panel is `w-full` under every one of them, so the cap only bites once the
-   * viewport is wider than it: on a phone all three are the same full-width bottom
+   * viewport is wider than it: on a phone all four are the same full-width bottom
    * sheet. Nothing here may introduce a `min-w-*`, which is what would break that.
    */
-  size?: "md" | "lg" | "xl";
+  size?: "md" | "lg" | "xl" | "2xl";
   /** Extra classes for the panel (e.g. `space-y-3` for form content spacing). */
   className?: string;
   /** id of the heading element, wired to `aria-labelledby`. */
   labelledBy?: string;
   /**
-   * Extra key handling on the panel (e.g. Ctrl/Cmd+Enter to submit). Runs first;
-   * if it calls `preventDefault()` the built-in Escape/Tab handling is skipped
-   * for that event.
+   * Extra key handling on the panel (e.g. Ctrl/Cmd+Enter to submit). Runs first; a
+   * `preventDefault()` on Escape HERE keeps the dialog open — the owner's claim (see
+   * `use-dismiss.ts`). One a field inside makes does not, since 0.34: the rule
+   * `FullBleedDialog` already had, so a search box keeping Chromium from clearing itself
+   * no longer holds the dialog open (Wave 2, DUP-1).
    */
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
   /**
@@ -296,7 +309,7 @@ function ModalPanel({
   if (open !== prevOpen) {
     setPrevOpen(open);
     setDismissed(false);
-    setExiting(open === false && prevOpen === true && !dismissed && !prefersReducedMotion());
+    setExiting(open === false && prevOpen === true && !dismissed && !skipsExitAnimation());
     if (open) drag.reset();
   }
   useEffect(() => {
@@ -341,15 +354,15 @@ function ModalPanel({
   useFocusTrap(panelRef, { active, initialFocus: "container" });
   const leaving = closing || exiting;
 
+  // One layer on the Escape stack while open (Wave 2, DUP-1): a list, a popover or a
+  // tooltip opened inside takes the key before the dialog does, wherever focus is —
+  // and the dialog gets it even when focus is not in the panel.
+  useDismissLayer(active, requestClose);
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    onKeyDown?.(e);
-    if (e.defaultPrevented) return;
-    if (e.key === "Escape") {
-      e.stopPropagation();
-      if (active) requestClose();
-      return;
-    }
-    // Tab containment lives in useFocusTrap, which listens on the panel itself.
+    runOwnKeyDown(e, onKeyDown);
+    // To whatever is on top — this dialog, unless something opened over it — and
+    // stopped here. Tab containment lives in useFocusTrap, which listens on the panel.
+    takeEscape(e);
   };
 
   // Portal to <body> so the `fixed inset-0 z-50` overlay escapes whatever stacking
@@ -401,8 +414,8 @@ function ModalPanel({
         style={{ ...style, ...drag.style }}
         className={cn(
           leaving ? "animate-sheet-out md:animate-none" : "animate-sheet md:animate-none",
-          "w-full rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-sm outline-none",
-          { md: "max-w-md", lg: "max-w-lg", xl: "max-w-3xl" }[size],
+          "w-full rounded-lg border border-subtle bg-surface shadow-sm outline-none",
+          { md: "max-w-md", lg: "max-w-lg", xl: "max-w-3xl", "2xl": "max-w-[110rem]" }[size],
           // A panel taller than the screen has to scroll ITSELF. The backdrop is
           // `fixed inset-0` and the body is scroll-locked while a dialog is open, so
           // without this the overflow simply had nowhere to go: on a phone the panel

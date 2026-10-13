@@ -6,6 +6,7 @@ import type { DataTableColumn, DataTableProps, FilterState } from "../data-table
 import { Pagination } from "../data-table-pagination";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { SwipeAction } from "../swipeable-row";
+import { stubPhone } from "../../test/viewport";
 
 /**
  * The 0.7.0 data-table fixes, one `describe` per finding: server loading state,
@@ -57,17 +58,6 @@ function renderTable(extra: Partial<DataTableProps<Row>> = {}) {
 function namesOnScreen(): string[] {
   const rows = within(screen.getByRole("table")).getAllByRole("row").slice(1);
   return rows.map((r) => within(r).getAllByRole("cell")[0]?.textContent ?? "");
-}
-
-/** The phone layout: `usePhoneLayout()`'s `(width < 768px)` matches, nothing else. */
-function stubPhone() {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("width <"),
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  }));
-  return () => vi.unstubAllGlobals();
 }
 
 // ---------------------------------------------------------------------------
@@ -334,6 +324,23 @@ describe("standalone Pagination", () => {
     render(<Pagination page={0} totalPages={3} pageSize={10} total={30} onPage={() => {}} />);
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
+
+  // Round 0.34 BUG-14: a paged table filtered down to nothing said "1–0 / 0" — a range
+  // that starts after it ends. No rows is a count, not a range.
+  it("says the count, not a range, when there are no rows", () => {
+    const { container } = render(
+      <Pagination
+        page={0}
+        totalPages={0}
+        pageSize={25}
+        total={0}
+        onPage={() => {}}
+        labels={{ rowCount: (n) => `${n} rows` }}
+      />,
+    );
+    expect(screen.getByText("0 rows")).toBeInTheDocument();
+    expect(container.textContent).not.toContain("1–0");
+  });
 });
 
 describe("server mode page-size select", () => {
@@ -456,7 +463,7 @@ describe("the phone card's keyboard frame (keksdose live #394)", () => {
     // kit's FOCUS_RING (§5, `--focus-ring-width`), drawn inset.
     const card = document.querySelector('[role="button"].w-full, a.w-full') as HTMLElement;
     expect(card.className).toContain("focus-visible:ring-inset");
-    expect(card.className).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
+    expect(card).toHaveClass("focus-visible:ring-focus");
     expect(card.className).toContain("[-webkit-tap-highlight-color:transparent]");
   });
 });

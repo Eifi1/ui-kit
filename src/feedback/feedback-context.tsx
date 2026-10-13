@@ -1,7 +1,8 @@
 import { Checkbox } from "../components/checkbox";
-import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import type { FeedbackContext, FeedbackEnvironment } from "./feedback-record";
+import { DEFAULT_FEEDBACK_CONTEXT_LABELS } from "./feedback-context-labels";
 
 /**
  * The reporter context of a feedback report: the box the submit dialog shows, and the
@@ -128,10 +129,8 @@ export interface FeedbackContextLabels {
   attachUrl: string;
 }
 
-export const DEFAULT_FEEDBACK_CONTEXT_LABELS: FeedbackContextLabels = {
-  user: "User",
-  attachUrl: "Attach current page URL",
-};
+// Defined in ./feedback-context-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_CONTEXT_LABELS };
 
 export interface FeedbackContextBoxProps {
   /** Who is filing — the same value handed to {@link feedbackContext}. */
@@ -142,7 +141,7 @@ export interface FeedbackContextBoxProps {
   attachUrl: boolean;
   onAttachUrlChange: (next: boolean) => void;
   /** Prop > `<UiKitProvider labels={{ feedbackContext }}>` > English. */
-  labels?: Partial<FeedbackContextLabels>;
+  labels?: LabelOverride<FeedbackContextLabels>;
   className?: string;
 }
 
@@ -181,7 +180,7 @@ export function FeedbackContextBox({
   return (
     <div
       className={cn(
-        "space-y-1 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2 text-xs text-[var(--text-muted)]",
+        "space-y-1 rounded-md border border-subtle bg-surface-2 px-3 py-2 text-xs text-muted",
         className,
       )}
     >
@@ -190,7 +189,7 @@ export function FeedbackContextBox({
           line
         ) : (
           <>
-            <span className="font-medium text-[var(--text-secondary)]">{lead}</span>
+            <span className="font-medium text-secondary">{lead}</span>
             {submitter}
           </>
         )}
@@ -198,7 +197,7 @@ export function FeedbackContextBox({
       <Checkbox
         checked={attachUrl}
         onCheckedChange={onAttachUrlChange}
-        label={<span className="text-xs font-medium text-[var(--text-secondary)]">{labels.attachUrl}</span>}
+        label={<span className="text-xs font-medium text-secondary">{labels.attachUrl}</span>}
         description={
           url ? (
             // `break-all`: a URL is one unbreakable word, and at 390px a long query string

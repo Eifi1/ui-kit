@@ -1,6 +1,17 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { ReactNode } from "react";
-import { Button, DatePicker, DateRangePicker, MiniCalendar, ToggleGroup, cn } from "@eifi1/ui-kit";
+import {
+  Button,
+  DatePicker,
+  DateRangePicker,
+  MiniCalendar,
+  ToggleGroup,
+  cn,
+  DateMark,
+  FieldHint,
+  Select,
+  UiKitProvider,
+} from "@eifi1/ui-kit";
 import type { DateRangeDraftSummary, DateRangePickerPreset } from "@eifi1/ui-kit";
 import {
   addDaysIso,
@@ -22,7 +33,7 @@ import {
   toLocalIso,
   todayIso,
 } from "@eifi1/ui-kit/dates";
-import { Example, Note, OutTable, Stage } from "../lib/section";
+import { Example, Note, OutTable, Stage, StateLine, code } from "../lib/section";
 
 /**
  * DATES.
@@ -104,12 +115,6 @@ const DE_CALENDAR = {
   startSelected: (d: string) => `${d} als Start gewählt. Enddatum wählen.`,
   rangeSelected: (f: string, t: string) => `Zeitraum ${f} bis ${t} gewählt.`,
 };
-
-/** The live value under a specimen. A controlled component is only demonstrably
- *  controlled once you can watch the state it is driven by change underneath it. */
-function StateLine({ children }: { children: ReactNode }) {
-  return <p className="mt-3 font-mono text-xs text-[var(--text-muted)]">{children}</p>;
-}
 
 /** An empty string is invisible on a page; render it as the literal instead. */
 function iso(value: string): string {
@@ -193,7 +198,7 @@ export function Dates() {
         <StateLine>
           from={iso(rangeFrom)} to={iso(rangeTo)}
         </StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Clicking backwards works: pick a day earlier than the open start and the component swaps
           the ends for you rather than refusing. Clicking again once both ends are set starts a new
           selection — there is no third state to get stuck in. The week starts on the locale&apos;s
@@ -231,7 +236,7 @@ export function Dates() {
         <StateLine>
           value={iso(singleDay)} · min={nearMin} · max={nearMax}
         </StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Both ends of the same day, which is how <code className="font-mono">DatePicker</code>{" "}
           drives it internally. The bounds are inclusive and a bounded month still pages — you can
           navigate to a month that is entirely out of range and find every day in it dead, which is
@@ -249,7 +254,7 @@ export function Dates() {
               value={loc}
               onChange={setLoc}
               options={LOCALE_OPTIONS}
-              ariaLabel="Calendar locale"
+              aria-label="Calendar locale"
             />
             <div className="max-w-xs">
               <MiniCalendar
@@ -306,7 +311,7 @@ export function Dates() {
         <StateLine>
           weekStartsOn=0 → {iso(sundayDay)} · focusOnOpen → {iso(focusDay)}
         </StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Open the second calendar with the keyboard (Enter on the button): focus lands on the
           selected day, so ←/→ move a day and Enter picks — no hunt through 42 cells. The first
           calendar is rendered inline and so does not take focus merely by existing.
@@ -331,7 +336,7 @@ export function Dates() {
           </div>
         </Stage>
         <StateLine>value={iso(due)}</StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           <code className="font-mono">clearable</code> emits{" "}
           <code className="font-mono">&quot;&quot;</code>, not{" "}
           <code className="font-mono">null</code> — the empty value is the empty string everywhere
@@ -362,7 +367,7 @@ export function Dates() {
         <StateLine>
           value={iso(stepped)} · min={stepMin} · max={stepMax}
         </StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Walk the arrows to either edge and they go flat rather than disappearing — a control that
           comes and goes with the value reflows whatever sits beside it, which is the complaint the
           behaviour exists to answer. The today button starts flat because the value already is
@@ -438,7 +443,7 @@ export function Dates() {
             />
           </div>
         </Stage>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           <code className="font-mono">invalid</code> paints and sets{" "}
           <code className="font-mono">aria-invalid</code>; it carries no message, so the error text
           is yours to render. <code className="font-mono">disabled</code> also suppresses the clear
@@ -468,7 +473,7 @@ export function Dates() {
         <StateLine>
           from={iso(from)} to={iso(to)}
         </StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           One <code className="font-mono">onChange(from, to)</code> for both ends rather than two
           callbacks — a half-applied range is not a state a filter should ever be in. The separator
           is a prop (<code className="font-mono">separator</code>, default{" "}
@@ -498,7 +503,7 @@ export function Dates() {
         <StateLine>
           from={iso(presetFrom)} to={iso(presetTo)}
         </StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The presets here are <code className="font-mono">dateRangePresets()</code> from the{" "}
           <code className="font-mono">@eifi1/ui-kit/dates</code> subpath, relabelled through this
           page&apos;s own map. A preset is selected-looking only when both ends match exactly, so
@@ -584,7 +589,7 @@ export function Dates() {
         <StateLine>
           value={iso(deDay)} · from={iso(deFrom)} to={iso(deTo)}
         </StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           <code className="font-mono">calendarLabels</code> reaches the calendar inside the popover —
           its month arrows and the spoken &quot;choose a start / end date&quot; — which the trigger
           has no other way to pass down. The provider&apos;s{" "}
@@ -628,7 +633,7 @@ export function Dates() {
         <StateLine>
           value={iso(rtlDay)} · from={iso(rtlFrom)} to={iso(rtlTo)}
         </StateLine>
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The weeks run from the right, and ← → follow the reading direction: focus a day and press
           ← to reach the NEXT day, which sits to its left. The month chevrons and the picker&apos;s ‹ ›
           day steps are mirrored so &ldquo;previous&rdquo; points to the reading start, and the
@@ -696,7 +701,7 @@ function ReportRangeExample() {
       <StateLine>
         from={iso(range.from)} to={iso(range.to)} preset={range.preset === null ? "null" : `"${range.preset}"`} · commits={commits}
       </StateLine>
-      <p className="mt-2 text-xs text-[var(--text-secondary)]">
+      <p className="mt-2 text-xs text-secondary">
         Open it: &ldquo;Last 3 full months&rdquo; is marked, by its <code className="font-mono">id</code>{" "}
         (the controlled <code className="font-mono">preset</code>) as long as its dates still match.
         Pick &ldquo;Last 6 full months&rdquo;, then nudge the end a few days — nothing has been
@@ -734,7 +739,7 @@ function RangeDraftSummaryExample() {
     const name = preset ? preset.label : "Custom";
     return (
       <>
-        <span className="font-medium text-[var(--text-secondary)]">{name}</span> · {summaryDay(from)} –{" "}
+        <span className="font-medium text-secondary">{name}</span> · {summaryDay(from)} –{" "}
         {to ? summaryDay(to) : "…"}
       </>
     );
@@ -761,7 +766,7 @@ function RangeDraftSummaryExample() {
       <StateLine>
         from={iso(range.from)} to={iso(range.to)} preset={range.preset === null ? "null" : `"${range.preset}"`}
       </StateLine>
-      <p className="mt-2 text-xs text-[var(--text-secondary)]">
+      <p className="mt-2 text-xs text-secondary">
         Open it: the line reads &ldquo;Last 3 full months · …&rdquo;. Pick another preset and it follows; nudge a
         day and it becomes &ldquo;Custom&rdquo; — the one place a preset armed and then changed is seen to have
         stopped being one; click a first day and the end reads &ldquo;…&rdquo; until the second click. The
@@ -797,7 +802,7 @@ function RangeSheetExample() {
       label="DateRangePicker — the phone sheet and sheetBackCloses"
       hint="below 768px only: narrow the window to a phone width or open the screen-size preview in the top bar"
     >
-      <label className="mb-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+      <label className="mb-3 flex items-center gap-2 text-xs text-secondary">
         <input type="checkbox" checked={backCloses} onChange={(e) => setBackCloses(e.target.checked)} />
         <code className="font-mono">sheetBackCloses</code>
       </label>
@@ -819,8 +824,8 @@ function RangeSheetExample() {
       </StateLine>
       <div className="mt-3">
         <Note>
-          On a desktop this is the 440px popover. Below the phone breakpoint (
-          <code className="font-mono">PHONE_QUERY</code>, 767px) the same field opens a full-screen sheet
+          On a desktop this is the 440px popover. In the phone layout (
+          <code className="font-mono">usePhoneLayout()</code>) the same field opens a full-screen sheet
           instead — use the screen-size preview in the top bar, or a phone-width window: the presets
           become a two-column grid of 44px rows ABOVE the calendar, and Cancel / Apply sit pinned in the
           sheet&apos;s footer as two thumb-wide halves. The sheet wears the popover&apos;s id, so the
@@ -879,11 +884,13 @@ function RangeTriggerExample() {
                 {...triggerProps}
                 className={cn(triggerProps.className, "rounded-b-none sm:rounded-b-md sm:rounded-e-none")}
               >
-                <span {...valueProps} className="min-w-0 truncate">
+                {/* The kit's own trigger value wraps from Large up; a custom one says so
+                    itself (text size §10.17). */}
+                <span {...valueProps} className="min-w-0 truncate-until-large">
                   {preset ? (
                     <>
                       {preset.label}
-                      <span className="ms-2 text-xs text-[var(--text-muted)]">{text}</span>
+                      <span className="ms-2 text-xs text-muted">{text}</span>
                     </>
                   ) : (
                     text
@@ -1009,12 +1016,97 @@ export function DateHelpers() {
         hint="the eleven named ranges behind the data-table date filter — key only, because the label is the consumer's"
       >
         <OutTable rows={presetRows} />
-        <p className="mt-3 text-xs text-[var(--text-secondary)]">
+        <p className="mt-3 text-xs text-secondary">
           Every one of these is computed from the local calendar day, which is why they are printed
           rather than asserted here: the same call answers differently in Berlin and in Los Angeles,
           and that is the point — the server compares plain dates with no zone at all, so the
           user&apos;s local day is what it wants.
         </p>
+      </Example>
+    </>
+  );
+}
+
+/* ── since 0.22 ─────────────────────────────────────────────────────────── */
+
+/** keksdose's date-format preference, as the provider formatter it asked for: digits
+ *  in ISO order, the weekday in the UI language. */
+function useIsoWithWeekday(language: string) {
+  return useCallback(
+    (iso: string, ctx: { unit: "day" | "month" | "year"; weekday: boolean }) => {
+      if (ctx.unit !== "day") return "";
+      const [y, m, d] = iso.split("-").map(Number);
+      const day = new Date(y, m - 1, d).toLocaleDateString(language, { weekday: "short" });
+      return ctx.weekday ? `${day}, ${iso}` : iso;
+    },
+    [language],
+  );
+}
+
+/** DatePicker / DateRangePicker: hint and error (K4), the provider formatter (K12). */
+export function Dates022Demo() {
+  const [due, setDue] = useState("2026-09-07");
+  const [range, setRange] = useState({ from: "2026-09-01", to: "2026-09-30" });
+  const [language, setLanguage] = useState("en-GB");
+  const formatDate = useIsoWithWeekday(language);
+  return (
+    <>
+      <Example label="DatePicker hint and error" hint="the anatomy every field has: caption, message, aria-describedby">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2">
+          <DatePicker
+            label="Booking date"
+            value={due}
+            onChange={setDue}
+            step
+            today="2026-10-02"
+            hint="The day the bank booked it, not the receipt's."
+            error={due > "2026-10-02" ? "A booking cannot be in the future." : undefined}
+          />
+          <DateRangePicker
+            label="Statement period"
+            hint={<FieldHint label="Both days are included" />}
+            from={range.from}
+            to={range.to}
+            onChange={(from, to) => setRange({ from, to })}
+          />
+        </div>
+        <Note>
+          A text {code("hint")} is a caption under the field, a {code("FieldHint")} rides the label line, as on{" "}
+          {code("Select")}. {code("error")} goes under the whole row (steppers included) and implies{" "}
+          {code("invalid")}; step past today to see it.
+        </Note>
+        <Note>Since 0.22.</Note>
+      </Example>
+      <Example label="<UiKitProvider formatDate>" hint="one date look for every picker trigger and DateMark">
+        <div className="flex flex-col gap-3">
+          <Select label="Weekday language" value={language} onChange={(e) => setLanguage(e.target.value)} className="sm:w-56">
+            <option value="en-GB">English</option>
+            <option value="de-CH">Deutsch (Schweiz)</option>
+            <option value="fr-CH">Français (Suisse)</option>
+          </Select>
+          <UiKitProvider formatDate={formatDate}>
+            <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2">
+              <DatePicker label="Booking date" value={due} onChange={setDue} />
+              <DateRangePicker
+                label="Statement period"
+                from={range.from}
+                to={range.to}
+                onChange={(from, to) => setRange({ from, to })}
+              />
+            </div>
+            <p className="text-sm text-secondary">
+              In a table cell: <DateMark value={due} />
+            </p>
+          </UiKitProvider>
+        </div>
+        <Note>
+          keksdose&apos;s preference — ISO digits, the weekday in the UI language — set once on the provider
+          instead of a {code("formatValue")} on every field. The formatter is told the {code("unit")}, the{" "}
+          {code("source")} and a {code("weekday")} suggestion (a single date yes, a range&apos;s ends no); returning{" "}
+          {code('""')} falls back to the kit&apos;s own. A field&apos;s own {code("formatValue")} or{" "}
+          {code("formatOptions")} still wins.
+        </Note>
+        <Note>Since 0.22.</Note>
       </Example>
     </>
   );

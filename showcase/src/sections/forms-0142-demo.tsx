@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { IntegerField, MoneyField, formatMoney } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, READOUT } from "../lib/section";
 
 /**
  * 0.14.2 on the Forms page: `MoneyField` (kastlan 52), a number-valued money input for
  * rows and cells outside a form, and `IntegerField` (kastlan 51), the plain whole-number
  * preset.
  */
-
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
 
 interface BudgetRow {
   id: number;
@@ -34,7 +32,7 @@ export function Forms0142Demo() {
             <div key={row.id} className="grid grid-cols-[8rem_1fr] items-center gap-3 large:max-sm:grid-cols-1 large:max-sm:gap-1">
               <span className="text-sm">{row.name}</span>
               <MoneyField
-                ariaLabel={`${row.name} amount`}
+                aria-label={`${row.name} amount`}
                 currency="CHF"
                 min={0}
                 value={row.amount}

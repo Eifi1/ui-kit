@@ -1,6 +1,6 @@
-import { forwardRef, useId, useState } from "react";
+import { useState } from "react";
 import type { ChangeEvent, FocusEvent } from "react";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import {
   PHONE_COUNTRIES,
@@ -11,8 +11,10 @@ import {
   parsePhone,
 } from "../lib/phone";
 import type { ParsedPhone, PhoneCountry, PhoneCountryCode } from "../lib/phone";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
-import { Input, Select, type InputProps } from "./ui";
+import { useFieldMessages } from "./field-parts";
+import { Input, type InputProps } from "./input";
+import { Select } from "./select";
+import { DEFAULT_PHONE_INPUT_LABELS } from "./phone-input-labels";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -25,10 +27,8 @@ export interface PhoneInputLabels {
   other: string;
 }
 
-export const DEFAULT_PHONE_INPUT_LABELS: PhoneInputLabels = {
-  countryCode: "Country code",
-  other: "Other",
-};
+// Defined in ./phone-input-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_PHONE_INPUT_LABELS };
 
 /**
  * The `phoneInput` namespace: prop > `<UiKitProvider labels>` > English (0.22.0).
@@ -39,14 +39,6 @@ function usePhoneInputLabels(prop: Partial<PhoneInputLabels> | undefined): Phone
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** The caption and the error under the row — the type every kit field uses for them
- *  (Select's caption, Input's `error`). */
-const CAPTION_CLASS = "mt-1 text-caption leading-tight text-[var(--text-muted)]";
-const ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
-
-const isTextHint = (hint: unknown): hint is string | number =>
-  (typeof hint === "string" && hint !== "") || typeof hint === "number";
 
 /** A stored value read back: an E.164 number these rules can read, else `null`. */
 function storedNumber(value: string): ParsedPhone | null {
@@ -99,7 +91,7 @@ export interface PhoneInputProps extends Omit<InputProps, "type" | "value" | "de
    *  left out still shows under its own code. */
   countries?: readonly PhoneCountryCode[];
   /** See {@link PhoneInputLabels}. */
-  labels?: Partial<PhoneInputLabels>;
+  labels?: LabelOverride<PhoneInputLabels>;
   /** Classes for the whole field — the select, the input and the lines under them.
    *  `inputClassName` reaches the `<input>`. */
   className?: string;
@@ -143,27 +135,25 @@ export interface PhoneInputProps extends Omit<InputProps, "type" | "value" | "de
  * the number with `aria-describedby`. The select is named by `labels.countryCode`, and
  * the pair is a group named by a string `label`.
  */
-export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function PhoneInput(
-  {
-    value,
-    onValueChange,
-    onChange,
-    onBlur,
-    defaultCountry = "CH",
-    countries = PHONE_COUNTRIES,
-    labels,
-    className,
-    inputClassName,
-    label,
-    hint,
-    error,
-    invalid,
-    disabled,
-    "aria-describedby": ariaDescribedBy,
-    ...rest
-  },
+export function PhoneInput({
   ref,
-) {
+  value,
+  onValueChange,
+  onChange,
+  onBlur,
+  defaultCountry = "CH",
+  countries = PHONE_COUNTRIES,
+  labels,
+  className,
+  inputClassName,
+  label,
+  hint,
+  error,
+  invalid,
+  disabled,
+  "aria-describedby": ariaDescribedBy,
+  ...rest
+}: PhoneInputProps) {
   const text = usePhoneInputLabels(labels);
   const [country, setCountry] = useState<PhoneCountry>(() => countryOf(value) ?? defaultCountry);
   // What was typed, shown for as long as it still reads as the value (AmountInput's
@@ -230,10 +220,16 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
   const options: PhoneCountryCode[] = [...countries];
   if (country !== "other" && !options.includes(country)) options.push(country);
 
-  const captionId = useId();
-  const errorId = useId();
-  const caption = isTextHint(hint);
-  const showError = hasMessage(error);
+  // A FieldHint "?" rides the number's label line; text — and a FieldHint at Large and
+  // on touch (§4) — goes under the whole row with the error. Through useFieldMessages
+  // since 0.34, not a copy of its rule (DUP-2, DUP-8).
+  const messages = useFieldMessages({
+    hint,
+    error,
+    invalid,
+    describedBy: ariaDescribedBy,
+    ariaInvalid: rest["aria-invalid"],
+  });
   const named = typeof label === "string" && label !== "";
 
   return (
@@ -273,10 +269,9 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
             type="tel"
             autoComplete={rest.autoComplete ?? "tel"}
             label={label}
-            // A FieldHint "?" rides the label line; text goes under the whole row.
-            hint={caption ? undefined : hint}
-            invalid={invalid || showError}
-            aria-describedby={mergeDescribedBy(ariaDescribedBy, caption && captionId, showError && errorId)}
+            hint={messages.labelHint}
+            invalid={messages.isInvalid}
+            aria-describedby={messages.describedBy}
             disabled={disabled}
             value={display}
             onChange={handleChange}
@@ -288,17 +283,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
           />
         </div>
       </div>
-      {caption && (
-        <p id={captionId} className={CAPTION_CLASS}>
-          {hint}
-        </p>
-      )}
-      {showError && (
-        <p id={errorId} className={ERROR_CLASS}>
-          {error}
-        </p>
-      )}
+      {messages.below}
     </div>
   );
-});
-PhoneInput.displayName = "PhoneInput";
+}

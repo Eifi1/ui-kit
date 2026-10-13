@@ -1,8 +1,11 @@
-import { useCallback, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { Link, useHref, useLocation } from "react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button, Card, EmptyState, Tabs } from "../components/ui";
+import { Button } from "../components/button";
+import { Card } from "../components/card";
+import { EmptyState } from "../components/empty-state";
+import { Tabs } from "../components/tabs";
 import { FOCUS_RING } from "../components/focus-ring";
 import { Chip } from "../components/chip";
 import { List, ListItem } from "../components/list";
@@ -10,7 +13,7 @@ import type { ListItemLinkProps } from "../components/list";
 import { PageHeader } from "../components/page-header";
 import { SearchField } from "../components/search-field";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { createSearchIndex } from "../search/search-index";
 import type { SearchEntry } from "../search/search-index";
 import {
@@ -70,10 +73,42 @@ export interface SettingsLayoutProps<G extends string> {
    */
   phoneFooter?: ReactNode;
   /** Prop > `<UiKitProvider labels={{ settings }}>` > English. */
-  labels?: Partial<SettingsLabels>;
+  labels?: LabelOverride<SettingsLabels>;
   /** See {@link SettingsLayoutMode}. Default `"auto"`: the screen decides. */
   layout?: SettingsLayoutMode;
+  /**
+   * The app's name, the last part of the window's title: "Security · Settings ·
+   * Kastlan" (§3.1). Left out, the title ends at the page: "Security · Settings".
+   */
+  appName?: string;
+  /**
+   * The window's title (`document.title`, §3.1) — round 0.34 C8, KS U7. By default the
+   * layout writes "<group> · <page> · <appName>" while a group is open and
+   * "<page> · <appName>" on the phone's list, and puts back the title it found when it
+   * unmounts. `<page>` is `title` when that is a string, else `labels.title`.
+   *
+   * A function writes another order or another separator from the same parts; `false`
+   * leaves `document.title` to the app. Kastlan's `SettingsChrome` and Kurvenschmiede's
+   * `GroupTitle` were this effect written by hand, and Kurvenschmiede's admin page, on
+   * the same layout, had none — every admin section was titled "Kurvenschmiede".
+   */
+  documentTitle?: false | ((parts: SettingsDocumentTitleParts) => string);
   className?: string;
+}
+
+/** What {@link SettingsLayoutProps.documentTitle} is given to write the window's title. */
+export interface SettingsDocumentTitleParts {
+  /** The open group's name, or `null` on the phone's list of groups. */
+  group: string | null;
+  /** The page: `title` when it is a string, else `labels.title` ("Settings"). */
+  page: string;
+  /** The `appName` prop, or `undefined`. */
+  appName: string | undefined;
+}
+
+/** "Security · Settings · Kastlan" (§3.1); a part that is missing is left out. */
+function defaultDocumentTitle({ group, page, appName }: SettingsDocumentTitleParts): string {
+  return [group, page, appName].filter((part): part is string => Boolean(part)).join(" · ");
 }
 
 interface Searchable<G extends string> extends SearchEntry {
@@ -118,6 +153,8 @@ export function SettingsLayout<G extends string>({
   phoneFooter,
   labels: labelsProp,
   layout = "auto",
+  appName,
+  documentTitle,
   className,
 }: SettingsLayoutProps<G>): ReactElement {
   const labels = useKitLabels("settings", DEFAULT_SETTINGS_LABELS, labelsProp);
@@ -200,6 +237,28 @@ export function SettingsLayout<G extends string>({
   };
 
   const pageTitle = title ?? labels.title;
+
+  // The window's title (§3.1). Computed to a string during render so the effect below
+  // runs when the words change, not whenever an inline `documentTitle` function is new.
+  // Each run puts back the title it found before writing its own, so a group switch
+  // ends where it began and the unmount leaves the title the page had before settings.
+  const windowTitle =
+    documentTitle === false
+      ? null
+      : (documentTitle ?? defaultDocumentTitle)({
+          group: group === null ? null : (groupById.get(group)?.title ?? null),
+          page: typeof title === "string" ? title : labels.title,
+          appName,
+        });
+  useEffect(() => {
+    if (windowTitle === null) return;
+    const before = document.title;
+    document.title = windowTitle;
+    return () => {
+      document.title = before;
+    };
+  }, [windowTitle]);
+
   const pageClass = cn("mx-auto w-full space-y-4 p-4 md:p-6", width === "7xl" ? "max-w-7xl" : "max-w-6xl", className);
 
   const searchField = showSearch ? (
@@ -267,7 +326,7 @@ export function SettingsLayout<G extends string>({
                 e.preventDefault();
                 route.back();
               }}
-              className={cn("-ms-1 inline-flex items-center gap-0.5 self-start rounded-md pe-1 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]", FOCUS_RING)}
+              className={cn("-ms-1 inline-flex items-center gap-0.5 self-start rounded-md pe-1 text-sm font-medium text-muted hover:text-primary", FOCUS_RING)}
             >
               <ChevronLeft aria-hidden className="size-4 rtl:-scale-x-100" />
               {pageTitle}
@@ -293,7 +352,7 @@ export function SettingsLayout<G extends string>({
                   leading={
                     <span
                       aria-hidden
-                      className="flex size-8 shrink-0 items-center justify-center rounded-md bg-[var(--bg-surface-2)] text-[var(--text-secondary)] [&_svg]:size-4"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2 text-secondary [&_svg]:size-4"
                     >
                       {g.icon}
                     </span>

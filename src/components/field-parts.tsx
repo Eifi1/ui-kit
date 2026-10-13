@@ -1,28 +1,63 @@
 import { createContext, isValidElement, useContext, useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode, Ref, RefCallback } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useInlineFacts } from "../hooks/use-large-text";
 import { FOCUS_RING } from "./focus-ring";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
 
 /**
  * The pieces of a field's anatomy the kit's fields share — the static label, the hint
  * (caption or "?"), the caption and the error under a field, the label strip over a
- * bare group, the write lock on a control that saves itself. Private to the package —
- * not re-exported from the barrel, except `FieldLabel` and `FLOATING_LABEL_STATIC`,
- * which ui.tsx re-exports as it always has.
+ * bare group, the write lock on a control that saves itself, and the wiring under them
+ * (`aria-describedby`, refs). Private to the package — not re-exported from the barrel,
+ * except `FieldLabel` and `FLOATING_LABEL_STATIC`, which the barrel names (ui.tsx did until
+ * 0.34 split it).
  *
  * One file since 0.23: until then the pickers' half (`field-anatomy.tsx`: the date and
  * month pickers, whose trigger is a button in a wrapper of their own, and the groups
  * with no field box) sat beside this one with its own copies of `isTextHint` and the
  * caption class (keksdose K4: "uniform field anatomy … today it is a patchwork").
  *
- * Nothing here imports `ui.tsx`: `ui.tsx` imports this, and so do the combobox family,
+ * Nothing here imports a field module: field-base, input, select and textarea import this, and so do the combobox family,
  * the pickers and the native choice controls — the lint's no-cycle rule holds it.
  */
+
+/* ── the wiring: descriptions and refs ─────────────────────────────────────── */
+
+/**
+ * Ids to describe a control by, merged in reading order: whatever the caller already
+ * pointed at (standing advice), then the caption or description, then the error (the
+ * news). Merge, never replace — see {@link useFieldError}. An empty list is `undefined`,
+ * never `""`: a dangling attribute describes the control as nothing at all.
+ *
+ * Here since 0.34 (DUP-11, refactor audit 2026-10); `choice-parts.ts` held it, beside a
+ * copy of the presence rule, for the native choice controls alone.
+ */
+export function mergeDescribedBy(...ids: Array<string | false | null | undefined>): string | undefined {
+  const list = ids.filter(Boolean);
+  return list.length ? list.join(" ") : undefined;
+}
+
+/** Point a ref — a callback or an object — at `node`. `undefined` and `null` are no ref. */
+export function assignRef<T>(ref: Ref<T> | undefined, node: T | null): void {
+  if (typeof ref === "function") ref(node);
+  else if (ref) (ref as { current: T | null }).current = node;
+}
+
+/**
+ * One callback ref feeding several — the caller's forwarded `ref` and a field's own
+ * (DUP-11: AmountInput, FormActions, ScrollArea and SearchField each wrote this by hand).
+ * Wrap it in `useCallback` (or `useMemo`) over the same refs where a new callback every
+ * render would detach and re-attach the node.
+ */
+export function mergeRefs<T>(...refs: Array<Ref<T> | undefined>): RefCallback<T> {
+  return (node) => {
+    for (const ref of refs) assignRef(ref, node);
+  };
+}
 
 /* ── the static label ─────────────────────────────────────────────────────── */
 
@@ -32,7 +67,7 @@ import { hasMessage, mergeDescribedBy } from "./choice-parts";
 // same baseline — which is what put dev#468's "?" three pixels above the word it
 // belongs to.
 export const STATIC_LABEL_TYPE =
-  "text-caption leading-tight text-[var(--text-muted)] peer-disabled:opacity-50";
+  "text-caption leading-tight text-muted peer-disabled:opacity-50";
 
 /**
  * A field's label at Large and Extra large (0.33, docs/text-size-harmonization.md
@@ -80,7 +115,7 @@ export const FLOATING_LABEL_STATIC = cn(
  * button not a labelable input). Same placement as {@link FloatingField}'s static label,
  * so every labelled field lines up. Render inside a `relative` wrapper, before the trigger.
  */
-export interface FieldLabelProps extends ComponentPropsWithoutRef<"span"> {
+export interface FieldLabelProps extends ComponentPropsWithRef<"span"> {
   children: ReactNode;
 }
 
@@ -111,8 +146,13 @@ export function FieldLabel({ children, className, ...rest }: FieldLabelProps) {
  * reach of a keyboard and of every touch device, and the tooltip shows on focus
  * too. The text is also its accessible name, so a screen reader gets it without
  * the bubble ever opening.
+ *
+ * For a FACT — a format, a limit, a consequence — which at Large and on a touch screen
+ * becomes the field's caption ({@link useInlineHint}). Paragraph-long HELP the field is
+ * usable without belongs in a `HelpPopover` instead (0.34, §10.23), which opens on a tap
+ * and stays a "?" at every size.
  */
-export interface FieldHintProps extends Omit<ComponentPropsWithoutRef<"button">, "children"> {
+export interface FieldHintProps extends Omit<ComponentPropsWithRef<"button">, "children"> {
   /** The explanation. It is both the tooltip's text and, by default, the button's
    *  accessible name, so a screen reader gets it without the bubble ever opening. */
   label: string;
@@ -150,7 +190,7 @@ export function FieldHint({
         onClick={(e) => e.preventDefault()}
         // The kit's focus frame (0.32, §5): the "?" is a tab stop, and had no ring at all.
         className={cn(
-          "flex rounded-full text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)]",
+          "flex rounded-full text-placeholder transition-colors hover:text-secondary",
           FOCUS_RING,
           className,
         )}
@@ -167,6 +207,11 @@ export function FieldHint({
  * {@link FieldHint} becomes its own words — so the field shows them as its CAPTION under
  * the box, where they are read without hovering or tapping a 14 px "?". Anywhere else,
  * and for any other hint, the hint unchanged.
+ *
+ * A FieldHint only, on purpose (0.34, §10.23): a FieldHint is a FACT, and a fact stays
+ * visible. Paragraph-long HELP — why, how, what the options mean; the field is usable
+ * without it — goes in a `HelpPopover`, which this leaves on the label line at every
+ * size: printed under the field it was the longest thing in the form (keksdose K3).
  *
  * The kit's fields call it through {@link useFieldHint} / {@link useFieldMessages}; a
  * field that resolves its own `hint` (an app's, or one of the kit's own outside this
@@ -197,7 +242,7 @@ export function isTextHint(hint: ReactNode): hint is string | number {
 
 /** The caption under a field — Select's and NumberInput's type, so every field's
  *  standing advice reads alike. */
-export const FIELD_CAPTION_CLASS = "mt-1 text-caption leading-tight text-[var(--text-muted)]";
+export const FIELD_CAPTION_CLASS = "mt-1 text-caption leading-tight text-muted";
 
 export interface FieldHintParts {
   /** The caller's `aria-describedby` with the caption's id appended — standing
@@ -224,7 +269,64 @@ export function useFieldHint(hintProp: ReactNode, describedBy: string | undefine
     describedBy: text ? mergeDescribedBy(describedBy, captionId) : describedBy,
     captionId: text ? captionId : undefined,
     captionText: text ? hint : undefined,
-    labelHint: !text && hasMessage(hint) ? hint : undefined,
+    labelHint: !text && hasContent(hint) ? hint : undefined,
+  };
+}
+
+/** The error line under a field — one type for every field's message (DUP-8, refactor
+ *  audit 2026-10: ChipInput and FileDropzone printed theirs in `text-xs`). */
+export const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-danger";
+
+/**
+ * The message under a field that is wrong, and the wiring that attaches it.
+ *
+ * `invalid` paints the field (`FIELD_INVALID`) and sets `aria-invalid`, and there it
+ * stopped: a field that announces "invalid" and nothing else has told a screen-reader
+ * user only that they are stuck. The message was always on screen — a sibling `<p>`
+ * beside the field — and never in the accessibility tree, because attaching it needs an
+ * id on the message and an `aria-describedby` on the control, and no caller was going to
+ * mint one by hand for every field on a form.
+ *
+ * Two rules the wiring has to keep:
+ *
+ *  - **Merge, never replace.** A field may already point at a hint ("at least twelve
+ *    characters"). Overwriting that reference to say the field is wrong trades one half
+ *    of the answer for the other — and it keeps the half the user has already read. The
+ *    hint stays first: it is the standing advice, the error is the news.
+ *  - **`invalid` keeps working alone**, for the forms whose message lives somewhere else
+ *    entirely (a summary at the top of a dialog). There is nothing to point at then, and
+ *    a dangling id describes the field as nothing at all.
+ *
+ * Deliberately NOT `role="alert"`. `aria-describedby` is read when focus reaches the
+ * control, which is where a field's own error is wanted; an alert would also interrupt
+ * whatever is being read at the time, on every keystroke of a form that re-validates as
+ * you type.
+ *
+ * Every field's since 0.34 (DUP-8, refactor audit 2026-10): it was ui.tsx's own, so the
+ * combobox family restated it as `useComboboxFieldError` — without the fourth argument,
+ * so Autocomplete announced a form library's `aria-invalid` and did not paint it — and
+ * ten fields restated it inline.
+ */
+export function useFieldError(
+  error: ReactNode,
+  invalid: boolean | undefined,
+  describedBy: string | undefined,
+  /** The caller's own `aria-invalid`. A form library sets THIS (see `@eifi1/ui-kit/rhf`
+   *  `FormControl`), not our `invalid` prop — and a field that announces invalid should
+   *  look it too. */
+  ariaInvalid?: unknown,
+): { isInvalid: boolean; describedBy: string | undefined; errorEl: ReactNode } {
+  const errorId = useId();
+  const hasError = hasContent(error);
+  return {
+    /** A field carrying a message that says what is wrong with it IS wrong. */
+    isInvalid: Boolean(invalid) || hasError || ariaInvalid === true || ariaInvalid === "true",
+    describedBy: mergeDescribedBy(describedBy, hasError && errorId),
+    errorEl: hasError ? (
+      <p id={errorId} className={FIELD_ERROR_CLASS}>
+        {error}
+      </p>
+    ) : null,
   };
 }
 
@@ -312,40 +414,66 @@ export interface LockReason {
 export function useLockReason(commit: CommitScope | undefined, disabledReason: ReactNode): LockReason {
   const reason = useCommitReason(commit, disabledReason);
   const reasonId = useId();
-  return { reason, locked: hasMessage(reason), reasonId };
+  return { reason, locked: hasContent(reason), reasonId };
 }
 
 /**
- * The kit {@link Tooltip} around a locked control, with a `hidden` copy of the reason for
- * the control's `aria-describedby` — Button's anatomy. The control goes in a FRAGMENT so
- * the Tooltip does not also clone its bubble's id into the description: the hidden copy
- * already describes it, and the same sentence twice would be read on every focus.
+ * A locked control and its reason — the kit's ONE frame for it, used by Button,
+ * IconButton, Chip, Checkbox, Switch and every field that locks (DUP-3, refactor audit
+ * 2026-10: Button's `ReasonFrame` and Chip's `ChipReasonFrame` were copies of it, and
+ * only those two drew the line, so a field locked through `commit` kept its reason in a
+ * tooltip on a phone while the Save beside it said it in words). Where it shows is
+ * {@link DisabledReasonDisplay}'s: by default a LINE under the control at Large and on a
+ * touch screen ({@link DisabledReasonLine}), the kit {@link Tooltip} otherwise.
+ *
+ * A component of its own so only a LOCKED control asks the text size and the pointer;
+ * the hundreds of unlocked controls on a page subscribe to nothing.
+ *
+ * Tooltip form: the control in a FRAGMENT with a `hidden` copy of the reason for its
+ * `aria-describedby`, so the Tooltip does not also clone its bubble's id into the
+ * description — the same sentence twice would be read on every focus. Line form: the
+ * line IS the description (it carries `reasonId`), and no bubble repeats what is on
+ * screen.
  *
  * `className` is the wrapper's, which becomes the outermost element while locked — a
  * control moves its own layout classes here so a lock does not reflow the form.
  */
 export function LockedReason({
   lock,
-  line = false,
+  display,
+  line: lineProp,
+  side,
+  portal,
   className,
+  lineClassName,
   children,
 }: {
-  lock: LockReason;
-  /** Draw the reason as a line under the control instead (0.32, §4) — see
-   *  {@link DisabledReasonLine}; the caller decides with {@link useDisabledReasonLine}. */
+  /** The reason, and the id the control's `aria-describedby` names. */
+  lock: Pick<LockReason, "reason" | "reasonId">;
+  /** Where the reason shows — the control's `disabledReasonDisplay`. Default `"auto"`. */
+  display?: DisabledReasonDisplay;
+  /** The answer of a caller that asked {@link useDisabledReasonLine} for its own layout
+   *  already (Checkbox, Switch); wins over `display`. */
   line?: boolean;
+  /** The bubble's side and portal — IconButton's `tooltipSide` / `tooltipPortal`. */
+  side?: TooltipSide;
+  portal?: boolean;
   className?: string;
+  /** Classes for the line itself — a list row's padding, so the words line up with the
+   *  row's. */
+  lineClassName?: string;
   children: ReactNode;
 }) {
-  if (line) {
+  const asked = useDisabledReasonLine(display);
+  if (lineProp ?? asked) {
     return (
-      <DisabledReasonLine id={lock.reasonId} reason={lock.reason} className={className}>
+      <DisabledReasonLine id={lock.reasonId} reason={lock.reason} className={className} lineClassName={lineClassName}>
         {children}
       </DisabledReasonLine>
     );
   }
   return (
-    <Tooltip label={lock.reason} className={className}>
+    <Tooltip label={lock.reason} side={side} portal={portal} className={className}>
       <>
         {children}
         <span id={lock.reasonId} hidden>
@@ -407,7 +535,7 @@ export function useDisabledReasonLine(display: DisabledReasonDisplay = "auto"): 
  *  control's "why" reads like a field's standing advice. Capped, so a long reason under
  *  a small control wraps rather than widening its row without end. */
 export const DISABLED_REASON_LINE_CLASS =
-  "mt-1 block max-w-[20rem] text-caption leading-tight text-[var(--text-muted)]";
+  "mt-1 block max-w-[20rem] text-caption leading-tight text-muted";
 
 /**
  * A control and its `disabledReason` as a line under it — the `"line"` form of
@@ -420,17 +548,21 @@ export function DisabledReasonLine({
   id,
   reason,
   className,
+  lineClassName,
   children,
 }: {
   id: string;
   reason: ReactNode;
   className?: string;
+  /** Classes for the line itself (0.34) — a list row's padding, so its words start
+   *  where the row's do. */
+  lineClassName?: string;
   children: ReactNode;
 }) {
   return (
     <span data-slot="disabled-reason" className={cn("inline-flex max-w-full flex-col items-start", className)}>
       {children}
-      <span id={id} className={DISABLED_REASON_LINE_CLASS}>
+      <span id={id} className={cn(DISABLED_REASON_LINE_CLASS, lineClassName)}>
         {reason}
       </span>
     </span>
@@ -449,19 +581,11 @@ export const RequiredStarOnLegend = createContext(false);
 
 /* ── fields not built on FloatingField: pickers and bare groups ──────────── */
 
-/** `undefined`, `null`, `false` and `""` are what a caller's `cond && "…"` evaluates to
- *  when there is nothing to say; none of them is content. A numeric `0` is. */
-export function hasContent(node: ReactNode): boolean {
-  return node !== undefined && node !== null && node !== false && node !== "";
-}
-
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
-
 export interface FieldMessages {
   /** `invalid`, a message, or an `aria-invalid` from outside (a form library). */
   isInvalid: boolean;
-  /** The caller's description, then the caption, then the error — the standing
-   *  advice before the news, as `useFieldError` in ui.tsx orders them. */
+  /** The caller's description, then the caption, then a lock's reason, then the error —
+   *  the standing advice before the news, as {@link useFieldError} orders them. */
   describedBy: string | undefined;
   /** The caption and the error, for under the field; `null` when there is neither. */
   below: ReactNode;
@@ -470,50 +594,46 @@ export interface FieldMessages {
   labelHint: ReactNode;
 }
 
-/** `hint` / `error` / `invalid` resolved the way `Select` resolves them. */
+/**
+ * `hint` / `error` / `invalid` resolved the way `Select` resolves them —
+ * {@link useFieldHint} and {@link useFieldError} together, for a field that draws what
+ * goes under it in one place (a picker, a group, a field built on another).
+ */
 export function useFieldMessages({
-  hint: hintProp,
+  hint,
   error,
   invalid,
   describedBy,
   ariaInvalid,
+  reasonId,
 }: {
   hint?: ReactNode;
   error?: ReactNode;
   invalid?: boolean;
   describedBy?: string;
   ariaInvalid?: unknown;
+  /** A lock's reason (`useLockReason`'s `reasonId`, while locked): described after the
+   *  caption and before the error, as on Select. */
+  reasonId?: string | false;
 }): FieldMessages {
-  const hint = useInlineHint(hintProp);
-  const hintId = useId();
-  const errorId = useId();
-  const textHint = isTextHint(hint);
-  const hasError = hasContent(error);
+  const hintParts = useFieldHint(hint, describedBy);
+  const field = useFieldError(error, invalid, mergeDescribedBy(hintParts.describedBy, reasonId), ariaInvalid);
   return {
-    isInvalid: Boolean(invalid) || hasError || ariaInvalid === true || ariaInvalid === "true",
-    describedBy:
-      [describedBy, textHint && hintId, hasError && errorId].filter(Boolean).join(" ") || undefined,
+    isInvalid: field.isInvalid,
+    describedBy: field.describedBy,
     below:
-      textHint || hasError ? (
+      hintParts.captionText !== undefined || field.errorEl !== null ? (
         <>
-          {textHint && (
-            <p id={hintId} className={FIELD_CAPTION_CLASS}>
-              {hint}
-            </p>
-          )}
-          {hasError && (
-            <p id={errorId} className={FIELD_ERROR_CLASS}>
-              {error}
-            </p>
-          )}
+          <FieldCaption parts={hintParts} />
+          {field.errorEl}
         </>
       ) : null,
-    labelHint: !textHint && hasContent(hint) ? hint : undefined,
+    labelHint: hintParts.labelHint,
   };
 }
 
 /**
- * The field and what is under it, as one box — `FieldGroup` in ui.tsx, for the same
+ * The field and what is under it, as one box — `FieldGroup` in field-base.tsx, for the same
  * reasons written there. Nothing of its own while there is nothing under the field and
  * the caller passed no `error` key (the DOM is exactly what it was before these props);
  * once `error` is passed the box is kept even with no message, so the trigger is never
@@ -561,23 +681,31 @@ export function FieldLabelLine({ label, hint }: { label: ReactNode; hint?: React
 }
 
 /**
- * How tall the strip over a bare group is — the values {@link FieldStrip}'s `pad` takes,
- * public since 0.23 (keksdose G8), so the names say what the CONTENT needs rather than
- * which kit group first needed it (until 0.23 they were `toggle` and `tiles`).
+ * How tall the strip over a bare group is: 20px at Normal, for every group the kit
+ * draws one over — ToggleGroup's `labelPlacement="strip"`, SwatchPicker, IconPicker
+ * and {@link FieldStrip} (whose `pad` named two heights until 0.34).
  *
- *  - `"field"` — 16px. keksdose's `ClearedStatusPicker` (live #288 rework, #431,
- *    measured): *"16px of label strip plus a 26px group is exactly a labelled Input"*,
- *    so a status group in a row of 42px fields ends where they end. The label's line
- *    box runs into the group's top hairline, but the ACTIVE fill — the thing feedback
- *    #117 was about — starts at 19px, below the label's 17.75px. For content with a
- *    border and an inset of its own; ToggleGroup's `labelPlacement="strip"`.
- *  - `"clear"` — 20px, keksdose's `FlagPicker` and location field (`pt-5`). A tile has
- *    no inset fill: its selection IS its frame, a 2px dark border-and-ring from the
- *    tile's top edge, so the tile has to start below the whole label line — and so does
- *    anything else with no inset: a map, a row of buttons, a line of text. SwatchPicker,
- *    IconPicker, and FieldStrip's default.
+ * The label ROW, not the label, is what has to fit (keksdose dev#593, kk K4, measured in
+ * headless Chromium): it sits `top-1` (4px) and is as tall as the taller of the label
+ * (11px `text-caption` in a `leading-tight` line, 13.75px) and its "?" (a 14px icon,
+ * `size-3.5`) — so it ends 18px down. The strip has to be at least that:
+ *
+ *     label row: 4 + max(13.75, 14) = 18   ≤   strip: 20   (2px clear of the content)
+ *
+ * Until 0.34 a 16px strip (`"field"`) stood over the segmented group so that 16 + its
+ * 26px box made a labelled Input's 42px (keksdose's `ClearedStatusPicker`, live #288 /
+ * #431). The label and its "?" then crossed the group's top border by 2px — *"the
+ * question mark even interferes with it"* (at 125 %: label row 424–438, border at 436).
+ * The 4px come out of the group's segments instead (`STRIP_SEGMENT` in
+ * toggle-group.tsx): 20 + 22 = 42. A tile, a map, a row of buttons — content with no
+ * inset — needed the 20px already (keksdose's `FlagPicker` and location field, `pt-5`).
+ *
+ * Every term is rem, so the sum holds at any browser font size. At Large and Extra large
+ * there is no strip: the label row stands above the content, in flow
+ * ({@link LABEL_ABOVE_AT_LARGE}), and the padding goes (`large:pt-0` in
+ * {@link LabelStrip}), so nothing lies under the label to cross.
  */
-export const LABEL_STRIP_PAD = { field: "pt-4", clear: "pt-5" } as const;
+export const LABEL_STRIP_PAD = "pt-5";
 
 /**
  * The 11px label (and its `FieldHint`) over a group that is NOT a field — keksdose K2:
@@ -598,23 +726,24 @@ export function LabelStrip({
   label,
   hint,
   disabled,
-  pad,
   className,
   children,
   ...rest
 }: Omit<ComponentPropsWithoutRef<"div">, "children"> & {
   labelId: string;
   label: ReactNode;
+  /** What rides the label line beside the label — a resolved `labelHint`
+   *  ({@link useFieldMessages}), never a raw `hint`: a FieldHint is the caption at Large
+   *  and on touch, and the caller draws that under its group. */
   hint?: ReactNode;
   /** Dim the label with its group, as `peer-disabled:` dims a field's own. */
   disabled?: boolean;
-  pad: keyof typeof LABEL_STRIP_PAD;
   children: ReactNode;
 }) {
   return (
     // At Large the row is a label above the group, in flow (0.33, §10.17), and the
     // strip's padding goes: nothing lies under it any more.
-    <div {...rest} className={cn("relative min-w-0", LABEL_STRIP_PAD[pad], "large:pt-0", className)}>
+    <div {...rest} className={cn("relative min-w-0", LABEL_STRIP_PAD, "large:pt-0", className)}>
       <div
         data-field-label=""
         className={cn("pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1", LABEL_ABOVE_AT_LARGE)}

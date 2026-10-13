@@ -15,7 +15,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { RowActionList, RowActionsCollapse } from "@eifi1/ui-kit";
 import { useTextSizeStore } from "../stores";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code, READOUT_WRAP } from "../lib/section";
 
 /**
  * TEXT SIZE, 0.33 (docs/text-size-harmonization.md §10.16–§10.18): a row action carries
@@ -24,9 +24,6 @@ import { Example, Note } from "../lib/section";
  * name for "truncate at Normal, wrap at Large". Belongs on the "Text size & contrast"
  * page, after text-size-components-032-demo. Ada's garden is SYNTHETIC.
  */
-
-const code = (s: string) => <code className="font-mono [overflow-wrap:anywhere]">{s}</code>;
-const READOUT = "font-mono text-xs text-secondary [overflow-wrap:anywhere]";
 
 /** The page's own text size, from the top bar's store — the same switch as above. */
 function PageSize() {
@@ -127,7 +124,7 @@ export function RowActions033Demo() {
           </div>
         </div>
 
-        <ul className={`space-y-0.5 ${READOUT}`} aria-live="polite">
+        <ul className={`space-y-0.5 ${READOUT_WRAP}`} aria-live="polite">
           <li>
             watched: {String(watched)} · flagged: {String(flagged)} · share open: {String(shareOpen)} · last: {log}
           </li>

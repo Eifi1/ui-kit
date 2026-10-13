@@ -1,11 +1,13 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, WifiOff } from "lucide-react";
-import { useKitLabels } from "../i18n/kit-labels";
-import { Button, EmptyState } from "./ui";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { Button } from "./button";
+import { EmptyState } from "./empty-state";
 import { CopyButton } from "./copy-button";
 import { Disclosure } from "./disclosure";
 import { documentNavigation } from "../lib/document-navigation";
+import { DEFAULT_ERROR_BOUNDARY_LABELS } from "./error-boundary-labels";
 
 /** The words of the default fallback. */
 export interface ErrorBoundaryLabels {
@@ -35,20 +37,8 @@ export interface ErrorBoundaryLabels {
   reportedAs: (reference: string) => string;
 }
 
-export const DEFAULT_ERROR_BOUNDARY_LABELS: ErrorBoundaryLabels = {
-  title: "Something went wrong",
-  message: "This part of the page could not be shown. Try again, or reload the page.",
-  retry: "Try again",
-  details: "Error details",
-  reload: "Reload",
-  updateTitle: "A new version is available",
-  updateMessage: "Part of the app has changed since this page was loaded. Reload to get the new version.",
-  offlineTitle: "You’re offline",
-  offlineMessage: "This page could not be loaded without a connection. Reconnect, then reload the page.",
-  copyReport: "Copy error report",
-  reported: "This error has been reported automatically.",
-  reportedAs: (reference) => `Reported as ${reference}`,
-};
+// Defined in ./error-boundary-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ERROR_BOUNDARY_LABELS };
 
 /**
  * What was thrown, as flat strings, read ONCE when it arrives.
@@ -376,7 +366,7 @@ export interface ErrorBoundaryProps {
   headingAs?: "h2" | "h3" | "h4" | "h5" | "h6";
   /** Classes for the default fallback's box (`m-8 min-h-[400px]`, kastlan). */
   className?: string;
-  labels?: Partial<ErrorBoundaryLabels>;
+  labels?: LabelOverride<ErrorBoundaryLabels>;
 }
 
 type FilingState = "none" | "pending" | "filed" | "failed";
@@ -599,7 +589,7 @@ function ErrorFallback({
   actions?: ReactNode;
   headingAs: NonNullable<ErrorBoundaryProps["headingAs"]>;
   className?: string;
-  labels?: Partial<ErrorBoundaryLabels>;
+  labels?: LabelOverride<ErrorBoundaryLabels>;
 }) {
   const text = useKitLabels("errorBoundary", DEFAULT_ERROR_BOUNDARY_LABELS, labels);
   const chunk = isChunkLoadError(details);
@@ -642,7 +632,7 @@ function ErrorFallback({
             // program's words and can be read out or screenshotted verbatim.
             <p
               data-error-message=""
-              className="-mt-1 mb-1 basis-full whitespace-pre-wrap break-words rounded-md border border-[var(--danger-border-strong)] bg-[var(--danger-bg)] px-3 py-2 text-start font-mono text-xs text-[var(--text-primary)]"
+              className="-mt-1 mb-1 basis-full whitespace-pre-wrap break-words rounded-md border border-danger-strong bg-danger-soft px-3 py-2 text-start font-mono text-xs text-primary"
             >
               {errorLine}
             </p>
@@ -659,7 +649,7 @@ function ErrorFallback({
           {actions}
           {showDetails && reportText !== null && (
             <Disclosure variant="bare" title={text.details} className="basis-full text-start">
-              <pre className="max-h-60 overflow-auto whitespace-pre-wrap break-words text-xs text-[var(--text-secondary)]">
+              <pre className="max-h-60 overflow-auto whitespace-pre-wrap break-words text-xs text-secondary">
                 {reportText}
               </pre>
             </Disclosure>

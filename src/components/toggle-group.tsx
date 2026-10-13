@@ -1,14 +1,16 @@
-import { useId } from "react";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement, ReactNode } from "react";
+import { useCallback, useId } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { FIELD_INVALID, FloatingField, Label } from "./ui";
+import { FIELD_INVALID, FloatingField, Label } from "./field-base";
 import { Tooltip } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
+import { hasContent } from "../lib/presence";
 import {
+  assignRef,
   DISABLED_REASON_LINE_CLASS,
   FIELD_CAPTION_CLASS,
-  hasContent,
+  FIELD_ERROR_CLASS,
   isTextHint,
   LabelStrip,
   useDisabledReasonLine,
@@ -53,12 +55,6 @@ export interface ToggleGroupBaseProps<T extends string>
    * (docs/text-size-harmonization.md §4). The keyboard is the same either way.
    */
   overflow?: "truncate" | "wrap";
-  /**
-   * @deprecated Pass `aria-label` instead — the DOM spelling, which every other
-   * control in this kit now answers to. Kept working because three applications ship
-   * this one today; it names the group only when `aria-label` is absent.
-   */
-  ariaLabel?: string;
   /**
    * Show, refuse the change (Keksdose live #288: a payment dated in the future has no
    * state to set).
@@ -108,9 +104,11 @@ export interface ToggleGroupBaseProps<T extends string>
    * `"strip"`: the 11px static label (and `hint`) in a strip OVER the bare group, for a
    * group that stands in a row of fields but is not one (keksdose K2 — the transaction
    * row's cleared-status picker, live #288 / #431 / dev#468). No field border: the group
-   * keeps its own box, and its segments drop their vertical padding so a 16px strip
-   * plus the 26px group is exactly a labelled {@link Input}'s 42px, the label on the
-   * same line as theirs. `error` and `caption` go under the group, as in the other two.
+   * keeps its own box, and its segments drop their vertical padding and set a 16px line,
+   * so the 20px strip plus the 22px group is exactly a labelled {@link Input}'s 42px,
+   * the label on the same line as theirs and clear of the group's border (keksdose
+   * dev#593 — see `STRIP_SEGMENT`). `error` and `caption` go under the group, as in the
+   * other two.
    *
    * Inside a `Field`, pass no `label` at all and spread the render-prop instead —
    * `{(ids, { labelId }) => <ToggleGroup {...ids} aria-labelledby={labelId} … />}` —
@@ -173,6 +171,15 @@ export interface ToggleGroupBaseProps<T extends string>
    * no effect.
    */
   commit?: CommitScope;
+  /**
+   * The group — the `radiogroup` (or the pressed shape's `group`) the rest of the props go
+   * on — as a React 19 ref prop (0.34, API-3, refactor audit 2026-10). The group itself
+   * takes no focus, so its `focus()` lands where a keyboard would: the radio shape's one
+   * tab stop (the checked option, else the first), or in the pressed shape the pressed
+   * button, else the first. That is react-hook-form's focus-on-error, which /rhf's
+   * adapter reached by an id lookup carrying this same rule until now.
+   */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /**
@@ -225,20 +232,61 @@ const CHROME_SEGMENT: Record<"sm" | "md", string> = { md: "py-0 leading-[1.125re
  * A `large:` class, so it costs no render and is right on the first paint.
  * `overflow="wrap"` wraps at every size already.
  *
- * 0.32.1 (Kurvenschmiede's 0.32 report): every count and every placement but the
- * strip, not only a field of four or more. Since a row breaks only where its labels do
- * not fit, a wrap only ever replaces a truncation — and three options in a card at
- * Extra large on a 360 px phone read "Syst… Li… D…". The strip keeps one row: its
- * 26 px group is what lines it up with the 42 px fields beside it (`STRIP_SEGMENT`).
+ * 0.32.1 (Kurvenschmiede's 0.32 report): every count and every placement, not only a
+ * field of four or more. Since a row breaks only where its labels do not fit, a wrap
+ * only ever replaces a truncation — and three options in a card at Extra large on a
+ * 360 px phone read "Syst… Li… D…".
+ *
+ * 0.34 (round 0.34 T1, text size §10.17): the strip too, which 0.32.1 kept to one row so
+ * its 26 px group lined up with the 42 px fields beside it (`STRIP_SEGMENT`). The size
+ * sweep read "Op…" in its segments at 360 px / Extra large — the same "Syst… Li… D…" —
+ * and a row of fields that grows to a taller cell (keksdose's status strip sits in an
+ * `items-start` grid) is the smaller loss. At Normal, and wherever it fits, it is the
+ * one row it was.
  */
 const WRAP_AT_LARGE = "large:flex-wrap";
 
 /**
- * The strip placement's segments: a 26px group (1 + 2 + 20 + 2 + 1) under the 16px
- * strip — `md`'s 20px text-sm line with no padding, `sm`'s 16px line with 2px either
- * side. See `LABEL_STRIP_PAD` for why 16.
+ * The strip placement's segments (keksdose dev#593, kk K4): a 22px group under the 20px
+ * strip, which is a labelled Input's 42px at Normal —
+ *
+ *     strip 20 + group (1 + 2 + 16 + 2 + 1) 22 = 42 = Input (1 + 16 + 20 + 4 + 1)
+ *
+ * — both sizes setting their text in a 16px line with no padding (`md`'s 14px, `sm`'s
+ * 12px). Until 0.34 the strip was 16px over a 26px group (a 20px line), and the label
+ * row, which ends 18px down, crossed the group's top border by 2px; see
+ * `LABEL_STRIP_PAD` in field-parts.tsx for the label row's sum. keksdose had the same
+ * fix locally: `pt-5` and `@3xl:leading-4`.
+ *
+ * At Large and Extra large the label stands above the group and there is no strip to
+ * share out, so the segments keep the line they had: `md` its text-sm line
+ * (`large:leading-5` — a label that wraps there, WRAP_AT_LARGE, needs it), `sm` its 2px
+ * either side.
  */
-const STRIP_SEGMENT: Record<"sm" | "md", string> = { md: "py-0", sm: "py-0.5" };
+const STRIP_SEGMENT: Record<"sm" | "md", string> = {
+  md: "py-0 leading-4 large:leading-5",
+  sm: "py-0 leading-4 large:py-0.5",
+};
+
+/**
+ * The strip placement's group is BLOCK-level (keksdose dev#593). Drawn `inline-flex`, it
+ * sat on a line box of the strip's own line height, and a 22px box on a taller line
+ * gained a pixel of leading above and below — 44px, not 42. Block-level, the group is
+ * exactly its box. keksdose wrote it as `[&>[role=radiogroup]]:flex` on the strip.
+ */
+const STRIP_GROUP = "flex";
+
+/**
+ * Where the group's `focus()` lands (see {@link ToggleGroupBaseProps.ref}): the radio
+ * shape's one tab stop, or the pressed shape's pressed button — else the first option a
+ * keyboard can reach. The rule /rhf's ToggleGroup adapter applied by id until 0.34.
+ */
+function groupFocusTarget(group: HTMLElement): HTMLElement | null {
+  return (
+    group.querySelector<HTMLElement>('button[tabindex="0"], button[aria-pressed="true"]') ??
+    group.querySelector<HTMLElement>("button:not(:disabled)")
+  );
+}
 
 /**
  * A line under the group saying what the CHOSEN option means — lenkbank's ToggleField
@@ -326,7 +374,6 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     className,
     optionClassName,
     overflow = "truncate",
-    ariaLabel,
     disabled = false,
     size = "md",
     label,
@@ -338,12 +385,22 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
     disabledReasonDisplay,
     commit,
     "aria-label": ariaLabelAttr,
+    ref,
     ...restWithMode
   } = props;
   const labelId = useId();
   const errorId = useId();
   const reasonId = useId();
   const hintCaptionId = useId();
+  // The group's `focus()` is a no-op on a div with no tabindex; the caller's ref gets one
+  // that lands where the keyboard would (see `ref`).
+  const setGroup = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (el) el.focus = (options?: FocusOptions) => groupFocusTarget(el)?.focus(options);
+      assignRef(ref, el);
+    },
+    [ref],
+  );
   // The lock's reason under a locked provider (with `commit`), else the group's own.
   const disabledReason = useCommitReason(commit, ownDisabledReason);
   const locked = hasContent(disabledReason);
@@ -363,9 +420,9 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   const field = labelled && labelPlacement === "field";
   const above = labelled && labelPlacement === "above";
   const strip = labelled && labelPlacement === "strip";
-  // At Large and Extra large a truncating group wraps instead, the strip excepted (see
-  // WRAP_AT_LARGE).
-  const wrapAtLarge = overflow === "truncate" && !strip;
+  // At Large and Extra large a truncating group wraps instead, the strip too since 0.34
+  // (see WRAP_AT_LARGE).
+  const wrapAtLarge = overflow === "truncate";
   const hasError = labelled && hasContent(error);
   // Taken off the rest so neither reaches the DOM; `props` keeps them paired, which is
   // what lets the `onChange` below be called with `null` only in the mode that allows it.
@@ -454,19 +511,24 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           // keyboard, which is the only input that needs it.
           //
           // The ring is the kit's focus frame (0.32, §5): `--focus-ring-width` wide.
-          overflow === "wrap" ? "whitespace-nowrap" : "min-w-0 truncate",
-          "flex-1 basis-auto rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-inset focus-visible:ring-[var(--border-strong)]",
+          //
+          // From Large up the group wraps its ROW first (WRAP_AT_LARGE), so a segment's
+          // own text breaks only when one label is wider than a whole row — and then it
+          // wraps rather than ending in an ellipsis (`truncate-until-large`, text size
+          // §10.17; round 0.34 T1: the sweep read 'confirmVariant="da…' at 360 px).
+          overflow === "wrap" ? "whitespace-nowrap" : "min-w-0 truncate-until-large",
+          "flex-1 basis-auto rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-inset focus-visible:ring-strong",
           FOCUS_RING_WIDTH,
           size === "sm" && "px-2 py-1 text-xs",
           // In the field chrome: no vertical padding, and the line that makes the
           // field 42px under a strip that clears the label — see CHROME_PAD. `sm`
           // keeps its 12px type here (it used to be overridden to the md line).
           field && CHROME_SEGMENT[size],
-          // In the strip placement: a 26px group under a 16px strip — STRIP_SEGMENT.
+          // In the strip placement: a 22px group under a 20px strip — STRIP_SEGMENT.
           strip && STRIP_SEGMENT[size],
           active
-            ? "bg-[var(--bg-inverse)] text-[var(--text-inverse)]"
-            : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]",
+            ? "bg-inverse text-inverse"
+            : "text-secondary hover:bg-hover",
           // No hover fill on a group that cannot be changed — a segment that
           // lights up under the pointer is an offer, and there is none here. Not on
           // the chosen segment: its fill IS its state, and its inverse text would
@@ -494,11 +556,10 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       // radiogroup role or the disabled state by accident. `className` is destructured
       // out entirely and merged through `cn`, so it is never in here.
       {...rest}
+      ref={setGroup}
       role={pressed ? "group" : "radiogroup"}
-      // The DOM spelling wins; `ariaLabel` is the fallback for the call sites that
-      // have not moved yet.
-      aria-label={ariaLabelAttr ?? ariaLabel}
-      aria-labelledby={labelled && ariaLabelAttr === undefined && ariaLabel === undefined ? labelId : rest["aria-labelledby"]}
+      aria-label={ariaLabelAttr}
+      aria-labelledby={labelled && ariaLabelAttr === undefined ? labelId : rest["aria-labelledby"]}
       aria-invalid={hasError || rest["aria-invalid"] || undefined}
       aria-describedby={
         [rest["aria-describedby"], hintAsCaption !== undefined && hintCaptionId, hasCaption && captionId, hasError && errorId]
@@ -522,7 +583,9 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
         // (The hover fill is the DESKTOP half of that report: Tailwind v4 wraps every
         // `hover:` in `@media (hover: hover)`, so a phone never paints it. The half a
         // phone does see is the focus ring — see the segment's own note below.)
-        "inline-flex w-full gap-0.5 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] p-0.5 shadow-sm",
+        "inline-flex w-full gap-0.5 rounded-md border border-strong bg-surface p-0.5 shadow-sm",
+        // Block-level under the strip, so it adds no line box's leading — STRIP_GROUP.
+        strip && STRIP_GROUP,
         overflow === "wrap" && "flex-wrap",
         wrapAtLarge && WRAP_AT_LARGE,
         // The whole group fades, the way every other disabled control in this
@@ -568,13 +631,13 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       <p
         id={captionId}
         aria-live={captionIsLive ? "polite" : undefined}
-        className={cn("text-caption leading-snug text-[var(--text-muted)]", hasCaption && "mt-1")}
+        className={cn("text-caption leading-snug text-muted", hasCaption && "mt-1")}
       >
         {hasCaption ? captionNode : null}
       </p>
     ) : null;
   const errorEl = hasError ? (
-    <p id={errorId} className="mt-1 text-caption leading-tight text-[var(--danger)]">
+    <p id={errorId} className={FIELD_ERROR_CLASS}>
       {error}
     </p>
   ) : null;
@@ -607,7 +670,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
             id={labelId}
             disabled={dimmed}
             data-error={hasError || undefined}
-            className="data-[error=true]:text-[var(--danger)]"
+            className="data-[error=true]:text-danger"
           >
             {label}
           </Label>
@@ -624,7 +687,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   }
   if (strip) {
     return (
-      <LabelStrip labelId={labelId} label={label} hint={labelHint} disabled={dimmed} pad="field" className={className}>
+      <LabelStrip labelId={labelId} label={label} hint={labelHint} disabled={dimmed} className={className}>
         {group}
         {belowEl}
         {captionEl}
@@ -655,9 +718,9 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       >
         <div
           className={cn(
-            "flex flex-1 flex-col justify-center rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-1 shadow-sm",
+            "flex flex-1 flex-col justify-center rounded-md border border-subtle bg-surface px-1 shadow-sm",
             CHROME_PAD[size],
-            dimmed && "bg-[var(--bg-surface-2)] opacity-60",
+            dimmed && "bg-surface-2 opacity-60",
             hasError && FIELD_INVALID,
             chromeClassName,
           )}

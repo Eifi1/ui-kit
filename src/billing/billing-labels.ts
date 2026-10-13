@@ -281,5 +281,5 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
 /** The `billing` namespace, resolved: English, then the provider, then `labels` — which
  *  may be partial at every depth (`{ status: { comped: "Beta" } }`). */
 export function useBillingLabels(labels?: LabelOverride<BillingLabels>): BillingLabels {
-  return useKitLabels("billing", DEFAULT_BILLING_LABELS, labels as Partial<BillingLabels> | undefined);
+  return useKitLabels("billing", DEFAULT_BILLING_LABELS, labels);
 }

@@ -31,7 +31,7 @@ describe("Chip children and icons (M3)", () => {
   });
 
   it("takes a ready element as its icon", () => {
-    render(<Chip icon={<Check data-testid="glyph" className="text-[var(--success)]" />}>Done</Chip>);
+    render(<Chip icon={<Check data-testid="glyph" className="text-success" />}>Done</Chip>);
     expect(screen.getByTestId("glyph").parentElement).toHaveAttribute("aria-hidden");
   });
 });

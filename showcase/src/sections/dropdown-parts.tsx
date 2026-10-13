@@ -15,8 +15,9 @@ import {
   cn,
   useDropdown,
   useDropdownSearch,
+  Tooltip,
 } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, Row, Stage } from "../lib/section";
+import { ConstList, Example, Note, Row, Stage, code } from "../lib/section";
 import { ACCOUNTS, CATEGORY_GROUPS, Current, MARKETS, SORTS, STORES } from "./dropdown-fixtures";
 
 /**
@@ -91,20 +92,16 @@ export function DropdownParts() {
             <MultiSelect
               label="Markets"
               options={MARKETS}
-              values={markets}
+              value={markets}
               onChange={setMarkets}
               // Nothing selected is not "nothing": a filter with no markets ticked
               // matches every market, so the closed trigger has to say "All" rather
-              // than sit empty. Defaults to the literal "All" — pass a translation.
-              allLabel="All markets"
+              // than sit empty. `labels.all` defaults to the catalogue's "All".
+              labels={{ all: "All markets", search: "Search markets", selectAll: "Select all", clear: "Clear" }}
               itemLabel={(n) => `${n} of ${MARKETS.length}`}
-              searchLabel="Search markets"
-              selectAllLabel="Select all"
-              clearLabel="Clear"
-              // The rows here carry a postcode and a distance beside the label;
-              // `panelClassName` is the supported way to widen past the 16rem default
-              // rather than reaching into the panel with a descendant selector.
-              panelClassName="w-72"
+              // The rows here carry a postcode and a distance beside the label: the
+              // panel is at least the trigger's width and 16rem, and grows with its
+              // rows up to 32rem, so nothing has to widen it.
             />
           </div>
           <div className="w-64 max-w-full">
@@ -124,7 +121,7 @@ export function DropdownParts() {
           label="second"
           value={plainMarkets.length ? JSON.stringify(plainMarkets) : "[] (= all)"}
         />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The second one passes no strings but <code className="font-mono">placeholder</code>: its
           search box, its two actions and its count come from{" "}
           <code className="font-mono">multiSelect.*</code> in the provider — switch the showcase
@@ -142,7 +139,6 @@ export function DropdownParts() {
             buttonLabel={pickedLabel}
             selected={picked}
             onSelect={(group, item) => setPicked({ group, item })}
-            // `aria-label`, the DOM spelling; the older `ariaLabel` prop is deprecated.
             aria-label="Category"
             filterPlaceholder="Filter categories"
           />
@@ -151,7 +147,7 @@ export function DropdownParts() {
           label="selected"
           value={picked ? `{ group: "${picked.group}", item: "${picked.item}" }` : "null"}
         />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           The filter treats a group name as a whole-group match: typing{" "}
           <code className="font-mono">food</code> keeps every row under Food, while{" "}
           <code className="font-mono">bike</code> reduces Transport to its one matching row and
@@ -198,13 +194,13 @@ export function DropdownParts() {
                 >
                   <span className="min-w-0 flex-1 truncate">{a.label}</span>
                   {a.sublabel && (
-                    <span className="shrink-0 text-xs text-[var(--text-muted)]">{a.sublabel}</span>
+                    <span className="shrink-0 text-xs text-muted">{a.sublabel}</span>
                   )}
                 </button>
               </li>
             ))}
             {sheetHits.length === 0 && (
-              <li className="px-4 py-3 text-sm text-[var(--text-muted)]">No account matches.</li>
+              <li className="px-4 py-3 text-sm text-muted">No account matches.</li>
             )}
           </ul>
         </PickerSheet>
@@ -261,7 +257,7 @@ export function DropdownParts() {
                           setSortOpen(false);
                         }}
                         className={cn(
-                          "block w-full px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
+                          "block w-full px-3 py-1.5 text-start text-sm text-primary hover:bg-surface-2",
                           s.key === sortKey && "font-medium",
                         )}
                       >
@@ -275,7 +271,7 @@ export function DropdownParts() {
           </Row>
         </Stage>
         <Current label="sort" value={`"${sortKey}"`} />
-        <p className="mt-2 text-xs text-[var(--text-secondary)]">
+        <p className="mt-2 text-xs text-secondary">
           Open it and press Escape: the list closes and focus is back on the button, because the
           button carries <code className="font-mono">triggerRef</code>. Browser Back closes the
           list too, without leaving the page (<code className="font-mono">backCloses</code>,
@@ -300,7 +296,7 @@ export function DropdownParts() {
                 onClick={() => setStoreOpen((o) => !o)}
                 className={cn(FIELD_TRIGGER, FIELD_FLOATING_PAD, "pe-9")}
               >
-                <span className={cn("truncate", !storeKey && "text-[var(--text-muted)]")}>
+                <span className={cn("truncate", !storeKey && "text-muted")}>
                   {STORES.find((s) => s.key === storeKey)?.label ?? "Pick a store"}
                 </span>
                 <FieldChevron />
@@ -340,12 +336,12 @@ export function DropdownParts() {
                           setStoreOpen(false);
                         }}
                         className={cn(
-                          "flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-start text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]",
+                          "flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-start text-sm text-primary hover:bg-surface-2",
                           s.key === storeKey && "font-medium",
                         )}
                       >
                         <span className="min-w-0 truncate">{s.label}</span>
-                        <span className="shrink-0 text-xs text-[var(--text-muted)]">{s.hint}</span>
+                        <span className="shrink-0 text-xs text-muted">{s.hint}</span>
                       </button>
                     </li>
                   ))}
@@ -376,5 +372,86 @@ export function DropdownParts() {
         </Note>
       </Example>
     </>
+  );
+}
+
+/* ── since 0.12 ─────────────────────────────────────────────────────────── */
+
+/**
+ * `data-clips` on the dropdown lists (keksdose E8). Combobox's listbox and PickerSheet's
+ * scroller now carry the {@link CLIPS_ATTRIBUTE} marker, so a Tooltip inside a row — the
+ * `optionAdornment` badge that says what an option IS — sees a scroll container above it
+ * and portals its bubble out, instead of being cut off by the list's edge (and, in jsdom,
+ * joining the option's accessible name).
+ */
+
+export function PickerSheetClipsDemo() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [account, setAccount] = useState<string | null>(null);
+  const hits = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? ACCOUNTS.filter((a) => a.label.toLowerCase().includes(q)) : ACCOUNTS;
+  }, [query]);
+  return (
+    <Example
+      label="PickerSheet — data-clips on the scroller"
+      hint="a Tooltip in a sheet row portals out rather than being clipped"
+    >
+      <Stage>
+        <Row>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setQuery("");
+              setOpen(true);
+            }}
+          >
+            Open the sheet with tooltips
+          </Button>
+        </Row>
+      </Stage>
+      <PickerSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Account"
+        query={query}
+        onQueryChange={setQuery}
+        searchPlaceholder="Search accounts"
+        closeLabel="Close"
+      >
+        <ul role="listbox" aria-label="Accounts">
+          {hits.map((a) => (
+            <li key={a.value} role="option" aria-selected={a.value === account}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAccount(a.value);
+                  setOpen(false);
+                }}
+                className={cn(SHEET_ROW_CLASS, a.value === account && "font-medium")}
+              >
+                <span className="min-w-0 flex-1 truncate">{a.label}</span>
+                <Tooltip label={`Group: ${a.group ?? "—"} · ${a.sublabel ?? ""}`} side="start">
+                  <span className="shrink-0 rounded border border-subtle px-1 text-micro uppercase tracking-wide text-muted">
+                    {a.group}
+                  </span>
+                </Tooltip>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </PickerSheet>
+      <Current label="value" value={account === null ? "null" : `"${account}"`} />
+      <div className="mt-3">
+        <Note>
+          The sheet's scrolling body is marked {code("data-clips")}, so any Tooltip in a row —
+          including a {code("Combobox")}'s {code("optionAdornment")} when the combobox opens as a sheet on
+          a phone — portals its bubble out of the scroller instead of drawing it inside, where the
+          scroller's edge would clip it. Hover (or focus) a group badge.
+        </Note>
+      </div>
+      <Note>Since 0.12.</Note>
+    </Example>
   );
 }

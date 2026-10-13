@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { render, screen } from "@testing-library/react";
-import { lazySection } from "../lib/lazy-section";
+import { lazySection, preloadSections } from "../lib/lazy-section";
 
 function Greeting({ name }: { name: string }) {
   return <p>Hello {name}</p>;
@@ -51,5 +51,20 @@ describe("lazySection", () => {
     await expect(Lazy.preload()).rejects.toThrow("chunk gone");
     await Lazy.preload();
     expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  // TST-8: a page shard loads the sections of its own pages, not all of them.
+  it("preloadSections() loads the named sections and leaves the others alone", async () => {
+    const wanted = vi.fn(() => Promise.resolve({ Wanted: Greeting }));
+    const other = vi.fn(() => Promise.resolve({ Other: Greeting }));
+    lazySection(wanted, "Wanted");
+    lazySection(other, "Other");
+    await preloadSections(["Wanted", "Wanted"]);
+    expect(wanted).toHaveBeenCalledTimes(1);
+    expect(other).not.toHaveBeenCalled();
+  });
+
+  it("preloadSections() rejects a name nothing registered, so a stale index fails setup", async () => {
+    await expect(preloadSections(["NoSuchSection"])).rejects.toThrow(/NoSuchSection/);
   });
 });

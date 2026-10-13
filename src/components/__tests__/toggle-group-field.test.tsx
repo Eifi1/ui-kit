@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ToggleGroup } from "../toggle-group";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 
 const OPTIONS = [
   { value: "a", label: "Any" },
@@ -33,9 +33,9 @@ describe("ToggleGroup as a field (lenkbank's ToggleField, gear/common.tsx:97)", 
     // The group's own box is dropped; the chrome box around it is the field.
     expect(group.className).toContain("border-0");
     const chrome = group.parentElement!;
-    expect(chrome.className).toContain("border-[var(--border)]");
+    expect(chrome.className).toContain("border-subtle");
     // pt-5, not pt-4: the strip clears the 11px label (keksdose K1, feedback #117) —
-    // the geometry itself is asserted in toggle-group-022.test.tsx.
+    // the geometry itself is asserted in toggle-group.field-chrome.test.tsx.
     expect(chrome.className).toContain("pt-5");
     expect(chrome.className).not.toContain("pt-4");
     // className goes to the wrapper, as on a labelled Select.
@@ -66,7 +66,7 @@ describe("ToggleGroup as a field (lenkbank's ToggleField, gear/common.tsx:97)", 
     const group = screen.getByRole("radiogroup", { name: "Direction" });
     expect(group).toHaveAttribute("aria-invalid", "true");
     expect(group).toHaveAccessibleDescription("Pick one");
-    expect(group.parentElement!.className).toContain("border-[var(--danger-border-strong)]");
+    expect(group.parentElement!.className).toContain("border-danger-strong");
   });
 
   it("lets an explicit aria-label name the group instead", () => {

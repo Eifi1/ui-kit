@@ -1,14 +1,16 @@
-import { useId, useRef } from "react";
+import { useId, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
 import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
+import { mergeRefs } from "./field-parts";
 import { useBackdropClose } from "./modal";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useCloseTransition } from "../hooks/use-close-transition";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { runOwnKeyDown, takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 
 /**
  * The padding around the dialog's scrolling body, as a CSS length (0.32,
@@ -82,6 +84,9 @@ export interface FullBleedDialogProps extends Omit<ComponentPropsWithoutRef<"div
    * last field); padded for the home indicator, since it is the panel's bottom edge.
    */
   footer?: ReactNode;
+  /** The `role="dialog"` element, where the rest of the props go (0.34, API-2, refactor
+   *  audit 2026-10) — merged with its own ref, which the focus trap holds. */
+  ref?: Ref<HTMLDivElement>;
 }
 
 /**
@@ -128,6 +133,7 @@ export function FullBleedDialog({
   onMouseDown,
   onMouseUp,
   onKeyDown,
+  ref,
   ...rest
 }: FullBleedDialogProps) {
   // Every way OUT goes through `requestClose`, so the panel lowers itself before the
@@ -140,6 +146,7 @@ export function FullBleedDialog({
   useOverlayHistory(open && backCloses, requestClose);
 
   const dialogRef = useRef<HTMLDivElement>(null);
+  const setDialog = useMemo(() => mergeRefs(dialogRef, ref), [ref]);
   const titleId = useId();
   const hasTitle = title !== undefined && title !== null && title !== false;
   const hasHeader = header !== undefined && header !== null && header !== false;
@@ -162,25 +169,20 @@ export function FullBleedDialog({
   // (live #402). Closing still hands focus back to whatever opened the dialog.
   useFocusTrap(dialogRef, { active: open });
 
+  // A layer on the Escape stack while open (Wave 2, DUP-1). This dialog is what a
+  // `PickerSheet`, a list or the numpad opens on top of, and the stack hands the key
+  // to whichever of them is topmost — one press dismissing the sheet AND the edit
+  // behind it was Keksdose live #309 (*"Mouse Back does not only close the select but
+  // also the whole edit or create dialog"*) on a different key.
+  useDismissLayer(open, requestClose);
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // The caller's handler first (keksdose's transaction-search keeps its list keys on
-    // the dialog); a `preventDefault()` IN THAT HANDLER claims the key, Escape included.
-    // Only there: a descendant's preventDefault does not count. A SearchField in the
-    // header prevents Escape to stop Chromium clearing a type=search input, and in
-    // 0.8.0 that silently stopped Escape from closing the dialog (keksdose).
-    const preventedBefore = e.defaultPrevented;
-    onKeyDown?.(e);
-    const claimedByCaller = !preventedBefore && e.defaultPrevented;
-    if (claimedByCaller || e.key !== "Escape") return;
-    // On the panel, the way `Modal` does it, and NOT through `useEscapeKey`: this
-    // dialog is the thing a `PickerSheet` opens on top of, and a document-level
-    // listener cannot tell which of the two the user meant. One press would dismiss
-    // the sheet AND throw away the edit behind it — Keksdose live #309 (*"Mouse Back
-    // does not only close the select but also the whole edit or create dialog"*) on a
-    // different key. The sheet's own handler stops the event here, so the innermost
-    // overlay is the one that closes, which is only true because focus is now in it.
-    e.stopPropagation();
-    requestClose();
+    // the dialog); a `preventDefault()` IN THAT HANDLER claims Escape. Only there: a
+    // descendant's does not count. A SearchField in the header prevents Escape to stop
+    // Chromium clearing a type=search input, and in 0.8.0 that silently stopped Escape
+    // from closing the dialog (keksdose). The one rule `Modal` now shares.
+    runOwnKeyDown(e, onKeyDown);
+    takeEscape(e);
   };
 
   if (!open || typeof document === "undefined") return null;
@@ -218,7 +220,7 @@ export function FullBleedDialog({
       // `tabIndex={-1}` is what makes the line above more than a claim: without it the
       // container cannot take focus and `useFocusTrap` silently does nothing.
       tabIndex={-1}
-      ref={dialogRef}
+      ref={setDialog}
       onKeyDown={handleKeyDown}
       // COMPOSED with the backdrop's, not overridden by them. These two used to ride
       // `...rest` and then lose to `{...backdropClose}` spread after it, silently —
@@ -238,15 +240,15 @@ export function FullBleedDialog({
     >
       <div
         className={cn(
-          "flex h-full w-full flex-col overflow-hidden bg-[var(--bg-surface)] shadow-xl",
+          "flex h-full w-full flex-col overflow-hidden bg-surface shadow-xl",
           closing ? "animate-sheet-out" : "animate-sheet",
           className,
         )}
       >
-        <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-subtle px-3 py-3">
           {hasTitle ? (
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <Heading id={titleId} className="min-w-0 break-words text-base font-semibold leading-snug text-[var(--text-primary)]">
+              <Heading id={titleId} className="min-w-0 break-words text-base font-semibold leading-snug text-primary">
                 {title}
               </Heading>
               {hasHeader && <div className="min-w-0 flex-1 font-medium">{header}</div>}
@@ -258,7 +260,7 @@ export function FullBleedDialog({
             type="button"
             onClick={requestClose}
             aria-label={closeLabel}
-            className="-me-1 shrink-0 rounded p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+            className="-me-1 shrink-0 rounded p-1.5 text-muted hover:bg-hover hover:text-secondary"
           >
             <X className="size-5" />
           </button>
@@ -275,7 +277,7 @@ export function FullBleedDialog({
         {footer !== undefined && footer !== null && footer !== false && (
           <div
             data-full-bleed-footer=""
-            className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-[var(--border)] px-3 pt-3"
+            className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-subtle px-3 pt-3"
             style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             {footer}

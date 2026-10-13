@@ -14,6 +14,10 @@ export { DataTable, DEFAULT_DATA_TABLE_SORT_LABELS } from "./components/data-tab
 export type {
   DataTableSortLabels,
   DataTableColumn,
+  // The barrel had these two and this entry did not (refactor audit 2026-10, MOD-5):
+  // the types of a column's `cellProps` and `headProps`.
+  DataTableCellProps,
+  DataTableHeadProps,
   DataTableProps,
   ServerPagination,
   FilterState,

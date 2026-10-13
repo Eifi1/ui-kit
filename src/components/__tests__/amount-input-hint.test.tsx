@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AmountInput } from "../amount-input";
-import { FieldHint } from "../ui";
+import { FieldHint } from "../field-parts";
 import { roundToCurrency } from "../../lib/format";
 
 /** keksdose P8: AmountInput's `hint`, NumberInput's rule. */

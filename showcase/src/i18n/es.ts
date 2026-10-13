@@ -121,7 +121,7 @@ export const es: Dictionary = {
       title: "Administración de usuarios",
       short: "Usuarios",
       blurb:
-        "La parte de administración de las cuentas: la lista de usuarios con sus roles y estados, las cuatro acciones de administración con la confirmación que pide el servidor, el registro de auditoría, las invitaciones, el traspaso de trabajo, y la columna de plan y el cambio de plan del operador.",
+        "La parte de administración de las cuentas: la lista de usuarios con sus roles y estados, las cuatro acciones de administración con la confirmación que pide el servidor, el registro de auditoría con sus acciones de grupo, las invitaciones, el traspaso de trabajo, y la columna de plan y el cambio de plan del operador.",
     },
     subscription: {
       title: "Suscripción",
@@ -368,7 +368,7 @@ export const es: Dictionary = {
       title: "Gráfico de series",
       short: "Series",
       blurb:
-        "El gráfico de series con zoom que comparten las aplicaciones: un eje por unidad, una leyenda de interruptores, un solo zoom para una pila de gráficos y las utilidades que hay debajo.",
+        "El gráfico de series con zoom que comparten las aplicaciones: un eje por unidad, una leyenda de interruptores, un solo zoom para una pila de gráficos, un presupuesto de filas para tablas largas y las utilidades que hay debajo.",
     },
     "series-chart-marks": {
       title: "Gráfico de series: barras, áreas y tiempo",
@@ -536,7 +536,7 @@ export const es: Dictionary = {
       title: "Facturación",
       short: "Facturación",
       blurb:
-        "Los planes y sus límites, la situación de la suscripción con las fechas de la prueba y de la beta, el bloqueo de solo lectura al vencer, y los webhooks de Paddle y Lemon Squeezy: firmas comprobadas, eventos normalizados, un solo dispatch.",
+        "Los planes y sus límites, la situación de la suscripción con las fechas de la prueba y de la beta, el bloqueo de solo lectura al vencer, y los webhooks de Paddle: firmas comprobadas, eventos normalizados, un solo dispatch.",
     },
     "server-mail": {
       title: "Correo",
@@ -554,7 +554,7 @@ export const es: Dictionary = {
       title: "Límites, errores y CORS",
       short: "Límites",
       blurb:
-        "El limitador de frecuencia de ventana deslizante y de quién es la dirección que cuenta, cada rechazo del kit respondido con el estado de su contrato, y CORS para algunos orígenes más.",
+        "El limitador de frecuencia de ventana deslizante y de quién es la dirección que cuenta, cada rechazo del kit respondido con el estado de su contrato, CORS para algunos orígenes más y el token del planificador en las rutas de tareas.",
     },
     "server-translation-review": {
       title: "Revisión de traducciones",
@@ -1233,7 +1233,7 @@ export const es: Dictionary = {
     "server-billing": [
       "comprobar el límite del plan en el servidor",
       "verificar la firma de un webhook",
-      "procesar eventos de Paddle y Lemon Squeezy",
+      "procesar eventos de Paddle",
       "la suscripción está al día",
       "fechas de fin de la prueba y de la beta",
       "rechazar escrituras al vencer la suscripción",

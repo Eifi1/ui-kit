@@ -1,12 +1,12 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { Card } from "../components/ui";
-import type { CardTone } from "../components/ui";
+import type { ComponentPropsWithRef, ReactNode } from "react";
+import { Card } from "../components/card";
+import type { CardTone } from "../components/card";
 import { cn } from "../lib/cn";
-import { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS } from "../account/account-parts";
+import { CARD_DESCRIPTION_CLASS, CARD_TITLE_CLASS } from "./settings-card-classes";
 import { SettingsHeading, useSettingsHeadingLevel } from "./settings-heading";
 import { useSettingsLayout } from "./settings-context";
 
-export interface SettingsSectionProps extends Omit<ComponentPropsWithoutRef<"div">, "title" | "id"> {
+export interface SettingsSectionProps extends Omit<ComponentPropsWithRef<"div">, "title" | "id"> {
   /** The card's DOM id — the catalogue entry's `anchor`, the `?focus=` target. */
   anchor: string;
   /** The card's name: a heading at the layout's level (`h3` by default). */

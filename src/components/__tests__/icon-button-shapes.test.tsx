@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { IconButton } from "../ui";
+import { IconButton } from "../icon-button";
 
 describe("IconButton 0.11 additions", () => {
   it("size xl is a 48px box with a 24px glyph", () => {
@@ -27,11 +27,11 @@ describe("IconButton 0.11 additions", () => {
 
   it("tone success is green at rest, and quiet waits for hover", () => {
     const { rerender } = render(<IconButton tone="success" aria-label="Synced" />);
-    expect(screen.getByRole("button").className).toContain("text-[var(--success)]");
+    expect(screen.getByRole("button")).toHaveClass("text-success");
     rerender(<IconButton tone="success" quiet aria-label="Synced" />);
     const cls = screen.getByRole("button").className;
-    expect(cls).toContain("text-[var(--text-placeholder)]");
-    expect(cls).toContain("hover:text-[var(--success)]");
+    expect(cls).toContain("text-placeholder");
+    expect(screen.getByRole("button")).toHaveClass("hover:text-success");
   });
 
   it("toneColor sets the custom tone's variable and implies tone=custom", () => {

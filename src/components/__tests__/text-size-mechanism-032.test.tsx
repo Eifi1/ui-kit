@@ -1,6 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { FIELD_BASE, FIELD_TOUCH_TEXT, FOCUS_RING, FOCUS_RING_WIDTH, Input } from "../ui";
+import { FIELD_BASE, FIELD_TOUCH_TEXT } from "../field-base";
+import { FOCUS_RING, FOCUS_RING_WIDTH } from "../focus-ring";
+import { cn } from "../../lib/cn";
+import { Input } from "../input";
 import { DropdownSearchHeader } from "../dropdown";
 import { ContrastSetting, TextSizeSetting, ThemeSetting } from "../settings-fields";
 import { DEFAULT_APPEARANCE_LABELS } from "../appearance-labels";
@@ -32,9 +35,26 @@ describe("the 16 px field floor on touch (§10.1)", () => {
 
 describe("the shared focus frame (§5)", () => {
   it("draws its ring --focus-ring-width wide, on keyboard focus", () => {
-    expect(FOCUS_RING).toContain("focus-visible:ring-[length:var(--focus-ring-width)]");
-    expect(FOCUS_RING).toContain("focus-visible:ring-[var(--brand)]");
-    expect(FOCUS_RING).toContain(FOCUS_RING_WIDTH);
+    // `ring-focus` is tokens.css's `--ring-width-focus: var(--focus-ring-width)` (0.34, DOC-7).
+    expect(FOCUS_RING.split(" ")).toContain("focus-visible:ring-focus");
+    expect(FOCUS_RING.split(" ")).toContain("focus-visible:ring-brand");
+    expect(FOCUS_RING_WIDTH).toBe("focus-visible:ring-focus");
+    expect(FOCUS_RING.split(" ")).toContain(FOCUS_RING_WIDTH);
+  });
+
+  it("keeps its width when cn() is given another ring colour", () => {
+    // Unregistered, tailwind-merge read `ring-focus` as a COLOUR and the later colour
+    // replaced it: the control kept a colour and lost its ring.
+    expect(cn(FOCUS_RING, "focus-visible:ring-strong").split(" ")).toEqual([
+      "focus-visible:outline-none",
+      "focus-visible:ring-focus",
+      "focus-visible:ring-strong",
+    ]);
+    expect(cn(FOCUS_RING_WIDTH, "focus-visible:ring-brand-contrast")).toBe("focus-visible:ring-focus focus-visible:ring-brand-contrast");
+    expect(cn("focus-visible:outline-focus", "focus-visible:outline-brand")).toBe("focus-visible:outline-focus focus-visible:outline-brand");
+    // …and merges as the width it is: a later width replaces it, both ways.
+    expect(cn("ring-2", "ring-focus")).toBe("ring-focus");
+    expect(cn("outline-focus", "outline-2")).toBe("outline-2");
   });
 });
 

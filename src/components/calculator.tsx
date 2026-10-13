@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Calculator as CalculatorIcon, Delete } from "lucide-react";
 import { Popover } from "./popover";
 import { cn } from "../lib/cn";
-import { FIELD_TOUCH_TEXT } from "./ui";
+import { FIELD_TOUCH_TEXT } from "./field-base";
+import { FOCUS_RING } from "./focus-ring";
 import { evaluateExpression, formatResult, isBareAmount, splitLeadingSign } from "../lib/calc";
 import {
   DEFAULT_CALCULATOR_LABELS,
@@ -35,8 +36,11 @@ interface CalculatorButtonProps {
   onChange: (value: string, expression?: string) => void;
   className?: string;
   /** The trigger's accessible name; wins over `calculator.open` from the provider. */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the trigger only when `aria-label` is absent. */
   ariaLabel?: string;
-  /** Screen-reader names for the panel's own controls. `ariaLabel` above already
+  /** Screen-reader names for the panel's own controls. `aria-label` above already
    *  covers the trigger; these three were hardcoded English inside the popover,
    *  which a translating host had no way to reach. */
   labels?: CalculatorButtonLabels;
@@ -70,8 +74,9 @@ const KEYS: Key[] = [
   { kind: "ins", label: "+", ins: "+", accent: true, name: "plus" },
 ];
 
-const KEY_BASE =
-  "flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-[length:var(--focus-ring-width)] focus:ring-[var(--border-strong)]";
+// The kit's one focus frame (text-size §5). Until 0.34 the keys rang in `ring-strong` on
+// `focus:`, so a pointer click left a grey ring on the key it pressed (DOC-7).
+const KEY_BASE = `flex h-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${FOCUS_RING}`;
 // Two key families, two fills: digits sit on the inset surface and darken on
 // hover, operators sit a step down on `--bg-active` and lift toward that surface —
 // the same split `NumberPadSheet` uses for this keypad on a phone. The tokens
@@ -156,9 +161,9 @@ function CalculatorPanel({
         // is right-aligned in every script too — so both stay physical, pinned
         // with `dir="ltr"` rather than mirrored in a right-to-left form.
         dir="ltr"
-        className={cn("block w-full rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1.5 text-right font-mono text-sm text-[var(--text-primary)] focus:border-[var(--border-strong)] focus:ring-[var(--border-strong)]", FIELD_TOUCH_TEXT)}
+        className={cn("block w-full rounded-md border border-subtle bg-surface px-2 py-1.5 text-right font-mono text-sm text-primary focus:border-strong focus:ring-strong", FIELD_TOUCH_TEXT)}
       />
-      <div dir="ltr" className="h-4 pr-1 text-right font-mono text-xs text-[var(--text-placeholder)]">
+      <div dir="ltr" className="h-4 pr-1 text-right font-mono text-xs text-placeholder">
         {result !== null && formatResult(result) !== text.trim() ? `= ${formatResult(result)}` : ""}
       </div>
       <div className="grid grid-cols-4 gap-1.5">
@@ -204,7 +209,7 @@ function CalculatorPanel({
             // an inverted fill, so the hover is the chip mixed back toward the
             // surface — a step quieter in either theme, and still a colour, so
             // KEY_BASE's `transition-colors` carries it.
-            "col-span-2 bg-[var(--bg-inverse)] text-[var(--text-inverse)] hover:bg-[color-mix(in_oklab,var(--bg-inverse)_88%,var(--bg-surface))]",
+            "col-span-2 bg-inverse text-inverse hover:bg-[color-mix(in_oklab,var(--bg-inverse)_88%,var(--bg-surface))]",
           )}
         >
           =
@@ -224,11 +229,13 @@ export function CalculatorButton({
   value,
   onChange,
   className,
-  ariaLabel,
+  "aria-label": ariaLabelAttr,
+  ariaLabel: ariaLabelProp,
   labels: labelsProp,
 }: CalculatorButtonProps) {
-  // prop > provider > English, with the older `ariaLabel` prop folded in as the
-  // `open` key it has always been.
+  // prop > provider > English, with the name prop folded in as the `open` key it has
+  // always been. The DOM spelling wins over the deprecated `ariaLabel`.
+  const ariaLabel = ariaLabelAttr ?? ariaLabelProp;
   const fromProps = useMemo(
     () => (ariaLabel === undefined ? labelsProp : { ...labelsProp, open: ariaLabel }),
     [ariaLabel, labelsProp],
@@ -247,7 +254,7 @@ export function CalculatorButton({
           aria-label={labels.open}
           aria-expanded={open}
           className={cn(
-            "flex items-center justify-center text-[var(--text-placeholder)] transition-colors hover:text-[var(--text-secondary)]",
+            "flex items-center justify-center text-placeholder transition-colors hover:text-secondary",
             className,
           )}
         >

@@ -1,14 +1,16 @@
 import { useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { CheckCircle2, LogIn, TimerOff, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { LoadingState } from "../components/loading-state";
-import { Button, EmptyState } from "../components/ui";
+import { Button } from "../components/button";
+import { EmptyState } from "../components/empty-state";
 import { authErrorCode } from "./auth-errors";
 import { OUTCOME_CLASS, STATUS_HEADING_CLASS, useOncePerKey } from "./status-parts";
 import type { AuthHeadingLevel } from "./status-parts";
+import { DEFAULT_ACCEPT_INVITATION_LABELS } from "./accept-invitation-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -41,21 +43,8 @@ export interface AcceptInvitationLabels {
   register: string;
 }
 
-export const DEFAULT_ACCEPT_INVITATION_LABELS: AcceptInvitationLabels = {
-  title: "Accept invitation",
-  accepting: "Joining…",
-  accepted: "Invitation accepted.",
-  joined: (name) => `You’ve joined ${name}.`,
-  continue: "Continue",
-  invalid: "Could not join with this link",
-  expired: "This invitation has expired",
-  noToken: "This link is missing its invite token.",
-  askAgain: "Ask the person who invited you to send a new invitation.",
-  signInFirst: "Sign in to accept this invitation",
-  signInHint: "Use the account the invitation was sent to.",
-  signIn: "Sign in",
-  register: "Create account",
-};
+// Defined in ./accept-invitation-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_ACCEPT_INVITATION_LABELS };
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -72,7 +61,7 @@ export type AcceptInvitationFailure = "invalid" | "expired" | "signIn";
 
 type Outcome = "accepted" | AcceptInvitationFailure;
 
-export interface AcceptInvitationProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
+export interface AcceptInvitationProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** The invitation's token — the app's `?invite=` / `?token=`. Empty: the link was cut
    *  short, and the page says so without asking anyone. */
   token: string;
@@ -101,7 +90,7 @@ export interface AcceptInvitationProps extends Omit<ComponentPropsWithoutRef<"di
   title?: ReactNode;
   /** The heading's level. Default `h2`, under the page's `h1`. */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<AcceptInvitationLabels>;
+  labels?: LabelOverride<AcceptInvitationLabels>;
 }
 
 /**

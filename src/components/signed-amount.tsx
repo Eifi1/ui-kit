@@ -1,10 +1,11 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatMoney, formatNumber, formatPercent } from "../lib/format";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_STAT_TILE_LABELS } from "./stat-tile";
 import type { StatTileLabels } from "./stat-tile";
+import { DEFAULT_SIGNED_AMOUNT_LABELS } from "./signed-amount-labels";
 
 /**
  * The text colours a figure can carry, token-backed — `StatTile`'s tones, as a class
@@ -31,16 +32,16 @@ export type TextTone =
   | "info";
 
 const TEXT_TONE: Record<TextTone, string> = {
-  default: "text-[var(--text-primary)]",
-  muted: "text-[var(--text-muted)]",
-  brand: "text-[var(--brand)]",
-  income: "text-[var(--money-income)]",
-  expense: "text-[var(--money-expense)]",
-  net: "text-[var(--money-net)]",
-  success: "text-[var(--success)]",
-  warning: "text-[var(--warning)]",
-  danger: "text-[var(--danger)]",
-  info: "text-[var(--info)]",
+  default: "text-primary",
+  muted: "text-muted",
+  brand: "text-brand",
+  income: "text-money-income",
+  expense: "text-money-expense",
+  net: "text-money-net",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-danger",
+  info: "text-info",
 };
 
 /**
@@ -52,7 +53,7 @@ export function toneTextClass(tone: TextTone): string {
   return TEXT_TONE[tone];
 }
 
-export interface ToneProps extends ComponentPropsWithoutRef<"span"> {
+export interface ToneProps extends ComponentPropsWithRef<"span"> {
   tone: TextTone;
 }
 
@@ -98,10 +99,8 @@ export interface SignedAmountLabels {
   negative: (amount: string) => string;
 }
 
-export const DEFAULT_SIGNED_AMOUNT_LABELS: SignedAmountLabels = {
-  positive: (amount) => `plus ${amount}`,
-  negative: (amount) => `minus ${amount}`,
-};
+// Defined in ./signed-amount-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_SIGNED_AMOUNT_LABELS };
 
 interface SignedFormatProps {
   /** ISO 4217 code: format as money. */
@@ -169,7 +168,7 @@ const ARROW = { up: ArrowUp, down: ArrowDown, flat: Minus } as const;
 
 export interface SignedAmountProps
   extends SignedFormatProps,
-    Omit<ComponentPropsWithoutRef<"span">, "children"> {
+    Omit<ComponentPropsWithRef<"span">, "children"> {
   value: number;
   /** See {@link SignedAmountTone}. Default `signed`, or `verdict` with `goodDirection`. */
   tone?: SignedAmountTone;
@@ -191,7 +190,7 @@ export interface SignedAmountProps
   arrow?: boolean;
   /** Tag the figure `data-private`, for the host's demo-mode blur. */
   sensitive?: boolean;
-  labels?: Partial<SignedAmountLabels>;
+  labels?: LabelOverride<SignedAmountLabels>;
 }
 
 /**
@@ -256,7 +255,7 @@ export function SignedAmount({
   );
 }
 
-export interface DeltaProps extends SignedFormatProps, Omit<ComponentPropsWithoutRef<"span">, "children"> {
+export interface DeltaProps extends SignedFormatProps, Omit<ComponentPropsWithRef<"span">, "children"> {
   /** The change. Above zero is "up". */
   value: number;
   /** Which way is good news. Unset, the change is stated and not judged (muted); set,
@@ -275,7 +274,7 @@ export interface DeltaProps extends SignedFormatProps, Omit<ComponentPropsWithou
   arrow?: boolean;
   sensitive?: boolean;
   /** The `statTile` namespace's direction words — a delta says the same as a tile's. */
-  labels?: Partial<Pick<StatTileLabels, "increase" | "decrease" | "unchanged" | "better" | "worse">>;
+  labels?: LabelOverride<Pick<StatTileLabels, "increase" | "decrease" | "unchanged" | "better" | "worse">>;
 }
 
 /**
@@ -339,7 +338,7 @@ export function Delta({
         <span aria-hidden>{amount}</span>
         <span className="sr-only">{spoken}</span>
       </span>
-      {label != null && <span className="text-[var(--text-muted)]">{label}</span>}
+      {label != null && <span className="text-muted">{label}</span>}
     </span>
   );
 }

@@ -7,6 +7,9 @@ export interface RoleSwitcherProps<R extends string> {
   value: R;
   onChange: (role: R) => void;
   /** Default: `topBar.switchRole` from the {@link UiKitProvider}, else English. */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the switcher only when `aria-label` is absent. */
   ariaLabel?: string;
   heading?: string;
   /** The trigger's tooltip. Default: `topBar.role(value)`. */
@@ -27,17 +30,18 @@ export function RoleSwitcher<R extends string>({
   roles,
   value,
   onChange,
+  "aria-label": ariaLabelAttr,
   ariaLabel,
   heading,
   title,
 }: RoleSwitcherProps<R>) {
-  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { switchRole: ariaLabel });
+  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { switchRole: ariaLabelAttr ?? ariaLabel });
   return (
     <OptionSwitcherMenu<R>
-      ariaLabel={labels.switchRole}
+      aria-label={labels.switchRole}
       title={title ?? labels.role(value)}
       heading={heading}
-      icon={<FlaskConical className="size-5 text-[var(--warning)]" />}
+      icon={<FlaskConical className="size-5 text-warning" />}
       options={roles.map((r) => ({ value: r, label: r }))}
       value={value}
       onSelect={onChange}

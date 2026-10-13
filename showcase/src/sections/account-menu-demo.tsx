@@ -94,24 +94,24 @@ function AccountMenu() {
       hint="avatar trigger with a badge, identity header, choices, a danger row, children rows and a legal footer"
     >
       <Row className="mb-3">
-        <span className="text-xs text-[var(--text-muted)]">align</span>
-        <label className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+        <span className="text-xs text-muted">align</span>
+        <label className="flex items-center gap-1 text-sm text-secondary">
           <input type="radio" name="account-align" checked={align === "end"} onChange={() => setAlign("end")} /> end
         </label>
-        <label className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+        <label className="flex items-center gap-1 text-sm text-secondary">
           <input type="radio" name="account-align" checked={align === "start"} onChange={() => setAlign("start")} /> start
         </label>
         <button
           type="button"
-          className="text-sm text-[var(--brand)] underline"
+          className="text-sm text-brand underline"
           onClick={() => setUnread((n) => n + 1)}
         >
           one more notification
         </button>
       </Row>
-      <div className={`flex rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] p-2 ${align === "end" ? "justify-end" : "justify-start"}`}>
+      <div className={`flex rounded-md border border-subtle bg-surface-2 p-2 ${align === "end" ? "justify-end" : "justify-start"}`}>
         <TopBarActionMenu
-          ariaLabel="Account menu"
+          aria-label="Account menu"
           align={align}
           triggerClassName="w-auto gap-1 rounded-full px-1"
           trigger={({ open }) => (
@@ -123,7 +123,7 @@ function AccountMenu() {
               />
               <ChevronDown
                 aria-hidden
-                className={`size-4 text-[var(--text-muted)] transition-transform ${open ? "rotate-180" : ""}`}
+                className={`size-4 text-muted transition-transform ${open ? "rotate-180" : ""}`}
               />
             </>
           )}
@@ -155,7 +155,7 @@ function AccountMenu() {
         >
           {(close) => (
             <>
-              <li className="my-1 border-t border-[var(--border)]" />
+              <li className="my-1 border-t border-subtle" />
               {(["household", "business"] as const).map((w) => (
                 <li key={w}>
                   <MenuItem
@@ -189,7 +189,7 @@ function AccountMenu() {
           <code className="font-mono">trigger</code> draws the face INSIDE the kit&apos;s button, so the wiring stays —{" "}
           <code className="font-mono">aria-haspopup</code>, <code className="font-mono">aria-expanded</code>, the
           keyboard — and <code className="font-mono">open</code> turns the chevron. The button is named by{" "}
-          <code className="font-mono">ariaLabel</code> plus the face&apos;s readable text, so the badge&apos;s
+          <code className="font-mono">aria-label</code> plus the face&apos;s readable text, so the badge&apos;s
           &ldquo;3 unread&rdquo; is heard. <code className="font-mono">triggerClassName</code> rounds it round the
           avatar. The <code className="font-mono">header</code> is text, not a row: ↑/↓ skip it. Entries are{" "}
           <code className="font-mono">MenuItem</code>s — a <code className="font-mono">current</code> link (this page),

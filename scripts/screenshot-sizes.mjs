@@ -12,10 +12,13 @@
  * the screen its first offender is on.
  *
  * Variants: 360 px at Extra large (the narrowest case), and 390 px at Normal, Large and
- * Extra large.
+ * Extra large. They run at once, in four contexts of one browser, and each one's lines
+ * are held back until the variants before it have printed, so the output reads in order
+ * (refactor audit 2026-10 TST-6: the run was 324 page loads in a row, ~25 minutes).
  *
  * Two more checks at Large and Extra large (0.33, docs/text-size-harmonization.md
- * §10.17, §10.22), both report-only until 0.34 passes `--gate-truncation`:
+ * §10.17, §10.22). Report-only by themselves; with `--gate-truncation` either one fails
+ * the run, and since 0.34 a release is gated that way (`npm run check:sweep`, below):
  *  - **TRUNCATED** (`measureTruncation`): a one-line ellipsis, or a line clamp, that cuts
  *    its text. An overflow check cannot see it — the box holds, only its words are gone
  *    ("Payment r…") — and §4 says text wraps at Large. Normal keeps its ellipses. A
@@ -27,10 +30,18 @@
  *    covers the screen by design; a deliberate case sits under `data-pinned-ok`.
  *
  * Usage:
+ *   npm run check:sweep      the release gate (0.34): the fixture test below, then the
+ *                            showcase build, then every page with `--pages all
+ *                            --no-screens --gate-truncation`. CI runs it on a release PR
+ *                            (ci.yml's `sweep` job; refactor plan 2026-10, decision 2: the
+ *                            one check that runs in CI first, to keep Chromium off the
+ *                            shared machine). Not part of `npm run check` or
+ *                            `npm run release`; run it by hand to see a result before CI.
+ *
  *   npx vite build --config showcase/vite.config.ts --logLevel warn   (once)
  *   node scripts/screenshot-sizes.mjs [--out DIR] [--pages start,inputs,…|all] [--url URL]
  *                                     [--no-screens] [--no-truncation] [--no-pinned]
- *                                     [--gate-truncation]
+ *                                     [--gate-truncation] [--serial]
  *
  *   --out    where the screenshots go (default: $TMPDIR/ui-kit-sizes)
  *   --pages  showcase slugs (default: the representative pages below); `all` is every
@@ -43,19 +54,34 @@
  *                      machine
  *   --truncation / --no-truncation   the TRUNCATED check (on by default)
  *   --pinned / --no-pinned           the PINNED check (on by default)
- *   --gate-truncation  exit 3 on a TRUNCATED or PINNED finding (from 0.34)
+ *   --gate-truncation  exit 3 on a TRUNCATED or PINNED finding — the release gate since
+ *                      0.34, through `npm run check:sweep`
+ *   --serial           the variants one after another, as before: one renderer instead
+ *                      of four, for a machine short of memory
  *
  * The checks' own test, outside `npm run check` (it needs Chromium; jsdom lays nothing
  * out): `node scripts/screenshot-sizes-fixture.test.mjs`, which runs this script on
  * scripts/fixtures/screenshot-sizes-fixture.html and expects one finding of each.
+ * `npm run check:sweep` runs it first, so the gate checks itself before the long run.
+ *
+ * The browser (TST-5): `playwright-core` is a devDependency, pinned `~1.63.0`, and the
+ * run uses the Chromium headless shell that release of it expects — never one borrowed
+ * from an app's node_modules or picked from the cache by name. It installs no browser
+ * itself; once per machine (and after a bump):
+ *
+ *   npx playwright-core install chromium-headless-shell
+ *
+ * CI adds `--with-deps` for the system libraries. When the browser is missing, the run
+ * stops with that command.
  *
  * Environment:
- *   PLAYWRIGHT_CORE  a playwright-core package directory (default: the one resolvable from
- *                    here, else ../keksdose/node_modules/playwright-core)
- *   CHROMIUM         the browser executable (default: the newest Chromium headless shell
- *                    under ~/.cache/ms-playwright)
- *   LD_LIBRARY_PATH  handed to the browser as is — for a machine missing a library the
- *                    headless shell links against (libasound)
+ *   CHROMIUM         another browser executable, instead of playwright's own — for a
+ *                    machine that cannot download it; a revision the client does not
+ *                    pin is unsupported, so the gate's verdict is CI's
+ *   LD_LIBRARY_PATH  handed to the browser — for a machine missing a library the headless
+ *                    shell links against (libasound). ~/.local/lib, where a user without
+ *                    root puts one, is appended when it exists, so the release gate runs
+ *                    without it being set
  *
  * Exits 1 when any page overflows, so it can gate a release run; 3 with
  * `--gate-truncation` and a TRUNCATED or PINNED finding (an overflow still answers 1);
@@ -63,7 +89,7 @@
  */
 /* global document, getComputedStyle, window, Node -- the measures run in the page, not in Node. */
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -127,32 +153,46 @@ function allSlugs() {
   return [...new Set([...source.matchAll(/\bslug: "([a-z0-9-]+)"/g)].map((m) => m[1]))];
 }
 
+/** The repository's own playwright-core (a devDependency), and its version. */
 function loadPlaywright() {
-  const candidates = [
-    process.env.PLAYWRIGHT_CORE,
-    join(ROOT, "node_modules/playwright-core"),
-    resolve(ROOT, "../keksdose/node_modules/playwright-core"),
-  ].filter(Boolean);
-  for (const dir of candidates) {
-    if (existsSync(join(dir, "package.json"))) return createRequire(join(dir, "package.json"))(dir);
+  const require = createRequire(join(ROOT, "package.json"));
+  try {
+    return { chromium: require("playwright-core").chromium, version: require("playwright-core/package.json").version };
+  } catch (error) {
+    if (error?.code !== "MODULE_NOT_FOUND") throw error;
+    throw new SetupError("playwright-core is not installed: it is a devDependency, so run `npm ci`", { cause: error });
   }
-  throw new Error(`playwright-core not found (tried ${candidates.join(", ")}); set PLAYWRIGHT_CORE`);
 }
 
-function findChromium() {
-  if (process.env.CHROMIUM) return process.env.CHROMIUM;
-  const cache = join(homedir(), ".cache/ms-playwright");
-  const shells = existsSync(cache)
-    ? readdirSync(cache)
-        .filter((name) => name.startsWith("chromium_headless_shell-"))
-        .sort()
-        .reverse()
-    : [];
-  for (const shell of shells) {
-    const exe = join(cache, shell, "chrome-headless-shell-linux64/chrome-headless-shell");
-    if (existsSync(exe)) return exe;
+/** The machine is not set up for the sweep. Printed as its message alone, which says
+ *  what to run; the stack and playwright's own banner would only bury it. */
+class SetupError extends Error {}
+
+/** Playwright's own headless shell, unless CHROMIUM names another browser. A missing
+ *  browser ends the run with the command that installs it, not playwright's banner,
+ *  which says `npx playwright install` — a package this repository does not have. */
+async function launchBrowser(chromium, version) {
+  try {
+    return await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, env: browserEnv() });
+  } catch (error) {
+    if (process.env.CHROMIUM || !/Executable doesn't exist/.test(error?.message ?? "")) throw error;
+    const path = /Executable doesn't exist at (\S+)/.exec(error.message)?.[1] ?? "its cache";
+    throw new SetupError(
+      `playwright-core ${version} expects its Chromium headless shell at ${path}, and it is not there.\n` +
+        "Install it once with:  npx playwright-core install chromium-headless-shell\n" +
+        "(or set CHROMIUM to a browser executable; a revision the client does not pin is unsupported)",
+      { cause: error },
+    );
   }
-  throw new Error(`no Chromium headless shell under ${cache}; set CHROMIUM`);
+}
+
+/** The browser's environment: ours, with ~/.local/lib on the library path when it exists —
+ *  where a machine without root keeps the libasound the headless shell links against. */
+function browserEnv() {
+  const local = join(homedir(), ".local/lib");
+  const path = process.env.LD_LIBRARY_PATH ?? "";
+  if (!existsSync(local) || path.split(":").includes(local)) return { ...process.env };
+  return { ...process.env, LD_LIBRARY_PATH: path ? `${path}:${local}` : local };
 }
 
 /** Starts `vite preview` on `port` and resolves once it answers. */
@@ -265,7 +305,13 @@ function installSweepHelpers() {
     }
     return { slot, heading };
   };
-  window.__sizeSweep = { DIALOG, invisible, offstage, placeOf };
+  /** The box itself, short — `<span.truncate.text-sm>` — so a finding can be traced to
+   *  the class that cut it without opening the page. */
+  const tagOf = (el) => {
+    const cls = typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean).slice(0, 4) : [];
+    return `<${el.tagName.toLowerCase()}${cls.map((c) => "." + c).join("")}>`;
+  };
+  window.__sizeSweep = { DIALOG, invisible, offstage, placeOf, tagOf };
 }
 
 /**
@@ -275,7 +321,7 @@ function installSweepHelpers() {
  * finding is marked `data-truncation-offender=n`.
  */
 function measureTruncation() {
-  const { invisible, offstage, placeOf } = window.__sizeSweep;
+  const { invisible, offstage, placeOf, tagOf } = window.__sizeSweep;
   const findings = [];
   for (const el of document.body.querySelectorAll("*")) {
     const s = getComputedStyle(el);
@@ -289,6 +335,7 @@ function measureTruncation() {
     findings.push({
       ...placeOf(el),
       kind: oneLine ? "ellipsis" : "clamp",
+      box: tagOf(el),
       text: (el.textContent ?? "").replace(/\s+/g, " ").trim(),
       width: Math.round(el.getBoundingClientRect().width),
     });
@@ -306,7 +353,7 @@ function measureTruncation() {
  * `data-pinned-offender=n`.
  */
 function measurePinned() {
-  const { DIALOG, invisible, offstage, placeOf } = window.__sizeSweep;
+  const { DIALOG, invisible, offstage, placeOf, tagOf } = window.__sizeSweep;
   const vh = window.innerHeight;
   const pinnedAs = (el) => {
     const s = getComputedStyle(el);
@@ -335,6 +382,7 @@ function measurePinned() {
     findings.push({
       ...placeOf(el),
       how,
+      box: tagOf(el),
       height: Math.round(height),
       share: Math.round((height / vh) * 100),
       text: (el.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 50),
@@ -349,6 +397,32 @@ function findingLine(label, f, detail) {
   return `    ${label} ${where ? where + " " : ""}${detail}`;
 }
 
+/**
+ * Lines from variants that run at once, printed as if they had run one after another:
+ * the first unfinished variant prints as it goes, and a later one's lines wait until
+ * every variant before it has finished. The fixture test reads the output as one block
+ * per variant, and so does a person.
+ */
+function inOrder(count) {
+  const held = Array.from({ length: count }, () => []);
+  const finished = Array(count).fill(false);
+  let current = 0;
+  return {
+    line(index, text) {
+      if (index === current) console.log(text);
+      else held[index].push(text);
+    },
+    finish(index) {
+      finished[index] = true;
+      while (current < count && finished[current]) {
+        current += 1;
+        for (const text of held[current] ?? []) console.log(text);
+        held[current] = [];
+      }
+    },
+  };
+}
+
 async function main() {
   const out = resolve(arg("out", join(tmpdir(), "ui-kit-sizes")));
   const pagesArg = arg("pages", DEFAULT_PAGES.join(","));
@@ -359,22 +433,26 @@ async function main() {
   const gate = flag("gate-truncation");
   mkdirSync(out, { recursive: true });
 
+  // The browser before the preview server: a machine without it stops here, with no
+  // detached `vite preview` left running.
+  const { chromium, version } = loadPlaywright();
+  const browser = await launchBrowser(chromium, version);
   const given = arg("url", "");
-  const preview = given ? null : await startPreview(Number(process.env.SHOWCASE_PREVIEW_PORT ?? 4179));
-  // A page file (the checks' fixture) is the page itself; a server is a directory.
-  const base = /\.html?$/.test(given) ? given : (given || preview.url).replace(/\/?$/, "/");
-
-  const { chromium } = loadPlaywright();
-  const browser = await chromium.launch({ executablePath: findChromium(), env: { ...process.env } });
-  const findings = [];
-  try {
-    for (const variant of VARIANTS) {
-      const context = await browser.newContext({
-        viewport: { width: variant.width, height: variant.height },
-        deviceScaleFactor: 1,
-        isMobile: true,
-        hasTouch: true,
-      });
+  let preview = null;
+  let base = given;
+  const printer = inOrder(VARIANTS.length);
+  // One list per variant, joined in VARIANTS order below, so the summary reads as it did
+  // when the variants ran one after another.
+  const perVariant = VARIANTS.map(() => []);
+  const sweepVariant = async (variant, index) => {
+    const log = (line) => printer.line(index, line);
+    const context = await browser.newContext({
+      viewport: { width: variant.width, height: variant.height },
+      deviceScaleFactor: 1,
+      isMobile: true,
+      hasTouch: true,
+    });
+    try {
       const page = await context.newPage();
       for (const slug of pages) {
         const name = `${slug}--${variant.width}-${variant.size}`;
@@ -423,7 +501,7 @@ async function main() {
           if (truncated.length) truncatedShot = await shoot('[data-truncation-offender="0"]', "truncated");
           if (pinned.length) pinnedShot = await shoot('[data-pinned-offender="0"]', "pinned");
         }
-        findings.push({ name, applied, variant, ...result, truncated, pinned, shot, full, offender, truncatedShot, pinnedShot });
+        perVariant[index].push({ name, applied, variant, ...result, truncated, pinned, shot, full, offender, truncatedShot, pinnedShot });
         const verdict = [
           overflows && `OVERFLOW document +${result.document}px, main +${result.main}px`,
           truncated.length && `${truncated.length} truncated`,
@@ -431,18 +509,31 @@ async function main() {
         ]
           .filter(Boolean)
           .join(", ");
-        console.log(`${name.padEnd(36)} ${applied === variant.size ? "" : `(size ${applied}!) `}${verdict || "ok"}`);
-        for (const offender of result.offenders) console.log(`    ${offender}`);
-        for (const f of truncated) console.log(findingLine("TRUNCATED", f, `${f.width}px ${f.kind}: "${f.text}"`));
-        for (const f of pinned) console.log(findingLine("PINNED", f, `${f.how} ${f.height}px (${f.share} % of the viewport): "${f.text}"`));
+        log(`${name.padEnd(36)} ${applied === variant.size ? "" : `(size ${applied}!) `}${verdict || "ok"}`);
+        for (const offender of result.offenders) log(`    ${offender}`);
+        for (const f of truncated) log(findingLine("TRUNCATED", f, `${f.width}px ${f.kind} ${f.box}: "${f.text}"`));
+        for (const f of pinned) log(findingLine("PINNED", f, `${f.how} ${f.height}px (${f.share} % of the viewport) ${f.box}: "${f.text}"`));
       }
+    } finally {
       await context.close();
+    }
+    printer.finish(index);
+  };
+  try {
+    if (!given) preview = await startPreview(Number(process.env.SHOWCASE_PREVIEW_PORT ?? 4179));
+    // A page file (the checks' fixture) is the page itself; a server is a directory.
+    base = /\.html?$/.test(given) ? given : (given || preview.url).replace(/\/?$/, "/");
+    if (flag("serial")) {
+      for (const [index, variant] of VARIANTS.entries()) await sweepVariant(variant, index);
+    } else {
+      await Promise.all(VARIANTS.map(sweepVariant));
     }
   } finally {
     await browser.close();
     preview?.stop();
   }
 
+  const findings = perVariant.flat();
   const bad = findings.filter((f) => f.document > 0 || f.main > 0);
   const cut = findings.filter((f) => f.truncated.length > 0);
   const tall = findings.filter((f) => f.pinned.length > 0);
@@ -463,6 +554,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error(error instanceof SetupError ? `✖ ${error.message}` : error);
   process.exitCode = 2;
 });

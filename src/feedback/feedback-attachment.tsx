@@ -1,4 +1,5 @@
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import {
   useEffect,
   useLayoutEffect,
@@ -9,19 +10,20 @@ import {
   type RefObject,
 } from "react";
 import { Camera, FileText, Image as ImageIcon, Paperclip, X } from "lucide-react";
-import { Button, IconButton, Spinner } from "../components/ui";
-import type { ButtonSize, ButtonVariant } from "../components/ui";
+import { Button } from "../components/button";
+import { IconButton } from "../components/icon-button";
+import { Spinner } from "../components/spinner";
+import type { ButtonSize, ButtonVariant } from "../components/button-look";
 import { DEFAULT_FILE_PICKER_LABELS, formatAccept } from "../components/file-button";
 import { useCommitReason, type CommitScope } from "../components/write-lock";
-import { useKitFileLabels, useKitLabels } from "../i18n/kit-labels";
+import { useKitFileLabels, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
+import { DEFAULT_FEEDBACK_ATTACHMENT_LABELS } from "./feedback-attachment-labels";
+import { DEFAULT_ATTACHMENT_ACCEPT, DEFAULT_MAX_ATTACHMENT_BYTES, DEFAULT_MAX_ATTACHMENTS } from "./feedback-record";
 
-export const DEFAULT_ATTACHMENT_ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-export const DEFAULT_MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
-/** How many files `<FeedbackAttachmentField multiple>` takes when `max` is not given
- *  (0.15.5). Five photos of one problem is already a lot to look through; a report
- *  that needs more is a conversation, which the thread is for. */
-export const DEFAULT_MAX_ATTACHMENTS = 5;
+// Defined in ./feedback-record since 0.34, which a top bar can import without this
+// field (MOD-1); still exported from here, where they always were.
+export { DEFAULT_ATTACHMENT_ACCEPT, DEFAULT_MAX_ATTACHMENT_BYTES, DEFAULT_MAX_ATTACHMENTS };
 
 /**
  * The field's own strings — the `feedbackAttachment` namespace of `<UiKitProvider
@@ -65,35 +67,8 @@ export interface FeedbackAttachmentFieldLabels {
   attachmentUploadFailed?: (name: string) => string;
 }
 
-/**
- * English, in the feedback contract's wording since 0.27.0 (docs/feedback-harmonization.md
- * §4.2: keksdose's `feedback.*` keys are the canon, and the kit owns them now). Three
- * strings moved with it:
- *
- * - `attachmentAdd` "Attach image" → **"Add attachment"**: the field takes a PDF or a text
- *   log as well wherever the app passes `FEEDBACK_ATTACHMENT_ACCEPT` (keksdose feedback
- *   #87), and a button that says "image" over a picker that offers a PDF is wrong in one
- *   of the two places.
- * - `attachmentPaste` → keksdose's longer line, which says WHY one would paste — a region
- *   snip shows one corner rather than the whole page (Steering Design feedback #39).
- * - `attachmentLimit` for one: "remove **it**", as keksdose's `attachments_full_one`;
- *   "remove one" of a single file read oddly.
- */
-export const DEFAULT_FEEDBACK_ATTACHMENT_LABELS: FeedbackAttachmentFieldLabels = {
-  attachmentAdd: "Add attachment",
-  attachmentCapture: "Capture screenshot",
-  attachmentPaste: "…or paste a screenshot straight from the clipboard, so you can show one corner rather than the whole page.",
-  attachmentRemove: "Remove attachment",
-  attachmentList: "Attachments",
-  attachmentScreenshot: "Screenshot",
-  attachmentRemoveFile: (name) => `Remove ${name}`,
-  attachmentLimit: (max) =>
-    max === 1
-      ? "Up to 1 attachment — remove it to add another."
-      : `Up to ${max} attachments — remove one to add another.`,
-  attachmentUploading: "Uploading…",
-  attachmentUploadFailed: (name) => `“${name}” could not be uploaded`,
-};
+// Defined in ./feedback-attachment-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FEEDBACK_ATTACHMENT_LABELS };
 
 /** Why a file was turned away. `"count"` only ever comes from `multiple` (and `refs`)
  *  mode: more files arrived at once than `max` left room for, and the surplus was
@@ -173,7 +148,7 @@ export interface FeedbackAttachmentRef {
 interface FeedbackAttachmentFieldBaseProps {
   /** Prop > `<UiKitProvider labels={{ feedbackAttachment }}>` > English. Optional
    *  since 0.7.0; `attachment` (the heading) is only ever read from here. */
-  labels?: Partial<FeedbackAttachmentLabels> &
+  labels?: LabelOverride<FeedbackAttachmentLabels> &
     Pick<Partial<FeedbackAttachmentFieldLabels>, "attachmentUploading" | "attachmentUploadFailed">;
   accept?: string[];
   maxBytes?: number;
@@ -472,18 +447,18 @@ function SingleField({
             <img
               src={preview}
               alt={value.name}
-              className="h-20 w-20 rounded border border-[var(--border)] object-cover"
+              className="h-20 w-20 rounded border border-subtle object-cover"
             />
           ) : (
             // Non-image attachments (PDF, text) can't preview as an <img>, so
             // show a neutral file tile with the name/size beside it instead.
-            <div className="flex h-20 w-20 items-center justify-center rounded border border-[var(--border)] text-[var(--text-placeholder)]">
+            <div className="flex h-20 w-20 items-center justify-center rounded border border-subtle text-placeholder">
               <FileText className="size-8" />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{value.name}</div>
-            <div className="text-xs text-[var(--text-muted)]">
+            <div className="truncate-until-large text-sm text-secondary">{value.name}</div>
+            <div className="text-xs text-muted">
               {fileText.size(value.size)}
             </div>
           </div>
@@ -514,7 +489,7 @@ function SingleField({
           </div>
           {/* Said out loud, because a gesture with no affordance is a gesture
               nobody finds. */}
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-muted">
             {text.attachmentPaste}
           </p>
         </div>
@@ -524,6 +499,11 @@ function SingleField({
         type="file"
         accept={accept.join(",")}
         className="sr-only"
+        // Out of the tab order and the accessibility tree, as in the other two modes:
+        // the add button is the way in (round 0.34, the showcase's axe check — this one
+        // was a second, nameless stop).
+        tabIndex={-1}
+        aria-hidden
         disabled={disabled}
         onChange={(e) => {
           pick(e.target.files?.[0]);
@@ -662,12 +642,12 @@ function MultipleField({
           {chips.map((chip, index) => (
             <li
               key={fileKey(chip.file)}
-              className="flex min-w-0 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-1"
+              className="flex min-w-0 items-center gap-2 rounded-md border border-subtle bg-surface p-1"
             >
               <ChipPreview file={chip.file} screenshot={chip.screenshot} />
               <div className="min-w-0 flex-1">
-                <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{chip.name}</div>
-                <div className="truncate-until-large text-xs text-[var(--text-muted)]">
+                <div className="truncate-until-large text-sm text-secondary">{chip.name}</div>
+                <div className="truncate-until-large text-xs text-muted">
                   {/* The screenshot's file name moves down here: still there for the
                       reporter who wants to know what will be sent, not its title. */}
                   {chip.screenshot ? `${chip.file.name} · ${fileText.size(chip.file.size)}` : fileText.size(chip.file.size)}
@@ -712,7 +692,7 @@ function MultipleField({
           )}
         </div>
       )}
-      <p className="text-xs text-[var(--text-muted)]">
+      <p className="text-xs text-muted">
         {room > 0 ? text.attachmentPaste : limitLabel(max)}
       </p>
       <input
@@ -776,7 +756,7 @@ function RefsField({
   // take the focusable `aria-disabled` path and say why — Button's and IconButton's
   // `disabledReason`, handed down as is.
   const disabledReason = useCommitReason(commits, ownDisabledReason);
-  const locked = hasReason(disabledReason);
+  const locked = hasContent(disabledReason);
   const reason = locked ? disabledReason : undefined;
   const inert = disabled || locked;
 
@@ -899,13 +879,13 @@ function RefsField({
           {value.map((ref, index) => (
             <li
               key={`ref:${ref.key}`}
-              className="flex min-w-0 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-surface)] p-1"
+              className="flex min-w-0 items-center gap-2 rounded-md border border-subtle bg-surface p-1"
             >
               <RefGlyph type={ref.type} />
               <div className="min-w-0 flex-1">
-                <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{ref.name}</div>
+                <div className="truncate-until-large text-sm text-secondary">{ref.name}</div>
                 {ref.size !== undefined && (
-                  <div className="truncate-until-large text-xs text-[var(--text-muted)]">{fileText.size(ref.size)}</div>
+                  <div className="truncate-until-large text-xs text-muted">{fileText.size(ref.size)}</div>
                 )}
               </div>
               <RemoveButton
@@ -921,14 +901,14 @@ function RefsField({
               key={`upload:${upload.id}`}
               aria-busy="true"
               data-attachment-uploading=""
-              className="flex min-w-0 items-center gap-2 rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-1"
+              className="flex min-w-0 items-center gap-2 rounded-md border border-dashed border-subtle bg-surface p-1"
             >
-              <span className="flex size-12 shrink-0 items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-placeholder)]">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded border border-subtle bg-surface-2 text-placeholder">
                 <Spinner label={null} className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate-until-large text-sm text-[var(--text-secondary)]">{upload.file.name}</div>
-                <div className="truncate-until-large text-xs text-[var(--text-muted)]">{uploadingLabel}</div>
+                <div className="truncate-until-large text-sm text-secondary">{upload.file.name}</div>
+                <div className="truncate-until-large text-xs text-muted">{uploadingLabel}</div>
               </div>
             </li>
           ))}
@@ -964,11 +944,11 @@ function RefsField({
       {locked ? (
         // Where the paste hint was: a phone never hovers, so the Tooltip alone would
         // leave a touch user with buttons that do nothing and no word why.
-        <div data-attachment-reason="" className="text-xs text-[var(--text-muted)]">
+        <div data-attachment-reason="" className="text-xs text-muted">
           {disabledReason}
         </div>
       ) : (
-        <p className="text-xs text-[var(--text-muted)]">{room > 0 ? text.attachmentPaste : limitLabel(max)}</p>
+        <p className="text-xs text-muted">{room > 0 ? text.attachmentPaste : limitLabel(max)}</p>
       )}
       <input
         ref={fileInputRef}
@@ -992,7 +972,7 @@ function RefsField({
  *  preview: an image glyph for an image `type`, a file glyph for anything else. */
 function RefGlyph({ type }: { type?: string }) {
   return (
-    <span className="flex size-12 shrink-0 items-center justify-center rounded border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-placeholder)]">
+    <span className="flex size-12 shrink-0 items-center justify-center rounded border border-subtle bg-surface-2 text-placeholder">
       {type?.startsWith("image/") ? <ImageIcon aria-hidden className="size-6" /> : <FileText aria-hidden className="size-6" />}
     </span>
   );
@@ -1001,7 +981,7 @@ function RefGlyph({ type }: { type?: string }) {
 function Heading({ text, className }: { text?: string; className?: string }) {
   if (!text) return null;
   return (
-    <div className={cn("mb-1 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]", className)}>
+    <div className={cn("mb-1 text-xs font-medium uppercase tracking-wide text-muted", className)}>
       {text}
     </div>
   );
@@ -1084,10 +1064,6 @@ function RemoveButton({
   );
 }
 
-/** A reason worth showing: `null`, `false` and `""` are a caller's "no reason". */
-function hasReason(reason: ReactNode): boolean {
-  return reason !== undefined && reason !== null && reason !== false && reason !== "";
-}
 
 /**
  * The {@link FeedbackAttachmentErrorInfo} builder of one field: its limits, and the
@@ -1154,7 +1130,7 @@ function ChipPreview({ file, screenshot }: { file: File; screenshot: boolean }) 
   }, [file, isImage]);
 
   return (
-    <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded border border-[var(--border)] bg-[var(--bg-surface-2)] text-[var(--text-placeholder)]">
+    <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded border border-subtle bg-surface-2 text-placeholder">
       {isImage && url ? (
         <img src={url} alt="" className="size-full object-cover" />
       ) : (
@@ -1162,7 +1138,7 @@ function ChipPreview({ file, screenshot }: { file: File; screenshot: boolean }) 
       )}
       {screenshot && (
         // Marks the slot apart from the photos: it is why the capture button is gone.
-        <span className="absolute bottom-0.5 end-0.5 rounded-sm bg-[var(--bg-surface)] p-0.5 text-[var(--text-secondary)]">
+        <span className="absolute bottom-0.5 end-0.5 rounded-sm bg-surface p-0.5 text-secondary">
           <Camera aria-hidden className="size-3" />
         </span>
       )}

@@ -18,7 +18,7 @@ import {
   useKitFormat,
 } from "@eifi1/ui-kit";
 import type { TextTone } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row } from "../lib/section";
+import { Example, Note, OutTable, Row, code, READOUT } from "../lib/section";
 
 /**
  * The 0.12 formatters (`formatNumber`, `formatMoney`, `formatPercent`, `formatDate`,
@@ -26,9 +26,6 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * (`SignedAmount`, `Delta`, `Tone`). The formatters are `Intl` with the kit's locale
  * handed in, so the useful specimen is the same input in several locales side by side.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
-const READOUT = "font-mono text-xs text-[var(--text-secondary)]";
 
 const LOCALES = ["en-GB", "de-CH", "fr-FR", "hu-HU", "zh-CN"] as const;
 
@@ -104,13 +101,13 @@ function FormatterTable() {
           say four more locales were off to the right — and the side-by-side is the point. */}
       <ul className="space-y-3 sm:hidden">
         {SPECIMENS.map((s) => (
-          <li key={s.expr} className="border-b border-[var(--border)] pb-3 last:border-b-0 last:pb-0">
-            <p className="break-words font-mono text-xs text-[var(--text-secondary)]">{s.expr}</p>
+          <li key={s.expr} className="border-b border-subtle pb-3 last:border-b-0 last:pb-0">
+            <p className="break-words font-mono text-xs text-secondary">{s.expr}</p>
             <dl className="mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-xs">
               {LOCALES.map((l) => (
                 <div key={l} className="contents">
-                  <dt className="font-mono text-[var(--text-muted)]">{l}</dt>
-                  <dd className="break-words font-mono font-medium text-[var(--text-primary)]">{s.run(l, value)}</dd>
+                  <dt className="font-mono text-muted">{l}</dt>
+                  <dd className="break-words font-mono font-medium text-primary">{s.run(l, value)}</dd>
                 </div>
               ))}
             </dl>
@@ -122,10 +119,10 @@ function FormatterTable() {
       <div className="overflow-x-auto max-sm:hidden">
         <table className="w-full min-w-[56rem] text-left text-xs">
           <thead>
-            <tr className="border-b border-[var(--border)]">
-              <th className="py-1.5 pr-4 font-medium text-[var(--text-muted)]">call</th>
+            <tr className="border-b border-subtle">
+              <th className="py-1.5 pr-4 font-medium text-muted">call</th>
               {LOCALES.map((l) => (
-                <th key={l} className="py-1.5 pr-4 font-mono font-medium text-[var(--text-muted)]">
+                <th key={l} className="py-1.5 pr-4 font-mono font-medium text-muted">
                   {l}
                 </th>
               ))}
@@ -133,10 +130,10 @@ function FormatterTable() {
           </thead>
           <tbody>
             {SPECIMENS.map((s) => (
-              <tr key={s.expr} className="border-b border-[var(--border)] last:border-b-0">
-                <td className="py-1.5 pr-4 align-top font-mono text-[var(--text-secondary)]">{s.expr}</td>
+              <tr key={s.expr} className="border-b border-subtle last:border-b-0">
+                <td className="py-1.5 pr-4 align-top font-mono text-secondary">{s.expr}</td>
                 {LOCALES.map((l) => (
-                  <td key={l} className="py-1.5 pr-4 align-top font-mono font-medium text-[var(--text-primary)]">
+                  <td key={l} className="py-1.5 pr-4 align-top font-mono font-medium text-primary">
                     {s.run(l, value)}
                   </td>
                 ))}

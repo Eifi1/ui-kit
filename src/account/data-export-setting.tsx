@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Download } from "lucide-react";
 
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
+import { clickDownload } from "../lib/download";
 import { AlertBanner } from "../components/alert-banner";
-import { hasMessage } from "../components/choice-parts";
+import { hasContent } from "../lib/presence";
 import { TextLink } from "../components/text-link";
-import { Button, Card } from "../components/ui";
-import { englishWait, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
+import { Button } from "../components/button";
+import { Card } from "../components/card";
+import { isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { CARD_DESCRIPTION_CLASS, settle, useMounted } from "./account-parts";
 import { SettingsCardTitle } from "../settings/settings-heading";
+import { DEFAULT_DATA_EXPORT_LABELS } from "./data-export-setting-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -35,18 +38,8 @@ export interface DataExportLabels {
   failed: string;
 }
 
-export const DEFAULT_DATA_EXPORT_LABELS: DataExportLabels = {
-  title: "Export your data",
-  description: "Download a copy of your account’s data as a JSON file.",
-  download: "Download my data",
-  started: "Your download has started.",
-  saveAgain: "Didn’t start? Save the file",
-  rateLimited: (seconds) =>
-    seconds && seconds > 0
-      ? `You exported your data a moment ago. Try again in ${englishWait(seconds)}.`
-      : "You exported your data a moment ago. Please try again in a minute.",
-  failed: "The export failed. Please try again.",
-};
+// Defined in ./data-export-setting-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_DATA_EXPORT_LABELS };
 
 /* ── Props ───────────────────────────────────────────────────────────────── */
 
@@ -57,7 +50,7 @@ export const DEFAULT_DATA_EXPORT_LABELS: DataExportLabels = {
  */
 export type DataExportFile = Blob | { url: string; filename?: string };
 
-export interface DataExportSettingProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface DataExportSettingProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /**
    * Fetch the export (`GET /auth/me/export`, §6.5). Resolve with the file — the card
    * saves it under `filename` — or reject with the client's error: a 429 (the export is
@@ -75,7 +68,7 @@ export interface DataExportSettingProps extends Omit<ComponentPropsWithoutRef<"d
   filename?: string;
   /** The app's own words for a failure, or `undefined` for the kit's. Asked first. */
   describeError?: (error: unknown) => ReactNode | undefined;
-  labels?: Partial<DataExportLabels>;
+  labels?: LabelOverride<DataExportLabels>;
 }
 
 interface Saved {
@@ -94,20 +87,6 @@ function defaultFilename(now = new Date()): string {
 /** A `{ url }` answer, as opposed to a Blob or anything else. */
 function isUrlAnswer(value: unknown): value is { url: string; filename?: string } {
   return typeof value === "object" && value !== null && typeof (value as { url?: unknown }).url === "string";
-}
-
-/** Hand `href` to the browser as a download named `filename`: a link with `download`,
- *  clicked once and taken out again — the one way a page saves a file without a new
- *  tab that would show the JSON instead. */
-function startDownload(href: string, filename: string) {
-  const link = document.createElement("a");
-  link.href = href;
-  link.download = filename;
-  link.rel = "noopener";
-  link.hidden = true;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
 }
 
 /**
@@ -171,14 +150,16 @@ export function DataExportSetting({
           return;
         }
         setSaved(next);
-        startDownload(next.href, next.filename);
+        // The click alone, not `saveBlob`: the object URL is the card's to revoke, since
+        // the "Save the file" link below points at it for as long as it is shown.
+        clickDownload(next.href, next.filename);
       },
       (error: unknown) => {
         if (!mounted.current) return;
         setBusy(false);
         const own = describeError?.(error);
         setFailure(
-          hasMessage(own) ? own : isRateLimited(error) ? labels.rateLimited(retryAfterSeconds(error)) : labels.failed,
+          hasContent(own) ? own : isRateLimited(error) ? labels.rateLimited(retryAfterSeconds(error)) : labels.failed,
         );
       },
     );
@@ -189,7 +170,7 @@ export function DataExportSetting({
       <div className="space-y-1">
         <SettingsCardTitle>{labels.title}</SettingsCardTitle>
         <div className={CARD_DESCRIPTION_CLASS}>{labels.description}</div>
-        {hasMessage(description) && <div className={CARD_DESCRIPTION_CLASS}>{description}</div>}
+        {hasContent(description) && <div className={CARD_DESCRIPTION_CLASS}>{description}</div>}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Button type="button" variant="secondary" pending={busy} onClick={run}>
@@ -198,7 +179,7 @@ export function DataExportSetting({
         </Button>
         {/* Always in the tree, so the confirmation that appears in it is announced; in
             the button's row, so an empty one takes no line of its own. */}
-        <span role="status" className="text-xs text-[var(--text-secondary)]">
+        <span role="status" className="text-xs text-secondary">
           {saved && (
             <>
               {labels.started}{" "}
@@ -209,7 +190,7 @@ export function DataExportSetting({
           )}
         </span>
       </div>
-      {hasMessage(failure) && (
+      {hasContent(failure) && (
         <AlertBanner tone="danger" size="sm" role="alert">
           {failure}
         </AlertBanner>

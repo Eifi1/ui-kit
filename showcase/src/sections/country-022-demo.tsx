@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, CountrySelect, FieldHint, ToggleGroup, WriteLockProvider } from "@eifi1/ui-kit";
-import { Example, Note } from "../lib/section";
+import { Example, Note, code } from "../lib/section";
 
 /**
  * CountrySelect (0.22): kastlan's address country with its six neighbours on top, and
@@ -8,8 +8,6 @@ import { Example, Note } from "../lib/section";
  * own (`Intl.DisplayNames`), so switching the locale below renames all 249 rows
  * without the kit shipping a single country name.
  */
-
-const code = (s: string) => <code className="font-mono">{s}</code>;
 
 const LOCALES = [
   { value: "en", label: "English" },
@@ -54,7 +52,7 @@ export function Country022Demo() {
               hint="All 249 countries, sorted by name"
             />
           </div>
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-xs text-muted">
             Stored value: {code(address ?? "null")}
           </p>
         </div>

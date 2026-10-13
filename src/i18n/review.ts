@@ -130,6 +130,10 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "dataTable.pageRange": [[1, 25, 1240]],
   "dataTable.rowCount": [[1], [1240]],
   "dataTable.columnsCount": [[3, 8]],
+  "dataTable.filterColumn": [
+    ["{{column}}", false],
+    ["{{column}}", true],
+  ],
   "miniCalendar.day": [["{{date}}"]],
   "miniCalendar.startSelected": [["{{date}}"]],
   "miniCalendar.rangeSelected": [["{{from}}", "{{to}}"]],

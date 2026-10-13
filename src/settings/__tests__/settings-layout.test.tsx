@@ -1,16 +1,17 @@
 import { useEffect } from "react";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, useLocation, useNavigate, useNavigationType, type InitialEntry } from "react-router";
 import { Database, KeyRound, Palette, User } from "lucide-react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SettingsLayout, type SettingsLayoutProps } from "../settings-layout";
 import { SettingsSection } from "../settings-section";
 import { SettingsHeadingLevel } from "../settings-heading";
 import { useSettingsLayout } from "../settings-context";
 import { settingsSearchEntries, type SettingsEntry, type SettingsGroup } from "../settings-catalogue";
-import { SETTINGS_FOCUS_RING } from "../use-settings-focus";
+import { SETTINGS_FOCUS_MS, SETTINGS_FOCUS_RING } from "../use-settings-focus";
 import { ListItem } from "../../components/list";
-import { PasswordSetting, TwoFactorSetting } from "../../components/account-settings";
+import { PasswordSetting, TwoFactorSetting } from "../../account/account-settings";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * SettingsLayout (docs/settings-harmonization.md §3.2–§3.5, §3.7): the search threshold
@@ -114,15 +115,7 @@ function mount(initial: InitialEntry, props: Partial<SettingsLayoutProps<G>> = {
 
 /** A phone: the phone layout's `(width < 768px)` matches. */
 function mockPhone() {
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query.includes("width < 768px"),
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-    }),
-  });
+  stubViewportWidth(PHONE_WIDTH);
 }
 
 afterEach(() => {
@@ -283,15 +276,25 @@ describe("SettingsLayout — search on a desktop (§3.4)", () => {
 });
 
 describe("SettingsLayout — ?focus= (§3.5)", () => {
-  it("rings the card, focuses its heading and removes ONLY `focus`", async () => {
-    mount("/settings/security?tour=t1&focus=twofactor-card&tourStep=2");
-    const card = document.getElementById("twofactor-card")!;
-    expect(card).toHaveClass("ring-2");
-    expect(document.activeElement).toBe(screen.getByRole("heading", { level: 3, name: "Two-factor authentication" }));
-    expect(path()).toBe("/settings/security?tour=t1&tourStep=2");
-    expect(probe!.type).toBe("REPLACE");
-    // 1.8 s later the ring is gone.
-    await waitFor(() => expect(card).not.toHaveClass("ring-2"), { timeout: 3000 });
+  it("rings the card, focuses its heading and removes ONLY `focus`", () => {
+    // Fake timers: the ring's 1.8 s are run, not waited out — a real wait of up to 3 s
+    // that held 1.2 s of slack against the load (TST-11).
+    vi.useFakeTimers();
+    try {
+      mount("/settings/security?tour=t1&focus=twofactor-card&tourStep=2");
+      const card = document.getElementById("twofactor-card")!;
+      expect(card).toHaveClass("ring-2");
+      expect(document.activeElement).toBe(screen.getByRole("heading", { level: 3, name: "Two-factor authentication" }));
+      expect(path()).toBe("/settings/security?tour=t1&tourStep=2");
+      expect(probe!.type).toBe("REPLACE");
+      // The ring stays its full 1.8 s, and is gone after.
+      act(() => vi.advanceTimersByTime(SETTINGS_FOCUS_MS - 1));
+      expect(card).toHaveClass("ring-2");
+      act(() => vi.advanceTimersByTime(1));
+      expect(card).not.toHaveClass("ring-2");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("finds the anchor's group from /settings?focus=", () => {
@@ -362,6 +365,58 @@ describe("SettingsLayout — phone (§3.3)", () => {
     fireEvent.click(screen.getByRole("link", { name: "Back to settings" }));
     expect(path()).toBe("/settings");
     expect(probe!.type).toBe("POP");
+  });
+});
+
+/**
+ * Round 0.34 C8 (KS U7): "<group> · Settings · <app>" (§3.1), which Kastlan's
+ * `SettingsChrome` and Kurvenschmiede's `GroupTitle` wrote by hand — and which
+ * Kurvenschmiede's admin page, on the same layout, never wrote at all.
+ */
+describe("SettingsLayout — the window's title (§3.1)", () => {
+  afterEach(() => {
+    document.title = "";
+  });
+
+  it("names the open group, the page and the app, and follows the group", () => {
+    document.title = "Kastlan";
+    mount("/settings/security", { appName: "Kastlan" });
+    expect(document.title).toBe("Security · Settings · Kastlan");
+    fireEvent.click(screen.getByRole("tab", { name: "Data" }));
+    expect(document.title).toBe("Data · Settings · Kastlan");
+  });
+
+  it("puts back the title it found when it unmounts", () => {
+    document.title = "Dashboard · Kastlan";
+    const { unmount } = mount("/settings/security", { appName: "Kastlan" });
+    fireEvent.click(screen.getByRole("tab", { name: "Data" }));
+    unmount();
+    expect(document.title).toBe("Dashboard · Kastlan");
+  });
+
+  it("is the page and the app on the phone's list, and leaves out a missing app name", () => {
+    mount("/settings", { layout: "phone", appName: "Kastlan" });
+    expect(document.title).toBe("Settings · Kastlan");
+    fireEvent.click(screen.getByRole("link", { name: /Security/ }));
+    expect(document.title).toBe("Security · Settings · Kastlan");
+  });
+
+  it("reads the page from a string title — Kurvenschmiede's admin page", () => {
+    mount("/settings/account", { title: "Administration" });
+    expect(document.title).toBe("Account · Administration");
+  });
+
+  it("writes another order through documentTitle, and nothing with documentTitle={false}", () => {
+    const { unmount } = mount("/settings/account", {
+      appName: "Kurvenschmiede",
+      documentTitle: ({ group, page, appName }) => `${appName} — ${page}: ${group}`,
+    });
+    expect(document.title).toBe("Kurvenschmiede — Settings: Account");
+    unmount();
+
+    document.title = "Untouched";
+    mount("/settings/account", { appName: "Kurvenschmiede", documentTitle: false });
+    expect(document.title).toBe("Untouched");
   });
 });
 

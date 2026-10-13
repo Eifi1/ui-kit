@@ -123,7 +123,7 @@ export const zh: Dictionary = {
     "user-admin": {
       title: "用户管理",
       short: "用户",
-      blurb: "账户的管理端：带角色和状态的用户列表、四项管理操作及服务器要求的确认、审计日志、邀请、工作移交，以及运营者的套餐列与套餐变更。",
+      blurb: "账户的管理端：带角色和状态的用户列表、四项管理操作及服务器要求的确认、含群组操作的审计日志、邀请、工作移交，以及运营者的套餐列与套餐变更。",
     },
     subscription: {
       title: "订阅",
@@ -361,7 +361,7 @@ export const zh: Dictionary = {
       title: "序列图",
       short: "序列",
       blurb:
-        "各应用共用的可缩放序列图：每种单位一条坐标轴、由开关组成的图例、一组图表共用一次缩放，以及其底层的工具函数。",
+        "各应用共用的可缩放序列图：每种单位一条坐标轴、由开关组成的图例、一组图表共用一次缩放、长表格的行数预算，以及其底层的工具函数。",
     },
     "series-chart-marks": {
       title: "序列图：柱形、面积与时间",
@@ -523,7 +523,7 @@ export const zh: Dictionary = {
       title: "计费",
       short: "计费",
       blurb:
-        "套餐及其上限，订阅状态以及试用期和测试版的日期，到期后的只读限制，以及 Paddle 和 Lemon Squeezy 的 webhook：校验签名、统一事件、单一分发。",
+        "套餐及其上限，订阅状态以及试用期和测试版的日期，到期后的只读限制，以及 Paddle 的 webhook：校验签名、统一事件、单一分发。",
     },
     "server-mail": {
       title: "邮件",
@@ -541,7 +541,7 @@ export const zh: Dictionary = {
       title: "限流、错误与 CORS",
       short: "限流",
       blurb:
-        "滑动窗口限流器及其计数所依据的地址、本套件的每种拒绝都以契约规定的状态码响应，以及为少量额外来源开放的 CORS。",
+        "滑动窗口限流器及其计数所依据的地址、本套件的每种拒绝都以契约规定的状态码响应、为少量额外来源开放的 CORS，以及作业路由上的调度器令牌。",
     },
     "server-translation-review": {
       title: "翻译审校",
@@ -1220,7 +1220,7 @@ export const zh: Dictionary = {
     "server-billing": [
       "在服务器上 检查 套餐上限",
       "验证 webhook 签名",
-      "处理 Paddle 和 Lemon Squeezy 事件",
+      "处理 Paddle 事件",
       "订阅 是否 正常",
       "试用期 和 测试版 结束日期",
       "订阅到期时 拒绝 写入",

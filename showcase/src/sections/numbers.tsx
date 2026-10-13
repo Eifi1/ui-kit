@@ -9,7 +9,6 @@ import {
   FieldHint,
   NumberInput,
   NumberPadSheet,
-  PHONE_QUERY,
   commitExpression,
   evaluateExpression,
   formatResult,
@@ -18,10 +17,11 @@ import {
   looksLikeExpression,
   sanitizeLive,
   splitLeadingSign,
-  useMediaQuery,
+  usePhoneLayout,
+  roundToCurrency,
 } from "@eifi1/ui-kit";
 import { NumberFieldDemo } from "./number-time-demo";
-import { Example, Note, OutTable, Row, Swatch, Stage } from "../lib/section";
+import { Example, Note, OutTable, Row, Swatch, Stage, READOUT } from "../lib/section";
 
 /**
  * NUMBERS & MONEY.
@@ -66,8 +66,8 @@ function State({ rows }: { rows: Array<[label: string, value: string]> }) {
     <dl className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
       {rows.map(([label, value]) => (
         <div key={label} className="flex items-baseline gap-2">
-          <dt className="text-[var(--text-muted)]">{label}</dt>
-          <dd className="font-mono text-[var(--text-primary)]">{value === "" ? '""' : value}</dd>
+          <dt className="text-muted">{label}</dt>
+          <dd className="font-mono text-primary">{value === "" ? '""' : value}</dd>
         </div>
       ))}
     </dl>
@@ -129,7 +129,7 @@ export function Numbers() {
 
   // The same query the kit gates its phone shapes on, read here only to TELL the
   // reader which half of the page they are looking at. Nothing below branches on it.
-  const isPhone = useMediaQuery(PHONE_QUERY, false);
+  const isPhone = usePhoneLayout();
 
   const outflow = direction === "outflow";
   const selected = getCurrency(pickerCode);
@@ -138,8 +138,8 @@ export function Numbers() {
     <>
       <Note>
         Several affordances in this section are phone-only, gated on{" "}
-        <code className="font-mono">PHONE_QUERY</code> (
-        <code className="font-mono">max-width: 767px</code>): the <strong>number pad sheet</strong>{" "}
+        <code className="font-mono">usePhoneLayout()</code> (below{" "}
+        <code className="font-mono">md</code> at the text size in force): the <strong>number pad sheet</strong>{" "}
         that replaces the OS keyboard, and <code className="font-mono">variant="display"</code> on
         both fields. Above that width they are deliberately inert — the desktop calculator popover
         appears instead, and the display variant renders as an ordinary bordered field. Narrow the
@@ -247,7 +247,7 @@ export function Numbers() {
       >
         <Stage>
           {/* The goal-target shape: one number a dialog is about, at display size
-              with the chrome dropped — below PHONE_QUERY only. */}
+              with the chrome dropped — in the phone layout only. */}
           <NumberInput
             label="Savings goal"
             value={goal}
@@ -255,9 +255,9 @@ export function Numbers() {
             variant="display"
             suffix="€"
           />
-          {/* No label: `ariaLabel` names it, for a table cell or an inline editor. */}
+          {/* No label: `aria-label` names it, for a table cell or an inline editor. */}
           <NumberInput
-            ariaLabel="Quantity"
+            aria-label="Quantity"
             value={bare}
             onChange={setBare}
             calculator={false}
@@ -284,8 +284,8 @@ export function Numbers() {
       >
         <Stage>
           <div className="space-y-3">
-            <div className="relative inline-flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2">
-              <span className="font-mono text-sm text-[var(--text-primary)]">
+            <div className="relative inline-flex items-center gap-3 rounded-md border border-subtle bg-surface-2 px-3 py-2">
+              <span className="font-mono text-sm text-primary">
                 {calcValue || "—"}
               </span>
               {/* The second argument is the EXPRESSION the result came out of. A host
@@ -438,7 +438,7 @@ export function Numbers() {
         <Stage>
           <div data-stage="wide" className="grid gap-4 sm:grid-cols-2">
             {/* Same input, same numpad, same commit contract — only the chrome is
-                dropped, and only below PHONE_QUERY. `align="center"` centres in what
+                dropped, and only in the phone layout. `align="center"` centres in what
                 is LEFT of the currency chip, not in the whole box, so the last digits
                 never end up behind it. */}
             <AmountInput
@@ -495,17 +495,17 @@ export function Numbers() {
                 invalid={requiredCode === ""}
               />
             </Row>
-            <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+            <div className="flex items-center gap-2 text-xs text-secondary">
               <span>getCurrency(value) →</span>
               {selected ? (
                 <>
                   <CurrencyFlag country={selected.country} />
-                  <span className="font-mono text-[var(--text-primary)]">
+                  <span className="font-mono text-primary">
                     {selected.code} · {selected.symbol} · {selected.name}
                   </span>
                 </>
               ) : (
-                <span className="font-mono text-[var(--text-primary)]">undefined</span>
+                <span className="font-mono text-primary">undefined</span>
               )}
             </div>
           </div>
@@ -564,18 +564,18 @@ export function Numbers() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <span className="font-mono text-sm text-[var(--text-primary)]">{deCalcButton}</span>
+              <span className="font-mono text-sm text-primary">{deCalcButton}</span>
               <CalculatorButton
                 value={deCalcButton}
                 onChange={(next) => setDeCalcButton(next)}
-                ariaLabel="Rechner"
+                aria-label="Rechner"
                 labels={{ panel: "Rechner", equals: "Ergebnis", plus: "plus", minus: "minus" }}
               />
             </div>
-            {/* No `label` on this one: `ariaLabel` names an amount field that sits in
+            {/* No `label` on this one: `aria-label` names an amount field that sits in
                 a table cell, and `placeholder` is what it shows while empty. */}
             <AmountInput
-              ariaLabel="Amount for row 3"
+              aria-label="Amount for row 3"
               placeholder="0.00"
               value={unlabelledAmount}
               onChange={setUnlabelledAmount}
@@ -587,7 +587,7 @@ export function Numbers() {
           Open the currency list on the first two and search &quot;Franken&quot;: the filter matches
           the <em>shown</em>, translated name. The calculator names are screen-reader names — inspect
           the trigger&apos;s <code className="font-mono">aria-label</code>, or open the popover. The
-          last field is unlabelled: <code className="font-mono">ariaLabel</code> names it and{" "}
+          last field is unlabelled: <code className="font-mono">aria-label</code> names it and{" "}
           <code className="font-mono">placeholder</code> fills it while empty.
         </Note>
       </Example>
@@ -636,8 +636,8 @@ export function Numbers() {
             <Note>
               In an app this sheet is never rendered by hand: focusing a{" "}
               <code className="font-mono">NumberInput</code> or{" "}
-              <code className="font-mono">AmountInput</code> below{" "}
-              <code className="font-mono">PHONE_QUERY</code> opens it, with the field's
+              <code className="font-mono">AmountInput</code> in the phone layout{" "}
+              (<code className="font-mono">usePhoneLayout()</code>) opens it, with the field's
               <code className="font-mono"> inputMode="none"</code> suppressing the OS keyboard in
               its place. The button below mounts it explicitly so a desktop reader can see it at
               all. It portals to <code className="font-mono">document.body</code> and is fixed to
@@ -652,7 +652,7 @@ export function Numbers() {
               <Button type="button" variant="secondary" onClick={() => setDePadOpen(true)}>
                 Open it with labels (German)
               </Button>
-              <span className="font-mono text-sm text-[var(--text-primary)]">
+              <span className="font-mono text-sm text-primary">
                 {padValue || "0"}
               </span>
             </Row>
@@ -714,9 +714,9 @@ export function NumberHelpers() {
               {SAMPLES.map((c) => (
                 <span key={c.code} className="flex items-center gap-2 text-xs">
                   <CurrencyFlag country={c.country} />
-                  <span className="font-mono font-medium text-[var(--text-primary)]">{c.code}</span>
-                  <span className="font-mono text-[var(--text-muted)]">{c.symbol}</span>
-                  <span className="text-[var(--text-secondary)]">{c.name}</span>
+                  <span className="font-mono font-medium text-primary">{c.code}</span>
+                  <span className="font-mono text-muted">{c.symbol}</span>
+                  <span className="text-secondary">{c.name}</span>
                 </span>
               ))}
             </Row>
@@ -793,5 +793,46 @@ export function NumberHelpers() {
         />
       </Example>
     </>
+  );
+}
+
+/* ── since 0.16 ─────────────────────────────────────────────────────────── */
+
+const CAPTION = "text-xs text-muted";
+
+export function Numbers016Demo() {
+  const [amount, setAmount] = useState("12.50");
+  const [rate, setRate] = useState("3.49");
+  return (
+    <Example label="AmountInput hint, a tighter unit, roundToCurrency fallbackDigits">
+      <div className="grid max-w-2xl gap-3 sm:grid-cols-2">
+        <AmountInput
+          label="Deposit"
+          currency="EUR"
+          value={amount}
+          onChange={setAmount}
+          hint={<FieldHint label="Held until the lease ends." />}
+        />
+        <AmountInput label="Monthly rent" currency="EUR" value={amount} onChange={setAmount} hint="Cold rent, without utilities" />
+      </div>
+      <Row>
+        <div className="w-24">
+          <NumberInput aria-label="VAT rate" value={rate} onChange={setRate} suffix="%" calculator={false} />
+        </div>
+        <div className="w-28">
+          <NumberInput aria-label="Speed" value="88" onChange={() => {}} suffix="km/h" calculator={false} />
+        </div>
+        <span className={CAPTION}>a unit in a narrow cell: ~8px of end padding, not 12</span>
+      </Row>
+      <ul className={`space-y-0.5 ${READOUT}`}>
+        <li>roundToCurrency(0.1 + 0.2, &quot;&quot;) → {String(roundToCurrency(0.1 + 0.2, ""))}</li>
+        <li>
+          roundToCurrency(0.1 + 0.2, &quot;&quot;, &#123; fallbackDigits: 2 &#125;) →{" "}
+          {String(roundToCurrency(0.1 + 0.2, "", { fallbackDigits: 2 }))}
+        </li>
+        <li>roundToCurrency(1.005, &quot;EUR&quot;, &#123; fallbackDigits: 0 &#125;) → {String(roundToCurrency(1.005, "EUR", { fallbackDigits: 0 }))}</li>
+      </ul>
+      <Note>Since 0.16.</Note>
+    </Example>
   );
 }

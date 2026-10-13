@@ -1,10 +1,11 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactElement, ReactNode } from "react";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
-import { useKitLabels, useKitLink } from "../i18n/kit-labels";
+import { useKitLabels, useKitLink, type LabelOverride } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
+import { DEFAULT_BREADCRUMBS_LABELS } from "./breadcrumbs-labels";
 
 export interface BreadcrumbsLabels {
   /** The `nav` landmark's name — what a screen reader lists it as. */
@@ -13,10 +14,8 @@ export interface BreadcrumbsLabels {
   showAll: string;
 }
 
-export const DEFAULT_BREADCRUMBS_LABELS: BreadcrumbsLabels = {
-  label: "Breadcrumb",
-  showAll: "Show full path",
-};
+// Defined in ./breadcrumbs-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_BREADCRUMBS_LABELS };
 
 export interface BreadcrumbItem {
   label: ReactNode;
@@ -35,7 +34,7 @@ export interface BreadcrumbLinkProps {
   children: ReactNode;
 }
 
-export interface BreadcrumbsProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
+export interface BreadcrumbsProps extends Omit<ComponentPropsWithRef<"nav">, "children"> {
   items: BreadcrumbItem[];
   /** Your router's link. Default: the `<UiKitProvider linkComponent>` (for an in-app
    *  `href`), then `<a>`. The API `Chip`, `StatTile` and `ListItem` share. */
@@ -57,7 +56,7 @@ export interface BreadcrumbsProps extends Omit<ComponentPropsWithoutRef<"nav">, 
    *  parent by default (2), because "up one level" is what a phone user reaches for. */
   keepEnd?: number;
   /** Overrides the {@link UiKitProvider}'s `breadcrumbs` labels. */
-  labels?: Partial<BreadcrumbsLabels>;
+  labels?: LabelOverride<BreadcrumbsLabels>;
 }
 
 /**
@@ -103,22 +102,26 @@ export function Breadcrumbs({
   const isHidden = (i: number) => collapsible && i >= 1 && i < firstKept;
 
   const sep = (
-    <span aria-hidden className="flex shrink-0 items-center text-[var(--text-placeholder)]">
+    <span aria-hidden className="flex shrink-0 items-center text-placeholder">
       {separator ?? <ChevronRight className="size-3.5 rtl:-scale-x-100" />}
     </span>
   );
-  const linkClass = cn("block max-w-[14rem] truncate rounded-sm hover:text-[var(--text-primary)]", FOCUS_RING);
+  // Each crumb is capped (in rem, so the cap grows with the text) and cut with an
+  // ellipsis at Normal; from Large up it wraps inside its cap instead (text size §10.17,
+  // round 0.34 T1): the list already wraps between crumbs, and a crumb cut to "Inv…" at
+  // 150 % names no page.
+  const linkClass = cn("block max-w-[14rem] truncate-until-large rounded-sm hover:text-primary", FOCUS_RING);
 
   return (
     <nav {...rest} aria-label={ariaLabel ?? labels.label} className={cn("min-w-0 text-sm", className)}>
-      <ol className="m-0 flex min-w-0 list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0 text-[var(--text-muted)]">
+      <ol className="m-0 flex min-w-0 list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0 text-muted">
         {items.map((item, i) => {
           const last = i === items.length - 1;
           const key = item.key ?? (typeof item.label === "string" ? `${i}-${item.label}` : String(i));
           let content: ReactNode;
           if (last) {
             content = (
-              <span aria-current="page" className="block max-w-[16rem] truncate font-medium text-[var(--text-primary)]">
+              <span aria-current="page" className="block max-w-[16rem] truncate-until-large font-medium text-primary">
                 {item.label}
               </span>
             );
@@ -135,7 +138,7 @@ export function Breadcrumbs({
               </a>
             );
           } else {
-            content = <span className="block max-w-[14rem] truncate">{item.label}</span>;
+            content = <span className="block max-w-[14rem] truncate-until-large">{item.label}</span>;
           }
           return (
             <Fragment key={key}>
@@ -150,7 +153,7 @@ export function Breadcrumbs({
                     }}
                     aria-label={labels.showAll}
                     aria-expanded={false}
-                    className={cn("flex items-center rounded-sm px-0.5 hover:text-[var(--text-primary)]", FOCUS_RING)}
+                    className={cn("flex items-center rounded-sm px-0.5 hover:text-primary", FOCUS_RING)}
                   >
                     <MoreHorizontal className="size-4" aria-hidden />
                   </button>

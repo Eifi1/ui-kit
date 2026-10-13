@@ -1,19 +1,24 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef } from "react";
+import type { KeyboardEvent, ReactNode, Ref } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
-import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./ui";
+import {
+  FIELD_BASE,
+  FIELD_DISPLAY,
+  FIELD_INVALID,
+  FLOATING_INPUT_CLASS,
+  FloatingField,
+} from "./field-base";
 import { CURRENCIES } from "./currency-select";
-import { hasMessage, mergeDescribedBy } from "./choice-parts";
-import { LockedReason, useInlineHint, useLockReason } from "./field-parts";
+import { FieldCaption, LockedReason, mergeRefs, type DisabledReasonDisplay } from "./field-parts";
+import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
 import { commitExpression, formatResult } from "../lib/calc";
-import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
-import { usePhoneLayout } from "../hooks/use-breakpoint";
-import { useKitLocale } from "../i18n/kit-labels";
 
-interface NumberInputProps {
+/** {@link NumberInput}'s props — exported since 0.34 (refactor audit 2026-10, API-9): a
+ *  wrapper typed itself off `ComponentProps<typeof NumberInput>` until then. */
+export interface NumberInputProps {
   /** The text, DOT-decimal ("1234.5", or a calculation being typed: "12+5"), as
    *  `onChange` reports it — so a caller's `Number(value)` reads it. The field SHOWS it
    *  in the locale's mark (see `locale`). A comma here is read as the decimal mark too,
@@ -27,6 +32,11 @@ interface NumberInputProps {
    * fields so the save always sees the resolved number, never "10+5". */
   onCommit?: (value: string) => void;
   label?: ReactNode;
+  /** Names the field when it has no visible `label` (a table cell, a phone's display
+   *  shape). */
+  "aria-label"?: string;
+  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
+   *  Names the field only when `aria-label` is absent. */
   ariaLabel?: string;
   /** Names for the calculator this field renders — its trigger, and the controls
    *  inside the popover — and for the numpad sheet it opens on a phone. Overrides
@@ -148,11 +158,18 @@ interface NumberInputProps {
    * Combobox family's lock is. Nothing changes the value: the step keys do nothing, the
    * calculator and the phone's numpad are not offered, and neither blur nor Enter
    * commits — so `onChange` and `onCommit` are never called. Enter is swallowed, so the
-   * field does not submit the form around it. The reason is in the kit {@link Tooltip}
+   * field does not submit the form around it. The reason is a line under the field at
+   * Large and on a touch screen, else in the kit {@link Tooltip} (`disabledReasonDisplay`),
    * and on the input's `aria-describedby`, between the caption and the error. Wins over
    * `disabled`.
    */
   disabledReason?: ReactNode;
+  /**
+   * Where the reason shows — {@link Button}'s `disabledReasonDisplay`: by default a line
+   * under the field at Large and on a touch screen, the tooltip otherwise (§4 "No fact
+   * only in a tooltip"; DUP-3, refactor audit 2026-10).
+   */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /**
    * This field COMMITS — {@link Button}'s `commit`: under a locked
    * {@link WriteLockProvider} it is locked the `disabledReason` way with the lock's reason
@@ -162,6 +179,13 @@ interface NumberInputProps {
    * {@link IntegerField} pass it on.
    */
   commit?: CommitScope;
+  /**
+   * The `<input>`, as a React 19 ref prop (0.34, API-3, refactor audit 2026-10): the one
+   * focusable field of its family with no ref at all, so react-hook-form's focus-on-error
+   * could reach it only through /rhf's id lookup, and an app not at all.
+   * {@link NumberField} and {@link IntegerField} pass it on.
+   */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /** Decimal places of `n` as written ("0.25" → 2, "1e-7" → 7), for decimal-exact
@@ -207,9 +231,8 @@ export function stepNumber(
   return clamp(Number((origin + k * step).toFixed(places)));
 }
 
-// The error line under a field — the type of `ui.tsx`'s (module-private) one, so a
-// NumberInput's message is indistinguishable from an Input's.
-const FIELD_ERROR_CLASS = "mt-1 text-caption leading-tight text-[var(--danger)]";
+/** NumberInput never rounds: what was typed (or calculated) is what it reports. */
+const asTyped = (text: string) => text;
 
 // ── The money guard (kastlan 5, Kurvenschmiede) ─────────────────────────────────
 
@@ -232,7 +255,7 @@ function namesMoney(node: ReactNode): boolean {
 
 /**
  * Is this field being used for MONEY? A currency in the unit (`suffix="CHF"`), or in
- * the label, `ariaLabel` or placeholder of a field with no unit at all ("Estimated
+ * the label, `aria-label` or placeholder of a field with no unit at all ("Estimated
  * cost (CHF)"). Any other suffix is a unit — "%", "mm", "N·m" — and says what the
  * digits are, whatever the label says. `digits` plays no part: NumberInput has none,
  * and Kurvenschmiede's engineering fields at 2 and 3 decimals are exactly what this
@@ -291,68 +314,44 @@ function devWarnings(): boolean {
  */
 export function NumberInput(props: NumberInputProps) {
   const {
+    ref,
     value,
     onChange,
     onCommit,
     label,
-    ariaLabel,
+    "aria-label": ariaLabelAttr,
+    ariaLabel: ariaLabelProp,
     labels,
     placeholder,
-    disabled,
     autoFocus,
     className,
     inputClassName,
     id,
-    calculator = true,
-    variant = "field",
-    hint: hintProp,
-    invalid: invalidProp,
-    error,
-    locale: localeProp,
-    "aria-describedby": ariaDescribedBy,
-    "aria-invalid": ariaInvalid,
     "aria-required": ariaRequired,
     suffix,
     step,
     min,
     max,
-    disabledReason,
-    commit: commitScope,
+    disabledReasonDisplay,
   } = props;
+  // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
+  const ariaLabel = ariaLabelAttr ?? ariaLabelProp;
   const generatedId = useId();
   const fieldId = id ?? generatedId;
-  const hintId = useId();
-  const errorId = useId();
-  // The lock: focusable, `readOnly`, nothing changes or commits — see `disabledReason`.
-  const lock = useLockReason(commitScope, disabledReason);
-  const locked = lock.locked;
-  // Locked wins over `disabled`: the point of a reason is a field a keyboard reaches.
-  const off = Boolean(disabled) && !locked;
-  // §4 "No fact only in a tooltip" (docs/text-size-harmonization.md): at Large and on a
-  // touch screen a FieldHint is its words, so it takes the caption's path below — the
-  // other kit fields do the same through `useFieldHint`.
-  const hint = useInlineHint(hintProp);
-  // Text is a caption under the field; a FieldHint rides the label line. See `hint`.
-  const textHint = (typeof hint === "string" && hint !== "") || typeof hint === "number";
-  const hasError = hasMessage(error);
+  // The engine AmountInput shares (DUP-10): the lock (focusable, `readOnly`, nothing
+  // changes or commits — see `disabledReason`), the hint — a FieldHint is its words at
+  // Large and on touch, §4 — the error, the description's order, the typist's draft and
+  // the locale's mark (see the component's note), the calculator and the numpad.
+  // NumberInput never rounds; it shows the value as it is.
+  const numeric = useNumericField(props, { settle: asTyped, display: () => value });
+  const { lock, locked, off, isMobile, asDisplay, showCalc, showNumpad, setFocused, mark, setDraft, derived } = numeric;
+  const invalid = numeric.isInvalid;
   // Passed at all — even as `undefined` — the field keeps its box; see `error`.
   const reserve = "error" in props || "hint" in props;
-  // The standing advice first, the news second: the caller's ids, the caption, the
-  // error — a lock's reason between the last two, as on Select.
-  const describedBy = mergeDescribedBy(ariaDescribedBy, textHint && hintId, locked && lock.reasonId, hasError && errorId);
-  const invalid = Boolean(invalidProp) || hasError || ariaInvalid === true || ariaInvalid === "true";
   const labelled = label !== undefined;
-  // On phones we suppress the OS keyboard (inputMode="none" below) for our own
-  // calculator numpad, so the desktop popover trigger is hidden (feedback #334).
-  const isMobile = usePhoneLayout();
-  const asDisplay = isMobile && variant === "display";
-  // A locked field offers no calculator: its result would be a value.
-  const showCalc = calculator && !disabled && !locked && !isMobile;
-  const [focused, setFocused] = useState(false);
   // The unit and the calculator's measured width, reserved as the field's end padding.
-  const endRef = useRef<HTMLDivElement>(null);
-  const [endWidth, setEndWidth] = useState<number | null>(null);
   const hasEnd = showCalc || suffix !== undefined;
+  const [endRef, endWidth] = useEndWidth(hasEnd);
   // Before the first measurement (and wherever there is no layout), a TEXT unit
   // reserves an estimate from its length — one `ch` a character, in the input's own
   // (larger) font, so it errs wide — plus the span's `pe-2` and the 4px gap, and the
@@ -361,36 +360,20 @@ export function NumberInput(props: NumberInputProps) {
   const suffixChars = typeof suffix === "string" || typeof suffix === "number" ? String(suffix).length : null;
   const estimatedEnd =
     suffixChars !== null ? `calc(${suffixChars}ch + 0.75rem${showCalc ? " + 2.25rem" : ""})` : undefined;
-  useLayoutEffect(() => {
-    const el = endRef.current;
-    if (!hasEnd || !el || typeof ResizeObserver === "undefined") return;
-    // The first callback fires on `observe`; no layout (jsdom) keeps the class fallback.
-    const observer = new ResizeObserver(() => {
-      const width = el.getBoundingClientRect().width;
-      setEndWidth(width > 0 ? Math.ceil(width) : null);
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasEnd]);
   // On mobile, focusing opens the numpad bottom sheet instead of the native
-  // keyboard (#334); the ref lets its "Done" blur → commit + close.
-  const showNumpad = isMobile && !disabled && !locked && focused;
+  // keyboard (#334); the ref lets its "Done" blur → commit + close. The caller's `ref`
+  // gets the same element.
   const inputRef = useRef<HTMLInputElement>(null);
+  const setInput = useMemo(() => mergeRefs(inputRef, ref), [ref]);
 
-  // The mark is the locale's; see the component's note. `derived` is the value in that
-  // mark — one character for one, no grouping — and `draft` the typist's own text,
-  // shown only while it still says what the value says (see `showsTyped`).
-  const mark = decimalMark(useKitLocale(localeProp));
-  const [draft, setDraft] = useState<string | null>(null);
-  const derived = localizeMark(value, mark);
-  const display = draft !== null && showsTyped(draft, mark, value) ? draft : derived;
+  // `derived` is the value in the locale's mark — one character for one, no grouping —
+  // and the draft the typist's own text, shown only while it still says what the value
+  // says (see `showsTyped`).
+  const display = numeric.typedFor(value) ?? derived;
 
   // A keystroke, a paste or a numpad key: the typist's text is kept, the value is what
   // a number reads it as.
-  const typed = (raw: string) => {
-    setDraft(raw);
-    onChange(readTyped(raw, mark));
-  };
+  const typed = (raw: string) => onChange(numeric.read(raw));
   // A RESULT — the calculator's, the numpad's "=" — is dot-decimal already. It does not
   // go through `typed`: "1.234" out of `100/81.03…` is never a thousand.
   const result = (next: string) => {
@@ -416,7 +399,7 @@ export function NumberInput(props: NumberInputProps) {
 
   const commit = () => {
     setDraft(null);
-    const next = commitExpression(value);
+    const next = numeric.settle(commitExpression(value));
     if (next !== value) onChange(next);
     onCommit?.(next);
   };
@@ -448,7 +431,7 @@ export function NumberInput(props: NumberInputProps) {
     stepBy(count);
   };
 
-  // While locked the field sits in the reason's Tooltip, which becomes its outermost
+  // While locked the field sits in the reason's frame (line or Tooltip), its outermost
   // box — so `className` (a width, a flex or grid cell) moves onto that, and the form
   // keeps its layout, as on Select.
   const field = (
@@ -457,10 +440,10 @@ export function NumberInput(props: NumberInputProps) {
       htmlFor={fieldId}
       label={label}
       srOnlyLabel={asDisplay}
-      hint={textHint ? undefined : hint}
+      hint={numeric.hint.labelHint}
     >
       <input
-        ref={inputRef}
+        ref={setInput}
         id={fieldId}
         aria-label={ariaLabel}
         type="text"
@@ -491,7 +474,7 @@ export function NumberInput(props: NumberInputProps) {
         }}
         onKeyDown={onKeyDown}
         aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
+        aria-describedby={numeric.describedBy}
         aria-required={ariaRequired}
         // The end padding sits last so it always wins over an inputClassName that
         // sets its own px. Both trailing controls can be on at once, so the room
@@ -521,7 +504,7 @@ export function NumberInput(props: NumberInputProps) {
               : undefined
         }
       />
-      {(showCalc || suffix !== undefined) && (
+      {hasEnd && (
         // One flex track for both, so the unit and the calculator sit side by side
         // instead of stacking on the same corner — AmountInput's arrangement, which
         // has carried a chip and a calculator together since #430.
@@ -533,7 +516,7 @@ export function NumberInput(props: NumberInputProps) {
               value={derived}
               onChange={result}
               className="self-stretch px-2.5"
-              ariaLabel={labels?.calculatorTrigger}
+              aria-label={labels?.calculatorTrigger}
               labels={labels?.calculator}
             />
           )}
@@ -542,7 +525,7 @@ export function NumberInput(props: NumberInputProps) {
               aria-hidden
               // pe-2, not the input's px-3: the unit is chrome at the box's edge, and
               // with pe-3 plus the 4px gap it took ~26px of a narrow table cell.
-              className="pointer-events-none pe-2 text-xs font-medium text-[var(--text-muted)]"
+              className="pointer-events-none pe-2 text-xs font-medium text-muted"
             >
               {suffix}
             </span>
@@ -565,29 +548,21 @@ export function NumberInput(props: NumberInputProps) {
     </FloatingField>
   );
   const box = locked ? (
-    <LockedReason lock={lock} className={cn("block w-full", className)}>
+    <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block w-full", className)}>
       {field}
     </LockedReason>
   ) : (
     field
   );
-  if (!textHint && !hasError && !reserve) return box;
+  if (numeric.hint.captionText === undefined && numeric.errorEl === null && !reserve) return box;
   // Outside the field's own `relative` box, as Select's caption is: the calculator
   // and the unit are `inset-y-0` in it and would stretch down over a second line.
   // `className` stays on the field, so adding a caption cannot change what it styles.
   return (
     <div>
       {box}
-      {textHint && (
-        <p id={hintId} className="mt-1 text-caption leading-tight text-[var(--text-muted)]">
-          {hint}
-        </p>
-      )}
-      {hasError && (
-        <p id={errorId} className={FIELD_ERROR_CLASS}>
-          {error}
-        </p>
-      )}
+      <FieldCaption parts={numeric.hint} />
+      {numeric.errorEl}
     </div>
   );
 }

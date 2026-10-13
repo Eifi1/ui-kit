@@ -469,6 +469,26 @@ describe("TranslationExportButton", () => {
     render(<TranslationExportButton rows={ROWS} onExport={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Export corrections (0)" })).toBeDisabled();
   });
+
+  it("without onExport, saves the file through the kit's saveBlob (round 0.34 C6)", () => {
+    const rows = translationRows({
+      locale: "fr",
+      strings: { "common.save": "Enregistrer" },
+      reference: { "common.save": "Save" },
+      reviews: [review({ verdict: "NEEDS_CHANGE", suggestion: "Sauvegarder" })],
+    });
+    URL.createObjectURL = vi.fn(() => "blob:corrections");
+    URL.revokeObjectURL = vi.fn();
+    const saved: { href: string; download: string; inBody: boolean }[] = [];
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      saved.push({ href: this.getAttribute("href") ?? "", download: this.download, inBody: document.body.contains(this) });
+    });
+    render(<TranslationExportButton rows={rows} fileName="fr-corrections.json" />);
+    fireEvent.click(screen.getByRole("button", { name: "Export corrections (1)" }));
+    // Attached when clicked, as every kit download is now; this one used to be detached.
+    expect(saved).toEqual([{ href: "blob:corrections", download: "fr-corrections.json", inBody: true }]);
+    click.mockRestore();
+  });
 });
 
 describe("on a phone (390px: classes only, jsdom has no layout)", () => {

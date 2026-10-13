@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { CheckCircle2, MailWarning, TimerOff, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { AlertBanner } from "../components/alert-banner";
 import { LoadingState } from "../components/loading-state";
-import { Button, EmptyState } from "../components/ui";
+import { Button } from "../components/button";
+import { EmptyState } from "../components/empty-state";
 import { OUTCOME_CLASS, STATUS_HEADING_CLASS, isThenable, useOncePerKey } from "./status-parts";
 import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import type { AuthHeadingLevel } from "./status-parts";
+import { DEFAULT_VERIFY_EMAIL_LABELS } from "./verify-email-labels";
 
 /* ── Labels ──────────────────────────────────────────────────────────────── */
 
@@ -51,25 +53,8 @@ export interface VerifyEmailLabels {
   dismiss: string;
 }
 
-export const DEFAULT_VERIFY_EMAIL_LABELS: VerifyEmailLabels = {
-  title: "Confirm your email address",
-  verifying: "Confirming…",
-  verified: "Your email address is confirmed.",
-  continue: "Continue",
-  invalid: "This confirmation link is not valid",
-  expired: "This confirmation link has expired",
-  noToken: "This link is missing its confirmation token.",
-  invalidHint: "The link may have expired or already been used.",
-  requestInApp: "You can request a new one from inside the app.",
-  requestHere: "You can request a new one here.",
-  resend: "Send again",
-  resendIn: (seconds) => `Send again in ${seconds} s`,
-  resent: "Confirmation email sent",
-  resendError: "Could not send the confirmation email",
-  rateLimited: englishRateLimited,
-  banner: "Please confirm your email address.",
-  dismiss: "Not now",
-};
+// Defined in ./verify-email-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_VERIFY_EMAIL_LABELS };
 
 /** A minute: long enough that an impatient second click does not mail twice, short
  *  enough that a mail lost to a spam filter can be re-sent without leaving the page. The
@@ -89,7 +74,7 @@ type ResendPhase = "idle" | "sending" | "sent" | "failed";
  */
 function useResend(onResend: (() => Promise<unknown> | void) | undefined, cooldown: number) {
   const [phase, setPhase] = useState<ResendPhase>("idle");
-  // The refusal itself, for `describeError` (0.29.1): the server's own sentence — keksdose's
+  // The refusal itself, for `describeError` (0.30.0): the server's own sentence — keksdose's
   // per-address throttle, "try again in N minutes" — beats a fixed "could not send".
   const [error, setError] = useState<unknown>(undefined);
   const [remaining, setRemaining] = useState(0);
@@ -176,7 +161,7 @@ function ResendStatus({
   return (
     <span
       role="status"
-      className={cn(phase === "failed" ? "text-[var(--danger)]" : "text-[var(--success)]", className)}
+      className={cn(phase === "failed" ? "text-danger" : "text-success", className)}
     >
       {phase === "sent" ? labels.resent : failed}
     </span>
@@ -193,7 +178,7 @@ function defaultVerifyFailure(error: unknown): VerifyEmailFailure {
   return authErrorCode(error) === "token_expired" ? "expired" : "invalid";
 }
 
-export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "title"> {
+export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
   /** The link's token — the app's `?token=`. Empty: the link was cut short, and the
    *  page says so without asking anyone. */
   token: string;
@@ -207,7 +192,7 @@ export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithoutRef<"d
   /** Which dead end a rejection is. Default: `invalid` for everything — §5.2's servers
    *  answer one `token_invalid`; an app whose server tells expiry apart maps it here. */
   classifyError?: (error: unknown) => VerifyEmailFailure;
-  /** 0.29.1: the words for a refused resend — the server's own sentence (a throttle's
+  /** 0.30.0: the words for a refused resend — the server's own sentence (a throttle's
    *  "try again in N minutes"), else the kit's `resendError`. */
   describeError?: (error: unknown) => string | undefined;
   /** Someone is signed in on this device: "Continue" goes into the app, and a dead link
@@ -228,7 +213,7 @@ export interface VerifyEmailStatusProps extends Omit<ComponentPropsWithoutRef<"d
   title?: ReactNode;
   /** The heading's level. Default `h2`, under the page's `h1`. */
   headingAs?: AuthHeadingLevel;
-  labels?: Partial<VerifyEmailLabels>;
+  labels?: LabelOverride<VerifyEmailLabels>;
 }
 
 type VerifyOutcome = "verified" | VerifyEmailFailure;
@@ -272,7 +257,7 @@ export function VerifyEmailStatus({
   const resend = useResend(onResend, cooldown);
 
   useOncePerKey(token === "" ? null : token, onVerify, (key, result) => {
-    // Without a classifier, the coded refusal decides (0.29.1): `token_expired` is
+    // Without a classifier, the coded refusal decides (0.30.0): `token_expired` is
     // "expired", anything else "invalid".
     const next: VerifyOutcome = result.ok
       ? "verified"
@@ -358,7 +343,7 @@ export interface EmailVerificationBannerProps {
   /** Send a new confirmation mail (`POST /auth/verify-email/resend`). Resolve when it
    *  went out; reject and the banner says it could not. */
   onResend: () => Promise<unknown> | void;
-  /** 0.29.1: the words for a refused resend — the server's own sentence, else the kit's. */
+  /** 0.30.0: the words for a refused resend — the server's own sentence, else the kit's. */
   describeError?: (error: unknown) => string | undefined;
   /** Seconds "Send again" waits after a mail went out. Default 60; `0` never waits. */
   cooldown?: number;
@@ -372,7 +357,7 @@ export interface EmailVerificationBannerProps {
    *  budget with you directly." */
   children?: ReactNode;
   className?: string;
-  labels?: Partial<VerifyEmailLabels>;
+  labels?: LabelOverride<VerifyEmailLabels>;
 }
 
 /**

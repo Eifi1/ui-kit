@@ -8,12 +8,12 @@
 // ramp (`paletteFor`), so it re-skins with the palette like every other chart, and the
 // kit's own legends (`ToggleLegend`, `StaticLegend`).
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ComponentProps, ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentProps, ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 import { Pie, PieChart as RechartsPieChart, Sector } from "recharts";
 import type { PieLabelRenderProps, PieSectorShapeProps } from "recharts";
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { paletteFor } from "../theme/chart-palette";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
 import { DEFAULT_PIE_CHART_LABELS, type PieChartLabels } from "./pie-chart-labels";
@@ -44,7 +44,7 @@ export interface PieChartSlice {
  * Everything a `<div>` takes reaches the chart's root, so a test id or a `data-tour`
  * anchor can find it. `children` is the chart's own.
  */
-export interface PieChartProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface PieChartProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   data: readonly PieChartSlice[];
   /** `"donut"` (default) leaves a hole with the total in it; `"pie"` is the full disc. */
   variant?: "donut" | "pie";
@@ -99,7 +99,7 @@ export interface PieChartProps extends Omit<ComponentPropsWithoutRef<"div">, "ch
   empty?: ReactNode;
   /** BCP 47 tag for the numbers and percentages. Default: the provider's. */
   locale?: string;
-  labels?: Partial<PieChartLabels>;
+  labels?: LabelOverride<PieChartLabels>;
 }
 
 /** A slice as drawn: only the ones with a positive value, in `data` order. */
@@ -305,7 +305,7 @@ export function PieChart({
           onBlur={() => setFocused(undefined)}
           // CSS beats a presentation attribute, so this recolours the sector's own
           // stroke for as long as it has keyboard focus.
-          className="outline-none [&:focus-visible>path]:stroke-[var(--text-primary)]"
+          className="outline-none [&:focus-visible>path]:stroke-primary"
         >
           <Sector key={key ?? undefined} {...sector} />
         </g>
@@ -404,7 +404,7 @@ export function PieChart({
 
   const emptyBox = (
     <div
-      className={cn("flex items-center justify-center text-sm text-[var(--text-muted)]", box.className)}
+      className={cn("flex items-center justify-center text-sm text-muted", box.className)}
       style={box.style}
     >
       {empty ?? labels.empty}
@@ -456,14 +456,16 @@ export function PieChart({
               aria-hidden={focusedSlice ? true : undefined}
               className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center"
             >
-              <span className="max-w-[40%] truncate text-xs text-[var(--text-muted)]">
+              {/* The label wraps from Large up, inside the hole's 40 % (text size
+                  §10.17, round 0.34 T1: the sweep read "Spent in Sept…"). */}
+              <span className="max-w-[40%] truncate-until-large text-xs text-muted">
                 {focusedSlice ? focusedSlice.slice.label : (centerLabel ?? labels.total)}
               </span>
-              <span className="max-w-[40%] truncate text-lg font-semibold tabular-nums text-[var(--text-primary)]">
+              <span className="max-w-[40%] truncate text-lg font-semibold tabular-nums text-primary">
                 {focusedSlice ? formatValue(focusedSlice.value) : (centerValue ?? formatValue(total))}
               </span>
               {focusedSlice && (
-                <span className="text-xs tabular-nums text-[var(--text-muted)]">
+                <span className="text-xs tabular-nums text-muted">
                   {formatShare(focusedSlice.share)}
                 </span>
               )}

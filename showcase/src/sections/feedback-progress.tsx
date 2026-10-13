@@ -72,7 +72,7 @@ function ProgressDeterminate() {
         <Button variant="brand" onClick={run} disabled={running}>
           {running ? "Uploading…" : "Simulate an upload"}
         </Button>
-        <span className="font-mono text-xs text-[var(--text-muted)]">value={value}</span>
+        <span className="font-mono text-xs text-muted">value={value}</span>
       </Row>
       <div className="mt-3">
         <Note>
@@ -102,13 +102,13 @@ function ProgressIndeterminate() {
           <div className="mx-auto grid max-w-md gap-5">
             <ProgressBar label="Waiting for the bank" />
             <div className="space-y-1.5">
-              <p aria-hidden className="font-mono text-xs text-[var(--text-muted)]">
+              <p aria-hidden className="font-mono text-xs text-muted">
                 aria-label=&quot;Re-indexing&quot; · tone=&quot;info&quot; · size=&quot;sm&quot;
               </p>
               <ProgressBar aria-label="Re-indexing" tone="info" size="sm" />
             </div>
             <div className="space-y-1.5">
-              <p aria-hidden className="font-mono text-xs text-[var(--text-muted)]">
+              <p aria-hidden className="font-mono text-xs text-muted">
                 no label, no aria-label
               </p>
               <ProgressBar />
@@ -159,7 +159,7 @@ function ProgressMeter() {
         <Button variant="secondary" onClick={() => setSpent((s) => s + 80)}>
           Spend more
         </Button>
-        <span className="font-mono text-xs text-[var(--text-muted)]">
+        <span className="font-mono text-xs text-muted">
           {spent} / {budget} → tone=&quot;{tone}&quot;
         </span>
       </Row>
@@ -190,7 +190,7 @@ function ProgressTonesSizes() {
       <div className="mt-4 space-y-3">
         {SIZES.map((size) => (
           <div key={size} className="flex items-center gap-3">
-            <code className="w-10 shrink-0 font-mono text-caption text-[var(--text-muted)]">{size}</code>
+            <code className="w-10 shrink-0 font-mono text-caption text-muted">{size}</code>
             <ProgressBar value={60} size={size} aria-label={`size ${size}`} className="flex-1" />
           </div>
         ))}
@@ -204,7 +204,7 @@ function ProgressTonesSizes() {
         ].map((r) => (
           <div key={r.name} className="space-y-1.5">
             <div className="flex items-baseline justify-between text-sm">
-              <span className="text-[var(--text-primary)]">{r.name}</span>
+              <span className="text-primary">{r.name}</span>
               <span
                 className="tabular-nums"
                 style={{ color: r.tone === "income" ? "var(--money-income)" : "var(--money-expense)" }}
@@ -242,19 +242,19 @@ function SkeletonDemo() {
       <div className="grid gap-4 sm:grid-cols-3">
         {SHAPES.map((shape) => (
           <div key={shape} className="space-y-2">
-            <p className="font-mono text-caption text-[var(--text-muted)]">shape=&quot;{shape}&quot;</p>
+            <p className="font-mono text-caption text-muted">shape=&quot;{shape}&quot;</p>
             <Skeleton shape={shape} />
           </div>
         ))}
       </div>
-      <div className="mt-5 rounded-md border border-[var(--border)] p-3" aria-busy={!loaded}>
+      <div className="mt-5 rounded-md border border-subtle p-3" aria-busy={!loaded}>
         {loaded ? (
           <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--bg-inverse)] text-sm font-semibold text-[var(--text-inverse)]">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-inverse text-sm font-semibold text-inverse">
               AL
             </span>
-            <div className="text-sm text-[var(--text-secondary)]">
-              <p className="font-medium text-[var(--text-primary)]">Ada Lovelace</p>
+            <div className="text-sm text-secondary">
+              <p className="font-medium text-primary">Ada Lovelace</p>
               <p>Notes on the Analytical Engine, with a table of the Bernoulli numbers and the
                 first published algorithm meant for a machine.</p>
             </div>
@@ -306,7 +306,7 @@ function EmptyStateDemo() {
             />
           ) : (
             <div className="space-y-2">
-              <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
+              <ul className="space-y-1 text-sm text-secondary">
                 {rows.map((row) => (
                   <li key={row} className="font-mono">
                     {row}
@@ -371,7 +371,7 @@ function EmptyStateRich() {
             The page hit an error it could not recover from.{" "}
             <a
               href="#/feedback"
-              className="underline hover:text-[var(--text-primary)]"
+              className="underline hover:text-primary"
               onClick={(e) => {
                 e.preventDefault();
                 setResets((n) => n + 1);
@@ -484,14 +484,14 @@ function AlertInlineDemo() {
       label="AlertBanner — inline"
       hint='variant="inline": colour, glyph and role only — for a toolbar row; a live region by default'
     >
-      <div className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--bg-surface-2)] px-3 py-2">
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+      <div className="flex flex-wrap items-center gap-3 rounded-md border border-subtle bg-surface-2 px-3 py-2">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           Radius
           <input
             type="number"
             value={radius}
             onChange={(e) => setRadius(Number(e.target.value))}
-            className="w-16 rounded border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-1 text-[var(--text-primary)]"
+            className="w-16 rounded border border-subtle bg-surface px-2 py-1 text-primary"
           />
         </label>
         <Button variant="secondary" onClick={() => setSolving((v) => !v)}>
@@ -537,13 +537,13 @@ function ToneFrames() {
     >
       <div className="space-y-3">
         {BANNER_TONES.map((tone) => (
-          <div key={tone} className={`${alertFrameClass(tone)} text-sm text-[var(--text-primary)]`}>
+          <div key={tone} className={`${alertFrameClass(tone)} text-sm text-primary`}>
             <code className="font-mono">alertFrameClass(&quot;{tone}&quot;)</code> — radius and
             padding included.
           </div>
         ))}
         <div
-          className={`${toneFrameClass("warning")} rounded-xl px-5 py-4 text-sm text-[var(--text-primary)]`}
+          className={`${toneFrameClass("warning")} rounded-xl px-5 py-4 text-sm text-primary`}
         >
           <code className="font-mono">toneFrameClass(&quot;warning&quot;)</code> on a box that
           brought its own <code className="font-mono">rounded-xl px-5 py-4</code>.
