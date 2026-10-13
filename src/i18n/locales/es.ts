@@ -259,6 +259,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       noResults: "Sin resultados",
       fieldValue: (field, value) => `${field}: ${value}`,
       opensInNewTab: "se abre en una pestaña nueva",
+      aboutField: (field) => `Acerca de «${field}»`,
+      help: "Ayuda",
     },
     dataTable: {
       columns: "Columnas",
@@ -1047,6 +1049,96 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       rateLimited,
       failed: "No ha funcionado. Inténtelo de nuevo.",
     },
+    // 0.36.0 — docs/notifications-harmonization.md §4.2: the notification cards.
+    notifications: {
+      typesTitle: "Avisarme de",
+      typesDescription: "Elija de qué se entera y cómo.",
+      byEmail: "Por correo electrónico",
+      emailUnverified: "Confirme su dirección para recibirlos.",
+      digestCadence: "Frecuencia",
+      digestWeekly: "Semanal",
+      digestMonthly: "Mensual",
+      typesLoading: "Cargando los ajustes de notificaciones…",
+      typesEmpty: "No hay notificaciones para esta cuenta.",
+      quietTitle: "Horas de silencio",
+      quietDescription: (inbox) =>
+        inbox
+          ? "Sin notificaciones push durante este intervalo. Aun así, llegan a su bandeja de entrada."
+          : "Sin notificaciones push durante este intervalo.",
+      quietFrom: "Desde",
+      quietUntil: "Hasta",
+      quietIncomplete:
+        "Indique una hora de inicio y una de fin. Las horas de silencio se aplican cuando ambas están definidas.",
+      timeZone: "Zona horaria",
+      deviceZone: (zone) => `Este dispositivo está en ${zone}.`,
+      useDeviceZone: "Usarla",
+      regions: {
+        Africa: "África",
+        America: "América",
+        Antarctica: "Antártida",
+        Arctic: "Ártico",
+        Asia: "Asia",
+        Atlantic: "Atlántico",
+        Australia: "Australia",
+        Europe: "Europa",
+        Indian: "Océano Índico",
+        Pacific: "Pacífico",
+      },
+      pushTitle: "Notificaciones push",
+      pushDescription: "Notificaciones en este dispositivo, también con la app cerrada.",
+      unsupported: "Este navegador no admite notificaciones push.",
+      iosInstall: (app) =>
+        `En iPhone o iPad, añada primero ${app} a la pantalla de inicio: iOS solo entrega notificaciones a la app instalada.`,
+      notConfigured: "Las notificaciones push no están configuradas en este servidor.",
+      blocked: "Las notificaciones están bloqueadas en los ajustes de este navegador.",
+      on: "Las notificaciones están activadas en este dispositivo.",
+      off: "Las notificaciones están desactivadas en este dispositivo.",
+      otherAccount:
+        "Este navegador recibe notificaciones de otra cuenta. Actívelas aquí para recibirlas en la cuenta con la que ha iniciado sesión.",
+      enable: "Activar notificaciones",
+      disable: "Desactivar",
+      sendTest: "Enviar una prueba",
+      enableFailed: "No se pudieron activar las notificaciones.",
+      noServiceWorker:
+        "No se pudo contactar con el service worker de la app. Recargue la página e inténtelo de nuevo.",
+      pushTimeout: "El servicio push del navegador no respondió. Compruebe su conexión e inténtelo de nuevo.",
+      testSent: (count) => `Prueba enviada a ${n(count)} ${plural(count, "dispositivo", "dispositivos")}`,
+      testNone: "Ningún dispositivo aceptó la prueba. Active primero las notificaciones en este dispositivo.",
+      testFailed: "No se pudo enviar la notificación de prueba.",
+      explainerTitle: "¿Activar las notificaciones?",
+      explainerBody: (app) =>
+        `${app} solo envía notificaciones de lo que usted elija, y puede desactivarlas en cualquier momento.`,
+      explainerHint: "A continuación, su navegador le pedirá permiso.",
+      explainerContinue: "Continuar",
+      devicesTitle: "Dispositivos de notificación",
+      devicesDescription:
+        "Todos los dispositivos que reciben notificaciones push de su cuenta. Quite los que ya no use.",
+      devicesLoading: "Cargando dispositivos…",
+      devicesEmpty: "Aún no hay ningún dispositivo que reciba notificaciones.",
+      unknownDevice: "Dispositivo desconocido",
+      thisDevice: "Este dispositivo",
+      added: (date) => `Añadido el ${date}`,
+      lastDelivery: (date) => `Última entrega el ${date}`,
+      noDelivery: "Aún sin entregas",
+      failures: (count) =>
+        `${n(count)} ${plural(count, "entrega fallida consecutiva", "entregas fallidas consecutivas")}`,
+      remove: "Quitar",
+      // Starts with `remove`, the button's visible text, for voice control.
+      removeItem: (device) => `Quitar ${device}`,
+      removePrompt: "¿Dejar de enviar notificaciones a este dispositivo?",
+      unsubscribeTitle: "Notificaciones por correo electrónico",
+      unsubscribeAbout: (type) => `Recibe correos sobre: ${type}.`,
+      unsubscribeGeneric: "Recibe correos de notificación.",
+      stopThese: "Dejar de recibir estos correos",
+      stopAll: (app) => `Dejar de recibir todos los correos de notificación de ${app}`,
+      stoppedThese: "Hecho. Ya no recibirá estos correos.",
+      stoppedAll: (app) => `Hecho. Ya no recibirá correos de notificación de ${app}.`,
+      accountMail: "Los correos sobre su cuenta seguirán llegando.",
+      turnBackOn: "Puede volver a activarlos en cualquier momento en los ajustes.",
+      openSettings: "Abrir los ajustes",
+      invalidLink: "Este enlace ya no funciona. Puede desactivar los correos en los ajustes.",
+      failed: "No ha funcionado. Inténtelo de nuevo.",
+    },
     sessions: {
       title: "Sesiones",
       description:
@@ -1583,6 +1675,20 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         "El contraste aumentado oscurece los textos tenues y las líneas, y engrosa los marcos de foco. «Sistema» sigue el ajuste de este dispositivo.",
       contrastModes: { system: "Sistema", standard: "Estándar", more: "Aumentado" },
       saveFailed: "No se ha podido guardar en su cuenta. En este dispositivo se aplica igualmente.",
+    },
+    // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
+    // last card of "Apariencia". "Restablecer", as a phone's own settings say it.
+    deviceReset: {
+      title: "Restablecer este dispositivo",
+      description:
+        "Devuelve a sus valores predeterminados el aspecto de este dispositivo y la vista en que quedaron sus tablas y paneles. Su cuenta, sus datos y su inicio de sesión no se tocan.",
+      action: "Restablecer los ajustes de este dispositivo",
+      confirmTitle: "¿Restablecer los ajustes de este dispositivo?",
+      confirmBody:
+        "El tema, los colores, el tamaño del texto, el contraste y el idioma vuelven aquí a sus valores predeterminados, y las tablas y los paneles se abren como la primera vez. Si su cuenta tiene un idioma, un tamaño de texto o un contraste, este dispositivo vuelve a seguirlo. Su cuenta y sus otros dispositivos quedan como están.",
+      confirmAction: "Restablecer",
+      done: "Los ajustes de este dispositivo han vuelto a sus valores predeterminados.",
+      keywords: "restablecer predeterminado valores dispositivo restaurar apariencia tablas diseño",
     },
     rowActions: {
       actions: "Acciones",

@@ -17,7 +17,7 @@ not blank, comments or docstrings.
 
 ## Status
 
-**Settled 2026-10-13, building in server-kit 0.9.** The three apps reviewed the draft on
+**Settled 2026-10-13, built for server-kit 0.9.0.** The three apps reviewed the draft on
 2026-10-13 and Marcel decided what they left open ("As recommended", §2). The reviews'
 corrections are folded into §1–§4, and §5 says where each went. §4 is the build list.
 Nothing is built yet.
@@ -860,7 +860,11 @@ wiring, the three conformance checks (2.14) and its own variations (1.1).
    ids, `Body_upload_attachment_api_v1_feedback_attachments_post` and `status_filter`
    (2.9), and the crash path's layer-1 exemption (`infrastructure/demo_guard.py:41`, which
    `backend/tests/api/test_feedback_crash.py:164-174` relies on). Regenerating
-   `frontend/src/shared/api/openapi-schema.d.ts` gives no diff.
+   `frontend/src/shared/api/openapi-schema.d.ts` changes JSDoc comments only (the kit's
+   endpoints carry docstrings, which become OpenAPI descriptions); the types, operation
+   ids and components stay. A route walk iterates the router itself: FastAPI 0.142
+   includes routers lazily, so `app.routes` no longer lists their APIRoutes (KS's
+   `route_table.py` already does this).
 8. What a user may notice: the identity stamp (2.13); `Content-Disposition` on every
    download, from the re-read type. A demo's refusal code changes only behind layer 1,
    and `nosniff` changes nothing in prod (1.3).

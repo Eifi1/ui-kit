@@ -454,6 +454,12 @@ export const it: Dictionary = {
       short: "Shell",
       blurb: "La cornice dell’app che stai guardando, smontata pezzo per pezzo.",
     },
+    notifications: {
+      title: "Notifiche",
+      short: "Notifiche",
+      blurb:
+        "Le impostazioni di notifica che ogni app condivide: i tipi che il server restituisce, con un interruttore nell’app e uno per e-mail, le ore di silenzio e il fuso orario, il push su questo dispositivo e l’elenco dei dispositivi, e la pagina che apre il link di disiscrizione di un’e-mail.",
+    },
     settings: {
       title: "Impostazioni",
       short: "Impostazioni",
@@ -541,11 +547,17 @@ export const it: Dictionary = {
       blurb:
         "Le email dell’account: i testi per lingua, un unico layout che fa l’escape di ogni valore, due trasporti che non sollevano mai eccezioni — e le email di esempio della release, renderizzate.",
     },
+    "server-notifications": {
+      title: "Notifiche",
+      short: "Notifiche",
+      blurb:
+        "I tipi di notifica dell’app e gli interruttori di ogni account, il PATCH delle impostazioni, chi riceve una voce nella posta in arrivo, un push o un’e-mail, le ore di silenzio e il riepilogo, il payload del push e la risposta di un servizio push, e il token firmato per la disiscrizione con un clic.",
+    },
     "server-feedback": {
       title: "Feedback e upload",
       short: "Feedback",
       blurb:
-        "Il contratto del feedback come funzioni pure — schemi, stati, le regole del PATCH, rielaborazione, segnalazione degli arresti anomali, cancellazione — e allegati giudicati dai loro byte.",
+        "Il contratto del feedback come funzioni pure — schemi, stati, le regole del PATCH, rielaborazione, segnalazione degli arresti anomali, cancellazione — le sue route come un’unica factory di router, e allegati giudicati dai loro byte.",
     },
     "server-limits": {
       title: "Limiti, errori e CORS",
@@ -1120,6 +1132,22 @@ export const it: Dictionary = {
       "comprimere la barra laterale",
       "menu account con avatar",
     ],
+    notifications: [
+      "impostazioni delle notifiche",
+      "attivare o disattivare le notifiche",
+      "scegliere quali notifiche ricevere",
+      "avvisare via e-mail",
+      "ore di silenzio",
+      "non disturbare di notte",
+      "scegliere un fuso orario",
+      "notifiche push su questo dispositivo",
+      "inviare una notifica di prova",
+      "elencare i dispositivi che ricevono notifiche",
+      "rimuovere un dispositivo",
+      "annullare l’iscrizione alle e-mail",
+      "link di disiscrizione con un clic",
+      "riepilogo settimanale o mensile",
+    ],
     settings: [
       "impostazioni dell’account",
       "cambiare la password",
@@ -1244,6 +1272,17 @@ export const it: Dictionary = {
       "registrare le email in sviluppo",
       "indirizzo di risposta del supporto",
     ],
+    "server-notifications": [
+      "registrare i tipi di notifica dell’app",
+      "endpoint delle impostazioni di notifica",
+      "chi riceve un push o un’e-mail",
+      "controllare le ore di silenzio sul server",
+      "quando è dovuto il riepilogo",
+      "creare il payload di un web push",
+      "rimuovere un’iscrizione push scaduta",
+      "firmare un link di disiscrizione con un clic",
+      "struttura della posta in arrivo delle notifiche",
+    ],
     "server-feedback": [
       "validare una segnalazione",
       "regole di stato del feedback",
@@ -1251,6 +1290,7 @@ export const it: Dictionary = {
       "controllare il tipo di un file caricato",
       "limitare la dimensione degli allegati",
       "cancellare il feedback di un utente eliminato",
+      "montare le route del feedback",
     ],
     "server-limits": [
       "limitare la frequenza di una route",

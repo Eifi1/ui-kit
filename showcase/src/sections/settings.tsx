@@ -2,21 +2,29 @@
    person's JOB TITLE ("Treasurer"), not an ARIA role. jsx-a11y matches on the attribute
    name for a component it cannot resolve to a DOM element, and a directive cannot be
    placed between JSX attributes, so this is file-scoped. No DOM `role` is set here. */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
+  DeviceResetSetting,
+  deviceSettings,
   LanguageSetting,
   PasswordSetting,
   ProfileSetting,
+  readStored,
+  registerDeviceSetting,
+  SettingsHeadingLevel,
+  Switch,
   ThemeSetting,
   TwoFactorSetting,
+  writeStored,
 } from "@eifi1/ui-kit";
 import type {
+  DeviceSetting,
   PasswordSettingLabels,
   ProfileSettingLabels,
   TwoFactorSettingLabels,
 } from "@eifi1/ui-kit";
-import { Example, Note, Row, beat } from "../lib/section";
+import { Example, Note, OutTable, Row, beat } from "../lib/section";
 import { useTheme } from "../stores";
 
 /**
@@ -529,6 +537,82 @@ function ProfileLoadingRow() {
   );
 }
 
+/** A setting of this demo's own, on the device, as an app's would be: it joins the
+ *  registry while the demo is mounted, with a `reset` that switches it off live. */
+const DEMO_HINTS_KEY = "uikit-showcase-device-reset-hints";
+
+function describeEntry(entry: DeviceSetting): string {
+  const parts: string[] = [entry.kind];
+  if (entry.prefix) parts.push("every key under it");
+  if (entry.storage === "session") parts.push("sessionStorage");
+  parts.push(entry.reset ? "reset live" : "removed");
+  return parts.join(" · ");
+}
+
+/**
+ * Bound to THIS page's registry: the showcase's real theme, palette, text-size and
+ * contrast stores (stores.ts), its AppShell's sidebar, the provider's table prefix, and
+ * the switch below. Pressing Reset resets the showcase itself, as the card would an app.
+ */
+function DeviceResetRow() {
+  const [hints, setHints] = useState(() => readStored(DEMO_HINTS_KEY) === "1");
+  const [entries, setEntries] = useState<readonly DeviceSetting[]>([]);
+  const [lastKeys, setLastKeys] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    writeStored(DEMO_HINTS_KEY, hints ? "1" : "0");
+  }, [hints]);
+  useEffect(
+    () => registerDeviceSetting({ key: DEMO_HINTS_KEY, kind: "view", reset: () => setHints(false) }),
+    [],
+  );
+  // The provider joins a microtask after it mounts; read the list once everything has.
+  useEffect(() => {
+    const id = window.setTimeout(() => setEntries(deviceSettings()), 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  return (
+    <Example
+      label="DeviceResetSetting — this page's own registry"
+      hint="pressing Reset resets the showcase: theme, palette, text size, contrast, sidebar, table views"
+    >
+      <div className="max-w-xl space-y-4">
+        <Switch
+          label="Show the demo's hints"
+          description="A key this demo keeps on the device and registers itself, with a reset that turns it off"
+          checked={hints}
+          onCheckedChange={setHints}
+        />
+        {/* Under this example's own h3, the card titles itself one level down. */}
+        <SettingsHeadingLevel level="h4">
+          <DeviceResetSetting
+            description="Here that is the showcase's own look, its sidebar and its tables; the language menu is not registered and stays."
+            onReset={(keys) => {
+              setLastKeys(keys);
+              setEntries(deviceSettings());
+            }}
+          />
+        </SettingsHeadingLevel>
+        <OutTable rows={entries.map((entry) => [entry.key, describeEntry(entry)])} />
+        {lastKeys && (
+          <p className="text-xs text-secondary">
+            onReset → <code className="font-mono text-brand">{lastKeys.length ? lastKeys.join(", ") : "[]"}</code>
+          </p>
+        )}
+      </div>
+      <Note>
+        Since 0.36 (docs/settings-harmonization.md §11). The appearance group&apos;s last card.
+        The kit&apos;s stores join `registerDeviceSetting` when they are created, `UiKitProvider`
+        and `AppShell` while mounted; an app adds its own keys beside the store that owns each.
+        A confirm, not an undo, and no commit: nothing is written to the account, so a write
+        lock leaves it enabled. The sign-in, the session and anything waiting to be sent never
+        join, so they never go.
+      </Note>
+    </Example>
+  );
+}
+
 export function Settings() {
   return (
     <>
@@ -539,6 +623,7 @@ export function Settings() {
       <ProfileLoadingRow />
       <PasswordRow />
       <TwoFactorRow />
+      <DeviceResetRow />
     </>
   );
 }

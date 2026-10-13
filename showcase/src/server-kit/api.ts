@@ -81,7 +81,8 @@ export const SERVER_KIT_API = data as unknown as ServerKitApi;
 export const PACKAGE = "eifi1_server_kit";
 export const REPOSITORY_URL = "https://github.com/Eifi1/server-kit";
 
-/** `eifi1_server_kit.user_admin` → `user_admin`, the name routes.tsx and the anchors use. */
+/** `eifi1_server_kit.user_admin` → `user_admin`, the name routes.tsx and the anchors use;
+ *  a nested module keeps its dots (`eifi1_server_kit.feedback.router` → `feedback.router`). */
 export function moduleShort(name: string): string {
   return name.startsWith(`${PACKAGE}.`) ? name.slice(PACKAGE.length + 1) : name;
 }
@@ -95,6 +96,13 @@ export function findModule(api: ServerKitApi, short: string): ApiModule | undefi
  * (`#auth.AuthError`): Python's own dotted path minus the package, so a link reads like
  * the import it documents. The module prefix is not decoration — Feedback & uploads
  * documents `ACCEPTED_MEDIA_TYPES` twice, once per module.
+ *
+ * A module can be nested (`#feedback.router`, server-kit 0.9), so a module's anchor has
+ * the shape of a member's. The rule that keeps them apart: a member's name is one
+ * identifier, so `#a.b` is member `b` of module `a` — unless `a.b` is itself a module, and
+ * then `a` has no member `b`: scripts/sync-server-kit.mjs (`anchorClashes`) refuses an
+ * export where both exist, as Python would. `#feedback.router` is the module; `feedback`
+ * has no member `router`.
  */
 export const moduleAnchor = (short: string) => short;
 export const memberAnchor = (short: string, member: string) => `${short}.${member}`;
@@ -271,7 +279,8 @@ export function resolveTarget(
   const path = target.startsWith(`${PACKAGE}.`) ? target.slice(PACKAGE.length + 1) : undefined;
   const tryQualified = (dotted: string): ResolvedTarget | undefined => {
     if (modules.has(dotted)) return { module: dotted };
-    // The longest module name that prefixes the path wins (a module could be nested).
+    // The longest module name that prefixes the path wins: a module can be nested, and
+    // `feedback.router.feedback_router` is a member of `feedback.router`, not of `feedback`.
     const names = [...modules.keys()].sort((a, b) => b.length - a.length);
     for (const short of names) {
       if (!dotted.startsWith(`${short}.`)) continue;

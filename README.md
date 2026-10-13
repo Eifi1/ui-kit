@@ -175,6 +175,16 @@ module runs needs the text size even earlier: see "Before the first paint" under
 [Styling](#styling). Worked example:
 [`showcase/src/main.tsx`](https://github.com/Eifi1/ui-kit/blob/main/showcase/src/main.tsx).
 
+**Reset this device's settings** (0.36, `docs/settings-harmonization.md` §11): the four
+stores, `AppShell`'s sidebar key and `UiKitProvider`'s table prefix join a registry by
+themselves; `DeviceResetSetting` (the last card of the appearance group) clears them all and
+puts each back live. An app adds its own device keys, each with a reset that goes through its
+own store:
+
+```ts
+registerDeviceSetting({ key: "myapp-lang", kind: "appearance", reset: () => setDeviceLanguage(null) });
+```
+
 ### 4. Labels — one provider, the shipped catalogues
 
 Load the kit's words with `await loadUiKitLabels(code)` before the first render and hand
@@ -188,9 +198,9 @@ re-skins the kit by changing values rather than by forking components. The famil
 
 | Family | Tokens | Set by |
 |---|---|---|
-| **Palette** | `--bg-page` `--bg-surface` `--bg-surface-2` `--border` `--text-primary` `--text-secondary` `--text-muted` `--brand` `--brand-hover` `--brand-contrast` `--money-income` `--money-expense` `--money-net` `--money-neutral` `--chart-1…9` | `applyTokenSet()`, written inline on `<html>` from the active `PalettePreset` (More contrast steps four of them) |
+| **Palette** | `--bg-page` `--bg-surface` `--bg-surface-2` `--border` `--text-primary` `--text-secondary` `--text-muted` `--brand` `--brand-hover` `--brand-contrast` `--money-income` `--money-expense` `--money-net` `--money-neutral` `--chart-1…9` | `applyTokenSet()`, written inline on `<html>` from the active `PalettePreset` (More contrast steps four of them; in light also the well and the four money colours) |
 | **Derived** | `--text-placeholder` `--bg-hover` `--bg-active` `--bg-inverse` `--text-inverse` `--border-strong` `--brand-bg` `--brand-bg-hover` `--brand-muted`, and `--neutral` (`--text-muted` as a fill) | `color-mix()` or `var()` in `tokens.css`, from the layer above — so they follow the preset with no preset having to list them |
-| **Semantic** | `--danger*` `--warning*` `--info*` `--success*` — each the colour, `-contrast`, `-border` and `-bg`; danger and warning also `-border-strong`, danger `-hover` — and `--status-synced/-pending/-edited/-error` | literals in `tokens.css`, per theme |
+| **Semantic** | `--danger*` `--warning*` `--info*` `--success*` — each the colour, `-contrast`, `-border` and `-bg`; danger and warning also `-border-strong`, danger `-hover` — and `--status-synced/-pending/-edited/-error` | literals in `tokens.css`, per theme; in light under More contrast the four colours and `--status-edited` deepen for the darker well |
 | **Categorical hues** | `--hue-blue` `--hue-indigo` `--hue-purple` `--hue-teal` `--hue-orange`, each with `-contrast`, `-border` and `-bg` | literals in `tokens.css`, per theme — values that mean only "a different value" (a status enum), at the semantic family's weight |
 | **Fill foregrounds** | `<fill>-contrast`: the text ON a fill — `--brand-contrast`, `--money-income-contrast` … `--money-neutral-contrast`, `--neutral-contrast`, and each tone's and hue's `-contrast` | with their family; money is white in light and the page in dark |
 | **Media** | `--media-ink` `--media-scrim` `--media-scrim-hover` | literals, the SAME in both themes: controls drawn on a photo or a camera picture, whose background is the picture, not the page |
@@ -372,7 +382,11 @@ ONE scale on `<html>`: `data-text-size="normal" | "large" | "xlarge"` is 100 / 1
 of the browser's own font size, so Normal keeps whatever the reader set in the browser,
 and everything sized in rem (Tailwind's spacing and type) grows with it.
 `data-contrast="more"` is More contrast, from the setting or from `prefers-contrast: more`
-on "System"; it steps the colour tokens in JavaScript and widens `--focus-ring-width`. The
+on "System"; it steps the colour tokens in JavaScript and widens `--focus-ring-width`. In
+light it also darkens the well (`--bg-surface-2`, 10 % ink into the card) and deepens the
+money, status, teal, orange and `--status-edited` colours and `--bg-active` so they keep
+their contrast on it; dark keeps its well. A link button's and TextLink's brand reads
+`--brand-muted` (the brand as text) under it, in both modes. The
 stores in [Wiring](#wiring) put both attributes there; the attribute names are frozen.
 
 - **`large:`** applies at Large AND Extra large, **`xlarge:`** only at Extra large, and
@@ -542,14 +556,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1878 names from 302 modules** — 868 values and 1010 types. _Italic_ is a type-only export.
+**1925 names from 313 modules** — 890 values and 1035 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1878 |
+| `@eifi1/ui-kit` | 1925 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 77 |
 | `@eifi1/ui-kit/data-table` | 51 |
@@ -588,6 +602,7 @@ re-slicing of it, never a second API.
 | `lib/isin` | `formatIsin`, `isinCheckDigit`, `isValidIsin` |
 | `lib/phone` | `formatNationalPhone`, `formatPhone`, `isE164`, `parsePhone`, `PHONE_COUNTRIES`, `PHONE_DIAL_CODES`, _`ParsedPhone`_, _`PhoneCountry`_, _`PhoneCountryCode`_ |
 | `lib/column-mapping` | `assignColumnRole`, `guessMapping`, `missingRoles`, `readMappedTable`, `readTextFile`, `roleOfColumn`, _`ColumnMapperResult`_, _`ColumnMapping`_, _`ColumnRole`_ |
+| `lib/device-settings` | `deviceSettings`, `registerDeviceSetting`, `resetDeviceSettings`, _`DeviceSetting`_, _`DeviceSettingKind`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
 | `lib/chip-edge-snap` | `refreshChipEdges` |
 
@@ -817,6 +832,7 @@ re-slicing of it, never a second API.
 | `settings/settings-heading` | `SettingsHeadingLevel`, `useSettingsHeadingLevel`, _`SettingsHeadingLevelProps`_, _`SettingsHeadingTag`_ |
 | `settings/settings-catalogue` | `settingsHref`, `settingsSearchEntries`, `visibleSettingsEntries`, `visibleSettingsGroups`, _`SettingsEntry`_, _`SettingsGroup`_, _`SettingsSearchEntriesOptions`_ |
 | `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, `useSettingsLabels`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
+| `settings/device-reset-setting` | `DEFAULT_DEVICE_RESET_LABELS`, `DEVICE_RESET_ANCHOR`, `DeviceResetSetting`, _`DeviceResetLabels`_, _`DeviceResetSettingProps`_ |
 | `settings/use-account-language` | `matchOfferedLanguage`, `resolveAccountLanguage`, `useAccountLanguage`, _`AccountLanguage`_, _`AccountLanguageSource`_, _`ResolveAccountLanguageInput`_, _`ResolvedAccountLanguage`_, _`UseAccountLanguageOptions`_ |
 | `settings/use-account-appearance` | `resolveAccountAppearance`, `useAccountAppearance`, _`AccountAppearance`_, _`AccountAppearanceFields`_, _`AccountAppearancePatch`_, _`AppearanceSource`_, _`DeviceAppearance`_, _`ResolvedAccountAppearance`_, _`UseAccountAppearanceOptions`_ |
 
@@ -941,6 +957,20 @@ re-slicing of it, never a second API.
 | `billing/pay-page` | `paddleLocale`, `PAY_PAGE_LANG_PARAM`, `payPageUrl`, _`PaddleEnvironment`_ |
 | `billing/billing-overview` | _`BillingOverview`_, _`PortalRequest`_, _`PortalTarget`_, _`SubscriptionSource`_ |
 | `billing/plan-limit-toast` | `usePlanLimitToast`, _`PlanLimitToastOptions`_ |
+
+### notifications
+
+| Module | Exports |
+|---|---|
+| `notifications/notifications-labels` | `DEFAULT_NOTIFICATIONS_LABELS`, _`NotificationRegionLabels`_, _`NotificationsLabels`_ |
+| `notifications/notification-types` | _`DigestCadence`_, _`NotificationSettingsPatch`_, _`NotificationSwitches`_, _`NotificationTypeEntry`_, _`NotificationTypeGroup`_, _`NotificationTypesValue`_, _`PushDeviceItem`_ |
+| `notifications/notification-types-setting` | `NotificationTypesSetting`, _`NotificationTypesSettingProps`_ |
+| `notifications/quiet-hours-setting` | `QuietHoursSetting`, _`QuietHoursSettingProps`_ |
+| `notifications/time-zone-select` | `deviceTimeZone`, `timeZoneOptions`, `TimeZoneSelect`, _`TimeZoneSelectProps`_ |
+| `notifications/use-push-device` | `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
+| `notifications/push-device-setting` | `PushDeviceSetting`, _`PushDeviceAction`_, _`PushDeviceSettingProps`_ |
+| `notifications/push-devices-setting` | `describeUserAgent`, `PushDevicesSetting`, _`PushDevicesSettingProps`_ |
+| `notifications/unsubscribe-panel` | `UnsubscribePanel`, `unsubscribeTokenType`, _`UnsubscribePanelProps`_ |
 
 ### demo
 

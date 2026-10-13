@@ -11,6 +11,7 @@ import {
   ChartBar,
   ChartPie,
   Bookmark,
+  Bell,
   Images,
   KeyRound,
   UserCog,
@@ -230,6 +231,7 @@ const EmailVerificationBanner029Demo = lazySection(
 const PersonNames029Demo = lazySection(() => import("./sections/auth-pages-029-demo"), "PersonNames029Demo");
 const CompanySwitcher029Demo = lazySection(() => import("./sections/auth-pages-029-demo"), "CompanySwitcher029Demo");
 const Account030Demo = lazySection(() => import("./sections/account-030-demo"), "Account030Demo");
+const NotificationsPage = lazySection(() => import("./sections/notifications"), "NotificationsPage");
 const UserRoster030Demo = lazySection(() => import("./sections/admin-030-demo"), "UserRoster030Demo");
 const RolesEditor030Demo = lazySection(() => import("./sections/admin-030-demo"), "RolesEditor030Demo");
 const Invitations030Demo = lazySection(() => import("./sections/admin-030-demo"), "Invitations030Demo");
@@ -485,6 +487,23 @@ export const GROUPS: ShowcaseGroup[] = [
             <Localisation />
             <TranslationReviewDemo />
             <TranslationReview025Demo />
+          </>
+        ),
+      },
+      // 0.36: from App chrome, which reached its ten pages with Notifications. The links
+      // are set once on the provider, as the words are; the slug is unchanged.
+      {
+        slug: "links",
+        title: "Links",
+        short: "Links",
+        blurb:
+          "Every kit link routed by the app's own router, set once on the provider: the text link and its tones, a button or an action card that is a link, and links that leave the app.",
+        icon: Link2,
+        components: ["TextLink", "UiKitProvider", "useKitLink", "Button", "ActionCard"],
+        Body: () => (
+          <>
+            <LinksDemo />
+            <Links013Demo />
           </>
         ),
       },
@@ -1220,21 +1239,6 @@ export const GROUPS: ShowcaseGroup[] = [
         ),
       },
       {
-        slug: "links",
-        title: "Links",
-        short: "Links",
-        blurb:
-          "Every kit link routed by the app's own router, set once on the provider: the text link and its tones, a button or an action card that is a link, and links that leave the app.",
-        icon: Link2,
-        components: ["TextLink", "UiKitProvider", "useKitLink", "Button", "ActionCard"],
-        Body: () => (
-          <>
-            <LinksDemo />
-            <Links013Demo />
-          </>
-        ),
-      },
-      {
         // 0.31: the page and its rows on one page — App chrome holds at most ten (the
         // phone's row of page pills wraps), and the settings shell is where the rows go.
         slug: "settings",
@@ -1243,7 +1247,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
         icon: SettingsIcon,
-        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "PasswordSetting", "TwoFactorSetting", "LanguageSelect"],
+        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "PasswordSetting", "TwoFactorSetting", "LanguageSelect", "DeviceResetSetting", "registerDeviceSetting", "deviceSettings", "resetDeviceSettings"],
         Body: () => (
           <>
             <SettingsDesktop031Demo />
@@ -1255,6 +1259,18 @@ export const GROUPS: ShowcaseGroup[] = [
             <LanguageSelect022Demo />
           </>
         ),
+      },
+      {
+        // 0.36 (docs/notifications-harmonization.md §4.2): beside the settings page, whose
+        // notifications group these cards fill.
+        slug: "notifications",
+        title: "Notifications",
+        short: "Notifications",
+        blurb:
+          "The notification settings every app shares: the types the server answers with a switch in the app and one by e-mail, quiet hours and the time zone, push on this device and the list of devices, and the page an e-mail's unsubscribe link opens.",
+        icon: Bell,
+        components: ["NotificationTypesSetting", "QuietHoursSetting", "TimeZoneSelect", "timeZoneOptions", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS"],
+        Body: NotificationsPage,
       },
       {
         slug: "landing-demo",
@@ -1514,14 +1530,27 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: Mail,
         serverModules: ["mail"],
       }),
+      // server-kit 0.9 (docs/notifications-harmonization.md §4.1): the server half of the
+      // kit's Notifications page.
+      serverPage({
+        slug: "server-notifications",
+        title: "Notifications",
+        short: "Notifications",
+        blurb:
+          "The app's notification types and each account's switches, the settings PATCH, who gets an inbox row, a push or a mail, quiet hours and the digest, the push payload and a push service's answer, and the signed one-click unsubscribe token.",
+        icon: Bell,
+        serverModules: ["notifications"],
+      }),
       serverPage({
         slug: "server-feedback",
         title: "Feedback & uploads",
         short: "Feedback",
         blurb:
-          "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — and attachments judged by their bytes.",
+          "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — its routes as one router factory, and attachments judged by their bytes.",
         icon: Paperclip,
-        serverModules: ["feedback", "uploads"],
+        // `feedback.router` (server-kit 0.9) is a module of its own because it needs the
+        // `fastapi` extra, which the feedback package does not import.
+        serverModules: ["feedback", "feedback.router", "uploads"],
       }),
       serverPage({
         slug: "server-limits",

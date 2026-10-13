@@ -460,6 +460,12 @@ export const fr: Dictionary = {
       short: "Structure",
       blurb: "Le cadre d’application que vous avez sous les yeux, démonté pièce par pièce.",
     },
+    notifications: {
+      title: "Notifications",
+      short: "Notifications",
+      blurb:
+        "Les réglages de notification que toutes les apps partagent\u00a0: les types que le serveur renvoie, avec un interrupteur dans l’app et un par e-mail, les heures calmes et le fuseau horaire, le push sur cet appareil et la liste des appareils, et la page qu’ouvre le lien de désabonnement d’un e-mail.",
+    },
     settings: {
       title: "Paramètres",
       short: "Paramètres",
@@ -547,11 +553,17 @@ export const fr: Dictionary = {
       blurb:
         "Les e-mails du compte\u00a0: les textes par langue, une seule mise en page qui échappe chaque valeur, deux transports qui ne lèvent jamais d’exception — et les e-mails d’exemple de la version, rendus.",
     },
+    "server-notifications": {
+      title: "Notifications",
+      short: "Notifications",
+      blurb:
+        "Les types de notification de l’app et les interrupteurs de chaque compte, le PATCH des réglages, qui reçoit une entrée dans la boîte de réception, un push ou un e-mail, les heures calmes et le résumé, la charge utile du push et la réponse d’un service push, et le jeton signé de désabonnement en un clic.",
+    },
     "server-feedback": {
       title: "Retours et téléversements",
       short: "Retours",
       blurb:
-        "Le contrat des retours en fonctions pures — schémas, statuts, règles du PATCH, reprise, signalement des plantages, effacement — et des pièces jointes jugées sur leurs octets.",
+        "Le contrat des retours en fonctions pures — schémas, statuts, règles du PATCH, reprise, signalement des plantages, effacement — ses routes en une fabrique de routeurs, et des pièces jointes jugées sur leurs octets.",
     },
     "server-limits": {
       title: "Limites, erreurs et CORS",
@@ -1126,6 +1138,22 @@ export const fr: Dictionary = {
       "replier la barre latérale",
       "menu de compte avec avatar",
     ],
+    notifications: [
+      "paramètres de notification",
+      "activer ou désactiver les notifications",
+      "choisir les notifications à recevoir",
+      "notifier par e-mail",
+      "heures calmes",
+      "ne pas déranger la nuit",
+      "choisir un fuseau horaire",
+      "notifications push sur cet appareil",
+      "envoyer une notification de test",
+      "lister les appareils qui reçoivent des notifications",
+      "retirer un appareil",
+      "se désabonner des e-mails",
+      "lien de désabonnement en un clic",
+      "résumé hebdomadaire ou mensuel",
+    ],
     settings: [
       "paramètres du compte",
       "changer le mot de passe",
@@ -1250,6 +1278,17 @@ export const fr: Dictionary = {
       "journaliser les e-mails en développement",
       "adresse de réponse du support",
     ],
+    "server-notifications": [
+      "enregistrer les types de notification de l’app",
+      "point d’accès des réglages de notification",
+      "qui reçoit un push ou un e-mail",
+      "vérifier les heures calmes côté serveur",
+      "quand le résumé est dû",
+      "construire la charge utile d’un web push",
+      "supprimer un abonnement push expiré",
+      "signer un lien de désabonnement en un clic",
+      "structure de la boîte de réception des notifications",
+    ],
     "server-feedback": [
       "valider un retour",
       "règles de statut des retours",
@@ -1257,6 +1296,7 @@ export const fr: Dictionary = {
       "vérifier le type d’un fichier téléversé",
       "limiter la taille des pièces jointes",
       "effacer les retours d’un utilisateur supprimé",
+      "monter les routes des retours",
     ],
     "server-limits": [
       "limiter le débit d’une route",

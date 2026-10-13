@@ -14,7 +14,9 @@ import { MOUNT_TIMEOUT_MS, renderShowcase, useShowcaseEnvironment } from "./show
 // The pages rendered below. Every Server kit page is the one section `ServerModules`; the
 // two kit pages are there for the frame's "Server side" line (TST-8: this file loaded all
 // 250-odd sections for them).
-useShowcaseEnvironment({ pages: ["server-settings", "server-auth", "server-mail", "settings", "tokens"] });
+useShowcaseEnvironment({
+  pages: ["server-settings", "server-auth", "server-mail", "server-feedback", "server-notifications", "settings", "tokens"],
+});
 
 const api = SERVER_KIT_API;
 
@@ -88,6 +90,49 @@ describe("a module page", () => {
       });
       expect(within(values).getByText(JSON.stringify(withValues.values![0].value))).toBeInTheDocument();
       expectLinksLand("server-auth");
+    },
+    MOUNT_TIMEOUT_MS,
+  );
+
+  it(
+    "documents a nested module beside its package, under its own anchor (server-kit 0.9)",
+    () => {
+      renderShowcase("/server-feedback");
+      const router = findModule(api, "feedback.router")!;
+      const heading = screen.getByRole("heading", { name: router.name, level: 2 });
+      expect(heading).toHaveAttribute("id", "feedback.router");
+      // The package's heading comes first, the router's next, uploads after.
+      const order = [...document.querySelectorAll("main section > header > h2")].map((h) => h.id);
+      expect(order).toEqual(["feedback", "feedback.router", "uploads"]);
+      const section = heading.closest("section")!;
+      expect(within(section).getByRole("link", { name: /server-services-harmonization\.md §2\.9/ })).toHaveAttribute(
+        "href",
+        router.contract!.links[0].url,
+      );
+      for (const m of router.members) {
+        expect(document.getElementById(`feedback.router.${m.name}`)?.tagName, m.name).toBe("H4");
+      }
+      expect(
+        screen.getByRole("heading", { name: kindHeading("feedback.router", "function"), level: 3 }),
+      ).toHaveAttribute("id", "feedback-router-functions");
+      expectLinksLand("server-feedback");
+    },
+    MOUNT_TIMEOUT_MS,
+  );
+
+  it(
+    "gives notifications a page of its own, linked to both contract sections",
+    () => {
+      renderShowcase("/server-notifications");
+      const mod = findModule(api, "notifications")!;
+      expect(screen.getByRole("heading", { name: mod.name, level: 2 })).toHaveAttribute("id", "notifications");
+      const [shapes, kitPart] = mod.contract!.links;
+      expect([shapes.section, kitPart.section]).toEqual(["§3", "§4.1"]);
+      expect(screen.getByRole("link", { name: /notifications-harmonization\.md §3\b/ })).toHaveAttribute("href", shapes.url);
+      expect(screen.getByRole("link", { name: /notifications-harmonization\.md §4\.1/ })).toHaveAttribute("href", kitPart.url);
+      const main = document.querySelector("main")!;
+      expect(within(main).getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/notifications");
+      expectLinksLand("server-notifications");
     },
     MOUNT_TIMEOUT_MS,
   );

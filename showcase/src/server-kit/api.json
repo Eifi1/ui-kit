@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.8.0",
+  "kit_version": "0.9.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -2296,8 +2296,8 @@
         {
           "name": "apply_patch",
           "kind": "function",
-          "signature": "apply_patch(obj: object, update: BaseModel, *, not_nullable: Iterable[str], defaults: Mapping[str, object] | None = None) -> dict[str, object]",
-          "doc": "Write a settings body onto ``obj`` under §6.1's rules 1–3; the fields written.\n\nFor a PATCH and a PUT body alike — the rule is about the body, not the verb::\n\n    changes = apply_patch(user, payload, not_nullable=PROFILE_NOT_NULLABLE)\n\n* **Only the fields the client sent** are written (``update.model_fields_set``):\n  a field left out keeps its value (rule 1), even where the model's default is\n  ``None``. That is the whole difference from ``model_dump()``, which cannot tell \"left\n  out\" from \"sent as null\".\n* **A null clears** (rule 2): it is written as ``None`` — or as ``defaults[name]``,\n  for a field whose \"not set\" is a value (keksdose's push preferences: ``null`` resets\n  a type to its default).\n* **A null on a ``not_nullable`` field** is a :class:`PatchNullError` (rule 3, 422),\n  raised before ANYTHING is written, so a refused body never leaves ``obj`` half\n  changed. ``not_nullable`` is required on purpose: an empty one says \"every field may\n  be cleared\" out loud, and a forgotten one would otherwise reach the database as a\n  ``NOT NULL`` violation — a 500.\n\n``obj`` is an ORM row or any object (``setattr``), or a mutable mapping (item\nassignment). Values are written as validated: a nested model stays a model, so dump it\nfirst for a JSON column. Answers ``{name: value}`` for every field written, in the\nmodel's order — for the app's audit or its \"did the locale change\" check.\n\nProgramming errors, raised as :class:`TypeError` / :class:`ValueError` so a test meets\nthem on the first call: a model that doesn't forbid unknown fields (rule 4 — without\n``extra=\"forbid\"`` a typo would be a silent no-op), and a ``not_nullable`` or\n``defaults`` name that is no field of the model (a typo there would switch the guard off\nwithout a word), or one name in both."
+          "signature": "apply_patch(obj: object, update: BaseModel, *, not_nullable: Iterable[str], defaults: Mapping[str, object] | None = None, skip: Iterable[str] = ()) -> dict[str, object]",
+          "doc": "Write a settings body onto ``obj`` under §6.1's rules 1–3; the fields written.\n\nFor a PATCH and a PUT body alike — the rule is about the body, not the verb::\n\n    changes = apply_patch(user, payload, not_nullable=PROFILE_NOT_NULLABLE)\n\n* **Only the fields the client sent** are written (``update.model_fields_set``):\n  a field left out keeps its value (rule 1), even where the model's default is\n  ``None``. That is the whole difference from ``model_dump()``, which cannot tell \"left\n  out\" from \"sent as null\".\n* **A null clears** (rule 2): it is written as ``None`` — or as ``defaults[name]``,\n  for a field whose \"not set\" is a value (keksdose's push preferences: ``null`` resets\n  a type to its default).\n* **A null on a ``not_nullable`` field** is a :class:`PatchNullError` (rule 3, 422),\n  raised before ANYTHING is written, so a refused body never leaves ``obj`` half\n  changed. ``not_nullable`` is required on purpose: an empty one says \"every field may\n  be cleared\" out loud, and a forgotten one would otherwise reach the database as a\n  ``NOT NULL`` violation — a 500.\n* **A ``skip`` field is the caller's to write**: rule 3 still checks it — a null on it\n  is refused with the others, before anything is written — but it is neither written\n  nor answered. That is how a field with rules of its own reaches its own code:\n  notifications' ``types`` goes through\n  :func:`~eifi1_server_kit.notifications.apply_switches_patch`\n  (``skip=SETTINGS_SKIP``).\n\n``obj`` is an ORM row or any object (``setattr``), or a mutable mapping (item\nassignment). Values are written as validated: a nested model stays a model, so dump it\nfirst for a JSON column. Answers ``{name: value}`` for every field written, in the\nmodel's order — for the app's audit or its \"did the locale change\" check.\n\nProgramming errors, raised as :class:`TypeError` / :class:`ValueError` so a test meets\nthem on the first call: a model that doesn't forbid unknown fields (rule 4 — without\n``extra=\"forbid\"`` a typo would be a silent no-op), and a ``not_nullable``, ``defaults``\nor ``skip`` name that is no field of the model (a typo there would switch the guard off\nwithout a word), or one name in both ``not_nullable`` and ``defaults``, or in both\n``skip`` and ``defaults`` (a skipped field is not written, so it has no default here)."
         },
         {
           "name": "canonical_locale",
@@ -4303,7 +4303,7 @@
     {
       "name": "eifi1_server_kit.mail",
       "summary": "Outbound account mail: the words per language, one layout, two transports.",
-      "doc": "Outbound account mail: the words per language, one layout, two transports.\n\n``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``. Lifted from keksdose\n``backend/keksdose/infrastructure/email.py`` and ``domain/server_text.py`` and from\nKurvenschmiede ``infrastructure/email.py`` (``MailText``), which agree on everything\nhere; kastlan built its own on the same shape.\n\n* **The words are the app's.** A mail's texts are a table per language of\n  :class:`MailText` rows — the subject and the five parts :func:`render_message` lays\n  out — and :func:`pick` chooses the row for the recipient's locale. Which mails exist\n  and what they say stays in each app (§8 \"App-side: the texts of the mails\").\n* **One layout, escaped at the boundary** (:func:`render_message`): a greeting is built\n  from a person's name, and a name is free text, so an account called\n  ``<a href=\"…\">Reset here</a>`` must not put that anchor into the app's own mail.\n* **A whole HTML document**, with the language and a title: Outlook junked a fully\n  authenticated Kurvenschmiede reset mail (SCL 5 — a new domain on shared sending IPs),\n  and a bare fragment with no ``<html lang>`` and no ``<title>`` is one more mark against\n  a mail. :func:`render_mail` picks the row AND its language in one call.\n* **A ``Reply-To``** (:class:`ResendClient`'s ``reply_to``): the mails come from a\n  ``noreply@`` address, and a reply must reach a person. Each app's ``*_EMAIL_REPLY_TO``\n  setting defaults to ``support@<its domain>`` (:func:`support_address`), which\n  Cloudflare Email Routing forwards on all three domains.\n* **Two transports behind one protocol** (:class:`Mailer`): :class:`ResendClient` for\n  production — the ``mail`` extra (``eifi1-server-kit[mail]``, httpx) — and\n  :class:`ConsoleMailer` for a fresh checkout, which logs the message, link and all.\n  **Sending never raises**: a sign-up must not fail because a provider is down, and every\n  link can be asked for again. ``send`` answers whether the mail went; the caller decides\n  who is told.\n* **A word for every mail** — the ``kind`` it is sent and logged under, which an\n  operator greps three apps' logs for: a mail with a one-time link by its token's\n  :class:`~eifi1_server_kit.auth.OneTimeTokenKind`, billing's notices by\n  :class:`~eifi1_server_kit.billing.BillingNoticeKind`, and the two account notices with\n  no token by :class:`AccountNoticeKind`.\n\nNot here yet: ``List-Unsubscribe`` and anything else a NOTIFICATION mail needs — that is\nthe notifications round. These are transactional mails the recipient asked for.",
+      "doc": "Outbound account mail: the words per language, one layout, two transports.\n\n``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``. Lifted from keksdose\n``backend/keksdose/infrastructure/email.py`` and ``domain/server_text.py`` and from\nKurvenschmiede ``infrastructure/email.py`` (``MailText``), which agree on everything\nhere; kastlan built its own on the same shape.\n\n* **The words are the app's.** A mail's texts are a table per language of\n  :class:`MailText` rows — the subject and the five parts :func:`render_message` lays\n  out — and :func:`pick` chooses the row for the recipient's locale. Which mails exist\n  and what they say stays in each app (§8 \"App-side: the texts of the mails\").\n* **One layout, escaped at the boundary** (:func:`render_message`): a greeting is built\n  from a person's name, and a name is free text, so an account called\n  ``<a href=\"…\">Reset here</a>`` must not put that anchor into the app's own mail.\n* **A whole HTML document**, with the language and a title: Outlook junked a fully\n  authenticated Kurvenschmiede reset mail (SCL 5 — a new domain on shared sending IPs),\n  and a bare fragment with no ``<html lang>`` and no ``<title>`` is one more mark against\n  a mail. :func:`render_mail` picks the row AND its language in one call.\n* **A ``Reply-To``** (:class:`ResendClient`'s ``reply_to``): the mails come from a\n  ``noreply@`` address, and a reply must reach a person. Each app's ``*_EMAIL_REPLY_TO``\n  setting defaults to ``support@<its domain>`` (:func:`support_address`), which\n  Cloudflare Email Routing forwards on all three domains.\n* **Two transports behind one protocol** (:class:`Mailer`): :class:`ResendClient` for\n  production — the ``mail`` extra (``eifi1-server-kit[mail]``, httpx) — and\n  :class:`ConsoleMailer` for a fresh checkout, which logs the message, link and all.\n  **Sending never raises**: a sign-up must not fail because a provider is down, and every\n  link can be asked for again. ``send`` answers whether the mail went; the caller decides\n  who is told.\n* **A word for every mail** — the ``kind`` it is sent and logged under, which an\n  operator greps three apps' logs for: a mail with a one-time link by its token's\n  :class:`~eifi1_server_kit.auth.OneTimeTokenKind`, billing's notices by\n  :class:`~eifi1_server_kit.billing.BillingNoticeKind`, and the two account notices with\n  no token by :class:`AccountNoticeKind`.\n\n* **A notification mail** (``docs/notifications-harmonization.md`` §3.6) is sent under its\n  notification type's id and carries RFC 8058's one-click unsubscribe:\n  :func:`list_unsubscribe_headers` on :attr:`MailMessage.headers`, and a footer line\n  linking the app's unsubscribe page (:class:`MailUnsubscribe`, which\n  :func:`render_mail` lays out and turns into the headers). Account mail and billing's\n  notices carry none: the recipient asked for them, and has no switch to turn them off.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -4379,7 +4379,7 @@
           "name": "MailMessage",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class MailMessage",
-          "doc": "One mail, ready to send: ``html`` may be ``None`` for a plain-text mail (kastlan).",
+          "doc": "One mail, ready to send: ``html`` may be ``None`` for a plain-text mail (kastlan).\n\n``headers`` are extra mail headers — a notification mail's\n:func:`list_unsubscribe_headers` — which :class:`ResendClient` sends as Resend's\n``headers`` object and an SMTP transport sets on its message. A :class:`ValueError` for\na name that is no header name, or a line break in a value.",
           "fields": [
             {
               "name": "subject",
@@ -4396,6 +4396,12 @@
             {
               "name": "html",
               "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "headers",
+              "type": "Mapping[str, str] | None",
               "default": "None",
               "doc": ""
             }
@@ -4441,8 +4447,41 @@
           "methods": [
             {
               "name": "render",
-              "signature": "render(*, link: str, lang: str, **values: object) -> MailMessage",
-              "doc": "The mail with ``values`` filled in and the layout of :func:`render_message`;\n``lang`` is the language this row is written in (its key in the table), so no\ntemplate may use a ``{lang}`` placeholder.\n\n``str.format`` runs on the TEMPLATE only, so braces in a person's name are text,\nnever a format field; the name is HTML-escaped by the layout. A literal brace in a\ntemplate is doubled (``{{``)."
+              "signature": "render(*, link: str, lang: str, unsubscribe: MailUnsubscribe | None = None, **values: object) -> MailMessage",
+              "doc": "The mail with ``values`` filled in and the layout of :func:`render_message`;\n``lang`` is the language this row is written in (its key in the table), so no\ntemplate may use a ``{lang}`` or ``{unsubscribe}`` placeholder.\n\n``str.format`` runs on the TEMPLATE only, so braces in a person's name are text,\nnever a format field; the name is HTML-escaped by the layout. A literal brace in a\ntemplate is doubled (``{{``).\n\n``unsubscribe`` makes it a notification mail: the footer line, and\n:attr:`MailMessage.headers` from its ``one_click``. Its ``label`` is used as\nwritten, never formatted."
+            }
+          ]
+        },
+        {
+          "name": "MailUnsubscribe",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class MailUnsubscribe",
+          "doc": "A notification mail's way out (notifications §3.6), for :func:`render_mail`.\n\n``label`` is the footer line, in the recipient's language: why the mail came and what\nthe link does (\"You get this because e-mails about shared projects are on. Stop\nthem\"). ``page`` is the app's signed-out ``/unsubscribe?token=…`` page, which offers\n\"Stop these e-mails\" and \"Stop all\"; ``one_click`` the ``POST\n/notifications/unsubscribe/{token}`` URL for :func:`list_unsubscribe_headers`, or\n``None`` where the app's base URL isn't https (a development server): RFC 8058 takes\nhttps only, so such a mail has the footer line and no headers. A :class:`ValueError`\nfor a ``page`` that isn't http(s) or a ``one_click`` that isn't https.",
+          "fields": [
+            {
+              "name": "label",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "page",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "one_click",
+              "type": "str | None",
+              "default": null,
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "headers",
+              "signature": "@property headers -> dict[str, str] | None",
+              "doc": ":func:`list_unsubscribe_headers` for :attr:`one_click`, or ``None``."
             }
           ]
         },
@@ -4455,7 +4494,7 @@
             {
               "name": "send",
               "signature": "async send(to: str, message: MailMessage, *, kind: str = 'other') -> bool",
-              "doc": "Send one mail; whether it went out. Never raises.\n\n``kind`` is what the mail is FOR — a small enum fit for a log line or a metric\nlabel, which the recipient's address never is: a\n:class:`~eifi1_server_kit.auth.OneTimeTokenKind` (``verification``,\n``password_reset``, ``invitation``, ``email_change``), an\n:class:`AccountNoticeKind` (``email_change_notice``, ``account_deletion``) or a\n:class:`~eifi1_server_kit.billing.BillingNoticeKind`."
+              "doc": "Send one mail; whether it went out. Never raises.\n\n``kind`` is what the mail is FOR — a small enum fit for a log line or a metric\nlabel, which the recipient's address never is: a\n:class:`~eifi1_server_kit.auth.OneTimeTokenKind` (``verification``,\n``password_reset``, ``invitation``, ``email_change``), an\n:class:`AccountNoticeKind` (``email_change_notice``, ``account_deletion``), a\n:class:`~eifi1_server_kit.billing.BillingNoticeKind`, or — for a notification mail —\nits notification type's id (``share_granted``; notifications §3.6). An app whose own\n``send`` takes a narrower kind widens it to its registry's ids."
             }
           ]
         },
@@ -4478,6 +4517,12 @@
           ]
         },
         {
+          "name": "list_unsubscribe_headers",
+          "kind": "function",
+          "signature": "list_unsubscribe_headers(url: str) -> dict[str, str]",
+          "doc": "RFC 8058's two headers for a notification mail (notifications §3.6)::\n\n    List-Unsubscribe: <https://app.example/api/v1/notifications/unsubscribe/v1.…>\n    List-Unsubscribe-Post: List-Unsubscribe=One-Click\n\n``url`` is the app's ``POST /notifications/unsubscribe/{token}``, which a mail client\ncalls with no cookie and no page in between. A :class:`ValueError` unless it is\n``https://`` (RFC 8058 takes nothing else) in printable ASCII with no space, ``<``,\n``>`` or ``,`` — anything that would end the header's ``<…>``."
+        },
+        {
           "name": "pick",
           "kind": "function",
           "signature": "pick[T](locale: str | None, texts: Mapping[str, T], *, fallback: Sequence[str] = FALLBACK_LOCALES) -> T",
@@ -4492,14 +4537,14 @@
         {
           "name": "render_mail",
           "kind": "function",
-          "signature": "render_mail(locale: str | None, texts: Mapping[str, MailText], *, link: str, fallback: Sequence[str] = FALLBACK_LOCALES, **values: object) -> MailMessage",
-          "doc": "The recipient's mail from a table: :func:`pick_entry` for ``locale``, then\n:meth:`MailText.render` with the row's own language in ``<html lang>``::\n\n    message = render_mail(user.locale, RESET_TEXTS, link=link, name=greeting, hours=1)"
+          "signature": "render_mail(locale: str | None, texts: Mapping[str, MailText], *, link: str, fallback: Sequence[str] = FALLBACK_LOCALES, unsubscribe: MailUnsubscribe | None = None, **values: object) -> MailMessage",
+          "doc": "The recipient's mail from a table: :func:`pick_entry` for ``locale``, then\n:meth:`MailText.render` with the row's own language in ``<html lang>``::\n\n    message = render_mail(user.locale, RESET_TEXTS, link=link, name=greeting, hours=1)\n\nA notification mail passes ``unsubscribe`` (:class:`MailUnsubscribe`, its label picked\nfor the same ``locale``): the footer line and the ``List-Unsubscribe`` headers::\n\n    message = render_mail(user.locale, SHARED_TEXTS, link=link, actor=name, unsubscribe=way_out)\n    await mailer.send(user.email, message, kind=\"share_granted\")"
         },
         {
           "name": "render_message",
           "kind": "function",
-          "signature": "render_message(*, subject: str, lang: str, intro: str, body: str, cta: str, link: str, outro: str) -> tuple[str, str]",
-          "doc": "``(html, text)`` for a transactional mail: greeting, one paragraph, one link, footer\n(keksdose ``infrastructure/email.py:50``).\n\nThe one place a mail's layout is decided; the callers own the words. ``html`` is a\nWHOLE document — ``<!doctype html><html lang=\"{lang}\"><head><meta charset=\"utf-8\">\n<title>{subject}</title></head><body>…</body></html>`` — because a bare fragment is one\nmore mark against a mail with a spam filter (Kurvenschmiede's Outlook finding).\n``lang`` is the language the words are in (``de-CH``, ``en``; :func:`pick_entry`'s\nkey), ``subject`` the mail's subject.\n\n**Escaped here**, not by each caller: ``intro`` is built from a name, and a name may\nhold markup; the subject may hold one too. The plain-text half is not markup and stays\nexactly as written.\n\n``link`` must be ``http(s)``; it is server-built from the app's base URL and a token\nthe server minted. Unlike keksdose it is escaped inside the ``href`` too: ``&amp;`` in\nan attribute IS ``&`` to every HTML parser, so a query string survives, and a link can\nno longer close the attribute.\n\nThe plain text's link line is ``{cta}: {link}``, typeset for ``lang``: French takes a\nno-break space before the colon (``Choisir : https://…``), every other language\nnone."
+          "signature": "render_message(*, subject: str, lang: str, intro: str, body: str, cta: str, link: str, outro: str, unsubscribe: MailUnsubscribe | None = None) -> tuple[str, str]",
+          "doc": "``(html, text)`` for a transactional mail: greeting, one paragraph, one link, footer\n(keksdose ``infrastructure/email.py:50``).\n\nThe one place a mail's layout is decided; the callers own the words. ``html`` is a\nWHOLE document — ``<!doctype html><html lang=\"{lang}\"><head><meta charset=\"utf-8\">\n<title>{subject}</title></head><body>…</body></html>`` — because a bare fragment is one\nmore mark against a mail with a spam filter (Kurvenschmiede's Outlook finding).\n``lang`` is the language the words are in (``de-CH``, ``en``; :func:`pick_entry`'s\nkey), ``subject`` the mail's subject.\n\n**Escaped here**, not by each caller: ``intro`` is built from a name, and a name may\nhold markup; the subject may hold one too. The plain-text half is not markup and stays\nexactly as written.\n\n``link`` must be ``http(s)``; it is server-built from the app's base URL and a token\nthe server minted. Unlike keksdose it is escaped inside the ``href`` too: ``&amp;`` in\nan attribute IS ``&`` to every HTML parser, so a query string survives, and a link can\nno longer close the attribute.\n\nThe plain text's link line is ``{cta}: {link}``, typeset for ``lang``: French takes a\nno-break space before the colon (``Choisir : https://…``), every other language\nnone.\n\n``unsubscribe`` (a notification mail, :class:`MailUnsubscribe`) adds a last line after\nthe footer, linking its ``page``: escaped and typeset like the action line —\n``{label}: {page}`` in the text half."
         },
         {
           "name": "support_address",
@@ -4510,9 +4555,835 @@
       ]
     },
     {
+      "name": "eifi1_server_kit.notifications",
+      "summary": "Notifications, as code (``docs/notifications-harmonization.md`` §4.1 in ``Eifi1/ui-kit``).",
+      "doc": "Notifications, as code (``docs/notifications-harmonization.md`` §4.1 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions and Pydantic models — no database, no\nroutes, no network, no new dependency. The app keeps its tables, its routes (the demo's\nrefusal among them), its triggers, its words and its sending (``pywebpush``, its mailer).\nkeksdose is the source (``backend/keksdose/domain/schemas/push.py`` and its services),\ncited per rule.\n\n* :mod:`~eifi1_server_kit.notifications.registry` — the app's types, their defaults, and\n  the account's narrowing;\n* :mod:`~eifi1_server_kit.notifications.resource` — ``GET/PATCH /notifications/settings``:\n  the switches as they apply, and the PATCH's rules for ``types``;\n* :mod:`~eifi1_server_kit.notifications.delivery` — who gets an inbox row, a push, a mail;\n* :mod:`~eifi1_server_kit.notifications.timing` — quiet hours, the zone, the digest's period;\n* :mod:`~eifi1_server_kit.notifications.push` — the device shapes, the payload, a push\n  service's answer, the VAPID subject;\n* :mod:`~eifi1_server_kit.notifications.unsubscribe` — the signed one-click token;\n* :mod:`~eifi1_server_kit.notifications.inbox` — the inbox's shapes;\n* :mod:`~eifi1_server_kit.notifications.errors` — the coded refusals.\n\nThe mail's half — ``List-Unsubscribe`` and the footer line — is in\n:mod:`eifi1_server_kit.mail` (:class:`~eifi1_server_kit.mail.MailUnsubscribe`), and the\nPATCH's plain fields go through :func:`eifi1_server_kit.settings.apply_patch` with\n``skip=SETTINGS_SKIP``.",
+      "contract": {
+        "doc": "docs/notifications-harmonization.md",
+        "section": "§3, §4.1",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#3-the-shapes",
+        "links": [
+          {
+            "section": "§3",
+            "heading": "3. The shapes",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#3-the-shapes"
+          },
+          {
+            "section": "§4.1",
+            "heading": "4.1 server-kit 0.9: eifi1_server_kit.notifications (layer 1)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#41-server-kit-09-eifi1_server_kitnotifications-layer-1"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "DEFAULT_ZONE",
+          "kind": "constant",
+          "signature": "DEFAULT_ZONE = \"Europe/Zurich\"",
+          "doc": "The zone for an account that has none, or one ``zoneinfo`` no longer knows (decision 6):\nthe zone both billing notices are already written in."
+        },
+        {
+          "name": "DIGEST_CADENCES",
+          "kind": "constant",
+          "signature": "DIGEST_CADENCES: tuple[DigestCadence, ...] = (\"weekly\", \"monthly\")",
+          "doc": "Every :data:`DigestCadence`, the default first."
+        },
+        {
+          "name": "DIGEST_LATE_DAYS",
+          "kind": "constant",
+          "signature": "DIGEST_LATE_DAYS = 3",
+          "doc": "How many days after the period's first local day a digest is still due (decision 5): a\nTuesday digest after a missed Monday is right, its content is the view as of that day."
+        },
+        {
+          "name": "INBOX_RETENTION",
+          "kind": "constant",
+          "signature": "INBOX_RETENTION = timedelta(days=90)",
+          "doc": "How long an inbox row is kept (keksdose ``RETENTION_DAYS = 90``)."
+        },
+        {
+          "name": "PUSH_MAX_FAILURES",
+          "kind": "constant",
+          "signature": "PUSH_MAX_FAILURES = 10",
+          "doc": "Failures in a row after which the daily job deletes a device (keksdose\n``push_max_failures``). Every success resets the count."
+        },
+        {
+          "name": "PUSH_PAYLOAD_LIMIT",
+          "kind": "constant",
+          "signature": "PUSH_PAYLOAD_LIMIT = 3072",
+          "doc": "The encoded payload's ceiling in bytes. Web Push carries about 4 KB once encrypted; 3 KB\nof JSON leaves room for the encryption's overhead."
+        },
+        {
+          "name": "PUSH_TEST_TYPE",
+          "kind": "constant",
+          "signature": "PUSH_TEST_TYPE = \"test\"",
+          "doc": "The payload's ``data.type`` for a test push, the account's own and an admin's alike."
+        },
+        {
+          "name": "PUSH_TIMEOUT",
+          "kind": "constant",
+          "signature": "PUSH_TIMEOUT = 10.0",
+          "doc": "Seconds one send may take before it counts as failed (keksdose ``push_timeout_seconds``)."
+        },
+        {
+          "name": "PUSH_TTL",
+          "kind": "constant",
+          "signature": "PUSH_TTL = 86_400",
+          "doc": "Seconds a push service keeps a message for a device that is offline (keksdose\n``push_ttl_seconds``): a day."
+        },
+        {
+          "name": "QUIET_HOURS_PATTERN",
+          "kind": "constant",
+          "signature": "QUIET_HOURS_PATTERN = r\"^([01]\\d|2[0-3]):[0-5]\\d$\"",
+          "doc": "A quiet-hours bound: local ``HH:MM``, 00:00–23:59 (keksdose ``schemas/push.py:106-107``)."
+        },
+        {
+          "name": "SETTINGS_NOT_NULLABLE",
+          "kind": "constant",
+          "signature": "SETTINGS_NOT_NULLABLE: tuple[str, ...] = (\"types\", \"digest_cadence\")",
+          "doc": "``apply_patch``'s ``not_nullable`` for a body with :class:`DigestUpdate` (§3.2 rule 3):\n``types: null`` and ``digest_cadence: null`` are a 422 ``not_nullable``. Without a\ndigest, ``(\"types\",)`` — :data:`SETTINGS_SKIP`."
+        },
+        {
+          "name": "SETTINGS_SKIP",
+          "kind": "constant",
+          "signature": "SETTINGS_SKIP: tuple[str, ...] = (\"types\",)",
+          "doc": "``apply_patch``'s ``skip``: ``types`` is checked for a null there and written by the app\nfrom :func:`apply_switches_patch`."
+        },
+        {
+          "name": "TYPE_ID_PATTERN",
+          "kind": "constant",
+          "signature": "TYPE_ID_PATTERN = r\"^[a-z][a-z0-9_]{1,39}$\"",
+          "doc": "A type id: lower case, digits and ``_``, 2–40 characters, starting with a letter — it\nfits keksdose's ``notification_preferences.notification_type String(40)``."
+        },
+        {
+          "name": "Delivery",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class Delivery",
+          "doc": "What to do for one recipient: write an inbox row, push to their devices, send the\nmail. :attr:`NONE` is nothing at all.",
+          "fields": [
+            {
+              "name": "inbox",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "push",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "NONE",
+              "type": "ClassVar[Delivery]",
+              "default": "Delivery(inbox=False, push=False, email=False)",
+              "doc": "Nothing: no inbox row, no push, no mail."
+            }
+          ]
+        },
+        {
+          "name": "DigestCadence",
+          "kind": "constant",
+          "signature": "DigestCadence = Literal[\"weekly\", \"monthly\"]",
+          "doc": "How often the digest goes: on Monday, or on the 1st, in the account's zone."
+        },
+        {
+          "name": "DigestFields",
+          "kind": "model",
+          "signature": "class DigestFields(BaseModel)",
+          "doc": "The digest's cadence, where the app has a digest type (§2.5).",
+          "fields": [
+            {
+              "name": "digest_cadence",
+              "type": "DigestCadence",
+              "default": "'weekly'",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "DigestUpdate",
+          "kind": "model",
+          "signature": "class DigestUpdate(BaseModel)",
+          "doc": "The cadence in the ``PATCH``; ``null`` is refused (:data:`SETTINGS_NOT_NULLABLE`).",
+          "fields": [
+            {
+              "name": "digest_cadence",
+              "type": "DigestCadence | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "InboxItem",
+          "kind": "model",
+          "signature": "class InboxItem(BaseModel)",
+          "doc": "One inbox row as the bell lists it.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID | int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "notification_type",
+              "type": "str",
+              "default": null,
+              "doc": "The type id, so the page can pick an icon."
+            },
+            {
+              "name": "title",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "body",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "url",
+              "type": "str | None",
+              "default": null,
+              "doc": "A path in the app, or ``None``."
+            },
+            {
+              "name": "created_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "read_at",
+              "type": "datetime | None",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "InboxMarkRead",
+          "kind": "model",
+          "signature": "class InboxMarkRead(BaseModel)",
+          "doc": "``POST /notifications/inbox/read``: these rows, or with ``ids`` ``null`` or left out,\nthe whole inbox.",
+          "fields": [
+            {
+              "name": "ids",
+              "type": "list[UUID | int] | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "InboxMarkReadResponse",
+          "kind": "model",
+          "signature": "class InboxMarkReadResponse(BaseModel)",
+          "doc": "How many rows the call marked read.",
+          "fields": [
+            {
+              "name": "updated",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "InboxResponse",
+          "kind": "model",
+          "signature": "class InboxResponse(BaseModel)",
+          "doc": "A page of the inbox, newest first.",
+          "fields": [
+            {
+              "name": "items",
+              "type": "list[InboxItem]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "unread_count",
+              "type": "int",
+              "default": null,
+              "doc": "Every unread row of the account (the badge), not just this page's."
+            }
+          ]
+        },
+        {
+          "name": "NotificationError",
+          "kind": "class",
+          "signature": "class NotificationError(ValueError)",
+          "doc": "Base class of every notifications refusal; each subclass sets ``status_code``,\n``code`` and its English ``detail`` (for logs and API clients — the kit's pages show\ntheir own words for the code). Pass ``detail`` to say more.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(detail: str | None = None) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "NotificationSettingsResponse",
+          "kind": "model",
+          "signature": "class NotificationSettingsResponse(BaseModel)",
+          "doc": "``GET /notifications/settings`` and the ``PATCH``'s answer (rule 5): every type the\naccount can receive, in the registry's order (:func:`resolve_switches`). Add\n:class:`QuietHoursFields` and :class:`DigestFields` as the app has them.",
+          "fields": [
+            {
+              "name": "types",
+              "type": "dict[str, TypeSwitches]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "NotificationSettingsUpdate",
+          "kind": "model",
+          "signature": "class NotificationSettingsUpdate(BaseModel)",
+          "doc": "``PATCH /notifications/settings`` (§3.2), checked against the app's registry.\n\nSet :attr:`registry` in the subclass, as ``ProfileUpdate.offered_locales`` is set\n(settings §7.2); a class without it is a :class:`TypeError` on its first validation.\nA type the registry doesn't know, or an ``app`` / ``email`` switch on a type that\ndoesn't offer it, is a validation error (422). A type the registry knows but this\naccount doesn't receive is :func:`apply_switches_patch`'s\n:class:`~.errors.NotificationTypeError`. Unknown fields are a 422.",
+          "fields": [
+            {
+              "name": "types",
+              "type": "dict[str, TypeSwitchesPatch | None] | None",
+              "default": "None",
+              "doc": "``{type id: {\"app\"?, \"email\"?} | null}``; a type left out keeps, a type's ``null``\nresets both switches. ``\"types\": null`` is refused through ``apply_patch``."
+            },
+            {
+              "name": "registry",
+              "type": "ClassVar[NotificationTypes | None]",
+              "default": "None",
+              "doc": "The app's whole registry; the account's narrowing is :func:`apply_switches_patch`'s."
+            }
+          ]
+        },
+        {
+          "name": "NotificationType",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class NotificationType",
+          "doc": "One notification type (§3.1)::\n\n    NotificationType(\"support_chat\", app=True, quiet=False)  # keksdose\n    NotificationType(\"feedback_answered\", app=None, email=True)  # Kurvenschmiede\n\nA :class:`ValueError` for an id outside :data:`TYPE_ID_PATTERN`, or a type with\nneither channel.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "str",
+              "default": null,
+              "doc": "The id the switches, the inbox rows, the payload's ``data.type`` and the\nunsubscribe token carry (``support_chat``)."
+            },
+            {
+              "name": "app",
+              "type": "bool | None",
+              "default": null,
+              "doc": "The \"in the app\" default (inbox and push); ``None``: the app has no such channel."
+            },
+            {
+              "name": "email",
+              "type": "bool | None",
+              "default": "None",
+              "doc": "The e-mail default; ``None``: the type sends no mail."
+            },
+            {
+              "name": "quiet",
+              "type": "bool",
+              "default": "True",
+              "doc": "Quiet hours hold its push (§2.4). ``False`` for what a person sends — a share, a\nsupport reply, an announcement — and ``True`` for what the machine sends."
+            }
+          ]
+        },
+        {
+          "name": "NotificationTypeError",
+          "kind": "class",
+          "signature": "class NotificationTypeError(NotificationError)",
+          "doc": "A ``PATCH /notifications/settings`` naming a type this account doesn't receive (§3.2\nrule 4): 422 ``{\"detail\": …, \"code\": \"notification_type_not_received\", \"types\":\n[...]}``. Raised by :func:`~.resource.apply_switches_patch` before anything is written;\na type no registry knows is refused earlier, by the update model.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(type_ids: Iterable[str], detail: str | None = None) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "NotificationTypes",
+          "kind": "class",
+          "signature": "class NotificationTypes",
+          "doc": "The app's registry: its types, in its order (§3.1)::\n\n    TYPES = NotificationTypes(\n        NotificationType(\"invoices_overdue\", app=False, email=False),\n        NotificationType(\"dunnings_pending\", app=False),\n    )\n\nA :class:`ValueError` for an id declared twice. ``iter`` and ``len`` go over the\ntypes in order, ``\"digest\" in TYPES`` asks for an id, ``TYPES[\"digest\"]`` answers its\ntype (a :class:`KeyError` for an unknown one), :attr:`ids` the ids in order, and\n:meth:`receivable` narrows it to what one account can receive.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(*types: NotificationType) -> None",
+              "doc": ""
+            },
+            {
+              "name": "ids",
+              "signature": "@property ids -> tuple[str, ...]",
+              "doc": "Every id, in the registry's order."
+            },
+            {
+              "name": "receivable",
+              "signature": "receivable(keep: Callable[[NotificationType], bool]) -> NotificationTypes",
+              "doc": "The types one account can receive, in the same order: the account's narrowing.\n\nkastlan's two types go to an account that is staff in any of its companies (roles\nare per company); a tenant receives neither, so its ``GET`` lists none and a\n``PATCH`` naming one is a 422::\n\n    types = TYPES.receivable(lambda _type: is_staff_anywhere)"
+            }
+          ]
+        },
+        {
+          "name": "PushData",
+          "kind": "model",
+          "signature": "class PushData(BaseModel)",
+          "doc": "The payload's ``data``: where a click goes, and the notification's type.",
+          "fields": [
+            {
+              "name": "url",
+              "type": "str",
+              "default": null,
+              "doc": "A path in the app (``/support``), opened by the service worker on the app's origin;\nnever ``//``, a backslash or a scheme."
+            },
+            {
+              "name": "type",
+              "type": "str",
+              "default": null,
+              "doc": "The type id, or :data:`PUSH_TEST_TYPE` for a test push."
+            }
+          ]
+        },
+        {
+          "name": "PushDeviceResponse",
+          "kind": "model",
+          "signature": "class PushDeviceResponse(BaseModel)",
+          "doc": "One of the caller's devices in ``GET /notifications/devices``, oldest first. The\nowner gets the whole endpoint, to mark \"this device\" (keksdose ``schemas/push.py:128-139``).",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID | int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "endpoint",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "user_agent",
+              "type": "str | None",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "last_success_at",
+              "type": "datetime | None",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "failure_count",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PushEndpointTakenError",
+          "kind": "class",
+          "signature": "class PushEndpointTakenError(NotificationError)",
+          "doc": "``POST /notifications/devices`` with an endpoint another account holds (§3.5): 409.\n\nRefused, never moved to this account: the server can't prove the caller holds the\nendpoint, and moving it would let one account redirect another's notifications. The\nclient unsubscribes and registers a fresh endpoint (keksdose\n``domain/services/push_service.py:62-153``)."
+        },
+        {
+          "name": "PushKeyResponse",
+          "kind": "model",
+          "signature": "class PushKeyResponse(BaseModel)",
+          "doc": "``GET /notifications/push-key``: the VAPID public key; ``\"\"`` when push is off.",
+          "fields": [
+            {
+              "name": "key",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PushOutcome",
+          "kind": "enum",
+          "signature": "class PushOutcome(enum.StrEnum)",
+          "doc": "What one send's answer means for the device's row (§2.7).",
+          "values": [
+            {
+              "name": "DELIVERED",
+              "value": "delivered"
+            },
+            {
+              "name": "GONE",
+              "value": "gone"
+            },
+            {
+              "name": "FAILED",
+              "value": "failed"
+            }
+          ]
+        },
+        {
+          "name": "PushPayload",
+          "kind": "model",
+          "signature": "class PushPayload(BaseModel)",
+          "doc": "What the service worker receives: ``{title, body, tag, data: {url, type}}``.\n\n``tag`` is one per event: a repeat of the same event replaces the earlier notification\n(``digest:2026-W42``), distinct events don't (``support:<uuid>``). Send\n:meth:`encode`'s bytes.",
+          "fields": [
+            {
+              "name": "title",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "body",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "tag",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "data",
+              "type": "PushData",
+              "default": null,
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "encode",
+              "signature": "encode(limit: int = PUSH_PAYLOAD_LIMIT) -> bytes",
+              "doc": "The payload as compact UTF-8 JSON of at most ``limit`` bytes.\n\nA body that doesn't fit is cut, and ends in \"…\", at the longest length that fits; a\n:class:`ValueError` when even an empty body doesn't — a title or a tag too long for\na push."
+            }
+          ]
+        },
+        {
+          "name": "PushSubscriptionIn",
+          "kind": "model",
+          "signature": "class PushSubscriptionIn(BaseModel)",
+          "doc": "``POST /notifications/devices``: the browser's ``PushSubscription.toJSON()`` and a\nlabel to tell devices apart (keksdose ``schemas/push.py:16-22``). Registering is the\nswitch: an upsert by endpoint for the same account, a 409 for another's.\n\nIts other fields (``expirationTime``) are ignored, as the browser sends them. The\nendpoint is an https URL — a push service's — so no row ever points the server's\nsends at a plain-http address.",
+          "fields": [
+            {
+              "name": "endpoint",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "keys",
+              "type": "PushSubscriptionKeys",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "user_agent",
+              "type": "str | None",
+              "default": "None",
+              "doc": "``navigator.userAgent``, for the device list."
+            }
+          ]
+        },
+        {
+          "name": "PushSubscriptionKeys",
+          "kind": "model",
+          "signature": "class PushSubscriptionKeys(BaseModel)",
+          "doc": "The two keys a payload is encrypted for (``PushSubscription.toJSON().keys``).",
+          "fields": [
+            {
+              "name": "p256dh",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "auth",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PushTestResponse",
+          "kind": "model",
+          "signature": "class PushTestResponse(BaseModel)",
+          "doc": "``POST /notifications/test``: how many devices took the test push.",
+          "fields": [
+            {
+              "name": "sent",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PushUnregisterIn",
+          "kind": "model",
+          "signature": "class PushUnregisterIn(BaseModel)",
+          "doc": "``POST /notifications/devices/unregister {endpoint}``: the caller's own device, by\nits endpoint in the body — never in a URL. Silent when there is none.",
+          "fields": [
+            {
+              "name": "endpoint",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "QuietHoursFields",
+          "kind": "model",
+          "signature": "class QuietHoursFields(BaseModel)",
+          "doc": "The quiet hours and the zone, where the app has push (§3.2, §3.4).",
+          "fields": [
+            {
+              "name": "quiet_hours_start",
+              "type": "str | None",
+              "default": "None",
+              "doc": "Local ``HH:MM``; with ``quiet_hours_end``, the window — which may cross midnight."
+            },
+            {
+              "name": "quiet_hours_end",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "timezone",
+              "type": "str | None",
+              "default": "None",
+              "doc": "An IANA name; ``null`` is the app's zone, ``Europe/Zurich`` (decision 6)."
+            }
+          ]
+        },
+        {
+          "name": "QuietHoursUpdate",
+          "kind": "model",
+          "signature": "class QuietHoursUpdate(BaseModel)",
+          "doc": "The quiet hours and the zone in the ``PATCH``: ``HH:MM`` bounds, an IANA zone\n``zoneinfo`` knows; ``null`` clears each.",
+          "fields": [
+            {
+              "name": "quiet_hours_start",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "quiet_hours_end",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "timezone",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "StoredSwitches",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class StoredSwitches",
+          "doc": "What the app stores for one type: a switch the person set, or ``None`` — unset,\nread as the type's default by :func:`resolve_switches`. A type with no row is\n``StoredSwitches()``.",
+          "fields": [
+            {
+              "name": "app",
+              "type": "bool | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "type": "bool | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TypeSwitches",
+          "kind": "model",
+          "signature": "class TypeSwitches(BaseModel)",
+          "doc": "One type in the ``GET``: each switch as it applies, ``null`` where the type doesn't\noffer the channel (Kurvenschmiede: ``{\"app\": null, \"email\": true}``).",
+          "fields": [
+            {
+              "name": "app",
+              "type": "bool | None",
+              "default": null,
+              "doc": "The \"in the app\" switch (inbox and push); ``None``: the app has no such channel."
+            },
+            {
+              "name": "email",
+              "type": "bool | None",
+              "default": null,
+              "doc": "The e-mail switch; ``None``: the type sends no mail."
+            }
+          ]
+        },
+        {
+          "name": "TypeSwitchesPatch",
+          "kind": "model",
+          "signature": "class TypeSwitchesPatch(BaseModel)",
+          "doc": "One type in the ``PATCH``: a switch left out keeps, ``null`` resets it to the type's\ndefault. Unknown fields are a 422.",
+          "fields": [
+            {
+              "name": "app",
+              "type": "bool | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "type": "bool | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "UnsubscribeClaim",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class UnsubscribeClaim",
+          "doc": "What a valid token names: the account (as text — the app reads its own id type)\nand the type whose e-mail to turn off.",
+          "fields": [
+            {
+              "name": "user_id",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "type_id",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "UnsubscribeTokenError",
+          "kind": "class",
+          "signature": "class UnsubscribeTokenError(NotificationError)",
+          "doc": "An unsubscribe link whose token doesn't verify — tampered, cut, signed with another\nsecret, or of another version (§3.6): 400. A valid token always answers 200, also for\na switch already off or an account that is gone, so the answer reveals nothing."
+        },
+        {
+          "name": "apply_switches_patch",
+          "kind": "function",
+          "signature": "apply_switches_patch(types: NotificationTypes, stored: Mapping[str, StoredSwitches], patch: Mapping[str, TypeSwitchesPatch | None] | None) -> dict[str, StoredSwitches]",
+          "doc": "The new stored value of each type the body names, in the registry's order (§3.2\nrules 1–2): a type's ``null`` unsets both switches, a switch's ``null`` that one, a\nswitch left out keeps its stored value. The app writes what this answers.\n\n``types`` is the account's registry (:meth:`~.registry.NotificationTypes.receivable`);\na type it doesn't hold is a :class:`~.errors.NotificationTypeError` (422,\n``notification_type_not_received``), raised before anything is answered. ``patch`` is\nthe body's ``types``; ``None`` (left out) names nothing."
+        },
+        {
+          "name": "digest_due",
+          "kind": "function",
+          "signature": "digest_due(cadence: DigestCadence, zone: tzinfo, now: datetime, *, sent: str | None, late_days: int = DIGEST_LATE_DAYS) -> str | None",
+          "doc": "The period key while the digest is due, else ``None`` (§3.4).\n\nDue while ``sent`` — the key the app stored when it last sent one — is not this\nperiod's, and the local date (``now`` in ``zone``) is no more than ``late_days`` days\ninto the period: Monday to Thursday for a week, the 1st to the 4th for a month. Store\nthe answer as the new ``sent`` in the transaction that writes the digest's inbox row,\nwhether or not quiet hours let the push go: a marker set on the push would write a new\nrow every day of the grace. ``now`` is aware."
+        },
+        {
+          "name": "digest_period",
+          "kind": "function",
+          "signature": "digest_period(cadence: DigestCadence, day: date) -> str",
+          "doc": "The period ``day`` belongs to: its ISO week, ``2026-W42`` (on the ISO year, so\n2027-01-01 is ``2026-W53``), or its month, ``2026-10``. At most 8 characters, so the\nmarker fits ``VARCHAR(16)``."
+        },
+        {
+          "name": "digest_tag",
+          "kind": "function",
+          "signature": "digest_tag(period: str) -> str",
+          "doc": "The digest push's ``tag``: ``digest:2026-W42``, so a late copy of the same period\nreplaces the earlier notification on the device, and the next period's doesn't."
+        },
+        {
+          "name": "in_quiet_hours",
+          "kind": "function",
+          "signature": "in_quiet_hours(start: str | None, end: str | None, zone: tzinfo, now: datetime) -> bool",
+          "doc": "Whether ``now`` falls inside the window ``start``–``end`` in ``zone`` (§2.4).\n\n``start`` is inside, ``end`` is not; a window with ``start`` after ``end`` crosses\nmidnight. **Fails open:** a half-set window, a bound that is no ``HH:MM`` or\n``start == end`` answer ``False``. ``now`` is aware (a naive one is a ``ValueError``);\n``zone`` is :func:`resolve_zone`'s answer. On a day the clocks change, the window is\nread off the local wall clock: a window inside the skipped hour never happens that\nnight, and one inside the repeated hour holds both times round.\n\nOnly a ``quiet`` type's push is held, and a held push is dropped, not delayed: the\ninbox row is written and e-mail goes as usual (:func:`~.delivery.plan_delivery`)."
+        },
+        {
+          "name": "is_known_zone",
+          "kind": "function",
+          "signature": "is_known_zone(name: str | None) -> bool",
+          "doc": "Whether ``zoneinfo`` knows ``name`` — the update's check on ``timezone``.\n\n``Europe/Zurich`` and ``UTC`` are; an empty name, a region alone (``Europe``), a path\n(``../etc/passwd``) and ``None`` are not."
+        },
+        {
+          "name": "plan_delivery",
+          "kind": "function",
+          "signature": "plan_delivery(notification_type: NotificationType, switches: TypeSwitches, *, active: bool, is_actor: bool, quiet_now: bool, email_verified: bool, keeps_inbox: bool, service: bool = False) -> Delivery",
+          "doc": "The :class:`Delivery` for one recipient (§3.3).\n\n``switches`` is the recipient's, resolved (:func:`~.resource.resolve_switches`).\n``active`` is false for a deactivated account and a demo; ``is_actor`` for the\nevent's own author. ``quiet_now`` is :func:`~.timing.in_quiet_hours` for the\nrecipient, and drops only the push, only of a ``quiet`` type. ``keeps_inbox``: the\napp keeps an inbox (keksdose). ``service``: a service notice, on the app channel\nwhatever the switch says, never by mail."
+        },
+        {
+          "name": "push_outcome",
+          "kind": "function",
+          "signature": "push_outcome(status: int | None) -> PushOutcome",
+          "doc": "The :class:`PushOutcome` of a push service's HTTP status; ``None`` — no answer, a\ntimeout, a connection error — is :attr:`PushOutcome.FAILED` (keksdose\n``push_service.py:242-273``)."
+        },
+        {
+          "name": "read_unsubscribe_token",
+          "kind": "function",
+          "signature": "read_unsubscribe_token(secret: str | bytes, token: str) -> UnsubscribeClaim",
+          "doc": "The account and type a token names, after its MAC is checked in constant time.\n\nAnything else is an :class:`~.errors.UnsubscribeTokenError` (400): another version, a\nchanged ``<data>`` or ``<mac>``, base64 padding, a token signed with another secret,\nor a claim that is no ``<user id>:<type id>``."
+        },
+        {
+          "name": "resolve_switches",
+          "kind": "function",
+          "signature": "resolve_switches(types: NotificationTypes, stored: Mapping[str, StoredSwitches]) -> dict[str, TypeSwitches]",
+          "doc": "The ``GET``'s ``types``: every type of ``types`` — the account's registry — in its\norder, an unset switch as the type's default, ``None`` where the type doesn't offer\nthe channel. A stored row for a type ``types`` doesn't hold is left out."
+        },
+        {
+          "name": "resolve_zone",
+          "kind": "function",
+          "signature": "resolve_zone(name: str | None, fallback: str = DEFAULT_ZONE) -> ZoneInfo",
+          "doc": "The zone quiet hours and the digest run in: ``name``, or ``fallback`` when it is\nunset or no longer resolves (§3.4) — never UTC, never \"no quiet hours\".\n\n``fallback`` is the app's zone and must resolve; a typo there is a\n``ZoneInfoNotFoundError`` on the first call."
+        },
+        {
+          "name": "should_reap",
+          "kind": "function",
+          "signature": "should_reap(failure_count: int) -> bool",
+          "doc": "Whether the daily job deletes a device: :data:`PUSH_MAX_FAILURES` failures in a row\n(keksdose ``reap_dead_subscriptions``)."
+        },
+        {
+          "name": "unsubscribe_key",
+          "kind": "function",
+          "signature": "unsubscribe_key(secret: str | bytes) -> bytes",
+          "doc": "The token's key: HMAC-SHA256 of ``eifi1-notifications-unsubscribe`` under the app's\nsigning secret (its JWT secret). 32 bytes."
+        },
+        {
+          "name": "unsubscribe_token",
+          "kind": "function",
+          "signature": "unsubscribe_token(secret: str | bytes, user_id: int | str, type_id: str) -> str",
+          "doc": "The token for one account and one type: ``v1.<data>.<mac>``, URL-safe as it is.\n\nA :class:`ValueError` for an empty or overlong user id, or a type id outside\n:data:`~.registry.TYPE_ID_PATTERN`."
+        },
+        {
+          "name": "vapid_subject",
+          "kind": "function",
+          "signature": "vapid_subject(support_address: str) -> str",
+          "doc": "The VAPID ``sub`` claim: ``mailto:`` the app's support address (§2.7), not\nkeksdose's ``admin@``. Pass the app's reply-to — server-kit\n:func:`~eifi1_server_kit.mail.support_address` by default. A new subject leaves existing\nsubscriptions working. A :class:`ValueError` for anything but a bare address."
+        }
+      ]
+    },
+    {
       "name": "eifi1_server_kit.feedback",
       "summary": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).",
-      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.",
+      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.\n\nLayer 2 (0.9.0, ``docs/server-services-harmonization.md``): the flows written once against\nports each app implements — :class:`FeedbackService` over a :class:`FeedbackRepository`,\n:func:`upload_attachment` and :func:`download_attachment` over an\n:class:`AttachmentStorage`, :func:`throttle_upload` — re-exported here, without FastAPI.\nThe routes are ``eifi1_server_kit.feedback.router`` (the ``fastapi`` extra) and the fakes\nand conformance checks ``eifi1_server_kit.feedback.testing``; neither is re-exported.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3",
@@ -4695,6 +5566,12 @@
           "doc": "The two settled states: ``resolved_at`` is stamped on entering them, cleared on leaving,\nand a crash matching a row in one of them files a NEW row (keksdose\n``feedback_service.py:90`` ``_TERMINAL_STATUSES``)."
         },
         {
+          "name": "THROTTLED_DETAIL",
+          "kind": "constant",
+          "signature": "THROTTLED_DETAIL = \"Too many attachments uploaded — please try again later.\"",
+          "doc": "The upload throttle's sentence, keksdose's (``upload_guards.py:97``); its support door\nraises it too, through :func:`eifi1_server_kit.feedback.throttle_upload`."
+        },
+        {
           "name": "UUID32_SHA12_KEY_PATTERN",
           "kind": "constant",
           "signature": "UUID32_SHA12_KEY_PATTERN = rf\"[0-9a-f]{{32}}_[0-9a-f]{{12}}\\.(?:{_EXTENSIONS})\"",
@@ -4717,6 +5594,63 @@
               "type": "frozenset[str]",
               "default": null,
               "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "AttachmentDownload",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class AttachmentDownload",
+          "doc": "One file, ready to answer (§2.12): the bytes, the type they give and the headers.",
+          "fields": [
+            {
+              "name": "data",
+              "type": "bytes",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "media_type",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "headers",
+              "type": "dict[str, str]",
+              "default": null,
+              "doc": "``Content-Disposition`` and ``X-Content-Type-Options``."
+            }
+          ]
+        },
+        {
+          "name": "AttachmentNotFoundError",
+          "kind": "class",
+          "signature": "class AttachmentNotFoundError(FeedbackError)",
+          "doc": "A key outside the app's pattern, a file the store does not have, or one this\nviewer may not read (→ 404, \"Attachment not found\").",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(detail: str = 'Attachment not found') -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "AttachmentStorage",
+          "kind": "protocol",
+          "signature": "class AttachmentStorage(Protocol)",
+          "doc": "The app's attachment store (§2.5). It mints the key, so each app keeps its own\n(keksdose ``content_addressed_key``, kastlan ``<uuid32>_<sha12>``, Kurvenschmiede its\nHMAC with its dedupe and its sweep). There is no purge: the kit deletes no file.",
+          "methods": [
+            {
+              "name": "save",
+              "signature": "async save(data: bytes, upload: CheckedUpload, *, uploader: FeedbackActor, filename: str | None) -> str",
+              "doc": "Store a checked file and answer its key, one the app's AttachmentUrlPolicy accepts."
+            },
+            {
+              "name": "read",
+              "signature": "async read(key: str, *, viewer: FeedbackActor) -> StoredAttachment | None",
+              "doc": "The file, or None: missing, or not this viewer's to read (KS)."
             }
           ]
         },
@@ -4783,6 +5717,12 @@
               "doc": "Each URL checked, then de-duplicated in the order given.\n\nKeys are content-addressed in two apps, so the same picture pasted twice is the\nsame URL twice — one chip, not two, is what the reporter meant (keksdose\n``schemas/feedback.py:42-58`` ``_attachment_urls_are_ours``)."
             }
           ]
+        },
+        {
+          "name": "Clock",
+          "kind": "constant",
+          "signature": "type Clock = Callable[[], datetime]",
+          "doc": "The service's clock: an aware UTC ``datetime`` (``resolved_at``, a crash's\n``seen_at``). Not :data:`eifi1_server_kit.limiter.Clock`, which is a monotonic float."
         },
         {
           "name": "CrashCategoryNotAssignableError",
@@ -4931,6 +5871,64 @@
           ]
         },
         {
+          "name": "ErasedFeedback",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class ErasedFeedback",
+          "doc": "What :meth:`FeedbackService.erase_author` did (§2.15).",
+          "fields": [
+            {
+              "name": "reports",
+              "type": "int",
+              "default": null,
+              "doc": "Rows anonymised."
+            },
+            {
+              "name": "keys",
+              "type": "tuple[str, ...]",
+              "default": null,
+              "doc": "Bare policy keys no other row names, sorted; the app deletes them at its commit."
+            }
+          ]
+        },
+        {
+          "name": "FeedbackActor",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class FeedbackActor",
+          "doc": "Who is asking (§2.2): the ``viewer`` of a read, the ``uploader`` of a file, the\n``actor`` of a write.\n\nOne app dependency builds it from the app's own ``get_current_user``. ``is_admin``\nsays exactly what the app's ``admin_guard`` lets through. A caller without a session\n(Kurvenschmiede's feedback loop) builds one for the account it files under.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "display_name",
+              "type": "str | None",
+              "default": null,
+              "doc": "The context stamp's and a crash body's name."
+            },
+            {
+              "name": "is_admin",
+              "type": "bool",
+              "default": null,
+              "doc": "keksdose role ADMIN; kastlan ADMIN in the acting company; Kurvenschmiede role ADMIN."
+            },
+            {
+              "name": "is_demo",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "FeedbackAttachmentResponse",
           "kind": "model",
           "signature": "class FeedbackAttachmentResponse(BaseModel)",
@@ -5041,6 +6039,67 @@
           "doc": "The actor may not make this change (→ 403; keksdose ``FeedbackUpdateForbiddenError``).\n\nRaised for: not the author and not an admin; an author changing a field outside\ntitle / body / category; an author editing a row outside OPEN / READY / IN_PROGRESS\nwithout it being a rework append."
         },
         {
+          "name": "FeedbackNotFoundError",
+          "kind": "class",
+          "signature": "class FeedbackNotFoundError(FeedbackError)",
+          "doc": "No such report, or one this actor may not see (→ 404, \"Feedback not found\").\n\nAlso what a foreign row answers where the app chose ``foreign_row=\"not_found\"``\n(Kurvenschmiede): indistinguishable from a missing one (server-services §2.10).",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(detail: str = 'Feedback not found') -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "FeedbackRepository",
+          "kind": "protocol",
+          "signature": "class FeedbackRepository[RowT: FeedbackRow](Protocol)",
+          "doc": "The app's feedback rows, on the request's session (§2.4). Async; every write\nflushes and never commits. Ties in a list go to the higher id.",
+          "methods": [
+            {
+              "name": "get",
+              "signature": "async get(feedback_id: int, *, viewer: FeedbackActor) -> RowT | None",
+              "doc": "The row, or None: missing, or hidden from this viewer (ka's RLS, KS's visible_to)."
+            },
+            {
+              "name": "list_mine",
+              "signature": "async list_mine(user_id: int) -> Sequence[RowT]",
+              "doc": "The author's rows, newest first, the higher id first on a tie."
+            },
+            {
+              "name": "inbox",
+              "signature": "async inbox(status: FeedbackStatus | None) -> Sequence[tuple[RowT, str | None]]",
+              "doc": "Every row the request may see, in list_mine's order, each with its author's\ncurrent address: an outer join, None once the author is erased."
+            },
+            {
+              "name": "open_crash",
+              "signature": "async open_crash(fingerprint: str) -> RowT | None",
+              "doc": "The newest row with this fingerprint whose status is not in TERMINAL_STATUSES,\nthe higher id first on a tie."
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewFeedback) -> RowT",
+              "doc": "Insert and flush, so the id is set. The app adds its own columns (ka's company)\nand checks what is its own (KS claims the named uploads as new.user_id's)."
+            },
+            {
+              "name": "apply",
+              "signature": "async apply(row: RowT, changes: Mapping[str, Any], *, actor: FeedbackActor | None) -> RowT",
+              "doc": "Assign and flush. The keys are §3.1's columns; the values the kit's (enums\nincluded: a string column stores .value). `actor` makes the change: the request's\nfor an update and a crash's fold, None for the erasure (2.15)."
+            },
+            {
+              "name": "by_author",
+              "signature": "async by_author(user_id: int) -> Sequence[RowT]",
+              "doc": "The erasure's rows (2.15)."
+            },
+            {
+              "name": "urls_named_except",
+              "signature": "async urls_named_except(row_ids: Collection[int]) -> set[str]",
+              "doc": "Every attachment URL the rows outside row_ids name, in a column or the body\n(feedback_attachment_urls): the erasure's shared-key check."
+            }
+          ]
+        },
+        {
           "name": "FeedbackResponse",
           "kind": "model",
           "signature": "class FeedbackResponse(BaseModel)",
@@ -5133,6 +6192,107 @@
           ]
         },
         {
+          "name": "FeedbackRow",
+          "kind": "protocol",
+          "signature": "class FeedbackRow(Protocol)",
+          "doc": "A report as the kit reads it (§2.3): read-only members, so an app's mapped row\nsatisfies it as it is. The kit never assigns to it — every write goes through\n:meth:`FeedbackRepository.apply`. ``created_at`` is read only for the order.",
+          "methods": [
+            {
+              "name": "id",
+              "signature": "@property id -> int",
+              "doc": ""
+            },
+            {
+              "name": "user_id",
+              "signature": "@property user_id -> int | None",
+              "doc": ""
+            },
+            {
+              "name": "status",
+              "signature": "@property status -> FeedbackStatus | str",
+              "doc": ""
+            },
+            {
+              "name": "title",
+              "signature": "@property title -> str",
+              "doc": ""
+            },
+            {
+              "name": "body",
+              "signature": "@property body -> str",
+              "doc": ""
+            },
+            {
+              "name": "context",
+              "signature": "@property context -> Mapping[str, Any] | None",
+              "doc": ""
+            },
+            {
+              "name": "crash_fingerprint",
+              "signature": "@property crash_fingerprint -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "screenshot_url",
+              "signature": "@property screenshot_url -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "attachment_urls",
+              "signature": "@property attachment_urls -> Sequence[str] | None",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "signature": "@property created_at -> datetime",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "FeedbackService",
+          "kind": "class",
+          "signature": "class FeedbackService[RowT: FeedbackRow]",
+          "doc": "The contract's flows over the app's repository (§2.4, §2.10, §2.15).\n\n``policy`` is the app's attachment URL shape; ``foreign_row`` what a non-admin gets on\nanother person's row — ``\"forbidden\"`` lets :func:`~eifi1_server_kit.feedback.plan_update`'s\n403 speak (keksdose, kastlan), ``\"not_found\"`` answers 404 before it (Kurvenschmiede);\n``now`` stamps ``resolved_at`` and a crash's ``seen_at``.\n\nThe demo refusal and the inbox's admin check are here too, for a caller without the\nrouter (§2.8); over HTTP the app's own guards answer first.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(repository: FeedbackRepository[RowT], *, policy: AttachmentUrlPolicy, foreign_row: Literal['forbidden', 'not_found'] = 'forbidden', now: Clock = utc_now) -> None",
+              "doc": ""
+            },
+            {
+              "name": "create",
+              "signature": "async create(actor: FeedbackActor, payload: FeedbackCreate) -> RowT",
+              "doc": "File a report (§3.3): refused for a demo, CRASH refused (422), the first status\nthe server's (:func:`~eifi1_server_kit.feedback.initial_status`), the identity in\n``context`` the session's (:func:`~eifi1_server_kit.feedback.stamp_identity`, §2.13),\n``attachment_urls`` ``None`` for none."
+            },
+            {
+              "name": "report_crash",
+              "signature": "async report_crash(actor: FeedbackActor, payload: CrashReportCreate, *, limiter: SlidingWindowRateLimiter | None = None) -> CrashReportResponse",
+              "doc": "File a crash, or fold it into the open row with its fingerprint (§3.6).\n\n``stored: false`` for a demo, then for a spent window — charged before the lookup,\nso repeats count (§2.11) — and never an error status: the caller is a page that\nhas just crashed."
+            },
+            {
+              "name": "list_mine",
+              "signature": "async list_mine(actor: FeedbackActor) -> Sequence[RowT]",
+              "doc": "The actor's own reports, newest first — an admin's too."
+            },
+            {
+              "name": "inbox",
+              "signature": "async inbox(actor: FeedbackActor, status: FeedbackStatus | None = None) -> Sequence[tuple[RowT, str | None]]",
+              "doc": "Every report with its author's address, for an admin and nobody else\n(:class:`~eifi1_server_kit.feedback.FeedbackForbiddenError` \"Insufficient role\")."
+            },
+            {
+              "name": "update",
+              "signature": "async update(actor: FeedbackActor, feedback_id: int, payload: FeedbackUpdate) -> RowT",
+              "doc": "A PATCH, in keksdose's order (§2.10): refused for a demo; CRASH refused before\nthe lookup (422); the row this actor may see, or 404; a foreign row's 404 where\nthe app chose it; :func:`~eifi1_server_kit.feedback.plan_update` (403 or 422); then\nthe one write."
+            },
+            {
+              "name": "erase_author",
+              "signature": "async erase_author(user_id: int, identifiers: Iterable[str | None]) -> ErasedFeedback",
+              "doc": "Take an erased account out of its reports, and answer the files to delete (§2.15).\n\nEach of the author's rows is anonymised\n(:func:`~eifi1_server_kit.feedback.anonymise_feedback`) and written with\n``actor=None``: an erasure claims nothing and answers nobody. ``keys`` are the bare\nkeys of the URLs those rows named — columns and the body's rework lines — that no\nother row still names, sorted. Call it inside the app's own erasure transaction,\nwith a repository that does not commit; the app deletes the keys at its commit\n(keksdose prefixes ``feedback/`` and arms its after-commit purge, kastlan deletes\nafter its one commit, Kurvenschmiede ignores them)."
+            }
+          ]
+        },
+        {
           "name": "FeedbackStatus",
           "kind": "enum",
           "signature": "class FeedbackStatus(str, enum.Enum)",
@@ -5169,6 +6329,24 @@
             {
               "name": "WONT_DO",
               "value": "WONT_DO"
+            }
+          ]
+        },
+        {
+          "name": "FeedbackThrottledError",
+          "kind": "class",
+          "signature": "class FeedbackThrottledError(FeedbackError)",
+          "doc": "The upload window is spent (→ 429, contract §3.5): :data:`THROTTLED_DETAIL` with a\n``Retry-After`` in whole seconds, rounded up, as :class:`~eifi1_server_kit.demo.DemoError`\ncarries one.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(retry_after: float, detail: str = THROTTLED_DETAIL) -> None",
+              "doc": ""
+            },
+            {
+              "name": "headers",
+              "signature": "@property headers -> dict[str, str]",
+              "doc": "``{\"Retry-After\": …}`` — the header the answer carries."
             }
           ]
         },
@@ -5215,6 +6393,94 @@
           "kind": "class",
           "signature": "class FeedbackValidationError(FeedbackError)",
           "doc": "A value the payload may not carry, whoever sends it (→ 422)."
+        },
+        {
+          "name": "NewFeedback",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class NewFeedback",
+          "doc": "A row to insert (§2.3): the kit's columns; the app adds its own (kastlan's company).",
+          "fields": [
+            {
+              "name": "user_id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "title",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "body",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "category",
+              "type": "FeedbackCategory",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "status",
+              "type": "FeedbackStatus",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "context",
+              "type": "dict[str, Any] | None",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "screenshot_url",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "attachment_urls",
+              "type": "list[str] | None",
+              "default": "None",
+              "doc": "``None`` for none, never ``[]``."
+            },
+            {
+              "name": "crash_fingerprint",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "StoredAttachment",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class StoredAttachment",
+          "doc": "A stored file as :meth:`AttachmentStorage.read` answers it (§2.5).",
+          "fields": [
+            {
+              "name": "data",
+              "type": "bytes",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "media_type",
+              "type": "str | None",
+              "default": null,
+              "doc": "As stored, or from the key's extension (kk, ka); the kit re-reads the bytes (2.12)."
+            },
+            {
+              "name": "filename",
+              "type": "str | None",
+              "default": null,
+              "doc": "``None``: served as ``attachment.<ext>``."
+            }
+          ]
         },
         {
           "name": "UnknownAttachmentUrlError",
@@ -5339,6 +6605,12 @@
           "doc": "Fold into the open row, or file a new one.\n\n``candidate_status`` is the status of the row the APP'S QUERY found: the newest row with\nthe same fingerprint whose status is NOT terminal — keksdose ``record_crash``\n(``feedback_service.py:312-318``) filters ``status NOT IN TERMINAL_STATUSES`` in the\nquery itself, so an older re-opened row is counted even when a newer one with the same\nfingerprint was settled. Passing the newest row of ANY status instead files a duplicate\nin exactly that case (kastlan's finding). With keksdose's query the candidate always\nfolds; ``None`` (no open row) files a new one — a fixed crash coming back is news, and\nhiding it inside a resolved entry is how a regression goes unnoticed. Any non-terminal\nstatus folds, IN_EVALUATION included."
         },
         {
+          "name": "download_attachment",
+          "kind": "function",
+          "signature": "async download_attachment(actor: FeedbackActor, key: str, *, storage: AttachmentStorage, policy: AttachmentUrlPolicy, require_utf8_text: bool = False) -> AttachmentDownload",
+          "doc": "One stored file, with Kurvenschmiede's download rules for all three (§2.12).\n\n404 (\"Attachment not found\") for a key outside the policy's pattern — the only thing\nbetween a caller and the store path — and for a file the store does not have or will\nnot show this viewer. The type is read off the BYTES, never the stored word: their\nsignature, else ``text/plain; charset=utf-8`` when stored as text and still text,\nelse ``application/octet-stream``. ``Content-Disposition`` always — ``inline`` for\nthe four pictures only — with the stored name or ``attachment.<ext>``, and\n``X-Content-Type-Options: nosniff`` always."
+        },
+        {
           "name": "feedback_attachment_urls",
           "kind": "function",
           "signature": "feedback_attachment_urls(*, screenshot_url: str | None, attachment_urls: Iterable[str] | None, body: str | None, policy: AttachmentUrlPolicy = DEFAULT_ATTACHMENT_URL_POLICY) -> set[str]",
@@ -5441,10 +6713,157 @@
           "doc": "The sent context with ``user_id`` / ``user_email`` / ``user_display_name`` written by\nthe server from the session (Kurvenschmiede ``feedback_service.py:165`` ``stamped_context``).\n\nEverything else — the page, the browser, the build — is the client's to know. Returns a\nNEW dict: a plain JSON column has no mutation tracking (keksdose\n``feedback_service.py:323-327``)."
         },
         {
+          "name": "throttle_upload",
+          "kind": "function",
+          "signature": "throttle_upload(limiter: SlidingWindowRateLimiter, user_id: int) -> None",
+          "doc": "Charge one upload to ``user_id``'s window, or refuse with\n:class:`~eifi1_server_kit.feedback.FeedbackThrottledError` (429, ``Retry-After``).\n\nkeksdose's support door calls it too, on the same ``.upload`` window, so the 429's\nsentence is written once."
+        },
+        {
           "name": "truncate",
           "kind": "function",
           "signature": "truncate(text: str, limit: int) -> str",
           "doc": "``text`` cut to ``limit`` characters, the last one an ellipsis when it was cut."
+        },
+        {
+          "name": "upload_attachment",
+          "kind": "function",
+          "signature": "async upload_attachment(actor: FeedbackActor, file: UploadSource, *, declared_type: str | None, filename: str | None, storage: AttachmentStorage, policy: AttachmentUrlPolicy, limiter: SlidingWindowRateLimiter | None, decode_images: bool = False, require_utf8_text: bool = False) -> str",
+          "doc": "Store one file for a report not filed yet, and answer the URL to name it by (§3.5).\n\nIn order: refused for a demo; the window charged (before the file is read, §2.11);\n:func:`~eifi1_server_kit.uploads.read_capped_upload`;\n:func:`~eifi1_server_kit.uploads.check_upload` (400 / 413 / 415);\n:func:`~eifi1_server_kit.uploads.ensure_decodable_image` with ``decode_images`` (the\n``images`` extra; keksdose, kastlan); ``storage.save`` mints the key, and the answer\nis ``policy.url_for(key)``."
+        },
+        {
+          "name": "utc_now",
+          "kind": "function",
+          "signature": "utc_now() -> datetime",
+          "doc": "The current time, aware, in UTC — the default :data:`Clock`."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.feedback.router",
+      "summary": "The feedback routes as one router factory: ``feedback_router(FeedbackDeps(...))``.",
+      "doc": "The feedback routes as one router factory: ``feedback_router(FeedbackDeps(...))``.\n\nLayer 2 (``docs/server-services-harmonization.md`` §2.8–§2.10, §4.1 in ``Eifi1/ui-kit``),\nbehind the ``fastapi`` extra (``eifi1-server-kit[fastapi]``). The app passes its own\ndependencies and shapes — the actor, the repository on the request's session, the\nstorage, its demo guard factory and its admin guard, its attachment URL policy and its\nschema subclasses — and includes the router as it includes its own::\n\n    router = feedback_router(FeedbackDeps(\n        actor=feedback_actor, repository=feedback_repository, storage=feedback_storage,\n        demo_guard=not_in_the_demo, admin_guard=require_role(UserRole.ADMIN),\n        policy=FEEDBACK_ATTACHMENTS, create_model=FeedbackCreate, decode_images=True,\n    ))\n    app.include_router(router, prefix=\"/api/v1\")\n    app.state.feedback_limiters = FeedbackLimiters()\n    install_contract_error_handlers(app)\n\n**The guards are the app's** (§2.8), first in each route's ``dependencies=[…]``, so\nFastAPI runs them before the endpoint's parameters and before the body is validated (a\ndemo's ``json={}`` is a 403 ``demo_refused``, not a 422), and the apps' route walks find\nthem by their own names. ``demo_guard(\"uploads\")`` guards the upload,\n``demo_guard(\"feedback\")`` the create and the PATCH, ``admin_guard`` the inbox; the crash\nroute takes none (its service answers a demo ``stored: false``).\n\n**The endpoints carry keksdose's names** (``upload_attachment``, ``download_attachment``,\n``create``, ``report_crash``, ``list_my``, ``list_all``, ``update``), the upload's field is\n``file``, the inbox's query ``status_filter`` and the path parameter ``{feedback_id}``, so\nkeksdose's operation ids and its ``Body_upload_attachment_api_v1_feedback_attachments_post``\ncomponent stay as they are. An app's own extra routes go AFTER this router: a\n``GET /feedback/{feedback_id}`` included first would take ``GET /feedback/my``.\n\n**The router raises no** ``HTTPException``: past the app's guards every refusal is a kit\nrefusal, answered by :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\nEach request builds a :class:`~eifi1_server_kit.feedback.FeedbackService` on the\nrequest's repository; each flow makes at most one repository write, as its last step, and\nthe kit never commits (§2.7).\n\nNo ``from __future__ import annotations`` here, on purpose: the endpoints' parameter\ntypes are the app's models, closed over in the factory, and FastAPI cannot resolve a\nstring annotation that names a local.",
+      "contract": {
+        "doc": "docs/server-services-harmonization.md",
+        "section": "§2.9",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#29-the-router-factory",
+        "links": [
+          {
+            "section": "§2.9",
+            "heading": "2.9 The router factory",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#29-the-router-factory"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "FeedbackDeps",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class FeedbackDeps[RowT: FeedbackRow]",
+          "doc": "What an app hands :func:`feedback_router` (§2.9): its dependencies, shapes and choices.",
+          "fields": [
+            {
+              "name": "actor",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency answering a :class:`~eifi1_server_kit.feedback.FeedbackActor`."
+            },
+            {
+              "name": "repository",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency answering a ``FeedbackRepository[RowT]`` on the request's session."
+            },
+            {
+              "name": "storage",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency answering an :class:`~eifi1_server_kit.feedback.AttachmentStorage`."
+            },
+            {
+              "name": "demo_guard",
+              "type": "Callable[[str], Callable[..., Any]]",
+              "default": null,
+              "doc": "The app's factory: ``demo_guard(\"uploads\")``, ``demo_guard(\"feedback\")``."
+            },
+            {
+              "name": "admin_guard",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency on ``GET /feedback``."
+            },
+            {
+              "name": "policy",
+              "type": "AttachmentUrlPolicy",
+              "default": null,
+              "doc": "The app's keys and URLs; ``policy.prefix`` must be the mounted path."
+            },
+            {
+              "name": "create_model",
+              "type": "type[FeedbackCreate]",
+              "default": "<class 'eifi1_server_kit.feedback.schemas.FeedbackCreate'>",
+              "doc": "The app's subclass: its names and fields. Its ``attachment_url_policy`` must be ``policy``."
+            },
+            {
+              "name": "update_model",
+              "type": "type[FeedbackUpdate]",
+              "default": "<class 'eifi1_server_kit.feedback.schemas.FeedbackUpdate'>",
+              "doc": ""
+            },
+            {
+              "name": "response_model",
+              "type": "type[FeedbackResponse]",
+              "default": "<class 'eifi1_server_kit.feedback.schemas.FeedbackResponse'>",
+              "doc": ""
+            },
+            {
+              "name": "to_response",
+              "type": "Callable[[RowT, str | None], FeedbackResponse] | None",
+              "default": "None",
+              "doc": "``(row, address)`` → the answer; ``None``: ``response_model.model_validate(row)``\nwith ``user_email`` the address (the inbox's; ``None`` everywhere else)."
+            },
+            {
+              "name": "foreign_row",
+              "type": "Literal['forbidden', 'not_found']",
+              "default": "'forbidden'",
+              "doc": "A non-admin's PATCH on another person's row: 403 (keksdose, kastlan) or 404 (Kurvenschmiede)."
+            },
+            {
+              "name": "decode_images",
+              "type": "bool",
+              "default": "False",
+              "doc": ":func:`~eifi1_server_kit.uploads.ensure_decodable_image` on every upload (the ``images`` extra; kk, ka)."
+            },
+            {
+              "name": "require_utf8_text",
+              "type": "bool",
+              "default": "False",
+              "doc": "Text is text only when UTF-8 (Kurvenschmiede)."
+            },
+            {
+              "name": "limiters",
+              "type": "Callable[[Request], FeedbackLimiters]",
+              "default": "<function app_state_limiters>",
+              "doc": ""
+            },
+            {
+              "name": "now",
+              "type": "Clock",
+              "default": "<function utc_now>",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "app_state_limiters",
+          "kind": "function",
+          "signature": "app_state_limiters(request: Request) -> FeedbackLimiters",
+          "doc": "The app's :class:`~eifi1_server_kit.limiter.FeedbackLimiters`, read per request from\n``app.state.feedback_limiters`` — built once in ``create_app``, so a test that builds an\napp per test starts with empty windows."
+        },
+        {
+          "name": "feedback_router",
+          "kind": "function",
+          "signature": "feedback_router[RowT: FeedbackRow](deps: FeedbackDeps[RowT], *, prefix: str = '/feedback', tags: Sequence[str] = ('feedback',)) -> APIRouter",
+          "doc": "The contract's seven routes (§3.3), on ``APIRouter(prefix=prefix, tags=tags)``, in\nthis order: ``POST /attachments``, ``GET /attachments/{key}``, ``POST \"\"``,\n``POST /crash``, ``GET /my``, ``GET \"\"``, ``PATCH /{feedback_id}``.\n\nRaises :class:`ValueError` when ``deps.create_model.attachment_url_policy`` is not\n``deps.policy``: two policies would let a report name a key the download refuses."
         }
       ]
     },
@@ -5709,7 +7128,7 @@
     {
       "name": "eifi1_server_kit.limiter",
       "summary": "An in-process sliding-window rate limiter: at most N hits per key per window.",
-      "doc": "An in-process sliding-window rate limiter: at most N hits per key per window.\n\nkeksdose ``backend/keksdose/infrastructure/rate_limit.py:45-124``\n``SlidingWindowRateLimiter``, unchanged in behaviour — the lock, the blocked-hit rule and\nthe once-per-window sweep included. kastlan's copy (``infrastructure/rate_limit.py``) has\nthe same constructor and ``hit``/``reset``, so it swaps in as is.\n\n**Process-local.** The window lives in this process's memory: each Cloud Run instance and\neach uvicorn worker keeps its own counters (Kurvenschmiede's 2 workers make \"20 an hour\"\nan effective 40). It bounds one client hammering one process — a browser stuck in a render\nloop — not a cross-instance total. ``hit()`` is the whole contract, so a shared store\n(Redis, a table) could replace the deques without touching a caller.\n\n**No module globals here.** Build limiters per app — in ``create_app``, on\n``app.state`` — so a test that builds an app per test starts with empty windows\n(Kurvenschmiede ``infrastructure/security.py:288`` ``AuthLimiters`` / ``FeedbackLimiters``).\n:class:`FeedbackLimiters` is that pair for the feedback routes.\n\n**Whose address a window counts** is :func:`client_ip`'s answer: counted from the RIGHT of\n``X-Forwarded-For``, as many hops as the app has proxies — never the left-most entry,\nwhich the client writes itself.\n\n**When to charge is the caller's choice.** Call ``hit()`` where a request should start\ncosting a slot:\n\n* uploads — keksdose charges BEFORE the type/size checks (``upload_guards.throttle_attachment``),\n  so a refused file uses a slot; the contract recommends AFTER validation;\n* crashes — keksdose charges BEFORE the dedupe (``feedback_router.py:155``), so repeats\n  count and ``occurrences`` stops rising after 20 an hour; the contract recommends AFTER\n  the dedupe, charging only rows actually filed.",
+      "doc": "An in-process sliding-window rate limiter: at most N hits per key per window.\n\nkeksdose ``backend/keksdose/infrastructure/rate_limit.py:45-124``\n``SlidingWindowRateLimiter``, unchanged in behaviour — the lock, the blocked-hit rule and\nthe once-per-window sweep included. kastlan's copy (``infrastructure/rate_limit.py``) has\nthe same constructor and ``hit``/``reset``, so it swaps in as is.\n\n**Process-local.** The window lives in this process's memory: each Cloud Run instance and\neach uvicorn worker keeps its own counters (Kurvenschmiede's 2 workers make \"20 an hour\"\nan effective 40). It bounds one client hammering one process — a browser stuck in a render\nloop — not a cross-instance total. ``hit()`` is the whole contract, so a shared store\n(Redis, a table) could replace the deques without touching a caller.\n\n**No module globals here.** Build limiters per app — in ``create_app``, on\n``app.state`` — so a test that builds an app per test starts with empty windows\n(Kurvenschmiede ``infrastructure/security.py:288`` ``AuthLimiters`` / ``FeedbackLimiters``).\n:class:`FeedbackLimiters` is that pair for the feedback routes.\n\n**Whose address a window counts** is :func:`client_ip`'s answer: counted from the RIGHT of\n``X-Forwarded-For``, as many hops as the app has proxies — never the left-most entry,\nwhich the client writes itself.\n\n**When to charge: before the work.** Call ``hit()`` where a request starts costing the\nserver something — the feedback contract's rule since round 0.36 (§3.5, §3.6, as all\nthree apps did; ``docs/server-services-harmonization.md`` §2.11), and what\n:mod:`eifi1_server_kit.feedback.service` does:\n\n* uploads — BEFORE the file is read and checked (keksdose\n  ``upload_guards.throttle_attachment``), so a refused file uses a slot;\n* crashes — BEFORE the dedupe (keksdose ``feedback_router.py:155``), so repeats count and\n  ``occurrences`` stops rising after 20 an hour.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.5, §3.6",
@@ -5835,7 +7254,7 @@
     {
       "name": "eifi1_server_kit.errors",
       "summary": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.",
-      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, and a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
+      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.7",
@@ -5852,7 +7271,7 @@
         {
           "name": "CONTRACT_ERRORS",
           "kind": "constant",
-          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n)",
+          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n    NotificationError,\n)",
           "doc": "Every kit exception base that carries a ``status_code``; subclasses are covered by MRO."
         },
         {

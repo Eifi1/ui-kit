@@ -76,6 +76,17 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TranslationReviewEditor — one string, opened",
     "Swipe and group — 0.25",
   ],
+  "links": [
+    "UiKitProvider linkComponent — the router link, set once",
+    "TextLink — tones and underline",
+    "TextLink — external, stopPropagation, current and icon",
+    "Button — href",
+    "ActionCard — href and iconTone",
+    "replace and reloadDocument",
+    "IconButton — href",
+    "TextLink — primary, secondary, warning",
+    "IconButton — toneColor per theme",
+  ],
   "fields": [
     "Input — unlabelled and labelled",
     "Input — invalid",
@@ -88,6 +99,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Select — size, and selectClassName",
     "FieldHint — the “?” on the label line",
     "HelpPopover — paragraph-long help behind “?”",
+    "help beside hint — the fact as the caption, the help behind the one “?”",
     "Textarea",
     "FloatingField, FieldLabel, FieldChevron — composing your own",
     "SearchField",
@@ -731,17 +743,6 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PageHeader — actionsAlign",
     "StatusDot — hues beside matching Chips",
   ],
-  "links": [
-    "UiKitProvider linkComponent — the router link, set once",
-    "TextLink — tones and underline",
-    "TextLink — external, stopPropagation, current and icon",
-    "Button — href",
-    "ActionCard — href and iconTone",
-    "replace and reloadDocument",
-    "IconButton — href",
-    "TextLink — primary, secondary, warning",
-    "IconButton — toneColor per theme",
-  ],
   "settings": [
     "SettingsLayout — desktop",
     "SettingsLayout — phone",
@@ -755,8 +756,19 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PasswordSetting — resolving handler",
     "PasswordSetting — rejecting handler",
     "TwoFactorSetting",
+    "DeviceResetSetting — this page's own registry",
     "PasswordSetting — strength + maxBytes",
     "LanguageSelect — a language as a form field",
+  ],
+  "notifications": [
+    "NotificationTypesSetting — nine types under three headings",
+    "NotificationTypesSetting — in the app, and by e-mail",
+    "NotificationTypesSetting — e-mail only, address unverified",
+    "QuietHoursSetting — a device in another zone",
+    "TimeZoneSelect",
+    "PushDeviceSetting — every state",
+    "PushDevicesSetting — this device marked, failures, remove",
+    "UnsubscribePanel — the signed-out page",
   ],
   "landing-demo": [
     "A sample landing — Ada's Garden Planner",
@@ -965,12 +977,22 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "mail · Protocols",
     "mail · Constants",
   ],
+  "server-notifications": [
+    "notifications · Functions",
+    "notifications · Classes",
+    "notifications · Models",
+    "notifications · Enums",
+    "notifications · Constants",
+  ],
   "server-feedback": [
     "feedback · Functions",
     "feedback · Classes",
     "feedback · Models",
     "feedback · Enums",
+    "feedback · Protocols",
     "feedback · Constants",
+    "feedback.router · Functions",
+    "feedback.router · Classes",
     "uploads · Functions",
     "uploads · Classes",
     "uploads · Protocols",
@@ -1029,6 +1051,10 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Localisation",
     "TranslationReviewDemo",
     "TranslationReview025Demo",
+  ],
+  "links": [
+    "LinksDemo",
+    "Links013Demo",
   ],
   "kit-review": [
     "KitReviewPage",
@@ -1269,10 +1295,6 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "PageHeader014Demo",
     "StatusDotHuesDemo",
   ],
-  "links": [
-    "LinksDemo",
-    "Links013Demo",
-  ],
   "settings": [
     "SettingsDesktop031Demo",
     "SettingsPhone031Demo",
@@ -1281,6 +1303,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Settings",
     "PasswordStrength022Demo",
     "LanguageSelect022Demo",
+  ],
+  "notifications": [
+    "NotificationsPage",
   ],
   "landing-demo": [
     "SampleLanding031Demo",
@@ -1366,6 +1391,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "ServerModules",
   ],
   "server-mail": [
+    "ServerModules",
+  ],
+  "server-notifications": [
     "ServerModules",
   ],
   "server-feedback": [
