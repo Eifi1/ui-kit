@@ -23,6 +23,10 @@ export type { ChartHeight } from "./components/chart-height";
 // SharedXZoom and the zoom's types: the public face of ./chart-zoom-core, whose arithmetic
 // stays the kit's (refactor audit 2026-10, API-6b; off the surface in 0.35).
 export * from "./components/chart-zoom";
+// The same binding, named from the module that holds it and the drag layer (recharts): the
+// packaging contract reads this entry's own imports to know which modules may import
+// recharts, so chart-zoom-core has to be one of them (MOD-6).
+export { SharedXZoom } from "./components/chart-zoom-core";
 export * from "./components/toggle-legend";
 export * from "./components/facing-pair";
 export * from "./components/series-chart-labels";

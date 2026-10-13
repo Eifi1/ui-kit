@@ -422,7 +422,7 @@ export interface SharedTableView {
 /**
  * One table view — the sort and the page size — for an owner that draws it as SEVERAL
  * tables over one `storageKey`: `TranslationReviewPanel`'s groups, which sort and page
- * alike (0.34.1, Kurvenschmiede: its grouped review stored no view at all). Pass them to
+ * alike (0.35, Kurvenschmiede: its grouped review stored no view at all). Pass them to
  * each table as `sorts`/`onSortsChange` and `pageSize`/`onPageSizeChange`.
  *
  * Kept in the very blob a `DataTable` with that `storageKey` keeps, not in a format of

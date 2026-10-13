@@ -374,7 +374,7 @@ function ModalPanel({
   const layer = useDismissLayer(active, requestClose);
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // The caller's handler sees Escape only while this dialog is the layer on top: a
-    // tooltip or a list open over it takes that press first (0.34.1, KS's gear wizard).
+    // tooltip or a list open over it takes that press first (0.35, KS's gear wizard).
     runOwnKeyDown(e, onKeyDown, layer);
     // To whatever is on top — this dialog, unless something opened over it — and
     // stopped here. Tab containment lives in useFocusTrap, which listens on the panel.

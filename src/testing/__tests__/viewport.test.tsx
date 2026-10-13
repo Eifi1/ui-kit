@@ -94,7 +94,7 @@ describe("stubViewportWidth", () => {
   });
 });
 
-describe("setViewportWidth (0.34.1, keksdose's 0.34 report)", () => {
+describe("setViewportWidth (0.35, keksdose's 0.34 report)", () => {
   let undo = () => {};
   afterEach(() => {
     undo();

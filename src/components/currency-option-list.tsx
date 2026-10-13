@@ -8,7 +8,7 @@ import { CURRENCIES, type CurrencyOption } from "../currencies";
 // The one list both currency pickers render (round 0.34 Wave 2, DUP-4). CurrencySelect
 // re-exports the data under its own name, as it always has; the list is package-private.
 // Its own module, so AmountInput can render the list without a cycle through
-// currency-select. The data itself is ../currencies since 0.34.1: an entry of its own that
+// currency-select. The data itself is ../currencies since 0.35: an entry of its own that
 // imports nothing, which an app's build can read in Node (keksdose's flag subset).
 export { CURRENCIES };
 export type { CurrencyOption };

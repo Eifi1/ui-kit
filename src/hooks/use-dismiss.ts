@@ -47,7 +47,7 @@ import { isComposing } from "../lib/ime";
  * anywhere else claims nothing: a search box keeping Chromium from clearing itself
  * must not hold a dialog open (FullBleedDialog's 0.8.0 fix, which Modal never had).
  *
- * The owner's handler hears Escape only while its own layer is on top (0.34.1, KS). It
+ * The owner's handler hears Escape only while its own layer is on top (0.35, KS). It
  * runs before the stack is asked, so with a tooltip, a hover menu or a list open over
  * the dialog and focus on the panel, the gear wizard asked "Discard this gear?" and the
  * tooltip stayed. Now the layer above takes that press, and the next one is the
@@ -186,7 +186,7 @@ export function claimEscape(e: KeyboardEvent | ReactKeyboardEvent): void {
  *
  * Given the owner's `layer` (what {@link useDismissLayer} returned), an Escape that went
  * down while another layer was above that one skips the handler: the press is the
- * layer's on top, and the owner hears the next (0.34.1, KS). Without it, or while the
+ * layer's on top, and the owner hears the next (0.35, KS). Without it, or while the
  * owner's layer is not open, the handler sees every key, as before.
  */
 export function runOwnKeyDown<E extends ReactKeyboardEvent>(

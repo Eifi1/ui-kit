@@ -306,7 +306,7 @@ export interface DataTableProps<T> {
    * Controlled page size, as `sorts` above: the table pages by it and hands its pager's
    * choice to `onPageSizeChange` (`Infinity` is "All"). For tables that page ALIKE —
    * `TranslationReviewPanel`'s groups share one page size as they share one sort
-   * (0.34.1). Left out, the table keeps its own, from `defaultPageSize`, the URL and
+   * (0.35). Left out, the table keeps its own, from `defaultPageSize`, the URL and
    * `storageKey`. A change of value sends a client-side table back to page 1. In
    * `serverPagination` mode the page size is `serverPagination.pageSize`.
    */
@@ -574,7 +574,7 @@ export interface DataTableProps<T> {
    * On a phone it heads the summary card, which is also named by it.
    *
    * There is no built-in default word: a new kit label key is a silent English string
-   * in every translated app (see `missingDataTableLabels`), and the caller has the
+   * in every translated app (see `missingKitLabels`), and the caller has the
    * word in its own catalogue already. Without it the row is unlabelled on screen —
    * pass one.
    */
@@ -795,19 +795,7 @@ export function DataTable<T>({
   // prop to, `TranslationReviewPanel`'s among them.
   const providerStorageKeyPrefix = useKitTableStorageKeyPrefix();
   const storageKeyPrefix = storageKeyPrefixProp ?? providerStorageKeyPrefix ?? DEFAULT_PERSIST_PREFIX;
-  const labels = useMemo(
-    () =>
-      resolveDataTableLabels(
-        labelOverrides || labelsProp
-          ? {
-              ...labelOverrides,
-              ...labelsProp,
-              presets: { ...labelOverrides?.presets, ...labelsProp?.presets },
-            }
-          : undefined,
-      ),
-    [labelOverrides, labelsProp],
-  );
+  const labels = useMemo(() => resolveDataTableLabels(labelOverrides, labelsProp), [labelOverrides, labelsProp]);
   const locale = useKitLocale(localeProp);
 
   // ---- Row actions ---- (data-table-row-actions.tsx)

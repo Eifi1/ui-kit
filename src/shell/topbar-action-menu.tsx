@@ -268,8 +268,8 @@ export function TopBarActionMenu({
   footer?: ReactNode | ((close: () => void) => ReactNode);
   /** Wraps the footer in a `<nav>` with this name ("Legal"). Without it, a plain block. */
   footerLabel?: string;
-  /** Which edge of the trigger the panel lines up with (see `HoverMenu`, whose type this
-   *  is: `left`/`right` are deprecated 0.34). Default `end`. */
+  /** Which edge of the trigger the panel lines up with, `start` or `end` in the reading
+   *  direction (see `HoverMenu`, whose type this is). Default `end`. */
   align?: HoverMenuProps["align"];
   panelClassName?: string;
 }) {

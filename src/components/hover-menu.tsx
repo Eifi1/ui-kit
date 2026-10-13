@@ -293,7 +293,7 @@ export function HoverMenu({
       onKeyDown={(e) => {
         // The caller's handler sees Escape only while this menu is the layer on top: a
         // tooltip on one of its rows takes that press first (round 0.35 R2, the rule
-        // 0.34.1 gave the dialogs). Every other key, and a closed menu's, as before.
+        // the dialogs got first). Every other key, and a closed menu's, as before.
         runOwnKeyDown(e, rest.onKeyDown, layer);
         // Focus on the trigger or in the menu: the key stops here, so a panel around
         // the menu does not close with it.

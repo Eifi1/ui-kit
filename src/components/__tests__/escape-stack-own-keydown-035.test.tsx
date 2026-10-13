@@ -9,8 +9,8 @@ import { Popover } from "../popover";
 import { Tooltip } from "../tooltip";
 
 /**
- * Round 0.35 R2: the top-layer rule for the overlays' OWN `onKeyDown`, as 0.34.1 gave it
- * to Modal and FullBleedDialog (b477f4a, `escape-stack-sweep.test.tsx`). A caller's
+ * Round 0.35 R2: the top-layer rule for the overlays' OWN `onKeyDown`, as 0.35 gave it
+ * to Modal and FullBleedDialog first (b477f4a, `escape-stack-sweep.test.tsx`). A caller's
  * handler on a Popover, a HoverMenu, a DropdownPanel or a DropdownSearchHeader ran
  * before the stack was asked — so with a tooltip or a menu open over the overlay, a
  * handler that holds Escape ("clear the query first", "ask first") took the press, and

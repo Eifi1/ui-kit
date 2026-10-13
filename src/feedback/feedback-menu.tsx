@@ -56,8 +56,8 @@ export interface FeedbackMenuProps {
   iconBadge?: UserAvatarBadge | null;
   /** Prop > `<UiKitProvider labels={{ feedbackMenu }}>` > English. */
   labels?: LabelOverride<FeedbackMenuLabels>;
-  /** Which edge of the trigger the panel lines up with (see `HoverMenu`, whose type this
-   *  is: `left`/`right` are deprecated 0.34). Default `end`. */
+  /** Which edge of the trigger the panel lines up with, `start` or `end` in the reading
+   *  direction (see `HoverMenu`, whose type this is). Default `end`. */
   align?: HoverMenuProps["align"];
 }
 

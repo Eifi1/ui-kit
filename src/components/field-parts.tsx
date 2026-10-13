@@ -1,5 +1,5 @@
 import { createContext, isValidElement, useContext, useId } from "react";
-import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode, Ref, RefCallback } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
@@ -41,23 +41,9 @@ export function mergeDescribedBy(...ids: Array<string | false | null | undefined
   return list.length ? list.join(" ") : undefined;
 }
 
-/** Point a ref — a callback or an object — at `node`. `undefined` and `null` are no ref. */
-export function assignRef<T>(ref: Ref<T> | undefined, node: T | null): void {
-  if (typeof ref === "function") ref(node);
-  else if (ref) (ref as { current: T | null }).current = node;
-}
-
-/**
- * One callback ref feeding several — the caller's forwarded `ref` and a field's own
- * (DUP-11: AmountInput, FormActions, ScrollArea and SearchField each wrote this by hand).
- * Wrap it in `useCallback` (or `useMemo`) over the same refs where a new callback every
- * render would detach and re-attach the node.
- */
-export function mergeRefs<T>(...refs: Array<Ref<T> | undefined>): RefCallback<T> {
-  return (node) => {
-    for (const ref of refs) assignRef(ref, node);
-  };
-}
+// The ref plumbing lives in ../lib/refs since round 0.35 (Tooltip needs it, and this module
+// renders a Tooltip); the fields keep importing it from here.
+export { assignRef, mergeRefs } from "../lib/refs";
 
 /* ── the static label ─────────────────────────────────────────────────────── */
 
@@ -312,7 +298,7 @@ export function useFieldError(
   invalid: boolean | undefined,
   describedBy: string | undefined,
   /** The caller's own `aria-invalid`. A form library sets THIS (see `@eifi1/ui-kit/rhf`
-   *  `FormControl`), not our `invalid` prop — and a field that announces invalid should
+   *  `RhfField`), not our `invalid` prop — and a field that announces invalid should
    *  look it too. */
   ariaInvalid?: unknown,
 ): { isInvalid: boolean; describedBy: string | undefined; errorEl: ReactNode } {

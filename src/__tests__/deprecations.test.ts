@@ -51,53 +51,56 @@ const version = (s: string): [number, number] | undefined => {
 /** A JSDoc tag: `@deprecated` first on a `/**` or ` *` line — not one quoted in prose. */
 const TAG = /^\s*(?:\/\*\*|\*)\s*@deprecated\b(.*)$/;
 
-function deprecations(): Deprecation[] {
+/** The tags in one file's text; `file` is its path under src, for `at`. */
+function scan(file: string, source: string): Deprecation[] {
   const found: Deprecation[] = [];
-  for (const file of sources(SRC)) {
-    const lines = readFileSync(file, "utf8").split("\n");
-    lines.forEach((line, i) => {
-      const tag = TAG.exec(line);
-      if (!tag) return;
-      let close = i;
-      while (close < lines.length - 1 && !lines[close].includes("*/")) close += 1;
-      // The tag runs on until the comment ends or the next tag starts.
-      const parts = [tag[1]];
-      for (let j = i + 1; j <= close && !/^\s*\*\s*@\w/.test(lines[j]); j += 1) {
-        parts.push(lines[j].replace(/^\s*\*(?!\/)/, ""));
-      }
-      const text = parts
-        .join(" ")
-        .replace(/\*\/.*$/, "")
-        .replace(/\s+/g, " ")
-        .trim();
-      // What is deprecated: the first declaration after the comment, in the type or
-      // function above it.
-      let next = close + 1;
-      while (next < lines.length - 1 && lines[next].trim() === "") next += 1;
-      const member =
-        /^\s*(?:export\s+)?(?:declare\s+)?(?:readonly\s+)?(?:(?:async\s+)?function\*?\s+|const\s+|let\s+|type\s+|interface\s+|class\s+)?["']?([A-Za-z_$][\w$-]*)/.exec(
-          lines[next] ?? "",
-        )?.[1] ?? "?";
-      // Only a member (an indented declaration) has an owner; a top-level name is its own.
-      const owner = /^\s+/.test(lines[next] ?? "")
-        ? lines
-            .slice(0, i)
-            .reverse()
-            .map((l) => /\b(?:interface|type|function|class)\s+([A-Z][\w$]*)/.exec(l)?.[1])
-            .find(Boolean)
-        : undefined;
-      const since = /^(\d+\.\d+)\b/.exec(text)?.[1];
-      const removal = /\bremoved in (\d+\.\d+)\b/.exec(text)?.[1];
-      found.push({
-        at: `src/${file.slice(SRC.length + 1).replace(/\\/g, "/")}:${i + 1}`,
-        name: owner ? `${owner.replace(/Props$/, "")}.${member}` : member,
-        text,
-        since: since ? version(since) : undefined,
-        removal: removal ? version(removal) : undefined,
-      });
+  const lines = source.split("\n");
+  lines.forEach((line, i) => {
+    const tag = TAG.exec(line);
+    if (!tag) return;
+    let close = i;
+    while (close < lines.length - 1 && !lines[close].includes("*/")) close += 1;
+    // The tag runs on until the comment ends or the next tag starts.
+    const parts = [tag[1]];
+    for (let j = i + 1; j <= close && !/^\s*\*\s*@\w/.test(lines[j]); j += 1) {
+      parts.push(lines[j].replace(/^\s*\*(?!\/)/, ""));
+    }
+    const text = parts
+      .join(" ")
+      .replace(/\*\/.*$/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    // What is deprecated: the first declaration after the comment, in the type or
+    // function above it.
+    let next = close + 1;
+    while (next < lines.length - 1 && lines[next].trim() === "") next += 1;
+    const member =
+      /^\s*(?:export\s+)?(?:declare\s+)?(?:readonly\s+)?(?:(?:async\s+)?function\*?\s+|const\s+|let\s+|type\s+|interface\s+|class\s+)?["']?([A-Za-z_$][\w$-]*)/.exec(
+        lines[next] ?? "",
+      )?.[1] ?? "?";
+    // Only a member (an indented declaration) has an owner; a top-level name is its own.
+    const owner = /^\s+/.test(lines[next] ?? "")
+      ? lines
+          .slice(0, i)
+          .reverse()
+          .map((l) => /\b(?:interface|type|function|class)\s+([A-Z][\w$]*)/.exec(l)?.[1])
+          .find(Boolean)
+      : undefined;
+    const since = /^(\d+\.\d+)\b/.exec(text)?.[1];
+    const removal = /\bremoved in (\d+\.\d+)\b/.exec(text)?.[1];
+    found.push({
+      at: `src/${file.slice(SRC.length + 1).replace(/\\/g, "/")}:${i + 1}`,
+      name: owner ? `${owner.replace(/Props$/, "")}.${member}` : member,
+      text,
+      since: since ? version(since) : undefined,
+      removal: removal ? version(removal) : undefined,
     });
-  }
+  });
   return found;
+}
+
+function deprecations(): Deprecation[] {
+  return sources(SRC).flatMap((file) => scan(file, readFileSync(file, "utf8")));
 }
 
 const pkg = JSON.parse(readFileSync(join(SRC, "..", "package.json"), "utf8")) as { version: string };
@@ -107,8 +110,25 @@ const reached = ([ma, mi]: [number, number]) => major > ma || (major === ma && m
 const all = deprecations();
 
 describe("deprecations", () => {
+  // On a fixture since 0.35, which removed every tag there was: an empty list from src is
+  // now the expected answer, so it cannot be what proves the scan reads anything.
   it("finds the tags (the scan is not silently empty)", () => {
-    expect(all.length).toBeGreaterThan(0);
+    const fixture = [
+      "export interface WidgetProps {",
+      "  /** @deprecated 0.35 — use `aria-label`; removed in 0.36",
+      "   * (the fixture's reason). */",
+      "  ariaLabel?: string;",
+      "}",
+    ].join("\n");
+    expect(scan(join(SRC, "components/widget.tsx"), fixture)).toEqual([
+      {
+        at: "src/components/widget.tsx:2",
+        name: "Widget.ariaLabel",
+        text: "0.35 — use `aria-label`; removed in 0.36 (the fixture's reason).",
+        since: [0, 35],
+        removal: [0, 36],
+      },
+    ]);
   });
 
   it('name their schedule: "@deprecated 0.NN — <replacement>; removed in 0.MM"', () => {

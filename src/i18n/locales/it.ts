@@ -762,7 +762,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       submit: "Continua",
       cancel: "Annulla",
     },
-    // 0.34.1: keksdose's reviewed Italian (its `boot.slow` / `boot.waking`), which is canon.
+    // 0.35: keksdose's reviewed Italian (its `boot.slow` / `boot.waking`), which is canon.
     serverWake: {
       slow: "Sta ancora caricando: ci vuole più del solito.",
       waking: (appName) =>

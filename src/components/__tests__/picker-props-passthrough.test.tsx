@@ -28,10 +28,9 @@ import { DropdownPanel, DropdownSearchHeader, useDropdownSearch } from "../dropd
  *       the CONTROL, not the positioning wrapper it happens to sit in, and beats the
  *       name the component would otherwise compose from `label` + value.
  *
- * `GroupedPicker` additionally keeps its old `ariaLabel` spelling working, and only
- * when `"aria-label"` is absent: three apps are on it, and removing it is a later
- * minor. Everything else in this file already spoke the DOM spelling or had no
- * accessible-name prop at all, so nothing else grew a deprecated alias.
+ * `GroupedPicker` kept its old `ariaLabel` spelling until 0.34, which removed it (the
+ * last block). Everything else in this file already spoke the DOM spelling or had no
+ * accessible-name prop at all.
  *
  * The queries are `getByRole(..., { name })`, i.e. the accessible name as a reader
  * computes it — never the attribute — so a component is free to move where it hangs

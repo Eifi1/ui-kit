@@ -95,7 +95,7 @@ describe("de-CH", () => {
   });
 });
 
-describe("serverWake is keksdose's reviewed wording (0.34.1)", () => {
+describe("serverWake is keksdose's reviewed wording (0.35)", () => {
   // The cold-start notice is keksdose's (#199, kit 0.18), and its reviewed words are canon:
   // its `boot.slow` / `boot.waking`, with the app's name where keksdose writes its own. The
   // kit's fr and it had drifted ("cela prend plus de temps", "Caricamento in corso").

@@ -73,7 +73,7 @@ export interface EntityComboboxProps<V extends string | number, C extends ComboC
    *  so it is the one control here that MUST be in the reader's language. */
   closeLabel?: string;
   /** The phone sheet's heading (and, as a string, its accessible name) for a picker
-   *  whose label is drawn by someone else — a form's `FormLabel`; `RhfCombobox`
+   *  whose label is drawn by someone else — a bound field's label; `RhfCombobox`
    *  hands its label over here (0.24). Default: `label`, then `placeholder`. */
   sheetTitle?: ReactNode;
   disabled?: boolean;

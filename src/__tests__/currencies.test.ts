@@ -4,7 +4,7 @@ import { CURRENCIES as FROM_SELECT, getCurrency } from "../components/currency-s
 import { CURRENCIES as FROM_OPTION_LIST } from "../components/currency-option-list";
 
 /**
- * `@eifi1/ui-kit/currencies` (0.34.1, keksdose's 0.34 report): the currencies the pickers
+ * `@eifi1/ui-kit/currencies` (0.35, keksdose's 0.34 report): the currencies the pickers
  * offer as plain data, and `CURRENCY_COUNTRIES`, the flag each one paints — what keksdose's
  * flag-icons subset is built from. Its purity (it imports nothing) is
  * packaging-contract.test.ts's; its loading in plain Node, scripts/verify-package.mjs's.

@@ -774,7 +774,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       submit: "Continuer",
       cancel: "Annuler",
     },
-    // 0.34.1: keksdose's reviewed French (its `boot.slow` / `boot.waking`), which is canon.
+    // 0.35: keksdose's reviewed French (its `boot.slow` / `boot.waking`), which is canon.
     serverWake: {
       slow: "Chargement en cours — c’est plus long que d’habitude.",
       waking: (appName) =>

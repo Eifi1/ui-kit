@@ -290,7 +290,7 @@ export * from "./components/calculator";
 export * from "./components/numpad-sheet";
 export * from "./components/number-input";
 export * from "./components/currency-select";
-// 0.34.1: each currency's flag-icons country. `CURRENCIES` and it are also the pure-data
+// 0.35: each currency's flag-icons country. `CURRENCIES` and it are also the pure-data
 // entry "@eifi1/ui-kit/currencies", which imports nothing, for an app's build in Node.
 export { CURRENCY_COUNTRIES } from "./currencies";
 export * from "./components/amount-input";

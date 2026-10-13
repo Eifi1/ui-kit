@@ -29,7 +29,7 @@ describe("Pagination: the page-size select", () => {
 });
 
 /**
- * 0.34.1 (Kurvenschmiede): `TranslationReviewPanel`'s groups share one page size, as they
+ * 0.35 (Kurvenschmiede): `TranslationReviewPanel`'s groups share one page size, as they
  * share one sort, and store it — so the owner holds it, through `pageSize` and
  * `onPageSizeChange`, as it holds `sorts`.
  */

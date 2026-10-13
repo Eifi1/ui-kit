@@ -98,7 +98,7 @@ const listLayers = new WeakMap<object, DismissLayer>();
  * ## The caller's own handler (round 0.35 R2)
  *
  * A caller's `onKeyDown` on {@link DropdownPanel} or {@link DropdownSearchHeader} hears
- * Escape only while this list is the layer on top — the rule 0.34.1 gave the dialogs. A
+ * Escape only while this list is the layer on top — the rule the dialogs got first. A
  * tooltip over a row takes that press first, and the next one is the handler's, whose
  * `preventDefault()` still keeps the list. The two find the list's layer through the
  * refs this hook hands out — the panel through `panelRef`, the search box through

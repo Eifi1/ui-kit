@@ -2,13 +2,6 @@ import { useId } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { LabelStrip, useFieldMessages } from "./field-parts";
 
-/**
- * @deprecated 0.35 — nothing takes it: FieldStrip's `pad`, its one use, went in 0.35;
- * removed in 0.36 (round 0.35 R1). It named how far down the content started under the
- * 11px label; since 0.34 both values were the one 20px strip.
- */
-export type FieldStripPad = "clear" | "field";
-
 /** What a {@link FieldStrip} hands render-prop children. */
 export interface FieldStripIds {
   /** The label's id — for content that names ITSELF by the label (`aria-labelledby`)

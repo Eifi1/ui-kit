@@ -180,7 +180,7 @@ export function Popover({
     // it used to be dropped, overwritten by this one. A `preventDefault()` on Escape
     // there keeps the popover open — the owner's claim, as on the dialogs. And as there,
     // the handler sees Escape only while this popover is the layer on top: a tooltip or a
-    // menu open over it takes that press first (round 0.35 R2, 0.34.1's rule).
+    // menu open over it takes that press first (round 0.35 R2, the dialogs' rule).
     runOwnKeyDown(e, onKeyDownProp, layer);
     // Focus is in here, the normal case: the key is handed to the top layer and STOPPED,
     // so it does not travel on up the React tree to a dialog around the popover.

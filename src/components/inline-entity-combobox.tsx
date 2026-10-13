@@ -83,7 +83,7 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
   emptyLabel?: string;
   closeLabel?: string;
   /** The phone sheet's heading (and, as a string, its accessible name) for a field
-   *  whose label is drawn by someone else — a form's `FormLabel`;
+   *  whose label is drawn by someone else — a bound field's label;
    *  `RhfInlineEntityCombobox` hands its label over here (0.24). Default: `label`.
    *  See {@link Combobox}'s `sheetTitle`. */
   sheetTitle?: ReactNode;

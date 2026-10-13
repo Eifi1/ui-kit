@@ -1,10 +1,10 @@
 // `@eifi1/ui-kit/currencies` — the currencies the kit's pickers offer, as plain data
-// (0.34.1, keksdose's 0.34 report).
+// (0.35, keksdose's 0.34 report).
 //
 // This module imports NOTHING: no React, no stylesheet, no other kit module. That is the
 // entry's whole promise, because an app's BUILD reads it in Node — keksdose's Vite plugin
 // builds its flag-icons subset from these country codes while Vite loads its config. Until
-// 0.34.1 that plugin parsed the `country` literals out of dist/components/currency-select.js;
+// 0.35 that plugin parsed the `country` literals out of dist/components/currency-select.js;
 // 0.34 moved the list into the picker's option list and 91 of its test files failed at
 // load. A file inside dist/ is not something the kit promises; an entry is.
 // packaging-contract.test.ts pins the purity, scripts/verify-package.mjs the load in Node.

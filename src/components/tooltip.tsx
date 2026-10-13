@@ -23,6 +23,7 @@ import { useAnchoredRect, type AnchorRect } from "../hooks/use-anchored-rect";
 import { viewportSize } from "../hooks/use-anchored-panel";
 import { dirOf, type Direction } from "../lib/direction";
 import { hasClippingAncestor } from "../lib/clipping";
+import { assignRef } from "../lib/refs";
 
 /** The attribute that marks an element as a clipping container for {@link Tooltip}'s
  *  auto-portal, whatever its computed `overflow` — `<div data-clips>` or
@@ -642,26 +643,18 @@ function useTooltipTrigger(
 
 /**
  * The trigger wrapper's own ref, and one callback ref that hands the wrapper to the
- * caller's `ref` as well (round 0.35 R4). Written out rather than field-parts'
- * `mergeRefs`, whose module renders FieldHint's Tooltip: importing it here would close
- * an import cycle.
+ * caller's `ref` as well (round 0.35 R4).
  */
 function useTriggerRef(ref: Ref<HTMLSpanElement> | undefined) {
   const triggerRef = useRef<HTMLSpanElement | null>(null);
   const setTrigger = useCallback(
     (el: HTMLSpanElement | null) => {
       triggerRef.current = el;
-      pointRef(ref, el);
+      assignRef(ref, el);
     },
     [ref],
   );
   return { triggerRef, setTrigger };
-}
-
-/** Point a caller's ref — a callback or an object — at `el`. */
-function pointRef(ref: Ref<HTMLSpanElement> | undefined, el: HTMLSpanElement | null): void {
-  if (typeof ref === "function") ref(el);
-  else if (ref) ref.current = el;
 }
 
 /** The variant that lives next to its trigger, and — when `detect` is on, which is the

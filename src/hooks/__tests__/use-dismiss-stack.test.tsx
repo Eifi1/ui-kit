@@ -158,7 +158,7 @@ describe("claims", () => {
     expect(onEscape).not.toHaveBeenCalled();
   });
 
-  it("the owner's handler hears Escape only while its own layer is on top (0.34.1, KS)", () => {
+  it("the owner's handler hears Escape only while its own layer is on top (0.35, KS)", () => {
     // A tooltip over the dialog, focus on the dialog: the tooltip's press, and the
     // owner's handler — which would have claimed it — is not asked until the next one.
     const own = vi.fn();

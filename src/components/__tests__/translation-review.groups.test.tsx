@@ -188,7 +188,7 @@ describe("TranslationReviewPanel groups on a wide screen (keksdose, 0.25.1)", ()
   });
 });
 
-describe("TranslationReviewPanel's grouped view in storage (Kurvenschmiede, 0.34.1)", () => {
+describe("TranslationReviewPanel's grouped view in storage (Kurvenschmiede, 0.35)", () => {
   // Under `groupBy` the panel persisted nothing: `storageKey` kept the ungrouped table's
   // view only, so KS's grouped review opened unsorted, 50 rows a group, every visit. The
   // groups now keep ONE view — the sort and the page size — in the ungrouped table's own

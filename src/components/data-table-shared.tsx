@@ -97,11 +97,24 @@ export function columnLabel<T>(col: DataTableColumn<T>, labels?: DataTableLabels
  * finds out what fell back to English from `missingKitLabels(labels,
  * DEFAULT_UI_KIT_LABELS)` in its own test, where the answer is actionable.
  */
-export function resolveDataTableLabels(partial?: LabelOverride<DataTableLabels>): DataTableLabels {
-  if (!partial) return DEFAULT_DATA_TABLE_LABELS;
-  // An `undefined` preset is skipped, as the provider skips it, rather than blanking one.
+export function resolveDataTableLabels(
+  ...layers: (LabelOverride<DataTableLabels> | undefined)[]
+): DataTableLabels {
+  if (!layers.some(Boolean)) return DEFAULT_DATA_TABLE_LABELS;
+  // The layers in order, the provider's then the prop's, later winning key by key. An
+  // `undefined` key is skipped, as `useKitLabels` skips it, rather than blanking the word
+  // under it: DataTable spread `{ ...provider, ...prop }`, so `labels={{ autoSize:
+  // undefined }}` blanked the provider's word and the English one (round 0.35). `presets`
+  // is a record and is merged the same way, so renaming one keeps the other ten.
+  const partial: Partial<Omit<DataTableLabels, "presets">> = {};
   const presets = { ...DEFAULT_DATA_TABLE_LABELS.presets };
-  for (const [key, text] of Object.entries(partial.presets ?? {})) if (text !== undefined) presets[key] = text;
+  for (const layer of layers) {
+    for (const [key, value] of Object.entries(layer ?? {})) {
+      if (value === undefined) continue;
+      if (key !== "presets") Object.assign(partial, { [key]: value });
+      else for (const [preset, text] of Object.entries(value)) if (text !== undefined) presets[preset] = text;
+    }
+  }
   const merged: DataTableLabels = { ...DEFAULT_DATA_TABLE_LABELS, ...partial, presets };
   // `columnsCount` was split out of `columns` + a template literal. Consumers have
   // been translating `columns` since 0.1, and backfilling the English default over

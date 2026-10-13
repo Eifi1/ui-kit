@@ -170,7 +170,7 @@ export interface TranslationReviewPanelProps {
   pageSize?: number;
   /** Persists the table's sort and page size (DataTable's `storageKey`), under the
    *  prefix below — under {@link groupBy}, the one sort and page size every group
-   *  shares, in the same place (0.34.1). */
+   *  shares, in the same place (0.35). */
   storageKey?: string;
   /**
    * The `localStorage` prefix in front of `storageKey` (DataTable's `storageKeyPrefix`).
@@ -265,7 +265,7 @@ export interface TranslationReviewPanelProps {
    * `storageKey` persists that one view — the sort and the page size — in the place the
    * ungrouped table keeps its own (same key, same prefix, same blob), read on mount and
    * written on a change, so a reviewer switching the grouping on or off keeps both
-   * (0.34.1, Kurvenschmiede; before, it persisted the ungrouped table only). What only
+   * (0.35, Kurvenschmiede; before, it persisted the ungrouped table only). What only
    * the ungrouped table has — column widths, hidden columns — stays in the blob for it.
    *
    * Groups fold (each on its own, remembered while the panel lives), and a folded group's
@@ -569,7 +569,7 @@ export function TranslationReviewPanel({
   const confirmFocus = useRef<string | null>(null);
   // One view for every group's table — one sort, so a header click orders all of them
   // alike, and one page size — kept under `storageKey` in the single table's own blob, so
-  // switching the grouping keeps both (0.34.1, Kurvenschmiede).
+  // switching the grouping keeps both (0.35, Kurvenschmiede).
   const groupView = useSharedTableView({
     active: groupBy !== undefined,
     storageKey,

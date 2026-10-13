@@ -29,10 +29,10 @@
  *
  * Deliberately knows neither the wizard nor react-hook-form: `error` is a plain
  * value. Pass `wizard.fieldErrors.iban`, a step-local error, or
- * `fieldState.error?.message` from a `FormField` render — the markup is the same
- * whichever of them gates the step, so a step can move between them without its
- * fields changing. (Inside a react-hook-form form, `FormItem` + `FormLabel` from
- * `@eifi1/ui-kit/rhf` do the same job with the ids taken from the form.)
+ * `fieldState.error?.message` from a react-hook-form `Controller` — the markup is the
+ * same whichever of them gates the step, so a step can move between them without its
+ * fields changing. (Inside a react-hook-form form, `RhfField` from `@eifi1/ui-kit/rhf`
+ * does the same job with the ids taken from the form.)
  *
  * The error is NOT `role="alert"`, for the reason the kit's `error` prop gives (see
  * `useFieldError` in components/field-parts.tsx): it is read when focus reaches the control.

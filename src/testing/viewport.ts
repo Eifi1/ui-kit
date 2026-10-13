@@ -191,7 +191,7 @@ export function viewportMatchMedia(
 
 /**
  * Resize the stubbed viewport to `width` CSS px, live — the window being dragged narrower,
- * a phone turned (0.34.1, keksdose's 0.34 report). Every list the stub in force has handed
+ * a phone turned (0.35, keksdose's 0.34 report). Every list the stub in force has handed
  * out answers from the new width, and each one whose answer flipped fires `change` to its
  * `addEventListener` listeners, its legacy `addListener` ones and its `onchange`, as in a
  * browser; a list whose answer stayed the same tells nobody. So a mounted component that

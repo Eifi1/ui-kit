@@ -446,7 +446,7 @@ describe("the layer owner's own handler still claims (DUP-1)", () => {
   });
 });
 
-describe("the owner's handler hears Escape only while its dialog is on top (0.34.1, KS)", () => {
+describe("the owner's handler hears Escape only while its dialog is on top (0.35, KS)", () => {
   // Kurvenschmiede's gear wizard asks "Discard this gear?" from the Modal's `onKeyDown`.
   // That handler ran before the stack was asked, so with a tooltip, a hover menu or a
   // list open INSIDE the wizard and focus on the panel (a focused "?"), Escape asked

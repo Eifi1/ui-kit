@@ -181,7 +181,7 @@ export function FullBleedDialog({
     // descendant's does not count. A SearchField in the header prevents Escape to stop
     // Chromium clearing a type=search input, and in 0.8.0 that silently stopped Escape
     // from closing the dialog (keksdose). The one rule `Modal` now shares — as is this
-    // one: the handler sees Escape only while this dialog is the layer on top (0.34.1).
+    // one: the handler sees Escape only while this dialog is the layer on top (0.35).
     runOwnKeyDown(e, onKeyDown, layer);
     takeEscape(e);
   };

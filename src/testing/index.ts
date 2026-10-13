@@ -13,7 +13,7 @@ export {
 } from "./css-variables";
 // 0.34 (refactor audit 2026-10, TST-10): the environment jsdom lacks — a `matchMedia`
 // that answers from a viewport width (right at every text size) and a `ResizeObserver`
-// the test drives. Framework-free: each returns its own undo. 0.34.1: `setViewportWidth`,
+// the test drives. Framework-free: each returns its own undo. 0.35: `setViewportWidth`,
 // a live resize of the stub in force — its lists flip and fire `change` (keksdose).
 export {
   setViewportWidth,
