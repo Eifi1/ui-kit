@@ -13,14 +13,18 @@
  * What it reads, all from `tokens.css` with its comments stripped:
  *   - `@theme inline { --<namespace>-<name>: var(--<token>); }` → one utility per line,
  *     rendered as a matrix: a row per token, a column per property. Rows follow the
- *     order the tokens are declared in the file, so families stay together.
+ *     order the tokens are declared in the file, so families stay together. The block is
+ *     parsed by src/eslint/role-utilities.ts (`parseThemeInline`, imported from source —
+ *     Node strips its types), the parser `npm run check:tokens` and `@eifi1/ui-kit/eslint`
+ *     read their table with since 0.35, so the README cannot name a utility they miss.
  *   - the plain colour classes (`.text-money-pos { color: var(--money-income); }`),
  *     which take no variants and so are listed apart;
  *   - `@custom-variant` and `@utility` names, and the plain `@theme { … }` values, so a
  *     new variant or utility shows up in the README on the next run.
  *
- * A namespace this script does not know FAILS the run rather than being dropped: a role
- * that silently fell out of the table is the defect this file exists to prevent.
+ * A namespace role-utilities.ts does not know, or a property this script has no column
+ * for, FAILS the run rather than being dropped: a role that silently fell out of the table
+ * is the defect this file exists to prevent.
  *
  * Usage:
  *   node scripts/gen-styling-inventory.mjs           rewrite the block in README.md
@@ -30,6 +34,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { parseThemeInline, stripCssComments } from "../src/eslint/role-utilities.ts";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const TOKENS = join(ROOT, "tokens.css");
@@ -39,58 +44,55 @@ const BEGIN = "<!-- BEGIN GENERATED: styling — node scripts/gen-styling-invent
 const END = "<!-- END GENERATED: styling -->";
 
 /**
- * Tailwind 4's theme namespaces → the utility prefix each one makes, in column order.
- * Longest first where one is a prefix of another (`ring-offset-color` before
- * `ring-color`), because a variable is matched against them in this order. The width
- * and offset namespaces carry DOC-7's utilities (`ring-focus`, `outline-focus`,
- * `ring-offset-surface`, 0.34).
+ * The matrix's columns: role-utilities.ts's properties (ROLE_NAMESPACES), in reading
+ * order. The width and offset namespaces carry DOC-7's utilities (`ring-focus`,
+ * `outline-focus`, `ring-offset-surface`, 0.34).
  */
-const NAMESPACES = [
-  { ns: "text-color", prefix: "text", heading: "`text-*`" },
-  { ns: "background-color", prefix: "bg", heading: "`bg-*`" },
-  { ns: "border-color", prefix: "border", heading: "`border-*` `divide-*`" },
-  { ns: "ring-offset-color", prefix: "ring-offset", heading: "`ring-offset-*`" },
-  { ns: "ring-color", prefix: "ring", heading: "`ring-*`" },
-  { ns: "ring-width", prefix: "ring", heading: "`ring-*` (width)" },
-  { ns: "outline-color", prefix: "outline", heading: "`outline-*`" },
-  { ns: "outline-width", prefix: "outline", heading: "`outline-*` (width)" },
-  { ns: "fill", prefix: "fill", heading: "`fill-*`" },
-  { ns: "stroke", prefix: "stroke", heading: "`stroke-*`" },
+const COLUMNS = [
+  { property: "text", heading: "`text-*`" },
+  { property: "bg", heading: "`bg-*`" },
+  { property: "border", heading: "`border-*` `divide-*`" },
+  { property: "ring-offset", heading: "`ring-offset-*`" },
+  { property: "ring", heading: "`ring-*`" },
+  { property: "ring-width", heading: "`ring-*` (width)" },
+  { property: "outline", heading: "`outline-*`" },
+  { property: "outline-width", heading: "`outline-*` (width)" },
+  { property: "fill", heading: "`fill-*`" },
+  { property: "stroke", heading: "`stroke-*`" },
 ];
 
 /* ── Parsing ──────────────────────────────────────────────────────────────── */
 
-const css = readFileSync(TOKENS, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+const source = readFileSync(TOKENS, "utf8");
+// The text `parseThemeInline` reports its block's offsets in.
+const css = stripCssComments(source);
 
-/** The body of the first `@theme <modifier> { … }` block. Theme blocks hold only
- *  declarations, so the first `}` closes it. */
-function themeBlock(modifier) {
-  const match = new RegExp(`@theme${modifier ? `\\s+${modifier}` : ""}\\s*\\{([^}]*)\\}`).exec(css);
-  return match ? { body: match[1], start: match.index, end: match.index + match[0].length } : null;
-}
-
-const inline = themeBlock("inline");
+const inline = parseThemeInline(source);
 if (!inline) {
   console.error("tokens.css has no `@theme inline` block — the role utilities are gone, or this parser is.");
   process.exit(2);
 }
 
-/** `[{ utility, ns, token }]` in block order; `token` is the `var()` read, or the raw value. */
+/** `[{ utility, property, token }]` in block order; `token` is the `var()` read, or the raw value. */
 function roleUtilities() {
-  const out = [];
-  for (const [, name, value] of inline.body.matchAll(/--([a-z0-9-]+)\s*:\s*([^;]+);/g)) {
-    const space = NAMESPACES.find((n) => name.startsWith(`${n.ns}-`));
-    if (!space) {
+  return inline.declarations.map(({ variable, property, utility, token, value }) => {
+    if (!property) {
       console.error(
-        `tokens.css @theme inline: --${name} is in a namespace this script does not know.\n` +
-          "Add it to NAMESPACES in scripts/gen-styling-inventory.mjs (Tailwind namespace → utility prefix).",
+        `tokens.css @theme inline: --${variable} is in a namespace src/eslint/role-utilities.ts does not know.\n` +
+          "Add it to ROLE_NAMESPACES there (property → Tailwind namespace), and a column to COLUMNS in\n" +
+          "scripts/gen-styling-inventory.mjs.",
       );
       process.exit(2);
     }
-    const token = /^var\((--[a-z0-9-]+)\)$/.exec(value.trim())?.[1] ?? value.trim();
-    out.push({ utility: `${space.prefix}-${name.slice(space.ns.length + 1)}`, ns: space.ns, token });
-  }
-  return out;
+    if (!COLUMNS.some((c) => c.property === property)) {
+      console.error(
+        `tokens.css @theme inline: --${variable} is a \`${property}\` utility, which has no column in the README's table.\n` +
+          "Add it to COLUMNS in scripts/gen-styling-inventory.mjs.",
+      );
+      process.exit(2);
+    }
+    return { utility, property, token: token ?? value };
+  });
 }
 
 /** Where a token is first declared, outside the theme block that only reads it; tokens
@@ -118,12 +120,12 @@ const names = (re) => [...css.matchAll(re)].map((m) => m[1]);
 const code = (s) => `\`${s}\``;
 
 function renderMatrix(utilities) {
-  const used = NAMESPACES.filter((n) => utilities.some((u) => u.ns === n.ns));
+  const used = COLUMNS.filter((c) => utilities.some((u) => u.property === c.property));
   const rows = new Map();
   utilities.forEach((u, i) => {
     if (!rows.has(u.token)) rows.set(u.token, { order: i, cells: new Map() });
     const cells = rows.get(u.token).cells;
-    cells.set(u.ns, [...(cells.get(u.ns) ?? []), u.utility]);
+    cells.set(u.property, [...(cells.get(u.property) ?? []), u.utility]);
   });
   const sorted = [...rows].sort(
     ([a, ra], [b, rb]) => declaredAt(a) - declaredAt(b) || ra.order - rb.order,
@@ -133,7 +135,7 @@ function renderMatrix(utilities) {
     `|---|${used.map(() => "---").join("|")}|`,
     ...sorted.map(
       ([token, { cells }]) =>
-        `| ${code(token)} | ${used.map((n) => (cells.get(n.ns) ?? []).map(code).join(" ")).join(" | ")} |`,
+        `| ${code(token)} | ${used.map((c) => (cells.get(c.property) ?? []).map(code).join(" ")).join(" | ")} |`,
     ),
   ].join("\n");
 }
@@ -144,9 +146,11 @@ function render() {
   const plain = plainClasses();
   const variants = names(/@custom-variant\s+([a-z0-9-]+)/g);
   const custom = names(/@utility\s+([a-z0-9-]+)/g);
-  const theme = themeBlock("");
+  // The plain `@theme { … }` block (font sizes, breakpoints): values to list, no role
+  // utilities, so role-utilities.ts does not read it.
+  const theme = /@theme\s*\{([^}]*)\}/.exec(css)?.[1];
   const themeValues = theme
-    ? [...theme.body.matchAll(/--([a-z0-9-]+)\s*:\s*([^;]+);/g)].map(([, name, value]) => {
+    ? [...theme.matchAll(/--([a-z0-9-]+)\s*:\s*([^;]+);/g)].map(([, name, value]) => {
         if (name.startsWith("text-")) return `${code(name)} (font size ${value.trim()})`;
         if (name.startsWith("breakpoint-")) return `${code(`${name.slice(11)}:`)} (breakpoint, ${value.trim()} at Normal)`;
         return `${code(`--${name}`)} (${value.trim()})`;
