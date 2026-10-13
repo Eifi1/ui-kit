@@ -115,7 +115,10 @@ describe(".husky/pre-push (TST-2)", () => {
   // Run from inside a real `git push` (this very hook running the suite), git exports
   // GIT_DIR, GIT_INDEX_FILE and the like; inherited, they would point the scratch repo's git
   // at the pushing repository. Every git here, the hook's included, runs without them.
-  const ENV = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("GIT_")));
+  // HEAD_SHA too: CI exports it for check:commits, and the recorder below echoes it.
+  const ENV = Object.fromEntries(
+    Object.entries(process.env).filter(([k]) => !k.startsWith("GIT_") && k !== "HEAD_SHA"),
+  );
   const git = (cwd: string, ...args: string[]) => {
     const r = spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", ...args], {
       cwd,

@@ -306,8 +306,10 @@ export function FeedbackSubject({ row, wrap = false, labels: labelsProp, classNa
     );
   }
   return (
-    <span className={cn("inline-flex min-w-0 max-w-full items-center gap-1.5", className)}>
-      <span className="min-w-0 truncate font-medium">{row.title}</span>
+    <span className={cn("inline-flex min-w-0 max-w-full items-center gap-1.5 large:items-start", className)}>
+      {/* One line at Normal; from Large up the title wraps rather than losing its end (text
+          size §10.17 — the release sweep's first CI run found it cut on the showcase). */}
+      <span className="min-w-0 truncate-until-large font-medium">{row.title}</span>
       {chips}
     </span>
   );
