@@ -1,5 +1,7 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
+import { describe, expect, it, vi } from "vitest";
+import { DataTable } from "../data-table";
 import { Pagination } from "../data-table-pagination";
 
 /**
@@ -23,5 +25,49 @@ describe("Pagination: the page-size select", () => {
     const select = screen.getByRole("combobox", { name: "Rows per page" }) as HTMLSelectElement;
     expect(within(select).getAllByRole("option")).toHaveLength(6);
     expect(select.value).toBe("25");
+  });
+});
+
+/**
+ * 0.34.1 (Kurvenschmiede): `TranslationReviewPanel`'s groups share one page size, as they
+ * share one sort, and store it — so the owner holds it, through `pageSize` and
+ * `onPageSizeChange`, as it holds `sorts`.
+ */
+describe("DataTable: a page size held by the owner", () => {
+  const rows = Array.from({ length: 30 }, (_, i) => ({ id: i, name: `Row ${String(i).padStart(2, "0")}` }));
+  const table = (pageSize: number, onPageSizeChange = vi.fn()) => (
+    <MemoryRouter>
+      <DataTable
+        rows={rows}
+        rowKey={(r) => r.id}
+        columns={[{ key: "name", header: "Name", cell: (r) => r.name }]}
+        pageSize={pageSize}
+        onPageSizeChange={onPageSizeChange}
+      />
+    </MemoryRouter>
+  );
+  const shown = () =>
+    within(screen.getByRole("table"))
+      .getAllByRole("row")
+      .filter((r) => r.closest("tbody"))
+      .map((r) => r.textContent);
+
+  it("pages by it, and hands the pager's choice to the owner", () => {
+    const onPageSizeChange = vi.fn();
+    render(table(10, onPageSizeChange));
+    expect(shown()).toHaveLength(10);
+    fireEvent.change(screen.getByRole("combobox", { name: "Rows per page" }), { target: { value: "25" } });
+    expect(onPageSizeChange).toHaveBeenCalledWith(25);
+    // The owner's to apply: nothing moves until it does.
+    expect(shown()).toHaveLength(10);
+  });
+
+  it("goes back to the first page when the owner's value changes", () => {
+    const { rerender } = render(table(10));
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    expect(shown()[0]).toBe("Row 10");
+    rerender(table(25));
+    expect(shown()).toHaveLength(25);
+    expect(shown()[0]).toBe("Row 00");
   });
 });

@@ -2,8 +2,9 @@ import { act, fireEvent, render as rtlRender, screen, within } from "@testing-li
 import { useState } from "react";
 import type { ReactElement } from "react";
 import { MemoryRouter, useSearchParams } from "react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { UiKitProvider } from "../../i18n/kit-labels";
 import { DEFAULT_TRANSLATION_REVIEW_FILTER, translationRows } from "../../lib/translation-review";
 import type { ReviewStatus, TranslationReviewFilter, TranslationRow } from "../../lib/translation-review";
 import { TranslationReviewPanel } from "../translation-review";
@@ -184,6 +185,89 @@ describe("TranslationReviewPanel groups on a wide screen (keksdose, 0.25.1)", ()
       render(panel({ defaultGroupsOpen: true }));
       expect(expanded()).toEqual(["true", "true", "true"]);
     });
+  });
+});
+
+describe("TranslationReviewPanel's grouped view in storage (Kurvenschmiede, 0.34.1)", () => {
+  // Under `groupBy` the panel persisted nothing: `storageKey` kept the ungrouped table's
+  // view only, so KS's grouped review opened unsorted, 50 rows a group, every visit. The
+  // groups now keep ONE view — the sort and the page size — in the ungrouped table's own
+  // blob, under the same key and prefix.
+  beforeEach(() => localStorage.clear());
+
+  /** Three areas of twelve strings: every group open, one page each by default. */
+  const rows = areaRows({ areas: 3, big: 0, smallSize: 12 });
+  const bodyRows = (table: HTMLElement) => within(table).getAllByRole("row").filter((r) => r.closest("tbody"));
+  const keyHeader = (table: HTMLElement) => within(table).getByRole("columnheader", { name: /Key/ });
+  const pageSizeOf = (name: string) => within(section(name)).getByRole("combobox", { name: "Rows per page" });
+  const stored = (key = "hbui-table:translations") => JSON.parse(localStorage.getItem(key) ?? "null") as unknown;
+
+  it("restores a stored sort and page size in every group", () => {
+    localStorage.setItem(
+      "hbui-table:translations",
+      JSON.stringify({ sort: [{ key: "key", dir: "desc" }], filters: {}, pageSize: 10 }),
+    );
+    render(panel({ rows, storageKey: "translations" }));
+    for (const name of ["area000", "area001", "area002"]) {
+      const table = screen.getByRole("table", { name });
+      expect(keyHeader(table)).toHaveAttribute("aria-sort", "descending");
+      expect(bodyRows(table)).toHaveLength(10);
+      expect(pageSizeOf(name)).toHaveValue("10");
+    }
+  });
+
+  it("writes a sort or a page size changed in any group — one view, under the app's prefix — and every group follows", () => {
+    render(
+      <UiKitProvider tableStorageKeyPrefix="ks-table:">{panel({ rows, storageKey: "translations" })}</UiKitProvider>,
+    );
+    fireEvent.click(within(screen.getByRole("table", { name: "area001" })).getByRole("button", { name: "Key" }));
+    expect(stored("ks-table:translations")).toMatchObject({ sort: [{ key: "key", dir: "asc" }] });
+
+    fireEvent.change(pageSizeOf("area002"), { target: { value: "10" } });
+    expect(stored("ks-table:translations")).toMatchObject({ sort: [{ key: "key", dir: "asc" }], pageSize: 10 });
+    // One page size for every group, as there is one sort.
+    expect(bodyRows(screen.getByRole("table", { name: "area000" }))).toHaveLength(10);
+    expect(pageSizeOf("area000")).toHaveValue("10");
+    expect(Object.keys(localStorage)).toEqual(["ks-table:translations"]);
+  });
+
+  it("is read back by the ungrouped table, which finds its own widths and hidden columns as it left them", () => {
+    localStorage.setItem(
+      "hbui-table:translations",
+      JSON.stringify({ sort: [], filters: {}, pageSize: 50, widths: { key: 240 }, hidden: ["status"] }),
+    );
+    const { unmount } = render(panel({ rows, storageKey: "translations" }));
+    fireEvent.click(within(screen.getByRole("table", { name: "area000" })).getByRole("button", { name: "Key" }));
+    fireEvent.change(pageSizeOf("area000"), { target: { value: "10" } });
+    expect(stored()).toEqual({
+      sort: [{ key: "key", dir: "asc" }],
+      filters: {},
+      pageSize: 10,
+      widths: { key: 240 },
+      hidden: ["status"],
+    });
+    unmount();
+
+    render(panel({ rows, storageKey: "translations", groupBy: undefined }));
+    const table = screen.getByRole("table");
+    expect(keyHeader(table)).toHaveAttribute("aria-sort", "ascending");
+    expect(bodyRows(table)).toHaveLength(10);
+  });
+
+  it("keeps the view when the reviewer switches the grouping on", () => {
+    const { rerender } = render(panel({ rows, storageKey: "translations", groupBy: undefined }));
+    const sortByKey = () => fireEvent.click(within(screen.getByRole("table")).getByRole("button", { name: "Key" }));
+    sortByKey();
+    sortByKey();
+    expect(keyHeader(screen.getByRole("table"))).toHaveAttribute("aria-sort", "descending");
+    rerender(panel({ rows, storageKey: "translations" }));
+    expect(keyHeader(screen.getByRole("table", { name: "area001" }))).toHaveAttribute("aria-sort", "descending");
+  });
+
+  it("stores nothing without a storageKey", () => {
+    render(panel({ rows }));
+    fireEvent.click(within(screen.getByRole("table", { name: "area000" })).getByRole("button", { name: "Key" }));
+    expect(localStorage.length).toBe(0);
   });
 });
 

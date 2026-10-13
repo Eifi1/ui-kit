@@ -1,12 +1,14 @@
 import { useState } from "react";
-import type { ReactElement, ReactNode } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, ReactElement, ReactNode } from "react";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Autocomplete } from "../autocomplete";
 import { ChipInput } from "../chip-input";
+import { Combobox } from "../combobox";
 import { DatePicker } from "../date-picker";
+import { DialogFrame } from "../dialog-frame";
 import { EntityCombobox } from "../entity-combobox";
 import { FullBleedDialog } from "../full-bleed-dialog";
 import { HoverMenu } from "../hover-menu";
@@ -441,6 +443,197 @@ describe("the layer owner's own handler still claims (DUP-1)", () => {
     await user.keyboard("{Escape}");
     await settle();
     expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+describe("the owner's handler hears Escape only while its dialog is on top (0.34.1, KS)", () => {
+  // Kurvenschmiede's gear wizard asks "Discard this gear?" from the Modal's `onKeyDown`.
+  // That handler ran before the stack was asked, so with a tooltip, a hover menu or a
+  // list open INSIDE the wizard and focus on the panel (a focused "?"), Escape asked
+  // about the gear and left the tooltip standing. The layer opened over the dialog
+  // takes the press; the next one is the wizard's.
+  type OwnedHost = (props: {
+    onClose: () => void;
+    onKeyDown: (e: ReactKeyboardEvent<HTMLDivElement>) => void;
+    children: ReactNode;
+  }) => ReactElement;
+
+  const OWNED_HOSTS: [string, OwnedHost][] = [
+    [
+      "Modal",
+      ({ onClose, onKeyDown, children }) => (
+        <Modal onClose={onClose} aria-label="Gear" onKeyDown={onKeyDown}>
+          {children}
+        </Modal>
+      ),
+    ],
+    [
+      "FullBleedDialog",
+      ({ onClose, onKeyDown, children }) => (
+        <FullBleedDialog open onClose={onClose} title="Gear" closeLabel="Close" onKeyDown={onKeyDown}>
+          {children}
+        </FullBleedDialog>
+      ),
+    ],
+    [
+      "DialogFrame",
+      ({ onClose, onKeyDown, children }) => (
+        <DialogFrame onClose={onClose} title="Gear" onKeyDown={onKeyDown}>
+          {children}
+        </DialogFrame>
+      ),
+    ],
+  ];
+
+  /** The dialog itself, for a press with focus on its panel. */
+  const dialog = () => screen.getByRole("dialog", { name: "Gear" });
+
+  const CHILDREN: [string, OverlayCase][] = [
+    [
+      "a tooltip over a focused '?'",
+      {
+        field: (
+          <Tooltip label="What a gear is" portal>
+            <button type="button">?</button>
+          </Tooltip>
+        ),
+        open: async () => {
+          act(() => screen.getByRole("button", { name: "?" }).focus());
+          await waitFor(() => expect(screen.getByRole("tooltip")).toBeInTheDocument());
+        },
+        isOpen: () => screen.queryByRole("tooltip") !== null,
+      },
+    ],
+    [
+      "a HoverMenu opened by the mouse",
+      {
+        field: (
+          <HoverMenu
+            trigger={({ toggle }) => (
+              <button type="button" onClick={toggle}>
+                More
+              </button>
+            )}
+          >
+            {(close) => (
+              <ul>
+                <li>
+                  <button type="button" onClick={close}>
+                    Archive
+                  </button>
+                </li>
+              </ul>
+            )}
+          </HoverMenu>
+        ),
+        open: async (user) => {
+          await user.click(screen.getByRole("button", { name: "More" }));
+          expect(screen.getByRole("menu")).toBeInTheDocument();
+          // A mouse open takes no focus into the menu: the press comes from the panel.
+          act(() => dialog().focus());
+        },
+        isOpen: () => screen.queryByRole("menu") !== null,
+      },
+    ],
+    [
+      "a Combobox's list",
+      {
+        field: <Combobox label="Scope" value="" onChange={noop} options={["Front", "Rear"]} />,
+        open: async (user) => {
+          await user.click(screen.getByRole("combobox", { name: "Scope" }));
+          expect(screen.getByRole("listbox")).toBeInTheDocument();
+          act(() => dialog().focus());
+        },
+        isOpen: () => screen.queryByRole("listbox") !== null,
+      },
+    ],
+  ];
+
+  const OWNED_CASES = OWNED_HOSTS.flatMap(([host, Host]) => CHILDREN.map(([name, c]) => [name, host, Host, c] as const));
+
+  it.each(OWNED_CASES)("%s in a %s: the first Escape closes it, the second asks", async (_o, _h, Host, c) => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const ask = vi.fn();
+    // The wizard's handler, as Kurvenschmiede writes it.
+    const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      e.preventDefault();
+      ask();
+    };
+    render(
+      <Host onClose={onClose} onKeyDown={onKeyDown}>
+        {c.field}
+      </Host>,
+    );
+
+    await c.open(user);
+    expect(c.isOpen()).toBe(true);
+
+    await user.keyboard("{Escape}");
+    await settle();
+    expect(c.isOpen()).toBe(false);
+    expect(ask).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+
+    await user.keyboard("{Escape}");
+    await settle();
+    expect(ask).toHaveBeenCalledTimes(1);
+    // Its preventDefault still holds the dialog open.
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it.each(OWNED_HOSTS)("%s: every other key still reaches the handler while a layer is open", async (_h, Host) => {
+    const keys = vi.fn();
+    render(
+      <Host onClose={noop} onKeyDown={(e) => keys(e.key)}>
+        <Tooltip label="What a gear is" portal>
+          <button type="button">?</button>
+        </Tooltip>
+      </Host>,
+    );
+    act(() => screen.getByRole("button", { name: "?" }).focus());
+    await waitFor(() => expect(screen.getByRole("tooltip")).toBeInTheDocument());
+    const user = userEvent.setup();
+    await user.keyboard("a{Enter}");
+    expect(keys.mock.calls.map(([k]) => k)).toEqual(["a", "Enter"]);
+  });
+
+  it("a claim inside the layer still wins: the month grid goes back, then the picker closes, then it asks", async () => {
+    const user = userEvent.setup();
+    const ask = vi.fn();
+    render(
+      <Modal
+        onClose={noop}
+        aria-label="Gear"
+        onKeyDown={(e) => {
+          if (e.key !== "Escape" || e.defaultPrevented) return;
+          e.preventDefault();
+          ask();
+        }}
+      >
+        <DatePicker value="2026-10-03" onChange={noop} locale="en-GB" label="Bought" monthJump />
+      </Modal>,
+    );
+    await user.click(screen.getByRole("combobox", { name: /^Bought/ }));
+    const grid = () => screen.getByRole("grid");
+    const panel = grid().closest("[role=dialog]") as HTMLElement;
+    await user.click(within(panel).getByRole("button", { expanded: false }));
+    act(() => within(grid()).getByRole("gridcell", { name: "October 2026" }).focus());
+
+    await user.keyboard("{Escape}");
+    await settle();
+    expect(grid()).toHaveAccessibleName("October 2026");
+    expect(ask).not.toHaveBeenCalled();
+
+    await user.keyboard("{Escape}");
+    await settle();
+    expect(screen.queryByRole("grid")).toBeNull();
+    expect(ask).not.toHaveBeenCalled();
+
+    await user.keyboard("{Escape}");
+    await settle();
+    expect(ask).toHaveBeenCalledTimes(1);
   });
 });
 

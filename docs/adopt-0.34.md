@@ -36,7 +36,10 @@ From the three apps' 0.34 adoptions. Bump to `^0.34.1`; server-kit stays 0.8.0.
   closes that, the next reaches the dialog's handler (KS's gear wizard asks to discard on the
   second press).
 - **TranslationReviewPanel under `groupBy`** (Kurvenschmiede) remembers the sort and page size
-  under the same `storageKey` as the ungrouped table.
+  under the same `storageKey` as the ungrouped table (in DataTable's stored format, so switching
+  grouping keeps the view); the page size is now one for all groups. For that, DataTable takes a
+  controlled `pageSize` / `onPageSizeChange` pair, like `sorts` (additive; a new value returns to
+  page 1).
 - **The wake notice's French and Italian words** follow keksdose's reviewed ones.
 - **Corrections to this guide**, made in place: the `commit` counts (controls that save on their
   own: keksdose one, kastlan five), keksdose's money classes (no `[var()]` left; the unlayered

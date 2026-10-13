@@ -295,6 +295,16 @@ export interface DataTableProps<T> {
   sorts?: SortState[];
   onSortsChange?: (next: SortState[]) => void;
   /**
+   * Controlled page size, as `sorts` above: the table pages by it and hands its pager's
+   * choice to `onPageSizeChange` (`Infinity` is "All"). For tables that page ALIKE —
+   * `TranslationReviewPanel`'s groups share one page size as they share one sort
+   * (0.34.1). Left out, the table keeps its own, from `defaultPageSize`, the URL and
+   * `storageKey`. A change of value sends a client-side table back to page 1. In
+   * `serverPagination` mode the page size is `serverPagination.pageSize`.
+   */
+  pageSize?: number;
+  onPageSizeChange?: (pageSize: number) => void;
+  /**
    * Opt-in multi-row selection (desktop table only). When provided, a leading
    * checkbox column is rendered with a select-all box in the header; the owner
    * holds the selected set and reacts via the callbacks. Rows for which
@@ -728,6 +738,8 @@ export function DataTable<T>({
   onFiltersChange,
   sorts: sortsProp,
   onSortsChange,
+  pageSize: pageSizeProp,
+  onPageSizeChange,
   selection,
   labels: labelsProp,
   locale: localeProp,
@@ -830,6 +842,8 @@ export function DataTable<T>({
     defaultPageSize,
     sortsProp,
     filtersProp,
+    // Ignored in `serverPagination` mode, where the owner's is the page size.
+    pageSizeProp: isServer ? undefined : pageSizeProp,
   });
 
   // With the controls that change them switched off, persisted widths and hidden
@@ -1841,7 +1855,9 @@ export function DataTable<T>({
                 isServer
                   ? serverPagination!.onPageSizeChange
                   : (n) => {
-                      setPageSize(n);
+                      // To the owner when it holds the page size, as `commitSorts` does.
+                      if (onPageSizeChange) onPageSizeChange(n);
+                      else setPageSize(n);
                       setPage(0);
                     }
               }

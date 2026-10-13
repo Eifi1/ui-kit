@@ -174,14 +174,15 @@ export function FullBleedDialog({
   // to whichever of them is topmost — one press dismissing the sheet AND the edit
   // behind it was Keksdose live #309 (*"Mouse Back does not only close the select but
   // also the whole edit or create dialog"*) on a different key.
-  useDismissLayer(open, requestClose);
+  const layer = useDismissLayer(open, requestClose);
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // The caller's handler first (keksdose's transaction-search keeps its list keys on
     // the dialog); a `preventDefault()` IN THAT HANDLER claims Escape. Only there: a
     // descendant's does not count. A SearchField in the header prevents Escape to stop
     // Chromium clearing a type=search input, and in 0.8.0 that silently stopped Escape
-    // from closing the dialog (keksdose). The one rule `Modal` now shares.
-    runOwnKeyDown(e, onKeyDown);
+    // from closing the dialog (keksdose). The one rule `Modal` now shares — as is this
+    // one: the handler sees Escape only while this dialog is the layer on top (0.34.1).
+    runOwnKeyDown(e, onKeyDown, layer);
     takeEscape(e);
   };
 
