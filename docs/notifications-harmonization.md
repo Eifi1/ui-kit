@@ -15,7 +15,7 @@ for and nothing reads. **kk** = keksdose, **ka** = kastlan, **KS** = Kurvenschmi
 
 ## Status
 
-**Settled 2026-10-13, building in ui-kit 0.36 / server-kit 0.9.** The three apps
+**Settled 2026-10-13, built for ui-kit 0.36.0 / server-kit 0.9.0.** The three apps
 reviewed the draft on 2026-10-13; Marcel took its open decisions and the questions the
 reviews raised the same day ("As recommended"). Everything is folded into the sections
 below, and §8 says where each review point went. The build works from §4; each app's
@@ -818,10 +818,13 @@ unsubscribes and fires the event); `UnsubscribePanel` (both POSTs, both done sta
 languages (the catalogue tests).
 
 **Showcase:** a page "Notifications" in the App chrome group
-(`showcase/src/sections/notifications-036-demo.tsx`, `routes.tsx`): keksdose's nine types
+(`showcase/src/sections/notifications.tsx`, a family file: no new `*-0NN-demo.tsx`, the
+showcase's ratchet; `routes.tsx`): keksdose's nine types
 in three groups with the threshold and the digest; KS's three e-mail-only types with an
 unverified address; quiet hours with a device in another zone; the push card's states
-from a switcher over a fake `PushDevice`; the device list; the panel's states.
+from a switcher over a fake `PushDevice`; the device list; the panel's states. App
+chrome holds ten pages at most, so "Links" moves to Foundations beside "Localisation"
+(both are set once on the provider; the slug is unchanged).
 
 **Not in the kit:** the inbox list and bell, keksdose's check-up card, the service
 worker, an app's words for its types. Size: L.
