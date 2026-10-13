@@ -39,6 +39,7 @@ measurements, the per-app to-dos, the risks, the review log and the method are i
 | 10 | What the kit adds | ui-kit 0.33.0 | §12.1–§12.12; adopt-0.33; round 0.34 Q1 |
 | 11 | Risks | — (archived) | |
 | 12 | Settled after the reviews | — | index; each item points to its § |
+| 13 | The More-contrast light well | — (round 0.36, a draft for review) | |
 | A | Method | — (archived) | |
 
 ## 1. Where each one stands
@@ -459,7 +460,9 @@ gives `surface2` the page's lightness (`src/theme/palette-derive.ts`). Dark is u
   status and hue pairs are 5–17:1 already. The well is a surface, which More contrast
   never moves.
 - A future step could raise the light well to a 10 % ink mix under More contrast: muted
-  becomes secondary there, at ≥ 6.28:1 on it. Not built.
+  becomes secondary there, at ≥ 6.28:1 on it. Not built. Measured in round 0.36, the step
+  alone takes money, status and hue text below 4.5:1 on the well; §13 (a draft) proposes
+  it with the steps it needs.
 - Derived roles in CSS are safe in Tailwind 4.3 (§3.1); `check:tailwind` asserts each
   one reaches the built CSS (`--warning-border-strong`, the neutral pair, the money
   foregrounds, the row hover's 5.5 %).
@@ -926,6 +929,201 @@ stands here (none does: all twelve are folded). The reviews' wording is in
 10. **Two hover points: B′'s translucent ink, `--bg-hover` at 5.5 %** → §5.7, §5.5.
 11. **The brand as text on its hovered chip** → §5.8.
 12. **A brand glyph on the hovered chip turns brand-muted** → §5.8.
+
+## 13. The More-contrast light well (round 0.36; DRAFT for review)
+
+**DRAFT for review (round 0.36).** §5.6 left one step unbuilt: under More contrast, a
+light well of 10 % ink, where muted text (the set's secondary under More contrast) reads
+at ≥ 6.28:1 (brief 0.36 W). Measured before proposing: the step alone fails the audit,
+because the colours More contrast does not step sit on the well too.
+
+### 13.1 Where it stands
+
+- In light the well is the page (§5.3): 1.09–1.11:1 from the card, at both levels.
+- More contrast steps four tokens, in JS (`CONTRAST_STEPPED_VARS` and `contrastStep`,
+  `src/theme/contrast-tokens.ts:27`, `:141`). `applyTokenSet` writes the surfaces inline
+  (`src/theme/palette-presets.ts:485-509`), so no `[data-contrast=more]` rule can move
+  `--bg-surface-2` in keksdose or kastlan. KS, with no palette layer, gets the same step
+  from `reapplyContrastTokens` (`src/theme/contrast.ts:81-93`).
+- The literals (status, hues, field sync) and the derived roles (`--bg-active`,
+  `--bg-hover`) are plain CSS, which a `:root[data-contrast="more"]` rule can move. Only
+  `--focus-ring-width` does today (`tokens.css:75-77`).
+
+### 13.2 Measured
+
+With the kit's own code (`mix`, `contrast`, `contrastStep`, and `resolveTokens` from
+`src/test/tokens-css.ts`), in a scratch script outside the repo, over the six `PALETTES`
+(Imprint equals Default here). The well is p % of `--text-primary` mixed into the card, the
+formula of `--bg-hover`. Light, More contrast; each cell is the worst to the best preset.
+
+| On the well | today (the page) | 5.5 % | 10 % | needs |
+|---|---|---|---|---|
+| the well against the card | 1.09–1.11 | 1.10–1.13 | **1.19–1.24** | — |
+| `--text-primary` | 8.17–13.01 | 8.08–12.77 | 7.44–11.57 | 7 (`auditPalette`) |
+| `--text-secondary` (stepped) | 7.56–10.78 | 7.48–10.58 | 6.88–9.59 | 4.5 |
+| `--text-muted` (stepped: the set's secondary) | 6.99–8.52 | 6.91–8.36 | **6.35–7.58** | 4.5 |
+| `--text-placeholder` (stepped: the set's muted) | 4.61–5.51 | 4.57–5.41 | 4.17–4.90 | not held |
+| `--brand-muted` | 5.77–12.00 | 5.73–11.78 | 5.26–10.68 | 4.5 |
+| money, the worst of the four | 4.51–4.59 | 4.50–4.51 | **4.08–4.15** | 4.5 |
+| `--danger` `--warning` `--success` `--info` | 4.56–4.66 | 4.49–4.61 | **4.07–4.24** | 4.5 |
+| hues | 4.60–4.70 | 4.53–4.65 | **4.11–4.28** | 4.5 |
+| `--status-edited` | 3.11–3.17 | 3.06–3.14 | **2.77–2.89** | 3 |
+| `--border` (stepped) | 3.01–3.94 | 2.98–3.87 | **2.74**–3.51 | 3 |
+| `--brand` | 4.04–11.32 | 4.02–11.11 | 3.68–10.07 | 3 |
+| a well row's hover, the card (§5.7) | 1.09–1.11 | 1.10–1.13 | 1.19–1.24 | 1.08 |
+| B′'s ink over the well (§5.7) | 1.12–1.14 | 1.12–1.14 | 1.11–1.14 | 1.08 |
+| `--bg-active` (a digit key's hover, Button `primary`'s) | 1.14–1.18 | 1.13–1.16 | **1.04–1.05** | 1.08 |
+
+- **Muted is not the problem**: 6.35–7.58 on the 10 % well (§5.6's ≥ 6.28 was measured on
+  the 0.32.2 presets).
+- **Everything More contrast does not step is**: money, status and two hues fall to
+  4.07–4.28, `--status-edited` to 2.77, Default's stepped border to 2.74, and
+  `--bg-active` sits 1.04 from the well.
+- **The largest step that needs nothing else is 5.5 %** (money 4.50, status 4.49): 1.10–1.13
+  from the card against 1.09–1.11 today, which nobody would see. At 6 % Ink's money is
+  4.43.
+- **Dark** already stands 1.11–1.13 from the card. A 10 % step there would take money to
+  4.12 and a brand to 2.75.
+- The placeholder is held to no ratio today (`tokens-css-audit.test.ts` leaves it out of
+  the text roles); on the well it is the text of a disabled or read-only field.
+
+### 13.3 Decisions
+
+Settled by the measurements:
+
+1. **The step cannot ship alone.** Either the colours on the well step with it, or the
+   well stays where it is.
+
+Open, with a recommendation:
+
+2. **The mix: 10 % ink into the card, in light, under More contrast. Rec.** 1.19–1.24 from
+   the card, about twice today's step. The rule it is held to: **the stepped well stands
+   ≥ 1.17:1 from the card**, two of §5.7's 1.08 steps. 9 % is the least that clears it in
+   every preset (1.17–1.22, Default at 1.17 exactly), with no room.
+3. **What steps with it, in light under More contrast only. Rec:**
+   - **The four money colours, per token set, in `contrastStep`**: each solved darker at
+     its own hue and chroma until it clears 4.5 on the stepped well, measured on the hex
+     (`solveLightness`); a colour that clears already stays. In the shipped presets they
+     move 0.9–2.3 points of OKLCH lightness (Default: expense `#905902` → `#895400`, net
+     `#7a4fa3` → `#774ca0`, neutral `#6b6453` → `#665f4f`; income holds at 4.95).
+   - **Seven literals**, in a `tokens.css` block `:root[data-contrast="more"]:not(.dark)`,
+     each at its light value's OKLCH hue and chroma, solved over the presets' stepped wells
+     as §5.5 solved them:
+
+     | token | light | More contrast | worst on the well | worst on the page | white on it |
+     |---|---|---|---|---|---|
+     | `--danger` | `#be123c` | `#ba0739` | 4.31 → 4.53 | 4.83 → 5.08 | 6.29 → 6.61 |
+     | `--warning` | `#a34800` | `#9a4300` | 4.13 → 4.53 | 4.63 → 5.08 | 6.03 → 6.61 |
+     | `--success` | `#007152` | `#006a4d` | 4.13 → 4.54 | 4.63 → 5.09 | 6.03 → 6.63 |
+     | `--info` | `#0369a1` | `#006197` | 4.07 → 4.56 | 4.56 → 5.11 | 5.93 → 6.65 |
+     | `--hue-teal` | `#006f68` | `#006862` | 4.15 → 4.56 | 4.65 → 5.11 | 6.05 → 6.65 |
+     | `--hue-orange` | `#b43800` | `#a93400` | 4.11 → 4.53 | 4.60 → 5.08 | 5.99 → 6.61 |
+     | `--status-edited` (a mark, 3:1) | `#bf6800` | `#b66200` | 2.77 → 3.04 | 3.11 → 3.41 | — |
+
+     The others hold on the stepped well: blue 4.60, indigo 5.42, purple 4.79;
+     `--status-synced` 4.89, `-pending` 4.60, `-error` 4.44 and `--danger-border-strong`
+     3.22 (marks and lines need 3). `--warning-border-strong` is `var(--warning)` in light
+     and follows. `--danger-hover` stays, 1.21 from the new `--danger` (1.28 today).
+   - **`--bg-active` at 16 %** (12 % today), in the same block: 1.12–1.15 from the stepped
+     well, with `--text-primary` ≥ 6.66 and the stepped secondary ≥ 6.16 on it.
+   - **`--border`** re-solves against the stepped well, since `steppedBorder` measures the
+     worst surface: only Default moves (`#8b8170` → `#847a69`: 3.02 on the well, 3.61 on
+     the card).
+
+   Money and status text then read ≥ 5.08 on the page and the card under More contrast,
+   where today they stay at 4.5–4.7: More contrast deepens every coloured text, not only
+   the greys. §2's decision 15 ("no new JS step") and §3.1's "nothing else steps" change
+   with it.
+4. **Dark does not step. Rec.** It stands 1.11–1.13 from the card already, and its money
+   sits at 4.50 on the well with no room.
+5. **Muted gets no step of its own. Rec.** Under More contrast it is the set's secondary
+   everywhere already: 6.35–7.58 on the stepped well.
+6. **Not chosen: a lighter card instead of a darker well.** Half-way to white under More
+   contrast, the card stands 1.18–1.20 from the well and no text colour moves. But every
+   card, dialog and menu turns whiter, `--bg-active` still has to move (1.05–1.09 from the
+   well), and the weakest colours today, money and status at 4.5–4.7 on the page and the
+   well, stay where they are.
+7. **Not chosen: building nothing**, with §5.6's line closed on the 5.5 % ceiling. It is
+   the answer if the reviews refuse decision 3.
+
+### 13.4 The change
+
+- `src/theme/contrast-tokens.ts`:
+  - `WELL_INK_MORE = 0.10` beside `HOVER_INK`;
+  - `contrastStep(t)` also answers `bgSurface2` and the four money colours. For a light
+    set (its ink darker than its card) the well is `mix(textPrimary, bgSurface, 0.10)`
+    and the money is solved on it; a dark set's come back unchanged;
+  - `steppedBorder` measures against the stepped well;
+  - `CONTRAST_STEPPED_VARS` gains `--bg-surface-2` and the four `--money-*`.
+- `applyTokenSet` (`palette-presets.ts:485`) writes them; `reapplyContrastTokens`
+  (`contrast.ts:81`) writes and removes them for an app without a palette layer, as it
+  does the four today.
+- `tokens.css`: the `:root[data-contrast="more"]:not(.dark)` block with the seven literals
+  and `--bg-active` at 16 %, each with its "solved" comment, and the header's More-contrast
+  paragraph to match. Inside `<html>`, `(0,3,0)` outranks the `:root` and `:root, .dark`
+  blocks; `.dark` leaves it out.
+- `src/test/tokens-css.ts` reads that block for a light `more` variant.
+- `palette-derive.ts`: nothing is derived differently (the step is applied, not derived),
+  except that a light brand is also solved against the stepped well, so a derived palette
+  holds 3:1 there. No app derives a palette; the shipped brands hold (≥ 3.68).
+- The heat stops and `useChartHex` keep the standard hex: a chart's fills do not step.
+
+### 13.5 The audits to add
+
+- `auditPalette(t, semantic, { level: "more" })`, for a light set: `--text-primary` at 7,
+  and the stepped secondary and muted, `--brand-muted` and the stepped money at 4.5 on the
+  stepped well; the stepped border and `--brand` at 3 on it; the well 1.17 from the card.
+  `palette-audit.test.ts` runs both levels over every shipped preset, and `derivePalette`
+  audits both on the way out.
+- `tokens-css-audit.test.ts`: its `+more` variants then measure every text role, mark,
+  line and key step on the stepped well, with no new pair. New: under More contrast the
+  light well stands ≥ 1.17 from the card and the dark well does not move; each More
+  literal keeps its light value's hue and chroma and is darker.
+- `contrast.no-palette.test.tsx`: the KS path writes and removes the well and the money.
+- `check:tailwind`: the More block reaches the built CSS, as `--focus-ring-width:3px` does
+  (`scripts/check-tailwind-scan.mjs:49`).
+- `token-vars-declared.test.ts` already holds every `CONTRAST_STEPPED_VARS` name to a
+  declaration; the five are declared.
+
+### 13.6 What apps see
+
+Only under More contrast, in light; standard contrast and dark do not change.
+- **The kit's wells darken** (§5.3's list): Table zebra and group rows, DataTable's bands,
+  sticky footer and selected rows, the MeasuredGrid head, Card `inset`, disabled and
+  read-only fields, the numpad and calculator digit keys, mini-calendar cells, feedback
+  bubbles and badges, the settings icon tile, ToggleGroup's dimmed segments, and Button
+  `primary`'s fill.
+- **The apps' own wells follow**: in non-test source, keksdose uses the well 31 times in
+  23 files, kastlan 11 times in 6, KS 7 times in 5.
+- **Money, status, teal and orange text** turn a shade deeper on every surface.
+
+### 13.7 Per app
+
+Nothing to code. keksdose and kastlan get the step through `applyTokenSet`, KS through
+`reapplyContrastTokens`. Each app looks at its own well sites under More contrast in
+light; a text colour of its own on the well that the kit does not step (a Tailwind
+palette colour, an app literal) is the app's to measure. No app test pins a stepped
+value: keksdose's two appearance tests assert the attributes only
+(`app/__tests__/pre-paint-appearance.test.ts:43-60`). keksdose's NOT_ACCEPTED and
+UNCLEARED pills are fills under their own labels (§5.4) and do not change.
+
+### 13.8 Build
+
+**ui-kit 0.36 (M):** §13.4 and §13.5; the README's More-contrast lines and §3.1, §3.2
+and §5.6 here; the showcase's foundations page shows the well at both levels.
+**server-kit:** nothing.
+
+### 13.9 For the reviews
+
+1. **All:** under More contrast in light, is a darker well, with money and status text a
+   shade deeper, right for your screens? Where does it hurt (kk: the budget's zebra and
+   group rows; KS: selected rows)?
+2. **All:** any text of your own on the well, in a colour the kit does not step?
+3. **All:** any site of your own that rests on the well and hovers to `--bg-active`, or
+   rests on `--bg-active` (§5.2's keys)?
+4. **keksdose:** a legend's text in a money colour beside bars painted from the JS hex
+   would differ by up to 2.3 lightness points under More contrast. Acceptable?
+5. **All:** 10 % (1.19–1.24) or 9 % (1.17–1.22)?
 
 ## A. Method
 
