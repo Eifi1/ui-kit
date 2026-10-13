@@ -232,8 +232,10 @@ name with the property's own prefix dropped (`--bg-surface` → `bg-surface`,
 The names are **property-scoped**: a text role makes a `text-*` utility and nothing else,
 so `bg-muted` does not exist and a role cannot land on the wrong property by accident. An
 app's own `--color-*` names (shadcn-style) do not collide with them. Keep `[var(--…)]` for a
-role with no utility: the chart colours, `--status-*`, a ring offset, and a money colour
-that needs a variant (the money classes below are plain and take none). The kit's own
+role with no utility: the chart colours and `--status-*`. The ring offsets
+(`ring-offset-surface`, `ring-offset-page`) and the money colours (`text-money-income`,
+`bg-money-expense` …, the table below) are utilities since 0.34 and take variants, unlike
+the plain money classes further down. The kit's own
 markup follows this rule with no exceptions: `check:tokens` allows no `[var(--role)]` where
 a utility exists.
 
@@ -334,6 +336,35 @@ Utilities: `truncate-until-large`, `truncate-until-large-words`.
 Theme values: `text-micro` (font size 0.625rem), `text-caption` (font size 0.6875rem), `3xl:` (breakpoint, 150rem at Normal).
 
 <!-- END GENERATED: styling -->
+
+### Lint: the role utilities in an app
+
+`@eifi1/ui-kit/eslint` (0.35) is `check:tokens`' role rule for an app's own markup: an ESLint
+flat-config plugin whose `role-utilities` rule reports a `[var(--role)]` class wherever that
+property has a utility for the role, and names it. It reads every string literal and
+template-literal part, so a JSX `className`, a `cn()` / `clsx()` argument and a class constant
+alike. Where one utility fits, `eslint --fix` writes it and keeps the variants and the opacity:
+`hover:text-[var(--text-muted)]/70` → `hover:text-muted/70`. A token with no utility on that
+property is left alone (`text-[var(--chart-1)]`, `--status-*`, `bg-[var(--border)]` as a
+divider), and so are comments. The rule reads the table above, so a role that gains a utility is
+flagged from the release that adds it.
+
+```js
+// eslint.config.js
+import uiKit from "@eifi1/ui-kit/eslint";
+
+export default defineConfig([ // or tseslint.config(…): either takes it
+  // … the app's own entries, which say which files are linted …
+  uiKit.configs.recommended,
+]);
+```
+
+`configs.recommended` registers the plugin as `@eifi1/ui-kit` and turns
+`@eifi1/ui-kit/role-utilities` on as an error for every linted file except tests
+(`**/__tests__/**`, `*.test.*`, `*.spec.*`), which may name an old class to assert it is gone.
+To scope it yourself, register the plugin and set the rule:
+`{ files: ["src/**/*.tsx"], plugins: { "@eifi1/ui-kit": uiKit }, rules: { "@eifi1/ui-kit/role-utilities": "error" } }`.
+It runs on ESLint 9 and 10 and imports no package of its own.
 
 ### Text size and More contrast
 
@@ -511,26 +542,27 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1900 names from 303 modules** — 889 values and 1011 types. _Italic_ is a type-only export.
+**1878 names from 302 modules** — 868 values and 1010 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1900 |
-| `@eifi1/ui-kit/chart` | 105 |
+| `@eifi1/ui-kit` | 1878 |
+| `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 77 |
-| `@eifi1/ui-kit/data-table` | 53 |
-| `@eifi1/ui-kit/wizard` | 25 |
+| `@eifi1/ui-kit/data-table` | 51 |
+| `@eifi1/ui-kit/wizard` | 24 |
 | `@eifi1/ui-kit/tour` | 7 |
-| `@eifi1/ui-kit/feedback` | 165 |
+| `@eifi1/ui-kit/feedback` | 164 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
 | `@eifi1/ui-kit/currencies` | 3 |
+| `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 11 |
-| `@eifi1/ui-kit/rhf` | 60 |
+| `@eifi1/ui-kit/rhf` | 48 |
 
 Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a
 re-slicing of it, never a second API.
@@ -591,7 +623,7 @@ re-slicing of it, never a second API.
 |---|---|
 | `theme/color` | `contrast`, `deltaE`, `hexToOklch`, `luminance`, `oklchToHex`, `oklchToRgb`, `parseHex`, `rgbToOklch`, `simulateCvd`, `solveLightness`, `toHex`, _`CvdType`_, _`Oklch`_, _`Rgb`_ |
 | `theme/palette-derive` | `auditChartRamp`, `auditPalette`, `deriveChartRamp`, `derivePalette`, `describe`, _`AnchorRole`_, _`ChartRampReport`_, _`ContrastCheck`_, _`ContrastReport`_, _`DerivedPalette`_, _`DeriveOptions`_, _`PaletteAnchors`_, _`SemanticTokens`_ |
-| `theme/palette-presets` | `ALTERNATIVE_PRESETS`, `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `IMPRINT_PRESET`, `PALETTES`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
+| `theme/palette-presets` | `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `IMPRINT_PRESET`, `PALETTES`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
 | `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
 | `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
 | `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
@@ -615,7 +647,7 @@ re-slicing of it, never a second API.
 | `components/button` | `Button`, _`ButtonLinkProps`_, _`ButtonProps`_ |
 | `components/button-look` | `buttonClasses`, `TOUCH_TARGET_LARGE`, _`ButtonClassesOptions`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_ |
 | `components/icon-button` | `IconButton`, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_ |
-| `components/field-base` | `DEFAULT_CHARACTER_COUNT_LABELS`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TOUCH_TEXT`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FloatingField`, `Label`, `resolvePasswordRevealLabels`, _`CharacterCountLabels`_, _`FieldChevronProps`_, _`FloatingFieldProps`_, _`LabelProps`_, _`PasswordRevealLabels`_ |
+| `components/field-base` | `DEFAULT_CHARACTER_COUNT_LABELS`, `DEFAULT_PASSWORD_REVEAL_LABELS`, `FIELD_BASE`, `FIELD_DISPLAY`, `FIELD_FLOATING_PAD`, `FIELD_INVALID`, `FIELD_TOUCH_TEXT`, `FIELD_TRIGGER`, `FIELD_WRITABLE_LOOK`, `FieldChevron`, `FLOATING_INPUT_CLASS`, `FLOATING_LABEL_CLASS`, `FloatingField`, `Label`, _`CharacterCountLabels`_, _`FieldChevronProps`_, _`FloatingFieldProps`_, _`LabelProps`_, _`PasswordRevealLabels`_ |
 | `components/input` | `Input`, _`InputProps`_ |
 | `components/select` | `Select`, _`SelectProps`_ |
 | `components/textarea` | `Textarea`, _`TextareaProps`_ |
@@ -645,7 +677,7 @@ re-slicing of it, never a second API.
 | `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipProps`_, _`TooltipSide`_, _`TooltipSize`_, _`TooltipTap`_, _`TooltipViewport`_ |
 | `components/user-avatar` | `avatarInitials`, `UserAvatar`, _`UserAvatarBadge`_, _`UserAvatarProps`_ |
 | `components/settings-fields` | `ContrastSetting`, `LanguageSetting`, `TextSizeSetting`, `ThemeSetting`, _`ContrastSettingProps`_, _`LanguageSettingProps`_, _`TextSizeSettingProps`_, _`ThemeSettingProps`_, _`ThemeSettingSelectProps`_, _`ThemeSettingToggleProps`_ |
-| `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FIELD_SYNC_FRAME`, `FIELD_SYNC_SAVED_MS`, `FieldSyncIndicator`, `FieldSyncRow`, `resolveFieldSyncLabels`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
+| `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FIELD_SYNC_FRAME`, `FIELD_SYNC_SAVED_MS`, `FieldSyncIndicator`, `FieldSyncRow`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
 | `components/month-picker` | `DEFAULT_MONTH_PICKER_LABELS`, `MonthPicker`, _`MonthPickerLabels`_, _`MonthPickerProps`_ |
 | `components/checkbox` | `Checkbox`, _`CheckboxProps`_ |
 | `components/switch` | `Switch`, _`SwitchProps`_, _`SwitchSize`_ |
@@ -674,7 +706,6 @@ re-slicing of it, never a second API.
 | `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapNode`_, _`TreemapProps`_ |
 | `components/series-chart` | `resolveTooltipPlacement`, `SeriesChart`, `seriesLegendEntries`, `StaticSeriesChart`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartTooltipPlacement`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesLegendAxes`_ |
 | `components/chart-height` | _`ChartHeight`_ |
-| `components/chart-zoom` | `axisExtent`, `DEFAULT_Y_AXIS`, `defaultZoomAxes`, `fitXToY`, `fitYToX`, `NO_ZOOM`, `selectionFromDrag`, `withChartZoom`, `ZOOM_MIN_DRAG`, `ZOOM_SQUARE_ENOUGH`, `zoomAfter`, `zoomAxesFor`, `zoomDomains` |
 | `components/chart-zoom-core` | `SharedXZoom`, _`ZoomAxes`_, _`ZoomAxesSetting`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSeries`_, _`ZoomFitSource`_, _`ZoomRow`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
 | `components/toggle-legend` | `LegendColumn`, `LegendGroup`, `StaticLegend`, `STEP_DASH`, `STROKE_PATTERNS`, `strokeDash`, `toggleHidden`, `ToggleLegend`, _`LegendEntry`_, _`StaticLegendProps`_, _`ToggleLegendProps`_ |
 | `components/facing-pair` | `FACING_SIDES`, `facingAxes`, `facingBand`, `facingHeadingPad`, _`FacingSide`_ |
@@ -686,7 +717,7 @@ re-slicing of it, never a second API.
 | `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
 | `components/nav-pills` | `NavPills`, _`NavPillItem`_, _`NavPillLinkProps`_, _`NavPillsCurrent`_, _`NavPillsProps`_ |
 | `components/chip` | `Chip`, _`ChipHue`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
-| `components/chip-input` | `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, `resolveChipInputLabels`, _`ChipInputLabels`_, _`ChipInputProps`_ |
+| `components/chip-input` | `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, _`ChipInputLabels`_, _`ChipInputProps`_ |
 | `components/wizard-stepper` | `WizardStepper` |
 | `components/hover-menu` | `HoverMenu`, _`HoverMenuProps`_ |
 | `components/modal` | `Modal`, `ModalCloseContext`, `useBackdropClose`, _`ModalProps`_ |
@@ -739,9 +770,9 @@ re-slicing of it, never a second API.
 | `components/country-select` | `CountrySelect`, `DEFAULT_COUNTRY_SELECT_LABELS`, _`CountrySelectLabels`_, _`CountrySelectProps`_ |
 | `components/iban-input` | `DEFAULT_IBAN_INPUT_LABELS`, `IbanInput`, _`IbanInputLabels`_, _`IbanInputProps`_ |
 | `components/phone-input` | `DEFAULT_PHONE_INPUT_LABELS`, `PhoneInput`, _`PhoneInputLabels`_, _`PhoneInputProps`_ |
-| `components/field-strip` | `FieldStrip`, _`FieldStripIds`_, _`FieldStripPad`_, _`FieldStripProps`_ |
+| `components/field-strip` | `FieldStrip`, _`FieldStripIds`_, _`FieldStripProps`_ |
 | `components/column-mapper` | `ColumnMapper`, `ColumnRoleTable`, `DEFAULT_COLUMN_MAPPER_LABELS`, _`ColumnMapperLabels`_, _`ColumnMapperProps`_, _`ColumnRoleTableBodyProps`_, _`ColumnRoleTableProps`_, _`ColumnRoleTableRowProps`_ |
-| `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, `missingDataTableLabels`, `resolveDataTableLabels`, _`DataTableLabels`_ |
+| `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, _`DataTableLabels`_ |
 | `components/data-table-sort` | `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortCycle`_, _`SortDir`_, _`SortState`_, _`SortStepOptions`_ |
 | `components/data-table-filters` | `dateFilter`, `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `filterHref`, `isFilterActive`, `numberFilter`, `resolveFilter`, `rowMatches`, `selectFilter`, `textFilter`, _`ColumnFilter`_, _`FilterValue`_ |
 | `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
@@ -808,7 +839,7 @@ re-slicing of it, never a second API.
 | `feedback/feedback-attachment` | `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_FEEDBACK_ATTACHMENT_LABELS`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `DEFAULT_MAX_ATTACHMENTS`, `FeedbackAttachmentField`, `pastedName`, _`FeedbackAttachmentError`_, _`FeedbackAttachmentErrorInfo`_, _`FeedbackAttachmentFieldLabels`_, _`FeedbackAttachmentFieldMultipleProps`_, _`FeedbackAttachmentFieldProps`_, _`FeedbackAttachmentFieldRefsProps`_, _`FeedbackAttachmentFieldSingleProps`_, _`FeedbackAttachmentRef`_, _`FeedbackAttachmentRefsError`_ |
 | `feedback/feedback-dialog` | `DEFAULT_FEEDBACK_DIALOG_LABELS`, `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackDialogMultipleProps`_, _`FeedbackDialogProps`_, _`FeedbackDialogSingleProps`_, _`FeedbackDialogTextLabels`_, _`FeedbackMultipleSubmission`_, _`FeedbackSubmission`_, _`FeedbackSubmitHint`_ |
 | `feedback/feedback-inbox` | `FeedbackCategoryBadge`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, _`FeedbackNoteAttachment`_ |
-| `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackComposer`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackComposerSlotContext`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
+| `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackComposerSlotContext`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
 | `feedback/feedback-record` | `appendRework`, `attachmentName`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackAttachmentLine`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
 | `feedback/feedback-labels` | `DEFAULT_FEEDBACK_CATEGORY_LABELS`, `DEFAULT_FEEDBACK_STATUS_LABELS`, `DEFAULT_FEEDBACK_TOAST_LABELS`, `useFeedbackCategoryLabels`, `useFeedbackStatusLabels`, `useFeedbackToastLabels`, _`FeedbackCategoryLabels`_, _`FeedbackStatusLabels`_, _`FeedbackToastLabels`_ |
 | `feedback/feedback-status-undo` | `FEEDBACK_UNDO_DURATION`, `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutate`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
@@ -826,7 +857,7 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `wizard/types` | `DEFAULT_WIZARD_LABELS`, `resolveWizardLabels`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardLabels`_, _`WizardStepConfig`_, _`WizardUrlSync`_ |
+| `wizard/types` | `DEFAULT_WIZARD_LABELS`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardLabels`_, _`WizardStepConfig`_, _`WizardUrlSync`_ |
 | `wizard/use-wizard` | `useWizard` |
 | `wizard/wizard-context` | `useOptionalWizardContext`, `useWizardContext`, `useWizardNextGate`, `useWizardStepValidate`, `WizardContextProvider`, _`WizardContextValue`_ |
 | `wizard/validation` | `requiredFieldsValidator`, _`RequiredFieldSpec`_ |
@@ -939,36 +970,36 @@ element that takes focus: the `<input>` of `Input`, `NumberField`, `AmountInput`
 on its checked option. So they work directly with react-hook-form:
 `<Input {...field} />` (from `Controller`/`register`) attaches RHF's ref, giving
 focus-and-scroll-to-error for free. A component that spreads its props onto an element
-(`Card`, `EmptyState`, `PageHeader`, …) takes that element's `ref` too. For the full
-`FormField`/`FormControl` scaffolding, see `@eifi1/ui-kit/rhf` below.
+(`Card`, `EmptyState`, `PageHeader`, …) takes that element's `ref` too. For fields bound
+to a react-hook-form form in one line each, see `@eifi1/ui-kit/rhf` below.
 
 ### react-hook-form — `@eifi1/ui-kit/rhf` (optional)
 
-A thin adapter in shadcn's `form.tsx` shape, and the only entry that needs
-`react-hook-form` (an **optional** peer, `^7.55.0`). The main barrel does not import it,
-so apps without a form library install nothing.
+The react-hook-form adapter: `Form`, the bound fields (`RhfTextField`, `RhfNumberField`,
+`RhfMoneyField`, `RhfDateField`, `RhfSelect`, `RhfCombobox`, `RhfCheckbox`, …) and
+`RhfField` for a control of your own, and the only entry that needs `react-hook-form` (an
+**optional** peer, `^7.55.0`). The main barrel does not import it, so apps without a form
+library install nothing.
 
 ```tsx
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@eifi1/ui-kit/rhf";
+import { Form, RhfField, RhfNumberField, RhfTextField } from "@eifi1/ui-kit/rhf";
 
 <Form {...form}>
-  <FormField control={form.control} name="amount" render={({ field }) => (
-    <FormItem>
-      <FormLabel required>Amount</FormLabel>
-      <FormControl>
-        <NumberField value={field.value} onCommit={field.onChange} />
-      </FormControl>
-      <FormMessage />
-    </FormItem>
+  <RhfTextField name="title" label="Title" required rules={{ required: "Give it a title." }} />
+  <RhfNumberField name="amount" label="Amount" unit="EUR" hint="Net of VAT." />
+  <RhfField name="street" label="Street" render={({ field, invalid }) => (
+    <AddressAutocomplete {...field} invalid={invalid} />
   )} />
 </Form>
 ```
 
-`FormControl` gives its one child `id`, `aria-describedby` (only the description and
-message actually rendered, merged after the child's own) and `aria-invalid` — which every
-kit field now also PAINTS from, so no extra `invalid` prop is needed. `FormMessage` shows
-the form's own message; the kit adds no text. `useFormField()` exposes the ids and field
-state for custom parts.
+Each bound field is a label, the control, a hint and the form's message wired to each
+other: the control's `aria-describedby` names only the hint and message actually rendered
+(merged after the control's own), `aria-invalid` and `invalid` come from the field state,
+and `field.ref` reaches the focusable element, so a failed submit focuses the first field
+in error. The message is the form's own; the kit adds no text. The shadcn scaffold the
+adapter started as (`FormField`, `FormItem`, `FormLabel`, `FormControl`,
+`FormDescription`, `FormMessage`, `useFormField`) left the public surface in 0.35.
 
 ### Pasted and imported tables — `@eifi1/ui-kit/table-text`
 

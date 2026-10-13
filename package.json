@@ -52,6 +52,10 @@
       "types": "./dist/currencies.d.ts",
       "import": "./dist/currencies.js"
     },
+    "./eslint": {
+      "types": "./dist/eslint/index.d.ts",
+      "import": "./dist/eslint/index.js"
+    },
     "./testing": {
       "types": "./dist/testing/index.d.ts",
       "import": "./dist/testing/index.js"

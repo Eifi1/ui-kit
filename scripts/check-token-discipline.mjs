@@ -24,22 +24,30 @@
  * `--brand-contrast`, the ring offsets (`ring-offset-surface`) and the focus frame's
  * width (`ring-[length:var(--focus-ring-width)]` → `ring-focus`).
  *
+ * Since 0.35 (round 0.35 R5, Kurvenschmiede's Q6) the apps hold their own markup to the
+ * same rule with `@eifi1/ui-kit/eslint`, and both read one definition:
+ * src/eslint/role-utilities.ts (the matcher, and the parser of the `@theme inline` block)
+ * and its table, role-utilities.generated.ts. This imports them from source — Node strips
+ * their types — and fails while the table is stale.
+ *
  * Run: `npm run check:tokens`
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { findRoleClasses, roleUtilitiesFromCss } from "../src/eslint/role-utilities.ts";
+import { ROLE_UTILITIES } from "../src/eslint/role-utilities.generated.ts";
 
 /**
  * Lower this whenever the real count drops. Never raise it.
  *
- * 815 -> 2. The two survivors are both deliberate and both carry a comment saying so:
+ * 815 -> 2 -> 1. The survivor is deliberate and carries a comment saying so:
  *   - account-settings.tsx  `bg-white` behind a QR code, which a camera needs at
  *     maximum contrast regardless of theme.
- *   - swipeable-row.tsx     `text-white` on a swipe action whose fill the caller
- *     supplies, so there is no token that knows what it is sitting on.
- * If you get these to zero, delete the budget and assert on zero instead.
+ * The other, swipeable-row.tsx's `text-white` on a caller-supplied fill, went with
+ * SwipeAction's deprecated `className` / `armedClassName` in 0.35 (round 0.35 R1).
+ * If you get this to zero, delete the budget and assert on zero instead.
  */
-const BUDGET = Number(process.env.TOKEN_BUDGET ?? "2");
+const BUDGET = Number(process.env.TOKEN_BUDGET ?? "1");
 
 /**
  * The second ratchet: `[var(--role)]` classes where a role utility exists. Never raise
@@ -134,58 +142,37 @@ perFile.sort((a, b) => b[1] - a[1]);
 /* ── The role-class ratchet (0.33) ────────────────────────────────────────────────── */
 
 /**
- * Which tokens have a utility, per property, read from `tokens.css`'s `@theme inline`
- * block — so a role that gains a utility starts counting the day it does. `divide-*` and
- * the side borders (`border-t-*`, `border-x-*` …) read `--border-color-*`, as Tailwind does.
- * The money colours are theme names since 0.34 (`text-money-income`, with variants), so
+ * Which tokens have a utility, per property, as tokens.css's `@theme inline` block declares
+ * them — so a role that gains a utility starts counting the day it does. The table both
+ * this and `@eifi1/ui-kit/eslint` read is that block re-rendered; a stale one fails here,
+ * before it can let an app's lint miss the new role. `divide-*` and the side borders
+ * (`border-t-*`, `border-x-*` …) read `--border-color-*`, as Tailwind does. The money
+ * colours are theme names since 0.34 (`text-money-income`, with variants), so
  * `text-[var(--money-income)]` counts like any role. A width typed `length:` —
  * `ring-[length:var(--focus-ring-width)]` — is read against the WIDTH namespaces, where
- * `ring-focus` lives.
+ * `ring-focus` lives. The matcher (src/eslint/role-utilities.ts) reads `text-[var(--text-muted)]`,
+ * `hover:bg-[var(--bg-hover)]`, `border-t-[var(--border)]`, `focus-visible:ring-[var(--brand)]/40`,
+ * `ring-offset-[var(--bg-surface)]` and `focus-visible:ring-[length:var(--focus-ring-width)]`,
+ * preceded by a start, a space, a quote or a variant's colon.
  */
-const THEME = /@theme inline\s*\{([^}]*)\}/.exec(
-  readFileSync(resolve(import.meta.dirname, "..", "tokens.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, ""),
-)?.[1];
-if (!THEME) {
+const declared = roleUtilitiesFromCss(readFileSync(resolve(import.meta.dirname, "..", "tokens.css"), "utf8"));
+if (!declared) {
   console.error("✖ tokens.css has no @theme inline block — the role utilities are gone, or this parser is");
   process.exit(1);
 }
-const NAMESPACE = {
-  text: "text-color",
-  bg: "background-color",
-  border: "border-color",
-  ring: "ring-color",
-  "ring-offset": "ring-offset-color",
-  outline: "outline-color",
-  fill: "fill",
-  stroke: "stroke",
-  // `ring-[length:var(--x)]` / `outline-[length:var(--x)]`: a width, not a colour.
-  "ring-width": "ring-width",
-  "outline-width": "outline-width",
-};
-const withUtility = {};
-for (const [prop, ns] of Object.entries(NAMESPACE)) {
-  withUtility[prop] = new Set(
-    [...THEME.matchAll(new RegExp(`--${ns}-[a-z0-9-]+\\s*:\\s*var\\((--[a-z0-9-]+)\\)`, "g"))].map((m) => m[1]),
+if (JSON.stringify(declared) !== JSON.stringify(ROLE_UTILITIES)) {
+  console.error(
+    "✖ src/eslint/role-utilities.generated.ts is not tokens.css's @theme inline block — run:\n" +
+      "    node scripts/gen-role-utilities.mjs\n" +
+      "  (this check and @eifi1/ui-kit/eslint both read that table)",
   );
+  process.exit(1);
 }
-withUtility.divide = withUtility.border;
-
-// `text-[var(--text-muted)]`, `hover:bg-[var(--bg-hover)]`, `border-t-[var(--border)]`,
-// `focus-visible:ring-[var(--brand)]/40`, `ring-offset-[var(--bg-surface)]`,
-// `focus-visible:ring-[length:var(--focus-ring-width)]`. Preceded by a start, a space, a
-// quote or a variant's colon.
-const ROLE_CLASS =
-  /(?:^|[\s"'`:])(text|bg|border(?:-[xytrblse])?|divide|ring-offset|ring|outline|fill|stroke)-\[(length:)?var\((--[a-zA-Z0-9-]+)\)\]/g;
 
 const rolePerFile = [];
 let roleTotal = 0;
 for (const file of walk(SRC)) {
-  let n = 0;
-  for (const [, prop, length, token] of stripComments(readFileSync(file, "utf8")).matchAll(ROLE_CLASS)) {
-    // `border-t` reads `border`'s set; a `length:` hint reads the property's widths.
-    const key = length ? `${prop}-width` : prop.startsWith("border-") ? "border" : prop;
-    if (withUtility[key]?.has(token)) n++;
-  }
+  const n = findRoleClasses(stripComments(readFileSync(file, "utf8")), ROLE_UTILITIES).length;
   if (n) {
     rolePerFile.push([file.slice(SRC.length + 1), n]);
     roleTotal += n;

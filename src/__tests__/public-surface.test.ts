@@ -14,6 +14,7 @@ import * as tableText from "../table-text";
 import * as dates from "../lib/dates";
 import * as currencies from "../currencies";
 import * as testing from "../testing";
+import * as eslintPlugin from "../eslint";
 import * as i18nDeCh from "../i18n/locales/de-CH";
 import * as i18nEn from "../i18n/locales/en";
 import * as i18nEs from "../i18n/locales/es";
@@ -219,7 +220,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `attachSessionRefresh`, `isTransientRefreshFailure`, `isSignedOutStep`; and
   // `PHONE_QUERY` removed (deprecated since 0.32).
   // and later in 0.34 `foldForSearch`, `rankMatch` (lib/text-match: one search fold for every list).
-  // 0.34.1 (+1): `CURRENCY_COUNTRIES`, code → flag-icons country (keksdose's 0.34 report);
+  // 0.35 (+1): `CURRENCY_COUNTRIES`, code → flag-icons country (keksdose's 0.34 report);
   // also on the new /currencies.
   // 0.35.0 (−15, refactor audit 2026-10, API-6, deprecated in 0.34): the chart-zoom maths
   // and `withChartZoom`, 13 names (API-6b); `ALTERNATIVE_PRESETS` (API-6c);
@@ -277,7 +278,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8
   // lines and keksdose on 2, and nothing counted it. The local-calendar ISO helpers.
   ["@eifi1/ui-kit/dates", dates, 20],
-  // 0.34.1: `CURRENCIES` and `CURRENCY_COUNTRIES` as plain data an app's build tooling
+  // 0.35: `CURRENCIES` and `CURRENCY_COUNTRIES` as plain data an app's build tooling
   // imports in Node (keksdose's flag subset read them out of a dist/ file 0.34 moved). A
   // slice of the barrel, not standalone in the sense below: both names are the barrel's
   // too. It imports nothing at all — packaging-contract.test.ts pins that.
@@ -287,8 +288,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // (docs/colour-roles-harmonization.md §8.3).
   // 0.34.0 (+3): the environment stubs (refactor audit 2026-10, TST-10) —
   // `stubViewportWidth`, `viewportMatchMedia`, `stubResizeObserver`.
-  // 0.34.1 (+1): `setViewportWidth`, a live resize of the active stub (keksdose's 0.34 report).
+  // 0.35 (+1): `setViewportWidth`, a live resize of the active stub (keksdose's 0.34 report).
   ["@eifi1/ui-kit/testing", testing, 7],
+  // 0.35: the ESLint plugin, its `default` export only (`role-utilities`, KS Q6): an app's
+  // lint config imports it in Node, so it imports nothing else of the kit.
+  ["@eifi1/ui-kit/eslint", eslintPlugin, 1],
   // 0.18.0: the only German left (see the history above); `uiKitLabelsDeCh` (+1).
   ["@eifi1/ui-kit/i18n/de-CH", i18nDeCh, 2],
   // 0.17.0: `uiKitLabelsEn(numberLocale)`, the English defaults with grouped counts
@@ -314,6 +318,8 @@ const STANDALONE = new Set([
   "@eifi1/ui-kit/dates",
   // Test helpers, never part of an app's bundle.
   "@eifi1/ui-kit/testing",
+  // Lint tooling, the same.
+  "@eifi1/ui-kit/eslint",
   ...ENTRIES.map(([name]) => name).filter((name) => name.startsWith("@eifi1/ui-kit/i18n/")),
 ]);
 
@@ -367,7 +373,7 @@ describe("standalone entries", () => {
  */
 const SRC = join(process.cwd(), "src");
 // `currencies` is one module that re-exports nothing, so only the second rule bites:
-// `CurrencyOption`, a type, has to reach the barrel too (0.34.1).
+// `CurrencyOption`, a type, has to reach the barrel too (0.35).
 const SLICES = ["chart", "currencies", "data-table", "feedback", "search", "shell", "tour", "wizard"];
 
 const sourceOf = (base: string) =>

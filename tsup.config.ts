@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { defineConfig } from "tsup";
 
 // `bundle: false` is the load-bearing setting, not a default.
@@ -33,6 +34,12 @@ import { defineConfig } from "tsup";
 // one `.d.ts` per module like the `.js`. tsup's own declaration build was rollup-plugin-dts
 // over every entry, at 5.2 GB resident, and it hoisted shared declarations into hashed
 // chunks the unbundled graph has no use for (TST-3, refactor audit 2026-10).
+//
+// `__UI_KIT_VERSION__` is the one constant baked in: `@eifi1/ui-kit/eslint` reports it as its
+// plugin version, which ESLint's cache keys a file's result on (round 0.35 R5). No other
+// module names it, so `define` changes nothing else.
+const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as { version: string };
+
 export default defineConfig({
   entry: ["src/**/*.ts", "src/**/*.tsx", "!src/**/*.test.*", "!src/test/**", "!src/vite-env.d.ts"],
   format: ["esm"],
@@ -43,4 +50,5 @@ export default defineConfig({
   clean: true,
   target: "es2022",
   banner: { js: '"use client";' },
+  define: { __UI_KIT_VERSION__: JSON.stringify(version) },
 });
