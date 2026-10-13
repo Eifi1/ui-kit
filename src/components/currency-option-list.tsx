@@ -3,49 +3,15 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { foldForSearch } from "../lib/text-match";
 import { ComboboxPanel, type ComboboxCore, type ComboOption } from "./combobox-core";
+import { CURRENCIES, type CurrencyOption } from "../currencies";
 
-// The currency data and the one list both currency pickers render (round 0.34 Wave 2,
-// DUP-4). CurrencySelect re-exports the data under its own name, as it always has; the
-// list is package-private. Its own module, so AmountInput can render the list without a
-// cycle through currency-select.
-
-export interface CurrencyOption {
-  code: string;
-  name: string;
-  symbol: string;
-  /** ISO 3166-1 alpha-2 country code (lowercase) used by flag-icons. */
-  country: string;
-}
-
-export const CURRENCIES: CurrencyOption[] = [
-  { code: "EUR", name: "Euro", symbol: "€", country: "eu" },
-  { code: "USD", name: "US Dollar", symbol: "$", country: "us" },
-  { code: "GBP", name: "British Pound", symbol: "£", country: "gb" },
-  { code: "CHF", name: "Swiss Franc", symbol: "CHF", country: "ch" },
-  { code: "JPY", name: "Japanese Yen", symbol: "¥", country: "jp" },
-  { code: "CAD", name: "Canadian Dollar", symbol: "CA$", country: "ca" },
-  { code: "AUD", name: "Australian Dollar", symbol: "A$", country: "au" },
-  { code: "NZD", name: "New Zealand Dollar", symbol: "NZ$", country: "nz" },
-  { code: "SEK", name: "Swedish Krona", symbol: "kr", country: "se" },
-  { code: "NOK", name: "Norwegian Krone", symbol: "kr", country: "no" },
-  { code: "DKK", name: "Danish Krone", symbol: "kr", country: "dk" },
-  { code: "PLN", name: "Polish Zloty", symbol: "zł", country: "pl" },
-  { code: "CZK", name: "Czech Koruna", symbol: "Kč", country: "cz" },
-  { code: "HUF", name: "Hungarian Forint", symbol: "Ft", country: "hu" },
-  { code: "RON", name: "Romanian Leu", symbol: "lei", country: "ro" },
-  { code: "BGN", name: "Bulgarian Lev", symbol: "лв", country: "bg" },
-  { code: "TRY", name: "Turkish Lira", symbol: "₺", country: "tr" },
-  { code: "RUB", name: "Russian Ruble", symbol: "₽", country: "ru" },
-  { code: "CNY", name: "Chinese Yuan", symbol: "¥", country: "cn" },
-  { code: "HKD", name: "Hong Kong Dollar", symbol: "HK$", country: "hk" },
-  { code: "SGD", name: "Singapore Dollar", symbol: "S$", country: "sg" },
-  { code: "INR", name: "Indian Rupee", symbol: "₹", country: "in" },
-  { code: "BRL", name: "Brazilian Real", symbol: "R$", country: "br" },
-  { code: "MXN", name: "Mexican Peso", symbol: "MX$", country: "mx" },
-  { code: "ZAR", name: "South African Rand", symbol: "R", country: "za" },
-  { code: "ILS", name: "Israeli Shekel", symbol: "₪", country: "il" },
-  { code: "AED", name: "UAE Dirham", symbol: "د.إ", country: "ae" },
-];
+// The one list both currency pickers render (round 0.34 Wave 2, DUP-4). CurrencySelect
+// re-exports the data under its own name, as it always has; the list is package-private.
+// Its own module, so AmountInput can render the list without a cycle through
+// currency-select. The data itself is ../currencies since 0.34.1: an entry of its own that
+// imports nothing, which an app's build can read in Node (keksdose's flag subset).
+export { CURRENCIES };
+export type { CurrencyOption };
 
 export interface CurrencyFlagProps extends ComponentPropsWithRef<"span"> {
   /** ISO 3166-1 alpha-2, lowercase — the class flag-icons keys its sprite by. */

@@ -201,6 +201,24 @@ try {
   if (parsed === expected) ok("parseTable reads a German export by package name");
   else fail(`parseTable by package name answered ${parsed}`);
 
+  log("• currencies is data an app's build reads in plain Node");
+  // 0.34.1: keksdose's Vite plugin imports it while Vite loads its config — Node, no DOM,
+  // nothing but the module itself. It imports nothing at all, relative or bare: a kit
+  // module behind it could reach React or a stylesheet later (packaging-contract.test.ts
+  // holds the same rule on src/).
+  const currencies = join(installed, "dist", "currencies.js");
+  const currencyImports = [
+    ...readFileSync(currencies, "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+)["']/g),
+  ].map((m) => m[1]);
+  if (currencyImports.length === 0) ok("dist/currencies.js imports nothing");
+  else fail(`dist/currencies.js imports ${currencyImports.join(", ")}`);
+  const [countries] = runProbe(
+    `import { CURRENCIES, CURRENCY_COUNTRIES } from ${JSON.stringify(specifierOf("./currencies"))};\n` +
+      `console.log(JSON.stringify([typeof window, CURRENCY_COUNTRIES.CHF, CURRENCY_COUNTRIES.EUR, Object.keys(CURRENCY_COUNTRIES).length === CURRENCIES.length]));`,
+  );
+  if (countries === JSON.stringify(["undefined", "ch", "eu", true])) ok("CURRENCY_COUNTRIES loads by package name without a DOM");
+  else fail(`the currencies entry by package name answered ${countries}`);
+
   log("• the pay page's bin writes an app's page, and refuses a wrong pairing");
   const bin = join(scratch, "node_modules", ".bin", "eifi1-pay-page");
   const payOut = join(scratch, "srv-pay");

@@ -9,7 +9,8 @@ import {
   FLOATING_INPUT_CLASS,
   FloatingField,
 } from "./field-base";
-import { CURRENCIES } from "./currency-select";
+// The data alone (0.34.1): not the picker, which this field does not render.
+import { CURRENCIES } from "../currencies";
 import { FieldCaption, LockedReason, mergeRefs, type DisabledReasonDisplay } from "./field-parts";
 import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";

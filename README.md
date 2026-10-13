@@ -94,6 +94,12 @@ currency picker and the language menu. It was a 5.6 MB hard dependency through 0
 installed into every consumer and imported by nothing — so it may still be in your tree
 transitively after upgrading. Depend on it explicitly if you render any of the three.
 
+**Shipping only the flags you render.** `@eifi1/ui-kit/currencies` (0.34.1) is the
+currency list as plain data — `CURRENCIES`, and `CURRENCY_COUNTRIES` (code → the lowercase
+country flag-icons names the flag by: `CHF` → `"ch"`, `EUR` → `"eu"`). It imports nothing,
+so a build script or a Vite plugin can import it in Node to generate a flag subset. Read
+it there, never out of a file under `dist/`: those move between versions.
+
 ## Wiring
 
 ### 1. Vite — dedupe shared singletons
@@ -505,14 +511,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1899 names from 302 modules** — 888 values and 1011 types. _Italic_ is a type-only export.
+**1900 names from 303 modules** — 889 values and 1011 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1899 |
+| `@eifi1/ui-kit` | 1900 |
 | `@eifi1/ui-kit/chart` | 105 |
 | `@eifi1/ui-kit/shell` | 77 |
 | `@eifi1/ui-kit/data-table` | 53 |
@@ -522,7 +528,8 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
-| `@eifi1/ui-kit/testing` | 10 |
+| `@eifi1/ui-kit/currencies` | 3 |
+| `@eifi1/ui-kit/testing` | 11 |
 | `@eifi1/ui-kit/rhf` | 60 |
 
 Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a
@@ -914,6 +921,12 @@ re-slicing of it, never a second API.
 | `demo/demo-start` | `DemoStart`, _`DemoStartProps`_ |
 | `demo/demo-banner` | `DemoBanner`, _`DemoBannerProps`_ |
 | `demo/demo-ended` | `DemoEnded`, _`DemoEndedProps`_ |
+
+### root
+
+| Module | Exports |
+|---|---|
+| `currencies` | `CURRENCY_COUNTRIES` |
 
 <!-- END GENERATED: exports -->
 

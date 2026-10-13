@@ -29,8 +29,8 @@ From the three apps' 0.34 adoptions. Bump to `^0.34.1`; server-kit stays 0.8.0.
   instead of parsing a dist file, which moved in 0.34. keksdose: `import { CURRENCY_COUNTRIES }
   from "@eifi1/ui-kit/currencies"` and drop the dist-path parse.
 - **`setViewportWidth(width)`** in `@eifi1/ui-kit/testing` (keksdose): changes an active
-  `stubViewportWidth` stub and fires `change` on every media query, so a test can simulate a live
-  resize.
+  `stubViewportWidth` stub and fires `change` on each media query whose answer flips, as a
+  browser does, so a test can simulate a live resize (wrap it in `act()`).
 - **Escape inside a dialog** (Kurvenschmiede): a dialog's own `onKeyDown` sees Escape only while
   the dialog is the topmost layer; with a tooltip, menu or list open inside, the first press
   closes that, the next reaches the dialog's handler (KS's gear wizard asks to discard on the

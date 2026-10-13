@@ -1,9 +1,9 @@
 import { act, render, renderHook, screen } from "@testing-library/react";
 import { useEffect, useRef, useState } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { breakpointQuery, usePhoneLayout } from "../../hooks/use-breakpoint";
 import { applyTextSize, TEXT_SCALE } from "../../theme/text-size";
-import { stubResizeObserver, stubViewportWidth, viewportMatchMedia } from "..";
+import { setViewportWidth, stubResizeObserver, stubViewportWidth, viewportMatchMedia } from "..";
 
 /**
  * `@eifi1/ui-kit/testing`'s environment stubs (0.34, refactor audit 2026-10, TST-10): what
@@ -91,6 +91,115 @@ describe("stubViewportWidth", () => {
     expect(window.matchMedia).toBe(before);
     expect(window.matchMedia("(width < 768px)").matches).toBe(true);
     outer();
+  });
+});
+
+describe("setViewportWidth (0.34.1, keksdose's 0.34 report)", () => {
+  let undo = () => {};
+  afterEach(() => {
+    undo();
+    undo = () => {};
+  });
+
+  /** What a page shows by `usePhoneLayout()`: cards on a phone, a table elsewhere. */
+  function Layout() {
+    return <p>{usePhoneLayout() ? "cards" : "table"}</p>;
+  }
+
+  it("resizes the page live: a component on a breakpoint switches, both ways", () => {
+    undo = stubViewportWidth(1280);
+    render(<Layout />);
+    expect(screen.getByText("table")).toBeInTheDocument();
+    act(() => setViewportWidth(375));
+    expect(screen.getByText("cards")).toBeInTheDocument();
+    act(() => setViewportWidth(1280));
+    expect(screen.getByText("table")).toBeInTheDocument();
+  });
+
+  it("crosses the breakpoint of the text size in force: at Large the phone ends at 960 px", () => {
+    undo = stubViewportWidth(1280);
+    applyTextSize("large");
+    const { result } = renderHook(() => usePhoneLayout());
+    expect(result.current).toBe(false);
+    act(() => setViewportWidth(800));
+    expect(result.current).toBe(true);
+    act(() => setViewportWidth(960));
+    expect(result.current).toBe(false);
+  });
+
+  it("flips every list the stub handed out, and tells each one's listeners, old API and new", () => {
+    undo = stubViewportWidth(1280);
+    const phone = window.matchMedia("(width < 768px)");
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const heard: Array<[string, boolean, string]> = [];
+    const listener = (e: MediaQueryListEvent) => heard.push(["event", e.matches, e.media]);
+    phone.addEventListener("change", listener);
+    phone.addListener((e) => heard.push(["legacy", e.matches, e.media]));
+    phone.onchange = (e) => heard.push(["onchange", e.matches, e.media]);
+    const wideHeard: boolean[] = [];
+    wide.addEventListener("change", (e) => wideHeard.push(e.matches));
+
+    setViewportWidth(375);
+    expect([phone.matches, wide.matches]).toEqual([true, false]);
+    expect(heard).toHaveLength(3);
+    expect(heard).toEqual(
+      expect.arrayContaining([
+        ["event", true, "(width < 768px)"],
+        ["legacy", true, "(width < 768px)"],
+        ["onchange", true, "(width < 768px)"],
+      ]),
+    );
+    expect(wideHeard).toEqual([false]);
+
+    // A width every query answers the same way tells nobody, as in a browser.
+    setViewportWidth(390);
+    expect(heard).toHaveLength(3);
+
+    // A removed listener hears nothing more; the others hear the way back.
+    phone.removeEventListener("change", listener);
+    setViewportWidth(1280);
+    expect(phone.matches).toBe(false);
+    expect(heard.map(([kind]) => kind).sort()).toEqual(["event", "legacy", "legacy", "onchange", "onchange"]);
+    expect(wideHeard).toEqual([false, true]);
+  });
+
+  it("answers a list asked for after the change from the new width", () => {
+    undo = stubViewportWidth(375);
+    setViewportWidth(1280);
+    expect(window.matchMedia("(width < 768px)").matches).toBe(false);
+    expect(window.matchMedia("(min-width: 1024px)").matches).toBe(true);
+  });
+
+  it("resizes only the stub in force — a nested one, or one put in by vi.stubGlobal", () => {
+    const outer = stubViewportWidth(375);
+    const outerList = window.matchMedia("(width < 768px)");
+    const inner = stubViewportWidth(375);
+    const innerList = window.matchMedia("(width < 768px)");
+    setViewportWidth(1280);
+    expect([outerList.matches, innerList.matches]).toEqual([true, false]);
+    inner();
+    setViewportWidth(1280);
+    expect(outerList.matches).toBe(false);
+    outer();
+
+    vi.stubGlobal("matchMedia", viewportMatchMedia(375));
+    try {
+      setViewportWidth(1280);
+      expect(window.matchMedia("(width < 768px)").matches).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("refuses when no viewport stub is in force, rather than resize nothing", () => {
+    expect(() => setViewportWidth(375)).toThrow(/stubViewportWidth/);
+    // A hand-written matchMedia is not one it can drive.
+    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    try {
+      expect(() => setViewportWidth(375)).toThrow(/stubViewportWidth/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 
