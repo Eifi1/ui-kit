@@ -3,8 +3,11 @@ import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from 
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
+import { plainText } from "../lib/plain-text";
+import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 import { useInlineFacts } from "../hooks/use-large-text";
 import { FOCUS_RING } from "./focus-ring";
+import { HelpPopover } from "./help-popover";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
 
@@ -202,14 +205,80 @@ export function FieldHint({
  * The kit's fields call it through {@link useFieldHint} / {@link useFieldMessages}; a
  * field that resolves its own `hint` (an app's, or one of the kit's own outside this
  * file) calls it first and then treats the result as it treated a text hint.
+ *
+ * `withHelp` (round 0.36): the field has a `help`, whose "?" is the field's only one
+ * ({@link fieldHelpMark}) — so a FieldHint is its words at EVERY size, not only at Large
+ * and on touch.
  */
-export function useInlineHint(hint: ReactNode): ReactNode {
+export function useInlineHint(hint: ReactNode, withHelp = false): ReactNode {
   const inline = useInlineFacts();
-  if (inline && isValidElement(hint) && hint.type === FieldHint) {
+  if ((inline || withHelp) && isValidElement(hint) && hint.type === FieldHint) {
     const words = (hint.props as FieldHintProps).label;
     if (words) return words;
   }
   return hint;
+}
+
+/* ── help (round 0.36, docs/text-size-harmonization.md §4, §10.23) ─────────── */
+
+/**
+ * The doc every field's `help` prop points at.
+ *
+ * A field may carry two kinds of words (§10.23): a FACT — a format, a limit, a
+ * consequence — which stays visible, and HELP — why the field exists, how to choose,
+ * what the options mean — which the field is usable without and which may sit behind a
+ * "?". Until 0.36 a field had one slot, `hint`, so a field with both had to drop one or
+ * print a paragraph (Kurvenschmiede's "How it was measured", round 0.36 H). Now:
+ *
+ * - `hint` is the fact, the caption under the field, on its `aria-describedby`;
+ * - `help` is the help, a {@link HelpPopover} "?" on the label line (an unlabelled
+ *   field's at its end edge, as a hint's), named "About <label>" (`common.aboutField`,
+ *   from the label's text, else the `aria-label`, else `common.help`). Pass a
+ *   `HelpPopover` as `help` to name it yourself ("What do the statuses mean?").
+ *
+ * The help's "?" is then the field's ONLY "?": a `FieldHint` passed as `hint` beside it
+ * draws none of its own and shows its words as the caption at every size, as it does at
+ * Large and on touch; any other `hint` is the caption too. Two "?" side by side would
+ * look the same and open different things.
+ */
+export interface FieldHelpProps {
+  /**
+   * Help the field is usable without — why it exists, how to choose, what the options
+   * mean — behind the field's one "?" on its label line: a {@link HelpPopover} named
+   * "About <label>" that opens on a tap (round 0.36, docs/text-size-harmonization.md §4).
+   * Pass a `HelpPopover` to name it yourself. `hint` stays the visible fact: with `help`
+   * set it is the caption under the field at every size, a `FieldHint` included.
+   */
+  help?: ReactNode;
+}
+
+/**
+ * The "?" for a field's `help` — the field's own name, "About <label>", in the reader's
+ * language. A component so that a field without `help` asks the labels nothing.
+ */
+function FieldHelp({ name, children }: { name: ReactNode; children: ReactNode }) {
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const text = plainText(name);
+  return <HelpPopover label={text === undefined ? common.help : common.aboutField(text)}>{children}</HelpPopover>;
+}
+
+/**
+ * A field's `help` as the "?" for its label line, or `undefined` when there is none. A
+ * {@link HelpPopover} is used as it is (it carries its own name); anything else is put
+ * in one named "About <name>" — `name` is the field's label, else its `aria-label`.
+ */
+export function fieldHelpMark(help: ReactNode, name: ReactNode): ReactNode | undefined {
+  if (!hasContent(help)) return undefined;
+  if (isValidElement(help) && help.type === HelpPopover) return help;
+  return <FieldHelp name={name}>{help}</FieldHelp>;
+}
+
+/** What {@link useFieldHint} needs to draw a field's `help`. */
+export interface FieldHelpSource {
+  /** The field's `help`. */
+  help?: ReactNode;
+  /** What names its "?": the field's label, else its `aria-label`. */
+  name?: ReactNode;
 }
 
 
@@ -236,26 +305,43 @@ export interface FieldHintParts {
   describedBy: string | undefined;
   /** The caption's id while there is one. */
   captionId: string | undefined;
-  /** The caption itself, or `undefined` for a hint that is not text. */
-  captionText: string | number | undefined;
-  /** A non-text hint (a FieldHint) for the label line — or, on a field with no label
-   *  line, the end edge outside the box. `undefined` when there is none. */
+  /** The caption itself — a text hint, or any hint beside a `help` — or `undefined`. */
+  captionText: ReactNode | undefined;
+  /** What rides the label line — the `help`'s "?" ({@link fieldHelpMark}), else a
+   *  non-text hint (a FieldHint) — or, on a field with no label line, the end edge
+   *  outside the box. `undefined` when there is none. */
   labelHint: ReactNode | undefined;
 }
 
 /**
- * Split a field's `hint` into the caption under it (attached with `aria-describedby`)
- * or the "?" on its label line. See {@link isTextHint}.
+ * Whether a resolved `hint` goes under the field as its caption: text always (see
+ * {@link isTextHint}); with a `help` beside it, whatever it is — the label line's "?"
+ * is the help's (round 0.36, §4).
  */
-export function useFieldHint(hintProp: ReactNode, describedBy: string | undefined): FieldHintParts {
-  const hint = useInlineHint(hintProp);
+export function isHintCaption(hint: ReactNode, withHelp: boolean): boolean {
+  return isTextHint(hint) || (withHelp && hasContent(hint));
+}
+
+/**
+ * Split a field's `hint` into the caption under it (attached with `aria-describedby`)
+ * or the "?" on its label line. See {@link isTextHint}. With a `help` ({@link
+ * FieldHelpProps}), the help's "?" takes the label line and the hint is the caption.
+ */
+export function useFieldHint(
+  hintProp: ReactNode,
+  describedBy: string | undefined,
+  { help, name }: FieldHelpSource = {},
+): FieldHintParts {
+  const helpMark = fieldHelpMark(help, name);
+  const withHelp = helpMark !== undefined;
+  const hint = useInlineHint(hintProp, withHelp);
   const captionId = useId();
-  const text = isTextHint(hint);
+  const caption = isHintCaption(hint, withHelp);
   return {
-    describedBy: text ? mergeDescribedBy(describedBy, captionId) : describedBy,
-    captionId: text ? captionId : undefined,
-    captionText: text ? hint : undefined,
-    labelHint: !text && hasContent(hint) ? hint : undefined,
+    describedBy: caption ? mergeDescribedBy(describedBy, captionId) : describedBy,
+    captionId: caption ? captionId : undefined,
+    captionText: caption ? hint : undefined,
+    labelHint: helpMark ?? (!caption && hasContent(hint) ? hint : undefined),
   };
 }
 
@@ -575,24 +661,26 @@ export interface FieldMessages {
   describedBy: string | undefined;
   /** The caption and the error, for under the field; `null` when there is neither. */
   below: ReactNode;
-  /** The hint for the LABEL line (a `FieldHint`), or `undefined` when the hint is a
-   *  caption or there is none. */
+  /** What rides the LABEL line — the `help`'s "?", else a `FieldHint` — or `undefined`
+   *  when the hint is a caption and there is no help. */
   labelHint: ReactNode;
 }
 
 /**
- * `hint` / `error` / `invalid` resolved the way `Select` resolves them —
+ * `hint` / `help` / `error` / `invalid` resolved the way `Select` resolves them —
  * {@link useFieldHint} and {@link useFieldError} together, for a field that draws what
  * goes under it in one place (a picker, a group, a field built on another).
  */
 export function useFieldMessages({
   hint,
+  help,
+  name,
   error,
   invalid,
   describedBy,
   ariaInvalid,
   reasonId,
-}: {
+}: FieldHelpSource & {
   hint?: ReactNode;
   error?: ReactNode;
   invalid?: boolean;
@@ -602,7 +690,7 @@ export function useFieldMessages({
    *  caption and before the error, as on Select. */
   reasonId?: string | false;
 }): FieldMessages {
-  const hintParts = useFieldHint(hint, describedBy);
+  const hintParts = useFieldHint(hint, describedBy, { help, name });
   const field = useFieldError(error, invalid, mergeDescribedBy(hintParts.describedBy, reasonId), ariaInvalid);
   return {
     isInvalid: field.isInvalid,

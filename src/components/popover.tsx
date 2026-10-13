@@ -10,7 +10,9 @@ import { dirOf } from "../lib/direction";
 import type { Direction } from "../lib/direction";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_POPOVER_LABELS } from "./popover-labels";
-import { mergeRefs } from "./field-parts";
+// From ../lib/refs, not field-parts (round 0.36): field-parts renders a HelpPopover for a
+// field's `help`, so importing from there would close a cycle, as it did for Tooltip.
+import { mergeRefs } from "../lib/refs";
 
 /** The panel's accessible name. A `role="dialog"` with no name announces as "dialog"
  *  and nothing else, which is worse than the unlabelled div it replaced — so it is a

@@ -42,12 +42,14 @@ const HELP_WIDTH: RemLength = "20rem";
  * new row on a phone). `useInlineHint` turns only a FieldHint into a caption, so this
  * one stays on the label line at every size.
  *
- * **On a field.** Pass it as `hint`, as a FieldHint is passed: every kit field that
- * puts a FieldHint on its label line puts this there too, as it does any `hint` that is
- * not text (Input, Select, Textarea, NumberInput, AmountInput, the comboboxes and
- * pickers, ToggleGroup, {@link FieldStrip}) — and an unlabelled one at its end edge,
- * outside the box. The `@eifi1/ui-kit/rhf` bindings draw every `hint` under the field,
- * this one included. It also stands on its own, beside a heading or a column title.
+ * **On a field: its `help`** (0.36, round 0.36 decision 1). Every kit field that takes a
+ * `hint` takes a `help` beside it, and the `@eifi1/ui-kit/rhf` bindings too: pass the
+ * help's words and the field draws this "?" on its label line (an unlabelled one at its
+ * end edge, outside the box), named "About <label>" — or pass a HelpPopover to name it
+ * yourself. `hint` stays the FACT, printed under the field; while `help` is set a
+ * FieldHint there draws no "?" of its own, so the field has one. Passed as `hint`, as in
+ * 0.34, it still rides the label line. It also stands on its own, beside a heading or a
+ * column title.
  *
  * **A popover, not a tooltip**: a tooltip bubble is for a line, and opens on hover a
  * finger never makes. This is the kit {@link Popover}: it opens and closes on a tap or a
@@ -60,7 +62,7 @@ const HELP_WIDTH: RemLength = "20rem";
  * accepted and cleared?", keksdose live #247); "!" is a warning.
  *
  * ```tsx
- * <Select label="Status" hint={
+ * <Select label="Status" hint="Cleared and reconciled rows are locked." help={
  *   <HelpPopover label="What do the statuses mean?">
  *     Pending: … Accepted: … Cleared: … Reconciled: …
  *   </HelpPopover>

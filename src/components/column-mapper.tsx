@@ -31,6 +31,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from "./table";
+import type { FieldHelpProps } from "./field-parts";
 import { Select } from "./select";
 import { Textarea } from "./textarea";
 import { DEFAULT_COLUMN_MAPPER_LABELS, markedShort } from "./column-mapper-labels";
@@ -425,7 +426,7 @@ export function ColumnRoleTable<
 
 // ── ColumnMapper ──────────────────────────────────────────────────────────────
 
-export interface ColumnMapperProps<R extends string> {
+export interface ColumnMapperProps<R extends string> extends FieldHelpProps {
   /** The parts the columns play — translated labels, which are required, which must
    *  be numbers. See {@link ColumnRole}. */
   roles: readonly ColumnRole<R>[];
@@ -440,7 +441,8 @@ export interface ColumnMapperProps<R extends string> {
   onChange: (result: ColumnMapperResult<R> | null) => void;
   /** The paste box's label. Default: `labels.paste`. */
   label?: ReactNode;
-  /** The caption under the paste box. Default: `labels.pasteHint`. */
+  /** The caption under the paste box. Default: `labels.pasteHint`. The paste box's
+   *  `help` (0.36) is `help`. */
   hint?: ReactNode;
   /** What the file dialog offers, and what a drop is checked against. Default:
    *  `.csv,.tsv,.txt,.dat,.asc`. */
@@ -503,6 +505,7 @@ export function ColumnMapper<R extends string>({
   onChange,
   label,
   hint,
+  help,
   accept = DEFAULT_ACCEPT,
   maxSize,
   defaultText = "",
@@ -605,6 +608,7 @@ export function ColumnMapper<R extends string>({
       <Textarea
         label={label ?? labels.paste}
         hint={hint ?? labels.pasteHint}
+        help={help}
         rows={5}
         wrap="off"
         spellCheck={false}

@@ -22,6 +22,7 @@ import {
   useFieldHint,
   useLockReason,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
 } from "./field-parts";
 import type { CommitScope } from "./write-lock";
 import { lockedKeyDown, rowClass, SuggestionList, usePrimaryPressOnly } from "./combobox-suggestions";
@@ -38,7 +39,8 @@ export type { InlineEntityComboboxProps } from "./inline-entity-combobox";
  * the DOM events of the wrapper. Everything else a wrapper needs reaches the root.
  */
 export interface ComboboxProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange" | "onBlur" | "onSubmit"> {
+  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange" | "onBlur" | "onSubmit">,
+    FieldHelpProps {
   value: string;
   onChange: (v: string) => void;
   /** Suggestion pool (e.g. existing payee names). */
@@ -186,6 +188,7 @@ export function Combobox(props: ComboboxProps) {
     invalid,
     error,
     hint,
+    help,
     disabled,
     disabledReason,
     disabledReasonDisplay,
@@ -204,7 +207,7 @@ export function Combobox(props: ComboboxProps) {
     "aria-required": ariaRequired,
     ...rest
   } = props;
-  const hintParts = useFieldHint(hint, ariaDescribedBy);
+  const hintParts = useFieldHint(hint, ariaDescribedBy, { help, name: label ?? ariaLabel });
   const field = useFieldError(error, invalid, hintParts.describedBy, ariaInvalid);
   const generated = useId();
   const fieldId = id ?? generated;

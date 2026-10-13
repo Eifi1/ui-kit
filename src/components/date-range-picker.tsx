@@ -394,6 +394,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
     disabled,
     invalid,
     hint,
+    help,
     error,
     // The trigger's (API-3).
     ref,
@@ -404,6 +405,8 @@ export function DateRangePicker(props: DateRangePickerProps) {
   const render = useTriggerFormat("dateRangePicker", locale, formatOptions, formatValue);
   const messages = useFieldMessages({
     hint,
+    help,
+    name: label ?? rest["aria-label"],
     error,
     invalid,
     describedBy: rest["aria-describedby"],

@@ -1,7 +1,14 @@
 import { useId, useLayoutEffect, useRef } from "react";
 import type { ChangeEvent, ReactNode, Ref, TextareaHTMLAttributes } from "react";
 import { cn } from "../lib/cn";
-import { EndHintRow, FieldCaption, mergeDescribedBy, useFieldError, useFieldHint } from "./field-parts";
+import {
+  EndHintRow,
+  FieldCaption,
+  mergeDescribedBy,
+  useFieldError,
+  useFieldHint,
+  type FieldHelpProps,
+} from "./field-parts";
 import {
   CharacterCount,
   FIELD_BASE,
@@ -221,7 +228,7 @@ function TextareaLabelStrip() {
   return <span ref={ref} aria-hidden data-slot="label-strip" className={TEXTAREA_LABEL_STRIP} />;
 }
 
-export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement>, FieldHelpProps {
   label?: ReactNode;
   /** See {@link Input}'s `invalid`. */
   invalid?: boolean;
@@ -240,13 +247,13 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
 }
 
 export function Textarea(props: TextareaProps) {
-  const { ref, className, label, id, placeholder, invalid, error, hint, showCount, countLabels, ...rest } = props;
+  const { ref, className, label, id, placeholder, invalid, error, hint, help, showCount, countLabels, ...rest } = props;
   // See Input's `reserve`.
   const reserve = "error" in props || "hint" in props || "showCount" in props;
   const generated = useId();
   const fieldId = id ?? generated;
   const countId = useId();
-  const hintParts = useFieldHint(hint, rest["aria-describedby"]);
+  const hintParts = useFieldHint(hint, rest["aria-describedby"], { help, name: label ?? rest["aria-label"] });
   const maxLength = rest.maxLength;
   const counting = Boolean(showCount) && typeof maxLength === "number" && maxLength > 0;
   const length = useTypedLength(rest.value, rest.defaultValue);

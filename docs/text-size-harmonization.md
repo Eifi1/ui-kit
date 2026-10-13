@@ -25,7 +25,7 @@ log are in [archive/text-size-history.md](archive/text-size-history.md).
 | 1 | Where each one stands | — (archived) | §10.13 (archived) |
 | 2 | Decisions | — | |
 | 3 | The mechanism | ui-kit 0.32.0 | §10.1–§10.4, §10.9, §10.11; 0.34 (`PHONE_QUERY` removed) |
-| 4 | What changes at Large and Extra large | ui-kit 0.32.0 (follow-ups in 0.32.1 and 0.34.0; `help` building in 0.36) | §10.7, §10.8, §10.10, §10.17, §10.23; 0.34 (a locked field's reason line, ToggleGroup's strip); round 0.36 decision 1 (a `help` slot beside `hint`: one "?", the fact as a caption) |
+| 4 | What changes at Large and Extra large | ui-kit 0.32.0 (follow-ups in 0.32.1 and 0.34.0; `help` in 0.36.0) | §10.7, §10.8, §10.10, §10.17, §10.23; 0.34 (a locked field's reason line, ToggleGroup's strip); round 0.36 decision 1 (a `help` slot beside `hint`: one "?", the fact as a caption) |
 | 5 | More contrast | ui-kit 0.32.0 | §10.5 |
 | 6 | The settings and their backend | ui-kit 0.32.0, server-kit 0.6.0 | §10.6, §10.12 |
 | 7 | Per repo | — (archived) | |

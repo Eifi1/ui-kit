@@ -7,6 +7,7 @@ import type { CheckboxGroupOption } from "../components/checkbox-group";
 import { Select } from "../components/select";
 import type { SelectProps } from "../components/select";
 import type { CommitScope } from "../components/write-lock";
+import type { FieldHelpProps } from "../components/field-parts";
 import { DEFAULT_ROLE_SELECT_LABELS } from "./role-select-labels";
 
 /**
@@ -185,7 +186,7 @@ export function RoleSelect<R extends string = string>({
 
 /* ── RolesEditor ────────────────────────────────────────────────────────────── */
 
-export interface RolesEditorProps<R extends string = string> {
+export interface RolesEditorProps<R extends string = string> extends FieldHelpProps {
   /** The roles ticked — the draft the app holds while its dialog is open. */
   value: readonly R[];
   roles: RoleVocabulary<R>;
@@ -236,6 +237,7 @@ export function RolesEditor<R extends string = string>({
   legendVisibility,
   required,
   hint,
+  help,
   error,
   columns,
   commit,
@@ -267,6 +269,7 @@ export function RolesEditor<R extends string = string>({
       onChange={onChange}
       required={required}
       hint={hint}
+      help={help}
       error={error}
       columns={columns}
       commit={commit}

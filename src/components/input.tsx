@@ -12,6 +12,7 @@ import {
   LockedReason,
   mergeDescribedBy,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
   useFieldError,
   useFieldHint,
   useLockReason,
@@ -38,7 +39,7 @@ import {
 // open the picker on a click anywhere in the field instead (feedback #224).
 const PICKER_TYPES = new Set(["date", "datetime-local", "month", "time", "week"]);
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement>, FieldHelpProps {
   label?: ReactNode;
   /** Classes for the `<input>` itself, as distinct from `className`, which
    *  styles the field WRAPPER once a `label` turns this into a FloatingField.
@@ -156,6 +157,7 @@ export function Input(props: InputProps) {
     invalid,
     error,
     hint,
+    help,
     showCount,
     countLabels,
     passwordLabels,
@@ -171,7 +173,7 @@ export function Input(props: InputProps) {
   const generated = useId();
   const fieldId = id ?? generated;
   const countId = useId();
-  const hintParts = useFieldHint(hint, rest["aria-describedby"]);
+  const hintParts = useFieldHint(hint, rest["aria-describedby"], { help, name: label ?? rest["aria-label"] });
   const maxLength = rest.maxLength;
   const counting = Boolean(showCount) && typeof maxLength === "number" && maxLength > 0;
   const length = useTypedLength(rest.value, rest.defaultValue);

@@ -4,7 +4,14 @@ import { cn } from "../lib/cn";
 import { Checkbox } from "./checkbox";
 import { hasContent } from "../lib/presence";
 import { useCommitReason, type CommitScope } from "./write-lock";
-import { FIELD_ERROR_CLASS, mergeDescribedBy, RequiredStarOnLegend, useInlineHint } from "./field-parts";
+import {
+  FIELD_ERROR_CLASS,
+  fieldHelpMark,
+  mergeDescribedBy,
+  RequiredStarOnLegend,
+  useInlineHint,
+  type FieldHelpProps,
+} from "./field-parts";
 
 /** One box of a {@link CheckboxGroup}. */
 export interface CheckboxGroupOption<T extends string = string> {
@@ -22,7 +29,7 @@ export interface CheckboxGroupOption<T extends string = string> {
  *  reader where the dialog's title already says it to the eye. */
 export type CheckboxGroupLegendVisibility = "visible" | "sr-only";
 
-export interface CheckboxGroupProps<T extends string = string> {
+export interface CheckboxGroupProps<T extends string = string> extends FieldHelpProps {
   /** The question the boxes answer — the fieldset's `<legend>`, which names the group.
    *  Without one, pass `aria-label`. */
   legend?: ReactNode;
@@ -64,6 +71,8 @@ export interface CheckboxGroupProps<T extends string = string> {
   /**
    * Standing advice for the group, under the boxes, attached to the fieldset with
    * `aria-describedby` before the error — the field anatomy every kit field keeps.
+   * A `help` beside it (0.36) is a "?" after the legend — with a visible legend only —
+   * and names nothing: the fieldset is then named by the legend's words alone.
    */
   hint?: ReactNode;
   /** What is wrong with the set, in the caller's words. Under the boxes, on the
@@ -128,6 +137,7 @@ export function CheckboxGroup<T extends string = string>({
   disabled,
   required,
   hint,
+  help,
   error,
   invalid,
   commit,
@@ -142,7 +152,11 @@ export function CheckboxGroup<T extends string = string>({
   const errorId = `${generated}-error`;
   // §4: a FieldHint under the group is its words at Large and on a touch screen, not a
   // lone "?" (DUP-2, refactor audit 2026-10). A HelpPopover stays a "?".
-  const shownHint = useInlineHint(hint);
+  // A `help` "?" after a VISIBLE legend (0.36): the label line a group has. Its FieldHint
+  // hint is then its words at every size, as everywhere a help stands beside one.
+  const helpMark = fieldHelpMark(legend !== undefined && legendVisibility === "visible" ? help : undefined, legend);
+  const legendTextId = `${generated}-legend`;
+  const shownHint = useInlineHint(hint, helpMark !== undefined);
   const showHint = hasContent(shownHint);
   const showError = hasContent(error);
   const isInvalid = Boolean(invalid) || showError;
@@ -169,6 +183,9 @@ export function CheckboxGroup<T extends string = string>({
     <fieldset
       id={id}
       aria-label={ariaLabel}
+      // With a help "?" inside the legend, the legend's WORDS name the group: a legend
+      // names its fieldset by its whole content, the "?"'s "About …" included.
+      aria-labelledby={helpMark !== undefined && ariaLabel === undefined ? legendTextId : undefined}
       aria-describedby={mergeDescribedBy(ariaDescribedBy, showHint && hintId, showError && errorId)}
       disabled={disabled && !locked}
       // `relative` holds an `sr-only` legend (sr-only-containment.test); `min-w-0`
@@ -184,12 +201,13 @@ export function CheckboxGroup<T extends string = string>({
               : cn("mb-2 p-0 text-sm font-medium text-primary", (disabled || locked) && "opacity-60")
           }
         >
-          {legend}
+          {helpMark === undefined ? legend : <span id={legendTextId}>{legend}</span>}
           {required && (
             <span aria-hidden className="ms-0.5 text-danger">
               *
             </span>
           )}
+          {helpMark !== undefined && <span className="ms-1 inline-flex align-middle font-normal">{helpMark}</span>}
         </legend>
       )}
       <RequiredStarOnLegend.Provider value={true}>

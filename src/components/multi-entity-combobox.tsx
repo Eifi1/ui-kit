@@ -28,13 +28,15 @@ import {
   useFieldHint,
   useLockReason,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
 } from "./field-parts";
 import { useCommitReason, type CommitScope } from "./write-lock";
 
 /** `onChange` is the kit's — "a selection was made", carrying values — rather
  *  than the div's form event, so the DOM's spelling of it is omitted. */
 export interface MultiEntityComboboxProps<V extends string | number>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange">,
+    FieldHelpProps {
   /** Selected ids. */
   value: V[];
   onChange: (value: V[]) => void;
@@ -144,6 +146,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
     invalid,
     error,
     hint,
+    help,
     filter,
     minChars,
     debounceMs,
@@ -169,7 +172,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
     minChars,
     debounceMs,
   });
-  const hintParts = useFieldHint(hint, ariaDescribedBy);
+  const hintParts = useFieldHint(hint, ariaDescribedBy, { help, name: label ?? ariaLabel });
   const field = useFieldError(error, invalid, hintParts.describedBy, ariaInvalid);
   // The props are the per-instance overrides, the provider the app-wide ones; a
   // prop left `undefined` falls through to the provider rather than masking it.

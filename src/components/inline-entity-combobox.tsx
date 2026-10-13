@@ -34,6 +34,7 @@ import {
   useFieldHint,
   useLockReason,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
 } from "./field-parts";
 import { hasContent } from "../lib/presence";
 import { useCommitReason, type CommitScope } from "./write-lock";
@@ -47,7 +48,8 @@ const CREATE_ROW_CLASS = "flex items-center gap-2 font-medium text-brand";
 /** `id` is the INPUT's and `onChange` is the field's — see {@link ComboboxProps}
  *  for why the div's spellings of them are omitted. */
 export interface InlineEntityComboboxProps<V extends string | number, C extends ComboClearValue = null>
-  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange"> {
+  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange">,
+    FieldHelpProps {
   /** Selected option id; `null` or `clearValue` when nothing is selected. */
   value: V | C | null;
   /** Required and unanswered — see {@link Combobox}'s `invalid`. */
@@ -226,6 +228,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     invalid,
     error,
     hint,
+    help,
     ref,
     "aria-label": ariaLabel,
     // Off `rest` and onto the <input>, which is the combobox a reader meets: `Field`'s
@@ -239,7 +242,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   // The clear value reads as "nothing selected", whichever one the caller picked —
   // so from here down `value` is the id or `null`, as it always was.
   const value: V | null = rawValue == null || rawValue === clearValue ? null : (rawValue as V);
-  const hintParts = useFieldHint(hint, ariaDescribedBy);
+  const hintParts = useFieldHint(hint, ariaDescribedBy, { help, name: label ?? ariaLabel });
   const field = useFieldError(error, invalid, hintParts.describedBy, ariaInvalid);
   const generated = useId();
   const fieldId = id ?? generated;

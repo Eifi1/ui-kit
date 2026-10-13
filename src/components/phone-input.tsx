@@ -148,6 +148,7 @@ export function PhoneInput({
   inputClassName,
   label,
   hint,
+  help,
   error,
   invalid,
   disabled,
@@ -225,6 +226,9 @@ export function PhoneInput({
   // since 0.34, not a copy of its rule (DUP-2, DUP-8).
   const messages = useFieldMessages({
     hint,
+    // The number's label line takes the help's "?" (0.36); the hint is then the caption.
+    help,
+    name: label ?? rest["aria-label"],
     error,
     invalid,
     describedBy: ariaDescribedBy,

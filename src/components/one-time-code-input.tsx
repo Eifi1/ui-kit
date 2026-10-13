@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import type { ChangeEvent, ClipboardEvent, FocusEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
-import { EndHintRow, FieldCaption, useFieldError, useFieldHint } from "./field-parts";
+import { EndHintRow, FieldCaption, useFieldError, useFieldHint, type FieldHelpProps } from "./field-parts";
 import {
   FIELD_BASE,
   FIELD_INVALID,
@@ -60,7 +60,8 @@ export interface OneTimeCodeInputProps
   extends Omit<
     InputHTMLAttributes<HTMLInputElement>,
     "value" | "defaultValue" | "onChange" | "type" | "inputMode" | "autoComplete" | "maxLength" | "pattern"
-  > {
+  >,
+    FieldHelpProps {
   /** The digits so far — a string, so leading zeros survive. */
   value: string;
   /** The cleaned code after every edit: digits only, never longer than `length`. */
@@ -130,6 +131,7 @@ export function OneTimeCodeInput(props: OneTimeCodeInputProps) {
     onComplete,
     label,
     hint,
+    help,
     error,
     invalid: invalidProp,
     className,
@@ -151,7 +153,7 @@ export function OneTimeCodeInput(props: OneTimeCodeInputProps) {
   // Text is a caption under the field; a FieldHint rides the label line, and is that
   // caption at Large and on touch (§4). See `hint`. Through useFieldHint and
   // useFieldError since 0.34, not copies of their rules (DUP-2, DUP-8).
-  const hintParts = useFieldHint(hint, ariaDescribedBy);
+  const hintParts = useFieldHint(hint, ariaDescribedBy, { help, name: label ?? rest["aria-label"] });
   const {
     isInvalid: invalid,
     describedBy,

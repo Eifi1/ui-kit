@@ -13,6 +13,7 @@ import {
   useFieldMessages,
   useLockReason,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
 } from "./field-parts";
 import type { CommitScope } from "./write-lock";
 import {
@@ -46,7 +47,8 @@ export interface MultiSelectOption<V extends string | number = string | number> 
  *  inferred from `options` and `value`, so `onChange` hands back `number[]` for number
  *  ids and `string[]` for string ones, and no call site casts. */
 export interface MultiSelectProps<V extends string | number = string | number>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange">,
+    FieldHelpProps {
   options: MultiSelectOption<V>[];
   /** The chosen values — the select family's `value` (API-4). */
   value?: V[];
@@ -140,6 +142,7 @@ export function MultiSelect<V extends string | number = string | number>(props: 
     invalid,
     error,
     hint,
+    help,
     disabled,
     disabledReason,
     disabledReasonDisplay,
@@ -195,6 +198,8 @@ export function MultiSelect<V extends string | number = string | number>(props: 
   // The caller's ids, the caption, a lock's reason, the error — Select's order.
   const field = useFieldMessages({
     hint,
+    help,
+    name: label ?? ariaLabel,
     error,
     invalid,
     describedBy: ariaDescribedBy,

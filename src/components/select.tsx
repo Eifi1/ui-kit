@@ -6,6 +6,7 @@ import {
   LockedReason,
   mergeDescribedBy,
   type DisabledReasonDisplay,
+  type FieldHelpProps,
   useFieldError,
   useFieldHint,
   useLockReason,
@@ -20,7 +21,7 @@ import {
   fieldBelow,
 } from "./field-base";
 
-export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> {
+export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "size">, FieldHelpProps {
   label?: ReactNode;
   /** See {@link Input}'s `invalid`. */
   invalid?: boolean;
@@ -33,7 +34,8 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
    *  set in the value's type on top of both the label and the value. On an
    *  UNLABELLED Select (no label line) a FieldHint sits at the field's end edge,
    *  outside the box. Since 0.34 a FieldHint is the caption at Large and on a touch
-   *  screen, as on Input (`useInlineHint`); a `HelpPopover` stays a "?". */
+   *  screen, as on Input (`useInlineHint`); a `HelpPopover` stays a "?". Beside a
+   *  `help` (0.36) the hint is the caption at every size: the help's "?" is the only one. */
   hint?: ReactNode;
   /**
    * `"sm"`: a 28px, 12px-type select for a toolbar or a table header, where the
@@ -109,6 +111,7 @@ export function Select(props: SelectProps) {
     invalid,
     error,
     hint: hintProp,
+    help,
     size,
     selectClassName,
     disabledReason,
@@ -138,7 +141,7 @@ export function Select(props: SelectProps) {
   // and on a touch screen is its words, a caption like any text (§4; a HelpPopover stays
   // on the label line, §10.23). See `hint` above. Through useFieldHint since 0.34, not a
   // copy of its rule (DUP-2, refactor audit 2026-10).
-  const hintParts = useFieldHint(hintProp, rest["aria-describedby"]);
+  const hintParts = useFieldHint(hintProp, rest["aria-describedby"], { help, name: label ?? rest["aria-label"] });
   const hint = hintParts.labelHint;
   const { isInvalid, describedBy, errorEl } = useFieldError(
     error,
