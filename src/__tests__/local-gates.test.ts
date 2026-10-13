@@ -112,10 +112,15 @@ describe("the check's tree stamp (TST-2)", () => {
 describe(".husky/pre-push (TST-2)", () => {
   const HOOK = join(ROOT, ".husky/pre-push");
   const ZERO = "0".repeat(40);
+  // Run from inside a real `git push` (this very hook running the suite), git exports
+  // GIT_DIR, GIT_INDEX_FILE and the like; inherited, they would point the scratch repo's git
+  // at the pushing repository. Every git here, the hook's included, runs without them.
+  const ENV = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("GIT_")));
   const git = (cwd: string, ...args: string[]) => {
     const r = spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", ...args], {
       cwd,
       encoding: "utf8",
+      env: ENV,
     });
     if (r.status !== 0) throw new Error(`git ${args.join(" ")}: ${r.stderr}`);
     return r.stdout.trim();
@@ -141,7 +146,7 @@ describe(".husky/pre-push (TST-2)", () => {
       cwd: dir,
       input: stdin,
       encoding: "utf8",
-      env: { ...process.env, PATH: `${join(dir, ".bin")}:${process.env.PATH}`, NPM_LOG: log },
+      env: { ...ENV, PATH: `${join(dir, ".bin")}:${process.env.PATH}`, NPM_LOG: log },
     });
     return { status: r.status, out: r.stdout + r.stderr, npm: existsSync(log) ? readFileSync(log, "utf8").trim().split("\n") : [] };
   }

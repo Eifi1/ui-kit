@@ -39,6 +39,8 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   translation_review: ["localisation", "kit-review"],
   // The extra-origin CORS that lets this very site's Kit review page call keksdose.
   cors: ["kit-review"],
+  // The scheduler's token on an app's job routes (server-kit 0.8): no kit page speaks it.
+  jobs: [],
 };
 
 /** The Server kit page a module is documented on (routes.tsx `serverModules`). */
