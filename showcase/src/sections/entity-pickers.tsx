@@ -278,7 +278,7 @@ export function EntityPickers() {
           <MultiSelect
             label="Markets"
             options={MARKETS}
-            values={stateMarkets}
+            value={stateMarkets}
             itemLabel={(n) => `${n} market${n === 1 ? "" : "s"}`}
             onChange={setStateMarkets}
             placeholder="None chosen"
@@ -310,7 +310,7 @@ export function EntityPickers() {
           <MultiSelect
             label="Markets (disabled)"
             options={MARKETS}
-            values={[MARKETS[0].value]}
+            value={[MARKETS[0].value]}
             // MultiSelect's default summary is the bare count — alone in a field, "1"
             // did not say one of what.
             itemLabel={(n) => `${n} market${n === 1 ? "" : "s"}`}
@@ -369,8 +369,10 @@ export function EntityPickers() {
           <code className="font-mono">clearValue</code>. <code className="font-mono">&quot;&quot;</code> is
           also read back as empty: placeholder, no ×. It is a closed choice (
           <code className="font-mono">null | &quot;&quot;</code>) because only those can never be a
-          real option id. For react-hook-form + zod, pass it on the picker inside{" "}
-          <code className="font-mono">FormField</code>; the adapter does not coerce.
+          real option id. For react-hook-form + zod, pass it on{" "}
+          <code className="font-mono">RhfCombobox</code> /{" "}
+          <code className="font-mono">RhfInlineEntityCombobox</code>, or on the picker inside{" "}
+          <code className="font-mono">RhfField</code>; the adapter does not coerce.
         </p>
       </Example>
 

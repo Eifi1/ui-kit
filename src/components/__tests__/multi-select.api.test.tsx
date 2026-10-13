@@ -11,8 +11,8 @@ import { UiKitProvider } from "../../i18n/kit-labels";
  * five production call sites cast (keksdose `next.map(String)`, `as string[]`;
  * Kurvenschmiede `as number[]` ×3); per-string chrome props where the kit takes `labels`;
  * and no `disabledReason` / `commit`. Now generic over the option value, with `value`,
- * `labels` and the lock; `values` and the four string props are deprecated (removed in
- * 0.35).
+ * `labels` and the lock; `values` and the four string props were deprecated in 0.34 and
+ * removed in 0.35 (round 0.35 R1).
  */
 
 describe("MultiSelect is generic over its option value", () => {
@@ -69,18 +69,14 @@ describe("MultiSelect is generic over its option value", () => {
 });
 
 describe("MultiSelect: value and labels, the family's names", () => {
-  it("reads `value`; the deprecated `values` still works", () => {
-    const { rerender } = render(
+  it("reads `value`", () => {
+    render(
       <MultiSelect label="Tags" options={[{ value: "a", label: "Alpha" }, { value: "b", label: "Beta" }]} value={["a"]} onChange={vi.fn()} />,
-    );
-    expect(screen.getByRole("combobox", { name: "Tags: 1" })).toBeInTheDocument();
-    rerender(
-      <MultiSelect label="Tags" options={[{ value: "a", label: "Alpha" }, { value: "b", label: "Beta" }]} values={["a"]} onChange={vi.fn()} />,
     );
     expect(screen.getByRole("combobox", { name: "Tags: 1" })).toBeInTheDocument();
   });
 
-  it("takes `labels` over the provider's multiSelect namespace; the old string props still work", () => {
+  it("takes `labels` over the provider's multiSelect namespace", () => {
     render(
       <UiKitProvider labels={{ multiSelect: { selectAll: "Alle", clear: "Leeren" } }}>
         <MultiSelect
@@ -88,8 +84,7 @@ describe("MultiSelect: value and labels, the family's names", () => {
           options={[{ value: 1, label: "One" }]}
           value={[]}
           onChange={vi.fn()}
-          labels={{ search: "Find sets", all: "None picked" }}
-          clearLabel="Select none"
+          labels={{ search: "Find sets", all: "None picked", clear: "Select none" }}
         />
       </UiKitProvider>,
     );
@@ -98,6 +93,24 @@ describe("MultiSelect: value and labels, the family's names", () => {
     expect(screen.getByRole("textbox", { name: "Find sets" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Alle" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Select none" })).toBeInTheDocument();
+  });
+
+  it("takes no other names: `values` and the four string props went in 0.35 (round 0.35 R1)", () => {
+    const noop = vi.fn();
+    // Compile-time: `tsc --noEmit` fails if a directive below goes unused.
+    const gone = [
+      // @ts-expect-error — `values` is gone: pass `value`.
+      <MultiSelect key="1" options={[]} values={[]} onChange={noop} />,
+      // @ts-expect-error — `allLabel` is gone: pass `labels.all`.
+      <MultiSelect key="2" options={[]} onChange={noop} allLabel="All" />,
+      // @ts-expect-error — `searchLabel` is gone: pass `labels.search`.
+      <MultiSelect key="3" options={[]} onChange={noop} searchLabel="Search" />,
+      // @ts-expect-error — `selectAllLabel` is gone: pass `labels.selectAll`.
+      <MultiSelect key="4" options={[]} onChange={noop} selectAllLabel="All" />,
+      // @ts-expect-error — `clearLabel` is gone: pass `labels.clear`.
+      <MultiSelect key="5" options={[]} onChange={noop} clearLabel="None" />,
+    ];
+    expect(gone).toHaveLength(5);
   });
 });
 

@@ -15,7 +15,8 @@ import { Example, Note, OutTable, Row, READOUT } from "../lib/section";
  * 0.33 (docs/colour-roles-harmonization.md §6, §12.6): a panel is painted by its `tone` —
  * the tone's wash under its text while the action is previewed, the tone's fill under its
  * `-contrast` once armed — or, for an app's documented exception, by `paint`. The
- * specimens moved off the deprecated `className` / `armedClassName` pair.
+ * specimens moved off the `className` / `armedClassName` pair, deprecated then and
+ * removed in 0.35.
  */
 
 // Live readouts share one class so a reader can tell "this is state" from "this is
@@ -171,7 +172,7 @@ function SwipeDemo() {
         class under a hard-coded <code className="font-mono">text-white</code>, dimmed to 60 %
         until armed: 2.4–4.5:1 on the kit&apos;s own swipes, and white on near-white on every
         dark pastel. That path (<code className="font-mono">className</code> /{" "}
-        <code className="font-mono">armedClassName</code>) still compiles, deprecated.
+        <code className="font-mono">armedClassName</code>) was deprecated in 0.33 and removed in 0.35.
       </Note>
     </div>
   );
@@ -388,8 +389,8 @@ function SwipePaints() {
         a custom property: idle is `color-mix(in oklab, fill 14%, var(--bg-surface))` under the body ink — a
         mid-tone as text on its own wash would be 2.4:1 — armed is the fill under the foreground. Values are CSS
         colours or `var()`s, the same in both themes unless the app declares the variable per theme. The kit
-        cannot measure an app&apos;s paint, so the app&apos;s tests pin the pair. Not deprecated, unlike
-        `className` / `armedClassName`.
+        cannot measure an app&apos;s paint, so the app&apos;s tests pin the pair. It is the one way past the
+        tones since `className` / `armedClassName` went in 0.35.
       </Note>
     </div>
   );

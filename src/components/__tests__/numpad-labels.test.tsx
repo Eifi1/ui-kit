@@ -77,7 +77,7 @@ describe("the numpad speaks one language from either field", () => {
   }
 
   it("takes the host's names through AmountInput", () => {
-    render(<AmountInput value="12" onChange={noop} ariaLabel="Betrag" labels={{ pad: PAD_DE }} />);
+    render(<AmountInput value="12" onChange={noop} aria-label="Betrag" labels={{ pad: PAD_DE }} />);
     expect(padNames(() => fireEvent.focus(screen.getByLabelText("Betrag")))).toEqual([
       PAD_DE.pad,
       PAD_DE.backspace,
@@ -88,7 +88,7 @@ describe("the numpad speaks one language from either field", () => {
   });
 
   it("takes them through NumberInput too — the same sheet, the same words", () => {
-    render(<NumberInput value="12" onChange={noop} ariaLabel="Ziel" labels={{ pad: PAD_DE }} />);
+    render(<NumberInput value="12" onChange={noop} aria-label="Ziel" labels={{ pad: PAD_DE }} />);
     expect(padNames(() => fireEvent.focus(screen.getByLabelText("Ziel")))).toEqual([
       PAD_DE.pad,
       PAD_DE.backspace,

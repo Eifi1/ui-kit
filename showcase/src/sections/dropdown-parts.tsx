@@ -105,12 +105,12 @@ export function DropdownParts() {
             />
           </div>
           <div className="w-64 max-w-full">
-            {/* Only `placeholder`: it stands in for `allLabel`, and every other string
+            {/* Only `placeholder`: it stands in for `labels.all`, and every other string
                 (search, select all, clear, the count) comes from the provider. */}
             <MultiSelect
               aria-label="Markets"
               options={MARKETS}
-              values={plainMarkets}
+              value={plainMarkets}
               onChange={setPlainMarkets}
               placeholder="Any market"
             />
@@ -314,8 +314,8 @@ export function DropdownParts() {
                   // before it is painted.
                   width={288}
                   // Logical: the panel's START edge lines up with the trigger's — its
-                  // left here, its right under dir="rtl". `left`/`right` stay physical;
-                  // the default is `end`.
+                  // left here, its right under dir="rtl". The default is `end`; the
+                  // physical `left`/`right` went in 0.35.
                   align="start"
                   empty={storeHits.length === 0}
                   header={

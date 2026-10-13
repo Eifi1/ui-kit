@@ -199,7 +199,7 @@ describe("MultiSelect passes DOM props through", () => {
     render(
       <MultiSelect
         options={[{ value: "a", label: "Checking" }]}
-        values={[]}
+        value={[]}
         onChange={vi.fn()}
         label="Accounts"
         data-tour="payee"
@@ -212,7 +212,7 @@ describe("MultiSelect passes DOM props through", () => {
     render(
       <MultiSelect
         options={[{ value: "a", label: "Checking" }]}
-        values={["a"]}
+        value={["a"]}
         onChange={vi.fn()}
         label="Accounts"
         aria-label="Accounts, filtered"

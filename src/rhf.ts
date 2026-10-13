@@ -1,6 +1,7 @@
 // `@eifi1/ui-kit/rhf` — the react-hook-form adapter: Form and the bound Rhf* fields (and
-// RhfField as the escape hatch). The shadcn scaffold (FormField, FormItem, FormLabel,
-// FormControl, FormDescription, FormMessage, useFormField) is deprecated in 0.34.
+// RhfField as the escape hatch). The shadcn scaffold they are built from (FormField,
+// FormItem, FormLabel, FormControl, FormDescription, FormMessage, useFormField) left the
+// surface in 0.35 (refactor audit 2026-10, API-6f; deprecated in 0.34).
 //
 // The only entry point in the package that requires `react-hook-form`, and an optional
 // peer for that reason: an app without a form library installs nothing for it. NOT

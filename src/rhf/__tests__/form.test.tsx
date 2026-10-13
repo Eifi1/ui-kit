@@ -293,20 +293,11 @@ describe("useFormField", () => {
   });
 });
 
-describe("./form, the public face (0.34, refactor audit 2026-10, API-6f)", () => {
-  it("hands out Form, and the core's own scaffold under the deprecated names", () => {
-    // Deprecated until 0.35: the same functions, not copies. The bound fields import the core.
-    const names = [
-      "Form",
-      "FormField",
-      "FormItem",
-      "FormLabel",
-      "FormControl",
-      "FormDescription",
-      "FormMessage",
-      "useFormField",
-    ] as const;
-    for (const name of names) expect(publicFace[name], name).toBe(core[name]);
-    expect(Object.keys(publicFace).sort()).toEqual([...names].sort());
+describe("./form, the public face (refactor audit 2026-10, API-6f)", () => {
+  it("hands out Form and none of the scaffold (removed in 0.35)", () => {
+    // FormField, FormItem, … are the core's own, which the bound fields import; the public
+    // face keeps the one value an app uses.
+    expect(Object.keys(publicFace)).toEqual(["Form"]);
+    expect(publicFace.Form).toBe(core.Form);
   });
 });

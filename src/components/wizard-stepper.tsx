@@ -5,16 +5,12 @@ import { cn } from "../lib/cn";
 export function WizardStepper({
   steps,
   current,
-  "aria-label": ariaLabelAttr,
-  ariaLabel,
+  "aria-label": ariaLabel,
 }: {
   steps: { key: string; label: string }[];
   current: string;
   /** Names the list of steps ("Import steps"). */
   "aria-label"?: string;
-  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
-   *  Names the steps only when `aria-label` is absent. */
-  ariaLabel?: string;
 }) {
   const currentIndex = steps.findIndex((s) => s.key === current);
   return (
@@ -22,7 +18,7 @@ export function WizardStepper({
     // (0.32.1, the 360 px Extra-large sweep; docs/text-size-harmonization.md §4).
     // "Upload — Map columns — Confirm" ran 22 px past a 360 px phone at Extra large.
     // Where the steps fit, they stay one row.
-    <ol className="flex flex-wrap items-center gap-1 text-xs" aria-label={ariaLabelAttr ?? ariaLabel}>
+    <ol className="flex flex-wrap items-center gap-1 text-xs" aria-label={ariaLabel}>
       {steps.map((step, i) => (
         <li key={step.key} className="flex items-center gap-1">
           {i > 0 && <span className="w-4 border-t border-subtle" />}

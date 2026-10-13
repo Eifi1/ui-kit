@@ -245,7 +245,6 @@ export {
   FloatingField,
   Label,
   DEFAULT_PASSWORD_REVEAL_LABELS,
-  resolvePasswordRevealLabels,
   DEFAULT_CHARACTER_COUNT_LABELS,
   type FieldChevronProps,
   type FloatingFieldProps,

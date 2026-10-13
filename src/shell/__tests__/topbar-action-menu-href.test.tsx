@@ -21,7 +21,7 @@ const ENTRIES: TopBarMenuEntry[] = [
 function App() {
   return (
     <MemoryRouter initialEntries={["/"]}>
-      <TopBarActionMenu ariaLabel="Guided tours" icon={<Compass />} href="/tours" heading="Tours" entries={ENTRIES} />
+      <TopBarActionMenu aria-label="Guided tours" icon={<Compass />} href="/tours" heading="Tours" entries={ENTRIES} />
       <Routes>
         <Route path="/" element={<p>Home</p>} />
         <Route path="/tours" element={<p>Tours page</p>} />
@@ -81,7 +81,7 @@ describe("TopBarActionMenu href", () => {
   it("without href it stays a button that toggles", () => {
     render(
       <MemoryRouter>
-        <TopBarActionMenu ariaLabel="Guided tours" icon={<Compass />} entries={ENTRIES} />
+        <TopBarActionMenu aria-label="Guided tours" icon={<Compass />} entries={ENTRIES} />
       </MemoryRouter>,
     );
     const button = screen.getByRole("button", { name: "Guided tours" });

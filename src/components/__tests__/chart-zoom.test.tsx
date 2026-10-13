@@ -602,27 +602,11 @@ describe("withChartZoom — one axis, or none", () => {
   });
 });
 
-describe("chart-zoom, the public face (0.34, refactor audit 2026-10, API-6b)", () => {
-  it("hands out the core's own values under the deprecated names, and SharedXZoom", () => {
-    // Deprecated until 0.35: the same functions, not copies, so nothing can drift before
-    // they go. The kit itself imports the core.
-    const names = [
-      "DEFAULT_Y_AXIS",
-      "ZOOM_SQUARE_ENOUGH",
-      "ZOOM_MIN_DRAG",
-      "zoomAxesFor",
-      "selectionFromDrag",
-      "axisExtent",
-      "fitYToX",
-      "fitXToY",
-      "NO_ZOOM",
-      "zoomAfter",
-      "zoomDomains",
-      "defaultZoomAxes",
-      "withChartZoom",
-      "SharedXZoom",
-    ] as const;
-    for (const name of names) expect(publicFace[name], name).toBe(core[name]);
-    expect(Object.keys(publicFace).sort()).toEqual([...names].sort());
+describe("chart-zoom, the public face (refactor audit 2026-10, API-6b)", () => {
+  it("hands out SharedXZoom and none of the arithmetic (removed in 0.35)", () => {
+    // The 13 names deprecated in 0.34 (zoomAxesFor, withChartZoom, …) are the core's own,
+    // which the kit imports; the public face keeps the one value an app uses.
+    expect(Object.keys(publicFace)).toEqual(["SharedXZoom"]);
+    expect(publicFace.SharedXZoom).toBe(core.SharedXZoom);
   });
 });

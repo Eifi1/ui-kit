@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import type { ComponentProps } from "react";
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { DropdownPanel, useDropdown } from "../dropdown";
@@ -90,5 +91,13 @@ describe("DropdownPanel", () => {
     // …while a press anywhere else still closes it.
     fireEvent.pointerDown(document.body);
     expect(screen.queryByRole("button", { name: "CHF" })).toBeNull();
+  });
+});
+
+describe("DropdownPanel align", () => {
+  it("takes no physical edge since 0.35 (round 0.35 R1, API-6e)", () => {
+    // @ts-expect-error — `left` / `right` went in 0.35: `start` / `end` follow the reading direction
+    const physical: ComponentProps<typeof DropdownPanel>["align"] = "left";
+    expect(physical).toBe("left");
   });
 });

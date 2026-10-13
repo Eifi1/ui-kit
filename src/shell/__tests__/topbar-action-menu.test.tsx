@@ -31,7 +31,7 @@ function AccountMenu({
     <MemoryRouter>
       <div dir={dir}>
         <TopBarActionMenu
-          ariaLabel="Marcel Eifert"
+          aria-label="Marcel Eifert"
           triggerClassName="rounded-full"
           trigger={() => (
             <UserAvatar name="Marcel Eifert" badge={unread ? { label: `${unread} unread` } : null} />
@@ -77,11 +77,11 @@ describe("TopBarActionMenu as an account menu", () => {
     expect(trigger()).toHaveAccessibleName("Marcel Eifert 3 unread");
   });
 
-  it("takes the person's name from ariaLabel only: the avatar's initials stay hidden", () => {
+  it("takes the person's name from aria-label only: the avatar's initials stay hidden", () => {
     render(
       <MemoryRouter>
         <TopBarActionMenu
-          ariaLabel="Account menu"
+          aria-label="Account menu"
           trigger={() => <UserAvatar name="Marcel Eifert" badge={{ label: "3 unread" }} />}
           entries={[{ key: "x", label: "Log out", onSelect: () => {} }]}
         />
@@ -188,7 +188,7 @@ describe("TopBarActionMenu, the icon button", () => {
       <MemoryRouter>
         <TopBarActionMenu
           icon={<span>?</span>}
-          ariaLabel="Feedback"
+          aria-label="Feedback"
           heading="Send"
           entries={[{ key: "bug", label: "Bug", onSelect }]}
         />
@@ -207,7 +207,7 @@ describe("TopBarActionMenu, the icon button", () => {
       <MemoryRouter>
         <TopBarActionMenu
           icon={<span>?</span>}
-          ariaLabel="More"
+          aria-label="More"
           entries={[{ key: "a", label: "A", onSelect: () => {} }]}
         >
           {(close) => (
@@ -233,7 +233,7 @@ describe("TopBarActionMenu iconBadge", () => {
         <TopBarActionMenu
           icon={<svg data-testid="icon" />}
           iconBadge={badge}
-          ariaLabel="Send feedback"
+          aria-label="Send feedback"
           entries={[{ key: "bug", label: "Bug", onSelect: () => {} }]}
         />
       </MemoryRouter>,

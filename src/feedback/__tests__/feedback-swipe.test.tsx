@@ -84,8 +84,9 @@ describe("feedbackSwipePlan", () => {
     const [wontDo] = out?.start ?? [];
     expect([advance.tone, done.tone, wontDo.tone]).toEqual(["info", "success", "danger"]);
     for (const panel of [advance, done, wontDo]) {
-      expect(panel.className).toBeUndefined();
-      expect(panel.armedClassName).toBeUndefined();
+      // The class pair it replaced went in 0.35 (round 0.35 R1).
+      expect(panel).not.toHaveProperty("className");
+      expect(panel).not.toHaveProperty("armedClassName");
     }
   });
 

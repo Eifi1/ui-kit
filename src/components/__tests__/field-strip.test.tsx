@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Star } from "lucide-react";
@@ -37,19 +38,21 @@ describe("FieldStrip (keksdose G8)", () => {
   });
 
   // keksdose dev#593 (kk K4): the label row ends 18px down (4 + the 14px "?"), so a 16px
-  // strip put it across the content's top border. Since 0.34 there is one strip.
-  it('pad="field" is the same 20px strip, kept so a caller compiles; a className merges after it', () => {
+  // strip put it across the content's top border. Since 0.34 there is one strip, and since
+  // 0.35 no `pad` to ask for another (round 0.35 R1).
+  it("is one 20px strip, with no `pad` to choose another; a className merges after it", () => {
+    // @ts-expect-error — `pad` is gone: both values were the one 20px strip since 0.34.
+    void (<FieldStrip label="Status" pad="field"><span /></FieldStrip>);
     const { rerender } = render(
-      <FieldStrip label="Status" pad="field">
+      <FieldStrip label="Status">
         <span>Done</span>
       </FieldStrip>,
     );
     const group = screen.getByRole("group", { name: "Status" });
     expect(group.className).toContain("pt-5");
     expect(group.className).not.toContain("pt-4");
-    expect(group).not.toHaveAttribute("pad");
     rerender(
-      <FieldStrip label="Status" pad="field" className="pt-6 md:pt-7">
+      <FieldStrip label="Status" className="pt-6 md:pt-7">
         <span>Done</span>
       </FieldStrip>,
     );
@@ -73,7 +76,7 @@ describe("FieldStrip (keksdose G8)", () => {
       />,
     );
     const { container: field } = render(
-      <FieldStrip label="Status" pad="field">
+      <FieldStrip label="Status">
         <span />
       </FieldStrip>,
     );
@@ -225,5 +228,27 @@ describe("FieldStrip (keksdose G8)", () => {
     const group = screen.getByRole("group", { name: "Location" });
     expect(group).toHaveAttribute("data-tour", "location");
     expect(group).toHaveAttribute("id", "location-cell");
+  });
+
+  // Round 0.35 R4: a React 19 `ref` prop, as Card and EmptyState took in 0.34 (API-2) — on
+  // the group itself, which a caller scrolls to or measures, not on its content.
+  it("takes a ref, on its root: the group", () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <FieldStrip label="Location" ref={ref}>
+        <span />
+      </FieldStrip>,
+    );
+    expect(ref.current).toBe(screen.getByRole("group", { name: "Location" }));
+  });
+
+  it("puts the ref on the plain box under group={false}", () => {
+    const ref = createRef<HTMLDivElement>();
+    const { container } = render(
+      <FieldStrip label="Pattern" group={false} ref={ref}>
+        <span />
+      </FieldStrip>,
+    );
+    expect(ref.current).toBe(container.firstElementChild);
   });
 });

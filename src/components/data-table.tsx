@@ -5,7 +5,15 @@ import { Spinner } from "./spinner";
 import { ROW_ACTIONS_KEY, useRowActionColumn } from "./data-table-row-actions";
 import { useColumnResize } from "./data-table-resize";
 import { useRangeSelection } from "./data-table-selection";
-import { RowLink, cleanAttrs, columnLabel, fromOutside, logicalAlign, splitCellProps } from "./data-table-shared";
+import {
+  RowLink,
+  cleanAttrs,
+  columnLabel,
+  fromOutside,
+  logicalAlign,
+  resolveDataTableLabels,
+  splitCellProps,
+} from "./data-table-shared";
 import { MobileFilters, MobileRow, MobileSort, StackedFields } from "./data-table-mobile";
 import { DataTableHead } from "./data-table-head";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
@@ -20,7 +28,7 @@ import type { SwipeAction } from "./swipeable-row";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
-import { DEFAULT_DATA_TABLE_LABELS, resolveDataTableLabels, type DataTableLabels } from "./data-table-labels";
+import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
 import { useKitLabelOverrides, useKitLocale, useKitTableStorageKeyPrefix, type LabelOverride } from "../i18n/kit-labels";
 import { useEdgeFade } from "../lib/strip-fade";
 import { dirOf, type Direction } from "../lib/direction";

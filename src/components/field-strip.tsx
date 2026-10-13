@@ -1,10 +1,11 @@
 import { useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { LabelStrip, useFieldMessages } from "./field-parts";
 
 /**
- * How far down the content starts, under the 11px label — see {@link FieldStripProps.pad}.
- * Since 0.34 both are the one 20px strip.
+ * @deprecated 0.35 — nothing takes it: FieldStrip's `pad`, its one use, went in 0.35;
+ * removed in 0.36 (round 0.35 R1). It named how far down the content started under the
+ * 11px label; since 0.34 both values were the one 20px strip.
  */
 export type FieldStripPad = "clear" | "field";
 
@@ -19,7 +20,12 @@ export interface FieldStripIds {
   describedBy: string | undefined;
 }
 
-export interface FieldStripProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+/**
+ * A `div`'s props, `ref` included since 0.35 (round 0.35 R4, as Card and EmptyState took
+ * it in 0.34, API-2): the ref is the root — the group, or the plain box under
+ * `group={false}` — which a caller scrolls into view or measures.
+ */
+export interface FieldStripProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** The 11px static label, on the line a labelled field's label sits on. */
   label: ReactNode;
   /**
@@ -37,21 +43,6 @@ export interface FieldStripProps extends Omit<ComponentPropsWithoutRef<"div">, "
    * turns its map into a picture and drops its buttons, which no flag here could guess.
    */
   disabled?: boolean;
-  /**
-   * @deprecated 0.34 — drop it; removed in 0.35. Both values are the same 20px strip
-   * since 0.34, and the prop does nothing; it stays so a caller that passes it still
-   * compiles.
-   *
-   * It chose between `"clear"` (20px) and `"field"` (16px: the strip plus a 26px
-   * bordered control made a labelled Input's 42px). The label row — the label and its
-   * "?" — ends 18px down, so over a 16px strip it crossed the content's top border by
-   * 2px (keksdose dev#593; the arithmetic is on `LABEL_STRIP_PAD` in field-parts.tsx).
-   * For a row of 42px fields, make the content 22px tall: 20 + 22 = 42, the shape
-   * ToggleGroup's `labelPlacement="strip"` has since 0.34.
-   *
-   * A `className` still merges after the strip's padding.
-   */
-  pad?: FieldStripPad;
   /**
    * The wrapper is a `role="group"` named by the label (default), so a screen reader
    * entering the map or the first button hears "Location, group" — what the visible
@@ -104,8 +95,6 @@ export function FieldStrip({
   hint,
   error,
   disabled = false,
-  // Taken off so it never reaches the DOM; see `pad` (deprecated, one strip since 0.34).
-  pad: _pad,
   group = true,
   className,
   children,
@@ -118,6 +107,8 @@ export function FieldStrip({
   // every kit field reads them in.
   const groupDescribedBy = [rest["aria-describedby"], messages.describedBy].filter(Boolean).join(" ") || undefined;
   return (
+    // `rest` carries the caller's `ref` too (a plain prop in React 19): LabelStrip spreads
+    // its own rest onto the wrapper `<div>`, so the ref lands on the root.
     <LabelStrip
       {...rest}
       {...(group

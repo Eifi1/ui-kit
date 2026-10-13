@@ -50,32 +50,21 @@ export interface MultiSelectProps<V extends string | number = string | number>
   options: MultiSelectOption<V>[];
   /** The chosen values — the select family's `value` (API-4). */
   value?: V[];
-  /** @deprecated 0.34 — use `value`; removed in 0.35 (refactor audit 2026-10, API-4). */
-  values?: V[];
   onChange: (next: V[]) => void;
-  /** @deprecated 0.34 — use `labels.all`; removed in 0.35 (API-4). Displayed when no
-   *  value is selected (i.e. "all"); wins over `placeholder`, as `labels.all` does. */
-  allLabel?: string;
   /** Singular/plural countable label, used when 1+ items are selected. Default:
    *  `labels.selectedCount`, else `multiSelect.selectedCount` from the provider — the
    *  bare count in English. */
   itemLabel?: (count: number) => string;
-  /** Shown when nothing is picked, unless `labels.all` (or `allLabel`) says otherwise —
-   *  it has always doubled as the "nothing picked" text. */
+  /** Shown when nothing is picked, unless `labels.all` says otherwise — it has always
+   *  doubled as the "nothing picked" text. */
   placeholder?: string;
   /** Embedded top-boundary label, matching the native Input/Select fields. */
   label?: ReactNode;
-  /** @deprecated 0.34 — use `labels.search`; removed in 0.35 (API-4). */
-  searchLabel?: string;
-  /** @deprecated 0.34 — use `labels.selectAll`; removed in 0.35 (API-4). */
-  selectAllLabel?: string;
-  /** @deprecated 0.34 — use `labels.clear`; removed in 0.35 (API-4). */
-  clearLabel?: string;
   /**
    * Per-instance overrides of the provider's `multiSelect` namespace, over English — the
-   * kit's `labels` shape, where this took four string props (API-4). `all` is the trigger
-   * when nothing is picked: `labels.all`, then `allLabel`, then `placeholder`, then the
-   * provider's.
+   * kit's `labels` shape, where this took four string props until 0.35 (API-4: `allLabel`,
+   * `searchLabel`, `selectAllLabel`, `clearLabel`). `all` is the trigger when nothing is
+   * picked: `labels.all`, then `placeholder`, then the provider's.
    */
   labels?: LabelOverride<MultiSelectLabels>;
   /**
@@ -141,15 +130,10 @@ export function MultiSelect<V extends string | number = string | number>(props: 
   const {
     options,
     value: valueProp,
-    values,
     onChange,
-    allLabel,
     itemLabel,
     placeholder,
     label,
-    searchLabel,
-    selectAllLabel,
-    clearLabel,
     labels: labelsProp,
     className,
     panelClassName,
@@ -172,7 +156,7 @@ export function MultiSelect<V extends string | number = string | number>(props: 
     "aria-required": ariaRequired,
     ...rest
   } = props;
-  const value = useMemo<V[]>(() => valueProp ?? values ?? [], [valueProp, values]);
+  const value = useMemo<V[]>(() => valueProp ?? [], [valueProp]);
   // The rows as the family's options — the hint is the sublabel, searched like the label.
   const comboOptions = useMemo(
     () => options.map((o): ComboOption<V> => ({ value: o.value, label: o.label, sublabel: o.hint, disabled: o.disabled })),
@@ -190,14 +174,13 @@ export function MultiSelect<V extends string | number = string | number>(props: 
     },
     [ref, triggerRef],
   );
-  // `labels` > the deprecated string props > the provider's `multiSelect` > English. `all`
-  // is resolved apart below: between the instance's and the provider's sits `placeholder`,
-  // which has always doubled as the "nothing picked" text, and a caller who set it must
-  // keep seeing it.
+  // `labels` > the provider's `multiSelect` > English. `all` is resolved apart below:
+  // between the instance's and the provider's sits `placeholder`, which has always
+  // doubled as the "nothing picked" text, and a caller who set it must keep seeing it.
   const text = useKitLabels("multiSelect", DEFAULT_MULTI_SELECT_LABELS, {
-    search: labelsProp?.search ?? searchLabel,
-    selectAll: labelsProp?.selectAll ?? selectAllLabel,
-    clear: labelsProp?.clear ?? clearLabel,
+    search: labelsProp?.search,
+    selectAll: labelsProp?.selectAll,
+    clear: labelsProp?.clear,
     selectedCount: labelsProp?.selectedCount ?? itemLabel,
   });
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
@@ -226,7 +209,7 @@ export function MultiSelect<V extends string | number = string | number>(props: 
   const allChecked = options.length > 0 && options.every((o) => valueSet.has(o.value));
   const selectedSummary =
     value.length === 0 || allChecked
-      ? (labelsProp?.all ?? allLabel ?? placeholder ?? text.all)
+      ? (labelsProp?.all ?? placeholder ?? text.all)
       : text.selectedCount(value.length);
 
   const toggle = (o: ComboOption<V>) => {

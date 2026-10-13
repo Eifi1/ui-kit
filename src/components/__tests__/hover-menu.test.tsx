@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { HoverMenu } from "../hover-menu";
@@ -14,7 +15,7 @@ function Menu({
   onPick = () => {},
   ...props
 }: {
-  align?: "start" | "end" | "left" | "right";
+  align?: "start" | "end";
   onPick?: (what: string) => void;
   "aria-label"?: string;
 }) {
@@ -184,12 +185,16 @@ describe("HoverMenu align", () => {
   it.each([
     ["start", "start-0"],
     ["end", "end-0"],
-    ["left", "left-0"],
-    ["right", "right-0"],
   ] as const)("align=%s anchors with %s", (align, cls) => {
     render(<Menu align={align} />);
     fireEvent.click(trigger());
     expect(panelClass()).toContain(cls);
+  });
+
+  it("takes no physical edge since 0.35 (round 0.35 R1, API-6e)", () => {
+    // @ts-expect-error — `left` / `right` went in 0.35: `start` / `end` follow the reading direction
+    const physical: ComponentProps<typeof HoverMenu>["align"] = "right";
+    expect(physical).toBe("right");
   });
 
   it("defaults to the logical end edge (right in LTR, left in RTL)", () => {

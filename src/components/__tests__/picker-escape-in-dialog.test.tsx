@@ -146,7 +146,7 @@ const PICKERS: [string, PickerCase][] = [
             { value: "a", label: "Alpha" },
             { value: "b", label: "Beta" },
           ]}
-          values={[]}
+          value={[]}
           onChange={noop}
         />
       ),

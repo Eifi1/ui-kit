@@ -227,8 +227,7 @@ describe("DataTable in a right-to-left layout", () => {
     const action = (label: string): SwipeAction => ({
       label,
       onCommit: () => {},
-      className: "",
-      armedClassName: "",
+      tone: "neutral",
     });
 
     function renderSwipe(dir: "ltr" | "rtl") {

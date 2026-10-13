@@ -1,10 +1,11 @@
 /**
- * The react-hook-form adapter: the five parts every form is built from, and the hook
- * they share. `@eifi1/ui-kit/rhf`.
+ * The react-hook-form adapter: the five parts every bound field is built from, and the
+ * hook they share. Behind `@eifi1/ui-kit/rhf`, which exports `Form` alone of them.
  *
  * The kit's own module since 0.34 (refactor audit 2026-10, API-6f): the bound `Rhf*`
- * fields build on these parts, and import them from here. ./form is the public face —
- * `Form`, and until 0.35 the parts under their deprecated names, which no app imports.
+ * fields and `RhfField` build on these parts, and import them from here. ./form is the
+ * public face — `Form`; the parts left the public surface in 0.35 (deprecated in 0.34),
+ * when no app imported them any more.
  *
  * ```tsx
  * <Form {...form}>

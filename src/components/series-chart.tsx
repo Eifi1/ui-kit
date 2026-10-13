@@ -25,7 +25,7 @@
 // "area"` (and `stack`), and the abscissa may be a row of PERIODS (`x.type:
 // "category"`) or real dates (`x.type: "time"`) instead of a number the app had to
 // invent. What each of those does to the zoom is decided in one place,
-// `defaultZoomAxes` in `chart-zoom.tsx`.
+// `defaultZoomAxes` in `chart-zoom-core.tsx`.
 //
 // **An axis budget (0.15.1).** Every visible axis reserves its band, and four of them
 // leave a phone nothing to plot. A chart draws at most `maxVisibleAxes`, and — on its

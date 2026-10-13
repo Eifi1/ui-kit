@@ -221,19 +221,29 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // and later in 0.34 `foldForSearch`, `rankMatch` (lib/text-match: one search fold for every list).
   // 0.34.1 (+1): `CURRENCY_COUNTRIES`, code → flag-icons country (keksdose's 0.34 report);
   // also on the new /currencies.
-  ["@eifi1/ui-kit", barrel, 889],
+  // 0.35.0 (−15, refactor audit 2026-10, API-6, deprecated in 0.34): the chart-zoom maths
+  // and `withChartZoom`, 13 names (API-6b); `ALTERNATIVE_PRESETS` (API-6c);
+  // `FeedbackComposer` (API-6d).
+  // 0.35.0 (−6, round 0.35 R1, API-6a, deprecated in 0.34): the label helpers from before
+  // the provider — `resolveChipInputLabels`, `resolveFieldSyncLabels`,
+  // `resolvePasswordRevealLabels`, `resolveWizardLabels`, `resolveDataTableLabels` (now
+  // DataTable's own) and `missingDataTableLabels` (`missingKitLabels` checks every namespace).
+  ["@eifi1/ui-kit", barrel, 868],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
-  ["@eifi1/ui-kit/chart", chart, 59],
+  // 0.35.0 (−13): the zoom maths and `withChartZoom` are the kit's own (API-6b).
+  ["@eifi1/ui-kit/chart", chart, 46],
   // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
-  ["@eifi1/ui-kit/data-table", dataTable, 28],
+  // 0.35.0: `resolveDataTableLabels` and `missingDataTableLabels` removed (R1, API-6a) (−2).
+  ["@eifi1/ui-kit/data-table", dataTable, 26],
   // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS` (+1 here and in the barrel).
   // 0.22.0: ChatComposer, FeedbackComposer under a neutral name (keksdose K17) (+1).
   // 0.27.0: the feedback harmonization's 55 (see the barrel's note above).
-  ["@eifi1/ui-kit/feedback", feedback, 83],
+  // 0.35.0: `FeedbackComposer` removed, `ChatComposer` stays (API-6d) (−1).
+  ["@eifi1/ui-kit/feedback", feedback, 82],
   ["@eifi1/ui-kit/search", search, 9],
   // 0.31.0 (+26): the settings shell and its route, focus, context, heading and
   // catalogue helpers; PublicHeader, RootEntry, RedirectIfAuthed and the
@@ -247,7 +257,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // kastlan 51/52: `IntegerField` and `MoneyField` (+2). Showcase audit: `splitFileName` (+1).
   // 0.12.0: `useWizardStepValidate` and `useWizardNextGate` (+2 here and in the barrel),
   // the non-form step hooks kastlan kept in shared/components/wizard.
-  ["@eifi1/ui-kit/wizard", wizard, 12],
+  // 0.35.0: `resolveWizardLabels` removed (R1, API-6a) (−1).
+  ["@eifi1/ui-kit/wizard", wizard, 11],
   // 0.11.0: `useRhfWizardStep`, the react-hook-form bridge to the wizard's Next gate.
   // 0.12.0: the bound fields — `RhfField`, `RhfTextField`, `RhfTextarea`,
   // `RhfNumberField`, `RhfMoneyField`, `RhfDateField`, `RhfSelect`, `RhfCheckbox`,
@@ -258,7 +269,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // RhfPhoneInput (+5).
   // 0.23.0: RhfCountrySelect, RhfMonthPicker (kastlan) (+2).
   // 0.24.0: RhfInlineEntityCombobox (kastlan's AccountPicker, focus-on-error) (+1).
-  ["@eifi1/ui-kit/rhf", rhf, 29],
+  // 0.35.0: the shadcn scaffold — FormField, useFormField, FormItem, FormLabel,
+  // FormControl, FormDescription, FormMessage — is the bound fields' own (API-6f) (−7).
+  ["@eifi1/ui-kit/rhf", rhf, 22],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8

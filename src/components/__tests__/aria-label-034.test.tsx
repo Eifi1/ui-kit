@@ -20,12 +20,11 @@ import { PALETTES } from "../../theme/palette-presets";
 /**
  * API-1 (refactor audit 2026-10): sixteen components took only the camelCase
  * `ariaLabel`, after 0.34 (Q2) made `aria-label` the accessible-name prop everywhere
- * else. Each now takes `aria-label`, which wins when both are given; `ariaLabel` keeps
- * working until 0.35 and is `@deprecated`.
+ * else. 0.34 added `aria-label` and deprecated `ariaLabel`; 0.35 removed it (round 0.35
+ * R1), so `aria-label` is the one spelling.
  */
 
-/** A name prop in either spelling, or both. */
-type Name = { "aria-label"?: string; ariaLabel?: string };
+type Name = { "aria-label": string };
 
 function RhfHarness({ children }: { children: ReactNode }) {
   const form = useForm<{ amount: number | null; count: number | null }>({ defaultValues: { amount: 12, count: 3 } });
@@ -58,17 +57,12 @@ const CASES: Array<[string, (name: Name) => ReactElement, string]> = [
   ["PaletteMenu", (n) => <PaletteMenu palettes={PALETTES} activeId={PALETTES[0].id} mode="light" onSelect={noop} {...n} />, "button"],
   ["LanguageMenu", (n) => <LanguageMenu options={[{ code: "en", label: "English", country: "gb" }]} current="en" onChange={noop} {...n} />, "button"],
   ["RoleSwitcher", (n) => <RoleSwitcher roles={["admin", "viewer"]} value="admin" onChange={noop} {...n} />, "button"],
-  // Required there: one of the two spellings, so each row passes the one it tests.
-  [
-    "OptionSwitcherMenu",
-    (n) => <OptionSwitcherMenu icon={<span />} options={OPTIONS} value="a" onSelect={noop} {...(n as { "aria-label": string })} />,
-    "button",
-  ],
+  ["OptionSwitcherMenu", (n) => <OptionSwitcherMenu icon={<span />} options={OPTIONS} value="a" onSelect={noop} {...n} />, "button"],
   [
     "TopBarActionMenu",
     (n) => (
       <MemoryRouter>
-        <TopBarActionMenu icon={<span />} entries={[]} {...(n as { "aria-label": string })} />
+        <TopBarActionMenu icon={<span />} entries={[]} {...n} />
       </MemoryRouter>
     ),
     "button",
@@ -81,31 +75,58 @@ describe("aria-label on the sixteen camelCase holdouts (API-1)", () => {
     expect(screen.getByRole(role, { name: "Given name" })).toBeInTheDocument();
   });
 
-  it.each(CASES)("%s is still named by the deprecated ariaLabel", (_, view, role) => {
-    render(view({ ariaLabel: "Old name" }));
-    expect(screen.getByRole(role, { name: "Old name" })).toBeInTheDocument();
-  });
-
-  it.each(CASES)("%s takes aria-label over ariaLabel when both are given", (_, view, role) => {
-    render(view({ "aria-label": "Given name", ariaLabel: "Old name" }));
-    expect(screen.getByRole(role, { name: "Given name" })).toBeInTheDocument();
-    expect(screen.queryByRole(role, { name: "Old name" })).toBeNull();
+  it("takes no other spelling: the deprecated ariaLabel went in 0.35 (round 0.35 R1)", () => {
+    // Compile-time: `tsc --noEmit` fails if a directive below goes unused — that is, if
+    // one of the sixteen took `ariaLabel` again.
+    const gone = [
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <AmountInput key="1" value="1" onChange={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <MoneyField key="2" value={1} onCommit={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <NumberInput key="3" value="1" onChange={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <NumberField key="4" value={1} onCommit={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <IntegerField key="5" value={1} onCommit={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <CalculatorButton key="6" value="1" onChange={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <RhfNumberField key="7" name="count" ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <RhfIntegerField key="8" name="count" ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <RhfMoneyField key="9" name="amount" currency="CHF" ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <WizardStepper key="10" steps={[]} current="a" ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <ThemeToggle key="11" mode="light" onToggle={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <PaletteMenu key="12" palettes={PALETTES} activeId="x" mode="light" onSelect={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <LanguageMenu key="13" options={[]} current="en" onChange={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <RoleSwitcher key="14" roles={["admin"]} value="admin" onChange={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <OptionSwitcherMenu key="15" icon={null} options={OPTIONS} value="a" onSelect={noop} ariaLabel="Old" />,
+      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+      <TopBarActionMenu key="16" entries={[]} ariaLabel="Old" />,
+    ];
+    expect(gone).toHaveLength(16);
   });
 });
 
 describe("a required name stays required (API-1)", () => {
-  it("OptionSwitcherMenu and TopBarActionMenu take either spelling, and refuse neither", () => {
+  it("OptionSwitcherMenu and TopBarActionMenu refuse a menu with no name", () => {
     // Compile-time: `tsc --noEmit` fails if either directive below goes unused.
     const ok = [
       <OptionSwitcherMenu key="1" icon={null} options={OPTIONS} value="a" onSelect={noop} aria-label="Env" />,
-      <OptionSwitcherMenu key="2" icon={null} options={OPTIONS} value="a" onSelect={noop} ariaLabel="Env" />,
-      <TopBarActionMenu key="3" entries={[]} aria-label="Help" />,
-      <TopBarActionMenu key="4" entries={[]} ariaLabel="Help" />,
+      <TopBarActionMenu key="2" entries={[]} aria-label="Help" />,
       // @ts-expect-error — a menu with no name at all
-      <OptionSwitcherMenu key="5" icon={null} options={OPTIONS} value="a" onSelect={noop} />,
+      <OptionSwitcherMenu key="3" icon={null} options={OPTIONS} value="a" onSelect={noop} />,
       // @ts-expect-error — a menu with no name at all
-      <TopBarActionMenu key="6" entries={[]} />,
+      <TopBarActionMenu key="4" entries={[]} />,
     ];
-    expect(ok).toHaveLength(6);
+    expect(ok).toHaveLength(4);
   });
 });

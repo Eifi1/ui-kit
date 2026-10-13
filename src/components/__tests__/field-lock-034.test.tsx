@@ -279,7 +279,7 @@ describe("MoneyField under a write lock (round 0.34 C2)", () => {
   it("passes `commit` on: read-only, described, and `onCommit` never fires", async () => {
     const user = userEvent.setup();
     const onCommit = vi.fn();
-    render(locked(<MoneyField ariaLabel="Amount" currency="CHF" value={12.5} onCommit={onCommit} commit />));
+    render(locked(<MoneyField aria-label="Amount" currency="CHF" value={12.5} onCommit={onCommit} commit />));
     const input = screen.getByRole("textbox", { name: "Amount" });
     expect(input).toHaveAttribute("readonly");
     expect(input).toHaveAccessibleDescription(REASON);

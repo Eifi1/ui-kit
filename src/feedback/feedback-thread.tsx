@@ -646,7 +646,7 @@ export interface FeedbackComposerProps {
 }
 
 /**
- * What a {@link FeedbackComposer} `ref` holds.
+ * What a {@link ChatComposer} `ref` holds.
  *
  * keksdose F9: the support admin answers the same five questions all day and wants
  * chips above the box ("Thanks, fixed in the next release") that drop their text in
@@ -679,7 +679,8 @@ const isApple = () =>
  * Named for what it is since 0.22 (keksdose K17): the component was never
  * feedback-specific — a textarea, an optional picture or a host's upload slot, Send,
  * `sendOn="enter"` for the chat way — and keksdose's assistant and support chat are
- * chats, not reports. `FeedbackComposer` is its old name, deprecated in 0.34.
+ * chats, not reports. `FeedbackComposer`, its old name, was removed in 0.35 (refactor
+ * audit 2026-10, API-6d; deprecated in 0.34); its types keep theirs.
  */
 export function ChatComposer({
   onSend,
@@ -892,12 +893,6 @@ function dataAttributes(props: object): Record<string, unknown> {
   return out;
 }
 
-/**
- * @deprecated 0.34 — `ChatComposer`, the same function under the name that is not about
- * feedback; removed in 0.35 (refactor audit 2026-10, API-6d). keksdose's support thread
- * is the one app site.
- */
-export const FeedbackComposer = ChatComposer;
 /** {@link FeedbackComposerProps}, for {@link ChatComposer}. */
 export type ChatComposerProps = FeedbackComposerProps;
 /** {@link FeedbackComposerHandle}, for {@link ChatComposer}. */

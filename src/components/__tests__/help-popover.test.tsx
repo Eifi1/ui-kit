@@ -278,7 +278,7 @@ const SWEEP: Record<SweptField, (hint: ReactNode) => ReactElement> = {
   MultiEntityCombobox: (hint) => (
     <MultiEntityCombobox label="Status" value={["a"]} options={OPTIONS} onChange={noop} hint={hint} />
   ),
-  MultiSelect: (hint) => <MultiSelect label="Status" options={OPTIONS} values={[]} onChange={noop} hint={hint} />,
+  MultiSelect: (hint) => <MultiSelect label="Status" options={OPTIONS} value={[]} onChange={noop} hint={hint} />,
   Autocomplete: (hint) => <Autocomplete label="Status" value="" onChange={noop} hint={hint} />,
   DatePicker: (hint) => <DatePicker label="Status" value="2026-09-14" onChange={noop} hint={hint} />,
   DateRangePicker: (hint) => (

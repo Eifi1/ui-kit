@@ -98,13 +98,18 @@ describe("ServerWakeNotice", () => {
     expect(region.style.bottom).toBe("");
   });
 
-  it("lets a caller move it under its top bar or narrow it, and ignores the old navOffset", () => {
-    render(<ServerWakeNotice watcher={createServerWake()} navOffset={64} className="top-16 max-w-xs" />);
+  it("lets a caller move it under its top bar or narrow it", () => {
+    render(<ServerWakeNotice watcher={createServerWake()} className="top-16 max-w-xs" />);
     const region = screen.getByRole("status");
     expect(region).toHaveClass("top-16", "max-w-xs");
     expect(region.className).not.toContain("top-[calc(");
     expect(region.className).not.toContain("max-w-[24rem]");
     expect(region.style.bottom).toBe("");
+  });
+
+  it("takes no navOffset: deprecated in 0.34, when the notice moved to the top; gone in 0.35 (round 0.35 R1)", () => {
+    // @ts-expect-error — `navOffset` is gone: the notice has no bottom nav to clear.
+    void (<ServerWakeNotice navOffset={64} />);
   });
 
   it("follows the shared instance when no watcher is passed", () => {

@@ -535,7 +535,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "FormField", "FormItem", "FormLabel", "FormControl", "FormDescription", "FormMessage", "useFormField", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput", "RhfCountrySelect", "RhfMonthPicker", "RhfInlineEntityCombobox", "MoneyField", "IntegerField"],
+        components: ["Form", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput", "RhfCountrySelect", "RhfMonthPicker", "RhfInlineEntityCombobox", "MoneyField", "IntegerField"],
         Body: () => (
           <>
             <FormsRhf />
@@ -1358,7 +1358,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
-        components: ["FeedbackSubject", "FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "FeedbackComposer", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan"],
+        components: ["FeedbackSubject", "FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan"],
         Body: () => (
           <>
             <FeedbackInbox />

@@ -159,7 +159,7 @@ export function Popover({
   // A layer on the Escape stack while open (Wave 2, DUP-1): a list opened inside closes
   // first, and the dialog this popover sits in only after it — the calculator on an
   // amount field in a Modal is exactly that.
-  useDismissLayer(open, close);
+  const layer = useDismissLayer(open, close);
 
   useFocusTrap(panelRef, {
     active: open && pos !== null,
@@ -178,8 +178,10 @@ export function Popover({
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // A caller's own handler first (0.32.2: RowActions stops Enter / Space at the panel);
     // it used to be dropped, overwritten by this one. A `preventDefault()` on Escape
-    // there keeps the popover open — the owner's claim, as on the dialogs.
-    runOwnKeyDown(e, onKeyDownProp);
+    // there keeps the popover open — the owner's claim, as on the dialogs. And as there,
+    // the handler sees Escape only while this popover is the layer on top: a tooltip or a
+    // menu open over it takes that press first (round 0.35 R2, 0.34.1's rule).
+    runOwnKeyDown(e, onKeyDownProp, layer);
     // Focus is in here, the normal case: the key is handed to the top layer and STOPPED,
     // so it does not travel on up the React tree to a dialog around the popover.
     takeEscape(e);

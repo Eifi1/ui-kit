@@ -21,15 +21,13 @@ import { FOCUS_RING } from "../focus-ring";
 const del = (onCommit: () => void): SwipeAction => ({
   onCommit,
   label: "Delete",
-  className: "bg-[var(--money-neutral)]",
-  armedClassName: "bg-danger",
+  tone: "danger",
 });
 
 const restore = (onCommit: () => void): SwipeAction => ({
   onCommit,
   label: "Restore",
-  className: "bg-[var(--money-neutral)]",
-  armedClassName: "bg-[var(--money-income)]",
+  tone: "income",
 });
 
 const row = <button type="button">Monthly groceries</button>;

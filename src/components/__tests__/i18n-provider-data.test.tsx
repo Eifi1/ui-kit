@@ -176,8 +176,8 @@ describe("the calculator keypads under a provider", () => {
     expect(within(panel).getByRole("button", { name: "Plus (de)" })).toHaveTextContent("+");
   });
 
-  it("lets `ariaLabel` beat the provider's `calculator.open`", () => {
-    render(withKit(<CalculatorButton value="" onChange={() => {}} ariaLabel="Summe rechnen" />));
+  it("lets `aria-label` beat the provider's `calculator.open`", () => {
+    render(withKit(<CalculatorButton value="" onChange={() => {}} aria-label="Summe rechnen" />));
     expect(screen.getByRole("button", { name: "Summe rechnen" })).toBeInTheDocument();
   });
 

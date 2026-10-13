@@ -4,11 +4,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { AmountInput } from "../amount-input";
 import { CurrencySelect } from "../currency-select";
 import { TwoFactorSetting, type TwoFactorSettingLabels } from "../../account/account-settings";
-import {
-  DEFAULT_DATA_TABLE_LABELS,
-  missingDataTableLabels,
-  resolveDataTableLabels,
-} from "../data-table-labels";
+import { resolveDataTableLabels } from "../data-table-shared";
+import { missingKitLabels } from "../../i18n/kit-labels";
+import { DEFAULT_UI_KIT_LABELS } from "../../i18n/defaults";
 
 /**
  * The places where the kit's own "no strings" rule leaked (audit 2026-09-22,
@@ -161,63 +159,35 @@ describe("TwoFactorSetting strings", () => {
   });
 });
 
-describe("missingDataTableLabels", () => {
+// `missingDataTableLabels` left in 0.35 for `missingKitLabels`, which checks every namespace,
+// the table's among them; `resolveDataTableLabels` stayed as DataTable's own (round 0.35 R1).
+describe("the table's labels, checked with missingKitLabels", () => {
   it("names every key a caller left English", () => {
-    const missing = missingDataTableLabels({ columns: "Spalten", filter: "Filtern" });
+    const missing = missingKitLabels({ dataTable: { columns: "Spalten", filter: "Filtern" } }, DEFAULT_UI_KIT_LABELS);
 
-    expect(missing).not.toContain("columns");
-    expect(missing).not.toContain("filter");
+    expect(missing).not.toContain("dataTable.columns");
+    expect(missing).not.toContain("dataTable.filter");
     // The nineteen lenkbank ships in a German UI today are all in here; these four
     // stand for them.
-    expect(missing).toContain("selectAllRows");
-    expect(missing).toContain("pageSize");
-    expect(missing).toContain("numberAbs");
-    expect(missing).toContain("pageRange");
+    expect(missing).toContain("dataTable.selectAllRows");
+    expect(missing).toContain("dataTable.pageSize");
+    expect(missing).toContain("dataTable.numberAbs");
+    expect(missing).toContain("dataTable.pageRange");
   });
 
   it("reaches into `presets`, which is a Record and merges key by key", () => {
-    const missing = missingDataTableLabels({ presets: { today: "Heute" } });
+    const missing = missingKitLabels({ dataTable: { presets: { today: "Heute" } } }, DEFAULT_UI_KIT_LABELS);
 
-    expect(missing).not.toContain("presets.today");
-    expect(missing).toContain("presets.yesterday");
+    expect(missing).not.toContain("dataTable.presets.today");
+    expect(missing).toContain("dataTable.presets.yesterday");
     // Never the container itself: "presets" as an answer tells a reader nothing about
     // which of the eleven are English.
-    expect(missing).not.toContain("presets");
+    expect(missing).not.toContain("dataTable.presets");
   });
 
-  it("agrees with resolveDataTableLabels about what is derived", () => {
-    // `columnsCount` is built from a translated `columns` by the resolver, so
-    // reporting it as missing would send a consumer to translate a key they have
-    // already covered — the assertion an app writes on this would never go green.
-    const partial = { columns: "Spalten" };
-    expect(missingDataTableLabels(partial)).not.toContain("columnsCount");
-    expect(resolveDataTableLabels(partial).columnsCount(4, 9)).toBe("Spalten (4/9)");
-  });
-
-  it("is empty for a complete bundle and total for an empty one", () => {
-    expect(missingDataTableLabels(DEFAULT_DATA_TABLE_LABELS)).toEqual([]);
-
-    const all = missingDataTableLabels({});
-    const presetCount = Object.keys(DEFAULT_DATA_TABLE_LABELS.presets).length;
-    // Every key except `presets`, which is reported one preset at a time.
-    expect(all).toHaveLength(Object.keys(DEFAULT_DATA_TABLE_LABELS).length - 1 + presetCount);
-    expect(missingDataTableLabels()).toEqual(all);
-  });
-
-  it("only ever names keys that really do come back English", () => {
-    // The point of the helper is an assertion an app can trust, so a key it names
-    // must be one the resolver fills from the defaults — otherwise the app chases a
-    // translation it already has.
-    const partial = { columns: "Spalten", presets: { today: "Heute" } };
-    const resolved = resolveDataTableLabels(partial);
-    for (const key of missingDataTableLabels(partial)) {
-      const [head, preset] = key.split(".");
-      if (preset) {
-        expect(resolved.presets[preset]).toBe(DEFAULT_DATA_TABLE_LABELS.presets[preset]);
-      } else {
-        const k = head as keyof typeof DEFAULT_DATA_TABLE_LABELS;
-        expect(resolved[k]).toBe(DEFAULT_DATA_TABLE_LABELS[k]);
-      }
-    }
+  it("DataTable derives the count from a translated `columns`", () => {
+    // `columnsCount` is built from a translated `columns`, so an app that translated the
+    // key that existed before the count does not get "Columns (4/9)" back in English.
+    expect(resolveDataTableLabels({ columns: "Spalten" }).columnsCount(4, 9)).toBe("Spalten (4/9)");
   });
 });

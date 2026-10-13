@@ -1,13 +1,16 @@
 import type { CSSProperties, ReactNode } from "react";
 import { ROW_ACTIONS_KEY } from "./data-table-row-actions";
-import type { DataTableLabels } from "./data-table-labels";
+import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
 import type { DataTableCellProps, DataTableColumn, DataTableHeadProps } from "./data-table";
+import type { LabelOverride } from "../i18n/kit-labels";
 
 // What DataTable shares with its header (data-table-head.tsx), its column panel and its
 // phone layout (data-table-mobile.tsx): the cell-attribute and alignment rules, a
 // column's plain-text name, and the row link. Moved out of data-table.tsx unchanged
 // (refactor audit 2026-10, MOD-3), into a module of their own so none of those has to
-// import data-table.tsx at run time — which imports them.
+// import data-table.tsx at run time — which imports them. Since 0.35 also the table's
+// label resolver, which DataTable and its FilterPopover share and the barrel no longer
+// exports (round 0.35 R1).
 
 /**
  * Split a caller's cell attributes into what may reach the element and what the kit
@@ -78,6 +81,43 @@ export function cleanAttrs(
 export function columnLabel<T>(col: DataTableColumn<T>, labels?: DataTableLabels): string {
   if (col.key === ROW_ACTIONS_KEY && labels) return labels.actions;
   return col.headerText ?? (typeof col.header === "string" ? col.header : col.key);
+}
+
+/**
+ * The table's labels: caller overrides merged onto the English defaults (presets merged
+ * too, key by key, as the provider merges them — so the parameter is a
+ * {@link LabelOverride}).
+ *
+ * DataTable's own, and FilterPopover's: public until 0.35, when it left the barrel for
+ * DataTable's `labels` and the provider's `dataTable`, which it serves (round 0.35 R1,
+ * refactor audit 2026-10 API-6a). It stays a resolver rather than `useKitLabels` for the
+ * two keys it derives (`columnsCount`, `filterColumn`), which a plain merge would not.
+ *
+ * Lenient on purpose — a table with no labels at all still renders — so a translated app
+ * finds out what fell back to English from `missingKitLabels(labels,
+ * DEFAULT_UI_KIT_LABELS)` in its own test, where the answer is actionable.
+ */
+export function resolveDataTableLabels(partial?: LabelOverride<DataTableLabels>): DataTableLabels {
+  if (!partial) return DEFAULT_DATA_TABLE_LABELS;
+  // An `undefined` preset is skipped, as the provider skips it, rather than blanking one.
+  const presets = { ...DEFAULT_DATA_TABLE_LABELS.presets };
+  for (const [key, text] of Object.entries(partial.presets ?? {})) if (text !== undefined) presets[key] = text;
+  const merged: DataTableLabels = { ...DEFAULT_DATA_TABLE_LABELS, ...partial, presets };
+  // `columnsCount` was split out of `columns` + a template literal. Consumers have
+  // been translating `columns` since 0.1, and backfilling the English default over
+  // that would hand them "Columns (4/9)" back for having translated the key that
+  // existed at the time. So the count is derived from the RESOLVED `columns` unless the
+  // caller states the whole sentence, which is the escape hatch for a language where
+  // the parenthetical does not fit.
+  if (partial.columns !== undefined && partial.columnsCount === undefined) {
+    merged.columnsCount = (visible, total) => `${merged.columns} (${visible}/${total})`;
+  }
+  // The same for `filterColumn` (0.34), from a translated `filter`: the app's own word
+  // with the column, rather than English for having translated the key that existed.
+  if (partial.filter !== undefined && partial.filterColumn === undefined) {
+    merged.filterColumn = (column) => `${merged.filter}: ${column}`;
+  }
+  return merged;
 }
 
 /**

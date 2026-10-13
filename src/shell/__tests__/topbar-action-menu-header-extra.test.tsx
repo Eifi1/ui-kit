@@ -14,7 +14,7 @@ function Menu({ extra }: { extra: TopBarMenuHeader["extra"] }) {
     <MemoryRouter>
       <TopBarActionMenu
         icon={<span>A</span>}
-        ariaLabel="Account"
+        aria-label="Account"
         header={{ title: "Marcel Eifert", subtitle: "marcel@x.com", extra }}
         entries={[{ key: "logout", label: "Log out", onSelect: () => {} }]}
       />

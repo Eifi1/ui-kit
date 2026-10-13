@@ -36,9 +36,6 @@ export interface NumberInputProps {
   /** Names the field when it has no visible `label` (a table cell, a phone's display
    *  shape). */
   "aria-label"?: string;
-  /** @deprecated 0.34 — use `aria-label`; removed in 0.35 (refactor audit 2026-10, API-1).
-   *  Names the field only when `aria-label` is absent. */
-  ariaLabel?: string;
   /** Names for the calculator this field renders — its trigger, and the controls
    *  inside the popover — and for the numpad sheet it opens on a phone. Overrides
    *  for THIS field only: both resolve the `calculator` namespace of
@@ -320,8 +317,7 @@ export function NumberInput(props: NumberInputProps) {
     onChange,
     onCommit,
     label,
-    "aria-label": ariaLabelAttr,
-    ariaLabel: ariaLabelProp,
+    "aria-label": ariaLabel,
     labels,
     placeholder,
     autoFocus,
@@ -335,8 +331,6 @@ export function NumberInput(props: NumberInputProps) {
     max,
     disabledReasonDisplay,
   } = props;
-  // The DOM spelling wins; `ariaLabel` is the fallback for call sites not moved yet.
-  const ariaLabel = ariaLabelAttr ?? ariaLabelProp;
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   // The engine AmountInput shares (DUP-10): the lock (focusable, `readOnly`, nothing

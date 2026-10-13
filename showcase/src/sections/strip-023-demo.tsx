@@ -103,7 +103,7 @@ export function FieldStrip023Demo() {
           screen reader entering &ldquo;Locate me&rdquo; hears &ldquo;Location, group&rdquo; first. Its content
           starts 20px down like the swatches and the status group: the label and its &ldquo;?&rdquo; end 18px down, so
           the content&apos;s border stays clear of them. For a row of 42px fields, make the content 22px tall, as the
-          status group is (20 + 22 = 42; {code("pad")} is deprecated since 0.34, one strip for all). A text{" "}
+          status group is (20 + 22 = 42; one strip for all since 0.34, and {code("pad")} went in 0.35). A text{" "}
           {code("hint")} becomes a caption under the content, an {code("error")} a message, both describing the group.
         </Note>
       </Example>

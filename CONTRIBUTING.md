@@ -125,11 +125,11 @@ German is written once, in `german.ts`, and respelled for `de-CH`). `locales.tes
 fails on a catalogue that misses a key or prints a count another one formats.
 
 A component with more than a string or two takes one `labels` object with **every key
-optional**, merged over a `DEFAULT_*` constant by a `resolve*` helper — see
-`DEFAULT_DATA_TABLE_LABELS`/`resolveDataTableLabels` and
-`DEFAULT_CHIP_INPUT_LABELS`/`resolveChipInputLabels` for the shape to copy. Optional keys
-matter: a caller passing three of eleven must get English for the other eight, not
-`undefined` rendered into the DOM.
+optional** (a `LabelOverride`, partial at every depth), merged over a `DEFAULT_*` constant
+by `useKitLabels` — see `ChipInput` and `DEFAULT_CHIP_INPUT_LABELS` for the shape to copy.
+No public `resolve*` helper beside it: the five there were removed in 0.35 (round 0.35 R1).
+Optional keys matter: a caller passing three of eleven must get English for the other
+eight, not `undefined` rendered into the DOM.
 
 The `DEFAULT_*` constant lives in a `<component>-labels.ts` beside the component, with no
 component code (type imports only); the component imports and re-exports it. That keeps
@@ -217,7 +217,7 @@ rename costs the apps more than it returns.
 
 | Convention | Majority | Known outliers |
 |---|---|---|
-| Selected value | `value` + `onChange(value)`: 40 components | Tabs `active`; NavPills `current` / `onSelect`; TileRadioGroup `checked` / `onSelect`; GroupedPicker `selected` / `onSelect(group, item)`; MultiSelect `values` (deprecated 0.34 for `value`) |
+| Selected value | `value` + `onChange(value)`: 40 components | Tabs `active`; NavPills `current` / `onSelect`; TileRadioGroup `checked` / `onSelect`; GroupedPicker `selected` / `onSelect(group, item)` (MultiSelect's `values` went in 0.35) |
 | Change callback | Extends an `<input>`: DOM `onChange` kept, `onValueChange` added (TimeInput, IbanInput, PhoneInput, TypedConfirmField) | SearchField re-types `onChange` to a string; NumberField / IntegerField, PlanPicker and ChatComposer take `onValueChange` with no DOM `onChange` to keep |
 | Kit strings | `labels`: 146 components | ~30 take single-string chrome props: `closeLabel` (Combobox, DialogFrame, FullBleedDialog, PickerSheet, FloatingPanel, the entity comboboxes), `clearLabel`, `todayLabel`, `dismissLabel`, `collapseLabel` / `expandLabel` (AppShell), `removeLabel` (Chip), `toggleLabel` (TreeRow) |
 | `label` | The visible label, a `ReactNode` (Combobox, InlineEntityCombobox and ChipInput since 0.34) | `label` is the accessible name on ScrollArea and QrCode |

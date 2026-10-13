@@ -22,7 +22,7 @@ function Harness(props: {
   return (
     <>
       <AmountInput
-        ariaLabel="Amount"
+        aria-label="Amount"
         value={value}
         onChange={setValue}
         {...(negativeInit === undefined ? {} : { negative, onNegativeChange: setNegative })}

@@ -20,11 +20,9 @@ export * from "./components/treemap";
 export * from "./components/series-chart";
 // 0.32.1 (keksdose's 0.32 report): the height every chart takes, for an app's wrappers.
 export type { ChartHeight } from "./components/chart-height";
+// SharedXZoom and the zoom's types: the public face of ./chart-zoom-core, whose arithmetic
+// stays the kit's (refactor audit 2026-10, API-6b; off the surface in 0.35).
 export * from "./components/chart-zoom";
-// The zoom's own module since 0.34: SharedXZoom and the drag layer (recharts) live here,
-// ./chart-zoom is their public face. Named, so the arithmetic it also holds stays the
-// kit's (refactor audit 2026-10, API-6b) — the same binding the line above re-exports.
-export { SharedXZoom } from "./components/chart-zoom-core";
 export * from "./components/toggle-legend";
 export * from "./components/facing-pair";
 export * from "./components/series-chart-labels";

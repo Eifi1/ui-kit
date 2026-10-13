@@ -14,7 +14,7 @@ const noop = vi.fn();
 describe("AmountInput inputClassName", () => {
   it("lands on the <input>, and className stays on the wrapper", () => {
     const { container } = render(
-      <AmountInput ariaLabel="Gross" value="12.50" onChange={noop} className="max-w-40" inputClassName="text-end" calculator={false} />,
+      <AmountInput aria-label="Gross" value="12.50" onChange={noop} className="max-w-40" inputClassName="text-end" calculator={false} />,
     );
     const input = screen.getByRole("textbox", { name: "Gross" });
     expect(input).toHaveClass("text-end");
@@ -26,7 +26,7 @@ describe("AmountInput inputClassName", () => {
   it("restyles the base, but cannot take the trailing controls' room or the invalid border", () => {
     render(
       <AmountInput
-        ariaLabel="Gross"
+        aria-label="Gross"
         value="1"
         onChange={noop}
         currency="CHF"
@@ -56,7 +56,7 @@ describe("AmountInput inputClassName", () => {
  */
 describe("AmountInput inputClassName wins over the field's own looks (0.24)", () => {
   it("a symmetric px-2 when nothing trails — the budget's assigned cell", () => {
-    render(<AmountInput ariaLabel="Assigned" value="1" onChange={noop} calculator={false} inputClassName="px-2 py-1 text-end" />);
+    render(<AmountInput aria-label="Assigned" value="1" onChange={noop} calculator={false} inputClassName="px-2 py-1 text-end" />);
     const input = screen.getByRole("textbox", { name: "Assigned" });
     expect(input).toHaveClass("px-2", "py-1", "text-end");
     // Not `px-2 pe-3`, which left the end edge wider than the start.
@@ -67,7 +67,7 @@ describe("AmountInput inputClassName wins over the field's own looks (0.24)", ()
   it.each(["outflow", "inflow"] as const)("text-transparent over the %s tone — a price being re-fetched", (tone) => {
     render(
       <AmountInput
-        ariaLabel="Price"
+        aria-label="Price"
         value="12.5"
         onChange={noop}
         currency="CHF"
@@ -81,12 +81,12 @@ describe("AmountInput inputClassName wins over the field's own looks (0.24)", ()
   });
 
   it("the tone still paints when the caller sets no colour", () => {
-    render(<AmountInput ariaLabel="Spent" value="12.5" onChange={noop} tone="outflow" inputClassName="text-end" />);
+    render(<AmountInput aria-label="Spent" value="12.5" onChange={noop} tone="outflow" inputClassName="text-end" />);
     expect(screen.getByRole("textbox", { name: "Spent" })).toHaveClass("text-money-neg", "text-end");
   });
 
   it("the calculator's room is still applied after a caller's px-2, with no currency too", () => {
-    render(<AmountInput ariaLabel="Gross" value="1" onChange={noop} inputClassName="px-2" />);
+    render(<AmountInput aria-label="Gross" value="1" onChange={noop} inputClassName="px-2" />);
     const input = screen.getByRole("textbox", { name: "Gross" });
     expect(input).toHaveClass("px-2");
     expect(input.className).toMatch(/\bpe-10\b/);
@@ -95,7 +95,7 @@ describe("AmountInput inputClassName wins over the field's own looks (0.24)", ()
 
 describe("MoneyField inputClassName", () => {
   it("passes it through to the <input>", () => {
-    render(<MoneyField ariaLabel="VAT" value={7.7} onCommit={noop} inputClassName="text-end tabular-nums" />);
+    render(<MoneyField aria-label="VAT" value={7.7} onCommit={noop} inputClassName="text-end tabular-nums" />);
     const input = screen.getByRole("textbox", { name: "VAT" });
     expect(input).toHaveClass("text-end");
     expect(input).toHaveClass("tabular-nums");
@@ -127,7 +127,7 @@ describe("AmountInput reserves its trailing controls' measured width (0.34)", ()
       },
     );
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ width: 61.2 } as DOMRect);
-    render(<AmountInput ariaLabel="Gross" value="1" onChange={noop} currency="CHF" onCurrencyChange={noop} />);
+    render(<AmountInput aria-label="Gross" value="1" onChange={noop} currency="CHF" onCurrencyChange={noop} />);
     // ceil(61.2) = 62, the track's `end-1` (4px) and the 4px gap NumberInput keeps.
     expect(screen.getByRole("textbox", { name: "Gross" }).style.paddingInlineEnd).toBe("70px");
   });
