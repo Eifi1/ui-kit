@@ -79,6 +79,7 @@ export type {
   ReviewStatus,
   TranslationRow,
   ApiTranslationReview,
+  ApiTranslationReviewsResponse,
   ApiTranslationReviewWrite,
   TranslationRowsInput,
   TranslationSummary,
