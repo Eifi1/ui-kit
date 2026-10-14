@@ -21,6 +21,16 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.38.1](https://github.com/Eifi1/ui-kit/compare/v0.38.0...v0.38.1) (2026-10-14)
+
+The apps' 0.38 adoption findings, released as one batch once all three had reported (server-kit
+0.11.1 beside it). The steps per app are `docs/adopt-0.38.md` §5. Nothing is removed.
+
+### Fixed
+
+* **feedback:** FeedbackRecord's public fields take a server's `null` ([8e24cfa](https://github.com/Eifi1/ui-kit/commit/8e24cfa12e204e67b5f7571beddef64d51c8a9ad))
+* **feedback:** Kurvenschmiede's 0.38 findings — Hide's catch, a pager, openRow, toast words ([8ab58d0](https://github.com/Eifi1/ui-kit/commit/8ab58d0ff452c0df87916dcf759013c92ac9d626))
+
 ## [0.38.0](https://github.com/Eifi1/ui-kit/compare/v0.37.0...v0.38.0) (2026-10-14)
 
 Round 0.38: Marcel's public feedback, settled as feedback §9 after the three apps' reviews —
