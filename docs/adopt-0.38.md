@@ -57,6 +57,14 @@ kastlan the public part off, replies only. The contract (feedback §9.16) is the
 - **The repository's `add` maps `NewFeedback.public`.** Don't name a mapped relationship
   `replies`, `votes` or `mine` on the feedback model: the kit's views read attributes.
 - **A PATCH with `public`** is a 422 where the app has no `public_viewer` (kastlan).
+- **An adapter that commits** (a commit flag, as kastlan's feedback repository): the reply store
+  needs one too. A reply without a status change is the request's only write, so the
+  repository's commit never runs and the reply is lost; send `feedback_answered` after the
+  store's commit (kastlan's `SqlAlchemyFeedbackReplyStore(commit=)`).
+- **`onReply` passes the kit's `FeedbackStatus`** (a string union): an app with its own status
+  enum types its reply call with the kit's (kastlan).
+- **Public off** (kastlan): the replies table only — no `feedback.public`, votes or comments;
+  `add` may ignore `NewFeedback.public`, and `get_public` / `public_page` are never called.
 - **The migration** (§9.12): the replies, comments and votes tables; `feedback.public`
   (true on every existing report but crash reports, and those same rows marked
   `filed_private`, as feedback §9.2 decision 6 says; the notice goes only to authors other than
@@ -94,7 +102,9 @@ kastlan the public part off, replies only. The contract (feedback §9.16) is the
   copying `company_id` from the report (under the bypass); update CLAUDE.md's "Processing
   feedback" and `scripts/feedback-prod-migrate.sql`. A loop reply sends no notice yet.
 - `feedback_answered` e-mail only (`app=None`), on by default; `feedback_comment` not
-  declared.
+  declared. **The card is no longer staff only:** `feedback_answered` is receivable by every
+  non-demo account (a tenant's own report), so `receivable_types` is per type and the
+  catalogue draws what GET answers.
 - Frontend: `FeedbackRowDetail` `onReply` only; no menu entry, no notice, no public pages.
 
 ### Kurvenschmiede
