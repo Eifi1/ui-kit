@@ -277,6 +277,16 @@ account is sent nothing) hold as they are.
     of kastlan's own that redoes the offline caching, which is more than wiring the
     kit's parts. Meanwhile kastlan fixes its poller (§5.2).
 
+**Round 0.38 note (settled 2026-10-14).** Public feedback adds two types that more than
+one app declares, so their ids (server-kit `FEEDBACK_ANSWERED`, `FEEDBACK_COMMENT`) and
+their setting words (ui-kit `useFeedbackNotificationTypes`) move into the kit, by
+decision 1's rule: `feedback_answered` (a reply) and `feedback_comment` (a comment), to
+the author and the earlier commenters, never the writer, both on (they answer the
+person's own report or comment) and quiet, no content in mail or push. It also adds a
+fourth `AccountNoticeKind`, `feedback_published`: the one notice to authors of existing
+reports that became public. Details: [feedback-harmonization.md](feedback-harmonization.md)
+§9 (9.11, 9.12).
+
 ## 3. The shapes
 
 ### 3.1 A type
@@ -847,6 +857,15 @@ passing its actor; the tables and migrations (the switches, the settings row wit
 `/unsubscribe` page in the public paths; the inbox UI.
 
 ## 5. Per app
+
+**Round 0.38 (feedback §9.11, §9.16):** keksdose declares `feedback_answered` and
+`feedback_comment` on `app` (inbox + push), and its jobs runner sends `feedback_answered`
+for the loop's replies (`notified_at IS NULL`). kastlan declares `feedback_answered` by
+e-mail only (`app=None`: its poller carries company counts, not a person's event) and no
+`feedback_comment` while its public parts are off. Kurvenschmiede moves
+`feedback_answered` from "the status crosses into an answered one" to "a reply" and adds
+`feedback_comment`, both by e-mail. keksdose and Kurvenschmiede send the
+`feedback_published` notice once.
 
 ### 5.1 keksdose (canon: mostly names)
 

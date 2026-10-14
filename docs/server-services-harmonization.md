@@ -22,6 +22,7 @@ not blank, comments or docstrings.
 |---|---|---|
 | 1–5 | The feedback service, its router and the erasure | Settled 2026-10-13, built in server-kit 0.9.0 |
 | 6 | The translation review: a store port, the reviewer view carrying the grant, the router | Settled 2026-10-14, built for server-kit 0.10.0 / ui-kit 0.37.0 (round 0.37) |
+| 4.5 | Public feedback: the reply, comment and vote stores, the public routes (feedback §9) | Settled 2026-10-14, for server-kit 0.11 (round 0.38) |
 
 **§1–§5.** The three apps reviewed the draft on 2026-10-13 and Marcel decided what they
 left open ("As recommended", §2). The reviews' corrections are folded into §1–§4, and §5
@@ -961,6 +962,24 @@ wiring, the three conformance checks (2.14) and its own variations (1.1).
    `save(session, row, actor=first_admin)` (2.16).
 9. What changes: the throttle's sentence (kk's), and the `list_mine` operation id becomes
    `list_my`, which no KS client reads.
+
+### 4.5 Amendment for server-kit 0.11 (round 0.38, settled 2026-10-14)
+
+Public feedback grows the feedback service; the details and the build list are in
+[feedback-harmonization.md](feedback-harmonization.md) §9 (9.14). In short, all additive:
+- **Ports:** `FeedbackActor.role`, `NewFeedback.public`; new `PublicFeedbackRow`,
+  `PublicFeedbackRepository`, `FeedbackReplyStore`, `FeedbackCommentStore`,
+  `FeedbackVoteStore`, `PeopleLookup`. `AttachmentStorage.read`'s docs state the files
+  predicate: the uploader, the author of a report naming the file, an admin; never
+  "anyone who sees the report" (feedback 9.10).
+- **Service:** new flows (`reply`, `list_public`, `get_public`, the comment and vote
+  flows); 2.7's one write per request becomes **one write per store, the report last**;
+  `erase_author` also scrubs comments, deletes votes and un-names replies (2.15).
+- **Router:** `FeedbackDeps` gains the stores, `public_viewer` (the app's predicate on
+  the viewer; `None` mounts no public route; a demo never passes) and `public_search`;
+  nine routes (`create_reply`, `list_public`, `get_public`, `list_comments`,
+  `create_comment`, `hide_comment`, `delete_comment`, `vote`, `unvote`), the app's guards
+  first as in 2.8.
 
 ## 5. Settled after the reviews (2026-10-13)
 
