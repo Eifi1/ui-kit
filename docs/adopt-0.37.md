@@ -71,6 +71,9 @@ kastlan's; `work_transferred` is Kurvenschmiede's.
 ## 2. Breaking and must-change, every app
 
 - **Nothing is removed** in either kit.
+- **A test that holds an app's copy of a kit model to the kit's** (as sets of fields) fails
+  on the bump alone: `TranslationReviewOut` gains `reviewer_first_name` / `reviewer_last_name`
+  (Kurvenschmiede's `tests/unit/test_review_and_session_schemas.py`; the copy goes in §3).
 - **The four translation-review request bodies forbid unknown fields** (decision T5): a
   misspelt `suggestion` is a 422, not dropped. No app's page or test sends one (checked);
   Kurvenschmiede's own forbid models go.
