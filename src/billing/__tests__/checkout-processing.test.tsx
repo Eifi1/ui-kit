@@ -41,6 +41,26 @@ describe("checkoutFingerprint and checkoutLanded (§14.4 rule 1)", () => {
     expect(checkoutLanded(null, PAID)).toBe(true);
   });
 
+  it("sees a plan switch under a grant land, though plan, status and source stay (0.39, §15.2.10)", () => {
+    // A beta payer who bought Pro monthly switches to yearly: the grant keeps its row's
+    // plan, status, source and end; only what the payer pays moves.
+    const paying = { ...BETA_BOUGHT, paid: { plan: "pro", interval: "month" as const } };
+    const before = checkoutFingerprint(paying);
+    expect(checkoutLanded(before, paying)).toBe(false);
+    expect(checkoutLanded(before, { ...paying, paid: { plan: "pro", interval: "year" } })).toBe(true);
+    expect(checkoutLanded(before, { ...paying, paid: { plan: "business", interval: "month" } })).toBe(true);
+    // And an active payer's switch, which keeps `active`.
+    const active = { ...PAID, paid: { plan: "pro", interval: "year" as const } };
+    expect(checkoutLanded(checkoutFingerprint(active), { ...active, plan: "business", paid: { plan: "business", interval: "year" } })).toBe(true);
+  });
+
+  it("reads no paid price, null or left out, as the same, and its plan without case", () => {
+    expect(checkoutFingerprint({ ...PAID, paid: null })).toBe(checkoutFingerprint(PAID));
+    expect(checkoutFingerprint({ ...PAID, paid: { plan: "PRO", interval: "year" } })).toBe(
+      checkoutFingerprint({ ...PAID, paid: { plan: "pro", interval: "year" } }),
+    );
+  });
+
   it("reads the plan without case and the period's end as an instant", () => {
     expect(checkoutFingerprint({ ...PAID, plan: "PRO", current_period_end: "2026-11-09T00:00:00+00:00" })).toBe(
       checkoutFingerprint(PAID),

@@ -1749,6 +1749,14 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Der Bezahlvorgang konnte nicht geöffnet werden. Bitte kehren Sie zurück und versuchen Sie es gleich noch einmal.",
       payBack:
         "Der Bezahlvorgang wurde geschlossen. Sie können zurückkehren oder diese Seite neu laden, um ihn wieder zu öffnen.",
+      payDone: "Zahlung abgeschlossen. Sie können diese Seite schließen.",
+      // 0.39 (§15.2.10): PlanSwitchConfirm.
+      switchTitle: "Tarif ändern",
+      switchFromTo: (from, to) => `Von ${from} zu ${to}`,
+      switchChargedNow: "Jetzt belastet",
+      switchCredited: "Gutschrift auf die nächsten Belastungen",
+      switchNextCharge: (date) => `Nächste Belastung am ${date}`,
+      switchConfirm: "Tarif ändern",
       waitingChanges: (count) =>
         count === 1
           ? `${n(count)} Änderung wartet auf einen Tarif`
@@ -1760,9 +1768,13 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // §14.2: server-kit 0.7's refusals. "Zahlung und Rechnungen", as `manage`.
       providerUnavailable:
         "Der Zahlungsanbieter ist gerade nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.",
-      alreadySubscribed: "Sie haben bereits ein Abonnement. Ihren Tarif ändern Sie unter „Zahlung und Rechnungen“.",
+      alreadySubscribed: "Sie haben bereits ein Abonnement. Ändern Sie Ihren Tarif oben.",
       planNotSold:
         "Dieser Tarif ist für diesen Abrechnungszeitraum oder diese Währung nicht erhältlich. Bitte wählen Sie einen anderen.",
+      // 0.39 (§15.2.10): the plan switch's refusals.
+      notSubscribed:
+        "Es läuft kein Abonnement, das sich ändern ließe. Wählen Sie einen Tarif, um eines abzuschließen.",
+      planUnchanged: "Das ist bereits Ihr Tarif. Wählen Sie einen anderen Tarif oder Abrechnungszeitraum.",
     },
     // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "Tarif" as
     // in `billing`; keksdose's reviewed admin wording where it had one.

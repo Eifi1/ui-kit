@@ -3,6 +3,7 @@ import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useSyn
 import { toDate } from "../lib/format";
 import type { DateInput } from "../lib/format";
 import { readStored, removeStored, writeStored } from "../lib/safe-storage";
+import type { PaidPrice } from "./billing-overview";
 import type { BillingStanding } from "./billing-standing";
 
 /**
@@ -43,6 +44,9 @@ export type CheckoutOverview = Pick<BillingStanding, "status" | "in_good_standin
   plan: string;
   source: string;
   current_period_end?: DateInput;
+  /** 0.39 (§15.2.10): what the payer pays — a plan switch moves only this under a grant,
+   *  and keeps `active` without one. Left out or null: nothing paid. */
+  paid?: Pick<PaidPrice, "plan" | "interval"> | null;
 };
 
 /** How long a return keeps the page in "processing" before it trusts the overview. */
@@ -53,9 +57,12 @@ const POLL_EVERY = 4_000;
 const STORAGE_KEY = "eifi1-billing-checkout";
 
 /**
- * What of the overview a completed checkout changes, as one string: the plan (read
- * without case, §12.16), the status, the source, the standing and the period's end (read
- * as an instant, so `…Z` and `…+00:00` agree).
+ * What of the overview a completed checkout — or plan switch — changes, as one string:
+ * the plan (read without case, §12.16), the status, the source, the standing, the
+ * period's end (read as an instant, so `…Z` and `…+00:00` agree) and, since 0.39, the
+ * paid plan and period (`paid`, §15.2.10). A switch keeps `active`, and under a grant
+ * the plan too, so only `paid` shows it landed: one storage key serves the checkout and
+ * the switch.
  */
 export function checkoutFingerprint(o: CheckoutOverview): string {
   const end = toDate(o.current_period_end ?? null);
@@ -65,6 +72,8 @@ export function checkoutFingerprint(o: CheckoutOverview): string {
     o.source,
     String(o.in_good_standing),
     end ? end.toISOString() : "",
+    String(o.paid?.plan ?? "").toLowerCase(),
+    o.paid?.interval ?? "",
   ].join("|");
 }
 
@@ -247,6 +256,11 @@ function claimReturn(store: CheckoutStore): boolean {
  * `payer` is the user's or the company's id: a mark never speaks for another payer.
  * `overview` is what the page shows now; left out, the return waits for `active`. Pass
  * the same `storageKey` as the hook's.
+ *
+ * A plan switch (0.39, §15.2.10) is waited for the same way, under the same key: note
+ * the departure before `POST /billing/plan`, and once it answers put the return marker
+ * on the page's URL yourself (`checkoutReturnUrl`'s `?checkout=done`) — the row follows
+ * by webhook, and the fingerprint's `paid` shows it landed.
  */
 export function noteCheckoutStarted(
   payer: string | number,

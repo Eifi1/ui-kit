@@ -1,24 +1,35 @@
+import { checkoutReturnUrl } from "../src/billing/checkout-return";
 import {
   PAY_PAGE_LANG_PARAM,
   PAY_PAGE_TRANSACTION_PARAM,
   paddleLocale,
+  payPageAppFor,
   payPageConfigProblems,
   payPageLanguage,
-  paySuccessUrl,
 } from "../src/billing/pay-page";
-import type { PayPageConfig, PayPageLanguage, PayPageStrings } from "../src/billing/pay-page";
+import type { PayPageApp, PayPageConfig, PayPageLanguage, PayPageStrings } from "../src/billing/pay-page";
 
 /**
  * The pay page's one script (docs/billing-harmonization.md §14.4): `dist/pay/pay.js`,
  * served by each app on `pay.<app domain>` beside Paddle.js and nothing else.
  *
  * It reads `pay-config.json` from its own origin, then hands Paddle.js the token, the
- * environment and the checkout's settings — the overlay, the buyer's locale, the way
- * back (`?checkout=done` on the app's subscription page) and the theme — and Paddle.js
- * opens the transaction that `_ptxn` names by itself. Its own four lines say what is
- * happening around that, in the kit's seven languages: opening, nothing to pay, failed,
- * closed. It writes nothing to storage and sends nothing to the app's server: the only
- * requests are the configuration file and Paddle's.
+ * environment and the checkout's settings — the overlay, the buyer's locale and the
+ * theme — and Paddle.js opens the transaction that `_ptxn` names by itself.
+ *
+ * Any app's transaction (§15.2.5, 0.39): the page shows the host's own app until the
+ * checkout loads; `checkout.loaded` carries the transaction's `custom_data.app`, and the
+ * page frames THAT app from the configuration's map — its name, Terms, Privacy and way
+ * back. `checkout.completed` goes to its `checkoutReturnUrl(returnUrl)` (Paddle.js gets
+ * no `successUrl`, which would be the host's). A transaction that names no app the map
+ * knows — a payment-method update from Paddle's e-mail — gets no name and no Back, keeps
+ * the host's Terms and Privacy, and once paid says `payDone`. A return URL only ever
+ * comes from the map.
+ *
+ * Its own five lines say what is happening around that, in the kit's seven languages:
+ * opening, nothing to pay, failed, closed, done. It writes nothing to storage and sends
+ * nothing to the app's server: the only requests are the configuration file and
+ * Paddle's.
  *
  * No React and no app code: this file, `src/billing/pay-page.ts` and
  * `src/billing/checkout-return.ts` are the whole bundle; the words are built in from the
@@ -31,9 +42,11 @@ export interface PaddleJs {
   Initialize(options: PaddleInitializeOptions): void;
 }
 
-/** One of Paddle.js's events: `checkout.loaded`, `checkout.closed`, `checkout.completed`… */
+/** One of Paddle.js's events: `checkout.loaded`, `checkout.closed`, `checkout.completed`…
+ *  — with the checkout's data, whose `custom_data` is the transaction's (§14.3: `app`). */
 export interface PaddleEvent {
   name?: string;
+  data?: { custom_data?: Record<string, unknown> | null } | null;
 }
 
 export interface PaddleInitializeOptions {
@@ -43,7 +56,6 @@ export interface PaddleInitializeOptions {
     settings: {
       displayMode: "overlay";
       locale: string;
-      successUrl: string;
       theme: "light" | "dark";
     };
   };
@@ -65,11 +77,14 @@ export interface PayPageEnvironment {
   dark: boolean;
   /** The page's words, per language. */
   strings: Readonly<Record<PayPageLanguage, PayPageStrings>>;
+  /** Leaves for the app once paid — `window.location.assign`. */
+  navigate: (url: string) => void;
 }
 
-/** Where the page is: the checkout opening (or open), nothing to pay, a failure, or the
- *  checkout closed by the buyer. Carried as `data-state` on `<main>`. */
-export type PayPageState = "opening" | "nothing" | "failed" | "closed";
+/** Where the page is: the checkout opening (or open), nothing to pay, a failure, the
+ *  checkout closed by the buyer, or paid for a transaction that names no app (0.39).
+ *  Carried as `data-state` on `<main>`. */
+export type PayPageState = "opening" | "nothing" | "failed" | "closed" | "done";
 
 /** The page's elements (index.html's ids). */
 interface View {
@@ -115,14 +130,25 @@ function link(anchor: HTMLAnchorElement | null, text: string, href: string): voi
 
 /** The way back and the footer — the app's name and its Terms and Privacy, which
  *  Paddle's domain review wants easy to find. */
-function frame(view: View, words: PayPageStrings, config: PayPageConfig, doc: Document): void {
-  link(view.back, words.back, config.returnUrl);
-  if (view.app) view.app.textContent = config.appName;
+function frame(view: View, words: PayPageStrings, app: PayPageApp, doc: Document): void {
+  link(view.back, words.back, app.returnUrl);
+  if (view.app) view.app.textContent = app.name;
   view.legal?.setAttribute("aria-label", words.legal);
-  link(view.terms, words.terms, config.termsUrl);
-  link(view.privacy, words.privacy, config.privacyUrl);
+  link(view.terms, words.terms, app.termsUrl);
+  link(view.privacy, words.privacy, app.privacyUrl);
   if (view.footer) view.footer.hidden = false;
-  doc.title = config.appName;
+  doc.title = app.name;
+}
+
+/** A transaction that names no app the page knows: no name and no way back; the host's
+ *  Terms and Privacy stay. */
+function unframe(view: View, doc: Document, title: string): void {
+  if (view.back) {
+    view.back.hidden = true;
+    view.back.removeAttribute("href");
+  }
+  if (view.app) view.app.textContent = "";
+  doc.title = title;
 }
 
 /**
@@ -136,6 +162,7 @@ export async function startPayPage(env: PayPageEnvironment): Promise<PayPageStat
   const words = env.strings[language] ?? env.strings.en;
   const doc = env.document;
   doc.documentElement.lang = language;
+  const untitled = doc.title;
   const view = viewOf(doc);
   show(view, words, "opening");
 
@@ -151,7 +178,8 @@ export async function startPayPage(env: PayPageEnvironment): Promise<PayPageStat
     return show(view, words, "failed");
   }
   const config = raw as PayPageConfig;
-  frame(view, words, config, doc);
+  const host = config.apps[config.app];
+  frame(view, words, host, doc);
 
   const transaction = params.get(PAY_PAGE_TRANSACTION_PARAM);
   if (!config.token || !transaction) return show(view, words, "nothing");
@@ -160,17 +188,38 @@ export async function startPayPage(env: PayPageEnvironment): Promise<PayPageStat
   if (!paddle) return show(view, words, "failed");
   try {
     if (config.environment === "sandbox") paddle.Environment.set("sandbox");
+    // The app the transaction is for: the host's until the checkout says (§15.2.5).
+    let app: PayPageApp | undefined = host;
+    let paid = false;
+    /** The event's app, when it carries the transaction's data; else the one known. */
+    const appOf = (event: PaddleEvent): PayPageApp | undefined =>
+      event.data && typeof event.data === "object" ? payPageAppFor(config, event.data.custom_data?.app) : app;
     paddle.Initialize({
       token: config.token,
       eventCallback: (event) => {
-        if (event?.name === "checkout.closed") show(view, words, "closed");
+        if (paid) return;
+        if (event?.name === "checkout.loaded") {
+          app = appOf(event);
+          if (app) frame(view, words, app, doc);
+          else unframe(view, doc, untitled);
+        } else if (event?.name === "checkout.completed") {
+          paid = true;
+          app = appOf(event);
+          if (app) env.navigate(checkoutReturnUrl(app.returnUrl));
+          else {
+            unframe(view, doc, untitled);
+            show(view, words, "done");
+          }
+        } else if (event?.name === "checkout.closed") {
+          show(view, words, "closed");
+        }
       },
-      // Paddle.js opens the transaction `_ptxn` names with these settings by itself.
+      // Paddle.js opens the transaction `_ptxn` names with these settings by itself. No
+      // `successUrl`: the way back is the transaction's app's, known once it loads.
       checkout: {
         settings: {
           displayMode: "overlay",
           locale: paddleLocale(language),
-          successUrl: paySuccessUrl(config),
           theme: env.dark ? "dark" : "light",
         },
       },

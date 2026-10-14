@@ -556,14 +556,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1967 names from 320 modules** — 910 values and 1057 types. _Italic_ is a type-only export.
+**1975 names from 321 modules** — 912 values and 1063 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1967 |
+| `@eifi1/ui-kit` | 1975 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 77 |
 | `@eifi1/ui-kit/data-table` | 51 |
@@ -960,9 +960,10 @@ re-slicing of it, never a second API.
 | `billing/subscription-actions` | `SubscriptionActions`, _`SubscriptionActionsProps`_ |
 | `billing/checkout-return` | `CHECKOUT_RETURN_PARAM`, `CHECKOUT_RETURN_VALUE`, `checkoutReturnUrl`, `isCheckoutReturn`, `withoutCheckoutReturn` |
 | `billing/checkout-processing` | `checkoutFingerprint`, `checkoutLanded`, `noteCheckoutStarted`, `useCheckoutProcessing`, _`CheckoutOverview`_, _`CheckoutProcessingOptions`_ |
-| `billing/pay-page` | `paddleLocale`, `PAY_PAGE_LANG_PARAM`, `payPageUrl`, _`PaddleEnvironment`_ |
-| `billing/billing-overview` | _`BillingOverview`_, _`PortalRequest`_, _`PortalTarget`_, _`SubscriptionSource`_ |
+| `billing/pay-page` | `paddleLocale`, `PAY_PAGE_APPS`, `PAY_PAGE_LANG_PARAM`, `payPageUrl`, _`PaddleEnvironment`_, _`PayPageApp`_ |
+| `billing/billing-overview` | _`BillingOverview`_, _`PaidPrice`_, _`PlanSwitchPreview`_, _`PlanSwitchRequest`_, _`PortalRequest`_, _`PortalTarget`_, _`SubscriptionSource`_ |
 | `billing/plan-limit-toast` | `usePlanLimitToast`, _`PlanLimitToastOptions`_ |
+| `billing/plan-switch` | `PlanSwitchConfirm`, _`PlanSwitchConfirmProps`_, _`PlanSwitchSide`_ |
 
 ### notifications
 

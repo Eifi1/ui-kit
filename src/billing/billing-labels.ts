@@ -164,6 +164,25 @@ export interface BillingLabels {
   payFailed: string;
   /** The buyer closed the checkout without paying. */
   payBack: string;
+  /** 0.39 (§15.2.5): paid, for a transaction that names no app the page knows (a
+   *  payment-method update from Paddle's e-mail) — no way back to offer. */
+  payDone: string;
+
+  /* ── PlanSwitchConfirm (0.39, §15.2.10) ── */
+  /** The dialog's title: "Change plan". */
+  switchTitle: string;
+  /** The line naming both plans, each with its billing period: "From Pro (Monthly) to
+   *  Business (Yearly)". */
+  switchFromTo: (from: string, to: string) => string;
+  /** What an upgrade charges at once (Paddle's preview, prorated): "Charged now". */
+  switchChargedNow: string;
+  /** What a downgrade credits — the customer's balance, which Paddle takes off the next
+   *  charges: "Credited towards your next charges". */
+  switchCredited: string;
+  /** The next regular charge; `date` is formatted: "Next charge on 9 Nov 2026". */
+  switchNextCharge: (date: string) => string;
+  /** The confirm button: "Change plan". */
+  switchConfirm: string;
 
   /* ── Offline (§12.5) ── */
   /** Changes refused as `billing_read_only` inside a sync reply, kept queued and sent
@@ -189,11 +208,17 @@ export interface BillingLabels {
   /** `billing_provider_unavailable` (502): the provider didn't answer. Try again. */
   providerUnavailable: string;
   /** `billing_already_subscribed` (409): a second checkout while a subscription runs
-   *  (§14.6) — plan changes go through the portal. */
+   *  (§14.6). Since 0.39 plan changes go through the app's own switch (§15.2.10), not the
+   *  portal, and the words say so. */
   alreadySubscribed: string;
   /** `billing_plan_not_sold` (422): the catalogue doesn't sell this plan with that
-   *  period or currency. */
+   *  period or currency — at a checkout, or (0.39) a switch to a plan no longer sold. */
   planNotSold: string;
+  /** 0.39 (§15.2.10): `billing_not_subscribed` (409), a plan switch with no running
+   *  provider subscription — the page offers the checkout instead. */
+  notSubscribed: string;
+  /** 0.39: `billing_plan_unchanged` (409), a switch to the price the payer pays now. */
+  planUnchanged: string;
 }
 
 /** "today", "tomorrow", "in 5 days". */
@@ -266,6 +291,14 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
   payNothing: "There’s no payment to make here. To choose a plan, go back to the app.",
   payFailed: "The checkout couldn’t be opened. Please go back and try again in a moment.",
   payBack: "The checkout was closed. You can go back, or reload this page to open it again.",
+  payDone: "Payment complete. You can close this page.",
+
+  switchTitle: "Change plan",
+  switchFromTo: (from, to) => `From ${from} to ${to}`,
+  switchChargedNow: "Charged now",
+  switchCredited: "Credited towards your next charges",
+  switchNextCharge: (date) => `Next charge on ${date}`,
+  switchConfirm: "Change plan",
 
   waitingChanges: (count) =>
     count === 1 ? "1 change waiting for a plan" : `${count} changes waiting for a plan`,
@@ -274,8 +307,10 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
   notConfigured: "Payments aren't set up yet. Please try again later.",
   disabled: "Subscriptions aren't available here.",
   providerUnavailable: "The payment provider can’t be reached right now. Please try again in a moment.",
-  alreadySubscribed: "You already have a subscription. To change your plan, go to “Payment and invoices”.",
+  alreadySubscribed: "You already have a subscription. Change your plan above.",
   planNotSold: "This plan isn’t offered for that billing period or currency. Please choose another.",
+  notSubscribed: "There’s no running subscription to change. Choose a plan to subscribe.",
+  planUnchanged: "That’s already your plan. Pick another plan or billing period.",
 };
 
 /** The `billing` namespace, resolved: English, then the provider, then `labels` — which

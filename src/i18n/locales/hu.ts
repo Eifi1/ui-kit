@@ -1702,6 +1702,14 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       payNothing: "Itt nincs mit kifizetni. Csomag választásához térjen vissza az alkalmazásba.",
       payFailed: "A fizetést nem sikerült megnyitni. Kérjük, lépjen vissza, és próbálja újra egy kis idő múlva.",
       payBack: "A fizetés bezárult. Visszaléphet, vagy a megnyitásához töltse újra ezt az oldalt.",
+      payDone: "A fizetés sikerült. Bezárhatja ezt az oldalt.",
+      // 0.39 (§15.2.10): PlanSwitchConfirm.
+      switchTitle: "Csomag módosítása",
+      switchFromTo: (from, to) => `${from} helyett ${to}`,
+      switchChargedNow: "Most terhelt összeg",
+      switchCredited: "A következő terhelésekből levonva",
+      switchNextCharge: (date) => `Következő terhelés: ${date}`,
+      switchConfirm: "Csomag módosítása",
       // No plural after a numeral (convention 2).
       waitingChanges: (count) => `${n(count)} módosítás csomagra vár`,
       // "Elvetés", as `wizard.cancelConfirmLabel`.
@@ -1710,9 +1718,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       disabled: "Az előfizetés itt nem érhető el.",
       // §14.2: server-kit 0.7's refusals. "Fizetés és számlák", as `manage`.
       providerUnavailable: "A fizetési szolgáltató jelenleg nem érhető el. Kérjük, próbálja újra egy kis idő múlva.",
-      alreadySubscribed: "Már van előfizetése. A csomag módosításához nyissa meg a „Fizetés és számlák” részt.",
+      alreadySubscribed: "Már van előfizetése. A csomagot fent módosíthatja.",
       planNotSold:
         "Ez a csomag ehhez a számlázási időszakhoz vagy pénznemhez nem érhető el. Kérjük, válasszon másikat.",
+      // 0.39 (§15.2.10): the plan switch's refusals.
+      notSubscribed: "Nincs futó előfizetés, amelyet módosítani lehetne. Előfizetéshez válasszon egy csomagot.",
+      planUnchanged: "Ez már az Ön csomagja. Válasszon másik csomagot vagy számlázási időszakot.",
     },
     // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "csomag"
     // as in `billing`. A plan's name takes no case ending: it follows a colon or an arrow.

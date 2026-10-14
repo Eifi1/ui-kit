@@ -1715,6 +1715,14 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       payNothing: "Qui non c’è nulla da pagare. Per scegliere un piano, torni all’app.",
       payFailed: "Non è stato possibile aprire il pagamento. Torni indietro e riprovi tra un momento.",
       payBack: "Il pagamento è stato chiuso. Può tornare indietro, oppure ricaricare questa pagina per riaprirlo.",
+      payDone: "Pagamento completato. Può chiudere questa pagina.",
+      // 0.39 (§15.2.10): PlanSwitchConfirm.
+      switchTitle: "Cambia piano",
+      switchFromTo: (from, to) => `Da ${from} a ${to}`,
+      switchChargedNow: "Addebitato ora",
+      switchCredited: "Accreditato sui prossimi addebiti",
+      switchNextCharge: (date) => `Prossimo addebito il ${date}`,
+      switchConfirm: "Cambia piano",
       waitingChanges: (count) =>
         `${n(count)} ${plural(count, "modifica in attesa", "modifiche in attesa")} di un piano`,
       // "Scarta", as `wizard.cancelConfirmLabel`.
@@ -1723,9 +1731,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       disabled: "Gli abbonamenti non sono disponibili qui.",
       // §14.2: server-kit 0.7's refusals. "Pagamento e fatture", as `manage`. "Lei".
       providerUnavailable: "Il fornitore dei pagamenti non è raggiungibile al momento. Riprovi tra un momento.",
-      alreadySubscribed: "Ha già un abbonamento. Per cambiare piano, vada su «Pagamento e fatture».",
+      alreadySubscribed: "Ha già un abbonamento. Cambi piano qui sopra.",
       planNotSold:
         "Questo piano non è disponibile per questo periodo di fatturazione o questa valuta. Ne scelga un altro.",
+      // 0.39 (§15.2.10): the plan switch's refusals.
+      notSubscribed: "Non c’è nessun abbonamento attivo da modificare. Scelga un piano per abbonarsi.",
+      planUnchanged: "Questo è già il Suo piano. Scelga un altro piano o un altro periodo di fatturazione.",
     },
     // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "piano" as
     // in `billing`. "Lei" in sentences, the imperative on the title and the button.

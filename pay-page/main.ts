@@ -25,4 +25,6 @@ void startPayPage({
   },
   dark: window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false,
   strings: __PAY_STRINGS__,
+  // Once paid, to the transaction's app — a URL from the configuration's map only.
+  navigate: (url) => window.location.assign(url),
 });

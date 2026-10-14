@@ -251,12 +251,8 @@ try {
   log("• the pay page's bin writes an app's page, and refuses a wrong pairing");
   const bin = join(scratch, "node_modules", ".bin", "eifi1-pay-page");
   const payOut = join(scratch, "srv-pay");
-  const page = [
-    "--return-url", "https://app.example/settings/subscription",
-    "--app-name", "Example",
-    "--terms-url", "https://app.example/terms",
-    "--privacy-url", "https://app.example/privacy",
-  ];
+  // 0.39 (§15.2.6): the host's app from the kit's map, moved to another site.
+  const page = ["--app", "keksdose", "--app-url", "https://app.example"];
   if (!existsSync(bin)) fail("npm linked no eifi1-pay-page into node_modules/.bin");
   else {
     try {
@@ -264,7 +260,14 @@ try {
       const written = JSON.parse(readFileSync(join(payOut, "pay-config.json"), "utf8"));
       const files = ["index.html", "pay.js", "pay.css", ".well-known/apple-developer-merchantid-domain-association"];
       const missing = files.filter((f) => !existsSync(join(payOut, f)));
-      if (missing.length === 0 && written.token === "test_verify" && written.environment === "sandbox") {
+      if (
+        missing.length === 0 &&
+        written.token === "test_verify" &&
+        written.environment === "sandbox" &&
+        written.app === "keksdose" &&
+        written.apps?.keksdose?.returnUrl === "https://app.example/settings/subscription" &&
+        written.apps?.kastlan?.returnUrl === "https://kastlan.app/admin/billing"
+      ) {
         ok("eifi1-pay-page wrote the page and its pay-config.json");
       } else fail(`eifi1-pay-page wrote ${JSON.stringify(written)}, missing ${missing.join(", ") || "nothing"}`);
     } catch (e) {
@@ -276,6 +279,13 @@ try {
     } catch (e) {
       if (e.status === 1 && /sandbox token/.test(e.stderr ?? "")) ok("eifi1-pay-page refuses a sandbox token for live");
       else fail(`eifi1-pay-page refused a wrong pairing oddly: ${e.stderr || e.message}`);
+    }
+    try {
+      run(bin, ["--out", join(scratch, "srv-pay-old"), "--app-name", "Example"], scratch);
+      fail("eifi1-pay-page accepted the 0.33 flags");
+    } catch (e) {
+      if (e.status === 2 && /--app <tag>/.test(e.stderr ?? "")) ok("eifi1-pay-page refuses the 0.33 flags, naming --app");
+      else fail(`eifi1-pay-page refused the 0.33 flags oddly: ${e.stderr || e.message}`);
     }
   }
   // Served beside Paddle.js and nothing else: one classic script that loads nothing.

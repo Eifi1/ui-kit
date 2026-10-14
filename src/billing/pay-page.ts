@@ -1,21 +1,25 @@
 import type { UiKitLabels } from "../i18n/kit-labels";
-import { checkoutReturnUrl } from "./checkout-return";
 
 /**
- * The kit's pay page (docs/billing-harmonization.md §14.4, decision 19 as amended): a
- * standalone static page that ui-kit ships as `dist/pay/`, and that each app serves on
- * its own pay host, `pay.<app domain>` — a separate origin, approved in Paddle, where
- * Paddle.js shares the origin with nothing: no sign-in, no app code, no storage.
+ * The kit's pay page (docs/billing-harmonization.md §14.4, decision 19 as amended by
+ * §15.2): a standalone static page that ui-kit ships as `dist/pay/`, and that each app
+ * serves on its own pay host, `pay.<app domain>` — a separate origin, approved in Paddle,
+ * where Paddle.js shares the origin with nothing: no sign-in, no app code, no storage.
+ * Since 0.39 every pay page serves ANY app's transaction: it names the app from the
+ * transaction's custom data, from the kit's map {@link PAY_PAGE_APPS}, not from its
+ * domain — Paddle's single default payment link reaches one host for all three apps.
  *
  * Paddle's create-transaction answers `checkout.url`: the pay page's URL plus
  * `?_ptxn=<txn>`, and Paddle.js on that page opens the transaction by itself. The app
  * sends the buyer there with {@link payPageUrl}, which adds the buyer's language; the
  * page maps it to Paddle's checkout locale ({@link paddleLocale}). Everything else the
- * page needs — the client-side token, sandbox or live, the way back — is the app's
- * `pay-config.json`, written at its web build by the `eifi1-pay-page` script.
+ * page needs — the client-side token, sandbox or live, the host's app and the map of
+ * apps with their ways back — is the host's `pay-config.json`, written at its web build
+ * by the `eifi1-pay-page` script.
  *
  * Pure, and React-free: the page's own script (`pay-page/pay.ts`) and that build script
- * bundle this module. The exports below the barrel's four are theirs.
+ * bundle this module. The barrel exports the link's parts and the app map ({@link PAY_PAGE_APPS},
+ * {@link PayPageApp}); the exports marked @internal are theirs.
  */
 
 /** Paddle's two environments: the sandbox's client-side tokens start `test_`, live
@@ -138,6 +142,9 @@ export interface PayPageStrings {
   failed: string;
   /** `billing.payBack`: the buyer closed the checkout. */
   closed: string;
+  /** `billing.payDone` (0.39): paid, for a transaction that names no app the page
+   *  knows — there is no way back to offer. */
+  done: string;
   /** `common.back`: the link to the app's subscription page. */
   back: string;
   /** `legal.links.terms` and `legal.links.privacy`: the footer's links. */
@@ -154,6 +161,7 @@ export function payPageStrings(labels: UiKitLabels): PayPageStrings {
     nothing: labels.billing.payNothing,
     failed: labels.billing.payFailed,
     closed: labels.billing.payBack,
+    done: labels.billing.payDone,
     back: labels.common.back,
     terms: labels.legal.links.terms,
     privacy: labels.legal.links.privacy,
@@ -167,7 +175,45 @@ export function payPageStrings(labels: UiKitLabels): PayPageStrings {
 export const PAY_CONFIG_FILE = "pay-config.json";
 
 /**
- * `pay-config.json`: what the page needs that differs per app and deployment. Read by
+ * One app a pay page serves (docs/billing-harmonization.md §15.2.6): its name, the way
+ * back and its Terms and Privacy. Every pay page knows every app, because Paddle's links
+ * — its single default payment link, a payment-method update from its e-mails — reach
+ * whichever page the account names, whatever app the transaction is for.
+ */
+export interface PayPageApp {
+  /** The app's display name: the footer's line and the page's title. */
+  name: string;
+  /** The app's subscription page. Once paid, the page goes to
+   *  `checkoutReturnUrl(returnUrl)`; "Back" goes here. */
+  returnUrl: string;
+  termsUrl: string;
+  privacyUrl: string;
+}
+
+/** An app's tag: server-kit's `billing_app` pattern, the key of {@link PAY_PAGE_APPS}
+ *  and the `app` of a transaction's custom data (§14.3). */
+const APP_TAG = /^[a-z][a-z0-9_-]{0,63}$/;
+
+/** An app on its site: the name, the Terms and Privacy at `/terms` and `/privacy`, and
+ *  its subscription page. */
+function appAt(name: string, site: string, returnPath: string): PayPageApp {
+  return { name, returnUrl: `${site}${returnPath}`, termsUrl: `${site}/terms`, privacyUrl: `${site}/privacy` };
+}
+
+/**
+ * The apps the kit's pay pages serve, by their `billing_app` tag (§15.2.6) — one source,
+ * so the three pay hosts can't drift. A new app, or a page that moves, is a kit release.
+ * The bin writes it into `pay-config.json`; `--app-url` moves the host's own app to
+ * another site (a local stack, a dev deploy) and `--apps <file>` merges a map over it.
+ */
+export const PAY_PAGE_APPS: Readonly<Record<string, Readonly<PayPageApp>>> = Object.freeze({
+  keksdose: Object.freeze(appAt("Keksdose", "https://keksdose.app", "/settings/subscription")),
+  kastlan: Object.freeze(appAt("kastlan", "https://kastlan.app", "/admin/billing")),
+  kurvenschmiede: Object.freeze(appAt("Kurvenschmiede", "https://kurvenschmiede.app", "/settings/subscription")),
+});
+
+/**
+ * `pay-config.json`: what the page needs that differs per deployment (§15.2.6). Read by
  * the page from its own origin — never from the query, where Paddle's own links (it
  * puts only `_ptxn` there) would lack it and a return URL would be an open redirect on
  * an approved payment domain. @internal
@@ -177,19 +223,19 @@ export interface PayPageConfig {
    *  while billing is off, and the page says `payNothing`. */
   token: string | null;
   environment: PaddleEnvironment | null;
-  /** The app's subscription page. Paddle.js's `successUrl` is
-   *  `checkoutReturnUrl(returnUrl)`; "Back" goes here. */
-  returnUrl: string;
-  appName: string;
-  termsUrl: string;
-  privacyUrl: string;
+  /** The host's own app, a key of `apps`: the page shows it until the checkout loads,
+   *  and its Terms and Privacy stay for a transaction that names no app. */
+  app: string;
+  /** Every app the page serves, by tag. The transaction's `custom_data.app` picks one;
+   *  a return URL only ever comes from here. */
+  apps: Record<string, PayPageApp>;
 }
 
 /** Paddle's client-side token prefixes, per environment. */
 const TOKEN_PREFIX: Readonly<Record<PaddleEnvironment, string>> = { sandbox: "test_", live: "live_" };
 
-/** `https://`, or `http://` on this machine only (`localhost`, `127.0.0.1`, `[::1]`). */
-function isPageUrl(value: unknown): boolean {
+/** `https://`, or `http://` on this machine only (`localhost`, `127.0.0.1`, `[::1]`). @internal */
+export function isPayPageUrl(value: unknown): boolean {
   if (typeof value !== "string") return false;
   let url: URL;
   try {
@@ -201,6 +247,37 @@ function isPageUrl(value: unknown): boolean {
   return url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
 }
 
+/** Whether `tag` is a tag of `apps`, its own key — never `__proto__` or `constructor`. */
+function hasApp(apps: unknown, tag: unknown): tag is string {
+  return (
+    typeof tag === "string" &&
+    APP_TAG.test(tag) &&
+    typeof apps === "object" &&
+    apps !== null &&
+    Object.prototype.hasOwnProperty.call(apps, tag)
+  );
+}
+
+/**
+ * The app a transaction's custom data names (`custom_data.app`, §14.3), from the page's
+ * map — or undefined for none, or a tag the map doesn't know. @internal
+ */
+export function payPageAppFor(config: Pick<PayPageConfig, "apps">, tag: unknown): PayPageApp | undefined {
+  return hasApp(config.apps, tag) ? config.apps[tag] : undefined;
+}
+
+/** The problems of one app of the map. */
+function appProblems(tag: string, app: unknown): string[] {
+  if (typeof app !== "object" || app === null) return [`apps.${tag} is not an object`];
+  const a = app as Record<string, unknown>;
+  const problems: string[] = [];
+  if (typeof a.name !== "string" || a.name.trim() === "") problems.push(`apps.${tag}.name is missing`);
+  for (const key of ["returnUrl", "termsUrl", "privacyUrl"] as const) {
+    if (!isPayPageUrl(a[key])) problems.push(`apps.${tag}.${key} must be an https:// URL (http:// for localhost only)`);
+  }
+  return problems;
+}
+
 /**
  * What is wrong with a `pay-config.json`, one line each — `[]` when nothing is. The
  * build script refuses to write a file with any (so a wrong pairing fails the build,
@@ -208,8 +285,10 @@ function isPageUrl(value: unknown): boolean {
  *
  * - a token whose prefix disagrees with the environment (`test_` ↔ sandbox, `live_` ↔
  *   live), or a token without an environment;
- * - a return, terms or privacy URL that isn't `https://` (`http://` for localhost only);
- * - no app name. @internal
+ * - an app tag that isn't a `billing_app` tag (`^[a-z][a-z0-9_-]{0,63}$`), an app
+ *   without a name, or a return, terms or privacy URL that isn't `https://` (`http://`
+ *   for localhost only);
+ * - no `app`, or one that isn't in `apps`. @internal
  */
 export function payPageConfigProblems(config: unknown): string[] {
   if (typeof config !== "object" || config === null) return ["the configuration is not an object"];
@@ -233,14 +312,19 @@ export function payPageConfigProblems(config: unknown): string[] {
       );
     }
   }
-  for (const key of ["returnUrl", "termsUrl", "privacyUrl"] as const) {
-    if (!isPageUrl(c[key])) problems.push(`${key} must be an https:// URL (http:// for localhost only)`);
+  const { apps, app } = c;
+  if (typeof apps !== "object" || apps === null || Array.isArray(apps) || Object.keys(apps).length === 0) {
+    problems.push("apps must map each app's tag to its name and URLs");
+  } else {
+    for (const [tag, entry] of Object.entries(apps)) {
+      if (!APP_TAG.test(tag)) problems.push(`apps: ${JSON.stringify(tag)} is not an app tag (a-z, 0-9, _ and -)`);
+      else problems.push(...appProblems(tag, entry));
+    }
   }
-  if (typeof c.appName !== "string" || c.appName.trim() === "") problems.push("appName is missing");
+  if (typeof app !== "string" || app === "") problems.push("app is missing: the host's own app tag");
+  else if (!hasApp(apps, app)) {
+    const known = typeof apps === "object" && apps !== null ? Object.keys(apps).join(", ") : "";
+    problems.push(`app ${JSON.stringify(app)} is not in apps${known ? ` (${known})` : ""}`);
+  }
   return problems;
-}
-
-/** Paddle.js's `successUrl` for a configuration: the way back, `?checkout=done`. @internal */
-export function paySuccessUrl(config: Pick<PayPageConfig, "returnUrl">): string {
-  return checkoutReturnUrl(config.returnUrl);
 }

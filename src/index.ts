@@ -843,11 +843,18 @@ export type { CheckoutOverview, CheckoutProcessingOptions } from "./billing/chec
 // The link to the pay page and Paddle's locale (§14.4); the page itself ships as dist/pay/.
 export { PAY_PAGE_LANG_PARAM, paddleLocale, payPageUrl } from "./billing/pay-page";
 export type { PaddleEnvironment } from "./billing/pay-page";
+// 0.39 (§15.2.6): the apps every pay page serves, by their `billing_app` tag.
+export { PAY_PAGE_APPS } from "./billing/pay-page";
+export type { PayPageApp } from "./billing/pay-page";
 // The API's shapes the parts read, server-kit 0.7's (§4, §14.5), and the plan limit as
 // a toast (§14.11).
 export type { BillingOverview, SubscriptionSource, PortalTarget, PortalRequest } from "./billing/billing-overview";
 export { usePlanLimitToast } from "./billing/plan-limit-toast";
 export type { PlanLimitToastOptions } from "./billing/plan-limit-toast";
+// 0.39 (§15.2.10): the payer's plan switch, its shapes, and what the payer pays.
+export { PlanSwitchConfirm } from "./billing/plan-switch";
+export type { PlanSwitchConfirmProps, PlanSwitchSide } from "./billing/plan-switch";
+export type { PaidPrice, PlanSwitchRequest, PlanSwitchPreview } from "./billing/billing-overview";
 // The operator's plan parts (§14.12) are admin/plan-change, in the admin section.
 
 // ── settings ─────────────────────────────────────────────────────────────────

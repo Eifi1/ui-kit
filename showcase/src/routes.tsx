@@ -319,6 +319,7 @@ const ColourRoles033Demo = lazySection(() => import("./sections/colour-roles-033
 const RowActions033Demo = lazySection(() => import("./sections/text-size-033-demo"), "RowActions033Demo");
 const LabelAbove033Demo = lazySection(() => import("./sections/text-size-033-demo"), "LabelAbove033Demo");
 const Billing033Demo = lazySection(() => import("./sections/billing-033-demo"), "Billing033Demo");
+const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "BillingSwitchDemo");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
 // 0.31.0: the Server kit group — server-kit's modules, read out of its release's api.json.
@@ -1353,13 +1354,14 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Subscription",
         short: "Billing",
         blurb:
-          "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
+          "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the plan switch, the pay page that serves any app, and the imprint's commercial disclaimer.",
         icon: CreditCard,
-        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard"],
+        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS"],
         Body: () => (
           <>
             <Billing032Demo />
             <Billing033Demo />
+            <BillingSwitchDemo />
           </>
         ),
       },

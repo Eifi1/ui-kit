@@ -390,6 +390,9 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "billing.waitingChanges": one,
   // 0.33.0: the limit's figure line (§14.11) and the operator's plan parts (§14.12).
   "billing.limitUsageLine": [["{{dimension}}", "{{used}}", "{{limit}}"]],
+  // 0.39: PlanSwitchConfirm's two lines with figures (§15.2.10).
+  "billing.switchFromTo": [["{{from}}", "{{to}}"]],
+  "billing.switchNextCharge": [["{{date}}"]],
   "planChange.current": [["{{plan}}"]],
   "planChange.changed": [["{{from}}", "{{to}}"]],
   "planChange.set": [["{{to}}"]],

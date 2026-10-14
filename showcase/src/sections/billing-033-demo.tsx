@@ -319,18 +319,19 @@ window.location.assign(payPageUrl(url, i18n.language));`;
 const BUILD = `# The web image's build stage — the kit's static page, configured once:
 RUN npx eifi1-pay-page --out /srv-pay \\
       --token "$PADDLE_CLIENT_TOKEN" --environment "$PADDLE_ENVIRONMENT" \\
-      --return-url https://keksdose.app/settings/subscription \\
-      --app-name Keksdose \\
-      --terms-url https://keksdose.app/terms --privacy-url https://keksdose.app/privacy`;
+      --app keksdose --app-url "$PAY_APP_URL"   # 0.39: the host's app, from the kit's map`;
 
 const CONFIG = `// /srv-pay/pay-config.json, as the script writes it
 {
   "token": "live_…",
   "environment": "live",
-  "returnUrl": "https://keksdose.app/settings/subscription",
-  "appName": "Keksdose",
-  "termsUrl": "https://keksdose.app/terms",
-  "privacyUrl": "https://keksdose.app/privacy"
+  "app": "keksdose",
+  "apps": {
+    "keksdose": { "name": "Keksdose", "returnUrl": "https://keksdose.app/settings/subscription",
+                  "termsUrl": "https://keksdose.app/terms", "privacyUrl": "https://keksdose.app/privacy" },
+    "kastlan": { "name": "kastlan", "returnUrl": "https://kastlan.app/admin/billing", … },
+    "kurvenschmiede": { "name": "Kurvenschmiede", … }
+  }
 }`;
 
 const CADDY = `# The same web container answers the second host name, with headers of its own
@@ -376,6 +377,7 @@ export function PayPage033Demo() {
             ["billing.payNothing — no _ptxn, or billing off", labels.payNothing],
             ["billing.payFailed — Paddle.js did not load", labels.payFailed],
             ["billing.payBack — the buyer closed the checkout", labels.payBack],
+            ["billing.payDone — paid, for a transaction that names no app (0.39)", labels.payDone],
           ]}
         />
       </div>
@@ -387,11 +389,12 @@ export function PayPage033Demo() {
         Paddle&apos;s Apple Pay file), with no React, no sign-in, no storage and no request to the app, and each
         app serves it at {code("pay.<app domain>")} from its web container. The `eifi1-pay-page` bin copies it and writes
         `pay-config.json` at the web build; it refuses a token whose prefix disagrees with the environment
-        (`test_` sandbox, `live_` live) and a return URL that is not https, so a wrong pairing fails the build,
+        (`test_` sandbox, `live_` live) and a URL that is not https, so a wrong pairing fails the build,
         not a buyer. Without a token it writes `null` and the page says there is nothing to pay. The language is
-        the one thing per visit (`?lang=`, mapped to Paddle&apos;s locale; Hungarian gets English). The
-        page&apos;s `successUrl` is {code("checkoutReturnUrl(returnUrl)")}, which brings the buyer back to the
-        way-back specimen above. This showcase loads no Paddle.js.
+        the one thing per visit (`?lang=`, mapped to Paddle&apos;s locale; Hungarian gets English). Since
+        0.39 the page names the app from the transaction, not from its host, and once paid goes to that
+        app&apos;s {code("checkoutReturnUrl(returnUrl)")}, which brings the buyer back to the way-back specimen
+        above. This showcase loads no Paddle.js.
       </Note>
     </Example>
   );
