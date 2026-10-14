@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.11.0",
+  "kit_version": "0.11.1",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",

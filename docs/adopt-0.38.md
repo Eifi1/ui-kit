@@ -158,4 +158,4 @@ removed; a bump changes nothing until the app uses it.
     the latest answer (kastlan).
   - `create_reply` and `hide_comment` refuse a demo with `demo_refused` before the role's
     403; a route walk that lists them admin-first flips the order (Kurvenschmiede).
-  - The wheel: `v0.11.1`, sha256 `<at the release>`.
+  - The wheel: `v0.11.1`, sha256 `8877200ca7a000b2efecdd7b028e3f37b512e7f0d7a61aa24d73f42961ea212c`.
