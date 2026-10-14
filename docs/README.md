@@ -21,7 +21,7 @@ are in [archive/](archive/) as `<topic>-history.md`.
 | Contract | What it covers | Shipped in | Status |
 |---|---|---|---|
 | [i18n](i18n-harmonization.md) | The seven languages, the language registry, detection, formatting locales, translation review (rules H1–H10) | ui-kit 0.18–0.20, server-kit 0.1 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 |
-| [feedback](feedback-harmonization.md) | The feedback dialog, menu, inbox, the eight statuses and five categories, the thread | ui-kit 0.27, server-kit 0.1; amended in 0.31 (READY) | Current as of ui-kit 0.34.0 / server-kit 0.8.0 |
+| [feedback](feedback-harmonization.md) | The feedback dialog, menu, inbox, the eight statuses and five categories, the thread | ui-kit 0.27, server-kit 0.1; amended in 0.31 (READY) | Current as of ui-kit 0.34.0 / server-kit 0.8.0; §9 DRAFT (round 0.38): public feedback, votes, comments, replies as a list |
 | [legal](legal-harmonization.md) | Imprint, Privacy Policy and Terms: the page frame, the skeleton, the shared sentences | ui-kit 0.28 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 |
 | [auth](auth-harmonization.md) | Sign-in, sign-up, the account core, the session and its refresh | ui-kit 0.29, server-kit 0.3 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 (§11: session refresh, 0.34) |
 | [user-admin](user-admin-harmonization.md) | The user list, admin actions and the audit, invitations, the account's own settings cards | ui-kit 0.30, server-kit 0.4 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 (§11: groups in the audit, 0.34) |
