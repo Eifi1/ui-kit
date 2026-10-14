@@ -115,7 +115,7 @@ export function FeedbackReplyTimeline({
               {dateText(reply.created_at)}
             </time>
             {reply.status_to && (
-              <span className="inline-flex items-center gap-1" data-feedback-reply-status={reply.status_to}>
+              <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1" data-feedback-reply-status={reply.status_to}>
                 <span className="sr-only">{labels.statusChanged}</span>
                 {reply.status_from && reply.status_from !== reply.status_to && (
                   <>
