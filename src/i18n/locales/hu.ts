@@ -101,6 +101,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       statusChanged: (status, title) => `„${status}” állapotra állítva: ${title}`,
       statusUndo: "Visszavonás",
       statusRestored: (status, title) => `Vissza „${status}” állapotra: ${title}`,
+      commentFailed: "A hozzászólást nem sikerült elküldeni.",
+      voteFailed: "A szavazatot nem sikerült menteni.",
+      replyFailed: "A választ nem sikerült elküldeni.",
     },
     feedbackMenu: {
       trigger: "Visszajelzés küldése",
@@ -130,6 +133,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       visibleToOthers: "Mások számára látható",
       visibleHint: "Mások a címet és a szöveget látják, a képernyőképeit és fájljait soha.",
       visibleLocked: "Csak amíg a bejelentés nyitott.",
+      page: (page) => `${n(page)}. oldal`,
     },
     feedbackNotificationTypes: {
       answered: "Válaszok a bejelentéseire",

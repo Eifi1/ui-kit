@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { toast } from "../../components/toast";
 import { WriteLockProvider } from "../../components/write-lock";
+import { FeedbackCommentThread } from "../feedback-comment-thread";
 import { FeedbackNoteEditor } from "../feedback-inbox";
 import type { FeedbackRecord } from "../feedback-record";
 import {
@@ -12,6 +13,7 @@ import {
   feedbackPagePath,
   feedbackPageUrl,
   feedbackRowAccess,
+  type FeedbackDetailPatch,
   type FeedbackDetailUpdate,
 } from "../feedback-row-detail";
 
@@ -381,6 +383,37 @@ describe("FeedbackRowDetail — replies (0.38 §9.7)", () => {
     expect(screen.getByText("the thread")).toBeInTheDocument();
   });
 
+  it("draws the replies once: a FeedbackCommentThread inside drops the ones the Replies section has (0.38.1)", () => {
+    const replies = [reply({ body: "Looking into it." })];
+    render(
+      <FeedbackRowDetail
+        row={record({ replies })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={landing()}
+        comments={
+          <FeedbackCommentThread
+            replies={replies}
+            isAdmin={false}
+            comments={[
+              {
+                id: 5,
+                author_name: "Anna",
+                mine: false,
+                staff: false,
+                body: "Same here.",
+                hidden: false,
+                created_at: "2026-10-05T11:00:00Z",
+              },
+            ]}
+          />
+        }
+      />,
+    );
+    expect(screen.getAllByText("Looking into it.")).toHaveLength(1);
+    expect(screen.getByText("Same here.")).toBeInTheDocument();
+  });
+
   it("draws the Visible to others switch with `onPublicChange`, within the author's window only", () => {
     const onPublicChange = vi.fn();
     const { rerender } = render(
@@ -409,6 +442,22 @@ describe("FeedbackRowDetail — replies (0.38 §9.7)", () => {
     // Not drawn without the handler.
     rerender(<FeedbackRowDetail row={record({ public: true, mine: true })} canEdit={false} viewerId={AUTHOR} onUpdate={landing()} />);
     expect(screen.queryByRole("switch")).toBeNull();
+  });
+
+  it("sends the switch through the page's own PATCH: FeedbackDetailPatch carries `public` (0.38.1)", () => {
+    expectTypeOf<FeedbackDetailPatch["public"]>().toEqualTypeOf<boolean | undefined>();
+    const update = vi.fn<FeedbackDetailUpdate>();
+    render(
+      <FeedbackRowDetail
+        row={record({ public: true, mine: true })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={update}
+        onPublicChange={(next) => update({ id: 1, public: next }, { onSuccess: () => {} })}
+      />,
+    );
+    fireEvent.click(screen.getByRole("switch", { name: "Visible to others" }));
+    expect(update).toHaveBeenCalledWith({ id: 1, public: false }, expect.anything());
   });
 });
 

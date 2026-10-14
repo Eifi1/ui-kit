@@ -92,6 +92,17 @@ export interface FeedbackToastLabels {
   /** The Undo landed — `status` is the RESTORED status's label.
    *  de-CH: "Zurück auf „{{status}}“: {{title}}" */
   statusRestored: (status: string, title: string) => string;
+  /** 0.38.1: `POST /feedback/{id}/comments` failed with no `detail` of its own — for
+   *  `FeedbackCommentThread`'s `onComment`. de-CH: "Kommentar konnte nicht gesendet
+   *  werden." */
+  commentFailed: string;
+  /** 0.38.1: `PUT` / `DELETE /feedback/{id}/vote` failed with no `detail` of its own —
+   *  for `FeedbackVoteButton`'s `onVote` (the button rolls back; the app toasts).
+   *  de-CH: "Stimme konnte nicht gespeichert werden." */
+  voteFailed: string;
+  /** 0.38.1: `POST /feedback/{id}/replies` failed with no `detail` of its own — for
+   *  `FeedbackRowDetail`'s `onReply`. de-CH: "Antwort konnte nicht gesendet werden." */
+  replyFailed: string;
 }
 
 export const DEFAULT_FEEDBACK_TOAST_LABELS: FeedbackToastLabels = {
@@ -108,6 +119,9 @@ export const DEFAULT_FEEDBACK_TOAST_LABELS: FeedbackToastLabels = {
   statusChanged: (status, title) => `Set to “${status}”: ${title}`,
   statusUndo: "Undo",
   statusRestored: (status, title) => `Back to “${status}”: ${title}`,
+  commentFailed: "Could not post the comment.",
+  voteFailed: "Could not save your vote.",
+  replyFailed: "Could not send the reply.",
 };
 
 /** `feedbackStatus` resolved: English, then `<UiKitProvider labels>`, then `labels`. For

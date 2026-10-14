@@ -93,6 +93,27 @@ describe("FeedbackCommentThread", () => {
     expect(onHide).toHaveBeenLastCalledWith(expect.objectContaining({ id: 2 }), true);
   });
 
+  it("catches a rejected Hide as Delete does: no unhandled rejection (0.38.1, Kurvenschmiede)", async () => {
+    const unhandled = vi.fn();
+    process.on("unhandledRejection", unhandled);
+    try {
+      // A plain function, not `vi.fn`: a mock watches its own promise's result, which
+      // handles the rejection and would hide the bug.
+      let calls = 0;
+      const onHide = () => {
+        calls += 1;
+        return Promise.reject(new Error("403"));
+      };
+      wrap(<FeedbackCommentThread now={NOW} isAdmin onHide={onHide} replies={[]} comments={[comment()]} />);
+      await act(async () => fireEvent.click(screen.getByRole("button", { name: "Hide" })));
+      await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+      expect(calls).toBe(1);
+      expect(unhandled).not.toHaveBeenCalled();
+    } finally {
+      process.off("unhandledRejection", unhandled);
+    }
+  });
+
   it("no Hide for anyone but the admin", () => {
     wrap(<FeedbackCommentThread now={NOW} isAdmin={false} onHide={vi.fn()} replies={[]} comments={[comment()]} />);
     expect(screen.queryByRole("button", { name: "Hide" })).toBeNull();
@@ -132,6 +153,11 @@ describe("FeedbackCommentThread", () => {
     fireEvent.change(box, { target: { value: "  Me too  " } });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Comment" })));
     expect(onComment).toHaveBeenCalledWith("Me too");
+  });
+
+  it("takes no replies at all: `replies` may be left out (0.38.1)", () => {
+    render(<FeedbackCommentThread now={NOW} isAdmin={false} comments={[comment()]} />);
+    expect(rows()).toHaveLength(1);
   });
 
   it("renders without a ConfirmProvider when nothing can be deleted", () => {

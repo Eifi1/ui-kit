@@ -19,7 +19,8 @@ import { DEFAULT_FEEDBACK_VOTE_LABELS } from "./feedback-thread-parts-labels";
  * - **Optimistic with rollback:** the press shows the new state at once, `onVote(next)`
  *   sends `PUT` (`true`) or `DELETE` (`false`) and its answer — the server's count —
  *   replaces the guess; a rejection puts back what was there. The error is the app's
- *   to toast (its mutation's `onError`), as with every kit part that takes a promise.
+ *   to toast (its mutation's `onError`), as with every kit part that takes a promise —
+ *   the server's `detail`, else `feedbackToast.voteFailed` (0.38.1).
  * - **The author's own report** counts as their vote (§9.6, decision 20): `own` shows it
  *   pressed and `aria-disabled` with "Your report" as the reason (the server would
  *   answer 409).

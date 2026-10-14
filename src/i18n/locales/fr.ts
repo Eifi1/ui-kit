@@ -102,6 +102,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       statusChanged: (status, title) => `Passé à «\u202f${status}\u202f»\u00a0: ${title}`,
       statusUndo: "Annuler",
       statusRestored: (status, title) => `Revenu à «\u202f${status}\u202f»\u00a0: ${title}`,
+      commentFailed: "Le commentaire n’a pas pu être publié.",
+      voteFailed: "Votre vote n’a pas pu être enregistré.",
+      replyFailed: "La réponse n’a pas pu être envoyée.",
     },
     feedbackMenu: {
       trigger: "Envoyer un retour",
@@ -131,6 +134,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       visibleToOthers: "Visible par les autres",
       visibleHint: "Les autres personnes voient le titre et le texte, jamais vos captures d’écran ni vos fichiers.",
       visibleLocked: "Seulement tant que le retour est encore ouvert.",
+      page: (page) => `Page ${n(page)}`,
     },
     feedbackNotificationTypes: {
       answered: "Réponses à vos retours",

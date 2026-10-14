@@ -216,6 +216,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "feedbackPublic.comments": one,
   "feedbackPublic.votes": one,
   "feedbackPublic.filedBy": [["{{name}}"]],
+  "feedbackPublic.page": [[3]],
   "accountSettings.passkeys.renameItem": [["{{name}}"]],
   "accountSettings.passkeys.renameField": [["{{name}}"]],
   "accountSettings.passkeys.deleteItem": [["{{name}}"]],

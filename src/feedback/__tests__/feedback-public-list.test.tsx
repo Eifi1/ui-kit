@@ -155,6 +155,121 @@ describe("FeedbackPublicList — desktop", () => {
   });
 });
 
+describe("FeedbackPublicList — server pages, total unknown (0.38.1, Kurvenschmiede)", () => {
+  it("has no pager without onPageChange, nor on a first page with nothing after it", () => {
+    restore = stubViewportWidth(DESKTOP_WIDTH);
+    const { rerender } = renderList();
+    expect(screen.queryByRole("button", { name: "Next page" })).toBeNull();
+    rerender(
+      <FeedbackPublicList
+        rows={ROWS}
+        sort="newest"
+        onSortChange={() => {}}
+        onVote={vi.fn()}
+        renderDetail={() => null}
+        page={0}
+        hasMore={false}
+        onPageChange={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Next page" })).toBeNull();
+  });
+
+  it("pages back and forth without a total: Previous off on the first page, Next off without more", () => {
+    restore = stubViewportWidth(DESKTOP_WIDTH);
+    const onPageChange = vi.fn();
+    const { rerender } = renderList({ page: 0, hasMore: true, onPageChange });
+    const pager = screen.getByRole("group", { name: "Page 1" });
+    expect(within(pager).getByRole("button", { name: "Previous page" })).toBeDisabled();
+    fireEvent.click(within(pager).getByRole("button", { name: "Next page" }));
+    expect(onPageChange).toHaveBeenLastCalledWith(1);
+    rerender(
+      <FeedbackPublicList
+        rows={ROWS}
+        sort="newest"
+        onSortChange={() => {}}
+        onVote={vi.fn()}
+        renderDetail={() => null}
+        page={2}
+        hasMore={false}
+        onPageChange={onPageChange}
+      />,
+    );
+    const last = screen.getByRole("group", { name: "Page 3" });
+    expect(within(last).getByText("Page 3")).toBeInTheDocument();
+    expect(within(last).getByRole("button", { name: "Next page" })).toBeDisabled();
+    fireEvent.click(within(last).getByRole("button", { name: "Previous page" }));
+    expect(onPageChange).toHaveBeenLastCalledWith(1);
+  });
+
+  it("speaks the provider's language", () => {
+    restore = stubViewportWidth(DESKTOP_WIDTH);
+    render(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <FeedbackPublicList
+          rows={ROWS}
+          sort="newest"
+          onSortChange={() => {}}
+          onVote={vi.fn()}
+          renderDetail={() => null}
+          page={1}
+          hasMore
+          onPageChange={vi.fn()}
+        />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("group", { name: "Seite 2" })).toBeInTheDocument();
+  });
+
+  it("passes axe with the pager", async () => {
+    restore = stubViewportWidth(DESKTOP_WIDTH);
+    const { container } = renderList({ page: 1, hasMore: true, onPageChange: () => {} });
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("FeedbackPublicList — openRow, a ?row= not on this page (0.38.1, Kurvenschmiede)", () => {
+  const ELSEWHERE: FeedbackPublicListItem = { ...ROWS[0], id: 40, title: "Old report, page 4", comment_count: 0 };
+
+  it("draws the opened report above the page, with its detail", () => {
+    restore = stubViewportWidth(DESKTOP_WIDTH);
+    const onOpenChange = vi.fn();
+    renderList({ openId: 40, openRow: ELSEWHERE, onOpenChange });
+    expect(screen.getByText("Old report, page 4")).toBeInTheDocument();
+    expect(screen.getByTestId("detail")).toHaveTextContent("Detail of #40");
+    // It comes first, before the page's own rows.
+    const titles = screen.getAllByText(/Old report|Chart jumps|Export as CSV/).map((el) => el.textContent);
+    expect(titles[0]).toBe("Old report, page 4");
+    fireEvent.click(screen.getByText("Old report, page 4"));
+    expect(onOpenChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it("is gone once it is closed, and never doubled when the page has it", () => {
+    restore = stubViewportWidth(DESKTOP_WIDTH);
+    const { rerender } = renderList({ openId: null, openRow: ELSEWHERE });
+    expect(screen.queryByText("Old report, page 4")).toBeNull();
+    rerender(
+      <FeedbackPublicList
+        rows={ROWS}
+        sort="newest"
+        onSortChange={() => {}}
+        onVote={vi.fn()}
+        renderDetail={(row) => <div data-testid="detail">Detail of #{row.id}</div>}
+        openId={12}
+        openRow={ROWS[0]}
+      />,
+    );
+    expect(screen.getAllByText("Chart jumps on save")).toHaveLength(1);
+    expect(screen.getByTestId("detail")).toHaveTextContent("Detail of #12");
+  });
+
+  it("opens in the full-screen dialog on the phone", () => {
+    restore = stubViewportWidth(PHONE_WIDTH);
+    renderList({ openId: 40, openRow: ELSEWHERE });
+    expect(screen.getByRole("dialog")).toHaveTextContent("Detail of #40");
+  });
+});
+
 describe("FeedbackPublicList — phone", () => {
   it("draws a card per report: title, status, category, date and the two counts", () => {
     restore = stubViewportWidth(PHONE_WIDTH);
