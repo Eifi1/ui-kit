@@ -820,17 +820,22 @@ export function DeviceResetSetting(props: DeviceResetSettingProps): JSX.Element;
   does not disable it (decision 3). Cancel changes nothing.
 - Confirmed: `resetDeviceSettings()`, then `onReset?.(keys)`, then `toast.success(done)`.
   The card stays where it is; no reload.
-- The app adds the catalogue entry, `{ id: "device_reset", group: "appearance", anchor:
-  DEVICE_RESET_ANCHOR, title, keywords }`, last in its appearance group; `SettingsSection`
-  throws in development without it.
+- The app adds the catalogue entry, `{ id, group: "appearance", anchor: DEVICE_RESET_ANCHOR,
+  title, keywords }` with the id in its own catalogue's style (`device_reset`, kastlan's
+  `deviceReset`), last in its appearance group; `SettingsSection` throws in development
+  without it.
 
 ### 11.5 Per app
 
 Each app registers at module scope, beside the store or accessor it names, so the
-entries exist before the card can be pressed. A reset goes through the store's own
-setter, never `setState(getInitialState())` where the setter does more than set: that
-skips the setter's side effect (keksdose's `setPrivacyMode` → `applyDemoModeClass`,
-`ui-prefs-store.ts:59`, would have left the blur on while the store said off).
+entries exist before the card can be pressed. Module scope runs only once the module is
+imported: a store that only a lazy page imports registers only after that page has loaded,
+and a reset before then would leave its key. The settings page imports such a module for
+its side effect (Kurvenschmiede's `steering-curve-channels`, found adopting 0.36). A reset
+goes through the store's own setter, never `setState(getInitialState())` where the setter
+does more than set: that skips the setter's side effect (keksdose's `setPrivacyMode` →
+`applyDemoModeClass`, `ui-prefs-store.ts:59`, would have left the blur on while the store
+said off).
 
 - **keksdose:**
   - registers, as appearance: `keksdose-lang` (reset: the device-language store's

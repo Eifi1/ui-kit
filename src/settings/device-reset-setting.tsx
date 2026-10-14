@@ -67,10 +67,10 @@ export interface DeviceResetSettingProps
  * - **Live, no reload** (decision 10): each registered store resets through its own
  *   setter; the card stays where it is.
  *
- * The app adds the catalogue entry, `{ id: "device_reset", group: "appearance", anchor:
- * DEVICE_RESET_ANCHOR, title, keywords }` (`title` and `keywords` from these labels), last
- * in its appearance group: inside a `SettingsLayout`, `SettingsSection` throws in
- * development without it.
+ * The app adds the catalogue entry, `{ id, group: "appearance", anchor: DEVICE_RESET_ANCHOR,
+ * title, keywords }` (the id in its catalogue's own style, e.g. `device_reset` or
+ * `deviceReset`; `title` and `keywords` from these labels), last in its appearance group:
+ * inside a `SettingsLayout`, `SettingsSection` throws in development without it.
  */
 export function DeviceResetSetting({
   description,

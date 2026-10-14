@@ -157,7 +157,8 @@ keksdose is their canon. Kurvenschmiede's Select hints are done (its four commit
    Wire: no `user_name`, the address in the inbox only, keksdose's 429 sentence, operation ids
    renamed.
 5. **Notifications** (contract §5.2), e-mail per type now, push later as its own step: fix the
-   poller first (honour `since`, translated cards, a tag; gate the switch on staff). Registry
+   poller first (drop `since`: the counts are a state, contract §5.2.4; translated cards, a tag;
+   gate the switch on staff). Registry
    `invoices_overdue` (`app=False, email=False`), `dunnings_pending` (`app=False`), receivable by
    staff in any company (role checked in the event's company at delivery); a types-only PATCH
    (`apply_patch(not_nullable=SETTINGS_SKIP, skip=SETTINGS_SKIP)`), `plan_delivery(…,
