@@ -839,7 +839,8 @@ wiring, the three conformance checks (2.14) and its own variations (1.1).
      (`upload_guards.py:238-242`); `read` reads `feedback/<key>`
      (`adapters/external/invoice_file_store.py:116`), `None` when the object is missing,
      with `media_type` from the key's extension and no filename.
-3. Dependencies in `infrastructure/dependencies.py`:
+3. Dependencies in `infrastructure/dependencies.py` (keksdose's 0.36 adoption put them beside
+   the router, in `adapters/api/feedback_router.py`; either works):
    - `feedback_actor` (role ADMIN, `is_demo`, the display name);
    - `feedback_repository(session=Depends(db_session))`: the session `commit_boundary`
      commits (2.7; `:45`);

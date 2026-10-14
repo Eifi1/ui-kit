@@ -76,6 +76,16 @@ keksdose is their canon. Kurvenschmiede's Select hints are done (its four commit
 - **Tests that read `deviceSettings()`** right after rendering `UiKitProvider` must
   `await waitFor(…)`: the provider joins the registry a microtask late (a dynamic import keeps
   the label module free of other imports).
+- **Settings-page tests that pick cards by id:** the kit's one anchor, `DEVICE_RESET_ANCHOR`, is
+  `settings-device-reset`; a selector on a `-card` suffix (keksdose's own ids) misses it.
+- **Push endpoints are https only** (`PushSubscriptionIn`), on an alias route too: a test
+  fixture with an `http://…` endpoint now gets a 422 (no real browser sends one).
+- **Tests against the kit's feedback service** notice: `FeedbackService.update` on a missing id
+  raises `FeedbackNotFoundError`; the admin inbox yields `(row, email)` pairs; a `.txt` download
+  is `text/plain; charset=utf-8`, an attachment, with a `filename*` part.
+- **A persisted query cache** can rehydrate a notification settings value from before the bump,
+  which has no `types`: `NotificationTypesSetting` shows its skeleton until the refetch, no
+  crash (keksdose).
 - **server-kit typing:** `render_mail` takes a typed `unsubscribe=`, so a `**Mapping[str, str]`
   splat into it no longer type-checks (no app does this).
 - **Route walks on FastAPI ≥ 0.142** iterate the router itself: lazily included routers no
