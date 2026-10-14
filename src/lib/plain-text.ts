@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
  * to find (an icon), so the caller falls back to a name of its own.
  *
  * Package-private — not re-exported from the barrel. StatTile names its sparkline by it;
- * a field names its `help` "?" by it ("About <label>", round 0.36).
+ * a field names its `help` "?" by it ("About “<label>”", round 0.36).
  */
 export function plainText(node: ReactNode): string | undefined {
   const walk = (n: ReactNode): string => {
