@@ -296,3 +296,31 @@ describe("useFeedbackSubmit — files and capture", () => {
     expect(toast.success).toHaveBeenCalledWith("Danke für Ihr Feedback!");
   });
 });
+
+/** 0.38 (§9.2 decision 6): `publicNotice` shows the kit's sentence under the body. */
+describe("useFeedbackSubmit — publicNotice", () => {
+  const NOTICE = "Other users will see the title and text (never your screenshots or files).";
+
+  it("says nothing about other users by default", async () => {
+    render(<Host />);
+    await open();
+    expect(screen.queryByText(NOTICE)).toBeNull();
+  });
+
+  it("says who will read the report with publicNotice", async () => {
+    render(<Host publicNotice />);
+    await open();
+    expect(screen.getByText(NOTICE)).toBeInTheDocument();
+    expect(screen.getByLabelText("What happened? (optional)")).toHaveAccessibleDescription(NOTICE);
+  });
+
+  it("in the provider's language", async () => {
+    render(
+      <UiKitProvider labels={{ feedbackDialog: { publicNotice: "Andere Personen sehen Titel und Text." } } as UiKitLabelOverrides}>
+        <Host publicNotice />
+      </UiKitProvider>,
+    );
+    await open();
+    expect(screen.getByText("Andere Personen sehen Titel und Text.")).toBeInTheDocument();
+  });
+});

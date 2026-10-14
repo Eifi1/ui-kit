@@ -926,6 +926,15 @@ export { PushDevicesSetting, describeUserAgent } from "./notifications/push-devi
 export type { PushDevicesSettingProps } from "./notifications/push-devices-setting";
 export { UnsubscribePanel, unsubscribeTokenType } from "./notifications/unsubscribe-panel";
 export type { UnsubscribePanelProps } from "./notifications/unsubscribe-panel";
+// 0.38.0 (docs/feedback-harmonization.md §9.11): the two feedback types' setting words.
+export {
+  useFeedbackNotificationTypes,
+  DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS,
+} from "./notifications/feedback-notification-types";
+export type {
+  FeedbackNotificationTypeId,
+  FeedbackNotificationTypesLabels,
+} from "./notifications/feedback-notification-types";
 
 // ── landing ──────────────────────────────────────────────────────────────────
 // 0.31.0 (docs/landing-demo-harmonization.md): the public landing page. Its router-aware parts — the header and the resume (RootEntry,

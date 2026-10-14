@@ -298,6 +298,14 @@ const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-comp
 const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackTable027Demo");
 const FeedbackSubjectDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackSubjectDemo");
 const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-inbox/detail"), "FeedbackDetail027Demo");
+// 0.38.0: public feedback — the pages every user reads, the switch, the menu row, the notice, the types.
+const FeedbackPublic038Demo = lazySection(() => import("./sections/feedback-inbox/public-038"), "FeedbackPublic038Demo");
+const FeedbackPublicSwitch038Demo = lazySection(() => import("./sections/feedback-inbox/public-038"), "FeedbackPublicSwitch038Demo");
+const FeedbackPublicCompose038Demo = lazySection(() => import("./sections/feedback-inbox/public-038"), "FeedbackPublicCompose038Demo");
+const FeedbackNotificationTypes038Demo = lazySection(() => import("./sections/feedback-inbox/public-038"), "FeedbackNotificationTypes038Demo");
+// 0.38.0: public feedback — the vote, the replies, the comment thread.
+const FeedbackThread038Demo = lazySection(() => import("./sections/feedback-inbox/thread-038"), "FeedbackThread038Demo");
+const FeedbackReplies038Demo = lazySection(() => import("./sections/feedback-inbox/thread-038"), "FeedbackReplies038Demo");
 // 0.32.0: text size and contrast, and billing.
 const TextSize032Demo = lazySection(() => import("./sections/text-size-032-demo"), "TextSize032Demo");
 const TextSizeComponents032Demo = lazySection(
@@ -1269,8 +1277,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The notification settings every app shares: the types the server answers with a switch in the app and one by e-mail, quiet hours and the time zone, push on this device and the list of devices, and the page an e-mail's unsubscribe link opens.",
         icon: Bell,
-        components: ["NotificationTypesSetting", "QuietHoursSetting", "TimeZoneSelect", "timeZoneOptions", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS"],
-        Body: NotificationsPage,
+        components: ["NotificationTypesSetting", "QuietHoursSetting", "TimeZoneSelect", "timeZoneOptions", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS", "useFeedbackNotificationTypes", "DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS"],
+        Body: () => (
+          <>
+            <NotificationsPage />
+            <FeedbackNotificationTypes038Demo />
+          </>
+        ),
       },
       {
         slug: "landing-demo",
@@ -1365,6 +1378,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackAttachment023Demo />
             <FeedbackDialogButtons025Demo />
             <FeedbackSubmit027Demo />
+            <FeedbackPublicCompose038Demo />
           </>
         ),
       },
@@ -1374,13 +1388,17 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
-        components: ["FeedbackSubject", "FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan"],
+        components: ["FeedbackSubject", "FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan", "FeedbackVoteButton", "FeedbackCommentThread", "FeedbackReplyTimeline", "FeedbackReplyComposer", "FeedbackPublicList", "FeedbackPublicDetail", "FeedbackPublicSwitch", "feedbackPublicSwitchAllowed", "useFeedbackPublicLabels", "DEFAULT_FEEDBACK_PUBLIC_LABELS"],
         Body: () => (
           <>
             <FeedbackInbox />
             <FeedbackTable027Demo />
             <FeedbackSubjectDemo />
             <FeedbackDetail027Demo />
+            <FeedbackPublic038Demo />
+            <FeedbackPublicSwitch038Demo />
+            <FeedbackThread038Demo />
+            <FeedbackReplies038Demo />
             <FeedbackRecordDemo />
             <FeedbackComposerDemo />
           </>

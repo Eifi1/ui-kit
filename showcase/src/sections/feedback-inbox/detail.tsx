@@ -198,7 +198,7 @@ export function FeedbackDetail027Demo() {
   return (
     <Example
       label="The row detail"
-      hint="switch who is looking — the admin edits outcome and status, the author sends it back for rework"
+      hint="switch who is looking — the admin sets the status, the author sends it back for rework; the outcome is read-only since 0.38"
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-2">

@@ -769,6 +769,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PushDeviceSetting — every state",
     "PushDevicesSetting — this device marked, failures, remove",
     "UnsubscribePanel — the signed-out page",
+    "useFeedbackNotificationTypes — answers and comments",
   ],
   "landing-demo": [
     "A sample landing — Ada's Garden Planner",
@@ -850,6 +851,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FeedbackDialog — the attachment buttons' look",
     "FeedbackMenu + useFeedbackSubmit — the top-bar menu and the wired dialog",
     "FeedbackContextBox + feedbackContext() — what the box shows is what is sent",
+    "FeedbackMenu publicHref + useFeedbackSubmit publicNotice — reports others read",
   ],
   "feedback-inbox": [
     "The status vocabulary",
@@ -866,6 +868,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "feedbackColumns, FeedbackMobileCard, FeedbackAwaitingToggle — the two feedback pages",
     "FeedbackSubject — the title with its environment and rework chips",
     "The row detail",
+    "FeedbackPublicList + FeedbackPublicDetail — All feedback",
+    "FeedbackPublicSwitch — Visible to others",
+    "Replies, comments and the vote",
+    "The timeline and the reply composer",
     "Status and category in the kit's words, with Undo",
     "The body's rework rounds",
     "FeedbackNoteEditor — the attachment buttons' look",
@@ -1310,6 +1316,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "notifications": [
     "NotificationsPage",
+    "FeedbackNotificationTypes038Demo",
   ],
   "landing-demo": [
     "SampleLanding031Demo",
@@ -1351,12 +1358,17 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "FeedbackAttachment023Demo",
     "FeedbackDialogButtons025Demo",
     "FeedbackSubmit027Demo",
+    "FeedbackPublicCompose038Demo",
   ],
   "feedback-inbox": [
     "FeedbackInbox",
     "FeedbackTable027Demo",
     "FeedbackSubjectDemo",
     "FeedbackDetail027Demo",
+    "FeedbackPublic038Demo",
+    "FeedbackPublicSwitch038Demo",
+    "FeedbackThread038Demo",
+    "FeedbackReplies038Demo",
     "FeedbackRecordDemo",
     "FeedbackComposerDemo",
   ],

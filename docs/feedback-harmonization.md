@@ -28,6 +28,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 6 | Per repo (D) | — (archived) | |
 | 7 | Settled points — the final canon | — | index; folded items point to their § |
 | 8 | Amendment for 0.31 | ui-kit 0.31.0, server-kit 0.5.0 | index; folded into §2–§5 |
+| 9 | Round 0.38: public feedback (votes, comments, replies) | **§9 settled 2026-10-14 (round 0.38)**, for server-kit 0.11 / ui-kit 0.38 | amends §3.1, §3.3, §3.4 (`public`), §4.4.4 (outcome → replies), §5; server-services §2.7, §4.5; notifications §2, §5 (two types, the notice) |
 
 ## 1. Where each one stands
 
@@ -700,3 +701,721 @@ folded into the sections they amend; the wording is in the archive.
 §3.4 (the first status, the author's edits, where a rework goes), §4.3 and §4.4 (the
 author's edit, the awaiting toggle), §5 (the colour, the constants, server-kit's
 `initial_status` and `rework_status`).
+
+## 9. Round 0.38: public feedback (settled 2026-10-14)
+
+Round 0.38 (Marcel, 2026-10-14, relayed by keksdose) opens the reports to the app's other
+users: the people the app lets in read the reports, say "I want this too", and comment;
+the admin's answer becomes a list of replies instead of one `outcome` field. Built from a
+read-only survey on 2026-10-14 (kk `f6acbc41`, ka `fe8bf78`, KS `7dc6985`, all on
+`feat/kit-0.37`; server-kit 0.10.0 `2023006`; ui-kit `495d6b1`) and the three apps' reviews
+of the same day (9.18). **Settled 2026-10-14 (Marcel, in the ui-kit session).** Built for
+**server-kit 0.11** and **ui-kit 0.38**. keksdose's shape is the model. §1–§8 stand; where
+this section changes them it says so (§3.1 `outcome`, §3.3 the routes, §4.4.4 the
+Outcome section, §5 the kit's parts).
+
+### 9.1 Where each one stands
+
+| | keksdose | kastlan | Kurvenschmiede |
+|---|---|---|---|
+| Others' reports, for a non-admin | none: `GET /feedback/my` only; the inbox is `admin_guard` (the kit's router, `router.py:215-235`; kk `adapters/api/feedback_router.py:75-87`, `require_role(ADMIN)` `:81`) | none: `/feedback`, `/feedback/{id}`, `/feedback/counts` are `ADMIN_ONLY` (`adapters/api/feedback_router.py:73`, `:86-103`); `/my-feedback` redirect `pages/feedback-page.tsx:106` | none: `visible_to` narrows a non-admin to `user_id = viewer` (`domain/services/feedback_service.py:112-122`); a foreign row is 404 (`:72`) |
+| Scope of "every user" | the whole app | **one company**: `Feedback` is a `CompanyMixin` table under forced RLS (`domain/models/feedback.py:21`, `infrastructure/rls.py:65-82`), and the roles are per company, TENANT included (`domain/models/auth.py:17-21`, `:144-154`) | the whole app; roles ADMIN, MEMBER, CUSTOMER (an outside reader who may file, `adapters/api/feedback_router.py:56-60`), REVIEWER (`domain/models/user.py:41-58`) |
+| The answer | `outcome` Text, one field, overwritten (`domain/models/feedback.py:72`) | `outcome` Text (`domain/models/feedback.py:56`); also read by the export (`domain/services/account_service.py:300`) | `outcome` sealed, `EncryptedText` (`domain/models/feedback.py:137`) |
+| Comments | `feedback_comments`, **dormant**: model kept as "RETAINED DATA", routes deleted in refactor L2-8, 14 live rows of 2026-08-11 on #181–#194 (`domain/models/feedback.py:76-106`); created in `alembic/versions/20260430_0001_initial_schema.py:218-227` (`feedback_id` `ON DELETE CASCADE`), `user_id` nullable since `20260906_0098_feedback_anonymisable.py:56`. Still read by the export (`account_export_service.py:270-278`, `:324-325`, as `"from": "you" \| "keksdose"`), scrubbed by the erasure (`budgets_service.py:1255-1260`), reaped for demo users | **dropped**: folded into `body` as `--- COMMENT <stamp> · <First Last \| email \| user #id> ---` blocks (`alembic/versions/b4d6f8a0c2e4_feedback_fold_comments.py:1-22`, `:43-68`); none left to split (0 blocks: 62 rows local, 17 in prod) | none; the conversation is `body`'s rework blocks and `outcome` |
+| Titles and bodies | plain | plain | **sealed** (`EncryptedText`, `domain/models/feedback.py:122`, `:127`; `context` `EncryptedJson` `:130`): no SQL search or sort on them; decrypting costs ~30 µs a value |
+| Attachments, by key | any signed-in user who has the URL (the storage's `read` ignores the viewer) | the same | the uploader, or anyone who can see the report that links it (§3.5's accepted variation; `feedback_service.py:470-480`) |
+| Votes | none | none (the only votes are owner-meeting tallies, `domain/models/owner_meeting.py:125-127`) | none |
+| First names | `first_name` NOT NULL, `last_name` default `""`; **migration 0114 moved the old `display_name` whole into `first_name`** (`domain/models/user.py:51-58`); such an account is `name_incomplete` until it completes its name (`frontend/src/features/auth/complete-name-prompt.tsx`) | `first_name`, `last_name`, both NOT NULL (`domain/models/auth.py:30-31`); every non-demo account complete | `first_name` NOT NULL, `last_name`; the old `display_name` moved into `first_name` (`domain/models/user.py:67-74`) |
+| The loop's write path | `keksdose_feedback` login: `SELECT` on `feedback`, `UPDATE (status, outcome)`; may not read `users` (`scripts/feedback-live-setup.sh:39-41`, `:54-56`); `feedback-live-write.sh` runs a file of `UPDATE`s under `psql -1`, one transaction, terminal status IN_EVALUATION (`:6-9`, `:18`) | the Claude session's raw SQL `UPDATE feedback SET status, outcome` through `scripts/feedback-db.sh`, as `kastlan_app` after `SET app.bypass_rls` (`:56-57`) | `feedback_loop.py --resolve` writes status and outcome through `feedback_service.save` as the first admin, on the app's own login (`feedback_loop.py:244-297`) |
+| A feedback notification | none (`domain/models/push_subscription.py:38-63`: nine types, no feedback one) | none (`domain/services/notification_types.py:18-22`); its `app` channel is a company-wide poller | `feedback_answered`, e-mail, on (`domain/models/notification.py:40`, `:48-53`), fired from `save` → `notification_service.feedback_saved` when the status crosses into an answered one (`notification_service.py:224`, `:245-272`) |
+| Erasure | the kit's `erase_author`, then the comments scrubbed and nulled (`budgets_service.py:1218-1262`) | `erase_author` (`admin_user_service.py:375-377`) | `erase_author` (`erasure_service.py:423-438`) |
+| Export | own reports with `outcome` and every comment on them (`account_export_service.py:268-331`) | own reports with `outcome` (`account_service.py:244`, `:294-305`) | own reports (`export_service.py:89-92`) |
+| Demo | refused on writes (§3.3) | throwaway `is_demo` accounts, minted at the gate (`domain/services/demo_session_service.py:119`, `last_name=""` `:129`), refused on writes at sign-in (`adapters/api/feedback_router.py:58-62`) | `is_demo` accounts, refused by `not_in_the_demo` (`feedback_router.py:78`); **the demo is public**: anyone may open `/demo`, no invitation (`frontend/src/features/demo/demo-pages.tsx:12`) |
+
+The kit: `FeedbackResponse` has one `outcome` (server-kit `feedback/schemas.py:155-182`;
+ui-kit `FeedbackRecord`, `src/feedback/feedback-record.ts:84-120`); `FeedbackRowDetail`'s
+Outcome section is one editor (§4.4.4). A crash body carries the reporter's address
+(`User: <email> (#<id>)`, server-kit `feedback/crash.py:142`). ui-kit already has a
+conversation part, `FeedbackThread` with `own`, `staff` and event lines
+(`src/feedback/feedback-thread.tsx:108-147`, `:187`).
+
+### 9.2 Decisions
+
+Marcel settled the round on 2026-10-14 in the ui-kit session: "as recommended", and "Add
+kastlan recommended, option b where all the past ones can be seen. They are essentially
+only mine." The five relayed decisions are confirmed. Each line below is the rule.
+
+**The five (confirmed):**
+1. **Visibility: all, minus attachments.** A report is visible to every person the app's
+   predicate lets in (decision 7): title, the public body, category, status, replies,
+   comments. **Never to others:** `screenshot_url`, `attachment_urls`, `context`,
+   `crash_fingerprint`, the author's address.
+2. **Rating: an upvote only** ("I want this too"), one per person per report, a count,
+   sortable in the admin inbox. No down-votes, no stars.
+3. **Names: others by first name only**, on reports, comments and replies (9.5). The
+   admin still sees the whole account.
+4. **Comments by others: each its own row** (author, date, body), a thread, never folded
+   into a text field. The admin hides a comment. keksdose's `feedback_comments` is
+   revived (9.8).
+5. **Admin replies as a list:** each answer its own row (author, date, body, the status
+   change it made, if any), a timeline in the admin row. Each existing `outcome`
+   migrates in as the first reply. The loops write replies (9.13).
+
+**The rest:**
+6. **Existing reports become public (option b), with a per-report `public` flag** (9.3):
+   - `feedback.public` (boolean, NOT NULL). **The migration sets it `true` on every
+     existing report but a CRASH** (they are essentially Marcel's own) and marks those
+     rows `filed_private = true`.
+   - **A notice with an opt-out** goes once to each other author of such a report (9.12):
+     the report numbers, what others now see and never see, and how to keep a report
+     private.
+   - **Who sets it:** an admin, any time; the author, while the report is open (OPEN,
+     READY, IN_PROGRESS, the author's edit window), and **on a `filed_private` report at
+     any status** (that is the opt-out).
+   - **New reports are public by default** (a CRASH never). The dialog says so, under
+     the body: **"Other users will see the title and text (never your screenshots or
+     files)."** / **"Andere Personen sehen Titel und Text (nie Ihre Screenshots oder
+     Dateien)."**
+7. **Who sees the public parts is the app's predicate**, a callable on the viewer in
+   `FeedbackDeps` (`public_viewer`). An admin always passes; a demo never does (8).
+   keksdose: every signed-in user. Kurvenschmiede: ADMIN, MEMBER, REVIEWER, **never
+   CUSTOMER** (a customer files and reads their own reports only). kastlan: **off**
+   (`None`): the public routes are not mounted, no menu entry, no votes, no comments;
+   **replies ship everywhere** (they are not public parts). Should kastlan switch it on
+   later: per company (RLS), staff only (`ALL_EMPLOYEES`, never TENANT).
+8. **A demo is treated as not signed in for the public parts:** the public GETs answer
+   it 404, as to anyone outside the predicate; a vote or comment is the app's demo
+   refusal (403 `demo_refused`, kastlan's sign-in refusal `demo_read_only`). KS's demo
+   is open to anyone, so no public report may reach it.
+9. **Crash reports are private** (P-a): a CRASH row is never public, whatever its flag;
+   its body carries the reporter's address. It gets no votes and no comments; replies
+   work. A crash re-labelled BUG keeps `public = false` until an admin sets it.
+10. **The public body and every comment and reply body shown to others strip every
+    attachment URL anywhere** (`/api/v1/feedback/attachments/<key>`, the app's prefix),
+    not only the `[screenshot]` lines (P-b, P-e). 9.4.
+11. **Names: `first_name_of(first, last)` = `first` trimmed when `last` is not blank,
+    else `None`.** No guessing at a first word. `None` is shown as **"A user"** /
+    **"Eine Person"**, as an erased author is (9.5). Demo throwaways keep `last_name ""`.
+12. **Files: a predicate of their own**, separate from who sees the report: the
+    uploader, the report's author, an admin. Never "anyone who sees the report". Written
+    into the storage port's docs (9.10).
+13. **Replies notify; a status alone does not.** `feedback_answered` fires on a reply,
+    so a status-only move to a decided status (DONE, WONT_DO, POSTPONED) nudges the admin
+    toward a reply, and the status picker lives in the reply composer (9.7, 9.15).
+14. **Notifications:** `feedback_answered` (a reply) and `feedback_comment` (a visible
+    comment), to the author and the earlier commenters, never the writer; on by default;
+    no content in mail or push. kastlan: `feedback_answered` by e-mail only;
+    `feedback_comment` not declared while public is off. 9.11.
+15. **The loops write replies** (9.13): keksdose through its restricted login with a
+    grant and a `notified_at` queue the jobs runner sends; kastlan by raw SQL that
+    copies `company_id`, no notice yet; Kurvenschmiede through the kit's service.
+16. **keksdose's 14 comments migrate per row by data** (admin writer → staff comment;
+    the author → a comment; no writer → <deleted user>) and stay comments (K2). 9.8.
+17. **Moderation:** the admin hides and unhides; the writer deletes their own comment;
+    nobody edits a comment; no flags, bans or locks.
+18. **Erasure:** reports and comments anonymised; votes deleted; an erased admin's
+    replies kept without an author. **Export:** the person's own comments and votes;
+    another person's report by its id only. 9.12.
+19. **Rate limits:** comments 20 an hour, votes 60 an hour, per user; 429 with
+    `Retry-After`, charged before the work (§3.5).
+20. **The author's report is their vote**, cast on filing: the count starts at 1;
+    existing reports are backfilled. 9.6.
+21. **keksdose's menu:** a separate **"All feedback"** entry (`publicHref`); "My
+    feedback" unchanged (K4). The page is `/all-feedback`, "All feedback" / "Alle
+    Rückmeldungen".
+22. **`outcome` read-only for one release, then dropped.**
+23. **Cost (B4):** the public list carries titles only, no body; it sorts and searches
+    on plaintext columns only; the vote and comment counts are SQL counts. The answer
+    is read in the detail only (9.9).
+
+### 9.3 The report: three views and the `public` flag
+
+| Field | Admin (inbox) | Author (`/my`) | Public list | Public detail |
+|---|---|---|---|---|
+| `id`, `title`, `category`, `status`, `created_at`, `updated_at`, `resolved_at` | ✓ | ✓ | ✓ | ✓ |
+| `body` | as stored | as stored | — | **public body** (9.4) |
+| `user_id` | ✓ | ✓ | — | — |
+| `user_email` | ✓ | — | — | — |
+| `author_name` (new) | full name (`full_name`, reader's order) | their own full name | first name (9.5) | first name |
+| `mine` (new) | ✓ | `true` | ✓ | ✓ |
+| `public`, `filed_private` (new) | ✓ | ✓ | — | — |
+| `context`, `screenshot_url`, `attachment_urls` | ✓ | ✓ | — | — |
+| `votes`, `voted` (new) | ✓ | ✓ | ✓ | ✓ |
+| `comment_count` (new) | ✓, hidden ones included | visible ones | visible ones | visible ones |
+| `replies` (new) | ✓, with `status_from` | ✓ | — | ✓ |
+| `outcome` | ✓, frozen (9.7) | ✓, frozen | — | — |
+
+- The admin and author views are `FeedbackResponse` with the new fields, all optional, so
+  an app without public parts sends none of them. **`FeedbackPublicListItem` and
+  `FeedbackPublicResponse` are separate models**, so a field added to `FeedbackResponse`
+  later never reaches the public by default. `crash_fingerprint` is in no view.
+- **A report is public** when `public` is true and it is no CRASH:
+  `is_public(category, public)`. Only a public report is in the public list, and only a
+  public report's detail, comments and vote answer someone who is neither its author nor
+  an admin; otherwise 404 "Feedback not found", whatever the app's `foreign_row`.
+- **Switching `public`** is `PATCH /feedback/{id} {"public": false}` (§3.4's route).
+  The admin sets it any time. The author sets it (both ways) while the status is in
+  `AUTHOR_EDITABLE_STATUSES`, or at any status when `filed_private` is true; otherwise
+  403, keksdose's wording ("Entry is in DONE; only OPEN / READY / IN_PROGRESS entries
+  can be edited by the author"). `filed_private` is set by the migration only, never by
+  the API.
+- **Switched off**, the report leaves the public list; its comments and votes stay
+  (the author and the admin still see them); its commenters lose the thread (404).
+- An admin reading the public list gets the public view too; the files are in the inbox.
+
+### 9.4 The public body
+
+`public_body(body, *, policy) -> str` (server-kit, layer 1), applied by the server, never
+the client:
+- drops every `[screenshot] <url>` line (§3.4's pattern);
+- **removes every other attachment URL anywhere** in the text (`policy.prefix` + a key the
+  policy accepts, wherever it stands): a user may paste one into their own text or a
+  rework note, and kk and ka serve a key to any signed-in user (P-b);
+- rewrites kastlan's folded headers `--- COMMENT <stamp> · <name> ---` to
+  `--- COMMENT <stamp> ---`: the name may be an address;
+- keeps the `--- REWORK <stamp> ---` lines and the notes: the author's own words.
+
+`public_text(text, *, policy) -> str` is the URL removal alone; it is applied to every
+comment body and every reply body that leaves for someone other than its writer and an
+admin (P-e). A removed URL leaves `[…]`.
+
+### 9.5 Names
+
+`first_name_of(first, last) -> str | None` (server-kit, `auth.accounts`, beside
+`full_name` and `name_incomplete`): `first.strip()` when `last.strip()` is not empty,
+otherwise `None`. **No first-word guessing** ("王小明", "Dr. Anna Muster", "Muster, Anna"
+all break it). An account whose old display name moved whole into `first_name` (kk 0114,
+KS) is `name_incomplete` and shows no name until it completes it; kk already asks it to
+(`CompleteNameDialog`). `None` is drawn as **"A user"** / **"Eine Person"** (the kit's
+label, `feedbackPublic.anonymous`), the same as an erased author. kastlan: every non-demo
+account is complete; its demo throwaways keep `last_name ""` and so are never named (and
+cannot write). The admin sees `full_name` and the address, as today. A name is the
+server's: the client never builds one from an id.
+
+### 9.6 Votes
+
+Table `feedback_votes (feedback_id FK ON DELETE CASCADE, user_id FK users ON DELETE
+CASCADE, created_at server_default now(), PRIMARY KEY (feedback_id, user_id))`; in kastlan
+a `CompanyMixin` table.
+
+- **`votes`**: the row count, an SQL count per page (`GROUP BY`), never per row;
+  **`voted`**: whether the viewer has a row.
+- **The author's vote is cast on filing** (the create adds the row; not on a CRASH), so
+  the count reads "people who want this" and starts at 1. The author's button shows
+  "voted", disabled, "Your report". `DELETE` by the author is 409 "Your report counts as
+  your vote". The migration backfills one vote per existing non-CRASH report whose
+  `user_id` is set (an erased author's report starts at 0).
+- **Idempotent:** `PUT` twice is one row; `DELETE` with none is the same answer.
+- **Any status:** a DONE or WONT_DO report may still be wanted.
+- **The sort:** the inbox gains a sortable **Votes** column (client-side, as every
+  column); the public list sorts on the server by `newest` (default), `votes` (most, then
+  newest) or `updated`. Who voted never leaves the server.
+
+### 9.7 Replies
+
+Table `feedback_replies (id serial, feedback_id FK ON DELETE CASCADE, author_id FK users
+nullable, body Text NOT NULL, status_from nullable, status_to nullable, created_at
+server_default now())`; keksdose adds `notified_at timestamptz NULL` (9.13); KS seals
+`body`; kastlan's is a `CompanyMixin` table. Both status columns use the app's status
+type.
+
+```jsonc
+// FeedbackReplyResponse
+{ "id": 31, "author_name": "Marcel",     // others: first name; admin: full name; null: "Admin"
+  "body": "Fixed in 0.4.27.", "status_to": "IN_EVALUATION",  // null: no status change
+  "status_from": "OPEN",                 // the admin view only
+  "created_at": "2026-10-14T09:12:00Z" }
+// FeedbackReplyCreate (admin only)
+{ "body": "…", "status": "IN_EVALUATION" }  // body 1–8000 after trimming; status optional
+```
+
+- **Who writes:** an admin (`POST /feedback/{id}/replies`) and the loops (9.13). A reply
+  with `status` moves the report through `plan_reply` (the same `resolved_at` rule as
+  `plan_update`) and records `status_from`/`status_to`. A status `PATCH` alone writes no
+  reply and sends nothing.
+- **The nudge (B2):** the status picker is in the reply composer. A status-only change
+  into a decided status (`DECIDED_STATUSES`: DONE, WONT_DO, POSTPONED) from the table,
+  a swipe or the pills still works, and the detail then says "The author has not been
+  told. Add a reply." above the composer, with that status chosen, until a reply with
+  that `status_to` exists.
+- **Null author:** a loop reply, a migrated outcome, or an erased admin. Shown as the
+  app's word for its admin ("Admin"), never "the team" (§3.3).
+- **No edit, no delete** in the API: a correction is a new reply.
+- **The outcome migration** (each app, one Alembic step): one reply per row whose
+  `outcome` is not blank: `body = outcome`, `author_id = NULL`, `status_from` and
+  `status_to` NULL, `created_at = coalesce(resolved_at, updated_at)` (kk's raw `UPDATE`
+  never bumped `updated_at`, so it is the last app write; fine), and in kk
+  `notified_at = created_at` (never sent). KS seals the copy under the same key; kastlan
+  runs it under `SET LOCAL app.bypass_rls` and copies `company_id`.
+- **`outcome` is frozen for one release:** the column stays and is answered as stored
+  (an old client still shows the last answer); nothing writes it any more, and nothing
+  computes it from replies; `PATCH {outcome}` is 422 "outcome is read-only; post a
+  reply". The release after drops the column, kk's `UPDATE (outcome)` grant with it.
+- **Rework** is unchanged: the author's note is appended to the body (§3.4), not a reply
+  or a comment, and it still reopens the row.
+
+### 9.8 Comments
+
+Table `feedback_comments (id serial, feedback_id FK ON DELETE CASCADE, user_id FK users
+nullable, body Text NOT NULL, staff boolean NOT NULL default false, created_at
+server_default now(), updated_at, hidden_at nullable, hidden_by FK users nullable)`:
+keksdose's table plus `staff` and the two hide columns; KS seals `body`; kastlan's would
+be a `CompanyMixin` table (not built while public is off).
+
+```jsonc
+// FeedbackCommentResponse
+{ "id": 9, "author_name": "Anna", "mine": false, "staff": false,
+  "body": "Same here on the iPad.",       // null when hidden, but for its writer and an admin
+  "hidden": false, "created_at": "…" }
+// FeedbackCommentCreate
+{ "body": "…" }                           // 1–4000 after trimming; plain text, no files
+// FeedbackCommentHide (admin only)
+{ "hidden": true }
+```
+
+- **Who comments:** anyone who sees the report under 9.3 (its author included), on any
+  status; not a demo; not on a CRASH. A comment never changes the status.
+- **An admin's post is a reply** (9.7), so the answer is in one place. `staff` is true
+  only on keksdose's migrated rows whose writer is an admin.
+- **keksdose's 14 rows (K2)** stay comments, decided per row by data in the migration:
+  writer an admin → `staff = true`; writer the report's author → an ordinary comment;
+  `user_id` NULL → <deleted user> ("A user"). Marcel's check:
+  `SELECT c.id, c.user_id = f.user_id AS by_author, u.role FROM feedback_comments c JOIN
+  feedback f ON f.id = c.feedback_id LEFT JOIN users u ON u.id = c.user_id`.
+- **Hide:** `PATCH /feedback/{id}/comments/{comment_id} {"hidden": true|false}`, admin
+  only, sets or clears `hidden_at`/`hidden_by`. Hidden: others see "Hidden by an admin"
+  with no body and no name; the writer sees their text with that line; the admin sees it
+  struck through with **Unhide**. A hidden comment still counts for its writer's export
+  and erasure, and not in `comment_count` for anyone but an admin.
+- **Delete:** the writer's own, `DELETE /feedback/{id}/comments/{comment_id}`, a hard
+  delete; an admin hides instead. **No edit.**
+- **Order:** oldest first; the detail merges replies and comments by `created_at`.
+
+### 9.9 Endpoints
+
+Under `/api/v1/feedback`, bearer auth, the app's guards first in each route's
+dependencies (server-services §2.8). keksdose's names (`list_*`, `create_*`):
+
+| Method + path | Endpoint | Who (else) | Answer |
+|---|---|---|---|
+| `GET /public?sort=&status_filter=&category=&q=&limit=&offset=` | `list_public` | `public_viewer` (404) | `FeedbackPublicListItem[]`, public reports only |
+| `GET /public/{feedback_id}` | `get_public` | the same; the report public (404) | `FeedbackPublicResponse` |
+| `GET /{feedback_id}/comments` | `list_comments` | who sees the report (404) | `FeedbackCommentResponse[]` |
+| `POST /{feedback_id}/comments` | `create_comment` | the same; demo guard | 201 `FeedbackCommentResponse` |
+| `PATCH /{feedback_id}/comments/{comment_id}` | `hide_comment` | admin guard, demo guard | `FeedbackCommentResponse` |
+| `DELETE /{feedback_id}/comments/{comment_id}` | `delete_comment` | the writer (404); demo guard | 204 |
+| `PUT /{feedback_id}/vote` | `vote` | who sees the report (404); demo guard | `FeedbackVoteResponse` `{votes, voted}` |
+| `DELETE /{feedback_id}/vote` | `unvote` | the same; not the author (409) | `FeedbackVoteResponse` |
+| `POST /{feedback_id}/replies` | `create_reply` | admin guard, demo guard | 201 `FeedbackResponse`, `replies` included |
+
+- **Mounted:** `create_reply` when the app passes the reply store (all three); the other
+  eight only when `public_viewer` is set (kk, KS). They go before `PATCH /{feedback_id}`
+  in the router, and `/public` before any `/{feedback_id}` GET of the app's own.
+- **"Who sees the report":** an admin; its author (comments only when the author passes
+  `public_viewer` too: a KS customer gets 404); anyone passing `public_viewer` when the
+  report is public. A demo never passes (decision 8).
+- **The list (B4):** titles only, no body; `q` searches `title` and only where it is a
+  plaintext column (kk, ka; `FeedbackDeps.public_search=False` in KS, where `q` is a
+  422); sort as 9.6; `limit` 1–100 (default 50); counts in SQL.
+- **The detail** carries the public body and the replies; the comments are fetched
+  with it (`list_comments`), since they may be many.
+- **Replies ride on the report** on `GET /feedback`, `GET /feedback/my` and the create
+  and PATCH answers (a report has few); `GET /feedback` and `/my` keep their shapes plus
+  the new fields (9.3). The table shows no answer column: the answer is read in the
+  detail.
+- `PATCH /feedback/{id}` gains `public` (9.3). Routes added, none renamed; kk's
+  `openapi-schema.d.ts` gains them.
+
+### 9.10 Privacy rules
+
+What leaves for anyone but the author and an admin, exactly. **A report:** `id`,
+`title`, `category`, `status`, `created_at`, `updated_at`, `resolved_at`,
+`author_name` (first name or null), `mine`, `votes`, `voted`, `comment_count`; in the
+detail also the public body (9.4) and the replies (`id`, `author_name`, `body` through
+`public_text`, `status_to`, `created_at`). **A comment:** `id`, `author_name`, `mine`,
+`staff`, `body` (through `public_text`; null when hidden), `hidden`, `created_at`.
+**Never:** user ids, addresses, last names, `context`, any attachment URL or key (the
+columns, the body's file lines, a pasted URL), `crash_fingerprint`, `public`,
+`filed_private`, `hidden_by`, `status_from`, who voted. A CRASH row, never.
+
+- **The files predicate (decision 12)** is not the report's: a file is read by its
+  uploader, the author of a report naming it, or an admin. kk and ka serve a key to any
+  signed-in user; that stays safe only because no key reaches anyone else (above). KS's
+  "anyone who can see the report that links it" narrows to the three. The rule is
+  written into `AttachmentStorage.read`'s docstring (9.14).
+- **Mail and push carry no content** (notifications §2.8): no title, no body, no comment.
+- **The redaction** of ui-kit's thread (`data-private`, `feedback-thread.tsx`,
+  "Redaction") covers comment and reply bodies and names, as it does now.
+- `testing.assert_public_view` walks every public answer for a key outside these lists.
+
+### 9.11 Notifications
+
+Two types, declared by each app in its registry (notifications §2.1), with the ids in
+the kit (`FEEDBACK_ANSWERED`, `FEEDBACK_COMMENT`) and their setting words in the kit,
+since two apps declare them:
+
+| Type | Fires on | To | Default | Quiet |
+|---|---|---|---|---|
+| `feedback_answered` | a reply (9.7), from the admin or a loop | the author and every earlier commenter, never the reply's writer | on | true |
+| `feedback_comment` | a comment (9.8) | the author and the earlier commenters, never the comment's writer | on | true |
+
+- Both on by §2.1's rule: they fire only on a report the person wrote or commented on.
+  Voters are not told. A recipient must still see the report (9.9: an author always;
+  a commenter while it is public and they pass `public_viewer`); never a deactivated,
+  erased or demo account. `feedback_recipients(...)` (layer 1) computes the list.
+- **Channels:** kk `app` (inbox + push); ka **e-mail only** (`app=None`: its poller
+  carries company-wide counts, not a person's event) until push, and `feedback_comment`
+  not declared while public is off; KS e-mail. The mail says "Your report has an answer"
+  / "New comment on a report you follow", names the report by number and links
+  `?row=<id>`; the words are the app's.
+- **KS's `feedback_answered` changes its trigger** from "the status crosses into an
+  answered one" (`notification_service.py:224`) to "a reply" (decision 13).
+- **Hidden later** does not unsend.
+- **Where it fires:** the reply and comment stores' `add`, which see the actor
+  (server-services §2.16), sent after the commit (notifications §9.2.4). A request's
+  reply is tried once (notifications decision 5).
+- **keksdose's loop replies** run no app code: the jobs runner sends `feedback_answered`
+  for `feedback_replies` rows with `notified_at IS NULL` and sets `notified_at` in the
+  same transaction as the inbox write (the `digest_sent` pattern). The app's own writes
+  set `notified_at` at once (K3). kastlan's loop replies send nothing yet (the author
+  sees the answer on the next visit).
+
+### 9.12 The notice to existing authors, erasure, export
+
+**The notice (decision 6).** One mail per person, once, after the migration's deploy:
+to each active, non-demo, non-admin author of at least one `filed_private` report that is
+public. A new `AccountNoticeKind.FEEDBACK_PUBLISHED` (`"feedback_published"`): it is
+about the person's own data, so it has no switch and no unsubscribe link. Sent by an app
+job through the app's once-marker (notifications §3.4; event key
+`feedback_published:<user_id>`), so a re-run sends nothing twice. It says, in the
+recipient's language: from <date> other users of <app> see the title and text of your
+reports #12, #31, … (numbers only, no titles); never your screenshots, files or address,
+and only your first name; to keep one private, open it in "My feedback" and turn off
+"Visible to others", at any status; link `/my-feedback`. keksdose and Kurvenschmiede
+send it; kastlan has no public parts.
+
+**Erasure** (`FeedbackService.erase_author` grows; the app calls it as today):
+1. the reports, as now (§3.2, server-services §2.15);
+2. **comments** by the person: body `scrub_text`'d with the identifiers, `user_id` NULL;
+   kept, shown as "A user";
+3. **votes** by the person: deleted;
+4. **replies** by the person (an admin): `author_id` NULL, body scrubbed; kept;
+5. `hidden_by` NULL where it was them.
+`ErasedFeedback` gains `comments`, `votes`, `replies` counts (defaults 0). kk's own scrub
+(`budgets_service.py:1255-1260`) goes into the kit's.
+
+**Export:** `data.feedback[]` (own reports) gains `public`, `votes` (the count) and
+`replies: [{ body, status, created_at }]` (no author name); `data.feedback_comments:
+[{ report, body, hidden, created_at }]`, the comments the person wrote on any report,
+and `data.feedback_votes: [{ report, created_at }]`, oldest first. **`report` is the id
+only** (decision 18): another person's title is theirs. keksdose's `comments` key with
+`"from": "you" | "keksdose"` (`account_export_service.py:324-325`) goes; others'
+comments on the person's reports are not exported (user-admin §6.5).
+
+### 9.13 The loops' write paths
+
+**keksdose** answers with a reply, through `feedback-live-write.sh`, which runs the file
+with `psql -1` (`:18`): one transaction already, so **the file has no `BEGIN`/`COMMIT`**
+(a `COMMIT` inside would end it early, and a later failure would no longer roll back
+what came before). Per row:
+
+```sql
+INSERT INTO feedback_replies (feedback_id, body, status_from, status_to)
+  SELECT id, $$…$$, status, 'IN_EVALUATION' FROM feedback WHERE id = 412;
+UPDATE feedback SET status = 'IN_EVALUATION' WHERE id = 412;
+```
+
+Grants for `keksdose_feedback` (`feedback-live-setup.sh:39-41`, re-run as
+`keksdose_owner`), K1:
+- **may:** `SELECT` on `feedback`, `feedback_replies`, `feedback_comments`; `INSERT
+  (feedback_id, body, status_from, status_to)` on `feedback_replies`; `USAGE` on
+  `feedback_replies_id_seq`; `UPDATE (status)` on `feedback`;
+- **may not:** read `users` or `feedback_votes` (step 4 checks both and fails on
+  either); set `author_id`, `created_at` or `notified_at` (the defaults fill them:
+  `created_at` `server_default now()`, since kk's timestamps are Python-side,
+  `models/base.py:35-39`; `notified_at` NULL, so a loop reply is always "Admin" and
+  always queued); update or delete a reply; write or hide a comment; set `resolved_at`;
+- `UPDATE (outcome)` stays for the one release and goes with the column; the loop no
+  longer writes it.
+- `feedback-live-read.sh` shows each report's replies (oldest first, with `status_to`)
+  and its comments (body, `created_at`, hidden), without names.
+The foreign key to `users` needs no grant: Postgres checks it as the table's owner.
+
+**kastlan** answers with a reply by raw SQL through `scripts/feedback-db.sh` (as
+`kastlan_app`, RLS bypassed): `INSERT INTO feedback_replies (company_id, feedback_id,
+body, status_from, status_to) SELECT company_id, id, $$…$$, status, 'IN_EVALUATION' FROM
+feedback WHERE id = N;` then the status `UPDATE`. `company_id` is copied from the report;
+`created_at` has `server_default now()`. No notice yet (9.11). kastlan updates its
+`CLAUDE.md` loop text and `scripts/feedback-prod-migrate.sql` at adoption.
+
+**Kurvenschmiede**'s `feedback_loop.py --resolve` writes a reply through the kit's
+`FeedbackService.reply` as the first admin, so `feedback_answered` fires in the store's
+`add`.
+
+### 9.14 What server-kit 0.11 ships
+
+Additive: no name is removed or renamed; every new parameter has a default that keeps
+0.10's behaviour. Paths from the server-kit repo's root.
+
+**Layer 1**
+- `src/eifi1_server_kit/feedback/enums.py`: `DECIDED_STATUSES = frozenset({DONE, WONT_DO,
+  POSTPONED})`.
+- `src/eifi1_server_kit/feedback/public.py` (new): `public_body(body, *, policy=
+  DEFAULT_ATTACHMENT_URL_POLICY) -> str`, `public_text(text, *, policy=…) -> str`,
+  `is_public(category, public) -> bool`, `feedback_recipients(*, author_id,
+  commenter_ids, writer_id) -> list[int]` (author first, then commenters by first
+  comment, no writer, no duplicates, no None), `FEEDBACK_ANSWERED = "feedback_answered"`,
+  `FEEDBACK_COMMENT = "feedback_comment"`, `COMMENT_MAX = 4000`, `REPLY_MAX = 8000`,
+  `PUBLIC_REPORT_FIELDS`, `PUBLIC_COMMENT_FIELDS`, `PUBLIC_REPLY_FIELDS` (frozensets,
+  9.10's lists).
+- `src/eifi1_server_kit/auth/accounts.py`: `first_name_of(first, last) -> str | None`.
+- `src/eifi1_server_kit/feedback/rules.py`: `plan_update(…, filed_private: bool =
+  False)`: `public` joins the author's fields, allowed at any status when
+  `filed_private`; `ReplyPlan(changes, status_from, status_to)` and `plan_reply(*,
+  status, new_status, now=None) -> ReplyPlan` (the `resolved_at` rule;
+  `new_status=None` changes nothing; CRASH is no status, so no refusal is needed).
+- `src/eifi1_server_kit/feedback/schemas.py`: `FeedbackUpdate.public: bool | None`;
+  `FeedbackUpdate.outcome` refused with 422 "outcome is read-only; post a reply";
+  `FeedbackResponse` gains, all optional with defaults: `author_name: str | None`,
+  `mine: bool | None`, `public: bool | None`, `filed_private: bool | None`, `votes: int
+  | None`, `voted: bool | None`, `comment_count: int | None`, `replies:
+  list[FeedbackReplyResponse] | None`. New: `FeedbackReplyCreate {body, status}`,
+  `FeedbackReplyResponse {id, author_name, body, status_from, status_to, created_at}`
+  (`status_from` excluded in the public detail), `FeedbackPublicListItem {id, title,
+  category, status, created_at, updated_at, resolved_at, author_name, mine, votes,
+  voted, comment_count}`, `FeedbackPublicResponse(FeedbackPublicListItem) {body,
+  replies}`, `FeedbackCommentCreate {body}`, `FeedbackCommentResponse {id, author_name,
+  mine, staff, body, hidden, created_at}`, `FeedbackCommentHide {hidden}`,
+  `FeedbackVoteResponse {votes, voted}`, `PublicSort = Literal["newest", "votes",
+  "updated"]`. Bodies trimmed and bounded by `COMMENT_MAX` / `REPLY_MAX`.
+- `src/eifi1_server_kit/limiter.py`: `FEEDBACK_COMMENTS_PER_HOUR = 20`,
+  `FEEDBACK_VOTES_PER_HOUR = 60`; `FeedbackLimiters(…, comments_per_hour=20,
+  votes_per_hour=60)` gains `.comment` and `.vote` (429 + `Retry-After`), reset too.
+- `src/eifi1_server_kit/mail.py`: `AccountNoticeKind.FEEDBACK_PUBLISHED =
+  "feedback_published"`.
+
+**Layer 2**
+- `src/eifi1_server_kit/feedback/ports.py`:
+  - `FeedbackActor` gains `role: str | None = None` (the app's role name, for its
+    predicate);
+  - `NewFeedback` gains `public: bool = True` (the service passes False for a CRASH);
+  - `PublicFeedbackRow(FeedbackRow, Protocol)`: adds `category`, `public`,
+    `filed_private`, `updated_at`, `resolved_at`;
+  - `FeedbackReplyRow`, `FeedbackCommentRow` (read-only protocols with 9.7's and 9.8's
+    columns); `NewFeedbackReply(feedback_id, author_id, body, status_from, status_to)`,
+    `NewFeedbackComment(feedback_id, user_id, body)`; `PublicListEntry(row, votes,
+    voted, comment_count)`;
+  - `PublicFeedbackRepository[RowT]` (Protocol; the app's repository may implement it
+    too): `public_page(*, viewer_id, sort, status, category, q, limit, offset) ->
+    Sequence[PublicListEntry]` (public rows only, counts in SQL), `get_public(
+    feedback_id) -> RowT | None`;
+  - `FeedbackReplyStore`: `for_reports(ids) -> Mapping[int, Sequence[ReplyRowT]]`,
+    `add(new, *, actor: FeedbackActor | None) -> ReplyRowT` (fires
+    `feedback_answered`), `by_author(user_id)`, `apply(reply, changes)`;
+  - `FeedbackCommentStore`: `for_report(feedback_id) -> Sequence[CommentRowT]`,
+    `counts(ids, *, include_hidden) -> Mapping[int, int]`, `commenters(feedback_id) ->
+    Sequence[int]`, `add(new, *, actor) -> CommentRowT` (fires `feedback_comment`),
+    `get(feedback_id, comment_id)`, `apply(comment, changes, *, actor)`,
+    `delete(comment)`, `by_author(user_id)`, `clear_hidden_by(user_id) -> int`;
+  - `FeedbackVoteStore`: `counts(ids, *, viewer_id) -> Mapping[int, tuple[int, bool]]`,
+    `put(feedback_id, user_id) -> None`, `delete(feedback_id, user_id) -> None`,
+    `delete_by_author(user_id) -> int`;
+  - `PeopleLookup`: `names(user_ids) -> Mapping[int, tuple[str, str]]`, the one read of
+    `users` (first, last; never a demo or system account);
+  - every write flushes and none commits (server-services §2.7);
+  - `AttachmentStorage.read`'s docstring states the files predicate (9.10).
+- `src/eifi1_server_kit/feedback/service.py`: `FeedbackService.__init__` gains `replies
+  = None`, `comments = None`, `votes = None`, `people = None`, `public_viewer:
+  Callable[[FeedbackActor], bool] | None = None`, `public_search: bool = True`. New
+  methods: `reply(actor, feedback_id, payload)`, `list_public(actor, *, sort, status,
+  category, q, limit, offset)`, `get_public(actor, feedback_id)`, `comments(actor,
+  feedback_id)`, `comment(actor, feedback_id, payload, *, limiter)`, `hide_comment(
+  actor, feedback_id, comment_id, payload)`, `delete_comment(actor, feedback_id,
+  comment_id)`, `vote(actor, feedback_id, *, limiter)`, `unvote(actor, feedback_id, *,
+  limiter)`, `sees_public(actor) -> bool` (False for a demo, True for an admin, else
+  the predicate); and the views `admin_view(row, address)`, `author_view(row)`,
+  `public_item(entry)`, `public_view(row)`, each filling names, counts and replies in
+  one call per store for a page. `create` adds the author's vote after the report;
+  `update` passes `filed_private`; **one write per store, the report last** (a reply
+  with a status adds the reply, then applies the row). `erase_author` gains steps 2–5 of
+  9.12; `ErasedFeedback` gains `comments`, `votes`, `replies` (default 0).
+- `src/eifi1_server_kit/feedback/router.py`: `FeedbackDeps` gains `replies`,
+  `comments`, `votes`, `people` (the app's dependencies, default None), `public_viewer`
+  (default None), `public_search: bool = True`, and the response models
+  `reply_response_model`, `comment_response_model`, `public_item_model`,
+  `public_response_model`. The nine routes of 9.9 with those endpoint names; when
+  `public_viewer` is set and `comments` or `votes` or `people` is missing, a
+  `ValueError` at build time.
+- `src/eifi1_server_kit/feedback/testing.py`: `InMemoryReplyStore`,
+  `InMemoryCommentStore`, `InMemoryVoteStore`, `InMemoryPeopleLookup`;
+  `InMemoryFeedbackRepository` implements `PublicFeedbackRepository`;
+  `check_reply_store`, `check_comment_store`, `check_vote_store`,
+  `check_public_repository` (conformance, as `check_repository`); and
+  `assert_public_view(payload)` (9.10).
+- `src/eifi1_server_kit/feedback/__init__.py`: the new names exported.
+
+**Tests** (100 % line and branch coverage kept): `tests/feedback/test_public.py`
+(`public_body`: screenshot lines, a pasted URL mid-line, a URL in a rework note, two
+URLs, a foreign prefix kept, kastlan's header rewritten, rework lines kept;
+`public_text`; `is_public` for each category; `feedback_recipients`);
+`tests/auth/test_accounts.py` (`first_name_of`: "Anna"/"Muster", "Anna Muster"/"",
+"王小明"/"", whitespace, None); `tests/feedback/test_rules.py` (`plan_reply`, the
+`public` lane, `filed_private` at DONE); `tests/feedback/test_schemas.py` (the new
+models, the outcome 422, bounds); `tests/feedback/test_service_public.py` (each new
+method; the author's vote; the 409; the demo and the predicate; a CRASH never public;
+a switched-off report; hidden comments per viewer; one call per store per page);
+`tests/feedback/test_router_public.py` (the routes mounted or not, the guards' order,
+404 vs 403, the 429s, `assert_public_view` over every answer, the operation ids);
+`tests/feedback/test_service.py` (the erasure's new steps and counts);
+`tests/test_limiter.py`, `tests/test_mail.py` (the new kind);
+`tests/feedback/test_testing.py` (the fakes pass the checks; a broken fake fails).
+
+Size: **L** (~800 code, ~1 300 test lines).
+
+### 9.15 What ui-kit 0.38 ships
+
+Additive: every new prop is optional; an app without public parts changes nothing but
+the Outcome section (9.7).
+
+- `src/feedback/feedback-record.ts`: `FeedbackRecord` gains optional `author_name`,
+  `mine`, `public`, `filed_private`, `votes`, `voted`, `comment_count`, `replies:
+  FeedbackReply[]`; `outcome` documented as frozen; `FEEDBACK_DECIDED_STATUSES`,
+  `FEEDBACK_COMMENT_MAX = 4000`, `FEEDBACK_REPLY_MAX = 8000`.
+- `src/feedback/feedback-public-types.ts` (new): `FeedbackReply`, `FeedbackComment`,
+  `FeedbackPublicListItem`, `FeedbackPublicRecord`, `FeedbackVoteState`,
+  `FeedbackPublicSort` (`"newest" | "votes" | "updated"`).
+- `src/feedback/feedback-vote-button.tsx` (new) **`FeedbackVoteButton`** `{votes, voted,
+  own?, onVote(next: boolean): Promise<FeedbackVoteState>, disabled?, size?, labels?}`:
+  `ThumbsUp`, the count, `aria-pressed`; "I want this too" / "Will ich auch"; on one's
+  own report disabled with "Your report" / "Ihr Bericht"; optimistic with rollback.
+- `src/feedback/feedback-comment-thread.tsx` (new) **`FeedbackCommentThread`** `{replies,
+  comments, isAdmin, onComment?, onHide?, onDelete?, pending?, commit?, labels?}` on
+  `FeedbackThread`: replies with the `staff` look and a "→ {status}" chip, comments
+  with `own`, `null` names as "A user", the hidden line, **Hide / Unhide** for an
+  admin, **Delete** for the writer (confirm), the composer (1–4 000, no files; left out
+  when `onComment` is).
+- `src/feedback/feedback-replies.tsx` (new) **`FeedbackReplyTimeline`** `{replies,
+  renderDate?, labels?}` and **`FeedbackReplyComposer`** `{status, onReply(body,
+  status?), pending?, suggestedStatus?, commit?, labels?}`: the status pick
+  (`selectableFeedbackStatuses`, "No change" first), **Reply** / **Antworten**, and the
+  nudge line when `suggestedStatus` is set (9.7).
+- `src/feedback/feedback-row-detail.tsx`: **`FeedbackRowDetail`** replaces the Outcome
+  section with the timeline and, when `canEdit`, the composer (new props `onReply?`,
+  `replying?`); the nudge when the row's status is decided and no reply has that
+  `status_to`; without `row.replies` it shows `outcome` read-only as before. New props
+  `comments?: ReactNode` (the app's `FeedbackCommentThread`, under the timeline) and
+  `onPublicChange?` (the **Visible to others** switch, `FeedbackPublicSwitch`, for the
+  admin and, within 9.3's window, the author). `Resolved: {date}`, Rework and the
+  page buttons stay.
+- `src/feedback/feedback-public-switch.tsx` (new) **`FeedbackPublicSwitch`** `{row,
+  isAdmin, viewerId, onChange, pending?, labels?}`; hidden on a CRASH; its own
+  `feedbackPublicSwitchAllowed(row, {isAdmin, viewerId})`.
+- `src/feedback/feedback-public-list.tsx` (new) **`FeedbackPublicList`** `{rows, total?,
+  sort, onSortChange, search?, onSearchChange?, renderDetail(row), onVote, loading?,
+  labels?}`: `DataTable` with #, Date, Category, Subject, Votes, Status, the sort
+  toggle **Newest / Most wanted / Recently updated**, the search box only when
+  `onSearchChange` is passed, the phone cards; and **`FeedbackPublicDetail`** `{row,
+  comments, onVote, …}`: the public body, the timeline, the thread, the vote.
+- `src/feedback/feedback-table.tsx`: `feedbackColumns` / `useFeedbackColumns` gain
+  `votes?: boolean` (a sortable **Votes** column, hidden on the phone, a count chip on
+  the card).
+- `src/feedback/feedback-menu.tsx`: `FeedbackMenu` gains `publicHref?: string`: **All
+  feedback** / **Alle Rückmeldungen** (`Users` icon, key `all-feedback`) above the list
+  link, for everyone, when passed.
+- `src/feedback/feedback-dialog.tsx` and `feedback-submit.tsx`: `FeedbackDialog` gains
+  `publicNotice?: ReactNode` (a muted line under the body); `UseFeedbackSubmitOptions`
+  gains `publicNotice?: boolean` (the label `feedbackDialog.publicNotice`, decision 6).
+- `src/notifications/feedback-notification-types.ts` (new):
+  `useFeedbackNotificationTypes(): NotificationTypeEntry<"feedback_answered" |
+  "feedback_comment">[]` with the setting words ("Answers to your reports" / "Comments
+  on reports you follow", with a line each).
+- Labels in seven languages: new groups `feedbackPublic`, `feedbackComments`,
+  `feedbackReplies`, `feedbackVote`, `feedbackNotificationTypes`; new keys
+  `feedbackDialog.publicNotice`, `feedbackMenu.allFeedback`, `feedbackDetail.replies`,
+  `.visibleToOthers`, `.nudge`; `src/i18n/kit-labels.tsx`, `src/i18n/en.ts`, the
+  locales.
+- Showcase: the Feedback pages gain the public list, the thread and the reply
+  composer; the search index and the public-surface test list the new exports.
+
+**Tests:** `src/feedback/__tests__/feedback-vote-button.test.tsx` (pressed, own,
+rollback), `feedback-comment-thread.test.tsx` (hidden per viewer, Hide/Unhide, Delete
+with confirm, null name, bounds), `feedback-replies.test.tsx` (status pick, nudge,
+order), `feedback-row-detail.test.tsx` (the Outcome section replaced; the old row
+without `replies`; the switch's window), `feedback-public-switch.test.tsx`,
+`feedback-public-list.test.tsx` (sort, no search without the handler, phone cards,
+axe), `feedback-menu.test.tsx` (`publicHref`), `feedback-dialog-body.test.tsx` (the
+notice), `feedback-table.test.tsx` (Votes), `src/notifications/__tests__/
+feedback-notification-types.test.ts`, the labels test for seven locales, and
+`public-surface.test.ts`.
+
+Size: **M–L** (~900 code, ~900 test lines, seven locales).
+
+### 9.16 Per app
+
+- **keksdose (canon), M:** migrations: `feedback.public` (true but CRASH) and
+  `filed_private` (true on every existing row), `feedback_replies` (+ `notified_at`),
+  the outcome copy, `feedback_votes` + the author backfill, `feedback_comments` +
+  `staff`, `hidden_at`, `hidden_by` (the 14 rows per K2); the stores, `PeopleLookup`,
+  `public_viewer = lambda a: True`; the two types in `NOTIFICATION_TYPES` and the job
+  for `notified_at`; the notice job (9.12); the export and the erasure (its scrub moves
+  into the kit); the grants, `feedback-live-read.sh`, the SQL template and the agent
+  prompt (9.13); `/all-feedback` and `publicHref`; `publicNotice`.
+- **kastlan, S:** `feedback_replies` as a `CompanyMixin` table under forced RLS with
+  `server_default now()`; the outcome copy under bypass; the reply store; no
+  `public_viewer`; `feedback_answered` by e-mail; the export (`account_service.py:300`
+  → replies) and the erasure; the loop's SQL (9.13), `CLAUDE.md` and
+  `scripts/feedback-prod-migrate.sql`. The kit's `FeedbackRowDetail` takes the
+  timeline.
+- **Kurvenschmiede, M:** `public` and `filed_private` on `feedback`, the three tables, comment
+  and reply bodies sealed; the outcome copy sealed; the stores and `PeopleLookup` (no
+  demo or system account named); `public_viewer` = not demo and role in ADMIN, MEMBER,
+  REVIEWER (`FeedbackActor.role`); `public_search=False`; the files predicate narrowed
+  (9.10); `feedback_answered` moves to "a reply", `feedback_comment` added, both in
+  seven languages; the notice; `--resolve` writes a reply through the kit's service;
+  export and erasure; `publicNotice`.
+
+### 9.17 Shipped, amended elsewhere
+
+- server-services §4 (layer 2: the ports, the service, the router) points here
+  ([server-services-harmonization.md](server-services-harmonization.md) §4.5).
+- notifications: the two types and the notice kind
+  ([notifications-harmonization.md](notifications-harmonization.md) §2, §5).
+
+### 9.18 Reviews and decisions
+
+The draft (ui-kit `e09adf2`) was reviewed on 2026-10-14 by keksdose (keksdose-cb, at
+`52fa9f6a`; full review in kk `.feedback-live/kit038-review.md`), kastlan (kastlan-d1,
+at `fe8bf78`) and Kurvenschmiede (kurvenschmiede-1b, at `7dc6985`). Marcel settled it the
+same day in the ui-kit session: "Add kastlan recommended, option b where all the past
+ones can be seen. They are essentially only mine.", on top of "as recommended". Where
+each point went:
+- **Marcel:** the five relayed decisions confirmed → decisions 1–5; **existing reports:
+  keksdose relayed option (a)** (only new reports public; older ones private unless
+  marked), **Marcel chose option (b) in the ui-kit session** after seeing both: every
+  existing report public at the migration, a notice with an opt-out to other authors →
+  decision 6, 9.3, 9.12; kastlan off → decision 7; the demo's last name stays "" →
+  9.5; the rest "as recommended" → decisions 7–23.
+- **keksdose:** K1 the grant, `server_default`, `notified_at` NULL with no grant, no
+  `BEGIN`/`COMMIT` in the template, the read script, step 4 refusing `feedback_votes` →
+  9.13; K2 the 14 rows per row by data, kept as comments → decision 16, 9.8; K3 the
+  `notified_at` queue → 9.11; K4 "All feedback" via `publicHref`, "My feedback" as it
+  is → decision 21, 9.15; P-a crash reports private (required) → decision 9; P-b and P-e
+  the URL strip anywhere, on comments too → decision 10, 9.4; P-c → decision 6; P-d the
+  first name only for complete names → 9.5; the export label `:324-325` → 9.1, 9.12;
+  "Admin" for a null author, both types quiet → 9.7, 9.11.
+- **kastlan:** A1 off; if on, per company and staff only → decision 7; A2 the export
+  reads `outcome` (`account_service.py:300`), and kastlan **has** a loop write path
+  (raw SQL as `kastlan_app` under bypass, `company_id` copied, `server_default`, no
+  notice yet) → 9.1, 9.13, 9.16; A3 nothing to split → 9.1; it **has** throwaway demo
+  accounts → 9.1, 9.5; `CompanyMixin` at `feedback.py:21` → 9.1; `feedback_answered` by
+  e-mail only, `feedback_comment` not declared while off, a reply tried once → 9.11.
+- **Kurvenschmiede:** the public demo → decision 8; B1 the app's predicate, CUSTOMER
+  never → decision 7, 9.9; B2 a reply notifies, the nudge and the picker in the
+  composer → decision 13, 9.7; B3 no first-word guessing, "A user" → decision 11, 9.5;
+  B4 titles only, plaintext sort and search, SQL counts → decision 23, 9.9; the files
+  predicate in the storage port's docs → decision 12, 9.10; the outcome only in the
+  detail → 9.9; the export by id → decision 18; global report numbers fine.
+
+The cites in 9.1 were re-read at settling: kk at `52fa9f6a`, ka at `187ffe3` (two release
+commits after `fe8bf78`, no code change in the cited files), KS at `a35d44c` (a
+dependency bump after `7dc6985`).

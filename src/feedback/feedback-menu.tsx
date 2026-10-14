@@ -1,4 +1,4 @@
-import { Inbox, MessageSquare } from "lucide-react";
+import { Inbox, MessageSquare, Users } from "lucide-react";
 import type { UserAvatarBadge } from "../components/user-avatar";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { TopBarActionMenu, type TopBarMenuEntry } from "../shell/topbar-action-menu";
@@ -25,6 +25,10 @@ export interface FeedbackMenuLabels {
   /** The link to the inbox — an admin's one list link, in place of "My feedback".
    *  keksdose `feedback.view_all`. */
   viewFeedback: string;
+  /** The link to every public report, {@link FeedbackMenuProps.publicHref} (0.38,
+   *  docs/feedback-harmonization.md §9.2 decision 21). Optional, so a complete
+   *  `UiKitLabels` typed before 0.38 still compiles. de-CH "Alle Rückmeldungen". */
+  allFeedback?: string;
 }
 
 // Defined in ./feedback-menu-labels, which holds no component code (0.34, KS U8).
@@ -43,7 +47,7 @@ export interface FeedbackMenuProps {
    * `Sparkles` Help assistant → `/assistant` and `MessagesSquare` Support chat →
    * `/support` with its unread chip. Any {@link TopBarMenuEntry}; keep their `key`s clear
    * of the menu's own (`BUG`, `IDEA`, `QUESTION`, `OTHER`, `feedback-divider`,
-   * `my-feedback`, `view-feedback`).
+   * `all-feedback`, `my-feedback`, `view-feedback`).
    */
   extraEntries?: TopBarMenuEntry[];
   /** The user's own reports, linked for everyone but an admin. Default `"/my-feedback"`
@@ -51,6 +55,15 @@ export interface FeedbackMenuProps {
   myFeedbackHref?: string;
   /** The admin inbox, linked for an admin. Default `"/feedback"` (§2.3). */
   inboxHref?: string;
+  /**
+   * The public list (0.38, docs/feedback-harmonization.md §9.2 decision 21): when passed,
+   * an **All feedback** row (`Users`, key `all-feedback`) above the list link, for
+   * everyone — the admin too, who reads what the others read there. keksdose:
+   * `"/all-feedback"`; "My feedback" stays as it is. Leave it out where the app has no
+   * public parts (kastlan) or the viewer may not see them (a Kurvenschmiede customer, a
+   * demo — §9.2 decisions 7, 8).
+   */
+  publicHref?: string;
   /** A dot on the trigger — keksdose's unread support replies (`tone: "danger"`). Its
    *  `label` joins the trigger's name ("Send feedback 2 unread"). The words are the app's. */
   iconBadge?: UserAvatarBadge | null;
@@ -70,7 +83,8 @@ export interface FeedbackMenuProps {
  *    the category badges' own glyphs), each calling `onFile(category)`;
  * 3. a divider, always;
  * 4. the app's `extraEntries`;
- * 5. ONE list link, `Inbox`: an admin's is "View feedback" → `/feedback`, everyone
+ * 5. with `publicHref` (0.38), **All feedback** → the public list, for everyone;
+ * 6. ONE list link, `Inbox`: an admin's is "View feedback" → `/feedback`, everyone
  *    else's "My feedback" → `/my-feedback` — keksdose's (`top-bar.tsx:205-214`, feedback
  *    #331: admins get the management view, everyone else their own submissions).
  *
@@ -96,6 +110,7 @@ export function FeedbackMenu({
   extraEntries,
   myFeedbackHref = "/my-feedback",
   inboxHref = "/feedback",
+  publicHref,
   iconBadge,
   labels: labelsProp,
   align,
@@ -114,6 +129,17 @@ export function FeedbackMenu({
     }),
     { kind: "divider", key: "feedback-divider" },
     ...(extraEntries ?? []),
+    ...(publicHref
+      ? [
+          {
+            kind: "link",
+            key: "all-feedback",
+            to: publicHref,
+            icon: <Users className="size-4" />,
+            label: labels.allFeedback ?? DEFAULT_FEEDBACK_MENU_LABELS.allFeedback!,
+          } satisfies TopBarMenuEntry,
+        ]
+      : []),
     {
       kind: "link",
       key: isAdmin ? "view-feedback" : "my-feedback",

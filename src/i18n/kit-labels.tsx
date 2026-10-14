@@ -50,9 +50,14 @@ import type {
   FeedbackToastLabels,
 } from "../feedback/feedback-labels";
 import type { FeedbackMenuLabels } from "../feedback/feedback-menu";
+import type { FeedbackPublicLabels } from "../feedback/feedback-public-labels";
+import type { FeedbackNotificationTypesLabels } from "../notifications/feedback-notification-types-labels";
 import type { FeedbackContextLabels } from "../feedback/feedback-context";
 import type { FeedbackPageLabels } from "../feedback/feedback-table";
 import type { FeedbackDetailLabels } from "../feedback/feedback-row-detail";
+import type { FeedbackVoteLabels } from "../feedback/feedback-vote-button";
+import type { FeedbackCommentsLabels } from "../feedback/feedback-comment-thread";
+import type { FeedbackRepliesLabels } from "../feedback/feedback-replies";
 import type { AccountSettingsLabels } from "../account/account-settings-labels";
 import type { ConfirmDialogLabels } from "../components/confirm-dialog";
 import type { FloatingPanelLabels } from "../components/floating-panel";
@@ -338,9 +343,20 @@ export interface UiKitLabels {
   feedbackCategory: FeedbackCategoryLabels;
   feedbackToast: FeedbackToastLabels;
   feedbackMenu: FeedbackMenuLabels;
+  /** 0.38.0: the public feedback pages — `FeedbackPublicList`, `FeedbackPublicDetail`,
+   *  `FeedbackPublicSwitch` (docs/feedback-harmonization.md §9.15). */
+  feedbackPublic: FeedbackPublicLabels;
+  /** 0.38.0: `useFeedbackNotificationTypes` — the two feedback types' setting words
+   *  (§9.11). */
+  feedbackNotificationTypes: FeedbackNotificationTypesLabels;
   feedbackContext: FeedbackContextLabels;
   feedbackPage: FeedbackPageLabels;
   feedbackDetail: FeedbackDetailLabels;
+  /** 0.38.0: public feedback (docs/feedback-harmonization.md §9.15) — the vote button,
+   *  the comment thread, the replies' timeline and composer. */
+  feedbackVote: FeedbackVoteLabels;
+  feedbackComments: FeedbackCommentsLabels;
+  feedbackReplies: FeedbackRepliesLabels;
   /** 0.12.0: `ProfileSetting`, `PasswordSetting`, `TwoFactorSetting`, `PasskeysSetting`
    *  — one record per section. The provider takes a whole section record; the
    *  components merge it key by key, as a prop. */

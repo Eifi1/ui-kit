@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "../components/button";
 import { Input } from "../components/input";
@@ -93,6 +93,11 @@ export interface FeedbackDialogTextLabels {
   submitHint: FeedbackSubmitHint;
   cancel: string;
   save: string;
+  /** 0.38 (docs/feedback-harmonization.md §9.2 decision 6): the line under the body when
+   *  reports are public — `useFeedbackSubmit({ publicNotice: true })` shows it. Optional,
+   *  so a complete `UiKitLabels` typed before 0.38 still compiles. de-CH "Andere Personen
+   *  sehen Titel und Text (nie Ihre Screenshots oder Dateien)." */
+  publicNotice?: string;
 }
 
 // Defined in ./feedback-dialog-labels, which holds no component code (0.34, KS U8).
@@ -161,6 +166,14 @@ interface FeedbackDialogBaseProps {
   /** The attachment field's `buttonSize` (0.25.0) — with {@link attachmentButtonVariant}.
    *  Default `"md"`; `"sm"` draws the paperclip and camera at 14px. */
   attachmentButtonSize?: ButtonSize;
+  /**
+   * A muted line under the body saying who will read it (0.38, docs/feedback-harmonization.md
+   * §9.2 decision 6) — the kit's sentence is `feedbackDialog.publicNotice`, "Other users
+   * will see the title and text (never your screenshots or files)", which
+   * `useFeedbackSubmit({ publicNotice: true })` passes. Attached to the body field with
+   * `aria-describedby`, so it is heard where the text is written. Left out: no line.
+   */
+  publicNotice?: ReactNode;
 }
 
 /** One attachment — a screenshot, a picked or a pasted image; a second replaces
@@ -228,6 +241,7 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
     requireBody = true,
     attachmentButtonVariant,
     attachmentButtonSize,
+    publicNotice,
   } = props;
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -236,6 +250,8 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const isMobile = usePhoneLayout();
+  const noticeId = useId();
+  const hasNotice = publicNotice !== undefined && publicNotice !== null && publicNotice !== false && publicNotice !== "";
   const labels = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS, labelsProp);
   const attachmentText = useKitLabels("feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS, labelsProp);
   // Under `multiple` the heading is `attachmentList` — a screenshot AND photos — which
@@ -295,13 +311,25 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
   const subjectField = (
     <Input label={labels.subject} value={title} onChange={(e) => setTitle(e.target.value)} variant="display" />
   );
-  const bodyField = (
+  const bodyTextarea = (
     <Textarea
       rows={5}
       label={requireBody ? labels.body : (labelsProp?.body ?? labels.bodyOptional ?? labels.body)}
       value={body}
       onChange={(e) => setBody(e.target.value)}
+      aria-describedby={hasNotice ? noticeId : undefined}
     />
+  );
+  // 0.38: who will read it, right under what they are writing (§9.2 decision 6).
+  const bodyField = hasNotice ? (
+    <div className="space-y-1">
+      {bodyTextarea}
+      <p id={noticeId} className="text-xs text-muted" data-feedback-public-notice="">
+        {publicNotice}
+      </p>
+    </div>
+  ) : (
+    bodyTextarea
   );
   const fieldProps = {
     labels: attachmentLabels,

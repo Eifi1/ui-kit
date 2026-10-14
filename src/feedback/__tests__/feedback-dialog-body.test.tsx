@@ -61,3 +61,20 @@ describe("FeedbackDialog body requirement (keksdose K1)", () => {
     expect(screen.getByLabelText("Was ist passiert? (optional)")).toBeInTheDocument();
   });
 });
+
+/** 0.38 (§9.2 decision 6): where reports are public, a muted line under the body says
+ *  who reads it — attached to the body, so it is heard where the text is written. */
+describe("FeedbackDialog publicNotice", () => {
+  it("draws no line without it", () => {
+    render(<FeedbackDialog {...base} onSubmit={() => {}} />);
+    expect(document.querySelector("[data-feedback-public-notice]")).toBeNull();
+    expect(screen.getByLabelText("What happened?")).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("draws the line under the body and describes the body with it", () => {
+    const notice = "Other users will see the title and text (never your screenshots or files).";
+    render(<FeedbackDialog {...base} onSubmit={() => {}} publicNotice={notice} />);
+    expect(screen.getByText(notice)).toBeInTheDocument();
+    expect(screen.getByLabelText("What happened?")).toHaveAccessibleDescription(notice);
+  });
+});

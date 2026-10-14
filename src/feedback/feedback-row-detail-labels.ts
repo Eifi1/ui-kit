@@ -18,6 +18,7 @@ export const DEFAULT_FEEDBACK_DETAIL_LABELS: FeedbackDetailLabels = {
   download: (name) => `Download ${name}`,
   downloadFailed: "The attachment could not be downloaded.",
   outcome: "Outcome",
+  replies: "Replies",
   resolvedAt: (date) => `Resolved: ${date}`,
   outcomeAdd: "Add outcome",
   outcomeUpdate: "Update",

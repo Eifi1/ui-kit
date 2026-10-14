@@ -21,6 +21,18 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.38.0](https://github.com/Eifi1/ui-kit/compare/v0.37.0...v0.38.0) (2026-10-14)
+
+Round 0.38: Marcel's public feedback, settled as feedback §9 after the three apps' reviews —
+the public list and detail, upvotes, comments by others as rows, and the admin's answers as
+a timeline of replies (server-kit 0.11.0 ships beside it). `FeedbackRowDetail`'s Outcome
+editor gives way to the reply composer; bump server-kit 0.11 with it, which refuses a PATCH
+naming `outcome`. The migration per app is `docs/adopt-0.38.md`. Nothing is removed.
+
+### Added
+
+* **feedback:** public feedback — votes, comments, replies as a timeline, the public pages ([44878a0](https://github.com/Eifi1/ui-kit/commit/44878a00adb4dbfee39a01447031bd7964e079a9))
+
 ## [0.37.0](https://github.com/Eifi1/ui-kit/compare/v0.36.0...v0.37.0) (2026-10-14)
 
 Round 0.37: two contract sections settled after the three apps' reviews — the translation review
