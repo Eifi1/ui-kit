@@ -1150,9 +1150,9 @@ class TranslationReviewer:
   reviewer, so the kit refuses it for every app. kk keeps its re-check, so its token
   answers 401 before `scope()` is reached. A write needs no such check: `assert_allowed`
   holds a token to its grant's areas, so a legal-only one could write only `kit.legal.*`.
-  Layer 1's `can_review_kit` is wider: it passes an area that covers `kit.`
-  (`scope.py:184-194`), whose token `scope()` would refuse. No app has such an area
-  (`REVIEW_AREAS`: kk and KS `legal`, ka `legal` and `doc_text`).
+  Layer 1's `can_review_kit` agrees since server-kit 0.12: it refuses any area limit.
+  Until 0.11 it passed an area that covers `kit.`, whose token `scope()` refused; no
+  app has such an area (`REVIEW_AREAS`: kk and KS `legal`, ka `legal` and `doc_text`).
 - **The tokens stay kk's** in 0.10, with no port: the table, mint, revoke,
   `authenticate` and the two routes (`:128-148`). Layer 1 holds their pure half already.
   Only kk mints them; a port waits for a second app that does.
