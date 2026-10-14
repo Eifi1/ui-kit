@@ -19,7 +19,7 @@ export interface FeedbackPublicSwitchViewer {
 /** The viewer filed the row — `mine` when the server sent it, else the ids (never for an
  *  erased author, `user_id: null`). */
 function isAuthorOf(row: FeedbackPublicSwitchRow, viewerId: number | null | undefined): boolean {
-  if (row.mine !== undefined) return row.mine;
+  if (row.mine != null) return row.mine;
   return row.user_id !== null && viewerId !== undefined && viewerId !== null && row.user_id === viewerId;
 }
 
@@ -83,7 +83,7 @@ export function FeedbackPublicSwitch({
   className,
 }: FeedbackPublicSwitchProps) {
   const labels = useKitLabels("feedbackPublic", DEFAULT_FEEDBACK_PUBLIC_LABELS, labelsProp);
-  if (row.category === "CRASH" || row.public === undefined) return null;
+  if (row.category === "CRASH" || row.public == null) return null;
   if (!isAdmin && !isAuthorOf(row, viewerId)) return null;
   const allowed = feedbackPublicSwitchAllowed(row, { isAdmin, viewerId });
   return (
@@ -91,7 +91,7 @@ export function FeedbackPublicSwitch({
       className={className}
       label={labels.visibleToOthers}
       description={labels.visibleHint}
-      checked={row.public}
+      checked={row.public === true}
       disabled={pending}
       disabledReason={allowed ? undefined : labels.visibleLocked}
       commit={commit}

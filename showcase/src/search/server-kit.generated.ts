@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.11.0";
+export const SERVER_KIT_VERSION = "0.11.1";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */

@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import type { ReactNode } from "react";
 import { EyeOff } from "lucide-react";
 import { Button } from "../components/button";
@@ -9,6 +10,7 @@ import type { FeedbackComment, FeedbackReply } from "./feedback-public-types";
 import { DEFAULT_FEEDBACK_PUBLIC_LABELS } from "./feedback-public-labels";
 import { FEEDBACK_COMMENT_MAX } from "./feedback-record";
 import { useFeedbackRepliesLabels } from "./feedback-replies";
+import { FeedbackRepliesDrawnAboveContext } from "./feedback-replies-context";
 import { ChatComposer, FeedbackThread } from "./feedback-thread";
 import type { FeedbackThreadMessage } from "./feedback-thread";
 import { DEFAULT_FEEDBACK_COMMENTS_LABELS } from "./feedback-thread-parts-labels";
@@ -69,17 +71,24 @@ export { DEFAULT_FEEDBACK_COMMENTS_LABELS };
 /* ── The thread ───────────────────────────────────────────────────────────── */
 
 export interface FeedbackCommentThreadProps {
-  /** The report's replies (§9.7), oldest first. `[]` when it has none. */
-  replies: readonly FeedbackReply[];
+  /** The report's replies (§9.7), oldest first. Left out or `[]`: none.
+   *
+   *  Inside `FeedbackRowDetail`'s `comments` they are dropped (0.38.1): the detail's
+   *  Replies section draws them already, and the thread there is the comments alone —
+   *  so passing them there cannot draw them twice. */
+  replies?: readonly FeedbackReply[];
   /** `GET /feedback/{id}/comments`, oldest first. */
   comments: readonly FeedbackComment[];
   /** The viewer is the app's admin: Hide / Unhide, the hidden text struck through. */
   isAdmin: boolean;
   /** `POST /feedback/{id}/comments`. Return the promise: the box clears when it
-   *  resolves. Left out, no composer. */
+   *  resolves, and keeps the draft when it rejects. A failure is the app's to toast —
+   *  the server's `detail`, else `feedbackToast.commentFailed` (0.38.1). Left out, no
+   *  composer. */
   onComment?: (body: string) => void | Promise<unknown>;
-  /** `PATCH /feedback/{id}/comments/{comment_id} {hidden}` — the admin's. Left out, no
-   *  Hide / Unhide. */
+  /** `PATCH /feedback/{id}/comments/{comment_id} {hidden}` — the admin's. A rejection
+   *  is caught (0.38.1) and is the app's to toast (`feedbackToast.updateFailed`). Left
+   *  out, no Hide / Unhide. */
   onHide?: (comment: FeedbackComment, hidden: boolean) => void | Promise<unknown>;
   /** `DELETE /feedback/{id}/comments/{comment_id}` — the writer's own, after the
    *  confirm. Left out, no Delete. */
@@ -98,13 +107,22 @@ export interface FeedbackCommentThreadProps {
 
 type Entry = { at: number; order: number; message: FeedbackThreadMessage };
 
+/** The admin's Hide / Unhide as a promise — a sync throw or a `void` return included —
+ *  so the click can catch it as Delete's does. */
+const hideComment = async (
+  onHide: NonNullable<FeedbackCommentThreadProps["onHide"]>,
+  comment: FeedbackComment,
+) => {
+  await onHide(comment, !comment.hidden);
+};
+
 const instant = (iso: string) => {
   const ms = Date.parse(iso);
   return Number.isNaN(ms) ? 0 : ms;
 };
 
 export function FeedbackCommentThread({
-  replies,
+  replies: repliesProp = [],
   comments,
   isAdmin,
   onComment,
@@ -120,6 +138,8 @@ export function FeedbackCommentThread({
   const labels = useKitLabels("feedbackComments", DEFAULT_FEEDBACK_COMMENTS_LABELS, labelsProp);
   const anonymous = useKitLabels("feedbackPublic", DEFAULT_FEEDBACK_PUBLIC_LABELS).anonymous;
   const replyLabels = useFeedbackRepliesLabels();
+  const repliesDrawnAbove = useContext(FeedbackRepliesDrawnAboveContext);
+  const replies = repliesDrawnAbove ? [] : repliesProp;
 
   const entries: Entry[] = [];
   replies.forEach((reply, order) => {
@@ -163,7 +183,9 @@ export function FeedbackCommentThread({
           tone="muted"
           size="sm"
           commit={commit}
-          onClick={() => void onHide(comment, !comment.hidden)}
+          // Caught as Delete's is (0.38.1): a rejection is the app's to toast — its
+          // mutation's `onError` — and must not surface as an unhandled one.
+          onClick={() => void hideComment(onHide, comment).catch(() => {})}
         >
           {comment.hidden ? labels.unhide : labels.hide}
         </Button>,

@@ -54,6 +54,10 @@ describe("feedbackPublicSwitchAllowed", () => {
     expect(feedbackPublicSwitchAllowed(row({ user_id: null, mine: true }), { isAdmin: false })).toBe(true);
     expect(feedbackPublicSwitchAllowed(row({ mine: false }), { isAdmin: false, viewerId: AUTHOR })).toBe(false);
   });
+
+  it("reads a server's `null` as not sent (0.38.1: server-kit answers the public fields as null)", () => {
+    expect(feedbackPublicSwitchAllowed(row({ mine: null }), { isAdmin: false, viewerId: AUTHOR })).toBe(true);
+  });
 });
 
 describe("FeedbackPublicSwitch", () => {
@@ -92,6 +96,8 @@ describe("FeedbackPublicSwitch", () => {
     rerender(<FeedbackPublicSwitch row={row()} isAdmin={false} viewerId={8} onChange={() => {}} />);
     expect(container).toBeEmptyDOMElement();
     rerender(<FeedbackPublicSwitch row={row({ public: undefined })} isAdmin onChange={() => {}} />);
+    expect(container).toBeEmptyDOMElement();
+    rerender(<FeedbackPublicSwitch row={row({ public: null })} isAdmin onChange={() => {}} />);
     expect(container).toBeEmptyDOMElement();
   });
 

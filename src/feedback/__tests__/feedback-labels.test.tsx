@@ -2,6 +2,13 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { UiKitLabelOverrides } from "../../i18n/kit-labels";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
+import { uiKitLabelsEn } from "../../i18n/locales/en";
+import { UI_KIT_LABELS_ES } from "../../i18n/locales/es";
+import { UI_KIT_LABELS_FR } from "../../i18n/locales/fr";
+import { UI_KIT_LABELS_HU } from "../../i18n/locales/hu";
+import { UI_KIT_LABELS_IT } from "../../i18n/locales/it";
+import { UI_KIT_LABELS_ZH } from "../../i18n/locales/zh";
 import {
   FEEDBACK_CATEGORY_ORDER,
   FEEDBACK_STATUS_ORDER,
@@ -137,5 +144,38 @@ describe("FeedbackStatusTransitions", () => {
       />,
     );
     expect(screen.getByRole("button", { name: "app:DONE" })).toBeTruthy();
+  });
+});
+
+describe("feedbackToast: the public pages' failures (0.38.1, Kurvenschmiede)", () => {
+  const catalogues = {
+    en: uiKitLabelsEn(),
+    "de-CH": UI_KIT_LABELS_DE_CH,
+    es: UI_KIT_LABELS_ES,
+    fr: UI_KIT_LABELS_FR,
+    it: UI_KIT_LABELS_IT,
+    hu: UI_KIT_LABELS_HU,
+    zh: UI_KIT_LABELS_ZH,
+  };
+  const keys = ["commentFailed", "voteFailed", "replyFailed"] as const;
+
+  it("has a failed comment, vote and reply in English", () => {
+    expect(DEFAULT_FEEDBACK_TOAST_LABELS.commentFailed).toBe("Could not post the comment.");
+    expect(DEFAULT_FEEDBACK_TOAST_LABELS.voteFailed).toBe("Could not save your vote.");
+    expect(DEFAULT_FEEDBACK_TOAST_LABELS.replyFailed).toBe("Could not send the reply.");
+  });
+
+  it.each(Object.entries(catalogues))("%s says each in its own words", (locale, labels) => {
+    for (const key of keys) {
+      const text = labels.feedbackToast[key];
+      expect(text.trim()).not.toBe("");
+      if (locale !== "en") expect(text).not.toBe(DEFAULT_FEEDBACK_TOAST_LABELS[key]);
+    }
+    // The three are three different sentences.
+    expect(new Set(keys.map((key) => labels.feedbackToast[key])).size).toBe(3);
+  });
+
+  it("is Swiss in de-CH", () => {
+    expect(UI_KIT_LABELS_DE_CH.feedbackToast.commentFailed).toBe("Kommentar konnte nicht gesendet werden.");
   });
 });

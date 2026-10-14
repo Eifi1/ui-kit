@@ -104,6 +104,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       statusChanged: (status, title) => `Impostato su «${status}»: ${title}`,
       statusUndo: "Annulla",
       statusRestored: (status, title) => `Tornato a «${status}»: ${title}`,
+      commentFailed: "Non è stato possibile pubblicare il commento.",
+      voteFailed: "Non è stato possibile salvare il Suo voto.",
+      replyFailed: "Non è stato possibile inviare la risposta.",
     },
     feedbackMenu: {
       trigger: "Invia feedback",
@@ -133,6 +136,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       visibleToOthers: "Visibile agli altri",
       visibleHint: "Le altre persone vedono il titolo e il testo, mai i Suoi screenshot o file.",
       visibleLocked: "Solo finché la segnalazione è ancora aperta.",
+      page: (page) => `Pagina ${n(page)}`,
     },
     feedbackNotificationTypes: {
       answered: "Risposte alle Sue segnalazioni",

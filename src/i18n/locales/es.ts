@@ -104,6 +104,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       statusChanged: (status, title) => `Cambiado a «${status}»: ${title}`,
       statusUndo: "Deshacer",
       statusRestored: (status, title) => `De vuelta a «${status}»: ${title}`,
+      commentFailed: "No se ha podido publicar el comentario.",
+      voteFailed: "No se ha podido guardar su voto.",
+      replyFailed: "No se ha podido enviar la respuesta.",
     },
     feedbackMenu: {
       trigger: "Enviar comentarios",
@@ -133,6 +136,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       visibleToOthers: "Visible para otras personas",
       visibleHint: "Otras personas ven el título y el texto, nunca sus capturas ni sus archivos.",
       visibleLocked: "Solo mientras el informe siga abierto.",
+      page: (page) => `Página ${n(page)}`,
     },
     feedbackNotificationTypes: {
       answered: "Respuestas a sus informes",

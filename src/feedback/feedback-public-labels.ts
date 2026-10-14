@@ -51,6 +51,9 @@ export interface FeedbackPublicLabels {
   visibleHint: string;
   /** Why the author cannot flip it now: the report is past its open window (§9.3). */
   visibleLocked: string;
+  /** 0.38.1: the pager's "where am I" — `page` counts from 1. The server answers no
+   *  total, so there is no "of N". */
+  page: (page: number) => string;
 }
 
 export const DEFAULT_FEEDBACK_PUBLIC_LABELS: FeedbackPublicLabels = {
@@ -73,4 +76,5 @@ export const DEFAULT_FEEDBACK_PUBLIC_LABELS: FeedbackPublicLabels = {
   visibleToOthers: "Visible to others",
   visibleHint: "Other users see the title and text, never your screenshots or files.",
   visibleLocked: "Only while the report is still open.",
+  page: (page) => `Page ${page}`,
 };

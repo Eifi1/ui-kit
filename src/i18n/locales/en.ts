@@ -54,6 +54,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       total: (count) => (count === 1 ? "1 report" : `${n(count)} reports`),
       comments: (count) => (count === 1 ? "1 comment" : `${n(count)} comments`),
       votes: (count) => (count === 1 ? "1 vote" : `${n(count)} votes`),
+      page: (page) => `Page ${n(page)}`,
     },
     measuredGrid: {
       ...d.measuredGrid,

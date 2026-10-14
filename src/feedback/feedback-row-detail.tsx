@@ -42,6 +42,7 @@ import type { CommitScope } from "../components/write-lock";
 import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "./feedback-row-detail-labels";
 import { FeedbackReplyComposer, FeedbackReplyTimeline, feedbackReplyNudge } from "./feedback-replies";
 import { FeedbackPublicSwitch } from "./feedback-public-switch";
+import { FeedbackRepliesDrawnAboveContext } from "./feedback-replies-context";
 import { DEFAULT_FEEDBACK_COMMENTS_LABELS } from "./feedback-thread-parts-labels";
 
 /**
@@ -373,6 +374,10 @@ export interface FeedbackDetailPatch {
    *  answers 422; the detail no longer sends it (a reply is written instead). */
   outcome?: string | null;
   status?: FeedbackStatus;
+  /** 0.38.1: the **Visible to others** flip (§9.3) — what `onPublicChange`'s
+   *  `PATCH /feedback/{id} {"public": next}` carries, alone, so an app can send it
+   *  through the same `onUpdate` mutation. */
+  public?: boolean;
 }
 
 /**
@@ -582,17 +587,22 @@ export interface FeedbackRowDetailProps {
    * 0.38: `POST /feedback/{id}/replies` (§9.7) — the body and the status picked
    * (`undefined`: "No change"). With `canEdit` and a row that carries `replies`, the
    * reply composer stands under the timeline. Return the promise: the box clears when it
-   * resolves.
+   * resolves. A failure is the app's to toast — the server's `detail`, else
+   * `feedbackToast.replyFailed` (0.38.1).
    */
   onReply?: (body: string, status?: FeedbackStatus) => void | Promise<unknown>;
   /** 0.38: the reply is in flight. */
   replying?: boolean;
   /** 0.38: the report's comments — the app's `FeedbackCommentThread` — in a section of
-   *  their own under the replies. */
+   *  their own under the replies. A thread here draws the comments alone (0.38.1): the
+   *  Replies section above has the replies, so whatever `replies` the thread is handed
+   *  are dropped, and nothing is drawn twice. */
   comments?: ReactNode;
   /** 0.38: `PATCH /feedback/{id} {"public": next}` — draws the **Visible to others**
    *  switch (`FeedbackPublicSwitch`) in the Status section, for the admin (`canEdit`)
-   *  and, within §9.3's window, the author. */
+   *  and, within §9.3's window, the author. The page's own mutation fits:
+   *  `onPublicChange={(next) => update.mutate({ id: row.id, public: next })}` —
+   *  {@link FeedbackDetailPatch}'s `public` (0.38.1). */
   onPublicChange?: (next: boolean) => void;
   labels?: LabelOverride<FeedbackDetailLabels>;
   className?: string;
@@ -818,7 +828,9 @@ export function FeedbackRowDetail({
       </FeedbackDetailSection>
 
       {comments != null && (
-        <FeedbackDetailSection title={commentLabels.comments}>{comments}</FeedbackDetailSection>
+        <FeedbackDetailSection title={commentLabels.comments}>
+          <FeedbackRepliesDrawnAboveContext.Provider value>{comments}</FeedbackRepliesDrawnAboveContext.Provider>
+        </FeedbackDetailSection>
       )}
 
       {showRework && (

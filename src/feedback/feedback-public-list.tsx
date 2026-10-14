@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { MessageSquare, ThumbsUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageSquare, ThumbsUp } from "lucide-react";
 import { DataTable, type DataTableColumn } from "../components/data-table";
+import { DEFAULT_DATA_TABLE_LABELS } from "../components/data-table-labels";
+import { IconButton } from "../components/icon-button";
 import { SearchField } from "../components/search-field";
 import { ToggleGroup } from "../components/toggle-group";
 import type { CommitScope } from "../components/write-lock";
@@ -80,6 +82,55 @@ function VoteCount({ count, voted, labels }: { count: number; voted: boolean; la
   );
 }
 
+/** 0.38.1: previous / next over the server's pages when it answers no total
+ *  (`GET /feedback/public` — Kurvenschmiede): "Page 3" between two arrows. The arrows'
+ *  names are `dataTable`'s, the strip's; the page's is `feedbackPublic.page`. */
+function PublicPager({
+  page,
+  hasMore,
+  onPageChange,
+  labels,
+}: {
+  page: number;
+  hasMore: boolean;
+  onPageChange: (page: number) => void;
+  labels: FeedbackPublicLabels;
+}) {
+  const tableLabels = useKitLabels("dataTable", DEFAULT_DATA_TABLE_LABELS);
+  const name = labels.page(page + 1);
+  return (
+    <div
+      role="group"
+      aria-label={name}
+      className="flex items-center justify-end gap-2 text-sm text-secondary"
+      data-feedback-public-pager={page}
+    >
+      <IconButton
+        size="sm"
+        variant="secondary"
+        label={tableLabels.prevPage}
+        disabled={page <= 0}
+        onClick={() => onPageChange(page - 1)}
+      >
+        {/* "Previous" points back along the line — left in LTR, right in RTL. */}
+        <ChevronLeft className="rtl:-scale-x-100" />
+      </IconButton>
+      <span className="tabular-nums" aria-hidden>
+        {name}
+      </span>
+      <IconButton
+        size="sm"
+        variant="secondary"
+        label={tableLabels.nextPage}
+        disabled={!hasMore}
+        onClick={() => onPageChange(page + 1)}
+      >
+        <ChevronRight className="rtl:-scale-x-100" />
+      </IconButton>
+    </div>
+  );
+}
+
 /* ── The list ─────────────────────────────────────────────────────────────── */
 
 export interface FeedbackPublicListProps<T extends FeedbackPublicListItem = FeedbackPublicListItem> {
@@ -110,6 +161,26 @@ export interface FeedbackPublicListProps<T extends FeedbackPublicListItem = Feed
    *  keeps it itself. */
   openId?: number | null;
   onOpenChange?: (id: number | null) => void;
+  /**
+   * 0.38.1: the opened report when it is NOT on this page — a `?row=` link to an older
+   * one (Kurvenschmiede). The app fetches it (`GET /feedback/public/{id}`, a list item's
+   * fields and more) and passes it with `openId`; while `openId` is its id it is drawn
+   * first, above the page's rows, and opened with `renderDetail` (on the phone, in the
+   * full-screen dialog). Closed, it is gone. A row the page has already is never drawn
+   * twice: the page's own is opened instead.
+   */
+  openRow?: T | null;
+  /**
+   * 0.38.1: the server's page, from 0 — for a pager where `/feedback/public` answers no
+   * total (Kurvenschmiede). With {@link onPageChange} a **Previous / Page n / Next**
+   * strip stands under the table; Next is off without {@link hasMore}. Left out, no
+   * pager: the server's `limit` is all there is.
+   */
+  page?: number;
+  /** 0.38.1: there is a page after this one (e.g. the page came back full). */
+  hasMore?: boolean;
+  /** 0.38.1: go to another page (`page ± 1`); the app fetches it. Draws the pager. */
+  onPageChange?: (page: number) => void;
   /** A vote COMMITS — see Button's `commit`. */
   commit?: CommitScope;
   /** See {@link FeedbackRenderDate}. Default: the kit's, with the weekday. */
@@ -140,9 +211,10 @@ export interface FeedbackPublicListProps<T extends FeedbackPublicListItem = Feed
  *   counts; the vote itself is in the opened report (a button inside the card, which is
  *   the row's own button, would be two controls in one).
  *
- * No paging of its own: the server's `limit` is the page, and `total` says how many
- * there are (an app with more than one page adds its pager below). Needs a router, as
- * every `DataTable` does.
+ * No client paging: the server's `limit` is the page, and `total` says how many there
+ * are. For more than one page, `page` / `hasMore` / `onPageChange` draw a previous /
+ * next strip that needs no total (0.38.1); `openRow` shows a `?row=` report from
+ * another page. Needs a router, as every `DataTable` does.
  */
 export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPublicListItem>({
   rows,
@@ -156,6 +228,10 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
   loading = false,
   openId: openIdProp,
   onOpenChange,
+  openRow,
+  page: pageIndex = 0,
+  hasMore = false,
+  onPageChange,
   commit,
   renderDate: renderDateProp,
   labels: labelsProp,
@@ -172,6 +248,10 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
     if (openIdProp === undefined) setOwnOpenId(id);
     onOpenChange?.(id);
   };
+  // A `?row=` report from another page: first, while it is the open one, and only when
+  // the page does not have it itself.
+  const shownRows =
+    openRow && openId === openRow.id && !rows.some((row) => row.id === openRow.id) ? [openRow, ...rows] : rows;
 
   const columns = useMemo<DataTableColumn<T>[]>(
     () => [
@@ -257,7 +337,7 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
         )}
       </div>
       <DataTable
-        rows={rows}
+        rows={shownRows}
         columns={columns}
         rowKey={(row) => row.id}
         rowName={(row) => row.title}
@@ -284,6 +364,9 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
           </div>
         )}
       />
+      {onPageChange && (pageIndex > 0 || hasMore) && (
+        <PublicPager page={pageIndex} hasMore={hasMore} onPageChange={onPageChange} labels={labels} />
+      )}
     </div>
   );
 }

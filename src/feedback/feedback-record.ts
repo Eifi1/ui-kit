@@ -117,20 +117,20 @@ export interface FeedbackRecord {
   /** The admin: the full name; the author: their own; `null`: none to show. */
   author_name?: string | null;
   /** The viewer filed it. */
-  mine?: boolean;
+  mine?: boolean | null;
   /** Visible to the app's other users (§9.3); never on a CRASH. */
-  public?: boolean;
+  public?: boolean | null;
   /** Made public by the 0.38 migration: the author may switch it off at any status. */
-  filed_private?: boolean;
+  filed_private?: boolean | null;
   /** People who want this (the author's own vote included, §9.6). */
-  votes?: number;
+  votes?: number | null;
   /** The viewer's vote. */
-  voted?: boolean;
+  voted?: boolean | null;
   /** Comments (an admin's count includes hidden ones). */
-  comment_count?: number;
+  comment_count?: number | null;
   /** The admin's answers, oldest first (§9.7). Absent: a server before 0.38 — read
    *  `outcome` instead. */
-  replies?: FeedbackReply[];
+  replies?: FeedbackReply[] | null;
 }
 
 /* ── Constants (§3.4, §3.5, §4.3) ─────────────────────────────────────────── */

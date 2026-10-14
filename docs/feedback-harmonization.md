@@ -1373,6 +1373,13 @@ Size: **M–L** (~900 code, ~900 test lines, seven locales).
   (9.10); `feedback_answered` moves to "a reply", `feedback_comment` added, both in
   seven languages; the notice; `--resolve` writes a reply through the kit's service;
   export and erasure; `publicNotice`.
+  Recorded at its adoption (2026-10-14): **no `server_default`** on `created_at` — KS's
+  schema rule forbids database defaults (a test enforces it), and its loop writes through
+  the ORM, so the model sets it; **a CUSTOMER's report is filed private**, and migration 0052
+  left customers' existing reports private (a customer is never shown `publicNotice`, so
+  is never told others read it); `filed_private` is set on exactly the rows 0052 made
+  public; the feedback mails link the author to `/my-feedback?row=<id>`, everyone else to
+  `/all-feedback?row=<id>`.
 
 ### 9.17 Shipped, amended elsewhere
 

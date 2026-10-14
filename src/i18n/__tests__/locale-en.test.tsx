@@ -93,6 +93,7 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "feedbackAttachment.attachmentLimit",
       "feedbackPage.reworkChip",
       "feedbackPublic.comments",
+      "feedbackPublic.page",
       "feedbackPublic.total",
       "feedbackPublic.votes",
       "feedbackToast.attachmentTooMany",

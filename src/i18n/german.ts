@@ -113,6 +113,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       statusChanged: (status, title) => `Auf „${status}“ gesetzt: ${title}`,
       statusUndo: "Rückgängig",
       statusRestored: (status, title) => `Zurück auf „${status}“: ${title}`,
+      commentFailed: "Kommentar konnte nicht gesendet werden.",
+      voteFailed: "Stimme konnte nicht gespeichert werden.",
+      replyFailed: "Antwort konnte nicht gesendet werden.",
     },
     feedbackMenu: {
       trigger: "Feedback senden",
@@ -142,6 +145,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       visibleToOthers: "Für andere sichtbar",
       visibleHint: "Andere Personen sehen Titel und Text, nie Ihre Screenshots oder Dateien.",
       visibleLocked: "Nur solange die Meldung noch offen ist.",
+      page: (page) => `Seite ${n(page)}`,
     },
     feedbackNotificationTypes: {
       answered: "Antworten auf Ihre Meldungen",

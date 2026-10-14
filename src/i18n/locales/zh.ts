@@ -94,6 +94,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       statusChanged: (status, title) => `已设为“${status}”：${title}`,
       statusUndo: "撤销",
       statusRestored: (status, title) => `已恢复为“${status}”：${title}`,
+      commentFailed: "无法发表评论。",
+      voteFailed: "无法保存您的投票。",
+      replyFailed: "无法发送回复。",
     },
     feedbackMenu: {
       trigger: "发送反馈",
@@ -123,6 +126,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       visibleToOthers: "对他人可见",
       visibleHint: "其他用户可以看到标题和正文，绝不会看到您的截图或文件。",
       visibleLocked: "仅在反馈仍处于打开状态时可更改。",
+      page: (page) => `第 ${n(page)} 页`,
     },
     feedbackNotificationTypes: {
       answered: "您的反馈收到的回复",
