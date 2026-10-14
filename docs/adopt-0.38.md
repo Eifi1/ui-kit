@@ -134,3 +134,28 @@ kastlan the public part off, replies only. The contract (feedback §9.16) is the
   ```
 
   sha256: `27cf11d6611d7bceb2f6941540234bfd2b16a7bba1e9967909d0678e973f0071`
+
+## 5. 0.38.1 and server-kit 0.11.1 (the apps' adoption findings)
+
+One batch, released once all three apps had reported (Marcel, 2026-10-14). Nothing is
+removed; a bump changes nothing until the app uses it.
+
+- **ui-kit:**
+  - `FeedbackRecord`'s public fields take a server's `null` (`?: T | null`): an app's
+    generated types pass without narrowing (keksdose).
+  - A server-paged `FeedbackPublicList`: `page={p} hasMore={rows.length === limit}
+    onPageChange={setPage}`; drop a pager of your own (Kurvenschmiede).
+  - A `?row=<id>` not on the page: fetch `GET /feedback/public/{id}` and pass
+    `openRow={record}` beside `openId`.
+  - Failed mutations: `feedbackToast.commentFailed`, `voteFailed`, `replyFailed` for the
+    app's `onError`, when the server sent no `detail`.
+  - `onPublicChange={(next) => update.mutate({ id: row.id, public: next })}`:
+    `FeedbackDetailPatch` carries `public`.
+  - Inside `FeedbackRowDetail`'s `comments`, `replies={[]}` is no longer needed.
+  - Hide catches a rejected `onHide`, as Delete does.
+- **server-kit 0.11.1:**
+  - `outcome` answers as the newest reply's body (§9.7), so a client from before 0.38 shows
+    the latest answer (kastlan).
+  - `create_reply` and `hide_comment` refuse a demo with `demo_refused` before the role's
+    403; a route walk that lists them admin-first flips the order (Kurvenschmiede).
+  - The wheel: `v0.11.1`, sha256 `<at the release>`.
