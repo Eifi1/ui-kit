@@ -45,7 +45,7 @@ const HELP_WIDTH: RemLength = "20rem";
  * **On a field: its `help`** (0.36, round 0.36 decision 1). Every kit field that takes a
  * `hint` takes a `help` beside it, and the `@eifi1/ui-kit/rhf` bindings too: pass the
  * help's words and the field draws this "?" on its label line (an unlabelled one at its
- * end edge, outside the box), named "About <label>" — or pass a HelpPopover to name it
+ * end edge, outside the box), named "About “<label>”" — or pass a HelpPopover to name it
  * yourself. `hint` stays the FACT, printed under the field; while `help` is set a
  * FieldHint there draws no "?" of its own, so the field has one. Passed as `hint`, as in
  * 0.34, it still rides the label line. It also stands on its own, beside a heading or a

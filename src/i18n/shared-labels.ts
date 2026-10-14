@@ -37,7 +37,7 @@ export const DEFAULT_COMMON_LABELS: CommonLabels = {
   fieldValue: (field, value) => `${field}: ${value}`,
   dismiss: "Dismiss",
   opensInNewTab: "opens in a new tab",
-  aboutField: (field) => `About ${field}`,
+  aboutField: (field) => `About “${field}”`,
   help: "Help",
 };
 

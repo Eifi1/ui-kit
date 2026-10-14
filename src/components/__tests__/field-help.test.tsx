@@ -71,7 +71,7 @@ import { DESKTOP_WIDTH, viewportMatchMedia } from "../../test/viewport";
  * Round 0.36 decision 1 (docs/text-size-harmonization.md §4, §10.23): a `help` slot beside
  * `hint` on every kit field. The fact is `hint` — a caption under the field, on its
  * `aria-describedby`; the help is `help` — a HelpPopover "?" on the label line, named
- * "About <label>". The help's "?" is the field's ONLY "?": while `help` is set a
+ * "About “<label>”". The help's "?" is the field's ONLY "?": while `help` is set a
  * FieldHint draws no "?" of its own and is printed as the caption at every size —
  * Normal included, not only at Large and on touch, where it always was.
  *
@@ -424,11 +424,11 @@ describe("the help's '?'", () => {
     render(<Input label="Reference" hint="At most 35 characters." help={HELP} />);
     const input = screen.getByRole("textbox", { name: "Reference" });
     expect(input).toHaveAccessibleDescription("At most 35 characters.");
-    const button = screen.getByRole("button", { name: "About Reference" });
+    const button = screen.getByRole("button", { name: "About “Reference”" });
     // On the label line: in the row with the label, not under the field.
     expect(button.closest("[data-field-label]")).toHaveTextContent("Reference");
     await user.click(button);
-    expect(screen.getByRole("dialog", { name: "About Reference" })).toHaveAccessibleDescription(HELP);
+    expect(screen.getByRole("dialog", { name: "About “Reference”" })).toHaveAccessibleDescription(HELP);
     // Still the fact, after the help opened.
     expect(input).toHaveAccessibleDescription("At most 35 characters.");
   });
@@ -442,7 +442,7 @@ describe("the help's '?'", () => {
     );
     const select = screen.getByRole("combobox", { name: "How it was measured" });
     expect(select).toHaveAccessibleDescription(FACT);
-    expect(screen.getByRole("button", { name: "About How it was measured" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "About “How it was measured”" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: FACT })).toBeNull();
   });
 
@@ -487,13 +487,13 @@ describe("the help's '?'", () => {
         help={HELP}
       />,
     );
-    expect(screen.getByRole("button", { name: "About Gross amount" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "About “Gross amount”" })).toBeInTheDocument();
   });
 
   it("an unlabelled field: named by its aria-label, at the end edge outside the box", () => {
     render(<Input aria-label="Status" hint="Four statuses." help={HELP} />);
     const input = screen.getByRole("textbox", { name: "Status" });
-    const button = screen.getByRole("button", { name: "About Status" });
+    const button = screen.getByRole("button", { name: "About “Status”" });
     const row = button.parentElement!.parentElement!;
     expect(row).toHaveClass("flex");
     expect(row).toContainElement(input);
@@ -518,7 +518,7 @@ describe("the help's '?'", () => {
     render(<CheckboxGroup legend="Areas" options={OPTIONS} value={[]} onChange={noop} hint="Pick one or more." help={HELP} />);
     const group = screen.getByRole("group", { name: "Areas" });
     expect(group).toHaveAccessibleDescription("Pick one or more.");
-    const button = within(group).getByRole("button", { name: "About Areas" });
+    const button = within(group).getByRole("button", { name: "About “Areas”" });
     expect(button.closest("legend")).not.toBeNull();
   });
 
@@ -529,7 +529,7 @@ describe("the help's '?'", () => {
       </Field>,
     );
     expect(screen.getByRole("textbox", { name: "Address" })).toHaveAccessibleDescription("As on the lease.");
-    expect(screen.getByRole("button", { name: "About Address" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "About “Address”" })).toBeInTheDocument();
   });
 
   it("a bound field draws it after its label, and does not hand `help` to the control too", () => {
@@ -540,10 +540,10 @@ describe("the help's '?'", () => {
     );
     const input = screen.getByRole("textbox", { name: "Reference" });
     expect(input).toHaveAccessibleDescription("At most 35 characters.");
-    expect(screen.getAllByRole("button", { name: "About Reference" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "About “Reference”" })).toHaveLength(1);
     // Beside the label above the field — not at the input's end edge.
     const label = screen.getByText("Reference");
-    expect(label.parentElement).toContainElement(screen.getByRole("button", { name: "About Reference" }));
+    expect(label.parentElement).toContainElement(screen.getByRole("button", { name: "About “Reference”" }));
   });
 
   it("RhfCheckbox takes no `help`: a box has no label line", () => {

@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.9.0";
+export const SERVER_KIT_VERSION = "0.10.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -394,6 +394,9 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["DIGEST_CADENCES", "constant"],
       ["DIGEST_LATE_DAYS", "constant"],
       ["INBOX_RETENTION", "constant"],
+      ["MAIL_EVENT_PATTERN", "constant"],
+      ["MAIL_LATE_DAYS", "constant"],
+      ["MAIL_MARKER_RETENTION", "constant"],
       ["PUSH_MAX_FAILURES", "constant"],
       ["PUSH_PAYLOAD_LIMIT", "constant"],
       ["PUSH_TEST_TYPE", "constant"],
@@ -411,6 +414,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["InboxMarkRead", "model"],
       ["InboxMarkReadResponse", "model"],
       ["InboxResponse", "model"],
+      ["MailMarker", "class"],
       ["NotificationError", "class"],
       ["NotificationSettingsResponse", "model"],
       ["NotificationSettingsUpdate", "model"],
@@ -440,6 +444,8 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["digest_tag", "function"],
       ["in_quiet_hours", "function"],
       ["is_known_zone", "function"],
+      ["mail_due", "function"],
+      ["mail_event", "function"],
       ["plan_delivery", "function"],
       ["push_outcome", "function"],
       ["read_unsubscribe_token", "function"],
@@ -627,6 +633,15 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
     ],
   },
   {
+    page: "server-feedback",
+    module: "clock",
+    summary: "The clock layer 2's services read: an aware UTC ``datetime``.",
+    members: [
+      ["Clock", "constant"],
+      ["utc_now", "function"],
+    ],
+  },
+  {
     page: "server-translation-review",
     module: "translation_review",
     summary: "The translation review contract: wire shapes, who may review what, and review tokens.",
@@ -641,10 +656,15 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["MAX_REVIEW_TOKEN_HOURS", "constant"],
       ["MIN_REVIEW_TOKEN_HOURS", "constant"],
       ["NOTE_MAX", "constant"],
+      ["NO_KIT_REVIEW_ACCESS", "constant"],
+      ["NO_REVIEW_ACCESS", "constant"],
       ["REVIEW_TOKEN_BYTES", "constant"],
       ["REVIEW_TOKEN_RANDOM_LENGTH", "constant"],
       ["TEXT_MAX", "constant"],
+      ["VERDICTS_EXPORT_KEY", "constant"],
+      ["NewVerdict", "class"],
       ["ReviewGrant", "class"],
+      ["ReviewerName", "class"],
       ["ReviewerProfile", "protocol"],
       ["TranslationAccessError", "class"],
       ["TranslationAreaError", "class"],
@@ -654,10 +674,14 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["TranslationReviewClearResponse", "model"],
       ["TranslationReviewKey", "model"],
       ["TranslationReviewOut", "model"],
+      ["TranslationReviewRow", "protocol"],
+      ["TranslationReviewService", "class"],
+      ["TranslationReviewStore", "protocol"],
       ["TranslationReviewTokenResponse", "model"],
       ["TranslationReviewTokenRevokeResponse", "model"],
       ["TranslationReviewWrite", "model"],
       ["TranslationReviewWriteResponse", "model"],
+      ["TranslationReviewer", "class"],
       ["TranslationReviewsResponse", "model"],
       ["TranslationVerdict", "enum"],
       ["area_like_patterns", "function"],
@@ -677,6 +701,15 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["review_token_is_live", "function"],
       ["review_token_pattern", "function"],
       ["tokens_to_retire", "function"],
+    ],
+  },
+  {
+    page: "server-translation-review",
+    module: "translation_review.router",
+    summary: "The translation review routes as one router factory: ``translation_review_router(TranslationReviewDeps(...))``.",
+    members: [
+      ["TranslationReviewDeps", "class"],
+      ["translation_review_router", "function"],
     ],
   },
   {

@@ -203,12 +203,17 @@ export function NotificationTypesKastlanDemo() {
 
 /* ── Kurvenschmiede: e-mail only, address unverified ──────────────────── */
 
-type KurvenschmiedeType = "feedback_answered" | "share_granted" | "team_added";
+type KurvenschmiedeType = "feedback_answered" | "share_granted" | "team_added" | "work_transferred";
 
 const KURVENSCHMIEDE_TYPES: readonly NotificationTypeEntry<KurvenschmiedeType>[] = [
   { id: "feedback_answered", label: "Answers to your reports", description: "Your report has an answer." },
   { id: "share_granted", label: "Work shared with you", description: "A project or a gear, or with your team." },
   { id: "team_added", label: "Added to a team", description: "Someone added you to a team." },
+  {
+    id: "work_transferred",
+    label: "Work handed on to you",
+    description: "When an administrator hands someone's work on to you.",
+  },
 ];
 
 export function NotificationTypesKurvenschmiedeDemo() {
@@ -216,6 +221,7 @@ export function NotificationTypesKurvenschmiedeDemo() {
     feedback_answered: { app: null, email: true },
     share_granted: { app: null, email: false },
     team_added: { app: null, email: false },
+    work_transferred: { app: null, email: false },
   });
   const [unverified, setUnverified] = useState(true);
   return (

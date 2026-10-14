@@ -43,6 +43,11 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   // `{detail, code}` — the codes the auth pages switch on instead of the English detail.
   errors: ["auth-account"],
   translation_review: ["localisation", "kit-review"],
+  // server-kit 0.10: the review's routes as one factory (the `fastapi` extra), nested
+  // like `feedback.router`; the kit's review page talks to them.
+  "translation_review.router": ["localisation", "kit-review"],
+  // server-kit 0.10: the layer-2 services' shared clock; no page of the kit has one.
+  clock: [],
   // The extra-origin CORS that lets this very site's Kit review page call keksdose.
   cors: ["kit-review"],
   // The scheduler's token on an app's job routes (server-kit 0.8): no kit page speaks it.

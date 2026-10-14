@@ -4,7 +4,14 @@ import { join } from "node:path";
 import { Linter, RuleTester, type Rule } from "eslint";
 import tseslint from "typescript-eslint";
 import plugin from "../index";
-import { findRoleClasses, roleUtilitiesFromCss, type RoleUtilityTable } from "../role-utilities";
+import {
+  findRoleClasses,
+  parseThemeInline,
+  ROLE_NAMESPACES,
+  roleUtilitiesFromCss,
+  stripCssComments,
+  type RoleUtilityTable,
+} from "../role-utilities";
 import { ROLE_UTILITIES } from "../role-utilities.generated";
 
 /**
@@ -33,6 +40,82 @@ describe("the table", () => {
 
   it("is null without an @theme inline block", () => {
     expect(roleUtilitiesFromCss(":root { --text-muted: #666; }")).toBeNull();
+  });
+});
+
+/**
+ * The one reading of the `@theme inline` block (0.37): the table above, and the README's
+ * role-utility table (scripts/gen-styling-inventory.mjs), which counts every declaration,
+ * orders its rows by them and fails on a namespace with no property.
+ */
+describe("parseThemeInline", () => {
+  const css = [
+    "/* @theme inline { --text-color-ghost: var(--ghost); } */",
+    "@theme { --text-sm: 0.875rem; }",
+    "@theme inline {",
+    "  --text-color-muted: var(--text-muted);",
+    "  /* --background-color-gone: var(--gone); */",
+    "  --ring-width-focus: var(--focus-ring-width);",
+    "  --ring-offset-color-surface: var(--bg-surface);",
+    "  --background-color-hover:var(--bg-hover) ;",
+    "  --color-ink: var(--ink);",
+    "  --fill-muted: var(--text-muted, #666);",
+    "}",
+  ].join("\n");
+
+  it("reads the declarations in block order, comments stripped, a width named like its colour", () => {
+    const block = parseThemeInline(css)!;
+    expect(block.declarations).toEqual([
+      { variable: "text-color-muted", property: "text", name: "muted", utility: "text-muted", token: "--text-muted", value: "var(--text-muted)" },
+      { variable: "ring-width-focus", property: "ring-width", name: "focus", utility: "ring-focus", token: "--focus-ring-width", value: "var(--focus-ring-width)" },
+      { variable: "ring-offset-color-surface", property: "ring-offset", name: "surface", utility: "ring-offset-surface", token: "--bg-surface", value: "var(--bg-surface)" },
+      { variable: "background-color-hover", property: "bg", name: "hover", utility: "bg-hover", token: "--bg-hover", value: "var(--bg-hover)" },
+      // A namespace no property reads: reported, so the README's table can refuse it.
+      { variable: "color-ink", property: null, name: null, utility: null, token: "--ink", value: "var(--ink)" },
+      // Not a bare var(): no token, the value as written.
+      { variable: "fill-muted", property: "fill", name: "muted", utility: "fill-muted", token: null, value: "var(--text-muted, #666)" },
+    ]);
+  });
+
+  it("places the block in the comment-stripped text, not the plain @theme before it", () => {
+    const block = parseThemeInline(css)!;
+    const text = stripCssComments(css).slice(block.start, block.end);
+    expect(text.startsWith("@theme inline {")).toBe(true);
+    expect(text.endsWith("}")).toBe(true);
+    expect(text).toContain("--fill-muted");
+  });
+
+  it("leaves a namespace with no property and a value with no bare token out of the table", () => {
+    const table = roleUtilitiesFromCss(css)!;
+    // check:tokens compares the table as JSON, so the key order is ROLE_NAMESPACES'.
+    expect(Object.keys(table)).toEqual(Object.keys(ROLE_NAMESPACES));
+    expect(table).toEqual({
+      text: { "--text-muted": ["muted"] },
+      bg: { "--bg-hover": ["hover"] },
+      border: {},
+      ring: {},
+      "ring-offset": { "--bg-surface": ["surface"] },
+      outline: {},
+      fill: {},
+      stroke: {},
+      "ring-width": { "--focus-ring-width": ["focus"] },
+      "outline-width": {},
+    });
+  });
+
+  it("gives the README every utility of the table, and only those, for tokens.css", () => {
+    const { declarations } = parseThemeInline(readFileSync(join(process.cwd(), "tokens.css"), "utf8"))!;
+    expect(declarations.filter((d) => !d.property || !d.token)).toEqual([]);
+    for (const d of declarations) expect(ROLE_UTILITIES[d.property!][d.token!]).toContain(d.name);
+    const tableCount = Object.values(ROLE_UTILITIES).reduce(
+      (n, tokens) => n + Object.values(tokens).reduce((m, names) => m + names.length, 0),
+      0,
+    );
+    expect(declarations).toHaveLength(tableCount);
+  });
+
+  it("is null without an @theme inline block", () => {
+    expect(parseThemeInline("@theme { --text-sm: 0.875rem; }")).toBeNull();
   });
 });
 

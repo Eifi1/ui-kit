@@ -5,7 +5,9 @@
 // The table itself is role-utilities.generated.ts, re-rendered from tokens.css's
 // `@theme inline` block by scripts/gen-role-utilities.mjs with the parser below; the
 // check fails while it is stale. So tokens.css stays the source: a role that gains a
-// utility there is flagged in the kit and in the apps from the next release on.
+// utility there is flagged in the kit and in the apps from the next release on. The
+// README's role-utility table (scripts/gen-styling-inventory.mjs) reads the block with
+// the same parser since 0.37, so the README, the check and the plugin cannot disagree.
 //
 // This module imports NOTHING, and its TypeScript is erasable only (no enum, no
 // namespace, no parameter property): the check imports it from source under Node's type
@@ -43,20 +45,74 @@ export type RoleUtilityTable = {
   readonly [P in RoleProperty]: Readonly<Record<string, readonly string[]>>;
 };
 
+/** One `--<namespace>-<name>: <value>;` of the `@theme inline` block. */
+export interface ThemeInlineDeclaration {
+  /** The theme variable without its dashes: `text-color-muted`, `ring-width-focus`. */
+  variable: string;
+  /** The property whose namespace it is in; `null` for a namespace ROLE_NAMESPACES lacks. */
+  property: RoleProperty | null;
+  /** The name after the namespace, `muted`; `null` with `property`. */
+  name: string | null;
+  /** The utility it makes: `text-muted`, `ring-focus` (a width is `ring-*` like a colour). */
+  utility: string | null;
+  /** The token the value reads, `--text-muted`; `null` unless the value is a bare `var()`. */
+  token: string | null;
+  /** The value as written, trimmed. */
+  value: string;
+}
+
+/** The `@theme inline` block: where it stands, and every declaration in it in block order. */
+export interface ThemeInlineBlock {
+  /** Its first and one-past-last offset in `stripCssComments(css)`, not in `css`. */
+  start: number;
+  end: number;
+  declarations: ThemeInlineDeclaration[];
+}
+
+/** `css` without its comments: a declaration commented out is not one. */
+export function stripCssComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+const PROPERTIES = Object.keys(ROLE_NAMESPACES) as RoleProperty[];
+
+/**
+ * tokens.css's `@theme inline` block, read once for every reader: the table below, and
+ * the README's (scripts/gen-styling-inventory.mjs), which fails on a `property: null`
+ * where the table leaves it out. `null` when there is no such block — the role utilities
+ * are gone, or this parser is. Theme blocks hold only declarations, so the first `}`
+ * closes it; no namespace is another's prefix, so the first that fits is the one.
+ */
+export function parseThemeInline(css: string): ThemeInlineBlock | null {
+  const block = /@theme\s+inline\s*\{([^}]*)\}/.exec(stripCssComments(css));
+  if (!block) return null;
+  const declarations = [...block[1].matchAll(/--([a-z0-9-]+)\s*:\s*([^;]+);/g)].map(([, variable, raw]) => {
+    const value = raw.trim();
+    const property = PROPERTIES.find((p) => variable.startsWith(`${ROLE_NAMESPACES[p]}-`)) ?? null;
+    const name = property && variable.slice(ROLE_NAMESPACES[property].length + 1);
+    return {
+      variable,
+      property,
+      name,
+      utility: property && `${property.replace(/-width$/, "")}-${name}`,
+      token: /^var\((--[a-z0-9-]+)\)$/.exec(value)?.[1] ?? null,
+      value,
+    };
+  });
+  return { start: block.index, end: block.index + block[0].length, declarations };
+}
+
 /**
  * The table `tokens.css` declares: every `--<namespace>-<name>: var(--<token>)` in its
- * `@theme inline` block, in block order. `null` when there is no such block — the role
- * utilities are gone, or this parser is.
+ * `@theme inline` block, in block order, each property present (in ROLE_NAMESPACES' order)
+ * even when it has none. `null` when there is no such block.
  */
 export function roleUtilitiesFromCss(css: string): RoleUtilityTable | null {
-  const theme = /@theme inline\s*\{([^}]*)\}/.exec(css.replace(/\/\*[\s\S]*?\*\//g, ""))?.[1];
-  if (theme === undefined) return null;
-  const table = {} as Record<RoleProperty, Record<string, string[]>>;
-  for (const prop of Object.keys(ROLE_NAMESPACES) as RoleProperty[]) {
-    const names: Record<string, string[]> = {};
-    const declared = new RegExp(`--${ROLE_NAMESPACES[prop]}-([a-z0-9-]+)\\s*:\\s*var\\((--[a-z0-9-]+)\\)`, "g");
-    for (const [, name, token] of theme.matchAll(declared)) (names[token] ??= []).push(name);
-    table[prop] = names;
+  const block = parseThemeInline(css);
+  if (!block) return null;
+  const table = Object.fromEntries(PROPERTIES.map((p) => [p, {}])) as Record<RoleProperty, Record<string, string[]>>;
+  for (const { property, name, token } of block.declarations) {
+    if (property && name && token) (table[property][token] ??= []).push(name);
   }
   return table;
 }

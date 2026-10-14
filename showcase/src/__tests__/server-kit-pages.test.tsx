@@ -62,7 +62,7 @@ describe("a module page", () => {
       }
       // A signature, laid out one parameter per line.
       const sig = document.getElementById("settings.apply_patch")!.closest("article")!.querySelector("pre")!;
-      expect(sig.textContent).toMatch(/^apply_patch\(\n {4}obj: object,/);
+      expect(sig.textContent).toMatch(/^apply_patch\(\n {4}obj: object \| None,/);
 
       // Roles: a member of this module and one of another page link to their anchors.
       const article = document.getElementById("settings.PatchNullError")!.closest("article")!;
@@ -103,7 +103,7 @@ describe("a module page", () => {
       expect(heading).toHaveAttribute("id", "feedback.router");
       // The package's heading comes first, the router's next, uploads after.
       const order = [...document.querySelectorAll("main section > header > h2")].map((h) => h.id);
-      expect(order).toEqual(["feedback", "feedback.router", "uploads"]);
+      expect(order).toEqual(["feedback", "feedback.router", "uploads", "clock"]);
       const section = heading.closest("section")!;
       expect(within(section).getByRole("link", { name: /server-services-harmonization\.md §2\.9/ })).toHaveAttribute(
         "href",

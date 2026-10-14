@@ -30,7 +30,7 @@ import type { CommitScope } from "./write-lock";
 
 /** The props both fields take and this engine reads. */
 export interface NumericFieldProps extends FieldHelpProps {
-  /** What names the `help` "?" — "About <label>" — with the `aria-label`. */
+  /** What names the `help` "?" — "About “<label>”" — with the `aria-label`. */
   label?: ReactNode;
   hint?: ReactNode;
   error?: ReactNode;

@@ -21,6 +21,21 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.37.0](https://github.com/Eifi1/ui-kit/compare/v0.36.0...v0.37.0) (2026-10-14)
+
+Round 0.37: two contract sections settled after the three apps' reviews — the translation review
+as server-kit layer 2 (server services §6; server-kit 0.10.0 ships beside it) and notifications
+§9 (Kurvenschmiede's `work_transferred`, a job's mail owed until it went) — plus what the apps'
+0.36 adoptions found. The migration per app is `docs/adopt-0.37.md`. Nothing is removed.
+
+### Fixed
+
+* **i18n:** English names a field's help "?" with its label quoted — About “Kind of drive” ([a77e75e](https://github.com/Eifi1/ui-kit/commit/a77e75ea0de79e4da7fc596d9e893c75265db180))
+
+### Changed
+
+* the styling inventory reads `@theme inline` through the ESLint rule's parser ([f6b1ee0](https://github.com/Eifi1/ui-kit/commit/f6b1ee0b418f0a66496ba60836b6dfecb05e64c8))
+
 ## [0.36.0](https://github.com/Eifi1/ui-kit/compare/v0.35.0...v0.36.0) (2026-10-13)
 
 Round 0.36: Kurvenschmiede's Select hints and every queued round, four contracts settled after

@@ -30,8 +30,8 @@ are in [archive/](archive/) as `<topic>-history.md`.
 | [text-size](text-size-harmonization.md) | Text size (Normal, Large, Extra large) and More contrast | ui-kit 0.32, server-kit 0.6 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 (§4 amended for 0.36: a `help` slot beside `hint`) |
 | [billing](billing-harmonization.md) | Plans, grants, trials, the Paddle client, the checkout page and the way back | ui-kit 0.32–0.33, server-kit 0.6–0.7 | Current as of ui-kit 0.34.0 / server-kit 0.8.0; off in production until each app's launch |
 | [colour-roles](colour-roles-harmonization.md) | The role utilities, a foreground for every fill, the hover rule, the CSS-variable guard | ui-kit 0.33 | Current as of ui-kit 0.34.0 (§13: the More-contrast light well, settled 2026-10-13, built for ui-kit 0.36.0) |
-| [notifications](notifications-harmonization.md) | Notification types and switches, quiet hours, the zone, the digest, push devices, one-click unsubscribe | — | Settled 2026-10-13, built for ui-kit 0.36.0 / server-kit 0.9.0 |
-| [server-services](server-services-harmonization.md) | server-kit layer 2: the feedback service behind ports, its router factory, the shared erasure | — | Settled 2026-10-13, built for server-kit 0.9.0 (round 0.36) |
+| [notifications](notifications-harmonization.md) | Notification types and switches, quiet hours, the zone, the digest, push devices, one-click unsubscribe | — | Settled 2026-10-13, built for ui-kit 0.36.0 / server-kit 0.9.0; §9 (admin transfer, failed-mail retry) settled 2026-10-14, built for server-kit 0.10.0 / ui-kit 0.37.0 |
+| [server-services](server-services-harmonization.md) | server-kit layer 2: the feedback service behind ports, its router factory, the shared erasure; the translation review | — | §1–5 settled 2026-10-13, built for server-kit 0.9.0 (round 0.36); §6 the translation review settled 2026-10-14, built for server-kit 0.10.0 / ui-kit 0.37.0 (round 0.37) |
 
 ## Adoption notes (`adopt-0.x.md`)
 
@@ -42,7 +42,8 @@ session as it is. Once all three apps have adopted a release, its note moves to
 
 | Note | Release | What it was | Apps |
 |---|---|---|---|
-| [adopt-0.36](adopt-0.36.md) | ui-kit 0.36, server-kit 0.9 | Round 0.36: notifications, server-kit layer 2 (the feedback service), reset this device's settings, the More-contrast light well, a field's `help`; KS's Select hints | being built |
+| [adopt-0.37](adopt-0.37.md) | ui-kit 0.37, server-kit 0.10 | Round 0.37: the translation review as server-kit layer 2, notifications §9 (an admin's hand-over, a failed send); the apps' 0.36 findings | being built |
+| [adopt-0.36](adopt-0.36.md) | ui-kit 0.36, server-kit 0.9 | Round 0.36: notifications, server-kit layer 2 (the feedback service), reset this device's settings, the More-contrast light well, a field's `help`; KS's Select hints | all three adopted locally |
 | [adopt-0.35](adopt-0.35.md) | ui-kit 0.35 (server-kit stays 0.8) | The 0.34 deprecations removed; the apps' 0.34 findings (the planned 0.34.1); the refactor plan's open ends; `@eifi1/ui-kit/eslint` | all three adopted locally |
 | [adopt-0.34](adopt-0.34.md) | ui-kit 0.34, server-kit 0.8 | Round 0.34: the apps' 0.33 reports, keksdose's run 77, Kurvenschmiede's asks; session refresh, groups in the audit; the refactor waves | all three adopted locally |
 | [adopt-0.33](adopt-0.33.md) | ui-kit 0.33, server-kit 0.7 | Colour roles, billing §14 (Paddle client, checkout page), text size §10.16–§10.22 | all three on `^0.33.1` |

@@ -119,7 +119,7 @@ export interface RhfFieldBaseProps<
    *  `help` it is that caption at every size. */
   hint?: ReactNode;
   /** Help the field is usable without — why, how to choose — behind the field's one
-   *  "?" after the label: a `HelpPopover` named "About <label>" (round 0.36,
+   *  "?" after the label: a `HelpPopover` named "About “<label>”" (round 0.36,
    *  docs/text-size-harmonization.md §4); pass a `HelpPopover` to name it yourself.
    *  `hint` stays the visible fact under the field. */
   help?: ReactNode;

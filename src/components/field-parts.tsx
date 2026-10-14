@@ -232,7 +232,7 @@ export function useInlineHint(hint: ReactNode, withHelp = false): ReactNode {
  *
  * - `hint` is the fact, the caption under the field, on its `aria-describedby`;
  * - `help` is the help, a {@link HelpPopover} "?" on the label line (an unlabelled
- *   field's at its end edge, as a hint's), named "About <label>" (`common.aboutField`,
+ *   field's at its end edge, as a hint's), named "About “<label>”" (`common.aboutField`,
  *   from the label's text, else the `aria-label`, else `common.help`). Pass a
  *   `HelpPopover` as `help` to name it yourself ("What do the statuses mean?").
  *
@@ -245,7 +245,7 @@ export interface FieldHelpProps {
   /**
    * Help the field is usable without — why it exists, how to choose, what the options
    * mean — behind the field's one "?" on its label line: a {@link HelpPopover} named
-   * "About <label>" that opens on a tap (round 0.36, docs/text-size-harmonization.md §4).
+   * "About “<label>”" that opens on a tap (round 0.36, docs/text-size-harmonization.md §4).
    * Pass a `HelpPopover` to name it yourself. `hint` stays the visible fact: with `help`
    * set it is the caption under the field at every size, a `FieldHint` included.
    */
@@ -253,7 +253,7 @@ export interface FieldHelpProps {
 }
 
 /**
- * The "?" for a field's `help` — the field's own name, "About <label>", in the reader's
+ * The "?" for a field's `help` — the field's own name, "About “<label>”", in the reader's
  * language. A component so that a field without `help` asks the labels nothing.
  */
 function FieldHelp({ name, children }: { name: ReactNode; children: ReactNode }) {
@@ -265,7 +265,7 @@ function FieldHelp({ name, children }: { name: ReactNode; children: ReactNode })
 /**
  * A field's `help` as the "?" for its label line, or `undefined` when there is none. A
  * {@link HelpPopover} is used as it is (it carries its own name); anything else is put
- * in one named "About <name>" — `name` is the field's label, else its `aria-label`.
+ * in one named "About “<name>”" — `name` is the field's label, else its `aria-label`.
  */
 export function fieldHelpMark(help: ReactNode, name: ReactNode): ReactNode | undefined {
   if (!hasContent(help)) return undefined;

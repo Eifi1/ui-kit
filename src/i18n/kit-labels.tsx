@@ -170,9 +170,10 @@ export interface CommonLabels {
   /** Read after a link that opens a new tab (`<Button href external>`, TextLink):
    *  nothing else tells a screen reader the page is about to change tabs. */
   opensInNewTab: string;
-  /** The name of a field's `help` "?" and its panel (round 0.36): "About <field>", the
-   *  field's label as the argument — "About Jerk shape". A `HelpPopover` passed as
-   *  `help` keeps its own name. */
+  /** The name of a field's `help` "?" and its panel (round 0.36): "About “<field>”", the
+   *  field's label as the argument, quoted so a capitalised label reads as a name — "About
+   *  “Jerk shape”" (round 0.37; the other locales quoted it already). A `HelpPopover`
+   *  passed as `help` keeps its own name. */
   aboutField: (field: string) => string;
   /** …and of a `help` "?" on a field with no label and no `aria-label` to name it by. */
   help: string;

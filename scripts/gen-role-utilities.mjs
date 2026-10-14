@@ -7,8 +7,8 @@
  * Two readers, one table: `@eifi1/ui-kit/eslint`'s `role-utilities` rule, which an app's
  * ESLint loads in plain Node and so cannot read a stylesheet, and `npm run check:tokens`,
  * which fails while this file is stale. The parser is src/eslint/role-utilities.ts's, imported
- * from source (Node strips its types), so the check and this script cannot read the block
- * two ways.
+ * from source (Node strips its types), so the check, this script and the README's table
+ * (scripts/gen-styling-inventory.mjs, since 0.37) cannot read the block two ways.
  *
  * Usage:
  *   node scripts/gen-role-utilities.mjs           rewrite the generated file

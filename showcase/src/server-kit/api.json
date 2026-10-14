@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.9.0",
+  "kit_version": "0.10.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -1071,7 +1071,7 @@
         {
           "name": "FACT_SUFFIXES",
           "kind": "constant",
-          "signature": "FACT_SUFFIXES: frozenset[str] = frozenset(\n    {\n        \"at\",\n        \"on\",\n        \"until\",\n        \"date\",\n        \"count\",\n        \"enabled\",\n        \"required\",\n        \"fingerprint\",\n        \"epoch\",\n        \"kind\",\n        \"type\",\n        # 0.5.1 (keksdose): `api_tokens_revoked`, `sessions_valid` are facts about a secret,\n        # not the secret — keksdose had renamed them to `*_count` to get past the check.\n        \"revoked\",\n        \"valid\",\n    }\n)",
+          "signature": "FACT_SUFFIXES: frozenset[str] = frozenset(\n    {\n        \"at\",\n        \"on\",\n        \"until\",\n        \"date\",\n        \"count\",\n        \"enabled\",\n        \"required\",\n        \"fingerprint\",\n        \"epoch\",\n        \"kind\",\n        \"type\",\n        # 0.5.1 (keksdose): `api_tokens_revoked`, `sessions_valid` are facts about a secret,\n        # not the secret — keksdose had renamed them to `*_count` to get past the check.\n        \"revoked\",\n        \"valid\",\n        # 0.10 (keksdose): notifications' `digest_cadence` (the kit's own DigestFields, in\n        # every export by notifications §3.9) says how often the digest goes, not a digest.\n        \"cadence\",\n    }\n)",
           "doc": "A key's last word that says it holds a FACT about a secret — when, whether, how many,\nwhich one — and not the secret."
         },
         {
@@ -2296,8 +2296,8 @@
         {
           "name": "apply_patch",
           "kind": "function",
-          "signature": "apply_patch(obj: object, update: BaseModel, *, not_nullable: Iterable[str], defaults: Mapping[str, object] | None = None, skip: Iterable[str] = ()) -> dict[str, object]",
-          "doc": "Write a settings body onto ``obj`` under §6.1's rules 1–3; the fields written.\n\nFor a PATCH and a PUT body alike — the rule is about the body, not the verb::\n\n    changes = apply_patch(user, payload, not_nullable=PROFILE_NOT_NULLABLE)\n\n* **Only the fields the client sent** are written (``update.model_fields_set``):\n  a field left out keeps its value (rule 1), even where the model's default is\n  ``None``. That is the whole difference from ``model_dump()``, which cannot tell \"left\n  out\" from \"sent as null\".\n* **A null clears** (rule 2): it is written as ``None`` — or as ``defaults[name]``,\n  for a field whose \"not set\" is a value (keksdose's push preferences: ``null`` resets\n  a type to its default).\n* **A null on a ``not_nullable`` field** is a :class:`PatchNullError` (rule 3, 422),\n  raised before ANYTHING is written, so a refused body never leaves ``obj`` half\n  changed. ``not_nullable`` is required on purpose: an empty one says \"every field may\n  be cleared\" out loud, and a forgotten one would otherwise reach the database as a\n  ``NOT NULL`` violation — a 500.\n* **A ``skip`` field is the caller's to write**: rule 3 still checks it — a null on it\n  is refused with the others, before anything is written — but it is neither written\n  nor answered. That is how a field with rules of its own reaches its own code:\n  notifications' ``types`` goes through\n  :func:`~eifi1_server_kit.notifications.apply_switches_patch`\n  (``skip=SETTINGS_SKIP``).\n\n``obj`` is an ORM row or any object (``setattr``), or a mutable mapping (item\nassignment). Values are written as validated: a nested model stays a model, so dump it\nfirst for a JSON column. Answers ``{name: value}`` for every field written, in the\nmodel's order — for the app's audit or its \"did the locale change\" check.\n\nProgramming errors, raised as :class:`TypeError` / :class:`ValueError` so a test meets\nthem on the first call: a model that doesn't forbid unknown fields (rule 4 — without\n``extra=\"forbid\"`` a typo would be a silent no-op), and a ``not_nullable``, ``defaults``\nor ``skip`` name that is no field of the model (a typo there would switch the guard off\nwithout a word), or one name in both ``not_nullable`` and ``defaults``, or in both\n``skip`` and ``defaults`` (a skipped field is not written, so it has no default here)."
+          "signature": "apply_patch(obj: object | None, update: BaseModel, *, not_nullable: Iterable[str], defaults: Mapping[str, object] | None = None, skip: Iterable[str] = ()) -> dict[str, object]",
+          "doc": "Write a settings body onto ``obj`` under §6.1's rules 1–3; the fields written.\n\nFor a PATCH and a PUT body alike — the rule is about the body, not the verb::\n\n    changes = apply_patch(user, payload, not_nullable=PROFILE_NOT_NULLABLE)\n\n* **Only the fields the client sent** are written (``update.model_fields_set``):\n  a field left out keeps its value (rule 1), even where the model's default is\n  ``None``. That is the whole difference from ``model_dump()``, which cannot tell \"left\n  out\" from \"sent as null\".\n* **A null clears** (rule 2): it is written as ``None`` — or as ``defaults[name]``,\n  for a field whose \"not set\" is a value (keksdose's push preferences: ``null`` resets\n  a type to its default).\n* **A null on a ``not_nullable`` field** is a :class:`PatchNullError` (rule 3, 422),\n  raised before ANYTHING is written, so a refused body never leaves ``obj`` half\n  changed. ``not_nullable`` is required on purpose: an empty one says \"every field may\n  be cleared\" out loud, and a forgotten one would otherwise reach the database as a\n  ``NOT NULL`` violation — a 500.\n* **A ``skip`` field is the caller's to write**: rule 3 still checks it — a null on it\n  is refused with the others, before anything is written — but it is neither written\n  nor answered. That is how a field with rules of its own reaches its own code:\n  notifications' ``types`` goes through\n  :func:`~eifi1_server_kit.notifications.apply_switches_patch`\n  (``skip=SETTINGS_SKIP``).\n\n``obj`` is an ORM row or any object (``setattr``), or a mutable mapping (item\nassignment). Values are written as validated: a nested model stays a model, so dump it\nfirst for a JSON column. Answers ``{name: value}`` for every field written, in the\nmodel's order — for the app's audit or its \"did the locale change\" check.\n\n**``obj=None`` when every field is skipped**: a body whose fields all have their own\ncode (notifications' settings in an app with no push and no digest: ``types`` alone)\nhas nothing to write onto. Rule 3 is still checked; nothing is written, and the answer\nis ``{}``::\n\n    apply_patch(None, body, not_nullable=SETTINGS_SKIP, skip=SETTINGS_SKIP)\n\nProgramming errors, raised as :class:`TypeError` / :class:`ValueError` so a test meets\nthem on the first call: a model that doesn't forbid unknown fields (rule 4 — without\n``extra=\"forbid\"`` a typo would be a silent no-op), and a ``not_nullable``, ``defaults``\nor ``skip`` name that is no field of the model (a typo there would switch the guard off\nwithout a word), or one name in both ``not_nullable`` and ``defaults``, or in both\n``skip`` and ``defaults`` (a skipped field is not written, so it has no default here),\nor ``obj=None`` with a field that is not skipped (a :class:`TypeError` whatever the\nbody sent: a write onto nothing would be lost)."
         },
         {
           "name": "canonical_locale",
@@ -4303,7 +4303,7 @@
     {
       "name": "eifi1_server_kit.mail",
       "summary": "Outbound account mail: the words per language, one layout, two transports.",
-      "doc": "Outbound account mail: the words per language, one layout, two transports.\n\n``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``. Lifted from keksdose\n``backend/keksdose/infrastructure/email.py`` and ``domain/server_text.py`` and from\nKurvenschmiede ``infrastructure/email.py`` (``MailText``), which agree on everything\nhere; kastlan built its own on the same shape.\n\n* **The words are the app's.** A mail's texts are a table per language of\n  :class:`MailText` rows — the subject and the five parts :func:`render_message` lays\n  out — and :func:`pick` chooses the row for the recipient's locale. Which mails exist\n  and what they say stays in each app (§8 \"App-side: the texts of the mails\").\n* **One layout, escaped at the boundary** (:func:`render_message`): a greeting is built\n  from a person's name, and a name is free text, so an account called\n  ``<a href=\"…\">Reset here</a>`` must not put that anchor into the app's own mail.\n* **A whole HTML document**, with the language and a title: Outlook junked a fully\n  authenticated Kurvenschmiede reset mail (SCL 5 — a new domain on shared sending IPs),\n  and a bare fragment with no ``<html lang>`` and no ``<title>`` is one more mark against\n  a mail. :func:`render_mail` picks the row AND its language in one call.\n* **A ``Reply-To``** (:class:`ResendClient`'s ``reply_to``): the mails come from a\n  ``noreply@`` address, and a reply must reach a person. Each app's ``*_EMAIL_REPLY_TO``\n  setting defaults to ``support@<its domain>`` (:func:`support_address`), which\n  Cloudflare Email Routing forwards on all three domains.\n* **Two transports behind one protocol** (:class:`Mailer`): :class:`ResendClient` for\n  production — the ``mail`` extra (``eifi1-server-kit[mail]``, httpx) — and\n  :class:`ConsoleMailer` for a fresh checkout, which logs the message, link and all.\n  **Sending never raises**: a sign-up must not fail because a provider is down, and every\n  link can be asked for again. ``send`` answers whether the mail went; the caller decides\n  who is told.\n* **A word for every mail** — the ``kind`` it is sent and logged under, which an\n  operator greps three apps' logs for: a mail with a one-time link by its token's\n  :class:`~eifi1_server_kit.auth.OneTimeTokenKind`, billing's notices by\n  :class:`~eifi1_server_kit.billing.BillingNoticeKind`, and the two account notices with\n  no token by :class:`AccountNoticeKind`.\n\n* **A notification mail** (``docs/notifications-harmonization.md`` §3.6) is sent under its\n  notification type's id and carries RFC 8058's one-click unsubscribe:\n  :func:`list_unsubscribe_headers` on :attr:`MailMessage.headers`, and a footer line\n  linking the app's unsubscribe page (:class:`MailUnsubscribe`, which\n  :func:`render_mail` lays out and turns into the headers). Account mail and billing's\n  notices carry none: the recipient asked for them, and has no switch to turn them off.",
+      "doc": "Outbound account mail: the words per language, one layout, two transports.\n\n``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``. Lifted from keksdose\n``backend/keksdose/infrastructure/email.py`` and ``domain/server_text.py`` and from\nKurvenschmiede ``infrastructure/email.py`` (``MailText``), which agree on everything\nhere; kastlan built its own on the same shape.\n\n* **The words are the app's.** A mail's texts are a table per language of\n  :class:`MailText` rows — the subject and the five parts :func:`render_message` lays\n  out — and :func:`pick` chooses the row for the recipient's locale. Which mails exist\n  and what they say stays in each app (§8 \"App-side: the texts of the mails\").\n* **One layout, escaped at the boundary** (:func:`render_message`): a greeting is built\n  from a person's name, and a name is free text, so an account called\n  ``<a href=\"…\">Reset here</a>`` must not put that anchor into the app's own mail.\n* **A whole HTML document**, with the language and a title: Outlook junked a fully\n  authenticated Kurvenschmiede reset mail (SCL 5 — a new domain on shared sending IPs),\n  and a bare fragment with no ``<html lang>`` and no ``<title>`` is one more mark against\n  a mail. :func:`render_mail` picks the row AND its language in one call.\n* **A ``Reply-To``** (:class:`ResendClient`'s ``reply_to``): the mails come from a\n  ``noreply@`` address, and a reply must reach a person. Each app's ``*_EMAIL_REPLY_TO``\n  setting defaults to ``support@<its domain>`` (:func:`support_address`), which\n  Cloudflare Email Routing forwards on all three domains.\n* **Two transports behind one protocol** (:class:`Mailer`): :class:`ResendClient` for\n  production — the ``mail`` extra (``eifi1-server-kit[mail]``, httpx) — and\n  :class:`ConsoleMailer` for a fresh checkout, which logs the message, link and all.\n  **Sending never raises**: a sign-up must not fail because a provider is down, and every\n  link can be asked for again. ``send`` answers whether the mail went; the caller decides\n  who is told.\n* **A word for every mail** — the ``kind`` it is sent and logged under, which an\n  operator greps three apps' logs for: a mail with a one-time link by its token's\n  :class:`~eifi1_server_kit.auth.OneTimeTokenKind`, billing's notices by\n  :class:`~eifi1_server_kit.billing.BillingNoticeKind`, and the account notices with no\n  token by :class:`AccountNoticeKind`.\n\n* **A notification mail** (``docs/notifications-harmonization.md`` §3.6) is sent under its\n  notification type's id and carries RFC 8058's one-click unsubscribe:\n  :func:`list_unsubscribe_headers` on :attr:`MailMessage.headers`, and a footer line\n  linking the app's unsubscribe page (:class:`MailUnsubscribe`, which\n  :func:`render_mail` lays out and turns into the headers). Account mail and billing's\n  notices carry none: the recipient asked for them, and has no switch to turn them off.\n  One a job sends is owed until it went (§9.4): it carries\n  :attr:`MailMessage.idempotency_key` from\n  :meth:`~eifi1_server_kit.notifications.MailMarker.idempotency_key`, so two runs on one\n  day send it once.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -4345,7 +4345,7 @@
           "name": "AccountNoticeKind",
           "kind": "enum",
           "signature": "class AccountNoticeKind(enum.StrEnum)",
-          "doc": "The account mails that carry no one-time token, as the ``kind`` they are sent and\nlogged under (KS S5): each TELLS an address something rather than asking it to prove\nanything, so :class:`~eifi1_server_kit.auth.OneTimeTokenKind` has no word for them.\nNot ``MailKind``, which is :mod:`~eifi1_server_kit.user_admin`'s word for the mail an\nadmin sends again.\n\nThe user-admin contract requires both of every app with an email change and an\naccount deletion::\n\n    await mailer.send(user.email, message, kind=AccountNoticeKind.ACCOUNT_DELETION)",
+          "doc": "The account mails that carry no one-time token, as the ``kind`` they are sent and\nlogged under (KS S5): each TELLS an address something rather than asking it to prove\nanything, so :class:`~eifi1_server_kit.auth.OneTimeTokenKind` has no word for them.\nNot ``MailKind``, which is :mod:`~eifi1_server_kit.user_admin`'s word for the mail an\nadmin sends again. None has a switch or an unsubscribe link: they are about the\naccount itself.\n\nThe user-admin contract requires the first two of every app with an email change and\nan account deletion; the third is Kurvenschmiede's, for its admin transfer of work\n(notifications §9.3)::\n\n    await mailer.send(user.email, message, kind=AccountNoticeKind.ACCOUNT_DELETION)",
           "values": [
             {
               "name": "EMAIL_CHANGE_NOTICE",
@@ -4354,6 +4354,10 @@
             {
               "name": "ACCOUNT_DELETION",
               "value": "account_deletion"
+            },
+            {
+              "name": "WORK_TRANSFERRED_NOTICE",
+              "value": "work_transferred_notice"
             }
           ]
         },
@@ -4379,7 +4383,7 @@
           "name": "MailMessage",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class MailMessage",
-          "doc": "One mail, ready to send: ``html`` may be ``None`` for a plain-text mail (kastlan).\n\n``headers`` are extra mail headers — a notification mail's\n:func:`list_unsubscribe_headers` — which :class:`ResendClient` sends as Resend's\n``headers`` object and an SMTP transport sets on its message. A :class:`ValueError` for\na name that is no header name, or a line break in a value.",
+          "doc": "One mail, ready to send: ``html`` may be ``None`` for a plain-text mail (kastlan).\n\n``headers`` are extra mail headers — a notification mail's\n:func:`list_unsubscribe_headers` — which :class:`ResendClient` sends as Resend's\n``headers`` object and an SMTP transport sets on its message. A :class:`ValueError` for\na name that is no header name, or a line break in a value.\n\n``idempotency_key`` is the send's own ``Idempotency-Key`` — a request header to the\nprovider, not a mail header — for a mail a job may send again (notifications §9.4,\n:meth:`~eifi1_server_kit.notifications.MailMarker.idempotency_key`)::\n\n    message = replace(message, idempotency_key=marker.idempotency_key(today))\n\n:class:`ResendClient` sends it on both tries; ``None`` (account mail) is a random key\nper send. :class:`ConsoleMailer` ignores it. A :class:`ValueError` unless it is 1–256\ncharacters of printable ASCII with no space: Resend refuses a longer one, and it is\none header line.",
           "fields": [
             {
               "name": "subject",
@@ -4402,6 +4406,12 @@
             {
               "name": "headers",
               "type": "Mapping[str, str] | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "idempotency_key",
+              "type": "str | None",
               "default": "None",
               "doc": ""
             }
@@ -4494,7 +4504,7 @@
             {
               "name": "send",
               "signature": "async send(to: str, message: MailMessage, *, kind: str = 'other') -> bool",
-              "doc": "Send one mail; whether it went out. Never raises.\n\n``kind`` is what the mail is FOR — a small enum fit for a log line or a metric\nlabel, which the recipient's address never is: a\n:class:`~eifi1_server_kit.auth.OneTimeTokenKind` (``verification``,\n``password_reset``, ``invitation``, ``email_change``), an\n:class:`AccountNoticeKind` (``email_change_notice``, ``account_deletion``), a\n:class:`~eifi1_server_kit.billing.BillingNoticeKind`, or — for a notification mail —\nits notification type's id (``share_granted``; notifications §3.6). An app whose own\n``send`` takes a narrower kind widens it to its registry's ids."
+              "doc": "Send one mail; whether it went out. Never raises.\n\n``kind`` is what the mail is FOR — a small enum fit for a log line or a metric\nlabel, which the recipient's address never is: a\n:class:`~eifi1_server_kit.auth.OneTimeTokenKind` (``verification``,\n``password_reset``, ``invitation``, ``email_change``), an\n:class:`AccountNoticeKind` (``email_change_notice``, ``account_deletion``,\n``work_transferred_notice``), a\n:class:`~eifi1_server_kit.billing.BillingNoticeKind`, or — for a notification mail —\nits notification type's id (``share_granted``; notifications §3.6). An app whose own\n``send`` takes a narrower kind widens it to its registry's ids."
             }
           ]
         },
@@ -4502,7 +4512,7 @@
           "name": "ResendClient",
           "kind": "class",
           "signature": "class ResendClient",
-          "doc": "One POST to Resend's HTTP API per mail (keksdose, Kurvenschmiede ``send_email``).\n\n``api_key`` and ``from_address`` are injected — the app's settings, never read here;\n``from_address`` must be on a domain verified with Resend. ``reply_to`` is where a\nreply goes — the app's ``*_EMAIL_REPLY_TO`` setting, by default\n``support_address(from_address)``; ``None`` or empty sends none. ``client`` is an\n``httpx.AsyncClient`` the app owns and closes (tests pass one with a\n``MockTransport``); without it each send opens and closes its own.\n\n**At most one retry**, and only where a second attempt can help: a transport error (no\nconnection, a timeout) or an answer of ``429`` / ``5xx``. A ``4xx`` — a bad key, an\nunverified sender — fails at once. Both attempts carry the same ``Idempotency-Key``, so\na first attempt that did reach Resend before the timeout is not sent twice. No queue,\nno delivery tracking: a handful of mails, each awaited by somebody at the app.\n\nThe log lines name the ``kind`` and Resend's answer, never the recipient.",
+          "doc": "One POST to Resend's HTTP API per mail (keksdose, Kurvenschmiede ``send_email``).\n\n``api_key`` and ``from_address`` are injected — the app's settings, never read here;\n``from_address`` must be on a domain verified with Resend. ``reply_to`` is where a\nreply goes — the app's ``*_EMAIL_REPLY_TO`` setting, by default\n``support_address(from_address)``; ``None`` or empty sends none. ``client`` is an\n``httpx.AsyncClient`` the app owns and closes (tests pass one with a\n``MockTransport``); without it each send opens and closes its own.\n\n**At most one retry**, and only where a second attempt can help: a transport error (no\nconnection, a timeout) or an answer of ``429`` / ``5xx``. A ``4xx`` — a bad key, an\nunverified sender — fails at once. Both attempts carry the same ``Idempotency-Key``, so\na first attempt that did reach Resend before the timeout is not sent twice: the\nmessage's :attr:`~MailMessage.idempotency_key` where it has one (a job's notification\nmail, notifications §9.4), else a random ``{kind}-{uuid}``. No queue, no delivery\ntracking: a handful of mails, each awaited by somebody at the app.\n\n**Resend's idempotency** (its docs, 2026-10-14): a key is kept 24 hours; the same key\nwith the same body answers the first request's answer, and nothing is sent again; a\n``409`` is the same key while its first request is still in progress\n(``concurrent_idempotent_requests``) or with another body\n(``invalid_idempotent_request``). A ``409`` is \"not sent\" here and not retried: the\nrequest that holds the key has the mail, and a job's next run tries again under the\nnext day's key.\n\nThe log lines name the ``kind`` and Resend's answer, never the recipient.",
           "methods": [
             {
               "name": "__init__",
@@ -4557,10 +4567,10 @@
     {
       "name": "eifi1_server_kit.notifications",
       "summary": "Notifications, as code (``docs/notifications-harmonization.md`` §4.1 in ``Eifi1/ui-kit``).",
-      "doc": "Notifications, as code (``docs/notifications-harmonization.md`` §4.1 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions and Pydantic models — no database, no\nroutes, no network, no new dependency. The app keeps its tables, its routes (the demo's\nrefusal among them), its triggers, its words and its sending (``pywebpush``, its mailer).\nkeksdose is the source (``backend/keksdose/domain/schemas/push.py`` and its services),\ncited per rule.\n\n* :mod:`~eifi1_server_kit.notifications.registry` — the app's types, their defaults, and\n  the account's narrowing;\n* :mod:`~eifi1_server_kit.notifications.resource` — ``GET/PATCH /notifications/settings``:\n  the switches as they apply, and the PATCH's rules for ``types``;\n* :mod:`~eifi1_server_kit.notifications.delivery` — who gets an inbox row, a push, a mail;\n* :mod:`~eifi1_server_kit.notifications.timing` — quiet hours, the zone, the digest's period;\n* :mod:`~eifi1_server_kit.notifications.push` — the device shapes, the payload, a push\n  service's answer, the VAPID subject;\n* :mod:`~eifi1_server_kit.notifications.unsubscribe` — the signed one-click token;\n* :mod:`~eifi1_server_kit.notifications.inbox` — the inbox's shapes;\n* :mod:`~eifi1_server_kit.notifications.errors` — the coded refusals.\n\nThe mail's half — ``List-Unsubscribe`` and the footer line — is in\n:mod:`eifi1_server_kit.mail` (:class:`~eifi1_server_kit.mail.MailUnsubscribe`), and the\nPATCH's plain fields go through :func:`eifi1_server_kit.settings.apply_patch` with\n``skip=SETTINGS_SKIP``.",
+      "doc": "Notifications, as code (``docs/notifications-harmonization.md`` §4.1 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions and Pydantic models — no database, no\nroutes, no network, no new dependency. The app keeps its tables, its routes (the demo's\nrefusal among them), its triggers, its words and its sending (``pywebpush``, its mailer).\nkeksdose is the source (``backend/keksdose/domain/schemas/push.py`` and its services),\ncited per rule.\n\n* :mod:`~eifi1_server_kit.notifications.registry` — the app's types, their defaults, and\n  the account's narrowing;\n* :mod:`~eifi1_server_kit.notifications.resource` — ``GET/PATCH /notifications/settings``:\n  the switches as they apply, and the PATCH's rules for ``types``;\n* :mod:`~eifi1_server_kit.notifications.delivery` — who gets an inbox row, a push, a mail;\n* :mod:`~eifi1_server_kit.notifications.timing` — quiet hours, the zone, the digest's period;\n* :mod:`~eifi1_server_kit.notifications.retry` — a job's notification mail that failed to\n  send: the window it is owed in, the marker, the ``Idempotency-Key`` (§9.4);\n* :mod:`~eifi1_server_kit.notifications.push` — the device shapes, the payload, a push\n  service's answer, the VAPID subject;\n* :mod:`~eifi1_server_kit.notifications.unsubscribe` — the signed one-click token;\n* :mod:`~eifi1_server_kit.notifications.inbox` — the inbox's shapes;\n* :mod:`~eifi1_server_kit.notifications.errors` — the coded refusals.\n\nThe mail's half — ``List-Unsubscribe`` and the footer line, and a job's mail's\n``Idempotency-Key`` — is in :mod:`eifi1_server_kit.mail`\n(:class:`~eifi1_server_kit.mail.MailUnsubscribe`,\n:attr:`~eifi1_server_kit.mail.MailMessage.idempotency_key`), and the\nPATCH's plain fields go through :func:`eifi1_server_kit.settings.apply_patch` with\n``skip=SETTINGS_SKIP``.",
       "contract": {
         "doc": "docs/notifications-harmonization.md",
-        "section": "§3, §4.1",
+        "section": "§3, §4.1, §9",
         "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#3-the-shapes",
         "links": [
           {
@@ -4572,6 +4582,11 @@
             "section": "§4.1",
             "heading": "4.1 server-kit 0.9: eifi1_server_kit.notifications (layer 1)",
             "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#41-server-kit-09-eifi1_server_kitnotifications-layer-1"
+          },
+          {
+            "section": "§9",
+            "heading": "9. Round 0.37 amendment (settled 2026-10-14)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#9-round-037-amendment-settled-2026-10-14"
           }
         ]
       },
@@ -4599,6 +4614,24 @@
           "kind": "constant",
           "signature": "INBOX_RETENTION = timedelta(days=90)",
           "doc": "How long an inbox row is kept (keksdose ``RETENTION_DAYS = 90``)."
+        },
+        {
+          "name": "MAIL_EVENT_PATTERN",
+          "kind": "constant",
+          "signature": "MAIL_EVENT_PATTERN = r\"^[A-Za-z0-9][A-Za-z0-9:._-]{0,63}$\"",
+          "doc": "An event key: 1–64 letters, digits and ``:._-``, a letter or digit first. It fits the\nmarker's ``event VARCHAR(64)``."
+        },
+        {
+          "name": "MAIL_LATE_DAYS",
+          "kind": "constant",
+          "signature": "MAIL_LATE_DAYS = 3",
+          "doc": "How many days after its event's day a job's notification mail is still owed (decision\n5): billing's and the digest's grace (``NOTICE_LATE_LIMIT``, ``DIGEST_LATE_DAYS``)."
+        },
+        {
+          "name": "MAIL_MARKER_RETENTION",
+          "kind": "constant",
+          "signature": "MAIL_MARKER_RETENTION = timedelta(days=30)",
+          "doc": "How long the app keeps a marker (decision 6); the job that sends deletes older ones."
         },
         {
           "name": "PUSH_MAX_FAILURES",
@@ -4815,6 +4848,39 @@
               "type": "int",
               "default": null,
               "doc": "Every unread row of the account (the badge), not just this page's."
+            }
+          ]
+        },
+        {
+          "name": "MailMarker",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class MailMarker",
+          "doc": "One recipient's mail for one event, sent (decision 6): the row the app writes, and\nthe source of the send's ``Idempotency-Key`` (§9.4)::\n\n    marker = MailMarker(user.id, \"invoices_overdue\", mail_event(company.id, day))\n    if not mail_due(day, today, sent=marker in markers):\n        continue\n    message = replace(message, idempotency_key=marker.idempotency_key(today))\n    if await mailer.send(user.email, message, kind=marker.type_id):\n        ...  # INSERT (user_id, type_id, event, sent_at) ON CONFLICT DO NOTHING; commit\n\nA :class:`ValueError` for a ``type_id`` outside\n:data:`~eifi1_server_kit.notifications.TYPE_ID_PATTERN`, an ``event`` outside\n:data:`MAIL_EVENT_PATTERN`, or a string ``user_id`` with a colon, a space or nothing\nin it (a number or a UUID is right).",
+          "fields": [
+            {
+              "name": "user_id",
+              "type": "int | str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "type_id",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "event",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "idempotency_key",
+              "signature": "idempotency_key(day: date) -> str",
+              "doc": "``<type>:<event>:<user_id>:<YYYY-MM-DD>`` for the try on ``day`` (decision 7)::\n\n    MailMarker(17, \"invoices_overdue\", \"42:2026-10-13\").idempotency_key(date(2026, 10, 14))\n    # \"invoices_overdue:42:2026-10-13:17:2026-10-14\"\n\nTwo runs on one day send one mail: Resend answers the second from the first (it\nkeeps a key 24 hours). The next day's try is a new key, so a count that changed in\nbetween is no conflict at Resend. At most 181 characters, within Resend's 256. A\n:class:`TypeError` for a ``datetime``."
             }
           ]
         },
@@ -5298,7 +5364,7 @@
           "name": "digest_due",
           "kind": "function",
           "signature": "digest_due(cadence: DigestCadence, zone: tzinfo, now: datetime, *, sent: str | None, late_days: int = DIGEST_LATE_DAYS) -> str | None",
-          "doc": "The period key while the digest is due, else ``None`` (§3.4).\n\nDue while ``sent`` — the key the app stored when it last sent one — is not this\nperiod's, and the local date (``now`` in ``zone``) is no more than ``late_days`` days\ninto the period: Monday to Thursday for a week, the 1st to the 4th for a month. Store\nthe answer as the new ``sent`` in the transaction that writes the digest's inbox row,\nwhether or not quiet hours let the push go: a marker set on the push would write a new\nrow every day of the grace. ``now`` is aware."
+          "doc": "The period key while the digest is due, else ``None`` (§3.4).\n\nDue while ``sent`` — the key the app stored when it last sent one — is not this\nperiod's, and the local date (``now`` in ``zone``) is no more than ``late_days`` days\ninto the period: Monday to Thursday for a week, the 1st to the 4th for a month. Store\nthe answer as the new ``sent`` in the transaction that writes the digest's inbox row,\nwhether or not quiet hours let the push go: a marker set on the push would write a new\nrow every day of the grace. An app with no inbox stores it once the mail's send\nanswered ``True``, so a failed send is tried again the next day of the grace (§9.2\ndecision 9). ``now`` is aware."
         },
         {
           "name": "digest_period",
@@ -5323,6 +5389,18 @@
           "kind": "function",
           "signature": "is_known_zone(name: str | None) -> bool",
           "doc": "Whether ``zoneinfo`` knows ``name`` — the update's check on ``timezone``.\n\n``Europe/Zurich`` and ``UTC`` are; an empty name, a region alone (``Europe``), a path\n(``../etc/passwd``) and ``None`` are not."
+        },
+        {
+          "name": "mail_due",
+          "kind": "function",
+          "signature": "mail_due(event_day: date, today: date, *, sent: bool, late_days: int = MAIL_LATE_DAYS) -> bool",
+          "doc": "Whether a job's notification mail for an event is still owed to one recipient\n(decision 5): not ``sent`` (no marker), and ``today`` is 0 to ``late_days`` days after\n``event_day`` — the event's day and the 3 after it. A future ``event_day`` is not due.\n\nBoth are days in the job's own zone. A ``late_days`` below 0 is a :class:`ValueError`,\na ``datetime`` a :class:`TypeError`."
+        },
+        {
+          "name": "mail_event",
+          "kind": "function",
+          "signature": "mail_event(*parts: str | int | date) -> str",
+          "doc": "An event key from the app's parts, joined with ``:``, a date as ISO (decision 6)::\n\n    mail_event(company.id, day)  # kastlan: \"42:2026-10-13\"\n\nThe key names the event, never a person or what happened: ids and days, no name, no\ntitle, no amount. A :class:`ValueError` for an empty part, or a key outside\n:data:`MAIL_EVENT_PATTERN` (a space, an umlaut, over 64 characters, no part at all); a\n:class:`TypeError` for a ``datetime``."
         },
         {
           "name": "plan_delivery",
@@ -5357,8 +5435,8 @@
         {
           "name": "should_reap",
           "kind": "function",
-          "signature": "should_reap(failure_count: int) -> bool",
-          "doc": "Whether the daily job deletes a device: :data:`PUSH_MAX_FAILURES` failures in a row\n(keksdose ``reap_dead_subscriptions``)."
+          "signature": "should_reap(failure_count: int, *, limit: int = PUSH_MAX_FAILURES) -> bool",
+          "doc": "Whether the daily job deletes a device: ``limit`` failures in a row,\n:data:`PUSH_MAX_FAILURES` unless the app sets its own (keksdose's ``push_max_failures``\nsetting, ``reap_dead_subscriptions``). A ``limit`` below 1 is a :class:`ValueError`: it\nwould reap a device that never failed."
         },
         {
           "name": "unsubscribe_key",
@@ -5722,7 +5800,7 @@
           "name": "Clock",
           "kind": "constant",
           "signature": "type Clock = Callable[[], datetime]",
-          "doc": "The service's clock: an aware UTC ``datetime`` (``resolved_at``, a crash's\n``seen_at``). Not :data:`eifi1_server_kit.limiter.Clock`, which is a monotonic float."
+          "doc": "A service's clock: an aware UTC ``datetime`` (feedback's ``resolved_at`` and a crash's\n``seen_at``, a verdict's ``reviewed_at``). Not :data:`eifi1_server_kit.limiter.Clock`,\nwhich is a monotonic float."
         },
         {
           "name": "CrashCategoryNotAssignableError",
@@ -7289,9 +7367,40 @@
       ]
     },
     {
+      "name": "eifi1_server_kit.clock",
+      "summary": "The clock layer 2's services read: an aware UTC ``datetime``.",
+      "doc": "The clock layer 2's services read: an aware UTC ``datetime``.\n\n``docs/server-services-harmonization.md`` §6.2.1 in ``Eifi1/ui-kit``. The feedback service\n(0.9.0) and the translation review (0.10.0) take the same clock, so it lives here, and\n:mod:`eifi1_server_kit.feedback` re-exports the same objects. A test passes its own\n(``lambda: moment``); an app passes nothing.",
+      "contract": {
+        "doc": "docs/server-services-harmonization.md",
+        "section": "§6.2",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#62-decisions",
+        "links": [
+          {
+            "section": "§6.2",
+            "heading": "6.2 Decisions",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#62-decisions"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "Clock",
+          "kind": "constant",
+          "signature": "type Clock = Callable[[], datetime]",
+          "doc": "A service's clock: an aware UTC ``datetime`` (feedback's ``resolved_at`` and a crash's\n``seen_at``, a verdict's ``reviewed_at``). Not :data:`eifi1_server_kit.limiter.Clock`,\nwhich is a monotonic float."
+        },
+        {
+          "name": "utc_now",
+          "kind": "function",
+          "signature": "utc_now() -> datetime",
+          "doc": "The current time, aware, in UTC — the default :data:`Clock`."
+        }
+      ]
+    },
+    {
       "name": "eifi1_server_kit.translation_review",
       "summary": "The translation review contract: wire shapes, who may review what, and review tokens.",
-      "doc": "The translation review contract: wire shapes, who may review what, and review tokens.\n\nThe kit's ``TranslationReviewPanel`` and its showcase speak these; keksdose is the source\n(``schemas/translations.py``, ``translation_review_service.py``,\n``translation_review_token_service.py``, ``adapters/api/translations_router.py``).",
+      "doc": "The translation review contract: wire shapes, who may review what, and review tokens.\n\nThe kit's ``TranslationReviewPanel`` and its showcase speak these; keksdose is the source\n(``schemas/translations.py``, ``translation_review_service.py``,\n``translation_review_token_service.py``, ``adapters/api/translations_router.py``).\n\nLayer 2 (0.10.0; ``docs/server-services-harmonization.md`` §6 in ``Eifi1/ui-kit``): the\nreviewer view, the store port and :class:`TranslationReviewService` come with this\npackage and need no FastAPI; the routes are\n``eifi1_server_kit.translation_review.router`` (the ``fastapi`` extra), the fake and the\nconformance checks ``eifi1_server_kit.translation_review.testing``.",
       "contract": {
         "doc": "docs/i18n-harmonization.md",
         "section": "§2",
@@ -7366,6 +7475,18 @@
           "doc": "A reviewer's note."
         },
         {
+          "name": "NO_KIT_REVIEW_ACCESS",
+          "kind": "constant",
+          "signature": "NO_KIT_REVIEW_ACCESS = \"No review access to the kit's wording\"",
+          "doc": "The 403 for a review token on a grant with an area limit: a token lists every ``kit.``\nverdict, more than an area grant may see (keksdose's sentence at mint,\n``translation_review_token_service.py:71``; the service's ``scope()`` refuses it, §6.2.2)."
+        },
+        {
+          "name": "NO_REVIEW_ACCESS",
+          "kind": "constant",
+          "signature": "NO_REVIEW_ACCESS = \"No translation review access\"",
+          "doc": "The ``GET``'s 403 for a caller granted no locale (keksdose ``translations_router.py:90``,\nkastlan's too; server-services §6.2.8)."
+        },
+        {
           "name": "REVIEW_TOKEN_BYTES",
           "kind": "constant",
           "signature": "REVIEW_TOKEN_BYTES = 32",
@@ -7384,6 +7505,74 @@
           "doc": "The longest string in any bundle is ~3.5k characters; ten times that leaves room\nwithout accepting a megabyte (keksdose ``translations.py:12-14``)."
         },
         {
+          "name": "VERDICTS_EXPORT_KEY",
+          "kind": "constant",
+          "signature": "VERDICTS_EXPORT_KEY = \"translation_verdicts\"",
+          "doc": "Where an app's account export puts :meth:`TranslationReviewService.export`:\n``data[\"translation_verdicts\"]`` (keksdose's key, every app's since 0.10; §6.2.10)."
+        },
+        {
+          "name": "NewVerdict",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class NewVerdict",
+          "doc": "One ``(locale, key)``'s row as a save leaves it (§6.2.3): the store finds or adds the\nrow and assigns every field.",
+          "fields": [
+            {
+              "name": "locale",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "key",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "text",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "reference_text",
+              "type": "str | None",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "verdict",
+              "type": "TranslationVerdict",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "note",
+              "type": "str | None",
+              "default": null,
+              "doc": "Blank is ``None``."
+            },
+            {
+              "name": "suggestion",
+              "type": "str | None",
+              "default": null,
+              "doc": "``None`` unless ``NEEDS_CHANGE``."
+            },
+            {
+              "name": "reviewer_id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "reviewed_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "ReviewGrant",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class ReviewGrant",
@@ -7398,6 +7587,26 @@
             {
               "name": "areas",
               "type": "tuple[str, ...] | None",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "ReviewerName",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class ReviewerName",
+          "doc": "A reviewer's current name, as the list's outer join reads it.",
+          "fields": [
+            {
+              "name": "first_name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "last_name",
+              "type": "str",
               "default": null,
               "doc": ""
             }
@@ -7553,13 +7762,139 @@
               "name": "reviewer_name",
               "type": "str | None",
               "default": null,
-              "doc": "The reviewer's display name; NULL once their account has been erased."
+              "doc": "The reviewer's name in the READER's order (``auth.full_name`` with the reader's\nlocale; server-services §6.2.5); NULL once their account has been erased."
             },
             {
               "name": "reviewed_at",
               "type": "datetime",
               "default": null,
               "doc": ""
+            },
+            {
+              "name": "reviewer_first_name",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The name's two parts, for a page that writes them itself (auth §3.2: every API that\nreturns a person returns both); NULL once the account has been erased (0.10)."
+            },
+            {
+              "name": "reviewer_last_name",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TranslationReviewRow",
+          "kind": "protocol",
+          "signature": "class TranslationReviewRow(Protocol)",
+          "doc": "A verdict as the kit reads it (§6.2.3): read-only members, so an app's mapped row\nsatisfies it as it is. Its id never leaves the server, so there is none here.",
+          "methods": [
+            {
+              "name": "locale",
+              "signature": "@property locale -> str",
+              "doc": ""
+            },
+            {
+              "name": "key",
+              "signature": "@property key -> str",
+              "doc": ""
+            },
+            {
+              "name": "text",
+              "signature": "@property text -> str",
+              "doc": ""
+            },
+            {
+              "name": "reference_text",
+              "signature": "@property reference_text -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "verdict",
+              "signature": "@property verdict -> TranslationVerdict | str",
+              "doc": ""
+            },
+            {
+              "name": "note",
+              "signature": "@property note -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "suggestion",
+              "signature": "@property suggestion -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "reviewed_at",
+              "signature": "@property reviewed_at -> datetime",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TranslationReviewService",
+          "kind": "class",
+          "signature": "class TranslationReviewService[RowT: TranslationReviewRow]",
+          "doc": "H1's flows over the app's store (§6.3). Build one per request, on the request's store.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(store: TranslationReviewStore[RowT], *, locale_codes: Sequence[str], now: Clock = utc_now) -> None",
+              "doc": ""
+            },
+            {
+              "name": "scope",
+              "signature": "scope(viewer: TranslationReviewer) -> ReviewGrant",
+              "doc": "What ``viewer`` may list: their grant; for a review token, the grant with its\nareas ``(\"kit\",)``.\n\n:class:`~eifi1_server_kit.translation_review.TranslationAccessError` (403), in this\norder: a grant without a locale (:data:`NO_REVIEW_ACCESS`); a review token on a grant\nwith an area limit (:data:`NO_KIT_REVIEW_ACCESS`, T2) — a token lists every ``kit.``\nverdict, more than a legal-only grant may see. keksdose refuses such a token at mint\nand on every sign-in (``translation_review_token_service.py:59-71``, ``:133``); the\nkit refuses it for every app."
+            },
+            {
+              "name": "list_reviews",
+              "signature": "async list_reviews(viewer: TranslationReviewer) -> TranslationReviewsResponse",
+              "doc": "``GET /translations/reviews``: every verdict the viewer may see, by locale, then key.\n\nThe store filters by area; the answer is filtered again by locale and\n:func:`~eifi1_server_kit.translation_review.in_areas`, so a store that answers too\nmuch never shows a key outside the grant."
+            },
+            {
+              "name": "save",
+              "signature": "async save(viewer: TranslationReviewer, items: Sequence[TranslationReviewWrite]) -> list[TranslationReviewOut]",
+              "doc": "``PUT /translations/reviews``: a verdict on each item, replacing what was said before.\n\nAll or nothing: every pair is checked before anything is written. The last item per\n``(locale, key)`` wins, in first-seen order. A blank ``note`` or ``suggestion`` is\n``None``, and ``suggestion`` is dropped unless the verdict is ``NEEDS_CHANGE``. The\nrows come back with the viewer's own name."
+            },
+            {
+              "name": "clear",
+              "signature": "async clear(viewer: TranslationReviewer, keys: Sequence[tuple[str, str]]) -> int",
+              "doc": "``POST /translations/reviews/clear``: the pairs back to unreviewed, after the same\nchecks as a save. Answers how many verdicts existed."
+            },
+            {
+              "name": "export",
+              "signature": "async export(reviewer_id: int) -> list[dict[str, Any]]",
+              "doc": "The account export's rows for ``data[VERDICTS_EXPORT_KEY]`` (§6.2.10, T1): keksdose's\nshape (``account_export_service.py:375-387``), oldest first — ``locale``, ``string``\n(the key: a bare ``key`` reads as a secret to\n:func:`~eifi1_server_kit.user_admin.assert_no_secrets`), ``text``, ``verdict`` (its\nvalue), ``suggestion``, ``note`` (in that order, ``:383-384``), ``reviewed_at``."
+            }
+          ]
+        },
+        {
+          "name": "TranslationReviewStore",
+          "kind": "protocol",
+          "signature": "class TranslationReviewStore[RowT: TranslationReviewRow](Protocol)",
+          "doc": "The app's verdict rows, on the request's session (§6.2.3). Async; ``put`` and\n``clear`` flush and never commit.",
+          "methods": [
+            {
+              "name": "verdicts",
+              "signature": "async verdicts(locales: Sequence[str], areas: Sequence[str] | None) -> Sequence[tuple[RowT, ReviewerName | None]]",
+              "doc": "Every verdict in locales, and inside areas when given (None: every area), by\nlocale, then key, each with its reviewer's current name: an outer join, None once\nthe account is gone. The area filter comes from area_like_patterns, never by hand."
+            },
+            {
+              "name": "put",
+              "signature": "async put(verdicts: Sequence[NewVerdict]) -> Sequence[RowT]",
+              "doc": "The row of each (locale, key), found or added, takes every field. Flush; the\nrows in the order given. The kit sends each pair once."
+            },
+            {
+              "name": "clear",
+              "signature": "async clear(pairs: Collection[tuple[str, str]]) -> int",
+              "doc": "Delete the rows of these (locale, key) pairs and flush: how many existed."
+            },
+            {
+              "name": "by_reviewer",
+              "signature": "async by_reviewer(reviewer_id: int) -> Sequence[RowT]",
+              "doc": "The export's rows (§6.2.10), oldest reviewed_at first."
             }
           ]
         },
@@ -7662,6 +7997,50 @@
           ]
         },
         {
+          "name": "TranslationReviewer",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class TranslationReviewer",
+          "doc": "Who is reviewing (§6.2.2): the viewer of a list, the reviewer of a save or a clear.\n\nOne app dependency builds it from the app's own ``get_current_user``. ``grant`` is the\napp's ``review_grant(…)``. keksdose's review token is this same view with\n``kit_only=True``: its list is the area ``kit``, a write naming any other key is\nrefused whole, and a token on a grant with an area limit is refused its list.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": "The ``reviewer_id`` of what they write."
+            },
+            {
+              "name": "first_name",
+              "type": "str | None",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "last_name",
+              "type": "str | None",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "locale",
+              "type": "str | None",
+              "default": null,
+              "doc": "The reader's language: the order of ``reviewer_name`` (§6.2.5)."
+            },
+            {
+              "name": "grant",
+              "type": "ReviewGrant",
+              "default": null,
+              "doc": "The app's ``review_grant(…)``: locales and areas."
+            },
+            {
+              "name": "kit_only",
+              "type": "bool",
+              "default": "False",
+              "doc": "Signed in with a review token (keksdose): the kit's keys only."
+            }
+          ]
+        },
+        {
           "name": "TranslationReviewsResponse",
           "kind": "model",
           "signature": "class TranslationReviewsResponse(BaseModel)",
@@ -7707,7 +8086,7 @@
           "name": "area_like_patterns",
           "kind": "function",
           "signature": "area_like_patterns(areas: Sequence[str] | None) -> list[str] | None",
-          "doc": ":func:`in_areas` as SQL ``LIKE`` patterns, for a listing that filters in the query.\n\nPer area, the three arms of :func:`in_areas`: the key itself, ``<area>.%`` and the\nkit's wording for it, ``kit.<area>.%`` — ``[\"legal\"]`` gives ``[\"legal\", \"legal.%\",\n\"kit.legal.%\"]``. ``None`` (every area) is ``None``: no filter at all. An empty list\ngives an empty list, and an ``OR`` of nothing matches nothing, as ``in_areas`` does.\n\nKurvenschmiede's finding after 0.2.1: a listing that narrows by area in SQL\n(``key LIKE 'legal.%'``) never went through ``in_areas``, so the ``kit.<area>.`` arm\nreached the write check and not the list. Build the filter from this, never by\nhand, and the two cannot drift. ``%`` and ``_`` in an area are escaped with\n:data:`LIKE_ESCAPE`; name it in the query. ``LIKE`` is case-sensitive in PostgreSQL,\nas ``in_areas`` is; in SQLite only with ``PRAGMA case_sensitive_like = ON``::\n\n    patterns = area_like_patterns(grant.areas)\n    if patterns is not None:\n        query = query.where(or_(*(Row.key.like(p, escape=LIKE_ESCAPE) for p in patterns)))"
+          "doc": ":func:`in_areas` as SQL ``LIKE`` patterns, for a listing that filters in the query.\n\nPer area, the four arms of :func:`in_areas`: the key itself, ``<area>.%``, ``<area>:%``\nand the kit's wording for it, ``kit.<area>.%`` — ``[\"legal\"]`` gives ``[\"legal\",\n\"legal.%\", \"legal:%\", \"kit.legal.%\"]``. ``None`` (every area) is ``None``: no filter at\nall. An empty list gives an empty list, and an ``OR`` of nothing matches nothing, as\n``in_areas`` does.\n\nKurvenschmiede's finding after 0.2.1: a listing that narrows by area in SQL\n(``key LIKE 'legal.%'``) never went through ``in_areas``, so the ``kit.<area>.`` arm\nreached the write check and not the list. Build the filter from this, never by\nhand, and the two cannot drift. ``%`` and ``_`` in an area are escaped with\n:data:`LIKE_ESCAPE`; name it in the query. ``LIKE`` is case-sensitive in PostgreSQL,\nas ``in_areas`` is; in SQLite only with ``PRAGMA case_sensitive_like = ON``::\n\n    patterns = area_like_patterns(grant.areas)\n    if patterns is not None:\n        query = query.where(or_(*(Row.key.like(p, escape=LIKE_ESCAPE) for p in patterns)))"
         },
         {
           "name": "assert_allowed",
@@ -7731,7 +8110,7 @@
           "name": "in_areas",
           "kind": "function",
           "signature": "in_areas(key: str, areas: Sequence[str] | None) -> bool",
-          "doc": "Whether ``key`` lies in one of ``areas`` — the area itself, anything under ``<area>.``,\nor the kit's wording for it under ``kit.<area>.`` (``None`` = every area; keksdose\n``translation_review_service.py:91``).\n\nThe ``kit.<area>.`` arm is ui-kit 0.28's: the legal pages' shared sections are the kit's\nwords, flattened under ``kit.`` like all of them, so a reviewer granted ``[\"legal\"]``\nmust reach ``kit.legal.*`` too — read and write — or the lawyer never sees the text all\nthree apps share (docs/legal-harmonization.md §7.5 in ui-kit). The kit's ``keyInArea``\napplies the same rule on the page."
+          "doc": "Whether ``key`` lies in one of ``areas`` — the area itself, anything under ``<area>.``\nor ``<area>:``, or the kit's wording for it under ``kit.<area>.`` (``None`` = every\narea; keksdose ``translation_review_service.py:91``).\n\nThe ``kit.<area>.`` arm is ui-kit 0.28's: the legal pages' shared sections are the kit's\nwords, flattened under ``kit.`` like all of them, so a reviewer granted ``[\"legal\"]``\nmust reach ``kit.legal.*`` too — read and write — or the lawyer never sees the text all\nthree apps share (docs/legal-harmonization.md §7.5 in ui-kit). The ``<area>:`` arm is\n0.10's, for kastlan's ``ns:key`` (``legal:imprint.title``; i18n-harmonization H1,\nserver-services §6.2.4). The kit's ``keyInArea`` applies the same four arms on the page."
         },
         {
           "name": "is_kit_key",
@@ -7778,8 +8157,8 @@
         {
           "name": "review_grant",
           "kind": "function",
-          "signature": "review_grant(profile: ReviewerProfile, *, is_admin: bool, is_reviewer: bool, locale_codes: Sequence[str]) -> ReviewGrant",
-          "doc": "The caller's grant (keksdose ``allowed_locales`` / ``allowed_areas``, ``:96-112``).\n\nAn admin: every locale, every area. A reviewer: exactly the granted locales (in UI\norder, unknown ones ignored) and the granted areas. Anyone else: nothing — the role is\nthe permission and the locales are its scope, so a leftover list grants nothing."
+          "signature": "review_grant(profile: ReviewerProfile, *, is_admin: bool, is_reviewer: bool, locale_codes: Sequence[str], is_demo: bool = False) -> ReviewGrant",
+          "doc": "The caller's grant (keksdose ``allowed_locales`` / ``allowed_areas``, ``:96-112``).\n\nAn admin: every locale, every area. A reviewer: exactly the granted locales (in UI\norder, unknown ones ignored) and the granted areas. Anyone else: nothing — the role is\nthe permission and the locales are its scope, so a leftover list grants nothing. A\ndemo session: nothing, whatever role it wears (keksdose ``review_grant_of``, made the\nkit's in 0.10; server-services §6.2.2)."
         },
         {
           "name": "review_token_expiry",
@@ -7804,6 +8183,63 @@
           "kind": "function",
           "signature": "tokens_to_retire[T](live_oldest_first: Sequence[T], cap: int = MAX_LIVE_REVIEW_TOKENS) -> list[T]",
           "doc": "The live tokens to revoke before minting one more, so at most ``cap`` stay live\n(keksdose ``mint``: ``live[: max(0, len(live) - MAX_LIVE_TOKENS + 1)]``)."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.translation_review.router",
+      "summary": "The translation review routes as one router factory: ``translation_review_router(TranslationReviewDeps(...))``.",
+      "doc": "The translation review routes as one router factory: ``translation_review_router(TranslationReviewDeps(...))``.\n\nLayer 2 (``docs/server-services-harmonization.md`` §6.2.6–§6.2.8 in ``Eifi1/ui-kit``),\nbehind the ``fastapi`` extra (``eifi1-server-kit[fastapi]``). The app passes its own\ndependencies — the reviewer view on its ``get_current_user`` (keksdose's also reads a\nreview token), the store on the request's session — and its UI locales, and includes the\nrouter as it includes its own::\n\n    router = translation_review_router(TranslationReviewDeps(\n        reviewer=translation_reviewer, store=translation_review_store,\n        locale_codes=UI_LOCALE_CODES,\n    ))\n    app.include_router(router, prefix=\"/api/v1\")\n    install_contract_error_handlers(app)\n\nMounted at ``/api/v1``, the paths are :data:`~eifi1_server_kit.cors.TRANSLATION_REVIEW_ROUTES`'s.\n\n**No route guard** (§6.2.6): the three routes are \"any signed-in\", and the viewer's grant\ngates each — a ``GET`` with no locale is 403, a write outside the grant 403. A demo is\ngranted nothing. **The endpoints carry keksdose's names** (``list_translation_reviews``,\n``save_translation_reviews``, ``clear_translation_reviews``), so its and kastlan's\noperation ids stay. An app's own routes (keksdose's review tokens, kastlan's\n``GET /translations/documents``) go AFTER this router, on a router of their own.\n\n**The router raises no** ``HTTPException`` (§6.2.8): past the app's ``reviewer``\ndependency every refusal is layer 1's, answered by\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers`. The bodies are the\nkit's models, which refuse unknown fields (T5), so a misspelt field is a 422 for every\napp. Each request builds a\n:class:`~eifi1_server_kit.translation_review.TranslationReviewService` on the request's\nstore; each makes at most one store write, as its last step, and the kit never commits.\n\nNo ``from __future__ import annotations`` here, on purpose: the parameters'\n``Depends(deps.reviewer)`` and ``Depends(deps.store)`` name the factory's locals, and\nFastAPI cannot resolve a string annotation that names a local.",
+      "contract": {
+        "doc": "docs/server-services-harmonization.md",
+        "section": "§6.2",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#62-decisions",
+        "links": [
+          {
+            "section": "§6.2",
+            "heading": "6.2 Decisions",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#62-decisions"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "TranslationReviewDeps",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class TranslationReviewDeps[RowT: TranslationReviewRow]",
+          "doc": "What an app hands :func:`translation_review_router` (§6.2.7): its dependencies and vocabulary.",
+          "fields": [
+            {
+              "name": "reviewer",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency answering a\n:class:`~eifi1_server_kit.translation_review.TranslationReviewer`, on its\n``get_current_user`` (keksdose's: or a review token)."
+            },
+            {
+              "name": "store",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency answering a ``TranslationReviewStore[RowT]`` on the request's session."
+            },
+            {
+              "name": "locale_codes",
+              "type": "Sequence[str]",
+              "default": null,
+              "doc": "The app's UI locales, in its order."
+            },
+            {
+              "name": "now",
+              "type": "Clock",
+              "default": "<function utc_now>",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "translation_review_router",
+          "kind": "function",
+          "signature": "translation_review_router[RowT: TranslationReviewRow](deps: TranslationReviewDeps[RowT], *, prefix: str = '/translations', tags: Sequence[str] = ('translations',)) -> APIRouter",
+          "doc": "H1's three routes (§6.3), on ``APIRouter(prefix=prefix, tags=tags)``, in this order:\n``GET /reviews``, ``PUT /reviews``, ``POST /reviews/clear``."
         }
       ]
     },
