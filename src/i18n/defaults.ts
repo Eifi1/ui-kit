@@ -41,9 +41,16 @@ import {
   DEFAULT_FEEDBACK_TOAST_LABELS,
 } from "../feedback/feedback-labels";
 import { DEFAULT_FEEDBACK_MENU_LABELS } from "../feedback/feedback-menu-labels";
+import { DEFAULT_FEEDBACK_PUBLIC_LABELS } from "../feedback/feedback-public-labels";
+import { DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS } from "../notifications/feedback-notification-types-labels";
 import { DEFAULT_FEEDBACK_CONTEXT_LABELS } from "../feedback/feedback-context-labels";
 import { DEFAULT_FEEDBACK_PAGE_LABELS } from "../feedback/feedback-table-labels";
 import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "../feedback/feedback-row-detail-labels";
+import {
+  DEFAULT_FEEDBACK_COMMENTS_LABELS,
+  DEFAULT_FEEDBACK_REPLIES_LABELS,
+  DEFAULT_FEEDBACK_VOTE_LABELS,
+} from "../feedback/feedback-thread-parts-labels";
 import { DEFAULT_ACCOUNT_SETTINGS_LABELS } from "../account/account-settings-labels";
 import { DEFAULT_COPY_BUTTON_LABELS } from "../components/copy-button-labels";
 import { DEFAULT_BULK_ACTION_BAR_LABELS } from "../components/bulk-action-bar-labels";
@@ -180,9 +187,14 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   feedbackCategory: DEFAULT_FEEDBACK_CATEGORY_LABELS,
   feedbackToast: DEFAULT_FEEDBACK_TOAST_LABELS,
   feedbackMenu: DEFAULT_FEEDBACK_MENU_LABELS,
+  feedbackPublic: DEFAULT_FEEDBACK_PUBLIC_LABELS,
+  feedbackNotificationTypes: DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS,
   feedbackContext: DEFAULT_FEEDBACK_CONTEXT_LABELS,
   feedbackPage: DEFAULT_FEEDBACK_PAGE_LABELS,
   feedbackDetail: DEFAULT_FEEDBACK_DETAIL_LABELS,
+  feedbackVote: DEFAULT_FEEDBACK_VOTE_LABELS,
+  feedbackComments: DEFAULT_FEEDBACK_COMMENTS_LABELS,
+  feedbackReplies: DEFAULT_FEEDBACK_REPLIES_LABELS,
   accountSettings: DEFAULT_ACCOUNT_SETTINGS_LABELS,
   confirmDialog: DEFAULT_CONFIRM_DIALOG_LABELS,
   floatingPanel: DEFAULT_FLOATING_PANEL_LABELS,

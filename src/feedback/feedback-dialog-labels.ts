@@ -25,4 +25,5 @@ export const DEFAULT_FEEDBACK_DIALOG_LABELS: FeedbackDialogTextLabels = {
   submitHint: (apple) => (apple ? "⌘ Enter to send" : "Ctrl+Enter to send"),
   cancel: "Cancel",
   save: "Send",
+  publicNotice: "Other users will see the title and text (never your screenshots or files).",
 };

@@ -114,6 +114,37 @@ describe("FeedbackMenu", () => {
       trigger: "Send feedback",
       myFeedback: "My feedback",
       viewFeedback: "View feedback",
+      allFeedback: "All feedback",
     });
+  });
+});
+
+/** 0.38 (§9.2 decision 21): `publicHref` adds "All feedback" above the list link, for
+ *  everyone; keksdose's "My feedback" stays as it is. */
+describe("FeedbackMenu publicHref", () => {
+  it("has no All feedback row without it", () => {
+    renderMenu();
+    expect(within(openMenu()).queryByRole("menuitem", { name: "All feedback" })).toBeNull();
+  });
+
+  it("links All feedback above My feedback for a user", () => {
+    renderMenu({ publicHref: "/all-feedback" });
+    const menu = openMenu();
+    expect(rows(menu)).toEqual(["Bug", "Idea", "Question", "Other", "All feedback", "My feedback"]);
+    expect(within(menu).getByRole("menuitem", { name: "All feedback" })).toHaveAttribute("href", "/all-feedback");
+  });
+
+  it("links it above View feedback for an admin too, after the app's own rows", () => {
+    renderMenu({
+      publicHref: "/all-feedback",
+      isAdmin: true,
+      extraEntries: [{ kind: "link", key: "support", to: "/support", label: "Support chat" }],
+    });
+    expect(rows(openMenu())).toEqual(["Bug", "Idea", "Question", "Other", "Support chat", "All feedback", "View feedback"]);
+  });
+
+  it("speaks the provider's language", () => {
+    renderMenu({ publicHref: "/all-feedback" }, { feedbackMenu: { trigger: "Feedback senden", allFeedback: "Alle Rückmeldungen" } });
+    expect(within(openMenu("Feedback senden")).getByRole("menuitem", { name: "Alle Rückmeldungen" })).toBeInTheDocument();
   });
 });

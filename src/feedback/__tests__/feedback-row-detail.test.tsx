@@ -289,28 +289,126 @@ describe("FeedbackRowDetail — attachments", () => {
   });
 });
 
-describe("FeedbackRowDetail — outcome", () => {
-  it("lets the admin add one, update it, and clear it to null", () => {
-    const onUpdate = landing();
-    const { rerender } = render(
-      <FeedbackRowDetail row={record()} canEdit viewerId={ADMIN} onUpdate={onUpdate} />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Add outcome" }));
-    const box = screen.getByRole("textbox", { name: "What was done, decided, or why this won't be addressed." });
-    fireEvent.change(box, { target: { value: "  Fixed in 0.4.27.  " } });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(onUpdate.mock.calls[0][0]).toEqual({ id: 412, outcome: "Fixed in 0.4.27." });
+describe("FeedbackRowDetail — outcome (frozen, 0.38 §9.7)", () => {
+  it("shows a row without `replies` (a server before 0.38) its outcome read-only — no editor, to the admin either", () => {
+    render(<FeedbackRowDetail row={record({ outcome: "Fixed." })} canEdit viewerId={ADMIN} onUpdate={landing()} />);
+    expect(headings()).toContain("Outcome");
+    expect(screen.getByText("Fixed.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add outcome" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Update" })).toBeNull();
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+});
 
-    rerender(<FeedbackRowDetail row={record({ outcome: "Fixed." })} canEdit viewerId={ADMIN} onUpdate={onUpdate} />);
-    fireEvent.click(screen.getByRole("button", { name: "Update" }));
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: " " } });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(onUpdate.mock.calls[1][0]).toEqual({ id: 412, outcome: null });
+describe("FeedbackRowDetail — replies (0.38 §9.7)", () => {
+  const reply = (over: Partial<NonNullable<FeedbackRecord["replies"]>[number]> = {}) => ({
+    id: 31,
+    author_name: "Marcel Eifert",
+    body: "Fixed in 0.4.27.",
+    status_to: null,
+    status_from: null,
+    created_at: "2026-10-05T10:00:00Z",
+    ...over,
   });
 
-  it("offers no outcome editing off the inbox — to an admin either", () => {
-    render(<FeedbackRowDetail row={record({ user_id: ADMIN })} canEdit={false} viewerId={ADMIN} onUpdate={landing()} />);
-    expect(screen.queryByRole("button", { name: "Add outcome" })).toBeNull();
+  it("replaces the Outcome section with the timeline; the frozen outcome is not shown beside it", () => {
+    render(
+      <FeedbackRowDetail
+        row={record({ outcome: "Old answer", replies: [reply()] })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={landing()}
+      />,
+    );
+    expect(headings()).toContain("Replies");
+    expect(headings()).not.toContain("Outcome");
+    expect(screen.queryByText("Old answer")).toBeNull();
+    expect(within(screen.getByRole("list", { name: "Replies" })).getByText("Fixed in 0.4.27.")).toBeInTheDocument();
+    // The author gets no composer.
+    expect(screen.queryByRole("textbox", { name: "Write a reply" })).toBeNull();
+  });
+
+  it("gives the admin the composer, which sends the body and the status picked", async () => {
+    const onReply = vi.fn(() => Promise.resolve());
+    render(
+      <FeedbackRowDetail row={record({ replies: [] })} canEdit viewerId={ADMIN} onUpdate={landing()} onReply={onReply} />,
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Write a reply" }), { target: { value: " Looking. " } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Status with the reply" }), {
+      target: { value: "IN_EVALUATION" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Reply" }));
+    });
+    expect(onReply).toHaveBeenCalledWith("Looking.", "IN_EVALUATION");
+  });
+
+  it("nudges toward a reply on a decided status no reply carries, and stops once one does", () => {
+    const { rerender } = render(
+      <FeedbackRowDetail
+        row={record({ status: "DONE", replies: [reply({ status_to: "IN_EVALUATION" })] })}
+        canEdit
+        viewerId={ADMIN}
+        onUpdate={landing()}
+        onReply={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("The author has not been told. Add a reply.")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Status with the reply" })).toHaveValue("DONE");
+    rerender(
+      <FeedbackRowDetail
+        row={record({ status: "DONE", replies: [reply({ status_to: "DONE" })] })}
+        canEdit
+        viewerId={ADMIN}
+        onUpdate={landing()}
+        onReply={vi.fn()}
+      />,
+    );
+    expect(screen.queryByText("The author has not been told. Add a reply.")).toBeNull();
+  });
+
+  it("puts the app's comment thread in a Comments section", () => {
+    render(
+      <FeedbackRowDetail
+        row={record({ replies: [] })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={landing()}
+        comments={<p>the thread</p>}
+      />,
+    );
+    expect(headings()).toContain("Comments");
+    expect(screen.getByText("the thread")).toBeInTheDocument();
+  });
+
+  it("draws the Visible to others switch with `onPublicChange`, within the author's window only", () => {
+    const onPublicChange = vi.fn();
+    const { rerender } = render(
+      <FeedbackRowDetail
+        row={record({ public: true, mine: true })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={landing()}
+        onPublicChange={onPublicChange}
+      />,
+    );
+    const toggle = screen.getByRole("switch", { name: "Visible to others" });
+    fireEvent.click(toggle);
+    expect(onPublicChange).toHaveBeenCalledWith(false);
+    rerender(
+      <FeedbackRowDetail
+        row={record({ public: true, mine: true, status: "DONE" })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={landing()}
+        onPublicChange={onPublicChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole("switch", { name: "Visible to others" }));
+    expect(onPublicChange).toHaveBeenCalledTimes(1);
+    // Not drawn without the handler.
+    rerender(<FeedbackRowDetail row={record({ public: true, mine: true })} canEdit={false} viewerId={AUTHOR} onUpdate={landing()} />);
+    expect(screen.queryByRole("switch")).toBeNull();
   });
 });
 
@@ -472,12 +570,6 @@ describe("FeedbackRowDetail — write lock (opt-in)", () => {
     fireEvent.click(done);
     expect(statusChange).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Add outcome" }));
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "x" } });
-    const save = screen.getByRole("button", { name: "Save" });
-    expect(save).toHaveAttribute("aria-disabled", "true");
-    fireEvent.click(save);
-    fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter", ctrlKey: true });
     expect(onUpdate).not.toHaveBeenCalled();
   });
 

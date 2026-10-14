@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Download, ExternalLink, FileText, RotateCcw } from "lucide-react";
 import { AuthedImage } from "../components/authed-image";
 import { CopyButton } from "../components/copy-button";
@@ -40,6 +40,9 @@ import { useFeedbackStatusUndo } from "./feedback-status-undo";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import type { CommitScope } from "../components/write-lock";
 import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "./feedback-row-detail-labels";
+import { FeedbackReplyComposer, FeedbackReplyTimeline, feedbackReplyNudge } from "./feedback-replies";
+import { FeedbackPublicSwitch } from "./feedback-public-switch";
+import { DEFAULT_FEEDBACK_COMMENTS_LABELS } from "./feedback-thread-parts-labels";
 
 /**
  * One report, opened — the panel a feedback table unfolds under its row (§4.4 of
@@ -69,9 +72,12 @@ import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "./feedback-row-detail-labels";
  *
  * The sections, in the contract's order: **Subject** (the category and the title, §8.1;
  * `showSubject={false}` leaves it out), **Description** (the body; the author's
- * Edit while OPEN / READY / IN_PROGRESS), **URL**, **Attachment**, **Outcome** (the admin's
- * outcome editor, Rework, Open page), **Send for rework** (only while reworking) and
- * **Status**. No comment thread (§2.2: kastlan's comments fold into the body, §7.7).
+ * Edit while OPEN / READY / IN_PROGRESS), **URL**, **Attachment**, **Replies** (0.38,
+ * §9.7: the timeline, the admin's reply composer with its status picker and the nudge,
+ * Rework, Open page — on a row without `replies`, a server before 0.38, the frozen
+ * **Outcome** read-only in its place), **Comments** (0.38: the app's
+ * `FeedbackCommentThread`, when passed), **Send for rework** (only while reworking) and
+ * **Status** (with the **Visible to others** switch when `onPublicChange` is passed).
  *
  * The app keeps its data and its API: the row it renders, the PATCH (`onUpdate`), the
  * upload (`onUpload`), the authenticated GET (`fetcher`) and who is looking (`canEdit`,
@@ -116,16 +122,22 @@ export interface FeedbackDetailLabels {
   /** The toast when that download failed. de-CH: "Der Anhang konnte nicht
    *  heruntergeladen werden." */
   downloadFailed: string;
-  /** Section 4's heading. de-CH: "Ergebnis" */
+  /** Section 4's heading on a row without `replies` (a server before 0.38), where the
+   *  frozen outcome is shown read-only. de-CH: "Ergebnis" */
   outcome: string;
+  /** Section 4's heading since 0.38: the replies' timeline (§9.7). de-CH: "Antworten" */
+  replies: string;
   /** On section 4's heading line once the row is settled, given the formatted
    *  `resolved_at` date. de-CH: "Erledigt am: {{date}}" */
   resolvedAt: (date: string) => string;
-  /** The admin's button while there is no outcome. de-CH: "Ergebnis hinzufügen" */
+  /** The admin's button while there is no outcome. **Unused since 0.38** (the outcome is
+   *  frozen, §9.7; a reply is written instead); kept for one release.
+   *  de-CH: "Ergebnis hinzufügen" */
   outcomeAdd: string;
-  /** The same button once there is one. de-CH: "Aktualisieren" */
+  /** The same button once there is one. Unused since 0.38, as `outcomeAdd`.
+   *  de-CH: "Aktualisieren" */
   outcomeUpdate: string;
-  /** The line above the outcome editor. de-CH: "Was wurde umgesetzt, entschieden oder
+  /** The line above the outcome editor. Unused since 0.38, as `outcomeAdd`. de-CH: "Was wurde umgesetzt, entschieden oder
    *  warum nicht." */
   outcomePlaceholder: string;
   /** The button that opens section 5 on an answered row. de-CH: "Nacharbeit" */
@@ -314,7 +326,8 @@ export interface FeedbackRowAccess {
   /** "Edit description": the author, while the row is OPEN, READY or IN_PROGRESS — on either
    *  page (keksdose `canAuthorEdit`, `feedback-page.tsx:398`, is not gated on `mine`). */
   canEditDescription: boolean;
-  /** The outcome editor: the admin on the inbox (`canEdit`). */
+  /** The admin on the inbox (`canEdit`): since 0.38 the reply composer (the outcome
+   *  itself is frozen, §9.7). */
   canEditOutcome: boolean;
   /** "Rework": the admin or the author, on an answered row
    *  ({@link FEEDBACK_REWORKABLE_STATUSES}) — §3.4, anyone else gets the server's 403. */
@@ -356,7 +369,8 @@ export function feedbackRowAccess(
 export interface FeedbackDetailPatch {
   id: number;
   body?: string;
-  /** `null` clears it — a real edit. */
+  /** `null` clears it — a real edit. **Frozen since 0.38** (§9.7): server-kit 0.11
+   *  answers 422; the detail no longer sends it (a reply is written instead). */
   outcome?: string | null;
   status?: FeedbackStatus;
 }
@@ -564,6 +578,22 @@ export interface FeedbackRowDetailProps {
    * beside the detail.
    */
   showSubject?: boolean;
+  /**
+   * 0.38: `POST /feedback/{id}/replies` (§9.7) — the body and the status picked
+   * (`undefined`: "No change"). With `canEdit` and a row that carries `replies`, the
+   * reply composer stands under the timeline. Return the promise: the box clears when it
+   * resolves.
+   */
+  onReply?: (body: string, status?: FeedbackStatus) => void | Promise<unknown>;
+  /** 0.38: the reply is in flight. */
+  replying?: boolean;
+  /** 0.38: the report's comments — the app's `FeedbackCommentThread` — in a section of
+   *  their own under the replies. */
+  comments?: ReactNode;
+  /** 0.38: `PATCH /feedback/{id} {"public": next}` — draws the **Visible to others**
+   *  switch (`FeedbackPublicSwitch`) in the Status section, for the admin (`canEdit`)
+   *  and, within §9.3's window, the author. */
+  onPublicChange?: (next: boolean) => void;
   labels?: LabelOverride<FeedbackDetailLabels>;
   className?: string;
 }
@@ -605,6 +635,10 @@ export function FeedbackRowDetail({
   renderDate,
   commit,
   showSubject = true,
+  onReply,
+  replying = false,
+  comments,
+  onPublicChange,
   labels: labelsProp,
   className,
 }: FeedbackRowDetailProps) {
@@ -616,7 +650,6 @@ export function FeedbackRowDetail({
   const ownStatusChange = useFeedbackStatusUndo(onUpdate);
   const changeStatus = statusChange ?? ownStatusChange;
   const [editingBody, setEditingBody] = useState(false);
-  const [editingOutcome, setEditingOutcome] = useState(false);
   const [reworking, setReworking] = useState(false);
 
   const access = feedbackRowAccess(row, { canEdit, viewerId });
@@ -640,17 +673,10 @@ export function FeedbackRowDetail({
     onUpdate({ id: row.id, body: replaceDescription(row.body, value) }, { onSuccess: () => setEditingBody(false) });
   };
 
-  const saveOutcome = (value: string) => {
-    // Blank saves `null`: no outcome, rather than an empty one.
-    const next = value.trim() ? value.trim() : null;
-    if (next === row.outcome) {
-      setEditingOutcome(false);
-      return;
-    }
-    onUpdate({ id: row.id, outcome: next }, { onSuccess: () => setEditingOutcome(false) });
-  };
-
-  const showOutcomeEditor = access.canEditOutcome && editingOutcome;
+  // 0.38 (§9.7): the replies replace the outcome; a row without them is a server before
+  // 0.38, whose frozen outcome is shown as it is, read-only.
+  const replies = row.replies;
+  const commentLabels = useKitLabels("feedbackComments", DEFAULT_FEEDBACK_COMMENTS_LABELS);
   const showRework = access.canRework && reworking;
 
   return (
@@ -741,7 +767,7 @@ export function FeedbackRowDetail({
       )}
 
       <FeedbackDetailSection
-        title={labels.outcome}
+        title={replies ? labels.replies : labels.outcome}
         // When the row entered DONE / WONT_DO (keksdose feedback #96).
         action={
           row.resolved_at ? (
@@ -749,59 +775,51 @@ export function FeedbackRowDetail({
           ) : undefined
         }
       >
-        {showOutcomeEditor ? (
-          <FeedbackNoteEditor
-            key={row.id}
-            initial={row.outcome ?? ""}
-            pending={pending}
-            commit={commit}
-            onSave={saveOutcome}
-            onCancel={() => setEditingOutcome(false)}
-            saveLabel={labels.save}
-            cancelLabel={labels.cancel}
-            placeholder={labels.outcomePlaceholder}
-          />
-        ) : (
-          <div className="space-y-2">
+        <div className="space-y-3">
+          {replies ? (
+            <FeedbackReplyTimeline replies={replies} />
+          ) : (
             <FeedbackProse>{row.outcome || undefined}</FeedbackProse>
-            {(access.canEditOutcome || (access.canRework && !reworking) || pageHref) && (
-              <div className="flex flex-wrap gap-2">
-                {access.canEditOutcome && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setEditingOutcome(true);
-                    }}
-                  >
-                    {row.outcome ? labels.outcomeUpdate : labels.outcomeAdd}
-                  </Button>
-                )}
-                {access.canRework && !reworking && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setReworking(true);
-                    }}
-                  >
-                    <RotateCcw className="size-3.5" aria-hidden /> {labels.rework}
-                  </Button>
-                )}
-                {pageHref && (
-                  // A real href (keksdose dev #451): middle-click and ⌘/Ctrl-click are
-                  // the browser's, and only a link has them.
-                  <Button href={pageHref} variant="secondary" onClick={(event) => event.stopPropagation()}>
-                    <ExternalLink className="size-3.5" aria-hidden /> {labels.openPage}
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+          )}
+          {replies && access.canEditOutcome && onReply && (
+            <FeedbackReplyComposer
+              key={row.id}
+              status={row.status}
+              onReply={onReply}
+              pending={replying}
+              suggestedStatus={feedbackReplyNudge(row)}
+              commit={commit}
+            />
+          )}
+          {((access.canRework && !reworking) || pageHref) && (
+            <div className="flex flex-wrap gap-2">
+              {access.canRework && !reworking && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setReworking(true);
+                  }}
+                >
+                  <RotateCcw className="size-3.5" aria-hidden /> {labels.rework}
+                </Button>
+              )}
+              {pageHref && (
+                // A real href (keksdose dev #451): middle-click and ⌘/Ctrl-click are
+                // the browser's, and only a link has them.
+                <Button href={pageHref} variant="secondary" onClick={(event) => event.stopPropagation()}>
+                  <ExternalLink className="size-3.5" aria-hidden /> {labels.openPage}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </FeedbackDetailSection>
+
+      {comments != null && (
+        <FeedbackDetailSection title={commentLabels.comments}>{comments}</FeedbackDetailSection>
+      )}
 
       {showRework && (
         <FeedbackReworkSection
@@ -831,6 +849,17 @@ export function FeedbackRowDetail({
           onPick={(status) => changeStatus(row, status)}
           variant="pill"
         />
+        {onPublicChange && (
+          <FeedbackPublicSwitch
+            row={row}
+            isAdmin={canEdit}
+            viewerId={viewerId}
+            onChange={onPublicChange}
+            pending={pending}
+            commit={commit}
+            className="mt-3"
+          />
+        )}
       </FeedbackDetailSection>
     </FeedbackDetail>
   );

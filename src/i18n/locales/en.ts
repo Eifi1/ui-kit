@@ -48,6 +48,13 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       // `userFallback`'s number is an id, not a count: it stays as the default prints it.
       reworkChip: (count) => (count === 1 ? "Rework" : `Rework ×${n(count)}`),
     },
+    // 0.38.0: the public list's two counts.
+    feedbackPublic: {
+      ...d.feedbackPublic,
+      total: (count) => (count === 1 ? "1 report" : `${n(count)} reports`),
+      comments: (count) => (count === 1 ? "1 comment" : `${n(count)} comments`),
+      votes: (count) => (count === 1 ? "1 vote" : `${n(count)} votes`),
+    },
     measuredGrid: {
       ...d.measuredGrid,
       points: (count) => (count === 1 ? "1 point" : `${n(count)} points`),

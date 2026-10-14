@@ -533,3 +533,35 @@ describe("FeedbackEmptyState", () => {
     expect(screen.getByText("None").closest("td")).not.toBeNull();
   });
 });
+
+describe("the Votes column (0.38 §9.6)", () => {
+  const base = { canEdit: true, onStatus: () => {}, renderDate: isoDay, ...resolved };
+
+  it("is off by default and, with `votes`, a sortable column before Status, hidden on the phone", () => {
+    expect(feedbackColumns<FeedbackRecord>(base).map((c) => c.key)).not.toContain("votes");
+    const columns = feedbackColumns<FeedbackRecord>({ ...base, votes: true });
+    const keys = columns.map((c) => c.key);
+    expect(keys.indexOf("votes")).toBe(keys.indexOf("status") - 1);
+    const votes = columns.find((c) => c.key === "votes") as DataTableColumn<FeedbackRecord>;
+    expect(votes.header).toBe("Votes");
+    expect(votes.mobileHidden).toBe(true);
+    const sortBy = votes.sortBy as (row: FeedbackRecord) => number;
+    expect(sortBy({ ...ROWS[0], votes: 5 })).toBe(5);
+    expect(sortBy({ ...ROWS[0], votes: undefined })).toBe(0);
+  });
+
+  it("takes its header from feedbackPublic.columnVotes through the hook", () => {
+    const { result } = renderHook(
+      () => useFeedbackColumns<FeedbackRecord>({ canEdit: true, onStatus: () => {}, votes: true }),
+      { wrapper: ({ children }: { children: ReactNode }) => <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>{children}</UiKitProvider> },
+    );
+    expect(result.current.find((c) => c.key === "votes")?.header).toBe("Stimmen");
+  });
+
+  it("the card shows the count chip with `votes`", () => {
+    const { container, rerender } = render(<FeedbackMobileCard row={{ ...ROWS[0], votes: 4 }} renderDate={isoDay} />);
+    expect(container.querySelector("[data-feedback-vote-count]")).toBeNull();
+    rerender(<FeedbackMobileCard row={{ ...ROWS[0], votes: 4 }} renderDate={isoDay} votes />);
+    expect(container.querySelector("[data-feedback-vote-count]")).toHaveTextContent("4");
+  });
+});

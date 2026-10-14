@@ -2,6 +2,8 @@ import { toast } from "../components/toast";
 import { captureAppScreenshot } from "./feedback-capture";
 import { FeedbackContextBox, feedbackContext, type FeedbackSubmitter } from "./feedback-context";
 import { FeedbackDialog, type FeedbackMultipleSubmission } from "./feedback-dialog";
+import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog-labels";
+import { useKitLabels } from "../i18n/kit-labels";
 import { useFeedbackCategoryLabels, useFeedbackToastLabels } from "./feedback-labels";
 import {
   DEFAULT_MAX_ATTACHMENTS,
@@ -45,6 +47,8 @@ export interface FeedbackSubmitDialogProps {
   version?: string;
   /** `UseFeedbackSubmitOptions.capture`, as the app passed it. */
   capture?: false | (() => Promise<File | null>);
+  /** `UseFeedbackSubmitOptions.publicNotice` (0.38): the line under the body. */
+  publicNotice?: boolean;
 }
 
 /** `FeedbackDialog` as `useFeedbackSubmit` settles it — see the hook for what it settles. */
@@ -61,8 +65,10 @@ export function FeedbackSubmitDialog({
   environment,
   version,
   capture,
+  publicNotice = false,
 }: FeedbackSubmitDialogProps) {
   const toastText = useFeedbackToastLabels();
+  const dialogText = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS);
   const categoryLabels = useFeedbackCategoryLabels();
 
   const onCaptureScreenshot =
@@ -101,6 +107,9 @@ export function FeedbackSubmitDialog({
         )
       }
       onCaptureScreenshot={onCaptureScreenshot}
+      publicNotice={
+        publicNotice ? (dialogText.publicNotice ?? DEFAULT_FEEDBACK_DIALOG_LABELS.publicNotice) : undefined
+      }
       // The context is read off the very values the box below shows (§3.2).
       onSubmit={(data) => onSubmit(data, feedbackContext({ user, attachUrl, url, environment, version }))}
       contextSlot={<FeedbackContextBox user={user} url={url} attachUrl={attachUrl} onAttachUrlChange={onAttachUrlChange} />}

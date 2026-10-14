@@ -74,6 +74,14 @@ export interface UseFeedbackSubmitOptions<R = unknown> {
    * `modern-screenshot`. A rejection becomes the `captureFailed` toast.
    */
   capture?: false | (() => Promise<File | null>);
+  /**
+   * The app's reports are public (0.38, docs/feedback-harmonization.md §9.2 decision 6):
+   * `true` shows **"Other users will see the title and text (never your screenshots or
+   * files)"** (`feedbackDialog.publicNotice`) under the body. keksdose and Kurvenschmiede
+   * pass it — for a viewer who passes the app's `public_viewer` — and kastlan, whose
+   * public parts are off, does not. Default `false`.
+   */
+  publicNotice?: boolean;
 }
 
 export interface FeedbackSubmit {
@@ -134,7 +142,7 @@ export interface FeedbackSubmit {
  * new draft is somebody's next report.
  */
 export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions<R>): FeedbackSubmit {
-  const { upload, create, user, environment, version, onSubmitted, errorMessage, capture } = options;
+  const { upload, create, user, environment, version, onSubmitted, errorMessage, capture, publicNotice } = options;
   const toastText = useFeedbackToastLabels();
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<FeedbackCategory>("OTHER");
@@ -206,6 +214,7 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
         environment={environment}
         version={version}
         capture={capture}
+        publicNotice={publicNotice}
       />
     </Suspense>
   ) : null;

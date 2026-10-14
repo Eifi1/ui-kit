@@ -20,3 +20,13 @@ export * from "./feedback/feedback-submit";
 export * from "./feedback/feedback-table";
 export * from "./feedback/feedback-row-detail";
 export * from "./feedback/feedback-crash";
+// 0.38.0: the public pages (§9.15) — the "Visible to others" switch, the list every user
+// reads and one report opened.
+export * from "./feedback/feedback-public-switch";
+export * from "./feedback/feedback-public-list";
+// 0.38.0: public feedback (docs/feedback-harmonization.md §9) — the shapes, the vote, the
+// comment thread, the replies' timeline and composer.
+export * from "./feedback/feedback-public-types";
+export * from "./feedback/feedback-vote-button";
+export * from "./feedback/feedback-comment-thread";
+export * from "./feedback/feedback-replies";

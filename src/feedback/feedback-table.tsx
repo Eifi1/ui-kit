@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { MouseEvent, ReactElement, ReactNode } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ThumbsUp } from "lucide-react";
 import { cn } from "../lib/cn";
 import { toLocalIso } from "../lib/dates";
 import { EMPTY_FORMATTED_VALUE, formatDate, toDate } from "../lib/format";
@@ -33,6 +33,7 @@ import type { FeedbackStatusChange } from "./feedback-status-undo";
 import { feedbackPageHref, feedbackPagePath } from "./feedback-row-detail";
 import type { CommitScope } from "../components/write-lock";
 import { DEFAULT_FEEDBACK_PAGE_LABELS } from "./feedback-table-labels";
+import { DEFAULT_FEEDBACK_PUBLIC_LABELS } from "./feedback-public-labels";
 
 /**
  * The two feedback pages' TABLE — `/feedback` (the admin inbox) and `/my-feedback` (the
@@ -135,7 +136,17 @@ export function useFeedbackPageLabels(labels?: LabelOverride<FeedbackPageLabels>
  *  row type with more of them passes as it is. */
 export type FeedbackTableRow = Pick<
   FeedbackRecord,
-  "id" | "user_id" | "user_email" | "title" | "body" | "category" | "status" | "context" | "resolved_at" | "created_at"
+  | "id"
+  | "user_id"
+  | "user_email"
+  | "title"
+  | "body"
+  | "category"
+  | "status"
+  | "context"
+  | "resolved_at"
+  | "created_at"
+  | "votes"
 >;
 
 /** A context value as a trimmed string, or `""` — every key is optional on read (§3.2)
@@ -388,6 +399,23 @@ export interface FeedbackColumnsOptions {
   labels: FeedbackPageLabels;
   statusLabels: FeedbackStatusLabels;
   categoryLabels: FeedbackCategoryLabels;
+  /** 0.38 (§9.6): a sortable **Votes** column before Status — `row.votes`, a missing
+   *  one as 0 — hidden on the phone (the card's chip, {@link FeedbackMobileCardProps.votes},
+   *  carries it there). Off by default. */
+  votes?: boolean;
+  /** The Votes header — `feedbackPublic.columnVotes`, so the inbox and the public list
+   *  say the same ({@link useFeedbackColumns} reads it). Default "Votes". */
+  votesHeader?: string;
+}
+
+/** The vote count, a quiet chip with the thumb (§9.6) — the Votes cell and the card's. */
+function FeedbackVoteCount({ votes, className }: { votes: number | undefined; className?: string }) {
+  return (
+    <Chip size="sm" className={className} data-feedback-vote-count={votes ?? 0}>
+      <ThumbsUp className="size-3" aria-hidden />
+      <span className="tabular-nums">{votes ?? 0}</span>
+    </Chip>
+  );
 }
 
 /** A status's place in the chain, unknown ones last (as `feedbackCategoryRank`). */
@@ -434,8 +462,23 @@ export function feedbackColumns<T extends FeedbackTableRow>({
   labels,
   statusLabels,
   categoryLabels,
+  votes = false,
+  votesHeader = DEFAULT_FEEDBACK_PUBLIC_LABELS.columnVotes,
 }: FeedbackColumnsOptions): DataTableColumn<T>[] {
   const editable = canEdit && !mine;
+  const votesColumn: DataTableColumn<T>[] = votes
+    ? [
+        {
+          key: "votes",
+          header: votesHeader,
+          className: "whitespace-nowrap",
+          cell: (row) => <FeedbackVoteCount votes={row.votes} />,
+          sortBy: (row) => row.votes ?? 0,
+          filter: { type: "number", getValue: (row) => row.votes ?? 0 },
+          mobileHidden: true,
+        },
+      ]
+    : [];
   return [
     {
       key: "id",
@@ -521,6 +564,7 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       filterBy: (row) => feedbackPagePath(row.context) ?? "",
       mobileHidden: true,
     },
+    ...votesColumn,
     {
       key: "status",
       header: labels.columnStatus,
@@ -560,7 +604,7 @@ export function feedbackColumns<T extends FeedbackTableRow>({
 /** What {@link useFeedbackColumns} takes: {@link FeedbackColumnsOptions} with the words
  *  read from the provider, and `renderDate` optional. */
 export interface UseFeedbackColumnsOptions
-  extends Omit<FeedbackColumnsOptions, "renderDate" | "labels" | "statusLabels" | "categoryLabels"> {
+  extends Omit<FeedbackColumnsOptions, "renderDate" | "labels" | "statusLabels" | "categoryLabels" | "votesHeader"> {
   /** Default: the kit's date with the weekday ({@link useFeedbackRenderDate}). */
   renderDate?: FeedbackRenderDate;
   /** Over the `feedbackPage` namespace. Keep it stable (module scope or memoised): it is
@@ -580,16 +624,29 @@ export function useFeedbackColumns<T extends FeedbackTableRow>({
   onStatus,
   renderDate: renderDateProp,
   commit,
+  votes,
   labels: labelsProp,
 }: UseFeedbackColumnsOptions): DataTableColumn<T>[] {
   const labels = useFeedbackPageLabels(labelsProp);
   const statusLabels = useFeedbackStatusLabels();
   const categoryLabels = useFeedbackCategoryLabels();
+  const votesHeader = useKitLabels("feedbackPublic", DEFAULT_FEEDBACK_PUBLIC_LABELS).columnVotes;
   const renderDate = useFeedbackRenderDate(renderDateProp);
   return useMemo(
     () =>
-      feedbackColumns<T>({ mine, canEdit, onStatus, renderDate, commit, labels, statusLabels, categoryLabels }),
-    [mine, canEdit, onStatus, renderDate, commit, labels, statusLabels, categoryLabels],
+      feedbackColumns<T>({
+        mine,
+        canEdit,
+        onStatus,
+        renderDate,
+        commit,
+        labels,
+        statusLabels,
+        categoryLabels,
+        votes,
+        votesHeader,
+      }),
+    [mine, canEdit, onStatus, renderDate, commit, labels, statusLabels, categoryLabels, votes, votesHeader],
   );
 }
 
@@ -617,6 +674,9 @@ export interface FeedbackMobileCardProps {
   /** See {@link FeedbackRenderDate}; the same function as the columns' and the day
    *  headers'. Default: the kit's ({@link useFeedbackRenderDate}). */
   renderDate?: FeedbackRenderDate;
+  /** 0.38: the vote count as a chip beside the category — with `useFeedbackColumns`'
+   *  `votes`, whose column the phone hides. */
+  votes?: boolean;
   /** Over the `feedbackPage` namespace. */
   labels?: LabelOverride<FeedbackPageLabels>;
 }
@@ -631,7 +691,13 @@ export interface FeedbackMobileCardProps {
  * chips itself: with a `mobileCard`, DataTable never renders the `mobilePrimary` cell,
  * which is how keksdose's cards lost them.
  */
-export function FeedbackMobileCard({ row, showSubmitter = false, renderDate: renderDateProp, labels: labelsProp }: FeedbackMobileCardProps) {
+export function FeedbackMobileCard({
+  row,
+  showSubmitter = false,
+  renderDate: renderDateProp,
+  votes = false,
+  labels: labelsProp,
+}: FeedbackMobileCardProps) {
   const labels = useFeedbackPageLabels(labelsProp);
   const renderDate = useFeedbackRenderDate(renderDateProp);
   return (
@@ -644,6 +710,7 @@ export function FeedbackMobileCard({ row, showSubmitter = false, renderDate: ren
       </div>
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
         <FeedbackCategoryBadge category={row.category} compact />
+        {votes && <FeedbackVoteCount votes={row.votes} />}
         <FeedbackDate value={row.created_at} renderDate={renderDate} />
         {showSubmitter && (
           // The short id form: "#7" says enough on a card that has room for little.

@@ -1,5 +1,6 @@
 import { FEEDBACK_CATEGORY_ORDER } from "./feedback-vocabulary";
 import type { FeedbackCategory, FeedbackStatus } from "./feedback-vocabulary";
+import type { FeedbackReply } from "./feedback-public-types";
 
 /**
  * One feedback report as the three apps send it, and the facts the kit reads off it.
@@ -102,7 +103,9 @@ export interface FeedbackRecord {
   /** Up to 5 other files; `null` = none. Optional because a server older than the
    *  column sends no key at all (keksdose dev #578 met exactly that). */
   attachment_urls?: string[] | null;
-  /** The team's answer; `null` = none written. */
+  /** The team's answer; `null` = none written. **Frozen since 0.38** (§9.7): answered
+   *  as stored for one release, written by nothing, then dropped — the answer is
+   *  {@link FeedbackRecord.replies} now. */
   outcome: string | null;
   /** Set on ENTERING `DONE` / `WONT_DO`, cleared on leaving them. ISO 8601. */
   resolved_at: string | null;
@@ -110,6 +113,24 @@ export interface FeedbackRecord {
   created_at: string;
   /** ISO 8601. */
   updated_at: string;
+  // ── Round 0.38 (§9.3): all optional, so an app without public parts sends none. ──
+  /** The admin: the full name; the author: their own; `null`: none to show. */
+  author_name?: string | null;
+  /** The viewer filed it. */
+  mine?: boolean;
+  /** Visible to the app's other users (§9.3); never on a CRASH. */
+  public?: boolean;
+  /** Made public by the 0.38 migration: the author may switch it off at any status. */
+  filed_private?: boolean;
+  /** People who want this (the author's own vote included, §9.6). */
+  votes?: number;
+  /** The viewer's vote. */
+  voted?: boolean;
+  /** Comments (an admin's count includes hidden ones). */
+  comment_count?: number;
+  /** The admin's answers, oldest first (§9.7). Absent: a server before 0.38 — read
+   *  `outcome` instead. */
+  replies?: FeedbackReply[];
 }
 
 /* ── Constants (§3.4, §3.5, §4.3) ─────────────────────────────────────────── */
@@ -194,6 +215,23 @@ export const FEEDBACK_AWAITING_STATUSES: readonly FeedbackStatus[] = Object.free
   "IN_EVALUATION",
   "NEEDS_LIVE_TEST",
 ] as const);
+
+/**
+ * The **decided** statuses (§9.7, decision 13): `DONE`, `WONT_DO`, `POSTPONED`. A
+ * status-only move into one tells the author nothing (a status alone sends no
+ * notification), so the row detail nudges the admin toward a reply until one with that
+ * `status_to` exists.
+ */
+export const FEEDBACK_DECIDED_STATUSES: readonly FeedbackStatus[] = Object.freeze([
+  "DONE",
+  "WONT_DO",
+  "POSTPONED",
+] as const);
+
+/** A comment's longest body after trimming (§9.8). */
+export const FEEDBACK_COMMENT_MAX = 4000;
+/** A reply's longest body after trimming (§9.7). */
+export const FEEDBACK_REPLY_MAX = 8000;
 
 /* ── The body (§3.4) ──────────────────────────────────────────────────────── */
 

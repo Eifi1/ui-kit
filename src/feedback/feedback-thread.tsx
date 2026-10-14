@@ -119,6 +119,14 @@ export interface FeedbackThreadMessage {
   own?: boolean;
   /** Written by the team rather than a user: gets the "Staff" badge. */
   staff?: boolean;
+  /** 0.38: beside the author and time — a reply's "→ Done" status chip. Not
+   *  `data-private`: it is the app's, not somebody's words. */
+  badge?: ReactNode;
+  /** 0.38: the body struck through and muted — a hidden comment as its admin sees it. */
+  struck?: boolean;
+  /** 0.38: under the body — a note ("Hidden by an admin") and the message's actions
+   *  (Hide, Delete). Not `data-private`. */
+  footer?: ReactNode;
 }
 
 /**
@@ -296,13 +304,17 @@ export function FeedbackThread({
                     {labels.staff}
                   </span>
                 )}
+                {message.badge}
                 {time}
               </header>
               {message.body && (
                 <p
                   data-private={priv}
                   dir="auto"
-                  className="whitespace-pre-wrap break-words text-start text-primary"
+                  className={cn(
+                    "whitespace-pre-wrap break-words text-start",
+                    message.struck ? "text-muted line-through" : "text-primary",
+                  )}
                 >
                   {message.body}
                 </p>
@@ -319,6 +331,11 @@ export function FeedbackThread({
                     </li>
                   ))}
                 </ul>
+              )}
+              {message.footer != null && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted">
+                  {message.footer}
+                </div>
               )}
             </article>
           </li>,
