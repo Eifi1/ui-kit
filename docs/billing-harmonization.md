@@ -55,6 +55,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 14.15 | Open checks | not built: the Paddle and sandbox checks are pending | |
 | 14.16 | Settled after the reviews | — | an index: every item points to its § |
 | 14.17 | A grant clears the trial's end | app-side (round 0.34) | |
+| 15 | Round 0.39: shared payment page, plan switch and customer | DRAFT for review (server-kit 0.12, ui-kit 0.39) | |
 
 ## 1. Where each one stands
 
@@ -1885,3 +1886,315 @@ what reads it without the status: a "trial ends in 7 days" banner, a trial-end n
 keeps its own dates. The row is the app's, so the rule lives in each app's plan change
 (keksdose's `change_plan`, Kurvenschmiede's `change_plan`, kastlan's
 `billing_service.set_plan`).
+
+## 15. Round 0.39: shared payment page, plan switch and customer (DRAFT for review)
+
+DRAFT for review (round 0.39). Marcel's three answers on the Paddle candidates P2–P4
+(round-034 candidates, "Billing"), with a recommendation for each open point. Nothing here
+is built; server-kit 0.12 and ui-kit 0.39 ship it after the three reviews and Marcel's
+settle. P1 and P5 wait for his sandbox run (§15.6). Paths as in §14.
+
+### 15.1 Where each one stands (2026-10-14)
+
+**The pay host (§14.4).** No pay host is live: billing is off everywhere, and no deploy
+names one.
+- **keksdose** builds the kit's page into its web image (`deploy/gcp/Dockerfile.web:40-44`,
+  `--app-name Keksdose`, its own return, terms and privacy URLs; the same in
+  `deploy/Dockerfile.web:30-34`) and serves it in a last site block
+  (`deploy/gcp/Caddyfile.cloudrun:257`, `deploy/Caddyfile:156`) with §14.4's headers
+  (`Caddyfile.cloudrun:260-261`). `_PAY_HOST: ''` (`deploy/gcp/cloudbuild.yaml:145`),
+  `PADDLE_CLIENT_TOKEN=` empty (`:332`). Its CSP test reads the pay block
+  (`frontend/src/app/__tests__/csp-inline-script.test.ts:30`, `:82`).
+- **Kurvenschmiede** the same: `deploy/gcp/Dockerfile.web:37-40`, `deploy/Dockerfile.web:31-35`,
+  `deploy/gcp/Caddyfile.cloudrun:121`, `deploy/Caddyfile:75`, compose
+  `deploy/docker-compose.yml:95-106`; `_PAY_HOST`, `_PADDLE_CLIENT_TOKEN`,
+  `_PADDLE_ENVIRONMENT` empty (`deploy/gcp/cloudbuild.yaml:40-46`); a test pins the block
+  (`backend/tests/unit/test_deploy_files.py:74-88`); the steps in `deploy/gcp/README.md:350-400`
+  and `docs/configuration.md:125`.
+- **kastlan has no pay host.** `deploy/gcp/Caddyfile.cloudrun`, `Dockerfile.web` and
+  `cloudbuild.yaml` name no pay block, token or `PAY_HOST`, though adopt-0.33.md:811 asked for
+  one; only `.env.example:57-58` mentions `KASTLAN_BILLING_CHECKOUT_PAGE_URL` (commented) and
+  the hosted checkout.
+- **The kit:** the page reads one app's `pay-config.json` (`src/billing/pay-page.ts:175`,
+  `pay-page/pay.ts:118-126`: the app's name, Back, Terms, Privacy) and hands Paddle.js a
+  `successUrl` built from it (`pay.ts:163-176`). The bin takes one app's flags
+  (`pay-page/cli.ts:43-46`, `:151-154`).
+
+**Plan changes (§14.6).** All three pages send every pick in `PlanPicker` to
+`POST /billing/checkout`, which answers 409 `billing_already_subscribed` while a
+subscription runs: keksdose `frontend/src/features/billing/subscription-cards.tsx:211-218`
+(the 409's words `:57`), kastlan `features/billing/components/subscription-section.tsx:143-160`
+(card "Change plan"; `billing-refusals.ts:18`), Kurvenschmiede
+`features/billing/subscription-settings.tsx:151-158` (`shared/api/client.ts:255`). The
+server refuses in each checkout (keksdose `adapters/api/billing_router.py:121-122`, kastlan
+`domain/services/billing_service.py:226`, server-kit `billing/provider.py:253`). Paddle's
+port has no plan change (`billing/provider.py:93-137`, `billing/paddle.py:242-338`). The row
+already follows a changed plan: a `subscription.updated` snapshot sets `plan_code` from the
+price (`billing/webhooks.py:244-252`).
+
+**The customer (§14.3).** No app looks a customer up. The checkout passes the row's
+`provider_customer_id` once a webhook has set it (keksdose `billing_router.py:128`, kastlan
+`billing_service.py:230`, Kurvenschmiede `adapters/api/billing_router.py:119`); before that,
+Paddle's checkout asks for an e-mail. Each app's webhook lookup goes payer reference,
+then subscription id, then **customer id**: keksdose `domain/services/billing_service.py:420-439`,
+Kurvenschmiede `domain/services/billing_service.py:429-450`, kastlan
+`domain/services/billing_service.py:313-330`. The portal opens on the row's customer
+(keksdose `billing_router.py:149-155`, Kurvenschmiede `billing_router.py:143-147`, kastlan
+`billing_service.py:234-241`).
+
+### 15.2 Decisions
+
+Taken (Marcel, 2026-10-14):
+
+1. **P2: one neutral shared payment page** for the three apps, which is also the account's
+   single default payment link. It replaces decision 19's `pay.<app domain>` (§14.4): one
+   host, one deploy, one Paddle website approval. The page names the app per checkout,
+   from the transaction, not from the domain.
+2. **P3: plan changes through a shared kit implementation** — server-kit's `change_plan` and a
+   ui-kit control — not Paddle's portal. Marcel's words ("also shared for P3") read as this;
+   confirm at the settle. This settles §14.6's open point and replaces decision 21's
+   "through the portal".
+3. **P4: one Paddle customer per person across the apps**, the portal listing all their
+   subscriptions accepted. Marcel's words read as this; confirm at the settle. It closes
+   §14.3's open point.
+
+Proposed:
+
+4. **The host.** **Rec:** `pay.<neutral domain>`, on a domain that names the seller, not an
+   app: the same name as the Paddle account's business name, which Paddle's e-mails show
+   (point 9). Marcel picks the domain. It is one static deploy: a Cloud Run service
+   `pay-web` in europe-west4 (Caddy, the kit's page, one `pay-config.json`, min instances 0),
+   built from a small repo of its own (`Eifi1/pay`: Dockerfile pinning `@eifi1/ui-kit`, the
+   Caddyfile, `cloudbuild.yaml`, a compose file for local runs). Same stack and headers the
+   apps already test; no app's image or deploy carries it. GitHub Pages can't send headers;
+   Cloudflare Pages could (`_headers`), but it would be a new platform for one page.
+5. **How the page learns the app.** **Rec:** from the transaction's custom data. The page
+   initialises Paddle.js without a `successUrl`; on `checkout.loaded` it reads
+   `data.custom_data.app` (§14.3's tag) and looks it up in its config; on
+   `checkout.completed` it goes to that app's `checkoutReturnUrl(returnUrl)`. No query
+   parameter names the app: Paddle's own links carry only `_ptxn`, and the tag is already on
+   every transaction. Until the checkout loads, and for an unknown or missing tag (a
+   payment-method update from a Paddle e-mail, if its transaction carries no tag; §15.6),
+   the page is neutral: the seller's name and links, no Back, and once paid a new line
+   `payDone` ("Payment complete. You can close this page."). A return URL is only ever
+   one from the config, so no link can redirect a buyer.
+6. **Per-app settings: one `pay-config.json` with an app map**, not per transaction:
+   ```json
+   {
+     "token": "live_…",
+     "environment": "live",
+     "seller": { "name": "…", "termsUrl": "https://…", "privacyUrl": "https://…" },
+     "apps": {
+       "keksdose": { "name": "Keksdose", "returnUrl": "https://keksdose.app/settings/subscription",
+                     "termsUrl": "https://keksdose.app/terms", "privacyUrl": "https://keksdose.app/privacy" },
+       "kastlan": { "name": "kastlan", "returnUrl": "https://kastlan.app/admin/billing", "…": "…" },
+       "kurvenschmiede": { "name": "Kurvenschmiede", "returnUrl": "https://kurvenschmiede.app/settings/subscription", "…": "…" }
+     }
+   }
+   ```
+   The keys are the apps' `billing_app` tags, checked against its pattern. **No per-app
+   theme:** Paddle's checkout has only `light` and `dark`, and the page follows
+   `prefers-color-scheme` as today. **One client-side token** for the one host (§14.4's
+   "one per app" was for one per host).
+7. **CSP and Permissions-Policy.** **Rec:** §14.4's header set, unchanged, on the one host,
+   until the sandbox settles the exact Paddle hosts (P1). The kit ships it as one source:
+   `PAY_PAGE_HEADERS` (exported) and a `pay.caddy` snippet the bin writes beside the files,
+   which `Eifi1/pay`'s Caddyfile imports; a test there pins it.
+8. **Apple Pay.** **Rec:** one verification, of the neutral host, in Paddle's dashboard
+   (Website approval → Apple Pay verification → "Verify"), which needs no device; the page
+   keeps serving Paddle's `.well-known` file. Marked **"not yet verified on a device"**:
+   a later one-off test on a borrowed iPhone, or a look at the first real Apple Pay payment
+   in Paddle's dashboard. A failure only hides the Apple Pay button; cards and Google Pay
+   still work.
+9. **Paddle's own e-mails.** They come from Paddle in the account's business name, list the
+   product and price names, and link payment-method updates to the default payment link
+   (§14.3). **Rec:** the business name is the neutral seller's; every Paddle product name
+   starts with the app's brand ("Keksdose Plus"), so a receipt says which app it is for; the
+   default payment link is the neutral host. What the e-mails show is checked in the
+   sandbox (§15.6).
+10. **The plan switch** (server-kit `change_plan`, §15.3).
+    - **Proration.** **Rec:** `prorated_immediately` both ways: an upgrade charges the
+      difference now; a downgrade credits the unused part to the customer's balance,
+      which Paddle takes off the next charges. `on_payment_failure: prevent_change`, so a
+      declined upgrade changes nothing.
+    - **Immediate or next period.** **Rec:** immediate only. Paddle's subscription update
+      applies items at once; its `scheduled_change` holds only pause, cancel and resume
+      (Paddle's docs; the sandbox confirms). A switch "at the next period" would need a
+      pending plan on the row and a job at renewal in each app; the credit makes it
+      unnecessary.
+    - **Interval and currency.** Monthly ↔ yearly is a switch like any other (another
+      price). The currency stays the subscription's; a different currency needs a new
+      checkout after the old one ends.
+    - **A downgrade with usage over the new limit is allowed** (§3.4: a limit gates
+      creation only). The confirm shows the over-limit lines before the payer agrees, as
+      `PlanChangeConfirm` does for the operator (§14.12).
+    - **The confirm shows Paddle's preview:** what is charged or credited now and the next
+      charge, from `PATCH /subscriptions/{id}/preview`, so the payer agrees to a figure.
+    - **The kit's endpoint:** `POST /billing/plan/preview {plan, interval}` and
+      `POST /billing/plan {plan, interval}`, the payer only, the demo refused, under the
+      switch (§4). Refusals: 409 `billing_not_subscribed` (no running provider
+      subscription: the page offers the checkout), 422 `billing_plan_not_sold`, 409
+      `billing_plan_unchanged` (the same price). The answer is the preview; the row follows
+      through `subscription.updated`, and the page polls as after a checkout
+      (`useCheckoutProcessing`).
+    - **The UI control:** `PlanPicker` stays; while subscribed, the app routes a pick to
+      the switch, and the kit's `PlanSwitchConfirm` shows the preview, the over-limit lines
+      and Confirm. It never takes the write lock (a read-only payer may change plan).
+    - **Grants:** a payer under a running grant with a provider subscription may switch;
+      the row keeps the grant's status and source (§12.11).
+11. **The shared customer.**
+    - **Finding or creating it.** **Rec:** the row's `provider_customer_id` when it has
+      one; else the kit's `customer_for(email)`: `GET /customers?email=<the payer's sign-in
+      e-mail>`, else `POST /customers {email}`, and the transaction carries that
+      `customer_id`. The id is not written to the row at checkout: `at_provider` keeps
+      meaning "the webhook linked this payer" (§14.5).
+    - **Changes of address or e-mail.** Apps never write to the customer: name, e-mail and
+      address belong to the person and to Paddle, changed in Paddle's checkout or portal.
+      An app's own e-mail change doesn't reach Paddle; a later first checkout under the new
+      e-mail may find a second customer, which breaks nothing (rows go by payer reference
+      and subscription id).
+    - **What an app may read: only its own subscription**, by the id its own tagged events
+      gave it. The port gains no list call for a customer's subscriptions or transactions;
+      the portal's overview listing the others is Paddle's page, shown to the person.
+    - **The webhook lookup drops the customer-id fallback** in all three apps (§15.1):
+      with one customer per person it can land an event on the wrong row (kastlan: one
+      person paying for two companies). Payer reference, then subscription id.
+    - **Erasure.** An app never archives or changes the shared customer. It cancels its
+      own subscription at the request (§14.8) and drops its row at erasure. Paddle is an
+      independent controller (§8) and keeps its records under its own retention; each
+      app's privacy text says a person asks Paddle for those.
+    - **kastlan's company payer.** **Rec:** the customer is found by the e-mail of the
+      admin who checks out. The portal's `overview` then lists that person's other apps'
+      subscriptions to every company admin who opens it; so kastlan opens `overview` only
+      for the admin whose sign-in e-mail is the customer's, and gives other admins the
+      subscription's own `cancel` and `payment_method` targets (question for kastlan and
+      Marcel, §15.7).
+12. **Migration.** None is live (§15.1), so nothing moves at Paddle. **Rec:** keksdose and
+    Kurvenschmiede remove their pay blocks, build steps, build arguments and tests in their
+    0.39 adoption; kastlan removes nothing. Every app sets
+    `<APP>_BILLING_CHECKOUT_PAGE_URL=https://pay.<neutral domain>/` (explicit, though the
+    default payment link is the same page). kastlan's hosted checkout setting stays in the
+    kit for a sandbox fallback.
+13. **P5.** `PADDLE_API_EXAMPLES` are replaced by recorded sandbox answers, and
+    `billing.testing` pins removing a scheduled cancellation (§14.8) with the recorded
+    `subscription.updated`.
+
+### 15.3 server-kit 0.12
+
+Beside the translation-review change already on `feat/0.12.0` (breaking).
+- **Port** (`billing/provider.py`): `BillingProviderClient` gains
+  `preview_plan_change(*, subscription_id, price_id) -> PlanSwitchPreview`,
+  `change_plan(*, subscription_id, price_id) -> PlanSwitchPreview` and
+  `customer_for(*, email) -> str`; `NoProviderClient` refuses all three (503).
+  `checkout_url(…, customer_email: str | None = None)`: with no `customer_id`, the client
+  resolves one through `customer_for`.
+- **Paddle** (`billing/paddle.py`): `PATCH /subscriptions/{id}/preview` and
+  `PATCH /subscriptions/{id}` with `{items: [{price_id, quantity: 1}], proration_billing_mode:
+  "prorated_immediately", on_payment_failure: "prevent_change"}`; `GET /customers?email=`
+  then `POST /customers`. The key's permissions gain customer read and write.
+- **Rules:** `require_plan_switch(row, now)` (409 `billing_not_subscribed`, the inverse of
+  `require_new_checkout`), `switch_price(catalogue, row, request, settings)` (the price for
+  the plan and interval in the row's currency; 422 `billing_plan_not_sold`, 409
+  `billing_plan_unchanged`).
+- **Shapes** (`billing/schemas.py`): `PlanSwitchRequest {plan, interval}` (`extra="forbid"`),
+  `PlanSwitchPreview {plan, interval, currency, now_minor, next_minor, next_billed_at,
+  over_limit, limits, usage}` (`now_minor` negative for a credit).
+- **Errors:** `billing_not_subscribed` (409), `billing_plan_unchanged` (409), in
+  `CONTRACT_ERRORS`.
+- **Testing:** `FakeBillingProvider.switches`, `customers`; `PaddleApiFake` answers the new
+  calls; recorded sandbox answers in `PADDLE_API_EXAMPLES` (P5); a step for a plan switch's
+  `subscription.updated`; the scheduled-cancel removal pinned.
+- **Docs:** README's billing section; the payer lookup without the customer id.
+- Size: **M** (~250 code, ~450 test lines).
+
+### 15.4 ui-kit 0.39
+
+Beside what `feat/0.39.0` already has.
+- **Pay page** (breaking for the bin): `PayPageConfig` with `seller` and `apps` (§15.2.6),
+  `payPageConfigProblems` for it; `pay.ts` reads the tag on `checkout.loaded`, returns on
+  `checkout.completed`, neutral otherwise; no `successUrl` from config. The bin:
+  `eifi1-pay-page --out <dir> --config <file>` (the token and environment still flags);
+  it writes `pay.caddy`. `PAY_PAGE_HEADERS` exported. New line `billing.payDone`, seven
+  languages.
+- **Plan switch:** `PlanSwitchConfirm` (from → to, the preview's figures through
+  `formatMoney`, the over-limit lines with `planChange.usageOf` and `limitUsageLine`,
+  Confirm; `COMMIT_EXCEPT_BILLING` built in); the types `PlanSwitchRequest`,
+  `PlanSwitchPreview`; `BillingErrorCode` gains the two codes; `billing.switch*` labels in
+  seven languages (title, "Charged now", "Credited", "Next charge on {date}", confirm).
+- **Docs:** this section settled; adopt-0.39 billing part; §14.4's pay host text replaced.
+- Size: **M**.
+
+### 15.5 Per app
+
+- **All three:** adopt both kits; `<APP>_BILLING_CHECKOUT_PAGE_URL` to the neutral host;
+  the plan routes (preview and switch) on the kit's shapes; `PlanPicker`'s pick goes to the
+  switch while a provider subscription runs, else to the checkout; the checkout passes the
+  payer's sign-in e-mail; drop the customer-id fallback from the payer lookup; the privacy
+  text names the neutral host and Paddle as the shared customer record. **S–M each.**
+- **keksdose:** remove the pay block (`deploy/gcp/Caddyfile.cloudrun:239-275`,
+  `deploy/Caddyfile:145-174`), the build steps (`deploy/gcp/Dockerfile.web:26-44`, `:75`;
+  `deploy/Dockerfile.web:27-34`, `:48`), `_PAY_HOST` and the token (`cloudbuild.yaml:145`,
+  `:332`; `cloudbuild.dev.yaml:93-97`, `:186`, `:336-338`), the pay-block parts of
+  `csp-inline-script.test.ts`; the switch in `subscription-cards.tsx`.
+- **Kurvenschmiede:** remove the same (`deploy/gcp/Caddyfile.cloudrun:101-139`,
+  `deploy/Caddyfile:65-93`, both `Dockerfile.web`s, `cloudbuild.yaml:40-46`, `:78-80`,
+  `:192-194`, compose `:95-106`), `test_deploy_files.py:74-88`, and the docs
+  (`deploy/gcp/README.md:350-400`, `docs/configuration.md:125`); the switch in
+  `subscription-settings.tsx`.
+- **kastlan:** nothing to remove; `.env.example:57`; the switch in
+  `subscription-section.tsx`; the portal targets by admin (§15.2.11).
+- **`Eifi1/pay` (new):** the image, the Caddyfile importing `pay.caddy`, the config with the
+  three apps, `cloudbuild.yaml`, the DNS and domain mapping (§14.4's steps 1–2, once). **S.**
+
+### 15.6 Marcel's sandbox run (P1, P5)
+
+Before:
+1. Pick the neutral domain and the seller name (§15.2.4, 9).
+2. Create the Paddle sandbox account (sandbox-vendors.paddle.com) under the seller name.
+3. Catalog → Products: one product per app plan, named with the app's brand; prices in CHF
+   and EUR, monthly and yearly (§13). Copy the price ids.
+4. Developer tools → Authentication: one API key per app (`pdl_sdbx_apikey_…`) with
+   transaction write, customer-portal-session write, subscription write and customer
+   read/write; one client-side token (`test_…`) for the page.
+5. Developer tools → Notifications: one destination per app (subscription and transaction
+   events) to the app's `/webhooks/paddle` through a tunnel to the local backend; copy each
+   secret.
+6. Each app's local `.env`: `<APP>_BILLING_ENABLED=true`, the API key, the webhook secret,
+   the price ids, `<APP>_BILLING_CHECKOUT_PAGE_URL` = the page's URL.
+7. Run the page: the 0.33 page on a localhost port for the first runs, or the neutral host
+   once `Eifi1/pay` is deployed. Checkout → Website approval: add it; Checkout settings:
+   make it the default payment link.
+8. Website approval → Apple Pay verification: "Verify" the host (no device needed).
+
+Runs (note what you see; the kit's agent records the answers):
+9. In each app, a checkout with Paddle's test card: the overlay opens; the webhook lands
+   (`?checkout=done`, then active); the footer names the right app (from 0.39).
+10. Headers, in any browser (DevTools → Network → the document): the CSP and
+    `Permissions-Policy` arrive; the console shows no CSP violation; list the Paddle hosts
+    the page loads from. Application tab: what Paddle.js stores (for the privacy texts).
+11. Google Pay in Chrome on Windows or Android: the button shows and a test payment goes
+    through. Apple Pay: not yet verified on a device (§15.2.8).
+12. The same e-mail in two apps: one `ctm_` or two? Open the portal from one app: does
+    the overview list both subscriptions?
+13. The portal: "Cancel" at the period's end, then the app's reactivation removing it
+    (§14.8): the `subscription.updated` arrives (P5).
+14. Paddle's e-mails (receipt, payment-method update): which name, which products, which
+    link; open the update link: does the page get the app's tag?
+15. Plan switch (after server-kit 0.12): an upgrade and a downgrade, the preview's
+    figures against the charge and the credit; a declined card on an upgrade changes
+    nothing.
+
+### 15.7 For the reviews
+
+- **keksdose:** removing the pay block and its CSP test parts (§15.5) — anything else that
+  reads them? The switch beside `SOLD`: may a payer switch to a plan not sold any more
+  (rec: no, 422)? Your privacy text's words for the shared Paddle customer.
+- **kastlan:** the portal by admin (§15.2.11), or another way? Keep the hosted-checkout
+  setting? Who among a company's admins may switch the plan (rec: any company admin, as
+  checkout)?
+- **Kurvenschmiede:** your deploy test and docs' removal (§15.5); `storageKey` for the
+  switch's processing mark; a customer (non-payer) never sees the switch.
+- **All three:** does dropping the customer-id fallback break a test or a CLI path?
+- **Marcel:** the neutral domain and the seller name; Cloud Run (`Eifi1/pay`) or Cloudflare
+  Pages; confirm the reading of P3 and P4; immediate switches with a credit, no
+  next-period downgrade; kastlan's portal exposure under one customer per person.
