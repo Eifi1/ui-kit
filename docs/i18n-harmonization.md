@@ -15,7 +15,7 @@ are in [archive/i18n-history.md](archive/i18n-history.md).
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
 | 2 | Proposals, now the rules: | | |
-| | H1 translation review | ui-kit 0.19 (the parts, `kitLabelStrings`); server-kit 0.1 (`translation_review`) | the area scope (2026-10-02); ui-kit 0.28 (an area holds the kit's words of it); DRAFT for server-kit 0.10 ([server-services §6](server-services-harmonization.md), round 0.37): the service behind a store port, server-kit's area rule gains the `<area>:` arm, `reviewer_first_name` / `reviewer_last_name`, one export shape |
+| | H1 translation review | ui-kit 0.19 (the parts, `kitLabelStrings`); server-kit 0.1 (`translation_review`) | the area scope (2026-10-02); ui-kit 0.28 (an area holds the kit's words of it); [server-services §6](server-services-harmonization.md) (round 0.37, settled 2026-10-14, built for server-kit 0.10.0 / ui-kit 0.37.0): the service behind a store port and its router; the four area arms in both kits; `reviewer_first_name` / `reviewer_last_name`, `reviewer_name` in the reader's order; one export shape; a body with an unknown field refused |
 | | H2 language registry | ui-kit 0.19 (`KIT_LANGUAGES`, `resolveLanguage`, `loadUiKitLabels`, `formatLocaleOf`, `languageOptions`); 0.20 (`useUiKitLabels`, `peekUiKitLabels`) | refactor audit DOC-2 (the barrel, not an `i18n/languages` subpath) |
 | | H3 German is `de-CH` | app-side; the kit reads every German as `de-CH` (0.19, `resolveLanguage`) | |
 | | H4 register | ui-kit 0.18 (de-CH formal), 0.18.1 (es, it); the rest app-side | |
@@ -59,18 +59,31 @@ The reviewer role has an **area scope** (keksdose, at Marcel's request):
 `users.translation_review_areas` (JSON, NULL = every area; `legal` is the one area so
 far). A key is inside an area when it equals it or starts with `area.` (`area:` for
 kastlan's `ns:key`); the kit's own words of the area (`kit.<area>.…`) are inside it too.
+Both kits apply all four arms: ui-kit's `keyInArea`, and server-kit's `in_areas` and
+`area_like_patterns` since 0.10 (server-services §6.2.4).
 `GET` also returns `areas` and lists only verdicts inside them; `PUT` and `clear` refuse
 a key outside with 403. The assignment endpoint takes `{ locales, areas }` and answers
 `{ user_id, role, locales, areas }`; its path is app-specific
 (`/admin/users/{id}/reviewer` in keksdose, `/platform/users/{id}/reviewer` in kastlan).
 For a lawyer who reviews the Imprint, Privacy Policy and Terms and nothing else.
 
+Since server-kit 0.10 (server-services §6, settled 2026-10-14):
+- each review also carries the name's two parts, `reviewer_first_name` and
+  `reviewer_last_name`, and `reviewer_name` is the name in the reader's order; all three
+  are NULL once the account is erased;
+- a `PUT` or `clear` body with an unknown field is refused, 422;
+- an account export holds the reviewer's verdicts in one shape, keksdose's:
+  `data.translation_verdicts`, each `{ locale, string, text, verdict, suggestion, note,
+  reviewed_at }`, oldest first. The message key goes in `string`, because the export
+  check reads a bare `key` as a secret.
+
 **server-kit** `translation_review` carries the wire shapes (`TranslationReviewOut`,
 `TranslationReviewsResponse`, `TranslationReviewBatch`, `TranslationReviewClear`, …), who
 may review what (`ReviewGrant`, `assert_allowed`, `in_areas`, `normalize_areas`, the
 `kit.` scope) and the review tokens' format (a per-app prefix, only the SHA-256 digest
 stored). Its refusals carry their status: `TranslationLocaleError` and
-`TranslationAreaError` 422, `TranslationAccessError` 403.
+`TranslationAreaError` 422, `TranslationAccessError` 403. Since 0.10 it also holds the
+service behind a store port, the router and their test support (server-services §6).
 
 **The kit's parts**, presentational like ShareCard: `TranslationReviewPanel` and its
 pieces (`TranslationReviewEditor`, `ReviewStatusChip`, `TranslationProgress`,

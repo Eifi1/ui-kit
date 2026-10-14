@@ -7,8 +7,8 @@ implements, and a router factory `feedback_router(deps)` with the app's hooks. I
 from a read-only survey of the three backends on 2026-10-13 (kk `79b2949c`, ka `936f8b8`,
 KS `c34cba0`) and the three apps' reviews of the same day (kk at `c90d068e`, ka at
 `f2b9574`, KS at `bcadab6`). The wire stays
-[feedback-harmonization.md](feedback-harmonization.md) §3. Round 0.37 adds §6, a draft:
-the translation review on the same pattern, as server-kit 0.10.
+[feedback-harmonization.md](feedback-harmonization.md) §3. Round 0.37 adds §6, settled
+2026-10-14: the translation review on the same pattern, as server-kit 0.10.
 
 Backend paths are relative to each app's package: **kk** = keksdose
 (`backend/keksdose/`), **ka** = kastlan (`kastlan/`, at the repo root), **KS** =
@@ -21,14 +21,15 @@ not blank, comments or docstrings.
 | § | What | State |
 |---|---|---|
 | 1–5 | The feedback service, its router and the erasure | Settled 2026-10-13, built in server-kit 0.9.0 |
-| 6 | The translation review: a store port, the reviewer view carrying the grant, the router | **DRAFT for review (round 0.37)**, for server-kit 0.10.0 |
+| 6 | The translation review: a store port, the reviewer view carrying the grant, the router | Settled 2026-10-14, built for server-kit 0.10.0 / ui-kit 0.37.0 (round 0.37) |
 
 **§1–§5.** The three apps reviewed the draft on 2026-10-13 and Marcel decided what they
 left open ("As recommended", §2). The reviews' corrections are folded into §1–§4, and §5
 says where each went. §4 is the build list.
 
-**§6** waits for the three apps' reviews and Marcel; its questions are in 6.6, its build
-list in 6.3.
+**§6.** The three apps reviewed the draft on 2026-10-13 and Marcel decided what they left
+open on 2026-10-14 ("Do 0.37 as recommended", 6.2). The reviews' corrections are folded
+into 6.1–6.5, and 6.6 says where each went. 6.3 is the build list.
 
 ## 1. Where each one stands
 
@@ -998,13 +999,15 @@ sections above.
   checks never assert it) → 2.4, 2.14; KS 5 (`ATTACHMENT_URLS` beside the model, the
   default `to_response`) → 2.3, §4.4; KS 6 (two one-line test edits) → §4.4.
 
-## 6. The translation review (round 0.37, DRAFT for review)
+## 6. The translation review (round 0.37, settled 2026-10-14)
 
 Round 0.37 (Marcel, 2026-10-13: "Sounds good, continue") keeps §3's promise: the
 translation review on the feedback service's pattern, as **server-kit 0.10**. It is built
 from a read-only survey on 2026-10-13 (kk `c90d068e`, ka `0e8bd2c`, KS `bcadab6`; server-kit
-0.9.0 `41dbc85`). The wire stays H1's ([i18n-harmonization.md](i18n-harmonization.md) §2).
-Nothing here is decided: each **Rec:** waits for the reviews and Marcel.
+0.9.0 `41dbc85`) and the three apps' reviews of the same day. The cites were re-read on
+2026-10-14 in each app's 0.36 adoption tree (kk `c2feb89d`, ka `ef43021`, KS `c15b693`).
+The wire stays H1's ([i18n-harmonization.md](i18n-harmonization.md) §2). Settled
+2026-10-14 (Marcel: "Do 0.37 as recommended"); 6.6 records the reviews and the decisions.
 
 ### 6.1 Where each one stands
 
@@ -1018,7 +1021,7 @@ the export.
 | Service | `domain/services/translation_review_service.py`: 271 lines, 163 code; the flows `:133-250`, 89 | `domain/services/translation_review_service.py`: 258, 148; the class `:164-258`, 70 | `domain/services/translation_review_service.py`: 240, 136; the flows `:86-207`, 87 |
 | Repository | (in the service) | `adapters/persistence/translation_review_repository.py`: 44, 26 | (in the service) |
 | Router | `adapters/api/translations_router.py`: 148, 95, the token routes `:128-148` among them | `adapters/api/translation_router.py`: 71, 44, `GET /translations/documents` `:63-71` among them | `adapters/api/translations_router.py`: 67, 42 |
-| Schemas | the kit's, and two subclasses adding the name's parts (`domain/schemas/translations.py:40-56`) | its own (`domain/schemas/translation_review.py`: 79, 41) | its own, `extra="forbid"` (`domain/schemas/translations.py`: 103, 53) |
+| Schemas | the kit's, and three subclasses: the row adds the name's parts, the two answers re-type `reviews` (`domain/schemas/translations.py:40-56`) | its own (`domain/schemas/translation_review.py`: 79, 41) | its own, the four request models `extra="forbid"` (`domain/schemas/translations.py`: 103, 53; `:45-75`) |
 | Tests | `backend/tests/api/test_translations.py` 281, `test_translation_review_tokens.py` 251 | `tests/api/test_translation_review.py` 369 | `backend/tests/api/test_translations_api.py` 234 |
 
 **The same in all three:** H1's paths and bodies; one row per (`locale`, `key`); the last
@@ -1034,37 +1037,61 @@ key, with an outer join for the name; a `GET` with no locale is 403; and `review
 | Who reviews | role ADMIN every locale; role REVIEWER its locales and areas; a demo nothing (`review_grant_of`, service `:98-107`) | a platform superuser every locale; any account with `translation_review_locales` those, no role (`:100-112`) | role ADMIN; role REVIEWER (`grant`, `:72-83`) | 6.2.2 |
 | Layer 1 used | `review_grant`, `assert_allowed`, `normalize_*` | none: its own copies (`:57-112`, `:179-191`) | the same as kk, and `area_like_patterns` | 6.2.4 |
 | The area filter | SQL by hand, three arms (`:149-165`) | in Python after the query, its own `in_areas` with a fourth arm, `<area>:` (`:88-97`, `:201`) | SQL from `area_like_patterns` (`:86-99`) | 6.2.4 |
-| A second actor | a review token (`kdr_…`) from the showcase: the kit's keys only (router `:42-67`, `:92`) | — | — | 6.2.2 |
+| A second actor | a review token (`kdr_…`) from the showcase: the kit's keys only (`get_review_actor`, router `:49-62`; `:92`) | — | — | 6.2.2 |
 | `reviewer_name` | the reviewer's `display_name`, in their own order, plus `reviewer_first_name` and `reviewer_last_name` (`:170-185`) | "first last" (`:122-123`) | `full_name(first, last, reader's locale)` on the list (`:143-145`), `display_name` on a save (`:189`) | 6.2.5 |
 | Refusals | `HTTPException` from the kit's refusals (router `:70-73`); 401 for a dead token (`:58-59`) | its own: `AuthError` 403, `DomainValidationError` 422 "Unknown language" (`:176`, `:187-191`) | the kit's, by `install_contract_error_handlers`; its own 403 sentence on `GET` (router `:40`) | 6.2.8 |
 | Who commits | `commit_boundary`; the service flushes (`:231`, `:249`) | the service commits (`:245`, `:257`) | `get_db_session`; the service flushes (`:188`, `:206`) | 6.2.9 |
-| A demo | layer 1 refuses its writes (`infrastructure/demo_guard.py:74-80`, from `get_current_user`, `dependencies.py:138`); `GET` 403, no grant | layer 1 (`infrastructure/dependencies.py:188`, `:293-300`); `GET` 403 | the routes are `DEMO_ALLOWED` (`backend/tests/api/test_demo.py:240-242`); a MEMBER's grant refuses | 6.2.6 |
+| A demo | layer 1 refuses its writes (`infrastructure/demo_guard.py:74-80`, from `get_current_user`, `dependencies.py:138`); `GET` 403, no grant | layer 1 (`infrastructure/dependencies.py:187-188`, `:294-301`); `GET` 403 | the routes are `DEMO_ALLOWED` (`backend/tests/api/test_demo.py:243-245`); a MEMBER's grant refuses | 6.2.6 |
 | Texts | plain; `TEXT_MAX` 40 000 | plain; 20 000 (schemas `:13`) | sealed (`EncryptedText`, model `:55-67`); 40 000, a locale ≤ 8 (schemas `:15`, `:48`) | 6.2.3 |
-| Export, in `data` | `translation_verdicts`: `locale`, `string`, `text`, `verdict`, `suggestion`, `note`, `reviewed_at`, oldest first (`account_export_service.py:316-320`, `:375-387`) | `translation_reviews`: `locale`, `key`, `verdict`, `note`, `suggestion`, `reviewed_at` (`account_service.py:242-246`, `:307-317`) | `translation_verdicts`, ka's fields (`export_service.py:112-125`, `adapters/api/account_export.py:106`) | 6.2.10 |
+| Export, in `data` | `translation_verdicts`: `locale`, `string`, `text`, `verdict`, `suggestion`, `note`, `reviewed_at`, oldest first (`account_export_service.py:316-320`, `:375-387`) | `translation_reviews`: `locale`, `key`, `verdict`, `note`, `suggestion`, `reviewed_at`, in no order (`account_service.py:243-247`, `:309-319`) | `translation_verdicts`, ka's fields, `key` first, in no order (`export_service.py:112-125`, `adapters/api/account_export.py:109`) | 6.2.10 |
 | Endpoint names | `list_translation_reviews`, `save_translation_reviews`, `clear_translation_reviews` | the same | `list_reviews`, `save_reviews`, `clear_reviews` | 6.2.7 |
 
 Two findings:
 - **The kit's area rule lacks kastlan's arm.** H1 puts a key inside an area when it
-  continues it with `.`, or with `:` for kastlan's `ns:key`, and ui-kit's `keyInArea` has
+  continues it with `.`, or with `:` for kastlan's `ns:key`
+  ([i18n-harmonization.md](i18n-harmonization.md):59-61), and ui-kit's `keyInArea` has
   all four arms (`src/lib/translation-review.ts:265-269`). server-kit's `in_areas` and
-  `area_like_patterns` have three (`translation_review/scope.py:309-311`, `:347-351`), so
+  `area_like_patterns` have three (`translation_review/scope.py:88-89`, `:125-129`), so
   kastlan's `legal:imprint.title` falls outside `legal` there, and kastlan keeps a copy.
 - **`key` reads as a secret.** The kit's export check flags a bare `key`
-  (`user_admin/sensitive.py:76`), which is why kk exports `string`
-  (`account_export_service.py:378-379`). ka and KS export `key`; their export tests pass
-  only because neither fills a verdict (ka `tests/api/test_user_admin.py:432-470`, KS
-  `backend/tests/api/test_account_export.py:22-43`).
+  (`user_admin/sensitive.py:76`, `:144`), which is why kk exports `string`
+  (`account_export_service.py:378-380`). ka and KS export `key` (KS
+  `export_service.py:117`); their export tests pass only because neither fills a verdict
+  (ka `tests/api/test_user_admin.py:432-470`, KS
+  `backend/tests/api/test_account_export.py:22-43`, `:88-93`). With one verdict, ka's test
+  raises `ExportSecretError`. The check runs only in the tests, so no live export failed.
+
+**Which server-kit each runs.** Each app's 0.36 adoption tree pins 0.9.0 (kk
+`backend/pyproject.toml:121`, ka `pyproject.toml:90`, KS `backend/pyproject.toml:218`), each
+with the `fastapi` extra. kk's review read 0.8.0, before its adoption commit (`7f7652f8`).
+If kk's 0.36 adoption has not shipped when 0.10 comes, kk jumps 0.8 → 0.10 and takes 0.9's
+feedback layer in the same step (6.5).
 
 ### 6.2 Decisions
 
+**Decided (Marcel, 2026-10-14: "Do 0.37 as recommended"):**
+1. **One export shape, keksdose's** (T1): `data["translation_verdicts"]`, kk's fields in
+   kk's order, `suggestion` before `note`, oldest first. kastlan's `translation_reviews`
+   key is renamed, and ka's and KS's unordered exports gain the order (6.2.10).
+2. **The review tokens stay keksdose's** in 0.10, with no port (T2). The kit's `scope()`
+   refuses a token on a grant with an area limit, for every app (6.2.2).
+3. **`reviewer_name` in the reader's order** everywhere (T3, 6.2.5).
+4. **The area rule gains the `<area>:` arm** in every app (T4, 6.2.4).
+5. **The kit's four request models forbid unknown fields**, for every app (T5, KS Q1): a
+   misspelt `suggestion` is a 422, not a silent drop (6.2.7).
+
+The other rules below were the draft's, and the reviews agreed with them. Their
+corrections are folded in (6.6).
+
 #### 6.2.1 Where it lives
 
-**Rec:** as 2.1. Four new modules in the `translation_review` package: `ports` and
-`service` (no FastAPI, re-exported from `eifi1_server_kit.translation_review`), `router`
-(the `fastapi` extra, not re-exported) and `testing` (no FastAPI, not re-exported). Layer 1
-gains three additive changes (6.2.2, 6.2.4, 6.2.5). `Clock` and `utc_now` move to a new
+As 2.1. Four new modules in the `translation_review` package: `ports` and `service` (no
+FastAPI, re-exported from `eifi1_server_kit.translation_review`), `router` (the `fastapi`
+extra, not re-exported) and `testing` (no FastAPI, not re-exported). Layer 1 gains three
+additive changes (6.2.2, 6.2.4, 6.2.5) and one that refuses more: the request models
+forbid unknown fields (6.2.7). `Clock` and `utc_now` move to a new
 `eifi1_server_kit.clock`, and `feedback.ports` re-exports the same objects.
-**server-kit 0.10.0**, additive.
+**server-kit 0.10.0**, additive but for that refusal.
 
 #### 6.2.2 The reviewer view, carrying the grant
 
@@ -1079,7 +1106,6 @@ class TranslationReviewer:
     kit_only: bool = False    # signed in with a review token (kk): the kit's keys only
 ```
 
-**Rec:**
 - One app dependency builds it from the app's user, as `FeedbackActor` (2.2). **The grant
   stays the app's to build**, with layer 1's `review_grant`, because the roles differ (kk
   and KS a REVIEWER role; in ka the grant itself, on any account, and the superuser as the
@@ -1090,14 +1116,27 @@ class TranslationReviewer:
   False` (kk's rule, service `:98-107`, made the kit's).
 - **kk's review token is the same view with `kit_only=True`**, not a second type. kk's
   `get_review_actor` (router `:49-62`) stays kk's: it reads the token, answers 401 for a
-  dead one, sets the RLS user and returns the view with the user's own grant. The kit's
-  rule for it is kk's: the list is narrowed to the area `kit` (`areas: ["kit"]`, router
-  `:92`), and a write or clear naming any other key is refused whole by
-  `require_kit_keys` (403 "A review token reaches the kit's wording only") before the
-  grant is checked.
-- **The tokens stay kk's** in 0.10: the table, mint, revoke, `authenticate` and the two
-  routes (`:128-148`). Layer 1 holds their pure half already. Only kk mints them; a port
-  waits for a second app that does.
+  dead one, sets the RLS user (`:60`) and returns the view with the user's own grant. The
+  kit's rule for it: the list is the area `kit` (`areas: ["kit"]`, kk router `:92`), and a
+  write or clear naming any other key is refused whole by `require_kit_keys` (403 "A
+  review token reaches the kit's wording only") before the grant is checked.
+- **Decided (T2): a token on a grant with an area limit is refused, not narrowed.** When
+  `kit_only` is set and `grant.areas is not None`, `scope()` raises
+  `TranslationAccessError` (403, `NO_KIT_REVIEW_ACCESS`, "No review access to the kit's
+  wording", kk's sentence at mint, token service `:71`). keksdose replaces the areas with
+  `["kit"]` (router `:92`), which is safe there only because `can_review_kit` (token
+  service `:59-66`) refuses an area-limited grant at mint (`:70`) and on every
+  `authenticate` (`:133`), so a legal-only grant never holds a live token (kk 1a). An app
+  that mints without that re-check would list every `kit.*` verdict to a legal-only
+  reviewer, so the kit refuses it for every app. kk keeps its re-check, so its token
+  answers 401 before `scope()` is reached. A write needs no such check: `assert_allowed`
+  holds a token to its grant's areas, so a legal-only one could write only `kit.legal.*`.
+  Layer 1's `can_review_kit` is wider: it passes an area that covers `kit.`
+  (`scope.py:184-194`), whose token `scope()` would refuse. No app has such an area
+  (`REVIEW_AREAS`: kk and KS `legal`, ka `legal` and `doc_text`).
+- **The tokens stay kk's** in 0.10, with no port: the table, mint, revoke,
+  `authenticate` and the two routes (`:128-148`). Layer 1 holds their pure half already.
+  Only kk mints them; a port waits for a second app that does.
 
 #### 6.2.3 Rows: read through a protocol, written through the store
 
@@ -1155,46 +1194,51 @@ class TranslationReviewStore[RowT: TranslationReviewRow](Protocol):
         """The export's rows (6.2.10), oldest reviewed_at first."""
 ```
 
-**Rec:** this shape. The row's id never leaves the server (kk's is a UUID), so the
-protocol has none. `put` is an upsert, not feedback's `add` and `apply`: a save is keyed
-on (`locale`, `key`), and all three look a batch up per locale before writing (kk
-`:203-212`, ka `:220-226`, KS `:161-170`); an adapter may use `INSERT … ON CONFLICT`
-instead. KS's sealed columns stay in its model (`EncryptedText` reads and writes plain
-text), so its adapter is kk's. The kit's `TEXT_MAX` (40 000) holds in all three: ka's
-20 000 goes, and KS's locale cap of 8 never bites, since the locale check refuses an
-unknown code before any write.
+This shape. The row's id never leaves the server (kk's is a UUID), so the protocol has
+none. `put` is an upsert, not feedback's `add` and `apply`: a save is keyed on (`locale`,
+`key`), and all three look a batch up per locale before writing (kk `:203-212`, ka
+`:220-226`, KS `:161-170`); an adapter may use `INSERT … ON CONFLICT` instead. KS's sealed
+columns stay in its model (`EncryptedText` reads and writes plain text, and takes
+`check_store`'s 40 000-character text, KS Q3), so its adapter is kk's. The kit's
+`TEXT_MAX` (40 000) holds in all three: ka's 20 000 goes, and KS's locale cap of 8 never
+bites, since the locale check refuses an unknown code before any write.
 
 #### 6.2.4 The area rule
 
-**Rec:** the kit's rule becomes H1's. `in_areas` gains the `<area>:` arm and
+**Decided (T4):** the kit's rule becomes H1's. `in_areas` gains the `<area>:` arm and
 `area_like_patterns` gives four patterns per area (`["legal"]` → `legal`, `legal.%`,
-`legal:%`, `kit.legal.%`). No kk or KS key holds a `:`, so nothing changes for them, and
-kastlan drops its copy (`:88-97`). Every store filters with `area_like_patterns` (kk's
+`legal:%`, `kit.legal.%`). No kk or KS key holds a `:` (kk: none in its four bundles), so
+nothing changes for them. kastlan's own `in_areas` has the four arms (`:88-97`); it drops
+that copy once the kit's has them. Every store filters with `area_like_patterns` (kk's
 hand-written filter, `:149-165`, goes), and the service filters the answer again with
 `in_areas`, so a store that answers too much never shows a key outside the grant. One that
 answers too little is for `check_store` to catch (6.2.11).
 
 #### 6.2.5 The reviewer's name
 
-**Rec:** `TranslationReviewOut` gains kk's `reviewer_first_name` and `reviewer_last_name`
-(None by default; auth §3.2: every API that returns a person returns both), and kk's two
-subclasses go. The kit fills `reviewer_name` as KS does, `full_name(first, last,
-viewer.locale) or None`: the reader's order (auth §3.2, "on screen, the reader's"). kk's
-page formats the two parts itself and falls back to `reviewer_name`
-(`frontend/src/features/translations/translations-page.tsx:172`); ka's four languages put
-the first name first. So no page changes. A save answers with the viewer's own name.
+**Decided (T3):** `TranslationReviewOut` gains kk's `reviewer_first_name` and
+`reviewer_last_name` (None by default; auth §3.2: every API that returns a person returns
+both), and kk's three subclasses go (`domain/schemas/translations.py:40-56`: the row with
+the parts, and the two answers that re-type `reviews`). The kit fills `reviewer_name` as
+KS does, `full_name(first, last, viewer.locale) or None`: the reader's order (auth §3.2,
+"on screen, the reader's"). kk's page formats the two parts itself and falls back to
+`reviewer_name` (`frontend/src/features/translations/translations-page.tsx:171-172`); kk's
+and ka's four languages put the first name first, so kk's bytes do not change (its tests
+still read "Amélie Dubois", `backend/tests/api/test_translations.py:72`, `:74`). So no page
+changes. A save answers with the viewer's own name.
 
 #### 6.2.6 Guards: the grant is the guard
 
-**Rec:** no route-level guard. The three routes are "any signed-in", and the grant gates
-each, as today: a `GET` with no locale is 403, a write outside the grant 403. A demo is
-answered as now: in kk and ka, layer 1 refuses its writes with `demo_read_only` before the
-route runs, and its `GET` finds no grant; KS keeps the routes in `DEMO_ALLOWED` and the
-grant refuses. The route walks keep their classes, since each app's `reviewer` dependency
-depends on its `get_current_user` (ka `tests/api/test_staff_only_routes.py:82-85`,
-`:101-109`; KS `backend/tests/api/route_table.py:61-62`). kk's and ka's billing gates let
-the writes through for a lapsed plan (kk `backend/tests/api/test_billing_gate.py:171-175`,
-ka `infrastructure/dependencies.py:242-243`), and the paths do not change.
+No route-level guard. The three routes are "any signed-in", and the grant gates each, as
+today: a `GET` with no locale is 403, a write outside the grant 403, and a review token on
+a grant with an area limit 403 from `scope()` (T2, 6.2.2). A demo is answered as now: in
+kk and ka, layer 1 refuses its writes with `demo_read_only` before the route runs, and its
+`GET` finds no grant; KS keeps the routes in `DEMO_ALLOWED` and the grant refuses. The
+route walks keep their classes, since each app's `reviewer` dependency depends on its
+`get_current_user` (ka `tests/api/test_staff_only_routes.py:86-89`, `:105-114`; KS
+`backend/tests/api/route_table.py:61-62`). kk's and ka's billing gates let the writes
+through for a lapsed plan (kk `backend/tests/api/test_billing_gate.py:180-183`, ka
+`infrastructure/dependencies.py:243-244`), and the paths do not change.
 
 #### 6.2.7 The router factory, and kastlan's documents
 
@@ -1204,10 +1248,8 @@ class TranslationReviewDeps[RowT: TranslationReviewRow]:
     # FastAPI dependencies, the app's
     reviewer: Callable[..., Any]  # -> TranslationReviewer, on the app's get_current_user (kk: or a review token)
     store: Callable[..., Any]     # -> TranslationReviewStore[RowT], on the request's session
-    # the app's vocabulary and shapes
+    # the app's vocabulary
     locale_codes: Sequence[str]   # its UI locales, in its order
-    batch_model: type[TranslationReviewBatch] = TranslationReviewBatch  # KS's extra="forbid" subclasses
-    clear_model: type[TranslationReviewClear] = TranslationReviewClear
     now: Clock = utc_now
 
 
@@ -1217,65 +1259,84 @@ def translation_review_router[RowT: TranslationReviewRow](
 ) -> APIRouter: ...
 ```
 
-**Rec:**
 - **The routes** are H1's three, with kk's endpoint names, which ka already uses (§6.3).
   kk's and ka's operation ids stay; KS's change, and no client reads them: all three
-  build the path (kk `frontend/src/shared/api/endpoints.ts:2252-2261`, ka `:295-297`, KS
-  `:854-858`). Mounted at `/api/v1`, the paths are the review paths of
+  build the path (kk `frontend/src/shared/api/endpoints.ts:2244-2253`, ka `:298-300`, KS
+  `:870-874`). Mounted at `/api/v1`, the paths are the review paths of
   `cors.TRANSLATION_REVIEW_ROUTES` (`cors.py:78-84`), which kk opens to the showcase's
-  origin (`main.py:184-196`); the kit's test holds the two together.
+  origin (`main.py:189-201`); the kit's test holds the two together.
 - **An app's own routes go after the kit's router**, as for feedback (2.9). kastlan's
   `GET /translations/documents` stays its own, on a router of its own with the
   `/translations` prefix: it takes the same `reviewer` dependency and calls the service's
   `scope(viewer)` for the same 403 before it answers `_document_texts()` (`:140-161`).
   The words are kastlan's alone (`doc_text`), and a hook in the kit for one app's
   catalogue would be wider than what it serves. kk's token routes stay the same way.
-- **The schemas are the kit's.** ka's and KS's copies go. KS keeps `extra="forbid"` if
-  it wants, as subclasses passed in `batch_model` and `clear_model`; the answers are the
-  kit's models, since nothing in them is an app's.
+- **The schemas are the kit's, and refuse unknown fields (decided, T5; KS Q1).** The four
+  request models, `TranslationReviewWrite`, `TranslationReviewBatch`,
+  `TranslationReviewKey` and `TranslationReviewClear`
+  (`translation_review/schemas.py:63-92`), take `extra="forbid"`: a misspelt `suggestion`
+  is a 422, not a 200 that drops it. ka's and KS's copies go, KS's four forbid models
+  with them (`domain/schemas/translations.py:45-75`), so `TranslationReviewDeps` takes no
+  request model of the app's. The answers are the kit's models too, since nothing in
+  them is an app's. No page sends a field more: the three pages write through ui-kit's
+  `toApiWrite` (`src/lib/translation-review.ts:151-161`; kk
+  `frontend/src/features/translations/translations-page.tsx:311`, ka
+  `frontend/src/features/translations/pages/translations-page.tsx:157`, KS
+  `frontend/src/features/translations/translations-page.tsx:282`). A test that sends one
+  notices (6.5).
 
 #### 6.2.8 Errors
 
-**Rec:** the router raises no `HTTPException`. Past the app's `reviewer` dependency (kk's
-401 stays there), every refusal is layer 1's, answered by
-`install_contract_error_handlers`, which all three install: `TranslationLocaleError` and
-`TranslationAreaError` 422, `TranslationAccessError` 403. The `GET`'s 403 says kk's and
-ka's sentence, a new `NO_REVIEW_ACCESS = "No translation review access"`; KS's own
-("You have not been given any language to review.", router `:40`) goes, and ka's "Unknown
-language" becomes the kit's "Unknown locale", still 422. A `PUT` or a clear, in order: the
-body (422); `require_kit_keys` for a token (403); `assert_allowed` (422 for a locale the
-app does not ship, 403 outside the grant); the store.
+The router raises no `HTTPException`. Past the app's `reviewer` dependency (kk's 401 stays
+there), every refusal is layer 1's, answered by `install_contract_error_handlers`, which
+all three install: `TranslationLocaleError` and `TranslationAreaError` 422,
+`TranslationAccessError` 403. kk's 403 bodies stay byte for byte: `require_kit_keys` says
+its sentence (`scope.py:74`, kk router `:67`), and the handler answers `{"detail": …}` as
+an `HTTPException` does (kk `main.py:213`). The `GET`'s 403 says kk's and ka's sentence, a
+new `NO_REVIEW_ACCESS = "No translation review access"`; KS's own ("You have not been given
+any language to review.", router `:40`) goes, and nothing reads it (KS Q2). A token on an
+area-limited grant gets `NO_KIT_REVIEW_ACCESS` (6.2.2). ka's "Unknown language" becomes the
+kit's "Unknown locale", still 422; kastlan shows no refusal's sentence where a reviewer
+looks. A `PUT` or a clear, in order, as kk's today (router `:105`, `:120`): the body (422,
+an unknown field too); `require_kit_keys` for a token (403); `assert_allowed` (422 for a
+locale the app does not ship, 403 outside the grant); the store.
 
 #### 6.2.9 Who commits
 
-**Rec:** 2.7's rule. The kit never commits; `put` and `clear` flush; each request makes at
-most one store write (`put` or `clear`), and it is the last step. kk: `commit_boundary`
-commits the session its store dependency takes; KS: `get_db_session`. kastlan's service
-commits today (`:245`, `:257`); its store adapter commits after the flush only when its
-`commit` flag is on, and only the router's dependency sets it, as for its feedback
-repository. Its export reads with the flag off.
+2.7's rule. The kit never commits; `put` and `clear` flush; each request makes at most one
+store write (`put` or `clear`), and it is the last step. Who commits:
+- **keksdose:** `commit_boundary` commits the session its store dependency takes. That
+  dependency takes `Depends(db_session)`, the callable `get_review_actor` takes (router
+  `:52`), so FastAPI's per-request cache hands both the same session. On the token path
+  `get_review_actor` sets the RLS user on it (`set_current_user`, `:60`); a store on a
+  session of its own would see no user there (kk 1).
+- **kastlan:** its service commits today (`:245`, `:257`). Its store adapter commits after
+  the flush only when its `commit` flag is on, and only the router's dependency sets it,
+  as for its feedback repository (built in 0.36,
+  `adapters/persistence/feedback_repository.py:15-18`). Its export reads with the flag off.
+- **Kurvenschmiede:** `get_db_session`.
 
 #### 6.2.10 Erasure and export
 
-**Rec:**
 - **Erasure: nothing in the kit.** The foreign key's `SET NULL` is the rule in all three
   (6.1): the verdict stays, the person goes, and the list names nobody for it. kk's
   `_user_fk_plan` reads it off the schema (`budgets_service.py:1186`), KS's erasure says so
   (`erasure_service.py:46-50`), and ka's erasure deletes the user row. A note is about the
   wording, not its author, so nothing is scrubbed. kk's tokens go with the account (`ON
   DELETE CASCADE`, `domain/models/translation_review_token.py:39-41`).
-- **Export: kk's shape everywhere.** `TranslationReviewService.export(reviewer_id)` reads
-  `by_reviewer` and answers each row as `{locale, string, text, verdict, note,
-  suggestion, reviewed_at}`, the verdict as its value. The app puts it under
+- **Export: kk's shape everywhere (decided, T1).** `TranslationReviewService.export(
+  reviewer_id)` reads `by_reviewer`, oldest first, and answers each row as `{locale,
+  string, text, verdict, suggestion, note, reviewed_at}`, in that order, the verdict as
+  its value: kk's export as it is (`account_export_service.py:316-320`, `:375-387`;
+  `suggestion` before `note` at `:383-384`). The app puts it under
   `data["translation_verdicts"]` (`VERDICTS_EXPORT_KEY`). ka renames `translation_reviews`;
-  ka and KS trade `key` for `string` and gain `text`. Each app's export test fills one
-  verdict, so `assert_no_secrets` sees one (6.1). The grant stays in `account`, as each app
-  has it.
+  ka and KS trade `key` for `string`, gain `text`, take kk's field order, and their
+  exports, unordered today, go oldest first. Each app's export test fills one verdict, so
+  `assert_no_secrets` sees one (6.1). The grant stays in `account`, as each app has it.
 
 #### 6.2.11 Testing support
 
-**Rec:** `eifi1_server_kit.translation_review.testing`, in the wheel, not re-exported, as
-2.14:
+`eifi1_server_kit.translation_review.testing`, in the wheel, not re-exported, as 2.14:
 - `InMemoryTranslationReviewStore`, which records each write, so a test asserts the
   one-write rule, and `reviewer(**overrides)`;
 - `check_store`: what an app runs once against its adapter, on its test database, for one
@@ -1289,16 +1350,20 @@ superuser) and `check_store`.
 
 ### 6.3 server-kit 0.10.0: the build list
 
-Additive: no name changes. Module paths are from `src/eifi1_server_kit/`, the rest from
-the server-kit repo's root.
+Additive: no name changes. Two refusals are new: a request body with an unknown field is
+422 (T5), and a review token on a grant with an area limit 403 (T2). Module paths are from
+`src/eifi1_server_kit/`, the rest from the server-kit repo's root.
 
 **Layer 1**
 - `translation_review/scope.py`: `in_areas` with the `<area>:` arm; `area_like_patterns`
   with four patterns per area (its docstring and the README's example follow);
   `review_grant(…, is_demo: bool = False)`, an empty grant for a demo;
-  `NO_REVIEW_ACCESS`.
+  `NO_REVIEW_ACCESS = "No translation review access"` and
+  `NO_KIT_REVIEW_ACCESS = "No review access to the kit's wording"` (6.2.2, 6.2.8).
 - `translation_review/schemas.py`: `TranslationReviewOut.reviewer_first_name` and
-  `.reviewer_last_name`, `str | None = None`.
+  `.reviewer_last_name`, `str | None = None`; `model_config = ConfigDict(extra="forbid")`
+  on `TranslationReviewWrite`, `TranslationReviewBatch`, `TranslationReviewKey` and
+  `TranslationReviewClear` (T5).
 - `clock.py` (new): `Clock` and `utc_now`; `feedback/ports.py` imports them, its
   `__all__` unchanged.
 
@@ -1323,8 +1388,9 @@ class TranslationReviewService[RowT: TranslationReviewRow]:
     async def export(self, reviewer_id: int) -> list[dict[str, Any]]: ...
 ```
 
-- `scope`: the viewer's grant, its areas narrowed to `(KIT_AREA,)` when `kit_only`;
-  `TranslationAccessError(NO_REVIEW_ACCESS)` when it holds no locale.
+- `scope`: the viewer's grant. `TranslationAccessError(NO_REVIEW_ACCESS)` when it holds
+  no locale. When `kit_only`: `TranslationAccessError(NO_KIT_REVIEW_ACCESS)` when
+  `grant.areas is not None` (T2), else the grant with its areas `(KIT_AREA,)`.
 - `list_reviews`: `scope`; `store.verdicts(grant.locales, grant.areas)`; only what the
   locales and `in_areas` allow; `TranslationReviewsResponse(locales, areas, reviews)`, each
   review with the name's two parts and `reviewer_name` (6.2.5).
@@ -1334,11 +1400,11 @@ class TranslationReviewService[RowT: TranslationReviewRow]:
   `reviewer_id=viewer.id`, `reviewed_at=now()`; `store.put`; the rows out, with the
   viewer's name.
 - `clear`: the same two checks; `store.clear` with the pairs once each.
-- `export`: 6.2.10.
+- `export`: `by_reviewer`; each row as 6.2.10 writes it, `suggestion` before `note`.
 
 **`translation_review/router.py`** (new; the `fastapi` extra): the `ImportError` naming the
-extra, as `feedback.router`'s; no `from __future__ import annotations` (2.9's reason, for
-`batch_model`); `TranslationReviewDeps` and `translation_review_router` as 6.2.7. Each
+extra, as `feedback.router`'s; `TranslationReviewDeps` and `translation_review_router` as
+6.2.7. Each
 request builds `TranslationReviewService(store, locale_codes=deps.locale_codes,
 now=deps.now)`. "reviewer" and "store" are `Depends(deps.reviewer)` and
 `Depends(deps.store)`:
@@ -1346,8 +1412,8 @@ now=deps.now)`. "reviewer" and "store" are `Depends(deps.reviewer)` and
 | # | Route | Endpoint | Parameters | Answer |
 |---|---|---|---|---|
 | 1 | `GET /reviews` | `list_translation_reviews` | reviewer, store | 200 `TranslationReviewsResponse` |
-| 2 | `PUT /reviews` | `save_translation_reviews` | `payload: batch_model`, reviewer, store | 200 `TranslationReviewWriteResponse` |
-| 3 | `POST /reviews/clear` | `clear_translation_reviews` | `payload: clear_model`, reviewer, store | 200 `TranslationReviewClearResponse` |
+| 2 | `PUT /reviews` | `save_translation_reviews` | `payload: TranslationReviewBatch`, reviewer, store | 200 `TranslationReviewWriteResponse` |
+| 3 | `POST /reviews/clear` | `clear_translation_reviews` | `payload: TranslationReviewClear`, reviewer, store | 200 `TranslationReviewClearResponse` |
 
 **`translation_review/testing.py`** (new; no FastAPI, no httpx):
 
@@ -1390,17 +1456,20 @@ with `reviewed_at` it sets itself:
 `router` or `testing`.
 
 **Tests**, in `tests/translation_review/`:
-- `test_service.py`: each flow on the fake; a token viewer (the narrowed list, the whole
-  batch refused, its 403 before the grant's); the 403 and 422 orders; the last item wins;
-  the cleaning; the reader's order of the name; the second filter by `in_areas`; the
-  export;
+- `test_service.py`: each flow on the fake; a token viewer (the list of the area `kit`,
+  the whole batch refused, its 403 before the grant's); a token viewer on a grant with an
+  area limit refused by `scope` with `NO_KIT_REVIEW_ACCESS`, also by `list_reviews`; the
+  403 and 422 orders; the last item wins; the cleaning; the reader's order of the name;
+  the second filter by `in_areas`; the export, its keys in kk's order, oldest first;
 - `test_router.py`: a FastAPI app on the fake with `install_contract_error_handlers`; each
-  route's status and body; at `/api/v1`, the operation ids and the paths of
-  `TRANSLATION_REVIEW_ROUTES`; at most one store write per request, as the last step;
-  `check_round_trip` on the fake;
+  route's status and body; an unknown field in a `PUT` item, a `PUT` body, a clear item
+  and a clear body is 422, and nothing is written; at `/api/v1`, the operation ids and the
+  paths of `TRANSLATION_REVIEW_ROUTES`; at most one store write per request, as the last
+  step; `check_round_trip` on the fake;
 - `test_testing.py`: the checks pass on the fake and fail on a broken store (one without
   the `:` arm, one that keeps two rows for a pair);
-- `test_translation_review.py`: the `:` arm in both functions, `is_demo`;
+- `test_translation_review.py`: the `:` arm in both functions, `is_demo`; the four
+  request models refuse an unknown field;
 - `tests/test_package.py`: importing `eifi1_server_kit.translation_review` loads no
   `fastapi`; the router's `ImportError` names the extra.
 
@@ -1416,9 +1485,11 @@ filter; `CHANGELOG.md`: 0.10.0; `scripts/export_api.py` `MODULES` gains
 ### 6.4 ui-kit 0.37
 
 **Size S**, docs only; no component or wire change, since `reviewer_name` stays the field
-the kit's parts read (`src/lib/translation-review.ts:111-121`). This section; at the
-release H1 (i18n-harmonization.md §2: the four arms in both kits, the name's two parts,
-the export's one shape) and the showcase's `server-kit-api.json` synced to 0.10.
+the kit's parts read (`src/lib/translation-review.ts:111-121`), and `toApiWrite` sends only
+the kit's fields (`:151-161`). This section and H1 (i18n-harmonization.md §2: the four
+arms in both kits, the name's two parts, the export's one shape, the bodies' refusal of an
+unknown field), updated with it; at the release the showcase's `server-kit-api.json`
+synced to 0.10.
 
 ### 6.5 Per app
 
@@ -1426,40 +1497,52 @@ the export's one shape) and the showcase's `server-kit-api.json` synced to 0.10.
 |---|---|---|---|
 | kk | ≈ 150 (the flows 89, helpers 12, the three routes with `_kit_keys_only` and `_refuse` 44, the subclasses 7) | ≈ 50 (store 35, the view in `get_review_actor`, wiring) | **≈ 100** |
 | ka | ≈ 205 (the service but `_document_texts` ≈ 120, repository 26, three routes 23, schemas 38) | ≈ 65 (store with its flag 40, the view, wiring and the documents router 25) | **≈ 140** |
-| KS | ≈ 170 (the flows 87, router 42, schemas 44) | ≈ 60 (store 35, the view, wiring, the forbid subclasses if kept) | **≈ 110** |
+| KS | ≈ 170 (the flows 87, router 42, schemas 44) | ≈ 55 (store 35, the view, wiring) | **≈ 115** |
 
 Each app's review tests shrink to the wiring, `check_store`, `check_round_trip` and its
 own grant (kk's token tests stay whole).
 
 **keksdose**
-1. Pin server-kit 0.10.0, extras as for 0.9.
+1. Pin server-kit 0.10.0 with the `fastapi` extra (`backend/pyproject.toml:57`, `:121`).
+   The 0.36 adoption pins 0.9.0 with it; if that adoption has not shipped, kk jumps 0.8 →
+   0.10, adds the extra and takes 0.9's feedback layer in the same step
+   ([adopt-0.36.md](adopt-0.36.md)).
 2. The store, in `adapters/persistence/`: `verdicts` is `list_reviews`' query with
    `area_like_patterns` for `:149-165`, paired with the reviewer's `ReviewerName`; `put`
    is `save_reviews`' lookup and assignment (`:203-231`); `clear` is `:239-249`;
    `by_reviewer` is the export's query (`account_export_service.py:316-320`). Its
-   dependency takes `Depends(db_session)`.
+   dependency takes `Depends(db_session)`, the same callable as `get_review_actor` (router
+   `:52`), so both get the request's one session: the one `set_current_user` (`:60`) sets
+   the RLS user on for a token, and the one `commit_boundary` commits (6.2.9).
 3. `get_review_actor` (router `:49-62`) answers a `TranslationReviewer` with
    `grant=review_grant_of(user)` and `kit_only` as now; `review_grant_of` passes
-   `is_demo=user.is_demo` instead of folding it into `is_reviewer` (`:105`).
+   `is_demo=user.is_demo` instead of folding it into `is_reviewer` (`:105`). The token
+   service keeps `can_review_kit`'s re-check at mint and in `authenticate` (`:59-66`,
+   `:70`, `:133`), so an area-limited grant still answers 401, before the kit's `scope()`
+   would refuse it (6.2.2).
 4. `adapters/api/translations_router.py` keeps `get_review_actor` and the two token routes
    on its own router, included after `translation_review_router(TranslationReviewDeps(
    reviewer=get_review_actor, store=translation_review_store,
-   locale_codes=UI_LOCALE_CODES))` (`main.py:291`). These go: `_kit_keys_only`, `_refuse`
-   and the three routes; in the service `list_reviews`, `_row`, `save_reviews`,
-   `clear_reviews`, `_clean`, `_assert_allowed`, `allowed_locales` and `allowed_areas`
-   (`review_grant_of`, `normalize_*` and `set_reviewer` stay); the two subclasses
-   (`domain/schemas/translations.py:40-56`).
-5. The export calls `export(user.id)`: the same shape as now.
+   locale_codes=UI_LOCALE_CODES))` (`main.py:299`). These go: `ReviewActor`,
+   `_kit_keys_only`, `_refuse` and the three routes; in the service `list_reviews`, `_row`,
+   `save_reviews`, `clear_reviews`, `_clean`, `_assert_allowed`, `allowed_locales` and
+   `allowed_areas` (`review_grant_of`, `normalize_*` and `set_reviewer` stay); the three
+   subclasses (`domain/schemas/translations.py:40-56`, imported at router `:25-33`). The
+   token model's docstring names `allowed_locales`/`allowed_areas`
+   (`domain/models/translation_review_token.py:27`): it names `review_grant_of` instead.
+5. The export calls `export(user.id)`: the same shape as now, `suggestion` before `note`.
 6. Unchanged: the paths, the operation ids, the CORS routes, the billing list, the token
-   flow. A reader may notice `reviewer_name` in their own order; the page formats the parts
-   already.
+   flow, the 403 and 422 bodies. A reader may notice `reviewer_name` in their own order;
+   the page formats the parts already, and kk's four locales put the first name first. A
+   test that sends a field the kit's models lack gets 422 (T5).
 
 **kastlan**
 1. Pin server-kit 0.10.0.
 2. `SqlAlchemyTranslationReviewRepository` becomes the store, with a `commit` flag (6.2.9):
    `verdicts` is `list_with_reviewer` with the area filter, paired with names; `put` is
    `get_many`, `add` and the service's assignment (`:220-244`); `clear` is `delete_many`
-   per locale; `by_reviewer` is the export's query (`account_service.py:242-246`).
+   per locale; `by_reviewer` is the export's query (`account_service.py:243-247`), with
+   the order it lacks.
 3. Its `reviewer` dependency, on `get_current_user`: `review_grant(user,
    is_admin=user.is_superuser, is_reviewer=True, is_demo=user.is_demo,
    locale_codes=UI_LANGUAGES)`, the name's parts and `user.locale`.
@@ -1470,10 +1553,12 @@ own grant (kk's token tests stay whole).
    `document_texts`); the schemas but `DocumentTextsResponse`.
    `platform_service.set_reviewer` (`:244-275`) calls the kit's `normalize_locales` and
    `normalize_areas` with kastlan's vocabulary: the same 422, the kit's sentence.
-6. The export: `data["translation_verdicts"]` from `export(user.id)`
-   (`account_service.py:307-317`); its export test fills a verdict.
+6. The export: `data["translation_verdicts"]` from `export(user.id)` in place of
+   `translation_reviews` (`account_service.py:309-319`, below `data["notifications"]` at
+   `:308`, which 0.36 added); its export test fills a verdict.
 7. What changes on the wire: the refusals' sentences, the name's two parts, `TEXT_MAX`
-   40 000, the export's key and fields.
+   40 000, the export's key, fields and order. A body with an unknown field is 422 (T5);
+   the page sends none, so only a test notices.
 
 **Kurvenschmiede**
 1. Pin server-kit 0.10.0.
@@ -1482,43 +1567,47 @@ own grant (kk's token tests stay whole).
    they are.
 3. Its `reviewer` dependency, on `get_current_user`: `grant(user)` with `is_demo`, the
    name's parts and `user.locale`.
-4. `adapters/api/translations_router.py` becomes the kit's router (with the forbid
-   subclasses, if kept), in `main.ROUTERS` as today. The walks hold (6.2.6).
+4. `adapters/api/translations_router.py` becomes the kit's router, in `main.ROUTERS` as
+   today. The walks hold (6.2.6).
 5. These go: `_clean`, `_row`, `list_reviews`, `save_reviews` and `clear_reviews`; the
-   schemas but `AdminReviewerRequest` and `AdminReviewerResponse`.
-6. The export: `string` for `key`, and `text`; its export test fills a verdict.
+   schemas but `AdminReviewerRequest` and `AdminReviewerResponse`, so its four forbid
+   request models too (`domain/schemas/translations.py:45-75`): the kit's forbid unknown
+   fields now (T5).
+6. The export: `string` for `key`, and `text`, in kk's field order, oldest first (the
+   query has no order today, `export_service.py:114`); its export test fills a verdict.
 7. What changes: the operation ids (`list_reviews` → `list_translation_reviews`, read by
-   no client) and the `GET`'s 403 sentence.
+   no client), the `GET`'s 403 sentence (read by nothing, KS Q2) and the export's order.
 
-### 6.6 For the reviews
+### 6.6 Reviews and decisions
 
-**keksdose**
-1. `get_review_actor` answering the kit's view, and the token routes kept on kk's own
-   router after the kit's (6.2.2, 6.2.7): agreed? Does a test read `_refuse` or
-   `_kit_keys_only` themselves, rather than the status and `detail`?
-2. `reviewer_name` in the reader's order instead of the reviewer's `display_name`
-   (6.2.5): does anything but the page and the showcase read it?
-3. The `<area>:` arm (6.2.4): any kk key with a `:`?
+The three apps reviewed the draft on 2026-10-13 and agreed with its shape. Marcel decided
+the five points they left open on 2026-10-14. Their findings are folded into the sections
+above.
 
-**kastlan**
-1. Layer 1 in place of the copies (6.2.2, 6.2.4, 6.2.8): the grant as `is_admin=
-   is_superuser, is_reviewer=True`, and the kit's sentences. Does the page show a
-   refusal's `detail`?
-2. The store's `commit` flag, as for feedback (6.2.9)?
-3. `GET /translations/documents` as kastlan's own route after the kit's router, or a hook
-   in the kit (6.2.7)?
-4. The export's key `translation_verdicts`, `string` and `text` (6.2.10).
-
-**Kurvenschmiede**
-1. `extra="forbid"` kept through `batch_model` and `clear_model`, or the kit's models?
-2. The `GET`'s 403 sentence becomes kk's: does anything read KS's?
-3. `check_store`'s 40 000-character text through `EncryptedText` on the test database:
-   any limit?
-4. The export's `string` and `text` (6.2.10).
-
-**For Marcel**, once the reviews are in:
-1. One export shape, kk's, in all three (ka's key renamed)? Rec: yes.
-2. The review tokens stay kk's in 0.10, with no port? Rec: yes.
-3. `reviewer_name` in the reader's order everywhere? Rec: yes.
-4. server-kit's area rule gains the `<area>:` arm for every app, as H1 and ui-kit's
-   `keyInArea` have it? Rec: yes.
+- **Marcel** (2026-10-14, "Do 0.37 as recommended"): T1 one export shape, kk's, with
+  `suggestion` before `note` → 6.2.10; T2 the tokens stay kk's with no port, and `scope()`
+  refuses a token on a grant with an area limit → 6.2.2; T3 `reviewer_name` in the
+  reader's order → 6.2.5; T4 the `<area>:` arm in every app → 6.2.4; T5 the four request
+  models forbid unknown fields → 6.2.7, so `TranslationReviewDeps` takes no request model.
+- **keksdose** (keksdose-b5, at `c90d068e`): kk 1 (agreed; no test reads `_refuse` or
+  `_kit_keys_only`; the store shares `get_review_actor`'s session) → 6.2.9, 6.5; kk 1a
+  (kk replaces the areas, safe only through `can_review_kit`) → T2, 6.2.2; kk 2 (only the
+  page, the showcase and two asserts read the name; same bytes) → 6.2.5; kk 3 (no key
+  holds a `:`) → 6.2.4. Its corrections: three subclasses, not two → 6.1, 6.2.5, 6.5; it
+  ran 0.8.0 → 6.1, 6.5; the token cite `:49-62` → 6.1; the export's field order → 6.2.10;
+  the token model's docstring → 6.5.
+- **kastlan** (kastlan-10, at `0e8bd2c`): agreed. The grant as `is_admin=is_superuser,
+  is_reviewer=True`, and no page shows a refusal's sentence → 6.2.2, 6.2.8; its four-arm
+  `in_areas` waits for the kit's → 6.2.4; the store's `commit` flag as feedback's → 6.2.9;
+  `GET /translations/documents` its own route → 6.2.7; the export agreed, `key` confirmed
+  → 6.1, 6.2.10. Its correction: 0.36 put `data.notifications` above the verdicts → 6.5.
+- **Kurvenschmiede** (kurvenschmiede-b9, at `bcadab6`): B1 `key` confirmed, its export
+  unordered → 6.1, 6.2.10; B2 the area-rule cites (`scope.py:88-89`, `:125-129`; H1 at
+  `i18n-harmonization.md:59-61`) → 6.1; Q1 the kit's models forbid unknown fields → T5,
+  6.2.7; Q2 nothing reads the `GET`'s 403 sentence, so the question is dropped → 6.2.8;
+  Q3 a 40 000-character text through `EncryptedText` is fine → 6.2.3; Q4 the export
+  agreed → 6.2.10.
+- **Re-read on 2026-10-14** in the 0.36 adoption trees: the cites that moved since the
+  survey (kk `main.py`, the billing list and the client; ka's export, demo layer, route
+  walk, billing list and client; KS's `DEMO_ALLOWED`, export route and client) → 6.1,
+  6.2.6, 6.2.7, 6.5. kk's `suggestion` and `note` are at `:383-384`, not `:382-383`.

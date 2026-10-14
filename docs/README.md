@@ -30,8 +30,8 @@ are in [archive/](archive/) as `<topic>-history.md`.
 | [text-size](text-size-harmonization.md) | Text size (Normal, Large, Extra large) and More contrast | ui-kit 0.32, server-kit 0.6 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 (§4 amended for 0.36: a `help` slot beside `hint`) |
 | [billing](billing-harmonization.md) | Plans, grants, trials, the Paddle client, the checkout page and the way back | ui-kit 0.32–0.33, server-kit 0.6–0.7 | Current as of ui-kit 0.34.0 / server-kit 0.8.0; off in production until each app's launch |
 | [colour-roles](colour-roles-harmonization.md) | The role utilities, a foreground for every fill, the hover rule, the CSS-variable guard | ui-kit 0.33 | Current as of ui-kit 0.34.0 (§13: the More-contrast light well, settled 2026-10-13, built for ui-kit 0.36.0) |
-| [notifications](notifications-harmonization.md) | Notification types and switches, quiet hours, the zone, the digest, push devices, one-click unsubscribe | — | Settled 2026-10-13, built for ui-kit 0.36.0 / server-kit 0.9.0; §9 (admin transfer, failed-mail retry) DRAFT for review, round 0.37 |
-| [server-services](server-services-harmonization.md) | server-kit layer 2: the feedback service behind ports, its router factory, the shared erasure; the translation review | — | §1–5 settled 2026-10-13, built for server-kit 0.9.0 (round 0.36); §6 the translation review DRAFT for review (round 0.37, server-kit 0.10) |
+| [notifications](notifications-harmonization.md) | Notification types and switches, quiet hours, the zone, the digest, push devices, one-click unsubscribe | — | Settled 2026-10-13, built for ui-kit 0.36.0 / server-kit 0.9.0; §9 (admin transfer, failed-mail retry) settled 2026-10-14, built for server-kit 0.10.0 / ui-kit 0.37.0 |
+| [server-services](server-services-harmonization.md) | server-kit layer 2: the feedback service behind ports, its router factory, the shared erasure; the translation review | — | §1–5 settled 2026-10-13, built for server-kit 0.9.0 (round 0.36); §6 the translation review settled 2026-10-14, built for server-kit 0.10.0 / ui-kit 0.37.0 (round 0.37) |
 
 ## Adoption notes (`adopt-0.x.md`)
 
