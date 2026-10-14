@@ -1567,7 +1567,7 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Translation review",
         short: "Review",
         blurb:
-          "The translation review's wire shapes, who may review which keys and languages, the review tokens a reviewer opens the kit's review page with, and its service behind a store port with one router factory.",
+          "The translation review's wire shapes, who may review which keys and languages, and the review tokens a reviewer opens the kit's review page with.",
         icon: Languages,
         // `translation_review.router` (server-kit 0.10) needs the `fastapi` extra, as
         // `feedback.router` does.
