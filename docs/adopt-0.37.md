@@ -170,4 +170,4 @@ kastlan's; `work_transferred` is Kurvenschmiede's.
   uv add "eifi1-server-kit[billing,fastapi,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.10.0/eifi1_server_kit-0.10.0-py3-none-any.whl"          # Kurvenschmiede
   ```
 
-  sha256: `<at the release>`
+  sha256: `3589925b6367dc4732a8771c396e9f6daa237435f9342ec08240e79abdf3381d`

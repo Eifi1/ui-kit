@@ -997,6 +997,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "uploads · Classes",
     "uploads · Protocols",
     "uploads · Constants",
+    "clock · Functions",
+    "clock · Constants",
   ],
   "server-limits": [
     "limiter · Functions",
@@ -1019,6 +1021,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "translation_review · Enums",
     "translation_review · Protocols",
     "translation_review · Constants",
+    "translation_review.router · Functions",
+    "translation_review.router · Classes",
   ],
 };
 

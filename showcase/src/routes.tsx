@@ -1549,8 +1549,9 @@ export const GROUPS: ShowcaseGroup[] = [
           "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — its routes as one router factory, and attachments judged by their bytes.",
         icon: Paperclip,
         // `feedback.router` (server-kit 0.9) is a module of its own because it needs the
-        // `fastapi` extra, which the feedback package does not import.
-        serverModules: ["feedback", "feedback.router", "uploads"],
+        // `fastapi` extra, which the feedback package does not import. `clock` (0.10) is
+        // the layer-2 services' shared clock port; feedback was its first user.
+        serverModules: ["feedback", "feedback.router", "uploads", "clock"],
       }),
       serverPage({
         slug: "server-limits",
@@ -1566,9 +1567,11 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Translation review",
         short: "Review",
         blurb:
-          "The translation review's wire shapes, who may review which keys and languages, and the review tokens a reviewer opens the kit's review page with.",
+          "The translation review's wire shapes, who may review which keys and languages, the review tokens a reviewer opens the kit's review page with, and its service behind a store port with one router factory.",
         icon: Languages,
-        serverModules: ["translation_review"],
+        // `translation_review.router` (server-kit 0.10) needs the `fastapi` extra, as
+        // `feedback.router` does.
+        serverModules: ["translation_review", "translation_review.router"],
       }),
     ],
   },

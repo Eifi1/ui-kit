@@ -74,6 +74,7 @@ describe("a nested module (server-kit 0.9's feedback.router)", () => {
       "feedback",
       "feedback.router",
       "uploads",
+      "clock",
     ]);
   });
 
