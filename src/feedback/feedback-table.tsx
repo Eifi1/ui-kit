@@ -472,7 +472,7 @@ export function feedbackColumns<T extends FeedbackTableRow>({
           key: "votes",
           header: votesHeader,
           className: "whitespace-nowrap",
-          cell: (row) => <FeedbackVoteCount votes={row.votes} />,
+          cell: (row) => <FeedbackVoteCount votes={row.votes ?? undefined} />,
           sortBy: (row) => row.votes ?? 0,
           filter: { type: "number", getValue: (row) => row.votes ?? 0 },
           mobileHidden: true,
@@ -710,7 +710,7 @@ export function FeedbackMobileCard({
       </div>
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
         <FeedbackCategoryBadge category={row.category} compact />
-        {votes && <FeedbackVoteCount votes={row.votes} />}
+        {votes && <FeedbackVoteCount votes={row.votes ?? undefined} />}
         <FeedbackDate value={row.created_at} renderDate={renderDate} />
         {showSubmitter && (
           // The short id form: "#7" says enough on a card that has room for little.

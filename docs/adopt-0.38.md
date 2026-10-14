@@ -58,8 +58,9 @@ kastlan the public part off, replies only. The contract (feedback §9.16) is the
   `replies`, `votes` or `mine` on the feedback model: the kit's views read attributes.
 - **A PATCH with `public`** is a 422 where the app has no `public_viewer` (kastlan).
 - **The migration** (§9.12): the replies, comments and votes tables; `feedback.public`
-  (true on every existing report but crash reports, `filed_private` marking those by another
-  author for the notice); `outcome` into the first reply; one vote per report for its author.
+  (true on every existing report but crash reports, and those same rows marked
+  `filed_private`, as feedback §9.2 decision 6 says; the notice goes only to authors other than
+  the admin); `outcome` into the first reply; one vote per report for its author.
   `created_at` needs a database default where a loop writes raw SQL.
 
 ## 3. Per app
