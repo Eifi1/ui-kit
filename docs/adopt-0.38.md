@@ -122,4 +122,4 @@ kastlan the public part off, replies only. The contract (feedback §9.16) is the
   uv add "eifi1-server-kit[billing,fastapi,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.11.0/eifi1_server_kit-0.11.0-py3-none-any.whl"          # Kurvenschmiede
   ```
 
-  sha256: `<at the release>`
+  sha256: `27cf11d6611d7bceb2f6941540234bfd2b16a7bba1e9967909d0678e973f0071`
