@@ -108,4 +108,4 @@ can be adopted now; nothing charges anyone.
   uv add "eifi1-server-kit[billing,fastapi,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.12.0/eifi1_server_kit-0.12.0-py3-none-any.whl"          # Kurvenschmiede
   ```
 
-  sha256: `<at the release>`
+  sha256: `f7f410352deed79c96d09cc3adf7af013a67cbb71acbc6ab97673eea7e01f32b`
