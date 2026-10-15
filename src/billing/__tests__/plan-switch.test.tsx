@@ -123,6 +123,13 @@ describe("PlanSwitchConfirm (§15.2.10)", () => {
     expect(d).not.toHaveTextContent("Next charge");
   });
 
+  it("takes a server's preview without the next charge's fields (0.39.1: optional, as OpenAPI generates them)", async () => {
+    const { next_minor: _minor, next_billed_at: _at, ...withoutNext } = UPGRADE;
+    render(<Switch preview={withoutNext} />);
+    const d = await dialog();
+    expect(d).not.toHaveTextContent("Next charge");
+  });
+
   it("shows a spinner and holds Confirm while the preview loads", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
