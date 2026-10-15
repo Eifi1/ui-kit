@@ -21,6 +21,16 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.39.1](https://github.com/Eifi1/ui-kit/compare/v0.39.0...v0.39.1) (2026-10-15)
+
+keksdose's and kastlan's 0.39 adoption findings, released on Marcel's word (2026-10-15) before
+Kurvenschmiede's report; `docs/adopt-0.39.md` §5. Nothing is removed.
+
+### Fixed
+
+* **billing:** PlanSwitchPreview's next-charge fields are optional, as server-kit makes them ([e5cedf8](https://github.com/Eifi1/ui-kit/commit/e5cedf8070598d91b03633e57d6882f7713963f5))
+* **billing:** the pay page names Kastlan as the product does; adopt-0.39 §5 for 0.39.1 ([9762f3c](https://github.com/Eifi1/ui-kit/commit/9762f3ca074363979f1d79a0a1f70f6ccdb7db41))
+
 ## [0.39.0](https://github.com/Eifi1/ui-kit/compare/v0.38.1...v0.39.0) (2026-10-15)
 
 Round 0.39: the Paddle billing amendment (billing §15) — every app's pay page serves any app's
