@@ -21,6 +21,29 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.39.0](https://github.com/Eifi1/ui-kit/compare/v0.38.1...v0.39.0) (2026-10-15)
+
+Round 0.39: the Paddle billing amendment (billing §15) — every app's pay page serves any app's
+checkout, the payer's plan switch, one Paddle customer per e-mail address (server-kit 0.12.0
+ships beside it) — plus `ApiTranslationReviewsResponse`. Billing stays off until the sandbox
+run. The migration per app is `docs/adopt-0.39.md`; the pay page's old flags and
+`paySuccessUrl` are gone (below).
+
+### ⚠ BREAKING CHANGES
+
+* **billing:** `eifi1-pay-page` takes `--app <tag> [--app-url] [--apps <file>]` and refuses
+  `--return-url`, `--app-name`, `--terms-url` and `--privacy-url` (exit 2, naming the new
+  flags); `paySuccessUrl` is removed; `BillingOverview.paid` is required in typed fixtures.
+
+### Added
+
+* **billing:** every pay page serves any app's transaction; the payer's plan switch ([dc8fa69](https://github.com/Eifi1/ui-kit/commit/dc8fa6939d4b19a69e4913eaf79de97b450433f6))
+* **i18n:** `ApiTranslationReviewsResponse`, the GET answer's type, and the reviewer name's parts ([0bb8c85](https://github.com/Eifi1/ui-kit/commit/0bb8c85e1eefc3c02656a0859635bb7b01825d3b))
+
+### Fixed
+
+* **showcase:** the Subscription page keeps its translated blurb ([d7ba1e9](https://github.com/Eifi1/ui-kit/commit/d7ba1e90eac0105bd44357efd5c89516d06e65af))
+
 ## [0.38.1](https://github.com/Eifi1/ui-kit/compare/v0.38.0...v0.38.1) (2026-10-14)
 
 The apps' 0.38 adoption findings, released as one batch once all three had reported (server-kit
