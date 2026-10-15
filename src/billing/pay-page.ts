@@ -208,7 +208,7 @@ function appAt(name: string, site: string, returnPath: string): PayPageApp {
  */
 export const PAY_PAGE_APPS: Readonly<Record<string, Readonly<PayPageApp>>> = Object.freeze({
   keksdose: Object.freeze(appAt("Keksdose", "https://keksdose.app", "/settings/subscription")),
-  kastlan: Object.freeze(appAt("kastlan", "https://kastlan.app", "/admin/billing")),
+  kastlan: Object.freeze(appAt("Kastlan", "https://kastlan.app", "/admin/billing")),
   kurvenschmiede: Object.freeze(appAt("Kurvenschmiede", "https://kurvenschmiede.app", "/settings/subscription")),
 });
 

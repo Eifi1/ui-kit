@@ -112,7 +112,7 @@ describe("PAY_PAGE_APPS — the apps every pay page serves (§15.2.6)", () => {
         privacyUrl: "https://keksdose.app/privacy",
       },
       kastlan: {
-        name: "kastlan",
+        name: "Kastlan", // 0.39.1 (kastlan): the product's own spelling
         returnUrl: "https://kastlan.app/admin/billing",
         termsUrl: "https://kastlan.app/terms",
         privacyUrl: "https://kastlan.app/privacy",
@@ -372,8 +372,8 @@ describe("the pay page (dist/pay/)", () => {
     expect(document.getElementById("pay-app")).toHaveTextContent("Keksdose");
     const loaded = { name: "checkout.loaded", data: { custom_data: { app: "kastlan", payer: "company:9" } } };
     calls.init[0].eventCallback?.(loaded);
-    expect(document.getElementById("pay-app")).toHaveTextContent("kastlan");
-    expect(document.title).toBe("kastlan");
+    expect(document.getElementById("pay-app")).toHaveTextContent("Kastlan");
+    expect(document.title).toBe("Kastlan");
     expect(document.getElementById("pay-back")).toHaveAttribute("href", "https://kastlan.app/admin/billing");
     expect(document.getElementById("pay-terms")).toHaveAttribute("href", "https://kastlan.app/terms");
     expect(document.getElementById("pay-privacy")).toHaveAttribute("href", "https://kastlan.app/privacy");

@@ -76,9 +76,9 @@ export interface PlanSwitchPreview {
    *  charges. */
   now_minor: number;
   /** The next regular charge, in minor units. */
-  next_minor: number | null;
+  next_minor?: number | null;
   /** When it is charged; null when Paddle names no date. */
-  next_billed_at: string | null;
+  next_billed_at?: string | null;
   /** The plan and period switched to. */
   plan: string;
   interval: BillingInterval;
