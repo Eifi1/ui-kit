@@ -238,7 +238,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `pushSupported`, `PushDeviceError`, `PushDeviceSetting`, `PushDevicesSetting`,
   // `describeUserAgent`, `UnsubscribePanel`, `unsubscribeTokenType`,
   // `DEFAULT_NOTIFICATIONS_LABELS` (+16).
-  ["@eifi1/ui-kit", barrel, 910],
+  // 0.39.0 (+2, docs/billing-harmonization.md §15.4): `PlanSwitchConfirm`, the payer's
+  // plan switch, and `PAY_PAGE_APPS`, the apps every pay page serves.
+  ["@eifi1/ui-kit", barrel, 912],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

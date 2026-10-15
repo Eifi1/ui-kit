@@ -158,4 +158,8 @@ removed; a bump changes nothing until the app uses it.
     the latest answer (kastlan).
   - `create_reply` and `hide_comment` refuse a demo with `demo_refused` before the role's
     403; a route walk that lists them admin-first flips the order (Kurvenschmiede).
+  - **An app's own single-row route** (kastlan's `GET /feedback/{id}`, which the kit never
+    calls) answers through `FeedbackService.admin_view` to get `replies` and the newest
+    reply as `outcome`; a plain `FeedbackResponse.model_validate(row)` still answers the
+    frozen column (kastlan).
   - The wheel: `v0.11.1`, sha256 `8877200ca7a000b2efecdd7b028e3f37b512e7f0d7a61aa24d73f42961ea212c`.

@@ -115,9 +115,14 @@ export type DemoErrorCode =
  * - `billing_not_at_provider` — `409`: a portal request before the payer reached the
  *   provider (§14.5) — a stale page; the overview's `at_provider` says it first.
  * - `billing_already_subscribed` — `409`: a checkout while a provider subscription runs
- *   (§14.6). Plan changes go through the portal.
+ *   (§14.6). Since 0.39 plan changes go through the plan switch (§15.2.10).
  * - `billing_plan_not_sold` — `422`: a checkout for a plan, currency or interval the
- *   catalogue doesn't sell.
+ *   catalogue doesn't sell — or (0.39) a switch to one.
+ *
+ * 0.39.0 (server-kit 0.12, §15.2.10): the plan switch's refusals.
+ * - `billing_not_subscribed` — `409`: a switch with no running provider subscription;
+ *   the page offers the checkout instead.
+ * - `billing_plan_unchanged` — `409`: a switch to the price the payer pays now.
  */
 export type BillingErrorCode =
   | "billing_disabled"
@@ -127,7 +132,9 @@ export type BillingErrorCode =
   | "billing_provider_unavailable"
   | "billing_not_at_provider"
   | "billing_already_subscribed"
-  | "billing_plan_not_sold";
+  | "billing_plan_not_sold"
+  | "billing_not_subscribed"
+  | "billing_plan_unchanged";
 
 /** Every code the kit reads: the sign-in refusals, the account ones (0.30.0), the demo's
  *  (0.31.0) and billing's (0.32.0). */
@@ -142,6 +149,8 @@ const BILLING_CODES: ReadonlySet<BillingErrorCode> = new Set<BillingErrorCode>([
   "billing_not_at_provider",
   "billing_already_subscribed",
   "billing_plan_not_sold",
+  "billing_not_subscribed",
+  "billing_plan_unchanged",
 ]);
 
 const CODES: ReadonlySet<string> = new Set<KitErrorCode>([

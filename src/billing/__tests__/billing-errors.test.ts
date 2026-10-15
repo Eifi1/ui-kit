@@ -1,7 +1,25 @@
 import { describe, expect, it } from "vitest";
 
 import { authErrorCode, isAuthError, isBillingError } from "../../auth/auth-errors";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
+import { uiKitLabelsEn } from "../../i18n/locales/en";
+import { UI_KIT_LABELS_ES } from "../../i18n/locales/es";
+import { UI_KIT_LABELS_FR } from "../../i18n/locales/fr";
+import { UI_KIT_LABELS_HU } from "../../i18n/locales/hu";
+import { UI_KIT_LABELS_IT } from "../../i18n/locales/it";
+import { UI_KIT_LABELS_ZH } from "../../i18n/locales/zh";
+import { DEFAULT_BILLING_LABELS } from "../billing-labels";
 import { isPlanLimit } from "../plan-limit";
+
+const CATALOGUES = {
+  "de-CH": UI_KIT_LABELS_DE_CH,
+  en: uiKitLabelsEn(),
+  es: UI_KIT_LABELS_ES,
+  fr: UI_KIT_LABELS_FR,
+  it: UI_KIT_LABELS_IT,
+  hu: UI_KIT_LABELS_HU,
+  zh: UI_KIT_LABELS_ZH,
+} as const;
 
 /**
  * Billing's coded refusals (docs/billing-harmonization.md §3.3, §3.4, §4, §12.16) in the
@@ -26,6 +44,9 @@ describe("BillingErrorCode — read by authErrorCode and isAuthError", () => {
       "billing_not_at_provider",
       "billing_already_subscribed",
       "billing_plan_not_sold",
+      // 0.39 (server-kit 0.12, §15.2.10): the plan switch's two.
+      "billing_not_subscribed",
+      "billing_plan_unchanged",
     ] as const) {
       const body = { detail: "…", code };
       expect(authErrorCode(axios(body))).toBe(code);
@@ -43,12 +64,29 @@ describe("BillingErrorCode — read by authErrorCode and isAuthError", () => {
     expect(isBillingError(axios({ code: "billing_read_only" }), "plan_limit")).toBe(false);
     expect(isBillingError(axios({ code: "billing_already_subscribed" }, 409))).toBe(true);
     expect(isBillingError(axios({ code: "billing_not_at_provider" }, 409), "billing_not_at_provider")).toBe(true);
+    expect(isBillingError(axios({ code: "billing_not_subscribed" }, 409), "billing_not_subscribed")).toBe(true);
+    expect(isBillingError(axios({ detail: { code: "billing_plan_unchanged" } }, 409), "billing_plan_unchanged")).toBe(true);
+    expect(isBillingError(axios({ code: "billing_plan_unchanged" }, 409), "billing_not_subscribed")).toBe(false);
     // The audits' drafts were never the wire's names (decision 22).
     expect(isBillingError(axios({ code: "not_at_provider" }, 409))).toBe(false);
     expect(isBillingError(axios({ code: "demo_read_only" }, 403))).toBe(false);
     expect(isBillingError(axios({ code: "plan_budget_limit" }))).toBe(false);
     expect(isBillingError(new Error("network"))).toBe(false);
     expect(isBillingError(undefined)).toBe(false);
+  });
+});
+
+describe("the words of the plan switch's refusals (0.39, §15.2.10)", () => {
+  it("say what to do instead, and no longer send a plan change to the portal", () => {
+    expect(DEFAULT_BILLING_LABELS.notSubscribed).toBe("There’s no running subscription to change. Choose a plan to subscribe.");
+    expect(DEFAULT_BILLING_LABELS.planUnchanged).toBe("That’s already your plan. Pick another plan or billing period.");
+    expect(DEFAULT_BILLING_LABELS.alreadySubscribed).toBe("You already have a subscription. Change your plan above.");
+    for (const [code, labels] of Object.entries(CATALOGUES)) {
+      expect(labels.billing.alreadySubscribed, code).not.toContain(labels.billing.manage);
+      expect(labels.billing.notSubscribed, code).toMatch(/\S/);
+      expect(labels.billing.planUnchanged, code).toMatch(/\S/);
+      if (code !== "en") expect(labels.billing.planUnchanged, code).not.toBe(DEFAULT_BILLING_LABELS.planUnchanged);
+    }
   });
 });
 

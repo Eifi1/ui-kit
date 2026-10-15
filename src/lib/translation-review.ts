@@ -117,7 +117,19 @@ export interface ApiTranslationReview {
   note: string | null;
   suggestion: string | null;
   reviewer_name: string | null;
+  /** server-kit 0.10: the name's two parts (`reviewer_name` is them in the reader's order). */
+  reviewer_first_name?: string | null;
+  reviewer_last_name?: string | null;
   reviewed_at: string;
+}
+
+/** `GET /translations/reviews` (server-kit `TranslationReviewsResponse`): the locales and
+ *  areas the caller may review (`areas` null: every area; `["kit"]` for a review token)
+ *  and every stored verdict in them. Typed structurally, as {@link ApiTranslationReview}. */
+export interface ApiTranslationReviewsResponse {
+  locales: string[];
+  areas?: string[] | null;
+  reviews: ApiTranslationReview[];
 }
 
 /** One item of `PUT /translations/reviews`. */

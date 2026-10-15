@@ -27,7 +27,7 @@ import {
   translationRows,
   unreviewedRows,
 } from "../translation-review";
-import type { ApiTranslationReview, TranslationReview, TranslationReviewSwipeAction } from "../translation-review";
+import type { ApiTranslationReview, ApiTranslationReviewsResponse, TranslationReview, TranslationReviewSwipeAction } from "../translation-review";
 
 /**
  * The pure half of the translation review, ported from keksdose's and kastlan's
@@ -546,5 +546,30 @@ describe("swipe bindings (keksdose, live #377 rework: the swipes bound in its se
     const stored = ["none", "needsChange", "approve"] as unknown as TranslationReviewSwipeAction[];
     expect(plan({ end: stored }, "a.unreviewed")).toEqual({ end: ["approve"], start: [] });
     expect(plan({}, "a.unreviewed")).toEqual({ end: [], start: [] });
+  });
+});
+
+describe("ApiTranslationReviewsResponse (0.39, Kurvenschmiede's 0.37 finding 2)", () => {
+  it("takes server-kit 0.10's GET answer as generated, the name's parts and a null `areas` included", () => {
+    const answer = {
+      locales: ["de-CH", "en"],
+      areas: null,
+      reviews: [
+        {
+          locale: "de-CH",
+          key: "kit.common.save",
+          text: "Speichern",
+          reference_text: "Save",
+          verdict: "APPROVED",
+          note: null,
+          suggestion: null,
+          reviewer_name: "Ada Reviewer",
+          reviewer_first_name: "Ada",
+          reviewer_last_name: "Reviewer",
+          reviewed_at: "2026-10-14T10:00:00Z",
+        },
+      ],
+    } satisfies ApiTranslationReviewsResponse;
+    expect(fromApiReview(answer.reviews[0]).key).toBe("kit.common.save");
   });
 });

@@ -55,6 +55,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 14.15 | Open checks | not built: the Paddle and sandbox checks are pending | |
 | 14.16 | Settled after the reviews | — | an index: every item points to its § |
 | 14.17 | A grant clears the trial's end | app-side (round 0.34) | |
+| 15 | Round 0.39: pay pages that serve any app, a shared plan switch and customer | §15 settled 2026-10-14 (round 0.39); built in server-kit 0.12, ui-kit 0.39 | |
 
 ## 1. Where each one stands
 
@@ -117,7 +118,9 @@ Round 0.33 (Marcel, 2026-10-09, all as the round-033 audits recommended; §14):
     and every app's session tokens, and a CSP relaxed on one route can't help, since
     storage is per origin. The card fields stay in Paddle's frame, so decision 8 holds.
     kastlan's hosted-checkout setting stays for the sandbox review, and for live if Paddle
-    approves it.
+    approves it. Round 0.39 (2026-10-14): every pay page serves any app's transaction,
+    named by its custom data and the kit's app map; `pay.keksdose.app` is the account's
+    default payment link (§15.2.1).
 20. **No success URL on the checkout request.** The way back is `?checkout=done` on the
     subscription page (`isCheckoutReturn()`, `checkoutReturnUrl()`), and ui-kit ships the
     processing hook: keksdose's fingerprint-based, bounded logic, router-agnostic (§14.4).
@@ -1885,3 +1888,415 @@ what reads it without the status: a "trial ends in 7 days" banner, a trial-end n
 keeps its own dates. The row is the app's, so the rule lives in each app's plan change
 (keksdose's `change_plan`, Kurvenschmiede's `change_plan`, kastlan's
 `billing_service.set_plan`).
+
+## 15. Round 0.39: pay pages that serve any app, a shared plan switch and customer
+
+Settled 2026-10-14 (Marcel, in the ui-kit session), after the three app reviews and a
+Paddle explainer (§15.7). server-kit 0.12 and ui-kit 0.39 build it; P1 and P5 wait for
+Marcel's sandbox run (§15.6). Paths as in §14. It amends decision 19 (any pay page serves
+any app's transaction), settles §14.6's open point and replaces decision 21's "through
+the portal", and closes §14.3's open point on the customer.
+
+### 15.1 Where each one stands (2026-10-14)
+
+**The pay host (§14.4).** No pay host is live: billing is off everywhere.
+- **keksdose** builds the kit's page into its web image (`deploy/gcp/Dockerfile.web:38-44`,
+  `--app-name Keksdose` and URLs from `PAY_APP_URL`; the same in
+  `deploy/Dockerfile.web:28-34`) and serves it in a last site block
+  (`deploy/gcp/Caddyfile.cloudrun:257`, `deploy/Caddyfile:156`) with §14.4's headers.
+  `_PAY_HOST: ''` (`deploy/gcp/cloudbuild.yaml:145`), `PAY_APP_URL=${_APP_BASE_URL}`
+  (`:336`); the dev build the same (`cloudbuild.dev.yaml:93-97`, `:182-184`, `:336-338`).
+  The steps are in `deploy/gcp/README.md:407-437`. Its tests read the pay block
+  (`csp-inline-script.test.ts:30`, `:82`; `plausible-wiring.test.ts:30-36` skips it).
+- **Kurvenschmiede** the same: `deploy/gcp/Dockerfile.web:39-43`,
+  `deploy/Dockerfile.web:31-35`, `deploy/gcp/Caddyfile.cloudrun:121`, `deploy/Caddyfile:75`,
+  compose `deploy/docker-compose.yml:95-106`, `cloudbuild.yaml:40-46`, `:82`; a test pins
+  the bin's flags (`backend/tests/unit/test_deploy_files.py:123-142`); the steps in
+  `deploy/gcp/README.md:350-400` and `docs/configuration.md:124-127`.
+- **kastlan has no pay host.** Its web image (`deploy/gcp/Dockerfile.web`), Caddyfile and
+  `cloudbuild.yaml` name no pay block; `.env.example:57-58` and
+  `deploy/gcp/.env.gcp.example:32-33` already name `https://pay.kastlan.app/` (commented)
+  and the hosted checkout.
+- **The kit:** the page reads one app's `pay-config.json` (`src/billing/pay-page.ts:175-187`:
+  `returnUrl`, `appName`, `termsUrl`, `privacyUrl`) and hands Paddle.js a `successUrl`
+  built from it (`pay-page/pay.ts:163-176`); the bin takes one app's flags
+  (`pay-page/cli.ts:104-105`). A transaction of another app opened on this page would name
+  the wrong app and return to it.
+
+**Plan changes (§14.6).** All three pages send every pick in `PlanPicker` to
+`POST /billing/checkout`, which answers 409 `billing_already_subscribed` while a
+subscription runs: keksdose `frontend/src/features/billing/subscription-cards.tsx:211-218`
+(the 409's words `:57`), kastlan `features/billing/components/subscription-section.tsx:143-160`
+(`billing-refusals.ts:18`), Kurvenschmiede `features/billing/subscription-settings.tsx:151-158`
+(`shared/api/client.ts:255`). The server refuses in each checkout (keksdose
+`adapters/api/billing_router.py:123`, its docstring `:107-110` sends plan changes to the
+portal; kastlan `domain/services/billing_service.py:226`; server-kit
+`billing/provider.py:253`). Paddle's port has no plan change (`billing/provider.py:93-137`).
+A `subscription.updated` snapshot sets `plan_code` from the price, unless a grant holds
+(`billing/webhooks.py:121-169`, `:244-252`); no row keeps the price itself.
+
+**The customer (§14.3).** No app looks a customer up. The checkout passes the row's
+`provider_customer_id` once a webhook has set it (keksdose `billing_router.py:128`, kastlan
+`billing_service.py:230`, Kurvenschmiede `adapters/api/billing_router.py:119`); before that,
+Paddle's checkout asks for an e-mail. Each app's webhook lookup goes payer reference, then
+subscription id, then **customer id**: keksdose `domain/services/billing_service.py:432-438`
+(in `payer_row_for`, `:420-439`), Kurvenschmiede `domain/services/billing_service.py:429-450`,
+kastlan `domain/services/billing_service.py:313-330`. The portal opens on the row's
+customer (keksdose `billing_router.py:134-160`, the call `:151-155`; Kurvenschmiede
+`billing_router.py:143-147`; kastlan `billing_service.py:234-241`).
+
+### 15.2 Decisions
+
+All settled 2026-10-14 (Marcel; §15.7). The numbers are the ones the reviews cite.
+
+1. **P2: each app keeps its own pay page, and every pay page serves any app.** The hosts
+   stay `pay.keksdose.app`, `pay.kastlan.app` and `pay.kurvenschmiede.app` (decision 19
+   stands; "a neutral shared page" meant the kit's one page). Paddle's single default
+   payment link is met by the page, not by one host: every pay page reads the app from
+   the transaction's custom data, not from its domain, and takes that app's name, Terms,
+   Privacy and return URL from an app map in its `pay-config.json` (6). **The account's
+   default payment link is `pay.keksdose.app`** ("That is acceptable"). The neutral host
+   and an `Eifi1/pay` repo are dropped.
+2. **P3: the plan switch is built once in the kits** (server-kit's preview and switch
+   routes' parts, ui-kit's `PlanSwitchConfirm`) and used by all three, not Paddle's portal.
+3. **P4: one Paddle customer per e-mail address across the apps.** The portal's overview
+   listing all of a person's subscriptions is accepted; no app reads or touches another
+   app's subscription.
+4. **Hosting: as today.** Each app deploys its own pay host from its own web image (Caddy
+   on Cloud Run, §14.4's site block, `PAY_HOST`, the one-time steps), built from the kit's
+   page. kastlan builds its pay host first, in its 0.39 adoption, as keksdose's and
+   Kurvenschmiede's are (§14.4, adopt-0.33.md §4).
+5. **How the page learns the app: from the transaction's custom data.** Paddle.js gets no
+   `successUrl`. On `checkout.loaded` the page reads `data.custom_data.app` (§14.3's tag,
+   on every transaction an app creates) and looks it up in the map; on
+   `checkout.completed` it goes to that app's `checkoutReturnUrl(returnUrl)`. No query
+   parameter names the app: Paddle's own links carry only `_ptxn`.
+   - Until the checkout loads, the page shows the host's own app (the map's `app`), as
+     today.
+   - A missing or unknown tag (a payment-method update from a Paddle e-mail whose
+     transaction carries none; §15.6 step 15): no app name and no Back; the host's Terms
+     and Privacy stay; once paid, the new line `payDone` ("Payment complete. You can
+     close this page.").
+   - A return URL only ever comes from the map, so no link can redirect a buyer.
+6. **The app map is the kit's, written into `pay-config.json` by the bin.**
+   ```json
+   {
+     "token": "live_…",
+     "environment": "live",
+     "app": "keksdose",
+     "apps": {
+       "keksdose": { "name": "Keksdose",
+                     "returnUrl": "https://keksdose.app/settings/subscription",
+                     "termsUrl": "https://keksdose.app/terms",
+                     "privacyUrl": "https://keksdose.app/privacy" },
+       "kastlan": { "name": "kastlan", "returnUrl": "https://kastlan.app/admin/billing",
+                    "…": "…" },
+       "kurvenschmiede": { "name": "Kurvenschmiede",
+                           "returnUrl": "https://kurvenschmiede.app/settings/subscription",
+                           "…": "…" }
+     }
+   }
+   ```
+   - One source: ui-kit's `PAY_PAGE_APPS` (the three apps' names and base URLs, each
+     with `/terms` and `/privacy`, the return path `/settings/subscription` or
+     `/admin/billing`), so the three hosts can't drift. A new app or a moved page is a
+     kit release.
+   - `app` is the host's own app. `--app-url` replaces only its base URL (a local stack,
+     a dev deploy: today's `PAY_APP_URL`); `--apps <file>` merges a map over the kit's
+     (several apps run locally against one sandbox).
+   - The keys are the apps' `billing_app` tags and match its pattern
+     (`^[a-z][a-z0-9_-]{0,63}$`).
+   - **No per-app theme:** Paddle's checkout has only `light` and `dark`; the page
+     follows `prefers-color-scheme` as today. **One client-side token per host** (§14.4).
+7. **Headers: §14.4's, unchanged, on each host.** Nothing an app ships changes: the pay
+   blocks, their tests and the app CSPs stay. The sandbox settles the exact Paddle hosts
+   (P1, §14.15).
+8. **Apple Pay: set up, not device-verified.** Each host is verified in Paddle's dashboard
+   (Website approval → Apple Pay verification → "Verify"), which needs no device; the
+   page keeps serving Paddle's `.well-known` file. There is no Apple device to test on:
+   a later one-off test on a borrowed iPhone, or the first real Apple Pay payment in
+   Paddle's dashboard. A failure only hides the Apple Pay button; cards and Google Pay
+   still work.
+9. **Paddle's own e-mails** come from Paddle in the account's business name, list the
+   product and price names, and link payment-method updates to the default payment link,
+   `pay.keksdose.app`. Every Paddle product name starts with the app's brand ("Keksdose
+   Plus"), so a receipt says which app it is for; the page names the app from the
+   transaction (5). What the e-mails show is checked in the sandbox (§15.6).
+10. **The plan switch** (server-kit §15.3, ui-kit §15.4).
+    - **Immediate, prorated, with a credit on a downgrade:** `proration_billing_mode:
+      "prorated_immediately"` both ways. An upgrade charges the difference now; a
+      downgrade credits the unused part to the customer's balance, which Paddle takes off
+      the next charges. `on_payment_failure: "prevent_change"`: a declined upgrade changes
+      nothing. No switch "at the next period": Paddle's `scheduled_change` holds only
+      pause, cancel and resume.
+    - **Interval and currency.** Monthly ↔ yearly is a switch like any other (another
+      price). The currency stays the subscription's; another currency is a new checkout
+      after the old one ends.
+    - **Who switches: whoever may check out.** keksdose the user; any kastlan company
+      ADMIN (`billing_router.py:35`); a Kurvenschmiede MEMBER or ADMIN. A kastlan admin
+      who isn't the buyer charges the buyer's card at once on an upgrade, as a renewal
+      does; the confirm shows the figure. No buyer-only rule for the switch.
+    - **Plans no longer sold.** No switch TO one: 422 `billing_plan_not_sold`. A payer ON
+      one keeps it until switching away, to any sold plan. `PlanPicker` never offers it:
+      `GET /billing/plans` lists sold plans only (keksdose `billing_router.py:92` already),
+      so the 422 is a guard, not a path.
+    - **A downgrade with usage over the new limit is allowed** (§3.4: a limit gates
+      creation only). The confirm shows the over-limit lines before the payer agrees, as
+      `PlanChangeConfirm` does for the operator (§14.12).
+    - **The confirm shows Paddle's preview** (`PATCH /subscriptions/{id}/preview`): what
+      is charged or credited now and the next charge, so the payer agrees to a figure.
+    - **The routes:** `POST /billing/plan/preview {plan, interval}` and
+      `POST /billing/plan {plan, interval}`, both answering `PlanSwitchPreview`. Like the
+      checkout: the payer only, 404 `billing_disabled` while billing is off, behind the
+      app's demo guard (in its route walk). Refusals: 409 `billing_not_subscribed` (no
+      running provider subscription: the page offers the checkout), 422
+      `billing_plan_not_sold`, 409 `billing_plan_unchanged` (the price it pays now), 502
+      `billing_provider_unavailable`. The row follows through `subscription.updated`.
+    - **The row keeps the price it pays** (`provider_price_id`, written by every snapshot
+      that carries one, a grant's included), and the overview says it as `paid {plan,
+      interval, currency}`. So the switch knows the current price and currency without
+      asking Paddle, and a switch under a grant (whose row keeps the grant's plan, status
+      and source, §12.11) still shows that it landed.
+    - **The page polls as after a checkout, under the same storage key.**
+      `checkoutFingerprint` includes `paid`'s plan and interval, so a switch (which keeps
+      `active`, and under a grant the plan too) changes the fingerprint; one key serves
+      checkout and switch (Kurvenschmiede keeps `kurvenschmiede.billingCheckout`).
+    - **The UI:** `PlanPicker` stays. While a provider subscription runs, the app sends a
+      pick to the preview and opens the kit's `PlanSwitchConfirm`; otherwise to the
+      checkout. The confirm never takes the write lock (`COMMIT_EXCEPT_BILLING` built in:
+      a read-only payer may change plan; keksdose's demo-budget lock never applies).
+    - **The words.** `billing_already_subscribed`'s words stop pointing at the portal
+      ("You already have a subscription. Change your plan above."), and so does keksdose's
+      409 docstring (`billing_router.py:107-110`).
+11. **The shared customer.**
+    - **Finding or creating it:** the row's `provider_customer_id` when it has one; else
+      `customer_for(email)` with the payer's sign-in e-mail (kastlan: the admin who checks
+      out): `GET /customers?email=`, else `POST /customers {email}`; the transaction
+      carries that `customer_id`. The id isn't written to the row at checkout:
+      `at_provider` keeps meaning "the webhook linked this payer" (§14.5).
+    - **Changes of address or e-mail.** Apps never write to the customer; name, e-mail
+      and address are changed in Paddle's checkout or portal. An app's own e-mail change
+      doesn't reach Paddle; a later first checkout under the new e-mail may find a second
+      customer, which breaks nothing (rows go by payer reference and subscription id).
+    - **An app reads only its own subscription**, by the id its own tagged events gave
+      it. The port gains no list call for a customer's subscriptions or transactions.
+    - **The webhook lookup drops the customer-id fallback** in all three apps (§15.1): with
+      one customer per person it lands one payer's event on another's row (kastlan: one
+      person paying for two companies). Payer reference, then subscription id. An event
+      with neither (a payment-method update without the subscription id; §15.6 step 15)
+      lands on no row: logged, nothing written, which is the right failure.
+    - **Erasure.** An app never archives or changes the shared customer. It cancels its
+      own subscription at the request (§14.8) and drops its row at erasure. Paddle is an
+      independent controller (§8) and keeps its records under its own retention.
+    - **kastlan's portal: only the buying admin opens the overview.** The checkout's
+      custom data carries the buying admin's user id (`buyer: "user:<id>"`), and kastlan's
+      webhook stores it on the row (`provider_payer_user_id`). The portal's `overview` (which
+      lists that person's other subscriptions) opens only for that user id; every other
+      company admin gets the subscription's `cancel` and `payment_method` targets, and
+      sees "ask <buyer>" for the overview. If the sandbox shows that those links reach the
+      overview (§15.6 step 14), only the buyer gets any portal link. When the buyer leaves
+      the company or is erased, nobody opens the overview; cancel and payment method still
+      work; Paddle can't move a subscription to another customer, so the company buys
+      anew after the period ends.
+    - **The privacy texts** are written before billing goes live (none names Paddle yet),
+      from keksdose's draft: "Payments are handled by Paddle (Paddle.com Market Ltd), the
+      merchant of record, on a payment page shared by the apps of the same seller. If you
+      pay for more than one of them with the same e-mail address, Paddle keeps one customer
+      record for you, and its customer portal lists all your subscriptions. <App> never
+      sees your card; it receives your subscription's status and plan." Each app adds what
+      Paddle.js stores on the pay host (§15.6 step 11) and that a person asks Paddle for
+      Paddle's records.
+12. **Nothing moves at Paddle:** none is live. keksdose and Kurvenschmiede keep their pay
+    blocks and change only the bin's call; kastlan builds its pay host. Every app sets
+    `<APP>_BILLING_CHECKOUT_PAGE_URL=https://pay.<app domain>/`, as today. kastlan's hosted
+    checkout setting stays (config only, a sandbox fallback).
+13. **P5.** `PADDLE_API_EXAMPLES` are replaced by recorded sandbox answers, and
+    `billing.testing` pins removing a scheduled cancellation (§14.8) with the recorded
+    `subscription.updated`.
+
+### 15.3 server-kit 0.12
+
+Beside the translation-review change already on `feat/0.12.0` (breaking). Size **M**
+(~300 code, ~500 test lines).
+- **Port** (`billing/provider.py`): `BillingProviderClient` gains
+  `preview_plan_change(*, subscription_id, price_id) -> ProviderSwitchPreview`,
+  `change_plan(*, subscription_id, price_id) -> ProviderSwitchPreview` and
+  `customer_for(*, email) -> str`; `NoProviderClient` refuses all three (503).
+  `checkout_url(…, customer_email: str | None = None)`: with no `customer_id`, the client
+  resolves one through `customer_for`.
+- **Paddle** (`billing/paddle.py`): `PATCH /subscriptions/{id}/preview` and
+  `PATCH /subscriptions/{id}` with `{items: [{price_id, quantity: 1}],
+  proration_billing_mode: "prorated_immediately", on_payment_failure: "prevent_change"}`;
+  `GET /customers?email=` then `POST /customers`. The key's permissions gain customer read
+  and write.
+- **Rules** (`billing/provider.py`): `require_plan_switch(row, now)` (409
+  `billing_not_subscribed`, the inverse of `require_new_checkout`);
+  `switch_price(catalogue, row, request, settings, *, sold=None) -> str` (the price for the
+  plan and interval in the paid currency; 422 `billing_plan_not_sold` for a plan outside
+  `sold` or without that price, 409 `billing_plan_unchanged` for the row's
+  `provider_price_id`).
+- **The row:** `SubscriptionRow` gains `provider_price_id: str | None` (breaking: each
+  app adds the column); `row_changes` sets it from `plan_price_id` on every snapshot,
+  grant or not.
+- **Custom data** (`billing/events.py`): `checkout_custom_data(payer_ref, *, app=None,
+  buyer: str | None = None)`, `BUYER_KEY = "buyer"` (kastlan's buying admin).
+- **Shapes** (`billing/schemas.py`): `PlanSwitchRequest {plan, interval}`
+  (`extra="forbid"`); `ProviderSwitchPreview {currency, now_minor, next_minor,
+  next_billed_at}` (`now_minor` negative for a credit); `PlanSwitchPreview` = that plus
+  `{plan, interval, over_limit: list[str], limits, usage}`, built by
+  `plan_switch_preview(answer, plan, usage)`; `PaidPrice {plan, interval, currency}` and
+  `BillingOverview.paid: PaidPrice | None`, from `from_row(…, price_ref=
+  settings.billing_price_ref)`.
+- **Errors:** `billing_not_subscribed` (409), `billing_plan_unchanged` (409), in
+  `CONTRACT_ERRORS`; `billing_already_subscribed`'s text drops the portal.
+- **Testing** (`billing/testing.py`): `FakeBillingProvider.previews`, `.switches`,
+  `.customers`; `PaddleApiFake` answers the four new calls; a step for a switch's
+  `subscription.updated`; recorded sandbox answers in `PADDLE_API_EXAMPLES` and the
+  scheduled-cancel removal pinned (P5, after the sandbox run).
+- **Tests:** `tests/billing/test_provider.py` (the rules, both refusals, `sold`),
+  `test_paddle.py` (bodies, the customer lookup and create, errors), `test_dispatch.py`
+  (`provider_price_id` under a grant), `test_schemas.py` (`paid`, the preview),
+  `test_events.py` (`buyer`), `test_testing.py` (the fakes).
+- **Docs:** the module docstring's routes; README's billing section; the payer lookup
+  without the customer id.
+
+### 15.4 ui-kit 0.39
+
+Beside what `feat/0.39.0` already has. Size **M**.
+- **Pay page** (breaking for the bin):
+  - `PayPageConfig {token, environment, app, apps: Record<string, PayPageApp>}`,
+    `PayPageApp {name, returnUrl, termsUrl, privacyUrl}`; `PAY_PAGE_APPS` (§15.2.6);
+    `payPageConfigProblems` checks the tags, each app's URLs and name, and that `app` is
+    in `apps`. `paySuccessUrl` goes.
+  - `pay.ts`: `PaddleEvent` gains `data?.custom_data`; Initialize without `successUrl`;
+    `checkout.loaded` frames the tagged app; `checkout.completed` navigates to its
+    return (`PayPageEnvironment.navigate`), or shows the new state `done` (`payDone`);
+    the host's app until then.
+  - The bin: `eifi1-pay-page --out <dir> [--token … --environment …] --app <tag>
+    [--app-url <https://…>] [--apps <file>]`; the old `--return-url`, `--app-name`,
+    `--terms-url`, `--privacy-url` are refused with a line naming the new flags.
+  - The line `billing.payDone`, seven languages.
+- **Plan switch** (`src/billing/plan-switch.tsx`): `PlanSwitchConfirm {open,
+  onOpenChange, from: {plan, interval}, to: {plan, interval}, preview?: PlanSwitchPreview,
+  pending?, planName?, dimensionLabels?, formatLimit?, onConfirm, locale?, labels?}`:
+  from → to, the preview's figures through `formatMoney` ("Charged now" or "Credited",
+  "Next charge on {date}"), the over-limit lines with `planChange.usageOf` and
+  `limitUsageLine`, Confirm; a spinner while `preview` is undefined;
+  `COMMIT_EXCEPT_BILLING` built in. The types `PlanSwitchRequest`, `PlanSwitchPreview`,
+  `PaidPrice`, `BillingOverview.paid`. `BillingErrorCode` gains `billing_not_subscribed`
+  and `billing_plan_unchanged`, with words (`notSubscribed`, `planUnchanged`);
+  `billing.switch*` labels (title, charged now, credited, next charge, confirm) in seven
+  languages; `alreadySubscribed` reworded (§15.2.10).
+- **Processing:** `CheckoutOverview` gains `paid?`; `checkoutFingerprint` adds its plan
+  and interval (§15.2.10). One storage key for both.
+- **Tests:** `pay-page.test.ts` (another app's tag, an unknown tag, no tag, the return),
+  `pay-page-cli.test.ts` (flags, the map, the refused old flags), `plan-switch.test.tsx`
+  (figures, credit, over-limit, no write lock), `checkout-processing.test.tsx` (a switch
+  under a grant lands), `billing-errors.test.ts` (the two codes); the i18n review keys.
+- **Docs:** this section; adopt-0.39's billing part; §14.4's pay-config shape points here.
+
+### 15.5 Per app
+
+- **All three:** adopt both kits; the column `provider_price_id` (a migration); the plan
+  routes (preview and switch) on the kit's shapes, behind the demo guard and the billing
+  switch; `GET /billing/plans` lists sold plans only; `PlanPicker`'s pick goes to the
+  switch while a provider subscription runs, else to the checkout; the checkout passes
+  the payer's sign-in e-mail; drop the customer-id fallback from the payer lookup; the
+  words `billing_not_subscribed` and `billing_plan_unchanged` in the app's refusal map;
+  the privacy text (§15.2.11). **S–M each.**
+- **keksdose:** the bin's call in both `Dockerfile.web`s (`--app keksdose --app-url
+  "$PAY_APP_URL"`); `deploy/gcp/README.md:407-437` says the host serves every app and is
+  the default payment link; the switch in `subscription-cards.tsx:211-218`; the 409
+  docstring (`billing_router.py:107-110`, and `openapi-schema.d.ts`);
+  `billing_service.py:432-438`. The pay block, its tests and `billing_router.py:103` stay.
+- **Kurvenschmiede:** the bin's call in both `Dockerfile.web`s (`--app kurvenschmiede
+  --app-url "$PAY_APP_URL"`) and the flags `test_deploy_files.py:123-142` pins; the docs'
+  flags (`deploy/gcp/README.md:357`, `docs/configuration.md:124-127`); the switch in
+  `subscription-settings.tsx`; `billing_service.py:429-450`. The pay block, compose and
+  `cloudbuild.yaml` stay.
+- **kastlan:** builds its pay host as §14.4 and adopt-0.33.md §4 say (the bin in
+  `deploy/gcp/Dockerfile.web` with `--app kastlan`, the site block in
+  `Caddyfile.cloudrun`, `_PAY_HOST`, the token and environment in `cloudbuild.yaml`, a
+  test pinning the block's order, the README's steps); `.env.example:57` and
+  `deploy/gcp/.env.gcp.example:32-33` stay; the switch in `subscription-section.tsx`
+  (any company admin); `buyer` in the checkout's custom data and
+  `provider_payer_user_id` (a migration); the portal by user id (§15.2.11);
+  `billing_service.py:313-330`; the docstring at `billing_service.py:220`.
+
+### 15.6 Marcel's sandbox run (P1, P5)
+
+Before:
+1. Create the Paddle sandbox account (sandbox-vendors.paddle.com) under the business name.
+2. Catalog → Products: one product per app plan, named with the app's brand; prices in
+   CHF and EUR, monthly and yearly (§13). Copy the price ids.
+3. Developer tools → Authentication: one API key per app (`pdl_sdbx_apikey_…`) with
+   transaction write, customer-portal-session write, subscription write and customer
+   read/write; one client-side token (`test_…`) per pay host.
+4. Developer tools → Notifications: one destination per app (subscription and
+   transaction events) to the app's `/webhooks/paddle` through a tunnel to the local
+   backend; copy each secret.
+5. Each app's local `.env`: `<APP>_BILLING_ENABLED=true`, the API key, the webhook
+   secret, the price ids, `<APP>_BILLING_CHECKOUT_PAGE_URL` = its pay page's URL.
+6. Run the pay pages: each app's on a localhost port for the first runs, or its pay host
+   once deployed. Checkout → Website approval: add each; Checkout settings: make
+   keksdose's the default payment link.
+7. Website approval → Apple Pay verification: "Verify" each host (no device needed).
+
+Runs (note what you see; the kit's agent records the answers):
+8. In each app, a checkout with Paddle's test card: the overlay opens; the webhook lands
+   (`?checkout=done`, then active); the footer names the right app.
+9. Another app's transaction on keksdose's page (open a kastlan checkout's `_ptxn` on
+   `pay.keksdose.app`): `checkout.loaded` carries the custom data; the page names kastlan
+   and returns to it.
+10. Headers, in any browser (DevTools → Network → the document): the CSP and
+    `Permissions-Policy` arrive; the console shows no CSP violation; list the Paddle hosts
+    the page loads from.
+11. Application tab: what Paddle.js stores (for the privacy texts).
+12. Google Pay in Chrome on Windows or Android: the button shows and a test payment goes
+    through. Apple Pay: set up, not device-verified (§15.2.8).
+13. The same e-mail in two apps: one `ctm_` (expected) or two? Open the portal from one
+    app: does the overview list both subscriptions?
+14. kastlan: the per-subscription `cancel` and `payment_method` links: can they navigate
+    to the overview? (If yes, only the buyer gets any portal link, §15.2.11.)
+15. Paddle's e-mails (receipt, payment-method update): which name, which products, which
+    link. Open the update link: does the page get the app's tag, and does the
+    payment-method-update transaction carry the subscription id?
+16. The portal: "Cancel" at the period's end, then the app's reactivation removing it
+    (§14.8): the `subscription.updated` arrives (P5).
+17. Plan switch (after server-kit 0.12): an upgrade and a downgrade, monthly to yearly,
+    the preview's figures against the charge and the credit; a declined card on an
+    upgrade changes nothing; under a grant, `paid` moves and the page stops processing.
+
+### 15.7 Reviews and decisions
+
+- **Marcel, 2026-10-14, on the Paddle candidates** (round-034 candidates, "Billing"): P2
+  "There shall be a neutral shared payment page."; P3 and P4 "Also shared for P3 and p4."
+  P1 and P5 wait for his sandbox run. The DRAFT read P2 as one neutral host.
+- **The reviews, 2026-10-14:**
+  - **kastlan** (kastlan-d1, at origin/main `80eb418` = v0.13.6): the portal by the
+    buyer's user id, not e-mail, and the sandbox question on per-subscription links;
+    keep the hosted-checkout setting; any company admin switches, no buyer-only rule;
+    the customer-id fallback is a bug with a shared customer; `.env.gcp.example:32-33`.
+  - **keksdose** (keksdose-cb, at `a30ff0f8`, feat/kit-0.38; full text in its
+    `.feedback-live/kit039-review.md`): more readers of the pay block (moot now: the block
+    stays); no switch to an unsold plan, and a payer on one may switch away; the fallback
+    is unused; a payment-method-update transaction must carry the subscription id; the
+    409 docstring and `alreadySubscribed` stop pointing at the portal; the privacy text
+    from scratch; `PlanSwitchConfirm` takes no write lock; two cites corrected.
+  - **Kurvenschmiede** (kurvenschmiede-1b, at main `7366ed6` = v0.2.17): a removal list
+    (moot now: the block stays); one storage key if the fingerprint sees the plan and
+    interval; the fallback drop passes its 1,377 tests; the two new words; the routes
+    behind the demo guard and `billing_disabled`; MEMBER and ADMIN pay; no write lock;
+    the checkout passes the sign-in e-mail.
+- **Marcel's decisions, 2026-10-14, after the reviews and a Paddle explainer:**
+  - P2 changed: "I thought individual pages … That is acceptable." The pages stay per
+    app; every page serves any app's transaction from the custom data and an app map;
+    the default payment link is `pay.keksdose.app` (§15.2.1, 5, 6, 9).
+  - Hosting as recommended: Cloud Run, in each app's web image (§15.2.4).
+  - P3: the switch built once in the kits (§15.2.2, 10). P4: one customer per e-mail
+    address, the overview listing all subscriptions accepted, no app touches another's
+    (§15.2.3, 11).
+  - The switch: immediate, prorated, a credit on a downgrade.
+  - kastlan's portal: only the buyer by user id opens the overview (§15.2.11).
+  - Every review point above adopted, and the sandbox steps added (§15.6 steps 9, 14,
+    15); Apple Pay set up, not device-verified.

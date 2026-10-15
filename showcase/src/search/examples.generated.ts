@@ -834,6 +834,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "The pay page — dist/pay on pay.<app>",
     "A lock says its source — kinds, holds and commit scopes",
     "ShareCard under a billing lock — removing stays, adding does not",
+    "The payer's plan switch — PlanSwitchConfirm",
+    "Every pay page serves any app — PAY_PAGE_APPS",
   ],
   "feedback-compose": [
     "FeedbackDialog",
@@ -1350,6 +1352,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   "subscription": [
     "Billing032Demo",
     "Billing033Demo",
+    "BillingSwitchDemo",
   ],
   "feedback-compose": [
     "FeedbackCompose",

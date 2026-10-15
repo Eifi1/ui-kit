@@ -1629,6 +1629,14 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       payNothing: "这里没有需要支付的款项。如需选择套餐，请返回应用。",
       payFailed: "无法打开支付页面。请返回后稍候再试。",
       payBack: "支付页面已关闭。您可以返回，或重新加载此页面以再次打开。",
+      payDone: "付款已完成。您可以关闭此页面。",
+      // 0.39 (§15.2.10): PlanSwitchConfirm.
+      switchTitle: "更改套餐",
+      switchFromTo: (from, to) => `从 ${from} 更改为 ${to}`,
+      switchChargedNow: "立即扣款",
+      switchCredited: "抵扣后续扣款",
+      switchNextCharge: (date) => `下次扣款日期：${date}`,
+      switchConfirm: "更改套餐",
       waitingChanges: (count) => `${n(count)} 项修改正在等待套餐`,
       // "放弃", as `wizard.cancelConfirmLabel`.
       discardWaiting: "放弃等待中的修改",
@@ -1636,8 +1644,11 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       disabled: "此处不提供订阅。",
       // §14.2: server-kit 0.7's refusals. "付款与发票", as `manage`.
       providerUnavailable: "暂时无法连接支付服务商，请稍后再试。",
-      alreadySubscribed: "您已有订阅。如需更改套餐，请前往“付款与发票”。",
+      alreadySubscribed: "您已有订阅。请在上方更改套餐。",
       planNotSold: "该套餐不支持此计费周期或货币，请选择其他套餐。",
+      // 0.39 (§15.2.10): the plan switch's refusals.
+      notSubscribed: "没有可更改的有效订阅。请选择一个套餐进行订阅。",
+      planUnchanged: "这已经是您当前的套餐。请选择其他套餐或计费周期。",
     },
     // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "套餐" as
     // in `billing`. "测试版", as `landing.beta`.

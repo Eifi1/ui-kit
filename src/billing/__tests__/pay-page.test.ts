@@ -12,8 +12,10 @@ import { UI_KIT_LABELS_IT } from "../../i18n/locales/it";
 import { UI_KIT_LABELS_ZH } from "../../i18n/locales/zh";
 import type { useKitLocale } from "../../i18n/kit-labels";
 import {
+  PAY_PAGE_APPS,
   PAY_PAGE_LANG_PARAM,
   paddleLocale,
+  payPageAppFor,
   payPageConfigProblems,
   payPageLanguage,
   payPageStrings,
@@ -95,13 +97,46 @@ describe("payPageLanguage — lang, then the browser, then English", () => {
 const CONFIG: PayPageConfig = {
   token: "live_7d1f0c",
   environment: "live",
-  returnUrl: "https://keksdose.app/settings/subscription",
-  appName: "Keksdose",
-  termsUrl: "https://keksdose.app/terms",
-  privacyUrl: "https://keksdose.app/privacy",
+  app: "keksdose",
+  apps: { ...PAY_PAGE_APPS },
 };
+const KEKSDOSE = PAY_PAGE_APPS.keksdose;
 
-describe("pay-config.json's rules (§14.4)", () => {
+describe("PAY_PAGE_APPS — the apps every pay page serves (§15.2.6)", () => {
+  it("names the three apps by their billing_app tag, each with its Terms, Privacy and way back", () => {
+    expect(PAY_PAGE_APPS).toEqual({
+      keksdose: {
+        name: "Keksdose",
+        returnUrl: "https://keksdose.app/settings/subscription",
+        termsUrl: "https://keksdose.app/terms",
+        privacyUrl: "https://keksdose.app/privacy",
+      },
+      kastlan: {
+        name: "kastlan",
+        returnUrl: "https://kastlan.app/admin/billing",
+        termsUrl: "https://kastlan.app/terms",
+        privacyUrl: "https://kastlan.app/privacy",
+      },
+      kurvenschmiede: {
+        name: "Kurvenschmiede",
+        returnUrl: "https://kurvenschmiede.app/settings/subscription",
+        termsUrl: "https://kurvenschmiede.app/terms",
+        privacyUrl: "https://kurvenschmiede.app/privacy",
+      },
+    });
+    expect(Object.isFrozen(PAY_PAGE_APPS)).toBe(true);
+    expect(payPageConfigProblems(CONFIG)).toEqual([]);
+  });
+
+  it("finds a transaction's app by its own tag only", () => {
+    expect(payPageAppFor(CONFIG, "kastlan")).toBe(PAY_PAGE_APPS.kastlan);
+    for (const tag of [undefined, null, "", "lenkbank", "__proto__", "constructor", "toString", 7, "KASTLAN"]) {
+      expect(payPageAppFor(CONFIG, tag), String(tag)).toBeUndefined();
+    }
+  });
+});
+
+describe("pay-config.json's rules (§14.4, §15.2.6)", () => {
   it("accepts a token that matches its environment, and no token at all", () => {
     expect(payPageConfigProblems(CONFIG)).toEqual([]);
     expect(payPageConfigProblems({ ...CONFIG, token: "test_9a", environment: "sandbox" })).toEqual([]);
@@ -125,14 +160,36 @@ describe("pay-config.json's rules (§14.4)", () => {
     expect(payPageConfigProblems({ ...CONFIG, environment: "production" })).toHaveLength(2);
   });
 
-  it("wants https:// URLs, http:// for localhost only, and the app's name", () => {
-    expect(payPageConfigProblems({ ...CONFIG, returnUrl: "http://keksdose.app/settings/subscription" })).toEqual([
-      "returnUrl must be an https:// URL (http:// for localhost only)",
+  it("wants https:// URLs, http:// for localhost only, and each app's name", () => {
+    const keksdose = (app: Partial<typeof KEKSDOSE>) => ({ ...CONFIG, apps: { ...CONFIG.apps, keksdose: { ...KEKSDOSE, ...app } } });
+    expect(payPageConfigProblems(keksdose({ returnUrl: "http://keksdose.app/settings/subscription" }))).toEqual([
+      "apps.keksdose.returnUrl must be an https:// URL (http:// for localhost only)",
     ]);
-    expect(payPageConfigProblems({ ...CONFIG, returnUrl: "http://localhost:5173/settings/subscription" })).toEqual([]);
-    expect(payPageConfigProblems({ ...CONFIG, termsUrl: "javascript:alert(1)", privacyUrl: "/privacy" })).toHaveLength(2);
-    expect(payPageConfigProblems({ ...CONFIG, appName: " " })).toEqual(["appName is missing"]);
+    expect(payPageConfigProblems(keksdose({ returnUrl: "http://localhost:5173/settings/subscription" }))).toEqual([]);
+    expect(payPageConfigProblems(keksdose({ termsUrl: "javascript:alert(1)", privacyUrl: "/privacy" }))).toHaveLength(2);
+    expect(payPageConfigProblems(keksdose({ name: " " }))).toEqual(["apps.keksdose.name is missing"]);
     expect(payPageConfigProblems(null)).toEqual(["the configuration is not an object"]);
+  });
+
+  it("wants the host's app in the map, and app tags as billing_app writes them", () => {
+    expect(payPageConfigProblems({ ...CONFIG, app: "lenkbank" })).toEqual([
+      'app "lenkbank" is not in apps (keksdose, kastlan, kurvenschmiede)',
+    ]);
+    expect(payPageConfigProblems({ ...CONFIG, app: "" })).toEqual(["app is missing: the host's own app tag"]);
+    expect(payPageConfigProblems({ ...CONFIG, apps: { ...CONFIG.apps, "Pay Me": KEKSDOSE } })).toEqual([
+      'apps: "Pay Me" is not an app tag (a-z, 0-9, _ and -)',
+    ]);
+    expect(payPageConfigProblems({ ...CONFIG, apps: { ...CONFIG.apps, lenkbank: "x" } })).toEqual([
+      "apps.lenkbank is not an object",
+    ]);
+    expect(payPageConfigProblems({ ...CONFIG, apps: {} })).toEqual([
+      "apps must map each app's tag to its name and URLs",
+      'app "keksdose" is not in apps',
+    ]);
+    // The 0.33 shape, one app's fields at the top: refused, not half-read.
+    expect(
+      payPageConfigProblems({ token: null, environment: null, returnUrl: KEKSDOSE.returnUrl, appName: "Keksdose" }),
+    ).toEqual(["apps must map each app's tag to its name and URLs", "app is missing: the host's own app tag"]);
   });
 });
 
@@ -158,6 +215,7 @@ describe("the page's words", () => {
       nothing: DEFAULT_UI_KIT_LABELS.billing.payNothing,
       failed: DEFAULT_UI_KIT_LABELS.billing.payFailed,
       closed: DEFAULT_UI_KIT_LABELS.billing.payBack,
+      done: "Payment complete. You can close this page.",
       back: "Back",
       terms: DEFAULT_UI_KIT_LABELS.legal.links.terms,
       privacy: DEFAULT_UI_KIT_LABELS.legal.links.privacy,
@@ -197,6 +255,7 @@ function env(overrides: Partial<PayPageEnvironment> = {}): PayPageEnvironment {
     fetchConfig: async () => CONFIG,
     dark: false,
     strings: STRINGS,
+    navigate: () => {},
     ...overrides,
   };
 }
@@ -219,12 +278,8 @@ describe("the pay page (dist/pay/)", () => {
     expect(calls.environment).toEqual([]);
     expect(calls.init).toHaveLength(1);
     expect(calls.init[0].token).toBe("live_7d1f0c");
-    expect(calls.init[0].checkout.settings).toEqual({
-      displayMode: "overlay",
-      locale: "fr",
-      successUrl: "https://keksdose.app/settings/subscription?checkout=done",
-      theme: "dark",
-    });
+    // No successUrl: the way back is the transaction's app's (§15.2.5).
+    expect(calls.init[0].checkout.settings).toEqual({ displayMode: "overlay", locale: "fr", theme: "dark" });
     expect(document.documentElement.lang).toBe("fr");
     expect(message()).toBe(STRINGS.fr.opening);
     expect(document.title).toBe("Keksdose");
@@ -236,11 +291,11 @@ describe("the pay page (dist/pay/)", () => {
     const back = document.getElementById("pay-back") as HTMLAnchorElement;
     expect(back.hidden).toBe(false);
     expect(back.textContent).toBe(STRINGS.fr.back);
-    expect(back.href).toBe(CONFIG.returnUrl);
+    expect(back.href).toBe(KEKSDOSE.returnUrl);
     expect(document.getElementById("pay-footer")!.hidden).toBe(false);
     expect(document.getElementById("pay-app")).toHaveTextContent("Keksdose");
     expect(document.getElementById("pay-legal")).toHaveAttribute("aria-label", STRINGS.fr.legal);
-    expect(document.getElementById("pay-terms")).toHaveAttribute("href", CONFIG.termsUrl);
+    expect(document.getElementById("pay-terms")).toHaveAttribute("href", KEKSDOSE.termsUrl);
     expect(document.getElementById("pay-privacy")).toHaveTextContent(STRINGS.fr.privacy);
   });
 
@@ -288,7 +343,11 @@ describe("the pay page (dist/pay/)", () => {
       startPayPage(
         env({
           paddle: () => paddle,
-          fetchConfig: async () => ({ ...CONFIG, returnUrl: "https://evil.example/", token: "test_x" }),
+          fetchConfig: async () => ({
+            ...CONFIG,
+            apps: { ...CONFIG.apps, keksdose: { ...KEKSDOSE, returnUrl: "javascript:alert(1)" } },
+            token: "test_x",
+          }),
         }),
       ),
     ).resolves.toBe("failed");
@@ -305,6 +364,59 @@ describe("the pay page (dist/pay/)", () => {
     await expect(startPayPage(env({ paddle: () => throwing }))).resolves.toBe("failed");
   });
 
+  it("frames the app the transaction names once it loads, and returns there once paid (§15.2.5)", async () => {
+    const { paddle, calls } = fakePaddle();
+    const navigate = vi.fn();
+    await startPayPage(env({ paddle: () => paddle, navigate }));
+    // The host's own app until the checkout says.
+    expect(document.getElementById("pay-app")).toHaveTextContent("Keksdose");
+    const loaded = { name: "checkout.loaded", data: { custom_data: { app: "kastlan", payer: "company:9" } } };
+    calls.init[0].eventCallback?.(loaded);
+    expect(document.getElementById("pay-app")).toHaveTextContent("kastlan");
+    expect(document.title).toBe("kastlan");
+    expect(document.getElementById("pay-back")).toHaveAttribute("href", "https://kastlan.app/admin/billing");
+    expect(document.getElementById("pay-terms")).toHaveAttribute("href", "https://kastlan.app/terms");
+    expect(document.getElementById("pay-privacy")).toHaveAttribute("href", "https://kastlan.app/privacy");
+    calls.init[0].eventCallback?.({ name: "checkout.completed", data: { custom_data: { app: "kastlan" } } });
+    expect(navigate).toHaveBeenCalledExactlyOnceWith("https://kastlan.app/admin/billing?checkout=done");
+    // Paddle's overlay closing after the payment changes nothing.
+    calls.init[0].eventCallback?.({ name: "checkout.closed" });
+    expect(state()).toBe("opening");
+  });
+
+  it("returns to the app checkout.loaded named when checkout.completed carries no data", async () => {
+    const { paddle, calls } = fakePaddle();
+    const navigate = vi.fn();
+    await startPayPage(env({ paddle: () => paddle, navigate }));
+    calls.init[0].eventCallback?.({ name: "checkout.loaded", data: { custom_data: { app: "kurvenschmiede" } } });
+    calls.init[0].eventCallback?.({ name: "checkout.completed" });
+    expect(navigate).toHaveBeenCalledExactlyOnceWith("https://kurvenschmiede.app/settings/subscription?checkout=done");
+  });
+
+  it("names no app and offers no way back for an unknown tag or none, keeps the host's Terms, and says payDone", async () => {
+    for (const data of [{ custom_data: { app: "lenkbank" } }, { custom_data: null }, {}, { custom_data: { app: "__proto__" } }]) {
+      mountPage();
+      document.title = "Checkout";
+      const { paddle, calls } = fakePaddle();
+      const navigate = vi.fn();
+      await startPayPage(env({ paddle: () => paddle, navigate }));
+      calls.init[0].eventCallback?.({ name: "checkout.loaded", data });
+      const back = document.getElementById("pay-back") as HTMLAnchorElement;
+      expect(back.hidden, JSON.stringify(data)).toBe(true);
+      expect(back.hasAttribute("href")).toBe(false);
+      expect(document.getElementById("pay-app")!.textContent).toBe("");
+      expect(document.title).toBe("Checkout");
+      expect(document.getElementById("pay-terms")).toHaveAttribute("href", KEKSDOSE.termsUrl);
+      expect(document.getElementById("pay-footer")!.hidden).toBe(false);
+      calls.init[0].eventCallback?.({ name: "checkout.completed", data });
+      expect(navigate).not.toHaveBeenCalled();
+      expect(state()).toBe("done");
+      expect(message()).toBe(STRINGS.fr.done);
+      calls.init[0].eventCallback?.({ name: "checkout.closed" });
+      expect(state()).toBe("done");
+    }
+  });
+
   it("falls back to the browser's language, then English", async () => {
     const { paddle, calls } = fakePaddle();
     await startPayPage(env({ paddle: () => paddle, search: "?_ptxn=txn_1", languages: ["zh-TW", "en"] }));
@@ -319,7 +431,13 @@ describe("the pay page (dist/pay/)", () => {
     const setItem = vi.spyOn(Storage.prototype, "setItem");
     const { paddle } = fakePaddle();
     await startPayPage(
-      env({ paddle: () => paddle, fetchConfig: async () => ({ ...CONFIG, appName: "<img src=x onerror=alert(1)>" }) }),
+      env({
+        paddle: () => paddle,
+        fetchConfig: async () => ({
+          ...CONFIG,
+          apps: { ...CONFIG.apps, keksdose: { ...KEKSDOSE, name: "<img src=x onerror=alert(1)>" } },
+        }),
+      }),
     );
     expect(setItem).not.toHaveBeenCalled();
     expect(document.querySelector("img")).toBeNull();

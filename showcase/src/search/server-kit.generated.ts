@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.11.1";
+export const SERVER_KIT_VERSION = "0.12.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -250,6 +250,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["BETA_FREE_MONTHS", "constant"],
       ["BILLING_ERROR_DETAIL", "constant"],
       ["BILLING_ERROR_STATUS", "constant"],
+      ["BUYER_KEY", "constant"],
       ["CHECKOUT_RETURN_PARAM", "constant"],
       ["CHECKOUT_RETURN_VALUE", "constant"],
       ["CURRENCY_EXPONENTS", "constant"],
@@ -297,6 +298,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["PaddleClient", "class"],
       ["PaddleEnvironment", "enum"],
       ["PaddleError", "class"],
+      ["PaidPrice", "model"],
       ["PlanChangeRequest", "model"],
       ["PlanChangeResponse", "model"],
       ["PlanCode", "constant"],
@@ -305,10 +307,13 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["PlanOut", "model"],
       ["PlanPrices", "class"],
       ["PlanSpec", "model"],
+      ["PlanSwitchPreview", "model"],
+      ["PlanSwitchRequest", "model"],
       ["PoisonEventError", "class"],
       ["PortalRequest", "model"],
       ["PortalTarget", "constant"],
       ["PriceRef", "class"],
+      ["ProviderSwitchPreview", "model"],
       ["ResumeOutcome", "constant"],
       ["SubscriptionRow", "protocol"],
       ["SubscriptionSource", "enum"],
@@ -338,12 +343,15 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["paddle_locale", "function"],
       ["parse_webhook_event", "function"],
       ["plan_catalogue", "function"],
+      ["plan_switch_preview", "function"],
       ["plans_out", "function"],
       ["refuse_billing_read_only", "function"],
       ["require_new_checkout", "function"],
+      ["require_plan_switch", "function"],
       ["resume_after_withdrawal", "function"],
       ["row_changes", "function"],
       ["sold_plan", "function"],
+      ["switch_price", "function"],
       ["trial_ends_at", "function"],
       ["verify_paddle_signature", "function"],
       ["verify_webhook_signature", "function"],

@@ -1,6 +1,6 @@
 import type { DateInput } from "../lib/format";
 import type { SubscriptionStatus } from "./billing-labels";
-import type { BillingCurrency } from "./plan-price";
+import type { BillingCurrency, BillingInterval } from "./plan-price";
 
 /**
  * The billing API's shapes the kit's parts read (docs/billing-harmonization.md §4,
@@ -37,6 +37,58 @@ export interface BillingOverview {
    * portal request would answer `409 billing_not_at_provider`.
    */
   at_provider: boolean;
+  /**
+   * 0.39 (server-kit 0.12, §15.2.10): the price the payer pays at the provider — its
+   * plan, period and currency — or null with none (a trial, a grant without a purchase).
+   * Under a grant the row keeps the grant's plan, status and source (§12.11), so this
+   * is what shows that a switch landed; `checkoutFingerprint` reads it.
+   */
+  paid: PaidPrice | null;
+}
+
+/** 0.39: what the payer pays at the provider (server-kit's `PaidPrice`, §15.2.10),
+ *  read from the row's `provider_price_id`. */
+export interface PaidPrice {
+  /** The plan's code, lowercase. */
+  plan: string;
+  interval: BillingInterval;
+  currency: BillingCurrency;
+}
+
+/** 0.39: `POST /billing/plan/preview` and `POST /billing/plan`'s body (server-kit's
+ *  `PlanSwitchRequest`, §15.2.10) — the plan and period to switch to. The currency stays
+ *  the subscription's. */
+export interface PlanSwitchRequest {
+  plan: string;
+  interval: BillingInterval;
+}
+
+/**
+ * 0.39: what a plan switch costs — or did (server-kit's `PlanSwitchPreview`, §15.2.10):
+ * Paddle's preview, prorated at once, both routes' answer. `PlanSwitchConfirm` shows it
+ * before the payer agrees.
+ */
+export interface PlanSwitchPreview {
+  /** The subscription's currency. */
+  currency: BillingCurrency;
+  /** Charged at once, in minor units: an upgrade's prorated difference — or, negative, a
+   *  downgrade's credit to the customer's balance, which Paddle takes off the next
+   *  charges. */
+  now_minor: number;
+  /** The next regular charge, in minor units. */
+  next_minor: number | null;
+  /** When it is charged; null when Paddle names no date. */
+  next_billed_at: string | null;
+  /** The plan and period switched to. */
+  plan: string;
+  interval: BillingInterval;
+  /** The dimensions whose usage is over the new plan's limit (§3.4: a limit gates
+   *  creation only — the switch is allowed). */
+  over_limit: string[];
+  /** The new plan's limits; null for unlimited. */
+  limits: Record<string, number | null>;
+  /** What the payer has, per dimension. */
+  usage: Record<string, number>;
 }
 
 /**

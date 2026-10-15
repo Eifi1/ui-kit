@@ -1699,6 +1699,14 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       payNothing: "Aquí no hay nada que pagar. Para elegir un plan, vuelva a la aplicación.",
       payFailed: "No se ha podido abrir el pago. Vuelva atrás e inténtelo de nuevo en un momento.",
       payBack: "El pago se ha cerrado. Puede volver atrás o recargar esta página para abrirlo de nuevo.",
+      payDone: "Pago completado. Puede cerrar esta página.",
+      // 0.39 (§15.2.10): PlanSwitchConfirm.
+      switchTitle: "Cambiar de plan",
+      switchFromTo: (from, to) => `De ${from} a ${to}`,
+      switchChargedNow: "Cargo ahora",
+      switchCredited: "Abonado a sus próximos cargos",
+      switchNextCharge: (date) => `Próximo cargo el ${date}`,
+      switchConfirm: "Cambiar de plan",
       waitingChanges: (count) => `${n(count)} ${plural(count, "cambio", "cambios")} a la espera de un plan`,
       // "Descartar", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Descartar los cambios en espera",
@@ -1706,8 +1714,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       disabled: "Las suscripciones no están disponibles aquí.",
       // §14.2: server-kit 0.7's refusals. "Pagos y facturas", as `manage`. "Usted".
       providerUnavailable: "El proveedor de pagos no está disponible en este momento. Inténtelo de nuevo en un momento.",
-      alreadySubscribed: "Ya tiene una suscripción. Para cambiar de plan, vaya a «Pagos y facturas».",
+      alreadySubscribed: "Ya tiene una suscripción. Cambie de plan más arriba.",
       planNotSold: "Este plan no está disponible para ese periodo de facturación o esa moneda. Elija otro.",
+      // 0.39 (§15.2.10): the plan switch's refusals.
+      notSubscribed: "No hay ninguna suscripción activa que cambiar. Elija un plan para suscribirse.",
+      planUnchanged: "Ese ya es su plan. Elija otro plan u otro periodo de facturación.",
     },
     // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "plan" as
     // in `billing`. "Usted".

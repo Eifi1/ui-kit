@@ -1733,6 +1733,14 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       payNothing: "Il n’y a rien à payer ici. Pour choisir une formule, revenez à l’application.",
       payFailed: "Le paiement n’a pas pu s’ouvrir. Veuillez revenir en arrière et réessayer dans un instant.",
       payBack: "Le paiement a été fermé. Vous pouvez revenir en arrière, ou recharger cette page pour le rouvrir.",
+      payDone: "Paiement effectué. Vous pouvez fermer cette page.",
+      // 0.39 (§15.2.10): PlanSwitchConfirm.
+      switchTitle: "Changer de formule",
+      switchFromTo: (from, to) => `De ${from} à ${to}`,
+      switchChargedNow: "Débité maintenant",
+      switchCredited: "Crédité sur vos prochains paiements",
+      switchNextCharge: (date) => `Prochain prélèvement le ${date}`,
+      switchConfirm: "Changer de formule",
       waitingChanges: (count) =>
         `${n(count)} ${plural(count, "modification en attente", "modifications en attente")} d’une formule`,
       // "Abandonner", as `wizard.cancelConfirmLabel`.
@@ -1742,10 +1750,12 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       // §14.2: server-kit 0.7's refusals. "Paiement et factures", as `manage`.
       providerUnavailable:
         "Le prestataire de paiement est injoignable pour le moment. Veuillez réessayer dans un instant.",
-      alreadySubscribed:
-        "Vous avez déjà un abonnement. Pour changer de formule, allez dans «\u202fPaiement et factures\u202f».",
+      alreadySubscribed: "Vous avez déjà un abonnement. Changez de formule ci-dessus.",
       planNotSold:
         "Cette formule n’est pas proposée pour cette période de facturation ou cette devise. Veuillez en choisir une autre.",
+      // 0.39 (§15.2.10): the plan switch's refusals.
+      notSubscribed: "Aucun abonnement en cours à modifier. Choisissez une formule pour vous abonner.",
+      planUnchanged: "C’est déjà votre formule. Choisissez une autre formule ou une autre période de facturation.",
     },
     // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "formule"
     // as in `billing`. "Vous".
