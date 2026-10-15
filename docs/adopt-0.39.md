@@ -109,3 +109,19 @@ can be adopted now; nothing charges anyone.
   ```
 
   sha256: `f7f410352deed79c96d09cc3adf7af013a67cbb71acbc6ab97673eea7e01f32b`
+
+## 5. 0.39.1 (the apps' 0.39 findings)
+
+Released on Marcel's word (2026-10-15) before every report was in. Nothing is removed.
+
+- `PlanSwitchPreview`'s `next_minor` / `next_billed_at` are optional, as server-kit's
+  defaults make them in an app's generated types (keksdose).
+- `PAY_PAGE_APPS` spells kastlan "Kastlan", as its mails and pages do (kastlan).
+- **The pay page's headers:** the kit ships no Caddy snippet; inline §14.4's header set in the
+  pay block, as keksdose's Caddyfile does (kastlan).
+- **Every image build runs the bin, billing on or off:** with empty `--token`, `--environment`
+  and `--app-url` it exits 0 and writes `token: null` — the page then says it can't take a
+  payment (kastlan).
+- **Queued for the next round:** a server-computed `switching` flag on `BillingOverview`, so
+  no app mirrors server-kit's "a provider subscription runs" rule to choose switch or
+  checkout (kastlan mirrors it from `paid` today).
