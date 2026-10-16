@@ -240,6 +240,13 @@ export interface DataTableProps<T> {
    * must give it a bounded height (e.g. a flex column inside the viewport-locked app
    * shell). See feedback #207.
    *
+   * **The list page** (0.40, docs/page-layout-harmonization.md §1): the root carries
+   * `data-fill-height`, and from `md` up AppShell's `<main>` turns into a flex column
+   * while such a table is inside — the shell's banners keep their height, the page takes
+   * the rest. Wrap every element between `<main>` and the table in `FillHeight` (or merge
+   * `FILL_HEIGHT_CLASS`); nothing else to wire. The body never shrinks below `basis-48`
+   * (12rem, about five rows): on a window too short for that, `<main>` scrolls again.
+   *
    * **On a phone** the card list becomes the scroller ONLY when its parent really bounds
    * it — measured, not assumed (0.40, keksdose live #420): the list takes the flex
    * room it is given, and only when its rows overflow that room does it turn
@@ -272,14 +279,13 @@ export interface DataTableProps<T> {
    *  the cap on a page with anything else on it shows two scrollbars side by side,
    *  and the wheel moves whichever is under the pointer. For a list page whose table
    *  is the point, fill the height instead, from `md` up (a phone scrolls the page
-   *  and its card list as one):
+   *  and its card list as one) — docs/page-layout-harmonization.md §1.2 says which
+   *  pages fill:
    *
-   *  1. the shell's content column becomes a flex column of the main area's height
-   *     when the page asks — kastlan's
-   *     `md:has-[>[data-fill-height]]:flex md:has-[>[data-fill-height]]:h-full md:has-[>[data-fill-height]]:flex-col`;
-   *  2. the page's root asks, and is a flex column that may shrink:
-   *     `data-fill-height` and `md:flex md:min-h-0 md:flex-1 md:flex-col`;
-   *  3. the table takes the rest: `<DataTable fillHeight>`.
+   *  1. `<DataTable fillHeight>`: the table marks itself (`data-fill-height`), and
+   *     AppShell's `<main>` becomes a flex column while it is inside;
+   *  2. each element between `<main>` and the table is a `FillHeight` (the page's
+   *     root, any wrapper on the way), or merges `FILL_HEIGHT_CLASS`.
    *
    *  Only the body then scrolls, under its pinned header, and every other page grows
    *  with its content as before (kastlan e3985c9, its leases list). A short table that
@@ -1379,13 +1385,19 @@ export function DataTable<T>({
       // classes and a table-cell tooltip must portal under test just as it does in the
       // browser (see `CLIPS_ATTRIBUTE`). The bare root clips nothing and is not marked.
       data-clips={frame ? "" : undefined}
+      // The fill's marker (0.40, docs/page-layout-harmonization.md §1.3): AppShell's
+      // `<main>` and every `FillHeight` between it and this table key off it with
+      // `has-[[data-fill-height]]`, so a page asks for the fill by passing the prop.
+      data-fill-height={fillHeight ? "" : undefined}
       className={cn(
         "group/table",
         frame ? "overflow-clip" : "min-w-0",
         // Both layouts, not just the table: the phone card list overflowing a bounded
         // pane drew itself over whatever followed it, and in a viewport-locked shell
-        // the rows below the fold could not be reached at all.
-        fillHeight && "flex flex-1 flex-col min-h-0",
+        // the rows below the fold could not be reached at all. From `md` the minimum is
+        // the content's again (`md:min-h-auto`): the body's floor below then holds the
+        // whole chain up to `<main>`, which scrolls instead of leaving a slit.
+        fillHeight && "flex flex-1 flex-col min-h-0 md:min-h-auto",
         className,
       )}
     >
@@ -1589,8 +1601,11 @@ export function DataTable<T>({
       </div>
       )}
       {isMdUp && (
-      <div className={cn("flex", fillHeight && "min-h-0 flex-1")}>
-        <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col min-h-0")}>
+      <div className={cn("flex", fillHeight && "flex-1")}>
+        {/* Under `fillHeight` neither wrapper is `min-h-0`: a flex item's automatic
+            minimum is its content's, and the content's height counts the body at its
+            basis (`basis-48`, below), not at its rows — so the floor carries up. */}
+        <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col")}>
           {/* scrollbar-gutter:stable reserves the vertical-scrollbar space up
               front. Expanding a row adds height, which can bring the scrollbar
               in, which narrows the content box — and in an `auto` table layout
@@ -1601,7 +1616,10 @@ export function DataTable<T>({
             ref={desktopScroller}
             // The scroller: marked for the Tooltip's auto-portal (see the root above).
             data-clips=""
-            className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight && "flex-1 min-h-0")}
+            // Under `fillHeight` the body grows into the room from a 12rem basis (0.40,
+            // §1.3): about five rows is its floor. A window too short for the page's
+            // header and that much body scrolls `<main>` instead (keksdose's review).
+            className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight && "min-h-0 grow basis-48")}
             // `edgeFade`: the mask, `data-overflow` and the focus handling; nothing
             // while off. The height bound is merged over the mask, not replaced by it.
             {...edgeFadeProps}

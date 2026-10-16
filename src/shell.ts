@@ -10,6 +10,9 @@ export * from "./shell/role-switcher";
 export * from "./shell/topbar-action-menu";
 export * from "./shell/top-bar-brand";
 export * from "./shell/auth-layout";
+// 0.40.0: the list page's fill (docs/page-layout-harmonization.md §1.3).
+export { FillHeight, FILL_HEIGHT_CLASS } from "./shell/fill-height";
+export type { FillHeightProps } from "./shell/fill-height";
 // 0.31.0: the settings and admin pages' shell (docs/settings-harmonization.md §3, §5).
 export { SettingsLayout, SETTINGS_SEARCH_THRESHOLD } from "./settings/settings-layout";
 export type { SettingsLayoutProps, SettingsLayoutWidth, SettingsDocumentTitleParts } from "./settings/settings-layout";

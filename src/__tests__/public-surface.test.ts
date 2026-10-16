@@ -242,7 +242,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // plan switch, and `PAY_PAGE_APPS`, the apps every pay page serves.
   // 0.40.0 (+2, docs/feedback-harmonization.md §10.8): `FEEDBACK_QUEUE_STATUSES`, the
   // loops' queue, and `feedbackReworkCount`, the Rework chip's count off the entries.
-  ["@eifi1/ui-kit", barrel, 914],
+  // 0.40.0 (+2, docs/page-layout-harmonization.md §1.3): `FillHeight` and
+  // `FILL_HEIGHT_CLASS`, the list page's fill (here and in /shell).
+  ["@eifi1/ui-kit", barrel, 916],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -265,7 +267,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // last-visited page — the router-aware parts and their companions.
   // 0.32.0 (+3): the phone bar's "More" — AppShellMoreLabels' defaults,
   // DEFAULT_MOBILE_BAR_MAX, splitMobileBar.
-  ["@eifi1/ui-kit/shell", shell, 41],
+  // 0.40.0 (+2): `FillHeight`, `FILL_HEIGHT_CLASS` (docs/page-layout-harmonization.md §1.3).
+  ["@eifi1/ui-kit/shell", shell, 43],
   ["@eifi1/ui-kit/tour", tour, 4],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.

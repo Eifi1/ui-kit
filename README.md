@@ -556,16 +556,16 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1979 names from 321 modules** — 914 values and 1065 types. _Italic_ is a type-only export.
+**1982 names from 322 modules** — 916 values and 1066 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1979 |
+| `@eifi1/ui-kit` | 1982 |
 | `@eifi1/ui-kit/chart` | 92 |
-| `@eifi1/ui-kit/shell` | 77 |
+| `@eifi1/ui-kit/shell` | 80 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 24 |
 | `@eifi1/ui-kit/tour` | 7 |
@@ -818,6 +818,7 @@ re-slicing of it, never a second API.
 | `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
 | `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
 | `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
+| `shell/fill-height` | `FILL_HEIGHT_CLASS`, `FillHeight`, _`FillHeightProps`_ |
 | `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
 
 ### settings

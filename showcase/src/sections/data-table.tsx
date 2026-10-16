@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, ExternalLink, Archive } from "lucide-react";
+import { MemoryRouter, UNSAFE_LocationContext } from "react-router";
+import { ChevronDown, ChevronRight, ExternalLink, Archive, Home, List } from "lucide-react";
 import {
+  AppShell,
+  FillHeight,
+  Switch,
   Button,
   Card,
   CardContent,
@@ -18,6 +22,7 @@ import {
   numberFilter,
 } from "@eifi1/ui-kit";
 import type {
+  AppShellNavItem,
   DataTableChrome,
   DataTableColumn,
   DataTableDensity,
@@ -26,7 +31,7 @@ import type {
   SortState,
   DataTableRowAction,
 } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, Row, code, READOUT } from "../lib/section";
+import { Example, Note, NO_ROUTER, OutTable, Row, code, READOUT } from "../lib/section";
 import {
   AMOUNT_FMT,
   ARCHIVED_COUNT,
@@ -72,6 +77,7 @@ function DataTableSection() {
       <ReportTable />
       <PrivateCellsTable />
       <FillHeightTable />
+      <ListPageTable />
       <RtlTable />
     </>
   );
@@ -845,9 +851,11 @@ function FillHeightTable() {
   return (
     <Example
       label="fillHeight — a table in a bounded pane"
-      hint="the dashed box is a fixed 18rem flex column; the table — or the card list on a phone — fills it and scrolls inside"
+      hint="the dashed box is a fixed 24rem flex column; the table — or the card list on a phone — fills it and scrolls inside"
     >
-      <div className="flex h-72 flex-col rounded-md border border-dashed border-subtle p-2">
+      {/* 24rem, not 18rem (0.40): from md the body keeps a 12rem floor, and 18rem left
+          the header, that floor and the pager no room — the table ran past the box. */}
+      <div className="flex h-96 flex-col rounded-md border border-dashed border-subtle p-2">
         <div className="pb-2 text-xs text-muted">A toolbar above the table</div>
         <DataTable
           rows={ROWS}
@@ -868,22 +876,89 @@ function FillHeightTable() {
           <code className="font-mono"> maxBodyHeight</code> is ignored. Without a bounded
           flex parent (a viewport-locked app shell, a split pane) there is nothing to fill
           and the prop does nothing — which is why the main table above uses{" "}
-          <code className="font-mono">maxBodyHeight</code> instead.
+          <code className="font-mono">maxBodyHeight</code> instead. From{" "}
+          <code className="font-mono">md</code> the body never shrinks below 12rem (0.40):
+          a pane shorter than the header, that floor and the pager lets the table run past it.
         </Note>
         <Note>
           <strong>Two scrollbars</strong> (0.34, kastlan feedback 55): the default{" "}
           <code className="font-mono">maxBodyHeight</code>,{" "}
           <code className="font-mono">calc(100dvh - 12rem)</code>, scrolls the body inside a
           page that scrolls itself, so a long table under a page header shows two scrollbars
-          side by side. A list page whose table is the point fills the height from{" "}
-          <code className="font-mono">md</code> up instead: the shell&apos;s content column turns
-          into a full-height flex column when its page asks (
-          <code className="font-mono">md:has-[&gt;[data-fill-height]]:flex … :h-full … :flex-col</code>
-          ), the page root asks (<code className="font-mono">data-fill-height</code>,{" "}
-          <code className="font-mono">md:flex md:min-h-0 md:flex-1 md:flex-col</code>) and the
-          table takes the rest (<code className="font-mono">fillHeight</code>). Only the body
-          scrolls then, under its pinned header; every other page grows as before (kastlan
-          e3985c9).
+          side by side. A list page whose table is the point fills the window from{" "}
+          <code className="font-mono">md</code> up instead — the next example.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── the list page fills the window (0.40) ─────────────────────────────── */
+
+const LIST_PAGE_NAV: AppShellNavItem[] = [
+  { to: "/", label: "Home", icon: Home },
+  { to: "/payees", label: "Payees", icon: List },
+];
+
+function ListPageTable() {
+  const [banner, setBanner] = useState(true);
+  const [short, setShort] = useState(false);
+  return (
+    <Example
+      label="The list page fills the window — FillHeight in an AppShell"
+      hint="an embedded AppShell; from md only the table's body scrolls, under the banner and the page's header"
+    >
+      <Row>
+        <Switch label="A banner above the page" checked={banner} onCheckedChange={setBanner} />
+        <Switch label="A short window (20rem)" checked={short} onCheckedChange={setShort} />
+      </Row>
+      <div
+        className={
+          (short ? "h-80" : "h-[32rem]") +
+          " mt-3 overflow-hidden rounded-md border border-subtle bg-page"
+        }
+      >
+        <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
+          <MemoryRouter initialEntries={["/payees"]}>
+            <AppShell nav={LIST_PAGE_NAV} embedded topBar={<span className="font-semibold">Acme Books</span>}>
+              {banner && (
+                <div className="border-b border-subtle bg-surface-2 px-4 py-2 text-sm text-secondary">
+                  A banner: the shell&apos;s, above the page — it keeps its height.
+                </div>
+              )}
+              <FillHeight className="gap-3 p-4">
+                <h2 className="text-lg font-semibold text-primary">Payees</h2>
+                <DataTable
+                  rows={ROWS}
+                  columns={SMALL_COLUMNS}
+                  rowKey={(r) => r.id}
+                  defaultPageSize={25}
+                  fillHeight
+                  labels={{ table: "Payees" }}
+                />
+              </FillHeight>
+            </AppShell>
+          </MemoryRouter>
+        </UNSAFE_LocationContext.Provider>
+      </div>
+      <div className="mt-3">
+        <Note>
+          docs/page-layout-harmonization.md §1 (0.40). The table marks itself under{" "}
+          <code className="font-mono">fillHeight</code> (<code className="font-mono">data-fill-height</code>);
+          while one is inside, AppShell&apos;s <code className="font-mono">&lt;main&gt;</code> becomes a
+          flex column from <code className="font-mono">md</code>, so the banner keeps its own row
+          and the page takes the rest — <code className="font-mono">&lt;main&gt;</code> no longer
+          overflows by the banner&apos;s height. Every element between{" "}
+          <code className="font-mono">&lt;main&gt;</code> and the table is a{" "}
+          <code className="font-mono">FillHeight</code>, or merges{" "}
+          <code className="font-mono">FILL_HEIGHT_CLASS</code>; both do nothing below{" "}
+          <code className="font-mono">md</code> or around any other page.
+        </Note>
+        <Note>
+          The floor: the body keeps at least 12rem, about five rows. Switch on the short
+          window — the page keeps the header and that much body, and{" "}
+          <code className="font-mono">&lt;main&gt;</code> scrolls instead of leaving a slit of
+          rows. On a phone nothing fills: the page scrolls as one, the card list in its flow.
         </Note>
       </div>
     </Example>
