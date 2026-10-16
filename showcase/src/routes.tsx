@@ -946,7 +946,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The largest component in the kit, whole: sorting, filtering, selection and expansion, controlled from outside, short and unpaginated, filling a pane, and right-to-left.",
         icon: Table,
-        components: ["DataTable", "BooleanMark", "booleanColumn", "CopyButton"],
+        components: ["DataTable", "BooleanMark", "booleanColumn", "CopyButton", "FillHeight"],
         Body: () => (
           <>
             <DataTableDemo />

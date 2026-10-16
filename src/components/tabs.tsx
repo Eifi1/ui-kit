@@ -101,9 +101,9 @@ export interface TabsProps<T extends string>
    *  already fit a phone row, and turning those into chips would be an unrequested
    *  redesign of three other pages.
    *
-   *  @deprecated 0.40 — no consumer is left (keksdose went back to one scrolling row,
-   *  live #410). Use the scrolling strip with `overflowCue`, the caret that says a
-   *  phone's row goes on. Removed in the next minor (0.41). */
+   *  @deprecated 0.40 — use the scrolling strip with `overflowCue`; removed in 0.41. No
+   *  consumer is left (keksdose went back to one scrolling row, live #410); the caret
+   *  says a phone's row goes on. */
   wrap?: boolean;
   /**
    * The caret beside a SCROLLING strip below `md` (0.40, kk run 79 gap 1): a › while

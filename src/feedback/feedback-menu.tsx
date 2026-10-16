@@ -28,11 +28,11 @@ export interface FeedbackMenuLabels {
   /** 0.40: the admin's link to the triage list, {@link FeedbackMenuProps.inboxHref}
    *  ("View feedback" before). de-CH "Feedback-Eingang". */
   inbox: string;
-  /** @deprecated 0.40 — unused; the inbox row reads {@link inbox}. Kept optional for one
-   *  minor, then removed (§10.6). */
+  /** @deprecated 0.40 — use {@link inbox}; removed in 0.41. Unused: the inbox row reads
+   *  `inbox` (feedback §10.6). */
   viewFeedback?: string;
-  /** @deprecated 0.40 — unused; the public row reads {@link discussion}. Kept optional
-   *  for one minor, then removed (§10.6). */
+  /** @deprecated 0.40 — use {@link discussion}; removed in 0.41. Unused: the public row
+   *  reads `discussion` (feedback §10.6). */
   allFeedback?: string;
 }
 
