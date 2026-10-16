@@ -26,6 +26,13 @@ if [ -z "$tips" ]; then
   exit 0
 fi
 
+# Dependabot's half, locally (scripts/check-dependencies.mjs; Marcel, 2026-10-16, as
+# keksdose's): an open Dependabot alert blocks the push; newer minor/patch versions are
+# listed, never blocking. It replaces Dependabot's npm version-update PRs, and runs even
+# for a stamped tree, since an alert can open after the tree passed.
+# SKIP_DEPENDENCY_CHECK=1 skips it.
+node scripts/check-dependencies.mjs </dev/null || exit 1
+
 stamped=yes
 for sha in $tips; do
   tree=$(git rev-parse "$sha^{tree}")
