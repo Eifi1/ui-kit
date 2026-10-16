@@ -21,6 +21,16 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.40.1](https://github.com/Eifi1/ui-kit/compare/v0.40.0...v0.40.1) (2026-10-16)
+
+The apps' 0.40 adoption findings, released as one batch once all three had reported (server-kit
+0.13.1 beside it): `docs/adopt-0.40.md` §5. Also Dependabot's npm half moves into the pre-push
+hook, as keksdose's. Nothing is removed.
+
+### Fixed
+
+* **feedback:** FeedbackPublicList fills the window; the apps' 0.40 notes; no Dependabot rebases ([131bdb3](https://github.com/Eifi1/ui-kit/commit/131bdb3f3d8f8fe6b47a5b051c4f85f0c4d6819f))
+
 ## [0.40.0](https://github.com/Eifi1/ui-kit/compare/v0.39.1...v0.40.0) (2026-10-16)
 
 Round 0.40: every open point — feedback §10 (a rework is the author's entry with its own status;

@@ -1546,8 +1546,9 @@ merged thread (`feedback-comment-thread.tsx:124-207`), the menu's one list link 
     erased (`user_id` NULL), kastlan and Kurvenschmiede write `author_id` NULL, drawn as an
     unattributed rework ("A user"), never as "Admin". **Not in keksdose**, where a NULL
     reply author is the loop's team answer (`feedback_answered` by the jobs runner, the read
-    script): its step refuses to run while a row with blocks has `user_id` NULL and prints
-    those ids (none expected; Marcel decides then). Kurvenschmiede takes the uploader of a
+    script): its step leaves such a row's blocks in `body` and prints those ids (amended at
+    keksdose's adoption, 0.40.1: not stopping the deploy; `feedbackReworkCount` still counts
+    the blocks there, and no author-less entry reads as a team answer). Kurvenschmiede takes the uploader of a
     matching rework attachment first (10.4).
 
 ### 10.3 The rework entry
