@@ -21,6 +21,26 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.40.0](https://github.com/Eifi1/ui-kit/compare/v0.39.1...v0.40.0) (2026-10-16)
+
+Round 0.40: every open point — feedback §10 (a rework is the author's entry with its own status;
+the menu by role) and page layout §1 (the list page fills the window, the same in every app), both
+settled after the three apps' reviews; keksdose's phone-table and picker findings; the Paddle
+sandbox run's results (server-kit 0.13.0 ships beside it). The migration per app is
+`docs/adopt-0.40.md`. Nothing is removed; Tabs `wrap` and two FeedbackMenu labels are deprecated.
+
+### Added
+
+* **billing:** `BillingOverview.switching`; the pay page's CSP allows Paddle's overlay styles ([3577e59](https://github.com/Eifi1/ui-kit/commit/3577e594226687934684fe41b3492d481d8bfc7c))
+* **data-table:** phone cards — long-press selection, swipe on an open card, fill in the flow ([38536e1](https://github.com/Eifi1/ui-kit/commit/38536e1766d21e0ad3ac12d00ee61c5bb24f0786))
+* **feedback:** rework as the author's entry, a REWORK status, the menu by role (§10) ([31cc59b](https://github.com/Eifi1/ui-kit/commit/31cc59b728cbc0d7eefc75ccd17e26b0dc518075))
+* **page-layout:** the list page fills the window, the same in every app (§1) ([9420723](https://github.com/Eifi1/ui-kit/commit/9420723e19534520c08ff3020c68097be07f868d))
+
+### Fixed
+
+* **overlays:** closing a picker keeps the URL replaces made while open; sticky Done; Tabs cue ([a21140c](https://github.com/Eifi1/ui-kit/commit/a21140c12b32cc324a78f973d4a9142f452d3b32))
+* the deprecations name their schedule; FillHeight is on the data-table page ([7f0cac6](https://github.com/Eifi1/ui-kit/commit/7f0cac6fe1e304688b97a9c218f32658a3960689))
+
 ## [0.39.1](https://github.com/Eifi1/ui-kit/compare/v0.39.0...v0.39.1) (2026-10-15)
 
 keksdose's and kastlan's 0.39 adoption findings, released on Marcel's word (2026-10-15) before
