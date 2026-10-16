@@ -9,6 +9,7 @@ import { ToggleGroup } from "../components/toggle-group";
 import type { CommitScope } from "../components/write-lock";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
+import { FILL_HEIGHT_CLASS } from "../shell/fill-height";
 import { EMPTY_FORMATTED_VALUE } from "../lib/format";
 import { FeedbackCategoryBadge, FeedbackDetail, FeedbackDetailSection, FeedbackProse, FeedbackStatusBadge } from "./feedback-inbox";
 import { useFeedbackCategoryLabels } from "./feedback-labels";
@@ -189,6 +190,9 @@ export interface FeedbackPublicListProps<T extends FeedbackPublicListItem = Feed
    *  Subject, Status) are `feedbackPage`'s: pass `pageLabels` for those. */
   labels?: LabelOverride<FeedbackPublicLabels>;
   pageLabels?: LabelOverride<FeedbackPageLabels>;
+  /** 0.40.1: the list fills the window as DataTable's `fillHeight` (page layout §1) — the
+   *  public feedback page passes §1.2's rule. Below md the page scrolls, as everywhere. */
+  fillHeight?: boolean;
   className?: string;
 }
 
@@ -236,6 +240,7 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
   renderDate: renderDateProp,
   labels: labelsProp,
   pageLabels: pageLabelsProp,
+  fillHeight,
   className,
 }: FeedbackPublicListProps<T>) {
   const labels = useFeedbackPublicLabels(labelsProp);
@@ -310,7 +315,11 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
   );
 
   return (
-    <div className={cn("flex flex-col gap-3", className)} data-feedback-public-list="" aria-busy={loading || undefined}>
+    <div
+      className={cn("flex flex-col gap-3", fillHeight && FILL_HEIGHT_CLASS, className)}
+      data-feedback-public-list=""
+      aria-busy={loading || undefined}
+    >
       <div className="flex flex-wrap items-center gap-2">
         <ToggleGroup
           aria-label={labels.sort}
@@ -346,6 +355,7 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
         expandedRow={(row) => renderDetail(row)}
         mobileExpandAsDialog
         paginated={false}
+        fillHeight={fillHeight}
         empty={loading ? labels.loading : labels.empty}
         mobileCard={(row) => (
           <div className="min-w-0 space-y-1">

@@ -181,3 +181,22 @@ Billing:
   ```
 
   sha256: `bb6e561e9c935ad2261b22306d2e805d68d9d7a155343e93de5d0ca65cda7cce`
+
+## 5. 0.40.1 and server-kit 0.13.1 (the apps' 0.40 findings)
+
+One batch, once all three apps had reported (Marcel's rule for patches). Nothing is removed.
+
+- **`FeedbackPublicList` takes `fillHeight`** (page layout §1): the public feedback page passes
+  §1.2's rule, so `/all-feedback` fills like the inbox (keksdose).
+- **A staff-gate route test** (kastlan's `test_staff_only_routes`, Kurvenschmiede's demo walk)
+  classifies the new `POST /feedback/{id}/rework`: an author's route, not staff only.
+- **An app whose files belong to a report** (Kurvenschmiede) claims a rework's file inside its
+  reply store's `add`: `FeedbackService.rework` hands the file only to the store.
+- **keksdose's migration** leaves an erased author's blocks in `body` rather than stopping
+  (feedback §10, amended).
+- **server-kit 0.13.1:** `check_reply_store` writes its rework file under the app's own
+  attachment policy (`policy=`), so a store that resolves the file accepts it.
+- **CI:** both kits' Dependabot no longer rebases open PRs on every push to main
+  (`rebase-strategy: disabled`; keksdose's measurement). Whether kastlan and Kurvenschmiede
+  take keksdose's two CI changes is Marcel's call in their sessions.
+- The wheel: `v0.13.1`, sha256 `<at the release>`.

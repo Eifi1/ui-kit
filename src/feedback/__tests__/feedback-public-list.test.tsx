@@ -72,6 +72,20 @@ function renderList(props: Partial<FeedbackPublicListProps> = {}) {
 }
 
 describe("FeedbackPublicList — desktop", () => {
+  it("fills the window with `fillHeight` (0.40.1, page layout §1): the table marks itself and the root takes the room", () => {
+    restore = stubViewportWidth(DESKTOP_WIDTH);
+    const { container } = renderList({ fillHeight: true });
+    const root = container.querySelector("[data-feedback-public-list]");
+    expect(root?.className).toContain("md:has-[[data-fill-height]]:flex-1");
+    expect(container.querySelector("[data-fill-height]")).not.toBeNull();
+  });
+
+  it("keeps the cap without it", () => {
+    restore = stubViewportWidth(DESKTOP_WIDTH);
+    const { container } = renderList();
+    expect(container.querySelector("[data-fill-height]")).toBeNull();
+  });
+
   it("shows titles only: #, Date, Category, Subject, Votes, Status — no submitter, no body", () => {
     restore = stubViewportWidth(DESKTOP_WIDTH);
     renderList();
