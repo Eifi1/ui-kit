@@ -190,6 +190,9 @@ One batch, once all three apps had reported (Marcel's rule for patches). Nothing
   §1.2's rule, so `/all-feedback` fills like the inbox (keksdose).
 - **A staff-gate route test** (kastlan's `test_staff_only_routes`, Kurvenschmiede's demo walk)
   classifies the new `POST /feedback/{id}/rework`: an author's route, not staff only.
+- **A billing-gate test that pins every write route** (keksdose's
+  `test_every_write_route_is_classified`) classifies `POST /feedback/{id}/rework` as always
+  allowed, like the reply route.
 - **An app whose files belong to a report** (Kurvenschmiede) claims a rework's file inside its
   reply store's `add`: `FeedbackService.rework` hands the file only to the store.
 - **keksdose's migration** leaves an erased author's blocks in `body` rather than stopping
