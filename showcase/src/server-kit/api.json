@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.12.0",
+  "kit_version": "0.13.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -2611,7 +2611,7 @@
     {
       "name": "eifi1_server_kit.billing",
       "summary": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in ``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).",
-      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in\n``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables and\nno routes, and one request each for checkout, portal, cancel, undoing a cancel, a plan\nswitch's preview and the switch, and the shared customer (§15), through\n:mod:`~eifi1_server_kit.billing.paddle`, only with the ``billing`` extra\n(``eifi1-server-kit[billing]``, httpx; imported lazily, so importing this package never\nneeds it). The subscription row and the event table, the routes, the read-only gate's\nallow-list, the notice job's query, mail and trigger, and the provider seam stay in each\napp. Marcel's decisions (§2): all three apps charge, through a Merchant of Record —\nPaddle (decision 16), one account for the three apps, each checkout tagged with its app\n(decision 18) — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets\na 30-day trial without a card, a beta payer 12 free months. Lemon Squeezy, deprecated in\n0.7, went in 0.8 (decision 25).\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets, the price ids, the app's tag, Paddle's environment\n  and where the checkout opens;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates\n  (:func:`effective_comped_until` for a beta row stored before the launch date was known);\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — the provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, a mapper per provider, and the app's tag that drops another\n  app's events (:func:`parse_webhook_event`'s ``app``);\n* :mod:`~eifi1_server_kit.billing.provider` — the provider's port\n  (:class:`BillingProviderClient`), the deployment's client\n  (:func:`billing_provider_client`), and what a route checks first (:func:`sold_plan`,\n  :func:`require_new_checkout`; for a plan switch :func:`require_plan_switch` and\n  :func:`switch_price`); a deletion's cancellation and its undoing\n  (:func:`cancel_for_deletion`, :func:`resume_after_withdrawal`); the checkout's way back\n  (:func:`checkout_return_url`);\n* :mod:`~eifi1_server_kit.billing.paddle` — :class:`PaddleClient`, Paddle Billing's API\n  (the ``billing`` extra), :class:`PaddleError`, and the buyer's language as Paddle's\n  checkout names it (:func:`paddle_locale`);\n* :mod:`~eifi1_server_kit.billing.notices` — which payer is owed a trial or grant end\n  notice (:func:`billing_notice_due`);\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, the plans\n  (:class:`PlanOut` with :class:`PlanPrices`, :func:`plans_out`), checkout, the operator's plans\n  (:class:`AdminPlan`, :func:`admin_plans_out`) and plan change, the payer's plan switch\n  (:class:`PlanSwitchRequest`, :class:`PlanSwitchPreview`, :func:`plan_switch_preview`) and\n  what the payer pays (:class:`PaidPrice`, the overview's ``paid``), and a sync reply's\n  refused changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\n\nNot re-exported: :mod:`eifi1_server_kit.billing.testing`, the signed fixture events and the\nprovider fakes for the apps' tests and local CLIs (§14.9).",
+      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in\n``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables and\nno routes, and one request each for checkout, portal, cancel, undoing a cancel, a plan\nswitch's preview and the switch, and the shared customer (§15), through\n:mod:`~eifi1_server_kit.billing.paddle`, only with the ``billing`` extra\n(``eifi1-server-kit[billing]``, httpx; imported lazily, so importing this package never\nneeds it). The subscription row and the event table, the routes, the read-only gate's\nallow-list, the notice job's query, mail and trigger, and the provider seam stay in each\napp. Marcel's decisions (§2): all three apps charge, through a Merchant of Record —\nPaddle (decision 16), one account for the three apps, each checkout tagged with its app\n(decision 18) — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets\na 30-day trial without a card, a beta payer 12 free months. Lemon Squeezy, deprecated in\n0.7, went in 0.8 (decision 25).\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets, the price ids, the app's tag, Paddle's environment\n  and where the checkout opens;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates\n  (:func:`effective_comped_until` for a beta row stored before the launch date was known);\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — the provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, a mapper per provider, and the app's tag that drops another\n  app's events (:func:`parse_webhook_event`'s ``app``);\n* :mod:`~eifi1_server_kit.billing.provider` — the provider's port\n  (:class:`BillingProviderClient`), the deployment's client\n  (:func:`billing_provider_client`), and what a route checks first (:func:`sold_plan`,\n  :func:`require_new_checkout`; for a plan switch :func:`require_plan_switch` and\n  :func:`switch_price`; the rule both refuse by, :func:`provider_subscription_runs`); a deletion's cancellation and its undoing\n  (:func:`cancel_for_deletion`, :func:`resume_after_withdrawal`); the checkout's way back\n  (:func:`checkout_return_url`);\n* :mod:`~eifi1_server_kit.billing.paddle` — :class:`PaddleClient`, Paddle Billing's API\n  (the ``billing`` extra), :class:`PaddleError` (the 4xx codes that are the\n  deployment's fault, :data:`PADDLE_CONFIGURATION_CODES`), and the buyer's language as Paddle's\n  checkout names it (:func:`paddle_locale`);\n* :mod:`~eifi1_server_kit.billing.notices` — which payer is owed a trial or grant end\n  notice (:func:`billing_notice_due`);\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, the plans\n  (:class:`PlanOut` with :class:`PlanPrices`, :func:`plans_out`), checkout, the operator's plans\n  (:class:`AdminPlan`, :func:`admin_plans_out`) and plan change, the payer's plan switch\n  (:class:`PlanSwitchRequest`, :class:`PlanSwitchPreview`, :func:`plan_switch_preview`) and\n  what the payer pays (:class:`PaidPrice`, the overview's ``paid``), and a sync reply's\n  refused changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\n\nNot re-exported: :mod:`eifi1_server_kit.billing.testing`, the signed fixture events and the\nprovider fakes for the apps' tests and local CLIs (§14.9).",
       "contract": {
         "doc": "docs/billing-harmonization.md",
         "section": "§10, §14",
@@ -2707,6 +2707,12 @@
           "kind": "constant",
           "signature": "PADDLE_API_VERSION = \"1\"",
           "doc": "The API version every request names, the ``Paddle-Version`` header."
+        },
+        {
+          "name": "PADDLE_CONFIGURATION_CODES",
+          "kind": "constant",
+          "signature": "PADDLE_CONFIGURATION_CODES: frozenset[str] = frozenset(\n    {\n        \"transaction_checkout_url_domain_is_not_approved\",\n        \"transaction_default_checkout_url_not_set\",\n        \"transaction_checkout_not_enabled\",\n        \"transaction_payout_account_required\",\n        \"transaction_creation_blocked\",\n        \"paddle_billing_not_enabled\",\n        \"transaction_price_not_found\",\n        \"subscription_price_not_found\",\n    }\n)",
+          "doc": "Paddle's 4xx error codes that say the ACCOUNT or the deployment's setup refuses the\nrequest, not Paddle being down: a :class:`PaddleError` with one of them is 503\n``billing_not_configured`` (\"the deployment's fault\"), logged at ERROR with the code,\nlike a 401/403 — not 502 ``billing_provider_unavailable`` (\"try again\"), which no retry\nwould fix. Picked from https://developer.paddle.com/errors (read 2026-10-16), each\npage's status in brackets, for the calls this client makes:\n\n* ``transaction_checkout_url_domain_is_not_approved`` [400] — ``checkout.url``'s domain\n  isn't approved (``checkout_page_url``; the sandbox's answer for an unapproved pay\n  host, keksdose 2026-10-16);\n* ``transaction_default_checkout_url_not_set`` [400] — no default payment link set;\n* ``transaction_checkout_not_enabled`` [400] — checkouts not enabled, onboarding\n  incomplete;\n* ``transaction_payout_account_required`` [400] — no payout account;\n* ``transaction_creation_blocked`` [400] — legal or compliance restrictions on the\n  account;\n* ``paddle_billing_not_enabled`` [403] — Paddle Billing not activated for the account;\n* ``transaction_price_not_found`` [400] and ``subscription_price_not_found`` [400] — a\n  price id the settings name doesn't exist (a typo, or the other environment's id).\n\nNot listed, deliberately: what a buyer or a subscription's state causes\n(``customer_email_domain_not_allowed``, ``subscription_locked_*``,\n``subscription_payment_declined``…) and codes of calls the kit never makes (products,\ncheckout domains, notifications, ``not_available_in_sandbox``). A 5xx or no answer is\n502 whatever the code."
         },
         {
           "name": "PADDLE_EVENT_KINDS",
@@ -3034,13 +3040,19 @@
               "type": "PaidPrice | None",
               "default": "None",
               "doc": "The price the row says the payer pays (§15.2.10), from its ``provider_price_id``;\n``None`` with no price yet (no provider snapshot), one the settings don't name, or\nwithout ``price_ref``. It stays after the subscription ended: ``status`` says that."
+            },
+            {
+              "name": "switching",
+              "type": "bool",
+              "default": "False",
+              "doc": "A provider subscription runs (§15.2.10): a plan pick goes to the plan switch, not to\nthe checkout. :func:`~eifi1_server_kit.billing.provider_subscription_runs` as of\n``now`` — the rule :func:`~eifi1_server_kit.billing.require_new_checkout` and\n:func:`~eifi1_server_kit.billing.require_plan_switch` refuse by, so the page and the\ntwo routes never disagree. False by default: an app's own overview built without\n:meth:`from_row` keeps building."
             }
           ],
           "methods": [
             {
               "name": "from_row",
               "signature": "@classmethod from_row(row: SubscriptionRow, *, plan: PlanSpec, usage: Mapping[str, int], currency: BillingCurrency | str, now: datetime, retry_grace: timedelta | None = None, launch: datetime | None = None, price_ref: Callable[[str], PriceRef | None] | None = None) -> Self",
-              "doc": "The overview of ``row``, whose plan is ``plan`` (the catalogue's entry for\n``row.plan_code`` — another plan is a :class:`ValueError`), with the payer's\n``usage`` and ``currency``, its standing as of ``now``.\n\nPass ``launch=settings.billing_launch_at``: a beta row stored before the launch\ndate was known has no ``comped_until``, and both the standing and the\n``comped_until`` shown read it as the launch plus 12 months (§3.2).\n\nPass ``price_ref=settings.billing_price_ref`` for ``paid`` (§15.2.10): the row's\n``provider_price_id`` as a plan, interval and currency."
+              "doc": "The overview of ``row``, whose plan is ``plan`` (the catalogue's entry for\n``row.plan_code`` — another plan is a :class:`ValueError`), with the payer's\n``usage`` and ``currency``, its standing as of ``now``.\n\nPass ``launch=settings.billing_launch_at``: a beta row stored before the launch\ndate was known has no ``comped_until``, and both the standing and the\n``comped_until`` shown read it as the launch plus 12 months (§3.2).\n\nPass ``price_ref=settings.billing_price_ref`` for ``paid`` (§15.2.10): the row's\n``provider_price_id`` as a plan, interval and currency.\n\n``switching`` is :func:`~eifi1_server_kit.billing.provider_subscription_runs`\n``(row, now)``."
             }
           ]
         },
@@ -3654,7 +3666,7 @@
             {
               "name": "preview_plan_change",
               "signature": "async preview_plan_change(*, subscription_id: str, price_id: str) -> ProviderSwitchPreview",
-              "doc": "What switching to ``price_id`` would do (§15.2.10) — ``PATCH\n/subscriptions/{sub}/preview`` with the switch's body (:meth:`change_plan`), which\nchanges nothing: ``currency`` Paddle's ``currency_code``; ``now_minor``\n``update_summary.result.amount``, negative where its ``action`` is ``credit``\n(``0`` with no summary); ``next_minor`` ``next_transaction.details.totals``'\n``grand_total`` (else ``total``); ``next_billed_at`` Paddle's. A 2xx without them\nis a :class:`PaddleError` (502).\n(developer.paddle.com/api-reference/subscriptions/preview-subscription)"
+              "doc": "What switching to ``price_id`` would do (§15.2.10) — ``PATCH\n/subscriptions/{sub}/preview`` with the switch's body (:meth:`change_plan`), which\nchanges nothing: ``currency`` Paddle's ``currency_code``; ``now_minor``\n``update_summary.result.amount``, negative where its ``action`` is ``credit``\n(``0`` with no summary); ``next_minor`` ``next_transaction.details.totals.total`` (the\nplan's price; ``grand_total`` ignores the switch's own credit); ``next_billed_at`` Paddle's. A 2xx without them\nis a :class:`PaddleError` (502).\n(developer.paddle.com/api-reference/subscriptions/preview-subscription)"
             },
             {
               "name": "change_plan",
@@ -3688,7 +3700,7 @@
           "name": "PaddleError",
           "kind": "class",
           "signature": "class PaddleError(BillingError)",
-          "doc": "A Paddle call that failed: ``billing_provider_unavailable`` (502) — no answer, a 429\nor 5xx, a request Paddle refused, a 2xx without the fields the kit reads — or\n``billing_not_configured`` (503) for a 401/403, a wrong key or one without the\npermission: the deployment's fault, not \"try again\".\n\nThe client-facing ``detail`` is the kit's (``str(error)``, what the contract's error\nhandlers answer). Paddle's own words stay on the exception, for the log and for Paddle\nsupport; never the key or the body.",
+          "doc": "A Paddle call that failed: ``billing_provider_unavailable`` (502) — no answer, a 429\nor 5xx, a request Paddle refused, a 2xx without the fields the kit reads — or\n``billing_not_configured`` (503) for a 401/403, a wrong key or one without the\npermission, and for a 4xx with one of :data:`PADDLE_CONFIGURATION_CODES` (an\nunapproved checkout domain, an account not set up): the deployment's fault, not \"try\nagain\".\n\nThe client-facing ``detail`` is the kit's (``str(error)``, what the contract's error\nhandlers answer). Paddle's own words stay on the exception, for the log and for Paddle\nsupport; never the key or the body.",
           "methods": [
             {
               "name": "__init__",
@@ -4406,6 +4418,12 @@
           "kind": "function",
           "signature": "plans_out(catalogue: Mapping[str, PlanSpec]) -> list[PlanOut]",
           "doc": "The answer to ``GET /billing/plans`` (§4): every plan of ``catalogue`` as\n:class:`PlanOut`, in ``sort`` order (then by code, as\n:func:`~eifi1_server_kit.billing.plan_catalogue` orders them — sorted again here, so a\nmapping built by hand comes out the same)::\n\n    @router.get(\"/billing/plans\", response_model=list[PlanOut])\n    def billing_plans(payer: Payer = Depends(current_payer)) -> list[PlanOut]:\n        settings.require_billing_enabled()  # 404 billing_disabled\n        return plans_out(PLANS)\n\nEvery currency the plans are sold in: the page picks the payer's — the overview's\n``currency`` (§12.18) — and offers the switch where a plan has more than one."
+        },
+        {
+          "name": "provider_subscription_runs",
+          "kind": "function",
+          "signature": "provider_subscription_runs(row: SubscriptionRow, now: datetime) -> bool",
+          "doc": "Whether a provider subscription runs for ``row`` as of ``now`` (§14.6, §15.2.10):\nthe one rule :func:`require_new_checkout` and :func:`require_plan_switch` refuse by,\nand :class:`~eifi1_server_kit.billing.BillingOverview`'s ``switching`` — true, a plan\npick is a plan switch; false, a checkout. :func:`require_new_checkout` names the rule."
         },
         {
           "name": "refuse_billing_read_only",
@@ -5704,7 +5722,7 @@
     {
       "name": "eifi1_server_kit.feedback",
       "summary": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).",
-      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.\n\nLayer 2 (0.9.0, ``docs/server-services-harmonization.md``): the flows written once against\nports each app implements — :class:`FeedbackService` over a :class:`FeedbackRepository`,\n:func:`upload_attachment` and :func:`download_attachment` over an\n:class:`AttachmentStorage`, :func:`throttle_upload` — re-exported here, without FastAPI.\nThe routes are ``eifi1_server_kit.feedback.router`` (the ``fastapi`` extra) and the fakes\nand conformance checks ``eifi1_server_kit.feedback.testing``; neither is re-exported.\n\nPublic feedback (0.11, contract §9): the rules of :mod:`~eifi1_server_kit.feedback.public`\n(the public body, who is told, the field lists), the reply, comment and vote shapes, the\nfour stores' ports and the service's public flows.",
+      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.\n\nLayer 2 (0.9.0, ``docs/server-services-harmonization.md``): the flows written once against\nports each app implements — :class:`FeedbackService` over a :class:`FeedbackRepository`,\n:func:`upload_attachment` and :func:`download_attachment` over an\n:class:`AttachmentStorage`, :func:`throttle_upload` — re-exported here, without FastAPI.\nThe routes are ``eifi1_server_kit.feedback.router`` (the ``fastapi`` extra) and the fakes\nand conformance checks ``eifi1_server_kit.feedback.testing``; neither is re-exported.\n\nPublic feedback (0.11, contract §9): the rules of :mod:`~eifi1_server_kit.feedback.public`\n(the public body, who is told, the field lists), the reply, comment and vote shapes, the\nfour stores' ports and the service's public flows.\n\nRework as an entry (0.13, contract §10): ``FeedbackStatus.REWORK``, :data:`QUEUE_STATUSES`,\n:class:`FeedbackEntryKind`, :func:`plan_rework`, :class:`FeedbackReworkCreate`,\n:meth:`FeedbackService.rework`, and :func:`split_rework_blocks` for the migrations.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3",
@@ -5806,7 +5824,7 @@
           "name": "FEEDBACK_ANSWERED",
           "kind": "constant",
           "signature": "FEEDBACK_ANSWERED = \"feedback_answered\"",
-          "doc": "The notification type a reply fires, to the author and the earlier commenters (9.11)."
+          "doc": "The notification type a reply fires, to the author and the earlier commenters (9.11).\nA reply only (``kind = 'reply'``): a rework entry sends nothing — no\n``feedback_answered``, commenters not told, no admin mail (§10.2 decision 10); the REWORK\nstatus, or the Rework chip on an OPEN row, is the inbox's signal. An admin's reply with\nstatus REWORK is a reply and fires it."
         },
         {
           "name": "FEEDBACK_COMMENT",
@@ -5907,14 +5925,20 @@
         {
           "name": "PUBLIC_REPLY_FIELDS",
           "kind": "constant",
-          "signature": "PUBLIC_REPLY_FIELDS: frozenset[str] = frozenset({\"id\", \"author_name\", \"body\", \"status_to\", \"created_at\"})",
-          "doc": "What a reply says in the public detail (9.10): never ``status_from``."
+          "signature": "PUBLIC_REPLY_FIELDS: frozenset[str] = frozenset({\"id\", \"author_name\", \"body\", \"status_to\", \"created_at\", \"kind\"})",
+          "doc": "What a reply or rework entry says in the public detail (9.10, §10.3): ``kind`` carried,\nnever ``status_from``, never ``attachment_url``."
         },
         {
           "name": "PUBLIC_REPORT_FIELDS",
           "kind": "constant",
           "signature": "PUBLIC_REPORT_FIELDS: frozenset[str] = frozenset(\n    {\n        \"id\",\n        \"title\",\n        \"category\",\n        \"status\",\n        \"created_at\",\n        \"updated_at\",\n        \"resolved_at\",\n        \"author_name\",\n        \"mine\",\n        \"votes\",\n        \"voted\",\n        \"comment_count\",\n        \"body\",\n        \"replies\",\n    }\n)",
           "doc": "What a report says to anyone but its author and an admin (9.10): the list item's\nfields, and the detail's ``body`` (the public body) and ``replies``."
+        },
+        {
+          "name": "QUEUE_STATUSES",
+          "kind": "constant",
+          "signature": "QUEUE_STATUSES: frozenset[FeedbackStatus] = frozenset(\n    {FeedbackStatus.READY, FeedbackStatus.REWORK, FeedbackStatus.IN_PROGRESS}\n)",
+          "doc": "The loops' queue (§10.2 decision 4): released for work — READY, REWORK — and the one\nbeing worked on. Kurvenschmiede's loop adds OPEN (decision 9), a documented difference."
         },
         {
           "name": "REFERENCE_LENGTH",
@@ -5938,7 +5962,19 @@
           "name": "REWORKABLE_STATUSES",
           "kind": "constant",
           "signature": "REWORKABLE_STATUSES: frozenset[FeedbackStatus] = frozenset(FeedbackStatus) - AUTHOR_EDITABLE_STATUSES",
-          "doc": "Everything the team has answered — a report can be sent back for rework from these, and\na rework append re-queues it (contract §3.4; kit ``FEEDBACK_REWORKABLE_STATUSES``): the\nsame five as before READY, which is not among them (§8.2)."
+          "doc": "Everything the team has answered — a report can be sent back for rework from these\n(contract §3.4, §10.3; kit ``FEEDBACK_REWORKABLE_STATUSES``): the five answered\nstatuses, and REWORK itself (a second rework adds another entry, §10.2 decision 4).\nREADY is not among them (§8.2)."
+        },
+        {
+          "name": "REWORK_AUTHOR_ONLY",
+          "kind": "constant",
+          "signature": "REWORK_AUTHOR_ONLY = \"Only the author sends a report back; an admin replies\"",
+          "doc": "Why anyone but the report's author is refused a rework entry (§10.3): an admin answers\nwith a reply, which offers REWORK as a status."
+        },
+        {
+          "name": "REWORK_BLOCK_RE",
+          "kind": "constant",
+          "signature": "REWORK_BLOCK_RE = re.compile(r\"^--- REWORK (\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}) ---$\")",
+          "doc": "One block that :func:`split_rework_blocks` turns into an entry: exactly\n:func:`append_rework`'s rule, matched against a whole TRIMMED line; the group is the stamp.\nA line :data:`REWORK_RULE_RE` matches that this does not (``--- REWORK ANSWERED\n2026-09-16 ---``, ``--- REWORK 2026-09-04 ---``, ``--- REWORK (2) ---``) is no block."
         },
         {
           "name": "REWORK_RULE_RE",
@@ -6309,7 +6345,7 @@
               "name": "replies",
               "type": "int",
               "default": "0",
-              "doc": "Replies (an erased admin's) un-named and scrubbed; kept."
+              "doc": "Entries un-named and scrubbed, kept: an erased admin's replies and an erased\nauthor's rework entries (whose files join ``keys``)."
             }
           ]
         },
@@ -6641,6 +6677,22 @@
           ]
         },
         {
+          "name": "FeedbackEntryKind",
+          "kind": "enum",
+          "signature": "class FeedbackEntryKind(str, enum.Enum)",
+          "doc": "What one row of ``feedback_replies`` is (§10.2 decision 7): an admin's or a loop's\n``reply``, or the author's ``rework`` — \"this is not done yet\", its own dated entry in\nthe report's timeline since round 0.40, where it used to be a block appended to the\nbody. Stored as the lower-case value (``VARCHAR(12) NOT NULL DEFAULT 'reply'``), so a\nloop's INSERT without the column writes a reply and can never write a rework.",
+          "values": [
+            {
+              "name": "REPLY",
+              "value": "reply"
+            },
+            {
+              "name": "REWORK",
+              "value": "rework"
+            }
+          ]
+        },
+        {
           "name": "FeedbackError",
           "kind": "class",
           "signature": "class FeedbackError(ValueError)",
@@ -6749,7 +6801,7 @@
           "name": "FeedbackPublicReplyResponse",
           "kind": "model",
           "signature": "class FeedbackPublicReplyResponse(BaseModel)",
-          "doc": "One reply as the public detail shows it (§9.10): never ``status_from``.",
+          "doc": "One reply or rework entry as the public detail shows it (§9.10, §10.3): never\n``status_from``, never ``attachment_url``.",
           "fields": [
             {
               "name": "id",
@@ -6761,7 +6813,7 @@
               "name": "author_name",
               "type": "str | None",
               "default": "None",
-              "doc": "Others: the first name; an admin: the full name; ``None``: the app's word for its\nadmin (\"Admin\") — a loop's reply, a migrated outcome, an erased admin."
+              "doc": "Others: the first name; an admin: the full name; ``None``: the app's word for its\nadmin (\"Admin\") — a loop's reply, a migrated outcome, an erased admin — or, on a\n``rework`` entry, \"A user\" (an erased author), never the admin word."
             },
             {
               "name": "body",
@@ -6773,13 +6825,19 @@
               "name": "status_to",
               "type": "FeedbackStatus | None",
               "default": "None",
-              "doc": "The status the reply moved the report to; ``None``: no status change."
+              "doc": "The status the entry moved the report to; ``None``: no status change (a migrated\nrework entry too)."
             },
             {
               "name": "created_at",
               "type": "datetime",
               "default": null,
               "doc": ""
+            },
+            {
+              "name": "kind",
+              "type": "FeedbackEntryKind",
+              "default": "<FeedbackEntryKind.REPLY: 'reply'>",
+              "doc": "``reply`` (an admin's or a loop's answer) or ``rework`` (the author's, §10.3)."
             }
           ]
         },
@@ -6899,7 +6957,7 @@
           "name": "FeedbackReplyResponse",
           "kind": "model",
           "signature": "class FeedbackReplyResponse(FeedbackPublicReplyResponse)",
-          "doc": "One reply on the admin's and the author's report (§9.7).",
+          "doc": "One reply or rework entry on the admin's and the author's report (§9.7, §10.3).",
           "fields": [
             {
               "name": "id",
@@ -6911,7 +6969,7 @@
               "name": "author_name",
               "type": "str | None",
               "default": "None",
-              "doc": "Others: the first name; an admin: the full name; ``None``: the app's word for its\nadmin (\"Admin\") — a loop's reply, a migrated outcome, an erased admin."
+              "doc": "Others: the first name; an admin: the full name; ``None``: the app's word for its\nadmin (\"Admin\") — a loop's reply, a migrated outcome, an erased admin — or, on a\n``rework`` entry, \"A user\" (an erased author), never the admin word."
             },
             {
               "name": "body",
@@ -6923,7 +6981,7 @@
               "name": "status_to",
               "type": "FeedbackStatus | None",
               "default": "None",
-              "doc": "The status the reply moved the report to; ``None``: no status change."
+              "doc": "The status the entry moved the report to; ``None``: no status change (a migrated\nrework entry too)."
             },
             {
               "name": "created_at",
@@ -6932,10 +6990,22 @@
               "doc": ""
             },
             {
+              "name": "kind",
+              "type": "FeedbackEntryKind",
+              "default": "<FeedbackEntryKind.REPLY: 'reply'>",
+              "doc": "``reply`` (an admin's or a loop's answer) or ``rework`` (the author's, §10.3)."
+            },
+            {
               "name": "status_from",
               "type": "FeedbackStatus | None",
               "default": "None",
               "doc": "The status before the move: the admin view only (``None`` elsewhere)."
+            },
+            {
+              "name": "attachment_url",
+              "type": "str | None",
+              "default": "None",
+              "doc": "A rework entry's one file (§10.3); ``None`` for a reply. The admin's and the\nauthor's views only — never the public detail."
             }
           ]
         },
@@ -6943,7 +7013,7 @@
           "name": "FeedbackReplyRow",
           "kind": "protocol",
           "signature": "class FeedbackReplyRow(Protocol)",
-          "doc": "One answer (§9.7): ``feedback_replies``, read-only. ``author_id`` is ``None`` for a\nloop's reply, a migrated outcome or an erased admin.",
+          "doc": "One entry of ``feedback_replies``, read-only: an answer (§9.7) or, since 0.13, the\nauthor's rework (§10.3), told apart by ``kind``. ``author_id`` is ``None`` for a loop's\nreply, a migrated outcome, an erased admin — or an erased author's rework.",
           "methods": [
             {
               "name": "id",
@@ -6979,6 +7049,16 @@
               "name": "created_at",
               "signature": "@property created_at -> datetime",
               "doc": ""
+            },
+            {
+              "name": "kind",
+              "signature": "@property kind -> FeedbackEntryKind | str",
+              "doc": ""
+            },
+            {
+              "name": "attachment_url",
+              "signature": "@property attachment_url -> str | None",
+              "doc": ""
             }
           ]
         },
@@ -6986,27 +7066,27 @@
           "name": "FeedbackReplyStore",
           "kind": "protocol",
           "signature": "class FeedbackReplyStore[ReplyRowT: FeedbackReplyRow](Protocol)",
-          "doc": "The replies (§9.7). Async; every write flushes and none commits.",
+          "doc": "The replies and rework entries (§9.7, §10.3), one table. Async; every write flushes\nand none commits.",
           "methods": [
             {
               "name": "for_reports",
               "signature": "async for_reports(ids: Collection[int]) -> Mapping[int, Sequence[ReplyRowT]]",
-              "doc": "Each report's replies, oldest first (``created_at``, then id); a report with\nnone may be missing from the answer. One query for a page."
+              "doc": "Each report's entries, both kinds, oldest first (``created_at``, then id); a\nreport with none may be missing from the answer. One query for a page."
             },
             {
               "name": "add",
               "signature": "async add(new: NewFeedbackReply, *, actor: FeedbackActor | None) -> ReplyRowT",
-              "doc": "Insert and flush. Fires ``feedback_answered`` (to\n:func:`~eifi1_server_kit.feedback.feedback_recipients`), sent after the commit."
+              "doc": "Insert and flush, ``kind`` and ``attachment_url`` included, and ``created_at``\nwhen given. For ``kind = 'reply'`` only, fires ``feedback_answered`` (to\n:func:`~eifi1_server_kit.feedback.feedback_recipients`), sent after the commit; a\n``rework`` entry fires nothing (§10.2 decision 10)."
             },
             {
               "name": "by_author",
               "signature": "async by_author(user_id: int) -> Sequence[ReplyRowT]",
-              "doc": "The erasure's replies: those ``user_id`` wrote."
+              "doc": "The erasure's entries: those ``user_id`` wrote, both kinds."
             },
             {
               "name": "apply",
               "signature": "async apply(reply: ReplyRowT, changes: Mapping[str, Any]) -> ReplyRowT",
-              "doc": "Assign and flush (the erasure's ``author_id`` and ``body``)."
+              "doc": "Assign and flush (the erasure's ``author_id``, ``body`` and ``attachment_url``)."
             }
           ]
         },
@@ -7054,7 +7134,7 @@
             {
               "name": "urls_named_except",
               "signature": "async urls_named_except(row_ids: Collection[int]) -> set[str]",
-              "doc": "Every attachment URL the rows outside row_ids name, in a column or the body\n(feedback_attachment_urls): the erasure's shared-key check."
+              "doc": "Every attachment URL the rows outside row_ids name, in a column or the body\n(feedback_attachment_urls), and the ``attachment_url`` of their rework entries\n(0.13): the erasure's shared-key check."
             }
           ]
         },
@@ -7092,7 +7172,7 @@
               "name": "body",
               "type": "str",
               "default": null,
-              "doc": "``\"\"`` when none; rework rounds are appended here."
+              "doc": "``\"\"`` when none. Before round 0.40 rework rounds were appended here; an unmigrated\nrow may still carry them."
             },
             {
               "name": "category",
@@ -7194,7 +7274,33 @@
               "name": "replies",
               "type": "list[FeedbackReplyResponse] | None",
               "default": "None",
-              "doc": "The answers, oldest first; ``status_from`` for an admin only."
+              "doc": "The answers and rework entries (``kind``), oldest first; ``status_from`` for an\nadmin only."
+            }
+          ]
+        },
+        {
+          "name": "FeedbackReworkCreate",
+          "kind": "model",
+          "signature": "class FeedbackReworkCreate(BaseModel)",
+          "doc": "``POST /feedback/{id}/rework`` (§10.3), the report's author: what is still wanted,\n1–:data:`REPLY_MAX` characters after trimming, and at most one file — one of this\napp's attachment URLs (:attr:`attachment_url_policy`, else 422).",
+          "fields": [
+            {
+              "name": "body",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "attachment_url",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "attachment_url_policy",
+              "type": "ClassVar[AttachmentUrlPolicy]",
+              "default": "AttachmentUrlPolicy(key_pattern='[\\\\w-][\\\\w.-]*', prefix='/api/v1/feedback/attachments/')",
+              "doc": "Which URL may be named. Narrow it in the app's subclass; the service checks its own\npolicy too."
             }
           ]
         },
@@ -7290,12 +7396,12 @@
             {
               "name": "update",
               "signature": "async update(actor: FeedbackActor, feedback_id: int, payload: FeedbackUpdate) -> RowT",
-              "doc": "A PATCH, in keksdose's order (§2.10): refused for a demo; CRASH refused before\nthe lookup (422); the row this actor may see, or 404; a foreign row's 404 where\nthe app chose it; :func:`~eifi1_server_kit.feedback.plan_update` (403 or 422), with\nthe row's ``filed_private``; then the one write. ``public`` is a 422 where the app\nhas no public parts (no ``public_viewer``)."
+              "doc": "A PATCH, in keksdose's order (§2.10): refused for a demo; CRASH refused before\nthe lookup (422); the row this actor may see, or 404; a foreign row's 404 where\nthe app chose it; :func:`~eifi1_server_kit.feedback.plan_update` (403 or 422), with\nthe row's ``filed_private``; then the one write. ``public`` is a 422 where the app\nhas no public parts (no ``public_viewer``).\n\n**The legacy append** (0.13 only, §10.3): an old client's rework append is written\nas an entry (one write per store, the report last; ``body`` untouched) — the\nactor's ``rework`` entry when the actor is the author, else (an admin on another's\nreport) a reply with status REWORK — and logged ``feedback.legacy_rework_append``.\nWithout a reply store the body is appended as before 0.13."
             },
             {
               "name": "erase_author",
               "signature": "async erase_author(user_id: int, identifiers: Iterable[str | None]) -> ErasedFeedback",
-              "doc": "Take an erased account out of its reports, and answer the files to delete (§2.15).\n\nEach of the author's rows is anonymised\n(:func:`~eifi1_server_kit.feedback.anonymise_feedback`) and written with\n``actor=None``: an erasure claims nothing and answers nobody. ``keys`` are the bare\nkeys of the URLs those rows named — columns and the body's rework lines — that no\nother row still names, sorted. Call it inside the app's own erasure transaction,\nwith a repository that does not commit; the app deletes the keys at its commit\n(keksdose prefixes ``feedback/`` and arms its after-commit purge, kastlan deletes\nafter its one commit, Kurvenschmiede ignores them).\n\nWith the public-feedback stores (§9.12): the person's **comments** are scrubbed and\nun-named (kept, shown as \"A user\"), their **votes** deleted, their **replies** (an\nadmin's) un-named and scrubbed (kept), and ``hidden_by`` cleared where it was them."
+              "doc": "Take an erased account out of its reports, and answer the files to delete (§2.15).\n\nEach of the author's rows is anonymised\n(:func:`~eifi1_server_kit.feedback.anonymise_feedback`) and written with\n``actor=None``: an erasure claims nothing and answers nobody. ``keys`` are the bare\nkeys of the URLs those rows named — columns and the body's rework lines — that no\nother row still names, sorted. Call it inside the app's own erasure transaction,\nwith a repository that does not commit; the app deletes the keys at its commit\n(keksdose prefixes ``feedback/`` and arms its after-commit purge, kastlan deletes\nafter its one commit, Kurvenschmiede ignores them).\n\nWith the public-feedback stores (§9.12): the person's **comments** are scrubbed and\nun-named (kept, shown as \"A user\"), their **votes** deleted, their **replies** (an\nadmin's) and **rework entries** (an author's, §10.3) un-named and scrubbed (kept),\neach rework file taken off its entry and joining ``keys``\n(:func:`~eifi1_server_kit.feedback.anonymise_reply`), and ``hidden_by`` cleared\nwhere it was them."
             },
             {
               "name": "sees_public",
@@ -7325,7 +7431,12 @@
             {
               "name": "reply",
               "signature": "async reply(actor: FeedbackActor, feedback_id: int, payload: FeedbackReplyCreate) -> RowT",
-              "doc": "An admin's answer (§9.7): refused for a demo, 403 \"Insufficient role\" for anyone\nelse, 404 for a report the admin cannot see. The reply is added (the store fires\n``feedback_answered``); with a ``status`` the report moves by\n:func:`~eifi1_server_kit.feedback.plan_reply` — the reply first, the report last.\nAnswers the report; :meth:`admin_view` makes it the answer with its replies."
+              "doc": "An admin's answer (§9.7): refused for a demo, 403 \"Insufficient role\" for anyone\nelse, 404 for a report the admin cannot see. The reply is added (the store fires\n``feedback_answered``); with a ``status`` the report moves by\n:func:`~eifi1_server_kit.feedback.plan_reply` — the reply first, the report last.\nWith ``status`` REWORK it is how an admin sends any report back (§10.3): still a\nreply, and it notifies. Answers the report; :meth:`admin_view` makes it the answer\nwith its replies."
+            },
+            {
+              "name": "rework",
+              "signature": "async rework(actor: FeedbackActor, feedback_id: int, payload: FeedbackReworkCreate) -> RowT",
+              "doc": "The author sends a report back (§10.3): refused for a demo; the file one of this\napp's URLs (422); the report this actor may see, or 404 — a foreign row 404 where\nthe app chose it; then :func:`~eifi1_server_kit.feedback.plan_rework` (403 for\nanyone but the author, an admin included, and outside the reworkable statuses).\nThe ``rework`` entry is added — the store fires nothing for it — then the report\nmoves (REWORK for an admin author, OPEN otherwise): one write per store, the\nreport last. Answers the report; the router answers it with its replies."
             },
             {
               "name": "list_public",
@@ -7373,7 +7484,7 @@
           "name": "FeedbackStatus",
           "kind": "enum",
           "signature": "class FeedbackStatus(str, enum.Enum)",
-          "doc": "The eight statuses every app speaks (contract §2.1, §8.2), in the chain's order.\n\n``OPEN`` — filed, not yet triaged: nobody works on it, agents included; ``READY`` —\nreleased for implementation by an admin, the triage step between OPEN and IN_PROGRESS\n(keksdose live #396, contract §8.2: an admin sets OPEN → READY, and an admin's own\nreport starts there, :func:`~eifi1_server_kit.feedback.initial_status`);\n``NEEDS_LIVE_TEST`` — resolved, but only checkable on a deployed build (keksdose\nfeedback #196); ``POSTPONED`` — deliberately not now, neither a refusal nor a queue\n(keksdose feedback #195).\n\nAn app whose status column is a database enum adds the label before it can store\nREADY (Postgres: ``ALTER TYPE feedbackstatus ADD VALUE 'READY' AFTER 'OPEN'``);\nexisting OPEN rows stay OPEN — there is no back-fill.",
+          "doc": "The nine statuses every app speaks (contract §2.1, §8.2, §10.2), in the chain's order.\n\n``OPEN`` — filed, not yet triaged: nobody works on it, agents included; ``READY`` —\nreleased for implementation by an admin, the triage step between OPEN and IN_PROGRESS\n(keksdose live #396, contract §8.2: an admin sets OPEN → READY, and an admin's own\nreport starts there, :func:`~eifi1_server_kit.feedback.initial_status`);\n``NEEDS_LIVE_TEST`` — resolved, but only checkable on a deployed build (keksdose\nfeedback #196); ``POSTPONED`` — deliberately not now, neither a refusal nor a queue\n(keksdose feedback #195); ``REWORK`` — \"Rework requested\" (round 0.40, §10.2 decision\n4): sent back by its author or an admin, released for work again, so in the loops'\nqueue with READY and IN_PROGRESS (:data:`QUEUE_STATUSES`); its next step is\nIN_PROGRESS.\n\nAn app whose status column is a database enum adds the label before it can store\nREADY (Postgres: ``ALTER TYPE feedbackstatus ADD VALUE 'READY' AFTER 'OPEN'``);\nexisting OPEN rows stay OPEN — there is no back-fill. REWORK the same way (§10.4:\n``ADD VALUE IF NOT EXISTS 'REWORK' AFTER 'READY'``, committed before any write of it).",
           "values": [
             {
               "name": "OPEN",
@@ -7382,6 +7493,10 @@
             {
               "name": "READY",
               "value": "READY"
+            },
+            {
+              "name": "REWORK",
+              "value": "REWORK"
             },
             {
               "name": "IN_PROGRESS",
@@ -7623,7 +7738,7 @@
           "name": "NewFeedbackReply",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class NewFeedbackReply",
-          "doc": "A reply to insert (§9.7); the store adds ``created_at`` (``server_default now()``)\nand the app its own columns (kastlan's ``company_id``, keksdose's ``notified_at``).",
+          "doc": "An entry to insert (§9.7, §10.3): a reply, or a ``rework`` with its one file. The\nstore adds ``created_at`` (``server_default now()``) unless one is given — the\nmigration's explicit stamp — and the app its own columns (kastlan's ``company_id``,\nkeksdose's ``notified_at``).",
           "fields": [
             {
               "name": "feedback_id",
@@ -7652,6 +7767,24 @@
             {
               "name": "status_to",
               "type": "FeedbackStatus | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "kind",
+              "type": "FeedbackEntryKind",
+              "default": "<FeedbackEntryKind.REPLY: 'reply'>",
+              "doc": ""
+            },
+            {
+              "name": "attachment_url",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "datetime | None",
               "default": "None",
               "doc": ""
             }
@@ -7786,6 +7919,32 @@
           ]
         },
         {
+          "name": "ReworkBlock",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class ReworkBlock",
+          "doc": "One rework round of an old body (§10.4): when it was sent (UTC, to the minute), what\nit says, and its one file — the block's first ``[screenshot]`` line — or ``None``.",
+          "fields": [
+            {
+              "name": "stamp",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "note",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "url",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "StoredAttachment",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class StoredAttachment",
@@ -7821,7 +7980,7 @@
           "name": "UpdatePlan",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class UpdatePlan",
-          "doc": "What to write onto the row: ``changes`` is the sent fields, plus the server's own\n``status`` (a rework sent back to the queue — :func:`rework_status`; ``reopened``\nsays it happened) and ``resolved_at`` (a stamp or a clear) when they apply.",
+          "doc": "What to write onto the row: ``changes`` is the sent fields, plus the server's own\n``status`` (a rework sent back to the queue — :func:`rework_status`; ``reopened``\nsays it happened) and ``resolved_at`` (a stamp or a clear) when they apply.\n\n``rework`` (0.13 only, §10.3): set when ``reopened`` — the appended block, split, for\nthe service to write as an entry; ``body`` is then NOT in ``changes``.",
           "fields": [
             {
               "name": "changes",
@@ -7840,6 +7999,12 @@
               "type": "bool",
               "default": null,
               "doc": ""
+            },
+            {
+              "name": "rework",
+              "type": "ReworkBlock | None",
+              "default": "None",
+              "doc": ""
             }
           ]
         },
@@ -7850,10 +8015,16 @@
           "doc": "One report with its author taken out (keksdose ``_anonymise_feedback`` row loop, ``:1201-1214``).\n\n``identifiers`` are the person's own strings — build them with\n:func:`eifi1_server_kit.auth.erasure_identifiers` (the email, the old display name, the\nfull name in every order, longest first; never a bare first or last name). The body's\n``[screenshot] <url>`` lines are stripped (the fix this module documents) BEFORE the\nscrub, and every URL the row named is returned in ``urls`` for\n:func:`attachment_keys_to_purge`. ``changes`` sets ``user_id``, ``crash_fingerprint``,\n``screenshot_url`` and ``attachment_urls`` to ``None``."
         },
         {
+          "name": "anonymise_reply",
+          "kind": "function",
+          "signature": "anonymise_reply(*, body: str | None, attachment_url: str | None, identifiers: Iterable[str | None]) -> AnonymisedFeedback",
+          "doc": "One entry of ``feedback_replies`` with its writer taken out (§9.12, §10.3): kept,\n``author_id`` ``None``, the body scrubbed (:func:`scrub_text`). A rework entry's file\ngoes as the report's do: ``attachment_url`` set to ``None`` and the URL answered in\n``urls`` for :func:`attachment_keys_to_purge` (an entry without one is not written\nthere)."
+        },
+        {
           "name": "append_rework",
           "kind": "function",
           "signature": "append_rework(body: str, note: str, url: str | None = None, *, now: datetime, prefix: str = DEFAULT_ATTACHMENT_URL_PREFIX) -> str | None",
-          "doc": "``body`` with one rework round appended — the exact text the contract's PATCH carries.\n\nMirrors the kit's ``appendRework``: the note is required and trimmed (a file alone\ncannot be sent — ``None`` for a blank note, as the kit returns ``null``); ONE file per\nround, as one ``[screenshot] <url>`` line; ``\\n\\n`` is left out when the old body is\n``\"\"``. The old body is kept byte for byte, so the result strictly extends it — which\nis what :func:`eifi1_server_kit.feedback.is_rework_append` recognises.\n\nRaises :class:`ValueError` for a ``url`` outside ``prefix``: written anyway it would sit\nin the body as prose no reader recognises as a file."
+          "doc": "``body`` with one rework round appended — the exact text the contract's PATCH carried.\n\nLegacy (§10.3): a rework is an entry now; this is the shape a migration's downgrade\nwrites back and an old client still sends for one release.\n\nMirrors the kit's ``appendRework``: the note is required and trimmed (a file alone\ncannot be sent — ``None`` for a blank note, as the kit returns ``null``); ONE file per\nround, as one ``[screenshot] <url>`` line; ``\\n\\n`` is left out when the old body is\n``\"\"``. The old body is kept byte for byte, so the result strictly extends it — which\nis what :func:`eifi1_server_kit.feedback.is_rework_append` recognises.\n\nRaises :class:`ValueError` for a ``url`` outside ``prefix``: written anyway it would sit\nin the body as prose no reader recognises as a file."
         },
         {
           "name": "appended_text",
@@ -7949,7 +8120,7 @@
           "name": "feedback_recipients",
           "kind": "function",
           "signature": "feedback_recipients(*, author_id: int | None, commenter_ids: Iterable[int | None], writer_id: int | None) -> list[int]",
-          "doc": "Who hears of a new reply or comment (9.11): the report's author first, then each\nearlier commenter in the order of their first comment; never the writer, nobody twice,\nno ``None`` (an erased account).\n\nThe app still drops anyone who may no longer see the report (a commenter outside\n``public_viewer``, a report switched off) and any deactivated, erased or demo account."
+          "doc": "Who hears of a new reply or comment (9.11): the report's author first, then each\nearlier commenter in the order of their first comment; never the writer, nobody twice,\nno ``None`` (an erased account). Never asked for a rework entry, which tells nobody\n(§10.2 decision 10).\n\nThe app still drops anyone who may no longer see the report (a commenter outside\n``public_viewer``, a report switched off) and any deactivated, erased or demo account."
         },
         {
           "name": "fold_crash_context",
@@ -7973,7 +8144,13 @@
           "name": "is_rework_append",
           "kind": "function",
           "signature": "is_rework_append(old_body: str | None, changes: Mapping[str, Any]) -> bool",
-          "doc": "Is this PATCH an APPEND to the body — the rework composer's shape?\n\nkeksdose ``feedback_service.py:93`` ``_is_rework_append``, as the contract states it\n(§3.4): the changed fields are ``{\"body\"}`` and nothing else, and the new body strictly\nextends the old one, so the original is still there verbatim and first. A rewrite, a\ntruncation, or a body change bundled with any other field (a status included) is not\none. Asked of every actor, admins included (keksdose live #331).\n\n``changes`` is what the client actually sent — ``payload.model_dump(exclude_unset=True)``."
+          "doc": "Is this PATCH an APPEND to the body — the rework composer's shape?\n\nLegacy (§10.3): server-kit 0.13 turns such a PATCH into a rework entry\n(:func:`~eifi1_server_kit.feedback.plan_update`'s ``rework``); from 0.14 it is a 422.\n\nkeksdose ``feedback_service.py:93`` ``_is_rework_append``, as the contract states it\n(§3.4): the changed fields are ``{\"body\"}`` and nothing else, and the new body strictly\nextends the old one, so the original is still there verbatim and first. A rewrite, a\ntruncation, or a body change bundled with any other field (a status included) is not\none. Asked of every actor, admins included (keksdose live #331).\n\n``changes`` is what the client actually sent — ``payload.model_dump(exclude_unset=True)``."
+        },
+        {
+          "name": "legacy_rework_block",
+          "kind": "function",
+          "signature": "legacy_rework_block(old_body: str | None, new_body: str, *, now: datetime, prefix: str = DEFAULT_ATTACHMENT_URL_PREFIX) -> ReworkBlock",
+          "doc": "The block an old client's append carries (§10.3): the appended text split by\n:func:`~eifi1_server_kit.feedback.split_rework_blocks` when it is exactly one\nwell-formed block; anything else appended is one round sent ``now``, its text the\nnote, no file."
         },
         {
           "name": "normalise_crash_text",
@@ -7994,10 +8171,16 @@
           "doc": "A reply's status move, as data (§9.7). ``status`` is the row's stored one,\n``new_status`` what the reply chose; ``None`` changes nothing.\n\nWith a status, ``changes`` holds it and ``resolved_at`` by :func:`resolved_at_change`\n(as :func:`plan_update`), and the reply records the move — also onto the status the\nrow already has, which is how a reply answers the nudge after a status-only move into\na decided status. CRASH is a category, not a status, so nothing is refused here."
         },
         {
+          "name": "plan_rework",
+          "kind": "function",
+          "signature": "plan_rework(*, status: FeedbackStatus | str, is_author: bool, actor_is_admin: bool, now: datetime | None = None) -> ReplyPlan",
+          "doc": "A rework entry's move, as data (§10.3): the report's author only — anyone else,\nan admin included, is a :class:`FeedbackForbiddenError` :data:`REWORK_AUTHOR_ONLY` —\non a row in :data:`~eifi1_server_kit.feedback.REWORKABLE_STATUSES` (else 403 \"Entry is\nin <STATUS>; …\"). The row goes to :func:`rework_status` (REWORK for an admin author,\nOPEN otherwise), ``resolved_at`` cleared on leaving DONE / WONT_DO, and the entry\nrecords ``status_from`` / ``status_to``."
+        },
+        {
           "name": "plan_update",
           "kind": "function",
-          "signature": "plan_update(*, status: FeedbackStatus | str, body: str | None, changes: Mapping[str, Any], is_admin: bool, is_author: bool, now: datetime | None = None, filed_private: bool = False) -> UpdatePlan",
-          "doc": "The whole PATCH rule for one row, as data (keksdose ``update_feedback``).\n\n``status`` / ``body`` are the row's STORED values; ``changes`` is what the client sent\n(``payload.model_dump(exclude_unset=True)``) and is not mutated. Raises\n:class:`CrashCategoryNotAssignableError` (→ 422) or :class:`FeedbackForbiddenError`\n(→ 403); otherwise every key of :attr:`UpdatePlan.changes` is a column to assign.\n``now`` stamps ``resolved_at`` (default: the current UTC time). ``filed_private`` is\nthe row's flag (§9.3): its author may then switch ``public`` at any status."
+          "signature": "plan_update(*, status: FeedbackStatus | str, body: str | None, changes: Mapping[str, Any], is_admin: bool, is_author: bool, now: datetime | None = None, filed_private: bool = False, prefix: str = DEFAULT_ATTACHMENT_URL_PREFIX) -> UpdatePlan",
+          "doc": "The whole PATCH rule for one row, as data (keksdose ``update_feedback``).\n\n``status`` / ``body`` are the row's STORED values; ``changes`` is what the client sent\n(``payload.model_dump(exclude_unset=True)``) and is not mutated. Raises\n:class:`CrashCategoryNotAssignableError` (→ 422) or :class:`FeedbackForbiddenError`\n(→ 403); otherwise every key of :attr:`UpdatePlan.changes` is a column to assign.\n``now`` stamps ``resolved_at`` (default: the current UTC time). ``filed_private`` is\nthe row's flag (§9.3): its author may then switch ``public`` at any status.\n\n**The legacy append** (0.13 only, §10.3): a rework append on a row outside the author's\nlane sets :attr:`UpdatePlan.rework` (:func:`legacy_rework_block`, its file found under\n``prefix``) and drops ``body`` from ``changes``; the status is :func:`rework_status`'s."
         },
         {
           "name": "public_body",
@@ -8033,7 +8216,7 @@
           "name": "rework_count",
           "kind": "function",
           "signature": "rework_count(body: str | None) -> int",
-          "doc": "How many times a report has been sent back: its ``--- REWORK … ---`` rule lines.\n\nDerived, never stored (contract §3.1), so nothing can forget to set it. Folded kastlan\ncomments do not count (kit ``reworkCount``)."
+          "doc": "How many times a report has been sent back: its ``--- REWORK … ---`` rule lines.\n\nLegacy (§10.3): a report's reworks are its ``rework`` entries now; this counts an\nunmigrated body (the client's fallback without ``replies``).\n\nDerived, never stored (contract §3.1), so nothing can forget to set it. Folded kastlan\ncomments do not count (kit ``reworkCount``)."
         },
         {
           "name": "rework_stamp",
@@ -8045,7 +8228,7 @@
           "name": "rework_status",
           "kind": "function",
           "signature": "rework_status(*, actor_is_admin: bool) -> FeedbackStatus",
-          "doc": "Where a rework append sends a row back to (contract §3.4, §8.2): READY when an admin\nsends it — an admin's rework is already triaged — and OPEN otherwise, because a user's\nrework is new input for the triager to look at."
+          "doc": "Where a rework sends a row back to (§10.2 decision 5): REWORK when an admin sends\nit — an admin's rework is already triaged, released for work again — and OPEN\notherwise, because a user's rework is new input for the triager, who releases it to\nREWORK. (Before 0.13 an admin's went to READY.)"
         },
         {
           "name": "scrub_context",
@@ -8064,6 +8247,12 @@
           "kind": "function",
           "signature": "split_body_attachments(body: str | None, *, prefix: str = DEFAULT_ATTACHMENT_URL_PREFIX) -> tuple[str, list[str]]",
           "doc": "``(text, urls)``: the body without its file lines (trailing blank lines dropped), and\nthe URLs those lines named, in body order (kit ``splitBodyAttachments``)."
+        },
+        {
+          "name": "split_rework_blocks",
+          "kind": "function",
+          "signature": "split_rework_blocks(body: str | None, *, prefix: str = DEFAULT_ATTACHMENT_URL_PREFIX) -> tuple[str, list[ReworkBlock]]",
+          "doc": "``(description, blocks)``: a body without its rework rounds, and the rounds, in body\norder (§10.4) — what each app's migration writes as ``rework`` entries.\n\nA block opens on a line :data:`REWORK_BLOCK_RE` matches (after trimming) and runs to\nthe next :data:`BLOCK_RULE_RE` line or the end; its first ``[screenshot]`` line under\n``prefix`` is ``url``, the rest, trimmed, is ``note``. kastlan's folded ``--- COMMENT\n… ---`` blocks stay in the description as they are. The description loses its trailing\nwhitespace; a body without a block comes back unchanged (``\"\"`` for ``None``).\n\nRaises :class:`ValueError` on a line :data:`REWORK_RULE_RE` matches that is no block\n(``--- REWORK ANSWERED 2026-09-16 ---``, a date-only rule) or a stamp that is no date,\nso a migration stops rather than guess. Split ``body`` only, never ``outcome``:\nkeksdose's ``outcome`` holds such lines from old loop answers."
         },
         {
           "name": "stamp_identity",
@@ -8100,7 +8289,7 @@
     {
       "name": "eifi1_server_kit.feedback.router",
       "summary": "The feedback routes as one router factory: ``feedback_router(FeedbackDeps(...))``.",
-      "doc": "The feedback routes as one router factory: ``feedback_router(FeedbackDeps(...))``.\n\nLayer 2 (``docs/server-services-harmonization.md`` §2.8–§2.10, §4.1 in ``Eifi1/ui-kit``),\nbehind the ``fastapi`` extra (``eifi1-server-kit[fastapi]``). The app passes its own\ndependencies and shapes — the actor, the repository on the request's session, the\nstorage, its demo guard factory and its admin guard, its attachment URL policy and its\nschema subclasses — and includes the router as it includes its own::\n\n    router = feedback_router(FeedbackDeps(\n        actor=feedback_actor, repository=feedback_repository, storage=feedback_storage,\n        demo_guard=not_in_the_demo, admin_guard=require_role(UserRole.ADMIN),\n        policy=FEEDBACK_ATTACHMENTS, create_model=FeedbackCreate, decode_images=True,\n    ))\n    app.include_router(router, prefix=\"/api/v1\")\n    app.state.feedback_limiters = FeedbackLimiters()\n    install_contract_error_handlers(app)\n\n**The guards are the app's** (§2.8), first in each route's ``dependencies=[…]``, so\nFastAPI runs them before the endpoint's parameters and before the body is validated (a\ndemo's ``json={}`` is a 403 ``demo_refused``, not a 422), and the apps' route walks find\nthem by their own names. ``demo_guard(\"uploads\")`` guards the upload,\n``demo_guard(\"feedback\")`` the create and the PATCH, ``admin_guard`` the inbox; the crash\nroute takes none (its service answers a demo ``stored: false``).\n\n**The endpoints carry keksdose's names** (``upload_attachment``, ``download_attachment``,\n``create``, ``report_crash``, ``list_my``, ``list_all``, ``update``), the upload's field is\n``file``, the inbox's query ``status_filter`` and the path parameter ``{feedback_id}``, so\nkeksdose's operation ids and its ``Body_upload_attachment_api_v1_feedback_attachments_post``\ncomponent stay as they are. An app's own extra routes go AFTER this router: a\n``GET /feedback/{feedback_id}`` included first would take ``GET /feedback/my``.\n\n**The router raises no** ``HTTPException``: past the app's guards every refusal is a kit\nrefusal, answered by :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\nEach request builds a :class:`~eifi1_server_kit.feedback.FeedbackService` on the\nrequest's repository; each flow makes at most one repository write, as its last step, and\nthe kit never commits (§2.7).\n\n**Public feedback** (0.11, ``docs/feedback-harmonization.md`` §9.9): with ``deps.replies``\nthe router adds ``POST /{feedback_id}/replies`` (``create_reply``); with\n``deps.public_viewer`` (which needs ``comments``, ``votes`` and ``people``) eight more —\n``list_public``, ``get_public``, ``list_comments``, ``create_comment``, ``hide_comment``,\n``delete_comment``, ``vote``, ``unvote``. They go after the inbox and before the PATCH, so\n``/public`` comes before any ``/{feedback_id}`` GET the app adds after this router. The\nexisting answers fill the new fields from the stores given (one call per store a page).\n\nNo ``from __future__ import annotations`` here, on purpose: the endpoints' parameter\ntypes are the app's models, closed over in the factory, and FastAPI cannot resolve a\nstring annotation that names a local.",
+      "doc": "The feedback routes as one router factory: ``feedback_router(FeedbackDeps(...))``.\n\nLayer 2 (``docs/server-services-harmonization.md`` §2.8–§2.10, §4.1 in ``Eifi1/ui-kit``),\nbehind the ``fastapi`` extra (``eifi1-server-kit[fastapi]``). The app passes its own\ndependencies and shapes — the actor, the repository on the request's session, the\nstorage, its demo guard factory and its admin guard, its attachment URL policy and its\nschema subclasses — and includes the router as it includes its own::\n\n    router = feedback_router(FeedbackDeps(\n        actor=feedback_actor, repository=feedback_repository, storage=feedback_storage,\n        demo_guard=not_in_the_demo, admin_guard=require_role(UserRole.ADMIN),\n        policy=FEEDBACK_ATTACHMENTS, create_model=FeedbackCreate, decode_images=True,\n    ))\n    app.include_router(router, prefix=\"/api/v1\")\n    app.state.feedback_limiters = FeedbackLimiters()\n    install_contract_error_handlers(app)\n\n**The guards are the app's** (§2.8), first in each route's ``dependencies=[…]``, so\nFastAPI runs them before the endpoint's parameters and before the body is validated (a\ndemo's ``json={}`` is a 403 ``demo_refused``, not a 422), and the apps' route walks find\nthem by their own names. ``demo_guard(\"uploads\")`` guards the upload,\n``demo_guard(\"feedback\")`` the create and the PATCH, ``admin_guard`` the inbox; the crash\nroute takes none (its service answers a demo ``stored: false``).\n\n**The endpoints carry keksdose's names** (``upload_attachment``, ``download_attachment``,\n``create``, ``report_crash``, ``list_my``, ``list_all``, ``update``), the upload's field is\n``file``, the inbox's query ``status_filter`` and the path parameter ``{feedback_id}``, so\nkeksdose's operation ids and its ``Body_upload_attachment_api_v1_feedback_attachments_post``\ncomponent stay as they are. An app's own extra routes go AFTER this router: a\n``GET /feedback/{feedback_id}`` included first would take ``GET /feedback/my``.\n\n**The router raises no** ``HTTPException``: past the app's guards every refusal is a kit\nrefusal, answered by :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\nEach request builds a :class:`~eifi1_server_kit.feedback.FeedbackService` on the\nrequest's repository; each flow makes at most one repository write, as its last step, and\nthe kit never commits (§2.7).\n\n**Public feedback** (0.11, ``docs/feedback-harmonization.md`` §9.9): with ``deps.replies``\nthe router adds ``POST /{feedback_id}/replies`` (``create_reply``) and, since 0.13 (§10.3),\n``POST /{feedback_id}/rework`` (``create_rework``, the author's, behind the demo guard\nonly); with\n``deps.public_viewer`` (which needs ``comments``, ``votes`` and ``people``) eight more —\n``list_public``, ``get_public``, ``list_comments``, ``create_comment``, ``hide_comment``,\n``delete_comment``, ``vote``, ``unvote``. They go after the inbox and before the PATCH, so\n``/public`` comes before any ``/{feedback_id}`` GET the app adds after this router. The\nexisting answers fill the new fields from the stores given (one call per store a page).\n\nNo ``from __future__ import annotations`` here, on purpose: the endpoints' parameter\ntypes are the app's models, closed over in the factory, and FastAPI cannot resolve a\nstring annotation that names a local.",
       "contract": {
         "doc": "docs/server-services-harmonization.md",
         "section": "§2.9",
@@ -8253,6 +8442,12 @@
               "doc": ""
             },
             {
+              "name": "rework_model",
+              "type": "type[FeedbackReworkCreate]",
+              "default": "<class 'eifi1_server_kit.feedback.schemas.FeedbackReworkCreate'>",
+              "doc": "``POST /{feedback_id}/rework``'s body (§10.3): subclass it to narrow its\n``attachment_url_policy``; the service checks ``policy`` either way."
+            },
+            {
               "name": "comment_response_model",
               "type": "type[FeedbackCommentResponse]",
               "default": "<class 'eifi1_server_kit.feedback.schemas.FeedbackCommentResponse'>",
@@ -8282,7 +8477,7 @@
           "name": "feedback_router",
           "kind": "function",
           "signature": "feedback_router[RowT: FeedbackRow](deps: FeedbackDeps[RowT], *, prefix: str = '/feedback', tags: Sequence[str] = ('feedback',)) -> APIRouter",
-          "doc": "The contract's seven routes (§3.3), on ``APIRouter(prefix=prefix, tags=tags)``, in\nthis order: ``POST /attachments``, ``GET /attachments/{key}``, ``POST \"\"``,\n``POST /crash``, ``GET /my``, ``GET \"\"``, then public feedback's routes (§9.9: the\neight with ``public_viewer``, ``POST /{feedback_id}/replies`` with ``replies``), and\n``PATCH /{feedback_id}`` last.\n\nRaises :class:`ValueError` when ``deps.create_model.attachment_url_policy`` is not\n``deps.policy``: two policies would let a report name a key the download refuses; and\nwhen ``deps.public_viewer`` is set without ``comments``, ``votes`` or ``people``."
+          "doc": "The contract's seven routes (§3.3), on ``APIRouter(prefix=prefix, tags=tags)``, in\nthis order: ``POST /attachments``, ``GET /attachments/{key}``, ``POST \"\"``,\n``POST /crash``, ``GET /my``, ``GET \"\"``, then public feedback's routes (§9.9: the\neight with ``public_viewer``, ``POST /{feedback_id}/replies`` and\n``POST /{feedback_id}/rework`` with ``replies``), and ``PATCH /{feedback_id}`` last.\n\nRaises :class:`ValueError` when ``deps.create_model.attachment_url_policy`` is not\n``deps.policy``: two policies would let a report name a key the download refuses; and\nwhen ``deps.public_viewer`` is set without ``comments``, ``votes`` or ``people``."
         }
       ]
     },

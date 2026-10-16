@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.12.0";
+export const SERVER_KIT_VERSION = "0.13.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -259,6 +259,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["NOTICE_STATUSES", "constant"],
       ["PADDLE_API_BASES", "constant"],
       ["PADDLE_API_VERSION", "constant"],
+      ["PADDLE_CONFIGURATION_CODES", "constant"],
       ["PADDLE_EVENT_KINDS", "constant"],
       ["PADDLE_SIGNATURE_HEADER", "constant"],
       ["PADDLE_SIGNATURE_TOLERANCE", "constant"],
@@ -345,6 +346,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["plan_catalogue", "function"],
       ["plan_switch_preview", "function"],
       ["plans_out", "function"],
+      ["provider_subscription_runs", "function"],
       ["refuse_billing_read_only", "function"],
       ["require_new_checkout", "function"],
       ["require_plan_switch", "function"],
@@ -504,10 +506,13 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["PUBLIC_PAGE_SIZE", "constant"],
       ["PUBLIC_REPLY_FIELDS", "constant"],
       ["PUBLIC_REPORT_FIELDS", "constant"],
+      ["QUEUE_STATUSES", "constant"],
       ["REFERENCE_LENGTH", "constant"],
       ["REMOVED_URL", "constant"],
       ["REPLY_MAX", "constant"],
       ["REWORKABLE_STATUSES", "constant"],
+      ["REWORK_AUTHOR_ONLY", "constant"],
+      ["REWORK_BLOCK_RE", "constant"],
       ["REWORK_RULE_RE", "constant"],
       ["REWORK_STAMP_FORMAT", "constant"],
       ["SHA12_KEY_PATTERN", "constant"],
@@ -536,6 +541,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["FeedbackCommentStore", "protocol"],
       ["FeedbackConflictError", "class"],
       ["FeedbackCreate", "model"],
+      ["FeedbackEntryKind", "enum"],
       ["FeedbackError", "class"],
       ["FeedbackForbiddenError", "class"],
       ["FeedbackNotFoundError", "class"],
@@ -548,6 +554,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["FeedbackReplyStore", "protocol"],
       ["FeedbackRepository", "protocol"],
       ["FeedbackResponse", "model"],
+      ["FeedbackReworkCreate", "model"],
       ["FeedbackRow", "protocol"],
       ["FeedbackService", "class"],
       ["FeedbackStatus", "enum"],
@@ -565,10 +572,12 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["PublicListEntry", "class"],
       ["PublicSort", "constant"],
       ["ReplyPlan", "class"],
+      ["ReworkBlock", "class"],
       ["StoredAttachment", "class"],
       ["UnknownAttachmentUrlError", "class"],
       ["UpdatePlan", "class"],
       ["anonymise_feedback", "function"],
+      ["anonymise_reply", "function"],
       ["append_rework", "function"],
       ["appended_text", "function"],
       ["attachment_keys_to_purge", "function"],
@@ -590,9 +599,11 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["initial_status", "function"],
       ["is_public", "function"],
       ["is_rework_append", "function"],
+      ["legacy_rework_block", "function"],
       ["normalise_crash_text", "function"],
       ["opens_with_rework_rule", "function"],
       ["plan_reply", "function"],
+      ["plan_rework", "function"],
       ["plan_update", "function"],
       ["public_body", "function"],
       ["public_text", "function"],
@@ -605,6 +616,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["scrub_context", "function"],
       ["scrub_text", "function"],
       ["split_body_attachments", "function"],
+      ["split_rework_blocks", "function"],
       ["stamp_identity", "function"],
       ["throttle_upload", "function"],
       ["truncate", "function"],

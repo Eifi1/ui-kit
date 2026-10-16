@@ -180,4 +180,4 @@ Billing:
   uv add "eifi1-server-kit[billing,fastapi,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.13.0/eifi1_server_kit-0.13.0-py3-none-any.whl"          # Kurvenschmiede
   ```
 
-  sha256: `<at the release>`
+  sha256: `bb6e561e9c935ad2261b22306d2e805d68d9d7a155343e93de5d0ca65cda7cce`
