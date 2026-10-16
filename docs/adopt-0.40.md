@@ -1,8 +1,17 @@
 # Adopting `@eifi1/ui-kit` 0.40 and `eifi1-server-kit` 0.13
 
-<!-- PLACEHOLDER (main session): the round's intro — Marcel's "Done with Keksdose tests. Run
-all the open points for 0.40.0." (2026-10-16), the packages, and what waits for settle (the
-feedback contract's §10). -->
+Round 0.40 took every open point (Marcel, 2026-10-16: "Done with Keksdose tests. Run all the
+open points for 0.40.0"): the Paddle sandbox run's results (billing §14.4, §15.6), keksdose's
+runs 78 and 79 (phone tables, pickers, tabs), and two contracts settled after the three apps'
+reviews:
+- **feedback §10:** a rework is the author's entry in the conversation, with its own status
+  "Rework requested"; the menu reads Feedback discussion, My feedback (for everyone) and
+  Feedback inbox (admins);
+- **page layout §1** (a new contract): a list page whose table is the page fills the window,
+  the same in every app, through the kit's `FillHeight`; a 12rem floor; phones scroll the page.
+
+Both kits are breaking (server-kit: the reply rows' `kind` / `attachment_url`, REWORK;
+ui-kit: nothing is removed, `Tabs` `wrap` and two FeedbackMenu labels are deprecated).
 
 ## 1. What's new
 
@@ -38,8 +47,36 @@ From keksdose's Paddle sandbox run of 2026-10-16 (`docs/billing-harmonization.md
   - **checkout step 1 is the e-mail and the country only**, the card after "Continue";
   - **domain approval and Apple Pay are live only.**
 
-<!-- PLACEHOLDER (main session): DataTable (UD), overlays / pickers / Tabs /
-FeedbackReplyComposer (UO), the feedback contract (FB), server-kit 0.13's other items. -->
+### Phone tables, pickers, tabs (ui-kit 0.40)
+
+- **DataTable phone cards:** a long press selects a card and enters selection mode (the
+  owner's BulkActionBar as on desktop; "Select rows" for keyboards and screen readers); an
+  open card keeps its swipe on the header row; below md, `fillHeight` stays in the page's
+  flow, so the page scrolls from a card again.
+- **Overlays:** closing a PickerSheet or MultiSelect keeps the URL replaces made while it was
+  open (`useOverlayHistory`). Multi-select phone sheets get one sticky Done (`PickerSheet`
+  `footer` / `done`). Group headings stay at the top and `ComboOption.group` is no longer
+  searched (put a searchable group name in `sublabel`).
+- **Tabs:** `overflowCue` (› / ‹ below md); `wrap` is deprecated, removed in 0.41.
+- **FeedbackReplyComposer:** the status picker is the kit's Select, aligned with Reply.
+
+### Feedback §10 (ui-kit 0.40, server-kit 0.13)
+
+- server-kit: `FeedbackStatus.REWORK`, `QUEUE_STATUSES`, `FeedbackEntryKind`, `plan_rework`,
+  `FeedbackService.rework`, `POST /{feedback_id}/rework` (the author, behind the demo guard),
+  `split_rework_blocks` for the migration (`body` only); reply entries carry `kind` and
+  `attachment_url`; a rework fires no `feedback_answered`; a legacy PATCH append becomes an
+  entry for one release.
+- ui-kit: REWORK's chip (red, `RotateCcw`), rework entries in the timeline and thread,
+  `FeedbackRowDetail.onRework`, the Rework button only for an author without the composer,
+  the FeedbackMenu by role.
+
+### Page layout §1 (ui-kit 0.40)
+
+- `FillHeight` / `FILL_HEIGHT_CLASS` (`@eifi1/ui-kit/shell`); DataTable's `data-fill-height`;
+  AppShell's main a flex column from md while a filling table is inside (banners no longer
+  push it over); a 12rem floor. Don't add `min-h-0` between main and the table; a centred
+  `FillHeight` root needs `w-full`.
 
 ## 2. Must-change, every app
 
@@ -60,7 +97,18 @@ FeedbackReplyComposer (UO), the feedback contract (FB), server-kit 0.13's other 
 - **Help text** (where the app has one): a plan switch shows as "Renewal" in Paddle's
   portal; the checkout's first step asks only for the e-mail and the country.
 
-<!-- PLACEHOLDER (main session): the other packages' must-change items. -->
+### Feedback and layout
+
+- **The reply rows gain `kind` (NOT NULL, default 'reply') and `attachment_url`;** the store
+  writes them and fires `feedback_answered` for `reply` only; `urls_named_except` includes
+  entry files; the router takes `rework_model=` with the app's policy.
+- **REWORK in the status enum**, its label in its own migration step before any step writes it;
+  a downgrade moves REWORK rows to READY and keeps the label.
+- **The migration splits `body` with `split_rework_blocks`** — never `outcome`.
+- **FeedbackRowDetail:** pass `onRework={(note, url) => api.rework(row.id, { body: note,
+  attachment_url: url })}`. Headings reading `feedbackPage.title` / `feedbackPublic.title` now
+  say "Feedback inbox" / "Feedback discussion".
+- **Filling pages:** follow page-layout §1.4's checklist; the app's own fill classes go.
 
 ## 3. Per app
 
@@ -75,7 +123,15 @@ Billing:
   `deploy/gcp/README.md:435` ("the sandbox approves at once") and `:446` (set only once
   approved). keksdose's page stays the default payment link.
 
-<!-- PLACEHOLDER (main session): keksdose's other items. -->
+- Feedback: `feedback_public_stores.py:62-81`; migrate the 151 rows / 286 blocks with
+  `split_rework_blocks` (the step stops and lists ids if a row with blocks has no author); keep
+  the PATCH conversion for the installed PWA; the loop's read script shows entry kinds.
+- Pages: feedback, accounts, payees and transactions roots become `<FillHeight
+  className="py-4 md:p-6">`; `fillsPage` goes; check the row reveal lands in the table body.
+- Phone: drop `fillHeight={useBreakpoint("md")}` and, if no longer wanted, the toast's Merge
+  shortcut (long-press selection + the bulk bar now reach merge). Delete
+  `features/reports/tab-strip-more.tsx` for `<Tabs overflowCue>`, and the push-on-first-change
+  workaround for the payee report and Accounts filter.
 
 ### kastlan
 
@@ -86,7 +142,11 @@ Billing:
 - `deploy/gcp/README.md:355-362`: the sandbox has no website approval; step 6 only once
   approved; `.env.example:57`, `deploy/gcp/.env.gcp.example:32`: unset in the sandbox.
 
-<!-- PLACEHOLDER (main session): kastlan's other items. -->
+- Feedback: `feedback_reply_store.py:49-68` (no mail for a rework); REWORK's label in its own
+  step; the menu is admin 2 rows, others 1 (fix `top-bar.tsx:120-121`'s comment).
+- Pages: the shell column (`app-layout.tsx:141`) becomes `cn("p-4 md:p-6", FILL_HEIGHT_CLASS)`,
+  its comment `:136-140` goes; 23 roots become `<FillHeight>`, plus handover and sign-up
+  invitations; platform users stays capped.
 
 ### Kurvenschmiede
 
@@ -100,9 +160,24 @@ Billing:
   `deploy/gcp/README.md:384-385` ("the sandbox approves at once"); `cloudbuild.yaml:47-50`
   keeps the live URL.
 
-<!-- PLACEHOLDER (main session): Kurvenschmiede's other items. -->
+- Feedback: `feedback_stores.py:76` and `notification_service.py:280` skip reworks;
+  `feedback_loop.py:99` becomes `QUEUE_STATUSES | {OPEN}`; existing rework attachments become
+  the entries' `attachment_url`; `kind` with a server default dropped in the same step;
+  `created_at` written explicitly; the seed's rework through `FeedbackService.rework`.
+- Pages: feedback (`:166`) and sessions (`:168`) roots become `<FillHeight
+  className={PAGE_SHELL}>`; `SteeringLayout` (`:44`) a `FillHeight`, its strip (`:45`) and
+  PageHeader / PlanLimitNotice `shrink-0`.
 
 ## 4. Versions
 
-<!-- PLACEHOLDER (main session): `@eifi1/ui-kit` `^0.40.0`; `eifi1-server-kit` 0.13.0 wheel
-URLs per app and the sha256. -->
+- **`@eifi1/ui-kit` `^0.40.0`.** Bump by hand: a caret below 1.0 locks the minor version.
+- **`eifi1-server-kit` 0.13.0**, the release wheel by URL, extras as for 0.12, the sha256
+  pinned in `uv.lock`:
+
+  ```sh
+  uv add "eifi1-server-kit[billing,fastapi,images,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.13.0/eifi1_server_kit-0.13.0-py3-none-any.whl"   # kastlan
+  uv add "eifi1-server-kit[billing,fastapi,images] @ https://github.com/Eifi1/server-kit/releases/download/v0.13.0/eifi1_server_kit-0.13.0-py3-none-any.whl"        # keksdose
+  uv add "eifi1-server-kit[billing,fastapi,mail] @ https://github.com/Eifi1/server-kit/releases/download/v0.13.0/eifi1_server_kit-0.13.0-py3-none-any.whl"          # Kurvenschmiede
+  ```
+
+  sha256: `<at the release>`
