@@ -29,6 +29,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 7 | Settled points — the final canon | — | index; folded items point to their § |
 | 8 | Amendment for 0.31 | ui-kit 0.31.0, server-kit 0.5.0 | index; folded into §2–§5 |
 | 9 | Round 0.38: public feedback (votes, comments, replies) | **§9 settled 2026-10-14 (round 0.38)**, for server-kit 0.11 / ui-kit 0.38 | amends §3.1, §3.3, §3.4 (`public`), §4.4.4 (outcome → replies), §5; server-services §2.7, §4.5; notifications §2, §5 (two types, the notice) |
+| 10 | Round 0.40: rework as a conversation entry, the feedback menu | **§10 DRAFT (round 0.40)**, for server-kit 0.13 / ui-kit 0.40 | would amend §2.1 (REWORK), §2.2, §3.4 (the rework), §4.1 (the menu), §4.3–§4.5, §5; §9.7, §9.13 |
 
 ## 1. Where each one stands
 
@@ -1426,3 +1427,280 @@ each point went:
 The cites in 9.1 were re-read at settling: kk at `52fa9f6a`, ka at `187ffe3` (two release
 commits after `fe8bf78`, no code change in the cited files), KS at `a35d44c` (a
 dependency bump after `7dc6985`).
+
+## 10. Round 0.40: rework as a conversation entry, and the feedback menu (DRAFT for review)
+
+Two of Marcel's keksdose rows, answered on 2026-10-16 in the replies to the loop's
+proposals (kk live #418 "Yes", #419 with his own labels; relayed by keksdose run 79,
+`.feedback-live/run79-replies.md`). Drafted from a read-only survey on 2026-10-16 (kk
+`6473cef0`, ka `4997d49`, KS `228cfe1`, all on ui-kit 0.39.1; server-kit `c47106b` =
+0.12.0; ui-kit `b99604b`). **DRAFT for review (round 0.40)**: the apps review it, Marcel
+settles what the reviews leave open, then it is built for **server-kit 0.13** and
+**ui-kit 0.40**. §1–§9 stand; where this section changes them it says so (§2.1 the
+statuses, §2.2 and §3.4 the rework, §4.1 the menu, §4.3–§4.5, §5; §9.7 "Rework is
+unchanged", §9.13 the loops).
+
+### 10.1 Where each one stands
+
+| | keksdose | kastlan | Kurvenschmiede |
+|---|---|---|---|
+| A rework today | the kit's rework section appends `--- REWORK <stamp> ---` + the note (+ one `[screenshot]` line) to `body` by PATCH; the server re-queues it. Today's: #421, block `2026-10-16 06:12`, Marcel's (admin) → READY (`.feedback-live/queue.txt`, run 79 read) | the same through the kit (`CLAUDE.md:85`, `:117`) | the same through the kit (`frontend/src/shared/api/endpoints.ts:600`); seeded example `seed/__init__.py:139-143` |
+| Status column | Postgres enum `feedback_status` (`domain/models/feedback.py:58-59`); READY was added in an autocommit block (`alembic/versions/20261007_0119_feedback_ready.py:74-76`) | Postgres enum `feedbackstatus` (`domain/models/feedback.py:14-16`, `:41-45`; READY: `alembic/versions/c5e7a9b1d3f4_feedback_ready.py`) | `String(20)` (`domain/models/feedback.py:147`): no type change |
+| Replies table | `feedback_replies` with `notified_at` (`domain/models/feedback.py:123-147`) | `feedback_replies`, `CompanyMixin` (`domain/models/feedback.py:68-86`) | `feedback_replies`, body sealed (`domain/models/feedback.py:286-319`) |
+| The loop's queue | READY, IN_PROGRESS (`scripts/feedback-live-read.sh:38`); reads replies and comments since 0128 (`:62-75`) | READY, IN_PROGRESS (`CLAUDE.md:92-96`); rework "now in the `body`" (`:117`) | OPEN, READY, IN_PROGRESS (`backend/kurvenschmiede/feedback_loop.py:99`); a `[rework ×N]` marker off the body (`:148-151`) |
+| The loop's write | `INSERT (feedback_id, body, status_from, status_to)` on `feedback_replies` + `UPDATE (status)` under the restricted login (`scripts/feedback-live-setup.sh:46-53`) | raw SQL as `kastlan_app` under bypass, `company_id` copied (`CLAUDE.md:109-111`) | `--resolve` → the kit's `FeedbackService.reply` as the first admin (`feedback_loop.py:300-335`) |
+| Feedback menu | `isAdmin`, `publicHref="/all-feedback"` (`frontend/src/app/top-bar.tsx:132-138`): admin 2 links, member 2 | `isAdmin` only (`frontend/src/app/top-bar.tsx:125`): admin 1, member 1 | `isAdmin`, `publicHref` when `seesPublicFeedback` (`frontend/src/app/top-bar.tsx:59-63`; `shared/lib/roles.ts:13`, `:44`): admin 2, member 2, customer 1 |
+| An admin's own list | `/my-feedback` works for an admin (`features/feedback/feedback-page.tsx:148`), but no menu link | the same (`features/feedback/pages/feedback-page.tsx:121`; `CLAUDE.md:86` says admins review their own there) | the same (`features/feedback/feedback-page.tsx:87-107`) |
+
+**What today's run shows.** Marcel answered nine of the loop's questions on his own
+reports (#405–#419, 14:00–14:14) with the admin's **reply** composer, no status, then moved
+each to READY by hand (`queue.txt`: the replies with an empty `status_to`, the rows READY).
+They are reworks in all but name: the author asks for more. Only #421 used the Rework
+button, and its note sits in the body.
+
+The kits: server-kit decides the rework in `plan_update` (`feedback/rules.py:183-194`, an
+append is `is_rework_append`, `feedback/body.py:123`) and sends it to `rework_status`
+(`rules.py:123-127`: READY for an admin, OPEN otherwise); the lanes are `enums.py:69-71`
+(author-editable), `:81` (reworkable = the rest), `:86-88` (awaiting). Replies are
+`FeedbackReplyRow`/`NewFeedbackReply` (`feedback/ports.py:210-226`, `:253-261`), written by
+`FeedbackService.reply` (`feedback/service.py:657-683`); `outcome` answers as the newest
+reply (`service.py:530-534`); `public_body` keeps the REWORK lines (`public.py:123`); the
+erasure reads rework files off the body (`erasure.py:98`). ui-kit: `appendRework` /
+`reworkCount` (`src/feedback/feedback-record.ts:295`, `:317`), the lanes (`:186-217`),
+`canRework` for the admin or the author (`feedback-row-detail.tsx:359`),
+`FeedbackReworkSection` (`:444`), the chip (`feedback-table.tsx:295-306`), the timeline and
+composer (`feedback-replies.tsx:46`, `:91-117`), the merged thread
+(`feedback-comment-thread.tsx:124-207`), the menu's one list link by role
+(`feedback-menu.tsx:132-149`) and its words (`feedback-menu-labels.ts:7-12`,
+`src/i18n/german.ts:120-125`, `locales/fr.ts:109`, `it.ts:111`, `es.ts:111`, `hu.ts:108`,
+`zh.ts:101`).
+
+### 10.2 Decisions
+
+**Marcel's (kk #418, #419; relayed, confirmed at settle):**
+1. **A rework is a conversation entry from the author**, like a reply: its own row, dated,
+   in the report's timeline. Nothing is appended to `body` any more.
+2. **A rework has its own status, "Rework requested"** (`REWORK`), so the queue shows
+   reworks apart from new reports.
+3. **The menu:** "All feedback" becomes **"Feedback discussion"** (the public list);
+   **"My feedback" for everyone, admins included**; **"Feedback inbox"** for admins (the
+   triage list, in place of "View feedback"). The menu and its words are the kit's, so all
+   three apps get them.
+
+**The open points, with a Rec each:**
+4. **The lane.** **Rec:** `REWORK` means "sent back, released for work again": it is in
+   the loops' queue with READY and IN_PROGRESS (`QUEUE_STATUSES`), not in
+   `AWAITING_STATUSES` (it waits on the implementer, as READY does), not author-editable
+   (the description was answered; more goes in as another rework), and reworkable (a
+   second rework adds an entry). It sits after READY in the order; `next(REWORK)` is
+   IN_PROGRESS; "advance" from READY still goes to IN_PROGRESS. Colour `bg-warning-soft`,
+   icon `RotateCcw` (the Rework button's).
+5. **Who lands where (§8.2 kept).** **Rec:** an admin's rework → `REWORK` (already
+   triaged, as READY is today); anyone else's → `OPEN` (new input for the triager; in
+   kastlan a tenant's rework must not reach the dev loop past the company's admin). The
+   entry marks it: the inbox shows the Rework chip on that OPEN row, and the triager
+   releases it to `REWORK`. `rework_status(actor_is_admin=)` changes its admin answer from
+   READY to REWORK.
+6. **An admin-sent rework.** **Rec:** a rework entry is the report's **author**'s only (an
+   admin on their own report included). An admin on someone else's report **replies**
+   with status `REWORK` (the composer offers it, as every status): the author is told
+   (§9.11). The Rework button no longer shows for an admin on a foreign report.
+7. **Entry kind or comment flag.** **Rec:** a new kind on the replies table, not a comment
+   flag. `feedback_replies.kind` (`'reply'` | `'rework'`, NOT NULL, default `'reply'`)
+   and `attachment_url` (nullable, the rework's one file). A rework moves the status as a
+   reply does (`status_from`/`status_to`); comments never move one, can be hidden, exist
+   only where public parts are on (kastlan has no comments table), and are public-gated.
+   The table keeps its name, so grants and stores stay.
+8. **Migration.** **Rec:** one Alembic step per app turns every `--- REWORK <stamp> ---`
+   block into a `rework` entry (10.4); the body keeps the description (and kastlan's
+   folded COMMENT blocks). For **one release** the server still takes the old PATCH append
+   and writes it as an entry (a cached client); after that it is a 422.
+9. **The loops.** **Rec:** they still write replies only; `kind` and `attachment_url` are
+   not granted, so a loop can never write a rework. They read `REWORK` rows and each
+   entry's kind (10.5).
+10. **Notifications.** **Rec:** a rework sends nothing: no `feedback_answered` (the
+    store's `add` fires it for `kind = 'reply'` only), commenters not told, no admin type.
+    The REWORK status (or the chip on OPEN) is the signal in the inbox. keksdose's app
+    write sets `notified_at` at once, as for any app reply.
+11. **The menu by role.** **Rec:** three link rows under the divider, in this order:
+    **Feedback discussion** (`Users`, when `publicHref`), **My feedback** (`User`, always),
+    **Feedback inbox** (`Inbox`, when `isAdmin`). Admin 3, member 2; kastlan (no public
+    parts) admin 2, member 1; a KS customer 1. Keys unchanged (`all-feedback`,
+    `my-feedback`, `view-feedback`); routes unchanged (`/all-feedback`, `/my-feedback`,
+    `/feedback`). The page headings follow the menu: `/feedback` "Feedback inbox",
+    `/all-feedback` "Feedback discussion".
+
+### 10.3 The rework entry
+
+```jsonc
+// FeedbackReworkCreate — POST /feedback/{id}/rework (the author)
+{ "body": "Still cut off on the iPad.",            // 1–8000 after trimming, required
+  "attachment_url": "/api/v1/feedback/attachments/<key>" }  // optional, one; the app's policy
+// FeedbackReplyResponse gains
+{ "kind": "rework",                                // "reply" (default) | "rework"
+  "attachment_url": "…" }                          // admin and author views only
+```
+
+- **Who:** the report's author, not a demo; anyone else 403 "Only the author sends a
+  report back; an admin replies". Status must be reworkable (now six: IN_EVALUATION,
+  NEEDS_LIVE_TEST, POSTPONED, DONE, WONT_DO, REWORK), else 403 with today's wording.
+- **What it does:** adds the entry (`author_id` = the author, `kind = 'rework'`,
+  `status_from` = the row's, `status_to` = `rework_status`), then applies the row (status,
+  `resolved_at` cleared on leaving DONE/WONT_DO). One write per store, the report last
+  (§9.14).
+- **Shown:** in the timeline, oldest first with the replies and comments, as the author's
+  (`own` for them), with a **Rework** chip and "→ {status}"; its file as the rework
+  pictures are today (§4.4.3). In the public detail through `public_text`, first name only,
+  no `attachment_url` (§9.10: the note was public in the body before; the file never).
+- **The Rework chip** counts `kind = 'rework'` entries; without `replies` it falls back to
+  `reworkCount(body)`.
+- **`outcome`'s shim** (`service.py:530-534`) takes the newest entry of kind `reply`.
+- **Erasure:** a rework entry is the person's own words, so `by_author` covers it (§9.12
+  step 4); its file joins the keys `erase_author` purges. **Export:** `replies[]` gains
+  `kind`.
+
+### 10.4 Migrating the REWORK blocks
+
+Per app, one Alembic step, with server-kit's `split_rework_blocks(body) -> (description,
+blocks)` (the `REWORK_RULE_RE` of `body.py:27`; each block `stamp`, `note`, `url`):
+- one `rework` entry per block: `author_id` = the report's `user_id` (who pressed the
+  button is not recorded; nearly all are the author's), `body` = the note, `attachment_url`
+  = the block's `[screenshot]` line, `created_at` = the stamp (UTC, to the minute; ties
+  by id), `status_from`/`status_to` NULL (unknown);
+- `body` = the description, plus kastlan's `--- COMMENT … ---` blocks as they are (0 rows
+  today, §9.1);
+- **statuses unchanged** (a READY row with a fresh block stays in the queue);
+- keksdose: `notified_at = created_at` (never sent); kastlan: under `SET LOCAL
+  app.bypass_rls`, `company_id` copied; Kurvenschmiede: decrypt the body, re-seal body and
+  entry under their keys;
+- the enum label first: kk `ALTER TYPE feedback_status ADD VALUE IF NOT EXISTS 'REWORK'
+  AFTER 'READY'` in an autocommit block (0119's pattern); ka `feedbackstatus` the same,
+  and `scripts/feedback-prod-migrate.sql`; KS nothing;
+- downgrade re-appends the blocks in `append_rework`'s shape and deletes the entries.
+
+### 10.5 The loops' write paths
+
+The writes stay §9.13's. What changes is the read:
+- **keksdose:** `feedback-live-read.sh:38` adds `'REWORK'` to the queue, guarded by
+  `pg_enum` as READY was; the replies query (`:62-75`) selects `kind` and
+  `attachment_url`. `feedback-live-setup.sh:51-52` unchanged: `SELECT` covers the new
+  columns, the `INSERT` column list stays without `kind` and `attachment_url`.
+- **kastlan:** `CLAUDE.md:92-117`: the queue `status IN ('READY', 'REWORK',
+  'IN_PROGRESS')`; "the rework note is the newest `kind = 'rework'` entry"; the INSERT
+  unchanged (`kind` defaults to `'reply'`).
+- **Kurvenschmiede:** `feedback_loop.py:99` `QUEUE` gains REWORK; the marker (`:148-151`)
+  counts entries; `thread_of` shows the kind.
+- Every loop answers a rework with a reply (status IN_EVALUATION or NEEDS_LIVE_TEST), as
+  any queued row.
+
+### 10.6 The words
+
+| Key | EN | DE-CH | FR | IT | ES | HU | ZH |
+|---|---|---|---|---|---|---|---|
+| `feedbackMenu.discussion`, `feedbackPublic.title` | Feedback discussion | Feedback-Diskussion | Discussion des retours | Discussione sui feedback | Debate de comentarios | Visszajelzések megvitatása | 反馈讨论 |
+| `feedbackMenu.myFeedback` (unchanged) | My feedback | Mein Feedback | Mes retours | I miei feedback | Mis comentarios | Visszajelzéseim | 我的反馈 |
+| `feedbackMenu.inbox`, `feedbackPage.title` | Feedback inbox | Feedback-Eingang | Retours reçus | Feedback ricevuti | Comentarios recibidos | Beérkezett visszajelzések | 反馈收件箱 |
+| `feedbackStatus.REWORK` | Rework requested | Nacharbeit angefordert | Reprise demandée | Rielaborazione richiesta | Corrección solicitada | Átdolgozás kérve | 已要求返工 |
+
+The rework words follow the kit's existing chip (`Nacharbeit`, `Reprise`,
+`Rielaborazione`, `Corrección`, `Átdolgozás`, `返工`); "retours" and "comentarios" follow
+each language's `feedbackMenu`. `allFeedback` and `viewFeedback` stay optional and unused
+for one minor, then go (no app overrides them).
+
+### 10.7 What server-kit 0.13 ships
+
+Additive but for the two Recs that change behaviour (`rework_status` for an admin, the
+PATCH append). Paths from the repo root.
+
+**Layer 1**
+- `feedback/enums.py`: `FeedbackStatus.REWORK = "REWORK"` after READY;
+  `REWORKABLE_STATUSES` gains it (derived); `QUEUE_STATUSES = {READY, REWORK,
+  IN_PROGRESS}`; `FeedbackEntryKind` (`"reply"`, `"rework"`).
+- `feedback/rules.py`: `rework_status(actor_is_admin=)` → REWORK / OPEN; `plan_rework(*,
+  status, is_admin, is_author, now=None) -> ReplyPlan` (the 403s of 10.3);
+  `UpdatePlan.rework_note` (the appended note and file, split) so the service turns a
+  legacy append into an entry.
+- `feedback/body.py`: `ReworkBlock(stamp, note, url)`, `split_rework_blocks(body)`;
+  `append_rework` and `rework_count` kept, documented as legacy.
+- `feedback/schemas.py`: `FeedbackReworkCreate {body, attachment_url}` (policy-checked);
+  `FeedbackReplyResponse.kind = "reply"`, `.attachment_url = None`; the public reply view
+  carries `kind`, never `attachment_url` (`PUBLIC_REPLY_FIELDS` gains `kind`).
+
+**Layer 2**
+- `feedback/ports.py`: `FeedbackReplyRow` gains `kind`, `attachment_url`;
+  `NewFeedbackReply` gains `kind = "reply"`, `attachment_url = None`;
+  `FeedbackReplyStore.add` documented: fires `feedback_answered` for `reply` only.
+- `feedback/service.py`: `rework(actor, feedback_id, payload)`; `update` turns an append
+  into `rework` (one release, logged); the views carry `kind`/`attachment_url` by viewer;
+  the outcome shim takes the newest reply; `erase_author` collects entry files.
+- `feedback/router.py`: `POST /{feedback_id}/rework` (`create_rework`, 201
+  `FeedbackResponse` with `replies`), mounted with `replies`, demo guard.
+- `feedback/erasure.py`: keys from entries too. `feedback/testing.py`: the in-memory reply
+  store keeps `kind`/`attachment_url`; `check_reply_store` covers both kinds.
+
+**Tests:** `test_rules.py` (REWORK in the lanes, `rework_status`, `plan_rework` 403s),
+`test_body.py` (`split_rework_blocks`: none, one, two, a file, a COMMENT block kept, a
+sentence with "REWORK" not split), `test_schemas.py`, `test_service.py` (rework by the
+author, by an admin on their own, an admin on another's 403, a member → OPEN, the legacy
+append, no notification, the shim, erasure), `test_router.py`, `test_testing.py`; 100 %
+coverage.
+
+Size: **M** (~350 code, ~600 test lines).
+
+### 10.8 What ui-kit 0.40 ships
+
+- `src/feedback/feedback-vocabulary.ts`: `"REWORK"` in `FeedbackStatus` and
+  `FEEDBACK_STATUS_META` after READY (`RotateCcw`, `bg-warning-soft`);
+  `nextFeedbackStatus("REWORK")` = IN_PROGRESS; `visibleFeedbackStatuses` for it.
+- `src/feedback/feedback-record.ts`: REWORK in `FEEDBACK_REWORKABLE_STATUSES`;
+  `FEEDBACK_QUEUE_STATUSES`; `FeedbackReply.kind?`, `.attachment_url?`;
+  `feedbackReworkCount(row)` (entries, else the body).
+- `src/feedback/feedback-row-detail.tsx`: `canRework` = the author on a reworkable row;
+  `FeedbackReworkSection` gains `onRework(note, url?)` (the POST); `onUpdate`'s append
+  only when `onRework` is missing (one minor).
+- `src/feedback/feedback-replies.tsx`, `feedback-comment-thread.tsx`,
+  `feedback-public-list.tsx` (`FeedbackPublicDetail`): rework entries drawn as the
+  author's with the chip and their file.
+- `src/feedback/feedback-table.tsx`: the chip from `feedbackReworkCount`.
+- `src/feedback/feedback-menu.tsx`, `feedback-menu-labels.ts`: 10.2 decision 11; labels
+  `discussion`, `inbox`; `allFeedback`, `viewFeedback` deprecated.
+- Labels in seven languages (10.6): `src/i18n/german.ts`, `locales/*.ts`, `en`;
+  `feedbackPage.title`, `feedbackPublic.title`, the status.
+- Showcase and the search index: the menu by role, a rework in the timeline.
+
+**Tests:** `feedback-menu.test.tsx` (three rows by role, order, keys),
+`feedback-row-detail.test.tsx` (`onRework`, no button for an admin on a foreign report),
+`feedback-replies.test.tsx` (a rework entry), `feedback-table.test.tsx` (the chip from
+entries and from a body), the vocabulary test (REWORK's next and visible), the labels test
+for seven locales.
+
+Size: **M** (~300 code, ~350 test lines, seven locales).
+
+### 10.9 Per app
+
+- **keksdose, S–M:** the migration (label, `kind`, `attachment_url`, the blocks); the reply
+  store writes both kinds and fires for `reply` only (`adapters/persistence/
+  feedback_public_stores.py:62-74`); `onRework` on its pages; the read script (10.5); the
+  agent prompt and `feedback-live-write.sh` text name REWORK.
+- **kastlan, S:** the migration under bypass (+ `feedback-prod-migrate.sql`); the reply
+  store (`adapters/persistence/feedback_reply_store.py:49`); `onRework`; `CLAUDE.md`
+  §"Feedback Loop" (`:76-117`: nine statuses, the queue, the rework).
+- **Kurvenschmiede, S–M:** the migration with the seals; the reply store
+  (`domain/services/feedback_stores.py:76`) and `feedback_answered`
+  (`notification_service.py:280`) skip reworks; `feedback_loop.py` (10.5); the seed's
+  `REWORKED`; `docs/feedback-loop.md`.
+- **All:** nothing in the menu call changes (the kit draws the rows by role).
+
+### 10.10 For the reviews
+
+- **keksdose:** Rework for the admin on their own report: keep the reply composer beside
+  it, or hide it there so Marcel's answers to the loop (today's #405–#419) go in as
+  reworks? How many live rows hold REWORK blocks? Is the PATCH conversion for one release
+  needed (the PWA's cache)?
+- **kastlan:** a tenant's rework → OPEN for the company's admin, as today: confirm. Is a
+  rework visible to the tenant's own company admin only (RLS), as replies are?
+- **Kurvenschmiede:** the loop's queue keeps OPEN (`feedback_loop.py:99`) unlike the other
+  two: add REWORK beside it, or drop OPEN to match §8.2? A customer's rework → OPEN:
+  should the admin get a mail (KS mails today)?
+- **All:** the seven-language words of 10.6; REWORK's colour; the migration's
+  `author_id` (the report's author) when an admin had pressed the button.
