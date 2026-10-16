@@ -85,6 +85,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     feedbackStatus: {
       OPEN: "Offen",
       READY: "Bereit zur Umsetzung",
+      REWORK: "Nacharbeit angefordert",
       IN_PROGRESS: "In Bearbeitung",
       IN_EVALUATION: "Zur Prüfung",
       NEEDS_LIVE_TEST: "Live testen",
@@ -122,11 +123,13 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       myFeedback: "Mein Feedback",
       viewFeedback: "Feedback ansehen",
       allFeedback: "Alle Rückmeldungen",
+      discussion: "Feedback-Diskussion",
+      inbox: "Feedback-Eingang",
     },
     // 0.38.0 — docs/feedback-harmonization.md §9: the public pages and the two feedback
     // notification types. "Rückmeldungen" and "Eine Person" are the contract's (§9.2, §9.5).
     feedbackPublic: {
-      title: "Alle Rückmeldungen",
+      title: "Feedback-Diskussion",
       sort: "Sortieren",
       sortNewest: "Neueste",
       sortVotes: "Meistgewünscht",
@@ -158,7 +161,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       attachUrl: "Aktuelle Seiten-URL anhängen",
     },
     feedbackPage: {
-      title: "Feedback",
+      title: "Feedback-Eingang",
       myTitle: "Mein Feedback",
       columnId: "#",
       columnDate: "Datum",
@@ -344,6 +347,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       filter: "Filter",
       close: "Schließen",
       selectRow: "Zeile auswählen",
+      selectRows: "Zeilen auswählen",
+      cancelSelection: "Abbrechen",
       rowDetails: "Details",
       autoSize: "Spaltenbreiten anpassen",
       loading: "Wird geladen…",
@@ -534,6 +539,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // "Tab" is what German UIs say; "Registerkarte" reads like a 1990s manual.
       add: "Tab hinzufügen",
       remove: (tab) => `${tab} entfernen`,
+      more: "Weitere Tabs",
+      backToFirst: "Zurück zum ersten Tab",
     },
     appShell: {
       collapse: "Seitenleiste einklappen",
@@ -549,6 +556,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     },
     pickerSheet: {
       close: "Schließen",
+      done: "Fertig",
     },
     dialogFrame: {
       close: "Schließen",

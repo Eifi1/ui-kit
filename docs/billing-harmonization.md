@@ -30,7 +30,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 1 | Where each one stands | — (archived) | |
 | 2 | Decisions | — | 16–17 (2026-10-09); round 0.33's 18–27, with 19 and 26 as amended after its reviews (§14.16.1–2) |
 | 3 | The model | server-kit 0.6, ui-kit 0.32 | §12.1–§12.17, §12.22, §12.31–§12.33; server-kit 0.6.1 (`effective_comped_until`); §14.16.4; §14.17 (round 0.34) |
-| 4 | The API | server-kit 0.6; `at_provider`, the portal's `target` and `GET /admin/plans` in 0.7 | §12.17–§12.19; §14.5, §14.12 |
+| 4 | The API | server-kit 0.6; `at_provider`, the portal's `target` and `GET /admin/plans` in 0.7 | §12.17–§12.19; §14.5, §14.12; §15.2.10 (`paid` 0.12, `switching` 0.13) |
 | 5 | Webhooks | server-kit 0.6 | §12.11, §12.20; §14.3 (the app tag, 0.7); §14.16.17 |
 | 6 | The operator | server-kit 0.6; the operator's parts in ui-kit 0.33 | §12.34; §14.12; §14.17 |
 | 7 | The pages | ui-kit 0.32 | §12.6, §12.21, §12.24, §12.26; §14.4, §14.5; adopt-0.33 (`onPortal`) |
@@ -41,7 +41,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 12 | Settled after the reviews | — | an index: folded items point to their §; 12.36 stands as a rule |
 | 13 | Proposed plans | app-side | decision 17 |
 | 14.1–14.3 | Scope, the Paddle client, one account | server-kit 0.7, ui-kit 0.33 | §14.16.16, §14.16.18, §14.16.29; server-kit 0.7.1 (the `billing_app` validator, values compared as enums); adopt-0.33 (`PaddleClient`'s own connections); server-kit 0.8 (Paddle only) |
-| 14.4 | The checkout page and the way back | ui-kit 0.33, server-kit 0.7 | §14.16.1, §14.16.19–20, §14.16.26, §14.16.30–31; ui-kit 0.33.1 (an undefined locale); server-kit 0.7.1 (`paddle_locale`); adopt-0.33 (the pay page's URL checks) |
+| 14.4 | The checkout page and the way back | ui-kit 0.33, server-kit 0.7 | §14.16.1, §14.16.19–20, §14.16.26, §14.16.30–31; ui-kit 0.33.1 (an undefined locale); server-kit 0.7.1 (`paddle_locale`); adopt-0.33 (the pay page's URL checks); ui-kit 0.40 (`style-src` names both Paddle CDNs, the sandbox's notes) |
 | 14.5 | `at_provider` | server-kit 0.7, ui-kit 0.33 | §14.16.5, §14.16.24; adopt-0.33 (`onPortal`, the overview types) |
 | 14.6 | A second checkout | server-kit 0.7 | |
 | 14.7 | Notices | server-kit 0.7; the jobs token in 0.8 | §14.16.10–15; server-kit 0.7.1 (`OwedNotice.row`); adopt-0.33 (`billing_notices_owed`) |
@@ -55,7 +55,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 14.15 | Open checks | not built: the Paddle and sandbox checks are pending | |
 | 14.16 | Settled after the reviews | — | an index: every item points to its § |
 | 14.17 | A grant clears the trial's end | app-side (round 0.34) | |
-| 15 | Round 0.39: pay pages that serve any app, a shared plan switch and customer | §15 settled 2026-10-14 (round 0.39); built in server-kit 0.12, ui-kit 0.39 | |
+| 15 | Round 0.39: pay pages that serve any app, a shared plan switch and customer | §15 settled 2026-10-14 (round 0.39); built in server-kit 0.12, ui-kit 0.39 | round 0.40: `BillingOverview.switching` (server-kit 0.13, ui-kit 0.40, §15.2.10); the sandbox run, §15.6 (2026-10-16) |
 
 ## 1. Where each one stands
 
@@ -359,7 +359,7 @@ kastlan's `test_billing_off.py` route sweep is the contract test in every app.
 | Route | Who | What |
 |---|---|---|
 | `GET /billing/status` | signed in (kastlan: staff) | `{billing_enabled}` |
-| `GET /billing/overview` | the payer (kastlan: a company admin) | `{plan, status, source, in_good_standing, trial_ends_at, comped_until, current_period_end, cancel_at_period_end, limits, usage, currency, at_provider}` (`at_provider`: §14.5) |
+| `GET /billing/overview` | the payer (kastlan: a company admin) | `{plan, status, source, in_good_standing, trial_ends_at, comped_until, current_period_end, cancel_at_period_end, limits, usage, currency, at_provider, paid, switching}` (`at_provider`: §14.5; `paid`: §15.2.10, 0.12; `switching`: §15.2.10, 0.13) |
 | `GET /billing/plans` | the payer | the catalogue with this payer's currency and the prices |
 | `POST /billing/checkout {plan, interval, currency}` | the payer | `{url}`: the provider's checkout, on the kit's pay page at the app's pay host (§14.4) |
 | `POST /billing/portal {target?}` | the payer | `{url}`: the provider's hosted customer portal (payment method, invoices, cancel; §14.5) |
@@ -1172,7 +1172,7 @@ apply to it:
 http://{$PAY_HOST:pay.invalid}:{$PORT} {
 	root * /srv-pay
 	header {
-		Content-Security-Policy "default-src 'none'; script-src 'self' https://cdn.paddle.com; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com; connect-src 'self' https://*.paddle.com; img-src 'self' data: https://*.paddle.com; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'"
+		Content-Security-Policy "default-src 'none'; script-src 'self' https://cdn.paddle.com; frame-src https://buy.paddle.com https://sandbox-buy.paddle.com; connect-src 'self' https://*.paddle.com; img-src 'self' data: https://*.paddle.com; style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://sandbox-cdn.paddle.com; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'"
 		Permissions-Policy `payment=(self "https://buy.paddle.com" "https://sandbox-buy.paddle.com"), camera=(), geolocation=(), microphone=(), usb=()`
 		X-Robots-Tag "noindex"
 		X-Content-Type-Options nosniff
@@ -1193,6 +1193,22 @@ http://{$PAY_HOST:pay.invalid}:{$PORT} {
 - **The CSP allows only Paddle's hosts.** Paddle publishes no CSP list, so the sandbox
   settles the exact one (§14.15). A wide Paddle entry costs little here: the origin holds
   nothing to take.
+- **`style-src` names both Paddle CDNs** (ui-kit 0.40, settled in the sandbox): Paddle.js
+  loads its overlay stylesheet (`/paddle/v2/assets/css/paddle.css`) into the pay page
+  itself, from `sandbox-cdn.paddle.com` once `Paddle.Environment.set("sandbox")` ran and
+  presumably from `cdn.paddle.com` live — while the script itself always comes from
+  `cdn.paddle.com`, so `script-src` stays as it is. Evidence (keksdose, 2026-10-16: its
+  pay page served with this block's two headers before the change, headless Chromium
+  with a `securitypolicyviolation` listener, the whole flow): exactly one violation on
+  every load, `style-src-elem` blocking
+  `https://sandbox-cdn.paddle.com/paddle/v2/assets/css/paddle.css`; script, frame,
+  connect and img were never refused. The checkout still rendered (its frame styles
+  itself) but the overlay's own wrapper — backdrop, close button position — lost its
+  styles. Sentry, Stripe, localizecdn and Google Fonts load inside Paddle's frame, under
+  its own CSP, and need nothing here. The hosts go in **`style-src`, not
+  `style-src-elem`**: `style-src-elem` falls back to `style-src` anyway, while a browser
+  that predates `style-src-elem` (Safari before 15.4, Firefox before 108) ignores it and
+  would still block the stylesheet; one directive also can't drift from a second.
 - **`Permissions-Policy` allows `payment` for Paddle's frame**, so Apple Pay and Google Pay
   work in it. The app's own origin keeps what it has (keksdose's `payment=()`).
 - **No `Cross-Origin-Opener-Policy: same-origin`:** on a domain not verified for Apple Pay,
@@ -1214,7 +1230,10 @@ http://{$PAY_HOST:pay.invalid}:{$PORT} {
   one set by hand.
 - **Locally**, the same files on a second localhost port, which is a separate origin too:
   Compose's Caddy (`deploy/Caddyfile` in keksdose and Kurvenschmiede) gets a second site
-  block. Paddle's sandbox approves domains at once. That Caddy has automatic HTTPS on,
+  block. The sandbox has no website approval (§15.6, 2026-10-16), and Paddle refuses
+  `localhost` as its default payment link, so a local run leaves
+  `<APP>_BILLING_CHECKOUT_PAGE_URL` unset and opens on the default payment link, which
+  points at the pay page through a tunnel. That Caddy has automatic HTTPS on,
   so its block's default is `http://pay.invalid` — `{$PAY_HOST:http://pay.invalid}` —
   since a bare `pay.invalid` makes it ask for a certificate at every start (§14.16.30).
   The `pay.invalid` default fits only a Caddy without automatic HTTPS, as the Cloud Run
@@ -1227,14 +1246,19 @@ http://{$PAY_HOST:pay.invalid}:{$PORT} {
    verification. Then `PAY_HOST=pay.<app domain>` on `<app>-web`, where the next deploy
    keeps it (the deploy's own variables, or `--update-env-vars`; see `PAY_HOST` above).
 3. Paddle → Checkout → Website approval: add `pay.<app domain>`. Paddle reviews every
-   domain or subdomain a checkout opens from; the sandbox approves at once. The review
+   domain or subdomain a checkout opens from — live only: the sandbox has no website
+   approval (§15.6), so there the transaction opens on the default payment link. The review
    wants the product, the prices, the terms, the refund policy and the privacy policy easy
    to find; they may sit on the main domain, and the page's footer links them.
 4. Paddle → Website approval → Apple Pay verification: "Verify" the pay host. It is
    optional; without it Paddle opens Apple Pay in a popup.
 5. A client-side token per app (Paddle → Developer tools → Authentication), so one can be
    revoked alone. It goes to the web build with the environment.
-6. `<APP>_BILLING_CHECKOUT_PAGE_URL=https://pay.<app domain>/` on the backend.
+6. `<APP>_BILLING_CHECKOUT_PAGE_URL=https://pay.<app domain>/` on the backend — once the
+   domain is approved (step 3). An explicit `checkout.url` on an unapproved domain is
+   refused: 400 `transaction_checkout_url_domain_is_not_approved`, which server-kit 0.13
+   answers as 503 `billing_not_configured`. Unset, the transaction opens on the default
+   payment link, as in the sandbox (§15.6).
 
 **No app CSP changes** (§14.16.26): kastlan and Kurvenschmiede send none, keksdose keeps
 its app CSP and `payment=()`, and an app's tests that read the CSP from its Caddyfiles
@@ -1301,7 +1325,8 @@ export function useCheckoutProcessing(options: {
 6. **The mark is a browser entry** on the app's origin, so an app whose privacy text lists
    its entries names it (Kurvenschmiede passes its own `storageKey`).
 
-**Open (sandbox):** the pay host end to end, and the CSP it needs (§14.15).
+**Settled in the sandbox** (keksdose, 2026-10-16): the pay host end to end, and the CSP
+it needs (`style-src` above; §15.6).
 
 ### 14.5 Whether the payer reached the provider (decision 22)
 
@@ -1811,17 +1836,22 @@ All come before billing goes on, after Marcel's sandbox run; none blocks the cod
 - **With Paddle, in parallel:** hosted checkout on live (sellers@paddle.com), if it is
   still wanted.
 - **In the sandbox:**
-  - the portal's plan switch (§14.6);
+  - the portal's plan switch (§14.6) — replaced by the kits' switch (§15.2.10), settled
+    in the sandbox (§15.6);
   - the pay host end to end: Paddle.js opening the `_ptxn` transaction with the settings
     given to `Paddle.Initialize` (`successUrl`, `locale`), and the hosts its CSP needs;
-    Paddle publishes no list (§14.4);
+    Paddle publishes no list (§14.4) — settled in the sandbox (§15.6): `style-src` gains
+    both Paddle CDNs;
   - Apple Pay and Google Pay in Paddle's frame under the pay host's
-    `Permissions-Policy`, and Apple Pay verification of each pay host;
+    `Permissions-Policy`, and Apple Pay verification of each pay host — Google Pay
+    settled in the sandbox (§15.6); Apple Pay and its verification are live only;
   - what Paddle.js keeps on the pay host (cookies, storage), for the privacy texts
-    (§8);
+    (§8) — settled in the sandbox (§15.6);
   - which link Paddle's own emails and payment-method updates carry: Paddle uses the
-    account's default payment link for them, which is one app's pay host (§14.3);
-  - removing a scheduled cancellation and the `subscription.updated` it sends (§14.8);
+    account's default payment link for them, which is one app's pay host (§14.3) — the
+    update link works (§15.6); whether it carries the app's tag is still open;
+  - removing a scheduled cancellation and the `subscription.updated` it sends (§14.8) —
+    settled in the sandbox (§15.6);
   - whether one person is one Paddle customer across the apps, and what the portal then
     lists (§14.3);
   - recorded answers in place of `PADDLE_API_EXAMPLES` (§14.9).
@@ -2063,7 +2093,16 @@ All settled 2026-10-14 (Marcel; §15.7). The numbers are the ones the reviews ci
       checkout and switch (Kurvenschmiede keeps `kurvenschmiede.billingCheckout`).
     - **The UI:** `PlanPicker` stays. While a provider subscription runs, the app sends a
       pick to the preview and opens the kit's `PlanSwitchConfirm`; otherwise to the
-      checkout. The confirm never takes the write lock (`COMMIT_EXCEPT_BILLING` built in:
+      checkout. Since server-kit 0.13 / ui-kit 0.40 the overview says which:
+      `switching: bool` (default false), computed by the server with the same rule as
+      the two 409s (`billing_already_subscribed`, `billing_not_subscribed`) — a provider
+      subscription id, not set to cancel, and a provider row `active`, `trialing` or
+      `past_due`, or a purchase under a grant whose period still runs. True: the pick
+      opens `PlanSwitchConfirm`; false: the checkout. Apps read it and drop their client
+      mirrors of the rule (kastlan's and Kurvenschmiede's); the TS type has it optional
+      for older servers (absent = false). A 409 either way still sends the payer to the
+      other path, for an overview read before the state moved. `PlanPicker` takes no
+      `switching` prop: the kit doesn't choose, the app's `onChoose` does. The confirm never takes the write lock (`COMMIT_EXCEPT_BILLING` built in:
       a read-only payer may change plan; keksdose's demo-budget lock never applies).
     - **The words.** `billing_already_subscribed`'s words stop pointing at the portal
       ("You already have a subscription. Change your plan above."), and so does keksdose's
@@ -2236,36 +2275,115 @@ Before:
    transaction events) to the app's `/webhooks/paddle` through a tunnel to the local
    backend; copy each secret.
 5. Each app's local `.env`: `<APP>_BILLING_ENABLED=true`, the API key, the webhook
-   secret, the price ids, `<APP>_BILLING_CHECKOUT_PAGE_URL` = its pay page's URL.
-6. Run the pay pages: each app's on a localhost port for the first runs, or its pay host
-   once deployed. Checkout → Website approval: add each; Checkout settings: make
-   keksdose's the default payment link.
-7. Website approval → Apple Pay verification: "Verify" each host (no device needed).
+   secret, the price ids. **In the sandbox leave `<APP>_BILLING_CHECKOUT_PAGE_URL`
+   unset** (note 1 below): the transaction then opens on the default payment link.
+6. Run the pay pages: each app's on a localhost port behind a tunnel for the first runs
+   (Paddle refuses `localhost` as a URL), or its pay host once deployed. Checkout →
+   Checkout configuration: make keksdose's page the default payment link, and switch on
+   Google Pay (note 2). Website approval is live only (note 6).
+7. Apple Pay verification of each host: live only (note 6).
 
-Runs (note what you see; the kit's agent records the answers):
+Runs (note what you see; the kit's agent records the answers). keksdose ran them alone on
+2026-10-16; a run marked **settled in the sandbox** is settled for every app, since the
+pay page, the routes and the webhooks are the kits'. kastlan and Kurvenschmiede repeat 8
+on their own setup when they reach it.
 8. In each app, a checkout with Paddle's test card: the overlay opens; the webhook lands
-   (`?checkout=done`, then active); the footer names the right app.
+   (`?checkout=done`, then active); the footer names the right app. — **Settled in the
+   sandbox** (keksdose, 2026-10-16): the frame `sandbox-buy.paddle.com/checkout/che_…`
+   (wide overlay, multi-page); step 1 asks for the e-mail and the country only, the card
+   comes after "Continue" (note 5); back in the app "payment processing" showed and
+   turned active by itself (`useCheckoutProcessing` and the webhook);
+   `subscription.created` and `.activated` applied in the same second, no `transaction.*`
+   recorded; the row got its subscription id, `provider_price_id` and period end, and
+   under Marcel's admin grant the grant's plan, status and source stayed (§12.11). The
+   pay page's footer named Keksdose; Paddle's names the seller ("Your data will be shared
+   with <the account's name> for product fulfilment"). Declined card
+   (4000 0000 0000 0002): Paddle's own words in the app's locale, nothing charged, the
+   transaction stays unpaid.
 9. Another app's transaction on keksdose's page (open a kastlan checkout's `_ptxn` on
    `pay.keksdose.app`): `checkout.loaded` carries the custom data; the page names kastlan
-   and returns to it.
+   and returns to it. — Open: waits for kastlan or Kurvenschmiede in the sandbox.
 10. Headers, in any browser (DevTools → Network → the document): the CSP and
     `Permissions-Policy` arrive; the console shows no CSP violation; list the Paddle hosts
-    the page loads from.
-11. Application tab: what Paddle.js stores (for the privacy texts).
+    the page loads from. — **Settled in the sandbox** (keksdose, 2026-10-16): one
+    violation, Paddle.js's overlay stylesheet from `sandbox-cdn.paddle.com` → `style-src`
+    gains both Paddle CDNs (§14.4, ui-kit 0.40). The hosts of the whole flow: the pay
+    host, `cdn.paddle.com`, `sandbox-cdn.paddle.com`, `sandbox-buy.paddle.com`,
+    `sandbox-checkout-service.paddle.com`, `sandbox-checkout-analytics.paddle.com`; inside
+    Paddle's frame (its own CSP) `global.localizecdn.com`, `fonts.googleapis.com`,
+    `fonts.gstatic.com`, `o522631.ingest.sentry.io`, `js.stripe.com`, `m.stripe.network`,
+    `m.stripe.com`.
+11. Application tab: what Paddle.js stores (for the privacy texts). — **Settled in the
+    sandbox** (keksdose, 2026-10-16): the pay page's localStorage stays empty; cookies
+    `__cf_bm` on `.paddle.com` (Cloudflare's bot management) and `m` on `m.stripe.com`
+    (Stripe's fraud signal), both from Paddle's frame.
 12. Google Pay in Chrome on Windows or Android: the button shows and a test payment goes
-    through. Apple Pay: set up, not device-verified (§15.2.8).
+    through. Apple Pay: set up, not device-verified (§15.2.8). — **Settled in the
+    sandbox** (keksdose, 2026-10-16) for Google Pay once switched on (note 2): the button
+    shows on the tunnelled pay page without any domain approval. Apple Pay: live only
+    (note 6).
 13. The same e-mail in two apps: one `ctm_` (expected) or two? Open the portal from one
-    app: does the overview list both subscriptions?
+    app: does the overview list both subscriptions? — Open: waits for kastlan or
+    Kurvenschmiede in the sandbox. (`customer_for` created keksdose's sandbox customer,
+    and the portal opened from the app on the webhook-linked customer shows the right
+    subscription and invoice.)
 14. kastlan: the per-subscription `cancel` and `payment_method` links: can they navigate
-    to the overview? (If yes, only the buyer gets any portal link, §15.2.11.)
+    to the overview? (If yes, only the buyer gets any portal link, §15.2.11.) — Open:
+    kastlan's run.
 15. Paddle's e-mails (receipt, payment-method update): which name, which products, which
     link. Open the update link: does the page get the app's tag, and does the
-    payment-method-update transaction carry the subscription id?
+    payment-method-update transaction carry the subscription id? — **Settled in the
+    sandbox** (keksdose, 2026-10-16) for the cancellation mail and the update link:
+    "[TEST]-Your subscription for <seller> will be canceled" from
+    `Paddle <help@paddle.com>`, shown as "<seller> via paddle.com" (the seller's business
+    name — live, the name Marcel registers); the line "Keksdose Plus · CHF 89.00 · Amount
+    every year" (brand-first product names read well); dates in UTC only; Paddle.com
+    Market Ltd in the footer; no pay-page link in this mail. The payment-method update
+    link works and took a card. Still open: whether the update page gets the app's tag,
+    and whether that transaction carries the subscription id.
 16. The portal: "Cancel" at the period's end, then the app's reactivation removing it
-    (§14.8): the `subscription.updated` arrives (P5).
+    (§14.8): the `subscription.updated` arrives (P5). — **Settled in the sandbox**
+    (keksdose, 2026-10-16), from the portal and from the app (`SubscriptionActions` →
+    the portal's cancel target, then reactivate): "scheduled to be canceled on
+    <period end>"; `subscription.updated` set `cancel_at_period_end`, and removing the
+    cancellation sent `subscription.updated` back to false (P5 records them as
+    `billing.testing` examples).
 17. Plan switch (after server-kit 0.12): an upgrade and a downgrade, monthly to yearly,
     the preview's figures against the charge and the credit; a declined card on an
     upgrade changes nothing; under a grant, `paid` moves and the page stops processing.
+    — **Settled in the sandbox** (keksdose, 2026-10-16), but for the declined switch
+    (note 3): downgrade Plus CHF yearly (89.00) → Standard CHF monthly: a
+    `subscription_update` transaction, completed, total −84.00, nothing charged, the
+    credit on the customer; upgrade back to Plus yearly: total 84.01, 83.41 taken from
+    the credit, 0.60 charged to the card. Prorated both ways, the credit used first. Each
+    `subscription.updated` moved `provider_price_id` (so `paid`) and
+    `current_period_end` in the same second. Paddle's portal lists the switches as
+    "Renewal" (note 4).
+
+Notes from the run (2026-10-16), for every app's sandbox and deploy notes:
+1. **The default payment link in the sandbox.** A transaction that names its own
+   checkout page (`checkout.url`, set by `<APP>_BILLING_CHECKOUT_PAGE_URL`) is refused,
+   400 `transaction_checkout_url_domain_is_not_approved`, unless Paddle approved the
+   domain — and the sandbox has no approval UI (Checkout configuration offers only the
+   default payment link). So in the sandbox leave the setting unset: the transaction
+   opens on the default payment link, which is a pay page (keksdose's) serving every
+   app (§15.2). Live, set it once the pay host's domain passes Paddle's website review
+   (§14.4, step 3). server-kit 0.13 answers the refusal as 503 `billing_not_configured`,
+   the Paddle code in the log, no longer 502 `billing_provider_unavailable`.
+2. **Google Pay is off by default:** Checkout → Checkout configuration, switch it on. It
+   needs no domain approval.
+3. **A declined plan switch can't be arranged in the sandbox:** Paddle won't save the
+   decline card (4000 0000 0000 0002) as the subscription's payment method, so
+   `on_payment_failure: prevent_change` is never reached there. The kits' tests cover it
+   (server-kit's `PaddleApiFake`; the refusal's words in ui-kit).
+4. **Paddle's portal lists a plan switch as "Renewal"** ("Renewal for Keksdose Standard/
+   Plus + 1 more", CHF 0.00 or the charged difference), beside "Purchase of …" for the
+   first checkout. An app's help text says so.
+5. **Checkout step 1 is the e-mail and the country only;** the card fields come after
+   "Continue". Marcel read the first step as "nothing to put in" — a line in an app's
+   help or on its subscription page can say what follows.
+6. **Domain approval and Apple Pay are live only:** the sandbox has neither the website
+   approval nor the Apple Pay verification; both are done on the real pay host.
 
 ### 15.7 Reviews and decisions
 

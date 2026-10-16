@@ -44,6 +44,16 @@ export interface BillingOverview {
    * is what shows that a switch landed; `checkoutFingerprint` reads it.
    */
   paid: PaidPrice | null;
+  /**
+   * 0.40 (server-kit 0.13, §15.2.10): a provider subscription runs — the server's own
+   * rule, the one its checkout (409 `billing_already_subscribed`) and switch (409
+   * `billing_not_subscribed`) routes apply, so exactly one of the two answers. While it
+   * is true a `PlanPicker` pick opens `PlanSwitchConfirm` (`POST /billing/plan/preview`,
+   * then `POST /billing/plan`); while false, the checkout (`POST /billing/checkout`).
+   * Read it instead of mirroring the rule on the client. Optional so an overview from
+   * server-kit before 0.13 still type-checks; absent, read it as false.
+   */
+  switching?: boolean;
 }
 
 /** 0.39: what the payer pays at the provider (server-kit's `PaidPrice`, §15.2.10),

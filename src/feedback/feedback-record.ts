@@ -179,16 +179,29 @@ export const FEEDBACK_PICKABLE_CATEGORIES: readonly FeedbackCategory[] = Object.
 
 /**
  * The statuses a report can be sent back for **rework** from (§3.4): everything the team
- * has answered — `IN_EVALUATION`, `NEEDS_LIVE_TEST`, `POSTPONED`, `DONE`, `WONT_DO`. On
- * these the server reopens the row when the body grows by a rework block; on `OPEN`,
- * `READY` and `IN_PROGRESS` there is nothing to send back yet.
+ * has answered — `IN_EVALUATION`, `NEEDS_LIVE_TEST`, `POSTPONED`, `DONE`, `WONT_DO` — and,
+ * since 0.40, `REWORK` itself (§10.2 decision 4: a second rework adds another entry). On
+ * `OPEN`, `READY` and `IN_PROGRESS` there is nothing to send back yet.
  */
 export const FEEDBACK_REWORKABLE_STATUSES: readonly FeedbackStatus[] = Object.freeze([
+  "REWORK",
   "IN_EVALUATION",
   "NEEDS_LIVE_TEST",
   "POSTPONED",
   "DONE",
   "WONT_DO",
+] as const);
+
+/**
+ * The loops' queue (0.40, §10.2 decision 4; server-kit `QUEUE_STATUSES`): released for
+ * work (`READY`), sent back and released again (`REWORK`), and being worked
+ * (`IN_PROGRESS`). Kurvenschmiede's loop adds `OPEN` (decision 9) — its own difference,
+ * not this list's.
+ */
+export const FEEDBACK_QUEUE_STATUSES: readonly FeedbackStatus[] = Object.freeze([
+  "READY",
+  "REWORK",
+  "IN_PROGRESS",
 ] as const);
 
 /**
@@ -318,6 +331,24 @@ export function reworkCount(body: string): number {
   let n = 0;
   for (const line of body.split("\n")) if (REWORK_RULE.test(line.trim())) n += 1;
   return n;
+}
+
+/**
+ * How many times a report has been sent back, since 0.40 (§10.3): its `kind: "rework"`
+ * entries when the row carries `replies`, else {@link reworkCount} off the body (a server
+ * before server-kit 0.13, whose reworks are still `--- REWORK … ---` blocks). What the
+ * Rework chip counts.
+ */
+export function feedbackReworkCount(
+  row: { body?: string | null; replies?: readonly Pick<FeedbackReply, "kind">[] | null },
+): number {
+  if (row.replies) {
+    const entries = row.replies.filter((reply) => reply.kind === "rework").length;
+    // A row migrated by an app that answers `replies` but not yet `kind` keeps its body's
+    // count: no entry is a rework there, and the blocks are still in the body.
+    if (entries > 0) return entries;
+  }
+  return reworkCount(row.body ?? "");
 }
 
 /**

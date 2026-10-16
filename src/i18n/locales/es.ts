@@ -76,6 +76,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     feedbackStatus: {
       OPEN: "Abierto",
       READY: "Listo para implementar",
+      REWORK: "Corrección solicitada",
       IN_PROGRESS: "En curso",
       IN_EVALUATION: "En evaluación",
       NEEDS_LIVE_TEST: "Probar en producción",
@@ -113,11 +114,13 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       myFeedback: "Mis comentarios",
       viewFeedback: "Ver comentarios",
       allFeedback: "Todos los comentarios",
+      discussion: "Debate de comentarios",
+      inbox: "Comentarios recibidos",
     },
     // 0.38.0 — docs/feedback-harmonization.md §9: the public pages and the two feedback
     // notification types. "Informe" for one report, so it never reads as "comentario".
     feedbackPublic: {
-      title: "Todos los comentarios",
+      title: "Debate de comentarios",
       sort: "Ordenar",
       sortNewest: "Más recientes",
       sortVotes: "Más deseados",
@@ -149,7 +152,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       attachUrl: "Adjuntar la URL de la página actual",
     },
     feedbackPage: {
-      title: "Comentarios",
+      title: "Comentarios recibidos",
       myTitle: "Mis comentarios",
       columnId: "#",
       columnDate: "Fecha",
@@ -335,6 +338,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       filter: "Filtrar",
       close: "Cerrar",
       selectRow: "Seleccionar fila",
+      selectRows: "Seleccionar filas",
+      cancelSelection: "Cancelar",
       rowDetails: "Detalles",
       autoSize: "Ajustar ancho de columnas",
       loading: "Cargando…",
@@ -521,6 +526,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     tabs: {
       add: "Añadir pestaña",
       remove: (tab) => `Quitar ${tab}`,
+      more: "Más pestañas",
+      backToFirst: "Volver a la primera pestaña",
     },
     appShell: {
       collapse: "Contraer barra lateral",
@@ -536,6 +543,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     pickerSheet: {
       close: "Cerrar",
+      done: "Listo",
     },
     dialogFrame: {
       close: "Cerrar",

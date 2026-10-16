@@ -11,14 +11,28 @@ import type { FeedbackCategory, FeedbackStatus } from "./feedback-vocabulary";
  * account, a loop's reply). The client never builds one from an id.
  */
 
-/** One answer of the admin's — `FeedbackReplyResponse`, §9.7. Oldest first. */
+/** The two kinds of entry in a report's timeline (0.40, §10.2 decision 7): the admin's
+ *  `reply`, and the author's `rework` — the report sent back with a note. */
+export type FeedbackEntryKind = "reply" | "rework";
+
+/** One answer of the admin's — `FeedbackReplyResponse`, §9.7 — or, since 0.40, one
+ *  rework of the author's (§10.3, `kind: "rework"`). Oldest first. */
 export interface FeedbackReply {
   id: number;
   /** `null`: a loop's reply, a migrated `outcome`, or an erased admin — drawn as the
-   *  app's word for its admin ("Admin"). */
+   *  app's word for its admin ("Admin"). On a rework entry `null` is an erased or
+   *  unattributed author, drawn as "A user" (`feedbackPublic.anonymous`), never as the
+   *  admin word. */
   author_name: string | null;
   body: string;
-  /** The status this reply moved the report to; `null` = no status change. */
+  /** 0.40 (§10.3): `"reply"` (absent: a server before server-kit 0.13, all replies) or
+   *  `"rework"`, the author's entry. */
+  kind?: FeedbackEntryKind;
+  /** 0.40: a rework entry's one file (`/api/v1/feedback/attachments/<key>`) — the admin
+   *  and author views only; `null` or absent otherwise (never in the public view, §9.10). */
+  attachment_url?: string | null;
+  /** The status this reply moved the report to; `null` = no status change — and on a
+   *  rework migrated out of the body (§10.4), whose move was never recorded. */
   status_to: FeedbackStatus | null;
   /** Where it moved from — the admin view only. */
   status_from?: FeedbackStatus | null;

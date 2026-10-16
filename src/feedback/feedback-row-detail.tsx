@@ -237,7 +237,8 @@ export function feedbackPageUrl(context: FeedbackContext | null | undefined): st
  * keyed by URL, a React key clash keksdose had).
  */
 export function feedbackAttachmentUrls(
-  row: Pick<FeedbackRecord, "screenshot_url" | "attachment_urls" | "body">,
+  row: Pick<FeedbackRecord, "screenshot_url" | "attachment_urls" | "body"> &
+    Partial<Pick<FeedbackRecord, "replies">>,
 ): string[] {
   const urls = [
     ...(row.screenshot_url ? [row.screenshot_url] : []),
@@ -245,6 +246,11 @@ export function feedbackAttachmentUrls(
     // that predates it (keksdose dev #578).
     ...(row.attachment_urls ?? []),
     ...splitBodyAttachments(row.body).urls,
+    // 0.40 (§10.3): a rework entry's one file, in entry order — where the rework
+    // pictures of the body were before.
+    ...(row.replies ?? []).flatMap((reply) =>
+      reply.kind === "rework" && reply.attachment_url ? [reply.attachment_url] : [],
+    ),
   ];
   return [...new Set(urls)];
 }
@@ -330,8 +336,9 @@ export interface FeedbackRowAccess {
   /** The admin on the inbox (`canEdit`): since 0.38 the reply composer (the outcome
    *  itself is frozen, §9.7). */
   canEditOutcome: boolean;
-  /** "Rework": the admin or the author, on an answered row
-   *  ({@link FEEDBACK_REWORKABLE_STATUSES}) — §3.4, anyone else gets the server's 403. */
+  /** "Rework": the author, on an answered row ({@link FEEDBACK_REWORKABLE_STATUSES}).
+   *  Since 0.40 (§10.2 decision 6) the author's only — an admin sends a report back with
+   *  a reply whose status is `REWORK`; the server answers anyone else 403. */
   canRework: boolean;
   /** The status pills: the admin on the inbox; everyone else sees them read-only. */
   canChangeStatus: boolean;
@@ -356,7 +363,7 @@ export function feedbackRowAccess(
     isAuthor,
     canEditDescription: isAuthor && FEEDBACK_AUTHOR_EDITABLE_STATUSES.includes(row.status),
     canEditOutcome: canEdit,
-    canRework: (canEdit || isAuthor) && FEEDBACK_REWORKABLE_STATUSES.includes(row.status),
+    canRework: isAuthor && FEEDBACK_REWORKABLE_STATUSES.includes(row.status),
     canChangeStatus: canEdit,
   };
 }
@@ -396,11 +403,22 @@ export type FeedbackUpload = (file: File) => Promise<string>;
 
 /* ── Send for rework (§4.4.5) ─────────────────────────────────────────────── */
 
+/** 0.40 (§10.3): `POST /feedback/{id}/rework` — the trimmed note and the uploaded file's
+ *  URL. Return the promise: the section closes when it resolves and keeps the note when
+ *  it rejects (the toast is the app's: the server's `detail`, else
+ *  `feedbackToast.updateFailed`). */
+export type FeedbackReworkSend = (note: string, attachmentUrl?: string) => void | Promise<unknown>;
+
 export interface FeedbackReworkSectionProps {
   /** The row being sent back: its id, and the body the round is appended to. */
   row: Pick<FeedbackRecord, "id" | "body">;
-  /** The PATCH — see {@link FeedbackDetailUpdate}. Called with `{ id, body }` only. */
-  onUpdate: FeedbackDetailUpdate;
+  /** 0.40: the rework as an entry of its own — see {@link FeedbackReworkSend}. With it,
+   *  `onUpdate` is not called. */
+  onRework?: FeedbackReworkSend;
+  /** The PATCH — see {@link FeedbackDetailUpdate}. Called with `{ id, body }` only, and
+   *  only without `onRework`: the legacy append (§3.4), which server-kit 0.13 still
+   *  turns into an entry for one release. Optional since 0.40; pass one of the two. */
+  onUpdate?: FeedbackDetailUpdate;
   /** The PATCH is in flight (`update.isPending`). The upload adds its own. */
   pending?: boolean;
   /** The upload. Left out, the note goes without a file field. */
@@ -422,7 +440,7 @@ export interface FeedbackReworkSectionProps {
 }
 
 /**
- * The rework editor (§4.4.5): the submitter — or the admin — sends an answered report
+ * The rework editor (§4.4.5): the submitter sends an answered report
  * back with a note and at most one file, and the server reopens it (§3.4, keksdose
  * `submitRework`, `feedback-page.tsx:350`).
  *
@@ -432,6 +450,9 @@ export interface FeedbackReworkSectionProps {
  *   uploaded FIRST and awaited: a body naming a file that never arrived would be a
  *   rework whose evidence is missing, and the upload is the half that fails on its
  *   own. If it fails nothing is sent and the toast says so; the note stays in the box.
+ * - **0.40: an entry of its own** (§10.3) — with `onRework`, the note and the file's URL
+ *   go to `POST /feedback/{id}/rework` and the body is not touched. Without it, the
+ *   legacy append below, which server-kit 0.13 still converts (one minor).
  * - **The body alone goes in the PATCH** — {@link appendRework}'s strict extension of
  *   the current body, which is how the server recognises the append and reopens the
  *   row. Never a `status` (kastlan's client sent `OPEN`; an author may not write one,
@@ -443,6 +464,7 @@ export interface FeedbackReworkSectionProps {
  */
 export function FeedbackReworkSection({
   row,
+  onRework,
   onUpdate,
   pending = false,
   onUpload,
@@ -456,6 +478,7 @@ export function FeedbackReworkSection({
   const labels = useFeedbackDetailLabels(labelsProp);
   const toasts = useFeedbackToastLabels();
   const [uploading, setUploading] = useState(false);
+  const [sending, setSending] = useState(false);
   // The body as it is NOW, not as it was when Send was pressed: the list can refresh
   // while the file uploads, and an append to a stale body is no longer a strict
   // extension of the stored one — the server would read it as an edit, and refuse it.
@@ -490,6 +513,21 @@ export function FeedbackReworkSection({
         setUploading(false);
       }
     }
+    if (onRework) {
+      // 0.40 (§10.3): the entry, not the body — the server checks the URL (a 422 outside
+      // the app's attachment prefix).
+      setSending(true);
+      try {
+        await onRework(note, url ?? undefined);
+      } catch {
+        return; // The app's toast; the note stays in the box.
+      } finally {
+        setSending(false);
+      }
+      onSent?.();
+      return;
+    }
+    if (!onUpdate) return;
     let body: string | null;
     try {
       body = appendRework(latestBody.current, note, url);
@@ -511,7 +549,7 @@ export function FeedbackReworkSection({
         initial=""
         required
         commit={commit}
-        pending={pending || uploading}
+        pending={pending || uploading || sending}
         onSave={(value, file) => void send(value, file)}
         onCancel={onCancel}
         saveLabel={labels.reworkSend}
@@ -593,6 +631,15 @@ export interface FeedbackRowDetailProps {
   onReply?: (body: string, status?: FeedbackStatus) => void | Promise<unknown>;
   /** 0.38: the reply is in flight. */
   replying?: boolean;
+  /**
+   * 0.40 (§10.3): `POST /feedback/{id}/rework` — the author's rework as an entry of its
+   * own (see {@link FeedbackReworkSend}). The **Rework** button shows only to the author
+   * on an answered row, and only where the reply composer is not shown (§10.2 decision 6:
+   * an admin answering a report sends it back with a reply whose status is `REWORK`).
+   * Left out, the rework goes through `onUpdate` as the legacy body append — for one
+   * minor, while the server converts it.
+   */
+  onRework?: FeedbackReworkSend;
   /** 0.38: the report's comments — the app's `FeedbackCommentThread` — in a section of
    *  their own under the replies. A thread here draws the comments alone (0.38.1): the
    *  Replies section above has the replies, so whatever `replies` the thread is handed
@@ -647,6 +694,7 @@ export function FeedbackRowDetail({
   showSubject = true,
   onReply,
   replying = false,
+  onRework,
   comments,
   onPublicChange,
   labels: labelsProp,
@@ -687,7 +735,11 @@ export function FeedbackRowDetail({
   // 0.38, whose frozen outcome is shown as it is, read-only.
   const replies = row.replies;
   const commentLabels = useKitLabels("feedbackComments", DEFAULT_FEEDBACK_COMMENTS_LABELS);
-  const showRework = access.canRework && reworking;
+  // 0.40 (§10.2 decision 6): whoever has the reply composer answers with it — REWORK is
+  // one of its statuses — so the Rework button is for an author without it.
+  const composerShown = Boolean(replies && access.canEditOutcome && onReply);
+  const canRework = access.canRework && !composerShown;
+  const showRework = canRework && reworking;
 
   return (
     <FeedbackDetail className={className}>
@@ -791,7 +843,7 @@ export function FeedbackRowDetail({
           ) : (
             <FeedbackProse>{row.outcome || undefined}</FeedbackProse>
           )}
-          {replies && access.canEditOutcome && onReply && (
+          {composerShown && replies && onReply && (
             <FeedbackReplyComposer
               key={row.id}
               status={row.status}
@@ -801,9 +853,9 @@ export function FeedbackRowDetail({
               commit={commit}
             />
           )}
-          {((access.canRework && !reworking) || pageHref) && (
+          {((canRework && !reworking) || pageHref) && (
             <div className="flex flex-wrap gap-2">
-              {access.canRework && !reworking && (
+              {canRework && !reworking && (
                 <Button
                   type="button"
                   variant="secondary"
@@ -836,6 +888,7 @@ export function FeedbackRowDetail({
       {showRework && (
         <FeedbackReworkSection
           row={row}
+          onRework={onRework}
           onUpdate={onUpdate}
           pending={pending}
           onUpload={onUpload}

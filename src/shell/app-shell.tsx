@@ -537,6 +537,15 @@ export function AppShell({
             <main
               className={cn(
                 "relative flex-1 max-w-full overflow-x-clip pb-[calc(var(--app-nav-h,4rem)+1.5rem)] md:pb-0 md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable_both-edges]",
+                // The list page's fill (0.40, docs/page-layout-harmonization.md §1.3): while
+                // a `fillHeight` DataTable is inside, a flex column — a banner above the
+                // page keeps its own height and the page (a `FillHeight`) takes the rest,
+                // so `<main>` no longer overflows by the banner. Its children do not shrink
+                // (a banner of a fixed height or `overflow-hidden` would): the page grows
+                // into the rest from a zero basis, and a window too short for the page's
+                // floor scrolls `<main>`. Every other page lays out as before. Below `md`
+                // the document scrolls and nothing fills.
+                "md:has-[[data-fill-height]]:flex md:has-[[data-fill-height]]:flex-col md:has-[[data-fill-height]]:*:shrink-0",
                 // Embedded there is no document scroll to lean on below `md` either.
                 embedded && "min-h-0 overflow-y-auto",
               )}

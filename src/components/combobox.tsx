@@ -8,7 +8,7 @@ import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
-import { ComboboxFieldLabel, endHintRowProps, useActiveOptionScroll } from "./combobox-core";
+import { ComboboxFieldLabel, endHintRowProps, GROUP_HEADING_STICKY, useActiveOptionScroll } from "./combobox-core";
 import { useKitLocale } from "../i18n/kit-labels";
 import { rankMatch } from "../lib/text-match";
 import {
@@ -574,7 +574,10 @@ export function Combobox(props: ComboboxProps) {
                   {group !== undefined && (
                     <li
                       role="presentation"
-                      className="px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-muted"
+                      className={cn(
+                        GROUP_HEADING_STICKY,
+                        "px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-muted",
+                      )}
                     >
                       {group}
                     </li>
@@ -631,7 +634,10 @@ export function Combobox(props: ComboboxProps) {
                 {group !== undefined && (
                   <li
                     role="presentation"
-                    className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1"
+                    className={cn(
+                      GROUP_HEADING_STICKY,
+                      "px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1",
+                    )}
                   >
                     {group}
                   </li>

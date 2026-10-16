@@ -76,6 +76,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     feedbackStatus: {
       OPEN: "Aperto",
       READY: "Pronto da implementare",
+      REWORK: "Rielaborazione richiesta",
       IN_PROGRESS: "In corso",
       IN_EVALUATION: "In valutazione",
       NEEDS_LIVE_TEST: "Da testare in produzione",
@@ -113,11 +114,13 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       myFeedback: "I miei feedback",
       viewFeedback: "Visualizza feedback",
       allFeedback: "Tutti i feedback",
+      discussion: "Discussione sui feedback",
+      inbox: "Feedback ricevuti",
     },
     // 0.38.0 — docs/feedback-harmonization.md §9: the public pages and the two feedback
     // notification types. "Segnalazione" for one report; formal "Lei", as elsewhere.
     feedbackPublic: {
-      title: "Tutti i feedback",
+      title: "Discussione sui feedback",
       sort: "Ordina",
       sortNewest: "Più recenti",
       sortVotes: "Più richiesti",
@@ -149,7 +152,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       attachUrl: "Allega l’URL della pagina corrente",
     },
     feedbackPage: {
-      title: "Feedback",
+      title: "Feedback ricevuti",
       myTitle: "I miei feedback",
       columnId: "#",
       columnDate: "Data",
@@ -337,6 +340,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       filter: "Filtra",
       close: "Chiudi",
       selectRow: "Seleziona riga",
+      selectRows: "Seleziona righe",
+      cancelSelection: "Annulla",
       rowDetails: "Dettagli",
       autoSize: "Adatta larghezza colonne",
       loading: "Caricamento…",
@@ -524,6 +529,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     tabs: {
       add: "Aggiungi scheda",
       remove: (tab) => `Rimuovi ${tab}`,
+      more: "Altre schede",
+      backToFirst: "Torna alla prima scheda",
     },
     appShell: {
       collapse: "Comprimi barra laterale",
@@ -539,6 +546,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     pickerSheet: {
       close: "Chiudi",
+      done: "Fine",
     },
     dialogFrame: {
       close: "Chiudi",

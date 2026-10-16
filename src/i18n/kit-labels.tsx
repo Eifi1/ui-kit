@@ -279,6 +279,9 @@ export interface TopBarLabels {
 
 export interface PickerSheetLabels {
   close: string;
+  /** The sticky footer button that closes a multi-select sheet once the rows are ticked
+   *  (0.40) — the ticks are already applied, so it confirms rather than saves. */
+  done: string;
 }
 
 export interface SwipeableRowLabels {

@@ -11,12 +11,13 @@ import {
   MoreHorizontal,
   OctagonAlert,
   PauseCircle,
+  RotateCcw,
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
- * The feedback **vocabulary**: the eight statuses and five categories, the glyph and tone
+ * The feedback **vocabulary**: the nine statuses and five categories, the glyph and tone
  * of each, their orders, and the policy for how a report moves from status to status.
  *
  * Data and plain functions, no components. Until 0.34 this lived at the top of
@@ -27,16 +28,18 @@ import type { LucideIcon } from "lucide-react";
  * feedback-inbox.tsx re-exports every name here, so nothing an app imports has moved.
  */
 
-/** The eight states a report can be in.
+/** The nine states a report can be in.
  *
  *  Shared value for value across the apps on purpose: it is what lets one habit,
  *  and one agent prompt, work on any repo. Five are a chain and three sit off
  *  it — see {@link visibleFeedbackStatuses} for what that buys. `READY` joined in 0.31
  *  (feedback contract §8.2): OPEN is "filed, not yet triaged", READY "released for
- *  implementation", and nobody works an OPEN row. */
+ *  implementation", and nobody works an OPEN row. `REWORK` joined in 0.40 (§10.2
+ *  decisions 2, 4): "sent back, released for work again" — a READY that came back. */
 export type FeedbackStatus =
   | "OPEN"
   | "READY"
+  | "REWORK"
   | "IN_PROGRESS"
   | "IN_EVALUATION"
   | "NEEDS_LIVE_TEST"
@@ -75,6 +78,16 @@ export const FEEDBACK_STATUS_META: Record<
     icon: ClipboardCheck,
     activeBg: "bg-brand-soft",
     activeText: "text-brand",
+  },
+  // Sent back by its author or an admin and released for work again (0.40, feedback
+  // contract §10.2 decision 4): the Rework button's `RotateCcw`, in the danger tint so the
+  // queue shows reworks apart from new reports. Not IN_PROGRESS's warning tint — that is
+  // where a REWORK row moves next — and WONT_DO, the only other red, sits at the far end
+  // with `Ban`.
+  REWORK: {
+    icon: RotateCcw,
+    activeBg: "bg-danger-soft",
+    activeText: "text-danger",
   },
   IN_PROGRESS: {
     icon: Wrench,
@@ -142,8 +155,11 @@ const OFF_CHAIN: FeedbackStatus[] = ["NEEDS_LIVE_TEST", "POSTPONED", "WONT_DO"];
 const FORWARD_CHAIN: FeedbackStatus[] = ["OPEN", "READY", "IN_PROGRESS", "IN_EVALUATION", "DONE"];
 
 /** The next status along the chain, or null at the end (or off it, as `WONT_DO`
- *  is). What a swipe-to-advance gesture commits. */
+ *  is). What a swipe-to-advance gesture commits. `REWORK` (0.40) is not in the chain —
+ *  "advance" from READY still goes to IN_PROGRESS — but it leads there too: a reworked
+ *  row is READY's twin. */
 export function nextFeedbackStatus(current: FeedbackStatus): FeedbackStatus | null {
+  if (current === "REWORK") return "IN_PROGRESS";
   const at = FORWARD_CHAIN.indexOf(current);
   return at !== -1 && at < FORWARD_CHAIN.length - 1 ? FORWARD_CHAIN[at + 1] : null;
 }
@@ -152,7 +168,7 @@ export function nextFeedbackStatus(current: FeedbackStatus): FeedbackStatus | nu
  * The steps that make sense from where a row currently stands.
  *
  * For the compact control in a table cell: it is a glanceable triage affordance,
- * and a row of eight icons in a cell is noise. One step forward, one step back
+ * and a row of nine icons in a cell is noise. One step forward, one step back
  * (so an item can be sent back for rework), and any of the three off-chain
  * verdicts — which is what makes those usable as verdicts at all.
  *
@@ -165,7 +181,12 @@ export function nextFeedbackStatus(current: FeedbackStatus): FeedbackStatus | nu
 export function visibleFeedbackStatuses(current: FeedbackStatus): FeedbackStatus[] {
   const set = new Set<FeedbackStatus>([current]);
   const at = FORWARD_CHAIN.indexOf(current);
-  if (at !== -1) {
+  if (current === "REWORK") {
+    // READY's twin (0.40, §10.2 decision 4): the step that picks the work up, and the
+    // verdicts a released row can still get.
+    set.add("IN_PROGRESS");
+    for (const off of OFF_CHAIN) set.add(off);
+  } else if (at !== -1) {
     if (at < FORWARD_CHAIN.length - 1) set.add(FORWARD_CHAIN[at + 1]);
     if (at > 0) set.add(FORWARD_CHAIN[at - 1]);
     for (const off of OFF_CHAIN) set.add(off);

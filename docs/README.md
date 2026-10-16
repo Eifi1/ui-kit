@@ -21,7 +21,7 @@ are in [archive/](archive/) as `<topic>-history.md`.
 | Contract | What it covers | Shipped in | Status |
 |---|---|---|---|
 | [i18n](i18n-harmonization.md) | The seven languages, the language registry, detection, formatting locales, translation review (rules H1–H10) | ui-kit 0.18–0.20, server-kit 0.1 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 |
-| [feedback](feedback-harmonization.md) | The feedback dialog, menu, inbox, the eight statuses and five categories, the thread | ui-kit 0.27, server-kit 0.1; amended in 0.31 (READY) | Current as of ui-kit 0.34.0 / server-kit 0.8.0; §9 settled 2026-10-14 (round 0.38): public feedback, votes, comments, replies as a list |
+| [feedback](feedback-harmonization.md) | The feedback dialog, menu, inbox, the eight statuses and five categories, the thread | ui-kit 0.27, server-kit 0.1; amended in 0.31 (READY) | Current as of ui-kit 0.34.0 / server-kit 0.8.0; §9 settled 2026-10-14 (round 0.38): public feedback, votes, comments, replies as a list; §10 settled 2026-10-16 (round 0.40): rework as a conversation entry + REWORK status, the feedback menu's three links |
 | [legal](legal-harmonization.md) | Imprint, Privacy Policy and Terms: the page frame, the skeleton, the shared sentences | ui-kit 0.28 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 |
 | [auth](auth-harmonization.md) | Sign-in, sign-up, the account core, the session and its refresh | ui-kit 0.29, server-kit 0.3 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 (§11: session refresh, 0.34) |
 | [user-admin](user-admin-harmonization.md) | The user list, admin actions and the audit, invitations, the account's own settings cards | ui-kit 0.30, server-kit 0.4 | Current as of ui-kit 0.34.0 / server-kit 0.8.0 (§11: groups in the audit, 0.34) |
@@ -31,6 +31,7 @@ are in [archive/](archive/) as `<topic>-history.md`.
 | [billing](billing-harmonization.md) | Plans, grants, trials, the Paddle client, the checkout page and the way back | ui-kit 0.32–0.33, server-kit 0.6–0.7 | Current as of ui-kit 0.34.0 / server-kit 0.8.0; off in production until each app's launch; §15 settled 2026-10-14 (round 0.39) |
 | [colour-roles](colour-roles-harmonization.md) | The role utilities, a foreground for every fill, the hover rule, the CSS-variable guard | ui-kit 0.33 | Current as of ui-kit 0.34.0 (§13: the More-contrast light well, settled 2026-10-13, built for ui-kit 0.36.0) |
 | [notifications](notifications-harmonization.md) | Notification types and switches, quiet hours, the zone, the digest, push devices, one-click unsubscribe | — | Settled 2026-10-13, built for ui-kit 0.36.0 / server-kit 0.9.0; §9 (admin transfer, failed-mail retry) settled 2026-10-14, built for server-kit 0.10.0 / ui-kit 0.37.0 |
+| [page-layout](page-layout-harmonization.md) | Which list pages fill the window (DataTable `fillHeight`) and which keep the cap; the shell's wiring as `FillHeight`; the per-app checklist | ui-kit 0.40 | §1 settled 2026-10-16 (round 0.40): the list page fills the window, a 12rem body floor; built for ui-kit 0.40.0 |
 | [server-services](server-services-harmonization.md) | server-kit layer 2: the feedback service behind ports, its router factory, the shared erasure; the translation review | — | §1–5 settled 2026-10-13, built for server-kit 0.9.0 (round 0.36); §6 the translation review settled 2026-10-14, built for server-kit 0.10.0 / ui-kit 0.37.0 (round 0.37) |
 
 ## Adoption notes (`adopt-0.x.md`)
@@ -42,6 +43,7 @@ session as it is. Once all three apps have adopted a release, its note moves to
 
 | Note | Release | What it was | Apps |
 |---|---|---|---|
+| [adopt-0.40](adopt-0.40.md) | ui-kit 0.40, server-kit 0.13 | Round 0.40: feedback §10 (rework as an entry, the menu), page layout §1 (the list page fills), phone tables and pickers, the Paddle sandbox results, `switching` | being built |
 | [adopt-0.39](adopt-0.39.md) | ui-kit 0.39, server-kit 0.12 | Round 0.39: pay pages that serve any app, the shared plan switch and Paddle customer (billing §15); `ApiTranslationReviewsResponse`; `can_review_kit` as T2 | being built |
 | [adopt-0.38](adopt-0.38.md) | ui-kit 0.38, server-kit 0.11 | Round 0.38: public feedback — votes, comments by others, replies as a timeline, the public pages; `outcome` frozen | all three adopted (kastlan shipped) |
 | [adopt-0.37](adopt-0.37.md) | ui-kit 0.37, server-kit 0.10 | Round 0.37: the translation review as server-kit layer 2, notifications §9 (an admin's hand-over, a failed send); the apps' 0.36 findings | all three adopted locally |

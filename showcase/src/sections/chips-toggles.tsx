@@ -98,15 +98,15 @@ const REPORT_TABS = [
 
 type ReportTab = (typeof REPORT_TABS)[number]["id"];
 
-function WrappedTabStrip() {
+function OverflowTabStrip() {
   const [active, setActive] = useState<ReportTab>("open");
   return (
     <Example
-      label="Tabs — wrap"
-      hint="ten tabs; narrow below 768px and the strip becomes wrapping chips"
+      label="Tabs — overflowCue"
+      hint="ten tabs; narrow below 768px and a caret beside the strip says the row goes on"
     >
       <Tabs<ReportTab>
-        wrap
+        overflowCue
         aria-label="Report queues"
         active={active}
         onChange={setActive}
@@ -121,13 +121,12 @@ function WrappedTabStrip() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">wrap</code> cannot be done from a call site with a{" "}
-          <code className="font-mono">className</code>, which is why it is a prop: the active
-          marker has to change shape with the layout. The default marker is an underline riding
-          the container&apos;s bottom rule, and a tab in any row but the last has no rule to
-          wear — so a wrapped strip marks the active tab with a filled{" "}
-          <code className="font-mono">--brand</code> chip instead. From{" "}
-          <code className="font-mono">md</code> up the two strips are pixel-identical.
+          Below <code className="font-mono">md</code> the strip scrolls sideways, and its edge fade
+          alone can end exactly on a tab&apos;s end and read as &quot;no more&quot;. With{" "}
+          <code className="font-mono">overflowCue</code> a › beside the strip scrolls it on by three
+          quarters of its width and turns into a ‹ at the end, which goes back to the first tab.
+          Shown only while the strip overflows; from <code className="font-mono">md</code> up
+          nothing changes. It replaces <code className="font-mono">wrap</code>, deprecated in 0.40.
         </Note>
       </div>
     </Example>
@@ -293,7 +292,7 @@ export function ChipsToggles() {
       <ToggleGroupUnset />
       <ToggleGroupClearable />
       <TabStrip />
-      <WrappedTabStrip />
+      <OverflowTabStrip />
       <VerticalTabs />
       <TabControls />
     </>

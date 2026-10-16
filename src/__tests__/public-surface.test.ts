@@ -240,7 +240,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `DEFAULT_NOTIFICATIONS_LABELS` (+16).
   // 0.39.0 (+2, docs/billing-harmonization.md §15.4): `PlanSwitchConfirm`, the payer's
   // plan switch, and `PAY_PAGE_APPS`, the apps every pay page serves.
-  ["@eifi1/ui-kit", barrel, 912],
+  // 0.40.0 (+2, docs/feedback-harmonization.md §10.8): `FEEDBACK_QUEUE_STATUSES`, the
+  // loops' queue, and `feedbackReworkCount`, the Rework chip's count off the entries.
+  // 0.40.0 (+2, docs/page-layout-harmonization.md §1.3): `FillHeight` and
+  // `FILL_HEIGHT_CLASS`, the list page's fill (here and in /shell).
+  ["@eifi1/ui-kit", barrel, 916],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -255,14 +259,16 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.22.0: ChatComposer, FeedbackComposer under a neutral name (keksdose K17) (+1).
   // 0.27.0: the feedback harmonization's 55 (see the barrel's note above).
   // 0.35.0: `FeedbackComposer` removed, `ChatComposer` stays (API-6d) (−1).
-  ["@eifi1/ui-kit/feedback", feedback, 100],
+  // 0.40.0: `FEEDBACK_QUEUE_STATUSES`, `feedbackReworkCount` (+2 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 102],
   ["@eifi1/ui-kit/search", search, 9],
   // 0.31.0 (+26): the settings shell and its route, focus, context, heading and
   // catalogue helpers; PublicHeader, RootEntry, RedirectIfAuthed and the
   // last-visited page — the router-aware parts and their companions.
   // 0.32.0 (+3): the phone bar's "More" — AppShellMoreLabels' defaults,
   // DEFAULT_MOBILE_BAR_MAX, splitMobileBar.
-  ["@eifi1/ui-kit/shell", shell, 41],
+  // 0.40.0 (+2): `FillHeight`, `FILL_HEIGHT_CLASS` (docs/page-layout-harmonization.md §1.3).
+  ["@eifi1/ui-kit/shell", shell, 43],
   ["@eifi1/ui-kit/tour", tour, 4],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.

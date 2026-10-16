@@ -37,14 +37,14 @@ const INITIAL_SHEETS: TabItem<string>[] = [
   { id: "120", label: "120 km/h", detail: "not measured", empty: true },
 ];
 
-function SheetStrip({ removeOn, wrap }: { removeOn?: "every" | "active"; wrap?: boolean }) {
+function SheetStrip({ removeOn, overflowCue }: { removeOn?: "every" | "active"; overflowCue?: boolean }) {
   const [sheets, setSheets] = useState(INITIAL_SHEETS);
   const [active, setActive] = useState("80");
   return (
     <div data-stage="wide" className="space-y-3">
       <Tabs
         aria-label="Loops"
-        wrap={wrap}
+        overflowCue={overflowCue}
         removeOn={removeOn}
         tabs={sheets}
         active={active}
@@ -259,10 +259,10 @@ export function TabControls() {
 
       <Example
         label="Delete on the open tab only"
-        hint='removeOn="active" · wrap · Delete on a closed tab does nothing'
+        hint='removeOn="active" · overflowCue · Delete on a closed tab does nothing'
       >
         <Stage>
-          <SheetStrip removeOn="active" wrap />
+          <SheetStrip removeOn="active" overflowCue />
         </Stage>
       </Example>
 

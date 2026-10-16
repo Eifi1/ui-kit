@@ -556,20 +556,20 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1975 names from 321 modules** — 912 values and 1063 types. _Italic_ is a type-only export.
+**1982 names from 322 modules** — 916 values and 1066 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1975 |
+| `@eifi1/ui-kit` | 1982 |
 | `@eifi1/ui-kit/chart` | 92 |
-| `@eifi1/ui-kit/shell` | 77 |
+| `@eifi1/ui-kit/shell` | 80 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 24 |
 | `@eifi1/ui-kit/tour` | 7 |
-| `@eifi1/ui-kit/feedback` | 201 |
+| `@eifi1/ui-kit/feedback` | 205 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
@@ -818,6 +818,7 @@ re-slicing of it, never a second API.
 | `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
 | `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
 | `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
+| `shell/fill-height` | `FILL_HEIGHT_CLASS`, `FillHeight`, _`FillHeightProps`_ |
 | `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
 
 ### settings
@@ -856,7 +857,7 @@ re-slicing of it, never a second API.
 | `feedback/feedback-dialog` | `DEFAULT_FEEDBACK_DIALOG_LABELS`, `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackDialogMultipleProps`_, _`FeedbackDialogProps`_, _`FeedbackDialogSingleProps`_, _`FeedbackDialogTextLabels`_, _`FeedbackMultipleSubmission`_, _`FeedbackSubmission`_, _`FeedbackSubmitHint`_ |
 | `feedback/feedback-inbox` | `FeedbackCategoryBadge`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, _`FeedbackNoteAttachment`_ |
 | `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackComposerSlotContext`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
-| `feedback/feedback-record` | `appendRework`, `attachmentName`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_COMMENT_MAX`, `FEEDBACK_DECIDED_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_REPLY_MAX`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackAttachmentLine`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
+| `feedback/feedback-record` | `appendRework`, `attachmentName`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_COMMENT_MAX`, `FEEDBACK_DECIDED_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_QUEUE_STATUSES`, `FEEDBACK_REPLY_MAX`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackAttachmentLine`, `feedbackReworkCount`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
 | `feedback/feedback-labels` | `DEFAULT_FEEDBACK_CATEGORY_LABELS`, `DEFAULT_FEEDBACK_STATUS_LABELS`, `DEFAULT_FEEDBACK_TOAST_LABELS`, `useFeedbackCategoryLabels`, `useFeedbackStatusLabels`, `useFeedbackToastLabels`, _`FeedbackCategoryLabels`_, _`FeedbackStatusLabels`_, _`FeedbackToastLabels`_ |
 | `feedback/feedback-status-undo` | `FEEDBACK_UNDO_DURATION`, `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutate`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
 | `feedback/feedback-swipe` | `DEFAULT_FEEDBACK_SWIPE`, `FEEDBACK_SWIPE_ACTIONS`, `feedbackSwipePlan`, _`FeedbackSwipeAction`_, _`FeedbackSwipeBinding`_, _`FeedbackSwipeOptions`_ |
@@ -865,11 +866,11 @@ re-slicing of it, never a second API.
 | `feedback/feedback-capture` | `captureAppScreenshot`, _`CaptureAppScreenshotOptions`_ |
 | `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`UseFeedbackSubmitOptions`_ |
 | `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `feedbackColumns`, `FeedbackEmptyState`, `feedbackEnvironment`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `feedbackSubmitter`, `feedbackSubmitterEmail`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
-| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `feedbackAttachmentUrls`, `feedbackPageHref`, `feedbackPagePath`, `feedbackPageUrl`, `FeedbackReworkSection`, `feedbackRowAccess`, `FeedbackRowDetail`, `useFeedbackDetailLabels`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdate`_, _`FeedbackReworkSectionProps`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
+| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `feedbackAttachmentUrls`, `feedbackPageHref`, `feedbackPagePath`, `feedbackPageUrl`, `FeedbackReworkSection`, `feedbackRowAccess`, `FeedbackRowDetail`, `useFeedbackDetailLabels`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdate`_, _`FeedbackReworkSectionProps`_, _`FeedbackReworkSend`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
 | `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
 | `feedback/feedback-public-switch` | `FeedbackPublicSwitch`, `feedbackPublicSwitchAllowed`, _`FeedbackPublicSwitchProps`_, _`FeedbackPublicSwitchRow`_, _`FeedbackPublicSwitchViewer`_ |
 | `feedback/feedback-public-list` | `DEFAULT_FEEDBACK_PUBLIC_LABELS`, `FeedbackPublicDetail`, `FeedbackPublicList`, `useFeedbackPublicLabels`, _`FeedbackPublicDetailProps`_, _`FeedbackPublicLabels`_, _`FeedbackPublicListProps`_ |
-| `feedback/feedback-public-types` | _`FeedbackComment`_, _`FeedbackPublicListItem`_, _`FeedbackPublicRecord`_, _`FeedbackPublicSort`_, _`FeedbackReply`_, _`FeedbackVoteState`_ |
+| `feedback/feedback-public-types` | _`FeedbackComment`_, _`FeedbackEntryKind`_, _`FeedbackPublicListItem`_, _`FeedbackPublicRecord`_, _`FeedbackPublicSort`_, _`FeedbackReply`_, _`FeedbackVoteState`_ |
 | `feedback/feedback-vote-button` | `DEFAULT_FEEDBACK_VOTE_LABELS`, `FeedbackVoteButton`, _`FeedbackVoteButtonProps`_, _`FeedbackVoteLabels`_ |
 | `feedback/feedback-comment-thread` | `DEFAULT_FEEDBACK_COMMENTS_LABELS`, `FeedbackCommentThread`, _`FeedbackCommentsLabels`_, _`FeedbackCommentThreadProps`_ |
 | `feedback/feedback-replies` | `DEFAULT_FEEDBACK_REPLIES_LABELS`, `FeedbackReplyComposer`, `feedbackReplyNudge`, `FeedbackReplyTimeline`, `useFeedbackRepliesLabels`, _`FeedbackRepliesLabels`_, _`FeedbackReplyComposerProps`_, _`FeedbackReplyTimelineProps`_ |

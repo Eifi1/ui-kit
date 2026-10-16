@@ -1,11 +1,12 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING_WIDTH } from "./focus-ring";
 import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { horizontalStep } from "../lib/direction";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
+import { prefersReducedMotion } from "../lib/reduced-motion";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { mergeRefs } from "./field-parts";
 import { DEFAULT_TABS_LABELS } from "./ui-labels";
@@ -47,6 +48,10 @@ export interface TabsLabels {
   add: string;
   /** Accessible name of a tab's × — "Remove <tab>". */
   remove: (tab: string) => string;
+  /** The `overflowCue` caret while tabs lie past the strip's end: "More tabs". */
+  more: string;
+  /** The `overflowCue` caret at the strip's end, which goes back to the first tab. */
+  backToFirst: string;
 }
 
 // Defined in ./ui-labels, which holds no component code (0.34, KS U8).
@@ -94,8 +99,28 @@ export interface TabsProps<T extends string>
    *
    *  Opt-in on purpose. The three-tab strips (invoices, statements, bank imports)
    *  already fit a phone row, and turning those into chips would be an unrequested
-   *  redesign of three other pages. */
+   *  redesign of three other pages.
+   *
+   *  @deprecated 0.40 — use the scrolling strip with `overflowCue`; removed in 0.41. No
+   *  consumer is left (keksdose went back to one scrolling row, live #410); the caret
+   *  says a phone's row goes on. */
   wrap?: boolean;
+  /**
+   * The caret beside a SCROLLING strip below `md` (0.40, kk run 79 gap 1): a › while
+   * tabs lie past the strip's end — a tap scrolls it on by three quarters of its width —
+   * turning into a ‹ at the end, which goes back to the first. Shown only while the strip
+   * actually overflows.
+   *
+   * The edge fade alone could read as the end of the row: at the default scroll position
+   * the last visible tab can finish exactly where the fade begins, so nothing looks cut
+   * off (keksdose live #410, whose `tab-strip-more.tsx` this replaces). One button that
+   * turns round rather than two that come and go, so the strip's width never changes
+   * under the thumb. Out of the tab order — the keyboard walks the strip with the arrow
+   * keys, which bring the focused tab into view. From `md` up nothing changes. Ignored on
+   * a `wrap` strip and a vertical one (a side nav is a column, not a row). Names:
+   * `tabs.more` / `tabs.backToFirst`.
+   */
+  overflowCue?: boolean;
   /**
    * `id` of the element the caller renders the open tab's content into — the missing
    * half of `role="tab"`. A tab that controls nothing is a tab in name only: a screen
@@ -266,6 +291,7 @@ export function Tabs<T extends string>({
   onChange,
   className,
   wrap = false,
+  overflowCue = false,
   panelId,
   onRemove,
   removeOn = "every",
@@ -285,6 +311,36 @@ export function Tabs<T extends string>({
   const stripRef = useRef<HTMLDivElement>(null);
   const setStrip = useMemo(() => mergeRefs(stripRef, ref), [ref]);
   const fade = useStripFade(stripRef);
+  // See `overflowCue`. `start` alone means the strip is scrolled to its end.
+  const cue = overflowCue && !wrap && !vertical && fade.overflow !== undefined;
+  const cueAtEnd = fade.overflow === "start";
+  const onCue = () => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
+    if (cueAtEnd) {
+      strip.scrollTo({ left: 0, behavior });
+      return;
+    }
+    const rtl = getComputedStyle(strip).direction === "rtl";
+    strip.scrollBy({ left: (rtl ? -1 : 1) * Math.round(strip.clientWidth * 0.75), behavior });
+  };
+  const cueButton = cue ? (
+    // The strip's bottom rule continues under the caret, so the row reads as one.
+    <div data-tabs-overflow-cue="" className="flex shrink-0 items-center self-stretch border-b border-subtle md:hidden">
+      <IconButton
+        size="sm"
+        variant="ghost"
+        tone="muted"
+        tabIndex={-1}
+        type="button"
+        aria-label={cueAtEnd ? text.backToFirst : text.more}
+        onClick={onCue}
+      >
+        {cueAtEnd ? <ChevronLeft className="rtl:-scale-x-100" /> : <ChevronRight className="rtl:-scale-x-100" />}
+      </IconButton>
+    </div>
+  ) : null;
   // The OPEN tab is scrolled into the strip whenever it changes — on mount too, for a
   // deep link to the seventh report. A selection behind the cut edge was the worst
   // case of the overflow above: the one tab the panel below belongs to, sliced to
@@ -410,7 +466,7 @@ export function Tabs<T extends string>({
       // — it is the box a caller's margin or width is meant for.
       className={cn(
         vertical ? TABLIST_VERTICAL_CLASSES : wrap ? TABLIST_WRAP_CLASSES : TABLIST_CLASSES,
-        onAdd ? "min-w-0" : className,
+        onAdd ? "min-w-0" : overflowCue && !wrap && !vertical ? "min-w-0 flex-1" : className,
       )}
     >
       {tabs.map((tab) => {
@@ -598,6 +654,19 @@ export function Tabs<T extends string>({
         {text.remove(nameOf(activeTab))}
       </button>
     ) : null;
+  if (!onAdd && overflowCue && !wrap && !vertical) {
+    // The caret needs a row to sit in beside the strip, and `className` goes there — it
+    // is the box a caller's margin or width is meant for, as with an add button. The box
+    // is there whether or not the strip overflows right now, so a resize never moves
+    // the caller's class from one element to another.
+    return (
+      <div className={cn("flex items-end", className)}>
+        {tablist}
+        {removeButton}
+        {cueButton}
+      </div>
+    );
+  }
   if (!onAdd) {
     // No outer box: the strip stays the root, as callers' `className` and tests expect.
     return removeButton ? (
@@ -631,6 +700,7 @@ export function Tabs<T extends string>({
     >
       {tablist}
       {removeButton}
+      {cueButton}
       {/* Outside the tablist: an action, not a tab — and a tablist may own only
           tabs. The rule under the strip carries on beneath it. */}
       <div

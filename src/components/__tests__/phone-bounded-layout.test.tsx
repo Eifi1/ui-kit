@@ -25,7 +25,10 @@ interface Row {
 const ROWS: Row[] = Array.from({ length: 30 }, (_, i) => ({ id: i, name: `Row ${i}` }));
 const COLUMNS: DataTableColumn<Row>[] = [{ key: "name", header: "Name", cell: (r) => r.name }];
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe("DataTable fillHeight on a phone", () => {
   const renderCards = (fillHeight: boolean) =>
@@ -35,8 +38,12 @@ describe("DataTable fillHeight on a phone", () => {
       </MemoryRouter>,
     );
 
-  it("makes the card list the scroller inside a flex column that fills the parent", () => {
+  it("makes the card list the scroller inside a flex column that fills a BOUNDED parent", () => {
     stubPhone();
+    // jsdom has no layout: the rows overflowing the room the parent gives is said here.
+    // Since 0.40 the list scrolls only then (live #420; data-table-phone-040.test.tsx).
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(900);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(300);
     const { container } = renderCards(true);
     const list = container.querySelector("ul")!;
     expect(list).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");

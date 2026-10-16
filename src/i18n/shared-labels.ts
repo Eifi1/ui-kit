@@ -108,7 +108,7 @@ export const DEFAULT_TOP_BAR_LABELS: TopBarLabels = {
   role: (value) => `Role: ${value}`,
 };
 
-export const DEFAULT_PICKER_SHEET_LABELS: PickerSheetLabels = { close: "Close" };
+export const DEFAULT_PICKER_SHEET_LABELS: PickerSheetLabels = { close: "Close", done: "Done" };
 
 export const DEFAULT_SWIPEABLE_ROW_LABELS: SwipeableRowLabels = { actions: "Row actions" };
 

@@ -462,12 +462,14 @@ describe("FeedbackRowDetail — replies (0.38 §9.7)", () => {
 });
 
 describe("FeedbackRowDetail — rework", () => {
-  it("is offered on answered rows to the author and the admin, never to anyone else", () => {
+  it("is offered on answered rows to the author, never to anyone else (0.40: the admin replies)", () => {
     const cases: Array<[Partial<FeedbackRecord>, number, boolean, boolean]> = [
       [{ status: "DONE" }, AUTHOR, false, true],
       [{ status: "WONT_DO" }, AUTHOR, false, true],
       [{ status: "POSTPONED" }, AUTHOR, false, true],
-      [{ status: "NEEDS_LIVE_TEST" }, ADMIN, true, true],
+      // 0.40: REWORK is reworkable — a second rework adds another entry.
+      [{ status: "REWORK" }, AUTHOR, false, true],
+      [{ status: "NEEDS_LIVE_TEST" }, ADMIN, true, false],
       [{ status: "IN_EVALUATION" }, OTHER, false, false],
       [{ status: "OPEN" }, AUTHOR, false, false],
       [{ status: "IN_PROGRESS" }, ADMIN, true, false],
@@ -571,12 +573,12 @@ describe("FeedbackRowDetail — rework", () => {
 });
 
 describe("FeedbackRowDetail — status", () => {
-  it("gives the admin all eight pills, through the undoable change", () => {
+  it("gives the admin all nine pills, through the undoable change", () => {
     const statusChange = vi.fn();
     const row = record({ status: "IN_EVALUATION" });
     render(<FeedbackRowDetail row={row} canEdit viewerId={ADMIN} onUpdate={landing()} statusChange={statusChange} />);
     const pills = within(screen.getByText("Status").parentElement!.parentElement!).getAllByRole("button");
-    expect(pills).toHaveLength(8);
+    expect(pills).toHaveLength(9);
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(statusChange).toHaveBeenCalledWith(row, "DONE");
   });
@@ -690,5 +692,116 @@ describe("FeedbackRowDetail — the subject and READY (feedback contract §8, 0.
       true,
     );
     expect(feedbackRowAccess(record({ status: "READY" }), { canEdit: false, viewerId: AUTHOR }).canRework).toBe(false);
+  });
+});
+
+/** 0.40 (docs/feedback-harmonization.md §10.2 decision 6, §10.3, §10.8): the rework as the
+ *  author's entry — `onRework` — and the Rework button only where the composer is not. */
+describe("FeedbackRowDetail — rework as an entry (0.40)", () => {
+  const reply = { id: 1, author_name: null, body: "Done in 0.4.", status_to: "DONE" as const, created_at: "2026-10-05T10:00:00Z" };
+
+  it("sends the note and the file through onRework, never the PATCH, and closes when it resolves", async () => {
+    const onUpdate = landing();
+    const onRework = vi.fn(async () => {});
+    const onUpload = vi.fn(async () => `${ATT}/0123456789ab.png`);
+    const { container } = render(
+      <FeedbackRowDetail
+        row={record({ status: "DONE", replies: [reply] })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={onUpdate}
+        onUpload={onUpload}
+        onRework={onRework}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Rework" }));
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [new File(["x"], "a.png", { type: "image/png" })] } });
+    fireEvent.change(screen.getByRole("textbox", { name: /What still needs refinement/ }), {
+      target: { value: "  Still cut off.  " },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Send rework" }));
+    });
+    expect(onRework).toHaveBeenCalledWith("Still cut off.", `${ATT}/0123456789ab.png`);
+    expect(onUpdate).not.toHaveBeenCalled();
+    expect(screen.queryByText("Send for rework")).toBeNull();
+  });
+
+  it("sends a note alone without a URL, and keeps it when onRework rejects", async () => {
+    const onRework = vi.fn(async () => {
+      throw new Error("403");
+    });
+    render(<FeedbackReworkSection row={{ id: 9, body: "b" }} onRework={onRework} onCancel={vi.fn()} onSent={vi.fn()} />);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "note" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Send rework" }));
+    });
+    expect(onRework).toHaveBeenCalledWith("note", undefined);
+    expect(screen.getByRole("textbox")).toHaveValue("note");
+  });
+
+  it("shows no Rework button where the reply composer stands — the admin's own report included", () => {
+    render(
+      <FeedbackRowDetail
+        row={record({ user_id: ADMIN, status: "DONE", replies: [reply] })}
+        canEdit
+        viewerId={ADMIN}
+        onUpdate={landing()}
+        onReply={vi.fn()}
+        onRework={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Reply" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Rework" })).toBeNull();
+    // The composer offers REWORK as a status instead.
+    const pick = screen.getByRole("combobox", { name: "Status with the reply" });
+    expect(within(pick).getByRole("option", { name: "Rework requested" })).toHaveValue("REWORK");
+  });
+
+  it("shows the button to a member author, and to an admin author where no composer is shown", () => {
+    const { unmount } = render(
+      <FeedbackRowDetail row={record({ status: "DONE", replies: [reply] })} canEdit={false} viewerId={AUTHOR} onUpdate={landing()} onRework={vi.fn()} />,
+    );
+    expect(screen.getByRole("button", { name: "Rework" })).toBeInTheDocument();
+    unmount();
+    // An admin on /my-feedback (canEdit false): their own report, no composer.
+    render(
+      <FeedbackRowDetail
+        row={record({ user_id: ADMIN, status: "IN_EVALUATION", replies: [reply] })}
+        canEdit={false}
+        viewerId={ADMIN}
+        onUpdate={landing()}
+        onReply={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Rework" })).toBeInTheDocument();
+  });
+
+  it("falls back to the PATCH append without onRework (one minor)", () => {
+    const onUpdate = landing();
+    render(<FeedbackRowDetail row={record({ status: "DONE", body: "B." })} canEdit={false} viewerId={AUTHOR} onUpdate={onUpdate} />);
+    fireEvent.click(screen.getByRole("button", { name: "Rework" }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Again." } });
+    fireEvent.click(screen.getByRole("button", { name: "Send rework" }));
+    expect(onUpdate.mock.calls[0][0].body).toMatch(/^B\.\n\n--- REWORK .+ ---\nAgain\.$/);
+  });
+
+  it("lists a rework entry's file with the report's attachments", () => {
+    const urls = feedbackAttachmentUrls({
+      screenshot_url: `${ATT}/aaaaaaaaaaaa.png`,
+      attachment_urls: null,
+      body: "",
+      replies: [
+        { ...reply, id: 2, kind: "rework", attachment_url: `${ATT}/bbbbbbbbbbbb.png` },
+        { ...reply, id: 3, kind: "reply", attachment_url: `${ATT}/cccccccccccc.png` },
+      ],
+    });
+    expect(urls).toEqual([`${ATT}/aaaaaaaaaaaa.png`, `${ATT}/bbbbbbbbbbbb.png`]);
+  });
+
+  it("answers canRework for the author only", () => {
+    expect(feedbackRowAccess({ user_id: AUTHOR, status: "DONE" }, { canEdit: true, viewerId: ADMIN }).canRework).toBe(false);
+    expect(feedbackRowAccess({ user_id: AUTHOR, status: "REWORK" }, { canEdit: false, viewerId: AUTHOR }).canRework).toBe(true);
   });
 });

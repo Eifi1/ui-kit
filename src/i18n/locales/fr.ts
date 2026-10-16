@@ -76,6 +76,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     feedbackStatus: {
       OPEN: "Ouvert",
       READY: "Prêt à implémenter",
+      REWORK: "Reprise demandée",
       IN_PROGRESS: "En cours",
       IN_EVALUATION: "En évaluation",
       NEEDS_LIVE_TEST: "À tester en production",
@@ -111,11 +112,13 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       myFeedback: "Mes retours",
       viewFeedback: "Voir les retours",
       allFeedback: "Tous les retours",
+      discussion: "Discussion des retours",
+      inbox: "Retours reçus",
     },
     // 0.38.0 — docs/feedback-harmonization.md §9: the public pages and the two feedback
     // notification types. "Retour" for a report, as `feedbackMenu`.
     feedbackPublic: {
-      title: "Tous les retours",
+      title: "Discussion des retours",
       sort: "Trier",
       sortNewest: "Plus récents",
       sortVotes: "Plus demandés",
@@ -147,7 +150,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       attachUrl: "Joindre l’URL de la page actuelle",
     },
     feedbackPage: {
-      title: "Retours",
+      title: "Retours reçus",
       myTitle: "Mes retours",
       columnId: "#",
       columnDate: "Date",
@@ -341,6 +344,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       filter: "Filtrer",
       close: "Fermer",
       selectRow: "Sélectionner la ligne",
+      selectRows: "Sélectionner des lignes",
+      cancelSelection: "Annuler",
       rowDetails: "Détails",
       autoSize: "Ajuster la largeur des colonnes",
       loading: "Chargement…",
@@ -529,6 +534,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     tabs: {
       add: "Ajouter un onglet",
       remove: (tab) => `Supprimer ${tab}`,
+      more: "Autres onglets",
+      backToFirst: "Retour au premier onglet",
     },
     appShell: {
       collapse: "Réduire la barre latérale",
@@ -544,6 +551,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     pickerSheet: {
       close: "Fermer",
+      done: "Terminé",
     },
     dialogFrame: {
       close: "Fermer",

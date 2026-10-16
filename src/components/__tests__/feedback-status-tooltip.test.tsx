@@ -37,6 +37,7 @@ const renderRow = () =>
         ({
           OPEN: "Open",
           READY: "Ready to implement",
+          REWORK: "Rework requested",
           IN_PROGRESS: "In progress",
           IN_EVALUATION: "In evaluation",
           NEEDS_LIVE_TEST: "Test when live",

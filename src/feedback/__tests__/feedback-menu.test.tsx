@@ -6,8 +6,9 @@ import { DEFAULT_FEEDBACK_MENU_LABELS, FeedbackMenu, type FeedbackMenuProps } fr
 
 /**
  * §4.1 of the feedback contract (keksdose `app/top-bar.tsx:156`, §7.11): the four category
- * rows, a divider, the app's extras, and ONE list link — "View feedback" for an admin,
- * "My feedback" for everyone else (keksdose `top-bar.tsx:205-214`). No heading, no CRASH.
+ * rows, a divider, the app's extras, and the list links by role (0.40, §10.2 decision 11):
+ * "Feedback discussion" with `publicHref`, "My feedback" for everyone, "Feedback inbox" for
+ * an admin. No heading, no CRASH.
  */
 
 function renderMenu(props: Partial<FeedbackMenuProps> = {}, labels?: UiKitLabelOverrides) {
@@ -50,12 +51,12 @@ describe("FeedbackMenu", () => {
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
-  it("gives an admin only View feedback — the inbox, in place of My feedback", () => {
+  it("gives an admin My feedback and the Feedback inbox under it (0.40)", () => {
     renderMenu({ isAdmin: true });
     const menu = openMenu();
-    expect(rows(menu)).toEqual(["Bug", "Idea", "Question", "Other", "View feedback"]);
-    expect(within(menu).getByRole("menuitem", { name: "View feedback" })).toHaveAttribute("href", "/feedback");
-    expect(within(menu).queryByRole("menuitem", { name: "My feedback" })).toBeNull();
+    expect(rows(menu)).toEqual(["Bug", "Idea", "Question", "Other", "My feedback", "Feedback inbox"]);
+    expect(within(menu).getByRole("menuitem", { name: "Feedback inbox" })).toHaveAttribute("href", "/feedback");
+    expect(within(menu).getByRole("menuitem", { name: "My feedback" })).toHaveAttribute("href", "/my-feedback");
   });
 
   it("takes the routes from props", () => {
@@ -63,7 +64,7 @@ describe("FeedbackMenu", () => {
     expect(within(openMenu()).getByRole("menuitem", { name: "My feedback" })).toHaveAttribute("href", "/me/reports");
     cleanup();
     renderMenu({ isAdmin: true, myFeedbackHref: "/me/reports", inboxHref: "/admin/reports" });
-    expect(within(openMenu()).getByRole("menuitem", { name: "View feedback" })).toHaveAttribute("href", "/admin/reports");
+    expect(within(openMenu()).getByRole("menuitem", { name: "Feedback inbox" })).toHaveAttribute("href", "/admin/reports");
   });
 
   it("puts the app's extra entries between the divider and the list link", () => {
@@ -83,7 +84,8 @@ describe("FeedbackMenu", () => {
       "Other",
       "Help assistant",
       "Support chat2",
-      "View feedback",
+      "My feedback",
+      "Feedback inbox",
     ]);
     const divider = menu.querySelector("li.border-t")!;
     const assistant = within(menu).getByRole("menuitem", { name: "Help assistant" });
@@ -99,14 +101,14 @@ describe("FeedbackMenu", () => {
 
   it("reads its words from feedbackMenu and the rows from feedbackCategory; the prop wins", () => {
     renderMenu(
-      { isAdmin: true, labels: { viewFeedback: "Inbox" } },
+      { isAdmin: true, labels: { inbox: "Inbox" } },
       {
-        feedbackMenu: { trigger: "Feedback senden", myFeedback: "Mein Feedback", viewFeedback: "Feedback ansehen" },
+        feedbackMenu: { trigger: "Feedback senden", myFeedback: "Mein Feedback", inbox: "Feedback-Eingang" },
         feedbackCategory: { CRASH: "Absturz", BUG: "Fehler", IDEA: "Idee", QUESTION: "Frage", OTHER: "Sonstiges" },
       } as UiKitLabelOverrides,
     );
     const menu = openMenu("Feedback senden");
-    expect(rows(menu)).toEqual(["Fehler", "Idee", "Frage", "Sonstiges", "Inbox"]);
+    expect(rows(menu)).toEqual(["Fehler", "Idee", "Frage", "Sonstiges", "Mein Feedback", "Inbox"]);
   });
 
   it("has English defaults", () => {
@@ -115,36 +117,76 @@ describe("FeedbackMenu", () => {
       myFeedback: "My feedback",
       viewFeedback: "View feedback",
       allFeedback: "All feedback",
+      discussion: "Feedback discussion",
+      inbox: "Feedback inbox",
     });
   });
 });
 
-/** 0.38 (§9.2 decision 21): `publicHref` adds "All feedback" above the list link, for
- *  everyone; keksdose's "My feedback" stays as it is. */
+/** 0.38 (§9.2 decision 21) and 0.40 (§10.2 decision 11): `publicHref` adds "Feedback
+ *  discussion" first of the list links, for everyone. */
 describe("FeedbackMenu publicHref", () => {
-  it("has no All feedback row without it", () => {
+  it("has no Feedback discussion row without it", () => {
     renderMenu();
-    expect(within(openMenu()).queryByRole("menuitem", { name: "All feedback" })).toBeNull();
+    expect(within(openMenu()).queryByRole("menuitem", { name: "Feedback discussion" })).toBeNull();
   });
 
-  it("links All feedback above My feedback for a user", () => {
+  it("links Feedback discussion above My feedback for a user", () => {
     renderMenu({ publicHref: "/all-feedback" });
     const menu = openMenu();
-    expect(rows(menu)).toEqual(["Bug", "Idea", "Question", "Other", "All feedback", "My feedback"]);
-    expect(within(menu).getByRole("menuitem", { name: "All feedback" })).toHaveAttribute("href", "/all-feedback");
+    expect(rows(menu)).toEqual(["Bug", "Idea", "Question", "Other", "Feedback discussion", "My feedback"]);
+    expect(within(menu).getByRole("menuitem", { name: "Feedback discussion" })).toHaveAttribute("href", "/all-feedback");
   });
 
-  it("links it above View feedback for an admin too, after the app's own rows", () => {
+  it("gives an admin all three, in order, after the app's own rows", () => {
     renderMenu({
       publicHref: "/all-feedback",
       isAdmin: true,
       extraEntries: [{ kind: "link", key: "support", to: "/support", label: "Support chat" }],
     });
-    expect(rows(openMenu())).toEqual(["Bug", "Idea", "Question", "Other", "Support chat", "All feedback", "View feedback"]);
+    expect(rows(openMenu())).toEqual([
+      "Bug",
+      "Idea",
+      "Question",
+      "Other",
+      "Support chat",
+      "Feedback discussion",
+      "My feedback",
+      "Feedback inbox",
+    ]);
   });
 
   it("speaks the provider's language", () => {
-    renderMenu({ publicHref: "/all-feedback" }, { feedbackMenu: { trigger: "Feedback senden", allFeedback: "Alle Rückmeldungen" } });
-    expect(within(openMenu("Feedback senden")).getByRole("menuitem", { name: "Alle Rückmeldungen" })).toBeInTheDocument();
+    renderMenu({ publicHref: "/all-feedback" }, { feedbackMenu: { trigger: "Feedback senden", discussion: "Feedback-Diskussion" } });
+    expect(within(openMenu("Feedback senden")).getByRole("menuitem", { name: "Feedback-Diskussion" })).toBeInTheDocument();
+  });
+});
+
+/** 0.40 (§10.8): the list links per role — the counts the three apps see — with their
+ *  keys, routes and icons stable. */
+describe("FeedbackMenu by role (0.40)", () => {
+  const LINKS = ["Feedback discussion", "My feedback", "Feedback inbox"];
+  const links = (menu: HTMLElement) => rows(menu).filter((row) => LINKS.includes(row ?? ""));
+
+  it.each([
+    ["an admin with public parts (keksdose)", { isAdmin: true, publicHref: "/all-feedback" }, LINKS],
+    ["a member with public parts", { publicHref: "/all-feedback" }, ["Feedback discussion", "My feedback"]],
+    ["an admin without them (kastlan)", { isAdmin: true }, ["My feedback", "Feedback inbox"]],
+    ["anyone else without them (a KS customer)", {}, ["My feedback"]],
+  ] as const)("%s", (_who, props, expected) => {
+    renderMenu(props);
+    expect(links(openMenu())).toEqual(expected);
+  });
+
+  it("keeps the keys' routes and draws Users, User and Inbox", () => {
+    renderMenu({ isAdmin: true, publicHref: "/all-feedback" });
+    const menu = openMenu();
+    const icon = (name: string) => within(menu).getByRole("menuitem", { name }).querySelector("svg")?.getAttribute("class");
+    expect(within(menu).getByRole("menuitem", { name: "Feedback discussion" })).toHaveAttribute("href", "/all-feedback");
+    expect(within(menu).getByRole("menuitem", { name: "My feedback" })).toHaveAttribute("href", "/my-feedback");
+    expect(within(menu).getByRole("menuitem", { name: "Feedback inbox" })).toHaveAttribute("href", "/feedback");
+    expect(icon("Feedback discussion")).toContain("lucide-users");
+    expect(icon("My feedback")).toMatch(/lucide-user(\s|$)/);
+    expect(icon("Feedback inbox")).toContain("lucide-inbox");
   });
 });

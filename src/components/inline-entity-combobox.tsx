@@ -14,6 +14,7 @@ import {
   ComboboxFieldLabel,
   DISABLED_ROW_CLASS,
   endHintRowProps,
+  GROUP_HEADING_STICKY,
   isOptionEnabled,
   offersCreate,
   stepEnabled,
@@ -310,13 +311,14 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       const q = foldForSearch(query, locale);
       const hit = (s: string | undefined) => s !== undefined && foldForSearch(s, locale).includes(q);
       // The label's whole name or its start first (`rankMatch` 0 and 1), then a match
-      // anywhere in the label, the sublabel or the group.
+      // anywhere in the label or the sublabel. Not the group (0.40, kk run 79): with
+      // first-letter groups one typed letter matched its whole group.
       const leads = (o: ComboOption<V>) => {
         const rank = rankMatch(o.label, query, { locale });
         return rank === 0 || rank === 1;
       };
       const starts = options.filter(leads);
-      const rest = options.filter((o) => !leads(o) && (hit(o.label) || hit(o.sublabel) || hit(o.group)));
+      const rest = options.filter((o) => !leads(o) && (hit(o.label) || hit(o.sublabel)));
       ranked = [...starts, ...rest];
     }
     if (!ranked.some((o) => o.group)) return ranked;
@@ -647,7 +649,10 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                 {o.group && o.group !== matches[i - 1]?.group && (
                   <li
                     role="presentation"
-                    className="px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-muted"
+                    className={cn(
+                      GROUP_HEADING_STICKY,
+                      "px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-muted",
+                    )}
                   >
                     {o.group}
                   </li>
@@ -710,7 +715,10 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
               {o.group && o.group !== matches[i - 1]?.group && (
                 <li
                   role="presentation"
-                  className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1"
+                  className={cn(
+                    GROUP_HEADING_STICKY,
+                    "px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1",
+                  )}
                 >
                   {o.group}
                 </li>

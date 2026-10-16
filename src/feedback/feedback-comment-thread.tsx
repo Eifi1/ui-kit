@@ -8,9 +8,10 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { FeedbackStatusBadge } from "./feedback-inbox";
 import type { FeedbackComment, FeedbackReply } from "./feedback-public-types";
 import { DEFAULT_FEEDBACK_PUBLIC_LABELS } from "./feedback-public-labels";
-import { FEEDBACK_COMMENT_MAX } from "./feedback-record";
+import { FEEDBACK_COMMENT_MAX, attachmentName } from "./feedback-record";
 import { useFeedbackRepliesLabels } from "./feedback-replies";
 import { FeedbackRepliesDrawnAboveContext } from "./feedback-replies-context";
+import { FeedbackReworkEntryChip } from "./feedback-rework-entry-chip";
 import { ChatComposer, FeedbackThread } from "./feedback-thread";
 import type { FeedbackThreadMessage } from "./feedback-thread";
 import { DEFAULT_FEEDBACK_COMMENTS_LABELS } from "./feedback-thread-parts-labels";
@@ -23,6 +24,10 @@ import { DEFAULT_FEEDBACK_COMMENTS_LABELS } from "./feedback-thread-parts-labels
  *
  * - **Replies** are drawn as staff posts with the status they set ("→ Done"); a reply
  *   without an author is "Admin" (§9.7).
+ * - **Reworks** (0.40, §10.3, `kind: "rework"`) are the report's author's: the
+ *   **Rework** chip, "→ status" when the entry moved one (a migrated one did not), the
+ *   file when the view carries it; at the reading end for the author ({@link
+ *   FeedbackCommentThreadProps.isAuthor}), and a `null` name is "A user", never "Admin".
  * - **Comments**: the viewer's own at the reading end ("You"); someone else's under the
  *   first name the server sent, `null` as "A user" (§9.5, `feedbackPublic.anonymous`).
  * - **Hidden** (§9.8): others see "Hidden by an admin" and no name, no text; the writer
@@ -81,6 +86,9 @@ export interface FeedbackCommentThreadProps {
   comments: readonly FeedbackComment[];
   /** The viewer is the app's admin: Hide / Unhide, the hidden text struck through. */
   isAdmin: boolean;
+  /** 0.40: the viewer filed the report (the record's `mine`) — its rework entries are
+   *  theirs, drawn at the reading end as "You". Default `false`. */
+  isAuthor?: boolean;
   /** `POST /feedback/{id}/comments`. Return the promise: the box clears when it
    *  resolves, and keeps the draft when it rejects. A failure is the app's to toast —
    *  the server's `detail`, else `feedbackToast.commentFailed` (0.38.1). Left out, no
@@ -125,6 +133,7 @@ export function FeedbackCommentThread({
   replies: repliesProp = [],
   comments,
   isAdmin,
+  isAuthor = false,
   onComment,
   onHide,
   onDelete,
@@ -143,6 +152,35 @@ export function FeedbackCommentThread({
 
   const entries: Entry[] = [];
   replies.forEach((reply, order) => {
+    if (reply.kind === "rework") {
+      entries.push({
+        at: instant(reply.created_at),
+        order,
+        message: {
+          id: `reply-${reply.id}`,
+          own: isAuthor,
+          author: isAuthor ? undefined : (reply.author_name ?? anonymous),
+          createdAt: reply.created_at,
+          body: reply.body,
+          attachments: reply.attachment_url
+            ? [{ name: attachmentName(reply.attachment_url), url: reply.attachment_url }]
+            : undefined,
+          badge: (
+            <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1" data-feedback-entry-kind="rework">
+              <FeedbackReworkEntryChip />
+              {reply.status_to && (
+                <span className="inline-flex items-center gap-1" data-feedback-reply-status={reply.status_to}>
+                  <span className="sr-only">{replyLabels.statusChanged}</span>
+                  <span aria-hidden>→</span>
+                  <FeedbackStatusBadge status={reply.status_to} />
+                </span>
+              )}
+            </span>
+          ),
+        },
+      });
+      return;
+    }
     entries.push({
       at: instant(reply.created_at),
       order,

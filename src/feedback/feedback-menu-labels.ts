@@ -9,4 +9,6 @@ export const DEFAULT_FEEDBACK_MENU_LABELS: FeedbackMenuLabels = {
   myFeedback: "My feedback",
   viewFeedback: "View feedback",
   allFeedback: "All feedback",
+  discussion: "Feedback discussion",
+  inbox: "Feedback inbox",
 };

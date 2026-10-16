@@ -852,7 +852,9 @@ export function ChatComposer({
           }
         }}
       />
-      <div className="flex flex-wrap items-end justify-between gap-2">
+      {/* The `data-chat-composer-*` marks are for a host that lines its slot up with the
+          send button — FeedbackReplyComposer's status Select (#417). */}
+      <div data-chat-composer-actions="" className="flex flex-wrap items-end justify-between gap-2">
         {config || slot != null ? (
           <div className="flex min-w-0 flex-wrap items-end gap-2">
             {config && (
@@ -878,11 +880,13 @@ export function ChatComposer({
         <div className="ms-auto flex items-center gap-2">
           <span
             id={hintId}
+            data-chat-composer-hint=""
             className={size === "sm" ? "sr-only" : "text-xs text-placeholder"}
           >
             {sendOn === "enter" ? labels.sendHintEnter : labels.sendHint(modifier)}
           </span>
           <Button
+            data-chat-composer-send=""
             onClick={send}
             disabled={!canSend}
             commit={commit}

@@ -38,12 +38,13 @@ const german = {
 } as unknown as UiKitLabelOverrides;
 
 describe("the English defaults (keksdose en.json)", () => {
-  it("names all eight statuses and five categories", () => {
+  it("names all nine statuses and five categories", () => {
     expect(Object.keys(DEFAULT_FEEDBACK_STATUS_LABELS)).toEqual(FEEDBACK_STATUS_ORDER);
     expect(Object.keys(DEFAULT_FEEDBACK_CATEGORY_LABELS)).toEqual(FEEDBACK_CATEGORY_ORDER);
     expect(Object.values(DEFAULT_FEEDBACK_STATUS_LABELS)).toEqual([
       "Open",
       "Ready to implement",
+      "Rework requested",
       "In progress",
       "In evaluation",
       "Test when live",
@@ -177,5 +178,25 @@ describe("feedbackToast: the public pages' failures (0.38.1, Kurvenschmiede)", (
 
   it("is Swiss in de-CH", () => {
     expect(UI_KIT_LABELS_DE_CH.feedbackToast.commentFailed).toBe("Kommentar konnte nicht gesendet werden.");
+  });
+});
+
+/** 0.40 (docs/feedback-harmonization.md §10.6): the five keys in seven languages. */
+describe("the 0.40 words in every catalogue", () => {
+  const WORDS: Array<[string, { feedbackMenu: object; feedbackPublic: object; feedbackPage: object; feedbackStatus: object }, string[]]> = [
+    ["en", uiKitLabelsEn(), ["Feedback discussion", "Feedback inbox", "Rework requested"]],
+    ["de-CH", UI_KIT_LABELS_DE_CH, ["Feedback-Diskussion", "Feedback-Eingang", "Nacharbeit angefordert"]],
+    ["fr", UI_KIT_LABELS_FR, ["Discussion des retours", "Retours reçus", "Reprise demandée"]],
+    ["it", UI_KIT_LABELS_IT, ["Discussione sui feedback", "Feedback ricevuti", "Rielaborazione richiesta"]],
+    ["es", UI_KIT_LABELS_ES, ["Debate de comentarios", "Comentarios recibidos", "Corrección solicitada"]],
+    ["hu", UI_KIT_LABELS_HU, ["Visszajelzések megvitatása", "Beérkezett visszajelzések", "Átdolgozás kérve"]],
+    ["zh", UI_KIT_LABELS_ZH, ["反馈讨论", "反馈收件箱", "已要求返工"]],
+  ];
+
+  it.each(WORDS)("%s", (_locale, labels, [discussion, inbox, rework]) => {
+    expect(labels.feedbackMenu).toMatchObject({ discussion, inbox });
+    expect(labels.feedbackPublic).toMatchObject({ title: discussion });
+    expect(labels.feedbackPage).toMatchObject({ title: inbox });
+    expect(labels.feedbackStatus).toMatchObject({ REWORK: rework });
   });
 });

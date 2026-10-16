@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { Card } from "./card";
 import { Spinner } from "./spinner";
@@ -14,7 +14,7 @@ import {
   resolveDataTableLabels,
   splitCellProps,
 } from "./data-table-shared";
-import { MobileFilters, MobileRow, MobileSort, StackedFields } from "./data-table-mobile";
+import { MobileFilters, MobileRow, MobileSelectBar, MobileSort, StackedFields } from "./data-table-mobile";
 import { DataTableHead } from "./data-table-head";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
 import { useLargeText } from "../hooks/use-large-text";
@@ -236,10 +236,26 @@ export interface DataTableProps<T> {
   urlSync?: TableUrlSync;
   /**
    * When true, the table fills its parent's height and scrolls INTERNALLY, with the
-   * header pinned — so the page itself doesn't add a second, outer scrollbar. On a
-   * phone the card list is the scroller instead, with the filter button pinned above
-   * it; an unbounded parent simply lets either layout grow to its content. The parent must give it a bounded height (e.g. a flex
-   * column inside the viewport-locked app shell). See feedback #207.
+   * header pinned — so the page itself doesn't add a second, outer scrollbar. The parent
+   * must give it a bounded height (e.g. a flex column inside the viewport-locked app
+   * shell). See feedback #207.
+   *
+   * **The list page** (0.40, docs/page-layout-harmonization.md §1): the root carries
+   * `data-fill-height`, and from `md` up AppShell's `<main>` turns into a flex column
+   * while such a table is inside — the shell's banners keep their height, the page takes
+   * the rest. Wrap every element between `<main>` and the table in `FillHeight` (or merge
+   * `FILL_HEIGHT_CLASS`); nothing else to wire. The body never shrinks below `basis-48`
+   * (12rem, about five rows): on a window too short for that, `<main>` scrolls again.
+   *
+   * **On a phone** the card list becomes the scroller ONLY when its parent really bounds
+   * it — measured, not assumed (0.40, keksdose live #420): the list takes the flex
+   * room it is given, and only when its rows overflow that room does it turn
+   * `overflow-y-auto overscroll-contain`, with the filter button pinned above. Under an
+   * unbounded parent — `AppShell` on a phone, where the DOCUMENT scrolls — it stays in
+   * the page's flow and grows to its content. Until 0.40 it was a scroller either way,
+   * and a scroller with nothing to scroll and `overscroll-contain` swallowed the page's
+   * own scroll: a swipe that started on a card moved nothing. So `fillHeight` is safe
+   * to pass at every width; `fillHeight={useBreakpoint("md")}` is no longer needed.
    *
    * The cure for TWO SCROLLBARS (round 0.34 C14, kastlan feedback 55): the default
    * `maxBodyHeight` scrolls the body inside a page that scrolls too. How a page fills
@@ -263,14 +279,13 @@ export interface DataTableProps<T> {
    *  the cap on a page with anything else on it shows two scrollbars side by side,
    *  and the wheel moves whichever is under the pointer. For a list page whose table
    *  is the point, fill the height instead, from `md` up (a phone scrolls the page
-   *  and its card list as one):
+   *  and its card list as one) — docs/page-layout-harmonization.md §1.2 says which
+   *  pages fill:
    *
-   *  1. the shell's content column becomes a flex column of the main area's height
-   *     when the page asks — kastlan's
-   *     `md:has-[>[data-fill-height]]:flex md:has-[>[data-fill-height]]:h-full md:has-[>[data-fill-height]]:flex-col`;
-   *  2. the page's root asks, and is a flex column that may shrink:
-   *     `data-fill-height` and `md:flex md:min-h-0 md:flex-1 md:flex-col`;
-   *  3. the table takes the rest: `<DataTable fillHeight>`.
+   *  1. `<DataTable fillHeight>`: the table marks itself (`data-fill-height`), and
+   *     AppShell's `<main>` becomes a flex column while it is inside;
+   *  2. each element between `<main>` and the table is a `FillHeight` (the page's
+   *     root, any wrapper on the way), or merges `FILL_HEIGHT_CLASS`.
    *
    *  Only the body then scrolls, under its pinned header, and every other page grows
    *  with its content as before (kastlan e3985c9, its leases list). A short table that
@@ -313,11 +328,23 @@ export interface DataTableProps<T> {
   pageSize?: number;
   onPageSizeChange?: (pageSize: number) => void;
   /**
-   * Opt-in multi-row selection (desktop table only). When provided, a leading
+   * Opt-in multi-row selection. When provided, a leading
    * checkbox column is rendered with a select-all box in the header; the owner
    * holds the selected set and reacts via the callbacks. Rows for which
    * `isSelectable` returns false render no checkbox and are excluded from
    * select-all. See feedback #285 (bulk edit).
+   *
+   * **On a phone** (0.40, keksdose live #421) the cards enter a selection MODE: a long
+   * press on a card (500 ms, keksdose's register gesture) selects it and turns every
+   * card into a toggle with its box showing; a tap then selects or deselects. A
+   * keyboard or screen reader enters through "Select rows" (`labels.selectRows`),
+   * visually hidden until focused; in the mode a bar above the cards holds "Select all
+   * rows" and Cancel (`labels.cancelSelection`). The mode lasts while anything is
+   * selected — the bulk bar's Clear, the last box unticked or Cancel ends it — and swipe
+   * actions rest while it is on. Render the owner's `BulkActionBar` as on desktop; it
+   * appears with the first selected row. With `selection` the cards' text is not
+   * selectable on a phone, and a linked card's long press selects instead of opening
+   * the browser's link menu.
    */
   selection?: {
     isSelectable?: (row: T) => boolean;
@@ -1189,6 +1216,30 @@ export function DataTable<T>({
     if (d !== mobileDir) setMobileDir(d);
   };
 
+  // `fillHeight` on a phone (0.40, keksdose live #420): the card list is a scroller only
+  // while its parent bounds it — its rows overflow the flex room it was given. Under
+  // AppShell's phone layout the DOCUMENT scrolls, the list's room is its own content,
+  // and a scroller there (with `overscroll-contain`) only swallowed the page's scroll.
+  // Measured before paint on every render (rows revealed, filtered, opened), and on a
+  // resize of the list or its parent; one read of two heights.
+  const phoneFill = fillHeight && !isMdUp;
+  const phoneListRef = useRef<HTMLUListElement | null>(null);
+  const [phoneListScrolls, setPhoneListScrolls] = useState(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- every render on purpose: what overflows is the rows, and React bails out on an unchanged boolean
+  useLayoutEffect(() => {
+    const el = phoneListRef.current;
+    if (!phoneFill || !el) return;
+    setPhoneListScrolls(el.scrollHeight > el.clientHeight + 1);
+  });
+  useEffect(() => {
+    const el = phoneListRef.current;
+    if (!phoneFill || !el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => setPhoneListScrolls(el.scrollHeight > el.clientHeight + 1));
+    ro.observe(el);
+    if (el.parentElement) ro.observe(el.parentElement);
+    return () => ro.disconnect();
+  }, [phoneFill]);
+
   const { mobileSlice, canRevealMoreMobile, loadMoreRef } = useMobileReveal({
     rows: sorted,
     slice,
@@ -1197,6 +1248,23 @@ export function DataTable<T>({
     unpaged,
     defaultPageSize,
   });
+  // ---- Phone selection mode (0.40, keksdose live #421) ----
+  // The cards had no boxes, so `selection`'s bulk actions were unreachable on a phone.
+  // A long press on a card (kk's register gesture) — or "Select rows", the keyboard's
+  // and screen reader's way — enters the mode: every card shows its box and a tap
+  // toggles it. The mode lasts while anything is selected, so emptying the selection
+  // (the bulk bar's Clear, the last box unticked, Cancel) leaves it, as kk's does.
+  const anySelected =
+    !!selection && (selection.someSelected || (selection.allSelected && slice.length > 0));
+  const [phoneSelectMode, setPhoneSelectMode] = useState(false);
+  const [hadSelection, setHadSelection] = useState(anySelected);
+  if (anySelected !== hadSelection) {
+    // Adjusted while rendering, so the frame the selection empties is already out of
+    // the mode (an effect would paint a frame of boxes first).
+    setHadSelection(anySelected);
+    if (!anySelected) setPhoneSelectMode(false);
+  }
+  const phoneSelecting = !!selection && !isMdUp && (phoneSelectMode || anySelected);
   // ---- Shift+click range selection ---- (data-table-selection.ts; feedback #289,
   // anchored on the row's KEY so a sort, filter or page change cannot move it)
   const { selectionAnchor, rangeClick, canSelect, selectRange } = useRangeSelection({
@@ -1268,6 +1336,24 @@ export function DataTable<T>({
       mobileExpandAsDialog={mobileExpandAsDialog}
       compact={compact}
       large={large}
+      select={
+        selection
+          ? {
+              active: phoneSelecting,
+              selectable: canSelect(row),
+              selected: selection.isSelected(row),
+              onToggle: (checked) => {
+                selectionAnchor.current = rowKey(row);
+                selection.onToggle(row, checked);
+              },
+              onLongPress: () => {
+                setPhoneSelectMode(true);
+                selectionAnchor.current = rowKey(row);
+                if (!selection.isSelected(row)) selection.onToggle(row, true);
+              },
+            }
+          : null
+      }
     />
   );
 
@@ -1299,13 +1385,19 @@ export function DataTable<T>({
       // classes and a table-cell tooltip must portal under test just as it does in the
       // browser (see `CLIPS_ATTRIBUTE`). The bare root clips nothing and is not marked.
       data-clips={frame ? "" : undefined}
+      // The fill's marker (0.40, docs/page-layout-harmonization.md §1.3): AppShell's
+      // `<main>` and every `FillHeight` between it and this table key off it with
+      // `has-[[data-fill-height]]`, so a page asks for the fill by passing the prop.
+      data-fill-height={fillHeight ? "" : undefined}
       className={cn(
         "group/table",
         frame ? "overflow-clip" : "min-w-0",
         // Both layouts, not just the table: the phone card list overflowing a bounded
         // pane drew itself over whatever followed it, and in a viewport-locked shell
-        // the rows below the fold could not be reached at all.
-        fillHeight && "flex flex-1 flex-col min-h-0",
+        // the rows below the fold could not be reached at all. From `md` the minimum is
+        // the content's again (`md:min-h-auto`): the body's floor below then holds the
+        // whole chain up to `<main>`, which scrolls instead of leaving a slit.
+        fillHeight && "flex flex-1 flex-col min-h-0 md:min-h-auto",
         className,
       )}
     >
@@ -1373,14 +1465,33 @@ export function DataTable<T>({
             }}
           />
         )}
+        {selection && (
+          <MobileSelectBar
+            active={phoneSelecting}
+            allSelected={selection.allSelected}
+            someSelected={selection.someSelected}
+            compact={compact}
+            labels={labels}
+            onEnter={() => setPhoneSelectMode(true)}
+            onToggleAll={selection.onToggleAll}
+            onCancel={() => {
+              setPhoneSelectMode(false);
+              if (anySelected) selection.onToggleAll(false);
+            }}
+          />
+        )}
         <ul
+          ref={phoneListRef}
           className={cn(
             "divide-y divide-subtle",
-            // Under `fillHeight` the list is the scroller, as the table body is on a
-            // wide screen: the filter button stays above it and a server pager below.
-            // The endless-scroll sentinel still fires in here — an
-            // IntersectionObserver on the viewport sees through the clipping ancestor.
-            fillHeight && "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+            // Under `fillHeight` the list takes the room its parent gives it, and in a
+            // BOUNDED parent it is the scroller, as the table body is on a wide screen:
+            // the filter button stays above it and a server pager below. Only then —
+            // see `phoneListScrolls` (live #420). The endless-scroll sentinel still
+            // fires in here — an IntersectionObserver on the viewport sees through the
+            // clipping ancestor.
+            fillHeight && "min-h-0 flex-1",
+            fillHeight && phoneListScrolls && "overflow-y-auto overscroll-contain",
             // Same busy treatment as the desktop body; see `isLoading` below.
             isLoading && mobileSlice.length > 0 && "opacity-60 transition-opacity",
           )}
@@ -1490,8 +1601,11 @@ export function DataTable<T>({
       </div>
       )}
       {isMdUp && (
-      <div className={cn("flex", fillHeight && "min-h-0 flex-1")}>
-        <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col min-h-0")}>
+      <div className={cn("flex", fillHeight && "flex-1")}>
+        {/* Under `fillHeight` neither wrapper is `min-h-0`: a flex item's automatic
+            minimum is its content's, and the content's height counts the body at its
+            basis (`basis-48`, below), not at its rows — so the floor carries up. */}
+        <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col")}>
           {/* scrollbar-gutter:stable reserves the vertical-scrollbar space up
               front. Expanding a row adds height, which can bring the scrollbar
               in, which narrows the content box — and in an `auto` table layout
@@ -1502,7 +1616,10 @@ export function DataTable<T>({
             ref={desktopScroller}
             // The scroller: marked for the Tooltip's auto-portal (see the root above).
             data-clips=""
-            className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight && "flex-1 min-h-0")}
+            // Under `fillHeight` the body grows into the room from a 12rem basis (0.40,
+            // §1.3): about five rows is its floor. A window too short for the page's
+            // header and that much body scrolls `<main>` instead (keksdose's review).
+            className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight && "min-h-0 grow basis-48")}
             // `edgeFade`: the mask, `data-overflow` and the focus handling; nothing
             // while off. The height bound is merged over the mask, not replaced by it.
             {...edgeFadeProps}

@@ -319,7 +319,7 @@ export function Docstring({
 }) {
   if (!text || !text.trim()) return null;
   return (
-    <div className={cn("space-y-3 text-sm leading-relaxed text-secondary", className)}>
+    <div className={cn("space-y-3 text-sm leading-relaxed text-secondary [overflow-wrap:anywhere]", className)}>
       {renderBlocks(parseDocstring(text), resolve)}
     </div>
   );

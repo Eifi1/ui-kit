@@ -19,6 +19,7 @@ import {
   FeedbackAwaitingToggle,
   FeedbackEmptyState,
   FeedbackMobileCard,
+  FeedbackSubject,
   feedbackColumns,
   feedbackEnvironment,
   feedbackMobileGroupBy,
@@ -231,6 +232,7 @@ describe("feedbackColumns", () => {
     expect(status?.type === "select" && status.options?.map((o) => o.label)).toEqual([
       "Open",
       "Ready to implement",
+      "Rework requested",
       "In progress",
       "In evaluation",
       "Test when live",
@@ -563,5 +565,42 @@ describe("the Votes column (0.38 §9.6)", () => {
     expect(container.querySelector("[data-feedback-vote-count]")).toBeNull();
     rerender(<FeedbackMobileCard row={{ ...ROWS[0], votes: 4 }} renderDate={isoDay} votes />);
     expect(container.querySelector("[data-feedback-vote-count]")).toHaveTextContent("4");
+  });
+});
+
+/** 0.40 (§10.3): the chip counts the rework entries; without `replies`, the body's blocks. */
+describe("FeedbackSubject's Rework chip (0.40)", () => {
+  const entry = (id: number, kind?: "reply" | "rework") => ({
+    id,
+    kind,
+    author_name: null,
+    body: "x",
+    status_to: null,
+    created_at: "2026-10-04T09:00:00Z",
+  });
+  const chip = () => document.querySelector("[data-feedback-rework]");
+
+  it("counts the entries of kind rework", () => {
+    render(
+      <FeedbackSubject
+        row={{ title: "T", body: "B", context: null, replies: [entry(1, "rework"), entry(2, "reply"), entry(3, "rework"), entry(4, "rework")] }}
+      />,
+    );
+    expect(chip()).toHaveTextContent("Rework ×3");
+  });
+
+  it("reads the body's blocks without replies", () => {
+    render(<FeedbackSubject row={{ title: "T", body: "B\n\n--- REWORK 2026-10-04 09:12 ---\nAgain.", context: null }} />);
+    expect(chip()).toHaveTextContent("Rework");
+    expect(chip()).toHaveAttribute("data-feedback-rework", "1");
+  });
+
+  it("draws none for replies alone", () => {
+    render(<FeedbackSubject row={{ title: "T", body: "B", context: null, replies: [entry(1, "reply")] }} />);
+    expect(chip()).toBeNull();
+  });
+
+  it("titles the inbox Feedback inbox", () => {
+    expect(DEFAULT_FEEDBACK_PAGE_LABELS.title).toBe("Feedback inbox");
   });
 });

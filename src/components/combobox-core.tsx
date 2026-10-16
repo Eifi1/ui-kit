@@ -51,7 +51,11 @@ export interface ComboOption<V extends string | number> {
    * members indented beneath — {@link InlineEntityCombobox} does — this is a genuine
    * grouping, not decoration: the name appears once per section rather than trailing
    * every row in small grey type, which is barely legible on a phone (feedback #136).
-   * Searchable like `sublabel`.
+   * The heading stays at the top of the list while its rows scroll beneath it.
+   *
+   * NOT searched (0.40, kk run 79): a group is where a row is filed, not what it is
+   * called — with first-letter groups ("A", "B", … "#"), typing "a" matched every row
+   * filed under A. Searching a category's name means putting it in `sublabel`.
    */
   group?: string;
   /**
@@ -463,6 +467,16 @@ export function useComboboxCore<V extends string | number>({
 
 /** The anchored suggestion list's box and rows — one look for {@link Combobox},
  *  {@link InlineEntityCombobox} and {@link Autocomplete}. */
+/**
+ * A group's heading in a picker list stays at the top of the list while its rows scroll
+ * under it (kk run 79 gap 3): with first-letter groups over two hundred payees, the
+ * heading is the one thing that says where in the alphabet the thumb is. Opaque — the
+ * list's own `bg-surface` — so the rows pass beneath it rather than through it. Shared
+ * by every list that heads groups (the panel and the sheet, `Combobox`, `Autocomplete`,
+ * `InlineEntityCombobox`).
+ */
+export const GROUP_HEADING_STICKY = "sticky top-0 z-10 bg-surface";
+
 export const SUGGESTION_LIST_CLASS =
   "max-h-64 overflow-y-auto rounded-md border border-subtle bg-surface py-1 shadow-lg";
 
@@ -964,6 +978,7 @@ export function ComboboxPanel<V extends string | number>({
                   <li
                     role="presentation"
                     className={cn(
+                      GROUP_HEADING_STICKY,
                       "font-semibold uppercase tracking-wide text-muted",
                       isPhone ? "px-4 pb-1 pt-3 text-xs" : "px-3 pb-0.5 pt-2 text-caption first:pt-1",
                     )}
@@ -1009,6 +1024,10 @@ export function ComboboxPanel<V extends string | number>({
         onSearchKeyDown={onKeyDown}
         listboxId={listboxId}
         activeId={activeId}
+        // A multi list stays open as rows are ticked, so the sheet needs a way out
+        // that is not the X in its corner: the kit's sticky "Done" (keksdose #412).
+        // A single pick closes the sheet itself.
+        done={multi}
       >
         {toolbar}
         <div className="relative">
