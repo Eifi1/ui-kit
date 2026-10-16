@@ -139,6 +139,29 @@ export function FeedbackReplyTimeline({
 
 /* ── The composer ─────────────────────────────────────────────────────────── */
 
+/**
+ * The status Select and Reply on one line, one height (keksdose live #417, Android, dark).
+ *
+ * A field and a button of the same padding are not the same height everywhere: on a touch
+ * screen the field's type grows to 16 px (FIELD_TOUCH_TEXT, so iOS does not zoom) and its
+ * box with it, while the button keeps its 14 px line — and at Large the button takes its
+ * 48 px touch floor, which the field has not. So the composer's action row stretches its
+ * two halves to one height and Reply fills it (Button's `stretch`, which is the kit's
+ * answer for a button beside a taller field). Scoped to this composer through the marks
+ * ChatComposer puts on its row: a host slot with an attachment preview must not drag the
+ * send button to the preview's 80 px.
+ *
+ * On a touch screen the "Ctrl+Enter to send" hint has no keyboard to speak of, and beside
+ * a field-height select it pushed Reply onto a line of its own on a phone — it is
+ * visually hidden there (still read in order). At Large the button's 48 px floor is
+ * taller than any field, here as in every form row of the kit.
+ */
+const REPLY_ROW_ALIGN = cn(
+  "[&_[data-chat-composer-actions]]:items-stretch",
+  "[&_[data-chat-composer-send]]:self-stretch",
+  "pointer-coarse:[&_[data-chat-composer-hint]]:sr-only",
+);
+
 export interface FeedbackReplyComposerProps {
   /** The report's status now — what "No change" keeps. */
   status: FeedbackStatus;
@@ -196,7 +219,7 @@ export function FeedbackReplyComposer({
   };
 
   return (
-    <div className={cn("space-y-2", className)} data-feedback-reply-composer="">
+    <div className={cn("space-y-2", REPLY_ROW_ALIGN, className)} data-feedback-reply-composer="">
       {suggestedStatus && (
         <p className="flex items-start gap-1.5 text-xs text-secondary" data-feedback-nudge={suggestedStatus}>
           <BellOff className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden />
@@ -211,8 +234,10 @@ export function FeedbackReplyComposer({
         showCount
         labels={{ field: labels.field, placeholder: labels.placeholder, send: labels.reply }}
         attachmentSlot={
+          // The kit's standard Select at field height (#417: "not invent new things where
+          // there are usable ones already") — `size="sm"` was a 28 px box beside the
+          // 38 px Reply. See REPLY_ROW_ALIGN for how the two keep one height.
           <Select
-            size="sm"
             aria-label={labels.status}
             value={picked}
             disabled={pending}

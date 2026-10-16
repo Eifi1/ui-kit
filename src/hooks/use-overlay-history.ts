@@ -48,6 +48,16 @@ import { useEffect, useRef } from "react";
  * {@link noteAddress}: an address the overlay LIVED THROUGH (a filter the table wrote
  * while its sheet was up) is still unwound, because the user has acted since.
  *
+ * ## Not undoing the owner's replaces either
+ *
+ * An address the overlay lived through is unwound as an ENTRY, never as an address
+ * (keksdose live #412). A report that writes each tick of its payee sheet into the query
+ * with `setSearchParams(…, { replace: true })` rewrites the overlay's own entry, and the
+ * page entry beneath still carries the address from before the sheet opened — so the
+ * traversal that took our entry away also took every tick with it. See {@link carryOnto}:
+ * whichever way the entry goes (the unwind after a press, or a Back press), the address it
+ * last showed is carried onto the entry it lands on, and the router is told.
+ *
  * ## The traversal is deferred
  *
  * And it is *scheduled* rather than issued, because `history.go()` lands a task
@@ -99,6 +109,10 @@ interface PushedEntry {
   key: string | undefined;
   /** {@link routeOf} the address the marker was placed at. */
   route: string;
+  /** The entry's address as last OBSERVED, after the user's last gesture had run its
+   *  handlers — what a Back press must carry down (see {@link carryOnto}). `href` is
+   *  the snapshot BEFORE the gesture, which the owner's-close check needs instead. */
+  seen: string;
 }
 const pushed: PushedEntry[] = [];
 
@@ -197,8 +211,39 @@ function runUnwind(): void {
     if (taggedSentinel() === null) buryUnder(job.entries);
     return;
   }
+  const bottom = job.entries[0];
+  carry = { href: job.href, idx: bottom.idx, key: bottom.key };
   pendingProgrammatic += 1;
   window.history.go(-job.entries.length);
+}
+
+/** The address an unwind in flight must carry onto the entry it lands on. */
+let carry: { href: string; idx: number | undefined; key: string | undefined } | null = null;
+
+/**
+ * Put `href` — the address the overlay's entry last showed — onto the entry a traversal
+ * has just landed on, and tell the router (keksdose live #412).
+ *
+ * Only the query and the hash can differ: an address naming another page is a
+ * navigation, never carried. And only onto the page entry the overlay was opened over,
+ * which our push copied the router's `{idx, key}` from — a traversal that came to rest
+ * anywhere else is not ours to rewrite.
+ *
+ * The router heard the traversal land on the OLD address in this same event, so a
+ * `replaceState` alone would leave it showing the old query under the new one. A
+ * synthetic `popstate` makes it read the address again; both reads happen in one event
+ * dispatch, so React commits only the second. Ours absorbs it as programmatic.
+ */
+function carryOnto(href: string, mark: { idx: number | undefined; key: string | undefined }): void {
+  const here = currentHref();
+  if (here === href || routeOf(here) !== routeOf(href)) return;
+  const now = routerMark();
+  if (mark.idx !== undefined && now.idx !== undefined && mark.idx !== now.idx) return;
+  if (mark.key !== undefined && now.key !== undefined && mark.key !== now.key) return;
+  const state: unknown = window.history.state;
+  window.history.replaceState(state, "", href);
+  pendingProgrammatic += 1;
+  window.dispatchEvent(new PopStateEvent("popstate", { state }));
 }
 
 function currentHref(): string {
@@ -416,7 +461,25 @@ function noteAddress(): void {
   if (!top || top.dead || !stack.some((e) => e.id === top.id)) return;
   const tag = taggedSentinel();
   // Read without `currentSentinel`'s repair: an observation must not write history.
-  if (tag === top.id || (tag === null && standing === top.id && isStillOn(top))) top.href = currentHref();
+  if (tag === top.id || (tag === null && standing === top.id && isStillOn(top))) {
+    top.href = currentHref();
+    top.seen = top.href;
+  }
+}
+
+/** After the user's gesture has run its handlers: the address its entry now shows —
+ *  what a Back press must carry down (keksdose live #412). Again a little later, for a
+ *  handler that writes the address a task after the event. */
+function noteSeen(): void {
+  const top = pushed[pushed.length - 1];
+  if (!top || top.dead || !stack.some((e) => e.id === top.id)) return;
+  const tag = taggedSentinel();
+  if (tag === top.id || (tag === null && standing === top.id && isStillOn(top))) top.seen = currentHref();
+}
+
+function noteSeenNowAndLater(): void {
+  noteSeen();
+  setTimeout(noteSeen, 0);
 }
 
 function handlePop() {
@@ -428,6 +491,9 @@ function handlePop() {
   lastSeen = routerMark();
   if (pendingProgrammatic > 0) {
     pendingProgrammatic -= 1;
+    const job = carry;
+    carry = null;
+    if (job) carryOnto(job.href, job);
     return;
   }
   closeOnPop();
@@ -451,7 +517,10 @@ function closeOnPop() {
   // The browser consumed this entry, so the overlay's own cleanup has nothing left
   // to unwind and nothing to record as owed.
   consumed.add(top.id);
+  const record = pushed.find((p) => p.id === top.id);
   forgetPushed(top.id);
+  // What the page wrote into the address while we were up stays (#412).
+  if (record && !record.dead) carryOnto(record.seen, record);
   top.close();
 }
 
@@ -460,6 +529,7 @@ function ensureListening() {
   window.addEventListener("popstate", handlePop);
   window.addEventListener("pointerdown", noteAddress, true);
   window.addEventListener("keydown", noteAddress, true);
+  for (const type of ["click", "keyup", "change", "input"]) window.addEventListener(type, noteSeenNowAndLater);
   listening = true;
 }
 
@@ -501,7 +571,7 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       // The abandoned ones beneath come back owed; ours takes the top slot.
       for (const owed of inherited.slice(0, -1)) pushed.push({ ...owed, dead: true });
       const was = inherited[inherited.length - 1];
-      pushed.push({ id, href: currentHref(), dead: false, idx: was.idx, key: was.key, route: was.route });
+      pushed.push({ id, href: currentHref(), seen: currentHref(), dead: false, idx: was.idx, key: was.key, route: was.route });
       standing = id;
     } else {
       // A push DESTROYS every entry ahead of the one we are on, so anything we
@@ -516,7 +586,8 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       // the URL is unchanged, so the router treats popping this as a no-op re-render.
       window.history.pushState(marked, "");
       const page = routerMark();
-      pushed.push({ id, href: currentHref(), dead: false, idx: page.idx, key: page.key, route: routeOf(currentHref()) });
+      const at = currentHref();
+      pushed.push({ id, href: at, seen: at, dead: false, idx: page.idx, key: page.key, route: routeOf(at) });
       standing = id;
     }
     return () => {

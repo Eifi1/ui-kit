@@ -344,6 +344,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       filter: "Filter",
       close: "Schließen",
       selectRow: "Zeile auswählen",
+      selectRows: "Zeilen auswählen",
+      cancelSelection: "Abbrechen",
       rowDetails: "Details",
       autoSize: "Spaltenbreiten anpassen",
       loading: "Wird geladen…",
@@ -534,6 +536,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // "Tab" is what German UIs say; "Registerkarte" reads like a 1990s manual.
       add: "Tab hinzufügen",
       remove: (tab) => `${tab} entfernen`,
+      more: "Weitere Tabs",
+      backToFirst: "Zurück zum ersten Tab",
     },
     appShell: {
       collapse: "Seitenleiste einklappen",
@@ -549,6 +553,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     },
     pickerSheet: {
       close: "Schließen",
+      done: "Fertig",
     },
     dialogFrame: {
       close: "Schließen",

@@ -12,6 +12,7 @@ import {
   ComboboxFieldLabel,
   DISABLED_ROW_CLASS,
   endHintRowProps,
+  GROUP_HEADING_STICKY,
   isOptionEnabled,
   stepEnabled,
   SUGGESTION_LIST_CLASS,
@@ -547,7 +548,10 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
                       {startsGroup && (
                         <li
                           role="presentation"
-                          className="px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1"
+                          className={cn(
+                            GROUP_HEADING_STICKY,
+                            "px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1",
+                          )}
                         >
                           {o.group}
                         </li>

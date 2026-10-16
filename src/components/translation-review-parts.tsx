@@ -169,7 +169,8 @@ export interface TranslationLocaleTabsProps {
 }
 
 /**
- * One tab per locale with its approved/total, wrapping on a phone. Nothing for a single
+ * One tab per locale with its approved/total, one scrolling row on a phone with the
+ * strip's caret saying it goes on (`overflowCue`; `wrap` is deprecated in 0.40). Nothing for a single
  * locale: a strip with one tab is a heading that looks clickable.
  */
 export function TranslationLocaleTabs({ locales, active, onChange, className, labels: labelsProp }: TranslationLocaleTabsProps) {
@@ -178,7 +179,7 @@ export function TranslationLocaleTabs({ locales, active, onChange, className, la
   return (
     <Tabs
       aria-label={labels.locales}
-      wrap
+      overflowCue
       className={className}
       tabs={locales.map((locale) => {
         const summary = summariseRows(locale.rows);

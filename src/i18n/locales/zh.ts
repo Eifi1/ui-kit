@@ -325,6 +325,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       filter: "筛选",
       close: "关闭",
       selectRow: "选择行",
+      selectRows: "选择多行",
+      cancelSelection: "取消",
       rowDetails: "详情",
       autoSize: "自动调整列宽",
       loading: "加载中…",
@@ -507,6 +509,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       add: "添加标签页",
       // Quoted, so the spacing rule holds whether the tab's name is Han or Latin.
       remove: (tab) => `移除“${tab}”`,
+      more: "更多标签页",
+      backToFirst: "返回第一个标签页",
     },
     appShell: {
       collapse: "收起侧边栏",
@@ -522,6 +526,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     },
     pickerSheet: {
       close: "关闭",
+      done: "完成",
     },
     dialogFrame: {
       close: "关闭",

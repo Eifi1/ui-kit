@@ -333,6 +333,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       filter: "Szűrés",
       close: "Bezárás",
       selectRow: "Sor kijelölése",
+      selectRows: "Sorok kijelölése",
+      cancelSelection: "Mégse",
       rowDetails: "Részletek",
       autoSize: "Oszlopszélességek igazítása",
       loading: "Betöltés…",
@@ -519,6 +521,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     tabs: {
       add: "Lap hozzáadása",
       remove: (tab) => `${tab} eltávolítása`,
+      more: "További lapok",
+      backToFirst: "Vissza az első lapra",
     },
     appShell: {
       collapse: "Oldalsáv összecsukása",
@@ -534,6 +538,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     pickerSheet: {
       close: "Bezárás",
+      done: "Kész",
     },
     dialogFrame: {
       close: "Bezárás",

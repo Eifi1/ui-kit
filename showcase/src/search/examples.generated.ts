@@ -420,7 +420,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ToggleGroup — nothing selected yet",
     "ToggleGroup — allowEmpty",
     "Tabs — controlled, with badges and a routed tab",
-    "Tabs — wrap",
+    "Tabs — overflowCue",
     "Tabs — orientation=\"vertical\"",
     "Tabs that add and remove",
     "Delete on the open tab only",

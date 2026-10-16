@@ -6,6 +6,7 @@ import { cn } from "../lib/cn";
 import { mergeRefs } from "./field-parts";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
+import { Button } from "./button";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useFocusTrap } from "../hooks/use-focus-trap";
@@ -46,6 +47,23 @@ export interface PickerSheetProps
   /** The option the arrow keys are on, for the search box's `aria-activedescendant`. */
   activeId?: string;
   children: ReactNode;
+  /**
+   * A row pinned under the scrolling list — {@link FullBleedDialog}'s `footer`, on the
+   * picker's sheet (kk run 79 gap 2). Outside the scroller, so it stays put however long
+   * the list; padded for the home indicator, since it is the sheet's bottom edge.
+   */
+  footer?: ReactNode;
+  /**
+   * The kit's one sticky "Done" at the foot of the sheet (Marcel, keksdose #412): the
+   * button a multi-select sheet is left by once its rows are ticked. Ticks apply as
+   * they are made, so it closes (`onClose`) rather than saves. After any `footer`.
+   * {@link ComboboxPanel} turns it on for every `multi` list — `MultiSelect` and
+   * `MultiEntityCombobox` — and a single-select sheet, which closes on the tap that
+   * picks, has no use for it. Label: `pickerSheet.done`, else "Done" (`doneLabel`).
+   */
+  done?: boolean;
+  /** Default: `pickerSheet.done` from the {@link UiKitProvider}, else "Done". */
+  doneLabel?: string;
   /** The sheet, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
    *  merged with the sheet's own ref, which its focus trap holds. */
   ref?: Ref<HTMLDivElement>;
@@ -88,6 +106,9 @@ export function PickerSheet({
   listboxId,
   activeId,
   children,
+  footer,
+  done,
+  doneLabel,
   "aria-label": ariaLabel,
   className,
   style,
@@ -98,7 +119,8 @@ export function PickerSheet({
   // their own `closeLabel` through as `undefined` — so this lookup is what makes the
   // one way out of a full-screen sheet speak the app's language without each of
   // them having to (see the prop's note in `EntityCombobox`).
-  const labels = useKitLabels("pickerSheet", DEFAULT_PICKER_SHEET_LABELS, { close: closeLabel });
+  const labels = useKitLabels("pickerSheet", DEFAULT_PICKER_SHEET_LABELS, { close: closeLabel, done: doneLabel });
+  const hasFooter = (footer !== undefined && footer !== null && footer !== false) || Boolean(done);
   useBodyScrollLock(open);
   /**
    * Back closes THE SHEET, not the dialog it was opened from (Keksdose live #309:
@@ -276,6 +298,21 @@ export function PickerSheet({
       <div {...{ [CLIPS_ATTRIBUTE]: "" }} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {children}
       </div>
+      {hasFooter && (
+        <div
+          data-picker-sheet-footer=""
+          className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-subtle bg-surface px-3 pt-3"
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
+          {footer}
+          {done && (
+            // Full width: the one thing left to do on the sheet, under the thumb.
+            <Button type="button" className="flex-1" onClick={onClose}>
+              {labels.done}
+            </Button>
+          )}
+        </div>
+      )}
     </div>,
     document.body,
   );

@@ -87,6 +87,32 @@ describe("FeedbackReplyComposer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Reply" }));
     expect(onReply).not.toHaveBeenCalled();
   });
+
+  // keksdose live #417 (run 78 #2, Android, dark): the status pick was a 28 px `sm`
+  // select beside the 38 px Reply. Marcel: the kit's standard Select at field height,
+  // aligned with Reply — on phones too.
+  it("the status pick is the standard Select at field height, one height with Reply", () => {
+    const { container } = render(<FeedbackReplyComposer status="OPEN" onReply={vi.fn()} />);
+    const pick = screen.getByRole("combobox", { name: "Status with the reply" });
+    // The field's own height: FIELD_BASE's padding, not SELECT_SM's fixed 28 px box.
+    expect(pick).toHaveClass("py-2", "text-sm");
+    expect(pick).not.toHaveClass("h-7");
+    expect(pick).not.toHaveClass("text-xs");
+    // The action row stretches its two halves to one height and Reply fills it, so a
+    // field that grows on a touch screen (16 px type) takes the button with it.
+    const composer = container.querySelector("[data-feedback-reply-composer]")!;
+    expect(composer).toHaveClass(
+      "[&_[data-chat-composer-actions]]:items-stretch",
+      "[&_[data-chat-composer-send]]:self-stretch",
+      "pointer-coarse:[&_[data-chat-composer-hint]]:sr-only",
+    );
+    const row = composer.querySelector("[data-chat-composer-actions]")!;
+    const reply = screen.getByRole("button", { name: "Reply" });
+    expect(reply).toHaveAttribute("data-chat-composer-send");
+    expect(row).toContainElement(pick);
+    expect(row).toContainElement(reply);
+    expect(row.querySelector("[data-chat-composer-hint]")).not.toBeNull();
+  });
 });
 
 describe("feedbackReplyNudge", () => {

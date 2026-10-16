@@ -341,6 +341,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       filter: "Filtrer",
       close: "Fermer",
       selectRow: "Sélectionner la ligne",
+      selectRows: "Sélectionner des lignes",
+      cancelSelection: "Annuler",
       rowDetails: "Détails",
       autoSize: "Ajuster la largeur des colonnes",
       loading: "Chargement…",
@@ -529,6 +531,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     tabs: {
       add: "Ajouter un onglet",
       remove: (tab) => `Supprimer ${tab}`,
+      more: "Autres onglets",
+      backToFirst: "Retour au premier onglet",
     },
     appShell: {
       collapse: "Réduire la barre latérale",
@@ -544,6 +548,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     pickerSheet: {
       close: "Fermer",
+      done: "Terminé",
     },
     dialogFrame: {
       close: "Fermer",

@@ -283,10 +283,11 @@ describe("useOverlayHistory", () => {
     await settle();
 
     // The overlay's own entry must still be unwound: we are back on the table's
-    // entry, at the address it had before the overlay opened. Before the fix the
-    // cleanup read "not my entry", abandoned the entry as a husk, and the user was
-    // left one dead Back press from the page.
-    expect(window.location.search).toBe("");
+    // entry. Before the fix the cleanup read "not my entry", abandoned the entry as a
+    // husk, and the user was left one dead Back press from the page. The filter the
+    // table wrote while the overlay was up is carried down with us (#412).
+    expect(liveSentinel()).toBeNull();
+    expect(window.location.search).toBe("?f.status=open");
     expect(window.location.pathname).toBe("/table");
   });
 
@@ -303,7 +304,8 @@ describe("useOverlayHistory", () => {
       userPresses();
       view.rerender(<Nested outer={false} inner={false} />);
       await settle();
-      expect(window.location.search).toBe("");
+      expect(liveSentinel()).toBeNull();
+      expect(window.location.search).toBe(`?f.status=r${round}`);
       expect(window.location.pathname).toBe("/drift");
     }
     view.unmount();
@@ -630,5 +632,117 @@ describe("useOverlayHistory when the owner's address change is what closed it", 
     expect(go).not.toHaveBeenCalled();
     expect(window.location.hash).toBe("#/table");
     go.mockRestore();
+  });
+});
+
+/**
+ * keksdose live #412: a sheet whose ticks the page writes into the address with
+ * `setSearchParams(…, { replace: true })` WHILE the sheet is open. The replace rewrites
+ * the overlay's own entry; closing the sheet unwound that entry with `history.go(-1)` and
+ * landed on the page entry beneath, which still carried the address from before the
+ * sheet opened — every tick undone. The unwind must carry the address it leaves onto the
+ * entry it lands on, and the router must see it.
+ */
+describe("useOverlayHistory keeps the replaces made while it was open (#412)", () => {
+  function Report() {
+    const [params, setParams] = useSearchParams();
+    const [open, setOpen] = useState(false);
+    const ticked = params.getAll("payee");
+    const tick = (p: string) => {
+      const next = new URLSearchParams(params);
+      next.append("payee", p);
+      setParams(next, { replace: true });
+    };
+    return (
+      <div>
+        <p data-testid="ticks">{ticked.join(",") || "none"}</p>
+        <button onClick={() => setOpen(true)}>open sheet</button>
+        {open ? (
+          <div>
+            <Overlay onClose={() => setOpen(false)} />
+            <button onClick={() => tick("a")}>tick a</button>
+            <button onClick={() => tick("b")}>tick b</button>
+            <button onClick={() => setOpen(false)}>done</button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderReport() {
+    return render(
+      <BrowserRouter>
+        <Routes>
+          <Route path="/report" element={<Report />} />
+          <Route path="/other" element={<p>other</p>} />
+        </Routes>
+      </BrowserRouter>,
+    );
+  }
+
+  function press(label: string) {
+    fireEvent.pointerDown(screen.getByText(label));
+    fireEvent.click(screen.getByText(label));
+  }
+
+  it("closing by a press keeps every tick in the address and in the router", async () => {
+    window.history.replaceState(null, "", "/other");
+    window.history.pushState(null, "", "/report?year=2026");
+    const view = renderReport();
+    await settle();
+    press("open sheet");
+    await settle();
+    press("tick a");
+    press("tick b");
+    await settle();
+    press("done");
+    await settle();
+    await settle();
+    expect(liveSentinel()).toBeNull();
+    expect(window.location.pathname).toBe("/report");
+    expect(new URLSearchParams(window.location.search).getAll("payee")).toEqual(["a", "b"]);
+    expect(new URLSearchParams(window.location.search).get("year")).toBe("2026");
+    expect(screen.getByTestId("ticks")).toHaveTextContent("a,b");
+    // The overlay's entry is gone: one Back leaves the report.
+    await back();
+    await settle();
+    expect(window.location.pathname).toBe("/other");
+    view.unmount();
+    await settle();
+  });
+
+  it("closing by Back keeps the ticks too", async () => {
+    window.history.replaceState(null, "", "/other");
+    window.history.pushState(null, "", "/report");
+    const view = renderReport();
+    await settle();
+    press("open sheet");
+    await settle();
+    press("tick a");
+    await settle();
+    await back();
+    await settle();
+    await settle();
+    expect(screen.queryByText("done")).toBeNull();
+    expect(window.location.pathname).toBe("/report");
+    expect(new URLSearchParams(window.location.search).getAll("payee")).toEqual(["a"]);
+    expect(screen.getByTestId("ticks")).toHaveTextContent("a");
+    await back();
+    await settle();
+    expect(window.location.pathname).toBe("/other");
+    view.unmount();
+    await settle();
+  });
+
+  it("carries a hash written while open, too", async () => {
+    window.history.replaceState(null, "", "/plain");
+    const view = render(<Overlay />);
+    window.history.replaceState(window.history.state, "", "/plain?x=1#sec");
+    fireEvent.pointerDown(document.body);
+    view.unmount();
+    await settle();
+    expect(liveSentinel()).toBeNull();
+    expect(window.location.search).toBe("?x=1");
+    expect(window.location.hash).toBe("#sec");
   });
 });

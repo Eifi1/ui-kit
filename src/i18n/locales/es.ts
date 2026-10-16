@@ -335,6 +335,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       filter: "Filtrar",
       close: "Cerrar",
       selectRow: "Seleccionar fila",
+      selectRows: "Seleccionar filas",
+      cancelSelection: "Cancelar",
       rowDetails: "Detalles",
       autoSize: "Ajustar ancho de columnas",
       loading: "Cargando…",
@@ -521,6 +523,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     tabs: {
       add: "Añadir pestaña",
       remove: (tab) => `Quitar ${tab}`,
+      more: "Más pestañas",
+      backToFirst: "Volver a la primera pestaña",
     },
     appShell: {
       collapse: "Contraer barra lateral",
@@ -536,6 +540,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     pickerSheet: {
       close: "Cerrar",
+      done: "Listo",
     },
     dialogFrame: {
       close: "Cerrar",

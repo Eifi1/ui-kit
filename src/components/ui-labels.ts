@@ -19,4 +19,6 @@ export const DEFAULT_CHARACTER_COUNT_LABELS: CharacterCountLabels = {
 export const DEFAULT_TABS_LABELS: TabsLabels = {
   add: "Add tab",
   remove: (tab) => `Remove ${tab}`,
+  more: "More tabs",
+  backToFirst: "Back to the first tab",
 };

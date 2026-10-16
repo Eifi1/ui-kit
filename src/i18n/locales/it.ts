@@ -337,6 +337,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       filter: "Filtra",
       close: "Chiudi",
       selectRow: "Seleziona riga",
+      selectRows: "Seleziona righe",
+      cancelSelection: "Annulla",
       rowDetails: "Dettagli",
       autoSize: "Adatta larghezza colonne",
       loading: "Caricamento…",
@@ -524,6 +526,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     tabs: {
       add: "Aggiungi scheda",
       remove: (tab) => `Rimuovi ${tab}`,
+      more: "Altre schede",
+      backToFirst: "Torna alla prima scheda",
     },
     appShell: {
       collapse: "Comprimi barra laterale",
@@ -539,6 +543,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     pickerSheet: {
       close: "Chiudi",
+      done: "Fine",
     },
     dialogFrame: {
       close: "Chiudi",
