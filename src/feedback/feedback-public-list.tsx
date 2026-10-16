@@ -455,7 +455,8 @@ export function FeedbackPublicDetail({
         />
       </div>
       <FeedbackDetailSection title={labels.body}>
-        {/* Rework rounds stay in it — the author's own words (§9.4). */}
+        {/* Rework rounds stay in it — the author's own words (§9.4) — on a server before
+            server-kit 0.13; since then each is an entry in the conversation (§10.3). */}
         <FeedbackProse>{row.body}</FeedbackProse>
       </FeedbackDetailSection>
       <FeedbackDetailSection title={labels.conversation}>
@@ -464,6 +465,8 @@ export function FeedbackPublicDetail({
           comments={comments ?? []}
           loading={comments === undefined}
           isAdmin={isAdmin}
+          // 0.40 (§10.3): the author's rework entries are theirs — at the reading end.
+          isAuthor={row.mine}
           onComment={onComment}
           onHide={onHide}
           onDelete={onDelete}

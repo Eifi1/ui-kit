@@ -5,7 +5,7 @@
 import type { FeedbackPageLabels } from "./feedback-table";
 
 export const DEFAULT_FEEDBACK_PAGE_LABELS: FeedbackPageLabels = {
-  title: "Feedback",
+  title: "Feedback inbox",
   myTitle: "My feedback",
   columnId: "#",
   columnDate: "Date",

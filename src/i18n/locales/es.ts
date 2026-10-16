@@ -76,6 +76,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     feedbackStatus: {
       OPEN: "Abierto",
       READY: "Listo para implementar",
+      REWORK: "Corrección solicitada",
       IN_PROGRESS: "En curso",
       IN_EVALUATION: "En evaluación",
       NEEDS_LIVE_TEST: "Probar en producción",
@@ -113,11 +114,13 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       myFeedback: "Mis comentarios",
       viewFeedback: "Ver comentarios",
       allFeedback: "Todos los comentarios",
+      discussion: "Debate de comentarios",
+      inbox: "Comentarios recibidos",
     },
     // 0.38.0 — docs/feedback-harmonization.md §9: the public pages and the two feedback
     // notification types. "Informe" for one report, so it never reads as "comentario".
     feedbackPublic: {
-      title: "Todos los comentarios",
+      title: "Debate de comentarios",
       sort: "Ordenar",
       sortNewest: "Más recientes",
       sortVotes: "Más deseados",
@@ -149,7 +152,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       attachUrl: "Adjuntar la URL de la página actual",
     },
     feedbackPage: {
-      title: "Comentarios",
+      title: "Comentarios recibidos",
       myTitle: "Mis comentarios",
       columnId: "#",
       columnDate: "Fecha",

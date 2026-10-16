@@ -1,4 +1,4 @@
-import { Inbox, MessageSquare, Users } from "lucide-react";
+import { Inbox, MessageSquare, User, Users } from "lucide-react";
 import type { UserAvatarBadge } from "../components/user-avatar";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { TopBarActionMenu, type TopBarMenuEntry } from "../shell/topbar-action-menu";
@@ -13,21 +13,26 @@ import { DEFAULT_FEEDBACK_MENU_LABELS } from "./feedback-menu-labels";
 /**
  * `feedbackMenu` — the top-bar feedback menu's own words (0.27.0). The four category rows
  * are `feedbackCategory`'s, shared with the badges and the dialog's picker. de-CH canon
- * (keksdose `de-CH.json`): `trigger` "Feedback senden", `myFeedback` "Mein Feedback",
- * `viewFeedback` "Feedback ansehen".
+ * (keksdose `de-CH.json`, §10.6): `trigger` "Feedback senden", `discussion`
+ * "Feedback-Diskussion", `myFeedback` "Mein Feedback", `inbox` "Feedback-Eingang".
  */
 export interface FeedbackMenuLabels {
   /** The trigger's accessible name, and the menu's. keksdose `feedback.send`. */
   trigger: string;
-  /** The link to the reporter's own reports — everyone but an admin. keksdose
-   *  `feedback.my_title`. */
+  /** The link to the viewer's own reports — everyone's, an admin's too since 0.40
+   *  (§10.2 decision 3). keksdose `feedback.my_title`. */
   myFeedback: string;
-  /** The link to the inbox — an admin's one list link, in place of "My feedback".
-   *  keksdose `feedback.view_all`. */
-  viewFeedback: string;
-  /** The link to every public report, {@link FeedbackMenuProps.publicHref} (0.38,
-   *  docs/feedback-harmonization.md §9.2 decision 21). Optional, so a complete
-   *  `UiKitLabels` typed before 0.38 still compiles. de-CH "Alle Rückmeldungen". */
+  /** 0.40: the link to the public list, {@link FeedbackMenuProps.publicHref} (§10.2
+   *  decision 3; "All feedback" before). de-CH "Feedback-Diskussion". */
+  discussion: string;
+  /** 0.40: the admin's link to the triage list, {@link FeedbackMenuProps.inboxHref}
+   *  ("View feedback" before). de-CH "Feedback-Eingang". */
+  inbox: string;
+  /** @deprecated 0.40 — unused; the inbox row reads {@link inbox}. Kept optional for one
+   *  minor, then removed (§10.6). */
+  viewFeedback?: string;
+  /** @deprecated 0.40 — unused; the public row reads {@link discussion}. Kept optional
+   *  for one minor, then removed (§10.6). */
   allFeedback?: string;
 }
 
@@ -38,8 +43,8 @@ export interface FeedbackMenuProps {
   /** A category row was chosen — open the submit dialog on it (`useFeedbackSubmit`'s
    *  `open`). Never called with `CRASH`: there is no row for it. */
   onFile: (category: FeedbackCategory) => void;
-  /** The list link is "View feedback" → {@link inboxHref} INSTEAD of "My feedback" (§4.1,
-   *  keksdose `top-bar.tsx:205-214`). The admin check is the app's (kastlan's is
+  /** Adds the **Feedback inbox** row → {@link inboxHref} under "My feedback" (0.40, §10.2
+   *  decision 11; until 0.39 it replaced it). The admin check is the app's (kastlan's is
    *  company-scoped). Default `false`. */
   isAdmin?: boolean;
   /**
@@ -50,16 +55,16 @@ export interface FeedbackMenuProps {
    * `all-feedback`, `my-feedback`, `view-feedback`).
    */
   extraEntries?: TopBarMenuEntry[];
-  /** The user's own reports, linked for everyone but an admin. Default `"/my-feedback"`
-   *  (§2.3). */
+  /** The viewer's own reports, linked for everyone (an admin too since 0.40). Default
+   *  `"/my-feedback"` (§2.3). */
   myFeedbackHref?: string;
   /** The admin inbox, linked for an admin. Default `"/feedback"` (§2.3). */
   inboxHref?: string;
   /**
    * The public list (0.38, docs/feedback-harmonization.md §9.2 decision 21): when passed,
-   * an **All feedback** row (`Users`, key `all-feedback`) above the list link, for
-   * everyone — the admin too, who reads what the others read there. keksdose:
-   * `"/all-feedback"`; "My feedback" stays as it is. Leave it out where the app has no
+   * a **Feedback discussion** row (`Users`, key `all-feedback`; "All feedback" until 0.40)
+   * first of the list links, for everyone — the admin too, who reads what the others read
+   * there. keksdose: `"/all-feedback"`. Leave it out where the app has no
    * public parts (kastlan) or the viewer may not see them (a Kurvenschmiede customer, a
    * demo — §9.2 decisions 7, 8).
    */
@@ -83,17 +88,19 @@ export interface FeedbackMenuProps {
  *    the category badges' own glyphs), each calling `onFile(category)`;
  * 3. a divider, always;
  * 4. the app's `extraEntries`;
- * 5. with `publicHref` (0.38), **All feedback** → the public list, for everyone;
- * 6. ONE list link, `Inbox`: an admin's is "View feedback" → `/feedback`, everyone
- *    else's "My feedback" → `/my-feedback` — keksdose's (`top-bar.tsx:205-214`, feedback
- *    #331: admins get the management view, everyone else their own submissions).
+ * 5. the list links (0.40, §10.2 decision 11), in this order: **Feedback discussion**
+ *    (`Users`, key `all-feedback`) → `publicHref`, when passed; **My feedback** (`User`,
+ *    key `my-feedback`) → `/my-feedback`, for everyone, admins included; **Feedback
+ *    inbox** (`Inbox`, key `view-feedback`) → `/feedback`, for an admin. An admin with
+ *    public parts sees three, a member two; without them an admin two and anyone else
+ *    one. Until 0.39 an admin had the inbox in place of their own list (feedback #331);
+ *    Marcel's kk #419 gave them both.
  *
  * WHY A PRESET. Three apps had drawn three menus on the same primitive and they disagreed:
  * kastlan headed it "New submission", Kurvenschmiede "Send feedback" with a single link
  * that changed its words by role, keksdose had no heading and one link by role. keksdose
- * is the source (§2.4, §7.11): no heading, one link — the inbox for an admin, who reaches
- * their own reports there too — and the kit draws it, so the row order, the icons and the
- * words cannot drift again. Where the menu sits in the bar stays each app's.
+ * is the source (§2.4, §7.11): no heading, the list links by role — and the kit draws
+ * it, so the row order, the icons and the words cannot drift again. Where the menu sits in the bar stays each app's.
  *
  * `CRASH` has no row and never will: crash reports are filed by the error boundary with
  * the stack and a fingerprint (keksdose feedback #160), and a hand-filed "crash" would sort
@@ -136,17 +143,28 @@ export function FeedbackMenu({
             key: "all-feedback",
             to: publicHref,
             icon: <Users className="size-4" />,
-            label: labels.allFeedback ?? DEFAULT_FEEDBACK_MENU_LABELS.allFeedback!,
+            label: labels.discussion,
           } satisfies TopBarMenuEntry,
         ]
       : []),
     {
       kind: "link",
-      key: isAdmin ? "view-feedback" : "my-feedback",
-      to: isAdmin ? inboxHref : myFeedbackHref,
-      icon: <Inbox className="size-4" />,
-      label: isAdmin ? labels.viewFeedback : labels.myFeedback,
+      key: "my-feedback",
+      to: myFeedbackHref,
+      icon: <User className="size-4" />,
+      label: labels.myFeedback,
     },
+    ...(isAdmin
+      ? [
+          {
+            kind: "link",
+            key: "view-feedback",
+            to: inboxHref,
+            icon: <Inbox className="size-4" />,
+            label: labels.inbox,
+          } satisfies TopBarMenuEntry,
+        ]
+      : []),
   ];
   return (
     <TopBarActionMenu

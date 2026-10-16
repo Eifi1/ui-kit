@@ -76,6 +76,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     feedbackStatus: {
       OPEN: "Nyitott",
       READY: "Megvalósításra kész",
+      REWORK: "Átdolgozás kérve",
       IN_PROGRESS: "Folyamatban",
       IN_EVALUATION: "Értékelés alatt",
       NEEDS_LIVE_TEST: "Élesben tesztelendő",
@@ -110,11 +111,13 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       myFeedback: "Visszajelzéseim",
       viewFeedback: "Visszajelzések megtekintése",
       allFeedback: "Összes visszajelzés",
+      discussion: "Visszajelzések megvitatása",
+      inbox: "Beérkezett visszajelzések",
     },
     // 0.38.0 — docs/feedback-harmonization.md §9: the public pages and the two feedback
     // notification types. A noun after a number stays singular in Hungarian.
     feedbackPublic: {
-      title: "Összes visszajelzés",
+      title: "Visszajelzések megvitatása",
       sort: "Rendezés",
       sortNewest: "Legújabb",
       sortVotes: "Legkeresettebb",
@@ -146,7 +149,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       attachUrl: "Az aktuális oldal URL-jének csatolása",
     },
     feedbackPage: {
-      title: "Visszajelzések",
+      title: "Beérkezett visszajelzések",
       myTitle: "Visszajelzéseim",
       columnId: "#",
       columnDate: "Dátum",

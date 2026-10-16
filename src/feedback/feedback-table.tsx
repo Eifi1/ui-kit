@@ -28,7 +28,7 @@ import {
   type FeedbackCategoryLabels,
   type FeedbackStatusLabels,
 } from "./feedback-labels";
-import { FEEDBACK_AWAITING_STATUSES, reworkCount, type FeedbackContext, type FeedbackRecord } from "./feedback-record";
+import { FEEDBACK_AWAITING_STATUSES, feedbackReworkCount, type FeedbackContext, type FeedbackRecord } from "./feedback-record";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import { feedbackPageHref, feedbackPagePath } from "./feedback-row-detail";
 import type { CommitScope } from "../components/write-lock";
@@ -70,7 +70,8 @@ import { DEFAULT_FEEDBACK_PUBLIC_LABELS } from "./feedback-public-labels";
  * `de-CH.json`, ss never ß).
  */
 export interface FeedbackPageLabels {
-  /** The admin inbox's page title, `/feedback`. de-CH: "Feedback" */
+  /** The admin inbox's page title, `/feedback` — the menu's "Feedback inbox" (0.40,
+   *  §10.2 decision 11; "Feedback" before). de-CH: "Feedback-Eingang" */
   title: string;
   /** The user's own list, `/my-feedback`. de-CH: "Mein Feedback" */
   myTitle: string;
@@ -268,7 +269,9 @@ function instant(value: string | null | undefined): number | null {
 /* ── The subject: title + environment chip + rework chip ───────────────────── */
 
 export interface FeedbackSubjectProps {
-  row: Pick<FeedbackRecord, "title" | "body" | "context">;
+  /** `replies` (0.40): the chip counts the rework entries, else the body's blocks —
+   *  {@link feedbackReworkCount}. */
+  row: Pick<FeedbackRecord, "title" | "body" | "context"> & Partial<Pick<FeedbackRecord, "replies">>;
   /**
    * `false` (default): one line — the title truncates and the chips stay whole, as a
    * table cell wants. `true`: the title wraps and the chips flow after its last word, as
@@ -292,7 +295,7 @@ export interface FeedbackSubjectProps {
 export function FeedbackSubject({ row, wrap = false, labels: labelsProp, className }: FeedbackSubjectProps) {
   const labels = useFeedbackPageLabels(labelsProp);
   const env = feedbackEnvironment(row.context);
-  const rounds = reworkCount(row.body ?? "");
+  const rounds = feedbackReworkCount(row);
   const chipClass = wrap ? "ms-1.5 align-middle" : "shrink-0";
   const chips = (
     <>

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { BellOff } from "lucide-react";
+import type { ReactNode } from "react";
+import { BellOff, Paperclip } from "lucide-react";
 import { Select } from "../components/select";
 import type { CommitScope } from "../components/write-lock";
 import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
@@ -8,9 +9,11 @@ import { formatDate } from "../lib/format";
 import { FeedbackStatusBadge, selectableFeedbackStatuses, type FeedbackStatus } from "./feedback-inbox";
 import { useFeedbackStatusLabels } from "./feedback-labels";
 import type { FeedbackReply } from "./feedback-public-types";
-import { FEEDBACK_DECIDED_STATUSES, FEEDBACK_REPLY_MAX } from "./feedback-record";
+import { FEEDBACK_DECIDED_STATUSES, FEEDBACK_REPLY_MAX, attachmentName } from "./feedback-record";
 import { ChatComposer } from "./feedback-thread";
 import { DEFAULT_FEEDBACK_REPLIES_LABELS } from "./feedback-thread-parts-labels";
+import { FeedbackReworkEntryChip } from "./feedback-rework-entry-chip";
+import { DEFAULT_FEEDBACK_PUBLIC_LABELS } from "./feedback-public-labels";
 
 /**
  * The admin's answers as a list (docs/feedback-harmonization.md §9.7, decision 5): each
@@ -79,23 +82,53 @@ export interface FeedbackReplyTimelineProps {
   renderDate?: (iso: string) => string;
   /** Tag bodies and names `data-private` (a host's screen-share blur). Default true. */
   redact?: boolean;
+  /** 0.40: how a rework entry's file (`attachment_url`) is drawn under its text. Default:
+   *  its name beside a paperclip — the file itself is in the row detail's Attachment
+   *  section, fetched with the app's credentials. */
+  renderAttachment?: (url: string) => ReactNode;
   labels?: LabelOverride<FeedbackRepliesLabels>;
   className?: string;
+}
+
+/** The status an entry moved the report to — "→ Done", with where from in the admin view.
+ *  Nothing on an entry with no `status_to`: a status-less reply, or a rework migrated out
+ *  of the body, whose move was never recorded (0.40, §10.3). */
+function EntryStatus({ reply, statusChanged }: { reply: FeedbackReply; statusChanged: string }) {
+  if (!reply.status_to) return null;
+  return (
+    <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1" data-feedback-reply-status={reply.status_to}>
+      <span className="sr-only">{statusChanged}</span>
+      {reply.status_from && reply.status_from !== reply.status_to && (
+        <>
+          <FeedbackStatusBadge status={reply.status_from} />
+          <span aria-hidden>→</span>
+        </>
+      )}
+      {!reply.status_from && <span aria-hidden>→</span>}
+      <FeedbackStatusBadge status={reply.status_to} />
+    </span>
+  );
 }
 
 /**
  * The replies, oldest first, down a rule: each with its author (`null` → "Admin"), its
  * time, the status it set ("→ Done"; the admin view adds where from) and its text. No
  * edit and no delete (§9.7): a correction is a new reply.
+ *
+ * 0.40 (§10.3): an author's **rework** entry (`kind: "rework"`) stands among them as the
+ * author's — their name (`null` → "A user", never "Admin"), the **Rework** chip, the
+ * status it moved the report to (none on a migrated one) and its file.
  */
 export function FeedbackReplyTimeline({
   replies,
   renderDate,
   redact = true,
+  renderAttachment,
   labels: labelsProp,
   className,
 }: FeedbackReplyTimelineProps) {
   const labels = useFeedbackRepliesLabels(labelsProp);
+  const anonymous = useKitLabels("feedbackPublic", DEFAULT_FEEDBACK_PUBLIC_LABELS).anonymous;
   const locale = useKitLocale();
   const priv = redact ? "" : undefined;
   if (replies.length === 0) {
@@ -105,34 +138,43 @@ export function FeedbackReplyTimeline({
     renderDate ? renderDate(iso) : formatDate(iso, { dateStyle: "medium", timeStyle: "short" }, { locale });
   return (
     <ol aria-label={labels.replies} className={cn("space-y-3 border-s-2 border-subtle ps-3", className)}>
-      {replies.map((reply) => (
-        <li key={reply.id} data-feedback-reply={reply.id} className="min-w-0 text-sm">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted">
-            <span data-private={priv} className="font-medium text-secondary">
-              {reply.author_name ?? labels.admin}
-            </span>
-            <time dateTime={reply.created_at} className="tabular-nums">
-              {dateText(reply.created_at)}
-            </time>
-            {reply.status_to && (
-              <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1" data-feedback-reply-status={reply.status_to}>
-                <span className="sr-only">{labels.statusChanged}</span>
-                {reply.status_from && reply.status_from !== reply.status_to && (
-                  <>
-                    <FeedbackStatusBadge status={reply.status_from} />
-                    <span aria-hidden>→</span>
-                  </>
-                )}
-                {!reply.status_from && <span aria-hidden>→</span>}
-                <FeedbackStatusBadge status={reply.status_to} />
+      {replies.map((reply) => {
+        const rework = reply.kind === "rework";
+        return (
+          <li
+            key={reply.id}
+            data-feedback-reply={reply.id}
+            data-feedback-entry-kind={rework ? "rework" : undefined}
+            className="min-w-0 text-sm"
+          >
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted">
+              <span data-private={priv} className="font-medium text-secondary">
+                {reply.author_name ?? (rework ? anonymous : labels.admin)}
               </span>
+              {rework && <FeedbackReworkEntryChip />}
+              <time dateTime={reply.created_at} className="tabular-nums">
+                {dateText(reply.created_at)}
+              </time>
+              <EntryStatus reply={reply} statusChanged={labels.statusChanged} />
+            </div>
+            <p data-private={priv} dir="auto" className="mt-0.5 whitespace-pre-wrap break-words text-start text-primary">
+              {reply.body}
+            </p>
+            {rework && reply.attachment_url && (
+              <div className="mt-1 min-w-0" data-private={priv} data-feedback-entry-file="">
+                {renderAttachment ? (
+                  renderAttachment(reply.attachment_url)
+                ) : (
+                  <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-xs text-secondary">
+                    <Paperclip className="size-3.5 shrink-0" aria-hidden />
+                    <span className="min-w-0 break-all">{attachmentName(reply.attachment_url)}</span>
+                  </span>
+                )}
+              </div>
             )}
-          </div>
-          <p data-private={priv} dir="auto" className="mt-0.5 whitespace-pre-wrap break-words text-start text-primary">
-            {reply.body}
-          </p>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -184,7 +226,9 @@ export interface FeedbackReplyComposerProps {
 
 /**
  * The admin's reply box (§9.7): the text, the **status** to set with it ("No change"
- * first, then every status — {@link selectableFeedbackStatuses}), and **Reply**. A
+ * first, then every status — {@link selectableFeedbackStatuses}, `REWORK` among them
+ * since 0.40: how an admin sends any report back, their own included, §10.2 decision 6),
+ * and **Reply**. A
  * {@link ChatComposer} underneath: Ctrl/⌘+Enter sends, the count runs to 8 000, a draft
  * typed while a reply is in flight stays.
  *

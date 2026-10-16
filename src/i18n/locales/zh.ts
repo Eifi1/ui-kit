@@ -69,6 +69,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     feedbackStatus: {
       OPEN: "待处理",
       READY: "待实现",
+      REWORK: "已要求返工",
       IN_PROGRESS: "处理中",
       IN_EVALUATION: "评估中",
       NEEDS_LIVE_TEST: "待线上测试",
@@ -103,11 +104,13 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       myFeedback: "我的反馈",
       viewFeedback: "查看反馈",
       allFeedback: "全部反馈",
+      discussion: "反馈讨论",
+      inbox: "反馈收件箱",
     },
     // 0.38.0 — docs/feedback-harmonization.md §9: the public pages and the two feedback
     // notification types.
     feedbackPublic: {
-      title: "全部反馈",
+      title: "反馈讨论",
       sort: "排序",
       sortNewest: "最新",
       sortVotes: "最多人想要",
@@ -139,7 +142,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       attachUrl: "附加当前页面 URL",
     },
     feedbackPage: {
-      title: "反馈",
+      title: "反馈收件箱",
       myTitle: "我的反馈",
       columnId: "#",
       columnDate: "日期",

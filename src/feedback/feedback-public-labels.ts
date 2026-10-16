@@ -10,10 +10,11 @@
  * stay `feedbackPage`'s, so the two lists cannot disagree; the vote button's words are
  * `feedbackVote`'s, the thread's `feedbackComments`'.
  *
- * de-CH canon (§9.2, §9.5): `title` "Alle Rückmeldungen", `anonymous` "Eine Person".
+ * de-CH canon (§9.2, §9.5, §10.6): `title` "Feedback-Diskussion", `anonymous` "Eine Person".
  */
 export interface FeedbackPublicLabels {
-  /** The page's heading — keksdose's `/all-feedback`, the menu's "All feedback". */
+  /** The page's heading — keksdose's `/all-feedback`, the menu's "Feedback discussion"
+   *  (0.40, §10.2 decision 11; "All feedback" before). de-CH "Feedback-Diskussion". */
   title: string;
   /** The sort toggle's accessible name. */
   sort: string;
@@ -57,7 +58,7 @@ export interface FeedbackPublicLabels {
 }
 
 export const DEFAULT_FEEDBACK_PUBLIC_LABELS: FeedbackPublicLabels = {
-  title: "All feedback",
+  title: "Feedback discussion",
   sort: "Sort",
   sortNewest: "Newest",
   sortVotes: "Most wanted",

@@ -24,7 +24,8 @@ import type { FeedbackCategory, FeedbackStatus } from "./feedback-vocabulary";
  * `feedbackStatus` — one word per status, keyed by the enum value so
  * `labels[row.status]` is the whole lookup.
  *
- * de-CH canon: OPEN "Offen" · READY "Bereit zur Umsetzung" · IN_PROGRESS "In Bearbeitung" · IN_EVALUATION "Zur Prüfung"
+ * de-CH canon: OPEN "Offen" · READY "Bereit zur Umsetzung" · REWORK "Nacharbeit angefordert"
+ * (0.40, §10.6) · IN_PROGRESS "In Bearbeitung" · IN_EVALUATION "Zur Prüfung"
  * · NEEDS_LIVE_TEST "Live testen" · POSTPONED "Zurückgestellt" · DONE "Erledigt" ·
  * WONT_DO "Wird nicht umgesetzt".
  */
@@ -33,6 +34,7 @@ export type FeedbackStatusLabels = Record<FeedbackStatus, string>;
 export const DEFAULT_FEEDBACK_STATUS_LABELS: FeedbackStatusLabels = {
   OPEN: "Open",
   READY: "Ready to implement",
+  REWORK: "Rework requested",
   IN_PROGRESS: "In progress",
   IN_EVALUATION: "In evaluation",
   NEEDS_LIVE_TEST: "Test when live",

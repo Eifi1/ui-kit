@@ -5,12 +5,14 @@ import {
   FEEDBACK_AUTHOR_EDITABLE_STATUSES,
   FEEDBACK_AWAITING_STATUSES,
   FEEDBACK_PICKABLE_CATEGORIES,
+  FEEDBACK_QUEUE_STATUSES,
   FEEDBACK_REWORKABLE_STATUSES,
   appendRework,
   attachmentName,
   feedbackAttachmentLine,
   isImageAttachment,
   replaceDescription,
+  feedbackReworkCount,
   reworkCount,
   splitBodyAttachments,
   splitDescription,
@@ -229,8 +231,21 @@ describe("the contract's constants", () => {
 
   it("splits the statuses by who may act on them", () => {
     expect(FEEDBACK_AUTHOR_EDITABLE_STATUSES).toEqual(["OPEN", "READY", "IN_PROGRESS"]);
-    expect(FEEDBACK_REWORKABLE_STATUSES).toEqual(["IN_EVALUATION", "NEEDS_LIVE_TEST", "POSTPONED", "DONE", "WONT_DO"]);
+    expect(FEEDBACK_REWORKABLE_STATUSES).toEqual([
+      "REWORK",
+      "IN_EVALUATION",
+      "NEEDS_LIVE_TEST",
+      "POSTPONED",
+      "DONE",
+      "WONT_DO",
+    ]);
     expect(FEEDBACK_AWAITING_STATUSES).toEqual(["OPEN", "IN_EVALUATION", "NEEDS_LIVE_TEST"]);
+    // 0.40 (§10.2 decision 4): the loops' queue; REWORK waits on the implementer, as
+    // READY does, so it is not awaiting.
+    expect(FEEDBACK_QUEUE_STATUSES).toEqual(["READY", "REWORK", "IN_PROGRESS"]);
+    expect(FEEDBACK_AWAITING_STATUSES).not.toContain("REWORK");
+    expect(FEEDBACK_AUTHOR_EDITABLE_STATUSES).not.toContain("REWORK");
+    expect(Object.isFrozen(FEEDBACK_QUEUE_STATUSES)).toBe(true);
     // Author-editable and reworkable together are every status, and never overlap.
     expect([...FEEDBACK_AUTHOR_EDITABLE_STATUSES, ...FEEDBACK_REWORKABLE_STATUSES].sort()).toEqual(
       [...FEEDBACK_STATUS_ORDER].sort(),
@@ -257,5 +272,26 @@ describe("the contract's constants", () => {
     };
     const row: FeedbackRecord = kastlanRow;
     expect(row.attachment_urls ?? []).toEqual([]);
+  });
+});
+
+/** 0.40 (§10.3): the Rework chip counts the `rework` entries, else the body's blocks. */
+describe("feedbackReworkCount", () => {
+  const BLOCKS = "Cut off.\n\n--- REWORK 2026-10-04 09:12 ---\nStill.\n\n--- REWORK 2026-10-05 10:00 ---\nAgain.";
+  const entry = (id: number, kind?: "reply" | "rework") => ({ id, kind });
+
+  it("counts the rework entries when the row carries replies", () => {
+    expect(feedbackReworkCount({ body: "Cut off.", replies: [entry(1, "rework"), entry(2, "reply"), entry(3, "rework")] })).toBe(2);
+  });
+
+  it("falls back to the body without replies — a server before server-kit 0.13", () => {
+    expect(feedbackReworkCount({ body: BLOCKS })).toBe(2);
+    expect(feedbackReworkCount({ body: BLOCKS, replies: null })).toBe(2);
+  });
+
+  it("reads the body while no entry is a rework (replies without kind, not yet migrated)", () => {
+    expect(feedbackReworkCount({ body: BLOCKS, replies: [entry(1), entry(2, "reply")] })).toBe(2);
+    expect(feedbackReworkCount({ body: "", replies: [entry(1)] })).toBe(0);
+    expect(feedbackReworkCount({ body: null })).toBe(0);
   });
 });

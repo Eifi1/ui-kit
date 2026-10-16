@@ -85,6 +85,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     feedbackStatus: {
       OPEN: "Offen",
       READY: "Bereit zur Umsetzung",
+      REWORK: "Nacharbeit angefordert",
       IN_PROGRESS: "In Bearbeitung",
       IN_EVALUATION: "Zur Prüfung",
       NEEDS_LIVE_TEST: "Live testen",
@@ -122,11 +123,13 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       myFeedback: "Mein Feedback",
       viewFeedback: "Feedback ansehen",
       allFeedback: "Alle Rückmeldungen",
+      discussion: "Feedback-Diskussion",
+      inbox: "Feedback-Eingang",
     },
     // 0.38.0 — docs/feedback-harmonization.md §9: the public pages and the two feedback
     // notification types. "Rückmeldungen" and "Eine Person" are the contract's (§9.2, §9.5).
     feedbackPublic: {
-      title: "Alle Rückmeldungen",
+      title: "Feedback-Diskussion",
       sort: "Sortieren",
       sortNewest: "Neueste",
       sortVotes: "Meistgewünscht",
@@ -158,7 +161,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       attachUrl: "Aktuelle Seiten-URL anhängen",
     },
     feedbackPage: {
-      title: "Feedback",
+      title: "Feedback-Eingang",
       myTitle: "Mein Feedback",
       columnId: "#",
       columnDate: "Datum",

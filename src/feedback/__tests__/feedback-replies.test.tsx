@@ -39,6 +39,63 @@ describe("FeedbackReplyTimeline", () => {
   });
 });
 
+/** 0.40 (§10.3): the author's rework entries among the replies. */
+describe("FeedbackReplyTimeline — rework entries (0.40)", () => {
+  const items = () => within(screen.getByRole("list", { name: "Replies" })).getAllByRole("listitem");
+
+  it("draws a rework as the author's: their name, the Rework chip, the status it set, its file", () => {
+    render(
+      <FeedbackReplyTimeline
+        replies={[
+          reply({
+            id: 5,
+            kind: "rework",
+            author_name: "Ada",
+            body: "Still cut off.",
+            status_from: "DONE",
+            status_to: "OPEN",
+            attachment_url: "/api/v1/feedback/attachments/0123456789ab.png",
+          }),
+        ]}
+      />,
+    );
+    const [item] = items();
+    expect(item).toHaveAttribute("data-feedback-entry-kind", "rework");
+    expect(item).toHaveTextContent("Ada");
+    expect(item.querySelector("[data-feedback-entry-rework]")).toHaveTextContent("Rework");
+    expect(item.querySelector("[data-feedback-reply-status]")).toHaveAttribute("data-feedback-reply-status", "OPEN");
+    expect(item.querySelector("[data-feedback-entry-file]")).toHaveTextContent("0123456789ab.png");
+  });
+
+  it("draws a migrated rework without the arrow, and a null author as A user — never Admin", () => {
+    render(<FeedbackReplyTimeline replies={[reply({ id: 6, kind: "rework", author_name: null, body: "Old block." })]} />);
+    const [item] = items();
+    expect(item.querySelector("[data-feedback-reply-status]")).toBeNull();
+    expect(item).not.toHaveTextContent("→");
+    expect(item).toHaveTextContent("A user");
+    expect(item).not.toHaveTextContent("Admin");
+  });
+
+  it("draws an admin's REWORK reply as a reply with the status", () => {
+    render(<FeedbackReplyTimeline replies={[reply({ id: 7, author_name: null, status_from: "DONE", status_to: "REWORK" })]} />);
+    const [item] = items();
+    expect(item).not.toHaveAttribute("data-feedback-entry-kind");
+    expect(item).toHaveTextContent("Admin");
+    expect(item).toHaveTextContent("Rework requested");
+    expect(item.querySelector("[data-feedback-entry-rework]")).toBeNull();
+  });
+
+  it("hands the file to renderAttachment when given", () => {
+    render(
+      <FeedbackReplyTimeline
+        replies={[reply({ id: 8, kind: "rework", attachment_url: "/api/v1/feedback/attachments/a.pdf" })]}
+        renderAttachment={(url) => <a href={url}>the file</a>}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "the file" })).toHaveAttribute("href", "/api/v1/feedback/attachments/a.pdf");
+  });
+});
+
 describe("FeedbackReplyComposer", () => {
   it("offers No change first, then every status; No change sends no status", async () => {
     const onReply = vi.fn(() => Promise.resolve());
@@ -46,7 +103,9 @@ describe("FeedbackReplyComposer", () => {
     const pick = screen.getByRole("combobox", { name: "Status with the reply" });
     const options = within(pick).getAllByRole("option");
     expect(options[0]).toHaveTextContent("No change");
-    expect(options).toHaveLength(9);
+    // Nine statuses since 0.40: REWORK is how an admin sends a report back (§10.2 decision 6).
+    expect(options).toHaveLength(10);
+    expect(options.map((option) => option.getAttribute("value"))).toContain("REWORK");
     fireEvent.change(screen.getByRole("textbox", { name: "Write a reply" }), { target: { value: "Thanks" } });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Reply" })));
     expect(onReply).toHaveBeenCalledWith("Thanks", undefined);

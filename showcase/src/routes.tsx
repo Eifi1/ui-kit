@@ -306,6 +306,8 @@ const FeedbackNotificationTypes038Demo = lazySection(() => import("./sections/fe
 // 0.38.0: public feedback — the vote, the replies, the comment thread.
 const FeedbackThread038Demo = lazySection(() => import("./sections/feedback-inbox/thread-038"), "FeedbackThread038Demo");
 const FeedbackReplies038Demo = lazySection(() => import("./sections/feedback-inbox/thread-038"), "FeedbackReplies038Demo");
+const FeedbackRework040Demo = lazySection(() => import("./sections/feedback-inbox/rework-040"), "FeedbackRework040Demo");
+const FeedbackMenu040Demo = lazySection(() => import("./sections/feedback-inbox/rework-040"), "FeedbackMenu040Demo");
 // 0.32.0: text size and contrast, and billing.
 const TextSize032Demo = lazySection(() => import("./sections/text-size-032-demo"), "TextSize032Demo");
 const TextSizeComponents032Demo = lazySection(
@@ -1401,6 +1403,8 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackPublicSwitch038Demo />
             <FeedbackThread038Demo />
             <FeedbackReplies038Demo />
+            <FeedbackRework040Demo />
+            <FeedbackMenu040Demo />
             <FeedbackRecordDemo />
             <FeedbackComposerDemo />
           </>

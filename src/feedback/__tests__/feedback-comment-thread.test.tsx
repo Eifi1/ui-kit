@@ -165,3 +165,42 @@ describe("FeedbackCommentThread", () => {
     expect(rows()).toHaveLength(1);
   });
 });
+
+/** 0.40 (§10.3): a rework entry is the author's — never a staff post. */
+describe("FeedbackCommentThread — rework entries (0.40)", () => {
+  const rework = (over: Partial<FeedbackReply> = {}) =>
+    reply({ id: 40, kind: "rework", author_name: "Ada", body: "Still cut off.", status_to: "OPEN", ...over });
+
+  it("draws it under the author's name with the Rework chip and the status, no Staff badge", () => {
+    wrap(<FeedbackCommentThread now={NOW} isAdmin replies={[rework()]} comments={[]} />);
+    const [row] = rows();
+    expect(row).toHaveTextContent("Ada");
+    expect(row).not.toHaveTextContent("Staff");
+    expect(row.querySelector("[data-feedback-entry-rework]")).toHaveTextContent("Rework");
+    expect(row.querySelector("[data-feedback-reply-status]")).toHaveAttribute("data-feedback-reply-status", "OPEN");
+  });
+
+  it("puts it at the reading end for the author, as You, with its file", () => {
+    wrap(
+      <FeedbackCommentThread
+        now={NOW}
+        isAdmin={false}
+        isAuthor
+        replies={[rework({ attachment_url: "/api/v1/feedback/attachments/0123456789ab.png" })]}
+        comments={[]}
+      />,
+    );
+    const [row] = rows();
+    expect(row).toHaveTextContent("You");
+    expect(row.closest("[data-own]")).not.toBeNull();
+    expect(row).toHaveTextContent("0123456789ab.png");
+  });
+
+  it("draws a migrated one without the arrow, and a null author as A user", () => {
+    wrap(<FeedbackCommentThread now={NOW} isAdmin={false} replies={[rework({ author_name: null, status_to: null })]} comments={[]} />);
+    const [row] = rows();
+    expect(row.querySelector("[data-feedback-reply-status]")).toBeNull();
+    expect(row).toHaveTextContent("A user");
+    expect(row).not.toHaveTextContent("Admin");
+  });
+});
