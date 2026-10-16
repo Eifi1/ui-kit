@@ -202,4 +202,4 @@ One batch, once all three apps had reported (Marcel's rule for patches). Nothing
 - **CI:** both kits' Dependabot no longer rebases open PRs on every push to main
   (`rebase-strategy: disabled`; keksdose's measurement). Whether kastlan and Kurvenschmiede
   take keksdose's two CI changes is Marcel's call in their sessions.
-- The wheel: `v0.13.1`, sha256 `<at the release>`.
+- The wheel: `v0.13.1`, sha256 `ace3d249770df8bbd6846136614abf846d3950feb8386d520a4606fa335866e3`.
