@@ -18,6 +18,11 @@ export interface DataTableLabels extends DataTableSortLabels {
   filter: string;
   close: string;
   selectRow: string;
+  /** The phone card list's way into selection mode for a keyboard and a screen reader
+   *  (0.40, #421) — a button, visually hidden until focused; a long press is the touch way in. */
+  selectRows: string;
+  /** Leaves the phone card list's selection mode, clearing the selection (0.40, #421). */
+  cancelSelection: string;
   /**
    * The name of an opening row's disclosure button on desktop — visually hidden, in the
    * row's first cell, carrying `aria-expanded` and `aria-controls` (round 0.34, the
@@ -116,6 +121,8 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
   filter: "Filter",
   close: "Close",
   selectRow: "Select row",
+  selectRows: "Select rows",
+  cancelSelection: "Cancel",
   rowDetails: "Details",
   autoSize: "Auto-size columns",
   loading: "Loading…",

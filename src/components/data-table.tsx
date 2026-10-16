@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { Card } from "./card";
 import { Spinner } from "./spinner";
@@ -14,7 +14,7 @@ import {
   resolveDataTableLabels,
   splitCellProps,
 } from "./data-table-shared";
-import { MobileFilters, MobileRow, MobileSort, StackedFields } from "./data-table-mobile";
+import { MobileFilters, MobileRow, MobileSelectBar, MobileSort, StackedFields } from "./data-table-mobile";
 import { DataTableHead } from "./data-table-head";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
 import { useLargeText } from "../hooks/use-large-text";
@@ -236,10 +236,19 @@ export interface DataTableProps<T> {
   urlSync?: TableUrlSync;
   /**
    * When true, the table fills its parent's height and scrolls INTERNALLY, with the
-   * header pinned — so the page itself doesn't add a second, outer scrollbar. On a
-   * phone the card list is the scroller instead, with the filter button pinned above
-   * it; an unbounded parent simply lets either layout grow to its content. The parent must give it a bounded height (e.g. a flex
-   * column inside the viewport-locked app shell). See feedback #207.
+   * header pinned — so the page itself doesn't add a second, outer scrollbar. The parent
+   * must give it a bounded height (e.g. a flex column inside the viewport-locked app
+   * shell). See feedback #207.
+   *
+   * **On a phone** the card list becomes the scroller ONLY when its parent really bounds
+   * it — measured, not assumed (0.40, keksdose live #420): the list takes the flex
+   * room it is given, and only when its rows overflow that room does it turn
+   * `overflow-y-auto overscroll-contain`, with the filter button pinned above. Under an
+   * unbounded parent — `AppShell` on a phone, where the DOCUMENT scrolls — it stays in
+   * the page's flow and grows to its content. Until 0.40 it was a scroller either way,
+   * and a scroller with nothing to scroll and `overscroll-contain` swallowed the page's
+   * own scroll: a swipe that started on a card moved nothing. So `fillHeight` is safe
+   * to pass at every width; `fillHeight={useBreakpoint("md")}` is no longer needed.
    *
    * The cure for TWO SCROLLBARS (round 0.34 C14, kastlan feedback 55): the default
    * `maxBodyHeight` scrolls the body inside a page that scrolls too. How a page fills
@@ -313,11 +322,23 @@ export interface DataTableProps<T> {
   pageSize?: number;
   onPageSizeChange?: (pageSize: number) => void;
   /**
-   * Opt-in multi-row selection (desktop table only). When provided, a leading
+   * Opt-in multi-row selection. When provided, a leading
    * checkbox column is rendered with a select-all box in the header; the owner
    * holds the selected set and reacts via the callbacks. Rows for which
    * `isSelectable` returns false render no checkbox and are excluded from
    * select-all. See feedback #285 (bulk edit).
+   *
+   * **On a phone** (0.40, keksdose live #421) the cards enter a selection MODE: a long
+   * press on a card (500 ms, keksdose's register gesture) selects it and turns every
+   * card into a toggle with its box showing; a tap then selects or deselects. A
+   * keyboard or screen reader enters through "Select rows" (`labels.selectRows`),
+   * visually hidden until focused; in the mode a bar above the cards holds "Select all
+   * rows" and Cancel (`labels.cancelSelection`). The mode lasts while anything is
+   * selected — the bulk bar's Clear, the last box unticked or Cancel ends it — and swipe
+   * actions rest while it is on. Render the owner's `BulkActionBar` as on desktop; it
+   * appears with the first selected row. With `selection` the cards' text is not
+   * selectable on a phone, and a linked card's long press selects instead of opening
+   * the browser's link menu.
    */
   selection?: {
     isSelectable?: (row: T) => boolean;
@@ -1189,6 +1210,30 @@ export function DataTable<T>({
     if (d !== mobileDir) setMobileDir(d);
   };
 
+  // `fillHeight` on a phone (0.40, keksdose live #420): the card list is a scroller only
+  // while its parent bounds it — its rows overflow the flex room it was given. Under
+  // AppShell's phone layout the DOCUMENT scrolls, the list's room is its own content,
+  // and a scroller there (with `overscroll-contain`) only swallowed the page's scroll.
+  // Measured before paint on every render (rows revealed, filtered, opened), and on a
+  // resize of the list or its parent; one read of two heights.
+  const phoneFill = fillHeight && !isMdUp;
+  const phoneListRef = useRef<HTMLUListElement | null>(null);
+  const [phoneListScrolls, setPhoneListScrolls] = useState(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- every render on purpose: what overflows is the rows, and React bails out on an unchanged boolean
+  useLayoutEffect(() => {
+    const el = phoneListRef.current;
+    if (!phoneFill || !el) return;
+    setPhoneListScrolls(el.scrollHeight > el.clientHeight + 1);
+  });
+  useEffect(() => {
+    const el = phoneListRef.current;
+    if (!phoneFill || !el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => setPhoneListScrolls(el.scrollHeight > el.clientHeight + 1));
+    ro.observe(el);
+    if (el.parentElement) ro.observe(el.parentElement);
+    return () => ro.disconnect();
+  }, [phoneFill]);
+
   const { mobileSlice, canRevealMoreMobile, loadMoreRef } = useMobileReveal({
     rows: sorted,
     slice,
@@ -1197,6 +1242,23 @@ export function DataTable<T>({
     unpaged,
     defaultPageSize,
   });
+  // ---- Phone selection mode (0.40, keksdose live #421) ----
+  // The cards had no boxes, so `selection`'s bulk actions were unreachable on a phone.
+  // A long press on a card (kk's register gesture) — or "Select rows", the keyboard's
+  // and screen reader's way — enters the mode: every card shows its box and a tap
+  // toggles it. The mode lasts while anything is selected, so emptying the selection
+  // (the bulk bar's Clear, the last box unticked, Cancel) leaves it, as kk's does.
+  const anySelected =
+    !!selection && (selection.someSelected || (selection.allSelected && slice.length > 0));
+  const [phoneSelectMode, setPhoneSelectMode] = useState(false);
+  const [hadSelection, setHadSelection] = useState(anySelected);
+  if (anySelected !== hadSelection) {
+    // Adjusted while rendering, so the frame the selection empties is already out of
+    // the mode (an effect would paint a frame of boxes first).
+    setHadSelection(anySelected);
+    if (!anySelected) setPhoneSelectMode(false);
+  }
+  const phoneSelecting = !!selection && !isMdUp && (phoneSelectMode || anySelected);
   // ---- Shift+click range selection ---- (data-table-selection.ts; feedback #289,
   // anchored on the row's KEY so a sort, filter or page change cannot move it)
   const { selectionAnchor, rangeClick, canSelect, selectRange } = useRangeSelection({
@@ -1268,6 +1330,24 @@ export function DataTable<T>({
       mobileExpandAsDialog={mobileExpandAsDialog}
       compact={compact}
       large={large}
+      select={
+        selection
+          ? {
+              active: phoneSelecting,
+              selectable: canSelect(row),
+              selected: selection.isSelected(row),
+              onToggle: (checked) => {
+                selectionAnchor.current = rowKey(row);
+                selection.onToggle(row, checked);
+              },
+              onLongPress: () => {
+                setPhoneSelectMode(true);
+                selectionAnchor.current = rowKey(row);
+                if (!selection.isSelected(row)) selection.onToggle(row, true);
+              },
+            }
+          : null
+      }
     />
   );
 
@@ -1373,14 +1453,33 @@ export function DataTable<T>({
             }}
           />
         )}
+        {selection && (
+          <MobileSelectBar
+            active={phoneSelecting}
+            allSelected={selection.allSelected}
+            someSelected={selection.someSelected}
+            compact={compact}
+            labels={labels}
+            onEnter={() => setPhoneSelectMode(true)}
+            onToggleAll={selection.onToggleAll}
+            onCancel={() => {
+              setPhoneSelectMode(false);
+              if (anySelected) selection.onToggleAll(false);
+            }}
+          />
+        )}
         <ul
+          ref={phoneListRef}
           className={cn(
             "divide-y divide-subtle",
-            // Under `fillHeight` the list is the scroller, as the table body is on a
-            // wide screen: the filter button stays above it and a server pager below.
-            // The endless-scroll sentinel still fires in here — an
-            // IntersectionObserver on the viewport sees through the clipping ancestor.
-            fillHeight && "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+            // Under `fillHeight` the list takes the room its parent gives it, and in a
+            // BOUNDED parent it is the scroller, as the table body is on a wide screen:
+            // the filter button stays above it and a server pager below. Only then —
+            // see `phoneListScrolls` (live #420). The endless-scroll sentinel still
+            // fires in here — an IntersectionObserver on the viewport sees through the
+            // clipping ancestor.
+            fillHeight && "min-h-0 flex-1",
+            fillHeight && phoneListScrolls && "overflow-y-auto overscroll-contain",
             // Same busy treatment as the desktop body; see `isLoading` below.
             isLoading && mobileSlice.length > 0 && "opacity-60 transition-opacity",
           )}

@@ -194,8 +194,10 @@ describe("TranslationReviewPanel swipe (phone)", () => {
     const wording = screen.getByLabelText("Better wording");
     expect(wording).toHaveFocus();
     expect(onSave).not.toHaveBeenCalled();
-    // The open row does not swipe: its editor owns the width.
-    expect(swipeButtons("common.cancel")).toEqual([]);
+    // The open row's header still swipes (DataTable 0.40, keksdose live #416); the
+    // editor below it is outside the gesture.
+    expect(swipeButtons("common.cancel")).toEqual(["Approve", "Needs a change"]);
+    expect(within(slider("Annuler")).queryByLabelText("Better wording")).toBeNull();
   });
 
   it("mirrors the sides in a right-to-left page", async () => {

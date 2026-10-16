@@ -1,4 +1,4 @@
-import { Fragment, useId, useMemo, useState } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { FOCUS_RING } from "./focus-ring";
@@ -12,6 +12,8 @@ import type { SortCycle, SortState } from "./data-table-sort";
 import { FilterPopover } from "./data-table-filter-popover";
 import { SwipeableRow, type SwipeAction } from "./swipeable-row";
 import { DialogFrame } from "./dialog-frame";
+import { Checkbox } from "./checkbox";
+import { useLongPress } from "../hooks/use-long-press";
 import type { DataTableLabels } from "./data-table-labels";
 import { RowLink, cleanAttrs, columnLabel, fromOutside } from "./data-table-shared";
 import type {
@@ -202,6 +204,20 @@ export interface MobileRowProps<T> {
   compact: boolean;
   /** The text size is Large or Extra large (§4). */
   large: boolean;
+  /** Phone selection (0.40, keksdose live #421); null without DataTable's `selection`. */
+  select: MobileRowSelect | null;
+}
+
+/** A phone card's part in DataTable's `selection` (0.40, keksdose live #421). */
+export interface MobileRowSelect {
+  /** The card list is in selection mode: the card shows its box and a tap toggles it. */
+  active: boolean;
+  /** `selection.isSelectable` for this row. */
+  selectable: boolean;
+  selected: boolean;
+  onToggle: (checked: boolean) => void;
+  /** A long press outside the mode: enter it with this row selected. */
+  onLongPress: () => void;
 }
 
 /** One mobile card. Shared by the flat list and the grouped list, so both draw
@@ -224,8 +240,17 @@ export function MobileRow<T>({
   mobileExpandAsDialog,
   compact,
   large,
+  select,
 }: MobileRowProps<T>) {
   const expanded = isExpanded?.(row) ?? false;
+  // Selection mode (#421): the whole card is the row's checkbox — a tap toggles it
+  // instead of opening the row, and the swipe and the long press stand down, so no
+  // gesture means two things at once (keksdose's register list, its feedback #153).
+  const selecting = !!select?.active;
+  // Not on an open card, as in kk's register: its editor and a selection are two modes
+  // fighting over the same row.
+  const pressable = !!select && select.selectable && !selecting && !expanded;
+  const longPress = useLongPress(() => select?.onLongPress(), { enabled: pressable });
   const expansion = expanded ? openedRowContent(row) : null;
   const tint = rowClassName?.(row);
   // Use div+role="button" rather than a real <button> so cells that
@@ -241,9 +266,12 @@ export function MobileRow<T>({
   const opensDetail = interactive && opensRow;
   const swipeActions = swipeActionsFor?.(row);
   const swipe = swipeActions ? physicalSwipe(swipeActions, mobileDir) : null;
-  // An expanded row never swipes: the editor below it owns the horizontal space,
-  // and dragging the header away from its own form reads as a glitch.
-  const swipeEnabled = !!swipe && !expanded;
+  // An OPEN card swipes too (0.40, keksdose live #416, Marcel: "faster than scrolling
+  // down to the buttons"). Only the card's header — the summary line — is inside
+  // SwipeableRow; the opened body below is a sibling, so its fields, sliders and
+  // scrolling never meet the gesture. Until 0.40 an open card silently lost it.
+  // In selection mode a sideways drag would be a second meaning for a selecting touch.
+  const swipeEnabled = !!swipe && !selecting;
   const href = mobileCardLinkable ? rowHref?.(row) : undefined;
   const cardClass = cn(
     "w-full text-start flex items-center",
@@ -264,7 +292,13 @@ export function MobileRow<T>({
     // AppShell main's `overflow-x-clip` — so the frame went missing on one side. A press
     // keeps the fill and the squeeze above; an outline on every tap of a long list would
     // be louder than the acknowledgement it replaces.
-    interactive && cn("[-webkit-tap-highlight-color:transparent] focus-visible:ring-inset", FOCUS_RING),
+    (interactive || selecting) && cn("[-webkit-tap-highlight-color:transparent] focus-visible:ring-inset", FOCUS_RING),
+    selecting && "cursor-pointer",
+    select?.selected && selecting && "bg-brand-soft",
+    // A 500 ms hold would otherwise start a text selection, and iOS's link callout —
+    // which only yields to this CSS. The trade kk made on its register: the card's text
+    // is not selectable on a phone where the table offers selection.
+    select && "select-none [-webkit-touch-callout:none]",
   );
   // The card's content is written once and worn by either tag below. Note that
   // the primary cell is rendered RAW here, never through `linkColumn` — the card
@@ -324,7 +358,7 @@ export function MobileRow<T>({
           </>
         )}
       </div>
-      {opensDetail &&
+      {opensDetail && !selecting &&
         // `aria-hidden`: the row already announces itself as a button with
         // `aria-expanded`, so the icon would only add a second, wordless stop.
         (mobileExpandAsDialog ? (
@@ -344,13 +378,56 @@ export function MobileRow<T>({
         ))}
     </>
   );
-  const body =
-    interactive && href ? (
+  // The long press rides the card itself; the click it leaves behind is swallowed on
+  // the `<li>` below, in the capture phase, before the card (or RowLink) sees it.
+  // Attached whenever the table selects, the hook's `enabled` deciding whether a press
+  // arms: its pointerdown also clears a stale swallow latch, which must happen in the
+  // mode too, or a long press whose click never came would eat the first toggle.
+  const press = select ? longPress.handlers : undefined;
+  const body = selecting ? (
+    // In the mode a card is a toggle — kk's register row: `role="button"` with
+    // `aria-pressed`, the box beside it only a picture of that state (the card is the
+    // one control, so the two can never fight or fire twice).
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- role="button",
+       tabIndex 0 and Enter/Space are all here; the rule cannot follow the conditional role. */
+    <div
+      role={select!.selectable ? "button" : undefined}
+      tabIndex={select!.selectable ? 0 : undefined}
+      aria-pressed={select!.selectable ? select!.selected : undefined}
+      aria-disabled={select!.selectable ? undefined : true}
+      data-card-selecting=""
+      {...press}
+      onClick={(e) => {
+        if (!select!.selectable || fromOutside(e.target, e.currentTarget)) return;
+        select!.onToggle(!select!.selected);
+      }}
+      onKeyDown={(e) => {
+        if (!select!.selectable || e.target !== e.currentTarget) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          select!.onToggle(!select!.selected);
+        }
+      }}
+      className={cardClass}
+    >
+      <Checkbox
+        readOnly
+        tabIndex={-1}
+        aria-hidden
+        checked={select!.selected}
+        disabled={!select!.selectable}
+        className="pointer-events-none shrink-0 self-center"
+        inputClassName="pointer-events-none"
+      />
+      {cardInner}
+    </div>
+  ) : interactive && href ? (
       // A card with a URL of its own is a LINK, not a div wearing role="button"
       // (feedback #451): the phone's long-press "open in new tab" and a screen
       // reader's link semantics both come free, and the fake role goes away.
       <RowLink
         href={href}
+        {...press}
         onActivate={() => onRowClick!(row)}
         aria-expanded={opensRow ? expanded : undefined}
         className={cardClass}
@@ -371,6 +448,7 @@ export function MobileRow<T>({
          only attached when `interactive`, and then so are role="button", tabIndex 0 and the
          Enter/Space handler below; the rule cannot follow the conditional role. */
       <div
+        {...press}
         role={interactive ? "button" : undefined}
         tabIndex={interactive ? 0 : undefined}
         onClick={
@@ -400,7 +478,20 @@ export function MobileRow<T>({
       </div>
     );
   return (
-    <li className={cn(tint)} {...cleanAttrs(rowAttributes?.(row))}>
+    <li
+      className={cn(tint)}
+      {...cleanAttrs(rowAttributes?.(row))}
+      data-selected={selecting && select!.selected ? "" : undefined}
+      onClickCapture={
+        select
+          ? (e) => {
+              if (!longPress.consumeClick()) return;
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          : undefined
+      }
+    >
       {swipeEnabled ? (
         <SwipeableRow enabled left={swipe!.left} right={swipe!.right}>
           {body}
@@ -419,6 +510,99 @@ export function MobileRow<T>({
         </div>
       )}
     </li>
+  );
+}
+
+// ---------- Phone selection bar (0.40, keksdose live #421) ----------
+
+/**
+ * The card list's way into and out of selection mode for a keyboard and a screen
+ * reader — the long press is a touch gesture, and a gesture alone is no path at all.
+ *
+ * Outside the mode it is one button, "Select rows", visually hidden until it takes
+ * focus (SwipeableRow's keyboard buttons, the same rule): the card list keeps the look
+ * kk's register has, where the long press is the way in, and Tab or a screen reader's
+ * cursor still finds it. In the mode it is a visible row: "Select all rows" — the
+ * desktop header's box — and Cancel, which clears the selection and leaves, as the
+ * bulk bar's Clear does. The owner's bulk bar is the owner's, as on desktop: it
+ * appears because the selection is no longer empty.
+ */
+export function MobileSelectBar({
+  active,
+  allSelected,
+  someSelected,
+  compact,
+  labels,
+  onEnter,
+  onToggleAll,
+  onCancel,
+}: {
+  active: boolean;
+  allSelected: boolean;
+  someSelected: boolean;
+  compact: boolean;
+  labels: DataTableLabels;
+  onEnter: () => void;
+  onToggleAll: (checked: boolean) => void;
+  onCancel: () => void;
+}) {
+  // The control that was pressed unmounts with the mode it switched, so focus is
+  // handed across: into the bar's box on the way in, back to the button on the way out.
+  const handOff = useRef(false);
+  const allBox = useRef<HTMLInputElement>(null);
+  const enterButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!handOff.current) return;
+    handOff.current = false;
+    (active ? allBox.current : enterButton.current)?.focus();
+  }, [active]);
+  if (!active)
+    return (
+      <button
+        ref={enterButton}
+        type="button"
+        data-table-mobile-select=""
+        onClick={() => {
+          handOff.current = true;
+          onEnter();
+        }}
+        className={cn(
+          "sr-only rounded-md text-sm font-medium text-secondary",
+          // Padding only once shown: unconditional, it beats sr-only's `padding: 0`
+          // (SwipeableRow's 0.32.1 note).
+          "focus:not-sr-only focus:m-2 focus:inline-flex focus:px-2 focus:py-1",
+          FOCUS_RING,
+        )}
+      >
+        {labels.selectRows}
+      </button>
+    );
+  return (
+    <div
+      data-table-mobile-select=""
+      className={cn(
+        "flex flex-wrap items-center justify-between gap-2 border-b border-subtle",
+        compact ? "px-3 py-1.5" : "px-4 py-2",
+      )}
+    >
+      <Checkbox
+        ref={allBox}
+        label={labels.selectAllRows}
+        checked={allSelected}
+        indeterminate={someSelected && !allSelected}
+        onChange={(e) => onToggleAll(e.target.checked)}
+      />
+      <button
+        type="button"
+        onClick={() => {
+          handOff.current = true;
+          onCancel();
+        }}
+        className={cn("rounded-md px-2 py-1 text-sm text-muted hover:text-secondary", FOCUS_RING)}
+      >
+        {labels.cancelSelection}
+      </button>
+    </div>
   );
 }
 
