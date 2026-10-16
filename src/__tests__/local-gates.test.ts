@@ -139,20 +139,54 @@ describe(".husky/pre-push (TST-2)", () => {
     mkdirSync(bin);
     writeFileSync(join(bin, "npm"), '#!/bin/sh\necho "npm $* HEAD_SHA=${HEAD_SHA:-}" >> "$NPM_LOG"\n');
     chmodSync(join(bin, "npm"), 0o755);
+    // The dependency check (scripts/check-dependencies.mjs, 0.40.1) is the hook's first
+    // step; here a stand-in that records its run and exits with DEPS_EXIT.
+    mkdirSync(join(dir, "scripts"));
+    writeFileSync(
+      join(dir, "scripts", "check-dependencies.mjs"),
+      'import { appendFileSync } from "node:fs";\nappendFileSync(process.env.DEPS_LOG, "deps\\n");\nprocess.exit(Number(process.env.DEPS_EXIT ?? 0));\n',
+    );
     return { dir, head: git(dir, "rev-parse", "HEAD"), tree: git(dir, "rev-parse", "HEAD^{tree}") };
   }
 
-  function push(dir: string, stdin: string) {
+  function push(dir: string, stdin: string, depsExit = 0) {
     const log = join(dir, ".npm.log");
+    const depsLog = join(dir, ".deps.log");
     rmSync(log, { force: true });
+    rmSync(depsLog, { force: true });
     const r = spawnSync("sh", ["-e", HOOK], {
       cwd: dir,
       input: stdin,
       encoding: "utf8",
-      env: { ...ENV, PATH: `${join(dir, ".bin")}:${process.env.PATH}`, NPM_LOG: log },
+      env: {
+        ...ENV,
+        PATH: `${join(dir, ".bin")}:${process.env.PATH}`,
+        NPM_LOG: log,
+        DEPS_LOG: depsLog,
+        DEPS_EXIT: String(depsExit),
+      },
     });
-    return { status: r.status, out: r.stdout + r.stderr, npm: existsSync(log) ? readFileSync(log, "utf8").trim().split("\n") : [] };
+    return {
+      status: r.status,
+      out: r.stdout + r.stderr,
+      npm: existsSync(log) ? readFileSync(log, "utf8").trim().split("\n") : [],
+      deps: existsSync(depsLog),
+    };
   }
+
+  it("runs the dependency check first for a branch, and a failing one blocks the push (0.40.1)", () => {
+    const { dir, head } = repo();
+    const line = `refs/heads/main ${head} refs/heads/main ${ZERO}\n`;
+    const passed = push(dir, line);
+    expect(passed.deps).toBe(true);
+    expect(passed.npm).toEqual(["npm run check HEAD_SHA="]);
+    const blocked = push(dir, line, 1);
+    expect(blocked.deps).toBe(true);
+    expect(blocked.status).not.toBe(0);
+    expect(blocked.npm).toEqual([]);
+    // A push of tags only runs nothing, the dependency check included.
+    expect(push(dir, `refs/tags/v1.0.0 ${head} refs/tags/v1.0.0 ${ZERO}\n`).deps).toBe(false);
+  });
 
   it("checks nothing for a push of tags or deletes, and says so in one line", () => {
     const { dir, head } = repo();
