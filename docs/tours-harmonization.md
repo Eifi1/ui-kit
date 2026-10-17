@@ -1,7 +1,7 @@
 # Guided tours — harmonisation plan
 
 **Settled 2026-10-17** (Marcel, in the ui-kit session, after the three app reviews in
-audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. **§9 is a DRAFT for 0.44.**
+audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. §9 (round 0.44) settled 2026-10-17 with §9.6.
 
 Marcel, in kastlan's session, 2026-10-17, relayed by kastlan-d1: "Massively increase the
 number of tours and also have them grouped and similar filtering as in keksdose. Is that
@@ -245,8 +245,8 @@ rule:
 
 ## 9. Round 0.44: completion in one place, and a writer outside a page
 
-**DRAFT, 2026-10-17, for the three app reviews** (audits/round-045/reviews.md). Marcel: "0.44 with
-everything", the 0.43 adoptions' notes (audits/round-045/candidates.md) and these two features.
+**Settled 2026-10-17** (Marcel: "Settle and build", after the three app reviews in audits/round-045/reviews.md;
+§9.6 wins over §9.1–§9.3). Marcel: "0.44 with everything", the 0.43 adoptions' notes (audits/round-045/candidates.md) and these two features.
 
 1. **The engine reports a completion** (kk 2). `TourProvider` takes `onComplete(tour,
    {awarded})`, called once when a tour's last step is finished. `awarded` is `true` when
