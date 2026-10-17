@@ -17,6 +17,8 @@ import { sameRect } from "../hooks/use-anchored-rect";
 import { dirOf, horizontalStep } from "../lib/direction";
 import type { Direction } from "../lib/direction";
 import { DEFAULT_TOUR_LABELS } from "./tour-labels";
+import type { TourInfo } from "./tour-info";
+import { completeStored, rememberMigrate, type UseTourProgressOptions } from "./use-tour-progress";
 
 /**
  * `start`/`end` follow the reading direction (`end` is the right side in LTR and the
@@ -67,14 +69,32 @@ export { DEFAULT_TOUR_LABELS };
 
 interface StartOptions {
   /** Stable id of the tour, surfaced as `activeId` so the app can mirror it to
-   *  the URL (deep-link / evaluation tracking) and record completion. */
+   *  the URL (deep-link / evaluation tracking) and record completion. Defaults to
+   *  `tour.id`. */
   id?: string;
+  /** The tour being started, as the app lists it (docs/tours-harmonization.md §9.6.1).
+   *  When its last step is finished, the provider records the completion in its
+   *  `progress` and hands this to `onComplete`. */
+  tour?: TourInfo;
   /** Start at this step index instead of 0 (clamped) — for URL/deep-link resume. */
   startIndex?: number;
   /** Fires synchronously when the tour starts (e.g. enable a mock interceptor). */
   onStart?: () => void;
+  /** After the last step: runs after the provider's progress write and `onComplete`. */
   onFinish?: () => void;
   onSkip?: () => void;
+}
+
+/** What `TourProvider`'s `onComplete` learns besides the tour (§9.1, §9.6). */
+export interface TourCompletion {
+  /**
+   * `true` when the completion counts anew (the first time, or the first time after the
+   * tour's update, §8): the moment for the app's points toast. `false` for a replay, and
+   * when the stored text is in an old shape no `migrate` reads: nothing is overwritten
+   * then, and the error goes to `console.error` (keksdose B-1). `undefined` when the provider has no `progress` or the start carried no `tour`, so
+   * nothing was recorded.
+   */
+  awarded: boolean | undefined;
 }
 
 interface TourContextValue {
@@ -129,6 +149,11 @@ export function useTourOptional(): TourContextValue | null {
   return useContext(TourContext);
 }
 
+/** The kit's dev switch (as number-input's): a development build, never under vitest. */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
 /**
  * Provides the guided-tour engine: a dimmed spotlight overlay + step card driven
  * by a list of {@link TourStep}s. Domain-free — the app supplies the steps (copy,
@@ -136,13 +161,32 @@ export function useTourOptional(): TourContextValue | null {
  * Mount once inside the router; start a tour from anywhere via {@link useTour},
  * which also exposes step control (`next`/`prev`/`goToStep`) and the current
  * `index`/`total` for URL mirroring, `awaitClick` and deep-link resume.
+ *
+ * **Completion in one place** (docs/tours-harmonization.md §9.6): give the provider the
+ * app's `progress` (the same `{storageKey, migrate}` as `useTourProgress`) and start each
+ * tour with `start(steps, {tour})`. When the last step is finished the provider writes the
+ * completion ONCE, through the store every `useTourProgress` reader of the key shares
+ * (never a second copy), then calls `onComplete(tour, {awarded})`, then the start's own
+ * `onFinish`. A skip or `stop()` records nothing and calls neither. The app removes its
+ * own `complete()` from `onFinish`, or that second write answers `false`.
+ *
+ * Both props are optional: without `progress` or a `tour` on the start, `onComplete`
+ * still fires, with `awarded: undefined` (and `tour` as given, possibly `undefined`). A
+ * new `storageKey` (an account switch on a shared PC) is followed on the next
+ * completion, without a remount.
  */
 export function TourProvider({
   children,
   labels,
+  progress,
+  onComplete,
 }: {
   children: ReactNode;
   labels?: LabelOverride<TourLabels>;
+  /** The app's tour progress: the same options its `useTourProgress` readers use. */
+  progress?: UseTourProgressOptions;
+  /** A tour's last step was finished; see {@link TourCompletion}. */
+  onComplete?: (tour: TourInfo | undefined, completion: TourCompletion) => void;
 }) {
   // `labels` over the provider's `tour` over English. Resolved once here and handed
   // down: the step card is portalled, but context crosses portals anyway — this is
@@ -152,6 +196,20 @@ export function TourProvider({
   const [index, setIndex] = useState(0);
   const [activeId, setActiveId] = useState<string | null>(null);
   const optsRef = useRef<StartOptions>({});
+  // The latest props, read at the finish: a new `storageKey` or callback needs no remount.
+  const progressRef = useRef(progress);
+  const onCompleteRef = useRef(onComplete);
+  useLayoutEffect(() => {
+    progressRef.current = progress;
+    onCompleteRef.current = onComplete;
+  });
+  // The provider's migrate becomes the key's, for readers that pass none (keksdose B-2).
+  const storageKey = progress?.storageKey;
+  const migrate = progress?.migrate;
+  useLayoutEffect(() => {
+    if (storageKey !== undefined) rememberMigrate(storageKey, migrate);
+  }, [storageKey, migrate]);
+  const warnedNoTourRef = useRef(false);
   // Live mirrors so the step-control callbacks can stay stable (identity-safe for
   // consumers) while still reading the current steps/index. Synced in a layout
   // effect — after the commit, before paint and before any passive effect or event
@@ -169,7 +227,7 @@ export function TourProvider({
     optsRef.current = opts ?? {};
     optsRef.current.onStart?.();
     setIndex(Math.min(Math.max(0, opts?.startIndex ?? 0), Math.max(0, s.length - 1)));
-    setActiveId(opts?.id ?? null);
+    setActiveId(opts?.id ?? opts?.tour?.id ?? null);
     setSteps(s);
   }, []);
   const stop = useCallback(() => {
@@ -177,7 +235,30 @@ export function TourProvider({
     setActiveId(null);
   }, []);
   const finish = useCallback(() => {
-    optsRef.current.onFinish?.();
+    // Once per tour: a second "Done" before the overlay unmounts records nothing more.
+    if (!stepsRef.current) return;
+    stepsRef.current = null;
+    const { tour, onFinish } = optsRef.current;
+    const store = progressRef.current;
+    // Exactly one write per completion (§9.6.2), so `awarded` is what `complete(tour)` answered.
+    let awarded: boolean | undefined;
+    if (store && tour) {
+      try {
+        awarded = completeStored(store.storageKey, store.migrate, tour);
+      } catch (error) {
+        // A stored text no migrate reads is left as it is (keksdose B-1); the tour still ends.
+        console.error(error);
+        awarded = false;
+      }
+    } else if (store && !tour && devWarnings() && !warnedNoTourRef.current) {
+      warnedNoTourRef.current = true;
+      console.warn(
+        "[ui-kit] TourProvider has `progress`, but a finished tour's start carried no `tour`: " +
+          "nothing was recorded and `awarded` is undefined. Start it with `start(steps, { tour })`.",
+      );
+    }
+    onCompleteRef.current?.(tour, { awarded });
+    onFinish?.();
     setSteps(null);
     setActiveId(null);
   }, []);

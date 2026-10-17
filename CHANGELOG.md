@@ -21,6 +21,22 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.44.0](https://github.com/Eifi1/ui-kit/compare/v0.43.0...v0.44.0) (2026-10-17)
+
+The three 0.43 adoptions' notes, settled by Marcel on 2026-10-17 ("0.44 with everything") and
+reviewed against all three apps before release (docs/tours-harmonization.md §9): the tour engine
+reports a completion once (`TourProvider` `progress` + `onComplete(tour, {awarded})`, the tour
+carried by `start`), `completeTour` for tests and seeds, keksdose's reviewed tour words as the
+defaults, and no silent loss of an app's stored progress. Per-app steps: docs/adopt-0.44.md.
+
+### Added
+
+* **tour:** onComplete on the provider, completeTour, keksdose's reviewed words (tours §9) ([d128774](https://github.com/Eifi1/ui-kit/commit/d128774440be1f47309aad094c5bf88e30dfda42))
+
+### Fixed
+
+* **tour:** no silent loss of tour progress — a migrate per key, completeTour's guard ([97117ac](https://github.com/Eifi1/ui-kit/commit/97117acb1332a225ff4574238d4393652de7b18d))
+
 ## [0.43.0](https://github.com/Eifi1/ui-kit/compare/v0.42.0...v0.43.0) (2026-10-17)
 
 Settled by Marcel on 2026-10-17 and reviewed against all three apps before release: keksdose's

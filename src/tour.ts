@@ -8,7 +8,8 @@ export { TourCatalogue, TourCatalogueCard, DEFAULT_TOUR_CATALOGUE_LABELS } from 
 export type { TourCatalogueProps, TourCatalogueCardProps, TourCatalogueLabels } from "./tour/tour-catalogue";
 export { isTourNew, isTourReset, isTourDone, doneCount, earnedPoints } from "./tour/tour-info";
 export type { TourInfo, TourGroup, TourUpdate, TourCompletions } from "./tour/tour-info";
-export { useTourProgress, resetTourProgress } from "./tour/use-tour-progress";
+// 0.44.0: the writer outside a page (§9.2).
+export { useTourProgress, resetTourProgress, completeTour } from "./tour/use-tour-progress";
 export type { UseTourProgressOptions, TourProgress } from "./tour/use-tour-progress";
 export { useTourUrlSync, useTourCatalogueUrlState } from "./tour/use-tour-url-sync";
 export type { UseTourUrlSyncOptions, TourCatalogueFilter, TourStateFilter } from "./tour/use-tour-url-sync";

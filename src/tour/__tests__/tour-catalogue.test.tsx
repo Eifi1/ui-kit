@@ -68,7 +68,7 @@ describe("TourCatalogue", () => {
 
   it("counts each filter by what the others leave; a reset tour counts as to do (§8)", () => {
     render(<Harness />);
-    expect(screen.getByRole("radio", { name: "To do (2)" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Not taken (2)" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Completed (1)" })).toBeInTheDocument();
     const select = screen.getByRole("combobox", { name: "Topic" });
     expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual([
@@ -77,7 +77,7 @@ describe("TourCatalogue", () => {
       "Everyday budgeting (2)",
       "Nothing here (0)",
     ]);
-    fireEvent.click(screen.getByRole("radio", { name: "To do (2)" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Not taken (2)" }));
     expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual([
       "All topics (2)",
       "Getting started (0)",

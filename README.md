@@ -556,19 +556,19 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2079 names from 341 modules** — 958 values and 1121 types. _Italic_ is a type-only export.
+**2081 names from 341 modules** — 959 values and 1122 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2079 |
+| `@eifi1/ui-kit` | 2081 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 110 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 24 |
-| `@eifi1/ui-kit/tour` | 31 |
+| `@eifi1/ui-kit/tour` | 33 |
 | `@eifi1/ui-kit/feedback` | 205 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
@@ -899,10 +899,10 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
+| `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourCompletion`_, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
 | `tour/tour-catalogue` | `DEFAULT_TOUR_CATALOGUE_LABELS`, `TourCatalogue`, `TourCatalogueCard`, _`TourCatalogueCardProps`_, _`TourCatalogueLabels`_, _`TourCatalogueProps`_ |
 | `tour/tour-info` | `doneCount`, `earnedPoints`, `isTourDone`, `isTourNew`, `isTourReset`, _`TourCompletions`_, _`TourGroup`_, _`TourInfo`_, _`TourUpdate`_ |
-| `tour/use-tour-progress` | `resetTourProgress`, `useTourProgress`, _`TourProgress`_, _`UseTourProgressOptions`_ |
+| `tour/use-tour-progress` | `completeTour`, `resetTourProgress`, `useTourProgress`, _`TourProgress`_, _`UseTourProgressOptions`_ |
 | `tour/use-tour-url-sync` | `useTourCatalogueUrlState`, `useTourUrlSync`, _`TourCatalogueFilter`_, _`TourStateFilter`_, _`UseTourUrlSyncOptions`_ |
 
 ### search

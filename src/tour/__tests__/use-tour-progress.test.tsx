@@ -1,6 +1,6 @@
 import { act, render, renderHook, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { resetTourProgress, useTourProgress } from "../use-tour-progress";
+import { completeTour, resetTourProgress, useTourProgress } from "../use-tour-progress";
 
 /** docs/tours-harmonization.md §2.6, §6.2 (device progress, migrate, notify) and §8. */
 
@@ -236,5 +236,112 @@ describe("useTourProgress", () => {
     act(() => resetTourProgress(storageKey));
     expect(page.result.current.completed).toEqual({});
     expect(menu.result.current.completed).toEqual({});
+  });
+
+  it("one written form: a completion without a date is stored as \"\" and read as null (§9.6.6)", () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, JSON.stringify({ a: null }));
+    const { result } = renderHook(() => useTourProgress({ storageKey }));
+    act(() => {
+      result.current.complete("b");
+    });
+    const stored = JSON.parse(localStorage.getItem(storageKey)!);
+    expect(stored.a).toBe("");
+    expect(result.current.completed.a).toBeNull();
+  });
+});
+
+describe("completeTour", () => {
+  it("writes the kit's shape, keeps the other marks, and moves this tab's readers without a storage event", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-17T09:00:00Z"));
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, JSON.stringify({ a: "2026-09-01T10:00:00.000Z" }));
+    const page = renderHook(() => useTourProgress({ storageKey }));
+    const menu = renderHook(() => useTourProgress({ storageKey }));
+    const dispatch = vi.spyOn(window, "dispatchEvent");
+
+    act(() => completeTour(storageKey, "b"));
+    act(() => completeTour(storageKey, { id: "c" }, "2026-10-01T08:00:00Z"));
+    act(() => completeTour(storageKey, "d", new Date("2026-10-02T08:00:00Z")));
+    act(() => completeTour(storageKey, "e", null));
+
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual({
+      a: "2026-09-01T10:00:00.000Z",
+      b: "2026-10-17T09:00:00.000Z",
+      c: "2026-10-01T08:00:00Z",
+      d: "2026-10-02T08:00:00.000Z",
+      e: "",
+    });
+    expect(dispatch.mock.calls.some(([event]) => event.type === "storage")).toBe(false);
+    for (const reader of [page, menu]) {
+      expect(reader.result.current.completed).toEqual({
+        a: "2026-09-01T10:00:00.000Z",
+        b: "2026-10-17T09:00:00.000Z",
+        c: "2026-10-01T08:00:00Z",
+        d: "2026-10-02T08:00:00.000Z",
+        e: null,
+      });
+    }
+  });
+
+  it("seeds a key before any reader mounts", () => {
+    const storageKey = freshKey();
+    completeTour(storageKey, "budget", "2026-09-01");
+    const { result } = renderHook(() => useTourProgress({ storageKey }));
+    expect(result.current.completed).toEqual({ budget: "2026-09-01" });
+    expect(result.current.complete("budget")).toBe(false);
+  });
+});
+
+describe("a key's migrate is remembered, and an unreadable record is never overwritten (keksdose B-1, B-2)", () => {
+  it("a reader without migrate first no longer hides the old completions from one with it (B-2)", async () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, KEKSDOSE);
+    const bare = renderHook(() => useTourProgress({ storageKey }));
+    expect(bare.result.current.completed).toEqual({});
+    const withMigrate = renderHook(() => useTourProgress({ storageKey, migrate: fromKeksdose }));
+    expect(Object.keys(withMigrate.result.current.completed)).toEqual(["budget", "import"]);
+    // The bare reader learns the key's migrate too, without a write.
+    await act(async () => {});
+    expect(Object.keys(bare.result.current.completed)).toEqual(["budget", "import"]);
+  });
+
+  it("completeTour reads a zustand-v1 envelope through the key's registered migrate, keeping the old marks", () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, KEKSDOSE);
+    renderHook(() => useTourProgress({ storageKey, migrate: fromKeksdose }));
+    act(() => completeTour(storageKey, "goals", "2026-10-01T08:00:00Z"));
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual({
+      budget: "2026-09-01T10:00:00.000Z",
+      import: "2026-09-03T08:00:00.000Z",
+      goals: "2026-10-01T08:00:00Z",
+    });
+  });
+
+  it("completeTour takes {migrate} for a key no reader has registered yet", () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, KEKSDOSE);
+    completeTour(storageKey, "goals", "2026-10-01T08:00:00Z", { migrate: fromKeksdose });
+    expect(Object.keys(JSON.parse(localStorage.getItem(storageKey)!))).toEqual(["budget", "import", "goals"]);
+  });
+
+  it("with no migrate for an old shape, completeTour and complete throw and overwrite nothing (B-1)", () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, KEKSDOSE);
+    expect(() => completeTour(storageKey, "goals")).toThrow(/not the kit's shape/);
+    expect(localStorage.getItem(storageKey)).toBe(KEKSDOSE);
+    const { result } = renderHook(() => useTourProgress({ storageKey }));
+    expect(() => result.current.complete("goals")).toThrow(/not the kit's shape/);
+    expect(localStorage.getItem(storageKey)).toBe(KEKSDOSE);
+  });
+
+  it("an empty key, or the kit's shape, is written without a migrate", () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, "");
+    completeTour(storageKey, "a", null);
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual({ a: "" });
+    completeTour(storageKey, "b", "2026-10-01");
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual({ a: "", b: "2026-10-01" });
   });
 });

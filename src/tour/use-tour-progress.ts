@@ -18,20 +18,32 @@ import { isTourDone, type TourCompletions } from "./tour-info";
  *   a shape it recognises, `undefined` for any other — the kit's own shape included,
  *   which it then reads itself. keksdose: zustand's `{state: {completed}, version: 1}`;
  *   kastlan: an array of ids, completed without a date (`null`). It runs only on a stored
- *   text that is not the kit's shape already, once per text and key, whichever reader
- *   reads it first; its identity is ignored. **Define `migrate` once, at module level**,
- *   and hand every reader of the key the same one: readers of one key share one snapshot.
+ *   text that is not the kit's shape already, once per text and key. The FIRST `migrate`
+ *   any reader, `TourProvider` or {@link completeTour} passes for a key is remembered for
+ *   that key (later identities are ignored), so a reader without one, mounted first, no
+ *   longer hides the old marks from the rest (keksdose B-2). **Still, define the options
+ *   once, at module level, and hand the provider and every reader the same object.**
+ * - **Never overwritten unread** (keksdose B-1): a write (`complete`, the provider's,
+ *   `completeTour`) on a stored text that is neither empty nor the kit's shape, and that no
+ *   known `migrate` reads, THROWS instead of replacing the old marks.
  * - **Resetting the device** (settings §11): register the key with `reset: () =>
  *   resetTourProgress(storageKey)`, which clears storage and the page's memory and tells
  *   every reader in this tab.
  *
- * The kit's own shape is the record itself, `{ [id]: ISO | null }`; an empty string reads
- * as `null` (kastlan's record of 0.42).
+ * **The stored shape** (§9.3, §9.6.6), for an app's tests and seeds: the JSON record
+ * `{ [id]: ISO instant | "" }` under `storageKey`, where `""` is a completion without a
+ * date (a migrated record: kastlan's id list). That is the one written form; the hooks
+ * and callbacks (`completed`, `TourCompletions`) give `null` for `""`. A `null` read from
+ * storage (or returned by `migrate`) is accepted as the same thing and written back as
+ * `""`. To write a completion from outside a page, use {@link completeTour}.
  */
 export interface UseTourProgressOptions {
   storageKey: string;
   migrate?: (raw: unknown) => Record<string, string | null> | undefined;
 }
+
+/** What `complete` takes: a tour id, or the tour (`{id, updated}`, a `TourInfo` fits). */
+type CompletedTour = string | { id: string; updated?: { date: string } | null };
 
 export interface TourProgress {
   /** Tour id → the completion's ISO timestamp, or `null` when recorded without a date. */
@@ -43,8 +55,12 @@ export interface TourProgress {
    *
    * Returns `true` when this counts as a new completion — the moment to award the tour's
    * points and show the app's toast (§6.1) — and `false` for a replay.
+   *
+   * A tour started with `start(steps, {tour})` under a `TourProvider` that has `progress`
+   * is recorded by the provider (§9.6.2): do not call this from that start's `onFinish`
+   * too, or the second write answers `false`.
    */
-  complete: (tour: string | { id: string; updated?: { date: string } | null }) => boolean;
+  complete: (tour: CompletedTour) => boolean;
   /** "Mark as not done": forget the completion. */
   reset: (id: string) => void;
 }
@@ -62,7 +78,24 @@ const memory = new Map<string, string>();
  * holds. Several readers of one key with inline `migrate` arrows used to evict each other
  * here and loop (kastlan B1, 0.43).
  */
-const cache = new Map<string, { raw: string | null; value: TourCompletions }>();
+const cache = new Map<string, { raw: string | null; value: TourCompletions; readable: boolean }>();
+type Migrate = NonNullable<UseTourProgressOptions["migrate"]>;
+/** Each key's migrate: the first one any reader, the provider or `completeTour` passes (B-2). */
+const migrates = new Map<string, Migrate>();
+
+/**
+ * Remember `migrate` for `key` if it is the first one, and return the key's migrate. A
+ * snapshot parsed before the key had one is dropped and re-parsed, and the key's readers
+ * hear of it after this render (never from inside one).
+ * @internal Not part of the barrel; `TourProvider` registers its `progress` with it.
+ */
+export function rememberMigrate(key: string, migrate: UseTourProgressOptions["migrate"]): Migrate | undefined {
+  if (migrate && !migrates.has(key)) {
+    migrates.set(key, migrate);
+    if (cache.delete(key)) queueMicrotask(() => emit(key));
+  }
+  return migrates.get(key);
+}
 
 function emit(key: string) {
   listeners.get(key)?.forEach((listener) => listener());
@@ -89,8 +122,12 @@ function fromRecord(value: unknown): TourCompletions | undefined {
   return out;
 }
 
-function parse(raw: string | null, migrate: UseTourProgressOptions["migrate"]): TourCompletions {
-  if (raw === null) return EMPTY;
+/**
+ * The record, and whether the text was READ (empty, the kit's shape, or a shape `migrate`
+ * knows) rather than dropped: a write over an unread text would lose it (B-1).
+ */
+function parse(raw: string | null, migrate: UseTourProgressOptions["migrate"]): { value: TourCompletions; readable: boolean } {
+  if (raw === null || raw.trim() === "") return { value: EMPTY, readable: true };
   let value: unknown = raw;
   try {
     value = JSON.parse(raw);
@@ -99,26 +136,48 @@ function parse(raw: string | null, migrate: UseTourProgressOptions["migrate"]): 
   }
   if (migrate && !isKitShape(value)) {
     try {
-      const migrated = migrate(value);
-      if (migrated !== undefined) return fromRecord(migrated) ?? EMPTY;
+      const migrated = fromRecord(migrate(value));
+      if (migrated !== undefined) return { value: migrated, readable: true };
     } catch {
       // A migrate that throws reads as "not a shape it knows".
     }
   }
-  return fromRecord(value) ?? EMPTY;
+  return { value: fromRecord(value) ?? EMPTY, readable: isKitShape(value) };
 }
 
 function snapshot(key: string, migrate: UseTourProgressOptions["migrate"]): TourCompletions {
+  const known = rememberMigrate(key, migrate);
   const raw = rawOf(key);
   const hit = cache.get(key);
   if (hit && hit.raw === raw) return hit.value;
-  const value = parse(raw, migrate);
-  cache.set(key, { raw, value });
+  const parsed = parse(raw, known);
+  cache.set(key, { raw, ...parsed });
+  return parsed.value;
+}
+
+/** The record a write builds on; throws rather than overwrite a text nobody could read (B-1). */
+function readForWrite(key: string, migrate: UseTourProgressOptions["migrate"], own = false): TourCompletions {
+  // `own`: this migrate, even where the key registered another (completeTour's `{migrate}`).
+  const known = rememberMigrate(key, migrate);
+  const { value, readable } =
+    own && migrate && known !== migrate
+      ? parse(rawOf(key), migrate)
+      : { value: snapshot(key, migrate), readable: cache.get(key)?.readable };
+  if (!readable) {
+    throw new Error(
+      `[ui-kit] tour progress: the text stored under "${key}" is not the kit's shape and no migrate reads it; ` +
+        "refusing to overwrite it. Pass the key's migrate (the shared useTourProgress / TourProvider options, " +
+        "or completeTour's {migrate}).",
+    );
+  }
   return value;
 }
 
+/** The one written form (§9.6.6): a completion without a date is stored as `""`, never `null`. */
 function write(key: string, record: TourCompletions) {
-  const raw = JSON.stringify(record);
+  const stored: Record<string, string> = {};
+  for (const [id, at] of Object.entries(record)) stored[id] = at ?? "";
+  const raw = JSON.stringify(stored);
   writeStored(key, raw);
   // Storage refused it (blocked, full): keep it for this page's life instead.
   if (readStored(key) === raw) memory.delete(key);
@@ -157,6 +216,55 @@ export function resetTourProgress(storageKey: string): void {
   emit(storageKey);
 }
 
+/**
+ * Record a completion under `storageKey`, as {@link TourProgress.complete} does: through
+ * the one shared store and snapshot (never a copy), so every reader of the key moves.
+ * Returns `true` when it counts anew. `TourProvider` calls this on a tour's last step.
+ * @internal Not part of the barrel.
+ */
+export function completeStored(
+  storageKey: string,
+  migrate: UseTourProgressOptions["migrate"],
+  tour: CompletedTour,
+): boolean {
+  const subject = typeof tour === "string" ? { id: tour } : tour;
+  // Read now rather than from a render: two completions in one handler both count.
+  const current = readForWrite(storageKey, migrate);
+  if (isTourDone(subject, current[subject.id])) return false;
+  write(storageKey, { ...current, [subject.id]: new Date().toISOString() });
+  return true;
+}
+
+/**
+ * Write a completion from outside a page (§9.2): for an app's tests, seeds and scripts,
+ * beside {@link resetTourProgress}. It writes the kit's stored shape (`{[id]: ISO | ""}`)
+ * under `storageKey`, keeps the other tours' marks, and notifies every reader of the key
+ * in this tab directly (the `storage` event reaches only OTHER tabs), so a mounted
+ * `useTourProgress` or `TourCatalogue` moves at once.
+ *
+ * Unlike `complete`, it always writes (over a readable text; see below): `at` is the
+ * completion's instant (an ISO string or a `Date`, default now), `null` a completion
+ * without a date (stored as `""`, read back as `null`).
+ *
+ *     completeTour(TOUR_KEY, "budget", "2026-09-01T10:00:00Z");
+ *
+ * A stored text in an app's older shape is read through `opts.migrate`, or else the
+ * migrate a reader or the provider registered for the key. If the text is neither empty
+ * nor the kit's shape and no migrate reads it, this THROWS and writes nothing (B-1):
+ *
+ *     completeTour(TOUR_KEY, "budget", undefined, { migrate: fromZustand });
+ */
+export function completeTour(
+  storageKey: string,
+  tour: string | { id: string },
+  at?: string | Date | null,
+  opts?: { migrate?: UseTourProgressOptions["migrate"] },
+): void {
+  const id = typeof tour === "string" ? tour : tour.id;
+  const when = at === null ? null : at instanceof Date ? at.toISOString() : (at ?? new Date().toISOString());
+  write(storageKey, { ...readForWrite(storageKey, opts?.migrate, true), [id]: when });
+}
+
 /** The device's tour completions under `storageKey`; see {@link UseTourProgressOptions}. */
 export function useTourProgress({ storageKey, migrate }: UseTourProgressOptions): TourProgress {
   // Held, not depended on: an inline arrow is a new function every render, and neither the
@@ -172,14 +280,7 @@ export function useTourProgress({ storageKey, migrate }: UseTourProgressOptions)
   );
 
   const complete = useCallback(
-    (tour: string | { id: string; updated?: { date: string } | null }) => {
-      const subject = typeof tour === "string" ? { id: tour } : tour;
-      // Read now rather than from the render: two completions in one handler both count.
-      const current = snapshot(storageKey, migrateRef.current);
-      if (isTourDone(subject, current[subject.id])) return false;
-      write(storageKey, { ...current, [subject.id]: new Date().toISOString() });
-      return true;
-    },
+    (tour: CompletedTour) => completeStored(storageKey, migrateRef.current, tour),
     [storageKey],
   );
 

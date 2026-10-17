@@ -1191,6 +1191,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "earnedPoints",
           "useTourProgress",
           "resetTourProgress",
+          "completeTour",
           "useTourUrlSync",
           "useTourCatalogueUrlState",
         ],
