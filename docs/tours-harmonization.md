@@ -1,7 +1,7 @@
 # Guided tours — harmonisation plan
 
 **Settled 2026-10-17** (Marcel, in the ui-kit session, after the three app reviews in
-audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43.
+audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. **§9 is a DRAFT for 0.44.**
 
 Marcel, in kastlan's session, 2026-10-17, relayed by kastlan-d1: "Massively increase the
 number of tours and also have them grouped and similar filtering as in keksdose. Is that
@@ -242,3 +242,38 @@ rule:
    nothing to reset. A tour updated after a person's account was opened isn't NEW because
    of the update; `since` stays its first ship date.
 4. **One update at a time**: a later update replaces `updated`, and the newest date counts.
+
+## 9. Round 0.44: completion in one place, and a writer outside a page
+
+**DRAFT, 2026-10-17, for the three app reviews** (audits/round-045/reviews.md). Marcel: "0.44 with
+everything", the 0.43 adoptions' notes (audits/round-045/candidates.md) and these two features.
+
+1. **The engine reports a completion** (kk 2). `TourProvider` takes `onComplete(tour,
+   {awarded})`, called once when a tour's last step is finished. `awarded` is `true` when
+   the completion counts anew: the first time, or the first time after an update (§8). The
+   app shows its points toast there; no app wires `onFinish` and `complete()` by hand.
+   - The provider needs the progress to know `awarded`, so it takes the same
+     `{storageKey, migrate?}` as `useTourProgress`, plus the app's `TourInfo` list.
+   - Without these, `onComplete` still fires, with `awarded: undefined`.
+2. **A writer outside a page** (kk 1): `completeTour(storageKey, tour, at?)` beside
+   `resetTourProgress`. It writes the kit's shape and notifies every reader in the tab, for
+   tests, seeds and scripts.
+3. **The stored shape is documented** (KS 4): `{[id]: ISO instant | ""}` under the app's key.
+   An empty string is a completion without a date (a migrated record).
+4. **keksdose's reviewed words** are the kit's defaults where they differ (kk 5):
+   - `noMatchesHint` in de, fr and it (plural "filters");
+   - `stateTodo` in en and fr ("Not taken" / "Non suivies");
+   - the de `points` written out, not "Pkt.".
+5. **The guide** gains these notes:
+   - the portal's accessible names include "(opens in a new tab)", so tests match by regex
+     (kk 6, KS 1);
+   - "All topics" has the value `""` (kk 4);
+   - app tests see the kit's English unless they load the kit's labels (ka 1);
+   - a per-account key is a prefix plus the user id (KS 2);
+   - `options.window` is `openProviderPage`'s test seam (kk 7);
+   - `migrate` is defined once at module level, because all readers share one snapshot
+     (kk 3).
+
+Questions for the reviews: does `onComplete` on the provider fit your tour setup (keksdose's
+`useTours`, kastlan's `ToursRoot` and mock mode, KS's single tour)? And should the provider
+own the progress, or keep taking it from the app?
