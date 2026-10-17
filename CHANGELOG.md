@@ -23,6 +23,15 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 
 ## [0.42.0](https://github.com/Eifi1/ui-kit/compare/v0.41.0...v0.42.0) (2026-10-17)
 
+Three contracts settled by Marcel on 2026-10-17 after the three app reviews and a
+pre-release build review, released with server-kit 0.14 so each app adopts once: billing
+§16 (the provider's portal for the buyer only, an in-app cancel and its undo, a warning
+before paying under a free grant without an end), the admin area
+(docs/admin-harmonization.md: one way in, one shell, one section order, an Overview of what
+waits on the admin) and the top bar (docs/top-bar-harmonization.md: one order, the
+language in the account menu, keksdose's tours menu and sync indicator, server-backed dev
+switchers). Nothing is removed; the per-app steps are in docs/adopt-0.42.md.
+
 ### Added
 
 * buyer-only billing actions, the permanent-grant warning and the admin-area parts ([7749327](https://github.com/Eifi1/ui-kit/commit/77493275498bf51cbebb5aaf3e34ed0875abd1c3))
