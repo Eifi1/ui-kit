@@ -37,7 +37,9 @@ export interface DevSwitchersProps<R extends string, P extends string> {
    *  `/auth/me` (§2.7, §6.2). */
   onRole?: (role: R) => void;
   plans?: readonly P[];
-  /** The plan the server enforces now. */
+  /** The plan the server enforces now. Left out (not known yet — kastlan's overview is a
+   *  404 while billing is off), the plan menu still renders, with no row checked; a
+   *  `GET /dev/switch` answers it. */
   currentPlan?: P;
   /** Apply a plan — `POST /dev/switch {plan}`, then the overview (§6.3). */
   onPlan?: (plan: P) => void;
@@ -139,10 +141,10 @@ export function DevSwitchers<R extends string, P extends string>({
     ) : null;
 
   const planMenu =
-    plans && plans.length > 0 && plan !== undefined && onPlan ? (
+    plans && plans.length > 0 && onPlan ? (
       <TopBarActionMenu
         icon={flask}
-        aria-label={`${words.switchPlan} · ${words.plan(plan)}`}
+        aria-label={plan !== undefined ? `${words.switchPlan} · ${words.plan(plan)}` : words.switchPlan}
         entries={[
           { kind: "heading", key: "head-plan", label: words.planHeading },
           ...plans.map(

@@ -1894,6 +1894,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         syncingShort: "Synchronisation…",
         waitingShort: (count) => `${n(count)} en attente`,
         refusedShort: "Non synchronisé",
+        offlineUnsaved: "Hors ligne — les modifications ne peuvent pas être enregistrées avant la reconnexion",
+        saving: "Enregistrement…",
       },
       dev: {
         roleHeading: "Dev · rôle",

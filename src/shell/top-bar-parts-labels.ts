@@ -56,6 +56,11 @@ export interface SyncStatusLabels {
   waitingShort: (count: number) => string;
   /** The short words after a refused round. */
   refusedShort: string;
+  /** Offline in an online-only app (`storage="none"`): nothing is kept on the device. */
+  offlineUnsaved: string;
+  /** A round under way in an online-only app — it saves, it doesn't sync. Also its short
+   *  words beside the cloud. */
+  saving: string;
 }
 
 /** `DevSwitchers`' words (§2.7, §6.2, §6.3). */
@@ -109,6 +114,8 @@ export const DEFAULT_TOP_BAR_PARTS_LABELS: TopBarPartsLabels = {
     syncingShort: "Syncing…",
     waitingShort: (count) => `${count} waiting`,
     refusedShort: "Not synced",
+    offlineUnsaved: "Offline — changes can't be saved until you reconnect",
+    saving: "Saving…",
   },
   dev: {
     roleHeading: "Dev · role",

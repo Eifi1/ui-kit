@@ -43,8 +43,17 @@ export interface TourMenuProps {
   pathname?: string;
   /** How many new tours the menu offers beyond the page's own. Default 3. */
   maxNew?: number;
+  /**
+   * `"all"`: list every tour — this page's and the new ones first, then the rest below a
+   * rule — with `href` too, before "All tours…". For an app whose tours carry no `route`,
+   * `isNew` or `since` (kastlan, build review A1), where the short list would be empty
+   * off the tours' page. Default `"short"`: with `href`, only this page's and the new.
+   */
+  list?: "short" | "all";
   /** Prop > `<UiKitProvider labels={{ topBarParts: { tours } }}>` > English. */
   labels?: LabelOverride<TourMenuLabels>;
+  /** `data-*` attributes go on the compass — a tour's anchor (`data-tour="tours"`). */
+  [key: `data-${string}`]: string | number | boolean | undefined;
 }
 
 /** A path's first segment — "/reports/spending?g=month" → "/reports". */
@@ -58,7 +67,16 @@ const isFresh = (t: TourMenuTour) => !!t.isNew && !t.completed;
  * list — the tours that start on this page, up to three new ones (newest first), a rule,
  * and "All tours…". A taken tour's row carries a ✓, a new one a NEW chip.
  */
-export function TourMenu({ tours, onLaunch, href, pathname: pathnameProp, maxNew = 3, labels: labelsProp }: TourMenuProps) {
+export function TourMenu({
+  tours,
+  onLaunch,
+  href,
+  pathname: pathnameProp,
+  maxNew = 3,
+  list = "short",
+  labels: labelsProp,
+  ...attributes
+}: TourMenuProps) {
   const words = useTopBarPartsLabels(labelsProp ? { tours: labelsProp } : undefined).tours;
   const location = useLocation();
   const here = pageOf(pathnameProp ?? location.pathname);
@@ -70,7 +88,7 @@ export function TourMenu({ tours, onLaunch, href, pathname: pathnameProp, maxNew
     .filter((t) => !forThisPage.includes(t))
     .sort((a, b) => (b.since ?? "").localeCompare(a.since ?? ""))
     .slice(0, maxNew);
-  const rest = href ? [] : tours.filter((t) => !forThisPage.includes(t) && !newRows.includes(t));
+  const rest = href && list !== "all" ? [] : tours.filter((t) => !forThisPage.includes(t) && !newRows.includes(t));
 
   if (tours.length === 0 && !href) return null;
 
@@ -96,9 +114,12 @@ export function TourMenu({ tours, onLaunch, href, pathname: pathnameProp, maxNew
     { key: "this-page", label: words.thisPage, tours: forThisPage },
     { key: "new", label: words.newTours, tours: newRows },
   ].filter((b) => b.tours.length > 0);
-  const tail: TopBarMenuEntry[] = href
-    ? [{ kind: "link", key: "all-tours", icon: <Compass className="size-4" />, label: words.allTours, to: href }]
-    : rest.map(entryFor);
+  const tail: TopBarMenuEntry[] = [
+    ...rest.map(entryFor),
+    ...(href
+      ? [{ kind: "link" as const, key: "all-tours", icon: <Compass className="size-4" />, label: words.allTours, to: href }]
+      : []),
+  ];
 
   const entries: TopBarMenuEntry[] = [
     ...blocks.flatMap((b): TopBarMenuEntry[] => [
@@ -117,6 +138,7 @@ export function TourMenu({ tours, onLaunch, href, pathname: pathnameProp, maxNew
       href={href}
       panelClassName="w-72 max-h-[70vh] overflow-y-auto"
       entries={entries}
+      triggerAttributes={Object.fromEntries(Object.entries(attributes).filter(([k]) => k.startsWith("data-")))}
     />
   );
 }

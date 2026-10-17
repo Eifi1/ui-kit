@@ -1775,6 +1775,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         syncingShort: "正在同步…",
         waitingShort: (count) => `${n(count)} 项等待中`,
         refusedShort: "未同步",
+        offlineUnsaved: "离线——重新连接前无法保存修改",
+        saving: "正在保存…",
       },
       dev: {
         roleHeading: "开发 · 角色",

@@ -57,6 +57,24 @@ describe("AccountRoleChip", () => {
     expect(screen.getByRole("link", { name: "Admin" }).querySelector("svg")).not.toBeNull();
   });
 
+  it("takes a role's own look from the vocabulary; the prop wins; RoleChip ignores it", () => {
+    // keksdose: only ADMIN solid, REVIEWER and MEMBER soft (build review nit).
+    const quiet: RoleVocabulary<Role> = { ...ROLES, MEMBER: { ...ROLES.MEMBER, variant: "soft" } };
+    render(
+      <>
+        <AccountRoleChip value="MEMBER" roles={quiet} data-testid="own" />
+        <RoleChip value="MEMBER" roles={ROLES} variant="soft" data-testid="soft" />
+        <AccountRoleChip value="MEMBER" roles={quiet} variant="solid" data-testid="prop" />
+        <AccountRoleChip value="MEMBER" roles={ROLES} data-testid="default" />
+        <RoleChip value="MEMBER" roles={{ MEMBER: { label: "Member", variant: "solid" } }} data-testid="roster" />
+      </>,
+    );
+    expect(screen.getByTestId("own").className).toBe(screen.getByTestId("soft").className);
+    expect(screen.getByTestId("prop").className).toBe(screen.getByTestId("default").className);
+    expect(screen.getByTestId("own").className).not.toBe(screen.getByTestId("default").className);
+    expect(screen.getByTestId("roster").className).toBe(screen.getByTestId("soft").className);
+  });
+
   it("goes through the router's link with renderLink", () => {
     const onNavigate = vi.fn();
     render(

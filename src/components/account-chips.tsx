@@ -56,6 +56,13 @@ export interface RoleDefinition {
    * chips name a role, they are not a way in.
    */
   href?: string;
+  /**
+   * 0.42.0 (keksdose build review): this role's look in {@link AccountRoleChip} — keksdose
+   * draws only ADMIN `solid` and its REVIEWER and MEMBER `soft`. Default `solid`, the
+   * header's look; the chip's own `variant` prop wins over it. {@link RoleChip} ignores
+   * it: a roster's column keeps one look, set on the column.
+   */
+  variant?: ChipVariant;
 }
 
 /**
@@ -139,7 +146,9 @@ export interface AccountRoleChipProps<R extends string = string> extends RoleChi
  * link (through `renderLink`, else the provider's link, as {@link Chip} draws links) and
  * calls `onNavigate` on the click. Any other role is a plain chip — every account shows
  * its role (§7, "Always a badge"). The words and tones are the app's vocabulary; the kit
- * adds none. Carries `data-role` with the key.
+ * adds none. `solid` stays the default, so a role the app gives no look still reads as
+ * the header's tag; a role that should sit quieter (keksdose's MEMBER and REVIEWER) sets
+ * {@link RoleDefinition.variant} `soft` in the vocabulary. Carries `data-role` with the key.
  */
 export function AccountRoleChip<R extends string = string>({
   value: role,
@@ -147,7 +156,7 @@ export function AccountRoleChip<R extends string = string>({
   onNavigate,
   renderLink,
   size = "sm",
-  variant = "solid",
+  variant,
   shape = "square",
   caps = true,
   className,
@@ -161,7 +170,8 @@ export function AccountRoleChip<R extends string = string>({
     tone: def?.tone ?? "neutral",
     icon: def?.icon,
     size,
-    variant,
+    // The prop, then the role's own look, then the header's `solid`.
+    variant: variant ?? def?.variant ?? "solid",
     shape,
     caps,
     className,

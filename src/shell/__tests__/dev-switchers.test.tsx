@@ -125,4 +125,19 @@ describe("DevSwitchers", () => {
     );
     expect(screen.getAllByRole("button")).toHaveLength(1);
   });
+
+  it("draws the plan menu before the current plan is known, with no row checked (kastlan B4)", () => {
+    const onPlan = vi.fn();
+    render(
+      <MemoryRouter>
+        <DevSwitchers enabled plans={PLANS} onPlan={onPlan} billingOff />
+      </MemoryRouter>,
+    );
+    expect(planTrigger()).toHaveAccessibleName("Switch plan");
+    fireEvent.click(planTrigger());
+    const rows = screen.getAllByRole("menuitemradio");
+    expect(rows.every((r) => r.getAttribute("aria-checked") === "false")).toBe(true);
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "pro" }));
+    expect(onPlan).toHaveBeenCalledWith("pro");
+  });
 });

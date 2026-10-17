@@ -16,6 +16,26 @@ export interface AccountMenuLanguageOption {
    * the kit ships no flag set; decorative, so give it `aria-hidden`.
    */
   flag?: ReactNode;
+  /**
+   * Or the ISO 3166-1 alpha-2 country (lowercase) whose flag-icons flag to draw, as
+   * `LanguageMenu`'s `LanguageOption` takes it — so one language list feeds both
+   * (Kurvenschmiede's `LANGUAGES`). Needs the app's flag-icons CSS, as `LanguageMenu`
+   * does. `flag` wins when both are given.
+   */
+  country?: string;
+}
+
+/** The option's flag: its own node, else the flag-icons flag of its country. */
+function flagOf(lang: AccountMenuLanguageOption): ReactNode {
+  if (lang.flag !== undefined) return lang.flag;
+  if (!lang.country) return undefined;
+  return (
+    <span
+      aria-hidden
+      data-country={lang.country}
+      className={`fi fi-${lang.country} inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
+    />
+  );
 }
 
 export interface AccountMenuLanguageProps {
@@ -67,7 +87,7 @@ export function AccountMenuLanguage({
               <Globe aria-hidden className="size-4" />
               {label ?? words.language}
             </span>
-            {active?.flag}
+            {active && flagOf(active)}
           </span>
         }
       >
@@ -81,7 +101,7 @@ export function AccountMenuLanguage({
                   setOpen(false);
                   close?.();
                 }}
-                leading={lang.flag}
+                leading={flagOf(lang)}
                 // Under the row's own text, past the globe.
                 className="ps-9"
               >

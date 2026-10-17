@@ -255,7 +255,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `TOP_BAR_ACTION_ORDER`, `AccountMenuLanguage`, `TourMenu`, `SyncStatusIndicator`,
   // `syncState`, `DevSwitchers`, `DEV_ORIGINAL_ROLE_KEY`, `DEFAULT_TOP_BAR_PARTS_LABELS`,
   // `useTopBarPartsLabels`.
-  ["@eifi1/ui-kit", barrel, 941],
+  // 0.42.0 (+1, build review keksdose): `GrantWarningConfirm`, PlanPicker's grant warning on
+  // its own, for a switch that falls back to a checkout.
+  ["@eifi1/ui-kit", barrel, 942],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

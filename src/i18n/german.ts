@@ -1919,6 +1919,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         syncingShort: "Sync läuft…",
         waitingShort: (count) => `${n(count)} ausstehend`,
         refusedShort: "Nicht synchronisiert",
+        offlineUnsaved: "Offline – Änderungen können erst nach erneuter Verbindung gespeichert werden",
+        saving: "Wird gespeichert…",
       },
       dev: {
         roleHeading: "Dev · Rolle",

@@ -3,6 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 import { SyncStatusIndicator, syncState, type SyncStatus } from "../sync-status-indicator";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
+import { uiKitLabelsEn } from "../../i18n/locales/en";
+import { UI_KIT_LABELS_ES } from "../../i18n/locales/es";
+import { UI_KIT_LABELS_FR } from "../../i18n/locales/fr";
+import { UI_KIT_LABELS_HU } from "../../i18n/locales/hu";
+import { UI_KIT_LABELS_IT } from "../../i18n/locales/it";
+import { UI_KIT_LABELS_ZH } from "../../i18n/locales/zh";
 
 /** docs/top-bar-harmonization.md §2.6, §6.9, §6.10: keksdose's indicator, on the kit. */
 
@@ -151,5 +157,64 @@ describe("SyncStatusIndicator", () => {
       </UiKitProvider>,
     );
     expect(screen.getByRole("status")).toHaveTextContent("4 held");
+  });
+
+  it("forwards data-* to the trigger — a tour's anchor", () => {
+    const { rerender } = render(<SyncStatusIndicator status={IDLE} data-tour="sync-status" />);
+    expect(screen.getByRole("status")).toHaveAttribute("data-tour", "sync-status");
+    rerender(<SyncStatusIndicator status={IDLE} onSync={() => {}} data-tour="sync-status" />);
+    expect(screen.getByRole("button")).toHaveAttribute("data-tour", "sync-status");
+  });
+});
+
+describe('SyncStatusIndicator storage="none" — an online-only app (KS B1)', () => {
+  it("offline: changes can't be saved, never 'saved on this device'", () => {
+    render(<SyncStatusIndicator status={{ ...IDLE, online: false }} storage="none" showLabel />);
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Offline — changes can't be saved until you reconnect");
+    expect(status).not.toHaveTextContent("on this device");
+  });
+
+  it("a round reads Saving…, in the name and beside the cloud", () => {
+    const { container } = render(<SyncStatusIndicator status={{ ...IDLE, phase: "syncing" }} storage="none" showLabel />);
+    expect(screen.getByRole("status")).toHaveTextContent("Saving…");
+    expect(container.querySelector('span[aria-hidden="true"].text-xs')).toHaveTextContent("Saving…");
+  });
+
+  it("pending, blocked and waitingForPlan don't apply", () => {
+    render(
+      <SyncStatusIndicator status={{ ...IDLE, pending: 3, blocked: 1, waitingForPlan: 2, lastSyncedAt: Date.now() }} storage="none" />,
+    );
+    expect(state()).toBe("synced");
+    expect(screen.getByRole("status")).toHaveTextContent("Up to date");
+  });
+
+  it("hideWhenIdle with KS's feed: offline or saving only", () => {
+    const { rerender, container } = render(
+      <SyncStatusIndicator status={{ ...IDLE, pending: 2 }} storage="none" hideWhenIdle />,
+    );
+    expect(container).toBeEmptyDOMElement();
+    rerender(<SyncStatusIndicator status={{ ...IDLE, phase: "syncing" }} storage="none" hideWhenIdle />);
+    expect(state()).toBe("syncing");
+  });
+
+  it.each([
+    ["de-CH", UI_KIT_LABELS_DE_CH],
+    ["en", uiKitLabelsEn()],
+    ["es", UI_KIT_LABELS_ES],
+    ["fr", UI_KIT_LABELS_FR],
+    ["hu", UI_KIT_LABELS_HU],
+    ["it", UI_KIT_LABELS_IT],
+    ["zh", UI_KIT_LABELS_ZH],
+  ] as const)("%s has its own online-only words", (code, labels) => {
+    const sync = labels.topBarParts.sync;
+    expect(sync.offlineUnsaved).toBeTruthy();
+    expect(sync.saving).toBeTruthy();
+    expect(sync.offlineUnsaved).not.toBe(sync.offline);
+    if (code !== "en") expect(sync.offlineUnsaved).not.toBe(uiKitLabelsEn().topBarParts.sync.offlineUnsaved);
+    if (code === "de-CH") {
+      expect(sync.offlineUnsaved + sync.saving).not.toMatch(/ß/);
+      expect(sync.saving).toBe("Wird gespeichert…");
+    }
   });
 });

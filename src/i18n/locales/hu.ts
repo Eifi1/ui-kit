@@ -1859,6 +1859,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         syncingShort: "Szinkronizálás…",
         waitingShort: (count) => `${n(count)} várakozik`,
         refusedShort: "Nincs szinkronizálva",
+        offlineUnsaved: "Offline – a módosítások az újracsatlakozásig nem menthetők",
+        saving: "Mentés…",
       },
       dev: {
         roleHeading: "Dev · szerepkör",

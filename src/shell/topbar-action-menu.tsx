@@ -206,11 +206,13 @@ export function TopBarActionMenu({
   heading,
   header,
   entries,
+  leading,
   children,
   footer,
   footerLabel,
   align,
   panelClassName,
+  triggerAttributes,
 }: {
   /** The trigger's face for the usual icon button. Ignored when `trigger` is given. */
   icon?: ReactNode;
@@ -261,6 +263,13 @@ export function TopBarActionMenu({
    */
   children?: (close: () => void) => ReactNode;
   /**
+   * Rows like {@link children}, but BEFORE `entries`, under the header — the account
+   * menu's `AccountMenuLanguage`, which goes first after the app's context rows (§6.5)
+   * in a menu whose other rows are all entries (kastlan, build review B1). Render `<li>`s;
+   * `close` shuts the menu.
+   */
+  leading?: (close: () => void) => ReactNode;
+  /**
    * Free content below the rows, behind a rule — the legal links. Its links and
    * buttons are NOT menu rows: the arrow keys skip them and Tab reaches them. Pass a
    * function to get `close` for the links' `onClick`.
@@ -272,6 +281,9 @@ export function TopBarActionMenu({
    *  direction (see `HoverMenu`, whose type this is). Default `end`. */
   align?: HoverMenuProps["align"];
   panelClassName?: string;
+  /** `data-*` attributes for the trigger itself — a tour's anchor (`data-tour`), a test
+   *  hook. The parts built on this menu (`TourMenu`) pass theirs through here. */
+  triggerAttributes?: { [key: `data-${string}`]: string | number | boolean | undefined };
 }) {
   // Names the groups' headings for `aria-labelledby`. Positional rather than from the
   // entry's `key`, which is the caller's text and may hold a space — and a space in
@@ -286,11 +298,11 @@ export function TopBarActionMenu({
         // kit's button. Same classes and face either way.
         const control = (className: string, children: ReactNode, label?: string) =>
           href ? (
-            <Link to={href} onClick={close} aria-label={label} className={className}>
+            <Link {...triggerAttributes} to={href} onClick={close} aria-label={label} className={className}>
               {children}
             </Link>
           ) : (
-            <button type="button" onClick={toggle} aria-label={label} className={className}>
+            <button {...triggerAttributes} type="button" onClick={toggle} aria-label={label} className={className}>
               {children}
             </button>
           );
@@ -380,6 +392,7 @@ export function TopBarActionMenu({
                 {heading}
               </li>
             )}
+            {leading?.(close)}
             {toBlocks(entries).map((block, i, blocks) => {
               if (block.kind === "loose") {
                 const entry = block.entry;

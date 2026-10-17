@@ -834,8 +834,8 @@ export { DEFAULT_BILLING_LABELS, useBillingLabels, SUBSCRIPTION_STATUSES } from 
 export type { BillingLabels, SubscriptionStatus } from "./billing/billing-labels";
 export { BILLING_INTERVALS, planPrice, minorToMajor, formatPlanPrice, billingCurrencyFor } from "./billing/plan-price";
 export type { BillingInterval, BillingCurrency, PlanIntervalPrices, PlanPrices, PlanPriceAnswer } from "./billing/plan-price";
-export { PlanCard, PlanPicker, planRelation } from "./billing/plan-card";
-export type { BillingPlan, PlanRelation, PlanCardProps, PlanPickerProps, PlanChoice } from "./billing/plan-card";
+export { PlanCard, PlanPicker, GrantWarningConfirm, planRelation } from "./billing/plan-card";
+export type { BillingPlan, PlanRelation, PlanCardProps, PlanPickerProps, PlanChoice, GrantWarningConfirmProps } from "./billing/plan-card";
 export { SubscriptionStatusChip, SUBSCRIPTION_STATUS_TONES } from "./billing/subscription-status-chip";
 export type { SubscriptionStatusChipProps } from "./billing/subscription-status-chip";
 export { BillingBanner } from "./billing/billing-banner";

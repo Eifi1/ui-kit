@@ -1874,6 +1874,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         syncingShort: "Sincronizzazione…",
         waitingShort: (count) => `${n(count)} in attesa`,
         refusedShort: "Non sincronizzato",
+        offlineUnsaved: "Offline: le modifiche non possono essere salvate finché non si riconnette",
+        saving: "Salvataggio…",
       },
       dev: {
         roleHeading: "Dev · ruolo",

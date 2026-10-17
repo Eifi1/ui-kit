@@ -123,4 +123,39 @@ describe("TourMenu", () => {
     expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent)).toEqual(["All tours…"]);
     expect(menu.querySelector("li.border-t")).toBeNull();
   });
+
+  it("forwards data-* to the compass, as a link or a button — a tour's anchor", () => {
+    const { unmount } = render(
+      <MemoryRouter>
+        <TourMenu tours={TOURS} href="/tours" onLaunch={() => {}} data-tour="tours" />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("link", { name: /Guided tours/ })).toHaveAttribute("data-tour", "tours");
+    unmount();
+    render(
+      <MemoryRouter>
+        <TourMenu tours={TOURS} onLaunch={() => {}} data-tour="tours" />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("button", { name: /Guided tours/ })).toHaveAttribute("data-tour", "tours");
+  });
+
+  it('list="all": every tour with href too, the rest below a rule, then All tours… (kastlan A1)', () => {
+    // kastlan: no route, no isNew, no since.
+    const plain: TourMenuTour[] = [
+      { id: "a", title: "First steps" },
+      { id: "b", title: "Handovers" },
+    ];
+    render(
+      <MemoryRouter initialEntries={["/elsewhere"]}>
+        <TourMenu tours={plain} href="/help/tours" list="all" onLaunch={() => {}} />
+      </MemoryRouter>,
+    );
+    const menu = open(screen.getByRole("link", { name: "Guided tours" }));
+    expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent)).toEqual([
+      "First steps",
+      "Handovers",
+      "All tours…",
+    ]);
+  });
 });

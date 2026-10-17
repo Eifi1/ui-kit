@@ -150,7 +150,7 @@ const ATTENTION: AdminAttention = {
   invitations_pending: 0,
   users_total: 42,
   users_new_7d: 3,
-  extra: { support_waiting: 2, verdicts: null },
+  extra: { support_waiting: 2, awaiting_verdict: null },
 };
 
 const tiles = () =>
@@ -177,7 +177,7 @@ describe("AdminOverview", () => {
         attention={{ ...ATTENTION, deletion_requests: null, users_new_7d: null }}
         extraTiles={[
           { key: "support_waiting", label: "Support waiting", count: ATTENTION.extra.support_waiting, href: "/admin/messaging" },
-          { key: "verdicts", label: "Awaiting your verdict", count: ATTENTION.extra.verdicts, href: "/feedback" },
+          { key: "awaiting_verdict", label: "Awaiting your verdict", count: ATTENTION.extra.awaiting_verdict, href: "/feedback" },
         ]}
       />,
     );
@@ -226,7 +226,7 @@ describe("AttentionTile", () => {
 
 describe("adminWaitingCount", () => {
   it("sums the counts the app names, shared or extra, skipping nulls (§6.3)", () => {
-    expect(adminWaitingCount(ATTENTION, ["feedback_waiting", "support_waiting", "verdicts"])).toBe(6);
+    expect(adminWaitingCount(ATTENTION, ["feedback_waiting", "support_waiting", "awaiting_verdict"])).toBe(6);
     expect(adminWaitingCount(ATTENTION, ["feedback_waiting", "deletion_requests"])).toBe(5);
     expect(adminWaitingCount({ ...ATTENTION, feedback_waiting: null }, ["feedback_waiting"])).toBe(0);
     expect(adminWaitingCount(ATTENTION, ["nothing"])).toBe(0);

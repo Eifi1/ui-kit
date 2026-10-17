@@ -362,7 +362,6 @@ export function PlanPicker({
   labels: labelsProp,
 }: PlanPickerProps) {
   const labels = useBillingLabels(labelsProp);
-  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const locale = useKitLocale(localeProp);
   const generated = useId();
   /** The choice the grant warning holds back until "Buy anyway". */
@@ -487,30 +486,68 @@ export function PlanPicker({
         </Button>
       </div>
       {permanentGrant && !switching && (
-        <DialogFrame
+        <GrantWarningConfirm
           open={warned !== null}
-          title={labels.grantWarningTitle}
-          description={labels.grantWarningBody}
-          onClose={() => setWarned(null)}
-          data-grant-warning=""
-          actions={(close) => (
-            <>
-              <Button variant="secondary" onClick={close}>
-                {common.back}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  if (warned) onChoose(warned);
-                  setWarned(null);
-                }}
-              >
-                {labels.grantWarningAction}
-              </Button>
-            </>
-          )}
+          onOpenChange={(open) => {
+            if (!open) setWarned(null);
+          }}
+          onConfirm={() => {
+            if (warned) onChoose(warned);
+          }}
+          labels={labelsProp}
         />
       )}
     </div>
+  );
+}
+
+export interface GrantWarningConfirmProps {
+  /** Shown, controlled. */
+  open: boolean;
+  /** `false` on "Back", Escape, the backdrop — and after "Buy anyway". */
+  onOpenChange: (open: boolean) => void;
+  /** "Buy anyway": the app opens its checkout. The dialog closes itself after it. */
+  onConfirm: () => void;
+  /** Prop > `<UiKitProvider labels={{ billing }}>` > English: `grantWarningTitle`,
+   *  `grantWarningBody`, `grantWarningAction`. "Back" is `common.back`. */
+  labels?: LabelOverride<BillingLabels>;
+}
+
+/**
+ * 0.42 (§16.8 B): the permanent-grant warning before a checkout — `grantWarningTitle`,
+ * `grantWarningBody`, "Back" and "Buy anyway" (`grantWarningAction`). {@link PlanPicker}
+ * shows it itself under `permanentGrant` when not `switching`. Exported for the path the
+ * picker cannot see: an app that meant to switch, learned there is no subscription to
+ * switch (keksdose: `/billing/plan/preview` → 409 `billing_not_subscribed`) and falls back
+ * to a checkout — show this before that checkout, so a permanent-grant holder is still
+ * warned. Carries `data-grant-warning`.
+ */
+export function GrantWarningConfirm({ open, onOpenChange, onConfirm, labels: labelsProp }: GrantWarningConfirmProps) {
+  const labels = useBillingLabels(labelsProp);
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  return (
+    <DialogFrame
+      open={open}
+      title={labels.grantWarningTitle}
+      description={labels.grantWarningBody}
+      onClose={() => onOpenChange(false)}
+      data-grant-warning=""
+      actions={(close) => (
+        <>
+          <Button variant="secondary" onClick={close}>
+            {common.back}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              onConfirm();
+              onOpenChange(false);
+            }}
+          >
+            {labels.grantWarningAction}
+          </Button>
+        </>
+      )}
+    />
   );
 }

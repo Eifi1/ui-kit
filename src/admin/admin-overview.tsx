@@ -46,7 +46,7 @@ export const DEFAULT_ADMIN_ATTENTION_HREFS: Readonly<Record<AdminAttentionTile, 
 /**
  * The account menu's badge (§2.4 decision 15, §6.3): the sum of the counts that are work
  * waiting on THIS admin — each app names its own (keksdose `["feedback_waiting",
- * "support_waiting", "verdicts"]`, kastlan `["feedback_waiting"]`, Kurvenschmiede
+ * "support_waiting", "awaiting_verdict"]`, kastlan `["feedback_waiting"]`, Kurvenschmiede
  * `["feedback_waiting", "deletion_requests"]`). A name is a shared count or an `extra`
  * key; a `null` or missing count adds nothing. Invitations and users never belong in it.
  * `null` while there is no answer yet, so the badge shows nothing rather than a 0.

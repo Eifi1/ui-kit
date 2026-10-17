@@ -87,4 +87,54 @@ describe("AccountMenuLanguage", () => {
     );
     expect(screen.getByRole("button", { name: /Lingua/ })).toBeInTheDocument();
   });
+
+  it("takes LanguageMenu's `country` too: draws its flag-icons flag; `flag` wins", () => {
+    render(
+      <MemoryRouter>
+        <TopBarActionMenu aria-label="Account" icon={<span>A</span>} entries={[]}>
+          {(close) => (
+            <AccountMenuLanguage
+              languages={[
+                { code: "de-CH", label: "Deutsch", country: "ch" },
+                { code: "en", label: "English", country: "gb", flag: <span aria-hidden data-flag="own" /> },
+                { code: "fr", label: "Français", country: "fr" },
+              ]}
+              value="de-CH"
+              onPick={() => {}}
+              close={close}
+            />
+          )}
+        </TopBarActionMenu>
+      </MemoryRouter>,
+    );
+    openMenu();
+    expect(languageRow().querySelector(".fi.fi-ch")).not.toBeNull();
+    fireEvent.click(languageRow());
+    const rows = screen.getAllByRole("menuitemradio");
+    expect(rows[0].querySelector(".fi.fi-ch")).toHaveAttribute("aria-hidden");
+    expect(rows[1].querySelector('[data-flag="own"]')).not.toBeNull();
+    expect(rows[1].querySelector(".fi")).toBeNull();
+    expect(rows[2].querySelector(".fi.fi-fr")).not.toBeNull();
+  });
+
+  it("goes BEFORE the entries through `leading` — a menu that is all entries (kastlan B1)", () => {
+    render(
+      <MemoryRouter>
+        <TopBarActionMenu
+          aria-label="Account"
+          icon={<span>A</span>}
+          header={{ title: "Ada" }}
+          entries={[
+            { key: "settings", label: "Settings", onSelect: () => {} },
+            { key: "logout", label: "Log out", onSelect: () => {} },
+          ]}
+          leading={(close) => <AccountMenuLanguage languages={LANGS} value="en" onPick={() => {}} close={close} />}
+        />
+      </MemoryRouter>,
+    );
+    openMenu();
+    const rows = screen.getAllByRole("menuitem").map((r) => r.textContent ?? "");
+    expect(rows[0]).toMatch(/Language/);
+    expect(rows.slice(1)).toEqual(["Settings", "Log out"]);
+  });
 });

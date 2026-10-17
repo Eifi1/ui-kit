@@ -17,7 +17,7 @@ import type { BillingLabels } from "../billing-labels";
 import { isPermanentGrant } from "../billing-overview";
 import type { BillingOverview } from "../billing-overview";
 import { CancelSubscriptionConfirm } from "../cancel-subscription";
-import { PlanPicker } from "../plan-card";
+import { GrantWarningConfirm, PlanPicker } from "../plan-card";
 import type { BillingPlan } from "../plan-card";
 import { PlanSwitchConfirm } from "../plan-switch";
 import { SubscriptionActions } from "../subscription-actions";
@@ -245,6 +245,40 @@ describe("PlanPicker and PlanSwitchConfirm — the permanent-grant warning (§16
     await user.click(screen.getByRole("button", { name: "Choose Gardener" }));
     expect(onChoose).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("GrantWarningConfirm stands alone, for a switch that falls back to a checkout", async () => {
+    // keksdose: /billing/plan/preview → 409 billing_not_subscribed → checkout. The picker
+    // skipped its own warning (switching), so the app shows this before the checkout.
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<GrantWarningConfirm open={false} onOpenChange={onOpenChange} onConfirm={onConfirm} />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    rerender(<GrantWarningConfirm open onOpenChange={onOpenChange} onConfirm={onConfirm} />);
+    let dialog = screen.getByRole("dialog", { name: L.grantWarningTitle });
+    expect(dialog.closest("[data-grant-warning]") ?? dialog.querySelector("[data-grant-warning]")).not.toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: "Back" }));
+    await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    onOpenChange.mockClear();
+    rerender(<GrantWarningConfirm open onOpenChange={onOpenChange} onConfirm={onConfirm} labels={{ grantWarningAction: "Pay now" }} />);
+    dialog = screen.getByRole("dialog", { name: L.grantWarningTitle });
+    await user.click(within(dialog).getByRole("button", { name: "Pay now" }));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("GrantWarningConfirm speaks the provider's language", () => {
+    render(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <GrantWarningConfirm open onOpenChange={() => {}} onConfirm={() => {}} />
+      </UiKitProvider>,
+    );
+    expect(
+      screen.getByRole("dialog", { name: UI_KIT_LABELS_DE_CH.billing.grantWarningTitle }),
+    ).toBeInTheDocument();
   });
 
   it("PlanSwitchConfirm shows the warning above its figures, once", () => {
