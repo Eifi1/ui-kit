@@ -151,3 +151,25 @@ still draws no gap and no "0 points" for a tour passed without points (KS).
 A `/tours` page comes once there are three or more tours. Until then, `TourMenu` without
 an `href` stays supported (KS Q3).
 
+
+## 8. A tour that is updated or fixed (Marcel, 2026-10-17)
+
+Marcel: "Reset both with indication why it was reset". A tour's steps are each app's own data,
+so a fix or a rework is an app code change. How the change reaches people is the kit's
+rule:
+
+1. **Every update resets the tour, a fix as much as a rework.** The app gives the tour an
+   `updated: {date, reason}` (ISO day, and a short sentence in the app's words: "The import
+   screen moved; the tour follows it now."). A completion from before `updated.date` no
+   longer counts as done.
+   - The tour is "to do" again, and the "done" filter and the counts follow.
+   - Completing it again awards its points again.
+   - Nothing is deleted from the device: the kit compares the dates, so the old completion
+     date stays readable.
+2. **The reason is shown.** A reset tour's card carries an "Updated" pill and the line
+   "Reset on {date}: {reason}". `TourMenu` lists it with the same pill and lights its dot,
+   as for NEW.
+3. **A tour that was never completed** shows no reset line: for that person there is
+   nothing to reset. A tour updated after a person's account was opened isn't NEW because
+   of the update; `since` stays its first ship date.
+4. **One update at a time**: a later update replaces `updated`, and the newest date counts.
