@@ -556,19 +556,19 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2042 names from 335 modules** — 942 values and 1100 types. _Italic_ is a type-only export.
+**2075 names from 341 modules** — 955 values and 1120 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2042 |
+| `@eifi1/ui-kit` | 2075 |
 | `@eifi1/ui-kit/chart` | 92 |
-| `@eifi1/ui-kit/shell` | 108 |
+| `@eifi1/ui-kit/shell` | 110 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 24 |
-| `@eifi1/ui-kit/tour` | 7 |
+| `@eifi1/ui-kit/tour` | 28 |
 | `@eifi1/ui-kit/feedback` | 205 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
@@ -819,7 +819,7 @@ re-slicing of it, never a second API.
 | `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
 | `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
 | `shell/fill-height` | `FILL_HEIGHT_CLASS`, `FillHeight`, _`FillHeightProps`_ |
-| `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_ |
+| `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, `useAdminMenuEntry`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_, _`UseAdminMenuEntryOptions`_ |
 | `shell/top-bar-actions` | `TOP_BAR_ACTION_ORDER`, `TopBarActions`, _`TopBarActionsProps`_ |
 | `shell/account-menu-language` | `AccountMenuLanguage`, _`AccountMenuLanguageOption`_, _`AccountMenuLanguageProps`_ |
 | `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
@@ -900,6 +900,10 @@ re-slicing of it, never a second API.
 | Module | Exports |
 |---|---|
 | `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
+| `tour/tour-catalogue` | `DEFAULT_TOUR_CATALOGUE_LABELS`, `TourCatalogue`, `TourCatalogueCard`, _`TourCatalogueCardProps`_, _`TourCatalogueLabels`_, _`TourCatalogueProps`_ |
+| `tour/tour-info` | `isTourDone`, `isTourNew`, `isTourReset`, _`TourCompletions`_, _`TourGroup`_, _`TourInfo`_, _`TourUpdate`_ |
+| `tour/use-tour-progress` | `useTourProgress`, _`TourProgress`_, _`UseTourProgressOptions`_ |
+| `tour/use-tour-url-sync` | `useTourCatalogueUrlState`, `useTourUrlSync`, _`TourCatalogueFilter`_, _`TourStateFilter`_, _`UseTourUrlSyncOptions`_ |
 
 ### search
 
@@ -951,7 +955,7 @@ re-slicing of it, never a second API.
 | `admin/invitations-panel` | `DEFAULT_INVITATIONS_LABELS`, `InvitationsPanel`, _`InvitationDraft`_, _`InvitationRow`_, _`InvitationScope`_, _`InvitationSentAnswer`_, _`InvitationsLabels`_, _`InvitationsPanelProps`_, _`InvitationStatus`_ |
 | `admin/admin-parts` | _`AdminPerson`_ |
 | `admin/admin-area-labels` | `DEFAULT_ADMIN_AREA_LABELS`, `useAdminAreaLabels`, _`AdminAreaLabels`_, _`AdminSharedSection`_, _`AdminTileLabels`_ |
-| `admin/admin-sections` | `ADMIN_SECTIONS`, `adminSections`, _`AdminOwnSection`_, _`AdminSectionDefinition`_, _`AdminSectionsOptions`_ |
+| `admin/admin-sections` | `ADMIN_SECTIONS`, `adminSectionOrder`, `adminSections`, _`AdminKeptSection`_, _`AdminOwnSection`_, _`AdminSectionDefinition`_, _`AdminSectionOrderOptions`_, _`AdminSectionPlace`_, _`AdminSectionsOptions`_ |
 | `admin/admin-forbidden` | `AdminForbidden`, _`AdminForbiddenProps`_ |
 | `admin/admin-overview` | `AdminOverview`, `adminWaitingCount`, `AttentionTile`, `DEFAULT_ADMIN_ATTENTION_HREFS`, _`AdminAttention`_, _`AdminAttentionTile`_, _`AdminExtraTile`_, _`AdminOverviewProps`_, _`AttentionTileProps`_ |
 | `admin/admin-tool-links` | `AdminToolLinks`, _`AdminToolLink`_, _`AdminToolLinksProps`_ |
@@ -978,6 +982,8 @@ re-slicing of it, never a second API.
 | `billing/plan-limit-toast` | `usePlanLimitToast`, _`PlanLimitToastOptions`_ |
 | `billing/plan-switch` | `PlanSwitchConfirm`, _`PlanSwitchConfirmProps`_, _`PlanSwitchSide`_ |
 | `billing/cancel-subscription` | `CancelSubscriptionConfirm`, _`CancelSubscriptionConfirmProps`_ |
+| `billing/provider-page` | `openProviderPage`, _`OpenProviderPageOptions`_, _`ProviderPageWay`_ |
+| `billing/cancel-request` | `useCancelRequest`, _`CancelRequest`_, _`CancelRequested`_ |
 
 ### notifications
 

@@ -127,3 +127,6 @@ one and awards the points again.
   the first time or the first time after an update (§8). That is the moment to award the
   tour's points and show the app's toast. The engine has no completion hook of its own:
   call it from the tour's `onFinish`.
+- **The Overview is not a `SettingsSection`.** It is `standalone`, with no catalogue entry, and
+  a `SettingsSection` without an entry throws in development. Render `AdminOverview` on its
+  own in `renderGroup` for the `overview` section.
