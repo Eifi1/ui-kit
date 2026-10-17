@@ -121,8 +121,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     feedbackMenu: {
       trigger: "Feedback senden",
       myFeedback: "Mein Feedback",
-      viewFeedback: "Feedback ansehen",
-      allFeedback: "Alle Rückmeldungen",
       discussion: "Feedback-Diskussion",
       inbox: "Feedback-Eingang",
     },

@@ -109,8 +109,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     feedbackMenu: {
       trigger: "Visszajelzés küldése",
       myFeedback: "Visszajelzéseim",
-      viewFeedback: "Visszajelzések megtekintése",
-      allFeedback: "Összes visszajelzés",
       discussion: "Visszajelzések megvitatása",
       inbox: "Beérkezett visszajelzések",
     },

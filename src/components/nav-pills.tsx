@@ -73,8 +73,8 @@ const PILL_DISABLED = "cursor-not-allowed opacity-50 hover:bg-transparent hover:
  * keksdose's swipe-settings card (swipe-settings-card:152) hand-rolled this: four
  * surface names that do not fit a 406px phone, and a sideways scroll would hide the
  * ones that do not fit behind a gesture nothing announces (live #332: *"Have the tabs
- * in more rows, rather than scrolling sideways"*). It is not {@link Tabs} with `wrap`
- * because its items are not tabs: a `role="tab"` promises a tabpanel, a roving tab
+ * in more rows, rather than scrolling sideways"*). It is not {@link Tabs} (which
+ * scrolls; its multirow `wrap` went in 0.41) because its items are not tabs: a `role="tab"` promises a tabpanel, a roving tab
  * stop and arrow keys, and a set of links to pages (or of buttons that switch the rest
  * of a card) promises none of that. So every pill is its own tab stop, the set is a
  * list (a screen reader hears "list, 4 items"), and "current" is `aria-current` — the

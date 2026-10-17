@@ -112,8 +112,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     feedbackMenu: {
       trigger: "Enviar comentarios",
       myFeedback: "Mis comentarios",
-      viewFeedback: "Ver comentarios",
-      allFeedback: "Todos los comentarios",
       discussion: "Debate de comentarios",
       inbox: "Comentarios recibidos",
     },

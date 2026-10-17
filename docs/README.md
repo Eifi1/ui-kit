@@ -43,6 +43,7 @@ session as it is. Once all three apps have adopted a release, its note moves to
 
 | Note | Release | What it was | Apps |
 |---|---|---|---|
+| [adopt-0.41](adopt-0.41.md) | ui-kit 0.41 | Round 0.41: the three names deprecated in 0.40 removed (`Tabs` `wrap`, `FeedbackMenuLabels.viewFeedback` / `.allFeedback`); bump only | being built |
 | [adopt-0.40](adopt-0.40.md) | ui-kit 0.40, server-kit 0.13 | Round 0.40: feedback §10 (rework as an entry, the menu), page layout §1 (the list page fills), phone tables and pickers, the Paddle sandbox results, `switching` | being built |
 | [adopt-0.39](adopt-0.39.md) | ui-kit 0.39, server-kit 0.12 | Round 0.39: pay pages that serve any app, the shared plan switch and Paddle customer (billing §15); `ApiTranslationReviewsResponse`; `can_review_kit` as T2 | being built |
 | [adopt-0.38](adopt-0.38.md) | ui-kit 0.38, server-kit 0.11 | Round 0.38: public feedback — votes, comments by others, replies as a timeline, the public pages; `outcome` frozen | all three adopted (kastlan shipped) |

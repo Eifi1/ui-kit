@@ -110,8 +110,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     feedbackMenu: {
       trigger: "Envoyer un retour",
       myFeedback: "Mes retours",
-      viewFeedback: "Voir les retours",
-      allFeedback: "Tous les retours",
       discussion: "Discussion des retours",
       inbox: "Retours reçus",
     },
