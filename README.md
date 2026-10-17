@@ -563,12 +563,12 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2075 |
+| `@eifi1/ui-kit` | 2079 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 110 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 24 |
-| `@eifi1/ui-kit/tour` | 28 |
+| `@eifi1/ui-kit/tour` | 31 |
 | `@eifi1/ui-kit/feedback` | 205 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
