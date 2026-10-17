@@ -159,3 +159,90 @@ describe("TourMenu", () => {
     ]);
   });
 });
+
+describe("TourMenu — the catalogue's tours, with completed and joined (0.43, tours §3, §8)", () => {
+  // The catalogue's own list (TourInfo): no isNew, completed or reset on it.
+  const CATALOGUE = [
+    { id: "welcome", title: "Welcome", group: "start", route: "/home", since: "2026-01-01" },
+    { id: "budget", title: "Your budget", group: "budgeting", route: "/budget", since: "2026-10-05" },
+    {
+      id: "goals",
+      title: "Goals",
+      group: "budgeting",
+      route: "/goals",
+      since: "2026-01-01",
+      updated: { date: "2026-10-10", reason: "The goals editor moved." },
+    },
+  ];
+
+  it("works out ✓, NEW and Updated itself; a reset tour is listed with its pill and lights the dot", () => {
+    render(
+      <MemoryRouter initialEntries={["/home"]}>
+        <TourMenu
+          tours={CATALOGUE}
+          completed={{ welcome: "2026-02-01T00:00:00Z", goals: "2026-09-01T00:00:00Z" }}
+          joined="2026-03-01"
+          href="/tours"
+          onLaunch={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    const link = screen.getByRole("link", { name: /Guided tours/ });
+    expect(link).toHaveAccessibleName(/New tours/);
+    const menu = open(link);
+    // On this page: welcome (✓). New and updated: goals (updated 10-10) before budget (05).
+    expect(within(menu).getByText("New and updated")).toBeInTheDocument();
+    expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent)).toEqual([
+      "WelcomeCompleted",
+      "GoalsUpdated",
+      "Your budgetNew",
+      "All tours…",
+    ]);
+  });
+
+  it("only updated tours: the dot says so", () => {
+    render(
+      <MemoryRouter initialEntries={["/home"]}>
+        <TourMenu
+          tours={CATALOGUE}
+          completed={{ welcome: "2026-02-01T00:00:00Z", goals: null, budget: "2026-10-06T00:00:00Z" }}
+          joined="2026-03-01"
+          onLaunch={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("button", { name: /Guided tours/ })).toHaveAccessibleName(/Updated tours/);
+  });
+
+  it("completed again after the update: done, no pill, no dot", () => {
+    render(
+      <MemoryRouter initialEntries={["/home"]}>
+        <TourMenu
+          tours={CATALOGUE}
+          completed={{ welcome: "2026-02-01T00:00:00Z", goals: "2026-10-11T00:00:00Z", budget: "2026-10-06T00:00:00Z" }}
+          joined="2026-03-01"
+          onLaunch={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    const button = screen.getByRole("button", { name: /Guided tours/ });
+    expect(button).not.toHaveAccessibleName(/New|Updated/);
+  });
+  it("the record and joined win over a row's own completed and isNew: Updated still shows (kastlan A3)", () => {
+    // An app that still builds rows: completed: !!record[id], isNew from its own rule.
+    const record = { welcome: "2026-02-01T00:00:00Z", goals: "2026-09-01T00:00:00Z" };
+    const rows = CATALOGUE.map((t) => ({ ...t, completed: t.id in record, isNew: false }));
+    render(
+      <MemoryRouter initialEntries={["/home"]}>
+        <TourMenu tours={rows} completed={record} joined="2026-03-01" href="/tours" onLaunch={() => {}} />
+      </MemoryRouter>,
+    );
+    const menu = open(screen.getByRole("link", { name: /Guided tours/ }));
+    expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent)).toEqual([
+      "WelcomeCompleted",
+      "GoalsUpdated",
+      "Your budgetNew",
+      "All tours…",
+    ]);
+  });
+});

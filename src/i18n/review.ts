@@ -397,6 +397,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "billing.buyerHolds": [["{{buyer}}"], [undefined]],
   "billing.paymentFailedAskBuyer": [["{{buyer}}"], [undefined]],
   "billing.cancelConfirmBody": [["{{date}}"]],
+  "billing.portalOpensNewTab": [["{{provider}}", "{{app}}"], ["{{provider}}", undefined]],
   "planChange.current": [["{{plan}}"]],
   "planChange.changed": [["{{from}}", "{{to}}"]],
   "planChange.set": [["{{to}}"]],
@@ -417,4 +418,17 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "topBarParts.sync.waitingShort": one,
   "topBarParts.dev.plan": [["{{plan}}"]],
   "topBarParts.dev.backTo": [["{{role}}"]],
+  // 0.43.0 (docs/tours-harmonization.md §3, §8): the tours page's counts, its group
+  // option, the completion day and a reset's day and reason.
+  "tourCatalogue.groupAll": one,
+  "tourCatalogue.groupOption": [["{{group}}", 1], ["{{group}}", 3]],
+  "tourCatalogue.stateAll": one,
+  "tourCatalogue.stateTodo": one,
+  "tourCatalogue.stateDone": one,
+  "tourCatalogue.showing": [[3, 16]],
+  "tourCatalogue.resetOn": [["{{date}}", "{{reason}}"]],
+  "tourCatalogue.points": one,
+  "tourCatalogue.steps": one,
+  "tourCatalogue.duration": one,
+  "tourCatalogue.completedOn": [["{{date}}"]],
 };

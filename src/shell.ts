@@ -17,6 +17,9 @@ export type { FillHeightProps } from "./shell/fill-height";
 // (docs/admin-harmonization.md §2.1, §6.6).
 export { adminMenuEntry, AdminMenuRow } from "./shell/admin-menu";
 export type { AdminMenuEntryOptions, AdminMenuRowProps } from "./shell/admin-menu";
+// 0.43.0 (kastlan): the entry with the provider's words.
+export { useAdminMenuEntry } from "./shell/admin-menu";
+export type { UseAdminMenuEntryOptions } from "./shell/admin-menu";
 // 0.31.0: the settings and admin pages' shell (docs/settings-harmonization.md §3, §5).
 export { SettingsLayout, SETTINGS_SEARCH_THRESHOLD } from "./settings/settings-layout";
 export type { SettingsLayoutProps, SettingsLayoutWidth, SettingsDocumentTitleParts } from "./settings/settings-layout";

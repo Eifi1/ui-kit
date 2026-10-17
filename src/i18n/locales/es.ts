@@ -609,6 +609,34 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       awaitClickHint: "Haga clic en el elemento resaltado para continuar",
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
+    // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page.
+    tourCatalogue: {
+      searchLabel: "Buscar visitas",
+      searchPlaceholder: "Buscar visitas…",
+      groupLabel: "Tema",
+      groupAll: (count) => `Todos los temas (${n(count)})`,
+      groupOption: (group, count) => `${group} (${n(count)})`,
+      stateLabel: "Filtrar visitas",
+      stateAll: (count) => `Todas (${n(count)})`,
+      stateTodo: (count) => `Pendientes (${n(count)})`,
+      stateDone: (count) => `Completadas (${n(count)})`,
+      showing: (shown, total) => `Mostrando ${n(shown)} de ${n(total)} visitas`,
+      noMatches: "Ninguna visita coincide",
+      noMatchesHint: "Pruebe con otra palabra o borre los filtros.",
+      clearFilters: "Borrar filtros",
+      badgeNew: "Nuevo",
+      badgeUpdated: "Actualizado",
+      resetOn: (date, reason) => (reason ? `Restablecida el ${date}: ${reason}` : `Restablecida el ${date}`),
+      points: (count) => `+${n(count)} pts`,
+      steps: (count) => (count === 1 ? `${n(count)} paso` : `${n(count)} pasos`),
+      duration: (minutes) => `Unos ${n(minutes)} min`,
+      completedOn: (date) => `Completada el ${date}`,
+      completed: "Completada",
+      notCompleted: "No completada",
+      markUndone: "Marcar como no completada",
+      start: "Empezar",
+      replay: "Repetir",
+    },
     commandPalette: {
       clear: "Borrar búsqueda",
       submit: "Buscar",
@@ -1727,6 +1755,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       cancelConfirmBody: (date) => `Su suscripción termina el ${date}. Hasta entonces, todo funciona como antes.`,
       cancelConfirmAction: "Cancelar ahora la suscripción",
       keepSubscription: "Mantener la suscripción",
+      portalOpensNewTab: (provider, app) =>
+        `Los pagos y las facturas se abren en ${provider} en una pestaña nueva; ${app ? `${app} sigue abierto aquí` : "esta página sigue abierta"}.`,
       grantWarningTitle: "Su acceso gratuito continúa",
       grantWarningBody:
         "Su acceso gratuito no tiene fecha de fin. Mientras dure, una compra no cambia su plan: pagaría por un plan que no se aplica.",
@@ -1812,7 +1842,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       sections: {
         overview: { title: "Resumen", help: "Lo que está pendiente, de un vistazo." },
         users: { title: "Usuarios", help: "Quién tiene una cuenta y qué puede hacer cada uno." },
-        invitations: { title: "Invitaciones", help: "Los enlaces con los que entra una persona nueva." },
+        invitations: { title: "Invitaciones", help: "Invite a personas por correo electrónico en su idioma; reenvíe o revoque las invitaciones aún pendientes." },
         billing: { title: "Facturación", help: "El plan, el pago y las facturas." },
         activity: { title: "Actividad", help: "Lo que hicieron los administradores, lo más reciente primero." },
       },
@@ -1823,6 +1853,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         users: "Usuarios",
         usersNew: (count) => `${n(count)} ${plural(count, "nuevo", "nuevos")} en 7 días`,
       },
+      overviewError: "No se pudo cargar el resumen.",
+      retry: "Reintentar",
       tools: "Herramientas",
     },
     // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts; "plan" as
@@ -1836,6 +1868,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         allTours: "Todas las visitas…",
         badgeNew: "Nuevo",
         completed: "Completada",
+        badgeUpdated: "Actualizado",
+        updatedDot: "Visitas actualizadas",
+        newAndUpdated: "Nuevas y actualizadas",
       },
       sync: {
         blocked: (count) =>

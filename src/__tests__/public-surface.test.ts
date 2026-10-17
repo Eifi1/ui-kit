@@ -257,7 +257,14 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `useTopBarPartsLabels`.
   // 0.42.0 (+1, build review keksdose): `GrantWarningConfirm`, PlanPicker's grant warning on
   // its own, for a switch that falls back to a checkout.
-  ["@eifi1/ui-kit", barrel, 942],
+  // 0.43.0 (+9, docs/tours-harmonization.md §3, §8, here and in /tour): `TourCatalogue`,
+  // `TourCatalogueCard`, `DEFAULT_TOUR_CATALOGUE_LABELS`, `isTourNew`, `isTourReset`,
+  // `isTourDone`, `useTourProgress`, `useTourUrlSync`, `useTourCatalogueUrlState`.
+  // 0.43.0 (+4, billing §17 and the 0.42 adoptions): `openProviderPage`, `useCancelRequest`,
+  // `adminSectionOrder`, `useAdminMenuEntry`.
+  // 0.43.0 (+3, build review kastlan A1/A3, here and in /tour): `resetTourProgress`, the
+  // device reset's, and `doneCount` / `earnedPoints`, the header's counts by `isTourDone`.
+  ["@eifi1/ui-kit", barrel, 958],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -283,8 +290,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.40.0 (+2): `FillHeight`, `FILL_HEIGHT_CLASS` (docs/page-layout-harmonization.md §1.3).
   // 0.42.0 (+2): `adminMenuEntry`, `AdminMenuRow` (docs/admin-harmonization.md §6.6).
   // 0.42.0 (+10): the top bar's parts (docs/top-bar-harmonization.md §3.1, see the barrel).
-  ["@eifi1/ui-kit/shell", shell, 55],
-  ["@eifi1/ui-kit/tour", tour, 4],
+  // 0.43.0 (+1): `useAdminMenuEntry` (the 0.42 adoptions, kastlan 2).
+  ["@eifi1/ui-kit/shell", shell, 56],
+  // 0.43.0 (+9): the tours page (see the barrel).
+  // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
+  ["@eifi1/ui-kit/tour", tour, 16],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.
   // kastlan 51/52: `IntegerField` and `MoneyField` (+2). Showcase audit: `splitFileName` (+1).

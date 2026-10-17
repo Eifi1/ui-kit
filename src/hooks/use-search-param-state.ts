@@ -208,7 +208,12 @@ function writeQuery(
     }
   }
   queued.lastPushed = push;
-  void navigate(`?${search}`, push ? undefined : { replace: true, state: carriedState(queued.state) });
+  // The hash is spelled out: `navigate("?…")` drops it (keksdose dev#495; build review
+  // 0.43, keksdose N2 — the tours page's filters).
+  void navigate(
+    { search: `?${search}`, hash: location.hash },
+    push ? undefined : { replace: true, state: carriedState(queued.state) },
+  );
 }
 
 /** The rendered query, and a write that composes with every other one on the router. */

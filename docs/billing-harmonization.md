@@ -57,6 +57,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 14.17 | A grant clears the trial's end | app-side (round 0.34) | |
 | 15 | Round 0.39: pay pages that serve any app, a shared plan switch and customer | §15 settled 2026-10-14 (round 0.39); built in server-kit 0.12, ui-kit 0.39 | round 0.40: `BillingOverview.switching` (server-kit 0.13, ui-kit 0.40, §15.2.10); the sandbox run, §15.6 (2026-10-16) |
 | 16 | Round 0.42: the portal for the buyer only, an in-app cancel, the permanent-grant warning | §16 settled 2026-10-17 (round 0.42); built in server-kit 0.14, ui-kit 0.42 | amends §15.2.11; §16.7 folds the reviews, §16.8 settles them |
+| 17 | Round 0.43: the provider's portal opens in a new tab | §17 settled 2026-10-17; built in ui-kit 0.43 | |
 
 ## 1. Where each one stands
 
@@ -2622,3 +2623,28 @@ ui-kit 0.42 ships the following names:
   `cancelConfirmTitle`, `cancelConfirmBody(date)`, `cancelConfirmAction` (de-CH "Jetzt
   kündigen"), `keepSubscription`, `grantWarningTitle`, `grantWarningBody` and
   `grantWarningAction`.
+
+## 17. Round 0.43: the provider's portal opens in a new tab
+
+**Settled 2026-10-17.** Marcel, in kastlan's session ("Forward to the ui kit since the other pages
+shall do the same"), confirmed in the ui-kit session as "Portal only".
+
+1. **Every portal target opens in a new tab**: "Payment and invoices", "Cancel subscription"
+   where it still goes to the portal, and the payment-failed banner's "Update payment
+   method". The app stays open where it was.
+2. **The tab opens inside the click.** A `window.open` after the `await` is blocked as a
+   pop-up. The kit's `openProviderPage(fetchUrl)`:
+   - opens `about:blank` synchronously and sets `opener = null`;
+   - awaits the app's `POST /billing/portal`;
+   - sets the tab's location to the answer's `url`;
+   - closes the tab on a refusal and rethrows, so the app shows its error;
+   - falls back to the same tab when the browser refused the new one.
+
+   kastlan's `usePortal` (feat/kit-0.42, `72c3177`) is the reference.
+3. **People are told**: the portal actions carry an external-link icon, and a muted note
+   under `SubscriptionActions` reads "Payment and invoices open at {provider} in a new tab;
+   {app} stays open here." (`portalOpensNewTab`, in seven languages, with the provider
+   and app names passed in).
+4. **The checkout stays in the same tab** (Marcel: "Portal only"). The page waits for the
+   payer's return (`useCheckoutProcessing`), and a second tab would break that.
+

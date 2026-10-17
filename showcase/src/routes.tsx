@@ -267,6 +267,7 @@ const Month022Demo = lazySection(() => import("./sections/month-picker-demo"), "
 const Numbers022Demo = lazySection(() => import("./sections/numbers-022-demo"), "Numbers022Demo");
 const FeedbackAttachmentRefs022Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackAttachmentRefs022Demo");
 const TourStaleSpotlight022Demo = lazySection(() => import("./sections/tour"), "TourStaleSpotlight022Demo");
+const TourCatalogueDemo = lazySection(() => import("./sections/tour"), "TourCatalogueDemo");
 const Fields022Demo = lazySection(() => import("./sections/fields"), "Fields022Demo");
 const CheckboxGroup022Demo = lazySection(() => import("./sections/choices"), "CheckboxGroup022Demo");
 const CommitControls022Demo = lazySection(() => import("./sections/forms-rhf"), "CommitControls022Demo");
@@ -1175,11 +1176,29 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "A spotlight tour over the real page: steps that point at any element by selector, wait for a click, run code first, and survive a missing target.",
         icon: Footprints,
-        components: ["TourProvider", "useTour", "useTourOptional", "TourStep"],
+        components: [
+          "TourProvider",
+          "useTour",
+          "useTourOptional",
+          "TourStep",
+          "TourCatalogue",
+          "TourCatalogueCard",
+          "DEFAULT_TOUR_CATALOGUE_LABELS",
+          "isTourNew",
+          "isTourReset",
+          "isTourDone",
+          "doneCount",
+          "earnedPoints",
+          "useTourProgress",
+          "resetTourProgress",
+          "useTourUrlSync",
+          "useTourCatalogueUrlState",
+        ],
         Body: () => (
           <>
             <GuidedTour />
             <TourStaleSpotlight022Demo />
+            <TourCatalogueDemo />
           </>
         ),
       },
@@ -1345,7 +1364,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
         icon: UserCog,
-        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult", "AccountRoleChip", "adminMenuEntry", "AdminMenuRow", "ADMIN_SECTIONS", "adminSections", "AdminOverview", "AttentionTile", "adminWaitingCount", "AdminToolLinks", "AdminForbidden"],
+        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult", "AccountRoleChip", "adminMenuEntry", "AdminMenuRow", "ADMIN_SECTIONS", "adminSections", "AdminOverview", "AttentionTile", "adminWaitingCount", "AdminToolLinks", "AdminForbidden", "adminSectionOrder", "useAdminMenuEntry"],
         Body: () => (
           <>
             <AdminWayIn042Demo />
@@ -1368,7 +1387,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
         icon: CreditCard,
-        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS", "CancelSubscriptionConfirm", "isPermanentGrant", "GrantWarningConfirm"],
+        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS", "CancelSubscriptionConfirm", "isPermanentGrant", "GrantWarningConfirm", "openProviderPage", "useCancelRequest"],
         Body: () => (
           <>
             <Billing032Demo />

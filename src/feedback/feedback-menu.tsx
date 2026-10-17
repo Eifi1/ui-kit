@@ -71,6 +71,9 @@ export interface FeedbackMenuProps {
   /** Which edge of the trigger the panel lines up with, `start` or `end` in the reading
    *  direction (see `HoverMenu`, whose type this is). Default `end`. */
   align?: HoverMenuProps["align"];
+  /** 0.43: `data-*` attributes go on the trigger — a tour's anchor
+   *  (`data-tour="feedback-menu"`), a test hook. */
+  [key: `data-${string}`]: string | number | boolean | undefined;
 }
 
 /**
@@ -101,9 +104,9 @@ export interface FeedbackMenuProps {
  * to the top like one with none of what makes it actionable. The server refuses it with a
  * 422 anyway (§3.4).
  *
- * The menu forwards nothing to its trigger, as `TopBarActionMenu` does not: keksdose's
- * tour anchor (`data-tour="feedback-menu"`) stays on a wrapping `<span>`. Needs a router,
- * as every `TopBarActionMenu` with link rows does.
+ * Since 0.43 its `data-*` attributes go on the trigger (keksdose's tour anchor
+ * `data-tour="feedback-menu"` needs no wrapping `<span>` any more). Needs a router, as
+ * every `TopBarActionMenu` with link rows does.
  */
 export function FeedbackMenu({
   onFile,
@@ -115,6 +118,7 @@ export function FeedbackMenu({
   iconBadge,
   labels: labelsProp,
   align,
+  ...attributes
 }: FeedbackMenuProps) {
   const labels = useKitLabels("feedbackMenu", DEFAULT_FEEDBACK_MENU_LABELS, labelsProp);
   const categoryLabels = useFeedbackCategoryLabels();
@@ -167,6 +171,7 @@ export function FeedbackMenu({
       aria-label={labels.trigger}
       entries={entries}
       align={align}
+      triggerAttributes={Object.fromEntries(Object.entries(attributes).filter(([k]) => k.startsWith("data-")))}
     />
   );
 }

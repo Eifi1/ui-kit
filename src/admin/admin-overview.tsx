@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
+import { AlertBanner } from "../components/alert-banner";
+import { Button } from "../components/button";
 import { StatTile, StatTileGrid } from "../components/stat-tile";
 import type { StatTileProps } from "../components/stat-tile";
 import type { LabelOverride } from "../i18n/kit-labels";
+import { cn } from "../lib/cn";
 import { useAdminAreaLabels } from "./admin-area-labels";
 import type { AdminAreaLabels } from "./admin-area-labels";
 
@@ -68,14 +71,16 @@ export function adminWaitingCount(
 export interface AttentionTileProps extends Omit<StatTileProps, "href" | "onClick" | "value"> {
   /** The count. `null` shows the tile's dash; {@link AdminOverview} leaves such a tile out. */
   count: number | null | undefined;
-  /** Where the work is — the tile is a link to it. */
-  href: string;
+  /** Where the work is — the tile is a link to it. Since 0.43 it may be left out: a
+   *  quiet count, no link (Kurvenschmiede). */
+  href?: string;
 }
 
 /**
  * One tile of the overview: a {@link StatTile} that is a LINK to where the work is, its
  * count the headline. The whole tile is the link, named by its label; route it through
- * `renderLink` or the provider's link component, as any StatTile.
+ * `renderLink` or the provider's link component, as any StatTile. Without `href` (0.43) it
+ * is a quiet count, no link.
  */
 export function AttentionTile({ count, href, ...tile }: AttentionTileProps) {
   return <StatTile data-slot="attention-tile" {...tile} value={count ?? null} href={href} />;
@@ -88,7 +93,9 @@ export interface AdminExtraTile {
   label: ReactNode;
   /** `null` or `undefined` leaves the tile out, as for a shared one. */
   count: number | null | undefined;
-  href: string;
+  /** Where the work is. Left out (0.43, Kurvenschmiede): a quiet count with no link —
+   *  a number worth seeing that has no page of its own. */
+  href?: string;
   /** A line under the count. */
   description?: ReactNode;
 }
@@ -106,6 +113,18 @@ export interface AdminOverviewProps {
   extraTiles?: readonly AdminExtraTile[];
   /** Passed to every tile — `renderLink` for the router, `size`, `variant`. */
   tileProps?: Pick<StatTileProps, "renderLink" | "size" | "variant" | "locale">;
+  /**
+   * 0.43 (keksdose): the answer failed — the query's `error`, or `true`. Anything truthy
+   * shows `adminArea.overviewError` in a danger box, with "Try again" when
+   * {@link onRetry} is given. A failed poll keeps the last good tiles: with `attention`
+   * still there (a query keeps its last data), the box shows ALONGSIDE them, above, not
+   * instead (build review 0.43, keksdose N7) — pass `attention.data` as it is. Without
+   * an answer yet, the box alone. Without `error`: `undefined` is the skeletons and
+   * `null` nothing, as before.
+   */
+  error?: unknown;
+  /** "Try again" in the error box — the query's `refetch`. */
+  onRetry?: () => void;
   /** Prop > `<UiKitProvider labels={{ adminArea }}>` > English. */
   labels?: LabelOverride<AdminAreaLabels>;
   className?: string;
@@ -117,19 +136,43 @@ export interface AdminOverviewProps {
  * the total) — then the app's `extraTiles`. A tile whose count is `null` is left out,
  * so each app shows only what it has; a `0` is a quiet tile, "nothing waiting".
  *
- * Put it in the `overview` section's `SettingsSection` (titled by the sidebar, so
- * `titleVisible={false}`). keksdose links its metrics from here with at most two tiles
- * (§6.5).
+ * The overview is the admin area's landing page, standalone: it is NOT wrapped in a
+ * `SettingsSection` (`adminSections` gives it no entry; render it as the page's body, as
+ * Kurvenschmiede's `OverviewPanel` does). keksdose links its metrics from here with at
+ * most two tiles (§6.5).
  */
 export function AdminOverview({
   attention,
   hrefs,
   extraTiles = [],
   tileProps,
+  error,
+  onRetry,
   labels: labelsProp,
   className,
 }: AdminOverviewProps) {
   const labels = useAdminAreaLabels(labelsProp);
+  /** The error box: on its own (`alone`) it is the overview's root. */
+  const errorBox = (alone: boolean) => (
+    <AlertBanner
+      data-slot={alone ? "admin-overview" : undefined}
+      data-state={alone ? "error" : undefined}
+      variant="box"
+      tone="danger"
+      className={alone ? className : undefined}
+      action={
+        onRetry ? (
+          <Button type="button" variant="secondary" size="sm" onClick={() => onRetry()}>
+            {labels.retry}
+          </Button>
+        ) : undefined
+      }
+    >
+      {labels.overviewError}
+    </AlertBanner>
+  );
+  // Nothing good to keep: the box alone.
+  if (error && !attention) return errorBox(true);
   const href = { ...DEFAULT_ADMIN_ATTENTION_HREFS, ...hrefs };
   const loading = attention === undefined;
   const shared: { key: AdminAttentionTile; label: string; description?: ReactNode }[] = [
@@ -147,9 +190,9 @@ export function AdminOverview({
     ...shared.map((t) => ({ ...t, count: attention ? attention[t.key] : undefined, href: href[t.key] })),
     ...extraTiles,
   ].filter((t) => loading || (t.count !== null && t.count !== undefined));
-  if (!loading && tiles.length === 0) return null;
-  return (
-    <StatTileGrid data-slot="admin-overview" loading={loading} className={className}>
+  if (!loading && tiles.length === 0) return error ? errorBox(true) : null;
+  const grid = (
+    <StatTileGrid data-slot={error ? undefined : "admin-overview"} loading={loading} className={error ? undefined : className}>
       {tiles.map((t) => (
         <AttentionTile
           key={t.key}
@@ -162,5 +205,13 @@ export function AdminOverview({
         />
       ))}
     </StatTileGrid>
+  );
+  if (!error) return grid;
+  // A failed poll: the error above the last good tiles.
+  return (
+    <div data-slot="admin-overview" data-state="error" className={cn("space-y-4", className)}>
+      {errorBox(false)}
+      {grid}
+    </div>
   );
 }

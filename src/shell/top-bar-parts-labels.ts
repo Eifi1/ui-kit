@@ -24,6 +24,12 @@ export interface TourMenuLabels {
   badgeNew: string;
   /** What the ✓ on a taken tour's row says to a reader. */
   completed: string;
+  /** The chip on a tour reset by an update (0.43, docs/tours-harmonization.md §8). */
+  badgeUpdated: string;
+  /** The dot on the compass while only updated tours light it, for a reader. */
+  updatedDot: string;
+  /** The heading over the untaken new tours when updated ones are among them. */
+  newAndUpdated: string;
 }
 
 /** `SyncStatusIndicator`'s words (§2.6). The "waiting for a plan" state is
@@ -94,6 +100,9 @@ export const DEFAULT_TOP_BAR_PARTS_LABELS: TopBarPartsLabels = {
     allTours: "All tours…",
     badgeNew: "New",
     completed: "Completed",
+    badgeUpdated: "Updated",
+    updatedDot: "Updated tours",
+    newAndUpdated: "New and updated",
   },
   sync: {
     blocked: (count) =>

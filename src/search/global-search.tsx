@@ -188,6 +188,9 @@ export interface GlobalSearchProps {
   labels?: LabelOverride<GlobalSearchLabels>;
   /** Passed through to the palette (`empty`, `loading`, `error`, `hint`, …). */
   paletteLabels?: Partial<CommandPaletteLabels>;
+  /** 0.43: `data-*` attributes go on the kit's trigger button (`trigger="button"`) — a
+   *  tour's anchor (`data-tour="search"`), a test hook. A function trigger is the app's. */
+  [key: `data-${string}`]: string | number | boolean | undefined;
 }
 
 function isApplePlatform(): boolean {
@@ -290,6 +293,7 @@ function GlobalSearchImpl({
   density,
   labels,
   paletteLabels,
+  ...attributes
 }: GlobalSearchProps & { navigate: (href: string) => void; hrefFor: (href: string) => string }) {
   const l = useKitLabels("globalSearch", DEFAULT_GLOBAL_SEARCH_LABELS, labels);
   const pl = useKitLabels("commandPalette", DEFAULT_COMMAND_PALETTE_LABELS, paletteLabels);
@@ -563,6 +567,7 @@ function GlobalSearchImpl({
               className={hideTriggerOnPhone ? "hidden sm:block" : undefined}
             >
               <button
+                {...Object.fromEntries(Object.entries(attributes).filter(([k]) => k.startsWith("data-")))}
                 type="button"
                 onClick={openSearch}
                 aria-label={triggerLabel}

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useLocation } from "react-router";
 import { Check, Compass } from "lucide-react";
 import { Chip } from "../components/chip";
+import { isTourDone, isTourNew, isTourReset, type TourCompletions, type TourInfo } from "../tour/tour-info";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { TopBarActionMenu, type TopBarMenuEntry } from "./topbar-action-menu";
 import { useTopBarPartsLabels, type TourMenuLabels } from "./top-bar-parts-labels";
@@ -11,28 +12,36 @@ import { useTopBarPartsLabels, type TourMenuLabels } from "./top-bar-parts-label
  * The kit's tour engine (`TourProvider`) runs steps and keeps none; which tours exist,
  * which are new and which are taken is the app's (keksdose: `useTours`, `useIsNewTour`,
  * its progress store).
+ *
+ * Since 0.43 it is a subset of the catalogue's `TourInfo` (docs/tours-harmonization.md
+ * §3), so an app keeps ONE list: hand the menu the catalogue's tours with `completed`
+ * and `joined`, and it works out ✓, NEW and "Updated" itself. Given the record, the kit's
+ * ✓ and "Updated" win over a row's `completed` and `reset`; given `joined`, its NEW wins
+ * over `isNew` — so a row built from an app's own booleans cannot hide an update (§8,
+ * build review kastlan A3, keksdose K-S6). The booleans are for a menu with neither.
  */
-export interface TourMenuTour {
+export type TourMenuTour = Partial<Pick<TourInfo, "route" | "since" | "updated">> & {
   id: string;
   title: ReactNode;
-  /** The page the tour starts on. Its first segment decides "On this page":
-   *  "/reports/spending" belongs to "/reports". */
-  route?: string;
+  /** The row's icon, drawn at 16px. */
+  icon?: ReactNode;
   /** Shipped after this account was opened and not yet taken: a NEW chip on the row,
    *  and the dot on the compass. */
   isNew?: boolean;
   /** Taken: a ✓ on the row. */
   completed?: boolean;
-  /** The row's icon, drawn at 16px. */
-  icon?: ReactNode;
-  /** When the tour shipped, as an ISO date: the newest of the new come first. */
-  since?: string;
-}
+  /** Taken before its last update (§8): an "Updated" chip, and the dot, as for NEW. */
+  reset?: boolean;
+};
 
 export interface TourMenuProps {
   tours: readonly TourMenuTour[];
   /** Start a tour — `useTour().start(steps, { id })` with the app's steps. */
   onLaunch: (id: string) => void;
+  /** The device's completions (`useTourProgress().completed`): ✓ and "Updated" from them. */
+  completed?: TourCompletions;
+  /** The account's `created_at`: NEW from it, by `isTourNew`. */
+  joined?: string | null;
   /**
    * The app's tours page (keksdose `/tours`). With it the compass is a LINK there plus a
    * hover menu, and the menu ends in "All tours…". Without it (§6.7, Kurvenschmiede) the
@@ -59,7 +68,9 @@ export interface TourMenuProps {
 /** A path's first segment — "/reports/spending?g=month" → "/reports". */
 const pageOf = (path: string) => `/${path.split(/[?#]/)[0].split("/")[1] ?? ""}`;
 
-const isFresh = (t: TourMenuTour) => !!t.isNew && !t.completed;
+const isFresh = (t: TourMenuTour) => (!!t.isNew && !t.completed) || !!t.reset;
+/** When it last became news: its update, else its ship date. */
+const newsOf = (t: TourMenuTour) => (t.reset ? t.updated?.date : undefined) ?? t.since ?? "";
 
 /**
  * The top bar's guided-tours control (docs/top-bar-harmonization.md §2.4, §6.7), lifted
@@ -68,8 +79,10 @@ const isFresh = (t: TourMenuTour) => !!t.isNew && !t.completed;
  * and "All tours…". A taken tour's row carries a ✓, a new one a NEW chip.
  */
 export function TourMenu({
-  tours,
+  tours: toursProp,
   onLaunch,
+  completed: completions,
+  joined,
   href,
   pathname: pathnameProp,
   maxNew = 3,
@@ -80,13 +93,27 @@ export function TourMenu({
   const words = useTopBarPartsLabels(labelsProp ? { tours: labelsProp } : undefined).tours;
   const location = useLocation();
   const here = pageOf(pathnameProp ?? location.pathname);
+  const tours =
+    completions === undefined && joined === undefined
+      ? toursProp
+      : toursProp.map((t) => {
+          const at = completions?.[t.id];
+          // Ever completed: the record when there is one, else the row's own word.
+          const ever = completions ? at !== undefined : !!t.completed;
+          return {
+            ...t,
+            completed: completions ? isTourDone(t, at) : t.completed,
+            reset: completions ? isTourReset(t, at) : t.reset,
+            isNew: joined !== undefined ? isTourNew({ since: t.since, joined, completed: ever }) : t.isNew,
+          };
+        });
 
   const forThisPage = tours.filter((t) => t.route !== undefined && pageOf(t.route) === here);
   const fresh = tours.filter(isFresh);
   // ISO dates sort as text; a stable sort keeps one day's tours in the app's order.
   const newRows = fresh
     .filter((t) => !forThisPage.includes(t))
-    .sort((a, b) => (b.since ?? "").localeCompare(a.since ?? ""))
+    .sort((a, b) => newsOf(b).localeCompare(newsOf(a)))
     .slice(0, maxNew);
   const rest = href && list !== "all" ? [] : tours.filter((t) => !forThisPage.includes(t) && !newRows.includes(t));
 
@@ -96,7 +123,11 @@ export function TourMenu({
     key: tour.id,
     icon: tour.icon,
     label: tour.title,
-    trailing: tour.completed ? (
+    trailing: tour.reset ? (
+      <Chip size="sm" tone="brand" caps className="px-1.5">
+        {words.badgeUpdated}
+      </Chip>
+    ) : tour.completed ? (
       <>
         <Check aria-hidden className="size-4 text-success" />
         <span className="sr-only">{words.completed}</span>
@@ -112,7 +143,7 @@ export function TourMenu({
 
   const blocks = [
     { key: "this-page", label: words.thisPage, tours: forThisPage },
-    { key: "new", label: words.newTours, tours: newRows },
+    { key: "new", label: newRows.some((t) => t.reset) ? words.newAndUpdated : words.newTours, tours: newRows },
   ].filter((b) => b.tours.length > 0);
   const tail: TopBarMenuEntry[] = [
     ...rest.map(entryFor),
@@ -133,7 +164,11 @@ export function TourMenu({
   return (
     <TopBarActionMenu
       icon={<Compass className="size-5" />}
-      iconBadge={fresh.length > 0 ? { label: words.newDot, tone: "brand" } : null}
+      iconBadge={
+        fresh.length > 0
+          ? { label: fresh.some((t) => !t.reset) ? words.newDot : words.updatedDot, tone: "brand" }
+          : null
+      }
       aria-label={words.menu}
       href={href}
       panelClassName="w-72 max-h-[70vh] overflow-y-auto"

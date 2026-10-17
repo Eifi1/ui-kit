@@ -2,8 +2,8 @@ import { Link } from "react-router";
 import { ShieldCheck } from "lucide-react";
 import { Chip } from "../components/chip";
 import { MenuItem } from "../components/menu-item";
-import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
-import { DEFAULT_ADMIN_AREA_LABELS } from "../admin/admin-area-labels";
+import type { LabelOverride } from "../i18n/kit-labels";
+import { DEFAULT_ADMIN_AREA_LABELS, useAdminAreaLabels } from "../admin/admin-area-labels";
 import type { AdminAreaLabels } from "../admin/admin-area-labels";
 import type { TopBarMenuEntry } from "./topbar-action-menu";
 
@@ -45,8 +45,12 @@ export interface AdminMenuEntryOptions {
    * `adminWaitingCount(attention, […])`. `0`, `null` or none shows no badge.
    */
   badge?: number | null;
-  /** The resolved `adminArea` words (`useAdminAreaLabels()`); default English. Builds no
-   *  hook, so the entry can be made in the list of entries. */
+  /**
+   * The resolved `adminArea` words — pass `useAdminAreaLabels()`, or the row is ENGLISH
+   * in every language: a plain function reads no provider (kastlan, 0.42 adoption). Builds
+   * no hook, so the entry can be made in the list of entries. {@link useAdminMenuEntry}
+   * (0.43) is the same entry with the provider's words read for you.
+   */
   labels?: AdminAreaLabels;
   /** The entry's `key`. Default `"administration"`. */
   key?: string;
@@ -59,7 +63,12 @@ export interface AdminMenuEntryOptions {
  * the kit's word and the waiting count as its badge. Put it in the entries for an admin
  * only — the menu closes on the way, as any link row:
  *
+ *     const labels = useAdminAreaLabels();
  *     entries={[…, ...(isAdmin ? [adminMenuEntry({ badge: waiting, labels })] : []), …]}
+ *
+ * A function, not a hook: it reads NO provider, so pass `labels` (`useAdminAreaLabels()`)
+ * or the row says "Administration" in every language — or call {@link useAdminMenuEntry}
+ * at the component's top.
  */
 export function adminMenuEntry({
   href = "/admin",
@@ -77,6 +86,25 @@ export function adminMenuEntry({
     trailing: badgeText(badge) === null ? undefined : <WaitingBadge badge={badge} labels={labels} />,
     current,
   };
+}
+
+export interface UseAdminMenuEntryOptions extends Omit<AdminMenuEntryOptions, "labels"> {
+  /** Over the provider's `adminArea` words: prop > `<UiKitProvider labels={{ adminArea }}>`
+   *  > English. */
+  labels?: LabelOverride<AdminAreaLabels>;
+}
+
+/**
+ * {@link adminMenuEntry} with the provider's words (0.43, kastlan): the hook reads
+ * `useAdminAreaLabels()` itself, so the row is in the app's language without a `labels`
+ * to remember. Call it at the component's top, then put it in the entries:
+ *
+ *     const admin = useAdminMenuEntry({ badge: waiting });
+ *     entries={[…, ...(isAdmin ? [admin] : []), …]}
+ */
+export function useAdminMenuEntry({ labels: labelsProp, ...options }: UseAdminMenuEntryOptions = {}): TopBarMenuEntry {
+  const labels = useAdminAreaLabels(labelsProp);
+  return adminMenuEntry({ ...options, labels });
 }
 
 export interface AdminMenuRowProps {
@@ -99,7 +127,8 @@ export interface AdminMenuRowProps {
  *     {(close) => <ul>… {isAdmin && <AdminMenuRow badge={waiting} onNavigate={close} />} …</ul>}
  */
 export function AdminMenuRow({ href = "/admin", badge, onNavigate, current, labels: labelsProp }: AdminMenuRowProps) {
-  const labels = useKitLabels("adminArea", DEFAULT_ADMIN_AREA_LABELS, labelsProp);
+  // The provider's words, as every kit part (0.43: through the namespace's own hook).
+  const labels = useAdminAreaLabels(labelsProp);
   return (
     <li>
       <MenuItem

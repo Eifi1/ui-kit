@@ -624,6 +624,34 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       awaitClickHint: "Cliquez sur l’élément mis en évidence pour continuer",
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
+    // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page. keksdose's reviewed words.
+    tourCatalogue: {
+      searchLabel: "Rechercher une visite",
+      searchPlaceholder: "Rechercher une visite…",
+      groupLabel: "Thème",
+      groupAll: (count) => `Tous les thèmes (${n(count)})`,
+      groupOption: (group, count) => `${group} (${n(count)})`,
+      stateLabel: "Filtrer les visites",
+      stateAll: (count) => `Toutes (${n(count)})`,
+      stateTodo: (count) => `À faire (${n(count)})`,
+      stateDone: (count) => `Terminées (${n(count)})`,
+      showing: (shown, total) => `${n(shown)} visites sur ${n(total)}`,
+      noMatches: "Aucune visite ne correspond",
+      noMatchesHint: "Essayez un autre mot, ou effacez les filtres.",
+      clearFilters: "Effacer les filtres",
+      badgeNew: "Nouveau",
+      badgeUpdated: "Mise à jour",
+      resetOn: (date, reason) => (reason ? `Réinitialisée le ${date}\u202f: ${reason}` : `Réinitialisée le ${date}`),
+      points: (count) => `+${n(count)} pts`,
+      steps: (count) => (count === 1 ? `${n(count)} étape` : `${n(count)} étapes`),
+      duration: (minutes) => `Environ ${n(minutes)} min`,
+      completedOn: (date) => `Terminée le ${date}`,
+      completed: "Terminée",
+      notCompleted: "Non terminée",
+      markUndone: "Marquer comme non terminée",
+      start: "Démarrer",
+      replay: "Rejouer",
+    },
     commandPalette: {
       clear: "Effacer la recherche",
       submit: "Rechercher",
@@ -1762,6 +1790,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         `Votre abonnement prendra fin le ${date}. D’ici là, tout fonctionne comme avant.`,
       cancelConfirmAction: "Résilier maintenant",
       keepSubscription: "Conserver l’abonnement",
+      portalOpensNewTab: (provider, app) =>
+        `Le paiement et les factures s’ouvrent chez ${provider} dans un nouvel onglet\u202f; ${app ? `${app} reste ouvert ici` : "cette page reste ouverte"}.`,
       grantWarningTitle: "Votre accès gratuit continue",
       grantWarningBody:
         "Votre accès gratuit n’a pas de date de fin. Tant qu’il dure, un achat ne change pas votre formule : vous paieriez pour une formule qui ne s’applique pas.",
@@ -1851,7 +1881,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       sections: {
         overview: { title: "Vue d’ensemble", help: "Ce qui est en attente, en un coup d’œil." },
         users: { title: "Utilisateurs", help: "Qui a un compte, et ce que chacun peut faire." },
-        invitations: { title: "Invitations", help: "Les liens qui permettent à une nouvelle personne d’entrer." },
+        invitations: { title: "Invitations", help: "Invitez des personnes par e-mail dans leur langue\u202f; renvoyez ou révoquez les invitations encore ouvertes." },
         billing: { title: "Facturation", help: "L’offre, le paiement et les factures." },
         activity: { title: "Activité", help: "Ce que les administrateurs ont fait, du plus récent au plus ancien." },
       },
@@ -1862,6 +1892,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         users: "Utilisateurs",
         usersNew: (count) => `${n(count)} ${plural(count, "nouveau", "nouveaux")} en 7 jours`,
       },
+      overviewError: "La vue d’ensemble n’a pas pu être chargée.",
+      retry: "Réessayer",
       tools: "Outils",
     },
     // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts, keksdose's
@@ -1875,6 +1907,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         allTours: "Toutes les visites…",
         badgeNew: "Nouveau",
         completed: "Terminée",
+        badgeUpdated: "Mise à jour",
+        updatedDot: "Visites mises à jour",
+        newAndUpdated: "Nouvelles et mises à jour",
       },
       sync: {
         blocked: (count) =>

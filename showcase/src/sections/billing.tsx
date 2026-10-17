@@ -12,8 +12,10 @@ import {
   checkoutFingerprint,
   combineWriteLocks,
   isPermanentGrant,
+  openProviderPage,
   useBillingLabels,
   useBillingWriteLock,
+  useCancelRequest,
 } from "@eifi1/ui-kit";
 import type { BillingPlan, PlanChoice, PlanSwitchPreview, PlanSwitchSide } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, READOUT_WRAP, beat, code } from "../lib/section";
@@ -344,6 +346,106 @@ export function GrantWarning042Demo() {
   );
 }
 
+/* ── 0.43 (§17): the portal in a new tab; the in-app cancel shows at once ── */
+
+/** A stand-in for `window`, so the specimen opens no real tab: the tab it "opens" logs
+ *  where it was pointed. */
+function pretendWindow(log: (line: string) => void, blocked: boolean): Window {
+  const tab = {
+    closed: false,
+    opener: {} as unknown,
+    location: {
+      set href(url: string) {
+        log(`the new tab goes to ${url}; this page stays`);
+      },
+    },
+    close() {
+      this.closed = true;
+      log("the new tab is closed again");
+    },
+  };
+  return {
+    open: () => (blocked ? null : tab),
+    location: { assign: (url: string) => log(`the pop-up was blocked: this page goes to ${url}`) },
+  } as unknown as Window;
+}
+
+export function Portal043Demo() {
+  const [blocked, setBlocked] = useState(false);
+  const [refuse, setRefuse] = useState(false);
+  const [rowScheduled, setRowScheduled] = useState(false);
+  const [pending, setPending] = useState<"manage" | "cancel" | "resume" | null>(null);
+  const [last, setLast] = useState<string | null>(null);
+  // Before the overview query in an app: `useBillingOverview({ waiting: request.waiting })`.
+  const request = useCancelRequest();
+  const view = request.view(rowScheduled);
+
+  const toPortal = (target: string) => {
+    setPending("manage");
+    setLast(`POST /billing/portal {"target":"${target}"}`);
+    openProviderPage(
+      async () => {
+        await beat(700);
+        if (refuse) throw new Error("409 billing_not_at_provider");
+        return `https://customer-portal.paddle.com/…/${target}`;
+      },
+      { window: pretendWindow(setLast, blocked) },
+    )
+      .catch((error: Error) => setLast(`${error.message}: the app shows its error`))
+      .finally(() => setPending(null));
+  };
+  // The in-app cancel and its undo: 204 at once, the webhook three seconds later.
+  const ask = async (what: "cancel" | "resume") => {
+    setPending(what);
+    setLast(`POST /billing/${what} → 204`);
+    await beat(600);
+    setPending(null);
+    view.noteAsked();
+    await beat(3000);
+    setRowScheduled(what === "cancel");
+    setLast(`subscription.updated landed: cancel_at_period_end = ${what === "cancel"}`);
+  };
+
+  return (
+    <Example
+      label="The portal in a new tab — openProviderPage, useCancelRequest"
+      hint="the tab opens inside the click; the plan line shows a cancel at once"
+    >
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <Switch size="sm" label="The browser blocks pop-ups" checked={blocked} onCheckedChange={setBlocked} />
+          <Switch size="sm" label="The server refuses the portal" checked={refuse} onCheckedChange={setRefuse} />
+        </div>
+        <p className="text-sm text-muted" data-plan-line="">
+          Pro · {view.cancelScheduled ? "Cancels on 9 November 2026" : "Renews on 9 November 2026"}
+        </p>
+        <SubscriptionActions
+          onManage={() => toPortal("overview")}
+          onCancelInApp={() => void ask("cancel")}
+          cancelAtPeriodEnd={rowScheduled}
+          cancelRequested={view.requested}
+          onResume={() => void ask("resume")}
+          pending={pending}
+          providerName="Paddle"
+          appName="Ada’s Garden Planner"
+        />
+        <BillingBanner kind="payment-failed" variant="box" onAction={() => toPortal("payment_method")} />
+        <p className={READOUT_WRAP} aria-live="polite">
+          {last ?? "No request yet."}
+        </p>
+      </div>
+      <Note>
+        Since 0.43 (§17). The app&apos;s portal handler calls {code("openProviderPage(fetchUrl)")}: it opens{" "}
+        {code("about:blank")} inside the click with {code("opener = null")}, awaits {code("POST /billing/portal")},
+        and points the tab at the answer; a refusal closes the tab and rethrows, a blocked pop-up sends this page
+        instead. The portal&apos;s actions carry the external-link mark and the note names the provider and the
+        app; the checkout stays in the same tab. After the in-app cancel, {code("useCancelRequest")} shows
+        &ldquo;Cancels on&rdquo; and &ldquo;Keep subscription&rdquo; at once, until the webhook moves the row.
+      </Note>
+    </Example>
+  );
+}
+
 export function BillingSwitchDemo() {
   return (
     <>
@@ -351,6 +453,7 @@ export function BillingSwitchDemo() {
       <PayPageApps039Demo />
       <BuyerOnly042Demo />
       <GrantWarning042Demo />
+      <Portal043Demo />
     </>
   );
 }

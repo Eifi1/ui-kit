@@ -16,6 +16,10 @@ import { SubscriptionActions } from "../subscription-actions";
  * nothing.
  */
 
+/** 0.43 (§17): a portal action's name carries "(opens in a new tab)" — matched with or
+ *  without it. */
+const portalName = (words: string) => new RegExp(`^${words}( \\(opens in a new tab\\))?$`);
+
 const plain = (s: string | null | undefined) => (s ?? "").replace(/\s/g, " ");
 const banner = (kind: string) => document.querySelector(`[data-billing-banner="${kind}"]`) as HTMLElement;
 
@@ -99,7 +103,7 @@ describe("BillingBanner — the presets (§3.3, §12.6, §12.21)", () => {
     const failed = banner("payment-failed");
     expect(failed).toHaveTextContent("Your last payment didn’t go through.");
     expect(failed.className).toContain("bg-danger-soft");
-    await user.click(within(failed).getByRole("button", { name: "Update payment method" }));
+    await user.click(within(failed).getByRole("button", { name: portalName("Update payment method") }));
     expect(openPortal).toHaveBeenCalledTimes(1);
   });
 
@@ -208,9 +212,9 @@ describe("SubscriptionActions — the portal and a visible cancel (§12.26)", ()
     const user = userEvent.setup();
     const manage = vi.fn();
     const { container, rerender } = render(<SubscriptionActions onManage={manage} cancelHref="/portal/cancel" />);
-    await user.click(screen.getByRole("button", { name: "Payment and invoices" }));
+    await user.click(screen.getByRole("button", { name: portalName("Payment and invoices") }));
     expect(manage).toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "Cancel subscription" })).toHaveAttribute("href", "/portal/cancel");
+    expect(screen.getByRole("link", { name: portalName("Cancel subscription") })).toHaveAttribute("href", "/portal/cancel");
     rerender(<SubscriptionActions />);
     expect(container).toBeEmptyDOMElement();
   });
@@ -223,7 +227,7 @@ describe("SubscriptionActions — the portal and a visible cancel (§12.26)", ()
     expect(document.querySelector('[data-at-provider="false"]')).not.toBeNull();
     // Reached it — whatever the status or source (§12.26): both show again.
     rerender(<SubscriptionActions atProvider onPortal={portal} />);
-    expect(screen.getByRole("button", { name: "Payment and invoices" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: portalName("Payment and invoices") })).toBeInTheDocument();
     expect(screen.queryByText(DEFAULT_BILLING_LABELS.notAtProvider)).toBeNull();
     rerender(
       <UiKitProvider labels={{ billing: { notAtProvider: "Noch nichts zu verwalten." } } as never}>
@@ -237,13 +241,13 @@ describe("SubscriptionActions — the portal and a visible cancel (§12.26)", ()
     const user = userEvent.setup();
     const portal = vi.fn();
     const { rerender } = render(<SubscriptionActions onPortal={portal} />);
-    await user.click(screen.getByRole("button", { name: "Payment and invoices" }));
-    await user.click(screen.getByRole("button", { name: "Cancel subscription" }));
+    await user.click(screen.getByRole("button", { name: portalName("Payment and invoices") }));
+    await user.click(screen.getByRole("button", { name: portalName("Cancel subscription") }));
     expect(portal.mock.calls).toEqual([["overview"], ["cancel"]]);
     // The app's own callback wins over it.
     const cancel = vi.fn();
     rerender(<SubscriptionActions onPortal={portal} onCancel={cancel} />);
-    await user.click(screen.getByRole("button", { name: "Cancel subscription" }));
+    await user.click(screen.getByRole("button", { name: portalName("Cancel subscription") }));
     expect(cancel).toHaveBeenCalledTimes(1);
     expect(portal).toHaveBeenCalledTimes(2);
   });

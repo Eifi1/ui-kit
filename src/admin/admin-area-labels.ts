@@ -48,6 +48,10 @@ export interface AdminAreaLabels {
   sections: Record<AdminSharedSection, SettingsGroupLabels>;
   /** The overview's tiles. */
   tiles: AdminTileLabels;
+  /** 0.43: `AdminOverview`'s `error` — the counts could not be loaded. */
+  overviewError: string;
+  /** 0.43: its button, which calls `onRetry`. */
+  retry: string;
   /** The Tools list's heading and name (§2.5 decision 16). */
   tools: string;
 }
@@ -62,7 +66,7 @@ export const DEFAULT_ADMIN_AREA_LABELS: AdminAreaLabels = {
   sections: {
     overview: { title: "Overview", help: "What is waiting, at a glance." },
     users: { title: "Users", help: "Who has an account, and what each may do." },
-    invitations: { title: "Invitations", help: "The links that let a new person in." },
+    invitations: { title: "Invitations", help: "Invite people by e-mail in their language; resend or revoke what’s still open." },
     billing: { title: "Billing", help: "The plan, the payment and the invoices." },
     activity: { title: "Activity", help: "What the admins did, newest first." },
   },
@@ -73,6 +77,8 @@ export const DEFAULT_ADMIN_AREA_LABELS: AdminAreaLabels = {
     users: "Users",
     usersNew: (count) => `${count} new in 7 days`,
   },
+  overviewError: "The overview couldn’t be loaded.",
+  retry: "Try again",
   tools: "Tools",
 };
 

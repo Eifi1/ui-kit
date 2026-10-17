@@ -21,6 +21,23 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.43.0](https://github.com/Eifi1/ui-kit/compare/v0.42.0...v0.43.0) (2026-10-17)
+
+Settled by Marcel on 2026-10-17 and reviewed against all three apps before release: keksdose's
+tours page as the kit's catalogue (docs/tours-harmonization.md: groups, filters, the card, points
+everywhere, progress that carries over, and a reset with its reason when a tour is updated), the
+provider's portal in a new tab (billing §17; the checkout stays), and the findings from the three
+0.42 adoptions. Nothing is removed; the per-app steps are in docs/adopt-0.43.md.
+
+### Added
+
+* the tours catalogue, the portal in a new tab, and the 0.42 adoption fixes ([71d51eb](https://github.com/Eifi1/ui-kit/commit/71d51ebde359ff6861689df6e554b36488652553))
+
+### Fixed
+
+* **showcase:** the admin overview renders outside a SettingsSection (it has no entry) ([2c6b54b](https://github.com/Eifi1/ui-kit/commit/2c6b54bff15518c5db50904c50fb5c0e4af1dbdd))
+* the 0.43 build reviews — tour progress without a loop, useCancelRequest, the reset by instant ([7ca3faa](https://github.com/Eifi1/ui-kit/commit/7ca3faa2d225599b5cf8e7fc141b9060a7e9f388))
+
 ## [0.42.0](https://github.com/Eifi1/ui-kit/compare/v0.41.0...v0.42.0) (2026-10-17)
 
 Three contracts settled by Marcel on 2026-10-17 after the three app reviews and a

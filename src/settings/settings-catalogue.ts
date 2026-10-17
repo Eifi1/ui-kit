@@ -29,6 +29,13 @@ export interface SettingsGroup<G extends string = string> {
    * kastlan's `/admin/billing` while billing is off. Default: visible.
    */
   visible?: boolean;
+  /**
+   * 0.43: the group shows with no visible entry — a page of its own rather than of setting
+   * cards (the admin area's Overview, whose tiles are no settings; `adminSections` sets
+   * it). `visible: false` still hides it. Default: a group shows only with an entry once
+   * `entries` are given (§4.1).
+   */
+  standalone?: boolean;
 }
 
 /** One setting, and the card that holds it (§4.1). */
@@ -57,7 +64,8 @@ export interface SettingsEntry<G extends string = string> {
 /**
  * The groups that show, in their order: not `visible: false`, and — when `entries` is
  * given — holding at least one visible entry (§4.1: Kurvenschmiede's notifications group
- * stays hidden until it has a card). Without `entries` only the groups' own flag counts.
+ * stays hidden until it has a card) or `standalone` (0.43). Without `entries` only the
+ * groups' own flag counts.
  */
 export function visibleSettingsGroups<G extends string>(
   groups: readonly SettingsGroup<G>[],
@@ -66,7 +74,7 @@ export function visibleSettingsGroups<G extends string>(
   if (!entries) return groups.filter((g) => g.visible !== false);
   const filled = new Set<G>();
   for (const e of entries) if (e.visible !== false) filled.add(e.group);
-  return groups.filter((g) => g.visible !== false && filled.has(g.id));
+  return groups.filter((g) => g.visible !== false && (g.standalone === true || filled.has(g.id)));
 }
 
 /** The visible entries of the visible groups — what search may find. */
