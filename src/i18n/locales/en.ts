@@ -222,6 +222,19 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       waiting: (count) => `${n(count)} waiting`,
       tiles: { ...d.adminArea.tiles, usersNew: (count) => `${n(count)} new in 7 days` },
     },
+    // 0.43.0: the tours page's counts (docs/tours-harmonization.md §3).
+    tourCatalogue: {
+      ...d.tourCatalogue,
+      groupAll: (count) => `All topics (${n(count)})`,
+      groupOption: (group, count) => `${group} (${n(count)})`,
+      stateAll: (count) => `All (${n(count)})`,
+      stateTodo: (count) => `To do (${n(count)})`,
+      stateDone: (count) => `Completed (${n(count)})`,
+      showing: (shown, total) => `Showing ${n(shown)} of ${n(total)} tours`,
+      points: (count) => `+${n(count)} pts`,
+      steps: (count) => (count === 1 ? "1 step" : `${n(count)} steps`),
+      duration: (minutes) => `About ${n(minutes)} min`,
+    },
     // 0.42.0: the top bar's three counts (docs/top-bar-harmonization.md §3.1).
     topBarParts: {
       ...d.topBarParts,

@@ -97,6 +97,14 @@ export function DevSwitchers<R extends string, P extends string>({
   const bar = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS);
   const words = useTopBarPartsLabels(labelsProp ? { dev: labelsProp } : undefined).dev;
   const [kept, setKept] = useState<string | null>(() => (enabled ? readKey(storageKey) : null));
+  // 0.43 (keksdose): `enabled` may start false and turn true — an app's GET probe of the
+  // dev route — so the kept role is read again then, or "Back to {role}" is lost after a
+  // reload. Adjusted during render, React's pattern for state that follows a prop.
+  const [wasEnabled, setWasEnabled] = useState(enabled);
+  if (wasEnabled !== enabled) {
+    setWasEnabled(enabled);
+    if (enabled) setKept(readKey(storageKey));
+  }
   if (!enabled) return null;
 
   const original = (originalRole ?? kept ?? undefined) as R | undefined;

@@ -1,11 +1,30 @@
-import type { ComponentPropsWithRef } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
+import { ExternalLink } from "lucide-react";
 
+import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { Button } from "../components/button";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
 import type { BillingPortalAccess, PortalTarget } from "./billing-overview";
+import type { CancelRequested } from "./cancel-request";
+
+/** The portal action's mark (§17.3): the external-link glyph after the words, and "(opens
+ *  in a new tab)" for a reader — on a link, `Button`'s `external` says the latter. */
+export function ExternalMark({ reader }: { reader?: string }) {
+  return (
+    <>
+      <ExternalLink aria-hidden data-external="" className="size-4 shrink-0 rtl:-scale-x-100" />
+      {reader !== undefined && (
+        <>
+          {" "}
+          <span className="sr-only">({reader})</span>
+        </>
+      )}
+    </>
+  );
+}
 
 export interface SubscriptionActionsProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** "Payment and invoices", as a link — or {@link onManage}. Without either, none. */
@@ -62,6 +81,25 @@ export interface SubscriptionActionsProps extends Omit<ComponentPropsWithRef<"di
    *  the cancel's place while {@link cancelAtPeriodEnd} is true. Without it, the cancel
    *  stays as before. */
   onResume?: () => void;
+  /**
+   * 0.43 (kastlan `18bf4c0`): what was asked in the app and the overview does not show
+   * yet — `useCancelRequest(…).requested`. `"cancel"`: shown as scheduled ("Keep
+   * subscription" with {@link onResume}; without it, no second "Cancel subscription").
+   * `"resume"`: shown as not scheduled. `null` (default): {@link cancelAtPeriodEnd} says.
+   */
+  cancelRequested?: CancelRequested;
+  /**
+   * 0.43 (§17): the portal opens in a NEW TAB — the app's handler calls
+   * `openProviderPage` — so its actions carry the external-link mark, a link opens with
+   * `target="_blank"`, and the `portalOpensNewTab` note shows under them. Default true;
+   * `false` for an app whose portal still opens in the same tab.
+   */
+  portalNewTab?: boolean;
+  /** 0.43: the provider's name in the note. Default `"Paddle"` (§2 decision 16). */
+  providerName?: string;
+  /** 0.43: the app's name in the note ("Kastlan stays open here"). Without it, "this page
+   *  stays open". */
+  appName?: string;
   /** Which one is under way: its spinner, no second press. `"resume"` since 0.42. */
   pending?: "manage" | "cancel" | "resume" | null;
   /** Prop > `<UiKitProvider labels={{ billing }}>` > English. */
@@ -89,6 +127,12 @@ export interface SubscriptionActionsProps extends Omit<ComponentPropsWithRef<"di
  * "Cancel subscription" is the in-app cancel (`onCancelInApp`). While a cancel is
  * scheduled (`cancelAtPeriodEnd`) and `onResume` is given, "Keep subscription" stands in
  * the cancel's place, whoever the viewer is.
+ *
+ * 0.43 (§17): the portal opens in a new tab (`openProviderPage` in the app's handler):
+ * its actions carry the external-link mark, and a muted note says so — "Payment and
+ * invoices open at {provider} in a new tab; {app} stays open here." The in-app cancel and
+ * "Keep subscription" stay unmarked. After an in-app cancel or resume, `cancelRequested`
+ * (`useCancelRequest`) shows what was asked until the provider's webhook lands.
  */
 export function SubscriptionActions({
   manageHref,
@@ -102,12 +146,17 @@ export function SubscriptionActions({
   onCancelInApp,
   cancelAtPeriodEnd = false,
   onResume,
+  cancelRequested = null,
+  portalNewTab = true,
+  providerName = "Paddle",
+  appName,
   pending,
   labels: labelsProp,
   className,
   ...rest
 }: SubscriptionActionsProps) {
   const labels = useBillingLabels(labelsProp);
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   if (!atProvider) {
     return (
       <div {...rest} data-at-provider="false" className={cn("text-sm text-muted", className)}>
@@ -121,38 +170,75 @@ export function SubscriptionActions({
   // Under "buyer_only" the in-app cancel only; under "open" the portal's first, the
   // in-app cancel only where no way to the portal's is given.
   const cancelCall = buyerOnly ? onCancelInApp : (portalCancel ?? (cancelHref === undefined ? onCancelInApp : undefined));
+  // 0.43: what was asked in the app wins over the row until the row moves.
+  const scheduled = cancelRequested === "cancel" ? true : cancelRequested === "resume" ? false : cancelAtPeriodEnd;
+  // 0.43 (§17): the portal's actions are marked, a link opens a tab of its own.
+  const newTab = portalNewTab && !buyerOnly;
+  const words = (text: string, external: boolean, link: boolean): ReactNode =>
+    external ? (
+      <>
+        {text}
+        <ExternalMark reader={link ? undefined : common.opensInNewTab} />
+      </>
+    ) : (
+      text
+    );
+  const portalCancelShown = !buyerOnly && (cancelHref !== undefined || portalCancel !== undefined);
   const manage = buyerOnly ? (
     <p className="basis-full text-sm text-muted" data-buyer-holds="">
       {labels.buyerHolds(buyerName || undefined)}
     </p>
   ) : manageHref !== undefined ? (
-    <Button href={manageHref} variant="secondary">
-      {labels.manage}
+    <Button href={manageHref} variant="secondary" external={newTab || undefined} data-portal-action="manage">
+      {words(labels.manage, newTab, true)}
     </Button>
   ) : manageCall !== undefined ? (
-    <Button type="button" variant="secondary" onClick={manageCall} pending={pending === "manage"}>
-      {labels.manage}
+    <Button
+      type="button"
+      variant="secondary"
+      onClick={manageCall}
+      pending={pending === "manage"}
+      className={newTab ? "relative" : undefined}
+      data-portal-action="manage"
+    >
+      {words(labels.manage, newTab, false)}
     </Button>
   ) : null;
   const cancel =
-    cancelAtPeriodEnd && onResume !== undefined ? (
+    scheduled && onResume !== undefined ? (
       <Button type="button" variant="link" onClick={onResume} pending={pending === "resume"} data-keep-subscription="">
         {labels.keepSubscription}
       </Button>
-    ) : cancelHref !== undefined && !buyerOnly ? (
-      <Button href={cancelHref} variant="link" tone="danger">
-        {labels.cancel}
+    ) : cancelRequested === "cancel" ? null : cancelHref !== undefined && !buyerOnly ? (
+      <Button href={cancelHref} variant="link" tone="danger" external={newTab || undefined} data-portal-action="cancel">
+        {words(labels.cancel, newTab, true)}
       </Button>
     ) : cancelCall !== undefined ? (
-      <Button type="button" variant="link" tone="danger" onClick={cancelCall} pending={pending === "cancel"}>
-        {labels.cancel}
+      <Button
+        type="button"
+        variant="link"
+        tone="danger"
+        onClick={cancelCall}
+        pending={pending === "cancel"}
+        className={newTab && portalCancelShown ? "relative" : undefined}
+        data-portal-action={portalCancelShown ? "cancel" : undefined}
+      >
+        {words(labels.cancel, newTab && portalCancelShown, false)}
       </Button>
     ) : null;
   if (!manage && !cancel) return null;
+  // The note while a way to the portal shows: "Payment and invoices open at Paddle in a
+  // new tab; Kastlan stays open here."
+  const portalShown = !buyerOnly && (manage !== null || (cancel !== null && portalCancelShown && !(scheduled && onResume)));
   return (
     <div {...rest} className={cn("flex flex-wrap items-center gap-x-4 gap-y-2", className)}>
       {manage}
       {cancel}
+      {newTab && portalShown && (
+        <p className="basis-full text-sm text-muted" data-portal-note="">
+          {labels.portalOpensNewTab(providerName, appName || undefined)}
+        </p>
+      )}
     </div>
   );
 }

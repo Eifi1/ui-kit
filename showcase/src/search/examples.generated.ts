@@ -683,6 +683,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Tour — labels, placements, beforeStep and a missing target",
     "TourStep — the shape a step actually takes",
     "Tour — the step after a spotlighted one",
+    "TourCatalogue — the tours page body",
   ],
   "command-palette": [
     "CommandPalette",
@@ -816,7 +817,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "SignInForm — a backup code, and 'too many attempts'",
   ],
   "user-admin": [
-    "The way in — adminMenuEntry, AccountRoleChip",
+    "The way in — useAdminMenuEntry, AccountRoleChip",
     "The admin area — adminSections, AdminOverview, AdminToolLinks",
     "One tile — AttentionTile",
     "The 403 page — AdminForbidden",
@@ -846,6 +847,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Every pay page serves any app — PAY_PAGE_APPS",
     "The portal for the buyer only — SubscriptionActions, CancelSubscriptionConfirm",
     "The permanent-grant warning — PlanPicker, PlanSwitchConfirm",
+    "The portal in a new tab — openProviderPage, useCancelRequest",
   ],
   "feedback-compose": [
     "FeedbackDialog",
@@ -1300,6 +1302,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   "tour": [
     "GuidedTour",
     "TourStaleSpotlight022Demo",
+    "TourCatalogueDemo",
   ],
   "command-palette": [
     "CommandPaletteDemo",

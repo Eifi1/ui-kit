@@ -152,6 +152,62 @@ A `/tours` page comes once there are three or more tours. Until then, `TourMenu`
 an `href` stays supported (KS Q3).
 
 
+## 7. What shipped (ui-kit 0.43)
+
+All in `@eifi1/ui-kit/tour` beside the engine, and so in the barrel too. The two URL hooks
+need react-router, which is a required peer already.
+
+- **The data** (§2.2, §8): `TourInfo` `{id, title, description?, about?, icon?, group,
+  route?, since?, updated?: {date, reason}, steps?, points?, duration?, badge?}`, finished
+  strings only; `TourGroup` `{id, title, help?, icon?}`; `TourCompletions`
+  (`Record<id, ISO | null>`). `TourMenuTour` is now a subset of `TourInfo`, so one list
+  feeds both.
+- **`TourCatalogue`** (§2.1, §2.3, §2.8): `tours`, `groups`, `completed`, `joined`, the
+  controlled `query` / `group` (`null` is every group) / `state` (`"all" | "todo" |
+  "done"`) with `onChange(patch)`, `onLaunch`, `onReset`, a `header` slot, `formatDate`,
+  `labels`. keksdose's body as it was: the filter bar (SearchField, the group Select, the
+  ToggleGroup, each count cross-filtered), "Showing X of Y tours" while a filter is on,
+  the EmptyState with "Clear filters", and an h2 section per group with its icon and help
+  line over a `sm:2 / xl:3` grid; an emptied group is hidden. A tour whose `group` is not
+  in `groups` is not listed and not counted; an unknown group or state from an old link
+  is no filter. The search folds case and accents (`foldForSearch`).
+- **`TourCatalogueCard`**: keksdose's card. The points chip, the step count and the
+  duration ("About {n} min") are each drawn only when given: no gap, no "0 points" (§6.1,
+  KS). "Completed on {date}", or "Completed" for a `null` date. The title is an h3; Start /
+  Replay and "Mark as not done" are described by it.
+- **`isTourNew({since, joined, completed})`** (§6.4), **`isTourReset(tour, completedAt)`**
+  and **`isTourDone(tour, completedAt)`** (§8). A completion with no date predates any
+  update, so it is reset; a completion ON the update's day counts. A reset tour is not
+  NEW again: the card shows "Updated" and "Reset on {date}: {reason}".
+- **`useTourProgress({storageKey, migrate?})`** → `{completed, complete, reset}`
+  (§6.2). The kit's shape is the record itself (`""` reads as `null`, so kastlan's 0.42
+  record needs no `migrate`). `migrate(raw)` gets the parsed JSON and returns a record for
+  a shape it knows, `undefined` otherwise; the next write stores the kit's shape under the
+  same key. `complete(idOrTour)` keeps the first completion and returns `true` only when
+  the completion counts anew: that is the app's `onComplete` moment for the points and the
+  toast (§6.1). Passed the tour, a completion reset by `updated` is replaced (§8). Blocked
+  or full storage keeps the marks for the page's life. Readers on the same key agree
+  through an in-tab emitter and the `storage` event.
+- **`useTourUrlSync({launch, ready?, stepAliases?})`** (§2.7, §6.4): keksdose's
+  `TourUrlSync` on `useTourOptional()`. `launch(id, {startIndex})` is the app's launcher
+  (its steps, its `prepare()`, its `onFinish`). A tour starts whenever `?tour=` changes to
+  an id, on in-app navigation too, after `ready`; `&tourStep=` is 1-based. While a tour
+  runs, the URL mirrors it (never during a navigation in flight, never touching other
+  parameters or the hash); at the end only `tour`, `tourStep` and the aliases go.
+  `stepAliases: ["ts"]` reads kastlan's 0-based `ts` for one minor.
+- **`useTourCatalogueUrlState(params?)`** → `{query, group, state, onChange}`, spread onto
+  the catalogue: `?q`, `?topic`, `?state`, written with `replace`. `params` renames them
+  (kastlan's `?group`).
+- **`TourMenu`** takes `completed` and `joined` and works out ✓, NEW and "Updated"
+  itself; a tour's own `isNew` / `completed` / `reset` still wins. A reset tour is listed
+  with the "Updated" chip among the new ones (newest news first, by `updated.date`), the
+  heading then reads "New and updated", and it lights the dot ("Updated tours" when only
+  updates do).
+- **Words**, in 7 languages: the `tourCatalogue` namespace (keksdose's reviewed words where
+  it had them) and `topBarParts.tours.badgeUpdated`, `.updatedDot`, `.newAndUpdated`.
+- **Left to the app**, as settled: the page header, the points tile and the toast, the
+  topic words, the step lists and `prepare()`, role and data filtering, and the storage key.
+
 ## 8. A tour that is updated or fixed (Marcel, 2026-10-17)
 
 Marcel: "Reset both with indication why it was reset". A tour's steps are each app's own data,

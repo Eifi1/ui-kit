@@ -179,6 +179,10 @@ export interface BillingLabels {
   /** In place of "Cancel subscription" while a cancel is scheduled (§16.7 C, `POST
    *  /billing/resume`): "Keep subscription". */
   keepSubscription: string;
+  /** 0.43 (§17.3): the muted note under the actions while the portal opens in a new tab —
+   *  `provider` the provider's name ("Paddle"), `app` the app's; without the app, "this
+   *  page". "Payment and invoices open at Paddle in a new tab; Kastlan stays open here." */
+  portalOpensNewTab: (provider: string, app?: string) => string;
 
   /* ── The pay page (§14.4) ── */
   /* Built into the static page `dist/pay/` at the kit's build: it has no React and no
@@ -334,6 +338,8 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
   cancelConfirmBody: (date) => `Your subscription ends on ${date}. Until then everything works as before.`,
   cancelConfirmAction: "Cancel subscription now",
   keepSubscription: "Keep subscription",
+  portalOpensNewTab: (provider, app) =>
+    `Payment and invoices open at ${provider} in a new tab; ${app ? `${app} stays open here` : "this page stays open"}.`,
 
   payOpening: "Opening the secure checkout…",
   payNothing: "There’s no payment to make here. To choose a plan, go back to the app.",

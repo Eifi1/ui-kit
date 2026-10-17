@@ -1,6 +1,7 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { CreditCard, Hourglass, PencilOff } from "lucide-react";
 
+import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import type { AlertSize, AlertTone } from "../components/alert-banner";
@@ -9,6 +10,7 @@ import { Spinner } from "../components/spinner";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
 import type { BillingPortalAccess } from "./billing-overview";
+import { ExternalMark } from "./subscription-actions";
 
 /**
  * The billing banners (docs/billing-harmonization.md §3.3, §7, §12.6, §12.21):
@@ -66,6 +68,14 @@ interface BillingBannerBaseProps extends Omit<ComponentPropsWithRef<"div">, "chi
   actionLabel?: string;
   /** The action is under way: the button's spinner, no second press. */
   actionPending?: boolean;
+  /**
+   * 0.43 (§17): the action opens the provider's portal in a NEW TAB (`openProviderPage`
+   * in {@link onAction}): the external-link mark, "(opens in a new tab)" for a reader,
+   * and `target="_blank"` on an {@link actionHref}. Default: true for `payment-failed`
+   * with `onAction` (the portal's card page), false otherwise — an `actionHref` is
+   * usually the app's own subscription page.
+   */
+  actionNewTab?: boolean;
   /** An × that calls this; the app removes the banner and remembers that it did. */
   onDismiss?: () => void;
   dismissLabel?: string;
@@ -161,6 +171,7 @@ export function BillingBanner(props: BillingBannerProps) {
     onAction,
     actionLabel,
     actionPending,
+    actionNewTab,
     onDismiss,
     dismissLabel,
     labels: labelsProp,
@@ -168,6 +179,7 @@ export function BillingBanner(props: BillingBannerProps) {
     ...rest
   } = props;
   const labels = useBillingLabels(labelsProp);
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const days = Math.max(0, Math.floor(daysLeft ?? 0));
 
   let text: string;
@@ -209,14 +221,25 @@ export function BillingBanner(props: BillingBannerProps) {
   }
 
   const words = actionLabel ?? ownAction;
+  const newTab = actionNewTab ?? (kind === "payment-failed" && actionHref === undefined && onAction !== undefined);
   const action =
     askBuyer || words === undefined || (actionHref === undefined && onAction === undefined) ? undefined : actionHref !== undefined ? (
-      <Button href={actionHref} variant="secondary" size="sm">
+      <Button href={actionHref} variant="secondary" size="sm" external={newTab || undefined}>
         {words}
+        {newTab && <ExternalMark />}
       </Button>
     ) : (
-      <Button type="button" variant="secondary" size="sm" onClick={onAction} pending={actionPending}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={onAction}
+        pending={actionPending}
+        className={newTab ? "relative" : undefined}
+        data-portal-action={newTab ? "payment_method" : undefined}
+      >
         {words}
+        {newTab && <ExternalMark reader={common.opensInNewTab} />}
       </Button>
     );
 

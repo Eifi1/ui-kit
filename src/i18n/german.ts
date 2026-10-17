@@ -626,6 +626,34 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       awaitClickHint: "Klicken Sie auf das hervorgehobene Element, um fortzufahren",
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
+    // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page. keksdose's reviewed words.
+    tourCatalogue: {
+      searchLabel: "Touren durchsuchen",
+      searchPlaceholder: "Touren durchsuchen…",
+      groupLabel: "Thema",
+      groupAll: (count) => `Alle Themen (${n(count)})`,
+      groupOption: (group, count) => `${group} (${n(count)})`,
+      stateLabel: "Touren filtern",
+      stateAll: (count) => `Alle (${n(count)})`,
+      stateTodo: (count) => `Offen (${n(count)})`,
+      stateDone: (count) => `Abgeschlossen (${n(count)})`,
+      showing: (shown, total) => `${n(shown)} von ${n(total)} Touren`,
+      noMatches: "Keine Tour passt",
+      noMatchesHint: "Versuchen Sie ein anderes Wort, oder setzen Sie die Filter zurück.",
+      clearFilters: "Filter zurücksetzen",
+      badgeNew: "Neu",
+      badgeUpdated: "Aktualisiert",
+      resetOn: (date, reason) => `Zurückgesetzt am ${date}: ${reason}`,
+      points: (count) => `+${n(count)} Pkt.`,
+      steps: (count) => (count === 1 ? `${n(count)} Schritt` : `${n(count)} Schritte`),
+      duration: (minutes) => `Etwa ${n(minutes)} Min.`,
+      completedOn: (date) => `Abgeschlossen am ${date}`,
+      completed: "Abgeschlossen",
+      notCompleted: "Nicht abgeschlossen",
+      markUndone: "Als nicht erledigt markieren",
+      start: "Starten",
+      replay: "Erneut",
+    },
     commandPalette: {
       clear: "Suche löschen",
       submit: "Suchen",
@@ -1779,6 +1807,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // §312k BGB: the confirmation button says exactly this.
       cancelConfirmAction: "Jetzt kündigen",
       keepSubscription: "Abonnement behalten",
+      portalOpensNewTab: (provider, app) =>
+        `Zahlung und Rechnungen öffnen sich bei ${provider} in einem neuen Tab; ${app ? `${app} bleibt hier offen` : "diese Seite bleibt offen"}.`,
       grantWarningTitle: "Ihr kostenloser Zugang läuft weiter",
       grantWarningBody:
         "Ihr kostenloser Zugang hat kein Enddatum. Solange er läuft, ändert ein Kauf Ihren Tarif nicht: Sie würden für einen Tarif bezahlen, der nicht gilt.",
@@ -1872,7 +1902,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       sections: {
         overview: { title: "Übersicht", help: "Was gerade wartet, auf einen Blick." },
         users: { title: "Benutzer", help: "Wer ein Konto hat und was jede Person darf." },
-        invitations: { title: "Einladungen", help: "Die Links, mit denen neue Personen dazukommen." },
+        invitations: { title: "Einladungen", help: "Laden Sie Personen per E-Mail ein und sehen Sie, wer noch nicht beigetreten ist." },
         billing: { title: "Abrechnung", help: "Tarif, Zahlung und Rechnungen." },
         activity: { title: "Aktivität", help: "Was in der Verwaltung getan wurde, das Neueste zuerst." },
       },
@@ -1883,6 +1913,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         users: "Benutzer",
         usersNew: (count) => `${n(count)} neu in 7 Tagen`,
       },
+      overviewError: "Die Übersicht konnte nicht geladen werden.",
+      retry: "Erneut versuchen",
       tools: "Werkzeuge",
     },
     // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts. keksdose's
@@ -1896,6 +1928,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         allTours: "Alle Touren…",
         badgeNew: "Neu",
         completed: "Abgeschlossen",
+        badgeUpdated: "Aktualisiert",
+        updatedDot: "Aktualisierte Touren",
+        newAndUpdated: "Neu und aktualisiert",
       },
       sync: {
         blocked: (count) =>

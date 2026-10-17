@@ -47,7 +47,14 @@ interface AccountChipLook {
 export interface RoleDefinition {
   label: string;
   tone?: ChipTone;
-  /** A lucide component or an element — Kurvenschmiede marks its admins with a shield. */
+  /**
+   * A lucide component or an element — Kurvenschmiede marks its admins with a shield.
+   * Unlike {@link href} and {@link variant}, it shows EVERYWHERE the role is drawn: in
+   * {@link AccountRoleChip} and in {@link RoleChip} (the roster's column) alike. That is
+   * intended (0.43, keksdose's question): the glyph is part of how the role reads, so the
+   * shield on the header's chip is the shield in the users list. An app that wants the
+   * glyph in one place only hands the other a second vocabulary without `icon`.
+   */
   icon?: LucideIcon | ReactElement;
   /**
    * 0.42.0 (docs/admin-harmonization.md §2.1, settings §12.3): the role's tool — an

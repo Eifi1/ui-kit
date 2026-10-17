@@ -796,6 +796,9 @@ export { DEFAULT_ADMIN_AREA_LABELS, useAdminAreaLabels } from "./admin/admin-are
 export type { AdminAreaLabels, AdminTileLabels, AdminSharedSection } from "./admin/admin-area-labels";
 export { ADMIN_SECTIONS, adminSections } from "./admin/admin-sections";
 export type { AdminSectionDefinition, AdminOwnSection, AdminSectionsOptions } from "./admin/admin-sections";
+// 0.43.0 (keksdose): the section order as ids, and the narrowed `leaveOut`.
+export { adminSectionOrder } from "./admin/admin-sections";
+export type { AdminSectionPlace, AdminSectionOrderOptions, AdminKeptSection } from "./admin/admin-sections";
 export { AdminForbidden } from "./admin/admin-forbidden";
 export type { AdminForbiddenProps } from "./admin/admin-forbidden";
 export { AdminOverview, AttentionTile, adminWaitingCount, DEFAULT_ADMIN_ATTENTION_HREFS } from "./admin/admin-overview";
@@ -883,6 +886,11 @@ export { isPermanentGrant } from "./billing/billing-overview";
 export type { BillingPortalAccess } from "./billing/billing-overview";
 export { CancelSubscriptionConfirm } from "./billing/cancel-subscription";
 export type { CancelSubscriptionConfirmProps } from "./billing/cancel-subscription";
+// 0.43 (§17): the provider's portal in a new tab; the in-app cancel's follow-up.
+export { openProviderPage } from "./billing/provider-page";
+export type { OpenProviderPageOptions, ProviderPageWay } from "./billing/provider-page";
+export { useCancelRequest } from "./billing/cancel-request";
+export type { CancelRequest, CancelRequested } from "./billing/cancel-request";
 // The operator's plan parts (§14.12) are admin/plan-change, in the admin section.
 
 // ── settings ─────────────────────────────────────────────────────────────────

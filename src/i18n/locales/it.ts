@@ -613,6 +613,34 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       awaitClickHint: "Faccia clic sull’elemento evidenziato per continuare",
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
+    // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page. keksdose's reviewed words.
+    tourCatalogue: {
+      searchLabel: "Cerca tour",
+      searchPlaceholder: "Cerca tour…",
+      groupLabel: "Argomento",
+      groupAll: (count) => `Tutti gli argomenti (${n(count)})`,
+      groupOption: (group, count) => `${group} (${n(count)})`,
+      stateLabel: "Filtra i tour",
+      stateAll: (count) => `Tutti (${n(count)})`,
+      stateTodo: (count) => `Da fare (${n(count)})`,
+      stateDone: (count) => `Completati (${n(count)})`,
+      showing: (shown, total) => `${n(shown)} di ${n(total)} tour`,
+      noMatches: "Nessun tour corrisponde",
+      noMatchesHint: "Provi un’altra parola o cancelli i filtri.",
+      clearFilters: "Cancella filtri",
+      badgeNew: "Nuovo",
+      badgeUpdated: "Aggiornato",
+      resetOn: (date, reason) => `Reimpostato il ${date}: ${reason}`,
+      points: (count) => `+${n(count)} pt`,
+      steps: (count) => (count === 1 ? `${n(count)} passaggio` : `${n(count)} passaggi`),
+      duration: (minutes) => `Circa ${n(minutes)} min`,
+      completedOn: (date) => `Completato il ${date}`,
+      completed: "Completato",
+      notCompleted: "Non completato",
+      markUndone: "Segna come non completato",
+      start: "Avvia",
+      replay: "Ripeti",
+    },
     commandPalette: {
       clear: "Cancella ricerca",
       submit: "Cerca",
@@ -1744,6 +1772,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         `Il Suo abbonamento termina il ${date}. Fino ad allora tutto funziona come prima.`,
       cancelConfirmAction: "Disdici ora",
       keepSubscription: "Mantieni l’abbonamento",
+      portalOpensNewTab: (provider, app) =>
+        `Pagamenti e fatture si aprono su ${provider} in una nuova scheda; ${app ? `${app} resta aperto qui` : "questa pagina resta aperta"}.`,
       grantWarningTitle: "Il Suo accesso gratuito continua",
       grantWarningBody:
         "Il Suo accesso gratuito non ha una data di fine. Finché dura, un acquisto non cambia il Suo piano: pagherebbe per un piano che non si applica.",
@@ -1831,7 +1861,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       sections: {
         overview: { title: "Panoramica", help: "Ciò che è in attesa, a colpo d’occhio." },
         users: { title: "Utenti", help: "Chi ha un account e cosa può fare ciascuno." },
-        invitations: { title: "Inviti", help: "I link con cui entra una persona nuova." },
+        invitations: { title: "Inviti", help: "Inviti persone via e-mail e veda chi non si è ancora unito." },
         billing: { title: "Fatturazione", help: "Il piano, il pagamento e le fatture." },
         activity: { title: "Attività", help: "Ciò che hanno fatto gli amministratori, dal più recente." },
       },
@@ -1842,6 +1872,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         users: "Utenti",
         usersNew: (count) => `${n(count)} ${plural(count, "nuovo", "nuovi")} in 7 giorni`,
       },
+      overviewError: "Non è stato possibile caricare la panoramica.",
+      retry: "Riprova",
       tools: "Strumenti",
     },
     // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts, keksdose's
@@ -1855,6 +1887,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         allTours: "Tutti i tour…",
         badgeNew: "Nuovo",
         completed: "Completato",
+        badgeUpdated: "Aggiornato",
+        updatedDot: "Tour aggiornati",
+        newAndUpdated: "Nuovi e aggiornati",
       },
       sync: {
         blocked: (count) =>

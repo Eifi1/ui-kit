@@ -25,6 +25,7 @@ import type { CharacterCountLabels, PasswordRevealLabels } from "../components/f
 import type { TabsLabels } from "../components/tabs";
 import type { WizardLabels } from "../wizard/types";
 import type { TourLabels } from "../tour/tour";
+import type { TourCatalogueLabels } from "../tour/tour-catalogue-labels";
 import type { CommandPaletteLabels } from "../search/command-palette";
 import type { GlobalSearchLabels } from "../search/global-search";
 import type { MonthPickerLabels } from "../components/month-picker";
@@ -321,6 +322,8 @@ export interface UiKitLabels {
   file: FileLabels;
   wizard: WizardLabels;
   tour: TourLabels;
+  /** 0.43.0: the tours page — `TourCatalogue` and its card (docs/tours-harmonization.md §3). */
+  tourCatalogue: TourCatalogueLabels;
   commandPalette: CommandPaletteLabels;
   globalSearch: GlobalSearchLabels;
   seriesChart: SeriesChartLabels;

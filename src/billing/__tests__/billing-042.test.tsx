@@ -29,6 +29,10 @@ import { SubscriptionActions } from "../subscription-actions";
  */
 
 const L = DEFAULT_BILLING_LABELS;
+/** 0.43 (§17): a portal action's name carries "(opens in a new tab)" — matched with or
+ *  without it. */
+const portalName = (words: string) => new RegExp(`^${words}( \\(opens in a new tab\\))?$`);
+
 
 describe("isPermanentGrant (§16.7 E)", () => {
   const base = { status: "comped", source: "manual", comped_until: null } as const;
@@ -66,13 +70,13 @@ describe("SubscriptionActions — the portal for the buyer only (§16.2, §16.7 
         onCancelInApp={inApp}
       />,
     );
-    expect(screen.queryByRole("button", { name: L.manage })).toBeNull();
+    expect(screen.queryByRole("button", { name: portalName(L.manage) })).toBeNull();
     expect(screen.queryByRole("link")).toBeNull();
     expect(screen.getByText(L.buyerHolds("Ada Gardener"))).toBeInTheDocument();
     expect(L.buyerHolds("Ada Gardener")).toBe(
       "The payment method and the invoices are with Ada Gardener, who bought the subscription.",
     );
-    await user.click(screen.getByRole("button", { name: L.cancel }));
+    await user.click(screen.getByRole("button", { name: portalName(L.cancel) }));
     expect(inApp).toHaveBeenCalledTimes(1);
     expect(portal).not.toHaveBeenCalled();
     expect(onCancel).not.toHaveBeenCalled();
@@ -95,17 +99,17 @@ describe("SubscriptionActions — the portal for the buyer only (§16.2, §16.7 
     const { rerender } = render(
       <SubscriptionActions portal="buyer_only" onCancelInApp={() => {}} cancelAtPeriodEnd onResume={resume} />,
     );
-    expect(screen.queryByRole("button", { name: L.cancel })).toBeNull();
+    expect(screen.queryByRole("button", { name: portalName(L.cancel) })).toBeNull();
     await user.click(screen.getByRole("button", { name: L.keepSubscription }));
     expect(resume).toHaveBeenCalledTimes(1);
     // The buyer, under "open", too.
     rerender(<SubscriptionActions onPortal={portal} cancelAtPeriodEnd onResume={resume} pending="resume" />);
-    expect(screen.getByRole("button", { name: L.manage })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: L.cancel })).toBeNull();
+    expect(screen.getByRole("button", { name: portalName(L.manage) })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: portalName(L.cancel) })).toBeNull();
     expect(screen.getByRole("button", { name: new RegExp(L.keepSubscription) })).toHaveAttribute("aria-busy", "true");
     // Without onResume the cancel stays as before.
     rerender(<SubscriptionActions onPortal={portal} cancelAtPeriodEnd />);
-    expect(screen.getByRole("button", { name: L.cancel })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: portalName(L.cancel) })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: L.keepSubscription })).toBeNull();
   });
 
@@ -114,15 +118,15 @@ describe("SubscriptionActions — the portal for the buyer only (§16.2, §16.7 
     const portal = vi.fn();
     const inApp = vi.fn();
     const { rerender } = render(<SubscriptionActions portal="open" buyerName="Ada" onPortal={portal} onCancelInApp={inApp} />);
-    await user.click(screen.getByRole("button", { name: L.manage }));
-    await user.click(screen.getByRole("button", { name: L.cancel }));
+    await user.click(screen.getByRole("button", { name: portalName(L.manage) }));
+    await user.click(screen.getByRole("button", { name: portalName(L.cancel) }));
     expect(portal.mock.calls).toEqual([["overview"], ["cancel"]]);
     expect(inApp).not.toHaveBeenCalled();
     expect(document.querySelector("[data-buyer-holds]")).toBeNull();
     rerender(<SubscriptionActions cancelHref="/portal/cancel" onCancelInApp={inApp} />);
-    expect(screen.getByRole("link", { name: L.cancel })).toHaveAttribute("href", "/portal/cancel");
+    expect(screen.getByRole("link", { name: portalName(L.cancel) })).toHaveAttribute("href", "/portal/cancel");
     rerender(<SubscriptionActions onCancelInApp={inApp} />);
-    await user.click(screen.getByRole("button", { name: L.cancel }));
+    await user.click(screen.getByRole("button", { name: portalName(L.cancel) }));
     expect(inApp).toHaveBeenCalledTimes(1);
   });
 });
@@ -205,7 +209,7 @@ describe("BillingBanner payment-failed — ask the buyer (§16.7 A, §16.8)", ()
     // "open": as before.
     rerender(<BillingBanner kind="payment-failed" portal="open" buyerName="Ada" onAction={onAction} />);
     expect(screen.getByText(L.paymentFailed)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: L.updatePayment })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: portalName(L.updatePayment) })).toBeInTheDocument();
   });
 });
 

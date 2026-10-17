@@ -11,12 +11,14 @@ import {
   AttentionTile,
   SettingsLayout,
   SettingsSection,
+  Switch,
   ToggleGroup,
   TopBarActionMenu,
-  adminMenuEntry,
+  adminSectionOrder,
   adminSections,
   adminWaitingCount,
   useAdminAreaLabels,
+  useAdminMenuEntry,
 } from "@eifi1/ui-kit";
 import type { AdminAttention, AdminSharedSection, AdminToolLink, RoleVocabulary } from "@eifi1/ui-kit";
 import { Example, Note, code, NO_ROUTER } from "../lib/section";
@@ -71,10 +73,11 @@ function Frame({ initial, className, children }: { initial: string; className?: 
 
 export function AdminWayIn042Demo() {
   const [role, setRole] = useState<Role>("ADMIN");
-  const labels = useAdminAreaLabels();
+  // 0.43: adminMenuEntry with the provider's words read for it.
+  const admin = useAdminMenuEntry({ badge: WAITING });
   return (
     <Example
-      label="The way in — adminMenuEntry, AccountRoleChip"
+      label="The way in — useAdminMenuEntry, AccountRoleChip"
       hint="the Administration row with its waiting count; the role chip as a shortcut"
     >
       <ToggleGroup<Role>
@@ -98,7 +101,7 @@ export function AdminWayIn042Demo() {
           }}
           entries={[
             { kind: "link", key: "settings", to: "/settings", icon: <Settings className="size-4" aria-hidden />, label: "Settings" },
-            ...(role === "ADMIN" ? [adminMenuEntry({ badge: WAITING, labels })] : []),
+            ...(role === "ADMIN" ? [admin] : []),
             ...(role !== "MEMBER"
               ? [{ kind: "link" as const, key: "translations", to: "/translations", icon: <Languages className="size-4" aria-hidden />, label: "Translations" }]
               : []),
@@ -109,7 +112,9 @@ export function AdminWayIn042Demo() {
         Every account shows its role; a role whose vocabulary names an {code("href")} links there and closes the menu
         on the way. The row is for an admin only, and its badge is {code("adminWaitingCount")} over the counts that wait
         on this admin — here To triage and the app's own seeds, never invitations or users. A menu built from{" "}
-        {code("HoverMenu")} children takes {code("AdminMenuRow")}, the same row.
+        {code("HoverMenu")} children takes {code("AdminMenuRow")}, the same row. {code("useAdminMenuEntry")} (0.43) is{" "}
+        {code("adminMenuEntry({ labels: useAdminAreaLabels() })")}: the plain function reads no provider, so without{" "}
+        {code("labels")} it is English in every language.
       </Note>
     </Example>
   );
@@ -121,12 +126,16 @@ type Own = "beds";
 
 export function AdminArea042Demo() {
   const [layout, setLayout] = useState<"desktop" | "phone">("desktop");
+  const [failed, setFailed] = useState(false);
   const labels = useAdminAreaLabels();
   // The shared five without billing, and the planner's own Beds between Invitations and Activity.
   const groups = adminSections<Own>(labels, [{ id: "beds", icon: <Sprout />, title: "Beds", help: "The garden's beds and who tends them." }], {
     leaveOut: ["billing"],
   });
-  const entries = groups.map((g) => ({ id: g.id, group: g.id, anchor: `${g.id}-card`, title: g.title }));
+  // 0.43: the overview needs no entry of its own (it is `standalone`).
+  const entries = groups.filter((g) => g.id !== "overview").map((g) => ({ id: g.id, group: g.id, anchor: `${g.id}-card`, title: g.title }));
+  // 0.43: the same order as ids, with no words — for a router's paths.
+  const order = adminSectionOrder<Own, "billing">([{ id: "beds" }], { leaveOut: ["billing"] });
   return (
     <Example
       label="The admin area — adminSections, AdminOverview, AdminToolLinks"
@@ -141,6 +150,7 @@ export function AdminArea042Demo() {
           { value: "phone", label: "Phone" },
         ]}
       />
+      <Switch size="sm" className="mt-3" label="GET /admin/attention fails" checked={failed} onCheckedChange={setFailed} />
       <Frame key={layout} initial="/admin" className={layout === "phone" ? "mx-auto mt-3 max-w-[390px]" : "mt-3"}>
         <div className="h-[36rem] overflow-y-auto">
           <SettingsLayout<AdminSharedSection | Own>
@@ -161,7 +171,13 @@ export function AdminArea042Demo() {
                   <AdminOverview
                     attention={ATTENTION}
                     hrefs={{ feedback_waiting: "/feedback?status=OPEN" }}
-                    extraTiles={[{ key: "seeds_waiting", label: "Seeds to approve", count: ATTENTION.extra.seeds_waiting, href: "/admin/beds" }]}
+                    extraTiles={[
+                      { key: "seeds_waiting", label: "Seeds to approve", count: ATTENTION.extra.seeds_waiting, href: "/admin/beds" },
+                      // 0.43: no href, a quiet count.
+                      { key: "beds_total", label: "Beds", count: 12 },
+                    ]}
+                    error={failed}
+                    onRetry={() => setFailed(false)}
                   />
                 ) : (
                   <p className="text-sm text-secondary">The {section} section's cards.</p>
@@ -177,6 +193,9 @@ export function AdminArea042Demo() {
         {code("after")} names another place. The overview leaves out every {code("null")} count — this app has no
         deletion requests to act on — and each tile is a link to where the work is. The Tools list sits under the
         sidebar ({code("sidebarFooter")}) and in the phone footer; the feedback inbox is not in it, the top bar reaches it.
+        Since 0.43 the Overview shows with no entry, an extra tile without {code("href")} is a quiet count, a failed
+        answer shows {code("error")} with &ldquo;Try again&rdquo;, and {code("adminSectionOrder(own, { leaveOut })")}{" "}
+        gives the ids alone: {order.join(", ")}.
       </Note>
     </Example>
   );

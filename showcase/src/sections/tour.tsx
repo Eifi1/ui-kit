@@ -1,6 +1,20 @@
 import { useState } from "react";
-import { Button, DEFAULT_TOUR_LABELS, TourProvider, useTour, useTourOptional } from "@eifi1/ui-kit";
-import type { TourLabels, TourStep } from "@eifi1/ui-kit";
+import { BarChart3, FileUp, FlaskConical, GraduationCap, Target, Trophy, Wallet } from "lucide-react";
+import {
+  Button,
+  Chip,
+  DEFAULT_TOUR_LABELS,
+  PageHeader,
+  StatTile,
+  TourCatalogue,
+  TourMenu,
+  TourProvider,
+  isTourDone,
+  useTour,
+  useTourOptional,
+  useTourProgress,
+} from "@eifi1/ui-kit";
+import type { TourCatalogueFilter, TourCompletions, TourGroup, TourInfo, TourLabels, TourStep } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, beat } from "../lib/section";
 
 /**
@@ -427,6 +441,152 @@ export function TourStaleSpotlight022Demo() {
         carries the step it was found for, and a rect from another step is never drawn. Walk it with the arrows too.
       </Note>
       <Note>Since 0.22.</Note>
+    </Example>
+  );
+}
+
+/* ── since 0.43: the tours page ─────────────────────────────────────────── */
+
+const CATALOGUE_GROUPS: TourGroup[] = [
+  { id: "start", title: "Getting started", help: "The first steps, in the order most people take them.", icon: <GraduationCap /> },
+  { id: "budgeting", title: "Everyday budgeting", help: "Plan a month, and see where it went.", icon: <Wallet /> },
+  { id: "import", title: "Importing", help: "Bring transactions in from your bank.", icon: <FileUp /> },
+  { id: "reports", title: "Reports", help: "The charts, and what they answer.", icon: <BarChart3 /> },
+];
+
+const CATALOGUE_TOURS: TourInfo[] = [
+  {
+    id: "showcase-welcome",
+    title: "Welcome",
+    description: "The app in two minutes.",
+    about: "Visits the dashboard, the budget and the top bar, and changes nothing.",
+    icon: <GraduationCap />,
+    group: "start",
+    route: "/",
+    points: 20,
+    steps: 2,
+    duration: 2,
+  },
+  {
+    id: "showcase-budget",
+    title: "Your first budget",
+    description: "Plan a month, category by category.",
+    about: "Opens the budget page, explains the columns and how money moves between categories.",
+    icon: <Wallet />,
+    group: "budgeting",
+    route: "/budget",
+    since: "2026-10-05",
+    points: 30,
+    steps: 2,
+    duration: 4,
+  },
+  {
+    id: "showcase-goals",
+    title: "Goals",
+    description: "Save towards something.",
+    about: "Shows where a goal lives, and what the progress bar counts.",
+    icon: <Target />,
+    group: "budgeting",
+    route: "/budget",
+    updated: { date: "2026-10-10", reason: "The goals editor moved into the category." },
+    points: 40,
+    steps: 2,
+  },
+  {
+    id: "showcase-import",
+    title: "Bank import",
+    description: "A CSV from your bank, in four steps.",
+    icon: <FileUp />,
+    group: "import",
+    points: 30,
+    steps: 2,
+    duration: 3,
+    badge: (
+      <Chip size="sm" tone="warning" icon={FlaskConical}>
+        Practice: nothing is saved
+      </Chip>
+    ),
+  },
+];
+
+const CATALOGUE_STEPS: TourStep[] = [
+  { title: "A demo tour", body: "Every card here runs this same two-step tour." },
+  { title: "Done", body: "Finish it and the card turns completed — the menu above agrees without a reload." },
+];
+
+/** The device key is the app's, always (§6.2). This one is the showcase's own. */
+const SHOWCASE_PROGRESS_KEY = "showcase.tours.completed";
+
+export function TourCatalogueDemo() {
+  const { start } = useTour();
+  const progress = useTourProgress({ storageKey: SHOWCASE_PROGRESS_KEY });
+  const [filter, setFilter] = useState<TourCatalogueFilter>({ query: "", group: null, state: "all" });
+  const [toast, setToast] = useState<string | null>(null);
+  // Seeded once, so the reset tour is there to see: "Goals" was taken before its update.
+  const completed: TourCompletions = { "showcase-goals": "2026-09-20T10:00:00Z", ...progress.completed };
+
+  const launch = (id: string) => {
+    const tour = CATALOGUE_TOURS.find((t) => t.id === id);
+    if (!tour) return;
+    start(CATALOGUE_STEPS, {
+      id,
+      // The app's onComplete: record it, and award the points the first time it counts.
+      onFinish: () => {
+        if (progress.complete(tour)) setToast(`You earned ${tour.points} points!`);
+      },
+    });
+  };
+  const done = CATALOGUE_TOURS.filter((t) => isTourDone(t, completed[t.id]));
+  const earned = done.reduce((sum, t) => sum + (t.points ?? 0), 0);
+  const total = CATALOGUE_TOURS.reduce((sum, t) => sum + (t.points ?? 0), 0);
+
+  return (
+    <Example
+      label="TourCatalogue — the tours page body"
+      hint="keksdose's /tours (docs/tours-harmonization.md): sections per group, the filter bar, keksdose's card"
+    >
+      <div className="mb-3 flex items-center gap-2 text-sm text-muted">
+        The same list in the top bar&apos;s menu:
+        <TourMenu tours={CATALOGUE_TOURS} completed={completed} joined="2026-10-01" onLaunch={launch} list="all" />
+      </div>
+      <TourCatalogue
+        tours={CATALOGUE_TOURS}
+        groups={CATALOGUE_GROUPS}
+        completed={completed}
+        joined="2026-10-01"
+        {...filter}
+        onChange={(patch) => setFilter((f) => ({ ...f, ...patch }))}
+        onLaunch={launch}
+        onReset={progress.reset}
+        header={
+          <PageHeader
+            size="compact"
+            mobileLayout="inline"
+            actionsAlign="start"
+            as="h2"
+            title="Guided tours"
+            description={`${done.length} of ${CATALOGUE_TOURS.length} completed`}
+            actions={
+              <StatTile
+                size="sm"
+                tone="brand"
+                icon={<Trophy />}
+                className="w-36 shrink-0"
+                label="Bonus points"
+                value={earned}
+                unit={`/ ${total}`}
+              />
+            }
+          />
+        }
+      />
+      {toast && <Note>{toast}</Note>}
+      <Note>
+        The page header, the points tile and the toast are the app&apos;s; the kit draws the body. The filters are
+        controlled — an app keeps them in its URL with `useTourCatalogueUrlState()` (`?q`, `?topic`, `?state`), and
+        `useTourUrlSync` starts a tour from `?tour=` and mirrors `&tourStep=`. Progress is `useTourProgress` on this
+        device; &quot;Goals&quot; was completed before its update, so it is to do again, with the reason. Since 0.43.
+      </Note>
     </Example>
   );
 }
