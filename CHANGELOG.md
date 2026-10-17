@@ -21,6 +21,17 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.42.0](https://github.com/Eifi1/ui-kit/compare/v0.41.0...v0.42.0) (2026-10-17)
+
+### Added
+
+* buyer-only billing actions, the permanent-grant warning and the admin-area parts ([7749327](https://github.com/Eifi1/ui-kit/commit/77493275498bf51cbebb5aaf3e34ed0875abd1c3))
+* **shell:** the top bar's shared parts — TopBarActions, TourMenu, sync, dev switchers ([29a903f](https://github.com/Eifi1/ui-kit/commit/29a903fe8cf2a38eb69f43f55acd8f32c94c16f5))
+
+### Fixed
+
+* the pre-release build reviews — online-only sync, menu leading rows, GrantWarningConfirm ([13379b5](https://github.com/Eifi1/ui-kit/commit/13379b57e12dd72ac109f782cb0bbdf6520421d0))
+
 ## [0.41.0](https://github.com/Eifi1/ui-kit/compare/v0.40.1...v0.41.0) (2026-10-17)
 
 Round 0.41: the names deprecated in 0.40 are removed. No app used any of them, so the migration is a
