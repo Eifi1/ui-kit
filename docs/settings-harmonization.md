@@ -36,6 +36,7 @@ snapshot of the three apps, the per-repo to-dos and the review list as written a
 | 9 | Order | — (archived) | |
 | 10 | Settled after the reviews | — | an index: each item points to its § |
 | 11 | Reset this device's settings | — (round 0.36: settled 2026-10-13, built for ui-kit 0.36.0) | §11.7 (the reviews; round decisions 10, 11) |
+| 12 | The role chip is the way into the role's tool | **DRAFT, superseded**: moved to the admin round 0.43 (Marcel: the chip alone is too hidden) | amends §5's "Who sees it" |
 
 ## 1. Where each one stands
 
@@ -966,3 +967,76 @@ The three reviews (kk at `c90d068e`, ka at `f2b9574`, KS) and the round's decisi
 - **`KIND_OF` beside `ENTRY_OF`, the test by render, `SITES` gains
   `registerDeviceSetting`** (KS 3.4) → §11.5.
 - **Where, a confirm, live** (decisions 8–10, as recommended) → §11.2.
+
+## 12. The role chip is the way into the role's tool (round 0.42)
+
+**SUPERSEDED, 2026-10-17: moved to the admin round 0.43.** Marcel, after the reviews: the chip as the only way
+in is "a bit too hidden", and the admin view as a whole is to be harmonized. Kept as the reviews' input until
+that round's contract replaces it.
+
+**DRAFT, 2026-10-17, for the three app reviews** (audits/round-042/reviews.md). Marcel,
+in the keksdose session, relayed by keksdose-cb: "The admin section as in keksdose
+clicking on the admin chip shall be used in the other apps as well. Forward to the ui kit
+to harmonize. Kastlan has an additional sidebar entry, which is not intentional by now."
+keksdose is the source. This amends §5's "Who sees it": the way in is the role chip, not a
+menu row and not a sidebar entry.
+
+### 12.1 Where each one stands (2026-10-17)
+
+- **keksdose** (canon): the account menu's header (`TopBarActionMenu` `header.extra`,
+  `frontend/src/app/account-menu.tsx:385-408`) carries the role chip
+  (`<Chip href="/admin" onClick={close} variant="solid" size="sm" shape="square" caps
+  icon={ShieldCheck}>`, "Admin"). A reviewer's chip links to `/translations` (icon
+  `Languages`), and a member's chip is plain, not a link. The menu closes on the way. No
+  sidebar entry. The page is §5's `SettingsLayout` (`features/admin/admin-page.tsx`).
+- **kastlan**: a sidebar item `administration` → `/admin` for `ADMIN`
+  (`app/nav.ts:149`), which Marcel says is not intended. Separately, a superuser-only
+  `ShieldCheck` icon button → `/platform/companies` in the top bar
+  (`top-bar.tsx:134-142`), kastlan's platform console.
+- **Kurvenschmiede**: to be filled in by its review.
+
+### 12.2 Decisions (DRAFT)
+
+1. **The role chip in the account menu's header is the way into that role's tool**, in
+   every app: an admin's chip → `/admin`, and any other role with a tool (keksdose's
+   reviewer → `/translations`) → that tool. A role without a tool gets a plain chip, not
+   a link. The menu closes on the way.
+2. **No sidebar, bottom-bar or menu-row entry for the admin page.** kastlan drops
+   `administration` from `app/nav.ts`. A link-only admin task (§5's import wizard) keeps
+   its own entry in the app's admin nav group on a desktop, unchanged.
+3. **The route's guard is unchanged**: the app's admin check, and the app's 403 page for
+   anyone else (§5).
+4. **The look is keksdose's**: `solid`, `sm`, `square`, `caps`, the role's icon. The tone
+   is the role's own from the app's `RoleVocabulary`.
+
+### 12.3 ui-kit 0.42
+
+- **`RoleDefinition.href?: string`**: the role's tool. A vocabulary entry with it makes
+  the chip a link.
+- **`AccountRoleChip`**: `RoleChip` with §12.2.4's look as its defaults, made for
+  `header.extra`. Usage: `extra: (close) => <AccountRoleChip value={me.role} roles={ROLES}
+  onNavigate={close} />`. With an `href` it renders a link through the app's
+  `renderLink`/router link, as `Chip` does, and calls `onNavigate` on click. Without one
+  it renders a plain chip. No new labels: the role's words are the app's (§RoleChip).
+- **Docs**: §5's "The account menu's 'Administration' entry" is reworded to point here;
+  the showcase's account-menu example shows the chip as a link.
+
+### 12.4 Per app
+
+- **keksdose**: optional swap of its hand-built chip for `AccountRoleChip`, which gives
+  the same look and behaviour.
+- **kastlan**: drop `nav.ts:149`'s `administration` item and add the chip to the account
+  menu header for the company role.
+- **Kurvenschmiede**: add the chip, and drop any admin nav entry it has.
+
+### 12.5 Questions for the reviews
+
+1. **kastlan's platform console** (`/platform/companies`, superuser): should it move
+   into the chip as well (a superuser's chip → the console)? Or should it stay a top-bar
+   button, since a superuser is also a company admin and one chip can only link one
+   place?
+2. **kastlan's role is per company**: should the chip show the role in the active
+   company and follow the `CompanySwitcher`?
+3. **Kurvenschmiede's customer role**: is it a plain chip, or does it have a tool of its own?
+4. Is a chip as the only way in discoverable enough on a phone? keksdose: does live use
+   show anyone missing it?

@@ -56,6 +56,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 14.16 | Settled after the reviews | — | an index: every item points to its § |
 | 14.17 | A grant clears the trial's end | app-side (round 0.34) | |
 | 15 | Round 0.39: pay pages that serve any app, a shared plan switch and customer | §15 settled 2026-10-14 (round 0.39); built in server-kit 0.12, ui-kit 0.39 | round 0.40: `BillingOverview.switching` (server-kit 0.13, ui-kit 0.40, §15.2.10); the sandbox run, §15.6 (2026-10-16) |
+| 16 | Round 0.42: the portal for the buyer only, an in-app cancel, the permanent-grant warning | §16 settled 2026-10-17 (round 0.42); built in server-kit 0.14, ui-kit 0.42 | amends §15.2.11; §16.7 folds the reviews, §16.8 settles them |
 
 ## 1. Where each one stands
 
@@ -2418,3 +2419,206 @@ Notes from the run (2026-10-16), for every app's sandbox and deploy notes:
   - kastlan's portal: only the buyer by user id opens the overview (§15.2.11).
   - Every review point above adopted, and the sandbox steps added (§15.6 steps 9, 14,
     15); Apple Pay set up, not device-verified.
+
+## 16. Round 0.42: the portal for the buyer only, an in-app cancel, the permanent-grant warning
+
+**Settled 2026-10-17** (Marcel, in the ui-kit session, after the three app reviews; §16.7, §16.8).
+§16.7's proposals win over §16.2–§16.5 where they differ. The decisions
+are Marcel's, made 2026-10-17 in the ui-kit session and in kastlan's, after kastlan's
+sandbox run of §15.6 steps 13 and 14. It amends §15.2.11. Paths as in §14.
+
+### 16.1 What the sandbox showed (kastlan, 2026-10-17)
+
+- **One customer across the apps** (§15.6 step 13, settled): the checkout in kastlan, made
+  with the e-mail of keksdose's run, reused keksdose's `ctm_`. It now holds two
+  subscriptions, one tagged `app=keksdose` and one `app=kastlan`. `provider_payer_user_id`
+  landed on kastlan's row.
+- **The portal overview lists both** subscriptions, whichever app opened it.
+- **A subscription's `cancel` link reaches the overview** (§15.6 step 14, settled): from the
+  page it opens, the buyer can navigate to the list of all their subscriptions. Whether
+  the `payment_method` link reaches it too was not looked at, and it doesn't matter, since
+  the cancel link alone triggers §15.2.11's rule.
+- **Buying under a permanent grant** (no end) leaves the row `comped`, `manual` and on the
+  grant's plan. Only `current_period_end` moves (§3.2, §12.11, as designed). The payer
+  pays for a plan that never applies.
+
+### 16.2 Decisions (Marcel, 2026-10-17)
+
+1. **Every portal target is for the buyer only, where a buyer is stored.** §15.2.11's
+   branch "if those links reach the overview, only the buyer gets any portal link" now
+   applies. A row with `provider_payer_user_id` set opens `overview`, `cancel` and
+   `payment_method` only for that user. A row without it (keksdose and Kurvenschmiede,
+   whose payer is the person) changes nothing.
+2. **Another admin cancels in the app** ("Proposal is ok"): "Cancel subscription" opens the
+   kit's confirm and then `POST /billing/cancel`, which calls the port's existing
+   `cancel(subscription_id=…, immediately=False)` (the Paddle API, no portal session). The
+   subscription ends at its period's end. The row changes when Paddle's webhook lands
+   (`cancel_at_period_end`, §5), as after a cancellation in the portal.
+3. **"Payment and invoices" for another admin is a caption that names the buyer**: "The
+   payment method and the invoices are with {buyer}, who bought the subscription." No
+   button, so there is no request that could only end in the 403.
+4. **When the buyer has left or been erased**, nobody opens the portal. Any admin can
+   still cancel in the app. The payment method can't be changed, so the company lets the
+   period run out and buys anew; Paddle can't move a subscription to another customer.
+   This replaces §15.2.11's "cancel and payment method still work".
+5. **A checkout under a permanent grant is warned about, not refused** ("warn on
+   permanent grant"). Before the checkout starts, the kit's confirm says that the purchase
+   won't change the plan while the free grant runs, and the payer may go on. The overview
+   already tells the page: `status = comped`, `source = manual`, `comped_until = null`
+   (a beta row without an end shows the launch plus 12 months, §3.2, so it isn't
+   permanent). A grant with an end gets no warning: the bought plan applies from its end
+   on.
+
+### 16.3 server-kit 0.14
+
+- **`BillingOverview.portal: "open" | "buyer_only" = "open"`**, set by `from_row(…,
+  viewer_is_buyer: bool | None = None)`: `buyer_only` when the row has a buyer and the
+  viewer isn't them, otherwise `open`. **`BillingOverview.buyer_name: str | None`**: the
+  buyer's display name, which the app looks up and passes in (`from_row(…,
+  buyer_name=…)`). `None` when the buyer is gone: the caption then reads "…with the admin
+  who bought the subscription".
+- **`require_portal_access(row, *, viewer_ref: str) -> None`**: raises `403
+  billing_portal_buyer_only` when `row.provider_payer_user_id` is set and differs from
+  `viewer_ref`. The `/billing/portal` route calls it before `portal_url`.
+- **`async cancel_at_period_end(row, client) -> None`** and **`POST /billing/cancel`**
+  (204): `409 billing_not_at_provider` without a subscription id, a no-op when
+  `cancel_at_period_end` is already true, and Paddle's 4xx mapped as in server-kit 0.13. It
+  takes no write lock (§3.3: a read-only payer may always cancel). The route is open to
+  every admin who may read the overview, the buyer included.
+- **The webhook** writes nothing new: `cancel_at_period_end` arrives as today.
+
+### 16.4 ui-kit 0.42
+
+- **`BillingOverview.portal` and `buyer_name`** in the TypeScript types (both optional, so
+  an app on server-kit 0.13 keeps building).
+- **`SubscriptionActions`** gains `portal?: "open" | "buyer_only"` and `buyerName?`. With
+  `buyer_only`, "Payment and invoices" turns into the caption (decision 3), and "Cancel
+  subscription" calls the new `onCancelInApp` instead of `onPortal("cancel")`.
+- **`CancelSubscriptionConfirm`**: the dialog for the in-app cancel. It names the period's
+  end ("Your subscription ends on {date}. Until then everything works as before."), and
+  its button reads "Cancel subscription now" (de "Jetzt kündigen", the button text of
+  §312k BGB). It takes no write lock.
+- **The permanent-grant warning** on `PlanPicker`'s path into the checkout (decision 5):
+  `grantWarning` words, shown in the confirm before `onChoose`, with "Buy anyway" and
+  "Back".
+- **Labels** in all seven languages: `buyerHolds` (with and without a name),
+  `cancelConfirmTitle`, `cancelConfirmBody`, `cancelConfirmAction`, `grantWarningTitle`,
+  `grantWarningBody`, `grantWarningAction`.
+
+### 16.5 Per app
+
+- **kastlan**: drop its own buyer check for the portal and use `require_portal_access`;
+  pass `viewer_is_buyer` and `buyer_name` to `from_row`; mount `POST /billing/cancel`
+  behind its company-admin gate and its staff-route test; `billing.test.tsx`'s "any admin
+  may cancel (§15.2.11)" becomes "any admin cancels in the app; only the buyer opens the
+  portal".
+- **keksdose, Kurvenschmiede**: no buyer is stored, so the portal stays `open`. The
+  route `POST /billing/cancel` is optional for them. The permanent-grant warning applies,
+  since both apps' operators grant (§6).
+
+### 16.6 Questions for the reviews
+
+1. **Undoing an in-app cancel**: should the kit add `resume` (Paddle: clear the
+   subscription's `scheduled_change`) for the same admins, or is that left to the buyer's
+   portal and to the operator?
+2. **Who may use the in-app cancel**: every admin who reads the overview (the draft), or
+   only non-buyers, with the buyer using the portal's cancel as today?
+3. **The buyer's name** is shown to the company's other admins. kastlan: is a company
+   admin's display name already visible to the other admins (the roster)?
+4. Anything in your app that opens the portal and isn't listed in §16.5.
+
+### 16.7 The reviews and what they change (2026-10-17)
+
+All three reviews are in audits/round-042/reviews.md. kastlan-d1 reviewed at feat/kit-0.40,
+keksdose-cb at `77e9bdfd`, and kurvenschmiede-1b at `3a0f2ba`. The three agree on most of it.
+They need Marcel on two points: A and B.
+
+- **A. The payment-failed banner** (kastlan F1, keksdose Q4). It opens the portal's
+  `payment_method` too: kastlan's `billing-banners.tsx:31-35` and
+  `subscription-section.tsx:108-115`, keksdose's `billing-banner.tsx:92`, KS's
+  `subscription-settings.tsx:178`. Under `buyer_only` it would end in the 403. The banner
+  reads `GET /billing/status` (`BillingStanding`), which says nothing about the viewer.
+  **Proposed:** `BillingStanding` gains `portal` and `buyer_name` as the overview does,
+  and `BillingBanner`'s payment-failed kind, given `buyer_only`, shows "The payment
+  failed. {buyer} can update the payment method." with no button. New label:
+  `paymentFailedAskBuyer`, in 7 languages.
+- **B. The warning before a plan switch** (kastlan F5, KS 3 for it; keksdose K-4
+  against). With a subscription bought under the grant, `switching` is true, and a pick
+  opens `PlanSwitchConfirm`. The switch changes the paid plan, not the applied one, so it
+  is just as pointless as the checkout. keksdose asks to warn on the checkout only.
+  **Proposed:** warn on both. The switch confirm shows the same words above its own
+  figures. The reason is that the decision is about paying for a plan that never applies,
+  whichever path leads there.
+- **C. Undoing an in-app cancel** (§16.6 Q1). kastlan says yes, keksdose recommends it
+  for kastlan, and KS doesn't need it. **Proposed:** `POST /billing/resume` and
+  `resume_scheduled_cancel(row, client)` for the same admins as the cancel, optional like
+  the cancel. kastlan F4: the port already has the provider operation
+  (`remove_scheduled_cancel`, which `resume_after_withdrawal` uses), so no new provider
+  call is needed. The subscription page
+  shows "Keep subscription" while `cancel_at_period_end` is true.
+- **D. Who cancels in the app** (Q2): all three say every admin who reads the overview,
+  the buyer included. The draft stands.
+- **E. The kit owns the warning's rule** (KS 2, 4). **Proposed:** ui-kit exports
+  `isPermanentGrant(overview)` = `status === "comped" && source === "manual" &&
+  comped_until == null`. The `source` check stays explicit, because KS's pre-launch beta
+  rows have `comped_until` null. `PlanPicker` and `PlanSwitchConfirm` take
+  `permanentGrant?: boolean`, and the app passes `isPermanentGrant(overview)`. Every
+  app's operator grant writes `manual` (kastlan F6, keksdose K-3, KS 4).
+- **F. The routes in each app** (keksdose K-1, kastlan F2, KS 1, 5):
+  - `require_portal_access` is optional where no buyer is stored. There it is a no-op,
+    so calling it keeps the route the same shape.
+  - `/billing/cancel` and `/billing/resume` are optional for a person-payer app.
+  - An app with its own billing router writes them, and its billing-gate test classifies
+    them as always allowed, beside `/billing/portal` (keksdose
+    `test_billing_gate.py::test_every_write_route_is_classified`).
+  - kastlan adds them to `BILLING_WRITES` (`dependencies.py:203-210`), puts them behind
+    `refuse_demo` through `billing_admin` (`billing_router.py:37-41`), and adds them to
+    `test_staff_only_routes.py`.
+  - KS puts them behind `not_in_the_demo("billing")` and adds them to `DEMO_REFUSED`.
+- **G. `buyer_name`** (kastlan F3, Q3): it is first name + last name, and `None` when the
+  buyer is gone **or no longer a member** of the company. `provider_payer_user_id` has no
+  foreign key. The name is already visible to the company's admins on the Users panel.
+- **H. kastlan's full list of portal openers** goes into §16.5:
+  - `subscription-section.tsx:112`, `:135` and `:136`;
+  - `billing-banners.tsx:33`;
+  - server side, `billing_service.py:291-306` (its overview check at `:301` becomes
+    `require_portal_access`) and `billing_router.py:117-125`.
+
+### 16.8 Settled (Marcel, 2026-10-17)
+
+- **A**, the payment-failed banner: "Name the buyer". With `buyer_only` the banner shows
+  `paymentFailedAskBuyer`, with no button. When there is no buyer name, it reads "…the
+  admin who bought the subscription".
+- **B**, the warning before a switch: "Warn on both", before the checkout and before
+  the plan switch.
+- **C–H** "As proposed":
+  - the in-app undo (`POST /billing/resume`, "Keep subscription");
+  - every admin cancels in the app, the buyer included;
+  - the kit owns `isPermanentGrant`, with `source` explicit;
+  - the routes are optional for a person-payer app, and they are exempt from the write
+    lock and behind the demo guard;
+  - `buyer_name` is `None` once the buyer is gone or has left the company;
+  - kastlan's list of portal openers.
+
+### 16.9 What shipped (ui-kit 0.42)
+
+ui-kit 0.42 ships the following names:
+
+- **Types**: `BillingOverview.portal?` and `buyer_name?`, the same two on
+  `BillingStanding`, and the type `BillingPortalAccess = "open" | "buyer_only"`.
+- **`isPermanentGrant(overview)`**, with `source` explicit (§16.7 E).
+- **`SubscriptionActions`**: `portal`, `buyerName`, `onCancelInApp`, `cancelAtPeriodEnd`,
+  `onResume`, and `pending: "resume"`.
+- **`CancelSubscriptionConfirm`** (`open`, `onOpenChange`, `periodEnd`, `onConfirm`,
+  `pending`), which takes no billing lock.
+- **`BillingBanner`**'s payment-failed kind: `portal` and `buyerName`. Under `buyer_only`
+  it shows no button.
+- **The warning**: `PlanPicker` takes `permanentGrant` and `switching`, and
+  `PlanSwitchConfirm` takes `permanentGrant` (§16.8 B). The picker confirms before
+  `onChoose` only off the switch path. Told `switching`, it hands the pick on, and the
+  switch confirm shows the words above its figures, so the warning appears once on either
+  path.
+- **Labels**, in seven languages: `buyerHolds(buyer?)`, `paymentFailedAskBuyer(buyer?)`,
+  `cancelConfirmTitle`, `cancelConfirmBody(date)`, `cancelConfirmAction` (de-CH "Jetzt
+  kündigen"), `keepSubscription`, `grantWarningTitle`, `grantWarningBody` and
+  `grantWarningAction`.

@@ -3,8 +3,11 @@
 Round 0.41 removes the three names deprecated in 0.40, on the schedule their tags gave
 (`@deprecated 0.40 — …; removed in 0.41`). server-kit does not change.
 
-**Bump only.** No app used any of the three (verified across all three apps, test files
-included), so the bump changes nothing in keksdose, Kurvenschmiede or kastlan.
+**Bump only in keksdose and kastlan.** Kurvenschmiede used `wrap`, in
+`frontend/src/features/gear/sheet-tabs.tsx:76` (`SheetTabs`, the gear workbook's sheet strip),
+and swapped it for `overflowCue`, so the strip is one scrolling row on a phone. The first
+check of this guide missed it: it grepped for `<Tabs wrap` on one line, and the prop stood
+on a line of its own. Your type checker finds every use.
 
 ## 1. What's removed
 
