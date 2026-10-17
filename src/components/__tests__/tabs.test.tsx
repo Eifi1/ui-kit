@@ -3,21 +3,12 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { Tabs } from "../tabs";
 
 /**
- * Keksdose live #262, round 3: *"I would rather keep the tabs but have multirow tabs
- * depending on the screen size, I will not loose the function to see all reports at
- * once and navigate by single click rather by double click."*
+ * The strip is one scrolling row with an underline marker (the multirow `wrap` strip of
+ * keksdose live #262 was deprecated in 0.40 and removed in 0.41: keksdose went back to
+ * one scrolling row with the `overflowCue` caret, live #410).
  *
- * Ten report tabs on a 406px screen used to be a sideways scroller showing about
- * three; round 2 answered with a `<select>` below `md`, which cost a tap to open and
- * a tap to choose and hid nine reports behind the tenth. `wrap` is the answer that
- * keeps all ten on screen and one click each: the strip flows onto as many rows as it
- * needs and the active tab becomes a filled chip, because an underline hung off the
- * container's bottom rule can only mark a tab in the row that touches that rule.
- *
- * jsdom has no layout and no media queries, so the whole breakpoint lives in the
- * class string — which is exactly what these tests can read. The `md:` half is
- * asserted as literal tokens rather than by rendering, because it is the half that
- * has to keep three OTHER pages (invoices, statements, bank imports) unchanged.
+ * jsdom has no layout and no media queries, so the shape is asserted on the class
+ * string — which is exactly what these tests can read.
  *
  * The colours are design-system variables, not palette literals, so there is no
  * `dark:` half to assert: one class covers both themes because the token flips.
@@ -34,7 +25,7 @@ const LINKED = TABS.map((t) => ({ ...t, href: `/x/${t.id}` }));
 const list = () => screen.getByRole("tablist");
 
 describe("Tabs", () => {
-  describe("without `wrap` — the shape three other pages depend on", () => {
+  describe("the strip — the shape the pages that use tabs depend on", () => {
     it("stays the single-row underline strip, character for character", () => {
       render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} />);
       // The scroller and its bottom rule.
@@ -55,69 +46,18 @@ describe("Tabs", () => {
     });
   });
 
-  describe("with `wrap`", () => {
-    it("wraps the strip instead of scrolling it, and puts the row back at md", () => {
-      render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} wrap />);
-      const el = list();
-      // The point of the row: every tab is laid out, none is pushed out of frame.
-      expect(el).toHaveClass("flex-wrap");
-      // Not a scroller. Asserted as a TOKEN, because `md:overflow-x-auto` contains
-      // the substring and a `toContain` on the raw string would pass either way.
-      expect(el).not.toHaveClass("overflow-x-auto");
-      expect(el).not.toHaveClass("border-b");
-      // …and from 768px up it is the default strip again, rule and all.
-      expect(el).toHaveClass("md:flex-nowrap");
-      expect(el).toHaveClass("md:overflow-x-auto");
-      expect(el).toHaveClass("md:border-b");
-      expect(el).toHaveClass("md:border-subtle");
-    });
-
-    it("marks the active tab with a filled brand chip, not a floating underline", () => {
-      render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} wrap />);
-      const active = screen.getByRole("tab", { name: "Two" });
-      // Theme- and palette-proof: the store writes `--brand` and `--brand-contrast`
-      // together for every preset, so this pair cannot end up unreadable.
-      expect(active).toHaveClass("bg-brand");
-      expect(active).toHaveClass("text-brand-contrast");
-      // An underline attached to the container's bottom rule would mark only the
-      // LAST row, and `-mb-px` would pull every other chip into the row beneath it.
-      expect(active).not.toHaveClass("border-b-2");
-      expect(active).not.toHaveClass("-mb-px");
-      // Above the breakpoint the underline is exactly the default one again.
-      expect(active).toHaveClass("md:border-b-2");
-      expect(active).toHaveClass("md:-mb-px");
-      expect(active).toHaveClass("md:border-[var(--text-primary)]");
-      expect(active).toHaveClass("md:bg-transparent");
-    });
-
-    it("keeps every inactive tab readable, on the raised surface", () => {
-      render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} wrap />);
-      const idle = screen.getByRole("tab", { name: "Three" });
-      expect(idle).toHaveClass("bg-surface");
-      expect(idle).toHaveClass("text-primary");
-      expect(idle).not.toHaveClass("bg-brand");
-      // Ten labels have to fit three rows on a 406px phone: 32px chips (py-2 on
-      // text-xs), the desktop sizing restored at md.
-      expect(idle).toHaveClass("text-xs");
-      expect(idle).toHaveClass("px-2.5");
-      expect(idle).toHaveClass("py-2");
-      expect(idle).toHaveClass("rounded-md");
-      expect(idle).toHaveClass("md:text-sm");
-      expect(idle).toHaveClass("md:px-3");
-      expect(idle).toHaveClass("md:rounded-none");
-    });
-
+  describe("roles and routing", () => {
     it("gives the tablist an accessible name and keeps the roles", () => {
-      render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} wrap aria-label="Report" />);
+      render(<Tabs tabs={TABS} active="one" onChange={vi.fn()} aria-label="Report" />);
       expect(screen.getByRole("tablist", { name: "Report" })).toBeInTheDocument();
       expect(screen.getAllByRole("tab")).toHaveLength(3);
       expect(screen.getByRole("tab", { name: "One" })).toHaveAttribute("aria-selected", "true");
       expect(screen.getByRole("tab", { name: "Two" })).toHaveAttribute("aria-selected", "false");
     });
 
-    it("still routes a linked tab the way an unwrapped one does", () => {
+    it("routes a linked tab client-side, and leaves ⌘-click to the browser", () => {
       const onChange = vi.fn();
-      render(<Tabs tabs={LINKED} active="one" onChange={onChange} wrap />);
+      render(<Tabs tabs={LINKED} active="one" onChange={onChange} />);
       const two = screen.getByRole("tab", { name: "Two" });
       expect(two.tagName).toBe("A");
       expect(two).toHaveAttribute("href", "/x/two");
@@ -150,22 +90,20 @@ describe("Tabs", () => {
   });
 
   describe("keyboard", () => {
-    // The rows flow in DOM order, so walking the tabs in DOM order is what carries
-    // focus off the end of one row and onto the start of the next. Focus only:
-    // activation stays on click/Enter/Space, because a tab here can be a real route
+    // The arrows walk the tabs in DOM order. Focus only: activation stays on click/Enter/Space, because a tab here can be a real route
     // and arrowing past one must not navigate to it.
     const arrow = (key: string) => fireEvent.keyDown(document.activeElement!, { key });
 
     it("walks the strip with the arrow keys, wrapping at both ends", () => {
       const onChange = vi.fn();
-      render(<Tabs tabs={LINKED} active="one" onChange={onChange} wrap aria-label="Report" />);
+      render(<Tabs tabs={LINKED} active="one" onChange={onChange} aria-label="Report" />);
       const [one, two, three] = screen.getAllByRole("tab");
       one.focus();
       arrow("ArrowRight");
       expect(document.activeElement).toBe(two);
       arrow("ArrowRight");
       expect(document.activeElement).toBe(three);
-      // Off the end of the last row and back to the first chip of the first.
+      // Off the end and back to the first tab.
       arrow("ArrowRight");
       expect(document.activeElement).toBe(one);
       arrow("ArrowLeft");
@@ -175,7 +113,7 @@ describe("Tabs", () => {
     });
 
     it("jumps to the ends with Home and End", () => {
-      render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} wrap />);
+      render(<Tabs tabs={TABS} active="two" onChange={vi.fn()} />);
       const [one, , three] = screen.getAllByRole("tab");
       one.focus();
       arrow("End");

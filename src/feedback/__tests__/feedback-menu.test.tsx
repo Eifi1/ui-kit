@@ -115,8 +115,6 @@ describe("FeedbackMenu", () => {
     expect(DEFAULT_FEEDBACK_MENU_LABELS).toEqual({
       trigger: "Send feedback",
       myFeedback: "My feedback",
-      viewFeedback: "View feedback",
-      allFeedback: "All feedback",
       discussion: "Feedback discussion",
       inbox: "Feedback inbox",
     });

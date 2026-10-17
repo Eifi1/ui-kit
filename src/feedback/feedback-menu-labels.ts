@@ -7,8 +7,6 @@ import type { FeedbackMenuLabels } from "./feedback-menu";
 export const DEFAULT_FEEDBACK_MENU_LABELS: FeedbackMenuLabels = {
   trigger: "Send feedback",
   myFeedback: "My feedback",
-  viewFeedback: "View feedback",
-  allFeedback: "All feedback",
   discussion: "Feedback discussion",
   inbox: "Feedback inbox",
 };

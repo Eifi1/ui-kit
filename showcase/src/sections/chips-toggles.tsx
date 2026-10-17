@@ -126,7 +126,7 @@ function OverflowTabStrip() {
           <code className="font-mono">overflowCue</code> a › beside the strip scrolls it on by three
           quarters of its width and turns into a ‹ at the end, which goes back to the first tab.
           Shown only while the strip overflows; from <code className="font-mono">md</code> up
-          nothing changes. It replaces <code className="font-mono">wrap</code>, deprecated in 0.40.
+          nothing changes. It replaced <code className="font-mono">wrap</code>, removed in 0.41.
         </Note>
       </div>
     </Example>

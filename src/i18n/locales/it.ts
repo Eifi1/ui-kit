@@ -112,8 +112,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     feedbackMenu: {
       trigger: "Invia feedback",
       myFeedback: "I miei feedback",
-      viewFeedback: "Visualizza feedback",
-      allFeedback: "Tutti i feedback",
       discussion: "Discussione sui feedback",
       inbox: "Feedback ricevuti",
     },

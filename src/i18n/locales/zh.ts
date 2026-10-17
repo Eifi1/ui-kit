@@ -102,8 +102,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     feedbackMenu: {
       trigger: "发送反馈",
       myFeedback: "我的反馈",
-      viewFeedback: "查看反馈",
-      allFeedback: "全部反馈",
       discussion: "反馈讨论",
       inbox: "反馈收件箱",
     },

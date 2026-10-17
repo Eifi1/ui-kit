@@ -77,34 +77,6 @@ export interface TabsProps<T extends string>
   active: T;
   onChange: (id: T) => void;
   className?: string;
-  /** Let the strip WRAP onto as many rows as it needs below `md`, instead of
-   *  scrolling sideways — for a strip carrying more tabs than fit on a phone row.
-   *  Keksdose live #262: ten reports on a 406px screen showed about three, and the
-   *  round-2 answer (a <select> below `md`) cost a tap to open and a tap to choose.
-   *  *"I would rather keep the tabs but have multirow tabs depending on the screen
-   *  size, I will not loose the function to see all reports at once and navigate by
-   *  single click rather by double click."*
-   *
-   *  The active MARKER has to change with the layout, which is why this cannot be
-   *  done from a call site with a `className`: the default marker is a `border-b-2`
-   *  underline riding the container's own bottom rule, and a tab sitting in a row
-   *  that does not touch that rule cannot wear it — every row but the last would
-   *  show a stray line floating mid-strip, and `-mb-px` would pull each chip a
-   *  pixel into the row beneath it. A wrapped strip marks the active tab with a
-   *  filled brand chip instead, which is also the only thing findable at a glance
-   *  among ten same-weight labels on three rows.
-   *
-   *  From `md` up NOTHING changes: same single-line underline strip, same paddings,
-   *  same colours as every other strip in the app.
-   *
-   *  Opt-in on purpose. The three-tab strips (invoices, statements, bank imports)
-   *  already fit a phone row, and turning those into chips would be an unrequested
-   *  redesign of three other pages.
-   *
-   *  @deprecated 0.40 — use the scrolling strip with `overflowCue`; removed in 0.41. No
-   *  consumer is left (keksdose went back to one scrolling row, live #410); the caret
-   *  says a phone's row goes on. */
-  wrap?: boolean;
   /**
    * The caret beside a SCROLLING strip below `md` (0.40, kk run 79 gap 1): a › while
    * tabs lie past the strip's end — a tap scrolls it on by three quarters of its width —
@@ -117,7 +89,7 @@ export interface TabsProps<T extends string>
    * turns round rather than two that come and go, so the strip's width never changes
    * under the thumb. Out of the tab order — the keyboard walks the strip with the arrow
    * keys, which bring the focused tab into view. From `md` up nothing changes. Ignored on
-   * a `wrap` strip and a vertical one (a side nav is a column, not a row). Names:
+   * a vertical strip (a side nav is a column, not a row). Names:
    * `tabs.more` / `tabs.backToFirst`.
    */
   overflowCue?: boolean;
@@ -203,8 +175,8 @@ export interface TabsProps<T extends string>
    * `onRemove`, `onAdd` — means exactly what it means on the horizontal strip; the
    * badge moves to the row's end.
    *
-   * **On a phone (`usePhoneLayout()`) it becomes the horizontal strip**, `wrap` and
-   * all, rather than staying a column. A side nav only works beside its content; on
+   * **On a phone (`usePhoneLayout()`) it becomes the horizontal strip**, rather than
+   * staying a column. A side nav only works beside its content; on
    * a phone it has to go ABOVE it, and eight full-width rows there push the panel
    * the user picked below the fold on every visit — the two keksdose pages both
    * collapsed theirs into a scrolling row by hand for exactly that reason. The
@@ -220,14 +192,6 @@ export interface TabsProps<T extends string>
   ref?: Ref<HTMLDivElement>;
 }
 
-// The two shapes are written out as whole strings rather than as one base plus a
-// pile of `md:` overrides. The unwrapped pair is character-for-character what the
-// three strips that do not opt in get, so those cannot drift; the wrapped pair is
-// authored from scratch, so no unprefixed utility has to be beaten by its own `md:`
-// twin through tailwind-merge. The only ordering this relies on is Tailwind's own:
-// unprefixed utilities are emitted first, then `md:` — so from 768px up the wrapped
-// strip resolves to exactly the paint of the default one. Both themes come free now
-// that the colours are tokens: there is no `md:dark:` tier left to keep in step.
 const TABLIST_CLASSES =
   "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-subtle";
 // The side nav. A column of full-width rows with the open one FILLED rather than
@@ -242,9 +206,6 @@ const TAB_VERTICAL_ACTIVE_CLASSES = "bg-active text-primary";
 const TAB_VERTICAL_INACTIVE_CLASSES =
   "text-muted hover:bg-hover hover:text-primary";
 
-const TABLIST_WRAP_CLASSES =
-  "flex flex-wrap gap-1.5 md:flex-nowrap md:gap-1 md:overflow-x-auto md:overflow-y-hidden md:border-b md:border-subtle";
-
 // `max-w-full`: no tab outgrows its strip. A sheet's `detail` line ("Spurstangenkraft
 // links · … · 31 Punkte") made one tab 448px wide in a 390px strip, and a tab wider
 // than the strip cannot be scrolled into view — its end was simply off screen
@@ -256,31 +217,13 @@ const TAB_ACTIVE_CLASSES = "border-[var(--text-primary)] text-primary";
 const TAB_INACTIVE_CLASSES =
   "border-transparent text-muted hover:text-secondary hover:border-strong";
 
-// Below `md`, a chip: `py-2` on `text-xs` is exactly 32px tall, and ten German
-// report labels then land in three rows on a 406px screen (four at `text-sm`). The
-// active fill is the app's own selected pair, `--brand` / `--brand-contrast`: the
-// palette store writes both halves of it together for every preset and both themes,
-// so the contrast holds everywhere (5.1:1 at its worst preset) without a hard-coded
-// colour. Inactive chips take the raised card surface with full-strength body text —
-// all ten have to stay readable; it is the FILL, not the text weight, that says
-// which one is open.
-const TAB_WRAP_CLASSES =
-  FOCUS_RING_WIDTH +
-  " max-w-full whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-strong md:rounded-none md:border-b-2 md:-mb-px md:bg-transparent md:px-3 md:py-2 md:text-sm";
-const TAB_WRAP_ACTIVE_CLASSES =
-  "bg-brand text-brand-contrast md:border-[var(--text-primary)] md:text-primary";
-const TAB_WRAP_INACTIVE_CLASSES =
-  "bg-surface text-primary md:border-transparent md:text-muted md:hover:border-strong md:hover:text-secondary";
-
 // The add/remove chrome. The × reserves its gutter on every removable tab (see
-// `onRemove`); `md:pe-8` is spelled out because the wrapped chip's `md:px-3` would
-// otherwise hand the gutter back from 768px up.
-const TAB_REMOVABLE_CLASSES = "pe-8 md:pe-8";
+// `onRemove`).
+const TAB_REMOVABLE_CLASSES = "pe-8";
 const TAB_EMPTY_CLASSES = "-mx-1.5 rounded border border-dashed border-strong px-1.5";
 const TAB_ADD_CLASSES =
   FOCUS_RING_WIDTH +
   " inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-primary focus:outline-none focus-visible:ring-strong disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4";
-const TAB_ADD_WRAP_CLASSES = "px-2.5 text-xs md:px-3 md:text-sm";
 // `relative`: the phone's visually hidden label needs a positioned ancestor (see the
 // sr-only rule in CONTRIBUTING); `max-md:px-2` squares the lone "+".
 const TAB_ADD_PHONE_CLASSES = "relative max-md:px-2";
@@ -290,7 +233,6 @@ export function Tabs<T extends string>({
   active,
   onChange,
   className,
-  wrap = false,
   overflowCue = false,
   panelId,
   onRemove,
@@ -312,7 +254,7 @@ export function Tabs<T extends string>({
   const setStrip = useMemo(() => mergeRefs(stripRef, ref), [ref]);
   const fade = useStripFade(stripRef);
   // See `overflowCue`. `start` alone means the strip is scrolled to its end.
-  const cue = overflowCue && !wrap && !vertical && fade.overflow !== undefined;
+  const cue = overflowCue && !vertical && fade.overflow !== undefined;
   const cueAtEnd = fade.overflow === "start";
   const onCue = () => {
     const strip = stripRef.current;
@@ -394,9 +336,7 @@ export function Tabs<T extends string>({
     strip.querySelectorAll<HTMLElement>('[role="tab"]')[index]?.focus();
   }, [tabs, active]);
 
-  // Arrow keys walk the strip in DOM order (ARIA tabs pattern), which is what keeps
-  // a WRAPPED strip navigable: the rows flow in DOM order too, so Right off the end
-  // of row one lands on the first chip of row two rather than nowhere. Home/End jump
+  // Arrow keys walk the strip in DOM order (ARIA tabs pattern). Home/End jump
   // to the ends. Focus only — activation stays on click/Enter/Space, because a tab
   // here can be a real route and moving focus must not navigate.
   //
@@ -465,8 +405,8 @@ export function Tabs<T extends string>({
       // With an add button the strip gains an outer box, and `className` goes there
       // — it is the box a caller's margin or width is meant for.
       className={cn(
-        vertical ? TABLIST_VERTICAL_CLASSES : wrap ? TABLIST_WRAP_CLASSES : TABLIST_CLASSES,
-        onAdd ? "min-w-0" : overflowCue && !wrap && !vertical ? "min-w-0 flex-1" : className,
+        vertical ? TABLIST_VERTICAL_CLASSES : TABLIST_CLASSES,
+        onAdd ? "min-w-0" : overflowCue && !vertical ? "min-w-0 flex-1" : className,
       )}
     >
       {tabs.map((tab) => {
@@ -502,14 +442,8 @@ export function Tabs<T extends string>({
                 removable && "pe-8",
               )
             : cn(
-                wrap ? TAB_WRAP_CLASSES : TAB_CLASSES,
-                wrap
-                  ? isActive
-                    ? TAB_WRAP_ACTIVE_CLASSES
-                    : TAB_WRAP_INACTIVE_CLASSES
-                  : isActive
-                    ? TAB_ACTIVE_CLASSES
-                    : TAB_INACTIVE_CLASSES,
+                TAB_CLASSES,
+                isActive ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES,
                 removable && TAB_REMOVABLE_CLASSES,
               ),
         };
@@ -537,16 +471,7 @@ export function Tabs<T extends string>({
                 {/* A separator for the NAME only — whitespace between flex items is
                     not drawn, and without it the two lines ran together into one
                     word for a screen reader ("80 km/hloop 2"). */}{" "}
-                <span
-                  className={cn(
-                    "max-w-full truncate-until-large text-caption font-normal leading-tight text-muted",
-                    // On a wrapped strip's filled chip (below `md`) the muted grey
-                    // was dark text on the brand fill — "loop 2" all but vanished
-                    // under the one label that most needed reading. It takes the
-                    // chip's own ink instead, as the label and the × already do.
-                    wrap && isActive && !vertical && "text-brand-contrast md:text-muted",
-                  )}
-                >
+                <span className="max-w-full truncate-until-large text-caption font-normal leading-tight text-muted">
                   {tab.detail}
                 </span>
               </span>
@@ -620,12 +545,7 @@ export function Tabs<T extends string>({
                 type="button"
                 disabled={busy}
                 onClick={() => requestRemove(tab.id)}
-                className={cn(
-                  "absolute inset-y-0 end-1 my-auto",
-                  // On a wrapped strip's filled chip the quiet grey would vanish into
-                  // the brand fill below `md`.
-                  wrap && "text-brand-contrast md:text-placeholder",
-                )}
+                className="absolute inset-y-0 end-1 my-auto"
               >
                 <X />
               </IconButton>
@@ -654,7 +574,7 @@ export function Tabs<T extends string>({
         {text.remove(nameOf(activeTab))}
       </button>
     ) : null;
-  if (!onAdd && overflowCue && !wrap && !vertical) {
+  if (!onAdd && overflowCue && !vertical) {
     // The caret needs a row to sit in beside the strip, and `className` goes there — it
     // is the box a caller's margin or width is meant for, as with an add button. The box
     // is there whether or not the strip overflows right now, so a resize never moves
@@ -692,37 +612,26 @@ export function Tabs<T extends string>({
     );
   }
   return (
-    <div
-      className={cn(
-        wrap ? "flex flex-wrap items-end gap-1.5 md:flex-nowrap md:gap-0" : "flex items-end",
-        className,
-      )}
-    >
+    <div className={cn("flex items-end", className)}>
       {tablist}
       {removeButton}
       {cueButton}
       {/* Outside the tablist: an action, not a tab — and a tablist may own only
           tabs. The rule under the strip carries on beneath it. */}
       <div
-        className={cn(
-          "flex flex-1 items-center",
-          wrap
-            ? "md:self-stretch md:border-b md:border-subtle"
-            : "self-stretch border-b border-subtle",
-        )}
+        className="flex flex-1 items-center self-stretch border-b border-subtle"
       >
         <button
           type="button"
           onClick={onAdd}
           disabled={busy}
-          className={cn(TAB_ADD_CLASSES, wrap ? TAB_ADD_WRAP_CLASSES : TAB_ADD_PHONE_CLASSES)}
+          className={cn(TAB_ADD_CLASSES, TAB_ADD_PHONE_CLASSES)}
         >
           <Plus aria-hidden />
           {/* Below md a scrolling strip keeps the room for tabs: the label is visually
               hidden and the "+" carries it as its name. Beside "+ Add loop" a 390px strip
-              showed the open tab and a sliver of the next (showcase audit). A wrapping
-              strip has its own row there, so it keeps the label. */}
-          <span className={wrap ? undefined : "max-md:sr-only"}>{addLabel ?? text.add}</span>
+              showed the open tab and a sliver of the next (showcase audit). */}
+          <span className="max-md:sr-only">{addLabel ?? text.add}</span>
         </button>
       </div>
     </div>

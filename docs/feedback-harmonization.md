@@ -1662,7 +1662,8 @@ The writes stay §9.13's. What changes is the read:
 All three apps found them fine. The rework words follow the kit's existing chip
 (`Nacharbeit`, `Reprise`, `Rielaborazione`, `Corrección`, `Átdolgozás`, `返工`);
 "retours" and "comentarios" follow each language's `feedbackMenu`. `allFeedback` and
-`viewFeedback` stay optional and unused for one minor, then go (no app overrides them).
+`viewFeedback` stayed optional and unused for one minor and were removed in 0.41 (no app
+overrode them).
 
 ### 10.7 What server-kit 0.13 ships
 
@@ -1744,7 +1745,8 @@ Size: **M** (~350 code, ~600 test lines).
   `all-feedback` (`labels.discussion`, `Users`, `to: publicHref`, when set), `my-feedback`
   (`labels.myFeedback`, `User`, `to: myFeedbackHref`, always), `view-feedback`
   (`labels.inbox`, `Inbox`, `to: inboxHref`, when `isAdmin`); `FeedbackMenuLabels` gains
-  `discussion`, `inbox`; `allFeedback`, `viewFeedback` optional and `@deprecated`.
+  `discussion`, `inbox`; `allFeedback`, `viewFeedback` optional and `@deprecated` (removed
+  in 0.41).
   Rows per role: admin with public parts 3, member 2; kastlan admin 2, member 1; a KS
   customer 1.
 - Labels in seven languages (10.6): `src/i18n/german.ts`, `src/i18n/locales/{fr,it,es,hu,

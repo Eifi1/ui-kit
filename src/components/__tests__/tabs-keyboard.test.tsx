@@ -7,12 +7,10 @@ import { Tabs } from "../tabs";
 /**
  * The tab strip's keyboard: the ARIA tabs pattern, pressed rather than read.
  *
- * `tabs.test.tsx` beside this one asserts the CLASS STRINGS — deliberately, because
- * the wrap/no-wrap split is a breakpoint decision that jsdom cannot render and the
- * class string is the only honest evidence. What no test had pressed was the
- * keyboard, and the strip's comment makes two promises that only a keystroke can
- * check: the arrows walk the strip in DOM order (so a WRAPPED strip stays navigable
- * across rows), and activation stays MANUAL — "a tab here can be a real route and
+ * `tabs.test.tsx` beside this one asserts the CLASS STRINGS, which jsdom can read.
+ * What no test had pressed was the keyboard, and the strip's comment makes two
+ * promises that only a keystroke can check: the arrows walk the strip in DOM order,
+ * and activation stays MANUAL — "a tab here can be a real route and
  * moving focus must not navigate".
  *
  * Manual activation is the half that would rot silently. Switch to the automatic
@@ -29,7 +27,7 @@ const TABS = [
 ];
 
 /** Controlled, as the component is: the caller owns `active`. */
-function Harness({ onChange, wrap = false }: { onChange?: (id: string) => void; wrap?: boolean }) {
+function Harness({ onChange }: { onChange?: (id: string) => void }) {
   const [active, setActive] = useState("two");
   return (
     <>
@@ -37,7 +35,6 @@ function Harness({ onChange, wrap = false }: { onChange?: (id: string) => void; 
       <Tabs
         tabs={TABS}
         active={active}
-        wrap={wrap}
         aria-label="Reports"
         onChange={(id) => {
           setActive(id);
@@ -138,22 +135,6 @@ describe("the tab strip's keyboard", () => {
     expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
     await user.tab({ shift: true });
     expect(tab("Three")).toHaveFocus();
-  });
-
-  it("keeps the same keyboard when the strip wraps onto several rows", async () => {
-    // The wrapped strip is the reason the handler walks DOM order instead of
-    // geometry: the rows flow in DOM order too, so Right off the end of row one
-    // lands on the first chip of row two rather than nowhere.
-    const user = userEvent.setup();
-    render(<Harness wrap />);
-    await user.tab();
-    await user.tab();
-    expect(tab("Two")).toHaveFocus();
-
-    await user.keyboard("{ArrowRight}");
-    expect(tab("Three")).toHaveFocus();
-    await user.keyboard("{Home}");
-    expect(tab("One")).toHaveFocus();
   });
 });
 
