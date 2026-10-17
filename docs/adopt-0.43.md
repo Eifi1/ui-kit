@@ -120,3 +120,10 @@ one and awards the points again.
   `topBarParts.tours.badgeUpdated`, `.updatedDot` and `.newAndUpdated`. An app with its
   own full label catalogue must add them.
 - The kit takes finished strings: map i18n keys to text before the tours go in (§6.3).
+- **Register the progress key with "Reset this device's settings"** (settings §11): the tour
+  progress lives on the device, so the app adds its `storageKey` to the registry the reset
+  card clears.
+- **Points:** `complete(tour)` answers `true` only when a completion counts anew, which is
+  the first time or the first time after an update (§8). That is the moment to award the
+  tour's points and show the app's toast. The engine has no completion hook of its own:
+  call it from the tour's `onFinish`.
