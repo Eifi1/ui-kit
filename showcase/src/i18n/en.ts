@@ -542,7 +542,7 @@ export const en: Dictionary = {
       title: "Demo",
       short: "Demo",
       blurb:
-        "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
+        "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime. And the local-only switch for role and plan.",
     },
     "server-billing": {
       title: "Billing",

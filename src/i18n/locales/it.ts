@@ -1699,6 +1699,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         "Il Suo pagamento è in elaborazione. Il Suo piano inizia non appena viene confermato; questa pagina si aggiorna da sola.",
       choosePlan: "Scegli un piano",
       updatePayment: "Aggiorna il metodo di pagamento",
+      // 0.42 (§16.7 A): for an admin who isn't the buyer.
+      paymentFailedAskBuyer: (buyer) =>
+        buyer
+          ? `Il pagamento non è andato a buon fine. ${buyer} può aggiornare il metodo di pagamento.`
+          : "Il pagamento non è andato a buon fine. L’amministratore che ha sottoscritto l’abbonamento può aggiornare il metodo di pagamento.",
       checkAgain: "Verifica di nuovo",
       lockReason: "Il Suo piano è terminato. Scelga un piano per apportare di nuovo modifiche.",
       // As `characterCount.limitReached` ("Limite di caratteri raggiunto").
@@ -1729,6 +1734,20 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       switchCredited: "Accreditato sui prossimi addebiti",
       switchNextCharge: (date) => `Prossimo addebito il ${date}`,
       switchConfirm: "Cambia piano",
+      // 0.42 (§16): the portal for the buyer only, the in-app cancel, the grant warning.
+      buyerHolds: (buyer) =>
+        buyer
+          ? `Il metodo di pagamento e le fatture sono gestiti da ${buyer}, che ha sottoscritto l’abbonamento.`
+          : "Il metodo di pagamento e le fatture sono gestiti dall’amministratore che ha sottoscritto l’abbonamento.",
+      cancelConfirmTitle: "Disdici l’abbonamento",
+      cancelConfirmBody: (date) =>
+        `Il Suo abbonamento termina il ${date}. Fino ad allora tutto funziona come prima.`,
+      cancelConfirmAction: "Disdici ora",
+      keepSubscription: "Mantieni l’abbonamento",
+      grantWarningTitle: "Il Suo accesso gratuito continua",
+      grantWarningBody:
+        "Il Suo accesso gratuito non ha una data di fine. Finché dura, un acquisto non cambia il Suo piano: pagherebbe per un piano che non si applica.",
+      grantWarningAction: "Acquista comunque",
       waitingChanges: (count) =>
         `${n(count)} ${plural(count, "modifica in attesa", "modifiche in attesa")} di un piano`,
       // "Scarta", as `wizard.cancelConfirmLabel`.
@@ -1798,6 +1817,74 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     appShellMore: {
       more: "Altro",
       moreTitle: "Altre pagine",
+    },
+    // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Lei", as
+    // the rest of the catalogue.
+    adminArea: {
+      title: "Amministrazione",
+      waiting: (count) => `${n(count)} in attesa`,
+      forbiddenTitle: "Solo per gli amministratori",
+      forbiddenBody: (appName) =>
+        `Qui gli amministratori gestiscono ${appName}. Il Suo account non può aprire questa pagina.`,
+      forbiddenHome: "Vai alla pagina iniziale",
+      forbiddenReviewer: "Rivedi le traduzioni",
+      sections: {
+        overview: { title: "Panoramica", help: "Ciò che è in attesa, a colpo d’occhio." },
+        users: { title: "Utenti", help: "Chi ha un account e cosa può fare ciascuno." },
+        invitations: { title: "Inviti", help: "I link con cui entra una persona nuova." },
+        billing: { title: "Fatturazione", help: "Il piano, il pagamento e le fatture." },
+        activity: { title: "Attività", help: "Ciò che hanno fatto gli amministratori, dal più recente." },
+      },
+      tiles: {
+        feedbackWaiting: "Da smistare",
+        deletionRequests: "Richieste di eliminazione",
+        invitationsPending: "Inviti in sospeso",
+        users: "Utenti",
+        usersNew: (count) => `${n(count)} ${plural(count, "nuovo", "nuovi")} in 7 giorni`,
+      },
+      tools: "Strumenti",
+    },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts, keksdose's
+    // reviewed sync words where they are not about its budgets; "piano" as `billing`.
+    topBarParts: {
+      tours: {
+        menu: "Tour guidati",
+        newDot: "Nuovi tour",
+        thisPage: "In questa pagina",
+        newTours: "Nuovi tour",
+        allTours: "Tutti i tour…",
+        badgeNew: "Nuovo",
+        completed: "Completato",
+      },
+      sync: {
+        blocked: (count) =>
+          `${n(count)} ${plural(count, "modifica non può essere inviata", "modifiche non possono essere inviate")} da questo dispositivo`,
+        offline: "Offline: le modifiche vengono salvate su questo dispositivo e sincronizzate alla riconnessione",
+        refused: "Il server ha rifiutato l’ultima sincronizzazione",
+        syncing: "Sincronizzazione…",
+        pending: (count) =>
+          `${n(count)} ${plural(count, "modifica", "modifiche")} in attesa di sincronizzazione`,
+        syncedAt: (time) => `Sincronizzato alle ${time}`,
+        idle: "Aggiornato",
+        syncHint: "Tocchi per sincronizzare ora",
+        offlineHint: "offline non c’è nulla da sincronizzare",
+        withHint: (state, hint) => `${state} — ${hint}`,
+        scoped: (scope, state) => `${scope}: ${state}`,
+        offlineShort: "Offline",
+        syncingShort: "Sincronizzazione…",
+        waitingShort: (count) => `${n(count)} in attesa`,
+        refusedShort: "Non sincronizzato",
+        offlineUnsaved: "Offline: le modifiche non possono essere salvate finché non si riconnette",
+        saving: "Salvataggio…",
+      },
+      dev: {
+        roleHeading: "Dev · ruolo",
+        switchPlan: "Cambia piano",
+        plan: (value) => `Piano: ${value}`,
+        planHeading: "Dev · piano",
+        backTo: (role) => `Torna a ${role}`,
+        billingOff: "La fatturazione è disattivata in locale: i piani non cambiano nulla",
+      },
     },
   };
 }

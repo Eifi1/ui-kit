@@ -6,6 +6,7 @@ import { DEFAULT_COMMON_LABELS } from "../i18n/shared-labels";
 import { pluralForm } from "../i18n/plurals";
 import type { PluralForms } from "../i18n/plurals";
 import { formatDate, formatMoney, formatNumber } from "../lib/format";
+import { AlertBanner } from "../components/alert-banner";
 import { Button } from "../components/button";
 import { DialogFrame } from "../components/dialog-frame";
 import { Spinner } from "../components/spinner";
@@ -67,6 +68,15 @@ export interface PlanSwitchConfirmProps {
   onConfirm: () => void;
   /** The figures' and the date's locale. Default: the provider's. */
   locale?: string;
+  /**
+   * 0.42 (§16.2 decision 5, §16.8 B): the payer's free grant runs without an end —
+   * `isPermanentGrant(overview)`. The switch changes the PAID plan, not the applied one
+   * (§12.11), so the dialog says so above its figures (`grantWarningTitle`,
+   * `grantWarningBody`) before the payer agrees. Confirm stays Confirm: the warning is
+   * this dialog's own, and `PlanPicker` — told `switching` — shows none of its own on
+   * the way here, so the payer reads it once.
+   */
+  permanentGrant?: boolean;
   /** Prop > `<UiKitProvider labels={{ billing }}>` > English. */
   labels?: LabelOverride<BillingLabels>;
 }
@@ -105,6 +115,7 @@ export function PlanSwitchConfirm({
   formatLimit,
   onConfirm,
   locale: localeProp,
+  permanentGrant = false,
   labels: labelsProp,
 }: PlanSwitchConfirmProps) {
   const labels = useBillingLabels(labelsProp);
@@ -164,6 +175,11 @@ export function PlanSwitchConfirm({
         </>
       )}
     >
+      {permanentGrant && (
+        <AlertBanner tone="warning" size="sm" data-grant-warning="">
+          <strong className="block font-medium">{labels.grantWarningTitle}</strong> {labels.grantWarningBody}
+        </AlertBanner>
+      )}
       {preview === undefined ? (
         <div className="flex justify-center py-4">
           <Spinner showLabel />

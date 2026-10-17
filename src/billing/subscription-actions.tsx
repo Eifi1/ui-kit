@@ -5,7 +5,7 @@ import { cn } from "../lib/cn";
 import { Button } from "../components/button";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
-import type { PortalTarget } from "./billing-overview";
+import type { BillingPortalAccess, PortalTarget } from "./billing-overview";
 
 export interface SubscriptionActionsProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** "Payment and invoices", as a link — or {@link onManage}. Without either, none. */
@@ -35,8 +35,35 @@ export interface SubscriptionActionsProps extends Omit<ComponentPropsWithRef<"di
    * (§12.26). Default true (0.32's behaviour).
    */
   atProvider?: boolean;
-  /** Which of the two is under way: its spinner, no second press. */
-  pending?: "manage" | "cancel" | null;
+  /**
+   * 0.42 (§16.2, server-kit 0.14): the overview's `portal`. `"buyer_only"` — the row has
+   * a buyer and the viewer isn't them, so the portal would answer `403
+   * billing_portal_buyer_only`: "Payment and invoices" becomes a caption naming the buyer
+   * (`buyerHolds`, no button), and "Cancel subscription" calls {@link onCancelInApp}
+   * (no portal at all — `cancelHref`, `onCancel` and `onPortal` are not used). `"open"`
+   * (default): as before.
+   */
+  portal?: BillingPortalAccess;
+  /** 0.42: the overview's `buyer_name`, for the caption under `"buyer_only"`. Empty: "…with
+   *  the admin who bought the subscription". */
+  buyerName?: string | null;
+  /**
+   * 0.42 (§16.2 decision 2): "Cancel subscription" in the app — open
+   * `CancelSubscriptionConfirm`, whose Confirm is `POST /billing/cancel`. The cancel under
+   * `"buyer_only"`. Under `"open"` it is the last resort, used only when no portal cancel
+   * (`cancelHref`, `onCancel`, `onPortal`) is given — a person-payer app that mounts the
+   * route and not the portal's cancel.
+   */
+  onCancelInApp?: () => void;
+  /** 0.42 (§16.7 C): the overview's `cancel_at_period_end` — a cancel is scheduled. With
+   *  {@link onResume}, "Keep subscription" takes the cancel's place. */
+  cancelAtPeriodEnd?: boolean;
+  /** 0.42 (§16.7 C): "Keep subscription", the app's `POST /billing/resume` — shown in
+   *  the cancel's place while {@link cancelAtPeriodEnd} is true. Without it, the cancel
+   *  stays as before. */
+  onResume?: () => void;
+  /** Which one is under way: its spinner, no second press. `"resume"` since 0.42. */
+  pending?: "manage" | "cancel" | "resume" | null;
   /** Prop > `<UiKitProvider labels={{ billing }}>` > English. */
   labels?: LabelOverride<BillingLabels>;
 }
@@ -56,6 +83,12 @@ export interface SubscriptionActionsProps extends Omit<ComponentPropsWithRef<"di
  * Before the payer has reached the provider (`atProvider={false}`, a trial without a
  * card, a beta) there is no portal to open: the part says so in a caption instead of
  * offering two buttons that could only end in `409 billing_not_at_provider`.
+ *
+ * 0.42 (§16): where the company's buyer is another admin (`portal="buyer_only"`), the
+ * portal stays the buyer's — "Payment and invoices" is a caption that names them, and
+ * "Cancel subscription" is the in-app cancel (`onCancelInApp`). While a cancel is
+ * scheduled (`cancelAtPeriodEnd`) and `onResume` is given, "Keep subscription" stands in
+ * the cancel's place, whoever the viewer is.
  */
 export function SubscriptionActions({
   manageHref,
@@ -64,6 +97,11 @@ export function SubscriptionActions({
   onCancel,
   onPortal,
   atProvider = true,
+  portal = "open",
+  buyerName,
+  onCancelInApp,
+  cancelAtPeriodEnd = false,
+  onResume,
   pending,
   labels: labelsProp,
   className,
@@ -77,20 +115,31 @@ export function SubscriptionActions({
       </div>
     );
   }
+  const buyerOnly = portal === "buyer_only";
   const manageCall = onManage ?? (onPortal ? () => onPortal("overview") : undefined);
-  const cancelCall = onCancel ?? (onPortal ? () => onPortal("cancel") : undefined);
-  const manage =
-    manageHref !== undefined ? (
-      <Button href={manageHref} variant="secondary">
-        {labels.manage}
-      </Button>
-    ) : manageCall !== undefined ? (
-      <Button type="button" variant="secondary" onClick={manageCall} pending={pending === "manage"}>
-        {labels.manage}
-      </Button>
-    ) : null;
+  const portalCancel = onCancel ?? (onPortal ? () => onPortal("cancel") : undefined);
+  // Under "buyer_only" the in-app cancel only; under "open" the portal's first, the
+  // in-app cancel only where no way to the portal's is given.
+  const cancelCall = buyerOnly ? onCancelInApp : (portalCancel ?? (cancelHref === undefined ? onCancelInApp : undefined));
+  const manage = buyerOnly ? (
+    <p className="basis-full text-sm text-muted" data-buyer-holds="">
+      {labels.buyerHolds(buyerName || undefined)}
+    </p>
+  ) : manageHref !== undefined ? (
+    <Button href={manageHref} variant="secondary">
+      {labels.manage}
+    </Button>
+  ) : manageCall !== undefined ? (
+    <Button type="button" variant="secondary" onClick={manageCall} pending={pending === "manage"}>
+      {labels.manage}
+    </Button>
+  ) : null;
   const cancel =
-    cancelHref !== undefined ? (
+    cancelAtPeriodEnd && onResume !== undefined ? (
+      <Button type="button" variant="link" onClick={onResume} pending={pending === "resume"} data-keep-subscription="">
+        {labels.keepSubscription}
+      </Button>
+    ) : cancelHref !== undefined && !buyerOnly ? (
       <Button href={cancelHref} variant="link" tone="danger">
         {labels.cancel}
       </Button>

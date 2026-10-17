@@ -1,17 +1,22 @@
 import { useState } from "react";
 import {
+  BillingBanner,
   Button,
+  CancelSubscriptionConfirm,
   PAY_PAGE_APPS,
+  PlanPicker,
   PlanSwitchConfirm,
+  SubscriptionActions,
   Switch,
   WriteLockProvider,
   checkoutFingerprint,
   combineWriteLocks,
+  isPermanentGrant,
   useBillingLabels,
   useBillingWriteLock,
 } from "@eifi1/ui-kit";
-import type { PlanSwitchPreview, PlanSwitchSide } from "@eifi1/ui-kit";
-import { Example, Note, OutTable, beat, code } from "../lib/section";
+import type { BillingPlan, PlanChoice, PlanSwitchPreview, PlanSwitchSide } from "@eifi1/ui-kit";
+import { Example, Note, OutTable, READOUT_WRAP, beat, code } from "../lib/section";
 
 /**
  * SUBSCRIPTION — billing's family file (the showcase's rule: a release adds to the
@@ -172,11 +177,180 @@ export function PayPageApps039Demo() {
   );
 }
 
+/* ── 0.42 (§16): the portal for the buyer only, the in-app cancel and its undo ── */
+
+/** The company's buyer, SYNTHETIC. */
+const BUYER = "Ada Gardener";
+const PERIOD_END = "2026-11-09T08:00:00Z";
+
+export function BuyerOnly042Demo() {
+  const [viewerIsBuyer, setViewerIsBuyer] = useState(false);
+  const [buyerLeft, setBuyerLeft] = useState(false);
+  const [scheduled, setScheduled] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [pending, setPending] = useState<"cancel" | "resume" | null>(null);
+  const [last, setLast] = useState<string | null>(null);
+  const portal = viewerIsBuyer ? "open" : "buyer_only";
+  const buyerName = buyerLeft ? null : BUYER;
+
+  const cancel = async () => {
+    setPending("cancel");
+    setLast("POST /billing/cancel");
+    await beat(900);
+    setPending(null);
+    setAsking(false);
+    setScheduled(true);
+    setLast("POST /billing/cancel → 204; the webhook sets cancel_at_period_end");
+  };
+  const resume = async () => {
+    setPending("resume");
+    setLast("POST /billing/resume");
+    await beat(900);
+    setPending(null);
+    setScheduled(false);
+    setLast("POST /billing/resume → 204; the scheduled cancel is gone");
+  };
+  const toPortal = (target: string) => setLast(`POST /billing/portal {"target":"${target}"} → {url}`);
+
+  return (
+    <Example
+      label="The portal for the buyer only — SubscriptionActions, CancelSubscriptionConfirm"
+      hint="portal and buyer_name from the overview; another admin cancels in the app, any admin keeps it"
+    >
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <Switch size="sm" label="The viewer is the buyer" checked={viewerIsBuyer} onCheckedChange={setViewerIsBuyer} />
+          <Switch size="sm" label="The buyer has left the company" checked={buyerLeft} onCheckedChange={setBuyerLeft} />
+        </div>
+        <SubscriptionActions
+          portal={portal}
+          buyerName={buyerName}
+          onPortal={toPortal}
+          onCancelInApp={() => setAsking(true)}
+          cancelAtPeriodEnd={scheduled}
+          onResume={() => void resume()}
+          pending={pending === "resume" ? "resume" : null}
+        />
+        <BillingBanner
+          kind="payment-failed"
+          variant="box"
+          portal={portal}
+          buyerName={buyerName}
+          onAction={() => toPortal("payment_method")}
+        />
+        <p className={READOUT_WRAP} aria-live="polite">
+          {last ?? "No request yet."}
+        </p>
+        <CancelSubscriptionConfirm
+          open={asking}
+          onOpenChange={(open) => !open && pending === null && setAsking(false)}
+          periodEnd={PERIOD_END}
+          pending={pending === "cancel"}
+          onConfirm={() => void cancel()}
+        />
+      </div>
+      <Note>
+        Since 0.42. Where the company stores a buyer ({code("provider_payer_user_id")}), the provider&apos;s portal
+        opens for that admin only: for any other admin {code("portal")} is {code('"buyer_only"')}, &ldquo;Payment
+        and invoices&rdquo; becomes a caption that names the buyer, and &ldquo;Cancel subscription&rdquo; opens the
+        in-app confirm, whose button is {code("POST /billing/cancel")}. The subscription ends at its period&apos;s
+        end; while that is scheduled, &ldquo;Keep subscription&rdquo; ({code("POST /billing/resume")}) stands in the
+        cancel&apos;s place, for the buyer too. The payment-failed banner says who can change the card, with no
+        button. Neither confirm takes the billing lock.
+      </Note>
+    </Example>
+  );
+}
+
+/* ── 0.42 (§16.2 decision 5, §16.8 B): the permanent-grant warning ── */
+
+const GRANT_PLANS: BillingPlan[] = [
+  { code: "seedling", name: "Seedling" },
+  { code: "pro", name: "Pro", prices: { CHF: { year: 4900, month: 490 } } },
+  { code: "grove", name: "Grove", prices: { CHF: { year: 19900 } } },
+];
+
+export function GrantWarning042Demo() {
+  const [permanent, setPermanent] = useState(true);
+  const [bought, setBought] = useState(false);
+  const [pick, setPick] = useState<PlanSwitchSide | null>(null);
+  const [last, setLast] = useState<string | null>(null);
+  const overview = {
+    status: "comped" as const,
+    source: "manual" as const,
+    comped_until: permanent ? null : "2027-03-31T00:00:00Z",
+    switching: bought,
+  };
+  const grant = isPermanentGrant(overview);
+
+  const choose = (choice: PlanChoice) => {
+    if (overview.switching) setPick({ plan: choice.plan, interval: choice.interval });
+    else {
+      setLast(`POST /billing/checkout ${JSON.stringify(choice)}`);
+      setBought(true);
+    }
+  };
+
+  return (
+    <Example
+      label="The permanent-grant warning — PlanPicker, PlanSwitchConfirm"
+      hint="permanentGrant={isPermanentGrant(overview)}; the warning once, before the checkout or in the switch"
+    >
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <Switch size="sm" label="The grant has no end" checked={permanent} onCheckedChange={setPermanent} />
+          <Switch size="sm" label="A subscription runs (switching)" checked={bought} onCheckedChange={setBought} />
+        </div>
+        <PlanPicker
+          plans={GRANT_PLANS}
+          defaultCurrency="CHF"
+          defaultValue="grove"
+          current={bought ? "pro" : undefined}
+          permanentGrant={grant}
+          switching={overview.switching}
+          onChoose={choose}
+        />
+        <OutTable
+          rows={[
+            ["isPermanentGrant(overview)", String(grant)],
+            ["last request", last ?? "none yet"],
+          ]}
+        />
+        {pick && (
+          <PlanSwitchConfirm
+            open
+            onOpenChange={(next) => !next && setPick(null)}
+            from={{ plan: "pro", interval: "year" }}
+            to={pick}
+            preview={previewFor(pick)}
+            planName={planName}
+            permanentGrant={grant}
+            onConfirm={() => {
+              setLast(`POST /billing/plan ${JSON.stringify(pick)}`);
+              setPick(null);
+            }}
+          />
+        )}
+      </div>
+      <Note>
+        Since 0.42. Under an operator&apos;s grant without an end ({code("status: comped")},{" "}
+        {code("source: manual")}, {code("comped_until: null")}) a purchase leaves the plan on the grant&apos;s: the
+        payer would pay for a plan that never applies. The kit warns, it doesn&apos;t refuse. On the way to the
+        checkout PlanPicker asks first (&ldquo;Buy anyway&rdquo;, &ldquo;Back&rdquo;); told {code("switching")}, it
+        hands the pick on and PlanSwitchConfirm shows the same words above its figures, so the payer reads them
+        once. {code("source")} is checked explicitly: a pre-launch beta row has no end date either.
+      </Note>
+    </Example>
+  );
+}
+
 export function BillingSwitchDemo() {
   return (
     <>
       <PlanSwitch039Demo />
       <PayPageApps039Demo />
+      <BuyerOnly042Demo />
+      <GrantWarning042Demo />
     </>
   );
 }

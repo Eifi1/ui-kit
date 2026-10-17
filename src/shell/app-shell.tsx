@@ -91,6 +91,16 @@ export type AppShellSidebarFooterItem =
       hint?: string;
       /** Leaves the app: a plain `<a target="_blank" rel="noopener noreferrer">`. */
       external?: boolean;
+      /**
+       * 0.42.0 (docs/admin-harmonization.md §6.9): a count of what waits behind the link —
+       * kastlan's "Administration" with its To-triage count. A pill at the end of the
+       * expanded link, a corner dot on the collapsed icon; `0`, `null` or none shows
+       * nothing, and above 99 it reads "99+". The count joins the link's name, in
+       * `badgeLabel`'s words when given ("Administration, 3 waiting").
+       */
+      badge?: number | null;
+      /** The badge's words for a reader — `adminArea.waiting(count)`. Default: the number. */
+      badgeLabel?: string;
     }
   | {
       kind: "links";
@@ -589,6 +599,17 @@ const plainLink: KitLinkComponent = ({ children, ...p }) => <a {...p}>{children}
 const FOOTER_ICON_LINK =
   "flex min-h-8 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-secondary";
 
+/** A footer link's count as drawn: nothing for none, "99+" past 99. */
+function footerBadgeText(badge: number | null | undefined): string | null {
+  if (typeof badge !== "number" || !(badge > 0)) return null;
+  return badge > 99 ? "99+" : String(Math.floor(badge));
+}
+
+/** The count's pill — the solid "count" look of `Chip` (warning, the pending count's
+ *  tone, as `FloatingActionGroup`'s badge), sized for the footer's small text. */
+const FOOTER_BADGE =
+  "inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-warning px-1 text-micro font-semibold leading-4 tabular-nums text-warning-contrast";
+
 /** Calls the link renderer as a component, so a router link's hooks are its own. */
 function RenderedLink({ render, ...props }: KitLinkProps & { render: KitLinkComponent }) {
   return render(props);
@@ -627,12 +648,23 @@ function SidebarFooterItems({
           const to = item.kind === "links" ? (item.to ?? item.links[0]?.to) : item.to;
           if (!to) return null;
           const external = item.kind === "links" ? item.links.find((l) => l.to === to)?.external : item.external;
+          const count = item.kind === "links" ? null : footerBadgeText(item.badge);
+          const spoken = count === null || item.kind === "links" ? null : (item.badgeLabel ?? count);
           return (
             <Tooltip key={item.key} label={item.label} side="end" portal className="block">
               {linkTo(to, external, {
-                "aria-label": item.label,
-                className: FOOTER_ICON_LINK,
-                children: <item.icon className="size-4" aria-hidden />,
+                "aria-label": spoken === null ? item.label : `${item.label}, ${spoken}`,
+                className: cn(FOOTER_ICON_LINK, count !== null && "relative"),
+                children: (
+                  <>
+                    <item.icon className="size-4" aria-hidden />
+                    {count !== null && (
+                      <span aria-hidden data-badge="" className={cn(FOOTER_BADGE, "absolute -top-0.5 end-0.5")}>
+                        {count}
+                      </span>
+                    )}
+                  </>
+                ),
               })}
             </Tooltip>
           );
@@ -655,6 +687,7 @@ function SidebarFooterItems({
             </nav>
           );
         }
+        const count = footerBadgeText(item.badge);
         const link = linkTo(item.to, item.external, {
           className: cn(FOOTER_ICON_LINK, "gap-1.5 text-xs font-medium"),
           children: (
@@ -663,6 +696,14 @@ function SidebarFooterItems({
               {/* Wraps from Large up (text size §10.17, round 0.34 T1): the link is
                   `min-h-8`, so it grows a line rather than cut "Feedb…". */}
               <span className="min-w-0 truncate-until-large">{item.text ?? item.label}</span>
+              {count !== null && (
+                <>
+                  <span aria-hidden data-badge="" className={FOOTER_BADGE}>
+                    {count}
+                  </span>
+                  <span className="sr-only">, {item.badgeLabel ?? count}</span>
+                </>
+              )}
             </>
           ),
         });

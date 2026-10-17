@@ -1683,6 +1683,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         "Su pago se está procesando. Su plan empieza en cuanto se confirme; esta página se actualiza sola.",
       choosePlan: "Elegir un plan",
       updatePayment: "Actualizar el método de pago",
+      // 0.42 (§16.7 A): for an admin who isn't the buyer.
+      paymentFailedAskBuyer: (buyer) =>
+        buyer
+          ? `El pago no se ha completado. ${buyer} puede actualizar el método de pago.`
+          : "El pago no se ha completado. El administrador que contrató la suscripción puede actualizar el método de pago.",
       checkAgain: "Volver a comprobar",
       lockReason: "Su plan ha terminado. Elija un plan para volver a hacer cambios.",
       // As `characterCount.limitReached` ("Límite de caracteres alcanzado").
@@ -1713,6 +1718,19 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       switchCredited: "Abonado a sus próximos cargos",
       switchNextCharge: (date) => `Próximo cargo el ${date}`,
       switchConfirm: "Cambiar de plan",
+      // 0.42 (§16): the portal for the buyer only, the in-app cancel, the grant warning.
+      buyerHolds: (buyer) =>
+        buyer
+          ? `El método de pago y las facturas los gestiona ${buyer}, que contrató la suscripción.`
+          : "El método de pago y las facturas los gestiona el administrador que contrató la suscripción.",
+      cancelConfirmTitle: "Cancelar la suscripción",
+      cancelConfirmBody: (date) => `Su suscripción termina el ${date}. Hasta entonces, todo funciona como antes.`,
+      cancelConfirmAction: "Cancelar ahora la suscripción",
+      keepSubscription: "Mantener la suscripción",
+      grantWarningTitle: "Su acceso gratuito continúa",
+      grantWarningBody:
+        "Su acceso gratuito no tiene fecha de fin. Mientras dure, una compra no cambia su plan: pagaría por un plan que no se aplica.",
+      grantWarningAction: "Comprar de todos modos",
       waitingChanges: (count) => `${n(count)} ${plural(count, "cambio", "cambios")} a la espera de un plan`,
       // "Descartar", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Descartar los cambios en espera",
@@ -1780,6 +1798,74 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     appShellMore: {
       more: "Más",
       moreTitle: "Más páginas",
+    },
+    // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Usted",
+    // as the rest of the catalogue.
+    adminArea: {
+      title: "Administración",
+      waiting: (count) => `${n(count)} ${plural(count, "pendiente", "pendientes")}`,
+      forbiddenTitle: "Solo para administradores",
+      forbiddenBody: (appName) =>
+        `Aquí es donde los administradores gestionan ${appName}. Su cuenta no puede abrir esta página.`,
+      forbiddenHome: "Ir a la página de inicio",
+      forbiddenReviewer: "Revisar traducciones",
+      sections: {
+        overview: { title: "Resumen", help: "Lo que está pendiente, de un vistazo." },
+        users: { title: "Usuarios", help: "Quién tiene una cuenta y qué puede hacer cada uno." },
+        invitations: { title: "Invitaciones", help: "Los enlaces con los que entra una persona nueva." },
+        billing: { title: "Facturación", help: "El plan, el pago y las facturas." },
+        activity: { title: "Actividad", help: "Lo que hicieron los administradores, lo más reciente primero." },
+      },
+      tiles: {
+        feedbackWaiting: "Por clasificar",
+        deletionRequests: "Solicitudes de eliminación",
+        invitationsPending: "Invitaciones pendientes",
+        users: "Usuarios",
+        usersNew: (count) => `${n(count)} ${plural(count, "nuevo", "nuevos")} en 7 días`,
+      },
+      tools: "Herramientas",
+    },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts; "plan" as
+    // `billing`, "usted" as the rest of the catalogue.
+    topBarParts: {
+      tours: {
+        menu: "Visitas guiadas",
+        newDot: "Visitas nuevas",
+        thisPage: "En esta página",
+        newTours: "Visitas nuevas",
+        allTours: "Todas las visitas…",
+        badgeNew: "Nuevo",
+        completed: "Completada",
+      },
+      sync: {
+        blocked: (count) =>
+          `${n(count)} ${plural(count, "cambio no se puede enviar", "cambios no se pueden enviar")} desde este dispositivo`,
+        offline: "Sin conexión: los cambios se guardan en este dispositivo y se sincronizarán al volver a conectarse",
+        refused: "El servidor rechazó la última sincronización",
+        syncing: "Sincronizando…",
+        pending: (count) =>
+          `${n(count)} ${plural(count, "cambio", "cambios")} a la espera de sincronizarse`,
+        syncedAt: (time) => `Sincronizado a las ${time}`,
+        idle: "Al día",
+        syncHint: "Toque para sincronizar ahora",
+        offlineHint: "no hay nada que sincronizar sin conexión",
+        withHint: (state, hint) => `${state} — ${hint}`,
+        scoped: (scope, state) => `${scope}: ${state}`,
+        offlineShort: "Sin conexión",
+        syncingShort: "Sincronizando…",
+        waitingShort: (count) => `${n(count)} en espera`,
+        refusedShort: "Sin sincronizar",
+        offlineUnsaved: "Sin conexión: los cambios no se pueden guardar hasta que vuelva a conectarse",
+        saving: "Guardando…",
+      },
+      dev: {
+        roleHeading: "Dev · rol",
+        switchPlan: "Cambiar de plan",
+        plan: (value) => `Plan: ${value}`,
+        planHeading: "Dev · plan",
+        backTo: (role) => `Volver a ${role}`,
+        billingOff: "La facturación está desactivada en local: los planes no cambian nada",
+      },
     },
   };
 }

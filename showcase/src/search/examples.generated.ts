@@ -722,6 +722,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TopBarActionMenu — iconBadge",
     "TopBarActionMenu — a link in the header that closes the menu",
     "TopBarActionMenu — group headings",
+    "TopBarActions — the one order",
+    "SyncStatusIndicator — the seven states",
+    "TourMenu — with and without a tours page",
     "CompanySwitcher — several companies, one session",
   ],
   "page-structure": [
@@ -813,6 +816,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "SignInForm — a backup code, and 'too many attempts'",
   ],
   "user-admin": [
+    "The way in — adminMenuEntry, AccountRoleChip",
+    "The admin area — adminSections, AdminOverview, AdminToolLinks",
+    "One tile — AttentionTile",
+    "The 403 page — AdminForbidden",
     "User roster — useUserRosterColumns, RoleSelect, AdminActionConfirm",
     "Admin action log — AdminActionLog",
     "Groups in the audit — AdminActionLog groupNoun, AdminActionConfirm",
@@ -837,6 +844,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ShareCard under a billing lock — removing stays, adding does not",
     "The payer's plan switch — PlanSwitchConfirm",
     "Every pay page serves any app — PAY_PAGE_APPS",
+    "The portal for the buyer only — SubscriptionActions, CancelSubscriptionConfirm",
+    "The permanent-grant warning — PlanPicker, PlanSwitchConfirm",
   ],
   "feedback-compose": [
     "FeedbackDialog",
@@ -971,6 +980,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "demo · Enums",
     "demo · Protocols",
     "demo · Constants",
+    "dev_switch · Functions",
+    "dev_switch · Classes",
+    "dev_switch · Models",
+    "dev_switch · Enums",
+    "dev_switch · Constants",
   ],
   "server-billing": [
     "billing · Functions",
@@ -1300,6 +1314,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "ShellBrandDemo",
     "AccountHeaderLinkDemo",
     "TopBarMenuHeadingsDemo",
+    "TopBar042Demo",
     "CompanySwitcher029Demo",
   ],
   "page-structure": [
@@ -1345,6 +1360,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Account030Demo",
   ],
   "user-admin": [
+    "AdminWayIn042Demo",
+    "AdminArea042Demo",
+    "AdminForbidden042Demo",
     "UserRoster030Demo",
     "GroupActions034Demo",
     "PlanChange033Demo",

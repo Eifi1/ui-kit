@@ -412,6 +412,10 @@ export type { WriteLock, WriteLockLabels, WriteLockProviderProps, WriteLockKind,
 // 0.18: the parts both apps' admin rosters repeat (Kurvenschmiede 6).
 export { RoleChip, AccountStateChip, DateMark, dateColumn, DEFAULT_ACCOUNT_STATE_LABELS, ACCOUNT_STATE_TONES } from "./components/account-chips";
 export type { RoleChipProps, RoleDefinition, RoleVocabulary, AccountState, AccountStateLabels, AccountStateChipProps, DateMarkProps, DateColumnOptions } from "./components/account-chips";
+// 0.42 (docs/admin-harmonization.md §2.1): the role in the account menu's header, a link
+// to the role's tool (`RoleDefinition.href`).
+export { AccountRoleChip } from "./components/account-chips";
+export type { AccountRoleChipProps } from "./components/account-chips";
 // 0.18: the cold-start notice keksdose built (#199), for every app: the corner notice
 // that explains the wait (its framework-free watchdog is lib/server-wake).
 export { ServerWakeNotice, useServerWakeStage, DEFAULT_SERVER_WAKE_LABELS } from "./components/server-wake";
@@ -785,6 +789,25 @@ export type {
   InvitationsPanelProps,
 } from "./admin/invitations-panel";
 export type { AdminPerson } from "./admin/admin-parts";
+// 0.42.0 (docs/admin-harmonization.md §3.1): the admin area's template — its words, the
+// shared sections and the catalogue helper, the 403 page, the overview and its tiles fed
+// by `GET /admin/attention`, and the Tools list. The menu row is `./shell`'s.
+export { DEFAULT_ADMIN_AREA_LABELS, useAdminAreaLabels } from "./admin/admin-area-labels";
+export type { AdminAreaLabels, AdminTileLabels, AdminSharedSection } from "./admin/admin-area-labels";
+export { ADMIN_SECTIONS, adminSections } from "./admin/admin-sections";
+export type { AdminSectionDefinition, AdminOwnSection, AdminSectionsOptions } from "./admin/admin-sections";
+export { AdminForbidden } from "./admin/admin-forbidden";
+export type { AdminForbiddenProps } from "./admin/admin-forbidden";
+export { AdminOverview, AttentionTile, adminWaitingCount, DEFAULT_ADMIN_ATTENTION_HREFS } from "./admin/admin-overview";
+export type {
+  AdminAttention,
+  AdminAttentionTile,
+  AdminExtraTile,
+  AdminOverviewProps,
+  AttentionTileProps,
+} from "./admin/admin-overview";
+export { AdminToolLinks } from "./admin/admin-tool-links";
+export type { AdminToolLink, AdminToolLinksProps } from "./admin/admin-tool-links";
 // 0.33.0: the operator's plan parts (docs/billing-harmonization.md §14.12).
 export {
   planColumn,
@@ -811,8 +834,8 @@ export { DEFAULT_BILLING_LABELS, useBillingLabels, SUBSCRIPTION_STATUSES } from 
 export type { BillingLabels, SubscriptionStatus } from "./billing/billing-labels";
 export { BILLING_INTERVALS, planPrice, minorToMajor, formatPlanPrice, billingCurrencyFor } from "./billing/plan-price";
 export type { BillingInterval, BillingCurrency, PlanIntervalPrices, PlanPrices, PlanPriceAnswer } from "./billing/plan-price";
-export { PlanCard, PlanPicker, planRelation } from "./billing/plan-card";
-export type { BillingPlan, PlanRelation, PlanCardProps, PlanPickerProps, PlanChoice } from "./billing/plan-card";
+export { PlanCard, PlanPicker, GrantWarningConfirm, planRelation } from "./billing/plan-card";
+export type { BillingPlan, PlanRelation, PlanCardProps, PlanPickerProps, PlanChoice, GrantWarningConfirmProps } from "./billing/plan-card";
 export { SubscriptionStatusChip, SUBSCRIPTION_STATUS_TONES } from "./billing/subscription-status-chip";
 export type { SubscriptionStatusChipProps } from "./billing/subscription-status-chip";
 export { BillingBanner } from "./billing/billing-banner";
@@ -855,6 +878,11 @@ export type { PlanLimitToastOptions } from "./billing/plan-limit-toast";
 export { PlanSwitchConfirm } from "./billing/plan-switch";
 export type { PlanSwitchConfirmProps, PlanSwitchSide } from "./billing/plan-switch";
 export type { PaidPrice, PlanSwitchRequest, PlanSwitchPreview } from "./billing/billing-overview";
+// 0.42 (§16): the portal for the buyer only, the in-app cancel, the permanent-grant warning.
+export { isPermanentGrant } from "./billing/billing-overview";
+export type { BillingPortalAccess } from "./billing/billing-overview";
+export { CancelSubscriptionConfirm } from "./billing/cancel-subscription";
+export type { CancelSubscriptionConfirmProps } from "./billing/cancel-subscription";
 // The operator's plan parts (§14.12) are admin/plan-change, in the admin section.
 
 // ── settings ─────────────────────────────────────────────────────────────────

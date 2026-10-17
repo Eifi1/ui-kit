@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.13.1",
+  "kit_version": "0.14.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -982,7 +982,7 @@
     {
       "name": "eifi1_server_kit.user_admin",
       "summary": "User administration and the account's own settings, as code (``docs/user-admin-harmonization.md`` §7 in ``Eifi1/ui-kit``).",
-      "doc": "User administration and the account's own settings, as code\n(``docs/user-admin-harmonization.md`` §7 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes — no\ndatabase, no app ``User``, no routes. The tables (``admin_actions``, the token rows), the\nqueries, RLS and company scoping, what an erasure deletes and what an export holds stay in\neach app. keksdose and Kurvenschmiede are the reference, cited per rule.\n\n* :mod:`~eifi1_server_kit.user_admin.rules` — never yourself, never the last admin, the\n  typed address;\n* :mod:`~eifi1_server_kit.user_admin.actions` — :class:`AdminAction` and each action's\n  :class:`ConfirmationLevel`;\n* :mod:`~eifi1_server_kit.user_admin.roster` — the user list's query;\n* :mod:`~eifi1_server_kit.user_admin.audit` — the ``admin_actions`` row, and a detail\n  that never holds content;\n* :mod:`~eifi1_server_kit.user_admin.schemas` — the wire shapes;\n* :mod:`~eifi1_server_kit.user_admin.deletion` — the two-stage deletion's dates;\n* :mod:`~eifi1_server_kit.user_admin.export` — the export envelope and the secret check;\n* :mod:`~eifi1_server_kit.user_admin.sensitive` — what looks like a secret;\n* :mod:`~eifi1_server_kit.user_admin.errors` — :class:`AccountError` and its codes.\n\nThe email change's token lifetime and kind are the one-time token recipe's, in\n:mod:`eifi1_server_kit.auth`: ``EMAIL_CHANGE_TTL``, ``EMAIL_CHANGE_TOKEN_KIND``.",
+      "doc": "User administration and the account's own settings, as code\n(``docs/user-admin-harmonization.md`` §7 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes — no\ndatabase, no app ``User``, no routes. The tables (``admin_actions``, the token rows), the\nqueries, RLS and company scoping, what an erasure deletes and what an export holds stay in\neach app. keksdose and Kurvenschmiede are the reference, cited per rule.\n\n* :mod:`~eifi1_server_kit.user_admin.rules` — never yourself, never the last admin, the\n  typed address;\n* :mod:`~eifi1_server_kit.user_admin.actions` — :class:`AdminAction` and each action's\n  :class:`ConfirmationLevel`;\n* :mod:`~eifi1_server_kit.user_admin.roster` — the user list's query;\n* :mod:`~eifi1_server_kit.user_admin.audit` — the ``admin_actions`` row, and a detail\n  that never holds content;\n* :mod:`~eifi1_server_kit.user_admin.schemas` — the wire shapes;\n* :mod:`~eifi1_server_kit.user_admin.deletion` — the two-stage deletion's dates;\n* :mod:`~eifi1_server_kit.user_admin.export` — the export envelope and the secret check;\n* :mod:`~eifi1_server_kit.user_admin.sensitive` — what looks like a secret;\n* :mod:`~eifi1_server_kit.user_admin.errors` — :class:`AccountError` and its codes;\n* :mod:`~eifi1_server_kit.user_admin.attention` — :class:`AdminAttention`, what waits on\n  the admin (``docs/admin-harmonization.md`` §2.4, §6.4).\n\nThe email change's token lifetime and kind are the one-time token recipe's, in\n:mod:`eifi1_server_kit.auth`: ``EMAIL_CHANGE_TTL``, ``EMAIL_CHANGE_TOKEN_KIND``.",
       "contract": {
         "doc": "docs/user-admin-harmonization.md",
         "section": "§7",
@@ -1436,6 +1436,62 @@
           ]
         },
         {
+          "name": "AdminAttention",
+          "kind": "model",
+          "signature": "class AdminAttention(BaseModel)",
+          "doc": "``GET /admin/attention`` → ``{feedback_waiting, deletion_requests,\ninvitations_pending, users_total, users_new_7d, extra: {key: count}}`` (§2.4, §6.4).\n\nEach count is ``None`` where the app has no such thing, or where this viewer cannot act\non it; the page shows no tile for a ``None``, and a ``0`` as a quiet tile. The rules:\n\n* ``feedback_waiting`` is \"To triage\" (§6.1): reports in ``OPEN``, crash reports\n  included, scoped to what this admin can see (kastlan: the acting company). The\n  developer's lanes (``READY``, ``REWORK``, ``IN_PROGRESS``) are not the admin's.\n* ``deletion_requests`` only where this viewer acts on them (§6.2): Kurvenschmiede\n  counts them; keksdose (they run on their own) and kastlan's ``/admin`` answer ``None``.\n* **Demo accounts never count, anywhere** (§6.4): not as authors of a report, not as\n  users, not as new users, not in an ``extra``.\n* **In a demo session every count is ``None``** (§6.4; kastlan's demo user is a\n  company admin): answer :meth:`for_demo`, or pass ``demo=`` to :meth:`of`.\n* ``extra`` holds the app's own tiles, keyed as its overview names them (keksdose\n  ``support_waiting``; Kurvenschmiede ``released_for_work``).\n\nThe badge's sum is each app's (§6.3: only work that waits on this admin); invitations\nand users never join it.",
+          "fields": [
+            {
+              "name": "feedback_waiting",
+              "type": "AttentionCount",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "deletion_requests",
+              "type": "AttentionCount",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "invitations_pending",
+              "type": "AttentionCount",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "users_total",
+              "type": "AttentionCount",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "users_new_7d",
+              "type": "AttentionCount",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "extra",
+              "type": "dict[str, AttentionCount]",
+              "default": "dict()",
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "for_demo",
+              "signature": "@classmethod for_demo(*extra_keys: str) -> Self",
+              "doc": "The demo's answer: every count ``None``, the app's ``extra`` keys kept (as\n``None``) so the shape is the one the page knows."
+            },
+            {
+              "name": "of",
+              "signature": "@classmethod of(*, feedback_waiting: int | None = None, deletion_requests: int | None = None, invitations_pending: int | None = None, users_total: int | None = None, users_new_7d: int | None = None, extra: Mapping[str, int | None] | None = None, demo: bool = False) -> Self",
+              "doc": "The answer from the app's counts, each passed in (§6.4: the builder takes every\ncount). ``demo=True`` (the viewer's session is the demo's) answers\n:meth:`for_demo` with ``extra``'s keys, whatever the counts say."
+            }
+          ]
+        },
+        {
           "name": "AdminUserRow",
           "kind": "model",
           "signature": "class AdminUserRow(UserResponse)",
@@ -1562,6 +1618,12 @@
               "doc": ""
             }
           ]
+        },
+        {
+          "name": "AttentionCount",
+          "kind": "constant",
+          "signature": "AttentionCount = Annotated[int, Field(ge=0)] | None",
+          "doc": "One tile's count: ``None`` where the app has no such thing, or the viewer cannot act on it."
         },
         {
           "name": "AuditDetailError",
@@ -2609,9 +2671,195 @@
       ]
     },
     {
+      "name": "eifi1_server_kit.dev_switch",
+      "summary": "The dev switch: in local development only, a signed-in user sets their own role and plan.",
+      "doc": "The dev switch: in local development only, a signed-in user sets their own role and plan.\n\n``docs/top-bar-harmonization.md`` §2.7 and §6.1–§6.3 in ``Eifi1/ui-kit`` (§6 wins). The\nkit's ``DevSwitchers`` (role and plan, flask icon) call ``POST /dev/switch {role?, plan?}``,\nand the SERVER then enforces that role and plan, so the app behaves as it. **The route lets\na user make themselves ADMIN**, so its gate is the point of this module: it must be\nimpossible to switch on in a deployment by accident.\n\nLayer 1, like the rest of the kit: the gate, the startup check, the body, the refusals and\na validator — no route, no database. Each app writes the role and the plan its own way (the\nrecipe below and in the README).\n\n* :class:`DevSwitchSettings` — ``dev_switch_enabled: bool = False``, for the app's settings\n  to inherit (``<APP>_DEV_SWITCH_ENABLED``, set only in the local ``.env``);\n* :func:`dev_switch_enabled` — the gate: the flag AND the app's proof of a local run AND\n  not production; :func:`assert_dev_switch_safe` and :class:`DevSwitchUnsafeError` — the\n  app refuses to start with the flag set in production;\n* :func:`require_dev_switch` — a route dependency that answers 404 whenever the gate\n  doesn't hold, behind the mount;\n* :class:`DevSwitchRequest`, :class:`DevSwitchAnswer` — the wire shapes;\n* :func:`validate_dev_switch` — the app's roles and plans only (422);\n  :class:`DevSwitchError` and :class:`DevSwitchErrorCode` — the refusals.\n\n**The gate is never an environment name** (§6.1). Every app has one that says\n\"development\" where it must not be trusted:\n\n* keksdose runs a HOSTED dev deployment (``keksdose-dev`` on Cloud Run,\n  ``.github/workflows/deploy-dev.yml``), and its only environment-like setting,\n  ``metrics_environment``, defaults to ``\"dev\"`` (``infrastructure/settings.py:711``):\n  gated on it, anyone signed in on the hosted dev service could make themselves ADMIN\n  (review K-1);\n* kastlan's ``environment`` DEFAULTS to ``\"development\"``\n  (``kastlan/infrastructure/config.py:25-27``); a deployment that forgot\n  ``KASTLAN_ENVIRONMENT=production`` would mount the route (F3);\n* Kurvenschmiede's ``KURVENSCHMIEDE_DEPLOYMENT`` defaults to ``development``\n  (``backend/kurvenschmiede/infrastructure/settings.py:135``); only the image bakes in\n  ``production``, so a hand-run backend against a Cloud SQL proxy would mount it (KS 6a).\n\nSo the gate takes three things, and all three must agree: the explicit, off-by-default flag;\nthe app's own proof that this is a local run (kastlan: a loopback database host and no\n``K_SERVICE``, which Cloud Run sets; keksdose: a localhost or local-socket ``database_url``\nand no ``db_socket_dir``; KS ``is_development and is_local_database(settings)``,\n``feedback_loop.py:266``); and the app's production signal, which closes it whatever the\nother two say (kastlan ``environment == \"production\"``; keksdose\n``bool(db_socket_dir) or metrics_environment == \"prod\"``, since both its Cloud Run\nservices set ``KEKSDOSE_DB_SOCKET_DIR``; KS ``deployment is Deployment.PRODUCTION``).\n\n**The recipe** (the kit ships no router for it, as for billing's routes; ``<APP>``,\n``is_local_run`` and ``is_production`` are the app's own, as above)::\n\n    class Settings(BaseSettings, DevSwitchSettings):  # <APP>_DEV_SWITCH_ENABLED=true in .env only\n        model_config = SettingsConfigDict(env_prefix=\"<APP>_\")\n\n    def dev_switch_on(settings: Settings) -> bool:\n        return dev_switch_enabled(\n            flag=settings.dev_switch_enabled,\n            local_run=lambda: is_local_run(settings),  # the app's proof\n            production=is_production(settings),\n        )\n\n    def create_app(settings: Settings) -> FastAPI:\n        assert_dev_switch_safe(flag=settings.dev_switch_enabled, production=is_production(settings))\n        ...\n        if dev_switch_on(settings):  # otherwise the route is absent: 404\n            app.include_router(dev_router)\n\n    dev_router = APIRouter(\n        include_in_schema=False,  # never in the OpenAPI schema\n        dependencies=[Depends(require_dev_switch(lambda: dev_switch_on(get_settings())))],\n    )\n\n    @dev_router.post(DEV_SWITCH_PATH)\n    async def dev_switch(body: DevSwitchRequest, user=Depends(get_current_user), session=Depends(db)) -> DevSwitchAnswer:\n        body = validate_dev_switch(body, roles=ROLES, plans=PLANS)  # a signed-in user, NOT require_admin\n        if body.role is not None:\n            user.role = body.role  # the app's own write, see below\n        if body.plan is not None:\n            await set_plan(session, user, body.plan, comped_until=None)  # the operator's grant, permanent\n        await session.commit()\n        return DevSwitchAnswer(role=user.role, plan=...)\n\n    @dev_router.get(DEV_SWITCH_PATH)\n    async def dev_switch_state(user=Depends(get_current_user)) -> DevSwitchAnswer:\n        return DevSwitchAnswer(role=user.role, plan=...)  # the plan in effect, billing on or off\n\n* **``GET /dev/switch`` is the client's probe** (kastlan B4): behind the same gate, it\n  answers :class:`DevSwitchAnswer` — the role and the plan in effect. A 404 means the gate\n  is shut, so the client hides ``DevSwitchers`` (``enabled={import.meta.env.DEV &&\n  answered}``) rather than drawing switchers with nothing behind them; an answer gives\n  ``currentRole`` and ``currentPlan``, which the overview can't while billing is off.\n\n* **A signed-in user only, never ADMIN** (§6.2): a switch to a lesser role must be able to\n  switch back. The kit's ``DevSwitchers`` keeps the original role in session storage and\n  offers \"Back to {role}\".\n* **The role is written in the local database** (§6.2), since every app reads it from the\n  row on each request: keksdose ``users.role``; kastlan the acting company's\n  ``user_role_assignments`` (replace the caller's roles there), then ``issue_session``;\n  Kurvenschmiede ``users.role`` on the caller's own row, directly, skipping\n  ``admin_service.set_role``'s self and last-admin refusals, but still refusing CUSTOMER\n  for an account that owns work — ``DevSwitchError(DevSwitchErrorCode.DEV_SWITCH_REFUSED,\n  \"Sign in as the seed's customer\")``, a 409.\n* **The plan goes through the operator's grant, permanent** (§6.3): keksdose\n  ``admin_user_actions_service.set_plan(session, user, plan, comped_until=None)``, kastlan\n  ``BillingService.set_plan(company_id, plan, comped_until=None)``, Kurvenschmiede\n  ``billing_service.change_plan(…, comped_until=None, acknowledged=True)`` on the caller's\n  own row. That makes a permanent grant, and Billing §16's permanent-grant warning shows\n  on that account's checkout — EXCEPT on a row under a running beta grant (keksdose\n  before launch, kastlan likewise): ``comped_until=None`` keeps the beta status and source\n  and moves only the plan, so no permanent grant is made and no warning shows. That is\n  accepted: the switch is for previewing limits. With billing off, nothing is enforced;\n  the plan menu says so.\n* **No admin action log entry** — or one tagged :data:`DEV_SWITCH_LOG_TAG` — so a local\n  switch doesn't fill the activity log (review K-3).\n* The client then re-reads ``/auth/me`` and the overview. kastlan's real\n  ``/auth/switch-role`` (a held role) stays as it is.",
+      "contract": {
+        "doc": "docs/top-bar-harmonization.md",
+        "section": "§2.7, §6.1, §6.2, §6.3",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/top-bar-harmonization.md#27-dev-switchers-role-and-plan-server-too",
+        "links": [
+          {
+            "section": "§2.7",
+            "heading": "2.7 Dev switchers, role and plan, \"Server too\"",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/top-bar-harmonization.md#27-dev-switchers-role-and-plan-server-too"
+          },
+          {
+            "section": "§6.1",
+            "heading": "6.1 The dev switch's gate, a safety rule",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/top-bar-harmonization.md#61-the-dev-switchs-gate-a-safety-rule"
+          },
+          {
+            "section": "§6.2",
+            "heading": "6.2 What the switch writes",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/top-bar-harmonization.md#62-what-the-switch-writes"
+          },
+          {
+            "section": "§6.3",
+            "heading": "6.3 The plan switch",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/top-bar-harmonization.md#63-the-plan-switch"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "DEV_SWITCH_ERROR_DETAIL",
+          "kind": "constant",
+          "signature": "DEV_SWITCH_ERROR_DETAIL: Mapping[DevSwitchErrorCode, str] = {\n    DevSwitchErrorCode.DEV_SWITCH_DISABLED: \"Not Found\",\n    DevSwitchErrorCode.DEV_SWITCH_UNKNOWN_ROLE: \"Not a role of this app\",\n    DevSwitchErrorCode.DEV_SWITCH_UNKNOWN_PLAN: \"Not a plan of this app\",\n    DevSwitchErrorCode.DEV_SWITCH_REFUSED: \"This switch is not possible for this account\",\n}",
+          "doc": "The English ``detail`` of each code, for logs and API clients."
+        },
+        {
+          "name": "DEV_SWITCH_ERROR_STATUS",
+          "kind": "constant",
+          "signature": "DEV_SWITCH_ERROR_STATUS: Mapping[DevSwitchErrorCode, int] = {\n    DevSwitchErrorCode.DEV_SWITCH_DISABLED: 404,\n    DevSwitchErrorCode.DEV_SWITCH_UNKNOWN_ROLE: 422,\n    DevSwitchErrorCode.DEV_SWITCH_UNKNOWN_PLAN: 422,\n    DevSwitchErrorCode.DEV_SWITCH_REFUSED: 409,\n}",
+          "doc": "Each code's status."
+        },
+        {
+          "name": "DEV_SWITCH_LOG_TAG",
+          "kind": "constant",
+          "signature": "DEV_SWITCH_LOG_TAG = \"dev_switch\"",
+          "doc": "The tag an app that does log the switch puts on its admin action entry, so a local\nswitch is told apart from an operator's (review K-3). Logging nothing is as good."
+        },
+        {
+          "name": "DEV_SWITCH_PATH",
+          "kind": "constant",
+          "signature": "DEV_SWITCH_PATH = \"/dev/switch\"",
+          "doc": "The route, under the app's API prefix (``/api/v1/dev/switch``)."
+        },
+        {
+          "name": "DevSwitchAnswer",
+          "kind": "model",
+          "signature": "class DevSwitchAnswer(BaseModel)",
+          "doc": "The role and the plan now in effect: the answer of ``POST /dev/switch``, and of the\n``GET /dev/switch`` probe the client reads to learn that the gate is open and what to\ncheck in ``DevSwitchers`` (see the module's recipe). After a switch the client re-reads\n``/auth/me`` and the overview all the same.",
+          "fields": [
+            {
+              "name": "role",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "plan",
+              "type": "str | None",
+              "default": "None",
+              "doc": "``None`` for an app or account without a plan."
+            }
+          ]
+        },
+        {
+          "name": "DevSwitchError",
+          "kind": "class",
+          "signature": "class DevSwitchError(ValueError)",
+          "doc": "A dev switch refusal: ``status_code`` and ``code`` from :class:`DevSwitchErrorCode`,\nanswered ``{detail, code}`` by\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers`. A ``ValueError``\nlike every kit refusal.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(code: DevSwitchErrorCode, detail: str | None = None) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "DevSwitchErrorCode",
+          "kind": "enum",
+          "signature": "class DevSwitchErrorCode(enum.StrEnum)",
+          "doc": "The ``code`` of a dev switch refusal. A ``StrEnum``, so ``str(code)`` is the wire\nvalue.",
+          "values": [
+            {
+              "name": "DEV_SWITCH_DISABLED",
+              "value": "dev_switch_disabled"
+            },
+            {
+              "name": "DEV_SWITCH_UNKNOWN_ROLE",
+              "value": "dev_switch_unknown_role"
+            },
+            {
+              "name": "DEV_SWITCH_UNKNOWN_PLAN",
+              "value": "dev_switch_unknown_plan"
+            },
+            {
+              "name": "DEV_SWITCH_REFUSED",
+              "value": "dev_switch_refused"
+            }
+          ]
+        },
+        {
+          "name": "DevSwitchRequest",
+          "kind": "model",
+          "signature": "class DevSwitchRequest(BaseModel)",
+          "doc": "``POST /dev/switch``'s body: ``{role?, plan?}``, at least one of them (§2.7).\n\nUnknown fields are refused, and so is an empty body (422 through Pydantic). Whether the\nvalues are the app's is :func:`validate_dev_switch`'s question.",
+          "fields": [
+            {
+              "name": "role",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The role to act as, in the app's own words (``ADMIN``, ``MEMBER``, ``CUSTOMER``)."
+            },
+            {
+              "name": "plan",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The plan to act on, a plan code (``free``, ``pro``)."
+            }
+          ]
+        },
+        {
+          "name": "DevSwitchSettings",
+          "kind": "model",
+          "signature": "class DevSwitchSettings(BaseModel)",
+          "doc": "The flag, for the app's settings to INHERIT, so each reads its own variable\n(``KEKSDOSE_DEV_SWITCH_ENABLED``, ``KASTLAN_DEV_SWITCH_ENABLED``,\n``KURVENSCHMIEDE_DEV_SWITCH_ENABLED``)::\n\n    class Settings(BaseSettings, DemoSettings, DevSwitchSettings):\n        model_config = SettingsConfigDict(env_prefix=\"KASTLAN_\")\n\nAn app that keeps its own field declares ``<app>_dev_switch_enabled: bool = False``\nthe same way. **Set it only in the local ``.env``**, never in a deploy file, a\nCloud Run variable or a Secret: it is one of three signals, and the only one a\ndeveloper turns on by hand.",
+          "fields": [
+            {
+              "name": "dev_switch_enabled",
+              "type": "bool",
+              "default": "False",
+              "doc": "Off by default: the gate stays shut and the route is absent (404). On in production,\nthe app refuses to start (:func:`assert_dev_switch_safe`)."
+            }
+          ]
+        },
+        {
+          "name": "DevSwitchUnsafeError",
+          "kind": "class",
+          "signature": "class DevSwitchUnsafeError(RuntimeError)",
+          "doc": "The dev switch's flag is set in production: the app must not start (§6.1).\n\nA ``RuntimeError``, not a refusal: it is raised while the app is built, and no\nrequest is ever answered with it.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(detail: str = 'The dev switch is enabled in production: unset <APP>_DEV_SWITCH_ENABLED') -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "assert_dev_switch_safe",
+          "kind": "function",
+          "signature": "assert_dev_switch_safe(*, flag: bool, production: bool) -> None",
+          "doc": "Refuse to start when the flag is set in production (§6.1):\n:class:`DevSwitchUnsafeError`. Call it while building the app, before anything is\nmounted. An unknown production signal (anything but ``False``) counts as production."
+        },
+        {
+          "name": "dev_switch_enabled",
+          "kind": "function",
+          "signature": "dev_switch_enabled(*, flag: bool, local_run: bool | Callable[[], bool], production: bool) -> bool",
+          "doc": "Is the dev switch on? Only when ``flag`` is on AND ``local_run`` holds AND\n``production`` is off (§6.1).\n\n* ``flag`` — :attr:`DevSwitchSettings.dev_switch_enabled`, the explicit opt-in;\n* ``local_run`` — the app's own proof of a local run, or a callable giving it, which\n  is asked only when the flag is on and production off (KS's\n  ``is_local_database(settings)`` looks at the database URL and the key ring);\n* ``production`` — the app's production signal (kastlan\n  ``environment == \"production\"``, KS ``not is_development``).\n\n**Never pass an environment name as the proof alone**: see the module's notes.\nFail-closed: anything but exactly ``True`` for the flag and the proof, or exactly\n``False`` for production, shuts the gate."
+        },
+        {
+          "name": "require_dev_switch",
+          "kind": "function",
+          "signature": "require_dev_switch(gate: Callable[[], bool]) -> Callable[[Request], None]",
+          "doc": "The route dependency behind the mount: 404 ``dev_switch_disabled`` whenever\n``gate()`` isn't exactly ``True``, asked at every call::\n\n    dev_router = APIRouter(dependencies=[Depends(require_dev_switch(lambda: dev_switch_on(get_settings())))])\n\nThe mount is the gate; this is the second lock, for a router included by mistake or a\nsetting changed in a test. It takes Starlette's ``Request``, as FastAPI hands a\ndependency, so the kit imports no FastAPI."
+        },
+        {
+          "name": "validate_dev_switch",
+          "kind": "function",
+          "signature": "validate_dev_switch(request: DevSwitchRequest, *, roles: Collection[str], plans: Collection[str] = ()) -> DevSwitchRequest",
+          "doc": "``request`` with its role and plan in the app's own spelling, or a refusal: 422\n``dev_switch_unknown_role`` / ``dev_switch_unknown_plan`` for a value the app doesn't\noffer (compared without case: ``admin`` is ``ADMIN``).\n\n``roles`` and ``plans`` are the app's (a role enum's values, the plan catalogue's\ncodes); an app without plans passes none, and every plan is then refused. Whether the\ncaller may hold that role — KS's CUSTOMER for an account that owns work — stays the\napp's, with :attr:`DevSwitchErrorCode.DEV_SWITCH_REFUSED`."
+        }
+      ]
+    },
+    {
       "name": "eifi1_server_kit.billing",
       "summary": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in ``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).",
-      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in\n``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables and\nno routes, and one request each for checkout, portal, cancel, undoing a cancel, a plan\nswitch's preview and the switch, and the shared customer (§15), through\n:mod:`~eifi1_server_kit.billing.paddle`, only with the ``billing`` extra\n(``eifi1-server-kit[billing]``, httpx; imported lazily, so importing this package never\nneeds it). The subscription row and the event table, the routes, the read-only gate's\nallow-list, the notice job's query, mail and trigger, and the provider seam stay in each\napp. Marcel's decisions (§2): all three apps charge, through a Merchant of Record —\nPaddle (decision 16), one account for the three apps, each checkout tagged with its app\n(decision 18) — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets\na 30-day trial without a card, a beta payer 12 free months. Lemon Squeezy, deprecated in\n0.7, went in 0.8 (decision 25).\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets, the price ids, the app's tag, Paddle's environment\n  and where the checkout opens;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates\n  (:func:`effective_comped_until` for a beta row stored before the launch date was known);\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — the provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, a mapper per provider, and the app's tag that drops another\n  app's events (:func:`parse_webhook_event`'s ``app``);\n* :mod:`~eifi1_server_kit.billing.provider` — the provider's port\n  (:class:`BillingProviderClient`), the deployment's client\n  (:func:`billing_provider_client`), and what a route checks first (:func:`sold_plan`,\n  :func:`require_new_checkout`; for a plan switch :func:`require_plan_switch` and\n  :func:`switch_price`; the rule both refuse by, :func:`provider_subscription_runs`); a deletion's cancellation and its undoing\n  (:func:`cancel_for_deletion`, :func:`resume_after_withdrawal`); the checkout's way back\n  (:func:`checkout_return_url`);\n* :mod:`~eifi1_server_kit.billing.paddle` — :class:`PaddleClient`, Paddle Billing's API\n  (the ``billing`` extra), :class:`PaddleError` (the 4xx codes that are the\n  deployment's fault, :data:`PADDLE_CONFIGURATION_CODES`), and the buyer's language as Paddle's\n  checkout names it (:func:`paddle_locale`);\n* :mod:`~eifi1_server_kit.billing.notices` — which payer is owed a trial or grant end\n  notice (:func:`billing_notice_due`);\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, the plans\n  (:class:`PlanOut` with :class:`PlanPrices`, :func:`plans_out`), checkout, the operator's plans\n  (:class:`AdminPlan`, :func:`admin_plans_out`) and plan change, the payer's plan switch\n  (:class:`PlanSwitchRequest`, :class:`PlanSwitchPreview`, :func:`plan_switch_preview`) and\n  what the payer pays (:class:`PaidPrice`, the overview's ``paid``), and a sync reply's\n  refused changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\n\nNot re-exported: :mod:`eifi1_server_kit.billing.testing`, the signed fixture events and the\nprovider fakes for the apps' tests and local CLIs (§14.9).",
+      "doc": "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in\n``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and ports — no tables and\nno routes, and one request each for checkout, portal, cancel, undoing a cancel, a plan\nswitch's preview and the switch, and the shared customer (§15), through\n:mod:`~eifi1_server_kit.billing.paddle`, only with the ``billing`` extra\n(``eifi1-server-kit[billing]``, httpx; imported lazily, so importing this package never\nneeds it). The subscription row and the event table, the routes, the read-only gate's\nallow-list, the notice job's query, mail and trigger, and the provider seam stay in each\napp. Marcel's decisions (§2): all three apps charge, through a Merchant of Record —\nPaddle (decision 16), one account for the three apps, each checkout tagged with its app\n(decision 18) — in CHF and EUR; a lapsed payer is read-only, never locked; a new payer gets\na 30-day trial without a card, a beta payer 12 free months. Lemon Squeezy, deprecated in\n0.7, went in 0.8 (decision 25).\n\n* :mod:`~eifi1_server_kit.billing.settings` — :class:`BillingSettings`, the switch (off by\n  default), the provider, its secrets, the price ids, the app's tag, Paddle's environment\n  and where the checkout opens;\n* :mod:`~eifi1_server_kit.billing.plans` — :class:`PlanSpec`, the catalogue, the limits\n  (:func:`check_limit`), currencies, intervals and minor units;\n* :mod:`~eifi1_server_kit.billing.standing` — the row's statuses and sources,\n  :func:`in_good_standing`, and the trial's and the beta's dates\n  (:func:`effective_comped_until` for a beta row stored before the launch date was known);\n* :mod:`~eifi1_server_kit.billing.gate` — the read-only gate:\n  :func:`billing_write_allowed` (the demo's shape, the standing as an input) and\n  :func:`refuse_billing_read_only` for an app's own choke points;\n* :mod:`~eifi1_server_kit.billing.signatures` — the provider's webhook signature,\n  checked with ``hmac`` (no SDK);\n* :mod:`~eifi1_server_kit.billing.events` — the normalised event vocabulary,\n  :class:`NormalisedEvent`, a mapper per provider, and the app's tag that drops another\n  app's events (:func:`parse_webhook_event`'s ``app``);\n* :mod:`~eifi1_server_kit.billing.provider` — the provider's port\n  (:class:`BillingProviderClient`), the deployment's client\n  (:func:`billing_provider_client`), and what a route checks first (:func:`sold_plan`,\n  :func:`require_new_checkout`; for a plan switch :func:`require_plan_switch` and\n  :func:`switch_price`; the rule both refuse by, :func:`provider_subscription_runs`); a deletion's cancellation and its undoing\n  (:func:`cancel_for_deletion`, :func:`resume_after_withdrawal`); the portal for the buyer\n  only (:func:`portal_access`, :func:`require_portal_access`) and the in-app cancel and its\n  undoing (:func:`cancel_at_period_end`, :func:`resume_scheduled_cancel`); the checkout's way back\n  (:func:`checkout_return_url`);\n* :mod:`~eifi1_server_kit.billing.paddle` — :class:`PaddleClient`, Paddle Billing's API\n  (the ``billing`` extra), :class:`PaddleError` (the 4xx codes that are the\n  deployment's fault, :data:`PADDLE_CONFIGURATION_CODES`), and the buyer's language as Paddle's\n  checkout names it (:func:`paddle_locale`);\n* :mod:`~eifi1_server_kit.billing.notices` — which payer is owed a trial or grant end\n  notice (:func:`billing_notice_due`);\n* :mod:`~eifi1_server_kit.billing.webhooks` — the event-store port, the pure\n  :func:`dispatch` with the ordering guard and the grant's precedence, and the answer\n  policy;\n* :mod:`~eifi1_server_kit.billing.schemas` — the wire shapes: status, overview, the\n  standing (:class:`BillingStanding`), the plans\n  (:class:`PlanOut` with :class:`PlanPrices`, :func:`plans_out`), checkout, the operator's plans\n  (:class:`AdminPlan`, :func:`admin_plans_out`) and plan change, the payer's plan switch\n  (:class:`PlanSwitchRequest`, :class:`PlanSwitchPreview`, :func:`plan_switch_preview`) and\n  what the payer pays (:class:`PaidPrice`, the overview's ``paid``), and a sync reply's\n  refused changes;\n* :mod:`~eifi1_server_kit.billing.errors` — :class:`BillingError` and\n  :class:`PlanLimitError`, both answered by\n  :func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\n\nNot re-exported: :mod:`eifi1_server_kit.billing.testing`, the signed fixture events and the\nprovider fakes for the apps' tests and local CLIs (§14.9).",
       "contract": {
         "doc": "docs/billing-harmonization.md",
         "section": "§10, §14",
@@ -2645,13 +2893,13 @@
         {
           "name": "BILLING_ERROR_DETAIL",
           "kind": "constant",
-          "signature": "BILLING_ERROR_DETAIL: Mapping[BillingErrorCode, str] = {\n    BillingErrorCode.BILLING_DISABLED: \"Billing is not available\",\n    BillingErrorCode.BILLING_READ_ONLY: \"Read-only for now: changes need an active plan\",\n    BillingErrorCode.BILLING_NOT_CONFIGURED: \"Billing is not configured for this\",\n    BillingErrorCode.INVALID_SIGNATURE: \"Invalid webhook signature\",\n    BillingErrorCode.BILLING_PROVIDER_UNAVAILABLE: \"The payment provider is not available. Try again.\",\n    BillingErrorCode.BILLING_NOT_AT_PROVIDER: \"Nothing at the payment provider yet\",\n    BillingErrorCode.BILLING_ALREADY_SUBSCRIBED: \"A subscription is running: change its plan instead\",\n    BillingErrorCode.BILLING_PLAN_NOT_SOLD: \"This plan is not sold that way\",\n    BillingErrorCode.BILLING_NOT_SUBSCRIBED: \"No subscription is running: check out instead\",\n    BillingErrorCode.BILLING_PLAN_UNCHANGED: \"This is the plan you pay for now\",\n}",
+          "signature": "BILLING_ERROR_DETAIL: Mapping[BillingErrorCode, str] = {\n    BillingErrorCode.BILLING_DISABLED: \"Billing is not available\",\n    BillingErrorCode.BILLING_READ_ONLY: \"Read-only for now: changes need an active plan\",\n    BillingErrorCode.BILLING_NOT_CONFIGURED: \"Billing is not configured for this\",\n    BillingErrorCode.INVALID_SIGNATURE: \"Invalid webhook signature\",\n    BillingErrorCode.BILLING_PROVIDER_UNAVAILABLE: \"The payment provider is not available. Try again.\",\n    BillingErrorCode.BILLING_NOT_AT_PROVIDER: \"Nothing at the payment provider yet\",\n    BillingErrorCode.BILLING_ALREADY_SUBSCRIBED: \"A subscription is running: change its plan instead\",\n    BillingErrorCode.BILLING_PLAN_NOT_SOLD: \"This plan is not sold that way\",\n    BillingErrorCode.BILLING_NOT_SUBSCRIBED: \"No subscription is running: check out instead\",\n    BillingErrorCode.BILLING_PLAN_UNCHANGED: \"This is the plan you pay for now\",\n    BillingErrorCode.BILLING_PORTAL_BUYER_ONLY: \"Only the subscription's buyer opens the provider's portal\",\n}",
           "doc": "The English ``detail`` of each code, for logs and API clients; the kit's pages show their\nown words for the code. ``billing_read_only``'s says nothing about whose plan or why\n(§12.6)."
         },
         {
           "name": "BILLING_ERROR_STATUS",
           "kind": "constant",
-          "signature": "BILLING_ERROR_STATUS: Mapping[BillingErrorCode, int] = {\n    BillingErrorCode.BILLING_DISABLED: 404,\n    BillingErrorCode.BILLING_READ_ONLY: 402,\n    BillingErrorCode.BILLING_NOT_CONFIGURED: 503,\n    BillingErrorCode.INVALID_SIGNATURE: 400,\n    BillingErrorCode.BILLING_PROVIDER_UNAVAILABLE: 502,\n    BillingErrorCode.BILLING_NOT_AT_PROVIDER: 409,\n    BillingErrorCode.BILLING_ALREADY_SUBSCRIBED: 409,\n    BillingErrorCode.BILLING_PLAN_NOT_SOLD: 422,\n    BillingErrorCode.BILLING_NOT_SUBSCRIBED: 409,\n    BillingErrorCode.BILLING_PLAN_UNCHANGED: 409,\n}",
+          "signature": "BILLING_ERROR_STATUS: Mapping[BillingErrorCode, int] = {\n    BillingErrorCode.BILLING_DISABLED: 404,\n    BillingErrorCode.BILLING_READ_ONLY: 402,\n    BillingErrorCode.BILLING_NOT_CONFIGURED: 503,\n    BillingErrorCode.INVALID_SIGNATURE: 400,\n    BillingErrorCode.BILLING_PROVIDER_UNAVAILABLE: 502,\n    BillingErrorCode.BILLING_NOT_AT_PROVIDER: 409,\n    BillingErrorCode.BILLING_ALREADY_SUBSCRIBED: 409,\n    BillingErrorCode.BILLING_PLAN_NOT_SOLD: 422,\n    BillingErrorCode.BILLING_NOT_SUBSCRIBED: 409,\n    BillingErrorCode.BILLING_PLAN_UNCHANGED: 409,\n    BillingErrorCode.BILLING_PORTAL_BUYER_ONLY: 403,\n}",
           "doc": "Each code's status."
         },
         {
@@ -2881,6 +3129,10 @@
             {
               "name": "BILLING_PLAN_UNCHANGED",
               "value": "billing_plan_unchanged"
+            },
+            {
+              "name": "BILLING_PORTAL_BUYER_ONLY",
+              "value": "billing_portal_buyer_only"
             }
           ]
         },
@@ -3046,13 +3298,25 @@
               "type": "bool",
               "default": "False",
               "doc": "A provider subscription runs (§15.2.10): a plan pick goes to the plan switch, not to\nthe checkout. :func:`~eifi1_server_kit.billing.provider_subscription_runs` as of\n``now`` — the rule :func:`~eifi1_server_kit.billing.require_new_checkout` and\n:func:`~eifi1_server_kit.billing.require_plan_switch` refuse by, so the page and the\ntwo routes never disagree. False by default: an app's own overview built without\n:meth:`from_row` keeps building."
+            },
+            {
+              "name": "portal",
+              "type": "PortalAccess",
+              "default": "'open'",
+              "doc": "Who may open the portal (§16.2, §16.3): ``open``, or ``buyer_only`` — the row stores\na buyer (kastlan's ``provider_payer_user_id``) and the viewer isn't them, so \"Payment\nand invoices\" becomes a caption naming :attr:`buyer_name` and \"Cancel subscription\"\ncancels in the app (``POST /billing/cancel``). :func:`~eifi1_server_kit.billing.portal_access`."
+            },
+            {
+              "name": "buyer_name",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The buyer's display name for that caption, only with ``buyer_only`` (§16.3, §16.7\nG): the app looks it up — kastlan: first and last name — and passes ``None`` once\nthe buyer is gone or no longer a member; the caption then names \"the admin who\nbought the subscription\"."
             }
           ],
           "methods": [
             {
               "name": "from_row",
-              "signature": "@classmethod from_row(row: SubscriptionRow, *, plan: PlanSpec, usage: Mapping[str, int], currency: BillingCurrency | str, now: datetime, retry_grace: timedelta | None = None, launch: datetime | None = None, price_ref: Callable[[str], PriceRef | None] | None = None) -> Self",
-              "doc": "The overview of ``row``, whose plan is ``plan`` (the catalogue's entry for\n``row.plan_code`` — another plan is a :class:`ValueError`), with the payer's\n``usage`` and ``currency``, its standing as of ``now``.\n\nPass ``launch=settings.billing_launch_at``: a beta row stored before the launch\ndate was known has no ``comped_until``, and both the standing and the\n``comped_until`` shown read it as the launch plus 12 months (§3.2).\n\nPass ``price_ref=settings.billing_price_ref`` for ``paid`` (§15.2.10): the row's\n``provider_price_id`` as a plan, interval and currency.\n\n``switching`` is :func:`~eifi1_server_kit.billing.provider_subscription_runs`\n``(row, now)``."
+              "signature": "@classmethod from_row(row: SubscriptionRow, *, plan: PlanSpec, usage: Mapping[str, int], currency: BillingCurrency | str, now: datetime, retry_grace: timedelta | None = None, launch: datetime | None = None, price_ref: Callable[[str], PriceRef | None] | None = None, viewer_is_buyer: bool | None = None, buyer_name: str | None = None) -> Self",
+              "doc": "The overview of ``row``, whose plan is ``plan`` (the catalogue's entry for\n``row.plan_code`` — another plan is a :class:`ValueError`), with the payer's\n``usage`` and ``currency``, its standing as of ``now``.\n\nPass ``launch=settings.billing_launch_at``: a beta row stored before the launch\ndate was known has no ``comped_until``, and both the standing and the\n``comped_until`` shown read it as the launch plus 12 months (§3.2).\n\nPass ``price_ref=settings.billing_price_ref`` for ``paid`` (§15.2.10): the row's\n``provider_price_id`` as a plan, interval and currency.\n\n``switching`` is :func:`~eifi1_server_kit.billing.provider_subscription_runs`\n``(row, now)``.\n\nPass ``viewer_is_buyer`` where the row stores a buyer (kastlan: ``row.\nprovider_payer_user_id == user.id``) and the buyer's ``buyer_name`` (§16.3):\n``portal`` is :func:`~eifi1_server_kit.billing.portal_access`, and ``buyer_name``\nis kept only with ``buyer_only``. A person-payer app passes neither: ``open``."
             }
           ]
         },
@@ -3224,6 +3488,57 @@
               "name": "billing_standing",
               "signature": "billing_standing(row: SubscriptionRow | None, now: datetime, *, retry_grace: timedelta | None = None) -> bool",
               "doc": ":func:`~eifi1_server_kit.billing.in_good_standing`, behind the switch: with\nbilling off everyone is in good standing (§4). The standing the read-only gate\ntakes (:func:`~eifi1_server_kit.billing.billing_write_allowed`). A beta row stored\nwithout an end ends at :attr:`billing_launch_at` plus 12 months, once that is set\n(§3.2)."
+            }
+          ]
+        },
+        {
+          "name": "BillingStanding",
+          "kind": "model",
+          "signature": "class BillingStanding(BaseModel)",
+          "doc": "The payer's standing as every member's write lock and banners read it (§3.3,\n§12.5, §16.7 A) — ui-kit's ``BillingStanding`` — with the portal's ``portal`` and\n``buyer_name`` as the overview has them. For an app whose ``GET /billing/status``\ncarries the standing beside ``billing_enabled`` (kastlan's ``standing``), where the\npayment-failed banner reads it: with ``buyer_only`` the banner names the buyer and\nshows no button, so no request ends in the 403. Never the provider's details: those\nare the overview's. Build it with :meth:`from_row`::\n\n    class AppBillingStatus(BillingStatus):\n        standing: BillingStanding | None = None          # null while off, and for a demo",
+          "fields": [
+            {
+              "name": "status",
+              "type": "SubscriptionStatus",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "in_good_standing",
+              "type": "bool",
+              "default": null,
+              "doc": ":func:`~eifi1_server_kit.billing.in_good_standing` now: false = read-only (§3.3)."
+            },
+            {
+              "name": "trial_ends_at",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "comped_until",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": ":func:`~eifi1_server_kit.billing.effective_comped_until`, as on the overview."
+            },
+            {
+              "name": "portal",
+              "type": "PortalAccess",
+              "default": "'open'",
+              "doc": "As :attr:`BillingOverview.portal`."
+            },
+            {
+              "name": "buyer_name",
+              "type": "str | None",
+              "default": "None",
+              "doc": "As :attr:`BillingOverview.buyer_name`: only with ``buyer_only``."
+            }
+          ],
+          "methods": [
+            {
+              "name": "from_row",
+              "signature": "@classmethod from_row(row: SubscriptionRow, *, now: datetime, retry_grace: timedelta | None = None, launch: datetime | None = None, viewer_is_buyer: bool | None = None, buyer_name: str | None = None) -> Self",
+              "doc": "The standing of ``row`` as of ``now``, with :meth:`BillingOverview.from_row`'s\n``retry_grace``, ``launch``, ``viewer_is_buyer`` and ``buyer_name``."
             }
           ]
         },
@@ -4021,10 +4336,16 @@
           "doc": "An event that can never be applied — unreadable JSON, a field missing or of the wrong\ntype, a status nobody knows. Answered 2xx and logged (§5, keksdose's Pub/Sub rule): a\n5xx would make the provider redeliver the same bytes, for days (Paddle retries 60 times\nover 3 days).\n\nThe message names the field, never a value: a provider's body may carry the buyer's\nname and address, so a log line must never quote it."
         },
         {
+          "name": "PortalAccess",
+          "kind": "constant",
+          "signature": "PortalAccess = Literal[\"open\", \"buyer_only\"]",
+          "doc": "Who may open the portal (§16.2): ``open`` — whoever may read the overview (a row\nwithout a stored buyer: keksdose's and Kurvenschmiede's, whose payer is the person) —\nor ``buyer_only``, the viewer isn't the buyer the row stores (kastlan's\n``provider_payer_user_id``). :func:`portal_access` decides it."
+        },
+        {
           "name": "PortalRequest",
           "kind": "model",
           "signature": "class PortalRequest(BaseModel)",
-          "doc": "``POST /billing/portal {target?}`` (§14.5), an optional body: where the portal link\nopens — ``overview`` (\"Payment and invoices\", the default), ``cancel`` (\"Cancel\nsubscription\", the subscription's cancel link, §12.26) or ``payment_method`` (the\npayment-failed banner). The link is never stored::\n\n    @router.post(\"/billing/portal\", response_model=CheckoutAnswer)\n    async def portal(body: PortalRequest | None = None, payer=Depends(current_payer)) -> CheckoutAnswer:\n        settings.require_billing_enabled()\n        row = await row_of(payer)\n        url = await billing_client().portal_url(\n            customer_id=row.provider_customer_id,           # None: 409 billing_not_at_provider\n            subscription_id=row.provider_subscription_id,\n            target=(body or PortalRequest()).target,\n        )\n        return CheckoutAnswer(url=url)",
+          "doc": "``POST /billing/portal {target?}`` (§14.5), an optional body: where the portal link\nopens — ``overview`` (\"Payment and invoices\", the default), ``cancel`` (\"Cancel\nsubscription\", the subscription's cancel link, §12.26) or ``payment_method`` (the\npayment-failed banner). The link is never stored. Every target is for the buyer only\nwhere the row stores one (§16.2): :func:`~eifi1_server_kit.billing.require_portal_access`\nfirst, a no-op for a person-payer app::\n\n    @router.post(\"/billing/portal\", response_model=CheckoutAnswer)\n    async def portal(body: PortalRequest | None = None, viewer=Depends(current_user)) -> CheckoutAnswer:\n        settings.require_billing_enabled()\n        row = await row_of(payer_of(viewer))\n        require_portal_access(row, viewer_ref=str(viewer.id))   # 403 billing_portal_buyer_only\n        url = await billing_client().portal_url(\n            customer_id=row.provider_customer_id,           # None: 409 billing_not_at_provider\n            subscription_id=row.provider_subscription_id,\n            target=(body or PortalRequest()).target,\n        )\n        return CheckoutAnswer(url=url)",
           "fields": [
             {
               "name": "target",
@@ -4306,6 +4627,12 @@
           "doc": "May this request go on, given the payer's ``standing``? §3.3's gate, at the auth\ndependency::\n\n    standing = settings.billing_standing(payer_row, now)\n    if not billing_write_allowed(request.method, request.url.path, standing=standing, allow=BILLING_WRITES):\n        raise BillingError(BillingErrorCode.BILLING_READ_ONLY)\n\n* A payer in good standing — or billing switched off, which\n  :meth:`~eifi1_server_kit.billing.BillingSettings.billing_standing` answers as good\n  standing — always may.\n* GET, HEAD and OPTIONS always may: reading, exporting and signing in always work.\n* Anything else only when ``allow`` names it, in the demo's syntax: ``\"METHOD /path\"``\n  with the app's prefix, ``{name}`` for one path segment\n  (:func:`~eifi1_server_kit.demo.demo_write_allowed`). The list is the app's (§12.13,\n  §12.14): billing itself, the account's own settings, signing out; feedback with\n  attachments and crash reports; removing access (revoking a share, leaving a shared\n  item, offboarding, sessions, API tokens, passkeys, 2FA); taking the data and\n  leaving; admin routes; receiving sync. **Adding seats or guests stays blocked.**\n\n**Sync endpoints go on the allow-list** (§12.5): a 402 would stop the reply that\ncarries the updates. Inside them, refuse a lapsed payer's changes one by one and say\nso in the reply (:class:`~eifi1_server_kit.billing.SyncRefusal`)."
         },
         {
+          "name": "cancel_at_period_end",
+          "kind": "function",
+          "signature": "async cancel_at_period_end(row: SubscriptionRow, client: BillingProviderClient) -> None",
+          "doc": "Cancel the payer's subscription at its period's end, in the app (§16.2 decision 2,\n§16.3): ``POST /billing/cancel``, 204, for every admin who may read the overview, the\nbuyer included. The port's :meth:`~BillingProviderClient.cancel` with ``immediately``\nfalse — Paddle's API, no portal session: the subscription stays ``active`` until its\nperiod ends, and the row's ``cancel_at_period_end`` follows through the\n``subscription.updated`` Paddle sends.\n\n* 409 ``billing_not_at_provider``: no ``provider_subscription_id`` (a stale page; the\n  overview's ``at_provider`` hides the action).\n* Nothing, and no request: ``cancel_at_period_end`` is already set.\n* The provider's refusals as every call maps them (server-kit 0.13): 502\n  ``billing_provider_unavailable``, 503 ``billing_not_configured`` for the\n  deployment's fault.\n\nIt takes no write lock: a read-only payer may always cancel (§3.3). Unlike\n:func:`cancel_for_deletion` it raises: it is the person's own action, and the page\nsays what failed."
+        },
+        {
           "name": "cancel_for_deletion",
           "kind": "function",
           "signature": "async cancel_for_deletion(row: SubscriptionRow, client: BillingProviderClient) -> CancelOutcome | None",
@@ -4420,6 +4747,12 @@
           "doc": "The answer to ``GET /billing/plans`` (§4): every plan of ``catalogue`` as\n:class:`PlanOut`, in ``sort`` order (then by code, as\n:func:`~eifi1_server_kit.billing.plan_catalogue` orders them — sorted again here, so a\nmapping built by hand comes out the same)::\n\n    @router.get(\"/billing/plans\", response_model=list[PlanOut])\n    def billing_plans(payer: Payer = Depends(current_payer)) -> list[PlanOut]:\n        settings.require_billing_enabled()  # 404 billing_disabled\n        return plans_out(PLANS)\n\nEvery currency the plans are sold in: the page picks the payer's — the overview's\n``currency`` (§12.18) — and offers the switch where a plan has more than one."
         },
         {
+          "name": "portal_access",
+          "kind": "function",
+          "signature": "portal_access(row: SubscriptionRow, *, viewer_is_buyer: bool | None = None) -> PortalAccess",
+          "doc": "Who may open the portal for ``row`` (§16.2, §16.3): ``buyer_only`` exactly when the\nrow stores a buyer (``provider_payer_user_id``, read where the row has it) and\n``viewer_is_buyer`` is ``False``; otherwise ``open``. ``None`` — an app that doesn't\nsay, a person-payer app — is ``open``. The overview's and the standing's ``portal``\n(:class:`~eifi1_server_kit.billing.BillingOverview`,\n:class:`~eifi1_server_kit.billing.BillingStanding`); the route refuses by\n:func:`require_portal_access`."
+        },
+        {
           "name": "provider_subscription_runs",
           "kind": "function",
           "signature": "provider_subscription_runs(row: SubscriptionRow, now: datetime) -> bool",
@@ -4444,10 +4777,22 @@
           "doc": "Refuse a plan switch while no provider subscription runs (§15.2.10): 409\n``billing_not_subscribed`` — the inverse of :func:`require_new_checkout`, by the same\nrule, so exactly one of the two passes for any row. The page offers the checkout\ninstead. A subscription set to cancel at its period's end doesn't run here either: the\npayer subscribes again, to the plan they want, through a checkout."
         },
         {
+          "name": "require_portal_access",
+          "kind": "function",
+          "signature": "require_portal_access(row: SubscriptionRow, *, viewer_ref: str) -> None",
+          "doc": "Refuse the portal to anyone but the buyer the row stores (§16.2, §16.3): 403\n``billing_portal_buyer_only`` when ``row.provider_payer_user_id`` is set and differs\nfrom ``viewer_ref`` — the viewer's id as text (kastlan: ``str(user.id)``; the stored\nbuyer is compared as its text, so an integer column matches). Every target, the\noverview, ``cancel`` and ``payment_method`` alike: each reaches the overview of all\nthe buyer's subscriptions (§16.1). A row without a stored buyer — a person-payer app,\nor a buyer not yet known — passes everyone, so calling it keeps the route the same\nshape (§16.7 F). Call it in ``POST /billing/portal`` before\n:meth:`~BillingProviderClient.portal_url`.\n\nWhen the buyer has left the company or is erased nobody opens the portal (§16.2\ndecision 4): any admin still cancels in the app (:func:`cancel_at_period_end`)."
+        },
+        {
           "name": "resume_after_withdrawal",
           "kind": "function",
           "signature": "async resume_after_withdrawal(row: SubscriptionRow, client: BillingProviderClient, now: datetime | None = None) -> ResumeOutcome | None",
           "doc": "Undo the cancellation a deletion request scheduled, when the account comes back\n(§12.37, §14.8): an operator's reactivation that cancels a pending deletion, or a\nperson's own withdrawal where the app has one. The provider's\n:meth:`~BillingProviderClient.remove_scheduled_cancel` — Paddle's ``PATCH\n/subscriptions/{id} {\"scheduled_change\": null}``: the subscription stays ``active``,\nand the row follows through the ``subscription.updated`` event it sends.\n\n**Only the cancellation the deletion made:** call it only when the request's audit\ndetail recorded ``\"cancelled\"`` for this row (:func:`cancel_for_deletion`). A payer who\nhad cancelled in the portal before asking to leave (the request answered ``None``)\nisn't subscribed again. That audit is the check, not the row's\n``cancel_at_period_end``: :func:`cancel_for_deletion` doesn't set it — only Paddle's\n``subscription.updated`` does, which may not have arrived yet, and never arrives with\nbilling switched off (the webhook answers 404) — so the row may still read \"not\ncancelled\" while Paddle has the cancellation scheduled. Removing nothing is harmless:\nthe provider is asked whenever the subscription hasn't ended.\n\n* ``None``: nothing to undo — no ``provider_subscription_id``, the subscription\n  ``canceled`` or ``expired``, its period over at ``now`` (default: the current time),\n  or Paddle answering that it has ended. A subscription cancelled at once (it was\n  paused) or past its period can't be reinstated (Paddle: a cancelled subscription\n  \"can't be reinstated\"); the payer subscribes again through a new checkout.\n* ``\"resumed\"``, or ``\"failed\"``: it **never raises**. A failure is logged at ERROR —\n  \"remove the scheduled cancellation by hand\" — and goes into the reactivation's audit\n  detail (``provider_resume``)."
+        },
+        {
+          "name": "resume_scheduled_cancel",
+          "kind": "function",
+          "signature": "async resume_scheduled_cancel(row: SubscriptionRow, client: BillingProviderClient) -> None",
+          "doc": "Keep the subscription: undo a cancellation at the period's end, in the app (§16.7\nC, §16.8): ``POST /billing/resume``, 204, for the same admins as\n:func:`cancel_at_period_end` — the page's \"Keep subscription\" while the overview's\n``cancel_at_period_end`` is true. The port's\n:meth:`~BillingProviderClient.remove_scheduled_cancel` (Paddle's ``PATCH\n/subscriptions/{id} {\"scheduled_change\": null}``); the row follows through the\n``subscription.updated`` Paddle sends.\n\n* 409 ``billing_not_at_provider``: no ``provider_subscription_id``.\n* Nothing, and no request, unless ``cancel_at_period_end`` is set.\n* Nothing either when Paddle answers that there is nothing to resume — the\n  subscription has ended (``subscription_update_when_canceled``) or no cancellation is\n  scheduled (``subscription_scheduled_change_invalid_update``), as for\n  :func:`resume_after_withdrawal`: the page re-reads the overview, which shows it.\n* Any other failure raises, mapped as every call maps it (502, or 503 for the\n  deployment's fault): unlike :func:`resume_after_withdrawal` this is the person's own\n  action."
         },
         {
           "name": "row_changes",
@@ -8880,7 +9225,7 @@
     {
       "name": "eifi1_server_kit.errors",
       "summary": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.",
-      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
+      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, the dev switch's\n:class:`~eifi1_server_kit.dev_switch.DevSwitchError` 404 / 409 / 422, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.7",
@@ -8897,7 +9242,7 @@
         {
           "name": "CONTRACT_ERRORS",
           "kind": "constant",
-          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n    NotificationError,\n)",
+          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    DevSwitchError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n    NotificationError,\n)",
           "doc": "Every kit exception base that carries a ``status_code``; subclasses are covered by MRO."
         },
         {

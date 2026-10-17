@@ -40,6 +40,9 @@ export type SettingsLayoutWidth = "6xl" | "7xl";
  *  about twelve, keksdose 26; a page of six needs none. */
 export const SETTINGS_SEARCH_THRESHOLD = 8;
 
+/** The desktop sidebar's column: sticky beside a long group (§3.2). */
+const SIDEBAR_COLUMN = "mb-4 md:sticky md:top-6 md:mb-0 md:self-start";
+
 export interface SettingsLayoutProps<G extends string> {
   /** The page's `h1`: "Settings", "Administration". Default: `labels.title`. */
   title?: ReactNode;
@@ -72,6 +75,12 @@ export interface SettingsLayoutProps<G extends string> {
    * own navigation carries them.
    */
   phoneFooter?: ReactNode;
+  /**
+   * 0.42.0 (docs/admin-harmonization.md §2.5 decision 16): content under the section
+   * list on a desktop, in the same sticky column — the admin area's Tools list
+   * (`AdminToolLinks`). Not shown on a phone, where `phoneFooter` carries the same links.
+   */
+  sidebarFooter?: ReactNode;
   /** Prop > `<UiKitProvider labels={{ settings }}>` > English. */
   labels?: LabelOverride<SettingsLabels>;
   /** See {@link SettingsLayoutMode}. Default `"auto"`: the screen decides. */
@@ -151,6 +160,7 @@ export function SettingsLayout<G extends string>({
   width = "6xl",
   renderGroup,
   phoneFooter,
+  sidebarFooter,
   labels: labelsProp,
   layout = "auto",
   appName,
@@ -376,45 +386,59 @@ export function SettingsLayout<G extends string>({
     );
   } else {
     const open = group === null ? undefined : groupById.get(group);
+    // The section list alone, or (0.42) with the app's `sidebarFooter` under it in one
+    // sticky column.
+    const withSidebarFooter = (tabs: ReactNode) =>
+      sidebarFooter == null ? (
+        tabs
+      ) : (
+        <div className={cn(SIDEBAR_COLUMN, "space-y-6")}>
+          {tabs}
+          <div data-slot="settings-sidebar-footer">{sidebarFooter}</div>
+        </div>
+      );
     body = (
       <div className={pageClass} data-settings-view="desktop">
         <PageHeader size="compact" title={pageTitle} />
         {searchField}
         <div className="md:grid md:grid-cols-[14rem_minmax(0,1fr)] md:gap-6">
-          <Tabs<G>
-            orientation="vertical"
-            aria-label={labels.sections}
-            // Sticky (new in the harmonisation, §3.2): keksdose's notifications group
-            // scrolls for screens, and the list should stay in view beside it.
-            className="mb-4 md:sticky md:top-6 md:mb-0 md:self-start"
-            panelId={open && !searching ? panelId : undefined}
-            tabs={route.groups.map((g) => {
-              const count = hitsByGroup.get(g.id) ?? 0;
-              // While searching, the groups with nothing to show step back (keksdose).
-              const dim = searching && count === 0;
-              return {
-                id: g.id,
-                href: `${root}${settingsHref(base, g.id)}`,
-                name: g.title,
-                label: <span className={cn(dim && "opacity-40")}>{g.title}</span>,
-                icon: <span className={cn("inline-flex [&_svg]:size-4", dim && "opacity-40")}>{g.icon}</span>,
-                badge:
-                  searching && count > 0 ? (
-                    <Chip size="sm" tone="brand">
-                      <span aria-hidden>{count}</span>
-                      <span className="sr-only-fixed">{labels.matchCount(count)}</span>
-                    </Chip>
-                  ) : undefined,
-              };
-            })}
-            active={(open?.id ?? route.groups[0]?.id) as G}
-            onChange={(id) => {
-              // While searching the hits stand where the group would; a click on a group
-              // means "go there", so the search makes way (keksdose).
-              setQuery("");
-              select(id);
-            }}
-          />
+          {withSidebarFooter(
+            <Tabs<G>
+              orientation="vertical"
+              aria-label={labels.sections}
+              // Sticky (new in the harmonisation, §3.2): keksdose's notifications group
+              // scrolls for screens, and the list should stay in view beside it. With a
+              // `sidebarFooter` the column round both is the sticky one.
+              className={sidebarFooter == null ? SIDEBAR_COLUMN : undefined}
+              panelId={open && !searching ? panelId : undefined}
+              tabs={route.groups.map((g) => {
+                const count = hitsByGroup.get(g.id) ?? 0;
+                // While searching, the groups with nothing to show step back (keksdose).
+                const dim = searching && count === 0;
+                return {
+                  id: g.id,
+                  href: `${root}${settingsHref(base, g.id)}`,
+                  name: g.title,
+                  label: <span className={cn(dim && "opacity-40")}>{g.title}</span>,
+                  icon: <span className={cn("inline-flex [&_svg]:size-4", dim && "opacity-40")}>{g.icon}</span>,
+                  badge:
+                    searching && count > 0 ? (
+                      <Chip size="sm" tone="brand">
+                        <span aria-hidden>{count}</span>
+                        <span className="sr-only-fixed">{labels.matchCount(count)}</span>
+                      </Chip>
+                    ) : undefined,
+                };
+              })}
+              active={(open?.id ?? route.groups[0]?.id) as G}
+              onChange={(id) => {
+                // While searching the hits stand where the group would; a click on a group
+                // means "go there", so the search makes way (keksdose).
+                setQuery("");
+                select(id);
+              }}
+            />,
+          )}
           <div className="min-w-0 space-y-4">
             {searching ? (
               results

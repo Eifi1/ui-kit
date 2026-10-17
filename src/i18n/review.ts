@@ -393,9 +393,28 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // 0.39: PlanSwitchConfirm's two lines with figures (§15.2.10).
   "billing.switchFromTo": [["{{from}}", "{{to}}"]],
   "billing.switchNextCharge": [["{{date}}"]],
+  // 0.42 (§16): the buyer's name, or none once they are gone; the cancel's period end.
+  "billing.buyerHolds": [["{{buyer}}"], [undefined]],
+  "billing.paymentFailedAskBuyer": [["{{buyer}}"], [undefined]],
+  "billing.cancelConfirmBody": [["{{date}}"]],
   "planChange.current": [["{{plan}}"]],
   "planChange.changed": [["{{from}}", "{{to}}"]],
   "planChange.set": [["{{to}}"]],
   "planChange.untilDone": [["{{date}}"]],
   "planChange.usageOf": [["{{used}}", "{{limit}}", "{{dimension}}"]],
+  // 0.42.0 (docs/admin-harmonization.md §3.1): the menu row's count, the 403 page's app,
+  // the users tile's new accounts.
+  "adminArea.waiting": one,
+  "adminArea.forbiddenBody": [["{{app}}"]],
+  "adminArea.tiles.usersNew": one,
+  // 0.42.0 (docs/top-bar-harmonization.md §3.1): the sync indicator's counts, its time, the
+  // state joined to its hint or to the app's scope; the dev plan and the role to go back to.
+  "topBarParts.sync.blocked": one,
+  "topBarParts.sync.pending": one,
+  "topBarParts.sync.syncedAt": [["{{time}}"]],
+  "topBarParts.sync.withHint": [["{{state}}", "{{hint}}"]],
+  "topBarParts.sync.scoped": [["{{scope}}", "{{state}}"]],
+  "topBarParts.sync.waitingShort": one,
+  "topBarParts.dev.plan": [["{{plan}}"]],
+  "topBarParts.dev.backTo": [["{{role}}"]],
 };

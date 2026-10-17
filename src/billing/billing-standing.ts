@@ -1,6 +1,7 @@
 import { toDate } from "../lib/format";
 import type { DateInput } from "../lib/format";
 import type { SubscriptionStatus } from "./billing-labels";
+import type { BillingPortalAccess } from "./billing-overview";
 
 /**
  * What a device knows of the payer's standing — the fields of `GET /billing/overview`
@@ -16,6 +17,13 @@ export interface BillingStanding {
   /** When a free grant ends: a beta user's 12 months, an operator's grant. Empty for a
    *  grant without an end (§12.8). */
   comped_until?: DateInput;
+  /** 0.42 (server-kit 0.14, §16.7 A): who may open the provider's portal, as the
+   *  overview's `portal` — `GET /billing/status` says it too, for the payment-failed
+   *  banner (`BillingBanner`'s `portal`). Absent: `"open"`. */
+  portal?: BillingPortalAccess;
+  /** 0.42 (§16.7 A): the buyer's display name, as the overview's `buyer_name`; `null`
+   *  when the buyer is gone or has left the company. */
+  buyer_name?: string | null;
 }
 
 /**

@@ -272,6 +272,8 @@ const CheckboxGroup022Demo = lazySection(() => import("./sections/choices"), "Ch
 const CommitControls022Demo = lazySection(() => import("./sections/forms-rhf"), "CommitControls022Demo");
 // 0.23.0: the apps' 0.22 adoption round.
 const TopBarMenuHeadingsDemo = lazySection(() => import("./sections/topbar-023-demo"), "TopBarMenuHeadingsDemo");
+// 0.42.0: the top bar's shared parts (docs/top-bar-harmonization.md §3.1).
+const TopBar042Demo = lazySection(() => import("./sections/top-bar-parts"), "TopBar042Demo");
 const Rhf023Demo = lazySection(() => import("./sections/fields-023-demo"), "Rhf023Demo");
 const CountryClear023Demo = lazySection(() => import("./sections/fields-023-demo"), "CountryClear023Demo");
 const AmountClass023Demo = lazySection(() => import("./sections/fields-023-demo"), "AmountClass023Demo");
@@ -324,6 +326,10 @@ const Billing033Demo = lazySection(() => import("./sections/billing-033-demo"), 
 const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "BillingSwitchDemo");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
+// 0.42: the admin area's template (docs/admin-harmonization.md).
+const AdminWayIn042Demo = lazySection(() => import("./sections/admin-area"), "AdminWayIn042Demo");
+const AdminArea042Demo = lazySection(() => import("./sections/admin-area"), "AdminArea042Demo");
+const AdminForbidden042Demo = lazySection(() => import("./sections/admin-area"), "AdminForbidden042Demo");
 // 0.31.0: the Server kit group — server-kit's modules, read out of its release's api.json.
 const ServerModules = lazySection(() => import("./server-kit/server-kit-page"), "ServerModules");
 const ServerKitOverview = lazySection(() => import("./server-kit/server-kit-page"), "ServerKitOverview");
@@ -1218,7 +1224,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
-        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher"],
+        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher", "TopBarActions", "TOP_BAR_ACTION_ORDER", "AccountMenuLanguage", "TourMenu", "SyncStatusIndicator", "syncState", "SyncStatus", "DevSwitchers", "DEV_ORIGINAL_ROLE_KEY"],
         Body: () => (
           <>
             <ShellSection />
@@ -1226,6 +1232,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ShellBrandDemo />
             <AccountHeaderLinkDemo />
             <TopBarMenuHeadingsDemo />
+            <TopBar042Demo />
             <CompanySwitcher029Demo />
           </>
         ),
@@ -1338,9 +1345,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
         icon: UserCog,
-        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult"],
+        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult", "AccountRoleChip", "adminMenuEntry", "AdminMenuRow", "ADMIN_SECTIONS", "adminSections", "AdminOverview", "AttentionTile", "adminWaitingCount", "AdminToolLinks", "AdminForbidden"],
         Body: () => (
           <>
+            <AdminWayIn042Demo />
+            <AdminArea042Demo />
+            <AdminForbidden042Demo />
             <UserRoster030Demo />
             <GroupActions034Demo />
             <PlanChange033Demo />
@@ -1358,7 +1368,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
         icon: CreditCard,
-        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS"],
+        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS", "CancelSubscriptionConfirm", "isPermanentGrant", "GrantWarningConfirm"],
         Body: () => (
           <>
             <Billing032Demo />
@@ -1532,9 +1542,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Demo",
         short: "Demo",
         blurb:
-          "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
+          "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime. And the local-only switch for role and plan.",
         icon: FlaskConical,
-        serverModules: ["demo"],
+        serverModules: ["demo", "dev_switch"],
       }),
       serverPage({
         slug: "server-billing",

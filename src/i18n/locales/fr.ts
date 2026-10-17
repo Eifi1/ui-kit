@@ -1716,6 +1716,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         "Votre paiement est en cours de traitement. Votre formule démarre dès qu’il est confirmé\u202f; cette page se met à jour d’elle-même.",
       choosePlan: "Choisir une formule",
       updatePayment: "Mettre à jour le moyen de paiement",
+      // 0.42 (§16.7 A): for an admin who isn't the buyer.
+      paymentFailedAskBuyer: (buyer) =>
+        buyer
+          ? `Le paiement a échoué. ${buyer} peut mettre à jour le moyen de paiement.`
+          : "Le paiement a échoué. L’administrateur qui a souscrit l’abonnement peut mettre à jour le moyen de paiement.",
       checkAgain: "Vérifier à nouveau",
       lockReason: "Votre formule a pris fin. Choisissez une formule pour pouvoir de nouveau apporter des modifications.",
       // As `characterCount.limitReached` ("Limite de caractères atteinte").
@@ -1747,6 +1752,20 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       switchCredited: "Crédité sur vos prochains paiements",
       switchNextCharge: (date) => `Prochain prélèvement le ${date}`,
       switchConfirm: "Changer de formule",
+      // 0.42 (§16): the portal for the buyer only, the in-app cancel, the grant warning.
+      buyerHolds: (buyer) =>
+        buyer
+          ? `Le moyen de paiement et les factures sont gérés par ${buyer}, qui a souscrit l’abonnement.`
+          : "Le moyen de paiement et les factures sont gérés par l’administrateur qui a souscrit l’abonnement.",
+      cancelConfirmTitle: "Résilier l’abonnement",
+      cancelConfirmBody: (date) =>
+        `Votre abonnement prendra fin le ${date}. D’ici là, tout fonctionne comme avant.`,
+      cancelConfirmAction: "Résilier maintenant",
+      keepSubscription: "Conserver l’abonnement",
+      grantWarningTitle: "Votre accès gratuit continue",
+      grantWarningBody:
+        "Votre accès gratuit n’a pas de date de fin. Tant qu’il dure, un achat ne change pas votre formule : vous paieriez pour une formule qui ne s’applique pas.",
+      grantWarningAction: "Acheter quand même",
       waitingChanges: (count) =>
         `${n(count)} ${plural(count, "modification en attente", "modifications en attente")} d’une formule`,
       // "Abandonner", as `wizard.cancelConfirmLabel`.
@@ -1819,6 +1838,73 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     appShellMore: {
       more: "Plus",
       moreTitle: "Autres pages",
+    },
+    // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words.
+    adminArea: {
+      title: "Administration",
+      waiting: (count) => `${n(count)} en attente`,
+      forbiddenTitle: "Réservé aux administrateurs",
+      forbiddenBody: (appName) =>
+        `C’est ici que les administrateurs gèrent ${appName}. Votre compte ne peut pas ouvrir cette page.`,
+      forbiddenHome: "Aller à la page d’accueil",
+      forbiddenReviewer: "Relire les traductions",
+      sections: {
+        overview: { title: "Vue d’ensemble", help: "Ce qui est en attente, en un coup d’œil." },
+        users: { title: "Utilisateurs", help: "Qui a un compte, et ce que chacun peut faire." },
+        invitations: { title: "Invitations", help: "Les liens qui permettent à une nouvelle personne d’entrer." },
+        billing: { title: "Facturation", help: "L’offre, le paiement et les factures." },
+        activity: { title: "Activité", help: "Ce que les administrateurs ont fait, du plus récent au plus ancien." },
+      },
+      tiles: {
+        feedbackWaiting: "À trier",
+        deletionRequests: "Demandes de suppression",
+        invitationsPending: "Invitations en attente",
+        users: "Utilisateurs",
+        usersNew: (count) => `${n(count)} ${plural(count, "nouveau", "nouveaux")} en 7 jours`,
+      },
+      tools: "Outils",
+    },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts, keksdose's
+    // reviewed sync words where they are not about its budgets; "formule" as `billing`.
+    topBarParts: {
+      tours: {
+        menu: "Visites guidées",
+        newDot: "Nouvelles visites",
+        thisPage: "Sur cette page",
+        newTours: "Nouvelles visites",
+        allTours: "Toutes les visites…",
+        badgeNew: "Nouveau",
+        completed: "Terminée",
+      },
+      sync: {
+        blocked: (count) =>
+          `${n(count)} ${plural(count, "modification ne peut pas être envoyée", "modifications ne peuvent pas être envoyées")} depuis cet appareil`,
+        offline: "Hors ligne — les modifications sont enregistrées sur cet appareil et seront synchronisées à la reconnexion",
+        refused: "Le serveur a refusé la dernière synchronisation",
+        syncing: "Synchronisation…",
+        pending: (count) =>
+          `${n(count)} ${plural(count, "modification", "modifications")} en attente de synchronisation`,
+        syncedAt: (time) => `Synchronisé à ${time}`,
+        idle: "À jour",
+        syncHint: "Touchez pour synchroniser maintenant",
+        offlineHint: "rien à synchroniser hors ligne",
+        withHint: (state, hint) => `${state} — ${hint}`,
+        scoped: (scope, state) => `${scope}\u00a0: ${state}`,
+        offlineShort: "Hors ligne",
+        syncingShort: "Synchronisation…",
+        waitingShort: (count) => `${n(count)} en attente`,
+        refusedShort: "Non synchronisé",
+        offlineUnsaved: "Hors ligne — les modifications ne peuvent pas être enregistrées avant la reconnexion",
+        saving: "Enregistrement…",
+      },
+      dev: {
+        roleHeading: "Dev · rôle",
+        switchPlan: "Changer de formule",
+        plan: (value) => `Formule\u00a0: ${value}`,
+        planHeading: "Dev · formule",
+        backTo: (role) => `Revenir à ${role}`,
+        billingOff: "La facturation est désactivée en local\u00a0: les formules ne changent rien",
+      },
     },
   };
 }

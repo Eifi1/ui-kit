@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.13.1";
+export const SERVER_KIT_VERSION = "0.14.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -153,7 +153,9 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["ActiveChange", "model"],
       ["AdminAction", "enum"],
       ["AdminActionRow", "model"],
+      ["AdminAttention", "model"],
       ["AdminUserRow", "model"],
+      ["AttentionCount", "constant"],
       ["AuditDetailError", "class"],
       ["ConfirmationLevel", "enum"],
       ["DeletionMode", "enum"],
@@ -242,6 +244,27 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
     ],
   },
   {
+    page: "server-demo",
+    module: "dev_switch",
+    summary: "The dev switch: in local development only, a signed-in user sets their own role and plan.",
+    members: [
+      ["DEV_SWITCH_ERROR_DETAIL", "constant"],
+      ["DEV_SWITCH_ERROR_STATUS", "constant"],
+      ["DEV_SWITCH_LOG_TAG", "constant"],
+      ["DEV_SWITCH_PATH", "constant"],
+      ["DevSwitchAnswer", "model"],
+      ["DevSwitchError", "class"],
+      ["DevSwitchErrorCode", "enum"],
+      ["DevSwitchRequest", "model"],
+      ["DevSwitchSettings", "model"],
+      ["DevSwitchUnsafeError", "class"],
+      ["assert_dev_switch_safe", "function"],
+      ["dev_switch_enabled", "function"],
+      ["require_dev_switch", "function"],
+      ["validate_dev_switch", "function"],
+    ],
+  },
+  {
     page: "server-billing",
     module: "billing",
     summary: "Billing, plans and payment, as code (``docs/billing-harmonization.md`` §10 and §14 in ``Eifi1/ui-kit``; since ui-kit 0.34 the contract's body carries every settled amendment).",
@@ -281,6 +304,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["BillingProvider", "enum"],
       ["BillingProviderClient", "protocol"],
       ["BillingSettings", "model"],
+      ["BillingStanding", "model"],
       ["BillingStatus", "model"],
       ["CancelOutcome", "constant"],
       ["CheckoutAnswer", "model"],
@@ -311,6 +335,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["PlanSwitchPreview", "model"],
       ["PlanSwitchRequest", "model"],
       ["PoisonEventError", "class"],
+      ["PortalAccess", "constant"],
       ["PortalRequest", "model"],
       ["PortalTarget", "constant"],
       ["PriceRef", "class"],
@@ -327,6 +352,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["billing_notices_owed", "function"],
       ["billing_provider_client", "function"],
       ["billing_write_allowed", "function"],
+      ["cancel_at_period_end", "function"],
       ["cancel_for_deletion", "function"],
       ["check_limit", "function"],
       ["checkout_custom_data", "function"],
@@ -346,11 +372,14 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["plan_catalogue", "function"],
       ["plan_switch_preview", "function"],
       ["plans_out", "function"],
+      ["portal_access", "function"],
       ["provider_subscription_runs", "function"],
       ["refuse_billing_read_only", "function"],
       ["require_new_checkout", "function"],
       ["require_plan_switch", "function"],
+      ["require_portal_access", "function"],
       ["resume_after_withdrawal", "function"],
+      ["resume_scheduled_cancel", "function"],
       ["row_changes", "function"],
       ["sold_plan", "function"],
       ["switch_price", "function"],

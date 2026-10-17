@@ -1729,6 +1729,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Ihre Zahlung wird verarbeitet. Ihr Tarif beginnt, sobald sie bestätigt ist; diese Seite aktualisiert sich von selbst.",
       choosePlan: "Tarif wählen",
       updatePayment: "Zahlungsmethode aktualisieren",
+      // 0.42 (§16.7 A): for an admin who isn't the buyer. "Das Admin-Konto", which gives the
+      // reader no gender.
+      paymentFailedAskBuyer: (buyer) =>
+        buyer
+          ? `Die Zahlung ist fehlgeschlagen. ${buyer} kann die Zahlungsmethode aktualisieren.`
+          : "Die Zahlung ist fehlgeschlagen. Die Zahlungsmethode kann über das Admin-Konto aktualisiert werden, mit dem das Abonnement abgeschlossen wurde.",
       checkAgain: "Erneut prüfen",
       lockReason: "Ihr Tarif ist abgelaufen. Wählen Sie einen Tarif, um wieder Änderungen vorzunehmen.",
       // As `characterCount.limitReached` ("Zeichenlimit erreicht").
@@ -1763,6 +1769,20 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       switchCredited: "Gutschrift auf die nächsten Belastungen",
       switchNextCharge: (date) => `Nächste Belastung am ${date}`,
       switchConfirm: "Tarif ändern",
+      // 0.42 (§16): the portal for the buyer only, the in-app cancel, the grant warning.
+      buyerHolds: (buyer) =>
+        buyer
+          ? `Zahlungsmethode und Rechnungen liegen bei ${buyer}: Das Abonnement wurde über dieses Konto abgeschlossen.`
+          : "Zahlungsmethode und Rechnungen liegen beim Admin-Konto, mit dem das Abonnement abgeschlossen wurde.",
+      cancelConfirmTitle: "Abonnement kündigen",
+      cancelConfirmBody: (date) => `Ihr Abonnement endet am ${date}. Bis dahin funktioniert alles wie bisher.`,
+      // §312k BGB: the confirmation button says exactly this.
+      cancelConfirmAction: "Jetzt kündigen",
+      keepSubscription: "Abonnement behalten",
+      grantWarningTitle: "Ihr kostenloser Zugang läuft weiter",
+      grantWarningBody:
+        "Ihr kostenloser Zugang hat kein Enddatum. Solange er läuft, ändert ein Kauf Ihren Tarif nicht: Sie würden für einen Tarif bezahlen, der nicht gilt.",
+      grantWarningAction: "Trotzdem kaufen",
       waitingChanges: (count) =>
         count === 1
           ? `${n(count)} Änderung wartet auf einen Tarif`
@@ -1838,6 +1858,78 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     appShellMore: {
       more: "Mehr",
       moreTitle: "Weitere Seiten",
+    },
+    // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Verwaltung"
+    // as settings §5 names the page; "mit Administratorrechten" rather than "für
+    // Administratoren", which would give the reader a gender (as `transferOwnership`).
+    adminArea: {
+      title: "Verwaltung",
+      waiting: (count) => `${n(count)} offen`,
+      forbiddenTitle: "Nur mit Administratorrechten",
+      forbiddenBody: (appName) => `Hier wird ${appName} verwaltet. Ihr Konto kann diese Seite nicht öffnen.`,
+      forbiddenHome: "Zur Startseite",
+      forbiddenReviewer: "Übersetzungen prüfen",
+      sections: {
+        overview: { title: "Übersicht", help: "Was gerade wartet, auf einen Blick." },
+        users: { title: "Benutzer", help: "Wer ein Konto hat und was jede Person darf." },
+        invitations: { title: "Einladungen", help: "Die Links, mit denen neue Personen dazukommen." },
+        billing: { title: "Abrechnung", help: "Tarif, Zahlung und Rechnungen." },
+        activity: { title: "Aktivität", help: "Was in der Verwaltung getan wurde, das Neueste zuerst." },
+      },
+      tiles: {
+        feedbackWaiting: "Zu sichten",
+        deletionRequests: "Löschanfragen",
+        invitationsPending: "Offene Einladungen",
+        users: "Benutzer",
+        usersNew: (count) => `${n(count)} neu in 7 Tagen`,
+      },
+      tools: "Werkzeuge",
+    },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts. keksdose's
+    // reviewed sync words where they are not about its budgets; "Tarif" as `billing`.
+    topBarParts: {
+      tours: {
+        menu: "Geführte Touren",
+        newDot: "Neue Touren",
+        thisPage: "Auf dieser Seite",
+        newTours: "Neue Touren",
+        allTours: "Alle Touren…",
+        badgeNew: "Neu",
+        completed: "Abgeschlossen",
+      },
+      sync: {
+        blocked: (count) =>
+          count === 1
+            ? `${n(count)} Änderung kann von diesem Gerät nicht gesendet werden`
+            : `${n(count)} Änderungen können von diesem Gerät nicht gesendet werden`,
+        offline: "Offline – Änderungen werden auf diesem Gerät gespeichert und bei erneuter Verbindung synchronisiert",
+        refused: "Der Server hat den letzten Abgleich abgelehnt",
+        syncing: "Wird synchronisiert…",
+        pending: (count) =>
+          count === 1
+            ? `${n(count)} Änderung wartet auf Synchronisierung`
+            : `${n(count)} Änderungen warten auf Synchronisierung`,
+        syncedAt: (time) => `Synchronisiert um ${time}`,
+        idle: "Aktuell",
+        syncHint: "Tippen, um jetzt zu synchronisieren",
+        offlineHint: "offline gibt es nichts zu synchronisieren",
+        withHint: (state, hint) => `${state} – ${hint}`,
+        scoped: (scope, state) => `${scope}: ${state}`,
+        offlineShort: "Offline",
+        syncingShort: "Sync läuft…",
+        waitingShort: (count) => `${n(count)} ausstehend`,
+        refusedShort: "Nicht synchronisiert",
+        offlineUnsaved: "Offline – Änderungen können erst nach erneuter Verbindung gespeichert werden",
+        saving: "Wird gespeichert…",
+      },
+      dev: {
+        roleHeading: "Dev · Rolle",
+        switchPlan: "Tarif wechseln",
+        plan: (value) => `Tarif: ${value}`,
+        planHeading: "Dev · Tarif",
+        backTo: (role) => `Zurück zu ${role}`,
+        billingOff: "Die Abrechnung ist lokal aus: Tarife ändern nichts",
+      },
     },
   };
 }

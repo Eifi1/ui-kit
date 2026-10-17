@@ -211,6 +211,8 @@ const NOT_A_FIELD_HINT = [
   "FileDropzone",
   // A string: the component draws its own FieldHint from it.
   "StatTile",
+  // 0.42.0: a StatTile that is a link — the same `hint`.
+  "AttentionTile",
   "DescriptionItem",
 ] as const satisfies ReadonlyArray<HintTakers<typeof Kit>>;
 
