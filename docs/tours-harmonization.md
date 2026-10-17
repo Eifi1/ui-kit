@@ -277,3 +277,29 @@ everything", the 0.43 adoptions' notes (audits/round-045/candidates.md) and thes
 Questions for the reviews: does `onComplete` on the provider fit your tour setup (keksdose's
 `useTours`, kastlan's `ToursRoot` and mock mode, KS's single tour)? And should the provider
 own the progress, or keep taking it from the app?
+
+### 9.6 The reviews (2026-10-17) and what they change
+
+All three are in audits/round-045/reviews.md. Where they differ from §9.1–§9.3, these win:
+
+1. **The finished tour travels with its start** (keksdose: the provider sits above the
+   layout where no tour list exists). `start(steps, {tour, …})` carries the one `TourInfo`.
+   The provider takes `progress?: {storageKey, migrate?}` and `onComplete?(tour,
+   {awarded})`, never the list. That also removes kastlan's full-list concern.
+2. **`onComplete` comes in addition to the start's own callbacks** (kastlan). It fires
+   after the progress write, before `start()`'s `onFinish`, and never on a skip or
+   `stop()`. Exactly one write per completion, so `awarded` equals what `complete(tour)`
+   answered before. **The app removes its own `complete()` call** from `onFinish`, or the
+   second write answers `false`. The adopt guide names the lines.
+3. **The progress stays the app's** (all three). The provider reads and writes through the
+   same `{storageKey, migrate}` as `useTourProgress`, so there is one shared snapshot and
+   never a second copy. The options type `UseTourProgressOptions` is exported, so an app
+   declares the options once.
+4. **The provider follows a `storageKey` change without a remount** (KS: an account switch
+   on a shared PC), tested.
+5. **`completeTour` notifies the readers in the same tab directly** (keksdose: the
+   `storage` event reaches only other tabs).
+6. **One written form** (KS): stored `{[id]: ISO instant | ""}`, where `""` is a
+   completion without a date. Hooks and callbacks give `null` for it. The code's comments,
+   §9.3 and `completeTour` agree.
+7. **Both new provider props are optional** (keksdose's test render mounts it bare).
