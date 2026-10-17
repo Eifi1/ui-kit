@@ -980,6 +980,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "demo · Enums",
     "demo · Protocols",
     "demo · Constants",
+    "dev_switch · Functions",
+    "dev_switch · Classes",
+    "dev_switch · Models",
+    "dev_switch · Enums",
+    "dev_switch · Constants",
   ],
   "server-billing": [
     "billing · Functions",

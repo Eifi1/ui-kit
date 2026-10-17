@@ -189,7 +189,7 @@ Install the wheel by URL, pinned by hash:
 
 ```
 eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.14.0/eifi1_server_kit-0.14.0-py3-none-any.whl
-sha256: SHA256_AT_RELEASE
+sha256: aeafb19dac4f0095f7f583b698615c4185ae3193fa413445ea667b3454a4e8f3
 ```
 
 - **billing:**

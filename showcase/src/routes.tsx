@@ -1368,7 +1368,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
         icon: CreditCard,
-        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS", "CancelSubscriptionConfirm", "isPermanentGrant"],
+        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS", "CancelSubscriptionConfirm", "isPermanentGrant", "GrantWarningConfirm"],
         Body: () => (
           <>
             <Billing032Demo />
@@ -1542,9 +1542,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Demo",
         short: "Demo",
         blurb:
-          "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime.",
+          "The throwaway demo account: its settings, the gate's checks in order, the refusals and their codes, the read-only rule and its one lifetime. And the local-only switch for role and plan.",
         icon: FlaskConical,
-        serverModules: ["demo"],
+        serverModules: ["demo", "dev_switch"],
       }),
       serverPage({
         slug: "server-billing",
