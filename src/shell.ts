@@ -68,3 +68,23 @@ export type {
 } from "./landing/routing";
 export { PublicHeader } from "./landing/public-header";
 export type { PublicHeaderProps, PublicHeaderBrand } from "./landing/public-header";
+// 0.42.0: the top bar's shared parts (docs/top-bar-harmonization.md §3.1) — the slots in
+// §2.1's order, the account menu's language sub-list, the tours menu, the sync status, the
+// local-dev switchers, and their words.
+export { TopBarActions, TOP_BAR_ACTION_ORDER } from "./shell/top-bar-actions";
+export type { TopBarActionsProps } from "./shell/top-bar-actions";
+export { AccountMenuLanguage } from "./shell/account-menu-language";
+export type { AccountMenuLanguageProps, AccountMenuLanguageOption } from "./shell/account-menu-language";
+export { TourMenu } from "./shell/tour-menu";
+export type { TourMenuProps, TourMenuTour } from "./shell/tour-menu";
+export { SyncStatusIndicator, syncState } from "./shell/sync-status-indicator";
+export type { SyncStatus, SyncState, SyncStatusScope, SyncStatusIndicatorProps } from "./shell/sync-status-indicator";
+export { DevSwitchers, DEV_ORIGINAL_ROLE_KEY } from "./shell/dev-switchers";
+export type { DevSwitchersProps } from "./shell/dev-switchers";
+export { DEFAULT_TOP_BAR_PARTS_LABELS, useTopBarPartsLabels } from "./shell/top-bar-parts-labels";
+export type {
+  TopBarPartsLabels,
+  TourMenuLabels,
+  SyncStatusLabels,
+  DevSwitchersLabels,
+} from "./shell/top-bar-parts-labels";

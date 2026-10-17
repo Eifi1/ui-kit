@@ -1885,5 +1885,49 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       },
       tools: "Werkzeuge",
     },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts. keksdose's
+    // reviewed sync words where they are not about its budgets; "Tarif" as `billing`.
+    topBarParts: {
+      tours: {
+        menu: "Geführte Touren",
+        newDot: "Neue Touren",
+        thisPage: "Auf dieser Seite",
+        newTours: "Neue Touren",
+        allTours: "Alle Touren…",
+        badgeNew: "Neu",
+        completed: "Abgeschlossen",
+      },
+      sync: {
+        blocked: (count) =>
+          count === 1
+            ? `${n(count)} Änderung kann von diesem Gerät nicht gesendet werden`
+            : `${n(count)} Änderungen können von diesem Gerät nicht gesendet werden`,
+        offline: "Offline – Änderungen werden auf diesem Gerät gespeichert und bei erneuter Verbindung synchronisiert",
+        refused: "Der Server hat den letzten Abgleich abgelehnt",
+        syncing: "Wird synchronisiert…",
+        pending: (count) =>
+          count === 1
+            ? `${n(count)} Änderung wartet auf Synchronisierung`
+            : `${n(count)} Änderungen warten auf Synchronisierung`,
+        syncedAt: (time) => `Synchronisiert um ${time}`,
+        idle: "Aktuell",
+        syncHint: "Tippen, um jetzt zu synchronisieren",
+        offlineHint: "offline gibt es nichts zu synchronisieren",
+        withHint: (state, hint) => `${state} – ${hint}`,
+        scoped: (scope, state) => `${scope}: ${state}`,
+        offlineShort: "Offline",
+        syncingShort: "Sync läuft…",
+        waitingShort: (count) => `${n(count)} ausstehend`,
+        refusedShort: "Nicht synchronisiert",
+      },
+      dev: {
+        roleHeading: "Dev · Rolle",
+        switchPlan: "Tarif wechseln",
+        plan: (value) => `Tarif: ${value}`,
+        planHeading: "Dev · Tarif",
+        backTo: (role) => `Zurück zu ${role}`,
+        billingOff: "Die Abrechnung ist lokal aus: Tarife ändern nichts",
+      },
+    },
   };
 }

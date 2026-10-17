@@ -722,6 +722,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TopBarActionMenu — iconBadge",
     "TopBarActionMenu — a link in the header that closes the menu",
     "TopBarActionMenu — group headings",
+    "TopBarActions — the one order",
+    "SyncStatusIndicator — the seven states",
+    "TourMenu — with and without a tours page",
     "CompanySwitcher — several companies, one session",
   ],
   "page-structure": [
@@ -1306,6 +1309,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "ShellBrandDemo",
     "AccountHeaderLinkDemo",
     "TopBarMenuHeadingsDemo",
+    "TopBar042Demo",
     "CompanySwitcher029Demo",
   ],
   "page-structure": [

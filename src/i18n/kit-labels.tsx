@@ -119,6 +119,7 @@ import type { SignChipLabels } from "../components/sign-chip";
 import type { ColumnMapperLabels } from "../components/column-mapper";
 import type { NotificationsLabels } from "../notifications/notifications-labels";
 import type { AdminAreaLabels } from "../admin/admin-area-labels";
+import type { TopBarPartsLabels } from "../shell/top-bar-parts-labels";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -480,6 +481,9 @@ export interface UiKitLabels {
    *  403 page, the shared sections, the overview's tiles and the Tools list
    *  (docs/admin-harmonization.md §3.1). */
   adminArea: AdminAreaLabels;
+  /** 0.42.0: the top bar's shared parts — `TourMenu`, `SyncStatusIndicator`, `DevSwitchers`
+   *  (docs/top-bar-harmonization.md §3.1). */
+  topBarParts: TopBarPartsLabels;
 }
 
 /**

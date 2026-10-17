@@ -25,16 +25,30 @@ function MenuHeading({ children }: { children: string }) {
   );
 }
 
-/** Sun/Moon toggle for the light/dark theme. Controlled: the app owns the mode. */
+/**
+ * Sun/Moon toggle for the light/dark theme. Controlled: the app owns the mode, and the
+ * toggle keeps no storage key of its own (docs/top-bar-harmonization.md §6.4).
+ *
+ * `mode` is the theme ON SCREEN — the resolved one, so with a "system" preference it is
+ * whatever the OS gives. A tap asks for the opposite of that: `onChange("light")` while
+ * dark is shown, `onChange("dark")` while light is. The app writes it as its theme
+ * preference (an explicit light or dark), where Settings → Appearance keeps the three-way
+ * choice. `onToggle` is the older way to hear the tap, without the next mode; both fire.
+ */
 export function ThemeToggle({
   mode,
   onToggle,
+  onChange,
   "aria-label": ariaLabel,
   title,
   className,
 }: {
+  /** The resolved light/dark on screen (`useThemeStore`'s `mode`, not its preference). */
   mode: ThemeMode;
-  onToggle: () => void;
+  /** Hears a tap. Kept for 0.41's callers; `onChange` says what to switch to. */
+  onToggle?: () => void;
+  /** 0.42: the mode to switch to — always the opposite of `mode`. */
+  onChange?: (next: ThemeMode) => void;
   /** Default: `topBar.theme` from the {@link UiKitProvider}, else English. */
   "aria-label"?: string;
   title?: string;
@@ -48,7 +62,10 @@ export function ThemeToggle({
     <Tooltip label={title} portal>
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => {
+          onChange?.(mode === "dark" ? "light" : "dark");
+          onToggle?.();
+        }}
         aria-label={labels.theme}
         className={cn(TOPBAR_TRIGGER_CLASS, className)}
       >

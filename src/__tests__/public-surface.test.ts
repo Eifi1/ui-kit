@@ -251,7 +251,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `DEFAULT_ADMIN_AREA_LABELS`, `useAdminAreaLabels`, `ADMIN_SECTIONS`, `adminSections`,
   // `AdminForbidden`, `AdminOverview`, `AttentionTile`, `adminWaitingCount`,
   // `DEFAULT_ADMIN_ATTENTION_HREFS`, `AdminToolLinks`.
-  ["@eifi1/ui-kit", barrel, 931],
+  // 0.42.0 (+10, docs/top-bar-harmonization.md §3.1, here and in /shell): `TopBarActions`,
+  // `TOP_BAR_ACTION_ORDER`, `AccountMenuLanguage`, `TourMenu`, `SyncStatusIndicator`,
+  // `syncState`, `DevSwitchers`, `DEV_ORIGINAL_ROLE_KEY`, `DEFAULT_TOP_BAR_PARTS_LABELS`,
+  // `useTopBarPartsLabels`.
+  ["@eifi1/ui-kit", barrel, 941],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -276,7 +280,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // DEFAULT_MOBILE_BAR_MAX, splitMobileBar.
   // 0.40.0 (+2): `FillHeight`, `FILL_HEIGHT_CLASS` (docs/page-layout-harmonization.md §1.3).
   // 0.42.0 (+2): `adminMenuEntry`, `AdminMenuRow` (docs/admin-harmonization.md §6.6).
-  ["@eifi1/ui-kit/shell", shell, 45],
+  // 0.42.0 (+10): the top bar's parts (docs/top-bar-harmonization.md §3.1, see the barrel).
+  ["@eifi1/ui-kit/shell", shell, 55],
   ["@eifi1/ui-kit/tour", tour, 4],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.

@@ -1825,6 +1825,46 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       },
       tools: "Herramientas",
     },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts; "plan" as
+    // `billing`, "usted" as the rest of the catalogue.
+    topBarParts: {
+      tours: {
+        menu: "Visitas guiadas",
+        newDot: "Visitas nuevas",
+        thisPage: "En esta página",
+        newTours: "Visitas nuevas",
+        allTours: "Todas las visitas…",
+        badgeNew: "Nuevo",
+        completed: "Completada",
+      },
+      sync: {
+        blocked: (count) =>
+          `${n(count)} ${plural(count, "cambio no se puede enviar", "cambios no se pueden enviar")} desde este dispositivo`,
+        offline: "Sin conexión: los cambios se guardan en este dispositivo y se sincronizarán al volver a conectarse",
+        refused: "El servidor rechazó la última sincronización",
+        syncing: "Sincronizando…",
+        pending: (count) =>
+          `${n(count)} ${plural(count, "cambio", "cambios")} a la espera de sincronizarse`,
+        syncedAt: (time) => `Sincronizado a las ${time}`,
+        idle: "Al día",
+        syncHint: "Toque para sincronizar ahora",
+        offlineHint: "no hay nada que sincronizar sin conexión",
+        withHint: (state, hint) => `${state} — ${hint}`,
+        scoped: (scope, state) => `${scope}: ${state}`,
+        offlineShort: "Sin conexión",
+        syncingShort: "Sincronizando…",
+        waitingShort: (count) => `${n(count)} en espera`,
+        refusedShort: "Sin sincronizar",
+      },
+      dev: {
+        roleHeading: "Dev · rol",
+        switchPlan: "Cambiar de plan",
+        plan: (value) => `Plan: ${value}`,
+        planHeading: "Dev · plan",
+        backTo: (role) => `Volver a ${role}`,
+        billingOff: "La facturación está desactivada en local: los planes no cambian nada",
+      },
+    },
   };
 }
 

@@ -1747,6 +1747,44 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       },
       tools: "工具",
     },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts; "套餐" as
+    // `billing`.
+    topBarParts: {
+      tours: {
+        menu: "导览",
+        newDot: "有新导览",
+        thisPage: "本页",
+        newTours: "新导览",
+        allTours: "全部导览…",
+        badgeNew: "新",
+        completed: "已完成",
+      },
+      sync: {
+        blocked: (count) => `${n(count)} 项修改无法从此设备发送`,
+        offline: "离线——修改已保存在此设备上，重新连接后会同步",
+        refused: "服务器拒绝了上一次同步",
+        syncing: "正在同步…",
+        pending: (count) => `${n(count)} 项修改等待同步`,
+        syncedAt: (time) => `已于 ${time} 同步`,
+        idle: "已是最新",
+        syncHint: "点按立即同步",
+        offlineHint: "离线时无可同步内容",
+        withHint: (state, hint) => `${state}——${hint}`,
+        scoped: (scope, state) => `${scope}：${state}`,
+        offlineShort: "离线",
+        syncingShort: "正在同步…",
+        waitingShort: (count) => `${n(count)} 项等待中`,
+        refusedShort: "未同步",
+      },
+      dev: {
+        roleHeading: "开发 · 角色",
+        switchPlan: "切换套餐",
+        plan: (value) => `套餐：${value}`,
+        planHeading: "开发 · 套餐",
+        backTo: (role) => `返回 ${role}`,
+        billingOff: "本地已关闭计费：切换套餐不会改变任何内容",
+      },
+    },
   };
 }
 

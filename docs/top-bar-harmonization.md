@@ -195,3 +195,57 @@ where they differ.
     - the pill (`offline-indicator.tsx`) goes, and `HandoverSyncBanner` stays above the
       handover pages for the refusals.
 11. **Search on a phone**: kastlan drops `hideTriggerOnPhone` (ka F5).
+
+## 7. What shipped (ui-kit 0.42)
+
+All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
+`topBarParts` (`tours`, `sync`, `dev`), in all seven catalogues.
+
+- **`TopBarActions`** (§2.1, §6.6): named slots `companySwitcher`, `search`, `theme`,
+  `feedback`, `tours`, `assistant`, `sync`, `dev`, `platform`, `account`, drawn in that
+  order as a fragment for `TopBar`'s `actions`. An empty slot draws nothing, so it leaves
+  no gap. Without `account` it also draws the signed-out slots `language` and `signIn`,
+  at the end. `TOP_BAR_ACTION_ORDER` is the order.
+- **`AccountMenuLanguage`** (§2.3): an `<li>` for `TopBarActionMenu`'s `children`. It is a
+  `Disclosure variant="menu"` row with the globe, `topBar.language` and the active flag,
+  and one checked `MenuItem` per language. Props: `languages` (`{ code, label, flag? }`,
+  where the flag is the app's own node, so the kit ships no flag set), `value`,
+  `onPick`, and `close` (a pick shuts the menu). Optional: `label`, `defaultOpen`.
+- **`TourMenu`** (§2.4, §6.7): lucide `Compass`, on `TopBarActionMenu`.
+  - Props: `tours` as data (`{ id, title, route?, isNew?, completed?, icon?, since? }`),
+    `onLaunch(id)`, and an optional `href`. Optional: `pathname`, `maxNew` (3), `labels`.
+  - With `href`: the trigger is a link plus a hover menu, and the list is "On this page",
+    up to three "New tours" (newest first), a rule and "All tours…".
+  - Without `href`: the trigger is a button, and the other tours follow the rule.
+  - The NEW dot shows while a tour is new and untaken, and it is named for a reader. A row
+    has a ✓ (named "Completed") or a NEW chip.
+  - The kit's tour engine has no registry (`TourProvider` runs steps and keeps none), so
+    the app feeds the list from its own.
+- **`SyncStatusIndicator`** and **`SyncStatus`** `{ phase, online, pending, blocked?,
+  waitingForPlan?, lastSyncedAt? }` (§2.6, §6.9, §6.10):
+  - `syncState(status)` holds keksdose's ranking: blocked, waitingForPlan, offline, error,
+    syncing, pending, synced. The icons are keksdose's. The tones are the kit's roles:
+    danger for blocked, warning for anything waiting, info while syncing, success when in
+    sync. There are no raw palette colours.
+  - It shows the ✓ badge when in sync, the spin while syncing, and the tooltip suffix
+    ("— Tap to sync now", or "— nothing to sync while offline").
+  - Props: `onSync` (optional; without it the part is a status, not a button; a returned
+    promise keeps the spin), `hideWhenIdle`, `scope` (`{ name, offline? }`, for the tooltip
+    words), `showLabel` (the short words "Offline", "Syncing…", "3 waiting"), `labels`
+    and `locale`.
+  - "Waiting for a plan" reuses `billing.waitingChanges`.
+- **`DevSwitchers`** (§2.7, §6.2, §6.3): role, then plan, each a `TopBarActionMenu` behind
+  `RoleSwitcher`'s amber flask, with checked rows.
+  - It renders only when `enabled` is true, and each menu only with its list and handler.
+  - Props: `roles`, `currentRole` (not `role`: that is the ARIA role on a JSX element),
+    `onRole`, `plans`, `currentPlan`, `onPlan`, `originalRole` and
+    `billingOff`. Optional: `storageKey`, `roleLabel`, `planLabel`, `labels`.
+  - "Back to {role}": the role from before the session's first switch, kept in
+    `sessionStorage` under `DEV_ORIGINAL_ROLE_KEY` (each access in try/catch). An
+    `originalRole` from the app wins over it.
+  - With `billingOff`, the plan menu shows "Billing is off locally: plans change nothing"
+    and stays usable.
+- **`ThemeToggle`** (§6.4): it now has `onChange(next)`, and `next` is always the
+  opposite of `mode`, the resolved theme shown. So from "system" a tap goes to the other
+  theme. The toggle never had a storage key, and it still has none. `onToggle` is now
+  optional and still fires, so callers from 0.41 keep working.

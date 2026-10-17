@@ -272,6 +272,8 @@ const CheckboxGroup022Demo = lazySection(() => import("./sections/choices"), "Ch
 const CommitControls022Demo = lazySection(() => import("./sections/forms-rhf"), "CommitControls022Demo");
 // 0.23.0: the apps' 0.22 adoption round.
 const TopBarMenuHeadingsDemo = lazySection(() => import("./sections/topbar-023-demo"), "TopBarMenuHeadingsDemo");
+// 0.42.0: the top bar's shared parts (docs/top-bar-harmonization.md §3.1).
+const TopBar042Demo = lazySection(() => import("./sections/topbar-042-demo"), "TopBar042Demo");
 const Rhf023Demo = lazySection(() => import("./sections/fields-023-demo"), "Rhf023Demo");
 const CountryClear023Demo = lazySection(() => import("./sections/fields-023-demo"), "CountryClear023Demo");
 const AmountClass023Demo = lazySection(() => import("./sections/fields-023-demo"), "AmountClass023Demo");
@@ -1222,7 +1224,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
-        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher"],
+        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher", "TopBarActions", "TOP_BAR_ACTION_ORDER", "AccountMenuLanguage", "TourMenu", "SyncStatusIndicator", "syncState", "SyncStatus", "DevSwitchers", "DEV_ORIGINAL_ROLE_KEY"],
         Body: () => (
           <>
             <ShellSection />
@@ -1230,6 +1232,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <ShellBrandDemo />
             <AccountHeaderLinkDemo />
             <TopBarMenuHeadingsDemo />
+            <TopBar042Demo />
             <CompanySwitcher029Demo />
           </>
         ),

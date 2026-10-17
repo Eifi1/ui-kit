@@ -407,4 +407,14 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "adminArea.waiting": one,
   "adminArea.forbiddenBody": [["{{app}}"]],
   "adminArea.tiles.usersNew": one,
+  // 0.42.0 (docs/top-bar-harmonization.md §3.1): the sync indicator's counts, its time, the
+  // state joined to its hint or to the app's scope; the dev plan and the role to go back to.
+  "topBarParts.sync.blocked": one,
+  "topBarParts.sync.pending": one,
+  "topBarParts.sync.syncedAt": [["{{time}}"]],
+  "topBarParts.sync.withHint": [["{{state}}", "{{hint}}"]],
+  "topBarParts.sync.scoped": [["{{scope}}", "{{state}}"]],
+  "topBarParts.sync.waitingShort": one,
+  "topBarParts.dev.plan": [["{{plan}}"]],
+  "topBarParts.dev.backTo": [["{{role}}"]],
 };

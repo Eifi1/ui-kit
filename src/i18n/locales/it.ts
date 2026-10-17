@@ -1844,6 +1844,46 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       },
       tools: "Strumenti",
     },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts, keksdose's
+    // reviewed sync words where they are not about its budgets; "piano" as `billing`.
+    topBarParts: {
+      tours: {
+        menu: "Tour guidati",
+        newDot: "Nuovi tour",
+        thisPage: "In questa pagina",
+        newTours: "Nuovi tour",
+        allTours: "Tutti i tour…",
+        badgeNew: "Nuovo",
+        completed: "Completato",
+      },
+      sync: {
+        blocked: (count) =>
+          `${n(count)} ${plural(count, "modifica non può essere inviata", "modifiche non possono essere inviate")} da questo dispositivo`,
+        offline: "Offline: le modifiche vengono salvate su questo dispositivo e sincronizzate alla riconnessione",
+        refused: "Il server ha rifiutato l’ultima sincronizzazione",
+        syncing: "Sincronizzazione…",
+        pending: (count) =>
+          `${n(count)} ${plural(count, "modifica", "modifiche")} in attesa di sincronizzazione`,
+        syncedAt: (time) => `Sincronizzato alle ${time}`,
+        idle: "Aggiornato",
+        syncHint: "Tocchi per sincronizzare ora",
+        offlineHint: "offline non c’è nulla da sincronizzare",
+        withHint: (state, hint) => `${state} — ${hint}`,
+        scoped: (scope, state) => `${scope}: ${state}`,
+        offlineShort: "Offline",
+        syncingShort: "Sincronizzazione…",
+        waitingShort: (count) => `${n(count)} in attesa`,
+        refusedShort: "Non sincronizzato",
+      },
+      dev: {
+        roleHeading: "Dev · ruolo",
+        switchPlan: "Cambia piano",
+        plan: (value) => `Piano: ${value}`,
+        planHeading: "Dev · piano",
+        backTo: (role) => `Torna a ${role}`,
+        billingOff: "La fatturazione è disattivata in locale: i piani non cambiano nulla",
+      },
+    },
   };
 }
 

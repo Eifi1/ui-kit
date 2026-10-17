@@ -99,6 +99,7 @@ import { DEFAULT_ROW_ACTIONS_LABELS } from "../components/row-actions-labels";
 import { DEFAULT_APP_SHELL_MORE_LABELS } from "../shell/app-shell-labels";
 import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips-labels";
 import { DEFAULT_ADMIN_AREA_LABELS } from "../admin/admin-area-labels";
+import { DEFAULT_TOP_BAR_PARTS_LABELS } from "../shell/top-bar-parts-labels";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card-labels";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog-labels";
 import { DEFAULT_SERVER_WAKE_LABELS } from "../components/server-wake-labels";
@@ -258,4 +259,5 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   columnMapper: DEFAULT_COLUMN_MAPPER_LABELS,
   notifications: DEFAULT_NOTIFICATIONS_LABELS,
   adminArea: DEFAULT_ADMIN_AREA_LABELS,
+  topBarParts: DEFAULT_TOP_BAR_PARTS_LABELS,
 };

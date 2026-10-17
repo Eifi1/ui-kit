@@ -1864,6 +1864,46 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       },
       tools: "Outils",
     },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts, keksdose's
+    // reviewed sync words where they are not about its budgets; "formule" as `billing`.
+    topBarParts: {
+      tours: {
+        menu: "Visites guidées",
+        newDot: "Nouvelles visites",
+        thisPage: "Sur cette page",
+        newTours: "Nouvelles visites",
+        allTours: "Toutes les visites…",
+        badgeNew: "Nouveau",
+        completed: "Terminée",
+      },
+      sync: {
+        blocked: (count) =>
+          `${n(count)} ${plural(count, "modification ne peut pas être envoyée", "modifications ne peuvent pas être envoyées")} depuis cet appareil`,
+        offline: "Hors ligne — les modifications sont enregistrées sur cet appareil et seront synchronisées à la reconnexion",
+        refused: "Le serveur a refusé la dernière synchronisation",
+        syncing: "Synchronisation…",
+        pending: (count) =>
+          `${n(count)} ${plural(count, "modification", "modifications")} en attente de synchronisation`,
+        syncedAt: (time) => `Synchronisé à ${time}`,
+        idle: "À jour",
+        syncHint: "Touchez pour synchroniser maintenant",
+        offlineHint: "rien à synchroniser hors ligne",
+        withHint: (state, hint) => `${state} — ${hint}`,
+        scoped: (scope, state) => `${scope}\u00a0: ${state}`,
+        offlineShort: "Hors ligne",
+        syncingShort: "Synchronisation…",
+        waitingShort: (count) => `${n(count)} en attente`,
+        refusedShort: "Non synchronisé",
+      },
+      dev: {
+        roleHeading: "Dev · rôle",
+        switchPlan: "Changer de formule",
+        plan: (value) => `Formule\u00a0: ${value}`,
+        planHeading: "Dev · formule",
+        backTo: (role) => `Revenir à ${role}`,
+        billingOff: "La facturation est désactivée en local\u00a0: les formules ne changent rien",
+      },
+    },
   };
 }
 

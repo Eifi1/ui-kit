@@ -1831,6 +1831,44 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       },
       tools: "Eszközök",
     },
+    // 0.42.0 — docs/top-bar-harmonization.md §3.1: the top bar's shared parts; "csomag" as
+    // `billing`, the formal register as the rest of the catalogue.
+    topBarParts: {
+      tours: {
+        menu: "Bemutatók",
+        newDot: "Új bemutatók",
+        thisPage: "Ezen az oldalon",
+        newTours: "Új bemutatók",
+        allTours: "Összes bemutató…",
+        badgeNew: "Új",
+        completed: "Elvégezve",
+      },
+      sync: {
+        blocked: (count) => `${n(count)} módosítás nem küldhető el erről az eszközről`,
+        offline: "Offline – a módosítások ezen az eszközön maradnak, és az újracsatlakozáskor szinkronizálódnak",
+        refused: "A szerver elutasította a legutóbbi szinkronizálást",
+        syncing: "Szinkronizálás…",
+        pending: (count) => `${n(count)} módosítás szinkronizálásra vár`,
+        syncedAt: (time) => `Szinkronizálva: ${time}`,
+        idle: "Naprakész",
+        syncHint: "Koppintson a szinkronizáláshoz",
+        offlineHint: "offline nincs mit szinkronizálni",
+        withHint: (state, hint) => `${state} – ${hint}`,
+        scoped: (scope, state) => `${scope}: ${state}`,
+        offlineShort: "Offline",
+        syncingShort: "Szinkronizálás…",
+        waitingShort: (count) => `${n(count)} várakozik`,
+        refusedShort: "Nincs szinkronizálva",
+      },
+      dev: {
+        roleHeading: "Dev · szerepkör",
+        switchPlan: "Csomag váltása",
+        plan: (value) => `Csomag: ${value}`,
+        planHeading: "Dev · csomag",
+        backTo: (role) => `Vissza: ${role}`,
+        billingOff: "A számlázás helyben ki van kapcsolva: a csomagok semmin nem változtatnak",
+      },
+    },
   };
 }
 
