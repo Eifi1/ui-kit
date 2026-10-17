@@ -324,6 +324,10 @@ const Billing033Demo = lazySection(() => import("./sections/billing-033-demo"), 
 const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "BillingSwitchDemo");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
+// 0.42: the admin area's template (docs/admin-harmonization.md).
+const AdminWayIn042Demo = lazySection(() => import("./sections/admin-042-demo"), "AdminWayIn042Demo");
+const AdminArea042Demo = lazySection(() => import("./sections/admin-042-demo"), "AdminArea042Demo");
+const AdminForbidden042Demo = lazySection(() => import("./sections/admin-042-demo"), "AdminForbidden042Demo");
 // 0.31.0: the Server kit group — server-kit's modules, read out of its release's api.json.
 const ServerModules = lazySection(() => import("./server-kit/server-kit-page"), "ServerModules");
 const ServerKitOverview = lazySection(() => import("./server-kit/server-kit-page"), "ServerKitOverview");
@@ -1338,9 +1342,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
         icon: UserCog,
-        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult"],
+        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult", "AccountRoleChip", "adminMenuEntry", "AdminMenuRow", "ADMIN_SECTIONS", "adminSections", "AdminOverview", "AttentionTile", "adminWaitingCount", "AdminToolLinks", "AdminForbidden"],
         Body: () => (
           <>
+            <AdminWayIn042Demo />
+            <AdminArea042Demo />
+            <AdminForbidden042Demo />
             <UserRoster030Demo />
             <GroupActions034Demo />
             <PlanChange033Demo />
@@ -1358,7 +1365,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
         icon: CreditCard,
-        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS"],
+        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS", "CancelSubscriptionConfirm", "isPermanentGrant"],
         Body: () => (
           <>
             <Billing032Demo />

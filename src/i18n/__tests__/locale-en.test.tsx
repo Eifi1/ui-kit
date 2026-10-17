@@ -65,6 +65,9 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       .filter(([k, v]) => k !== "file.size" && english.get(k) !== v)
       .map(([k]) => k);
     expect(changed.sort()).toEqual([
+      // 0.42.0: the admin area's two counts.
+      "adminArea.tiles.usersNew",
+      "adminArea.waiting",
       "billing.grantEnding",
       "billing.trialEnding",
       "billing.waitingChanges",

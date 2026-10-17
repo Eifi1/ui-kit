@@ -108,6 +108,13 @@ export interface BillingLabels {
   choosePlan: string;
   /** The payment-failed banner's action, to the provider's portal: "Update payment method". */
   updatePayment: string;
+  /**
+   * 0.42 (§16.7 A, §16.8): the payment-failed banner for an admin who isn't the buyer
+   * (`portal: "buyer_only"`), with no button — only the buyer can change the card.
+   * `buyer` is their display name, or `undefined` when they are gone ("the admin who
+   * bought the subscription").
+   */
+  paymentFailedAskBuyer: (buyer?: string) => string;
   /** The processing banner's action, when the app gives one: "Check again". */
   checkAgain: string;
 
@@ -153,6 +160,26 @@ export interface BillingLabels {
    */
   notAtProvider: string;
 
+  /* ── The portal for the buyer only, the in-app cancel (0.42, §16) ── */
+  /**
+   * In place of "Payment and invoices" for an admin who isn't the buyer (`portal:
+   * "buyer_only"`, §16.2 decision 3): the provider's portal opens only for the buyer.
+   * `buyer` is their display name — or `undefined` when they are gone or have left the
+   * company, and the words then say "the admin who bought the subscription".
+   */
+  buyerHolds: (buyer?: string) => string;
+  /** `CancelSubscriptionConfirm`'s title: "Cancel subscription". */
+  cancelConfirmTitle: string;
+  /** Its body; `date` is the period's end, formatted: "Your subscription ends on
+   *  9 Nov 2026. Until then everything works as before." */
+  cancelConfirmBody: (date: string) => string;
+  /** Its confirm button (§16.4): "Cancel subscription now". German: "Jetzt kündigen",
+   *  the confirmation button's words in §312k BGB. */
+  cancelConfirmAction: string;
+  /** In place of "Cancel subscription" while a cancel is scheduled (§16.7 C, `POST
+   *  /billing/resume`): "Keep subscription". */
+  keepSubscription: string;
+
   /* ── The pay page (§14.4) ── */
   /* Built into the static page `dist/pay/` at the kit's build: it has no React and no
      provider, so an app's override never reaches it. */
@@ -183,6 +210,15 @@ export interface BillingLabels {
   switchNextCharge: (date: string) => string;
   /** The confirm button: "Change plan". */
   switchConfirm: string;
+
+  /* ── The permanent-grant warning (0.42, §16.2 decision 5, §16.8 B) ── */
+  /** The warning's title, before a checkout (`PlanPicker`) or a switch
+   *  (`PlanSwitchConfirm`) under a grant without an end: "Your free access continues". */
+  grantWarningTitle: string;
+  /** What the purchase does under it: nothing to the plan while the grant runs. */
+  grantWarningBody: string;
+  /** `PlanPicker`'s button that goes on to the checkout: "Buy anyway". */
+  grantWarningAction: string;
 
   /* ── Offline (§12.5) ── */
   /** Changes refused as `billing_read_only` inside a sync reply, kept queued and sent
@@ -271,6 +307,10 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
   processing: "Your payment is being processed. Your plan starts as soon as it’s confirmed; this page updates by itself.",
   choosePlan: "Choose a plan",
   updatePayment: "Update payment method",
+  paymentFailedAskBuyer: (buyer) =>
+    buyer
+      ? `The payment failed. ${buyer} can update the payment method.`
+      : "The payment failed. The admin who bought the subscription can update the payment method.",
   checkAgain: "Check again",
 
   lockReason: "Your plan has ended. Choose a plan to make changes again.",
@@ -286,6 +326,14 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
   manage: "Payment and invoices",
   cancel: "Cancel subscription",
   notAtProvider: "Nothing to manage yet. Payments and invoices appear here once you have a paid plan.",
+  buyerHolds: (buyer) =>
+    buyer
+      ? `The payment method and the invoices are with ${buyer}, who bought the subscription.`
+      : "The payment method and the invoices are with the admin who bought the subscription.",
+  cancelConfirmTitle: "Cancel subscription",
+  cancelConfirmBody: (date) => `Your subscription ends on ${date}. Until then everything works as before.`,
+  cancelConfirmAction: "Cancel subscription now",
+  keepSubscription: "Keep subscription",
 
   payOpening: "Opening the secure checkout…",
   payNothing: "There’s no payment to make here. To choose a plan, go back to the app.",
@@ -299,6 +347,11 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
   switchCredited: "Credited towards your next charges",
   switchNextCharge: (date) => `Next charge on ${date}`,
   switchConfirm: "Change plan",
+
+  grantWarningTitle: "Your free access continues",
+  grantWarningBody:
+    "You have free access with no end date. A purchase won’t change your plan while the free access runs: you would pay for a plan that doesn’t apply.",
+  grantWarningAction: "Buy anyway",
 
   waitingChanges: (count) =>
     count === 1 ? "1 change waiting for a plan" : `${count} changes waiting for a plan`,

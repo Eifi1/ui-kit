@@ -8,6 +8,7 @@ import { Button } from "../components/button";
 import { Spinner } from "../components/spinner";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
+import type { BillingPortalAccess } from "./billing-overview";
 
 /**
  * The billing banners (docs/billing-harmonization.md §3.3, §7, §12.6, §12.21):
@@ -16,7 +17,8 @@ import type { BillingLabels } from "./billing-labels";
  * - `grant-ending` — from 7 days before `comped_until`: a beta user's 12 months, an
  *   operator's grant;
  * - `payment-failed` — from the first failed payment (`past_due`), while the provider
- *   retries;
+ *   retries; since 0.42, for an admin who isn't the buyer (`portal="buyer_only"`), it
+ *   names who can update the payment method, with no button;
  * - `plan-ended` — out of good standing: read-only, never locked (§2.3);
  * - `guest` — a guest in someone else's read-only item (§12.6);
  * - `processing` — back from checkout before the webhook landed (§12.21).
@@ -78,6 +80,8 @@ export type BillingBannerProps = BillingBannerBaseProps &
         /** Calendar days left — `billingDaysLeft(trial_ends_at)`. 0 is today. */
         daysLeft: number;
         item?: never;
+        portal?: never;
+        buyerName?: never;
       }
     | {
         kind: "guest";
@@ -85,11 +89,31 @@ export type BillingBannerProps = BillingBannerBaseProps &
          *  the banner says "for now" and nothing more (§12.6). */
         item?: string;
         daysLeft?: never;
+        portal?: never;
+        buyerName?: never;
       }
     | {
-        kind: "payment-failed" | "plan-ended" | "processing";
+        kind: "payment-failed";
+        /**
+         * 0.42 (§16.7 A, §16.8): `GET /billing/status`'s `portal` (`BillingStanding`).
+         * `"buyer_only"` — the viewer isn't the buyer, so the portal's page for the card
+         * would answer 403: the banner says who can update the payment method
+         * (`paymentFailedAskBuyer`) and shows NO button, whatever `actionHref` or
+         * `onAction` say. `"open"` (default): as before.
+         */
+        portal?: BillingPortalAccess;
+        /** 0.42: the status's `buyer_name`, under `"buyer_only"`. Empty: "…the admin who
+         *  bought the subscription". */
+        buyerName?: string | null;
         daysLeft?: never;
         item?: never;
+      }
+    | {
+        kind: "plan-ended" | "processing";
+        daysLeft?: never;
+        item?: never;
+        portal?: never;
+        buyerName?: never;
       }
   );
 
@@ -128,6 +152,8 @@ export function BillingBanner(props: BillingBannerProps) {
     kind,
     daysLeft,
     item,
+    portal,
+    buyerName,
     tone,
     variant = "strip",
     size,
@@ -147,6 +173,8 @@ export function BillingBanner(props: BillingBannerProps) {
   let text: string;
   let icon: ReactNode;
   let ownAction: string | undefined;
+  // 0.42 (§16.7 A): only the buyer can reach the portal's card page.
+  const askBuyer = kind === "payment-failed" && portal === "buyer_only";
   switch (kind) {
     case "trial-ending":
       text = labels.trialEnding(days);
@@ -159,7 +187,7 @@ export function BillingBanner(props: BillingBannerProps) {
       ownAction = labels.choosePlan;
       break;
     case "payment-failed":
-      text = labels.paymentFailed;
+      text = askBuyer ? labels.paymentFailedAskBuyer(buyerName || undefined) : labels.paymentFailed;
       icon = <CreditCard />;
       ownAction = labels.updatePayment;
       break;
@@ -182,7 +210,7 @@ export function BillingBanner(props: BillingBannerProps) {
 
   const words = actionLabel ?? ownAction;
   const action =
-    words === undefined || (actionHref === undefined && onAction === undefined) ? undefined : actionHref !== undefined ? (
+    askBuyer || words === undefined || (actionHref === undefined && onAction === undefined) ? undefined : actionHref !== undefined ? (
       <Button href={actionHref} variant="secondary" size="sm">
         {words}
       </Button>

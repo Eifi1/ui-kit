@@ -1699,6 +1699,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         "Il Suo pagamento è in elaborazione. Il Suo piano inizia non appena viene confermato; questa pagina si aggiorna da sola.",
       choosePlan: "Scegli un piano",
       updatePayment: "Aggiorna il metodo di pagamento",
+      // 0.42 (§16.7 A): for an admin who isn't the buyer.
+      paymentFailedAskBuyer: (buyer) =>
+        buyer
+          ? `Il pagamento non è andato a buon fine. ${buyer} può aggiornare il metodo di pagamento.`
+          : "Il pagamento non è andato a buon fine. L’amministratore che ha sottoscritto l’abbonamento può aggiornare il metodo di pagamento.",
       checkAgain: "Verifica di nuovo",
       lockReason: "Il Suo piano è terminato. Scelga un piano per apportare di nuovo modifiche.",
       // As `characterCount.limitReached` ("Limite di caratteri raggiunto").
@@ -1729,6 +1734,20 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       switchCredited: "Accreditato sui prossimi addebiti",
       switchNextCharge: (date) => `Prossimo addebito il ${date}`,
       switchConfirm: "Cambia piano",
+      // 0.42 (§16): the portal for the buyer only, the in-app cancel, the grant warning.
+      buyerHolds: (buyer) =>
+        buyer
+          ? `Il metodo di pagamento e le fatture sono gestiti da ${buyer}, che ha sottoscritto l’abbonamento.`
+          : "Il metodo di pagamento e le fatture sono gestiti dall’amministratore che ha sottoscritto l’abbonamento.",
+      cancelConfirmTitle: "Disdici l’abbonamento",
+      cancelConfirmBody: (date) =>
+        `Il Suo abbonamento termina il ${date}. Fino ad allora tutto funziona come prima.`,
+      cancelConfirmAction: "Disdici ora",
+      keepSubscription: "Mantieni l’abbonamento",
+      grantWarningTitle: "Il Suo accesso gratuito continua",
+      grantWarningBody:
+        "Il Suo accesso gratuito non ha una data di fine. Finché dura, un acquisto non cambia il Suo piano: pagherebbe per un piano che non si applica.",
+      grantWarningAction: "Acquista comunque",
       waitingChanges: (count) =>
         `${n(count)} ${plural(count, "modifica in attesa", "modifiche in attesa")} di un piano`,
       // "Scarta", as `wizard.cancelConfirmLabel`.
@@ -1798,6 +1817,32 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     appShellMore: {
       more: "Altro",
       moreTitle: "Altre pagine",
+    },
+    // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Lei", as
+    // the rest of the catalogue.
+    adminArea: {
+      title: "Amministrazione",
+      waiting: (count) => `${n(count)} in attesa`,
+      forbiddenTitle: "Solo per gli amministratori",
+      forbiddenBody: (appName) =>
+        `Qui gli amministratori gestiscono ${appName}. Il Suo account non può aprire questa pagina.`,
+      forbiddenHome: "Vai alla pagina iniziale",
+      forbiddenReviewer: "Rivedi le traduzioni",
+      sections: {
+        overview: { title: "Panoramica", help: "Ciò che è in attesa, a colpo d’occhio." },
+        users: { title: "Utenti", help: "Chi ha un account e cosa può fare ciascuno." },
+        invitations: { title: "Inviti", help: "I link con cui entra una persona nuova." },
+        billing: { title: "Fatturazione", help: "Il piano, il pagamento e le fatture." },
+        activity: { title: "Attività", help: "Ciò che hanno fatto gli amministratori, dal più recente." },
+      },
+      tiles: {
+        feedbackWaiting: "Da smistare",
+        deletionRequests: "Richieste di eliminazione",
+        invitationsPending: "Inviti in sospeso",
+        users: "Utenti",
+        usersNew: (count) => `${n(count)} ${plural(count, "nuovo", "nuovi")} in 7 giorni`,
+      },
+      tools: "Strumenti",
     },
   };
 }

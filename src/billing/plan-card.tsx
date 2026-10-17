@@ -11,6 +11,7 @@ import type { ChoiceCardProps } from "../components/choice-card";
 import { Chip } from "../components/chip";
 import { ToggleGroup } from "../components/toggle-group";
 import { Button } from "../components/button";
+import { DialogFrame } from "../components/dialog-frame";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
 import { BILLING_INTERVALS, billingCurrencyFor, formatPlanPrice, planPrice } from "./plan-price";
@@ -263,6 +264,24 @@ export interface PlanPickerProps extends Omit<PlanDisplayProps, "currency" | "in
   onChoose: (choice: PlanChoice) => void;
   /** The checkout is being opened: the button's spinner, no second press. */
   pending?: boolean;
+  /**
+   * 0.42 (§16.2 decision 5, §16.8 B): the payer's free grant runs without an end —
+   * `isPermanentGrant(overview)`. A purchase under it changes nothing the payer gets
+   * while the grant runs (§12.11), so the button first opens a confirm —
+   * `grantWarningTitle`, `grantWarningBody`, "Buy anyway" (`grantWarningAction`) and
+   * "Back" — and {@link onChoose} runs only on "Buy anyway". Warned, not refused.
+   *
+   * Not while {@link switching}: then the pick opens `PlanSwitchConfirm`, which takes
+   * the same `permanentGrant` and shows the warning above its figures — one warning,
+   * in the dialog where the payer agrees, rather than a confirm before a confirm.
+   */
+  permanentGrant?: boolean;
+  /**
+   * 0.42: the overview's `switching` — the app sends this pick to `PlanSwitchConfirm`
+   * (§15.2.10), not the checkout. Only decides where {@link permanentGrant}'s warning
+   * shows; the button and {@link onChoose} are the same either way.
+   */
+  switching?: boolean;
   /** The provider's localised price for a plan, or `undefined` for the catalogue's —
    *  see {@link PlanCardProps.pricePreview}. */
   pricePreview?: (plan: BillingPlan, choice: Omit<PlanChoice, "plan">) => ReactNode | undefined;
@@ -308,6 +327,11 @@ function pricedIntervals(plans: readonly BillingPlan[]): BillingInterval[] {
  * The button never takes the write lock: billing itself always works, a read-only payer
  * must be able to pay (§3.3). It is off, with the reason on hover and focus, while
  * nothing is picked or the current plan is.
+ *
+ * 0.42 (§16.8 B): under a grant without an end (`permanentGrant`) the payer is warned
+ * before paying for a plan that won't apply — here, in a confirm before `onChoose`, on
+ * the way to the checkout; on the way to a switch (`switching`) in `PlanSwitchConfirm`
+ * instead, so the warning shows once on either path.
  */
 export function PlanPicker({
   plans,
@@ -324,6 +348,8 @@ export function PlanPicker({
   currencies: currenciesProp,
   onChoose,
   pending,
+  permanentGrant = false,
+  switching = false,
   pricePreview,
   legend,
   name,
@@ -336,8 +362,11 @@ export function PlanPicker({
   labels: labelsProp,
 }: PlanPickerProps) {
   const labels = useBillingLabels(labelsProp);
+  const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const locale = useKitLocale(localeProp);
   const generated = useId();
+  /** The choice the grant warning holds back until "Buy anyway". */
+  const [warned, setWarned] = useState<PlanChoice | null>(null);
   const groupName = name ?? generated;
   const legendId = `${generated}-legend`;
 
@@ -447,11 +476,41 @@ export function PlanPicker({
           className="max-sm:w-full"
           disabledReason={blocked}
           pending={pending}
-          onClick={() => picked && onChoose({ plan: picked.code, interval, currency })}
+          onClick={() => {
+            if (!picked) return;
+            const choice = { plan: picked.code, interval, currency };
+            if (permanentGrant && !switching) setWarned(choice);
+            else onChoose(choice);
+          }}
         >
           {buttonText}
         </Button>
       </div>
+      {permanentGrant && !switching && (
+        <DialogFrame
+          open={warned !== null}
+          title={labels.grantWarningTitle}
+          description={labels.grantWarningBody}
+          onClose={() => setWarned(null)}
+          data-grant-warning=""
+          actions={(close) => (
+            <>
+              <Button variant="secondary" onClick={close}>
+                {common.back}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  if (warned) onChoose(warned);
+                  setWarned(null);
+                }}
+              >
+                {labels.grantWarningAction}
+              </Button>
+            </>
+          )}
+        />
+      )}
     </div>
   );
 }

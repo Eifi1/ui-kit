@@ -118,6 +118,7 @@ import type { PhoneInputLabels } from "../components/phone-input";
 import type { SignChipLabels } from "../components/sign-chip";
 import type { ColumnMapperLabels } from "../components/column-mapper";
 import type { NotificationsLabels } from "../notifications/notifications-labels";
+import type { AdminAreaLabels } from "../admin/admin-area-labels";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -475,6 +476,10 @@ export interface UiKitLabels {
    *  device's push, the device list, and the unsubscribe page
    *  (docs/notifications-harmonization.md §4.2). */
   notifications: NotificationsLabels;
+  /** 0.42.0: the admin area's shared words — the account menu's "Administration" row, the
+   *  403 page, the shared sections, the overview's tiles and the Tools list
+   *  (docs/admin-harmonization.md §3.1). */
+  adminArea: AdminAreaLabels;
 }
 
 /**

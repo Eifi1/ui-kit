@@ -1613,6 +1613,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       processing: "您的付款正在处理中。确认后您的套餐即会生效；此页面会自动更新。",
       choosePlan: "选择套餐",
       updatePayment: "更新付款方式",
+      // 0.42 (§16.7 A): for an admin who isn't the buyer.
+      paymentFailedAskBuyer: (buyer) =>
+        buyer ? `付款未成功。${buyer} 可以更新付款方式。` : "付款未成功。购买该订阅的管理员可以更新付款方式。",
       checkAgain: "再次检查",
       lockReason: "您的套餐已结束。选择套餐后即可再次进行修改。",
       // As `characterCount.limitReached` ("已达到字符数上限").
@@ -1643,6 +1646,18 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       switchCredited: "抵扣后续扣款",
       switchNextCharge: (date) => `下次扣款日期：${date}`,
       switchConfirm: "更改套餐",
+      // 0.42 (§16): the portal for the buyer only, the in-app cancel, the grant warning.
+      buyerHolds: (buyer) =>
+        buyer
+          ? `付款方式和发票由购买该订阅的 ${buyer} 管理。`
+          : "付款方式和发票由购买该订阅的管理员管理。",
+      cancelConfirmTitle: "取消订阅",
+      cancelConfirmBody: (date) => `您的订阅将于 ${date} 结束。在此之前，一切照常使用。`,
+      cancelConfirmAction: "立即取消订阅",
+      keepSubscription: "保留订阅",
+      grantWarningTitle: "您的免费使用权仍然有效",
+      grantWarningBody: "您的免费使用权没有结束日期。在此期间，购买不会改变您的套餐：您将为一个不生效的套餐付费。",
+      grantWarningAction: "仍然购买",
       waitingChanges: (count) => `${n(count)} 项修改正在等待套餐`,
       // "放弃", as `wizard.cancelConfirmLabel`.
       discardWaiting: "放弃等待中的修改",
@@ -1707,6 +1722,30 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     appShellMore: {
       more: "更多",
       moreTitle: "更多页面",
+    },
+    // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words.
+    adminArea: {
+      title: "管理",
+      waiting: (count) => `${n(count)} 项待处理`,
+      forbiddenTitle: "仅限管理员",
+      forbiddenBody: (appName) => `管理员在这里管理 ${appName}。您的账户无法打开此页面。`,
+      forbiddenHome: "前往首页",
+      forbiddenReviewer: "审校翻译",
+      sections: {
+        overview: { title: "概览", help: "一眼看清待处理的事项。" },
+        users: { title: "用户", help: "谁拥有账户，以及每个人可以做什么。" },
+        invitations: { title: "邀请", help: "让新成员加入的链接。" },
+        billing: { title: "账单", help: "套餐、付款和发票。" },
+        activity: { title: "活动", help: "管理员的操作记录，最新的在前。" },
+      },
+      tiles: {
+        feedbackWaiting: "待分类",
+        deletionRequests: "删除请求",
+        invitationsPending: "待接受的邀请",
+        users: "用户",
+        usersNew: (count) => `近 7 天新增 ${n(count)} 人`,
+      },
+      tools: "工具",
     },
   };
 }

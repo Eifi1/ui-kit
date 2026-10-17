@@ -54,6 +54,43 @@ export interface BillingOverview {
    * server-kit before 0.13 still type-checks; absent, read it as false.
    */
   switching?: boolean;
+  /**
+   * 0.42 (server-kit 0.14, §16.3): who may open the provider's portal. `"buyer_only"`:
+   * the row has a buyer (`provider_payer_user_id`) and the viewer isn't them — every
+   * portal target would answer `403 billing_portal_buyer_only`, so "Payment and
+   * invoices" is a caption naming the buyer and "Cancel subscription" is the in-app
+   * cancel (`POST /billing/cancel`). `"open"`, or absent (server-kit before 0.14): as
+   * before. Pass it to `SubscriptionActions`' `portal`.
+   */
+  portal?: BillingPortalAccess;
+  /**
+   * 0.42 (§16.3, §16.7 G): the buyer's display name, for the caption under
+   * `"buyer_only"`; `null` when the buyer is gone or no longer a member of the company,
+   * and the words then say "the admin who bought the subscription".
+   */
+  buyer_name?: string | null;
+}
+
+/** 0.42 (§16.3): `BillingOverview.portal` and `BillingStanding.portal` — server-kit's
+ *  `Literal["open", "buyer_only"]`. */
+export type BillingPortalAccess = "open" | "buyer_only";
+
+/**
+ * 0.42 (§16.2 decision 5, §16.7 E): whether the payer's free grant runs WITHOUT AN END —
+ * an operator's grant (`source: "manual"`) with `comped_until` empty. A purchase under
+ * it leaves the row `comped` on the grant's plan (§12.11): only the paid price moves,
+ * so the payer would pay for a plan that never applies. Pass it to `PlanPicker`'s and
+ * `PlanSwitchConfirm`'s `permanentGrant`, which warn before the checkout or the switch.
+ *
+ * `source` is checked explicitly, not implied by the missing date: Kurvenschmiede's
+ * pre-launch beta rows are `comped` with `comped_until` null too (their launch-plus-12-
+ * months end isn't written yet, §3.2), and they are not permanent. A grant with an end
+ * gets no warning either: the bought plan applies from that end on.
+ */
+export function isPermanentGrant(
+  overview: Pick<BillingOverview, "status" | "source"> & { comped_until?: BillingOverview["comped_until"] },
+): boolean {
+  return overview.status === "comped" && overview.source === "manual" && overview.comped_until == null;
 }
 
 /** 0.39: what the payer pays at the provider (server-kit's `PaidPrice`, §15.2.10),

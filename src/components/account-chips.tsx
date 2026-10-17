@@ -6,7 +6,7 @@ import type { DateInput, FormatDateStyle, FormatRelativeTimeOptions } from "../l
 import { useKitDateFormatter, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { toLocalIso } from "../lib/dates";
 import { Chip } from "./chip";
-import type { ChipShape, ChipSize, ChipTone, ChipVariant } from "./chip";
+import type { ChipLinkProps, ChipShape, ChipSize, ChipTone, ChipVariant } from "./chip";
 import type { DataTableColumn } from "./data-table";
 import { DEFAULT_ACCOUNT_STATE_LABELS } from "./account-chips-labels";
 
@@ -49,6 +49,13 @@ export interface RoleDefinition {
   tone?: ChipTone;
   /** A lucide component or an element — Kurvenschmiede marks its admins with a shield. */
   icon?: LucideIcon | ReactElement;
+  /**
+   * 0.42.0 (docs/admin-harmonization.md §2.1, settings §12.3): the role's tool — an
+   * admin's `/admin`, a reviewer's `/translations`. {@link AccountRoleChip} is a link to
+   * it; a role without one gets a plain chip. {@link RoleChip} ignores it: a roster's
+   * chips name a role, they are not a way in.
+   */
+  href?: string;
 }
 
 /**
@@ -105,6 +112,69 @@ export function RoleChip<R extends string = string>({
       {def?.label ?? role}
     </Chip>
   );
+}
+
+/* ── AccountRoleChip ───────────────────────────────────────────────────────── */
+
+export interface AccountRoleChipProps<R extends string = string> extends RoleChipProps<R> {
+  /**
+   * Runs on the way to the role's tool — the account menu's `close`, so the panel does
+   * not stay open over the page it just navigated to (keksdose F7). Only called on a
+   * link chip.
+   */
+  onNavigate?: () => void;
+  /** Your router's link for the role's `href`. Default: the `<UiKitProvider
+   *  linkComponent>`, then `<a>` — {@link Chip}'s `renderLink`. */
+  renderLink?: (props: ChipLinkProps) => ReactElement;
+}
+
+/**
+ * The role in the account menu's header (0.42.0, docs/admin-harmonization.md §2.1, §7):
+ * {@link RoleChip} in keksdose's look — `solid`, `sm`, `square`, `caps`, the role's icon
+ * and tone — made for `TopBarActionMenu`'s `header.extra`:
+ *
+ *     extra: (close) => <AccountRoleChip value={me.role} roles={ROLES} onNavigate={close} />
+ *
+ * A role whose {@link RoleDefinition.href} is set is a shortcut to its tool: the chip is a
+ * link (through `renderLink`, else the provider's link, as {@link Chip} draws links) and
+ * calls `onNavigate` on the click. Any other role is a plain chip — every account shows
+ * its role (§7, "Always a badge"). The words and tones are the app's vocabulary; the kit
+ * adds none. Carries `data-role` with the key.
+ */
+export function AccountRoleChip<R extends string = string>({
+  value: role,
+  roles,
+  onNavigate,
+  renderLink,
+  size = "sm",
+  variant = "solid",
+  shape = "square",
+  caps = true,
+  className,
+  ...rest
+}: AccountRoleChipProps<R>) {
+  if (role === null || role === undefined || role === "") return null;
+  const def = roles[role];
+  const look = {
+    ...rest,
+    "data-role": role,
+    tone: def?.tone ?? "neutral",
+    icon: def?.icon,
+    size,
+    variant,
+    shape,
+    caps,
+    className,
+  } as const;
+  const label = def?.label ?? role;
+  if (def?.href) {
+    return (
+      <Chip {...look} href={def.href} renderLink={renderLink} onClick={onNavigate ? () => onNavigate() : undefined}>
+        {label}
+      </Chip>
+    );
+  }
+  return <Chip {...look}>{label}</Chip>;
 }
 
 /* ── AccountStateChip ──────────────────────────────────────────────────────── */

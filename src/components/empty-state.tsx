@@ -17,8 +17,9 @@ export interface EmptyStateProps extends Omit<ComponentPropsWithRef<"div">, "chi
    * keksdose's error boundary IS the page when it trips, and its `<h2>` went missing
    * when it moved onto EmptyState — so the page's heading outline lost the one line
    * that says what happened. Only the element changes; the look is the box's.
+   * `h1` (0.42.0) for an empty state that is the whole page — `AdminForbidden`.
    */
-  headingAs?: "h2" | "h3" | "h4" | "h5" | "h6";
+  headingAs?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
   /** A glyph ABOVE the title — kastlan's InboxEmptyState (an inbox), keksdose's
    *  offline card (a cloud with a slash). Sized by the box (`[&_svg]:size-8`) and
    *  muted, so five call sites cannot pick five sizes; hidden from assistive tech,

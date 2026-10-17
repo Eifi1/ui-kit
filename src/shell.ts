@@ -13,6 +13,10 @@ export * from "./shell/auth-layout";
 // 0.40.0: the list page's fill (docs/page-layout-harmonization.md §1.3).
 export { FillHeight, FILL_HEIGHT_CLASS } from "./shell/fill-height";
 export type { FillHeightProps } from "./shell/fill-height";
+// 0.42.0: the account menu's "Administration" row, as an entry and as a HoverMenu row
+// (docs/admin-harmonization.md §2.1, §6.6).
+export { adminMenuEntry, AdminMenuRow } from "./shell/admin-menu";
+export type { AdminMenuEntryOptions, AdminMenuRowProps } from "./shell/admin-menu";
 // 0.31.0: the settings and admin pages' shell (docs/settings-harmonization.md §3, §5).
 export { SettingsLayout, SETTINGS_SEARCH_THRESHOLD } from "./settings/settings-layout";
 export type { SettingsLayoutProps, SettingsLayoutWidth, SettingsDocumentTitleParts } from "./settings/settings-layout";

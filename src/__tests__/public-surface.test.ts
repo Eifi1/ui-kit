@@ -244,7 +244,14 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // loops' queue, and `feedbackReworkCount`, the Rework chip's count off the entries.
   // 0.40.0 (+2, docs/page-layout-harmonization.md §1.3): `FillHeight` and
   // `FILL_HEIGHT_CLASS`, the list page's fill (here and in /shell).
-  ["@eifi1/ui-kit", barrel, 916],
+  // 0.42.0 (+2, docs/billing-harmonization.md §16.9): `isPermanentGrant`, the grant
+  // warning's rule, and `CancelSubscriptionConfirm`, the in-app cancel's dialog.
+  // 0.42.0 (+13, docs/admin-harmonization.md §3.1): the admin area's template —
+  // `AccountRoleChip`, `adminMenuEntry` and `AdminMenuRow` (here and in /shell),
+  // `DEFAULT_ADMIN_AREA_LABELS`, `useAdminAreaLabels`, `ADMIN_SECTIONS`, `adminSections`,
+  // `AdminForbidden`, `AdminOverview`, `AttentionTile`, `adminWaitingCount`,
+  // `DEFAULT_ADMIN_ATTENTION_HREFS`, `AdminToolLinks`.
+  ["@eifi1/ui-kit", barrel, 931],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -268,7 +275,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.32.0 (+3): the phone bar's "More" — AppShellMoreLabels' defaults,
   // DEFAULT_MOBILE_BAR_MAX, splitMobileBar.
   // 0.40.0 (+2): `FillHeight`, `FILL_HEIGHT_CLASS` (docs/page-layout-harmonization.md §1.3).
-  ["@eifi1/ui-kit/shell", shell, 43],
+  // 0.42.0 (+2): `adminMenuEntry`, `AdminMenuRow` (docs/admin-harmonization.md §6.6).
+  ["@eifi1/ui-kit/shell", shell, 45],
   ["@eifi1/ui-kit/tour", tour, 4],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.

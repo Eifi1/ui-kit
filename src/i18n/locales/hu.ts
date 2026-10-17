@@ -1684,6 +1684,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         "A fizetése feldolgozás alatt áll. A csomagja a megerősítés után azonnal elindul; ez az oldal magától frissül.",
       choosePlan: "Csomag választása",
       updatePayment: "Fizetési mód frissítése",
+      // 0.42 (§16.7 A): for an admin who isn't the buyer.
+      paymentFailedAskBuyer: (buyer) =>
+        buyer
+          ? `A fizetés sikertelen volt. ${buyer} tudja frissíteni a fizetési módot.`
+          : "A fizetés sikertelen volt. Az előfizetést megvásárló adminisztrátor tudja frissíteni a fizetési módot.",
       checkAgain: "Újraellenőrzés",
       lockReason: "A csomagja lejárt. Ha ismét módosítani szeretne, válasszon csomagot.",
       // As `characterCount.limitReached` ("Elérte a karakterkorlátot").
@@ -1716,6 +1721,19 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       switchCredited: "A következő terhelésekből levonva",
       switchNextCharge: (date) => `Következő terhelés: ${date}`,
       switchConfirm: "Csomag módosítása",
+      // 0.42 (§16): the portal for the buyer only, the in-app cancel, the grant warning.
+      buyerHolds: (buyer) =>
+        buyer
+          ? `A fizetési módot és a számlákat ${buyer} kezeli, aki az előfizetést megvásárolta.`
+          : "A fizetési módot és a számlákat az előfizetést megvásárló adminisztrátor kezeli.",
+      cancelConfirmTitle: "Előfizetés lemondása",
+      cancelConfirmBody: (date) => `Az előfizetése ekkor ér véget: ${date}. Addig minden a megszokott módon működik.`,
+      cancelConfirmAction: "Lemondás most",
+      keepSubscription: "Előfizetés megtartása",
+      grantWarningTitle: "Az ingyenes hozzáférése továbbra is él",
+      grantWarningBody:
+        "Az ingyenes hozzáférésének nincs lejárati dátuma. Amíg tart, a vásárlás nem változtatja meg a csomagját: olyan csomagért fizetne, amely nem érvényes.",
+      grantWarningAction: "Mégis megvásárolom",
       // No plural after a numeral (convention 2).
       waitingChanges: (count) => `${n(count)} módosítás csomagra vár`,
       // "Elvetés", as `wizard.cancelConfirmLabel`.
@@ -1786,6 +1804,32 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     appShellMore: {
       more: "Továbbiak",
       moreTitle: "További oldalak",
+    },
+    // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Ön", as
+    // the rest of the catalogue.
+    adminArea: {
+      title: "Adminisztráció",
+      waiting: (count) => `${n(count)} várakozik`,
+      forbiddenTitle: "Csak adminisztrátoroknak",
+      forbiddenBody: (appName) =>
+        `Itt kezelik az adminisztrátorok a(z) ${appName} alkalmazást. Az Ön fiókja nem nyithatja meg ezt az oldalt.`,
+      forbiddenHome: "Ugrás a kezdőlapra",
+      forbiddenReviewer: "Fordítások ellenőrzése",
+      sections: {
+        overview: { title: "Áttekintés", help: "Ami most várakozik, egy pillantásra." },
+        users: { title: "Felhasználók", help: "Kinek van fiókja, és ki mit tehet." },
+        invitations: { title: "Meghívások", help: "A linkek, amelyekkel új személy csatlakozhat." },
+        billing: { title: "Számlázás", help: "A csomag, a fizetés és a számlák." },
+        activity: { title: "Tevékenység", help: "Mit tettek az adminisztrátorok, a legújabb elöl." },
+      },
+      tiles: {
+        feedbackWaiting: "Osztályozásra vár",
+        deletionRequests: "Törlési kérelmek",
+        invitationsPending: "Függő meghívások",
+        users: "Felhasználók",
+        usersNew: (count) => `${n(count)} új az elmúlt 7 napban`,
+      },
+      tools: "Eszközök",
     },
   };
 }

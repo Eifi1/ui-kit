@@ -216,6 +216,12 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       ...d.settings,
       matchCount: (count) => (count === 1 ? "1 match" : `${n(count)} matches`),
     },
+    // 0.42.0: the admin area's two counts (docs/admin-harmonization.md §3.1).
+    adminArea: {
+      ...d.adminArea,
+      waiting: (count) => `${n(count)} waiting`,
+      tiles: { ...d.adminArea.tiles, usersNew: (count) => `${n(count)} new in 7 days` },
+    },
     demo: {
       ...d.demo,
       rateLimited: (minutes) =>
