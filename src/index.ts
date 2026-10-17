@@ -890,7 +890,7 @@ export type { CancelSubscriptionConfirmProps } from "./billing/cancel-subscripti
 export { openProviderPage } from "./billing/provider-page";
 export type { OpenProviderPageOptions, ProviderPageWay } from "./billing/provider-page";
 export { useCancelRequest } from "./billing/cancel-request";
-export type { CancelRequest, CancelRequested } from "./billing/cancel-request";
+export type { CancelRequest, CancelRequested, CancelRequestView } from "./billing/cancel-request";
 // The operator's plan parts (§14.12) are admin/plan-change, in the admin section.
 
 // ── settings ─────────────────────────────────────────────────────────────────

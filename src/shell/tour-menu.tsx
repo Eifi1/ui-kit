@@ -15,8 +15,10 @@ import { useTopBarPartsLabels, type TourMenuLabels } from "./top-bar-parts-label
  *
  * Since 0.43 it is a subset of the catalogue's `TourInfo` (docs/tours-harmonization.md
  * §3), so an app keeps ONE list: hand the menu the catalogue's tours with `completed`
- * and `joined`, and it works out ✓, NEW and "Updated" itself. `isNew`, `completed` and
- * `reset` on a tour still win over that.
+ * and `joined`, and it works out ✓, NEW and "Updated" itself. Given the record, the kit's
+ * ✓ and "Updated" win over a row's `completed` and `reset`; given `joined`, its NEW wins
+ * over `isNew` — so a row built from an app's own booleans cannot hide an update (§8,
+ * build review kastlan A3, keksdose K-S6). The booleans are for a menu with neither.
  */
 export type TourMenuTour = Partial<Pick<TourInfo, "route" | "since" | "updated">> & {
   id: string;
@@ -96,11 +98,13 @@ export function TourMenu({
       ? toursProp
       : toursProp.map((t) => {
           const at = completions?.[t.id];
+          // Ever completed: the record when there is one, else the row's own word.
+          const ever = completions ? at !== undefined : !!t.completed;
           return {
             ...t,
-            completed: t.completed ?? (completions ? isTourDone(t, at) : undefined),
-            reset: t.reset ?? isTourReset(t, at),
-            isNew: t.isNew ?? isTourNew({ since: t.since, joined, completed: at !== undefined }),
+            completed: completions ? isTourDone(t, at) : t.completed,
+            reset: completions ? isTourReset(t, at) : t.reset,
+            isNew: joined !== undefined ? isTourNew({ since: t.since, joined, completed: ever }) : t.isNew,
           };
         });
 

@@ -201,8 +201,15 @@ describe("BillingBanner payment-failed — the card page in a new tab (§17.1)",
 });
 
 describe("useCancelRequest and cancelRequested (kastlan 18bf4c0)", () => {
+  /** The page's order: the request, then the overview (which reads `waiting`), then the view. */
+  function usePage(row: boolean | undefined, onQuery: (waiting: boolean) => void = () => {}) {
+    const request = useCancelRequest();
+    onQuery(request.waiting); // useBillingOverview({ waiting: request.waiting })
+    return { waiting: request.waiting, ...request.view(row) };
+  }
+
   it("shows a cancel at once, until the row moves", () => {
-    const { result, rerender } = renderHook(({ row }) => useCancelRequest(row), { initialProps: { row: false } });
+    const { result, rerender } = renderHook(({ row }) => usePage(row), { initialProps: { row: false } });
     expect(result.current).toMatchObject({ requested: null, cancelScheduled: false, waiting: false });
     act(() => result.current.noteAsked());
     expect(result.current).toMatchObject({ requested: "cancel", cancelScheduled: true, waiting: true });
@@ -217,10 +224,28 @@ describe("useCancelRequest and cancelRequested (kastlan 18bf4c0)", () => {
   });
 
   it("cancels out a cancel and its undo asked before the row moved", () => {
-    const { result } = renderHook(() => useCancelRequest(false));
+    const { result } = renderHook(() => usePage(false));
     act(() => result.current.noteAsked());
     act(() => result.current.noteAsked());
     expect(result.current).toMatchObject({ requested: null, cancelScheduled: false, waiting: false });
+  });
+
+  it("goes before the overview query: no data at construction, waiting feeds the query (kastlan B2)", () => {
+    const query = vi.fn();
+    const { result, rerender } = renderHook(({ row }) => usePage(row, query), {
+      initialProps: { row: undefined as boolean | undefined },
+    });
+    // Loading: nothing asked, nothing shown, no polling.
+    expect(result.current).toMatchObject({ requested: null, cancelScheduled: false, waiting: false });
+    expect(query).toHaveBeenLastCalledWith(false);
+    rerender({ row: false });
+    act(() => result.current.noteAsked());
+    expect(query).toHaveBeenLastCalledWith(true);
+    // A refetch in flight (no data for a moment) drops nothing.
+    rerender({ row: undefined });
+    expect(result.current.waiting).toBe(true);
+    rerender({ row: true });
+    expect(query).toHaveBeenLastCalledWith(false);
   });
 
   it("SubscriptionActions shows what was asked: Keep after a cancel, no second cancel without onResume", () => {

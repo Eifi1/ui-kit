@@ -630,7 +630,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       clearFilters: "Cancella filtri",
       badgeNew: "Nuovo",
       badgeUpdated: "Aggiornato",
-      resetOn: (date, reason) => `Reimpostato il ${date}: ${reason}`,
+      resetOn: (date, reason) => (reason ? `Reimpostato il ${date}: ${reason}` : `Reimpostato il ${date}`),
       points: (count) => `+${n(count)} pt`,
       steps: (count) => (count === 1 ? `${n(count)} passaggio` : `${n(count)} passaggi`),
       duration: (minutes) => `Circa ${n(minutes)} min`,
@@ -1861,7 +1861,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       sections: {
         overview: { title: "Panoramica", help: "Ciò che è in attesa, a colpo d’occhio." },
         users: { title: "Utenti", help: "Chi ha un account e cosa può fare ciascuno." },
-        invitations: { title: "Inviti", help: "Inviti persone via e-mail e veda chi non si è ancora unito." },
+        invitations: { title: "Inviti", help: "Inviti persone via e-mail nella loro lingua; reinvii o revochi gli inviti ancora aperti." },
         billing: { title: "Fatturazione", help: "Il piano, il pagamento e le fatture." },
         activity: { title: "Attività", help: "Ciò che hanno fatto gli amministratori, dal più recente." },
       },

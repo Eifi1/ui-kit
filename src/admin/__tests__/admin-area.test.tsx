@@ -28,7 +28,7 @@ describe("adminSections", () => {
     expect(groups.map((g) => [g.id, g.title, g.help])).toEqual([
       ["overview", "Overview", "What is waiting, at a glance."],
       ["users", "Users", "Who has an account, and what each may do."],
-      ["invitations", "Invitations", "Invite people by e-mail, and see who hasn’t joined yet."],
+      ["invitations", "Invitations", "Invite people by e-mail in their language; resend or revoke what’s still open."],
       ["billing", "Billing", "The plan, the payment and the invoices."],
       ["activity", "Activity", "What the admins did, newest first."],
     ]);

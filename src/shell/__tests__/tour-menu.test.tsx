@@ -228,4 +228,21 @@ describe("TourMenu — the catalogue's tours, with completed and joined (0.43, t
     const button = screen.getByRole("button", { name: /Guided tours/ });
     expect(button).not.toHaveAccessibleName(/New|Updated/);
   });
+  it("the record and joined win over a row's own completed and isNew: Updated still shows (kastlan A3)", () => {
+    // An app that still builds rows: completed: !!record[id], isNew from its own rule.
+    const record = { welcome: "2026-02-01T00:00:00Z", goals: "2026-09-01T00:00:00Z" };
+    const rows = CATALOGUE.map((t) => ({ ...t, completed: t.id in record, isNew: false }));
+    render(
+      <MemoryRouter initialEntries={["/home"]}>
+        <TourMenu tours={rows} completed={record} joined="2026-03-01" href="/tours" onLaunch={() => {}} />
+      </MemoryRouter>,
+    );
+    const menu = open(screen.getByRole("link", { name: /Guided tours/ }));
+    expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent)).toEqual([
+      "WelcomeCompleted",
+      "GoalsUpdated",
+      "Your budgetNew",
+      "All tours…",
+    ]);
+  });
 });

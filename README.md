@@ -556,7 +556,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2075 names from 341 modules** — 955 values and 1120 types. _Italic_ is a type-only export.
+**2079 names from 341 modules** — 958 values and 1121 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
@@ -901,8 +901,8 @@ re-slicing of it, never a second API.
 |---|---|
 | `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
 | `tour/tour-catalogue` | `DEFAULT_TOUR_CATALOGUE_LABELS`, `TourCatalogue`, `TourCatalogueCard`, _`TourCatalogueCardProps`_, _`TourCatalogueLabels`_, _`TourCatalogueProps`_ |
-| `tour/tour-info` | `isTourDone`, `isTourNew`, `isTourReset`, _`TourCompletions`_, _`TourGroup`_, _`TourInfo`_, _`TourUpdate`_ |
-| `tour/use-tour-progress` | `useTourProgress`, _`TourProgress`_, _`UseTourProgressOptions`_ |
+| `tour/tour-info` | `doneCount`, `earnedPoints`, `isTourDone`, `isTourNew`, `isTourReset`, _`TourCompletions`_, _`TourGroup`_, _`TourInfo`_, _`TourUpdate`_ |
+| `tour/use-tour-progress` | `resetTourProgress`, `useTourProgress`, _`TourProgress`_, _`UseTourProgressOptions`_ |
 | `tour/use-tour-url-sync` | `useTourCatalogueUrlState`, `useTourUrlSync`, _`TourCatalogueFilter`_, _`TourStateFilter`_, _`UseTourUrlSyncOptions`_ |
 
 ### search
@@ -983,7 +983,7 @@ re-slicing of it, never a second API.
 | `billing/plan-switch` | `PlanSwitchConfirm`, _`PlanSwitchConfirmProps`_, _`PlanSwitchSide`_ |
 | `billing/cancel-subscription` | `CancelSubscriptionConfirm`, _`CancelSubscriptionConfirmProps`_ |
 | `billing/provider-page` | `openProviderPage`, _`OpenProviderPageOptions`_, _`ProviderPageWay`_ |
-| `billing/cancel-request` | `useCancelRequest`, _`CancelRequest`_, _`CancelRequested`_ |
+| `billing/cancel-request` | `useCancelRequest`, _`CancelRequest`_, _`CancelRequested`_, _`CancelRequestView`_ |
 
 ### notifications
 

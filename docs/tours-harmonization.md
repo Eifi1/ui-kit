@@ -108,8 +108,10 @@ Kurvenschmiede.
 kastlan and Kurvenschmiede had asked for no points. Marcel: **"Points everywhere"**, so the
 tours look the same in all three apps. Every tour carries `points`, the card shows the
 chip, and each app shows a points tile in its page header and a toast on completion. The
-tile and the toast stay app-side (kk Q4, KS Q4), through `onComplete(tourId)`. The kit
-still draws no gap and no "0 points" for a tour passed without points (KS).
+tile and the toast stay app-side (kk Q4, KS Q4): the moment is `complete(tour)` returning
+`true` in the tour's `onFinish` (the engine has no completion hook of its own), and the
+tile sums `earnedPoints(tours, completed)`, by `isTourDone`. The kit still draws no gap and
+no "0 points" for a tour passed without points (KS).
 
 ### 6.2 Progress on the device, the key the app's own
 
@@ -184,22 +186,29 @@ need react-router, which is a required peer already.
   record needs no `migrate`). `migrate(raw)` gets the parsed JSON and returns a record for
   a shape it knows, `undefined` otherwise; the next write stores the kit's shape under the
   same key. `complete(idOrTour)` keeps the first completion and returns `true` only when
-  the completion counts anew: that is the app's `onComplete` moment for the points and the
-  toast (§6.1). Passed the tour, a completion reset by `updated` is replaced (§8). Blocked
+  the completion counts anew: that is the app's moment for the points and the toast
+  (§6.1). Passed the tour, a completion reset by `updated` is replaced (§8). Blocked
   or full storage keeps the marks for the page's life. Readers on the same key agree
-  through an in-tab emitter and the `storage` event.
+  through an in-tab emitter and the `storage` event, and share one snapshot cached by the
+  stored text; `migrate` runs once per text, only on a shape that is not the kit's, and its
+  identity is ignored — define it once, at module level (build review, kastlan B1).
+  `resetTourProgress(key)` clears the key and the page's memory and notifies, for the
+  device reset (optional per app; keksdose keeps usage out of it). `doneCount` and
+  `earnedPoints` count by `isTourDone`, for the header's x-of-y and points tile.
 - **`useTourUrlSync({launch, ready?, stepAliases?})`** (§2.7, §6.4): keksdose's
   `TourUrlSync` on `useTourOptional()`. `launch(id, {startIndex})` is the app's launcher
   (its steps, its `prepare()`, its `onFinish`). A tour starts whenever `?tour=` changes to
   an id, on in-app navigation too, after `ready`; `&tourStep=` is 1-based. While a tour
-  runs, the URL mirrors it (never during a navigation in flight, never touching other
+  runs, the URL mirrors it (never during a navigation in flight — read off the history of a
+  declarative router, off the data router's state under `createBrowserRouter` — never touching other
   parameters or the hash); at the end only `tour`, `tourStep` and the aliases go.
   `stepAliases: ["ts"]` reads kastlan's 0-based `ts` for one minor.
 - **`useTourCatalogueUrlState(params?)`** → `{query, group, state, onChange}`, spread onto
   the catalogue: `?q`, `?topic`, `?state`, written with `replace`. `params` renames them
   (kastlan's `?group`).
 - **`TourMenu`** takes `completed` and `joined` and works out ✓, NEW and "Updated"
-  itself; a tour's own `isNew` / `completed` / `reset` still wins. A reset tour is listed
+  itself; with the record passed its ✓ and "Updated" win over a tour's own `completed` /
+  `reset`, with `joined` its NEW over `isNew` (the booleans serve a menu with neither). A reset tour is listed
   with the "Updated" chip among the new ones (newest news first, by `updated.date`), the
   heading then reads "New and updated", and it lights the dot ("Updated tours" when only
   updates do).
@@ -216,12 +225,16 @@ rule:
 
 1. **Every update resets the tour, a fix as much as a rework.** The app gives the tour an
    `updated: {date, reason}` (ISO day, and a short sentence in the app's words: "The import
-   screen moved; the tour follows it now."). A completion from before `updated.date` no
-   longer counts as done.
+   screen moved; the tour follows it now."; the reason is for display only and may be left
+   out). A completion from before `updated.date` began on the device no longer counts as
+   done: instants compared, the completion's timestamp against the start of that day in
+   local time, so one taken at 00:30 in Zurich on the update day counts (build review,
+   keksdose K-S2).
    - The tour is "to do" again, and the "done" filter and the counts follow.
    - Completing it again awards its points again.
-   - Nothing is deleted from the device: the kit compares the dates, so the old completion
-     date stays readable.
+   - The reset itself deletes nothing: the kit compares the dates, so the old completion
+     date stays readable until the tour is completed again. Then `complete(tour)`
+     overwrites it with the new date (the first completion is no longer kept).
 2. **The reason is shown.** A reset tour's card carries an "Updated" pill and the line
    "Reset on {date}: {reason}". `TourMenu` lists it with the same pill and lights its dot,
    as for NEW.

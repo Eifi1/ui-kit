@@ -1,5 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
-import { MemoryRouter, useLocation, useNavigate } from "react-router";
+import { MemoryRouter, RouterProvider, createMemoryRouter, useLocation, useNavigate } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { TourProvider, useTour, type TourStep } from "../tour";
 import { useTourCatalogueUrlState, useTourUrlSync, type UseTourUrlSyncOptions } from "../use-tour-url-sync";
@@ -154,6 +154,50 @@ describe("useTourUrlSync", () => {
   });
 });
 
+describe("useTourUrlSync under a data router (createBrowserRouter's kind, kastlan A2)", () => {
+  it("does not write the mirror while a navigation is loading: the step's go() lands, then the mirror", async () => {
+    let release: () => void = () => {};
+    const slow = new Promise<null>((resolve) => {
+      release = () => resolve(null);
+    });
+    function Layout() {
+      const launcher = useLauncher();
+      return (
+        <>
+          <Sync launch={launcher} />
+          <Probe />
+        </>
+      );
+    }
+    const router = createMemoryRouter(
+      [
+        { path: "/budget", element: <Layout /> },
+        { path: "/other", element: <Layout />, loader: () => slow },
+      ],
+      { initialEntries: ["/budget?tour=budget&tourStep=1"] },
+    );
+    render(
+      <TourProvider>
+        <RouterProvider router={router} />
+      </TourProvider>,
+    );
+    await flush();
+    expect(url()).toBe("/budget?tour=budget&tourStep=1");
+    // A step navigates (its loader is slow), and the engine moves on meanwhile.
+    act(() => screen.getByText("go-other").click());
+    act(() => screen.getByText("engine-next").click());
+    await flush();
+    expect(router.state.navigation.state).toBe("loading");
+    // A replace onto /budget here would have cancelled the navigation.
+    await act(async () => {
+      release();
+      await slow;
+    });
+    await flush();
+    expect(url()).toBe("/other?q=x&tour=budget&tourStep=2");
+  });
+});
+
 describe("useTourCatalogueUrlState", () => {
   function Catalogue() {
     const filter = useTourCatalogueUrlState();
@@ -180,5 +224,21 @@ describe("useTourCatalogueUrlState", () => {
     act(() => screen.getByText("clear").click());
     expect(screen.getByTestId("url").textContent).toBe("?keep=1");
     expect(screen.getByTestId("filter").textContent).toBe(JSON.stringify({ q: "", g: null, s: "all" }));
+  });
+
+  it("keeps the hash when it writes (keksdose N2, dev#495)", () => {
+    function WithHash() {
+      const location = useLocation();
+      return <output data-testid="hash">{location.hash}</output>;
+    }
+    render(
+      <MemoryRouter initialEntries={["/tours?q=bud#import"]}>
+        <Catalogue />
+        <WithHash />
+      </MemoryRouter>,
+    );
+    act(() => screen.getByText("set").click());
+    expect(screen.getByTestId("url").textContent).toBe("?q=imp&topic=import&state=todo");
+    expect(screen.getByTestId("hash").textContent).toBe("#import");
   });
 });

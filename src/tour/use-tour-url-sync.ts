@@ -27,15 +27,24 @@ export interface UseTourUrlSyncOptions {
   stepAliases?: readonly string[];
 }
 
+type Place = { pathname: string; search: string; hash: string };
+
 /**
- * Has the router's history already moved on from the location React is still rendering?
+ * Has the router already moved on from the location React is still rendering?
  * keksdose's check (tour-url-sync.tsx, tours audit 2026-10-02): a mirror write built
- * from the page being LEFT is a replace back onto it, which cancels a step's `go()`. The
- * declarative routers' navigator is their history, and carries where it is; a navigator
- * without one answers "not in flight".
+ * from the page being LEFT is a replace back onto it, which cancels a step's `go()`.
+ *
+ * - A data router (`createBrowserRouter`, kastlan): its navigator has no location (build
+ *   review 0.43, kastlan A2), so the router's own state answers — a navigation still
+ *   loading, or a location it has committed that React has not rendered yet.
+ * - A declarative router (`BrowserRouter`, keksdose): its navigator is its history and
+ *   carries where it is.
+ * - Anything else answers "not in flight".
  */
-function navigationInFlight(history: Navigator | undefined, rendered: { pathname: string; search: string; hash: string }) {
-  const live = (history as (Navigator & { location?: Partial<typeof rendered> }) | undefined)?.location;
+function navigationInFlight(history: Navigator | undefined, dataRouter: DataRouterProbe, rendered: Place) {
+  const state = dataRouter?.router?.state;
+  if (state && (state.navigation?.state ?? "idle") !== "idle") return true;
+  const live = state?.location ?? (history as (Navigator & { location?: Partial<Place> }) | undefined)?.location;
   if (!live) return false;
   return (
     live.pathname !== rendered.pathname || (live.search ?? "") !== rendered.search || (live.hash ?? "") !== rendered.hash
@@ -44,6 +53,21 @@ function navigationInFlight(history: Navigator | undefined, rendered: { pathname
 
 type NavigationProbe = { navigator?: Navigator } | null;
 const NO_NAVIGATION = createContext<NavigationProbe>(null);
+/** The data router's state, as `useSearchParamState` reads it. */
+type DataRouterProbe = {
+  router?: { state?: { navigation?: { state?: string }; location?: Partial<Place> } };
+} | null;
+const NO_DATA_ROUTER = createContext<DataRouterProbe>(null);
+const DataRouterContext: Context<DataRouterProbe> = (() => {
+  try {
+    return (
+      (ReactRouter as unknown as { UNSAFE_DataRouterContext?: Context<DataRouterProbe> }).UNSAFE_DataRouterContext ??
+      NO_DATA_ROUTER
+    );
+  } catch {
+    return NO_DATA_ROUTER;
+  }
+})();
 /** Read off the namespace inside a `try`, as `useSearchParamState` reads the data router:
  *  a test's partial `vi.mock("react-router")` throws on an export it does not define. */
 const NavigationContext: Context<NavigationProbe> = (() => {
@@ -87,6 +111,7 @@ export function useTourUrlSync({ launch, ready = true, stepAliases = [] }: UseTo
   const location = useLocation();
   const { pathname, search, hash } = location;
   const history = useContext(NavigationContext)?.navigator;
+  const dataRouter = useContext(DataRouterContext);
   const engine = useTourOptional();
   const active = engine?.active ?? false;
   const activeId = engine?.activeId ?? null;
@@ -134,7 +159,7 @@ export function useTourUrlSync({ launch, ready = true, stepAliases = [] }: UseTo
   }, [urlTour, ready]);
 
   useEffect(() => {
-    if (navigationInFlight(history, { pathname, search, hash })) return;
+    if (navigationInFlight(history, dataRouter, { pathname, search, hash })) return;
     // A link not yet used keeps its parameters: a reload in that window resumes.
     if (pendingRef.current || launchingRef.current) return;
     const tourId = active && activeId ? activeId : null;

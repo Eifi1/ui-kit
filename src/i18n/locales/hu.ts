@@ -628,7 +628,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       clearFilters: "Szűrők törlése",
       badgeNew: "Új",
       badgeUpdated: "Frissítve",
-      resetOn: (date, reason) => `Visszaállítva: ${date} – ${reason}`,
+      resetOn: (date, reason) => (reason ? `Visszaállítva: ${date} – ${reason}` : `Visszaállítva: ${date}`),
       points: (count) => `+${n(count)} pont`,
       steps: (count) => `${n(count)} lépés`,
       duration: (minutes) => `Kb. ${n(minutes)} perc`,
@@ -1848,7 +1848,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       sections: {
         overview: { title: "Áttekintés", help: "Ami most várakozik, egy pillantásra." },
         users: { title: "Felhasználók", help: "Kinek van fiókja, és ki mit tehet." },
-        invitations: { title: "Meghívások", help: "Hívjon meg embereket e-mailben, és nézze meg, ki nem csatlakozott még." },
+        invitations: { title: "Meghívások", help: "Hívjon meg embereket e-mailben a saját nyelvükön; küldje újra vagy vonja vissza a még nyitott meghívókat." },
         billing: { title: "Számlázás", help: "A csomag, a fizetés és a számlák." },
         activity: { title: "Tevékenység", help: "Mit tettek az adminisztrátorok, a legújabb elöl." },
       },

@@ -27,8 +27,9 @@ export interface TourCatalogueLabels {
   badgeNew: string;
   /** The pill on a tour reset by an update (§8). */
   badgeUpdated: string;
-  /** A reset tour's line: the update's day (formatted) and its reason (§8). */
-  resetOn: (date: string, reason: string) => string;
+  /** A reset tour's line: the update's day (formatted) and its reason (§8); `reason` is
+   *  left out when the tour's update carries none. */
+  resetOn: (date: string, reason?: string) => string;
   /** The points chip. */
   points: (count: number) => string;
   steps: (count: number) => string;
@@ -61,7 +62,7 @@ export const DEFAULT_TOUR_CATALOGUE_LABELS: TourCatalogueLabels = {
   clearFilters: "Clear filters",
   badgeNew: "New",
   badgeUpdated: "Updated",
-  resetOn: (date, reason) => `Reset on ${date}: ${reason}`,
+  resetOn: (date, reason) => (reason ? `Reset on ${date}: ${reason}` : `Reset on ${date}`),
   points: (count) => `+${count} pts`,
   steps: (count) => (count === 1 ? "1 step" : `${count} steps`),
   duration: (minutes) => `About ${minutes} min`,

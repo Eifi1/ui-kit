@@ -376,7 +376,9 @@ export function Portal043Demo() {
   const [rowScheduled, setRowScheduled] = useState(false);
   const [pending, setPending] = useState<"manage" | "cancel" | "resume" | null>(null);
   const [last, setLast] = useState<string | null>(null);
-  const request = useCancelRequest(rowScheduled);
+  // Before the overview query in an app: `useBillingOverview({ waiting: request.waiting })`.
+  const request = useCancelRequest();
+  const view = request.view(rowScheduled);
 
   const toPortal = (target: string) => {
     setPending("manage");
@@ -398,7 +400,7 @@ export function Portal043Demo() {
     setLast(`POST /billing/${what} → 204`);
     await beat(600);
     setPending(null);
-    request.noteAsked();
+    view.noteAsked();
     await beat(3000);
     setRowScheduled(what === "cancel");
     setLast(`subscription.updated landed: cancel_at_period_end = ${what === "cancel"}`);
@@ -415,13 +417,13 @@ export function Portal043Demo() {
           <Switch size="sm" label="The server refuses the portal" checked={refuse} onCheckedChange={setRefuse} />
         </div>
         <p className="text-sm text-muted" data-plan-line="">
-          Pro · {request.cancelScheduled ? "Cancels on 9 November 2026" : "Renews on 9 November 2026"}
+          Pro · {view.cancelScheduled ? "Cancels on 9 November 2026" : "Renews on 9 November 2026"}
         </p>
         <SubscriptionActions
           onManage={() => toPortal("overview")}
           onCancelInApp={() => void ask("cancel")}
           cancelAtPeriodEnd={rowScheduled}
-          cancelRequested={request.requested}
+          cancelRequested={view.requested}
           onResume={() => void ask("resume")}
           pending={pending}
           providerName="Paddle"

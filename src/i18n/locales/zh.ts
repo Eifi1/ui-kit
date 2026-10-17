@@ -609,7 +609,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       clearFilters: "清除筛选",
       badgeNew: "新",
       badgeUpdated: "已更新",
-      resetOn: (date, reason) => `已于 ${date} 重置：${reason}`,
+      resetOn: (date, reason) => (reason ? `已于 ${date} 重置：${reason}` : `已于 ${date} 重置`),
       points: (count) => `+${n(count)} 分`,
       steps: (count) => `${n(count)} 步`,
       duration: (minutes) => `约 ${n(minutes)} 分钟`,
@@ -1764,7 +1764,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       sections: {
         overview: { title: "概览", help: "一眼看清待处理的事项。" },
         users: { title: "用户", help: "谁拥有账户，以及每个人可以做什么。" },
-        invitations: { title: "邀请", help: "通过电子邮件邀请他人，并查看谁尚未加入。" },
+        invitations: { title: "邀请", help: "通过电子邮件以对方的语言邀请他人；可重新发送或撤销尚未处理的邀请。" },
         billing: { title: "账单", help: "套餐、付款和发票。" },
         activity: { title: "活动", help: "管理员的操作记录，最新的在前。" },
       },

@@ -9,7 +9,9 @@ import {
   TourCatalogue,
   TourMenu,
   TourProvider,
-  isTourDone,
+  doneCount,
+  earnedPoints,
+  resetTourProgress,
   useTour,
   useTourOptional,
   useTourProgress,
@@ -536,8 +538,9 @@ export function TourCatalogueDemo() {
       },
     });
   };
-  const done = CATALOGUE_TOURS.filter((t) => isTourDone(t, completed[t.id]));
-  const earned = done.reduce((sum, t) => sum + (t.points ?? 0), 0);
+  // Counted by isTourDone: a tour reset by its update counts again once taken again.
+  const done = doneCount(CATALOGUE_TOURS, completed);
+  const earned = earnedPoints(CATALOGUE_TOURS, completed);
   const total = CATALOGUE_TOURS.reduce((sum, t) => sum + (t.points ?? 0), 0);
 
   return (
@@ -545,9 +548,13 @@ export function TourCatalogueDemo() {
       label="TourCatalogue — the tours page body"
       hint="keksdose's /tours (docs/tours-harmonization.md): sections per group, the filter bar, keksdose's card"
     >
-      <div className="mb-3 flex items-center gap-2 text-sm text-muted">
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted">
         The same list in the top bar&apos;s menu:
         <TourMenu tours={CATALOGUE_TOURS} completed={completed} joined="2026-10-01" onLaunch={launch} list="all" />
+        {/* What "Reset this device's settings" calls, where an app registers the key. */}
+        <Button variant="ghost" size="sm" onClick={() => resetTourProgress(SHOWCASE_PROGRESS_KEY)}>
+          Forget this device&apos;s progress
+        </Button>
       </div>
       <TourCatalogue
         tours={CATALOGUE_TOURS}
@@ -565,7 +572,7 @@ export function TourCatalogueDemo() {
             actionsAlign="start"
             as="h2"
             title="Guided tours"
-            description={`${done.length} of ${CATALOGUE_TOURS.length} completed`}
+            description={`${done} of ${CATALOGUE_TOURS.length} completed`}
             actions={
               <StatTile
                 size="sm"
@@ -585,7 +592,9 @@ export function TourCatalogueDemo() {
         The page header, the points tile and the toast are the app&apos;s; the kit draws the body. The filters are
         controlled — an app keeps them in its URL with `useTourCatalogueUrlState()` (`?q`, `?topic`, `?state`), and
         `useTourUrlSync` starts a tour from `?tour=` and mirrors `&tourStep=`. Progress is `useTourProgress` on this
-        device; &quot;Goals&quot; was completed before its update, so it is to do again, with the reason. Since 0.43.
+        device; &quot;Goals&quot; was completed before its update, so it is to do again, with the reason. The header
+        counts with `doneCount` and `earnedPoints`, and &ldquo;Forget&rdquo; is `resetTourProgress`, what the device
+        reset calls. Since 0.43.
       </Note>
     </Example>
   );

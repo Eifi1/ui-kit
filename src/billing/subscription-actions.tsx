@@ -83,7 +83,7 @@ export interface SubscriptionActionsProps extends Omit<ComponentPropsWithRef<"di
   onResume?: () => void;
   /**
    * 0.43 (kastlan `18bf4c0`): what was asked in the app and the overview does not show
-   * yet — `useCancelRequest(…).requested`. `"cancel"`: shown as scheduled ("Keep
+   * yet — `useCancelRequest().view(row).requested`. `"cancel"`: shown as scheduled ("Keep
    * subscription" with {@link onResume}; without it, no second "Cancel subscription").
    * `"resume"`: shown as not scheduled. `null` (default): {@link cancelAtPeriodEnd} says.
    */

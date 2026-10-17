@@ -85,14 +85,14 @@ describe("the Overview needs no entry (kastlan 1)", () => {
 });
 
 describe("AdminOverview: the error state (keksdose 4) and quiet tiles (Kurvenschmiede)", () => {
-  it("shows the error with Try again, over a stale answer", async () => {
+  it("shows the error with Try again alongside the last good tiles: a failed poll keeps them (keksdose N7)", async () => {
     const user = userEvent.setup();
     const retry = vi.fn();
     render(<AdminOverview attention={ATTENTION} error={new Error("500")} onRetry={retry} />);
     const box = document.querySelector('[data-slot="admin-overview"]') as HTMLElement;
     expect(box).toHaveAttribute("data-state", "error");
     expect(box).toHaveTextContent(DEFAULT_ADMIN_AREA_LABELS.overviewError);
-    expect(document.querySelector("[data-attention]")).toBeNull();
+    expect(box.querySelector("[data-attention]")).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Try again" }));
     expect(retry).toHaveBeenCalledTimes(1);
   });
@@ -128,7 +128,7 @@ describe("AdminOverview: the error state (keksdose 4) and quiet tiles (Kurvensch
 
 describe("the words (keksdose 6)", () => {
   it("says what invitations are for, in every language", () => {
-    expect(DEFAULT_ADMIN_AREA_LABELS.sections.invitations.help).toBe("Invite people by e-mail, and see who hasn’t joined yet.");
+    expect(DEFAULT_ADMIN_AREA_LABELS.sections.invitations.help).toBe("Invite people by e-mail in their language; resend or revoke what’s still open.");
     for (const c of OTHERS) {
       expect(c.adminArea.sections.invitations.help).not.toBe(DEFAULT_ADMIN_AREA_LABELS.sections.invitations.help);
       expect(c.adminArea.overviewError).not.toBe(DEFAULT_ADMIN_AREA_LABELS.overviewError);

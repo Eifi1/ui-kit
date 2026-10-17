@@ -641,7 +641,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       clearFilters: "Effacer les filtres",
       badgeNew: "Nouveau",
       badgeUpdated: "Mise à jour",
-      resetOn: (date, reason) => `Réinitialisée le ${date}\u202f: ${reason}`,
+      resetOn: (date, reason) => (reason ? `Réinitialisée le ${date}\u202f: ${reason}` : `Réinitialisée le ${date}`),
       points: (count) => `+${n(count)} pts`,
       steps: (count) => (count === 1 ? `${n(count)} étape` : `${n(count)} étapes`),
       duration: (minutes) => `Environ ${n(minutes)} min`,
@@ -1881,7 +1881,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       sections: {
         overview: { title: "Vue d’ensemble", help: "Ce qui est en attente, en un coup d’œil." },
         users: { title: "Utilisateurs", help: "Qui a un compte, et ce que chacun peut faire." },
-        invitations: { title: "Invitations", help: "Invitez des personnes par e-mail et voyez qui n’a pas encore rejoint." },
+        invitations: { title: "Invitations", help: "Invitez des personnes par e-mail dans leur langue\u202f; renvoyez ou révoquez les invitations encore ouvertes." },
         billing: { title: "Facturation", help: "L’offre, le paiement et les factures." },
         activity: { title: "Activité", help: "Ce que les administrateurs ont fait, du plus récent au plus ancien." },
       },

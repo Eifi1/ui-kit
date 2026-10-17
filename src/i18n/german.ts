@@ -643,7 +643,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       clearFilters: "Filter zurücksetzen",
       badgeNew: "Neu",
       badgeUpdated: "Aktualisiert",
-      resetOn: (date, reason) => `Zurückgesetzt am ${date}: ${reason}`,
+      resetOn: (date, reason) => (reason ? `Zurückgesetzt am ${date}: ${reason}` : `Zurückgesetzt am ${date}`),
       points: (count) => `+${n(count)} Pkt.`,
       steps: (count) => (count === 1 ? `${n(count)} Schritt` : `${n(count)} Schritte`),
       duration: (minutes) => `Etwa ${n(minutes)} Min.`,
@@ -1902,7 +1902,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       sections: {
         overview: { title: "Übersicht", help: "Was gerade wartet, auf einen Blick." },
         users: { title: "Benutzer", help: "Wer ein Konto hat und was jede Person darf." },
-        invitations: { title: "Einladungen", help: "Laden Sie Personen per E-Mail ein und sehen Sie, wer noch nicht beigetreten ist." },
+        invitations: { title: "Einladungen", help: "Laden Sie Personen per E-Mail in ihrer Sprache ein; senden Sie offene Einladungen erneut oder widerrufen Sie sie." },
         billing: { title: "Abrechnung", help: "Tarif, Zahlung und Rechnungen." },
         activity: { title: "Aktivität", help: "Was in der Verwaltung getan wurde, das Neueste zuerst." },
       },

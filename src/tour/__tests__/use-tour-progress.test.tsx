@@ -1,6 +1,6 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useTourProgress } from "../use-tour-progress";
+import { resetTourProgress, useTourProgress } from "../use-tour-progress";
 
 /** docs/tours-harmonization.md §2.6, §6.2 (device progress, migrate, notify) and §8. */
 
@@ -171,5 +171,70 @@ describe("useTourProgress", () => {
     const before = result.current.completed;
     rerender();
     expect(result.current.completed).toBe(before);
+  });
+
+  it("three readers of one key, each with its own inline migrate, render without a loop (kastlan B1)", () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, JSON.stringify(["a", "b"]));
+    const calls = vi.fn();
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    function Reader({ name }: { name: string }) {
+      // A new arrow every render, in every reader: the shape kastlan has in three places.
+      const { completed } = useTourProgress({
+        storageKey,
+        migrate: (raw) => {
+          calls();
+          return fromKastlan(raw);
+        },
+      });
+      return <p data-testid={name}>{Object.keys(completed).join(",")}</p>;
+    }
+    function Page() {
+      return (
+        <>
+          <Reader name="page" />
+          <Reader name="menu" />
+          <Reader name="header" />
+        </>
+      );
+    }
+    const { rerender } = render(<Page />);
+    rerender(<Page />);
+    for (const name of ["page", "menu", "header"]) expect(screen.getByTestId(name)).toHaveTextContent("a,b");
+    // migrate ran once for the stored text, not once per reader or per render.
+    expect(calls).toHaveBeenCalledTimes(1);
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it("does not run migrate on the kit's own shape", () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, JSON.stringify({ a: "2026-09-01", b: null }));
+    const migrate = vi.fn(() => ({ wrong: null }));
+    const { result } = renderHook(() => useTourProgress({ storageKey, migrate }));
+    expect(result.current.completed).toEqual({ a: "2026-09-01", b: null });
+    expect(migrate).not.toHaveBeenCalled();
+  });
+
+  it("resetTourProgress clears the key and the page's memory, and every reader moves at once", () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, JSON.stringify({ a: "2026-09-01" }));
+    const page = renderHook(() => useTourProgress({ storageKey }));
+    const menu = renderHook(() => useTourProgress({ storageKey }));
+    act(() => resetTourProgress(storageKey));
+    expect(localStorage.getItem(storageKey)).toBeNull();
+    expect(page.result.current.completed).toEqual({});
+    expect(menu.result.current.completed).toEqual({});
+
+    // Storage refuses writes: the mark lives in memory, and the reset forgets it too.
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("QuotaExceededError");
+    });
+    act(() => {
+      page.result.current.complete("b");
+    });
+    expect(Object.keys(menu.result.current.completed)).toEqual(["b"]);
+    act(() => resetTourProgress(storageKey));
+    expect(page.result.current.completed).toEqual({});
+    expect(menu.result.current.completed).toEqual({});
   });
 });

@@ -626,7 +626,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       clearFilters: "Borrar filtros",
       badgeNew: "Nuevo",
       badgeUpdated: "Actualizado",
-      resetOn: (date, reason) => `Restablecida el ${date}: ${reason}`,
+      resetOn: (date, reason) => (reason ? `Restablecida el ${date}: ${reason}` : `Restablecida el ${date}`),
       points: (count) => `+${n(count)} pts`,
       steps: (count) => (count === 1 ? `${n(count)} paso` : `${n(count)} pasos`),
       duration: (minutes) => `Unos ${n(minutes)} min`,
@@ -1842,7 +1842,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       sections: {
         overview: { title: "Resumen", help: "Lo que está pendiente, de un vistazo." },
         users: { title: "Usuarios", help: "Quién tiene una cuenta y qué puede hacer cada uno." },
-        invitations: { title: "Invitaciones", help: "Invite a personas por correo electrónico y vea quién no se ha unido aún." },
+        invitations: { title: "Invitaciones", help: "Invite a personas por correo electrónico en su idioma; reenvíe o revoque las invitaciones aún pendientes." },
         billing: { title: "Facturación", help: "El plan, el pago y las facturas." },
         activity: { title: "Actividad", help: "Lo que hicieron los administradores, lo más reciente primero." },
       },

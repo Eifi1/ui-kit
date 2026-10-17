@@ -41,8 +41,10 @@ export interface TourInfo {
 export interface TourUpdate {
   /** The day it shipped (ISO `YYYY-MM-DD`). */
   date: string;
-  /** Why, in a short sentence in the app's words: "The import screen moved; the tour follows it now." */
-  reason: string;
+  /** Why, in a short sentence in the app's words: "The import screen moved; the tour follows it now."
+   *  Only shown (the card's reset line); the reset itself reads `date` alone, so an app that
+   *  keeps a reason KEY on its tour definitions passes those to `complete(tour)` as they are. */
+  reason?: string;
 }
 
 /** A section of the tours page, in the app's words and order (§2.3). An empty one is hidden. */
@@ -64,6 +66,20 @@ export type TourCompletions = Readonly<Record<string, string | null>>;
 
 /** The calendar day of an ISO date or timestamp — `"2026-10-17T08:00:00Z"` → `"2026-10-17"`. */
 const dayOf = (iso: string) => iso.slice(0, 10);
+
+/** What a reset reads of a tour (§8): the update's day, nothing else. */
+type TourUpdated = { updated?: { date: string } | null };
+
+const BARE_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** The start of an ISO day (`YYYY-MM-DD`) in THIS device's time zone, as an instant. */
+function startOfLocalDay(day: string): number {
+  const [y, m, d] = dayOf(day).split("-").map(Number);
+  return new Date(y, m - 1, d).getTime();
+}
+
+/** A completion as an instant: a timestamp as written, a bare day from its local start. */
+const instantOf = (iso: string) => (BARE_DAY.test(iso) ? startOfLocalDay(iso) : Date.parse(iso));
 
 /**
  * Is this tour NEW for the person looking at it (§2.4, §6.4)? It shipped AFTER the
@@ -91,19 +107,38 @@ export function isTourNew({
 
 /**
  * Was this completion reset by an update (§8)? True when the tour carries `updated` and
- * the completion is from an EARLIER calendar day — or has no date at all, which predates
- * any update. A tour never completed (`completedAt` undefined) is never reset: for that
- * person there is nothing to reset. Nothing is deleted; the dates are compared.
+ * the completion happened BEFORE the update day began on this device — instants compared:
+ * the completion's timestamp against the start of `updated.date` in local time, so one
+ * taken at 00:30 in Zurich on the update day counts (its UTC day is the day before) — or
+ * has no date at all, which predates any update. A tour never completed (`completedAt`
+ * undefined) is never reset: for that person there is nothing to reset. The check itself
+ * deletes nothing; a new `complete(tour)` replaces the old date.
  */
-export function isTourReset(
-  tour: { updated?: TourUpdate | null },
-  completedAt: string | null | undefined,
-): boolean {
+export function isTourReset(tour: TourUpdated, completedAt: string | null | undefined): boolean {
   if (completedAt === undefined || !tour.updated) return false;
-  return completedAt === null || dayOf(completedAt) < dayOf(tour.updated.date);
+  return completedAt === null || instantOf(completedAt) < startOfLocalDay(tour.updated.date);
 }
 
 /** Does this completion count — completed, and not reset by a later update (§8)? */
-export function isTourDone(tour: { updated?: TourUpdate | null }, completedAt: string | null | undefined): boolean {
+export function isTourDone(tour: TourUpdated, completedAt: string | null | undefined): boolean {
   return completedAt !== undefined && !isTourReset(tour, completedAt);
+}
+
+/**
+ * How many of `tours` count as done (§8): the header's "x of y". A tour reset by an update
+ * does not count until it is taken again, as on its card.
+ */
+export function doneCount(tours: readonly ({ id: string } & TourUpdated)[], completed: TourCompletions): number {
+  return tours.filter((tour) => isTourDone(tour, completed[tour.id])).length;
+}
+
+/**
+ * The points earned on `tours` (§6.1, §8): the sum of each done tour's `points`. A reset
+ * tour's points are not earned until it is taken again; a tour without points adds none.
+ */
+export function earnedPoints(
+  tours: readonly ({ id: string; points?: number | null } & TourUpdated)[],
+  completed: TourCompletions,
+): number {
+  return tours.reduce((sum, tour) => sum + (isTourDone(tour, completed[tour.id]) ? (tour.points ?? 0) : 0), 0);
 }

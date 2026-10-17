@@ -6,9 +6,9 @@ export * from "./tour/tour";
 // `useTourCatalogueUrlState` need react-router (a peer already, for /shell).
 export { TourCatalogue, TourCatalogueCard, DEFAULT_TOUR_CATALOGUE_LABELS } from "./tour/tour-catalogue";
 export type { TourCatalogueProps, TourCatalogueCardProps, TourCatalogueLabels } from "./tour/tour-catalogue";
-export { isTourNew, isTourReset, isTourDone } from "./tour/tour-info";
+export { isTourNew, isTourReset, isTourDone, doneCount, earnedPoints } from "./tour/tour-info";
 export type { TourInfo, TourGroup, TourUpdate, TourCompletions } from "./tour/tour-info";
-export { useTourProgress } from "./tour/use-tour-progress";
+export { useTourProgress, resetTourProgress } from "./tour/use-tour-progress";
 export type { UseTourProgressOptions, TourProgress } from "./tour/use-tour-progress";
 export { useTourUrlSync, useTourCatalogueUrlState } from "./tour/use-tour-url-sync";
 export type { UseTourUrlSyncOptions, TourCatalogueFilter, TourStateFilter } from "./tour/use-tour-url-sync";
