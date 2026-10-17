@@ -1,6 +1,6 @@
 import { act, render, renderHook, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { resetTourProgress, useTourProgress } from "../use-tour-progress";
+import { completeTour, resetTourProgress, useTourProgress } from "../use-tour-progress";
 
 /** docs/tours-harmonization.md §2.6, §6.2 (device progress, migrate, notify) and §8. */
 
@@ -236,5 +236,60 @@ describe("useTourProgress", () => {
     act(() => resetTourProgress(storageKey));
     expect(page.result.current.completed).toEqual({});
     expect(menu.result.current.completed).toEqual({});
+  });
+
+  it("one written form: a completion without a date is stored as \"\" and read as null (§9.6.6)", () => {
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, JSON.stringify({ a: null }));
+    const { result } = renderHook(() => useTourProgress({ storageKey }));
+    act(() => {
+      result.current.complete("b");
+    });
+    const stored = JSON.parse(localStorage.getItem(storageKey)!);
+    expect(stored.a).toBe("");
+    expect(result.current.completed.a).toBeNull();
+  });
+});
+
+describe("completeTour", () => {
+  it("writes the kit's shape, keeps the other marks, and moves this tab's readers without a storage event", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-17T09:00:00Z"));
+    const storageKey = freshKey();
+    localStorage.setItem(storageKey, JSON.stringify({ a: "2026-09-01T10:00:00.000Z" }));
+    const page = renderHook(() => useTourProgress({ storageKey }));
+    const menu = renderHook(() => useTourProgress({ storageKey }));
+    const dispatch = vi.spyOn(window, "dispatchEvent");
+
+    act(() => completeTour(storageKey, "b"));
+    act(() => completeTour(storageKey, { id: "c" }, "2026-10-01T08:00:00Z"));
+    act(() => completeTour(storageKey, "d", new Date("2026-10-02T08:00:00Z")));
+    act(() => completeTour(storageKey, "e", null));
+
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual({
+      a: "2026-09-01T10:00:00.000Z",
+      b: "2026-10-17T09:00:00.000Z",
+      c: "2026-10-01T08:00:00Z",
+      d: "2026-10-02T08:00:00.000Z",
+      e: "",
+    });
+    expect(dispatch.mock.calls.some(([event]) => event.type === "storage")).toBe(false);
+    for (const reader of [page, menu]) {
+      expect(reader.result.current.completed).toEqual({
+        a: "2026-09-01T10:00:00.000Z",
+        b: "2026-10-17T09:00:00.000Z",
+        c: "2026-10-01T08:00:00Z",
+        d: "2026-10-02T08:00:00.000Z",
+        e: null,
+      });
+    }
+  });
+
+  it("seeds a key before any reader mounts", () => {
+    const storageKey = freshKey();
+    completeTour(storageKey, "budget", "2026-09-01");
+    const { result } = renderHook(() => useTourProgress({ storageKey }));
+    expect(result.current.completed).toEqual({ budget: "2026-09-01" });
+    expect(result.current.complete("budget")).toBe(false);
   });
 });

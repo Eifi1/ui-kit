@@ -259,11 +259,13 @@ rule:
    `resetTourProgress`. It writes the kit's shape and notifies every reader in the tab, for
    tests, seeds and scripts.
 3. **The stored shape is documented** (KS 4): `{[id]: ISO instant | ""}` under the app's key.
-   An empty string is a completion without a date (a migrated record).
-4. **keksdose's reviewed words** are the kit's defaults where they differ (kk 5):
-   - `noMatchesHint` in de, fr and it (plural "filters");
-   - `stateTodo` in en and fr ("Not taken" / "Non suivies");
-   - the de `points` written out, not "Pkt.".
+   An empty string is a completion without a date (a migrated record); the hooks and
+   callbacks give `null` for it (§9.6.6).
+4. **keksdose's reviewed words** are the kit's defaults where they differ (kk 5), taken from
+   keksdose's locale files: `noMatchesHint` with the singular filter in en, fr and it ("clear
+   the filter", "effacez le filtre", "cancelli il filtro"), `stateTodo` "Not taken" / "Non
+   suivies", and the de points as keksdose writes them, "+{n} Pkt". (The draft's "plural" and
+   "written out" had them backwards; the build follows keksdose's files.)
 5. **The guide** gains these notes:
    - the portal's accessible names include "(opens in a new tab)", so tests match by regex
      (kk 6, KS 1);
@@ -303,3 +305,35 @@ All three are in audits/round-045/reviews.md. Where they differ from §9.1–§9
    completion without a date. Hooks and callbacks give `null` for it. The code's comments,
    §9.3 and `completeTour` agree.
 7. **Both new provider props are optional** (keksdose's test render mounts it bare).
+
+### 9.7 What shipped (ui-kit 0.44)
+
+Built 2026-10-17 on feat/0.44.0, as §9.1–§9.5 with §9.6 winning. The adoption is
+docs/adopt-0.44.md.
+
+1. **`TourProvider`** takes `progress?: UseTourProgressOptions` and
+   `onComplete?(tour, {awarded})` (`TourCompletion`); both optional, so a bare test render
+   still mounts it. `start(steps, {tour, …})` carries the one `TourInfo`, and `activeId`
+   falls back to `tour.id`. On the last step's finish the provider writes once, through
+   the same module store and snapshot as `useTourProgress` (`completeStored`, internal),
+   then calls `onComplete(tour, {awarded})`, then the start's `onFinish`. A skip or
+   `stop()` calls neither and writes nothing; a second "Done" before the overlay goes is
+   ignored. Without `progress` or `tour` it still fires, `awarded: undefined` (and `tour`
+   as given). Props are read at the finish, so a new `storageKey` needs no remount (tested).
+2. **`completeTour(storageKey, tour, at?)`** beside `resetTourProgress`, in the barrel and
+   `/tour`: always writes (`at` an ISO string or `Date`, default now; `null` = without a
+   date), keeps the other marks, and notifies this tab's readers directly (tested without
+   a `storage` event).
+3. **One written form**: every write stores `{[id]: ISO | ""}`; a `null` from storage or
+   `migrate` is read as before and written back as `""`. `completed` gives `null` for `""`.
+   `useTourProgress`'s docstring states the shape and the module-level `migrate` reason.
+4. **`UseTourProgressOptions`** was already exported (barrel and `/tour`).
+5. **Words**, keksdose's exactly (§9.4):
+   - en `stateTodo` is "Not taken ({n})" and fr "Non suivies ({n})";
+   - `noMatchesHint` takes the singular: en "…clear the filter.", fr "…effacez le filtre.",
+     it "…cancelli il filtro.", and de-CH "Anderes Wort versuchen oder Filter
+     zurücksetzen.";
+   - the de `points` is "+{n} Pkt".
+6. **Docs**: `openProviderPage`'s docstring names `options.window` as the test seam, with a
+   stub. The showcase's tours page runs the 0.44 pattern (a provider with `progress` and
+   `onComplete`, `start(steps, {tour})`) and seeds with `completeTour`.

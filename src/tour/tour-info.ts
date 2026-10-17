@@ -59,8 +59,8 @@ export interface TourGroup {
 
 /**
  * Which tours are completed and when: tour id → the ISO timestamp of the completion, or
- * `null` for one recorded without a date (kastlan's old id list, §6.2). A tour that is
- * not a key is untaken.
+ * `null` for one recorded without a date (kastlan's old id list, §6.2; stored as `""`,
+ * §9.6.6). A tour that is not a key is untaken.
  */
 export type TourCompletions = Readonly<Record<string, string | null>>;
 

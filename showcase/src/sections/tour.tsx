@@ -12,11 +12,20 @@ import {
   doneCount,
   earnedPoints,
   resetTourProgress,
+  completeTour,
   useTour,
   useTourOptional,
   useTourProgress,
 } from "@eifi1/ui-kit";
-import type { TourCatalogueFilter, TourCompletions, TourGroup, TourInfo, TourLabels, TourStep } from "@eifi1/ui-kit";
+import type {
+  TourCatalogueFilter,
+  TourCompletions,
+  TourGroup,
+  TourInfo,
+  TourLabels,
+  TourStep,
+  UseTourProgressOptions,
+} from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, beat } from "../lib/section";
 
 /**
@@ -518,25 +527,37 @@ const CATALOGUE_STEPS: TourStep[] = [
 
 /** The device key is the app's, always (§6.2). This one is the showcase's own. */
 const SHOWCASE_PROGRESS_KEY = "showcase.tours.completed";
+/** Declared once, at module level: the provider and every reader share one snapshot (§9.6.3). */
+const SHOWCASE_PROGRESS: UseTourProgressOptions = { storageKey: SHOWCASE_PROGRESS_KEY };
 
 export function TourCatalogueDemo() {
-  const { start } = useTour();
-  const progress = useTourProgress({ storageKey: SHOWCASE_PROGRESS_KEY });
-  const [filter, setFilter] = useState<TourCatalogueFilter>({ query: "", group: null, state: "all" });
   const [toast, setToast] = useState<string | null>(null);
+  // Since 0.44 the provider records the finished tour and reports it (§9.6): the app's
+  // points toast lives here, once, and no launch wires `onFinish` + `complete()`.
+  return (
+    <TourProvider
+      progress={SHOWCASE_PROGRESS}
+      onComplete={(tour, { awarded }) => {
+        if (awarded && tour) setToast(`You earned ${tour.points} points!`);
+      }}
+    >
+      <TourCatalogueBody toast={toast} />
+    </TourProvider>
+  );
+}
+
+function TourCatalogueBody({ toast }: { toast: string | null }) {
+  const { start } = useTour();
+  const progress = useTourProgress(SHOWCASE_PROGRESS);
+  const [filter, setFilter] = useState<TourCatalogueFilter>({ query: "", group: null, state: "all" });
   // Seeded once, so the reset tour is there to see: "Goals" was taken before its update.
   const completed: TourCompletions = { "showcase-goals": "2026-09-20T10:00:00Z", ...progress.completed };
 
   const launch = (id: string) => {
     const tour = CATALOGUE_TOURS.find((t) => t.id === id);
     if (!tour) return;
-    start(CATALOGUE_STEPS, {
-      id,
-      // The app's onComplete: record it, and award the points the first time it counts.
-      onFinish: () => {
-        if (progress.complete(tour)) setToast(`You earned ${tour.points} points!`);
-      },
-    });
+    // The start carries its tour; the provider writes the completion and calls onComplete.
+    start(CATALOGUE_STEPS, { tour });
   };
   // Counted by isTourDone: a tour reset by its update counts again once taken again.
   const done = doneCount(CATALOGUE_TOURS, completed);
@@ -554,6 +575,10 @@ export function TourCatalogueDemo() {
         {/* What "Reset this device's settings" calls, where an app registers the key. */}
         <Button variant="ghost" size="sm" onClick={() => resetTourProgress(SHOWCASE_PROGRESS_KEY)}>
           Forget this device&apos;s progress
+        </Button>
+        {/* The writer outside a page (tests, seeds, scripts): every reader here moves at once. */}
+        <Button variant="ghost" size="sm" onClick={() => completeTour(SHOWCASE_PROGRESS_KEY, "showcase-import")}>
+          Seed &ldquo;Bank import&rdquo; as done
         </Button>
       </div>
       <TourCatalogue
@@ -594,7 +619,9 @@ export function TourCatalogueDemo() {
         `useTourUrlSync` starts a tour from `?tour=` and mirrors `&tourStep=`. Progress is `useTourProgress` on this
         device; &quot;Goals&quot; was completed before its update, so it is to do again, with the reason. The header
         counts with `doneCount` and `earnedPoints`, and &ldquo;Forget&rdquo; is `resetTourProgress`, what the device
-        reset calls. Since 0.43.
+        reset calls. Since 0.43. Since 0.44 the `TourProvider` takes `progress` and `onComplete(tour, {'{'}awarded{'}'})`:
+        a launch passes `start(steps, {'{'} tour {'}'})`, the provider writes the completion once and the app shows its
+        toast there. &ldquo;Seed&rdquo; is `completeTour`, for an app&apos;s tests and seeds.
       </Note>
     </Example>
   );

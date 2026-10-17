@@ -39,6 +39,15 @@ export interface OpenProviderPageOptions {
  *     />
  *
  * Resolves with the way it went.
+ *
+ * **The test seam is `options.window`** (docs/tours-harmonization.md §9.5, kk 7): an app's
+ * test passes a stub with `open` (returning a fake tab, or `null` for a blocked pop-up)
+ * and `location.assign`, instead of patching the global `window`:
+ *
+ *     const tab = { opener: {}, closed: false, location: { href: "" }, close: vi.fn() };
+ *     const win = { open: vi.fn(() => tab), location: { assign: vi.fn() } } as unknown as Window;
+ *     await openProviderPage(async () => "https://pay.example/portal", { window: win });
+ *     expect(tab.location.href).toBe("https://pay.example/portal");
  */
 export async function openProviderPage(
   fetchUrl: () => Promise<string>,

@@ -626,7 +626,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       stateDone: (count) => `Completati (${n(count)})`,
       showing: (shown, total) => `${n(shown)} di ${n(total)} tour`,
       noMatches: "Nessun tour corrisponde",
-      noMatchesHint: "Provi un’altra parola o cancelli i filtri.",
+      noMatchesHint: "Provi un’altra parola o cancelli il filtro.",
       clearFilters: "Cancella filtri",
       badgeNew: "Nuovo",
       badgeUpdated: "Aggiornato",
