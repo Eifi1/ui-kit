@@ -255,12 +255,15 @@ rule:
    - The provider needs the progress to know `awarded`, so it takes the same
      `{storageKey, migrate?}` as `useTourProgress`, plus the app's `TourInfo` list.
    - Without these, `onComplete` still fires, with `awarded: undefined`.
+   - **A skip (Skip, Esc) or `stop()` records nothing**: a skipped tour is not finished, so
+     no write, no `onComplete`, no points (KS 3).
 2. **A writer outside a page** (kk 1): `completeTour(storageKey, tour, at?)` beside
    `resetTourProgress`. It writes the kit's shape and notifies every reader in the tab, for
    tests, seeds and scripts.
 3. **The stored shape is documented** (KS 4): `{[id]: ISO instant | ""}` under the app's key.
    An empty string is a completion without a date (a migrated record); the hooks and
-   callbacks give `null` for it (§9.6.6).
+   callbacks give `null` for it (§9.6.6). So `completeTour(…, null)` stores `""`, and every
+   reader gets `null` for it (KS 4).
 4. **keksdose's reviewed words** are the kit's defaults where they differ (kk 5), taken from
    keksdose's locale files: `noMatchesHint` with the singular filter in en, fr and it ("clear
    the filter", "effacez le filtre", "cancelli il filtro"), `stateTodo` "Not taken" / "Non
@@ -321,7 +324,7 @@ docs/adopt-0.44.md.
    ignored. Without `progress` or `tour` it still fires, `awarded: undefined` (and `tour`
    as given). Props are read at the finish, so a new `storageKey` needs no remount (tested).
 2. **`completeTour(storageKey, tour, at?)`** beside `resetTourProgress`, in the barrel and
-   `/tour`: always writes (`at` an ISO string or `Date`, default now; `null` = without a
+   `/tour`: always writes over a readable text (item 8) (`at` an ISO string or `Date`, default now; `null` = without a
    date), keeps the other marks, and notifies this tab's readers directly (tested without
    a `storage` event).
 3. **One written form**: every write stores `{[id]: ISO | ""}`; a `null` from storage or
@@ -337,3 +340,20 @@ docs/adopt-0.44.md.
 6. **Docs**: `openProviderPage`'s docstring names `options.window` as the test seam, with a
    stub. The showcase's tours page runs the 0.44 pattern (a provider with `progress` and
    `onComplete`, `start(steps, {tour})`) and seeds with `completeTour`.
+7. **A key's `migrate` is remembered** (keksdose B-2, build review): the first `migrate`
+   any reader, the provider or `completeTour` passes for a key is kept in a module
+   registry (`rememberMigrate`, internal), so the snapshot no longer depends on which
+   reader came first. A snapshot parsed before the key had a `migrate` is re-parsed, and
+   the key's readers are told after the render. The guide makes one shared options object
+   for the provider and every reader a MUST. Tested (a bare reader first, then one with
+   `migrate`; the provider's `migrate` serving a bare reader).
+8. **No write over an unread record** (keksdose B-1): `completeTour(storageKey, tour, at?,
+   {migrate?})` reads through the given `migrate`, else the key's registered one. When the
+   stored text is neither empty nor the kit's shape and no `migrate` reads it,
+   `completeTour` and `complete` THROW and write nothing; the provider's finish catches it,
+   logs it (`console.error`), writes nothing and reports `awarded: false`, and the tour
+   still ends. Tested on keksdose's zustand-v1 envelope: the registry path keeps the old
+   completions; no migrate throws with the stored text unchanged.
+9. **A dev warning** (keksdose nit): in development (not under vitest), the provider warns
+   once when it has `progress` but a finished tour's start carried no `tour`, so `awarded`
+   stays `undefined`. Tested.

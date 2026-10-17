@@ -18,7 +18,7 @@ import { dirOf, horizontalStep } from "../lib/direction";
 import type { Direction } from "../lib/direction";
 import { DEFAULT_TOUR_LABELS } from "./tour-labels";
 import type { TourInfo } from "./tour-info";
-import { completeStored, type UseTourProgressOptions } from "./use-tour-progress";
+import { completeStored, rememberMigrate, type UseTourProgressOptions } from "./use-tour-progress";
 
 /**
  * `start`/`end` follow the reading direction (`end` is the right side in LTR and the
@@ -89,8 +89,9 @@ interface StartOptions {
 export interface TourCompletion {
   /**
    * `true` when the completion counts anew (the first time, or the first time after the
-   * tour's update, §8): the moment for the app's points toast. `false` for a replay.
-   * `undefined` when the provider has no `progress` or the start carried no `tour`, so
+   * tour's update, §8): the moment for the app's points toast. `false` for a replay, and
+   * when the stored text is in an old shape no `migrate` reads: nothing is overwritten
+   * then, and the error goes to `console.error` (keksdose B-1). `undefined` when the provider has no `progress` or the start carried no `tour`, so
    * nothing was recorded.
    */
   awarded: boolean | undefined;
@@ -148,6 +149,11 @@ export function useTourOptional(): TourContextValue | null {
   return useContext(TourContext);
 }
 
+/** The kit's dev switch (as number-input's): a development build, never under vitest. */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
 /**
  * Provides the guided-tour engine: a dimmed spotlight overlay + step card driven
  * by a list of {@link TourStep}s. Domain-free — the app supplies the steps (copy,
@@ -197,6 +203,13 @@ export function TourProvider({
     progressRef.current = progress;
     onCompleteRef.current = onComplete;
   });
+  // The provider's migrate becomes the key's, for readers that pass none (keksdose B-2).
+  const storageKey = progress?.storageKey;
+  const migrate = progress?.migrate;
+  useLayoutEffect(() => {
+    if (storageKey !== undefined) rememberMigrate(storageKey, migrate);
+  }, [storageKey, migrate]);
+  const warnedNoTourRef = useRef(false);
   // Live mirrors so the step-control callbacks can stay stable (identity-safe for
   // consumers) while still reading the current steps/index. Synced in a layout
   // effect — after the commit, before paint and before any passive effect or event
@@ -228,7 +241,22 @@ export function TourProvider({
     const { tour, onFinish } = optsRef.current;
     const store = progressRef.current;
     // Exactly one write per completion (§9.6.2), so `awarded` is what `complete(tour)` answered.
-    const awarded = store && tour ? completeStored(store.storageKey, store.migrate, tour) : undefined;
+    let awarded: boolean | undefined;
+    if (store && tour) {
+      try {
+        awarded = completeStored(store.storageKey, store.migrate, tour);
+      } catch (error) {
+        // A stored text no migrate reads is left as it is (keksdose B-1); the tour still ends.
+        console.error(error);
+        awarded = false;
+      }
+    } else if (store && !tour && devWarnings() && !warnedNoTourRef.current) {
+      warnedNoTourRef.current = true;
+      console.warn(
+        "[ui-kit] TourProvider has `progress`, but a finished tour's start carried no `tour`: " +
+          "nothing was recorded and `awarded` is undefined. Start it with `start(steps, { tour })`.",
+      );
+    }
     onCompleteRef.current?.(tour, { awarded });
     onFinish?.();
     setSteps(null);

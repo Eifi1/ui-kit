@@ -153,6 +153,47 @@ describe("TourProvider onComplete", () => {
     expect(localStorage.getItem(storageKey)).toBeNull();
   });
 
+  it("the provider's migrate serves a bare reader, and an unreadable record is not overwritten (keksdose B-1, B-2)", async () => {
+    const storageKey = freshKey();
+    const zustand = JSON.stringify({ state: { completed: { intro: "2026-09-01T10:00:00.000Z" } }, version: 1 });
+    localStorage.setItem(storageKey, zustand);
+    const migrate = (raw: unknown) =>
+      (raw as { state?: { completed?: Record<string, string> } } | null)?.state?.completed;
+    const onComplete = vi.fn();
+    const { engine } = setup({ progress: { storageKey, migrate }, onComplete }, <Reader storageKey={storageKey} />);
+    await act(async () => {});
+    expect(screen.getByTestId("reader")).toHaveTextContent("intro");
+    runThrough(engine, { tour: BUDGET });
+    expect(onComplete).toHaveBeenCalledWith(BUDGET, { awarded: true });
+    expect(Object.keys(JSON.parse(localStorage.getItem(storageKey)!))).toEqual(["intro", "budget"]);
+
+    // A key in an old shape that no migrate reads: the finish writes nothing.
+    const other = freshKey();
+    localStorage.setItem(other, zustand);
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const second = vi.fn();
+    const onFinish = vi.fn();
+    const bare = setup({ progress: { storageKey: other }, onComplete: second });
+    runThrough(bare.engine, { tour: BUDGET, onFinish });
+    expect(localStorage.getItem(other)).toBe(zustand);
+    expect(second).toHaveBeenCalledWith(BUDGET, { awarded: false });
+    expect(onFinish).toHaveBeenCalledTimes(1);
+    expect(bare.engine().active).toBe(false);
+    expect(errors.mock.calls.some(([e]) => String(e).includes("not the kit's shape"))).toBe(true);
+    errors.mockRestore();
+  });
+
+  it("in development, warns once when progress is set but a finished start carried no tour", () => {
+    vi.stubEnv("VITEST", "");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { engine } = setup({ progress: { storageKey: freshKey() } });
+    runThrough(engine, { id: "budget" });
+    runThrough(engine, { id: "budget" });
+    expect(warn.mock.calls.filter(([m]) => String(m).includes("carried no `tour`"))).toHaveLength(1);
+    warn.mockRestore();
+    vi.unstubAllEnvs();
+  });
+
   it("mounts bare, and a start's tour is the active id", () => {
     const onFinish = vi.fn();
     const { engine } = setup({});
