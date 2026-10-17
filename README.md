@@ -556,16 +556,16 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**1982 names from 322 modules** — 916 values and 1066 types. _Italic_ is a type-only export.
+**2040 names from 335 modules** — 941 values and 1099 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 1982 |
+| `@eifi1/ui-kit` | 2040 |
 | `@eifi1/ui-kit/chart` | 92 |
-| `@eifi1/ui-kit/shell` | 80 |
+| `@eifi1/ui-kit/shell` | 108 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 24 |
 | `@eifi1/ui-kit/tour` | 7 |
@@ -746,7 +746,7 @@ re-slicing of it, never a second API.
 | `components/description-list` | `DEFAULT_DESCRIPTION_LIST_LABELS`, `DescriptionItem`, `DescriptionList`, _`DescriptionItemProps`_, _`DescriptionListColumns`_, _`DescriptionListDensity`_, _`DescriptionListLabels`_, _`DescriptionListLayout`_, _`DescriptionListProps`_ |
 | `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_, _`FormActionsStack`_, _`FormActionsStickyWithin`_, _`FormActionsSubmitProps`_, _`FormActionsSubmitShortcut`_, _`ResponsiveFormActionsPlacement`_ |
 | `components/write-lock` | `COMMIT_EXCEPT_BILLING`, `DEFAULT_WRITE_LOCK_LABELS`, `useWriteLock`, `writeLockFor`, `WriteLockProvider`, _`CommitScope`_, _`WriteLock`_, _`WriteLockHold`_, _`WriteLockKind`_, _`WriteLockLabels`_, _`WriteLockProviderProps`_ |
-| `components/account-chips` | `ACCOUNT_STATE_TONES`, `AccountStateChip`, `dateColumn`, `DateMark`, `DEFAULT_ACCOUNT_STATE_LABELS`, `RoleChip`, _`AccountState`_, _`AccountStateChipProps`_, _`AccountStateLabels`_, _`DateColumnOptions`_, _`DateMarkProps`_, _`RoleChipProps`_, _`RoleDefinition`_, _`RoleVocabulary`_ |
+| `components/account-chips` | `ACCOUNT_STATE_TONES`, `AccountRoleChip`, `AccountStateChip`, `dateColumn`, `DateMark`, `DEFAULT_ACCOUNT_STATE_LABELS`, `RoleChip`, _`AccountRoleChipProps`_, _`AccountState`_, _`AccountStateChipProps`_, _`AccountStateLabels`_, _`DateColumnOptions`_, _`DateMarkProps`_, _`RoleChipProps`_, _`RoleDefinition`_, _`RoleVocabulary`_ |
 | `components/server-wake` | `DEFAULT_SERVER_WAKE_LABELS`, `ServerWakeNotice`, `useServerWakeStage`, _`ServerWakeLabels`_, _`ServerWakeNoticeProps`_ |
 | `components/share-card` | `DEFAULT_SHARE_CARD_LABELS`, `ShareCard`, `ShareDialog`, `SharePanel`, _`ShareAddRequest`_, _`ShareCandidate`_, _`ShareCardLabels`_, _`ShareCardProps`_, _`ShareDialogProps`_, _`ShareGrantee`_, _`SharePanelProps`_, _`SharePendingGrant`_, _`ShareRole`_ |
 | `components/line-items` | `DEFAULT_LINE_ITEMS_LABELS`, `LineItems`, _`LineItemCellContext`_, _`LineItemsColumn`_, _`LineItemsFieldLabels`_, _`LineItemsLabels`_, _`LineItemsProps`_, _`LineItemsRemoveAlign`_, _`LineItemsRemovePlacement`_, _`LineItemsRowProps`_, _`LineItemsSummary`_, _`LineItemsSummaryTone`_ |
@@ -819,6 +819,13 @@ re-slicing of it, never a second API.
 | `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
 | `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
 | `shell/fill-height` | `FILL_HEIGHT_CLASS`, `FillHeight`, _`FillHeightProps`_ |
+| `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_ |
+| `shell/top-bar-actions` | `TOP_BAR_ACTION_ORDER`, `TopBarActions`, _`TopBarActionsProps`_ |
+| `shell/account-menu-language` | `AccountMenuLanguage`, _`AccountMenuLanguageOption`_, _`AccountMenuLanguageProps`_ |
+| `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
+| `shell/sync-status-indicator` | `syncState`, `SyncStatusIndicator`, _`SyncState`_, _`SyncStatus`_, _`SyncStatusIndicatorProps`_, _`SyncStatusScope`_ |
+| `shell/dev-switchers` | `DEV_ORIGINAL_ROLE_KEY`, `DevSwitchers`, _`DevSwitchersProps`_ |
+| `shell/top-bar-parts-labels` | `DEFAULT_TOP_BAR_PARTS_LABELS`, `useTopBarPartsLabels`, _`DevSwitchersLabels`_, _`SyncStatusLabels`_, _`TopBarPartsLabels`_, _`TourMenuLabels`_ |
 | `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
 
 ### settings
@@ -943,6 +950,11 @@ re-slicing of it, never a second API.
 | `admin/transfer-ownership-dialog` | `DEFAULT_TRANSFER_OWNERSHIP_LABELS`, `TransferOwnershipDialog`, _`TransferCandidate`_, _`TransferOwnershipDialogProps`_, _`TransferOwnershipLabels`_, _`TransferUnavailable`_, _`TransferValues`_ |
 | `admin/invitations-panel` | `DEFAULT_INVITATIONS_LABELS`, `InvitationsPanel`, _`InvitationDraft`_, _`InvitationRow`_, _`InvitationScope`_, _`InvitationSentAnswer`_, _`InvitationsLabels`_, _`InvitationsPanelProps`_, _`InvitationStatus`_ |
 | `admin/admin-parts` | _`AdminPerson`_ |
+| `admin/admin-area-labels` | `DEFAULT_ADMIN_AREA_LABELS`, `useAdminAreaLabels`, _`AdminAreaLabels`_, _`AdminSharedSection`_, _`AdminTileLabels`_ |
+| `admin/admin-sections` | `ADMIN_SECTIONS`, `adminSections`, _`AdminOwnSection`_, _`AdminSectionDefinition`_, _`AdminSectionsOptions`_ |
+| `admin/admin-forbidden` | `AdminForbidden`, _`AdminForbiddenProps`_ |
+| `admin/admin-overview` | `AdminOverview`, `adminWaitingCount`, `AttentionTile`, `DEFAULT_ADMIN_ATTENTION_HREFS`, _`AdminAttention`_, _`AdminAttentionTile`_, _`AdminExtraTile`_, _`AdminOverviewProps`_, _`AttentionTileProps`_ |
+| `admin/admin-tool-links` | `AdminToolLinks`, _`AdminToolLink`_, _`AdminToolLinksProps`_ |
 | `admin/plan-change` | `DEFAULT_PLAN_CHANGE_LABELS`, `PlanChangeConfirm`, `planColumn`, `usePlanChangeResult`, `usePlanColumn`, _`PlanChange`_, _`PlanChangeConfirmProps`_, _`PlanChangeLabels`_, _`PlanChangeLine`_, _`PlanChangeOutcome`_, _`PlanChangeResultOptions`_, _`PlanChangeTone`_, _`PlanColumnOptions`_, _`PlanColumnUsage`_ |
 
 ### billing
@@ -962,9 +974,10 @@ re-slicing of it, never a second API.
 | `billing/checkout-return` | `CHECKOUT_RETURN_PARAM`, `CHECKOUT_RETURN_VALUE`, `checkoutReturnUrl`, `isCheckoutReturn`, `withoutCheckoutReturn` |
 | `billing/checkout-processing` | `checkoutFingerprint`, `checkoutLanded`, `noteCheckoutStarted`, `useCheckoutProcessing`, _`CheckoutOverview`_, _`CheckoutProcessingOptions`_ |
 | `billing/pay-page` | `paddleLocale`, `PAY_PAGE_APPS`, `PAY_PAGE_LANG_PARAM`, `payPageUrl`, _`PaddleEnvironment`_, _`PayPageApp`_ |
-| `billing/billing-overview` | _`BillingOverview`_, _`PaidPrice`_, _`PlanSwitchPreview`_, _`PlanSwitchRequest`_, _`PortalRequest`_, _`PortalTarget`_, _`SubscriptionSource`_ |
+| `billing/billing-overview` | `isPermanentGrant`, _`BillingOverview`_, _`BillingPortalAccess`_, _`PaidPrice`_, _`PlanSwitchPreview`_, _`PlanSwitchRequest`_, _`PortalRequest`_, _`PortalTarget`_, _`SubscriptionSource`_ |
 | `billing/plan-limit-toast` | `usePlanLimitToast`, _`PlanLimitToastOptions`_ |
 | `billing/plan-switch` | `PlanSwitchConfirm`, _`PlanSwitchConfirmProps`_, _`PlanSwitchSide`_ |
+| `billing/cancel-subscription` | `CancelSubscriptionConfirm`, _`CancelSubscriptionConfirmProps`_ |
 
 ### notifications
 

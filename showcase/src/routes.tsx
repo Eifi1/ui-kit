@@ -273,7 +273,7 @@ const CommitControls022Demo = lazySection(() => import("./sections/forms-rhf"), 
 // 0.23.0: the apps' 0.22 adoption round.
 const TopBarMenuHeadingsDemo = lazySection(() => import("./sections/topbar-023-demo"), "TopBarMenuHeadingsDemo");
 // 0.42.0: the top bar's shared parts (docs/top-bar-harmonization.md §3.1).
-const TopBar042Demo = lazySection(() => import("./sections/topbar-042-demo"), "TopBar042Demo");
+const TopBar042Demo = lazySection(() => import("./sections/top-bar-parts"), "TopBar042Demo");
 const Rhf023Demo = lazySection(() => import("./sections/fields-023-demo"), "Rhf023Demo");
 const CountryClear023Demo = lazySection(() => import("./sections/fields-023-demo"), "CountryClear023Demo");
 const AmountClass023Demo = lazySection(() => import("./sections/fields-023-demo"), "AmountClass023Demo");
@@ -327,9 +327,9 @@ const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "Billi
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
 // 0.42: the admin area's template (docs/admin-harmonization.md).
-const AdminWayIn042Demo = lazySection(() => import("./sections/admin-042-demo"), "AdminWayIn042Demo");
-const AdminArea042Demo = lazySection(() => import("./sections/admin-042-demo"), "AdminArea042Demo");
-const AdminForbidden042Demo = lazySection(() => import("./sections/admin-042-demo"), "AdminForbidden042Demo");
+const AdminWayIn042Demo = lazySection(() => import("./sections/admin-area"), "AdminWayIn042Demo");
+const AdminArea042Demo = lazySection(() => import("./sections/admin-area"), "AdminArea042Demo");
+const AdminForbidden042Demo = lazySection(() => import("./sections/admin-area"), "AdminForbidden042Demo");
 // 0.31.0: the Server kit group — server-kit's modules, read out of its release's api.json.
 const ServerModules = lazySection(() => import("./server-kit/server-kit-page"), "ServerModules");
 const ServerKitOverview = lazySection(() => import("./server-kit/server-kit-page"), "ServerKitOverview");
