@@ -21,6 +21,20 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.41.0](https://github.com/Eifi1/ui-kit/compare/v0.40.1...v0.41.0) (2026-10-17)
+
+Round 0.41: the names deprecated in 0.40 are removed. No app used any of them, so the migration is a
+bump (`docs/adopt-0.41.md`); server-kit stays 0.13.1.
+
+### ⚠ BREAKING CHANGES
+
+* `Tabs` no longer accepts `wrap`, and `FeedbackMenuLabels` no longer has
+  `viewFeedback` or `allFeedback`.
+
+### Added
+
+* remove the names deprecated in 0.40 — Tabs `wrap`, two FeedbackMenu labels ([4a1d673](https://github.com/Eifi1/ui-kit/commit/4a1d673e4694cfd38b5a8f880331a75d71057f42))
+
 ## [0.40.1](https://github.com/Eifi1/ui-kit/compare/v0.40.0...v0.40.1) (2026-10-16)
 
 The apps' 0.40 adoption findings, released as one batch once all three had reported (server-kit
