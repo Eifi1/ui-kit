@@ -590,7 +590,7 @@ The language picked on a device is under the app's own key: `useAccountLanguage`
     `shared/i18n/config.ts:19`;
   - views: tables on the kit's default prefix (`app/providers.tsx:55-59` passes none), the
     sidebar `kastlan.sidebarCollapsed` (`app/app-layout.tsx:117`);
-  - usage: tours done (`features/tours/utils/completions.ts:3`), the last page
+  - usage: tours done (`features/tours/use-tours.tsx:19`), the last page
     (`features/landing/access.ts:19`);
   - sign-in `kastlan_rt`, a demo's `kastlan.demoSession` (`shared/api/client.ts:37`, `:41`);
     crash reports, `kastlan.pendingCrashReports` (`shared/feedback/crash-reporter.ts:21`);

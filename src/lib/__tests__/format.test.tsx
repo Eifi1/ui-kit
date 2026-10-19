@@ -53,6 +53,15 @@ describe("formatDate", () => {
     expect(formatDate("2026-07-08", "short", { locale: "de-DE" })).toBe("08.07.26");
   });
 
+  it("a bare ISO date is the day it names in any time zone (round 0.45, N9)", () => {
+    // A calendar day has no zone: west of the device it must not show the day before
+    // (a tour's `updated.date`, the reset line), east of it not the day after.
+    for (const timeZone of ["America/Los_Angeles", "Pacific/Honolulu", "UTC", "Asia/Tokyo", "Pacific/Kiritimati"]) {
+      expect(formatDate("2026-10-10", "medium", { locale: "en-GB", timeZone })).toBe("10 Oct 2026");
+      expect(formatDate("2026-10-10", { day: "numeric", month: "long", timeZone }, { locale: "en-GB" })).toBe("10 October");
+    }
+  });
+
   it("formats timestamps, named styles and Intl options", () => {
     const ts = "2026-07-08T14:05:00Z";
     expect(formatDate(ts, "dateTime", { locale: "en-GB", timeZone: "UTC" })).toBe("8 Jul 2026, 14:05");

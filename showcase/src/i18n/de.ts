@@ -137,6 +137,12 @@ export const de: Dictionary = {
       blurb:
         "Für eine App bezahlen: die Tarifauswahl in zwei Währungen und zwei Abrechnungszeiträumen, der Status des Abonnements, die Banner von der Testphase bis zum Ablauf, Hinweis und Toast zum Tariflimit, die Nur-Lesen-Sperre und die Arten von Sperren, das Portal des Anbieters, der Rückweg aus dem Checkout, die Bezahlseite und der kommerzielle Hinweis im Impressum.",
     },
+    offline: {
+      title: "Offline",
+      short: "Offline",
+      blurb:
+        "Ohne Verbindung arbeiten: der gespeicherte Query-Cache mit seiner Streichliste, die Frage vor dem Abmelden, solange Änderungen warten, der Update-Hinweis, der auf eine Tour wartet, und die Wahl «gemeinsam genutzter Computer».",
+    },
     "auth-account": {
       title: "Anmeldung & Kontosicherheit",
       short: "Anmeldung",
@@ -535,10 +541,10 @@ export const de: Dictionary = {
         "Die Abfrage der Benutzerliste, die vier Admin-Aktionen und ihre Bestätigungsstufen, der Audit-Eintrag, das Löschen in zwei Stufen und der Datenexport.",
     },
     "server-settings": {
-      title: "Einstellungen & Sprache",
+      title: "Einstellungen, Sprache & Touren",
       short: "Einstellungen",
       blurb:
-        "Eine Regel für jeden Body mit Einstellungen — Weggelassenes bleibt, null leert, Unbekanntes wird abgelehnt — und die eine kanonische Sprache des Kontos.",
+        "Eine Regel für jeden Body mit Einstellungen — Weggelassenes bleibt, null leert, Unbekanntes wird abgelehnt — die eine kanonische Sprache des Kontos und sein Tourenfortschritt, bei dem der spätere Abschluss gilt.",
     },
     "server-demo": {
       title: "Demo",
@@ -571,10 +577,10 @@ export const de: Dictionary = {
         "Der Feedback-Vertrag als reine Funktionen — Schemas, Status, die PATCH-Regeln, Nacharbeit, Absturzmeldungen, Löschung — seine Routen als eine Router-Factory, und Anhänge, beurteilt nach ihren Bytes.",
     },
     "server-limits": {
-      title: "Limits, Fehler & CORS",
+      title: "Limits, Fehler, CORS & Sync",
       short: "Limits",
       blurb:
-        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, CORS für einige zusätzliche Origins und das Token des Schedulers auf Job-Routen.",
+        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, CORS für einige zusätzliche Origins das Token des Schedulers auf Job-Routen und die Local-first-Synchronisation: Die jüngste Änderung gilt, Ablehnungen je Änderung.",
     },
     "server-translation-review": {
       title: "Übersetzungsprüfung",
@@ -642,6 +648,14 @@ export const de: Dictionary = {
       "Zahlung wird nach dem Checkout verarbeitet",
       "die Paddle-Bezahlseite ausliefern",
       "Tariflimit als Toast",
+    ],
+    offline: [
+      "Daten für ein Neuladen ohne Verbindung behalten",
+      "den Query-Cache speichern",
+      "nie IBANs auf dem Gerät speichern",
+      "vor dem Abmelden mit ungesendeten Änderungen fragen",
+      "eine neue Version ist verfügbar, neu laden",
+      "dies ist ein gemeinsam genutzter Computer",
     ],
     "auth-account": [
       "Layout der Anmeldeseite",

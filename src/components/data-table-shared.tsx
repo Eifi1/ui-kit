@@ -147,6 +147,21 @@ export function fromOutside(target: EventTarget | null, row: HTMLElement): boole
   return !(target instanceof Node) || !row.contains(target);
 }
 
+/**
+ * What counts as a control of its own inside a clickable row: a click or key press
+ * that lands on one of these belongs to it, not to the row's `onRowClick`. The row's
+ * own link (`rowHref`, marked `data-row-link`) is the exception — it IS the row.
+ */
+const OWN_CONTROL =
+  'a[href],button,input,select,textarea,label,summary,[role="button"],[role="link"],[role="checkbox"],[role="switch"],[role="menuitem"],[role="option"],[contenteditable=""],[contenteditable="true"],[tabindex]:not([tabindex="-1"])';
+
+/** Whether an event on `row` started on a control nested inside it. */
+export function fromOwnControl(target: EventTarget | null, row: HTMLElement): boolean {
+  if (!(target instanceof Element)) return false;
+  const hit = target.closest(OWN_CONTROL);
+  return !!hit && hit !== row && row.contains(hit) && !hit.hasAttribute("data-row-link");
+}
+
 /** A click the APP owns. Anything else — middle, ⌘/Ctrl, Shift, Alt — belongs to
  *  the browser, and the whole feature is not touching it. */
 const isPlainLeftClick = (e: React.MouseEvent) =>
@@ -215,7 +230,9 @@ export function RowLink({
         }
         // Already cancelled above; this phase only decides what opens. A nested
         // control that stopped propagation deliberately never reaches it, which is
-        // exactly how the row behaved before it became a link.
+        // exactly how the row behaved before it became a link — and one that did not
+        // (a select in a phone card's cell, keksdose live #428) is still its own.
+        if (fromOwnControl(e.target, e.currentTarget)) return;
         onActivate?.();
       }}
     >

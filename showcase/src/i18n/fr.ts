@@ -132,6 +132,12 @@ export const fr: Dictionary = {
       blurb:
         "Payer une application\u00a0: le choix de la formule en deux devises et sur deux périodes, l’état de l’abonnement, les bandeaux de l’essai à l’expiration, l’avis et le toast de limite de formule, le verrou de lecture seule et les sortes de verrous, le portail du prestataire, le retour depuis le paiement, la page de paiement et l’avertissement commercial des mentions légales.",
     },
+    offline: {
+      title: "Hors ligne",
+      short: "Hors ligne",
+      blurb:
+        "Travailler sans connexion : le cache de requêtes conservé avec sa liste d’effacement, la question avant de se déconnecter tant que des modifications attendent, l’invite de mise à jour qui attend la fin d’une visite, et le choix « ordinateur partagé ».",
+    },
     "auth-account": {
       title: "Connexion et sécurité du compte",
       short: "Connexion",
@@ -530,10 +536,10 @@ export const fr: Dictionary = {
         "La requête de la liste des utilisateurs, les quatre actions d’administration et leurs niveaux de confirmation, l’entrée d’audit, la suppression en deux temps et l’export des données.",
     },
     "server-settings": {
-      title: "Paramètres et langue",
+      title: "Paramètres, langue et visites",
       short: "Paramètres",
       blurb:
-        "Une seule règle pour tout corps de requête de paramètres — un champ omis est conservé, null l’efface, un champ inconnu est refusé — et l’unique langue canonique du compte.",
+        "Une seule règle pour tout corps de requête de paramètres — un champ omis est conservé, null l’efface, un champ inconnu est refusé — l’unique langue canonique du compte, et sa progression dans les visites guidées, où la dernière complétion l’emporte.",
     },
     "server-demo": {
       title: "Démo",
@@ -566,10 +572,10 @@ export const fr: Dictionary = {
         "Le contrat des retours en fonctions pures — schémas, statuts, règles du PATCH, reprise, signalement des plantages, effacement — ses routes en une fabrique de routeurs, et des pièces jointes jugées sur leurs octets.",
     },
     "server-limits": {
-      title: "Limites, erreurs et CORS",
+      title: "Limites, erreurs, CORS et synchronisation",
       short: "Limites",
       blurb:
-        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, CORS pour quelques origines supplémentaires, et le jeton du planificateur sur les routes de tâches.",
+        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, CORS pour quelques origines supplémentaires, le jeton du planificateur sur les routes de tâches, et la synchronisation local-first : la modification la plus récente l’emporte, refus par modification.",
     },
     "server-translation-review": {
       title: "Relecture des traductions",
@@ -637,6 +643,14 @@ export const fr: Dictionary = {
       "paiement en cours de traitement au retour du paiement",
       "servir la page de paiement Paddle",
       "limite de formule sous forme de toast",
+    ],
+    offline: [
+      "garder les données pour un rechargement hors ligne",
+      "conserver le cache des requêtes",
+      "ne jamais stocker d’IBAN sur l’appareil",
+      "demander avant de se déconnecter avec des modifications non synchronisées",
+      "une nouvelle version est disponible, recharger",
+      "c’est un ordinateur partagé",
     ],
     "auth-account": [
       "mise en page de la connexion",

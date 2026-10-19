@@ -148,11 +148,20 @@ try {
     return run("node", [probe], scratch).trim().split("\n");
   };
 
-  // Entries that exist to hold an optional peer, and that peer.
-  const optionalEntries = { "./rhf": "react-hook-form" };
-  for (const [entry, peer] of Object.entries(optionalEntries)) {
+  // Entries that exist to hold optional peers, and those peers. 0.45: `/offline` holds the
+  // TanStack persister and idb-keyval (docs/local-first-harmonization.md §1.6).
+  const optionalEntries = {
+    "./rhf": ["react-hook-form"],
+    "./offline": [
+      "@tanstack/react-query",
+      "@tanstack/react-query-persist-client",
+      "@tanstack/query-async-storage-persister",
+      "idb-keyval",
+    ],
+  };
+  for (const [entry, peers] of Object.entries(optionalEntries)) {
     if (!subpaths.includes(entry)) fail(`${entry} is not in the exports map`);
-    if (!pkg.peerDependenciesMeta?.[peer]?.optional) fail(`${peer} is not an optional peer`);
+    for (const peer of peers) if (!pkg.peerDependenciesMeta?.[peer]?.optional) fail(`${peer} is not an optional peer`);
   }
   const plain = subpaths.filter((s) => !(s in optionalEntries));
   for (const line of runProbe(probeLines(plain))) {
@@ -161,15 +170,16 @@ try {
   }
 
   log("• an optional peer's entry needs that peer, and nothing else does");
-  for (const [entry, peer] of Object.entries(optionalEntries)) {
+  for (const [entry, peers] of Object.entries(optionalEntries)) {
     const [line] = runProbe(probeLines([entry]));
     // Resolution failure names the package it could not find. Anything else — a load
-    // that succeeds, or fails on a different package — means the entry is not what
-    // the manifest says it is.
-    if (line.startsWith("ERR") && line.includes(`'${peer}'`)) ok(`${entry} refuses to load without ${peer}`);
-    else fail(`${entry} without ${peer}: expected a missing-package error, got "${line}"`);
+    // that succeeds, or fails on a package that is not one of the entry's peers — means
+    // the entry is not what the manifest says it is.
+    const missing = peers.find((peer) => line.includes(`'${peer}'`) || line.includes(`'${peer}/`));
+    if (line.startsWith("ERR") && missing) ok(`${entry} refuses to load without ${missing}`);
+    else fail(`${entry} without ${peers.join(", ")}: expected a missing-package error, got "${line}"`);
   }
-  const optionalPeers = [...new Set(Object.values(optionalEntries))];
+  const optionalPeers = [...new Set(Object.values(optionalEntries).flat())];
   run(
     "npm",
     [

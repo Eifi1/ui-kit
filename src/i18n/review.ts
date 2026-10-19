@@ -353,6 +353,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "adminActionLog.by": [["{{actor}}"]],
   "adminActionLog.filteredTo": [["{{target}}"]],
   "adminActionLog.filterBy": [["{{target}}"]],
+  // 0.45.0 (admin §9.4): a company rename that logged both names.
+  "adminActionLog.renamedFromTo": [["{{from}}", "{{to}}"]],
   "transferOwnership.title": [["{{name}}"]],
   "transferOwnership.unavailable": [["{{account}}", "{{reason}}"]],
   "invitations.sent": [["{{date}}"]],
@@ -406,6 +408,12 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // 0.42.0 (docs/admin-harmonization.md §3.1): the menu row's count, the 403 page's app,
   // the users tile's new accounts.
   "adminArea.waiting": one,
+  // 0.45.0 (admin §9.3.4): an IconButton's name with its waiting count.
+  "adminArea.waitingLabel": [["{{label}}", 1], ["{{label}}", 3]],
+  // 0.45.0 (admin §9.2.4): the test mail's transport, masked address and limiter.
+  "mailTestCard.transport": [["{{backend}}"]],
+  "mailTestCard.sent": [["{{address}}"]],
+  "mailTestCard.rateLimited": [[], [30], [300]],
   "adminArea.forbiddenBody": [["{{app}}"]],
   "adminArea.tiles.usersNew": one,
   // 0.42.0 (docs/top-bar-harmonization.md §3.1): the sync indicator's counts, its time, the
@@ -431,4 +439,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "tourCatalogue.steps": one,
   "tourCatalogue.duration": one,
   "tourCatalogue.completedOn": [["{{date}}"]],
+  // 0.45.0 (docs/local-first-harmonization.md §1.6): the sign-out question's count, in
+  // both word sets.
+  "signOutPending.lost": one,
+  "signOutPending.kept": one,
 };

@@ -234,6 +234,46 @@ describe("react-hook-form stays behind @eifi1/ui-kit/rhf", () => {
   });
 });
 
+/**
+ * 0.45 (docs/local-first-harmonization.md §1.6): the persisted query cache needs TanStack
+ * Query and idb-keyval, optional peers of `@eifi1/ui-kit/offline` alone — the same rule as
+ * react-hook-form's. An app that never persists a cache installs none of them.
+ */
+describe("the offline peers stay behind @eifi1/ui-kit/offline", () => {
+  const PEERS = [
+    "@tanstack/react-query",
+    "@tanstack/react-query-persist-client",
+    "@tanstack/query-async-storage-persister",
+    "idb-keyval",
+  ];
+
+  it.each(PEERS)("%s is imported by the offline entry's modules and nowhere else", (peer) => {
+    const importers = importedPackages().get(peer) ?? [];
+    expect(importers.length).toBeGreaterThan(0);
+    const outside = importers.filter((file) => !/^src\/offline(\.ts|\/)/.test(file));
+    expect(outside, `${peer} imported outside src/offline*`).toEqual([]);
+  });
+
+  it.each(PEERS)("%s is an optional peer, and a devDependency for this repo's own tests", (peer) => {
+    expect(pkg.peerDependencies[peer]).toBeDefined();
+    expect(pkg.peerDependenciesMeta?.[peer]?.optional).toBe(true);
+    expect(pkg.devDependencies[peer]).toBeDefined();
+    expect(pkg.dependencies[peer]).toBeUndefined();
+  });
+
+  it("none is reached from the main barrel, however deep the re-export", () => {
+    const fromBarrel = packagesReachedFrom("src/index.ts");
+    expect(fromBarrel).toContain("react");
+    for (const peer of PEERS) expect(fromBarrel).not.toContain(peer);
+    const fromOffline = packagesReachedFrom("src/offline.ts");
+    for (const peer of PEERS) expect(fromOffline).toContain(peer);
+  });
+
+  it("is an exports entry", () => {
+    expect(pkg.exports["./offline"]).toEqual({ types: "./dist/offline.d.ts", import: "./dist/offline.js" });
+  });
+});
+
 describe("@eifi1/ui-kit/testing is pure (0.33)", () => {
   // The guard an app runs from its own test suite (docs/colour-roles-harmonization.md
   // §8.3): browser-safe like the rest of the kit, so it runs under jsdom or node alike.

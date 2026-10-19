@@ -135,6 +135,12 @@ export const hu: Dictionary = {
       blurb:
         "Fizetés egy alkalmazásért: a csomagválasztó két pénznemben és két időszakkal, az előfizetés állapota, a bannerek a próbaidőtől a lejáratig, a csomagkorlát-értesítés és -toast, a csak olvasható zár és a zárak fajtái, a szolgáltató portálja, a visszatérés a fizetésből, a fizetési oldal és az impresszum kereskedelmi nyilatkozata.",
     },
+    offline: {
+      title: "Offline",
+      short: "Offline",
+      blurb:
+        "Munka kapcsolat nélkül: a mentett lekérdezés-gyorsítótár a törlendő mezők listájával, a kérdés kijelentkezés előtt, amíg módosítások várnak, a frissítési értesítés, amely kivárja egy bemutató végét, és a „közös használatú számítógép” választás.",
+    },
     "auth-account": {
       title: "Bejelentkezés és fiókbiztonság",
       short: "Belépés",
@@ -533,10 +539,10 @@ export const hu: Dictionary = {
         "A felhasználólista lekérdezése, a négy adminisztrátori művelet és megerősítési szintjeik, az auditbejegyzés, a kétlépcsős törlés és az adatexport.",
     },
     "server-settings": {
-      title: "Beállítások és nyelv",
+      title: "Beállítások, nyelv és bemutatók",
       short: "Beállítások",
       blurb:
-        "Egyetlen szabály minden beállításokat küldő kéréstörzsre — a kihagyott mező megmarad, a null törli, az ismeretlen mezőt elutasítja — és a fiók egyetlen kanonikus nyelve.",
+        "Egyetlen szabály minden beállításokat küldő kéréstörzsre — a kihagyott mező megmarad, a null törli, az ismeretlen mezőt elutasítja — a fiók egyetlen kanonikus nyelve, és a bemutatók haladása, ahol a későbbi teljesítés érvényes.",
     },
     "server-demo": {
       title: "Demó",
@@ -569,10 +575,10 @@ export const hu: Dictionary = {
         "A visszajelzési szerződés tiszta függvényekként — sémák, állapotok, a PATCH-szabályok, átdolgozás, összeomlások rögzítése, törlés —, az útvonalai egyetlen routergyárként, és a mellékletek, amelyeket a bájtjaik alapján ítél meg.",
     },
     "server-limits": {
-      title: "Korlátok, hibák és CORS",
+      title: "Korlátok, hibák, CORS és szinkronizálás",
       short: "Korlátok",
       blurb:
-        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, és az ütemező tokenje a feladatútvonalakon.",
+        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, az ütemező tokenje a feladatútvonalakon, és a local-first szinkronizálás: a legutóbbi módosítás nyer, elutasítás módosításonként.",
     },
     "server-translation-review": {
       title: "Fordítások ellenőrzése",
@@ -640,6 +646,14 @@ export const hu: Dictionary = {
       "fizetés feldolgozás alatt a checkout után",
       "a Paddle fizetési oldal kiszolgálása",
       "csomagkorlát toast-értesítésként",
+    ],
+    offline: [
+      "adatok megőrzése offline újratöltéshez",
+      "a lekérdezés-gyorsítótár mentése",
+      "soha ne tároljon IBAN-t az eszközön",
+      "kérdezzen kijelentkezés előtt szinkronizálatlan módosításoknál",
+      "új verzió érhető el, újratöltés",
+      "ez egy közös használatú számítógép",
     ],
     "auth-account": [
       "bejelentkező oldal elrendezése",

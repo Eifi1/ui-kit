@@ -140,6 +140,12 @@ export const en: Dictionary = {
       blurb:
         "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
     },
+    offline: {
+      title: "Offline",
+      short: "Offline",
+      blurb:
+        "Working without a connection: the persisted query cache with its scrub list, the question before signing out while changes still wait, the update prompt that waits for a tour, and the shared-computer choice.",
+    },
     "auth-account": {
       title: "Sign-in & account security",
       short: "Auth",
@@ -533,10 +539,10 @@ export const en: Dictionary = {
         "The user list's query, the four admin actions and their confirmation levels, the audit entry, two-stage deletion and the data export.",
     },
     "server-settings": {
-      title: "Settings & language",
+      title: "Settings, language & tours",
       short: "Settings",
       blurb:
-        "One rule for every settings body — left out keeps, null clears, unknown is refused — and the account's one canonical language.",
+        "One rule for every settings body — left out keeps, null clears, unknown is refused — the account's one canonical language, and its tour progress, where the later completion wins.",
     },
     "server-demo": {
       title: "Demo",
@@ -569,10 +575,10 @@ export const en: Dictionary = {
         "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — its routes as one router factory, and attachments judged by their bytes.",
     },
     "server-limits": {
-      title: "Limits, errors & CORS",
+      title: "Limits, errors, CORS & sync",
       short: "Limits",
       blurb:
-        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, and the scheduler's token on job routes.",
+        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change.",
     },
     "server-translation-review": {
       title: "Translation review",
@@ -640,6 +646,14 @@ export const en: Dictionary = {
       "payment being processed after the checkout",
       "serve the Paddle pay page",
       "plan limit as a toast",
+    ],
+    offline: [
+      "keep data for an offline reload",
+      "persist the query cache",
+      "never store IBANs on the device",
+      "ask before signing out with unsynced changes",
+      "a new version is available, reload",
+      "this is a shared computer",
     ],
     "auth-account": [
       "login page layout",

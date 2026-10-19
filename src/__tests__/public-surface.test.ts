@@ -10,6 +10,7 @@ import * as shell from "../shell";
 import * as tour from "../tour";
 import * as wizard from "../wizard";
 import * as rhf from "../rhf";
+import * as offline from "../offline";
 import * as tableText from "../table-text";
 import * as dates from "../lib/dates";
 import * as currencies from "../currencies";
@@ -266,7 +267,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // device reset's, and `doneCount` / `earnedPoints`, the header's counts by `isTourDone`.
   // 0.44.0 (+1, docs/tours-harmonization.md §9.2, here and in /tour): `completeTour`, the
   // progress writer outside a page.
-  ["@eifi1/ui-kit", barrel, 959],
+  // 0.45.0 (+6, admin §9 and tours §10): `MailTestCard`, `DEFAULT_MAIL_TEST_CARD_LABELS`,
+  // `MAIL_TEST_ANCHOR`, `maskMailAddress`, and from /shell and /tour `AdminWaitingBadge`,
+  // `signOutTourProgress`.
+  ["@eifi1/ui-kit", barrel, 965],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -293,11 +297,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.42.0 (+2): `adminMenuEntry`, `AdminMenuRow` (docs/admin-harmonization.md §6.6).
   // 0.42.0 (+10): the top bar's parts (docs/top-bar-harmonization.md §3.1, see the barrel).
   // 0.43.0 (+1): `useAdminMenuEntry` (the 0.42 adoptions, kastlan 2).
-  ["@eifi1/ui-kit/shell", shell, 56],
+  ["@eifi1/ui-kit/shell", shell, 57],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).
-  ["@eifi1/ui-kit/tour", tour, 17],
+  ["@eifi1/ui-kit/tour", tour, 18],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.
   // kastlan 51/52: `IntegerField` and `MoneyField` (+2). Showcase audit: `splitFileName` (+1).
@@ -318,6 +322,12 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.35.0: the shadcn scaffold — FormField, useFormField, FormItem, FormLabel,
   // FormControl, FormDescription, FormMessage — is the bound fields' own (API-6f) (−7).
   ["@eifi1/ui-kit/rhf", rhf, 22],
+  // 0.45.0: local-first phase 1 (docs/local-first-harmonization.md §1.6) —
+  // `createQueryPersistence`, `DEFAULT_SCRUB_FIELDS`, `SignOutPendingDialog`, `PwaUpdatePrompt`,
+  // `SharedComputerChoice`, `isSharedComputer`, `setSharedComputer` and the three
+  // `DEFAULT_*_LABELS`. Standalone: its TanStack and idb-keyval peers stay out of the barrel.
+  // `isCacheSafe` (+1, keksdose's build review: its query-client tests use it).
+  ["@eifi1/ui-kit/offline", offline, 11],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8
@@ -359,6 +369,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
  */
 const STANDALONE = new Set([
   "@eifi1/ui-kit/rhf",
+  "@eifi1/ui-kit/offline",
   "@eifi1/ui-kit/table-text",
   "@eifi1/ui-kit/dates",
   // Test helpers, never part of an app's bundle.

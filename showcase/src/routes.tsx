@@ -24,6 +24,7 @@ import {
   ClipboardCopy,
   Command,
   CreditCard,
+  CloudOff,
   Compass,
   Contrast,
   Component as ComponentIcon,
@@ -325,6 +326,8 @@ const RowActions033Demo = lazySection(() => import("./sections/text-size-033-dem
 const LabelAbove033Demo = lazySection(() => import("./sections/text-size-033-demo"), "LabelAbove033Demo");
 const Billing033Demo = lazySection(() => import("./sections/billing-033-demo"), "Billing033Demo");
 const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "BillingSwitchDemo");
+// 0.45: local-first phase 1, @eifi1/ui-kit/offline (docs/local-first-harmonization.md §1.6).
+const OfflineDemo = lazySection(() => import("./sections/offline-demo"), "OfflineDemo");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
 // 0.42: the admin area's template (docs/admin-harmonization.md).
@@ -1365,7 +1368,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
         icon: UserCog,
-        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult", "AccountRoleChip", "adminMenuEntry", "AdminMenuRow", "ADMIN_SECTIONS", "adminSections", "AdminOverview", "AttentionTile", "adminWaitingCount", "AdminToolLinks", "AdminForbidden", "adminSectionOrder", "useAdminMenuEntry"],
+        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult", "AccountRoleChip", "adminMenuEntry", "AdminMenuRow", "ADMIN_SECTIONS", "adminSections", "AdminOverview", "AttentionTile", "adminWaitingCount", "AdminToolLinks", "AdminForbidden", "adminSectionOrder", "useAdminMenuEntry", "AdminWaitingBadge", "MailTestCard"],
         Body: () => (
           <>
             <AdminWayIn042Demo />
@@ -1514,6 +1517,18 @@ export const GROUPS: ShowcaseGroup[] = [
           </>
         ),
       },
+      {
+        // 0.45: what an app keeps on the device, and asks before it lets it go. In API, not App
+        // chrome: that group is at its ten pages (the phone's row of page pills).
+        slug: "offline",
+        title: "Offline",
+        short: "Offline",
+        blurb:
+          "Working without a connection: the persisted query cache with its scrub list, the question before signing out while changes still wait, the update prompt that waits for a tour, and the shared-computer choice.",
+        icon: CloudOff,
+        components: ["createQueryPersistence", "DEFAULT_SCRUB_FIELDS", "SignOutPendingDialog", "PwaUpdatePrompt", "SharedComputerChoice", "isSharedComputer", "setSharedComputer"],
+        Body: () => <OfflineDemo />,
+      },
     ],
   },
   {
@@ -1550,12 +1565,12 @@ export const GROUPS: ShowcaseGroup[] = [
       }),
       serverPage({
         slug: "server-settings",
-        title: "Settings & language",
+        title: "Settings, language & tours",
         short: "Settings",
         blurb:
-          "One rule for every settings body — left out keeps, null clears, unknown is refused — and the account's one canonical language.",
+          "One rule for every settings body — left out keeps, null clears, unknown is refused — the account's one canonical language, and its tour progress, where the later completion wins.",
         icon: SettingsIcon,
-        serverModules: ["settings"],
+        serverModules: ["settings", "tours", "tours.router"],
       }),
       serverPage({
         slug: "server-demo",
@@ -1609,12 +1624,12 @@ export const GROUPS: ShowcaseGroup[] = [
       }),
       serverPage({
         slug: "server-limits",
-        title: "Limits, errors & CORS",
+        title: "Limits, errors, CORS & sync",
         short: "Limits",
         blurb:
-          "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, and the scheduler's token on job routes.",
+          "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change.",
         icon: ShieldAlert,
-        serverModules: ["limiter", "errors", "cors", "jobs"],
+        serverModules: ["limiter", "errors", "cors", "jobs", "sync"],
       }),
       serverPage({
         slug: "server-translation-review",

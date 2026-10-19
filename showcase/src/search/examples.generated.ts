@@ -684,6 +684,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TourStep — the shape a step actually takes",
     "Tour — the step after a spotlighted one",
     "TourCatalogue — the tours page body",
+    "useTourProgress with an account (0.45)",
   ],
   "command-palette": [
     "CommandPalette",
@@ -818,6 +819,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   ],
   "user-admin": [
     "The way in — useAdminMenuEntry, AccountRoleChip",
+    "AdminWaitingBadge — the count on an IconButton",
+    "MailTestCard — “Send a test mail to me”",
     "The admin area — adminSections, AdminOverview, AdminToolLinks",
     "One tile — AttentionTile",
     "The 403 page — AdminForbidden",
@@ -956,6 +959,12 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "useSearchParamsState — a filter object in the URL",
     "useSearchParamState — setters called in a row compose",
   ],
+  "offline": [
+    "createQueryPersistence — the persisted query cache",
+    "SignOutPendingDialog — before a sign-out while changes wait",
+    "PwaUpdatePrompt — “A new version is available”",
+    "SharedComputerChoice — on the sign-in form",
+  ],
   "server-auth": [
     "auth · Functions",
     "auth · Classes",
@@ -974,6 +983,13 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "settings · Functions",
     "settings · Classes",
     "settings · Constants",
+    "tours · Functions",
+    "tours · Classes",
+    "tours · Models",
+    "tours · Protocols",
+    "tours · Constants",
+    "tours.router · Functions",
+    "tours.router · Classes",
   ],
   "server-demo": [
     "demo · Functions",
@@ -1000,6 +1016,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "mail · Rendered mails",
     "mail · Functions",
     "mail · Classes",
+    "mail · Models",
     "mail · Enums",
     "mail · Protocols",
     "mail · Constants",
@@ -1040,6 +1057,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "jobs · Classes",
     "jobs · Models",
     "jobs · Constants",
+    "sync · Functions",
+    "sync · Classes",
+    "sync · Models",
+    "sync · Protocols",
+    "sync · Constants",
   ],
   "server-translation-review": [
     "translation_review · Functions",
@@ -1419,6 +1441,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   "url-state": [
     "UrlStateDemo",
     "SearchParams025Demo",
+  ],
+  "offline": [
+    "OfflineDemo",
   ],
   "server-auth": [
     "ServerModules",

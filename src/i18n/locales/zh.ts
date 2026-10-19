@@ -1321,11 +1321,14 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       },
       // 0.34 (§11.5): whole phrases per noun. `team` is Kurvenschmiede's "团队"; `company`
       // keeps `actions.membership_remove`'s string.
+      renamedFromTo: (from, to) => `从 ${from} 改为 ${to}`,
       groupActions: {
         group: {
           group_create: "群组已创建",
           group_rename: "群组已重命名",
           group_delete: "群组已删除",
+          group_deactivate: "群组已停用",
+          group_reactivate: "群组已重新激活",
           membership_add: "已添加到群组",
           membership_role: "群组中的角色已更改",
           membership_remove: "已从群组移除",
@@ -1335,6 +1338,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           group_create: "团队已创建",
           group_rename: "团队已重命名",
           group_delete: "团队已删除",
+          group_deactivate: "团队已停用",
+          group_reactivate: "团队已重新激活",
           membership_add: "已添加到团队",
           membership_role: "团队中的角色已更改",
           membership_remove: "已从团队移除",
@@ -1344,6 +1349,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           group_create: "公司已创建",
           group_rename: "公司已重命名",
           group_delete: "公司已删除",
+          group_deactivate: "公司已停用",
+          group_reactivate: "公司已重新激活",
           membership_add: "已添加到公司",
           membership_role: "公司中的角色已更改",
           membership_remove: "已从公司移除",
@@ -1353,6 +1360,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           group_create: "预算已创建",
           group_rename: "预算已重命名",
           group_delete: "预算已删除",
+          group_deactivate: "预算已停用",
+          group_reactivate: "预算已重新激活",
           membership_add: "已添加到预算",
           membership_role: "预算中的角色已更改",
           membership_remove: "已从预算移除",
@@ -1754,9 +1763,21 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       moreTitle: "更多页面",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words.
+    mailTestCard: {
+      title: "测试邮件",
+      description: "通过本安装发送所有邮件所用的传输方式，向您自己的地址发送一封邮件。",
+      transport: (backend) => `传输方式：${backend}`,
+      action: "给我发送测试邮件",
+      sent: (address) => `已发送至 ${address}。请查看收件箱。`,
+      console: "控制台传输只记录邮件，未发送任何邮件。",
+      failed: "无法发送。服务器日志中有服务商的回复。",
+      rateLimited,
+      keywords: "测试邮件 邮件 电子邮件 传输 smtp resend 控制台 发送 投递",
+    },
     adminArea: {
       title: "管理",
       waiting: (count) => `${n(count)} 项待处理`,
+      waitingLabel: (label, count) => `${label}，${n(count)} 项待处理`,
       forbiddenTitle: "仅限管理员",
       forbiddenBody: (appName) => `管理员在这里管理 ${appName}。您的账户无法打开此页面。`,
       forbiddenHome: "前往首页",
@@ -1821,6 +1842,25 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         backTo: (role) => `返回 ${role}`,
         billingOff: "本地已关闭计费：切换套餐不会改变任何内容",
       },
+    },
+    // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
+    // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.
+    signOutPending: {
+      title: "部分修改尚未保存到服务器",
+      lost: (count) => `${n(count)} 项修改仍在等待同步。退出登录会清除此设备上的副本，而这是唯一的副本。`,
+      kept: (count) => `${n(count)} 项修改仍在等待同步。它们会为您保留在此设备上，并在您下次在此登录时同步。`,
+      syncNow: "立即同步",
+      signOutAnyway: "仍然退出登录",
+      discardWaiting: "放弃等待中的修改",
+      cancel: "取消",
+    },
+    pwaUpdate: {
+      updateAvailable: "有新版本可用。",
+      reload: "重新加载",
+    },
+    sharedComputer: {
+      label: "这是一台共用电脑",
+      hint: "此设备上不会保留您的数据副本。页面将只能在联网时打开。",
     },
   };
 }

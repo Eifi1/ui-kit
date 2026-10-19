@@ -100,6 +100,10 @@ import { DEFAULT_ROW_ACTIONS_LABELS } from "../components/row-actions-labels";
 import { DEFAULT_APP_SHELL_MORE_LABELS } from "../shell/app-shell-labels";
 import { DEFAULT_ACCOUNT_STATE_LABELS } from "../components/account-chips-labels";
 import { DEFAULT_ADMIN_AREA_LABELS } from "../admin/admin-area-labels";
+import { DEFAULT_MAIL_TEST_CARD_LABELS } from "../admin/mail-test-card-labels";
+import { DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS } from "../offline/sign-out-pending-dialog-labels";
+import { DEFAULT_PWA_UPDATE_PROMPT_LABELS } from "../offline/pwa-update-prompt-labels";
+import { DEFAULT_SHARED_COMPUTER_LABELS } from "../offline/shared-computer-labels";
 import { DEFAULT_TOP_BAR_PARTS_LABELS } from "../shell/top-bar-parts-labels";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card-labels";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog-labels";
@@ -262,4 +266,8 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   notifications: DEFAULT_NOTIFICATIONS_LABELS,
   adminArea: DEFAULT_ADMIN_AREA_LABELS,
   topBarParts: DEFAULT_TOP_BAR_PARTS_LABELS,
+  mailTestCard: DEFAULT_MAIL_TEST_CARD_LABELS,
+  signOutPending: DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS,
+  pwaUpdate: DEFAULT_PWA_UPDATE_PROMPT_LABELS,
+  sharedComputer: DEFAULT_SHARED_COMPUTER_LABELS,
 };

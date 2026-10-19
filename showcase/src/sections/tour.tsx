@@ -12,6 +12,7 @@ import {
   doneCount,
   earnedPoints,
   resetTourProgress,
+  signOutTourProgress,
   completeTour,
   useTour,
   useTourOptional,
@@ -24,6 +25,8 @@ import type {
   TourInfo,
   TourLabels,
   TourStep,
+  TourProgressAccount,
+  TourProgressBody,
   UseTourProgressOptions,
 } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, beat } from "../lib/section";
@@ -535,14 +538,124 @@ export function TourCatalogueDemo() {
   // Since 0.44 the provider records the finished tour and reports it (§9.6): the app's
   // points toast lives here, once, and no launch wires `onFinish` + `complete()`.
   return (
-    <TourProvider
-      progress={SHOWCASE_PROGRESS}
-      onComplete={(tour, { awarded }) => {
-        if (awarded && tour) setToast(`You earned ${tour.points} points!`);
-      }}
+    <>
+      <TourProvider
+        progress={SHOWCASE_PROGRESS}
+        onComplete={(tour, { awarded }) => {
+          if (awarded && tour) setToast(`You earned ${tour.points} points!`);
+        }}
+      >
+        <TourCatalogueBody toast={toast} />
+      </TourProvider>
+      <TourAccountDemo />
+    </>
+  );
+}
+
+/* ── 0.45: progress on the account (§10) ─────────────────────────────────── */
+
+/** A pretend `GET`/`PATCH /tours/progress`: server-kit's merge, the later completion wins. */
+const ACCOUNT_SERVER: Record<string, string> = { "showcase-budget": "2026-10-02T08:00:00Z" };
+const accountState = { online: true, requests: [] as string[] };
+const laterOf = (a: string | undefined, b: string) =>
+  a === undefined || a === "" ? b : b === "" ? a : Date.parse(b) > Date.parse(a) ? b : a;
+const unreachable = () => Object.assign(new Error("Failed to fetch"), { status: undefined });
+
+/** The stub's account, defined once at module level as an app's is. */
+const SHOWCASE_ACCOUNT: TourProgressAccount = {
+  load: async () => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    if (!accountState.online) throw unreachable();
+    accountState.requests.push("GET");
+    return { completed: { ...ACCOUNT_SERVER } };
+  },
+  save: async (body: TourProgressBody) => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    if (!accountState.online) throw unreachable();
+    accountState.requests.push(`PATCH ${JSON.stringify(body)}`);
+    for (const [id, at] of Object.entries(body.completed ?? {})) ACCOUNT_SERVER[id] = laterOf(ACCOUNT_SERVER[id], at);
+    for (const id of body.forget ?? []) delete ACCOUNT_SERVER[id];
+    return { completed: { ...ACCOUNT_SERVER } };
+  },
+};
+/** Per account: a prefix plus the user id (§10.2.6). */
+const ACCOUNT_KEY = "showcase.tours.account:ada";
+const ACCOUNT_PROGRESS: UseTourProgressOptions = { storageKey: ACCOUNT_KEY, account: SHOWCASE_ACCOUNT };
+
+function TourAccountDemo() {
+  const [signedIn, setSignedIn] = useState(true);
+  const [online, setOnline] = useState(true);
+  return (
+    <Example
+      label="useTourProgress with an account (0.45)"
+      hint="the device key as the account's cache, the :pending record, signOutTourProgress (docs/tours-harmonization.md §10)"
     >
-      <TourCatalogueBody toast={toast} />
-    </TourProvider>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            if (signedIn) signOutTourProgress(ACCOUNT_KEY);
+            setSignedIn(!signedIn);
+          }}
+        >
+          {signedIn ? "Sign out" : "Sign in as Ada"}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            accountState.online = !online;
+            setOnline(!online);
+            if (!online) window.dispatchEvent(new Event("online"));
+          }}
+        >
+          {online ? "Make the server unreachable" : "Reach the server again"}
+        </Button>
+      </div>
+      {signedIn ? <TourAccountBody /> : <Note>Signed out: the cache is gone, the pending record stays for Ada.</Note>}
+      <Note>
+        With {"`account: {load, save, adopt?}`"} the device key is the account&apos;s cache: the page paints from it,
+        loads the account on the first reader, on `online` and after each save. A completion goes to the cache and to
+        `&lt;key&gt;:pending`, sent as one PATCH; a failure with no answer keeps it, a 403 or 422 drops it.
+        `signOutTourProgress(key)` removes the cache only and keeps the pending record for its owner. kastlan passes
+        `adopt: {"{"}storageKey, discard: true{"}"}` to drop its old device-wide record. Nothing leaves this page.
+      </Note>
+    </Example>
+  );
+}
+
+function TourAccountBody() {
+  const progress = useTourProgress(ACCOUNT_PROGRESS);
+  const [, setTick] = useState(0);
+  const pending = typeof window === "undefined" ? null : window.localStorage.getItem(`${ACCOUNT_KEY}:pending`);
+  return (
+    <div className="space-y-2 text-sm">
+      <div className="flex flex-wrap gap-2">
+        {CATALOGUE_TOURS.slice(0, 3).map((tour) => (
+          <Button
+            key={tour.id}
+            size="sm"
+            variant={progress.completed[tour.id] !== undefined ? "primary" : "secondary"}
+            onClick={() => {
+              if (progress.completed[tour.id] !== undefined) progress.reset(tour.id);
+              else progress.complete(tour);
+              setTimeout(() => setTick((t) => t + 1), 800);
+            }}
+          >
+            {progress.completed[tour.id] !== undefined ? `${tour.title}: done` : `Complete ${tour.title}`}
+          </Button>
+        ))}
+      </div>
+      <OutTable
+        rows={[
+          ["completed (cache)", JSON.stringify(progress.completed)],
+          ["pending", pending ?? "—"],
+          ["account", JSON.stringify(ACCOUNT_SERVER)],
+          ["requests", accountState.requests.slice(-3).join(" · ") || "—"],
+        ]}
+      />
+    </div>
   );
 }
 

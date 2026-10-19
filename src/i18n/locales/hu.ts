@@ -1376,11 +1376,14 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       // 0.34 (§11.5): whole phrases per noun, each noun with its own suffix ("a
       // csapatból", "a cégből"). `team` is Kurvenschmiede's "csapat"; `company` keeps
       // `actions.membership_remove`'s string.
+      renamedFromTo: (from, to) => `${from} → ${to}`,
       groupActions: {
         group: {
           group_create: "Csoport létrehozva",
           group_rename: "Csoport átnevezve",
           group_delete: "Csoport törölve",
+          group_deactivate: "Csoport inaktiválva",
+          group_reactivate: "Csoport újraaktiválva",
           membership_add: "Hozzáadva a csoporthoz",
           membership_role: "Szerepkör a csoportban módosítva",
           membership_remove: "Eltávolítva a csoportból",
@@ -1390,6 +1393,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           group_create: "Csapat létrehozva",
           group_rename: "Csapat átnevezve",
           group_delete: "Csapat törölve",
+          group_deactivate: "Csapat inaktiválva",
+          group_reactivate: "Csapat újraaktiválva",
           membership_add: "Hozzáadva a csapathoz",
           membership_role: "Szerepkör a csapatban módosítva",
           membership_remove: "Eltávolítva a csapatból",
@@ -1399,6 +1404,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           group_create: "Cég létrehozva",
           group_rename: "Cég átnevezve",
           group_delete: "Cég törölve",
+          group_deactivate: "Cég inaktiválva",
+          group_reactivate: "Cég újraaktiválva",
           membership_add: "Hozzáadva a céghez",
           membership_role: "Szerepkör a cégben módosítva",
           membership_remove: "Eltávolítva a cégből",
@@ -1408,6 +1415,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           group_create: "Költségvetés létrehozva",
           group_rename: "Költségvetés átnevezve",
           group_delete: "Költségvetés törölve",
+          group_deactivate: "Költségvetés inaktiválva",
+          group_reactivate: "Költségvetés újraaktiválva",
           membership_add: "Hozzáadva a költségvetéshez",
           membership_role: "Szerepkör a költségvetésben módosítva",
           membership_remove: "Eltávolítva a költségvetésből",
@@ -1837,9 +1846,21 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Ön", as
     // the rest of the catalogue.
+    mailTestCard: {
+      title: "Tesztlevél",
+      description: "Egy levelet küld a saját címére, azon a csatornán, amelyen ez a telepítés minden levelét küldi.",
+      transport: (backend) => `Küldés módja: ${backend}`,
+      action: "Tesztlevél küldése magamnak",
+      sent: (address) => `Elküldve ide: ${address}. Nézze meg a beérkező leveleket.`,
+      console: "A konzolos küldés csak naplózza a leveleket; semmi sem lett elküldve.",
+      failed: "A küldés nem sikerült. A szolgáltató válasza a szervernaplóban található.",
+      rateLimited,
+      keywords: "tesztlevél teszt e-mail levél küldés smtp resend konzol kézbesítés",
+    },
     adminArea: {
       title: "Adminisztráció",
       waiting: (count) => `${n(count)} várakozik`,
+      waitingLabel: (label, count) => `${label}, ${n(count)} várakozik`,
       forbiddenTitle: "Csak adminisztrátoroknak",
       forbiddenBody: (appName) =>
         `Itt kezelik az adminisztrátorok a(z) ${appName} alkalmazást. Az Ön fiókja nem nyithatja meg ezt az oldalt.`,
@@ -1905,6 +1926,27 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         backTo: (role) => `Vissza: ${role}`,
         billingOff: "A számlázás helyben ki van kapcsolva: a csomagok semmin nem változtatnak",
       },
+    },
+    // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
+    // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.
+    signOutPending: {
+      title: "Néhány módosítás még nincs elmentve a szerveren",
+      lost: (count) =>
+        `${n(count)} módosítás még szinkronizálásra vár. Kijelentkezéskor törlődik az eszközön lévő másolat, pedig ez az egyetlen.`,
+      kept: (count) =>
+        `${n(count)} módosítás még szinkronizálásra vár. Ezen az eszközön megmarad az Ön számára, és a következő itteni bejelentkezésekor szinkronizálódik.`,
+      syncNow: "Szinkronizálás most",
+      signOutAnyway: "Kijelentkezés mindenképp",
+      discardWaiting: "Várakozó módosítások elvetése",
+      cancel: "Mégse",
+    },
+    pwaUpdate: {
+      updateAvailable: "Új verzió érhető el.",
+      reload: "Újratöltés",
+    },
+    sharedComputer: {
+      label: "Ez egy közös használatú számítógép",
+      hint: "Az adatairól nem marad másolat ezen az eszközön. Az oldalak így csak kapcsolattal nyílnak meg.",
     },
   };
 }

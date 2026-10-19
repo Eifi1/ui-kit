@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { FOCUS_RING } from "./focus-ring";
 import { IconButton } from "./icon-button";
@@ -15,7 +15,7 @@ import { DialogFrame } from "./dialog-frame";
 import { Checkbox } from "./checkbox";
 import { useLongPress } from "../hooks/use-long-press";
 import type { DataTableLabels } from "./data-table-labels";
-import { RowLink, cleanAttrs, columnLabel, fromOutside } from "./data-table-shared";
+import { RowLink, cleanAttrs, columnLabel, fromOutside, fromOwnControl } from "./data-table-shared";
 import type {
   DataTableCellProps,
   DataTableColumn,
@@ -383,7 +383,25 @@ export function MobileRow<T>({
   // Attached whenever the table selects, the hook's `enabled` deciding whether a press
   // arms: its pointerdown also clears a stale swallow latch, which must happen in the
   // mode too, or a long press whose click never came would eat the first toggle.
-  const press = select ? longPress.handlers : undefined;
+  //
+  // A press that starts on a control in a cell (or in a portal one opened) is that
+  // control's, not a way into the mode (keksdose live #428): it only clears the latch.
+  const press = select
+    ? {
+        ...longPress.handlers,
+        onPointerDown: (e: ReactPointerEvent<HTMLElement>) => {
+          if (fromOutside(e.target, e.currentTarget) || fromOwnControl(e.target, e.currentTarget)) {
+            longPress.consumeClick();
+            return;
+          }
+          longPress.handlers.onPointerDown(e);
+        },
+        onContextMenu: (e: ReactMouseEvent<HTMLElement>) => {
+          if (fromOutside(e.target, e.currentTarget) || fromOwnControl(e.target, e.currentTarget)) return;
+          longPress.handlers.onContextMenu(e);
+        },
+      }
+    : undefined;
   const body = selecting ? (
     // In the mode a card is a toggle — kk's register row: `role="button"` with
     // `aria-pressed`, the box beside it only a picture of that state (the card is the
@@ -399,6 +417,8 @@ export function MobileRow<T>({
       {...press}
       onClick={(e) => {
         if (!select!.selectable || fromOutside(e.target, e.currentTarget)) return;
+        // A tap on a control in a cell is that control's (keksdose live #428).
+        if (fromOwnControl(e.target, e.currentTarget)) return;
         select!.onToggle(!select!.selected);
       }}
       onKeyDown={(e) => {
@@ -455,6 +475,9 @@ export function MobileRow<T>({
           interactive
             ? (e) => {
                 if (fromOutside(e.target, e.currentTarget)) return;
+                // A tap on a control in a cell (a select, a button) is that
+                // control's, as on the desktop `<tr>` (keksdose live #428).
+                if (fromOwnControl(e.target, e.currentTarget)) return;
                 onRowClick!(row);
               }
             : undefined

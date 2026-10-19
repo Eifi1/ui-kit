@@ -65,6 +65,8 @@ when it chooses. To work on the design system and an app together, use
 | `sonner` | peer, `>=2`, **optional** | Under the kit's `toast` and `<Toaster>` (and through them `FileDropzone` and the wizard's "fill in the required fields" toast), reached only through `await import()`. Pass `onValidationFailed` to route the wizard's elsewhere. |
 | `react-hook-form` | peer, `^7.55.0`, **optional** | Only `@eifi1/ui-kit/rhf` imports it; the main barrel does not (see "Forms / refs" below). |
 | `modern-screenshot` | peer, `^4.7.0`, **optional** | The feedback dialog's "Capture screenshot" (`captureAppScreenshot`), reached only through `await import()`. Without it the capture rejects and the dialog toasts `feedbackToast.captureFailed`. |
+| `@tanstack/react-query`, `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` | peer, `^5`, **optional** | Only `@eifi1/ui-kit/offline` imports them (0.45, the persisted query cache, `createQueryPersistence`); the main barrel does not. |
+| `idb-keyval` | peer, `^6`, **optional** | The persisted cache's default IndexedDB store, in `@eifi1/ui-kit/offline` only. |
 | `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the appearance stores are singletons. |
 | `flag-icons` | **nothing — you supply the stylesheet** | See below. |
 
@@ -556,19 +558,19 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2081 names from 341 modules** — 959 values and 1122 types. _Italic_ is a type-only export.
+**2094 names from 342 modules** — 965 values and 1129 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2081 |
+| `@eifi1/ui-kit` | 2094 |
 | `@eifi1/ui-kit/chart` | 92 |
-| `@eifi1/ui-kit/shell` | 110 |
+| `@eifi1/ui-kit/shell` | 112 |
 | `@eifi1/ui-kit/data-table` | 51 |
 | `@eifi1/ui-kit/wizard` | 24 |
-| `@eifi1/ui-kit/tour` | 33 |
+| `@eifi1/ui-kit/tour` | 37 |
 | `@eifi1/ui-kit/feedback` | 205 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
@@ -577,6 +579,7 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 11 |
 | `@eifi1/ui-kit/rhf` | 48 |
+| `@eifi1/ui-kit/offline` | 22 |
 
 Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a
 re-slicing of it, never a second API.
@@ -819,7 +822,7 @@ re-slicing of it, never a second API.
 | `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
 | `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
 | `shell/fill-height` | `FILL_HEIGHT_CLASS`, `FillHeight`, _`FillHeightProps`_ |
-| `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, `useAdminMenuEntry`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_, _`UseAdminMenuEntryOptions`_ |
+| `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, `AdminWaitingBadge`, `useAdminMenuEntry`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_, _`AdminWaitingBadgeProps`_, _`UseAdminMenuEntryOptions`_ |
 | `shell/top-bar-actions` | `TOP_BAR_ACTION_ORDER`, `TopBarActions`, _`TopBarActionsProps`_ |
 | `shell/account-menu-language` | `AccountMenuLanguage`, _`AccountMenuLanguageOption`_, _`AccountMenuLanguageProps`_ |
 | `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
@@ -902,7 +905,7 @@ re-slicing of it, never a second API.
 | `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourCompletion`_, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
 | `tour/tour-catalogue` | `DEFAULT_TOUR_CATALOGUE_LABELS`, `TourCatalogue`, `TourCatalogueCard`, _`TourCatalogueCardProps`_, _`TourCatalogueLabels`_, _`TourCatalogueProps`_ |
 | `tour/tour-info` | `doneCount`, `earnedPoints`, `isTourDone`, `isTourNew`, `isTourReset`, _`TourCompletions`_, _`TourGroup`_, _`TourInfo`_, _`TourUpdate`_ |
-| `tour/use-tour-progress` | `completeTour`, `resetTourProgress`, `useTourProgress`, _`TourProgress`_, _`UseTourProgressOptions`_ |
+| `tour/use-tour-progress` | `completeTour`, `resetTourProgress`, `signOutTourProgress`, `useTourProgress`, _`TourProgress`_, _`TourProgressAccount`_, _`TourProgressAdopt`_, _`TourProgressBody`_, _`UseTourProgressOptions`_ |
 | `tour/use-tour-url-sync` | `useTourCatalogueUrlState`, `useTourUrlSync`, _`TourCatalogueFilter`_, _`TourStateFilter`_, _`UseTourUrlSyncOptions`_ |
 
 ### search
@@ -959,6 +962,7 @@ re-slicing of it, never a second API.
 | `admin/admin-forbidden` | `AdminForbidden`, _`AdminForbiddenProps`_ |
 | `admin/admin-overview` | `AdminOverview`, `adminWaitingCount`, `AttentionTile`, `DEFAULT_ADMIN_ATTENTION_HREFS`, _`AdminAttention`_, _`AdminAttentionTile`_, _`AdminExtraTile`_, _`AdminOverviewProps`_, _`AttentionTileProps`_ |
 | `admin/admin-tool-links` | `AdminToolLinks`, _`AdminToolLink`_, _`AdminToolLinksProps`_ |
+| `admin/mail-test-card` | `DEFAULT_MAIL_TEST_CARD_LABELS`, `MAIL_TEST_ANCHOR`, `MailTestCard`, `maskMailAddress`, _`MailTestAnswer`_, _`MailTestCardLabels`_, _`MailTestCardProps`_ |
 | `admin/plan-change` | `DEFAULT_PLAN_CHANGE_LABELS`, `PlanChangeConfirm`, `planColumn`, `usePlanChangeResult`, `usePlanColumn`, _`PlanChange`_, _`PlanChangeConfirmProps`_, _`PlanChangeLabels`_, _`PlanChangeLine`_, _`PlanChangeOutcome`_, _`PlanChangeResultOptions`_, _`PlanChangeTone`_, _`PlanColumnOptions`_, _`PlanColumnUsage`_ |
 
 ### billing

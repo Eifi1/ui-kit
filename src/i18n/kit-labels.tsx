@@ -120,7 +120,11 @@ import type { SignChipLabels } from "../components/sign-chip";
 import type { ColumnMapperLabels } from "../components/column-mapper";
 import type { NotificationsLabels } from "../notifications/notifications-labels";
 import type { AdminAreaLabels } from "../admin/admin-area-labels";
+import type { MailTestCardLabels } from "../admin/mail-test-card";
 import type { TopBarPartsLabels } from "../shell/top-bar-parts-labels";
+import type { SignOutPendingDialogLabels } from "../offline/sign-out-pending-dialog";
+import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
+import type { SharedComputerLabels } from "../offline/shared-computer";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -487,6 +491,15 @@ export interface UiKitLabels {
   /** 0.42.0: the top bar's shared parts — `TourMenu`, `SyncStatusIndicator`, `DevSwitchers`
    *  (docs/top-bar-harmonization.md §3.1). */
   topBarParts: TopBarPartsLabels;
+  /** 0.45.0: "Send a test mail to me" (docs/admin-harmonization.md §9.2.4). */
+  mailTestCard: MailTestCardLabels;
+  /** 0.45.0: the sign-out question while changes wait to sync (`@eifi1/ui-kit/offline`,
+   *  docs/local-first-harmonization.md §1.6). */
+  signOutPending: SignOutPendingDialogLabels;
+  /** 0.45.0: the service-worker update toast (local-first §1.5 D8). */
+  pwaUpdate: PwaUpdatePromptLabels;
+  /** 0.45.0: "This is a shared computer" on the sign-in form (local-first §1.5 D6). */
+  sharedComputer: SharedComputerLabels;
 }
 
 /**

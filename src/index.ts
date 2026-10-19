@@ -811,6 +811,9 @@ export type {
 } from "./admin/admin-overview";
 export { AdminToolLinks } from "./admin/admin-tool-links";
 export type { AdminToolLink, AdminToolLinksProps } from "./admin/admin-tool-links";
+// 0.45.0 (docs/admin-harmonization.md §9.2.4): "Send a test mail to me".
+export { MailTestCard, DEFAULT_MAIL_TEST_CARD_LABELS, MAIL_TEST_ANCHOR, maskMailAddress } from "./admin/mail-test-card";
+export type { MailTestCardProps, MailTestCardLabels, MailTestAnswer } from "./admin/mail-test-card";
 // 0.33.0: the operator's plan parts (docs/billing-harmonization.md §14.12).
 export {
   planColumn,

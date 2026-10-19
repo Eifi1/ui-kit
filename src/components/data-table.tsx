@@ -10,6 +10,7 @@ import {
   cleanAttrs,
   columnLabel,
   fromOutside,
+  fromOwnControl,
   logicalAlign,
   resolveDataTableLabels,
   splitCellProps,
@@ -701,21 +702,6 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 };
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
-
-/**
- * What counts as a control of its own inside a clickable row: a click or key press
- * that lands on one of these belongs to it, not to the row's `onRowClick`. The row's
- * own link (`rowHref`, marked `data-row-link`) is the exception — it IS the row.
- */
-const OWN_CONTROL =
-  'a[href],button,input,select,textarea,label,summary,[role="button"],[role="link"],[role="checkbox"],[role="switch"],[role="menuitem"],[role="option"],[contenteditable=""],[contenteditable="true"],[tabindex]:not([tabindex="-1"])';
-
-/** Whether an event on `row` started on a control nested inside it. */
-function fromOwnControl(target: EventTarget | null, row: HTMLElement): boolean {
-  if (!(target instanceof Element)) return false;
-  const hit = target.closest(OWN_CONTROL);
-  return !!hit && hit !== row && row.contains(hit) && !hit.hasAttribute("data-row-link");
-}
 
 /** Arrow/Home/End between the focusable rows of one `<tbody>` — the roving half of
  *  the keyboard-activatable rows (see the row's `onKeyDown`). */

@@ -38,7 +38,7 @@ describe("a module page", () => {
     "shows the module, its contract, install line, counterparts and every member",
     () => {
       renderShowcase("/server-settings");
-      expect(screen.getByRole("heading", { name: "Settings & language", level: 1 })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Settings, language & tours", level: 1 })).toBeInTheDocument();
       const mod = findModule(api, "settings")!;
       expect(screen.getByRole("heading", { name: mod.name, level: 2 })).toHaveAttribute("id", "settings");
 

@@ -21,6 +21,26 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.45.0](https://github.com/Eifi1/ui-kit/compare/v0.44.0...v0.45.0) (2026-10-19)
+
+Round 0.45, settled by Marcel on 2026-10-19 and reviewed against all three apps before release:
+tour progress on the account (tours §10: `useTourProgress` takes an `account`, the device record
+becomes its cache), the admin follow-ups (admin §9: `MailTestCard`, `AdminWaitingBadge`, a
+company's rename and switch in the log), and local-first phase 1 as the new
+`@eifi1/ui-kit/offline` subpath (local-first §1.6). The server halves ship as server-kit 0.15.0.
+Per-app steps: docs/adopt-0.45.md.
+
+### Added
+
+* tour progress on the account, MailTestCard, AdminWaitingBadge, the /offline subpath ([583f684](https://github.com/Eifi1/ui-kit/commit/583f6840d8203786695d089d9ceea411d885e630))
+
+### Fixed
+
+* **data-table:** a tap on a control inside a phone card no longer opens the row ([7b949ce](https://github.com/Eifi1/ui-kit/commit/7b949ce5dff1052670171ae5316e262091093498))
+* **format:** a bare ISO day formats on its own day whatever timeZone is given ([9474cfa](https://github.com/Eifi1/ui-kit/commit/9474cfa6f3f448a4ca5913a0374492c6db6a02dc))
+* **offline,tour:** the 0.45 build reviews — a cache per key, a session-long shared flag ([5b45bf5](https://github.com/Eifi1/ui-kit/commit/5b45bf57a7115946f3ca1c1d1b71f78ba74dd2b8))
+* **showcase:** the Offline page moves to API, the index lists 0.45's parts ([2a6b0c6](https://github.com/Eifi1/ui-kit/commit/2a6b0c6d5cce9ea8253be949592241aecf6e2f4f))
+
 ## [0.44.0](https://github.com/Eifi1/ui-kit/compare/v0.43.0...v0.44.0) (2026-10-17)
 
 The three 0.43 adoptions' notes, settled by Marcel on 2026-10-17 ("0.44 with everything") and

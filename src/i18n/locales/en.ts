@@ -220,6 +220,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
     adminArea: {
       ...d.adminArea,
       waiting: (count) => `${n(count)} waiting`,
+      waitingLabel: (label, count) => `${label}, ${n(count)} waiting`,
       tiles: { ...d.adminArea.tiles, usersNew: (count) => `${n(count)} new in 7 days` },
     },
     // 0.43.0: the tours page's counts (docs/tours-harmonization.md §3).
@@ -265,6 +266,17 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
         `Your free access ends ${inDays(days)}. After that you can still view everything, but changes need a plan.`,
       waitingChanges: (count) =>
         count === 1 ? "1 change waiting for a plan" : `${n(count)} changes waiting for a plan`,
+    },
+    signOutPending: {
+      ...d.signOutPending,
+      lost: (count) =>
+        count === 1
+          ? d.signOutPending.lost(1)
+          : `${n(count)} changes are still waiting to sync. Logging out clears this device’s copy, and it is the only copy.`,
+      kept: (count) =>
+        count === 1
+          ? d.signOutPending.kept(1)
+          : `${n(count)} changes are still waiting to sync. They stay on this device for you and sync the next time you log in here.`,
     },
   };
 }

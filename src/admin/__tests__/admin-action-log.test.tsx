@@ -284,13 +284,85 @@ const CATALOGUES = {
   zh: UI_KIT_LABELS_ZH,
 } as const;
 const NOUNS: AdminGroupNoun[] = ["group", "team", "company", "budget"];
-/** The five words of 0.34 and `membership_remove`, which the nouns' sets now carry. */
-const GROUP_KINDS = ["group_create", "group_rename", "group_delete", "membership_add", "membership_role", "membership_remove"] as const;
+/** The five words of 0.34, `membership_remove`, and 0.45's group (de)activation, which the
+ *  nouns' sets now carry. */
+const GROUP_KINDS = [
+  "group_create",
+  "group_rename",
+  "group_delete",
+  "membership_add",
+  "membership_role",
+  "membership_remove",
+  "group_deactivate",
+  "group_reactivate",
+] as const;
 
 describe("AdminActionLog — the group words in every language (§11.5)", () => {
   it("lists the five words in ADMIN_ACTION_KINDS", () => {
-    expect(ADMIN_ACTION_KINDS.slice(-5)).toEqual(["group_create", "group_rename", "group_delete", "membership_add", "membership_role"]);
+    expect(ADMIN_ACTION_KINDS.slice(-7, -2)).toEqual(["group_create", "group_rename", "group_delete", "membership_add", "membership_role"]);
     expect(new Set(ADMIN_ACTION_KINDS).size).toBe(ADMIN_ACTION_KINDS.length);
+  });
+
+  it("ends with server-kit 0.15's group_deactivate and group_reactivate (admin §9.1.3)", () => {
+    // server-kit's `AdminAction` order: the two come after `membership_role`.
+    expect(ADMIN_ACTION_KINDS.slice(-2)).toEqual(["group_deactivate", "group_reactivate"]);
+    expect(ADMIN_ACTION_KINDS).toHaveLength(24);
+  });
+
+  it("words a company's deactivation as the company's, not a person's", () => {
+    render(
+      <AdminActionLog
+        groupNoun="company"
+        entries={[
+          { id: 2, at: null, actor: ADMIN, action: "group_reactivate", target: { kind: "group", id: 3, name: "Muster AG" } },
+          { id: 1, at: null, actor: ADMIN, action: "group_deactivate", target: { kind: "group", id: 3, name: "Muster AG" } },
+        ]}
+      />,
+    );
+    const [reactivated, deactivated] = rows();
+    expect(reactivated).toHaveTextContent("Company reactivated");
+    expect(deactivated).toHaveTextContent("Company deactivated");
+    expect(deactivated).toHaveTextContent("Muster AG");
+    expect(deactivated).not.toHaveTextContent(/^Deactivated/);
+  });
+
+  it("a company rename with {from, to} reads “Company renamed from A to B”; with one name, as before", () => {
+    render(
+      <AdminActionLog
+        groupNoun="company"
+        entries={[
+          {
+            id: 2,
+            at: null,
+            actor: ADMIN,
+            action: "group_rename",
+            target: { kind: "group", id: 3, name: "Muster Treuhand AG" },
+            renamed: { from: "Muster AG", to: "Muster Treuhand AG" },
+          },
+          { id: 1, at: null, actor: ADMIN, action: "group_rename", target: { kind: "group", id: 4, name: "Beispiel GmbH" }, renamed: { from: "", to: "Beispiel GmbH" } },
+        ]}
+      />,
+    );
+    const [both, one] = rows();
+    expect(within(both).getByText("Company renamed")).toBeInTheDocument();
+    expect(within(both).getByText("from Muster AG to Muster Treuhand AG")).toHaveAttribute("data-private");
+    expect(one).toHaveTextContent("Company renamed");
+    expect(one).toHaveTextContent("Beispiel GmbH");
+    expect(one.querySelector("[data-renamed]")).toBeNull();
+  });
+
+  it("a team rename logs {} and reads “Team renamed” with the team", () => {
+    render(<AdminActionLog groupNoun="team" entries={[{ id: 1, at: null, actor: ADMIN, action: "group_rename", target: { kind: "group", id: 8, name: "Paint shop" } }]} />);
+    expect(rows()[0]).toHaveTextContent("Team renamed");
+    expect(rows()[0]).toHaveTextContent("Paint shop");
+    expect(rows()[0]).not.toHaveTextContent(/from/);
+  });
+
+  it.each(Object.entries(CATALOGUES))("%s: the rename phrase names both, in its own words", (code, catalogue) => {
+    const phrase = catalogue.adminActionLog.renamedFromTo("A1", "B2");
+    expect(phrase).toContain("A1");
+    expect(phrase).toContain("B2");
+    if (code !== "en") expect(phrase).not.toBe(DEFAULT_UI_KIT_LABELS.adminActionLog.renamedFromTo("A1", "B2"));
   });
 
   it.each(Object.entries(CATALOGUES))("%s: every group word renders in every noun's set, none falling back", (_code, catalogue) => {
