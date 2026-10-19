@@ -1,18 +1,24 @@
 # Local-first — harmonisation plan
 
 **kk** = keksdose, **ka** = kastlan, **KS** = Kurvenschmiede.
+**§1 (round 0.45) settled 2026-10-19** (Marcel, after the kastlan and keksdose reviews in
+audits/round-046/reviews.md; §1.8–§1.9). Phases 1 and 2 are built for ui-kit 0.45 / server-kit 0.15;
+phases 3 and 4 follow in later rounds.
 
 | § | What | Status |
 |---|---|---|
-| 1 | kastlan local-first like keksdose; KS stays online-only; what the kits lift | **DRAFT (round 0.45)** |
+| 1 | kastlan local-first like keksdose; KS stays online-only; what the kits lift | **SETTLED (round 0.45)**: P1+P2 in ui-kit 0.45 / server-kit 0.15 |
 
-## 1. kastlan becomes local-first — DRAFT (round 0.45)
+## 1. kastlan becomes local-first — SETTLED (round 0.45)
 
-**DRAFT for review (round 0.45)**, for ui-kit 0.46+ / server-kit 0.16+. Not settled: kastlan and
-keksdose review it, KS checks the online-only note (§1.4), and then Marcel settles it
-(audits/round-046/reviews.md). Read at kk `feat/feedback-loop-80-424-434` deaf428d, ka `feat/kit-0.44`
-6c2a0c4, KS `main` b54c16e, ui-kit `feat/0.45.0`, server-kit `feat/0.15.0`. In kk, FE = `frontend/src`
-and BE = `backend/keksdose`. In ka, FE = `frontend/src` and BE = `kastlan`.
+**Settled 2026-10-19** (Marcel, after the kastlan and keksdose reviews in
+audits/round-046/reviews.md; §1.9 records where each answer went, and the reviews' corrections
+are folded into §1.2, §1.3 and §1.5–§1.7). **Phases 1 and 2** (§1.7: the persisted offline cache
+with its scrub list, and the shared sync protocol) are built for **ui-kit 0.45 / server-kit 0.15**.
+Phases 3 and 4 follow in later rounds. Drafted at kk `feat/feedback-loop-80-424-434` deaf428d, ka
+`feat/kit-0.44` 6c2a0c4, KS `main` b54c16e, ui-kit `feat/0.45.0`, server-kit `feat/0.15.0`; the
+reviews' corrections re-checked at the same kk and ka commits. In kk, FE = `frontend/src` and
+BE = `backend/keksdose`. In ka, FE = `frontend/src` and BE = `kastlan`.
 
 Marcel, 2026-10-19:
 - "kastlan becomes local-first like keksdose."
@@ -37,7 +43,7 @@ topbar-kurvenschmiede.md §7.
 |---|---|---|---|
 | **Offline reads** | everything: the persisted query cache, plus the Dexie mirror of 11 entities | handovers only: a Dexie copy per account and company; every other page is online, with an in-memory query cache | none, by design |
 | **Offline writes** | everything synced: outbox → `POST /sync` | handover scope only (protocols, rooms, defects, photo captions, meter readings) | none |
-| **Concurrency** | whole-row LWW on the **client-stamped** `updated_at` | whole-row LWW, **the last to arrive** wins (the server stamps `updated_at`) | `version` + `If-Match`, 409/428, online |
+| **Concurrency** | upserts: whole-row LWW on `updated_at` (client-stamped when queued, server-now on REST); deletes tombstone **unconditionally** | whole-row LWW, **the last to arrive** wins (no `updated_at` on the wire; the server stamps it) | `version` + `If-Match`, 409/428, online |
 | **Sync protocol** | `knowledge` per household, paged pull, `refusals: true` | `knowledge` database-wide, scope `"handover"`, `SyncRefusal` | — |
 | **Indicator** | `SyncStatusIndicator`, always shown, 7 states | the floating pill + `HandoverSyncBanner` (top-bar §6.10: into the bar, `hideWhenIdle`, words for handovers) | `SyncStatusIndicator storage="none" hideWhenIdle` |
 | **Service worker** | custom `sw.ts`, `registerType: "prompt"`, push, share target | Workbox `autoUpdate`, shell only | none |
@@ -89,27 +95,43 @@ topbar-kurvenschmiede.md §7.
   - Only one round runs at a time (:1318).
 - The worker runs a round on mount, on `online` and every 30 s (use-sync-worker.ts:13-40), plus
   `kickSync()` after each write (sync-client.ts:1183). It has no backoff.
-- `updated_at` is client-stamped (write.ts:178, :236). `stampAfter()` keeps it 1 ms past the previous
-  value (sync-client.ts:639).
+- A queued write is stamped `new Date().toISOString()` (write.ts:178, :236 and about 13 more
+  sites). `stampAfter()` (sync-client.ts:639), which keeps it 1 ms past the previous value, is used
+  only by re-seal and the payee restate (sync-client.ts:781; payee-restate.ts:85, :171).
+- **Most online writes carry the server's clock** (review correction). `writeLocalFirst` tries REST
+  first (write.ts:111-137), and REST, import and job writes are stamped server-now by the
+  `before_flush` hook unless `updated_at` was set (BE infrastructure/sync.py:178-186). A row pushed
+  with no `updated_at` also falls back to server-now (sync_service.py:1288). So "the client's stamp"
+  holds for queued (offline or sealed) upserts only.
 
 **Conflicts and refusals**
-- The server merges whole-row LWW and keeps its copy only when strictly newer (BE
+- The server merges **upserts** whole-row LWW and keeps its copy only when strictly newer (BE
   domain/services/sync_service.py:523-550). A losing write comes back as the server's row in the same
-  round (:1280-1295). A tombstone moves `updated_at` forward so an older upsert cannot revive it (:553).
+  round (:1279-1295). A tombstone is stamped `utcnow()` and moves `updated_at` forward so an older
+  upsert cannot revive it (:553-558).
+- **Deletes are not LWW** (review correction). A pushed `delete` tombstones a live row
+  unconditionally, with no `updated_at` comparison (sync_service.py:1129-1180), so an older offline
+  delete beats a newer edit.
 - Two devices that create the same unique tuple get the rows merged. The duplicate gets a tombstone,
-  and references are remapped in the push (`_UNIQUE_KEYS` :176-186, :1233-1262, `_apply_remaps` :1763).
+  and references are remapped in the push (`_UNIQUE_KEYS` :182-190, :1235-1271, `_apply_remaps` :1763).
 - **There is no conflict dialog and no merge UI.**
-- With `refusals: true` (sync-client.ts:1459, :1530-1540), the server answers `refused: SyncRefusal`:
+- **Per-row server rejections** exist beside the refusals: coercion drops, category scope, revival
+  rules and the trade reversal echo a repair row (sync_service.py:1150-1158, :1183-1229); a push onto
+  another tenant's id is dropped silently (:1199-1214).
+- With `refusals: true` (sync-client.ts:1459, :1530-1540), the server answers `refused: SyncRefusal`,
+  **one** refusal for the **whole** push (BE domain/schemas/sync.py:162):
   - `billing_read_only` holds the queue for a plan (meta `held_for_plan` :155) and shows it as
     `waitingForPlan`.
   - `releaseHeldChanges()` :974 sends the held queue after payment (FE features/budgets/use-budgets.ts:80).
   - `discardWaitingChanges()` :995 drops it and rewinds the cursor.
   - `read_only`/`demo_read_only` keep the changes and show "refused" (:1612). Any other code counts as
-    blocked.
+    blocked, and stays blocked (:1530-1546): a new code in `refused` would block kk's queue.
 - A legacy 409 `tenant_key_missing` counts the whole queue as blocked (:1477-1479). Any other HTTP
   answer is `error`, and no answer at all is `offline` (:1480-1489).
 - **Sign-out with work queued.** When `pending + blocked > 0`, a dialog offers "sync now", "log out
-  anyway" and "discard waiting changes" (FE app/account-menu.tsx:102-108, :247-317).
+  anyway" and, only while `waitingForPlan > 0`, "discard waiting changes" (FE
+  app/account-menu.tsx:102-108, :247-317, :262). "Log out anyway" **destroys** the queued writes
+  (below), which is why the dialog exists.
 
 **The indicator**
 - It reads zustand `useSyncStatus`, whose fields are `phase`, `online`, `pendingWrites`,
@@ -139,12 +161,23 @@ topbar-kurvenschmiede.md §7.
 - Three entities are E2EE on `/sync` (record-crypto.ts:277). Unlocked keys sit in `"keksdose-keys"`
   with a 12 h TTL, bound to the user (FE shared/crypto/key-store.ts:1-49).
 - Sign-out (FE shared/state/auth-store.ts:123-145) locks the keys, clears the persisted cache and wipes
-  the mirror.
-  - A 401 keeps the mirror and the outbox (`wipeMirror: false`).
+  the mirror **and the outbox, on purpose** (db.ts:339-349: "The OUTBOX goes too, and that is a
+  decision"; auth-store.ts:57, :141-144).
+  - A 401 keeps the mirror and the outbox (`wipeMirror: false`), but still clears the persisted cache
+    and locks the keys (auth-store.ts:133-139).
   - Signing in as another user wipes everything first (`mirror_user_id`, :17, `forgetPreviousAccount`
     :47-66).
-  - A wipe bumps `MIRROR_GENERATION` (db.ts:211), so a round in flight cannot write into a wiped
-    mirror.
+  - **A budget switch wipes the mirror and the outbox** (`onActiveBudgetChanged` →
+    `clearMirrorForBudgetSwitch`, sync-client.ts:858-930, db.ts:355). It waits out a round in flight
+    but does not push the queue first. kk treats the loss of queued, held or blocked writes on a
+    switch as its own defect and fixes it in place (push first, or hold the switch while anything is
+    queued). **The kit does not copy it.**
+  - The stale-round guard has two layers: `bumpSessionEpoch()` within a tab (auth-store.ts:132,
+    sync-client.ts:1495) and `MIRROR_GENERATION` across tabs (db.ts:211, `mirrorMoved`
+    sync-client.ts:1206), so a round in flight cannot write into a wiped mirror.
+  - The tenant comes from the server's active budget (BE sync_router.py:108), not from the request.
+  - The persister keeps paused mutations on restore (query-client.ts:290).
+  - The SW caches no `/api`, but answers `/local-api/*` from an open window (sw.ts:171-203).
 - **One database for every user**, and no "shared computer" switch.
 
 **Server** (BE)
@@ -185,7 +218,15 @@ topbar-kurvenschmiede.md §7.
 - The round (sync.ts) sends `POST /sync {scope: "handover", last_knowledge, changes}` (:148-152).
   - `applyAnswer` lays the unsent changes back over the pulled rows (:94-125). The cursor is
     `meta.lastKnowledge` (:64, :122).
-  - A 422 `"Change <id>: …"` rejects only that change (:76-83, :164-169).
+  - A 422 `"Change <id>: …"` refuses **the whole request** (review correction): `SyncRefusedError`
+    (BE sync_scopes.py:44) aborts the round (sync_router.py:7). The client marks only the named
+    change `rejected` and puts the rest back to `pending` (:155-170), so they go in the next round:
+    one round per bad change.
+  - The client sends **no `updated_at`**: `SyncChange` has no such field (BE
+    domain/schemas/sync.py:11-21), and nothing in repo.ts, sync.ts or types.ts sets one.
+  - The copy **keeps signatures on the device**: `signature_tenant`/`signature_inspector` are fields
+    of the synced protocol (BE sync_scopes.py:72-73; FE types.ts:59-60). Signing at move-out without
+    a connection is the point of the copy.
   - A 402 or a `refused` answer marks the changes `waiting` (:53-62, :95-99, :158-162).
   - Photos upload after their parents get a pk (:175-233).
 - The controller (sync-controller.ts) polls every 30 s (:20), runs on `online`, and runs 800 ms after a
@@ -215,10 +256,12 @@ topbar-kurvenschmiede.md §7.
   - Its registry is **derived from the ORM**: every `SyncMixin` model syncs, with foreign keys
     translated through `sync_uuid` (:76-115).
   - `collect_delta` is at :219-264 and `apply_incoming` at :299-373.
-  - The incoming `updated_at` is skipped (:44), so **the last to arrive wins**.
+  - `updated_at` is not a sync field (`_SKIP_COLUMNS` :44), and `TimestampMixin.updated_at` has
+    `onupdate=func.now()` (domain/models/mixins.py:33), so **the last to arrive wins**.
 - The counter is one database-wide `knowledge_counter` row (infrastructure/sync.py:35-76). It is
   stamped in `before_flush` (:79-99).
-- `SyncMixin` (domain/models/mixins.py:44-62) is already on **52 model classes**,
+- `SyncMixin` (domain/models/mixins.py:44-62) is already on **51 model classes** (the draft's 52
+  counted `class SyncMixin` itself),
   invoices, payments, leases, units, contacts, documents, journal entries and meters among them.
   Making them syncable costs no schema work.
 
@@ -283,177 +326,265 @@ topbar-kurvenschmiede.md §7.
   (topbar-kurvenschmiede.md §7).
 - Its `If-Match` versions stay its online concurrency.
 
-**A doc fix only.** Top-bar §2.6/§6.9 describe KS's two states, but top-bar §7's prop list never names
-`storage`. This draft adds it there (top-bar §7, the `SyncStatusIndicator` props).
+**A doc fix only.** Top-bar §2.6/§6.9 describe KS's two states; top-bar §7's `SyncStatusIndicator`
+props now name `storage` (`"device"` | `"none"`, the online-only preset). KS left no answer in the
+reviews; re-checked at KS b54c16e (top-bar-parts.tsx:104-121: `storage="none" hideWhenIdle`, no
+`onSync`), nothing in §1 asks anything of KS.
 
-### 1.5 Decisions proposed
+### 1.5 Decisions (settled)
 
-**D1 One sync protocol, keksdose's.**
+**D1 One sync protocol, keksdose's; per-change rejections as a new field.**
 
-Both apps already speak the same protocol: a `knowledge` cursor, `SyncMixin`, whole-row LWW,
-tombstones and `SyncRefusal`. They differ in the details.
+Both apps already speak the same protocol: a `knowledge` cursor, `SyncMixin`, whole-row LWW for
+upserts, tombstones and `SyncRefusal`. They differ in the details.
 
-**Rec:**
-- kk's shapes become the shared ones. That covers `SyncChange`, `SyncRequest` (`last_knowledge`,
-  `changes`, `refusals`, `paged`/`page_cursor`), `SyncResponse` (`server_knowledge`, `changes`,
-  `refused`) and `SyncPageCursor`.
-- ka's `scope` is an optional field (kk has one scope).
-- ka sends `refusals: true` and switches from 402/422 to the `refused` list. ka's per-change 422
-  `"Change <id>: …"` becomes a `SyncRefusal{code: "rejected", detail, change_ids}`.
+- kk's shapes become the shared ones: `SyncChange`, `SyncRequest` (`last_knowledge`, `changes`,
+  `refusals`, `paged`/`page_cursor`), `SyncResponse` (`server_knowledge`, `changes`, `refused`,
+  `page_cursor`) and `SyncPageCursor` (entity, knowledge, id). ka's `scope` is an optional field
+  (kk has one scope). The models are open to subclassing, so kk keeps its extras (`fx_*`,
+  `valuation_*`, `tenant_sealed`, `tenant_can_seal`) and ka its `pk`.
+- **`refused` stays as it is**: one `SyncRefusal | None` for the whole push (`billing_read_only`,
+  `read_only`, `demo_read_only`, …). kk's client reads it that way and blocks for good on an unknown
+  code (sync-client.ts:1530-1546), so no per-change code goes into it.
+- **Per-change refusals are a NEW field**: `rejections: list[SyncRejection]`, one
+  `SyncRejection {change_id, code, detail}` per change (ka's outbox keeps a `reason` per row,
+  db.ts:24-37; one `detail` for many ids would not fit). Codes: `rejected` (a scope rule: a fixed
+  field, a finalised protocol, an entity not writable in the scope) and `plan_limit` (ka's photos
+  over the plan, today's 402 `planRefusal`, sync.ts:158-162). It defaults to `[]`, so kk's client
+  is untouched; kk may later move its silent drops and repair echoes onto it.
+- ka sends `refusals: true` and reads `rejections`. A scope-rule violation no longer aborts the
+  round (`SyncRefusedError`, sync_scopes.py:44): the other changes apply, each bad one comes back
+  with its own `detail`, and the one-round-per-bad-change loop goes.
+- **The old `/sync` shape stays accepted for one release** (D8 keeps old bundles alive longer): a
+  request without `refusals` or `updated_at` gets ka's 422 and server-now as today. The release
+  after 0.45's adoption removes it.
 
-**D2 Merge rule: the client-stamped `updated_at` wins (kk), not the last to arrive (ka).**
+**D2 Merge rule: the latest edit time wins; deletes tombstone unconditionally.**
 
-Under ka's rule, an edit made offline in the morning and synced at night overwrites an office edit made
-at noon. Once ka syncs more than handovers, that is no longer rare.
+Under ka's rule an edit made offline in the morning and synced at night overwrites an office edit made
+at noon; "last to arrive" is wrong as soon as a second scope exists.
 
-**Rec:**
-- Whole-row LWW on the client's `updated_at`, with kk's `stampAfter`.
-- A tombstone moves `updated_at` forward.
-- The losing write is echoed back in the same round.
-- **No conflict dialog** (kk has none). Instead, the server's per-scope rules refuse what must not be
-  overwritten: ka's `EntityRule` fixed fields, and a finalised protocol.
+- **Upserts:** whole-row LWW on the device's edit time. `SyncChange.updated_at` (optional, an
+  instant with a zone) is a **wire change** for ka, which sends none today (§1.3). The server keeps
+  its copy only when strictly newer and echoes the loser in the same round.
+- **A future stamp is clamped** to the server's now (tablets' clocks drift; tours §10.2.3 clamps
+  the same way).
+- **An older client** that sends no `updated_at` falls back to server-now, today's ka rule, for one
+  release (D1).
+- **Deletes tombstone unconditionally** (keksdose's correction, sync_service.py:1129-1180): no
+  comparison, the tombstone is stamped server-now and moves `updated_at` forward, so an older upsert
+  cannot revive it. An older offline delete beats a newer edit; that is accepted.
+- ka's client stamps `updated_at` on each local edit, including an edit merged into the pending
+  upsert (repo.ts:157-182), so the latest keystroke's time wins. ka's server sets `updated_at`
+  explicitly on every synced write, or `onupdate=func.now()` (mixins.py:33) stamps server time again.
+- kk changes nothing: its queued upserts carry the client stamp, and its REST, import and job writes
+  stay server-now. The kit never requires a client stamp on every write.
+- **No conflict dialog** (kk has none). The server's per-scope rules refuse what must not be
+  overwritten: ka's `EntityRule` fixed fields, and a finalised protocol (sync_scopes.py:249-307). A
+  signed protocol is never overwritten by either rule.
+- The cost in ka is **S–M**: nothing in tests/integration/test_sync.py or
+  tests/api/test_sync_handover.py asserts `updated_at`; `applyAnswer` (sync.ts:94-125) already lets a
+  losing echo replace the row.
 
 **D3 No `If-Match` on the outbox.**
 
-A queued write carries the whole row and the client's `updated_at`, not a version. **Rec:** ka's
-online REST writes stay as they are (no ETags). KS's version contract stays KS's.
+A queued write carries the whole row and the edit time, not a version. ka's online REST writes stay as
+they are (no ETags). KS's version contract stays KS's.
 
 **D4 kastlan's offline scope.**
 
-**Rec:** offline reads are broad, and offline writes cover field work only.
-
-- **Reads offline: everything a staff role has opened**, through the persisted query cache (kk's
-  policy). That gives estates, buildings, units, leases, tenants and contacts, meters, maintenance,
-  documents (the list, not the files), the invoice and payment lists, and the dashboard. The cache holds
-  only what the role was allowed to fetch, so roles need no extra rule.
-  - The deny-list adds: admin, platform, billing, translations, the assistant, report bodies, and any
-    payload holding an IBAN or a signature.
-- **Writes offline** (new sync scopes beside `handover`, all `MANAGER_WRITE`):
-  - `handover`, as today;
-  - `maintenance`: tickets, unit defects, notes;
-  - `meters`: readings outside a protocol;
-  - `contacts`: phone, e-mail, notes.
-  - Each is a `SyncScope` entry over models that are already `SyncMixin`.
-- **Online only**, where the button says "Needs a connection" and nothing is queued:
+- **Reads offline (P1, 0.45): everything a staff role has opened**, through the persisted query
+  cache (kk's policy). That gives estates, buildings, units, leases (who, since when, the rent),
+  tenants and contacts, meters, maintenance, documents (the list, not the files), the invoice and
+  payment lists, and the dashboard. The cache holds only what the role was allowed to fetch.
+  - Denied keys: admin, platform, billing, translations, the assistant, report bodies, bank
+    accounts.
+  - **A scrub list, not a dropped root** (ka's correction): IBANs sit inside payloads that are
+    wanted offline. Before a query is persisted the fields `iban`
+    (`ContactDetailResponse.bank_accounts[]`, BE domain/schemas/contact.py:161, :184-188),
+    `qr_iban` (schemas/property.py:68, :83, :94), `default_qr_iban` (:24) and `signature_*`
+    (the protocol's online detail, schemas/handover.py:232, :241) are removed. A page restored
+    offline shows such a field as "Needs a connection".
+- **Writes offline:** `handover` as today. `maintenance` (tickets, unit defects, notes), `meters`
+  (readings outside a protocol) and `contacts` (phone, e-mail, notes) come in P4, each a `SyncScope`
+  over models that are already `SyncMixin`. **Owner meetings** (votes and minutes in the meeting
+  room, domain/models/owner_meeting.py:72-137, already `SyncMixin`) are a **P4 candidate**, for
+  Marcel to decide in that round.
+- **Online only**, where the button says "Needs a connection" and nothing is queued (agreed by ka,
+  lease edits included):
   - anything that **numbers or moves money**: invoices (the gapless per-company number), payments,
-    QR bills, dunning, journal entries, deposits, service-charge statements, rent increases, mortgages;
+    QR bills, dunning, journal entries, deposits, service-charge statements, rent increases,
+    mortgages, bank accounts (IBAN);
   - anything that **makes a PDF or sends mail**: invoice, lease and dunning PDFs, `/send`;
-  - **lease** create, end and change (the one-active-lease 409, deposits);
+  - **lease** create, end and change (the one-active-lease 409, tenancy_service.py:102; deposits;
+    the lease is signed and numbered in the office);
   - **units** create (the `plan_limit` 402);
-  - users, roles, invitations, company settings, billing, the platform console, translation review and
-    feedback;
+  - users, roles, invitations, company settings, billing, the platform console, translation review
+    and feedback;
   - **switching company**, which mints tokens on the server. Offline, the switcher says "Needs a
     connection" and the app stays on the current company's copy.
-- Already-issued PDFs are **not** cached offline in phase 1 (Q3).
+- **Issued PDFs are not cached offline** (decided by default: no review asked for them).
 
-**D5 One device store per account and company (ka), not one per device (kk).**
+**D5 Device stores: per account and company in ka; kk keeps its single mirror.**
 
-**Rec:** ka's naming becomes the kit's rule. The Dexie database and the persisted query cache key both
-carry `<app>-<kind>-<user>-<company>`. kk's household plays the part of ka's company, and kk keeps its
-single mirror until it adopts the kit engine (phase 4). This makes the company switch a change of
-database, with no wipe and no cross-company leak.
+- **ka:** the Dexie database and the persisted query cache key carry
+  `<app>-<kind>-<user>-<company>`, as the handover copy already does (db.ts:78-86). The company switch
+  changes the persister's key: no wipe and no cross-company leak, and the persisted part needs no
+  `queryClient.clear()` (use-auth.ts:24-30).
+- **kk keeps its single mirror and `mirror_user_id`.** Per-household databases would not cure the
+  switch loss (the server pins the tenant to the active budget, so household A's outbox drains only
+  in A); a guest's mirror is the host's household, so they would multiply copies on shared devices;
+  the sealing-gate hold and `MIRROR_GENERATION` are built around one database; and moving an outbox
+  between databases is the riskiest migration kk could ship. Revisit only with a tenant field on
+  `/sync`. kk does take **the per-account persisted-cache key** (one dropped cache).
+- The **knowledge counter** stays ka's **database-wide row** (Q5). Under RLS the pull filters by
+  company anyway; a per-company counter would cost a migration and a full re-pull on every device.
+  Accepted leak: a jumping cursor shows other companies' write volume. The kit's counter is a port
+  (§1.6): kk counts per household.
 
-**D6 Sign-out and the shared PC.**
+**D6 Sign-out and the shared computer: per app.**
 
-**Rec:**
-- On sign-out, clear the persisted query cache and the mirror rows. The outbox (and photos) **stay for
-  their owner**, which is ka's rule and kk's 401 rule.
-- Before signing out, show kk's dialog when anything waits: "Sync now" / "Sign out anyway" / "Discard
-  waiting changes". The kit ships it.
-- Signing in as someone else does **not** wipe another account's outbox (it lives in that account's
-  own database). It does wipe every stale persisted cache older than `maxAge`.
-- No "shared computer" switch in phase 1 (Q4).
+- **ka:** sign-out clears the persisted query cache and the mirror rows; the outbox and photos
+  **stay for their owner** (auth-store.ts:68-80). The kit's `SignOutPendingDialog` shows only on an
+  **explicit** sign-out (top-bar.tsx:104, sessions-card.tsx:38), never in the session-ended hook
+  (auth-store.ts:170-174), which can't ask anyone. Its words say the changes stay on this device for
+  their owner. Signing in as someone else does not touch another account's outbox (it lives in that
+  account's own database); persisted caches older than `maxAge` are removed at sign-in.
+- **kk keeps its warn-and-wipe:** "Log out anyway" destroys the queue (db.ts:339-349), and the
+  persisted cache is always cleared (auth-store.ts:139). kk's copy must **not** say "your changes
+  stay on this device".
+- **"This is a shared computer"** (ka, P1): a choice at sign-in that **persists nothing**: the query
+  persistence is not mounted and the cache lives in memory only, as today. The handover copy is
+  ka's field tool on tablets and keeps its own rule (rows go at sign-out, the outbox waits for its
+  owner).
+- **The tour `:pending` record** (tours §10.2.4, `<storageKey>:pending`) is not the app's outbox: it
+  stays out of any "N waiting" count and out of the sign-out guard, in kk and in ka, on purpose
+  (losing a tour mark is acceptable). `signOutTourProgress` keeps it for its owner.
 
-**D7 Encryption at rest: none on the device (kk's decision).**
+**D7 Plaintext at rest, with a scrub list (kk's decision).**
 
-**Rec:** follow record-crypto.ts:32-58, plus:
-- never persist bank details, signatures or files;
-- the 24 h `maxAge`;
-- the wipe on sign-out.
-
-kastlan's server-side encryption (at_rest.py) is unchanged.
+- Follow record-crypto.ts:32-58: plaintext on the device, encryption at the wire where an app has it.
+- The **query cache** never persists the scrub list: `iban`, `qr_iban`, `default_qr_iban`,
+  `signature_*` (D4), and never files.
+- **Signatures in ka's handover copy stay, by design**: signing at move-out without a connection is
+  the point of the copy, and they leave the device once synced. The scrub applies to the query
+  cache, not to the sync store.
+- The 24 h `maxAge`, the wipe on sign-out, and the shared-computer choice.
+- kastlan's server-side encryption (at_rest.py) is unchanged.
 
 **D8 Service worker: the update prompt (kk), not autoUpdate.**
 
-**Rec:**
-- ka moves to `registerType: "prompt"` with the kit's update toast. An auto-reload mid-handover loses
-  no data, but it does lose the screen.
-- ka keeps Workbox `generateSW` (it has no push yet; notifications decision 9).
-- No API caching in either app: offline data comes from Dexie and the persisted cache.
+- ka moves to `registerType: "prompt"` with the kit's `PwaUpdatePrompt`. `autoUpdate` with
+  `clientsClaim` (vite.config.ts:31, :62) can reload in the middle of a drawn signature or a tour.
+- **The prompt waits while a handover is open or a tour runs** (`hold`), as the sync controller
+  already pauses for tours (sync-controller.ts:41). It never shows mid-handover or mid-tour.
+- ka keeps Workbox `generateSW` (it has no push yet; notifications decision 9). No API caching in
+  either app.
+- Because old bundles live longer, every `/sync` shape change keeps the previous shape for one
+  release (D1, D2).
 
-**D9 The indicator.**
+**D9 The indicator (P3).**
 
-**Rec:**
-- Once ka syncs more than handovers (phase 3), its indicator drops the handover `scope` words
-  (top-bar §6.10). It drops `hideWhenIdle` too, and is always shown as in kk.
-- Both apps store `lastSyncedAt` in `meta` after a good round, so it survives a reload. Today kk keeps
-  it in memory only, and ka has none (sync.ts:122).
-- The legacy `"kastlan-offline"` photo outbox is retired once it has drained.
+- Once ka syncs more than handovers, its indicator drops the handover `scope` words (top-bar §6.10)
+  and `hideWhenIdle`, and is always shown as in kk.
+- Both apps store `lastSyncedAt` in `meta` after a good round, so it survives a reload (a small
+  change in kk; ka has none, sync.ts:122).
+- The legacy `"kastlan-offline"` photo outbox is only drained (FE shared/offline/sync-manager.ts); P3
+  deletes it after one release of draining.
 
 ### 1.6 What each kit ships
 
-**server-kit `eifi1_server_kit.sync`** (layer 1 + a small layer 2). Size **M**: about 500 code lines and
-800 test lines.
-- `schemas`: kk's `SyncChange`/`SyncRequest`/`SyncResponse`/`SyncPageCursor`, with `scope` optional.
-  `SyncRefusal` moves here and stays re-exported from `billing`.
-- `mixin`: the `SyncMixin` columns (`sync_uuid`/`id`, `knowledge`, `deleted_at`, a client-owned
-  `updated_at`), the `before_flush` stamping hook, and the tombstone filter. The counter is a port: kk
-  counts per tenant, ka database-wide (Q5).
-- `merge`: `merge_lww(row, data, incoming_updated)` and the tombstone rule.
-- `scopes`: ka's `SyncScope`/`EntityRule` (readable set, writable rules, fixed fields, roles).
-- **It stays in the apps:**
-  - kk: the entities, E2EE and re-seal, fx, the unique-key merge, valuations, the budget switch;
-  - ka: the ORM-derived registry and `sync_uuid` foreign keys, the photo upload, finalising.
+**server-kit 0.15 `eifi1_server_kit.sync`** (P2; layer 1 + a small layer 2). Size **M**.
+- `schemas`: `SyncChange` (+ optional `updated_at`), `SyncPageCursor`, `SyncRequest` (`scope`
+  optional), `SyncResponse` (`refused` unchanged, `rejections` new), `SyncRejection`. `SyncRefusal`
+  moves here and stays re-exported from `billing`. All open to subclassing.
+- `mixin`: the `SyncMixin` columns (`knowledge`, `deleted_at`, a client-owned `updated_at`; the key
+  column is the app's: kk `id`, ka `sync_uuid`), kk's `before_flush` loop (infrastructure/sync.py:
+  141-186: stamp server-now only when `updated_at` was not set), `tombstone`, `bulk_tombstone`,
+  `bulk_restamp` and the `INCLUDE_TOMBSTONED` filter.
+- **The counter is a port**: `KnowledgeCounter.bump(session, tenant_id) -> int`, synchronous, called
+  inside `before_flush` under `no_autoflush` with a row lock (kk :45-63), plus `tenant_of(obj)`. ka
+  ignores the tenant (one row).
+- `merge`: `merge_lww(existing_updated, incoming_updated, *, now) -> bool` (strictly newer keeps the
+  server's, a future stamp clamped, none → now) and `merge_delete`, which always tombstones (D2).
+- `paging`: the (entity, knowledge, id) page cursor (kk's LP-3 fix).
+- **Stays in the apps:** kk's household tenancy and FORCE RLS, E2EE and re-seal, key custody, billing
+  refusals (`_refusal`), `_UNIQUE_KEYS`/remaps, revival rules, transfer cascades and trades, fx and
+  valuations, the budget switch; ka's ORM-derived registry and `sync_uuid` foreign keys, the photo
+  upload, finalising, and `SyncScope`/`EntityRule` (they move to the kit with P4's second scope, if a
+  second app wants them).
 
-**ui-kit `@eifi1/ui-kit/offline`** (new subpath, `dexie` and the TanStack persist packages as optional
-peers). Size **L**: about 1200 code lines and 1500 test lines.
-- `createQueryPersistence({ app, user, scope, denyRoots, buster, maxAge })`: kk's deny-list, `isCacheSafe`,
-  the guard on write and on restore, and the per-account key (D5).
-- `createSyncEngine({ dbName, entities, endpoint, scope })`: the outbox (seq-ordered, a held row holds its
-  successors, edits merging into the pending upsert as ka does), the round (push, then a paged pull, the
-  cursor moving only after a complete pull, unsent changes laid back over pulled rows), the
-  wipe-generation guard and the refusal handling (`waitingForPlan`, `releaseHeld`, `discardWaiting`,
-  `rejected` with the reason).
-- `useSyncWorker`: mount, `online`, 30 s, an 800 ms debounce, one round at a time, `pause()` for tours.
-- `useSyncStatus()` → the existing `SyncStatus`.
-- `readLocalFirst`/`isOfflineError`.
-- `SignOutPendingDialog` and `PwaUpdatePrompt`, with words in seven languages.
-- **It stays in the apps:** entity tables and indexes, local engines, crypto, and kk's `sw.ts` (push,
+**ui-kit 0.45 `@eifi1/ui-kit/offline`** (P1; a new subpath, with `@tanstack/react-query`,
+`@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` and `idb-keyval`
+as optional peers). Size **S–M**.
+- `createQueryPersistence({ app, user, company?, shouldPersistKey, denyRoots?, scrubFields?,
+  onUnsafe?, buster, maxAge })` → `{ key, persistOptions, clear(queryClient), removeStale() }`:
+  - `shouldPersistKey(key)` beside `denyRoots` (kk denies one whole key, `accounts.fxContext`, and
+    any key whose second segment is `"admin"`, query-client.ts:130-142);
+  - the scrub list applied before a query is persisted (`DEFAULT_SCRUB_FIELDS`: `iban`, `qr_iban`,
+    `default_qr_iban`, `signature_*`), recursively;
+  - `isCacheSafe` with a pluggable warn hook (`onUnsafe`, kk :165-191), the guard on write
+    (`shouldDehydrateQuery`) and the restore-side sanitizer that keeps paused mutations (kk :264-298);
+  - the per-account key (D5); `clear()` = `queryClient.clear()` plus `removeClient` (kk :302);
+    `removeStale()` drops other keys of the app older than `maxAge` (ka, at sign-in).
+- `SignOutPendingDialog({ open, queued, waitingForPlan, onSyncNow, onSignOutAnyway,
+  onDiscardWaiting?, keepsChanges, extra?, labels? })`: `queued` = pending + blocked; `onSyncNow`
+  is async, closes and re-evaluates without signing out; "Discard waiting changes" only with
+  `onDiscardWaiting` and `waitingForPlan > 0`; `keepsChanges` picks the words (ka: they stay for
+  you; kk: they will be lost); `extra` is room for the billing kit's `waitingChanges` line. Seven
+  languages.
+- `PwaUpdatePrompt({ needRefresh, onReload, onDismiss?, hold?, labels? })`: kk's toast with
+  "Reload"; while `hold` it waits (D8). Seven languages.
+- `SharedComputerChoice` (a labelled checkbox for the sign-in form) with
+  `isSharedComputer()`/`setSharedComputer(on)`, held in `sessionStorage`, so the choice itself
+  outlives no tab. Seven languages.
+- **P3, later:** `createSyncEngine`, `useSyncWorker`, `useSyncStatus()`, `readLocalFirst`/
+  `isOfflineError`, and leaf utilities both apps can share (`stampAfter`, the generation guard).
+  kk does not adopt the engine ("not for keksdose unless proven", P4).
+- **Stays in the apps:** entity tables and indexes, local engines, crypto, and kk's `sw.ts` (push,
   share target).
 
 ### 1.7 Per app, and the phases
 
 | Phase | ui-kit / server-kit | keksdose | kastlan | KS |
 |---|---|---|---|---|
-| P1 offline reads | ui-kit `createQueryPersistence`, `PwaUpdatePrompt`, `SignOutPendingDialog` (S–M) | moves its policy onto the kit helper (S) | persisted cache + deny-list; "Needs a connection" on online-only actions; prompt SW (M) | none |
-| P2 protocol | server-kit `sync` (M) | imports the schemas, mixin and merge (S–M) | D1 shapes, D2 merge rule, `refusals: true` (M) | none |
-| P3 engine | ui-kit `createSyncEngine`, `useSyncWorker` (L) | — | the handover copy onto the kit engine; `lastSyncedAt`; the indicator always shown; legacy outbox retired (M) | none |
-| P4 more scopes | — | kk's mirror onto the engine, when it suits (L, optional) | `maintenance`, `meters`, `contacts` scopes (M) | none |
+| **P1 offline reads (0.45)** | ui-kit `createQueryPersistence`, `SignOutPendingDialog`, `PwaUpdatePrompt`, `SharedComputerChoice` (S–M) | moves its policy onto the kit helper, per-account key, dialog with `keepsChanges={false}` (S) | persisted cache + scrub list; "Needs a connection" on online-only actions; shared-computer choice; prompt SW (M) | none |
+| **P2 protocol (0.45)** | server-kit `sync` (M) | imports the schemas, mixin, counter port and merge (S–M) | D1 shapes, `rejections`, D2 edit time (wire), `refusals: true`; old shape kept one release (M) | none |
+| P3 engine (later) | ui-kit `createSyncEngine`, `useSyncWorker` (L) | — | the handover copy onto the kit engine; `lastSyncedAt`; the indicator always shown; legacy outbox retired (M) | none |
+| P4 more scopes (later) | `SyncScope`/`EntityRule` into server-kit if shared | not for keksdose unless proven | `maintenance`, `meters`, `contacts`; owner meetings a candidate (M) | none |
 
-**Removes** about 400 lines of kastlan sync code (repo/sync/controller, the legacy outbox) and about
-150 lines of kk persistence code. kk's sync-client mostly stays until P4.
+kk also fixes its budget-switch outbox loss in place (§1.2), outside the kit.
 
-### 1.8 Open questions for Marcel
+### 1.8 Marcel's answers (2026-10-19)
 
-1. **D2:** the client's `updated_at` wins in kastlan too? (It changes who wins today for handovers.)
-2. **D4:** the offline write set: handover, maintenance, meters, contacts? Should a lease's or tenant's
-   details be writable offline too?
-3. **D4:** cache already-issued invoice/QR-bill PDFs for offline viewing, or never (size, personal data)?
-4. **D6:** a "This is a shared computer" choice at sign-in that keeps nothing on the device (memory
-   only), for kastlan's office PCs? Or does per-account storage plus the wipe on sign-out suffice?
-5. **D1/§1.6:** the knowledge counter: per company in ka (as kk per household), or keep ka's
-   database-wide row? A per-company counter means a migration of the cursor (a full re-pull once).
-6. **D7:** stay plaintext on the device for kastlan's tenant data (names, addresses, meter readings),
-   with IBANs and signatures kept off it?
-7. Does keksdose adopt the kit engine at all (P4), or only the persistence helper and the shared
-   protocol?
+1. **D2:** yes, the latest edit time wins, sent by the device (a wire change); older clients fall
+   back to server-now for one release; future stamps clamped; deletes tombstone unconditionally.
+2. **D4:** offline writes: handover now; maintenance, meters, contacts in P4; owner meetings a P4
+   candidate. Lease and tenant edits stay online (a tenant's phone/e-mail is `contacts`).
+3. **D4:** issued PDFs are not cached (decided by default).
+4. **D6:** yes, a "shared computer" choice at sign-in that persists nothing. Sign-out stays per app.
+5. **Counter:** ka keeps its database-wide row.
+6. **D7:** plaintext like kk, with the scrub list; signatures in the handover copy stay.
+7. **kk and the engine:** P1 and P2 only; no `createSyncEngine`, no per-household databases.
+8. **Scope of 0.45:** phases 1 and 2; later phases in following rounds.
 
-### 1.9 For the reviews
+### 1.9 Where each review answer went
 
-- **kastlan:** Is §1.3 right? Is the D4 scope right (which pages your staff use offline)? What does D2
-  cost your handover tests? Can D1's `refused` list replace your 422 path (sync.ts:76-83)? What does a
-  lease/tenant edit offline need?
-- **keksdose:** Does §1.2 match your code? Can `createQueryPersistence` and `SignOutPendingDialog` take
-  your policy and your dialog unchanged? Should the per-account database key (D5) apply to you too?
-  Which parts of sync-client are generic enough for P3?
-- **Kurvenschmiede:** Confirm §1.4: online-only, `storage="none"`, nothing further.
+| Review | Point | Where |
+|---|---|---|
+| ka 1 | 51 classes; no `updated_at` on the wire; the 422 refuses the whole request; signatures in the copy | §1.3, D2, D7 |
+| ka 2 | offline pages; owner meetings; lease edits online; scrub fields, not roots | D4 |
+| ka 3 | the cost of D2; clamp; old clients | D2 |
+| ka 4 | per-change reasons as a list; `plan_limit` | D1 (`rejections`) |
+| ka 5 | per-company key; outbox kept; dialog on explicit sign-out only; shared computer; `signature_*` | D5, D6, D7 |
+| ka 6 | the prompt; old `/sync` shape one release; wait during handover/tour | D8, D1 |
+| ka 7 | database-wide counter | D5 |
+| ka 8 | the legacy outbox retired after draining | D9 |
+| kk 1 | deletes unconditional; server clock online; `stampAfter`; sign-out wipes the outbox; the budget switch; per-row rejections; smaller points | §1.2, D2, D6 |
+| kk 2 | the helper's and the dialog's props | §1.6 |
+| kk 3 | single mirror + `mirror_user_id` | D5 |
+| kk 4 | what moves; the counter port; `merge_lww` with unconditional deletes | §1.6, D2 |
+| kk 5 | P1+P2 only; the engine not for kk | §1.6, §1.7 |
+| kk D1 | `refused` unchanged, a new field | D1 |
+| KS | no answer; online-only re-checked at b54c16e | §1.4 |
+| tours §10.2.4 | the `:pending` record outside "N waiting" and the sign-out guard | D6 |
