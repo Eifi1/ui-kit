@@ -480,7 +480,7 @@ export const en: Dictionary = {
       title: "Notifications",
       short: "Notifications",
       blurb:
-        "The notification settings every app shares: the types the server answers with a switch in the app and one by e-mail, quiet hours and the time zone, push on this device and the list of devices, and the page an e-mail's unsubscribe link opens.",
+        "The notification settings every app shares: the types the server answers with a switch per channel (in the app, push, e-mail), quiet hours and the account's time zone, the inbox and the top bar's bell, push on this device and the list of devices with the types each one mutes, and the page an e-mail's unsubscribe link opens.",
     },
     settings: {
       title: "Settings",
@@ -1184,6 +1184,10 @@ export const en: Dictionary = {
       "unsubscribe from e-mails",
       "one-click unsubscribe link",
       "weekly or monthly digest",
+      "notification inbox",
+      "bell with unread notifications",
+      "set the account's time zone automatically",
+      "mute push on one device",
     ],
     settings: [
       "account settings",

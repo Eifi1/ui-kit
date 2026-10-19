@@ -476,7 +476,7 @@ export const fr: Dictionary = {
       title: "Notifications",
       short: "Notifications",
       blurb:
-        "Les réglages de notification que toutes les apps partagent\u00a0: les types que le serveur renvoie, avec un interrupteur dans l’app et un par e-mail, les heures calmes et le fuseau horaire, le push sur cet appareil et la liste des appareils, et la page qu’ouvre le lien de désabonnement d’un e-mail.",
+        "Les réglages de notification que toutes les apps partagent\u00a0: les types que le serveur renvoie, avec un interrupteur par canal (dans l’app, push, e-mail), les heures calmes et le fuseau horaire du compte, la boîte de réception et la cloche de la barre du haut, le push sur cet appareil et la liste des appareils avec les types que chacun met en sourdine, et la page qu’ouvre le lien de désabonnement d’un e-mail.",
     },
     settings: {
       title: "Paramètres",
@@ -1181,6 +1181,10 @@ export const fr: Dictionary = {
       "se désabonner des e-mails",
       "lien de désabonnement en un clic",
       "résumé hebdomadaire ou mensuel",
+      "boîte de réception des notifications",
+      "cloche des notifications non lues",
+      "fuseau horaire du compte automatique",
+      "couper le push sur un appareil",
     ],
     settings: [
       "paramètres du compte",

@@ -13,15 +13,22 @@ import type { ReactNode } from "react";
 export type DigestCadence = "weekly" | "monthly";
 
 /**
- * One type's two switches in the `GET` (§3.2). `null` where the type does not offer
- * that channel: `email` for a type with no mail, `app` in an app with no "in the app"
- * channel (Kurvenschmiede: `{app: null, email: true}`). An unset switch already reads as
- * its default — the server fills it in.
+ * One type's switches in the `GET` (§3.2; §10.2: one per channel). `null` where the type
+ * does not offer that channel: `email` for a type with no mail, `app` in an app with no
+ * "in the app" channel (Kurvenschmiede: `{app: null, push: null, email: true}`), `push` in
+ * an app with no push (server-kit `NotificationTypes(..., push_channel=False)`: kastlan,
+ * KS). An unset switch already reads as its default — the server fills it in.
  */
 export interface NotificationSwitches {
   app: boolean | null;
+  /** 0.46 (§10.2): push, independent of `app`. Left out by a server before
+   *  server-kit 0.16, which reads as `null` (not offered). */
+  push?: boolean | null;
   email: boolean | null;
 }
+
+/** A channel a type may offer (§10.2), in the order the types card draws them. */
+export type NotificationChannel = "app" | "push" | "email";
 
 /** The `GET`'s `types`: every type the account can receive, in the registry's order. */
 export type NotificationTypesValue = Readonly<Record<string, NotificationSwitches>>;
@@ -51,13 +58,13 @@ export interface NotificationTypeGroup<Id extends string = string> {
 
 /**
  * The parts of `PATCH /notifications/settings` (§3.2) the cards send. Omitted keeps; a
- * type's `null` puts both its switches back to their defaults; `quiet_hours_*: null`
+ * type's `null` puts its switches back to their defaults; `quiet_hours_*: null`
  * clears a time. One switch per call from the types card (`{types: {digest: {app:
  * true}}}`), or `{digest_cadence}`; quiet hours send a time, with the device's zone the
  * first time; the zone picker sends `{timezone}`.
  */
 export interface NotificationSettingsPatch<Id extends string = string> {
-  types?: Partial<Record<Id, { app?: boolean; email?: boolean } | null>>;
+  types?: Partial<Record<Id, { app?: boolean; push?: boolean; email?: boolean } | null>>;
   digest_cadence?: DigestCadence;
   quiet_hours_start?: string | null;
   quiet_hours_end?: string | null;
@@ -77,4 +84,7 @@ export interface PushDeviceItem<Id extends string | number = string> {
   last_success_at: string | null;
   /** Failed deliveries in a row; the server removes the device at 10. */
   failure_count: number;
+  /** 0.46 (§10.2): the type ids this device mutes — a device can mute types, never add
+   *  them. Left out by a server before server-kit 0.16 (none muted). */
+  muted_types?: string[];
 }

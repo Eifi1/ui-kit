@@ -473,7 +473,7 @@ export const es: Dictionary = {
       title: "Notificaciones",
       short: "Notificaciones",
       blurb:
-        "Los ajustes de notificación que comparten todas las apps: los tipos que devuelve el servidor, con un interruptor en la app y otro por correo, las horas de silencio y la zona horaria, el push en este dispositivo y la lista de dispositivos, y la página que abre el enlace para darse de baja de un correo.",
+        "Los ajustes de notificación que comparten todas las apps: los tipos que devuelve el servidor, con un interruptor por canal (en la app, push, correo), las horas de silencio y la zona horaria de la cuenta, la bandeja de entrada y la campana de la barra superior, el push en este dispositivo y la lista de dispositivos con los tipos que cada uno silencia, y la página que abre el enlace para darse de baja de un correo.",
     },
     settings: {
       title: "Ajustes",
@@ -1178,6 +1178,10 @@ export const es: Dictionary = {
       "darse de baja de los correos",
       "enlace para darse de baja con un clic",
       "resumen semanal o mensual",
+      "bandeja de entrada de notificaciones",
+      "campana con notificaciones sin leer",
+      "zona horaria de la cuenta automática",
+      "silenciar el push en un dispositivo",
     ],
     settings: [
       "ajustes de la cuenta",

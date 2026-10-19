@@ -9,9 +9,9 @@ import {
 export { DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS };
 export type { FeedbackNotificationTypesLabels };
 
-/** The two feedback notification ids (§9.11), as server-kit's `FEEDBACK_ANSWERED` and
- *  `FEEDBACK_COMMENT` name them. */
-export type FeedbackNotificationTypeId = "feedback_answered" | "feedback_comment";
+/** The feedback notification ids (§9.11, §11), as server-kit's `FEEDBACK_ANSWERED`,
+ *  `FEEDBACK_COMMENT` and `FEEDBACK_RECEIVED` (0.46: an admin's alert) name them. */
+export type FeedbackNotificationTypeId = "feedback_answered" | "feedback_comment" | "feedback_received";
 
 /**
  * The setting words of the two feedback notification types (round 0.38,
@@ -27,9 +27,14 @@ export type FeedbackNotificationTypeId = "feedback_answered" | "feedback_comment
  * - **"Comments on reports you follow"** (`feedback_comment`): a visible comment, to the
  *   author and the earlier commenters.
  *
- * Both entries are always returned: the card draws a type only when the server answered
+ * - **"New feedback and reworks"** (`feedback_received`, 0.46, feedback §11): to the
+ *   admins, when someone files a report, sends one back for rework, or a page crashes.
+ *   `labels.adminGroup` ("Admin") is a heading an app may put over it.
+ *
+ * Every entry is always returned: the card draws a type only when the server answered
  * it (notifications §2.1), so kastlan, which does not declare `feedback_comment` while its
- * public parts are off, shows the first alone. Words: `<UiKitProvider labels={{
+ * public parts are off, shows the first alone, and a person who is no admin is never
+ * answered `feedback_received`. Words: `<UiKitProvider labels={{
  * feedbackNotificationTypes }}>` over English, `labels` over both.
  */
 export function useFeedbackNotificationTypes(
@@ -40,6 +45,7 @@ export function useFeedbackNotificationTypes(
     () => [
       { id: "feedback_answered", label: words.answered, description: words.answeredDescription },
       { id: "feedback_comment", label: words.comment, description: words.commentDescription },
+      { id: "feedback_received", label: words.received, description: words.receivedDescription },
     ],
     [words],
   );

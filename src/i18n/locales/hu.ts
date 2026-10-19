@@ -141,6 +141,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       answeredDescription: "Amikor egy Ön által írt vagy hozzászólt bejelentés választ kap.",
       comment: "Hozzászólások a követett bejelentésekhez",
       commentDescription: "Amikor valaki hozzászól egy Ön által írt vagy hozzászólt bejelentéshez.",
+      received: "Új bejelentések és átdolgozások",
+      receivedDescription: "Amikor valaki bejelentést tesz, visszaküld egyet, vagy egy oldal összeomlik.",
+      adminGroup: "Admin",
     },
     feedbackContext: {
       user: "Felhasználó",
@@ -1166,6 +1169,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       typesTitle: "Értesítést kérek ezekről",
       typesDescription: "Válassza ki, miről és hogyan kapjon értesítést.",
       byEmail: "E-mailben",
+      channelApp: "Az appban",
+      channelPush: "Push",
+      channelEmail: "E-mail",
       emailUnverified: "Erősítse meg a címét, hogy megkapja ezeket.",
       digestCadence: "Gyakoriság",
       digestWeekly: "Hetente",
@@ -1173,10 +1179,16 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       typesLoading: "Értesítési beállítások betöltése…",
       typesEmpty: "Ehhez a fiókhoz nincsenek értesítések.",
       quietTitle: "Csendes órák",
-      quietDescription: (inbox) =>
-        inbox
-          ? "Ebben az idősávban nem érkeznek push-értesítések. A beérkezett értesítések közé így is bekerülnek."
-          : "Ebben az idősávban nem érkeznek push-értesítések.",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "Ebben az idősávban a push-értesítések várnak, és a végén érkeznek meg. A beérkezett értesítések közé azonnal bekerülnek."
+            : "Ebben az idősávban a push-értesítések várnak, és a végén érkeznek meg."
+          : inbox
+            ? "Ebben az idősávban nem érkeznek push-értesítések. A beérkezett értesítések közé így is bekerülnek."
+            : "Ebben az idősávban nem érkeznek push-értesítések.",
+      quietZone: (zone) => `Az Ön időzónájában (${zone}).`,
+      quietZoneLink: "Időzóna módosítása",
       quietFrom: "Ettől",
       quietUntil: "Eddig",
       quietIncomplete:
@@ -1196,6 +1208,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         Indian: "Indiai-óceán",
         Pacific: "Csendes-óceán",
       },
+      zoneAutomatic: (zone) => `Automatikus (ez az eszköz: ${zone})`,
+      zoneDescription: "A csendes órák, az összefoglaló és az app által Önnek írt időpontok ehhez igazodnak.",
       pushTitle: "Push-értesítések",
       pushDescription: "Értesítések ezen az eszközön, akkor is, ha az alkalmazás be van zárva.",
       unsupported: "Ez a böngésző nem támogatja a push-értesítéseket.",
@@ -1236,6 +1250,19 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `Eltávolítás: ${device}`,
       removePrompt: "Leállítja az értesítések küldését erre az eszközre?",
+      deviceTypes: "Típusok ezen az eszközön",
+      deviceTypesDescription: "Kapcsoljon ki egy típust, hogy csak ezen az eszközön némítsa.",
+      deviceTypesEmpty: "Egyik típusnál sincsenek bekapcsolva a push-értesítések.",
+      inboxTitle: "Beérkezett értesítések",
+      inboxLoading: "Értesítések betöltése…",
+      inboxEmpty: "Mindent elolvasott.",
+      markAllRead: "Összes megjelölése olvasottként",
+      clearAll: "Összes törlése",
+      clearPrompt: "Törli az összes értesítést?",
+      showMore: "Több megjelenítése",
+      bellLabel: "Értesítések",
+      bellUnread: (count) => `${n(count)} olvasatlan`,
+      allNotifications: "Összes értesítés",
       unsubscribeTitle: "E-mail-értesítések",
       unsubscribeAbout: (type) => `E-maileket kap erről: ${type}.`,
       unsubscribeGeneric: "Értesítő e-maileket kap.",

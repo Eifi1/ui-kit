@@ -83,6 +83,25 @@ for (const name of catalogues) {
   walk(join(LOCALES, name), [join(LOCALES, name)]);
 }
 
+// A service worker bundles `@eifi1/ui-kit/push-worker` (0.46, notifications §10.6 rule 5): its
+// closure imports no package (React, a component's dependency) and no component module —
+// only the handler's own module, which is dependency-free.
+{
+  const PUSH_WORKER = "dist/push-worker.js";
+  const reached = new Set();
+  const walk = (file) => {
+    if (reached.has(file)) return;
+    reached.add(file);
+    const bare = [...readFileSync(file, "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)"([^".][^"]*)"/g)].map((m) => m[1]);
+    if (bare.length) fail(`${PUSH_WORKER} reaches ${file}, which imports ${bare.join(", ")} — a worker entry imports no package`);
+    for (const next of staticImports(file)) walk(next);
+  };
+  walk(PUSH_WORKER);
+  const allowed = new Set([PUSH_WORKER, join("dist", "notifications", "push-worker.js")]);
+  const extra = [...reached].filter((file) => !allowed.has(file));
+  if (extra.length) fail(`${PUSH_WORKER} reaches ${extra.join(", ")} — only notifications/push-worker.js may come with it`);
+}
+
 // No runtime import cycle among the modules: static imports only, since a type import is
 // gone from the .js and a dynamic `import()` runs after its importer has loaded. The pay
 // page and the bin are bundles of their own.

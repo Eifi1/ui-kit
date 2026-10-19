@@ -203,3 +203,99 @@ describe("PushDevicesSetting", () => {
     expect(await axeViolations(container)).toEqual([]);
   });
 });
+
+describe("PushDevicesSetting — types on this device (0.46, §10.2)", () => {
+  const TYPES = [
+    { id: "scan_done", label: "Finished scans" },
+    { id: "overspend", label: "Overspent categories" },
+    { id: "digest", label: "Budget digest" },
+  ];
+  // `digest` has push off for the account: not listed. `old_type` was dropped by the registry.
+  const SWITCHES = {
+    scan_done: { app: true, push: true, email: null },
+    overspend: { app: false, push: true, email: null },
+    digest: { app: true, push: false, email: null },
+  };
+  const MUTING: PushDeviceItem<number>[] = [{ ...DEVICES[0], muted_types: ["overspend", "old_type"] }, DEVICES[1]];
+
+  it("lists the types with push on, each a switch, on unless the device mutes it", async () => {
+    const user = userEvent.setup();
+    render(
+      <PushDevicesSetting
+        devices={MUTING}
+        onRemove={vi.fn()}
+        onMutedTypesChange={vi.fn()}
+        types={TYPES}
+        typeSwitches={SWITCHES}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Types on this device: Chrome · Android" }));
+    const phone = document.querySelector('[data-push-device-id="1"]') as HTMLElement;
+    expect(within(phone).getAllByRole("switch")).toHaveLength(2);
+    expect(within(phone).getByRole("switch", { name: "Finished scans" })).toBeChecked();
+    expect(within(phone).getByRole("switch", { name: "Overspent categories" })).not.toBeChecked();
+    expect(within(phone).queryByRole("switch", { name: "Budget digest" })).not.toBeInTheDocument();
+  });
+
+  it("writes the device's whole list on each flip, without the ids the registry dropped", async () => {
+    const user = userEvent.setup();
+    const onMutedTypesChange = vi.fn(async () => undefined);
+    render(
+      <PushDevicesSetting
+        devices={MUTING}
+        onRemove={vi.fn()}
+        onMutedTypesChange={onMutedTypesChange}
+        types={TYPES}
+        typeSwitches={SWITCHES}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Types on this device: Chrome · Android" }));
+    const phone = document.querySelector('[data-push-device-id="1"]') as HTMLElement;
+    await user.click(within(phone).getByRole("switch", { name: "Finished scans" }));
+    expect(onMutedTypesChange).toHaveBeenLastCalledWith(1, ["overspend", "scan_done"]);
+    expect(within(phone).getByRole("switch", { name: "Finished scans" })).not.toBeChecked();
+    await user.click(within(phone).getByRole("switch", { name: "Overspent categories" }));
+    expect(onMutedTypesChange).toHaveBeenLastCalledWith(1, ["scan_done"]);
+    // The other device keeps its own (empty) list.
+    await user.click(screen.getByRole("button", { name: "Types on this device: Firefox · Windows" }));
+    const laptop = document.querySelector('[data-push-device-id="2"]') as HTMLElement;
+    await user.click(within(laptop).getByRole("switch", { name: "Overspent categories" }));
+    expect(onMutedTypesChange).toHaveBeenLastCalledWith(2, ["overspend"]);
+  });
+
+  it("puts a rejected flip back and says so; no disclosure without `onMutedTypesChange`", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <PushDevicesSetting
+        devices={MUTING}
+        onRemove={vi.fn()}
+        onMutedTypesChange={() => Promise.reject(new Error("offline"))}
+        types={TYPES}
+        typeSwitches={SWITCHES}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Types on this device: Chrome · Android" }));
+    await user.click(screen.getByRole("switch", { name: "Finished scans" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("That didn’t work. Please try again.");
+    expect(screen.getByRole("switch", { name: "Finished scans" })).toBeChecked();
+    unmount();
+    render(<PushDevicesSetting devices={MUTING} onRemove={vi.fn()} types={TYPES} typeSwitches={SWITCHES} />);
+    expect(screen.queryByRole("button", { name: /Types on this device/ })).not.toBeInTheDocument();
+  });
+
+  it("says so when no type has push on, and passes axe open", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <PushDevicesSetting
+        devices={DEVICES.slice(0, 1)}
+        onRemove={vi.fn()}
+        onMutedTypesChange={vi.fn()}
+        types={TYPES}
+        typeSwitches={{ scan_done: { app: true, push: false, email: null } }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /Types on this device/ }));
+    expect(screen.getByText("No type has push notifications turned on.")).toBeInTheDocument();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});

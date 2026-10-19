@@ -317,6 +317,37 @@ describe("dexie stays behind @eifi1/ui-kit/sync", () => {
   });
 });
 
+/**
+ * 0.46 (docs/notifications-harmonization.md §10.6 rule 5): a service worker imports the
+ * rotation handler from `@eifi1/ui-kit/push-worker`, which reaches no package (no React, no
+ * DOM component) and no module but the handler's own. The barrel keeps re-exporting it.
+ */
+describe("@eifi1/ui-kit/push-worker is worker-safe", () => {
+  /** Every source module the entry reaches through its relative imports. */
+  const modulesReachedFrom = (entry: string): string[] => {
+    const seen = new Set<string>();
+    const walk = (file: string) => {
+      if (seen.has(file)) return;
+      seen.add(file);
+      for (const specifier of specifiersOf(file)) {
+        const next = isRelative(specifier) ? resolveRelative(file, specifier) : null;
+        if (next) walk(next);
+      }
+    };
+    walk(join(ROOT, entry));
+    return [...seen].map((file) => file.slice(ROOT.length + 1).replace(/\\/g, "/")).sort();
+  };
+
+  it("reaches no package and no module but the handler", () => {
+    expect([...packagesReachedFrom("src/push-worker.ts")]).toEqual([]);
+    expect(modulesReachedFrom("src/push-worker.ts")).toEqual(["src/notifications/push-worker.ts", "src/push-worker.ts"]);
+  });
+
+  it("is an exports entry", () => {
+    expect(pkg.exports["./push-worker"]).toEqual({ types: "./dist/push-worker.d.ts", import: "./dist/push-worker.js" });
+  });
+});
+
 describe("@eifi1/ui-kit/testing is pure (0.33)", () => {
   // The guard an app runs from its own test suite (docs/colour-roles-harmonization.md
   // §8.3): browser-safe like the rest of the kit, so it runs under jsdom or node alike.

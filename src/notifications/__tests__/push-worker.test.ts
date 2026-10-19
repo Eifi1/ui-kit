@@ -142,3 +142,19 @@ describe("handlePushSubscriptionChange", () => {
     expect(page.postMessage).toHaveBeenCalledWith({ type: PUSH_SUBSCRIPTION_CHANGED, outcome: "replaced" });
   });
 });
+
+describe("@eifi1/ui-kit/push-worker (0.46, §10.6 rule 5)", () => {
+  it("is the same handler the barrel exports, from an entry a worker can bundle", async () => {
+    const entry = await import("../../push-worker");
+    const barrel = await import("../../index");
+    expect(Object.keys(entry).sort()).toEqual([
+      "PUSH_SUBSCRIPTION_CHANGED",
+      "handlePushSubscriptionChange",
+      "pushSubscriptionInput",
+      "resubscribeAfterChange",
+    ]);
+    expect(entry.handlePushSubscriptionChange).toBe(barrel.handlePushSubscriptionChange);
+    expect(entry.resubscribeAfterChange).toBe(barrel.resubscribeAfterChange);
+    expect(entry.PUSH_SUBSCRIPTION_CHANGED).toBe(barrel.PUSH_SUBSCRIPTION_CHANGED);
+  });
+});

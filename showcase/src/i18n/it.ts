@@ -470,7 +470,7 @@ export const it: Dictionary = {
       title: "Notifiche",
       short: "Notifiche",
       blurb:
-        "Le impostazioni di notifica che ogni app condivide: i tipi che il server restituisce, con un interruttore nell’app e uno per e-mail, le ore di silenzio e il fuso orario, il push su questo dispositivo e l’elenco dei dispositivi, e la pagina che apre il link di disiscrizione di un’e-mail.",
+        "Le impostazioni di notifica che ogni app condivide: i tipi che il server restituisce, con un interruttore per canale (nell’app, push, e-mail), le ore di silenzio e il fuso orario dell’account, la casella e la campanella della barra in alto, il push su questo dispositivo e l’elenco dei dispositivi con i tipi che ognuno silenzia, e la pagina che apre il link di disiscrizione di un’e-mail.",
     },
     settings: {
       title: "Impostazioni",
@@ -1175,6 +1175,10 @@ export const it: Dictionary = {
       "annullare l’iscrizione alle e-mail",
       "link di disiscrizione con un clic",
       "riepilogo settimanale o mensile",
+      "casella delle notifiche",
+      "campanella con le notifiche non lette",
+      "fuso orario dell’account automatico",
+      "silenziare il push su un dispositivo",
     ],
     settings: [
       "impostazioni dell’account",

@@ -13,6 +13,7 @@ describe("TopBarActions", () => {
     const { container } = render(
       <TopBarActions
         account={item("account")}
+        notifications={item("notifications")}
         platform={item("platform")}
         dev={item("dev")}
         sync={item("sync")}
@@ -34,6 +35,7 @@ describe("TopBarActions", () => {
       "sync",
       "dev",
       "platform",
+      "notifications",
       "account",
     ]);
   });
@@ -45,6 +47,15 @@ describe("TopBarActions", () => {
     const row = container.querySelector("header > div:last-child")!;
     expect(row.children).toHaveLength(2);
     expect(order(container)).toEqual(["search", "account"]);
+  });
+
+  it("0.46: the bell's slot sits right before the account menu, and is simply absent when not given", () => {
+    const { container, rerender } = render(
+      <TopBarActions notifications={item("notifications")} platform={item("platform")} account={item("account")} />,
+    );
+    expect(order(container)).toEqual(["platform", "notifications", "account"]);
+    rerender(<TopBarActions platform={item("platform")} account={item("account")} />);
+    expect(order(container)).toEqual(["platform", "account"]);
   });
 
   it("signed out (no account): Language and Sign in close the row (§6.6)", () => {
@@ -62,7 +73,7 @@ describe("TopBarActions", () => {
   });
 
   it("exports the order it draws", () => {
-    expect(TOP_BAR_ACTION_ORDER.slice(0, 10)).toEqual([
+    expect(TOP_BAR_ACTION_ORDER.slice(0, 11)).toEqual([
       "companySwitcher",
       "search",
       "theme",
@@ -72,6 +83,7 @@ describe("TopBarActions", () => {
       "sync",
       "dev",
       "platform",
+      "notifications",
       "account",
     ]);
   });

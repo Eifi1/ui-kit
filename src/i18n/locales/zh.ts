@@ -134,6 +134,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       answeredDescription: "当您提交或评论过的反馈收到回复时。",
       comment: "您关注的反馈中的评论",
       commentDescription: "当有人评论您提交或评论过的反馈时。",
+      received: "新反馈和返工",
+      receivedDescription: "当有人提交反馈、退回反馈或页面崩溃时。",
+      adminGroup: "管理员",
     },
     feedbackContext: {
       user: "用户",
@@ -1126,6 +1129,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       typesTitle: "通知我以下内容",
       typesDescription: "选择要接收哪些通知，以及接收方式。",
       byEmail: "通过电子邮件",
+      channelApp: "应用内",
+      channelPush: "推送",
+      channelEmail: "电子邮件",
       emailUnverified: "请先确认您的邮箱地址，才能收到这些邮件。",
       digestCadence: "频率",
       digestWeekly: "每周",
@@ -1133,8 +1139,16 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       typesLoading: "正在加载通知设置…",
       typesEmpty: "此账户没有可用的通知。",
       quietTitle: "免打扰时段",
-      quietDescription: (inbox) =>
-        inbox ? "此时段内不发送推送通知。通知仍会进入您的收件箱。" : "此时段内不发送推送通知。",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "此时段内推送通知会等待，并在时段结束时送达。通知会立即进入您的收件箱。"
+            : "此时段内推送通知会等待，并在时段结束时送达。"
+          : inbox
+            ? "此时段内不发送推送通知。通知仍会进入您的收件箱。"
+            : "此时段内不发送推送通知。",
+      quietZone: (zone) => `按您的时区（${zone}）。`,
+      quietZoneLink: "更改时区",
       quietFrom: "从",
       quietUntil: "到",
       quietIncomplete: "请同时设置开始和结束时间。两者都设置后，免打扰时段才会生效。",
@@ -1153,6 +1167,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         Indian: "印度洋",
         Pacific: "太平洋",
       },
+      zoneAutomatic: (zone) => `自动（此设备：${zone}）`,
+      zoneDescription: "免打扰时段、摘要以及应用为您写出的时间都以此为准。",
       pushTitle: "推送通知",
       pushDescription: "在此设备上接收通知，即使应用已关闭。",
       unsupported: "此浏览器不支持推送通知。",
@@ -1189,6 +1205,19 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `移除：${device}`,
       removePrompt: "停止向此设备发送通知？",
+      deviceTypes: "此设备上的类型",
+      deviceTypesDescription: "关闭某个类型，即可仅在此设备上将其静音。",
+      deviceTypesEmpty: "没有开启推送通知的类型。",
+      inboxTitle: "收件箱",
+      inboxLoading: "正在加载通知…",
+      inboxEmpty: "没有新通知。",
+      markAllRead: "全部标为已读",
+      clearAll: "全部清除",
+      clearPrompt: "删除收件箱中的所有通知？",
+      showMore: "显示更多",
+      bellLabel: "通知",
+      bellUnread: (count) => `${n(count)} 条未读`,
+      allNotifications: "所有通知",
       unsubscribeTitle: "电子邮件通知",
       unsubscribeAbout: (type) => `您会收到有关以下内容的邮件：${type}。`,
       unsubscribeGeneric: "您会收到通知邮件。",

@@ -9,12 +9,18 @@ repeat the status cell. **An app's own `DataTable` wrapper must forward
 the prop and drops it hands the kit `undefined`, so the kit draws its column wherever there
 is no `rowActions`, beside the wrapper's own, and swallows a `false`. TypeScript does not
 catch it, since the kit's `DataTableProps` now has the prop (keksdose B1/S1; its full
-migration is in the DataTable section). Everything else is optional, and each section says
+migration is in the DataTable section). The notification types card also changes
+on the bump: a type with two or more channels draws them as columns ("In the app" / "E-mail", and
+"Push" where offered) instead of a "By e-mail" switch under the row (the Notifications section);
+and `useFeedbackNotificationTypes()` returns `feedback_received` too, so each app's
+`NotificationTypeId` union gains it (the Feedback alerts section). Everything else is optional, and each section says
 which app's workaround it replaces. After any kit bump, regenerate the API types
 (`npm run generate:api` or the app's own; keksdose's is in frontend/package.json:15): a
 server-kit bump alone can change them (0.15 did: `AdminAction` gained `group_deactivate` /
-`group_reactivate`; keksdose N4). server-kit 0.16 changes no model keksdose exposes, so
-expect an empty diff there.
+`group_reactivate`; keksdose N4). server-kit 0.16 changes several exposed models, so expect a
+diff: `TypeSwitches.push`, `InboxItem.company`, the auth zone fields (`UserResponse.timezone` /
+`device_timezone`, `ProfileUpdate`, `RegisterRequest.device_timezone`), `SyncRequest.client_now`
+and the new `legacy_rework_append` code.
 
 ## The 0.45 adoptions: ui-kit fixes
 
@@ -301,9 +307,78 @@ service worker now re-registers it.
 
 | App | Change |
 | --- | --- |
-| keksdose | frontend/src/sw.ts: `handlePushSubscriptionChange(self, { pushKey, replace })` beside the `push` listener (:229), both requests with plain `fetch` (the worker has no token). Backend: the route beside `POST /notifications/devices/unregister`, on `PushReplaceIn`, finding the row by `old_endpoint` and checking `push_auth_matches(row.auth, body.old_auth)`; a test per answer (200 in place, 404 unknown or wrong auth, 409 another account's endpoint). |
-| kastlan | Nothing until its own push (its injectManifest worker, app list); then the same two steps. |
+| keksdose | frontend/src/sw.ts: `import { handlePushSubscriptionChange } from "@eifi1/ui-kit/push-worker"` (the worker-safe subpath, never the barrel, which reaches React), `handlePushSubscriptionChange(self, { pushKey, replace })` beside the `push` listener (:229), both requests with plain `fetch` (the worker has no token). Backend: the route beside `POST /notifications/devices/unregister` (adapters/api/notifications_router.py:87), on `PushReplaceIn`, rate-limited by the per-instance `SlidingWindowRateLimiter` as the other unauthenticated routes (auth_router.py:82). §10.6's rules: **`push_subscriptions` is FORCE RLS and the route has no session**, so the lookup by `old_endpoint` and the update run inside `async with bypass_rls_for(session)` (infrastructure/tenancy.py:130) with an explicit `PushSubscription.endpoint == body.old_endpoint` filter (the only unauthenticated route that takes the bypass); **proof before the 409**: `push_auth_matches(row.auth, body.old_auth)` first, and only a proven device learns the new endpoint is taken; an **inactive or demo** account → the same 404, and its row deleted; push rows **deleted on sign out everywhere** (auth_router.py:916), **on deactivation** (`request_deletion`, account_deletion_service.py:199) and **on erasure** (`erase_one`, :337). **The reaper's race**: a 404/410 marks the row `gone_at` and stops sending to it instead of deleting it (domain/services/push_service.py:294-298 → a migration adds `push_subscriptions.gone_at`); the replace may claim a gone row within `PUSH_GONE_GRACE` (7 days, server-kit), and the daily reap deletes gone rows older than that. Never log the route's body; its 422 is a plain detail, never the input (`old_auth`). A test per answer (200 in place, 200 claiming a gone row inside the grace and 404 past it, 404 unknown or wrong auth, 404 inactive and demo, 409 another account's endpoint only after the proof). |
+| kastlan | Nothing until its own push (its injectManifest worker, app list); then the same two steps. Then: import from `@eifi1/ui-kit/push-worker`, and §10.6's rules — device rows account-scoped **without RLS** (a sessionless route under forced RLS answers 404), push rows deleted on sign-out-everywhere, on deactivation (account_service.py:191-192) and on erasure, inactive or demo → 404, proof before the 409, the reaper's `gone_at` with the 7-day claim. |
 | Kurvenschmiede | Nothing (no push). |
+
+## Notifications: the inbox, the bell, a switch per channel and per device, the zone on the account (notifications §10; server-kit 0.16.0)
+
+docs/notifications-harmonization.md §10 (settled 2026-10-19). Additive on a plain bump, with two
+visible changes: the types card draws a **column per channel** wherever a type offers two or more
+("In the app" / "Push" / "E-mail", stacked under the label on a phone; the old "By e-mail" switch
+under the row is gone, `labels.byEmail` is deprecated and unused), and nothing else moves until
+the app passes the new props.
+
+- **`NotificationInbox`** (props only): `items` (server-kit `InboxItem`, with `company?`),
+  `unreadCount`, `loading`, `onMarkRead(ids | null)`, `onClear()` (asked first, in the header —
+  no `ConfirmProvider`), `onOpen?(item)` (the kit marks the row read, then the app routes; left
+  out, a row with a `url` is a real link that marks itself read on a click or a middle click),
+  `icon(type)` (`Bell` for a type it does not map), `hasMore` / `onLoadMore` / `loadingMore`,
+  `formatDate`, `title`, `labels`. **`INBOX_BADGE_INTERVAL = 60_000`** for the badge's poll.
+- **`NotificationBell`** (optional per app) for **`TopBarActions`' new `notifications` slot**,
+  right before `account`: the unread count as a badge ("99+"), the newest 20 rows in the bar's
+  `TopBarActionMenu` panel, then "All notifications" (`href`). One badge per signal: the bell
+  or an avatar dot, never both. The panel is the bar's hover panel at every width (the bar's
+  menus have no phone sheet).
+- **The types card:** `NotificationSwitches.push` (`null` or left out = not offered, so a
+  pre-0.16 server draws as before); a PATCH sends `{types: {id: {push}}}` alone.
+- **The device list:** `onMutedTypesChange(id, mutedTypes)` with `types` (the card's) and
+  `typeSwitches` (the settings `GET`'s `types`) draws "Types on this device" on each row — a
+  switch per type with push on; each flip saves the device's **whole** list
+  (`PATCH /notifications/devices/{id} {"muted_types": [...]}`). `PushDeviceItem.muted_types?`.
+- **`TimeZoneSetting`** (`value` = `/auth/me`'s `timezone`, `null` = Automatic; `onChange(zone |
+  null)` → `PATCH /auth/me {timezone}`) for the group that holds the language, and
+  **`useDeviceZoneReport({ stored: me.device_timezone, report, isDemo })`** once at app start
+  (reports only when the device's zone differs, once per start, never for a demo).
+- **`QuietHoursSetting`**: pass `zone` (the account's effective zone) and `zoneHref` (the zone
+  row): the picker goes, the card says "In your time zone (…)" and links there, and a time sends
+  no zone. **`timezone` is deprecated** (read only without `zone`; removed in 0.47 with the
+  settings resource's `timezone` alias). `held` (an app that runs the notifications tick) says a
+  held push arrives when the window ends.
+- **`<UiKitProvider timeZone>`**: `useKitFormat().formatDate` / `formatRelativeTime` show
+  timestamps in it when a call names none; a bare `"YYYY-MM-DD"` is never shifted.
+- New words in all seven languages (`notifications.channel*`, `inbox*`, `bell*`, `deviceTypes*`,
+  `zone*`, `quietZone*`; `quietDescription(inbox, held?)`); an app's `notifications` overrides
+  keep type-checking.
+
+| App | Change |
+| --- | --- |
+| keksdose | **Inbox:** features/auth/notification-inbox.tsx:67-179 → `<NotificationInbox items={inbox.data?.items} unreadCount={inbox.data?.unread_count ?? 0} loading={inbox.isPending} onMarkRead={(ids) => markRead.mutateAsync(ids)} onClear={() => clear.mutateAsync()} icon={(type) => TYPE_ICONS[type as NotificationTypeId]} formatDate={(iso) => formatDateTime(iso, locale)} />` in settings-page.tsx:178 (the device's zone, as today: no provider `timeZone`); `TYPE_ICONS` (:44-56) stays and gains `feedback_received`; its `notifications.inbox_*` keys go (the kit's words are keksdose's). Keep the avatar dot (app/account-menu.tsx:365-378) and the menu row's count (:146-171): **no `NotificationBell`**. **Switches:** the migration `notification_preferences.enabled` → `app` and `push` (a missing row stays missing; `migrate_enabled_to_channels`); `push_subscriptions.muted_types` (FORCE RLS as today); `PATCH /notifications/devices/{id}`; the `/push/preferences` shim writes both, and `couple_push_to_app=True` while old bundles send `{app}` alone. features/auth/notification-settings-cards.tsx:165 passes the answer as is (now with `push`); :231 `PushDevicesSetting` gains `types`, `typeSwitches={settings.data?.types}` and `onMutedTypesChange`. `PushData.inbox=False` when no inbox row is written, and frontend/src/sw.ts:256 shows the notification when `data.inbox === false` even with a focused window. **Zone:** copy `notification_settings.timezone` → `users.timezone` (then drop the column); `device_timezone`; `TimeZoneSetting` in features/auth/appearance-card.tsx beside the language; `useDeviceZoneReport` in the shell; notification-settings-cards.tsx:205 `QuietHoursSetting` gets `zone={me.effective zone}`, `zoneHref`, `held` (no `timezone`); the four UTC writers through `effective_zone` (billing_notice_service.py:181-188, account_deletion_service.py:268, :274, feedback_publish_notice_service.py:124, push_notifications.py:938-960). **Queue:** the table and store; `_deliver_to_user` (push_notifications.py:396-399) holds a quiet push instead of dropping it; the 15-min product-metrics Cloud Run Job becomes the tick (`notifications_tick` + `send_queued_replies`, out of the daily job at scheduler.py:248) and carries the mail env. |
+| kastlan | **No push:** `NotificationTypes(..., push_channel=False)`; `StoredSwitches` takes the defaulted `push` (notification_settings_service.py:52, :71); the card shows two columns for `invoices_overdue` (features/settings/pages/settings-page.tsx:332), nothing to change there. **Inbox for `invoices_overdue`:** the table (`user_id`, `company_id`, account-scoped, no RLS), `InboxStore` + `inbox_router`; the 00:10 job writes a row per (user, company, event) in the mailing loop (overdue_mail.py:151-170); **`NotificationBell` in `notifications=`** (app/top-bar.tsx:136), `onOpen` switching the acting company first when `item.company` is another's; the inbox's page or card for `href`. The poller stays, fed from the inbox rows and the live `dunnings_pending` count (tests/integration/test_notification_poll.py, tests/api/test_staff_only_routes.py:174, use-notifications.test.ts follow). **Zone:** `users.timezone`, `users.device_timezone`, `/auth/me`; `TimeZoneSetting` beside `LanguageSetting` (settings-page.tsx:153); `useDeviceZoneReport`; an app-zone `today()` (Europe/Zurich) on the request paths (invoice_logic.py:39, :61; dunning_repository.py:86-87; journal_entry_service.py:474, :494, :518; accounting_router.py:373, :384, :459; deposit_service.py:143, :150); billing notices stay Zurich. Optional: `<UiKitProvider timeZone={me.timezone ?? undefined}>`. **No queue in 0.46** (`notifications-flush` in `JOBS` with its first queued type). |
+| Kurvenschmiede | **No push, no inbox, no bell:** `NotificationTypes(..., push_channel=False)`; `settings_of` and the PATCH filter by `TYPES.receivable(lambda t: t.id != FEEDBACK_RECEIVED or user.role == ADMIN)` (notification_service.py:124-127); its e-mail-only rows keep their single switch (frontend/src/features/notifications/notifications-card.tsx:29). **Zone:** the two columns, `/auth/me` (ignored for a demo, as auth_router.py:249-262); `TimeZoneSetting` beside `LanguageSetting` (frontend/src/features/settings/account-cards.tsx:127); `useDeviceZoneReport`; the billing notice's day in the recipient's effective zone (`NOTICE_ZONE` → the resolver) with a test. Optional: the provider's `timeZone`. No queue, no flush route, no Scheduler job. |
+
+## Feedback alerts for admins (`feedback_received`; feedback §11; server-kit 0.16.0)
+
+docs/feedback-harmonization.md §11 (settled 2026-10-19). One type, `feedback_received`, for a new
+report, a rework that lands OPEN, and a new crash; on by default in every channel the app offers,
+`quiet`; never the actor, a demo or the platform superuser. **ui-kit:** `useFeedbackNotificationTypes()`
+now returns a third entry, `feedback_received` ("New feedback and reworks", "When someone files a
+report, sends one back, or a page crashes."), drawn only where the server answers it (an admin);
+`feedbackNotificationTypes.adminGroup` ("Admin") is a heading an app may put over it. **Type
+change on the bump:** `FeedbackNotificationTypeId` gains `"feedback_received"`, so an app that
+spreads the hook into a `NotificationTypeEntry<NotificationTypeId>[]` adds `feedback_received` to
+its own id union (all three declare the type in this round; keksdose
+features/auth/notification-settings-cards.tsx:145, kastlan
+features/settings/pages/settings-page.tsx:313-320, Kurvenschmiede
+features/notifications/notification-types.ts:29). An app that passes `groups` puts
+`feedback_received` in one (the card throws in development for a type the server answered in no
+group).
+
+| App | Change |
+| --- | --- |
+| keksdose | The type (in the app, push, e-mail on; `quiet`; `bundle` 15 min, which only crash mails use); `TYPE_ICONS.feedback_received`; a group for it in the card's `groups` (the kit's `adminGroup`). `FeedbackAlerts` over `admin_recipient_ids` minus the actor: an inbox row and a push for every kind, the mail at once (after commit) for a report or a rework, a crash's mail queued (the tick). Its **first notification mail**: `send_email(..., headers=)` (infrastructure/email.py:62) for RFC 8058, `POST /notifications/unsubscribe/{token}` (+ `/all`), the `/unsubscribe` page on `UnsubscribePanel`, a dedicated unsubscribe secret (not `jwt_secret`), the `User.email_verified` gate. The mail-kind guard (tests/unit/test_metrics.py:1057-1069) resolves enum kinds and type ids; observability §5.6 lists the billing kinds, `feedback_published`, `feedback_received`. Words: "New feedback report #123 (Bug)", "Report #123 was sent back for rework", "New crash report #123", link `/feedback?row=123`; no title, body or reporter. Support chat's admin push stays apart. |
+| kastlan | The type (e-mail on, no app), receivable "ADMIN in some company"; `FeedbackAlerts` via `FeedbackDeps` (feedback_router.py:84-107): the ADMINs of the report's company, active, non-demo, verified, switch on, not the actor (as `_recipients`, overdue_mail.py:95-116); report and rework mailed in a background task after commit; a crash → nothing (the badge). The words in doc_text/notifications.py beside `feedback_answered`, with `{company}`, four languages, `REVIEW_PENDING`. Logs: email.py:127 → the status and the JSON's `name`; :153-154 → `type(exc).__name__`. Its settings card shows the kit's entry with no change (the `types` list already spreads `useFeedbackNotificationTypes()`; add `feedback_received` to any `groups`). |
+| Kurvenschmiede | The type (e-mail on); every active non-demo ADMIN but the actor (`User.is_person`) through `_tell` / `send_after_commit`; report and rework mailed; a crash → nothing (the badge); `feedback_loop.file_report` builds `FeedbackService(alerts=None)`. The receivable filter on the settings read and PATCH (above). |
 
 ## Pre-push checks every pushed commit message with the shared script (ui-kit repo only)
 

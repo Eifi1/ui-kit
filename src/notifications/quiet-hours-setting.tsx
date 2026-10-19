@@ -23,8 +23,22 @@ export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div"
   start: string | null;
   /** The `GET`'s `quiet_hours_end`. */
   end: string | null;
-  /** The `GET`'s `timezone`, an IANA name, or `null` (the app's zone applies). */
-  timezone: string | null;
+  /** The `GET`'s `timezone`, an IANA name, or `null` (the app's zone applies).
+   *  @deprecated 0.46 (§10.3): the zone is the account's — pass `zone` instead, and the
+   *  card drops its picker. Read only while `zone` is left out. */
+  timezone?: string | null;
+  /**
+   * 0.46 (§10.3): the account's EFFECTIVE zone (the pick, else the last device's, else the
+   * app's), as `/auth/me` answers it. Given, the card has no picker: it says "In your time
+   * zone ({zone})" with a link to the time-zone row (`zoneHref`), and a time sends no
+   * zone. Left out, the 0.36 card with its picker, for one release.
+   */
+  zone?: string;
+  /** Where the time-zone row is (`TimeZoneSetting`), for the link beside `zone`. */
+  zoneHref?: string;
+  /** 0.46 (§10.4): the app queues a held push and sends it when the window ends (it runs
+   *  the notifications tick); the description says so. Default `false`: dropped. */
+  held?: boolean;
   /**
    * Save one change — `PATCH /notifications/settings`: a time (`null` when cleared), with
    * the device's zone the first time one is entered while `timezone` is `null`; or
@@ -48,8 +62,13 @@ type QuietField = "quiet_hours_start" | "quiet_hours_end" | "timezone";
 /**
  * Quiet hours (docs/notifications-harmonization.md §2.4, §2.6, §4.2): a window of local
  * times in the account's zone, which may cross midnight, when no push of a machine-sent
- * type is sent. A held push is dropped, not delayed; the inbox row and the mail go as
- * usual. keksdose's block, as a card of its own.
+ * type is sent. A held push is dropped — or, with `held` (0.46, §10.4), sent when the
+ * window ends; the inbox row and the mail go as usual. keksdose's block, as a card of its
+ * own.
+ *
+ * **0.46 (§10.3): the zone is the account's.** With `zone`, the card names it ("In your
+ * time zone (Europe / Zurich)") and links to `TimeZoneSetting`; the rest of this list is
+ * the 0.36 card, kept while `zone` is left out.
  *
  * - **Two times**, each saved as it is entered; a cleared time sends `null`. While only
  *   one is set the card says so: the window fails open until both are.
@@ -66,7 +85,10 @@ type QuietField = "quiet_hours_start" | "quiet_hours_end" | "timezone";
 export function QuietHoursSetting({
   start,
   end,
-  timezone,
+  timezone = null,
+  zone,
+  zoneHref,
+  held = false,
   onChange,
   fallbackZone = DEFAULT_FALLBACK_ZONE,
   inbox = false,
@@ -110,7 +132,7 @@ export function QuietHoursSetting({
     const next = value || null;
     if (next === shown(field, field === "quiet_hours_start" ? start : end)) return;
     const patch: NotificationSettingsPatch = { [field]: next };
-    if (next && zoneShown === null) patch.timezone = device;
+    if (next && zoneShown === null && zone === undefined) patch.timezone = device;
     save(patch);
   };
 
@@ -121,7 +143,7 @@ export function QuietHoursSetting({
     <Card {...rest} className={cn("p-4 space-y-3", className)}>
       <div>
         <SettingsCardTitle>{labels.quietTitle}</SettingsCardTitle>
-        <div className={CARD_DESCRIPTION_CLASS}>{labels.quietDescription(inbox)}</div>
+        <div className={CARD_DESCRIPTION_CLASS}>{labels.quietDescription(inbox, held)}</div>
       </div>
       <div className="flex flex-wrap items-end gap-3">
         <TimeInput
@@ -148,14 +170,26 @@ export function QuietHoursSetting({
           {labels.quietIncomplete}
         </p>
       )}
-      {anySet && (
+      {anySet && zone !== undefined && (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1" data-quiet-zone="">
+          <span id={`${id}-zone`} className={CARD_DESCRIPTION_CLASS}>
+            {labels.quietZone(zoneName(zone, labels.regions))}
+          </span>
+          {zoneHref && (
+            <Button href={zoneHref} size="sm" variant="link" aria-describedby={`${id}-zone`}>
+              {labels.quietZoneLink}
+            </Button>
+          )}
+        </div>
+      )}
+      {anySet && zone === undefined && (
         <div className="space-y-2">
           <TimeZoneSelect
             id={`${id}-zone`}
             value={effectiveZone}
             disabled={disabled}
             commit={COMMIT_EXCEPT_BILLING}
-            onChange={(zone) => save({ timezone: zone })}
+            onChange={(picked) => save({ timezone: picked })}
             className="max-w-72"
             labels={labelsProp}
           />

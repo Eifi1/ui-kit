@@ -2,18 +2,22 @@ import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 import {
   MoneyField,
+  NotificationBell,
+  NotificationInbox,
   NotificationTypesSetting,
   PushDeviceSetting,
   PushDevicesSetting,
   QuietHoursSetting,
   Switch,
   TimeZoneSelect,
+  TimeZoneSetting,
   ToggleGroup,
   UnsubscribePanel,
   unsubscribeTokenType,
 } from "@eifi1/ui-kit";
 import type {
   DigestCadence,
+  NotificationInboxItem,
   NotificationSettingsPatch,
   NotificationTypeEntry,
   NotificationTypeGroup,
@@ -21,6 +25,8 @@ import type {
   PushDevice,
   PushDeviceItem,
 } from "@eifi1/ui-kit";
+import { CalendarClock, ScanLine, Wallet } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Example, Note, code, beat } from "../lib/section";
 
 /**
@@ -55,14 +61,19 @@ function Column({ children }: { children: ReactNode }) {
 /** §3.2's PATCH rules for `types`, as a pretend server applies them: a switch named is
  *  set; a type's `null` would reset it to its default (here: off). */
 function applyTypes(value: NotificationTypesValue, patch: NotificationSettingsPatch): NotificationTypesValue {
-  const next: Record<string, { app: boolean | null; email: boolean | null }> = { ...value };
+  const next: Record<string, { app: boolean | null; push?: boolean | null; email: boolean | null }> = { ...value };
+  const reset = (on: boolean | null | undefined) => (on === null || on === undefined ? on : false);
   for (const [id, change] of Object.entries(patch.types ?? {})) {
     const current = next[id];
     if (!current) continue;
     next[id] =
       change === null
-        ? { app: current.app === null ? null : false, email: current.email === null ? null : false }
-        : { app: change?.app ?? current.app, email: change?.email ?? current.email };
+        ? { app: reset(current.app) ?? null, push: reset(current.push), email: reset(current.email) ?? null }
+        : {
+            app: change?.app ?? current.app,
+            push: change?.push ?? current.push,
+            email: change?.email ?? current.email,
+          };
   }
   return next;
 }
@@ -78,7 +89,8 @@ type KeksdoseType =
   | "share_events"
   | "digest"
   | "announcements"
-  | "support_chat";
+  | "support_chat"
+  | "feedback_received";
 
 const KEKSDOSE_TYPES: readonly NotificationTypeEntry<KeksdoseType>[] = [
   { id: "recurring_posted", label: "Recurring transactions", description: "A rule booked a transaction." },
@@ -90,24 +102,34 @@ const KEKSDOSE_TYPES: readonly NotificationTypeEntry<KeksdoseType>[] = [
   { id: "digest", label: "Budget digest", description: "A summary of your budgets." },
   { id: "announcements", label: "Product news", description: "New features and changes." },
   { id: "support_chat", label: "Support replies", description: "An answer to your message." },
+  // 0.46 (feedback §11): the kit's words, `useFeedbackNotificationTypes()` in an app.
+  {
+    id: "feedback_received",
+    label: "New feedback and reworks",
+    description: "When someone files a report, sends one back, or a page crashes.",
+  },
 ];
 
 const KEKSDOSE_GROUPS: readonly NotificationTypeGroup<KeksdoseType>[] = [
   { id: "budget", label: "Budget", types: ["recurring_posted", "scheduled_due", "overspend", "low_balance"] },
   { id: "activity", label: "Scans & sharing", types: ["scan_done", "share_events"] },
   { id: "updates", label: "Summaries & news", types: ["digest", "announcements", "support_chat"] },
+  // The kit's "Admin" heading (`feedbackNotificationTypes.adminGroup`); an admin only is answered it.
+  { id: "admin", label: "Admin", types: ["feedback_received"] },
 ];
 
+// 0.46 (§10.2): in the app and push, each its own switch; `feedback_received` mails too.
 const KEKSDOSE_VALUE: NotificationTypesValue = {
-  recurring_posted: { app: true, email: null },
-  overspend: { app: true, email: null },
-  scan_done: { app: false, email: null },
-  share_events: { app: false, email: null },
-  low_balance: { app: true, email: null },
-  digest: { app: true, email: null },
-  announcements: { app: false, email: null },
-  support_chat: { app: true, email: null },
-  scheduled_due: { app: true, email: null },
+  recurring_posted: { app: true, push: true, email: null },
+  overspend: { app: true, push: false, email: null },
+  scan_done: { app: false, push: true, email: null },
+  share_events: { app: false, push: false, email: null },
+  low_balance: { app: true, push: true, email: null },
+  digest: { app: true, push: true, email: null },
+  announcements: { app: false, push: false, email: null },
+  support_chat: { app: true, push: true, email: null },
+  scheduled_due: { app: true, push: true, email: null },
+  feedback_received: { app: true, push: true, email: true },
 };
 
 export function NotificationTypesKeksdoseDemo() {
@@ -117,8 +139,8 @@ export function NotificationTypesKeksdoseDemo() {
   const { lines, log } = useLog();
   return (
     <Example
-      label="NotificationTypesSetting — nine types under three headings"
-      hint="groups, digest, renderExtra; one PATCH per switch"
+      label="NotificationTypesSetting — ten types under four headings, a column per channel"
+      hint="In the app · Push · E-mail (0.46); groups, digest, renderExtra; one PATCH per switch"
     >
       <Column>
         <NotificationTypesSetting<KeksdoseType>
@@ -153,7 +175,10 @@ export function NotificationTypesKeksdoseDemo() {
         The server&apos;s {code("types")} is the only list: the card draws what it answered, in the order of the
         app&apos;s {code("groups")}, with the app&apos;s words and headings. A type the server answers that is in no
         group throws in development — keksdose&apos;s compile-time guard, at run time. The cadence shows under
-        the digest while it is on, the threshold under Low balance ({code("renderExtra")}).
+        the digest while it is on, the threshold under Low balance ({code("renderExtra")}). Since 0.46 each
+        channel is a column — &quot;In the app&quot;, &quot;Push&quot;, &quot;E-mail&quot; — stacked under the label on a
+        phone; a channel the server answers {code("null")} is not drawn, so the e-mail column holds the admin&apos;s{" "}
+        {code("feedback_received")} alone.
       </Note>
     </Example>
   );
@@ -176,7 +201,7 @@ export function NotificationTypesKastlanDemo() {
   const [failing, setFailing] = useState(false);
   const { lines, log } = useLog();
   return (
-    <Example label="NotificationTypesSetting — in the app, and by e-mail" hint="two switches per type, no matrix">
+    <Example label="NotificationTypesSetting — in the app, and by e-mail" hint="push: null — no push column">
       <div className="mb-3">
         <Switch checked={failing} onCheckedChange={setFailing} label="The server refuses" />
       </div>
@@ -194,8 +219,9 @@ export function NotificationTypesKastlanDemo() {
       </Column>
       <Readout lines={lines} />
       <Note>
-        &quot;By e-mail&quot; sits under a type that offers mail; {code("dunnings_pending")} offers none. A flip
-        shows at once and goes back if the PATCH fails, said under the card.
+        kastlan has no push ({code("NotificationTypes(..., push_channel=False)")} answers {code("push: null")}), so
+        two columns; {code("dunnings_pending")} offers no mail and keeps one switch named by its type. A flip shows
+        at once and goes back if the PATCH fails, said under the card.
       </Note>
     </Example>
   );
@@ -256,14 +282,23 @@ export function QuietHoursDemo() {
     end: "07:00",
     timezone: "Pacific/Auckland",
   });
+  const [accountZone, setAccountZone] = useState(true);
   const { lines, log } = useLog();
   return (
-    <Example label="QuietHoursSetting — a device in another zone" hint="fallbackZone; the device's zone with the first time">
+    <Example
+      label="QuietHoursSetting — the account's zone, and a held push"
+      hint="zone, zoneHref, held (0.46); without zone the 0.36 picker"
+    >
+      <div className="mb-3">
+        <Switch checked={accountZone} onCheckedChange={setAccountZone} label="The zone is the account's (0.46)" />
+      </div>
       <Column>
         <QuietHoursSetting
           start={settings.start}
           end={settings.end}
-          timezone={settings.timezone}
+          {...(accountZone
+            ? { zone: settings.timezone ?? "Europe/Zurich", zoneHref: "#time-zone-setting", held: true }
+            : { timezone: settings.timezone })}
           inbox
           onChange={async (patch) => {
             log(`PATCH ${JSON.stringify(patch)}`);
@@ -278,9 +313,10 @@ export function QuietHoursDemo() {
       </Column>
       <Readout lines={lines} />
       <Note>
-        The stored zone is Auckland's, so (unless you are there) the card offers this device&apos;s. Clear both
-        times and set one again with no zone stored, and the device&apos;s zone goes with it. With none stored the
-        card shows {code("fallbackZone")}, Europe/Zurich — the zone the server applies — never the device&apos;s.
+        Since 0.46 the zone is the account&apos;s ({code("TimeZoneSetting")} below): with {code("zone")} the card names
+        it and links to that row, and a time sends no zone. {code("held")} says a held push arrives when the
+        window ends — an app that runs the notifications tick (keksdose). Switch it off for the 0.36 card: the
+        stored zone is Auckland&apos;s, so (unless you are there) it offers this device&apos;s.
       </Note>
     </Example>
   );
@@ -296,6 +332,152 @@ export function TimeZoneSelectDemo() {
       <Note>
         Type &quot;Zur&quot; for Zurich. The regions are in the kit&apos;s words ({code("notifications.regions")}); a
         stored zone the runtime no longer lists is kept. Not clearable.
+      </Note>
+    </Example>
+  );
+}
+
+export function TimeZoneSettingDemo() {
+  const [zone, setZone] = useState<string | null>(null);
+  const { lines, log } = useLog();
+  return (
+    <Example label="TimeZoneSetting — Automatic, or a pick" hint="the account's zone (0.46, §10.3)">
+      <Column>
+        <TimeZoneSetting
+          id="time-zone-setting"
+          value={zone}
+          onChange={async (next) => {
+            log(`PATCH /auth/me ${JSON.stringify({ timezone: next })}`);
+            await beat(400);
+            setZone(next);
+          }}
+        />
+      </Column>
+      <Readout lines={lines} />
+      <Note>
+        For the settings group that holds the language. Automatic follows the device last used (each start
+        reports it through {code("useDeviceZoneReport")}, only when it differs and never for a demo); off pins
+        this device&apos;s zone, and the picker changes it. A pick that is not this device&apos;s offers &quot;Use
+        it&quot;. Quiet hours, the digest and the times the server writes follow it; {code("<UiKitProvider timeZone>")}{" "}
+        shows the kit&apos;s timestamps in it, a bare date never shifted.
+      </Note>
+    </Example>
+  );
+}
+
+/* ── The inbox and the bell ──────────────────────────────────────────────── */
+
+const INBOX: NotificationInboxItem<number>[] = [
+  {
+    id: 5,
+    notification_type: "scan_done",
+    title: "Your receipt is ready",
+    body: "Migros, 42.80 — check the lines and book it.",
+    url: "#scan",
+    created_at: "2026-10-19T08:30:00Z",
+    read_at: null,
+  },
+  {
+    id: 4,
+    notification_type: "low_balance",
+    title: "Low balance",
+    body: "Cash fell below 150.00.",
+    url: "#accounts",
+    created_at: "2026-10-18T17:05:00Z",
+    read_at: null,
+    company: "Muster AG",
+  },
+  {
+    id: 3,
+    notification_type: "recurring_posted",
+    title: "Rent was booked",
+    body: "The monthly rule booked 1,850.00.",
+    url: null,
+    created_at: "2026-10-01T06:00:00Z",
+    read_at: "2026-10-01T07:00:00Z",
+  },
+  {
+    id: 2,
+    notification_type: "retired_type",
+    title: "A kind that is gone",
+    body: "Its icon falls back to the bell.",
+    url: null,
+    created_at: "2026-09-20T06:00:00Z",
+    read_at: "2026-09-20T07:00:00Z",
+  },
+];
+
+const INBOX_ICONS: Record<string, LucideIcon> = { scan_done: ScanLine, low_balance: Wallet, recurring_posted: CalendarClock };
+
+function useInbox() {
+  const [items, setItems] = useState(INBOX);
+  const { lines, log } = useLog();
+  const unread = items.filter((item) => item.read_at === null).length;
+  const markRead = async (ids: number[] | null) => {
+    log(`POST /notifications/inbox/read ${JSON.stringify({ ids })}`);
+    await beat(300);
+    const now = new Date().toISOString();
+    setItems((current) => current.map((item) => (ids === null || ids.includes(item.id) ? { ...item, read_at: item.read_at ?? now } : item)));
+  };
+  return { items, setItems, unread, markRead, lines, log };
+}
+
+export function NotificationInboxDemo() {
+  const { items, setItems, unread, markRead, lines, log } = useInbox();
+  return (
+    <Example label="NotificationInbox — keksdose's list, lifted" hint="icon(type), company, mark read, clear behind a question">
+      <Column>
+        <NotificationInbox<number>
+          items={items}
+          unreadCount={unread}
+          icon={(type) => INBOX_ICONS[type]}
+          onMarkRead={markRead}
+          onClear={async () => {
+            log("DELETE /notifications/inbox");
+            await beat(400);
+            setItems([]);
+          }}
+          onOpen={(item) => {
+            void markRead([item.id]);
+            log(`open ${item.url ?? "(nothing to open)"}`);
+          }}
+          hasMore={items.length > 0}
+          onLoadMore={() => log("GET /notifications/inbox?offset=4")}
+        />
+      </Column>
+      <Readout lines={lines} />
+      <Note>
+        Props only: the app polls the count every {code("INBOX_BADGE_INTERVAL")} (60 s) and invalidates on its
+        worker&apos;s push message. Unread rows are bold with a dot; a row naming a company is kastlan&apos;s (its
+        inbox holds every company&apos;s rows). Without {code("onOpen")} a row with a {code("url")} is a real link
+        that marks itself read on a click or a middle click.
+      </Note>
+    </Example>
+  );
+}
+
+export function NotificationBellDemo() {
+  const { items, unread, markRead, lines, log } = useInbox();
+  return (
+    <Example label="NotificationBell — the top bar's notifications slot" hint="badge (99+), the newest 20, All notifications">
+      <div className="flex items-center gap-1 rounded-lg border border-subtle p-2">
+        <span className="me-auto text-sm text-secondary">Top bar</span>
+        <NotificationBell<number>
+          items={items}
+          unreadCount={unread}
+          icon={(type) => INBOX_ICONS[type]}
+          href="/app-chrome/notifications"
+          onOpen={(item) => {
+            void markRead([item.id]);
+            log(`open ${item.url ?? "(nothing to open)"}`);
+          }}
+        />
+      </div>
+      <Readout lines={lines} />
+      <Note>
+        Optional per app, in {code("TopBarActions")}&apos; {code("notifications")} slot right before the account
+        menu. One badge per signal: an app shows the bell or an unread dot on the avatar, never both — keksdose
+        keeps its dot, kastlan&apos;s inbox lives here.
       </Note>
     </Example>
   );
@@ -398,6 +580,7 @@ const DEVICES: PushDeviceItem<number>[] = [
 export function PushDevicesDemo() {
   const [devices, setDevices] = useState(DEVICES);
   const { lines, log } = useLog();
+  const typeSwitches = KEKSDOSE_VALUE;
   return (
     <Example label="PushDevicesSetting — this device marked, failures, remove" hint="the confirm sits in the row">
       <Column>
@@ -410,13 +593,21 @@ export function PushDevicesDemo() {
             await beat(500);
             setDevices((current) => current.filter((device) => device.id !== id));
           }}
+          types={KEKSDOSE_TYPES}
+          typeSwitches={typeSwitches}
+          onMutedTypesChange={async (id, mutedTypes) => {
+            log(`PATCH /notifications/devices/${id} ${JSON.stringify({ muted_types: mutedTypes })}`);
+            await beat(400);
+            setDevices((current) => current.map((device) => (device.id === id ? { ...device, muted_types: mutedTypes } : device)));
+          }}
         />
       </Column>
       <Readout lines={lines} />
       <Note>
         Removing this device also unsubscribes the browser and fires {code("PUSH_SUBSCRIPTION_CHANGED")}, so the
         push card stops saying &quot;on&quot;. The browser and system come from the stored user agent
-        ({code("describeUserAgent")}).
+        ({code("describeUserAgent")}). &quot;Types on this device&quot; (0.46) lists the types with push on; a device
+        can mute one, never add one, and each flip saves its whole {code("muted_types")} list.
       </Note>
     </Example>
   );
@@ -490,6 +681,9 @@ export function NotificationsPage() {
       <NotificationTypesKurvenschmiedeDemo />
       <QuietHoursDemo />
       <TimeZoneSelectDemo />
+      <TimeZoneSettingDemo />
+      <NotificationInboxDemo />
+      <NotificationBellDemo />
       <PushDeviceDemo />
       <PushDevicesDemo />
       <UnsubscribePanelDemo />

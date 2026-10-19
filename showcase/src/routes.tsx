@@ -1313,9 +1313,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Notifications",
         short: "Notifications",
         blurb:
-          "The notification settings every app shares: the types the server answers with a switch in the app and one by e-mail, quiet hours and the time zone, push on this device and the list of devices, and the page an e-mail's unsubscribe link opens.",
+          "The notification settings every app shares: the types the server answers with a switch per channel (in the app, push, e-mail), quiet hours and the account's time zone, the inbox and the top bar's bell, push on this device and the list of devices with the types each one mutes, and the page an e-mail's unsubscribe link opens.",
         icon: Bell,
-        components: ["NotificationTypesSetting", "QuietHoursSetting", "TimeZoneSelect", "timeZoneOptions", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS", "useFeedbackNotificationTypes", "DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS"],
+        components: ["NotificationTypesSetting", "QuietHoursSetting", "TimeZoneSelect", "timeZoneOptions", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS", "useFeedbackNotificationTypes", "DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS", "NotificationInbox", "NotificationBell", "INBOX_BADGE_INTERVAL", "TimeZoneSetting", "useDeviceZoneReport"],
         Body: () => (
           <>
             <NotificationsPage />

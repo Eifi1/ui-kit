@@ -76,6 +76,10 @@
       "types": "./dist/sync/testing.d.ts",
       "import": "./dist/sync/testing.js"
     },
+    "./push-worker": {
+      "types": "./dist/push-worker.d.ts",
+      "import": "./dist/push-worker.js"
+    },
     "./i18n/*": {
       "types": "./dist/i18n/locales/*.d.ts",
       "import": "./dist/i18n/locales/*.js"

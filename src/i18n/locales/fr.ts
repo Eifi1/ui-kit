@@ -142,6 +142,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       answeredDescription: "Quand un retour que vous avez écrit ou commenté reçoit une réponse.",
       comment: "Commentaires sur les retours que vous suivez",
       commentDescription: "Quand quelqu’un commente un retour que vous avez écrit ou commenté.",
+      received: "Nouveaux retours et reprises",
+      receivedDescription: "Quand quelqu’un dépose un retour, en renvoie un ou qu’une page plante.",
+      adminGroup: "Admin",
     },
     feedbackContext: {
       user: "Utilisateur",
@@ -1183,6 +1186,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       typesTitle: "Me notifier pour",
       typesDescription: "Choisissez ce dont vous êtes averti, et comment.",
       byEmail: "Par e-mail",
+      channelApp: "Dans l’app",
+      channelPush: "Push",
+      channelEmail: "E-mail",
       emailUnverified: "Confirmez votre adresse pour les recevoir.",
       digestCadence: "Fréquence",
       digestWeekly: "Hebdomadaire",
@@ -1190,10 +1196,16 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       typesLoading: "Chargement des paramètres de notification…",
       typesEmpty: "Il n’y a aucune notification pour ce compte.",
       quietTitle: "Heures calmes",
-      quietDescription: (inbox) =>
-        inbox
-          ? "Aucune notification push pendant cette plage. Elles arrivent quand même dans votre boîte de réception."
-          : "Aucune notification push pendant cette plage.",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "Les notifications push attendent pendant cette plage et arrivent à sa fin. Elles arrivent tout de suite dans votre boîte de réception."
+            : "Les notifications push attendent pendant cette plage et arrivent à sa fin."
+          : inbox
+            ? "Aucune notification push pendant cette plage. Elles arrivent quand même dans votre boîte de réception."
+            : "Aucune notification push pendant cette plage.",
+      quietZone: (zone) => `Dans votre fuseau horaire (${zone}).`,
+      quietZoneLink: "Changer de fuseau horaire",
       quietFrom: "De",
       quietUntil: "Jusqu’à",
       quietIncomplete:
@@ -1213,6 +1225,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         Indian: "Océan Indien",
         Pacific: "Pacifique",
       },
+      zoneAutomatic: (zone) => `Automatique (cet appareil\u202f: ${zone})`,
+      zoneDescription: "Les heures calmes, le résumé et les heures que l’app écrit pour vous le suivent.",
       pushTitle: "Notifications push",
       pushDescription: "Les notifications sur cet appareil, même quand l’app est fermée.",
       unsupported: "Ce navigateur ne prend pas en charge les notifications push.",
@@ -1254,6 +1268,19 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `Retirer ${device}`,
       removePrompt: "Ne plus envoyer de notifications à cet appareil\u202f?",
+      deviceTypes: "Types sur cet appareil",
+      deviceTypesDescription: "Désactivez un type pour le mettre en sourdine sur cet appareil seulement.",
+      deviceTypesEmpty: "Aucun type n’a les notifications push activées.",
+      inboxTitle: "Boîte de réception",
+      inboxLoading: "Chargement des notifications…",
+      inboxEmpty: "Vous êtes à jour.",
+      markAllRead: "Tout marquer comme lu",
+      clearAll: "Tout effacer",
+      clearPrompt: "Supprimer toutes les notifications de votre boîte de réception\u202f?",
+      showMore: "Afficher plus",
+      bellLabel: "Notifications",
+      bellUnread: (count) => (count === 1 ? `${n(count)} non lue` : `${n(count)} non lues`),
+      allNotifications: "Toutes les notifications",
       unsubscribeTitle: "Notifications par e-mail",
       unsubscribeAbout: (type) => `Vous recevez des e-mails concernant\u00a0: ${type}.`,
       unsubscribeGeneric: "Vous recevez des e-mails de notification.",

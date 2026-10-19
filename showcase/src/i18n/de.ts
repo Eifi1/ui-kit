@@ -481,7 +481,7 @@ export const de: Dictionary = {
       title: "Benachrichtigungen",
       short: "Benachrichtigungen",
       blurb:
-        "Die Benachrichtigungseinstellungen, die jede App teilt: die Arten, die der Server liefert, mit einem Schalter in der App und einem per E-Mail, Ruhezeiten und die Zeitzone, Push auf diesem Gerät und die Liste der Geräte, und die Seite, die der Abmeldelink einer E-Mail öffnet.",
+        "Die Benachrichtigungseinstellungen, die jede App teilt: die Arten, die der Server liefert, mit einem Schalter pro Kanal (in der App, Push, E-Mail), Ruhezeiten und die Zeitzone des Kontos, der Posteingang und die Glocke in der oberen Leiste, Push auf diesem Gerät und die Liste der Geräte mit den Arten, die jedes stummschaltet, und die Seite, die der Abmeldelink einer E-Mail öffnet.",
     },
     settings: {
       title: "Einstellungen",
@@ -1186,6 +1186,10 @@ export const de: Dictionary = {
       "E-Mails abbestellen",
       "Abmeldelink mit einem Klick",
       "wöchentliche oder monatliche Zusammenfassung",
+      "Posteingang der Benachrichtigungen",
+      "Glocke mit ungelesenen Benachrichtigungen",
+      "Zeitzone des Kontos automatisch übernehmen",
+      "Push pro Gerät stummschalten",
     ],
     settings: [
       "Kontoeinstellungen",

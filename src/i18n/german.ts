@@ -153,6 +153,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       answeredDescription: "Wenn eine Meldung, die Sie geschrieben oder kommentiert haben, eine Antwort erhält.",
       comment: "Kommentare zu Meldungen, denen Sie folgen",
       commentDescription: "Wenn jemand eine Meldung kommentiert, die Sie geschrieben oder kommentiert haben.",
+      received: "Neue Rückmeldungen und Überarbeitungen",
+      receivedDescription: "Wenn jemand eine Meldung erfasst, eine zurückschickt oder eine Seite abstürzt.",
+      adminGroup: "Admin",
     },
     feedbackContext: {
       user: "Nutzer",
@@ -1181,6 +1184,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       typesTitle: "Benachrichtigungen zu",
       typesDescription: "Wählen Sie, worüber Sie benachrichtigt werden, und wie.",
       byEmail: "Per E-Mail",
+      channelApp: "In der App",
+      channelPush: "Push",
+      channelEmail: "E-Mail",
       emailUnverified: "Bestätigen Sie Ihre Adresse, um diese zu erhalten.",
       digestCadence: "Häufigkeit",
       digestWeekly: "Wöchentlich",
@@ -1188,10 +1194,16 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       typesLoading: "Benachrichtigungseinstellungen werden geladen…",
       typesEmpty: "Für dieses Konto gibt es keine Benachrichtigungen.",
       quietTitle: "Ruhezeiten",
-      quietDescription: (inbox) =>
-        inbox
-          ? "In diesem Zeitfenster kommen keine Push-Benachrichtigungen. Im Posteingang kommen sie trotzdem an."
-          : "In diesem Zeitfenster kommen keine Push-Benachrichtigungen.",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "Push-Benachrichtigungen warten in diesem Zeitfenster und kommen, sobald es endet. Im Posteingang kommen sie sofort an."
+            : "Push-Benachrichtigungen warten in diesem Zeitfenster und kommen, sobald es endet."
+          : inbox
+            ? "In diesem Zeitfenster kommen keine Push-Benachrichtigungen. Im Posteingang kommen sie trotzdem an."
+            : "In diesem Zeitfenster kommen keine Push-Benachrichtigungen.",
+      quietZone: (zone) => `In Ihrer Zeitzone (${zone}).`,
+      quietZoneLink: "Zeitzone ändern",
       quietFrom: "Von",
       quietUntil: "Bis",
       quietIncomplete: "Legen Sie eine Start- und eine Endzeit fest. Ruhezeiten gelten erst, wenn beide gesetzt sind.",
@@ -1210,6 +1222,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         Indian: "Indischer Ozean",
         Pacific: "Pazifik",
       },
+      zoneAutomatic: (zone) => `Automatisch (dieses Gerät: ${zone})`,
+      zoneDescription: "Ruhezeiten, die Zusammenfassung und die Zeiten, die die App für Sie schreibt, richten sich danach.",
       pushTitle: "Push-Benachrichtigungen",
       pushDescription: "Benachrichtigungen auf diesem Gerät, auch wenn die App geschlossen ist.",
       unsupported: "Dieser Browser unterstützt keine Push-Benachrichtigungen.",
@@ -1257,6 +1271,19 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `Entfernen: ${device}`,
       removePrompt: "Keine Benachrichtigungen mehr an dieses Gerät senden?",
+      deviceTypes: "Arten auf diesem Gerät",
+      deviceTypesDescription: "Schalten Sie eine Art aus, um sie nur auf diesem Gerät stummzuschalten.",
+      deviceTypesEmpty: "Für keine Art sind Push-Benachrichtigungen eingeschaltet.",
+      inboxTitle: "Posteingang",
+      inboxLoading: "Benachrichtigungen werden geladen…",
+      inboxEmpty: "Alles gelesen – nichts Neues.",
+      markAllRead: "Alle als gelesen markieren",
+      clearAll: "Alle löschen",
+      clearPrompt: "Alle Benachrichtigungen aus Ihrem Posteingang löschen?",
+      showMore: "Mehr anzeigen",
+      bellLabel: "Benachrichtigungen",
+      bellUnread: (count) => `${n(count)} ungelesen`,
+      allNotifications: "Alle Benachrichtigungen",
       unsubscribeTitle: "E-Mail-Benachrichtigungen",
       unsubscribeAbout: (type) => `Sie erhalten E-Mails zu: ${type}.`,
       unsubscribeGeneric: "Sie erhalten Benachrichtigungs-E-Mails.",

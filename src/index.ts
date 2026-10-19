@@ -965,6 +965,7 @@ export type {
   NotificationTypeGroup,
   NotificationSettingsPatch,
   PushDeviceItem,
+  NotificationChannel,
 } from "./notifications/notification-types";
 export { NotificationTypesSetting } from "./notifications/notification-types-setting";
 export type { NotificationTypesSettingProps } from "./notifications/notification-types-setting";
@@ -972,6 +973,14 @@ export { QuietHoursSetting } from "./notifications/quiet-hours-setting";
 export type { QuietHoursSettingProps } from "./notifications/quiet-hours-setting";
 export { TimeZoneSelect, timeZoneOptions, deviceTimeZone } from "./notifications/time-zone-select";
 export type { TimeZoneSelectProps } from "./notifications/time-zone-select";
+// 0.46 (docs/notifications-harmonization.md §10.1, §10.3): the inbox list, the bell, the
+// account's time-zone row and the device-zone report.
+export { NotificationInbox, INBOX_BADGE_INTERVAL } from "./notifications/notification-inbox";
+export type { NotificationInboxItem, NotificationInboxProps } from "./notifications/notification-inbox";
+export { NotificationBell } from "./notifications/notification-bell";
+export type { NotificationBellProps } from "./notifications/notification-bell";
+export { TimeZoneSetting, useDeviceZoneReport } from "./notifications/time-zone-setting";
+export type { TimeZoneSettingProps, DeviceZoneReportOptions } from "./notifications/time-zone-setting";
 export {
   usePushDevice,
   PUSH_SUBSCRIPTION_CHANGED,
@@ -986,7 +995,8 @@ export type {
   PushPermission,
   PushDeviceErrorCode,
 } from "./notifications/use-push-device";
-// 0.46 (NT:1028): the service worker re-registers a rotated subscription.
+// 0.46 (NT:1028): the service worker re-registers a rotated subscription. A worker imports
+// them from `@eifi1/ui-kit/push-worker` (§10.6 rule 5); the barrel keeps them too.
 export {
   handlePushSubscriptionChange,
   resubscribeAfterChange,

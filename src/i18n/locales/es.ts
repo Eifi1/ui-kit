@@ -144,6 +144,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       answeredDescription: "Cuando un informe que usted escribió o comentó recibe una respuesta.",
       comment: "Comentarios en informes que sigue",
       commentDescription: "Cuando alguien comenta un informe que usted escribió o comentó.",
+      received: "Nuevos informes y revisiones",
+      receivedDescription: "Cuando alguien envía un informe, devuelve uno o una página falla.",
+      adminGroup: "Admin",
     },
     feedbackContext: {
       user: "Usuario",
@@ -1155,6 +1158,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       typesTitle: "Avisarme de",
       typesDescription: "Elija de qué se entera y cómo.",
       byEmail: "Por correo electrónico",
+      channelApp: "En la app",
+      channelPush: "Push",
+      channelEmail: "Correo",
       emailUnverified: "Confirme su dirección para recibirlos.",
       digestCadence: "Frecuencia",
       digestWeekly: "Semanal",
@@ -1162,10 +1168,16 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       typesLoading: "Cargando los ajustes de notificaciones…",
       typesEmpty: "No hay notificaciones para esta cuenta.",
       quietTitle: "Horas de silencio",
-      quietDescription: (inbox) =>
-        inbox
-          ? "Sin notificaciones push durante este intervalo. Aun así, llegan a su bandeja de entrada."
-          : "Sin notificaciones push durante este intervalo.",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "Las notificaciones push esperan durante este intervalo y llegan cuando termina. A su bandeja de entrada llegan enseguida."
+            : "Las notificaciones push esperan durante este intervalo y llegan cuando termina."
+          : inbox
+            ? "Sin notificaciones push durante este intervalo. Aun así, llegan a su bandeja de entrada."
+            : "Sin notificaciones push durante este intervalo.",
+      quietZone: (zone) => `En su zona horaria (${zone}).`,
+      quietZoneLink: "Cambiar zona horaria",
       quietFrom: "Desde",
       quietUntil: "Hasta",
       quietIncomplete:
@@ -1185,6 +1197,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         Indian: "Océano Índico",
         Pacific: "Pacífico",
       },
+      zoneAutomatic: (zone) => `Automática (este dispositivo: ${zone})`,
+      zoneDescription: "Las horas de silencio, el resumen y las horas que la app escribe para usted la siguen.",
       pushTitle: "Notificaciones push",
       pushDescription: "Notificaciones en este dispositivo, también con la app cerrada.",
       unsupported: "Este navegador no admite notificaciones push.",
@@ -1227,6 +1241,19 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `Quitar ${device}`,
       removePrompt: "¿Dejar de enviar notificaciones a este dispositivo?",
+      deviceTypes: "Tipos en este dispositivo",
+      deviceTypesDescription: "Desactive un tipo para silenciarlo solo en este dispositivo.",
+      deviceTypesEmpty: "Ningún tipo tiene las notificaciones push activadas.",
+      inboxTitle: "Bandeja de entrada",
+      inboxLoading: "Cargando notificaciones…",
+      inboxEmpty: "Está al día.",
+      markAllRead: "Marcar todo como leído",
+      clearAll: "Borrar todo",
+      clearPrompt: "¿Eliminar todas las notificaciones de su bandeja de entrada?",
+      showMore: "Mostrar más",
+      bellLabel: "Notificaciones",
+      bellUnread: (count) => `${n(count)} sin leer`,
+      allNotifications: "Todas las notificaciones",
       unsubscribeTitle: "Notificaciones por correo electrónico",
       unsubscribeAbout: (type) => `Recibe correos sobre: ${type}.`,
       unsubscribeGeneric: "Recibe correos de notificación.",

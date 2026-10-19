@@ -14,10 +14,12 @@
  * place — same account, same device. Open pages are told with a
  * {@link PUSH_SUBSCRIPTION_CHANGED} message, and every mounted `usePushDevice` re-reads.
  *
- * Dependency-free (no React), so an app's worker bundle takes only this file:
+ * Dependency-free (no React), so an app's worker bundle takes only this file — through
+ * the worker-safe subpath `@eifi1/ui-kit/push-worker` (0.46, §10.6 rule 5), not the main
+ * barrel, which reaches React and the components:
  *
  *     // sw.ts
- *     import { handlePushSubscriptionChange } from "@eifi1/ui-kit";
+ *     import { handlePushSubscriptionChange } from "@eifi1/ui-kit/push-worker";
  *     handlePushSubscriptionChange(self, {
  *       pushKey: () => fetch("/api/notifications/push-key").then((r) => r.json()).then((b) => b.key),
  *       replace: (body) => fetch("/api/notifications/devices/replace", {

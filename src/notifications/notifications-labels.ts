@@ -30,8 +30,13 @@ export interface NotificationsLabels {
   typesTitle: string;
   /** The line under it. */
   typesDescription: string;
-  /** The e-mail switch under a type that offers mail. */
+  /** @deprecated 0.46: the card's channels are columns now (`channelEmail`); unused,
+   *  kept so an app's override still type-checks. */
   byEmail: string;
+  /** 0.46 (§10.2): the channel columns' headings, and each switch's name. */
+  channelApp: string;
+  channelPush: string;
+  channelEmail: string;
   /** Under every e-mail switch while the account's address is unverified (decision 16):
    *  no notification mail goes to an unverified address. */
   emailUnverified: string;
@@ -47,8 +52,14 @@ export interface NotificationsLabels {
   /* ── Quiet hours ────────────────────────────────────────────────────── */
   quietTitle: string;
   /** The line under the title; `inbox`: the app keeps an inbox, which a held push still
-   *  reaches. */
-  quietDescription: (inbox: boolean) => string;
+   *  reaches; `held` (0.46, §10.4): the app queues a held push and sends it when the
+   *  window ends, instead of dropping it. */
+  quietDescription: (inbox: boolean, held?: boolean) => string;
+  /** 0.46 (§10.3): the card names the account's zone instead of a picker, given the
+   *  zone as the picker names it. */
+  quietZone: (zone: string) => string;
+  /** The link from there to the time-zone row. */
+  quietZoneLink: string;
   /** The start time's label. */
   quietFrom: string;
   /** The end time's label. */
@@ -64,6 +75,13 @@ export interface NotificationsLabels {
   useDeviceZone: string;
   /** The zone picker's region headings. */
   regions: NotificationRegionLabels;
+
+  /* ── The time-zone row (0.46, §10.3) ────────────────────────────────── */
+  /** The switch that follows the device, given this device's zone as the picker names
+   *  it. */
+  zoneAutomatic: (zone: string) => string;
+  /** The line under the row: what the zone is for. */
+  zoneDescription: string;
 
   /* ── This device ────────────────────────────────────────────────────── */
   pushTitle: string;
@@ -123,6 +141,32 @@ export interface NotificationsLabels {
   removeItem: (device: string) => string;
   /** The question the row asks before it removes. */
   removePrompt: string;
+  /** 0.46 (§10.2): the disclosure on a device's row listing the types with push on. */
+  deviceTypes: string;
+  /** The line inside it. */
+  deviceTypesDescription: string;
+  /** No type has push on for the account. */
+  deviceTypesEmpty: string;
+
+  /* ── The inbox and the bell (0.46, §10.1) ───────────────────────────── */
+  /** The inbox's heading (keksdose's "Inbox"). */
+  inboxTitle: string;
+  inboxLoading: string;
+  /** Nothing in the inbox. */
+  inboxEmpty: string;
+  markAllRead: string;
+  /** The header's clear button, and the confirm's answer. */
+  clearAll: string;
+  /** The question asked before the inbox is cleared. */
+  clearPrompt: string;
+  /** The row that loads the next page. */
+  showMore: string;
+  /** The bell's name. */
+  bellLabel: string;
+  /** Read after the bell's name, given the unread count (≥ 1). */
+  bellUnread: (count: number) => string;
+  /** The bell panel's link to the app's inbox. */
+  allNotifications: string;
 
   /* ── The unsubscribe page ───────────────────────────────────────────── */
   unsubscribeTitle: string;
@@ -150,6 +194,9 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
   typesTitle: "Notify me about",
   typesDescription: "Choose what you hear about, and how.",
   byEmail: "By e-mail",
+  channelApp: "In the app",
+  channelPush: "Push",
+  channelEmail: "E-mail",
   emailUnverified: "Confirm your address to receive these.",
   digestCadence: "Frequency",
   digestWeekly: "Weekly",
@@ -158,10 +205,16 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
   typesEmpty: "There are no notifications for this account.",
 
   quietTitle: "Quiet hours",
-  quietDescription: (inbox) =>
-    inbox
-      ? "No push notifications during this window. They still reach your inbox."
-      : "No push notifications during this window.",
+  quietDescription: (inbox, held) =>
+    held
+      ? inbox
+        ? "Push notifications wait during this window and arrive when it ends. They reach your inbox at once."
+        : "Push notifications wait during this window and arrive when it ends."
+      : inbox
+        ? "No push notifications during this window. They still reach your inbox."
+        : "No push notifications during this window.",
+  quietZone: (zone) => `In your time zone (${zone}).`,
+  quietZoneLink: "Change time zone",
   quietFrom: "From",
   quietUntil: "Until",
   quietIncomplete: "Set both a start and an end time. Quiet hours take effect once both are set.",
@@ -180,6 +233,8 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
     Indian: "Indian Ocean",
     Pacific: "Pacific",
   },
+  zoneAutomatic: (zone) => `Automatic (this device: ${zone})`,
+  zoneDescription: "Quiet hours, the digest and the times the app writes for you follow it.",
 
   pushTitle: "Push notifications",
   pushDescription: "Notifications on this device, also while the app is closed.",
@@ -221,6 +276,20 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
   remove: "Remove",
   removeItem: (device) => `Remove ${device}`,
   removePrompt: "Stop sending notifications to this device?",
+  deviceTypes: "Types on this device",
+  deviceTypesDescription: "Turn a type off to mute it on this device only.",
+  deviceTypesEmpty: "No type has push notifications turned on.",
+
+  inboxTitle: "Inbox",
+  inboxLoading: "Loading notifications…",
+  inboxEmpty: "You’re all caught up.",
+  markAllRead: "Mark all as read",
+  clearAll: "Clear all",
+  clearPrompt: "Delete all notifications from your inbox?",
+  showMore: "Show more",
+  bellLabel: "Notifications",
+  bellUnread: (count) => `${count} unread`,
+  allNotifications: "All notifications",
 
   unsubscribeTitle: "E-mail notifications",
   unsubscribeAbout: (type) => `You get e-mails about: ${type}.`,

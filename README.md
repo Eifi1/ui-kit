@@ -559,14 +559,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2102 names from 342 modules** — 969 values and 1133 types. _Italic_ is a type-only export.
+**2133 names from 348 modules** — 985 values and 1148 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2102 |
+| `@eifi1/ui-kit` | 2133 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 112 |
 | `@eifi1/ui-kit/data-table` | 52 |
@@ -580,7 +580,10 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 11 |
 | `@eifi1/ui-kit/rhf` | 48 |
-| `@eifi1/ui-kit/offline` | 28 |
+| `@eifi1/ui-kit/offline` | 32 |
+| `@eifi1/ui-kit/sync` | 33 |
+| `@eifi1/ui-kit/sync/testing` | 3 |
+| `@eifi1/ui-kit/push-worker` | 10 |
 
 Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a
 re-slicing of it, never a second API.
@@ -606,6 +609,7 @@ re-slicing of it, never a second API.
 | `lib/isin` | `formatIsin`, `isinCheckDigit`, `isValidIsin` |
 | `lib/phone` | `formatNationalPhone`, `formatPhone`, `isE164`, `parsePhone`, `PHONE_COUNTRIES`, `PHONE_DIAL_CODES`, _`ParsedPhone`_, _`PhoneCountry`_, _`PhoneCountryCode`_ |
 | `lib/column-mapping` | `assignColumnRole`, `guessMapping`, `missingRoles`, `readMappedTable`, `readTextFile`, `roleOfColumn`, _`ColumnMapperResult`_, _`ColumnMapping`_, _`ColumnRole`_ |
+| `lib/date-format` | `DATE_FORMAT_PREFERENCES`, `dateFormatSample`, `dateFormatterFor`, `formatDateWithPreference`, `isDateFormatPreference`, `resolveDateFormat`, _`DateFormatOptions`_, _`DateFormatPreference`_, _`ResolvedDateFormat`_ |
 | `lib/device-settings` | `deviceSettings`, `registerDeviceSetting`, `resetDeviceSettings`, _`DeviceSetting`_, _`DeviceSettingKind`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
 | `lib/chip-edge-snap` | `refreshChipEdges` |
@@ -653,7 +657,7 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitTableStorageKeyPrefix`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
+| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitTableStorageKeyPrefix`, `useKitTimeZone`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
 | `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
 | `i18n/review` | `kitLabelStrings`, _`KitLabelStringsOptions`_ |
 | `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
@@ -779,6 +783,7 @@ re-slicing of it, never a second API.
 | `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalDisclaimerSectionLabels`_, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
 | `components/legal-page` | `LEGAL_SKELETON`, `LegalAcceptCheckbox`, `LegalKitSection`, `LegalPage`, _`LegalAcceptCheckboxProps`_, _`LegalDisclaimerVariant`_, _`LegalKitSectionKey`_, _`LegalKitSectionProps`_, _`LegalPageProps`_, _`LegalSectionOwner`_, _`LegalSkeletonEntry`_, _`LegalSkeletonPage`_ |
 | `components/appearance-labels` | `DEFAULT_APPEARANCE_LABELS`, `useAppearanceLabels`, _`AppearanceLabels`_ |
+| `components/date-format-setting` | `DateFormatSetting`, _`DateFormatSettingProps`_ |
 | `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `RowActions`, `rowActionsColumn`, _`RowAction`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_, _`RowActionTone`_ |
 | `components/checkbox-group` | `CheckboxGroup`, _`CheckboxGroupLegendVisibility`_, _`CheckboxGroupOption`_, _`CheckboxGroupProps`_ |
 | `components/one-time-code-input` | `OneTimeCodeInput`, _`OneTimeCodeInputProps`_ |
@@ -995,11 +1000,15 @@ re-slicing of it, never a second API.
 | Module | Exports |
 |---|---|
 | `notifications/notifications-labels` | `DEFAULT_NOTIFICATIONS_LABELS`, _`NotificationRegionLabels`_, _`NotificationsLabels`_ |
-| `notifications/notification-types` | _`DigestCadence`_, _`NotificationSettingsPatch`_, _`NotificationSwitches`_, _`NotificationTypeEntry`_, _`NotificationTypeGroup`_, _`NotificationTypesValue`_, _`PushDeviceItem`_ |
+| `notifications/notification-types` | _`DigestCadence`_, _`NotificationChannel`_, _`NotificationSettingsPatch`_, _`NotificationSwitches`_, _`NotificationTypeEntry`_, _`NotificationTypeGroup`_, _`NotificationTypesValue`_, _`PushDeviceItem`_ |
 | `notifications/notification-types-setting` | `NotificationTypesSetting`, _`NotificationTypesSettingProps`_ |
 | `notifications/quiet-hours-setting` | `QuietHoursSetting`, _`QuietHoursSettingProps`_ |
 | `notifications/time-zone-select` | `deviceTimeZone`, `timeZoneOptions`, `TimeZoneSelect`, _`TimeZoneSelectProps`_ |
+| `notifications/notification-inbox` | `INBOX_BADGE_INTERVAL`, `NotificationInbox`, _`NotificationInboxItem`_, _`NotificationInboxProps`_ |
+| `notifications/notification-bell` | `NotificationBell`, _`NotificationBellProps`_ |
+| `notifications/time-zone-setting` | `TimeZoneSetting`, `useDeviceZoneReport`, _`DeviceZoneReportOptions`_, _`TimeZoneSettingProps`_ |
 | `notifications/use-push-device` | `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
+| `notifications/push-worker` | `handlePushSubscriptionChange`, `pushSubscriptionInput`, `resubscribeAfterChange`, _`PushReplaceInput`_, _`PushResubscribeOutcome`_, _`PushSubscriptionChangeEventLike`_, _`PushSubscriptionChangeOptions`_, _`PushWorkerScope`_ |
 | `notifications/push-device-setting` | `PushDeviceSetting`, _`PushDeviceAction`_, _`PushDeviceSettingProps`_ |
 | `notifications/push-devices-setting` | `describeUserAgent`, `PushDevicesSetting`, _`PushDevicesSettingProps`_ |
 | `notifications/unsubscribe-panel` | `UnsubscribePanel`, `unsubscribeTokenType`, _`UnsubscribePanelProps`_ |

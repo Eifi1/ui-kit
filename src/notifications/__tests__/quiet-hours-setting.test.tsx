@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { MemoryRouter } from "react-router";
 import { QuietHoursSetting } from "../quiet-hours-setting";
 import { deviceTimeZone, timeZoneOptions } from "../time-zone-select";
 import { DEFAULT_NOTIFICATIONS_LABELS } from "../notifications-labels";
@@ -161,6 +162,39 @@ describe("QuietHoursSetting", () => {
   it("passes axe with a window, the zone and the device's offer", async () => {
     const { container } = render(
       <QuietHoursSetting start="22:00" end={null} timezone="Pacific/Auckland" inbox onChange={vi.fn()} />,
+    );
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("QuietHoursSetting — the account's zone (0.46, §10.3, §10.4)", () => {
+  it("with `zone`: no picker, the zone named, a link to the row, and a time sends no zone", () => {
+    const onChange = vi.fn();
+    render(
+      <MemoryRouter>
+        <QuietHoursSetting start="22:00" end={null} zone="Europe/Zurich" zoneHref="/settings/language#time-zone" onChange={onChange} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("combobox", { name: "Time zone" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Use it" })).not.toBeInTheDocument();
+    expect(screen.getByText("In your time zone (Europe / Zurich).")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Change time zone" })).toHaveAttribute("href", "/settings/language#time-zone");
+    setTime(timeField("Until"), "07:00");
+    expect(onChange).toHaveBeenCalledWith({ quiet_hours_end: "07:00" });
+  });
+
+  it("`held`: the description says a held push arrives when the window ends", () => {
+    const { rerender } = render(<QuietHoursSetting start={null} end={null} zone="Europe/Zurich" held inbox onChange={vi.fn()} />);
+    expect(screen.getByText(/arrive when it ends\. They reach your inbox at once\./)).toBeInTheDocument();
+    rerender(<QuietHoursSetting start={null} end={null} zone="Europe/Zurich" onChange={vi.fn()} />);
+    expect(screen.getByText("No push notifications during this window.")).toBeInTheDocument();
+  });
+
+  it("passes axe with the zone line", async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <QuietHoursSetting start="22:00" end="07:00" zone="Europe/Zurich" zoneHref="/settings" onChange={vi.fn()} />
+      </MemoryRouter>,
     );
     expect(await axeViolations(container)).toEqual([]);
   });

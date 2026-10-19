@@ -13,6 +13,7 @@ import * as rhf from "../rhf";
 import * as offline from "../offline";
 import * as sync from "../sync";
 import * as syncTesting from "../sync/testing";
+import * as pushWorker from "../push-worker";
 import * as tableText from "../table-text";
 import * as dates from "../lib/dates";
 import * as currencies from "../currencies";
@@ -278,7 +279,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `isDateFormatPreference`, `resolveDateFormat`, `formatDateWithPreference`, `dateFormatSample`,
   // `dateFormatterFor`; push rotation `handlePushSubscriptionChange`, `resubscribeAfterChange`,
   // `pushSubscriptionInput`.
-  ["@eifi1/ui-kit", barrel, 979],
+  // 0.46.0 (+6, docs/notifications-harmonization.md §10.1, §10.3): `NotificationInbox`,
+  // `INBOX_BADGE_INTERVAL`, `NotificationBell`, `TimeZoneSetting`, `useDeviceZoneReport`, and
+  // `useKitTimeZone`, the provider's `timeZone`.
+  ["@eifi1/ui-kit", barrel, 985],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -348,6 +352,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/sync", sync, 12],
   // 0.46.0: `createFakeSyncTransport`, the scripted `/sync` server for an app's tests.
   ["@eifi1/ui-kit/sync/testing", syncTesting, 1],
+  // 0.46.0 (docs/notifications-harmonization.md §10.6 rule 5): the service worker's entry —
+  // `handlePushSubscriptionChange`, `resubscribeAfterChange`, `pushSubscriptionInput`,
+  // `PUSH_SUBSCRIPTION_CHANGED`. A slice of the barrel that reaches no package
+  // (packaging-contract.test.ts).
+  ["@eifi1/ui-kit/push-worker", pushWorker, 4],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8
