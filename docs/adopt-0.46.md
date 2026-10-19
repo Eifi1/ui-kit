@@ -66,6 +66,29 @@ languages). The app reads the connection itself.
 | kastlan | **K1** shared/offline/query-persistence.ts:58-63: the `dehydrateOptions` override → `persistMutations: false` in the `createQueryPersistence` call (:50-57). **K2** the sign-in page (features/auth/components/auth-page.tsx) runs `removeStaleQueryCopies("kastlan", PERSIST_MAX_AGE)` on mount, for the copy a session left when it ended with no user known (auth-store.ts:121, the rehydrate "ended" path); providers.tsx:51 stays. **K3** shared/pwa/sw-update.ts → `export const swUpdates = createServiceWorkerUpdates(registerSW)`; main.tsx:31 `swUpdates.start()`; app/pwa-update.tsx:18 → `useServiceWorkerUpdate(swUpdates)` (its names are `onReload` / `onDismiss`, the prompt's props). **K4** shared/offline/offline-lock.ts → the kit's `OFFLINE_LOCK` and `COMMIT_EXCEPT_OFFLINE` (for `COMMIT_OFFLINE_TOO`, in the handover's defect-form, room-inspector and meter-readings-card); app-layout.tsx:88 → `useOfflineWriteLock(!online)`, and `offlineSync.needsConnection` can go if the kit's words fit. |
 | Kurvenschmiede | Nothing (online-only). |
 
+## server-kit 0.16.0
+
+Install the wheel by URL, pinned by hash (0.16.0, not 0.15.1: it adds names, which server-kit's
+patches never do; nothing breaks):
+
+```
+eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.16.0/eifi1_server_kit-0.16.0-py3-none-any.whl
+sha256: SHA256_AT_RELEASE
+```
+
+Two changes show on the bump itself:
+
+- **The tours export spells `completed_at` as the wire does:** `2026-10-18T07:00:00Z`, not
+  `isoformat()`'s `+00:00` (`TourProgressService.export`). A test that pins the export's value
+  fails until it is re-pinned.
+- **`test_mail_message` returns `HtmlMailMessage`**, a `MailMessage` whose `html` is a `str`.
+
+| App | Change |
+| --- | --- |
+| keksdose | Drop `message.html or ""` after `test_mail_message`. No tours export (tours stay on the device). |
+| kastlan | If a test pins the account export's `tour_progress` value, re-pin `+00:00` → `Z`. |
+| Kurvenschmiede | Re-pin `backend/tests/api/test_tours_api.py`'s export value from `+00:00` to `Z` (KS build review S1). |
+
 ## Sync: the device clock's skew is corrected (server-kit 0.16.0)
 
 Local-first §1.5 D2, amended in round 0.46 (Marcel, 2026-10-19). The latest DEVICE edit time
