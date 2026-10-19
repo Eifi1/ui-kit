@@ -274,6 +274,49 @@ describe("the offline peers stay behind @eifi1/ui-kit/offline", () => {
   });
 });
 
+/**
+ * 0.46 (docs/local-first-harmonization.md §2.3): Dexie is an optional peer of
+ * `@eifi1/ui-kit/sync` alone. `/offline` stays importable without it, and `/sync` never loads
+ * `/offline`'s TanStack and idb-keyval peers: the leaf utilities both export live in one
+ * module that reaches no package.
+ */
+describe("dexie stays behind @eifi1/ui-kit/sync", () => {
+  const OFFLINE_PEERS = [
+    "@tanstack/react-query",
+    "@tanstack/react-query-persist-client",
+    "@tanstack/query-async-storage-persister",
+    "idb-keyval",
+  ];
+
+  it("is imported by the sync entry's modules and nowhere else", () => {
+    const importers = importedPackages().get("dexie") ?? [];
+    expect(importers.length).toBeGreaterThan(0);
+    expect(importers.filter((file) => !/^src\/sync(\.ts|\/)/.test(file))).toEqual([]);
+  });
+
+  it("is an optional peer, and a devDependency for this repo's own tests", () => {
+    expect(pkg.peerDependencies.dexie).toBeDefined();
+    expect(pkg.peerDependenciesMeta?.dexie?.optional).toBe(true);
+    expect(pkg.devDependencies.dexie).toBeDefined();
+    expect(pkg.dependencies.dexie).toBeUndefined();
+  });
+
+  it("/sync reaches dexie and none of /offline's peers; /offline and the barrel never reach dexie", () => {
+    const fromSync = packagesReachedFrom("src/sync.ts");
+    expect(fromSync).toContain("dexie");
+    for (const peer of OFFLINE_PEERS) expect(fromSync).not.toContain(peer);
+    expect(packagesReachedFrom("src/offline.ts")).not.toContain("dexie");
+    expect(packagesReachedFrom("src/index.ts")).not.toContain("dexie");
+    expect([...packagesReachedFrom("src/offline/local-first.ts")]).toEqual([]);
+    expect([...packagesReachedFrom("src/sync/testing.ts")]).toEqual([]);
+  });
+
+  it("are exports entries", () => {
+    expect(pkg.exports["./sync"]).toEqual({ types: "./dist/sync.d.ts", import: "./dist/sync.js" });
+    expect(pkg.exports["./sync/testing"]).toEqual({ types: "./dist/sync/testing.d.ts", import: "./dist/sync/testing.js" });
+  });
+});
+
 describe("@eifi1/ui-kit/testing is pure (0.33)", () => {
   // The guard an app runs from its own test suite (docs/colour-roles-harmonization.md
   // §8.3): browser-safe like the rest of the kit, so it runs under jsdom or node alike.

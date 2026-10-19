@@ -143,6 +143,12 @@ export const de: Dictionary = {
       blurb:
         "Ohne Verbindung arbeiten: der gespeicherte Query-Cache mit seiner Streichliste, die Frage vor dem Abmelden, solange Änderungen warten, der Update-Hinweis, der auf eine Tour wartet, und die Wahl «gemeinsam genutzter Computer».",
     },
+    sync: {
+      title: "Sync-Engine",
+      short: "Sync",
+      blurb:
+        "Auf der Kopie des Geräts arbeiten: die Sync-Engine mit ihrer Warteschlange, eine Anfrage pro Bereich, abgelehnte Änderungen, die bleiben, die Wartezeiten nach einem Fehler und die geschützte Abmeldung; dazu der Worker, der Status für die Anzeige und das Live-Lesen der Kopie.",
+    },
     "auth-account": {
       title: "Anmeldung & Kontosicherheit",
       short: "Anmeldung",
@@ -656,6 +662,14 @@ export const de: Dictionary = {
       "vor dem Abmelden mit ungesendeten Änderungen fragen",
       "eine neue Version ist verfügbar, neu laden",
       "dies ist ein gemeinsam genutzter Computer",
+    ],
+    sync: [
+      "offline gemachte Änderungen synchronisieren",
+      "Änderungen auf dem Gerät vormerken",
+      "eine fehlgeschlagene Synchronisierung später wiederholen",
+      "Änderungen bis zu einem Abo zurückhalten",
+      "den Sync-Status anzeigen",
+      "die Kopie auf dem Gerät live lesen",
     ],
     "auth-account": [
       "Layout der Anmeldeseite",

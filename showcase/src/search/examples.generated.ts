@@ -966,6 +966,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PwaUpdatePrompt — “A new version is available”",
     "SharedComputerChoice — on the sign-in form",
   ],
+  "sync": [
+    "createSyncEngine — a Dexie copy in this browser, a pretend server in memory",
+    "The wiring — kastlan's handover copy",
+  ],
   "server-auth": [
     "auth · Functions",
     "auth · Classes",
@@ -1446,6 +1450,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "offline": [
     "OfflineDemo",
+  ],
+  "sync": [
+    "SyncDemo",
   ],
   "server-auth": [
     "ServerModules",

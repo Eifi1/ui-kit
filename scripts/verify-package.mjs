@@ -158,6 +158,8 @@ try {
       "@tanstack/query-async-storage-persister",
       "idb-keyval",
     ],
+    // 0.46: `/sync` alone imports Dexie (§2.3); `/offline` loads without it.
+    "./sync": ["dexie"],
   };
   for (const [entry, peers] of Object.entries(optionalEntries)) {
     if (!subpaths.includes(entry)) fail(`${entry} is not in the exports map`);

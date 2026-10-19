@@ -60,6 +60,7 @@ import {
   PenLine,
   Pin,
   Puzzle,
+  RefreshCw,
   Server,
   Settings as SettingsIcon,
   ShieldAlert,
@@ -329,6 +330,8 @@ const Billing033Demo = lazySection(() => import("./sections/billing-033-demo"), 
 const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "BillingSwitchDemo");
 // 0.45: local-first phase 1, @eifi1/ui-kit/offline (docs/local-first-harmonization.md §1.6).
 const OfflineDemo = lazySection(() => import("./sections/offline-demo"), "OfflineDemo");
+// 0.46: local-first phase 3, @eifi1/ui-kit/sync (docs/local-first-harmonization.md §2.3).
+const SyncDemo = lazySection(() => import("./sections/sync-demo"), "SyncDemo");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
 // 0.42: the admin area's template (docs/admin-harmonization.md).
@@ -1530,6 +1533,17 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: CloudOff,
         components: ["createQueryPersistence", "DEFAULT_SCRUB_FIELDS", "SignOutPendingDialog", "PwaUpdatePrompt", "SharedComputerChoice", "isSharedComputer", "setSharedComputer"],
         Body: () => <OfflineDemo />,
+      },
+      {
+        // 0.46: the sync engine on the device's copy, beside Offline (API has room; App chrome is full).
+        slug: "sync",
+        title: "Sync engine",
+        short: "Sync",
+        blurb:
+          "Working on the device's copy: the sync engine with its queue, one request per scope, refused changes kept, the waits after an error and the guarded sign-out; its worker, its status for the indicator and the live read of the copy.",
+        icon: RefreshCw,
+        components: ["createSyncDb", "createSyncEngine", "useSyncWorker", "useSyncStatus", "useSyncQuery", "stampAfter", "isOfflineError", "readLocalFirst", "writeLocalFirst"],
+        Body: () => <SyncDemo />,
       },
     ],
   },

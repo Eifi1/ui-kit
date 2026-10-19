@@ -318,3 +318,89 @@ check:commit-rules` says so and passes until the tag exists, then `npm run sync:
 hook's exported `GIT_DIR` after a `cd` into a subdirectory (the top-level `.versionrc` still
 applies) and warns when it leads nowhere. Apps: nothing; each app's hook already vendors
 the shared script (or takes v1.3.1 with its next sync).
+
+## Sync engine and offline scopes (`@eifi1/ui-kit/sync`; local-first P3 + P4)
+
+docs/local-first-harmonization.md §2 (settled 2026-10-19). A new subpath, `@eifi1/ui-kit/sync`:
+`createSyncDb(name, { extraStores?, upgrades? })` (one Dexie database: `rows`, `outbox` with a
+`scope` index, `meta`, plus the app's tables), `createSyncEngine({ db, scopes, send, isOffline?,
+planCode?, holdCodes?, paged?, steps?, paused?, pollMs?, soonMs?, backoffMs? })` (one request per
+scope in `scopes()` order, read every round; `client_now` fresh per request; the paged pull's
+cursor written with the last page only; `refused` per change by `holdCodes` → `waiting`, any
+other code → `blocked` (sent on `retryBlocked()`); `rejections[]` → `rejected`, never re-sent; a
+lost scope's 403 rejects its queue "Not allowed to sync <scope>"; errors back off 5 s, 15 s,
+60 s, then every 5 min, reset by a good round, `online` or "Sync now"; offline sets no timer;
+`forget({ keepQueue })` bumps the generation first, and every apply and every step checks it;
+one engine per database; `start()` does nothing on a computer marked shared),
+`useSyncWorker(engine | null)`, `useSyncStatus(engine | null)` → `{ status, onSync }` for
+`SyncStatusIndicator`, `useSyncQuery(db, query, deps)` (Dexie `liveQuery`). `@eifi1/ui-kit/sync/testing`:
+`createFakeSyncTransport()` for the app's tests. **`dexie` (^4) is an optional peer of `/sync`
+only.** The leaf utilities `stampAfter`, `isOfflineError`, `readLocalFirst`, `writeLocalFirst`
+come from `/sync` or `/offline` (one module, no Dexie, no TanStack). No new words.
+
+| App | Change |
+| --- | --- |
+| keksdose | Nothing (the engine is not for kk, §1.8 7). Optional: `stampAfter` / `isOfflineError` from `@eifi1/ui-kit/offline` in place of sync-client.ts:639-643 / net.ts:20 (kk's `isOfflineError` counts any non-axios `Error` as offline; the kit's only fetch's `TypeError`). |
+| kastlan | See below. |
+| Kurvenschmiede | Nothing (online-only, §1.4). |
+
+**kastlan, server (BE `kastlan`)**
+- Take the server-kit 0.16.0 wheel's `sync.scopes`; `domain/services/sync_scopes.py`: `HANDOVER`
+  onto `SyncScope`/`EntityRule`, its checks (finalised protocol, reading in the protocol's unit,
+  signature before finalising) as `guard`s, finalising in `after_apply`.
+- **QR-IBAN withholding:** `withheld=frozenset({"estates.qr_iban"})` on every scope; the pull runs
+  rows through `withhold`; a test that the handover pull holds no `qr_iban` and a push naming it is
+  rejected.
+- Paging: `collect_delta` (domain/services/sync_service.py:224-255) on the kit's `page_of`, 2000
+  rows a page; the router honours `paged`.
+- Four new scopes, rules per §2.5, roles as online: `MEETINGS`, `METERS`, `MAINTENANCE` (costs and
+  schedules included; `after_apply`: `ASSIGNED` on a work order's create, `next_due` via
+  `calc_next_due` when `last_performed` changes), `CONTACTS` (`FINANCE_WRITE`; phone, mobile,
+  email, notes only). The router (adapters/api/sync_router.py) resolves `scope` among the five and
+  answers 403 to a role without it.
+- **Completed meetings online:** owner_meeting_service.py `add_agenda_item` (:109),
+  `update_agenda_item` (:113), `delete_agenda_item` (:117) refuse a COMPLETED meeting (409), and
+  `update_meeting` (:79) a `notes` change on one; the `meetings` scope's guard refuses the same.
+- **Idempotent creates (D16):** the P4 REST create schemas (schemas/maintenance.py, meter.py,
+  owner_meeting.py) take an optional `sync_uuid`; a create whose `sync_uuid` already names a row of
+  the company answers that row.
+- Tests: tests/api/test_sync_handover.py stays green; one `test_sync_<scope>.py` per new scope
+  (allowed, each rejection, a completed meeting refused, `next_due` recomputed, the withheld
+  field); the completed-meeting REST checks; a duplicate REST create with the same `sync_uuid`.
+
+**kastlan, client (FE `frontend/src`; HO = features/handover/offline)**
+- `@eifi1/ui-kit/sync`; `dexie` stays ^4.4.6. The handover copy onto the engine: HO/db.ts →
+  `createSyncDb("kastlan-handover-<user>-<company>", { extraStores: { photos: "id, roomId, status" },
+  upgrades: [{ version: 2, upgrade: (tx) => … }] })`, where v2 sets `scope = "handover"` on every
+  outbox row **and moves `meta.lastKnowledge` to `lastKnowledge:handover`** (the engine keeps a
+  cursor per scope; without the move the first round pulls everything again, harmless but slow).
+  Outbox statuses: ka's `waiting` rows keep their meaning; the engine adds `blocked`. HO/repo.ts
+  `write()` → `engine.write("handover", …)` (stamped with `stampAfter`); HO/sync.ts and
+  HO/sync-controller.ts → `createSyncEngine({ send, scopes, planCode, holdCodes: ["billing_read_only",
+  "plan_limit"], paged: true, steps: [photoUpload], paused: deviceSyncPaused })`; the 422 parser
+  and its loop deleted; HO/offline.test.ts is the parity suite (`createFakeSyncTransport` or the
+  mocked `apiClient`).
+- **One engine per account and company:** built from the signed-in user and company;
+  `useSyncWorker(engine)` in app/app-layout.tsx:92 replaces `useHandoverSyncLoop`; a company switch
+  builds a new one and stops the old.
+- **The guarded sign-out:** features/auth/stores/auth-store.ts:74 calls `engine.forget({ keepQueue:
+  true })` instead of `forgetHandoverCopy`; the photo step writes only while `ctx.isCurrent()`.
+- **Shared computer:** `isSharedComputer()` → no engine (`useSyncWorker(null)`), the queueing
+  controls locked "Needs a connection", the handover pages and the meeting recording page not
+  offered.
+- Indicator: app/top-bar.tsx:177 `SyncStatusIndicator` always shown (no `hideWhenIdle`, no handover
+  `scope` words), fed by `useSyncStatus(engine)` plus the legacy queue's count. **The legacy
+  `kastlan-offline` queue and `syncManager` drain stay** (D17; prod is on v0.11.0).
+- **All five scopes**, in the round's order handover, meetings, meters, maintenance, contacts;
+  `scopes()` from the company role.
+  - **The meeting page:** a new recording page under features/owner-meetings ("meeting mode"): per
+    agenda item the three counts, the resolution and `minutes_text` as the chair announces them,
+    and the meeting's `notes`; reads and writes the copy only; no outcome computed (ZGB 712m double
+    majority later); "Complete" online only ("Needs a connection"); a completed meeting read-only;
+    invitations read-only.
+  - meters, maintenance, contacts: the online pages on `readLocalFirst`/`writeLocalFirst`; creates
+    mint `sync_uuid` once and send it on both paths; queued controls take
+    `commit={COMMIT_EXCEPT_OFFLINE}`; a meter reading's scope from its row.
+  - maintenance costs (`cost_estimate`, `actual_cost` on the detail page) and a schedules list with
+    "Done" write through the copy (no online writer exists today).
+- Words for the new page and the schedules list in all seven languages.

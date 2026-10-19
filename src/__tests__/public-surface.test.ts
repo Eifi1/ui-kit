@@ -11,6 +11,8 @@ import * as tour from "../tour";
 import * as wizard from "../wizard";
 import * as rhf from "../rhf";
 import * as offline from "../offline";
+import * as sync from "../sync";
+import * as syncTesting from "../sync/testing";
 import * as tableText from "../table-text";
 import * as dates from "../lib/dates";
 import * as currencies from "../currencies";
@@ -336,7 +338,16 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `isCacheSafe` (+1, keksdose's build review: its query-client tests use it).
   // 0.46.0 (+3, kastlan K2, K3): `removeStaleQueryCopies`, `createServiceWorkerUpdates`,
   // `useServiceWorkerUpdate`.
-  ["@eifi1/ui-kit/offline", offline, 14],
+  // 0.46.0 (+4, local-first §2.3): the leaf utilities `stampAfter`, `isOfflineError`,
+  // `readLocalFirst`, `writeLocalFirst`, shared with `/sync` from one module.
+  ["@eifi1/ui-kit/offline", offline, 18],
+  // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
+  // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
+  // `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the four leaf utilities `/offline`
+  // exports too. Standalone: its Dexie peer stays out of the barrel.
+  ["@eifi1/ui-kit/sync", sync, 12],
+  // 0.46.0: `createFakeSyncTransport`, the scripted `/sync` server for an app's tests.
+  ["@eifi1/ui-kit/sync/testing", syncTesting, 1],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8
@@ -379,6 +390,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
 const STANDALONE = new Set([
   "@eifi1/ui-kit/rhf",
   "@eifi1/ui-kit/offline",
+  "@eifi1/ui-kit/sync",
+  "@eifi1/ui-kit/sync/testing",
   "@eifi1/ui-kit/table-text",
   "@eifi1/ui-kit/dates",
   // Test helpers, never part of an app's bundle.

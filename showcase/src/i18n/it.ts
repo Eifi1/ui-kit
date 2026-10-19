@@ -132,6 +132,12 @@ export const it: Dictionary = {
       blurb:
         "Lavorare senza connessione: la cache delle query conservata con il suo elenco di campi da togliere, la domanda prima di uscire mentre delle modifiche attendono, l’avviso di aggiornamento che aspetta la fine di un tour e la scelta «computer condiviso».",
     },
+    sync: {
+      title: "Motore di sincronizzazione",
+      short: "Sync",
+      blurb:
+        "Lavorare sulla copia del dispositivo: il motore di sincronizzazione con la sua coda, una richiesta per ambito, le modifiche rifiutate che restano, le attese dopo un errore e l’uscita protetta; il suo worker, il suo stato per l’indicatore e la lettura dal vivo della copia.",
+    },
     "auth-account": {
       title: "Accesso e sicurezza dell'account",
       short: "Accesso",
@@ -645,6 +651,14 @@ export const it: Dictionary = {
       "chiedere prima di uscire con modifiche non sincronizzate",
       "è disponibile una nuova versione, ricarica",
       "questo è un computer condiviso",
+    ],
+    sync: [
+      "sincronizzare le modifiche fatte offline",
+      "mettere in coda le scritture sul dispositivo",
+      "riprovare più tardi una sincronizzazione fallita",
+      "tenere le modifiche in attesa di un piano",
+      "mostrare lo stato della sincronizzazione",
+      "leggere dal vivo la copia del dispositivo",
     ],
     "auth-account": [
       "layout della pagina di accesso",

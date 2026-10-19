@@ -11,6 +11,8 @@ import * as wizard from "../../../src/wizard";
 import * as rhf from "../../../src/rhf";
 import * as tableText from "../../../src/table-text";
 import * as offline from "../../../src/offline";
+import * as sync from "../../../src/sync";
+import * as syncTesting from "../../../src/sync/testing";
 import * as testing from "../../../src/testing";
 import * as dates from "../../../src/lib/dates";
 import * as i18nDeCh from "../../../src/i18n/locales/de-CH";
@@ -52,6 +54,8 @@ const ENTRIES: Record<string, Record<string, unknown>> = {
   "./rhf": rhf,
   "./table-text": tableText,
   "./offline": offline,
+  "./sync": sync,
+  "./sync/testing": syncTesting,
   "./testing": testing,
   "./dates": dates,
   "./i18n/de-CH": i18nDeCh,

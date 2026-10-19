@@ -135,6 +135,12 @@ export const es: Dictionary = {
       blurb:
         "Trabajar sin conexión: la caché de consultas guardada con su lista de campos que se eliminan, la pregunta antes de cerrar sesión mientras hay cambios pendientes, el aviso de actualización que espera a que termine un recorrido y la opción «ordenador compartido».",
     },
+    sync: {
+      title: "Motor de sincronización",
+      short: "Sync",
+      blurb:
+        "Trabajar sobre la copia del dispositivo: el motor de sincronización con su cola, una petición por ámbito, los cambios rechazados que se conservan, las esperas tras un error y el cierre de sesión protegido; su worker, su estado para el indicador y la lectura en vivo de la copia.",
+    },
     "auth-account": {
       title: "Inicio de sesión y seguridad de la cuenta",
       short: "Acceso",
@@ -648,6 +654,14 @@ export const es: Dictionary = {
       "preguntar antes de cerrar sesión con cambios sin sincronizar",
       "hay una nueva versión, recargar",
       "este es un ordenador compartido",
+    ],
+    sync: [
+      "sincronizar cambios hechos sin conexión",
+      "poner escrituras en cola en el dispositivo",
+      "reintentar más tarde una sincronización fallida",
+      "conservar cambios a la espera de un plan",
+      "mostrar el estado de sincronización",
+      "leer en vivo la copia del dispositivo",
     ],
     "auth-account": [
       "diseño de la página de inicio de sesión",

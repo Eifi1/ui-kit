@@ -141,6 +141,12 @@ export const hu: Dictionary = {
       blurb:
         "Munka kapcsolat nélkül: a mentett lekérdezés-gyorsítótár a törlendő mezők listájával, a kérdés kijelentkezés előtt, amíg módosítások várnak, a frissítési értesítés, amely kivárja egy bemutató végét, és a „közös használatú számítógép” választás.",
     },
+    sync: {
+      title: "Szinkronizáló motor",
+      short: "Szinkron",
+      blurb:
+        "Munka az eszköz másolatán: a szinkronizáló motor a várólistájával, hatókörönként egy kérés, a megmaradó elutasított módosítások, a hiba utáni várakozások és a védett kijelentkezés; a worker, az állapot a jelzőhöz és a másolat élő olvasása.",
+    },
     "auth-account": {
       title: "Bejelentkezés és fiókbiztonság",
       short: "Belépés",
@@ -654,6 +660,14 @@ export const hu: Dictionary = {
       "kérdezzen kijelentkezés előtt szinkronizálatlan módosításoknál",
       "új verzió érhető el, újratöltés",
       "ez egy közös használatú számítógép",
+    ],
+    sync: [
+      "offline végzett módosítások szinkronizálása",
+      "írások sorba állítása az eszközön",
+      "sikertelen szinkronizálás későbbi újrapróbálása",
+      "módosítások megtartása egy előfizetésig",
+      "a szinkronizálás állapotának megjelenítése",
+      "az eszköz másolatának élő olvasása",
     ],
     "auth-account": [
       "bejelentkező oldal elrendezése",

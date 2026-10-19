@@ -138,6 +138,12 @@ export const fr: Dictionary = {
       blurb:
         "Travailler sans connexion : le cache de requêtes conservé avec sa liste d’effacement, la question avant de se déconnecter tant que des modifications attendent, l’invite de mise à jour qui attend la fin d’une visite, et le choix « ordinateur partagé ».",
     },
+    sync: {
+      title: "Moteur de synchronisation",
+      short: "Sync",
+      blurb:
+        "Travailler sur la copie de l’appareil : le moteur de synchronisation et sa file d’attente, une requête par périmètre, les modifications refusées conservées, les délais après une erreur et la déconnexion protégée ; son worker, son état pour l’indicateur et la lecture en direct de la copie.",
+    },
     "auth-account": {
       title: "Connexion et sécurité du compte",
       short: "Connexion",
@@ -651,6 +657,14 @@ export const fr: Dictionary = {
       "demander avant de se déconnecter avec des modifications non synchronisées",
       "une nouvelle version est disponible, recharger",
       "c’est un ordinateur partagé",
+    ],
+    sync: [
+      "synchroniser les modifications faites hors ligne",
+      "mettre des écritures en file sur l’appareil",
+      "réessayer plus tard une synchronisation échouée",
+      "garder des modifications en attente d’un forfait",
+      "afficher l’état de la synchronisation",
+      "lire en direct la copie de l’appareil",
     ],
     "auth-account": [
       "mise en page de la connexion",

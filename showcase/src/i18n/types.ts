@@ -90,6 +90,7 @@ export type PageSlug =
   | "user-admin"
   | "subscription"
   | "offline"
+  | "sync"
   | "wizard"
   | "feedback-compose"
   | "feedback-inbox"

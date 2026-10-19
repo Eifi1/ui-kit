@@ -28,3 +28,5 @@ export {
   setSharedComputer,
 } from "./offline/shared-computer";
 export type { SharedComputerChoiceProps, SharedComputerLabels, SharedComputerStorage } from "./offline/shared-computer";
+// 0.46 (§2.3): the leaf utilities, shared with `@eifi1/ui-kit/sync` from one module that imports no peer.
+export { isOfflineError, readLocalFirst, stampAfter, writeLocalFirst } from "./offline/local-first";
