@@ -545,7 +545,8 @@ details" card first in `/admin/company`, on kit parts already there (`SettingsSe
   :51). The plumbing exists (`render_latex_pdf(…, extra_files=…)`, latex_renderer.py:59-62,
   ships binaries to pdflatex); the templates are the work. Checked then with server-kit's
   `check_upload` and `ensure_decodable_image` (uploads.py:260, :308), shown in the card
-  with `FileDropzone` and `AuthedImage`.
+  with `FileButton` / `useFilePicker` and `AuthedImage` (the kit has no `FileDropzone`; kastlan
+  ships the logo with its 0.46 adoption, Marcel 2026-10-19).
 
 **Split.** ui-kit none. server-kit none. kastlan S (name, address, the rename's log rows);
 the logo a later round (M).

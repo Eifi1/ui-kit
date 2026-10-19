@@ -18,7 +18,7 @@ scopes (P4), for ui-kit 0.46 / server-kit 0.16.
 audits/round-046/reviews.md; §1.9 records where each answer went, and the reviews' corrections
 are folded into §1.2, §1.3 and §1.5–§1.7). **Phases 1 and 2** (§1.7: the persisted offline cache
 with its scrub list, and the shared sync protocol) are built for **ui-kit 0.45 / server-kit 0.15**.
-Phases 3 and 4 follow in later rounds. Drafted at kk `feat/feedback-loop-80-424-434` deaf428d, ka
+Phases 3 and 4 are §2, built for ui-kit 0.46 / server-kit 0.16. Drafted at kk `feat/feedback-loop-80-424-434` deaf428d, ka
 `feat/kit-0.44` 6c2a0c4, KS `main` b54c16e, ui-kit `feat/0.45.0`, server-kit `feat/0.15.0`; the
 reviews' corrections re-checked at the same kk and ka commits. In kk, FE = `frontend/src` and
 BE = `backend/keksdose`. In ka, FE = `frontend/src` and BE = `kastlan`.
@@ -1029,15 +1029,19 @@ page; D16's REST-first seam does not apply), and ka adds a schedules list with "
   (`votes_for/against/abstain`, `resolution`, :121-127), not a ballot per owner; the minutes are
   `AgendaItem.minutes_text` (:128) and `OwnerMeeting.notes` (:93). Weighted votes
   (`MeetingInvitation.ownership_share`, :154-156) and attendance are not recorded today.
-- **The page records what the chair announces; it does not decide a resolution** (settled, ka's
-  review). A Stockwerkeigentümer resolution often needs both majorities, by head and by value
-  quota (ZGB 712m with 647b ff.); three plain counts record only one. The recording page takes the
-  counts and the resolution text the chair announces and computes no outcome. The double majority
-  (attendance per owner with `ownership_share`) is a later model change, its own round.
-- **Conflicts on a vote: whole-row LWW, no merge (D2).** The counts and the resolution of one item
-  travel in one row, so two devices never mix counts; the latest edit wins and the other device
-  gets the winner back in the same round. A second recorder at the same meeting is the only real
-  conflict. **Rec:** no lock and no dialog: one recorder per meeting by convention, the losing
+- **The double majority is recorded per owner** (amended 2026-10-19, Marcel: in kastlan's 0.46
+  adoption, not a later round). A Stockwerkeigentümer resolution often needs both majorities, by
+  head and by value quota (ZGB 712m with 647b ff.). kastlan records attendance on the
+  `MeetingInvitation` (which already carries `ownership_share` and `proxy_contact_id`) and one
+  vote row per owner per agenda item (SyncMixin, `updated_at` for LWW); the head and quota tallies
+  are derived from those rows, on the server and on the device, and the plain counts become
+  derived. The meetings scope's writable set gains the vote rows and the invitation's attendance
+  (`meeting_uuid` / invitation fixed). App model and scope only: no kit change.
+- **Conflicts on a vote: whole-row LWW, no merge (D2).** Each owner's vote on one item is its own
+  row (since the 2026-10-19 amendment above), so two devices recording different owners never
+  conflict, and the tallies are derived, never stored as a second truth; the latest edit to the
+  same owner's vote wins and the other device gets the winner back in the same round. Two
+  recorders entering the same owner's vote is the only real conflict. **Rec:** no lock and no dialog: one recorder per meeting by convention, the losing
   device shows the winner. A per-meeting "recorder" claim would be an online lock, which the
   meeting room cannot take.
 - **Who may edit minutes offline:** whoever may online, `MANAGER_WRITE` (ADMIN, MANAGER;
@@ -1165,8 +1169,8 @@ page; D16's REST-first seam does not apply), and ka adds a schedules list with "
 4. **D15:** the engine guards every step (the photo upload too) with the sign-out generation; one
    engine per database (ka: per account and company).
 5. **D15/Q8:** on a shared computer the engine does not start.
-6. **Owner meetings:** the page records the results the chair announces (no head/value-quota double
-   majority yet, ZGB 712m; a later model change); add, update and delete of agenda items and the
+6. **Owner meetings:** attendance and one vote per owner per item, the head and quota tallies
+   derived (ZGB 712m double majority; amended 2026-10-19 into kastlan's 0.46 adoption); add, update and delete of agenda items and the
    approved minutes are refused online after approval.
 7. **Q5:** all five scopes in 0.46: handover, meetings, meters, maintenance, contacts (ka's order).
 8. **Q3/D14:** withhold `estates.qr_iban` from `/sync` in 0.46 (`SyncScope.withheld`).
