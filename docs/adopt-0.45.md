@@ -10,7 +10,7 @@ Install the wheel by URL, pinned by hash:
 
 ```
 eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.15.0/eifi1_server_kit-0.15.0-py3-none-any.whl
-sha256: SHA256_AT_RELEASE
+sha256: 60a6f2af027ba6bc5830e9ab688100a0d2e9978f1ea8b44a0631245b567334a6
 ```
 
 New: `tours` (+ `tours.router`, `tours.testing`), `sync` (the `sync` extra: `eifi1-server-kit[sync]`),

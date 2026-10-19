@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.14.0",
+  "kit_version": "0.15.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -1017,7 +1017,7 @@
         {
           "name": "CONFIRMATION_LEVELS",
           "kind": "constant",
-          "signature": "CONFIRMATION_LEVELS: Mapping[AdminAction, ConfirmationLevel] = {\n    AdminAction.DEACTIVATE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.REACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.ROLE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_REMOVE: ConfirmationLevel.NONE,\n    AdminAction.PASSWORD_CHANGE_REQUIRE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.PASSWORD_CHANGE_WITHDRAW: ConfirmationLevel.NONE,\n    AdminAction.MAIL_VERIFICATION: ConfirmationLevel.NONE,\n    AdminAction.MAIL_RESET: ConfirmationLevel.NONE,\n    AdminAction.REVIEWER: ConfirmationLevel.NONE,\n    AdminAction.INVITE: ConfirmationLevel.NONE,\n    AdminAction.INVITE_RESEND: ConfirmationLevel.NONE,\n    AdminAction.INVITE_REVOKE: ConfirmationLevel.NONE,\n    AdminAction.TRANSFER: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_REQUEST: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_CANCEL: ConfirmationLevel.NONE,\n    AdminAction.ERASE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.PLAN: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.GROUP_CREATE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_RENAME: ConfirmationLevel.NONE,\n    AdminAction.GROUP_DELETE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_ADD: ConfirmationLevel.NONE,\n    AdminAction.MEMBERSHIP_ROLE: ConfirmationLevel.NONE,\n}",
+          "signature": "CONFIRMATION_LEVELS: Mapping[AdminAction, ConfirmationLevel] = {\n    AdminAction.DEACTIVATE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.REACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.ROLE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_REMOVE: ConfirmationLevel.NONE,\n    AdminAction.PASSWORD_CHANGE_REQUIRE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.PASSWORD_CHANGE_WITHDRAW: ConfirmationLevel.NONE,\n    AdminAction.MAIL_VERIFICATION: ConfirmationLevel.NONE,\n    AdminAction.MAIL_RESET: ConfirmationLevel.NONE,\n    AdminAction.REVIEWER: ConfirmationLevel.NONE,\n    AdminAction.INVITE: ConfirmationLevel.NONE,\n    AdminAction.INVITE_RESEND: ConfirmationLevel.NONE,\n    AdminAction.INVITE_REVOKE: ConfirmationLevel.NONE,\n    AdminAction.TRANSFER: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_REQUEST: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_CANCEL: ConfirmationLevel.NONE,\n    AdminAction.ERASE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.PLAN: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.GROUP_CREATE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_RENAME: ConfirmationLevel.NONE,\n    AdminAction.GROUP_DELETE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_ADD: ConfirmationLevel.NONE,\n    AdminAction.MEMBERSHIP_ROLE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_DEACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_REACTIVATE: ConfirmationLevel.NONE,\n}",
           "doc": "The contract's level per action (§4.2). ``type_email``: deactivate, erase (the\noperator's \"erase now\"), transfer — and the user's own deletion request, whose body\ncarries the typed address (§6.4). ``acknowledge``: force a password change, change a\nrole, change a plan (billing §6), delete a group (§11.2 decision 5: what goes with it\nis what nobody can see afterwards). Everything else: ``none``. No group's action is\n``type_email``: a group has no address to type."
         },
         {
@@ -1358,6 +1358,14 @@
             {
               "name": "MEMBERSHIP_ROLE",
               "value": "membership_role"
+            },
+            {
+              "name": "GROUP_DEACTIVATE",
+              "value": "group_deactivate"
+            },
+            {
+              "name": "GROUP_REACTIVATE",
+              "value": "group_reactivate"
             }
           ]
         },
@@ -4548,19 +4556,19 @@
           "name": "SyncRefusal",
           "kind": "model",
           "signature": "class SyncRefusal(BaseModel)",
-          "doc": "The changes a sync reply refused (§12.5): ``{code, detail, change_ids}``, on the\napp's sync answer beside the updates it still sends.\n\n**A 402 is not a refusal of one change.** Sync endpoints stay on the gate's allow-list;\ninside them, a lapsed payer's changes are refused as ``billing_read_only`` and not\napplied, and the reply still carries the updates — keksdose's E2EE gate is the\nprecedent. The client keeps the refused changes queued, as \"N changes waiting for a\nplan\", and sends them after payment::\n\n    class SyncResponse(BaseModel):\n        server_knowledge: int\n        changes: list[SyncChange]\n        refused: SyncRefusal | None = None\n\n``change_ids`` are the client-minted ids of the refused changes (keksdose's and\nkastlan's ``SyncChange.id``; a UUID is written as its string). ``code`` is another\nkit code where a change is refused for another reason (``plan_limit`` for a create past\nthe limit, after the read-only check, §12.3).",
+          "doc": "The changes a sync reply refused (§12.5): ``{code, detail, change_ids}``, on the\napp's sync answer beside the updates it still sends.\n\n**A 402 is not a refusal of one change.** Sync endpoints stay on the gate's allow-list;\ninside them, a lapsed payer's changes are refused as ``billing_read_only`` and not\napplied, and the reply still carries the updates — keksdose's E2EE gate is the\nprecedent. The client keeps the refused changes queued, as \"N changes waiting for a\nplan\", and sends them after payment::\n\n    class SyncResponse(BaseModel):\n        server_knowledge: int\n        changes: list[SyncChange]\n        refused: SyncRefusal | None = None\n\n``change_ids`` are the client-minted ids of the refused changes (keksdose's and\nkastlan's ``SyncChange.id``; a UUID is written as its string). ``code`` stays\n``billing_read_only``: a create past the plan's limit is a per-change\n:class:`SyncRejection` with :data:`SYNC_PLAN_LIMIT`, never this refusal.\n\nSince 0.15 it lives in :mod:`eifi1_server_kit.sync` (local-first §1.6) and\n:mod:`eifi1_server_kit.billing` re-exports the same class. It is ONE refusal for the\nWHOLE push: a per-change refusal is a :class:`SyncRejection`, never a code here\n(keksdose's client blocks its queue for good on a code it does not know).",
           "fields": [
             {
               "name": "code",
               "type": "str",
               "default": "'billing_read_only'",
-              "doc": ""
+              "doc": "``BillingErrorCode.BILLING_READ_ONLY`` (written out: billing imports this module)."
             },
             {
               "name": "detail",
               "type": "str",
               "default": "'Read-only for now: changes need an active plan'",
-              "doc": ""
+              "doc": "``BILLING_ERROR_DETAIL[BILLING_READ_ONLY]``, written out for the same reason."
             },
             {
               "name": "change_ids",
@@ -4905,7 +4913,7 @@
     {
       "name": "eifi1_server_kit.mail",
       "summary": "Outbound account mail: the words per language, one layout, two transports.",
-      "doc": "Outbound account mail: the words per language, one layout, two transports.\n\n``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``. Lifted from keksdose\n``backend/keksdose/infrastructure/email.py`` and ``domain/server_text.py`` and from\nKurvenschmiede ``infrastructure/email.py`` (``MailText``), which agree on everything\nhere; kastlan built its own on the same shape.\n\n* **The words are the app's.** A mail's texts are a table per language of\n  :class:`MailText` rows — the subject and the five parts :func:`render_message` lays\n  out — and :func:`pick` chooses the row for the recipient's locale. Which mails exist\n  and what they say stays in each app (§8 \"App-side: the texts of the mails\").\n* **One layout, escaped at the boundary** (:func:`render_message`): a greeting is built\n  from a person's name, and a name is free text, so an account called\n  ``<a href=\"…\">Reset here</a>`` must not put that anchor into the app's own mail.\n* **A whole HTML document**, with the language and a title: Outlook junked a fully\n  authenticated Kurvenschmiede reset mail (SCL 5 — a new domain on shared sending IPs),\n  and a bare fragment with no ``<html lang>`` and no ``<title>`` is one more mark against\n  a mail. :func:`render_mail` picks the row AND its language in one call.\n* **A ``Reply-To``** (:class:`ResendClient`'s ``reply_to``): the mails come from a\n  ``noreply@`` address, and a reply must reach a person. Each app's ``*_EMAIL_REPLY_TO``\n  setting defaults to ``support@<its domain>`` (:func:`support_address`), which\n  Cloudflare Email Routing forwards on all three domains.\n* **Two transports behind one protocol** (:class:`Mailer`): :class:`ResendClient` for\n  production — the ``mail`` extra (``eifi1-server-kit[mail]``, httpx) — and\n  :class:`ConsoleMailer` for a fresh checkout, which logs the message, link and all.\n  **Sending never raises**: a sign-up must not fail because a provider is down, and every\n  link can be asked for again. ``send`` answers whether the mail went; the caller decides\n  who is told.\n* **A word for every mail** — the ``kind`` it is sent and logged under, which an\n  operator greps three apps' logs for: a mail with a one-time link by its token's\n  :class:`~eifi1_server_kit.auth.OneTimeTokenKind`, billing's notices by\n  :class:`~eifi1_server_kit.billing.BillingNoticeKind`, and the account notices with no\n  token by :class:`AccountNoticeKind`.\n\n* **A notification mail** (``docs/notifications-harmonization.md`` §3.6) is sent under its\n  notification type's id and carries RFC 8058's one-click unsubscribe:\n  :func:`list_unsubscribe_headers` on :attr:`MailMessage.headers`, and a footer line\n  linking the app's unsubscribe page (:class:`MailUnsubscribe`, which\n  :func:`render_mail` lays out and turns into the headers). Account mail and billing's\n  notices carry none: the recipient asked for them, and has no switch to turn them off.\n  One a job sends is owed until it went (§9.4): it carries\n  :attr:`MailMessage.idempotency_key` from\n  :meth:`~eifi1_server_kit.notifications.MailMarker.idempotency_key`, so two runs on one\n  day send it once.",
+      "doc": "Outbound account mail: the words per language, one layout, two transports.\n\n``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``. Lifted from keksdose\n``backend/keksdose/infrastructure/email.py`` and ``domain/server_text.py`` and from\nKurvenschmiede ``infrastructure/email.py`` (``MailText``), which agree on everything\nhere; kastlan built its own on the same shape.\n\n* **The words are the app's.** A mail's texts are a table per language of\n  :class:`MailText` rows — the subject and the five parts :func:`render_message` lays\n  out — and :func:`pick` chooses the row for the recipient's locale. Which mails exist\n  and what they say stays in each app (§8 \"App-side: the texts of the mails\").\n* **One layout, escaped at the boundary** (:func:`render_message`): a greeting is built\n  from a person's name, and a name is free text, so an account called\n  ``<a href=\"…\">Reset here</a>`` must not put that anchor into the app's own mail.\n* **A whole HTML document**, with the language and a title: Outlook junked a fully\n  authenticated Kurvenschmiede reset mail (SCL 5 — a new domain on shared sending IPs),\n  and a bare fragment with no ``<html lang>`` and no ``<title>`` is one more mark against\n  a mail. :func:`render_mail` picks the row AND its language in one call.\n* **A ``Reply-To``** (:class:`ResendClient`'s ``reply_to``): the mails come from a\n  ``noreply@`` address, and a reply must reach a person. Each app's ``*_EMAIL_REPLY_TO``\n  setting defaults to ``support@<its domain>`` (:func:`support_address`), which\n  Cloudflare Email Routing forwards on all three domains.\n* **Two transports behind one protocol** (:class:`Mailer`): :class:`ResendClient` for\n  production — the ``mail`` extra (``eifi1-server-kit[mail]``, httpx) — and\n  :class:`ConsoleMailer` for a fresh checkout, which logs the message, link and all.\n  **Sending never raises**: a sign-up must not fail because a provider is down, and every\n  link can be asked for again. ``send`` answers whether the mail went; the caller decides\n  who is told.\n* **A word for every mail** — the ``kind`` it is sent and logged under, which an\n  operator greps three apps' logs for: a mail with a one-time link by its token's\n  :class:`~eifi1_server_kit.auth.OneTimeTokenKind`, billing's notices by\n  :class:`~eifi1_server_kit.billing.BillingNoticeKind`, and the account notices with no\n  token by :class:`AccountNoticeKind`.\n\n* **A notification mail** (``docs/notifications-harmonization.md`` §3.6) is sent under its\n  notification type's id and carries RFC 8058's one-click unsubscribe:\n  :func:`list_unsubscribe_headers` on :attr:`MailMessage.headers`, and a footer line\n  linking the app's unsubscribe page (:class:`MailUnsubscribe`, which\n  :func:`render_mail` lays out and turns into the headers). Account mail and billing's\n  notices carry none: the recipient asked for them, and has no switch to turn them off.\n  One a job sends is owed until it went (§9.4): it carries\n  :attr:`MailMessage.idempotency_key` from\n  :meth:`~eifi1_server_kit.notifications.MailMarker.idempotency_key`, so two runs on one\n  day send it once.\n* **The admin's test mail** (``docs/admin-harmonization.md`` §9.2, 0.15):\n  :func:`test_mail_message` in seven languages, sent under :data:`MAIL_TEST_KIND`\n  through the app's own send, awaited inline (never an after-commit hook), and answered\n  as :class:`MailTestResult`; :data:`MAIL_TEST_LIMIT` for the app's limiter. No router:\n  each app's route is a few lines over its own transport.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -4924,6 +4932,18 @@
           "kind": "constant",
           "signature": "FALLBACK_LOCALES: tuple[str, ...] = (\"de-CH\", \"de\", \"en\")",
           "doc": "Where :func:`pick` goes when the recipient's language has no row: the UI's German —\nthe apps' home language and the kit's fallback (i18n H7) — then English."
+        },
+        {
+          "name": "MAIL_TEST_KIND",
+          "kind": "constant",
+          "signature": "MAIL_TEST_KIND = \"mail_test\"",
+          "doc": "The ``kind`` the admin's test mail is sent and logged under, and its metric label\n(keksdose ``record_email``; kastlan's kinds at ``email.py:65``)."
+        },
+        {
+          "name": "MAIL_TEST_LIMIT",
+          "kind": "constant",
+          "signature": "MAIL_TEST_LIMIT = Budget(3, 600)",
+          "doc": "``POST /admin/mail/test`` (kastlan: ``/platform/mail/test``): 3 per 10 minutes per\naccount, beside the app's other limiters (§9.2.1, §9.2.6)."
         },
         {
           "name": "RESEND_ENDPOINT",
@@ -5020,6 +5040,26 @@
               "type": "str | None",
               "default": "None",
               "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "MailTestResult",
+          "kind": "model",
+          "signature": "class MailTestResult(BaseModel)",
+          "doc": "The test route's answer, ``{sent, mail_backend}`` (§9.2.1). ``sent`` is the app's\nown ``send``'s bool; a console transport answers ``True`` although nothing left the\nserver, so the page reads ``mail_backend`` first (§9.2.4). The provider's error stays in\nthe server log (§9.2.7).",
+          "fields": [
+            {
+              "name": "sent",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "mail_backend",
+              "type": "str",
+              "default": null,
+              "doc": "The app's transport as its admin page already reports it: ``console``, ``resend``,\n``smtp``."
             }
           ]
         },
@@ -5167,6 +5207,12 @@
           "kind": "function",
           "signature": "support_address(from_address: str, *, local: str = SUPPORT_LOCAL_PART) -> str",
           "doc": "``support@<the sender's domain>``: the default of each app's ``*_EMAIL_REPLY_TO``\nsetting. ``\"Kurvenschmiede <noreply@kurvenschmiede.app>\"`` →\n``\"support@kurvenschmiede.app\"``. Cloudflare Email Routing forwards ``support@`` on all\nthree apps' domains (2026-10-07); the mails come from ``noreply@``, which nobody\nreads."
+        },
+        {
+          "name": "test_mail_message",
+          "kind": "function",
+          "signature": "test_mail_message(locale: str | None, *, app_name: str, backend: str, sent_at: datetime) -> MailMessage",
+          "doc": "The admin's test mail (§9.2.3) in the admin's language, through :func:`pick_entry`'s\nfallback: subject \"Test mail from {app}\", a body naming the transport and the time\n(UTC, ``2026-10-19 14:05 UTC``). It names no recipient, so the route's log line and\nthe mail never carry the address. No link: a whole escaped document as\n:func:`render_message` lays one out, the plain text beside it.\n\nThe route awaits the app's own send and returns its bool — never an after-commit hook::\n\n    message = test_mail_message(admin.locale, app_name=\"Kurvenschmiede\", backend=backend, sent_at=now)\n    sent = await mailer.send(admin.email, message, kind=MAIL_TEST_KIND)\n    return MailTestResult(sent=sent, mail_backend=backend)\n\n``sent_at`` must be aware; a naive one is a :class:`ValueError`."
         }
       ]
     },
@@ -6067,7 +6113,7 @@
     {
       "name": "eifi1_server_kit.feedback",
       "summary": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).",
-      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.\n\nLayer 2 (0.9.0, ``docs/server-services-harmonization.md``): the flows written once against\nports each app implements — :class:`FeedbackService` over a :class:`FeedbackRepository`,\n:func:`upload_attachment` and :func:`download_attachment` over an\n:class:`AttachmentStorage`, :func:`throttle_upload` — re-exported here, without FastAPI.\nThe routes are ``eifi1_server_kit.feedback.router`` (the ``fastapi`` extra) and the fakes\nand conformance checks ``eifi1_server_kit.feedback.testing``; neither is re-exported.\n\nPublic feedback (0.11, contract §9): the rules of :mod:`~eifi1_server_kit.feedback.public`\n(the public body, who is told, the field lists), the reply, comment and vote shapes, the\nfour stores' ports and the service's public flows.\n\nRework as an entry (0.13, contract §10): ``FeedbackStatus.REWORK``, :data:`QUEUE_STATUSES`,\n:class:`FeedbackEntryKind`, :func:`plan_rework`, :class:`FeedbackReworkCreate`,\n:meth:`FeedbackService.rework`, and :func:`split_rework_blocks` for the migrations.",
+      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.\n\nLayer 2 (0.9.0, ``docs/server-services-harmonization.md``): the flows written once against\nports each app implements — :class:`FeedbackService` over a :class:`FeedbackRepository`,\n:func:`upload_attachment` and :func:`download_attachment` over an\n:class:`AttachmentStorage`, :func:`throttle_upload` — re-exported here, without FastAPI.\nThe routes are ``eifi1_server_kit.feedback.router`` (the ``fastapi`` extra) and the fakes\nand conformance checks ``eifi1_server_kit.feedback.testing``; neither is re-exported.\n\nPublic feedback (0.11, contract §9): the rules of :mod:`~eifi1_server_kit.feedback.public`\n(the public body, who is told, the field lists), the reply, comment and vote shapes, the\nfour stores' ports and the service's public flows.\n\nRework as an entry (0.13, contract §10): ``FeedbackStatus.REWORK``, :data:`QUEUE_STATUSES`,\n:class:`FeedbackEntryKind`, :func:`plan_rework`, :class:`FeedbackReworkCreate`,\n:meth:`FeedbackService.rework`, and :func:`split_rework_blocks` for the migrations.\n\nThe admin's counts (0.15, ``docs/admin-harmonization.md`` §9.5):\n:meth:`FeedbackRepository.count_by_status` and :func:`feedback_attention`, which folds it\ninto :class:`FeedbackAttention`'s three tiles from the kit's own status sets.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3",
@@ -6749,6 +6795,32 @@
               "type": "str",
               "default": null,
               "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "FeedbackAttention",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class FeedbackAttention",
+          "doc": "The three feedback tiles (§9.5.2). An app shows the ones it has a tile for:\n``to_triage`` as ``AdminAttention``'s ``feedback_waiting``, the other two as ``extra``\nkeys.",
+          "fields": [
+            {
+              "name": "to_triage",
+              "type": "int",
+              "default": null,
+              "doc": "OPEN: new reports nobody has looked at."
+            },
+            {
+              "name": "awaiting_verdict",
+              "type": "int",
+              "default": null,
+              "doc": ":data:`~eifi1_server_kit.feedback.AWAITING_STATUSES` without OPEN: answered, waiting\non the admin's verdict. An ``extra`` key (``\"awaiting_verdict\"``)."
+            },
+            {
+              "name": "released_for_work",
+              "type": "int",
+              "default": null,
+              "doc": ":data:`~eifi1_server_kit.feedback.QUEUE_STATUSES`: released for work, or being\nworked on (Kurvenschmiede's queue tile; its loop's queue adds OPEN on its own). An\n``extra`` key (``\"released_for_work\"``)."
             }
           ]
         },
@@ -7455,6 +7527,11 @@
               "name": "inbox",
               "signature": "async inbox(status: FeedbackStatus | None) -> Sequence[tuple[RowT, str | None]]",
               "doc": "Every row the request may see, in list_mine's order, each with its author's\ncurrent address: an outer join, None once the author is erased."
+            },
+            {
+              "name": "count_by_status",
+              "signature": "async count_by_status() -> Mapping[FeedbackStatus, int]",
+              "doc": "Every status's count in one GROUP BY status (0.15, admin §9.5), in the request's\nscope (as inbox): crash reports in, demo authors out, an erased author's report\n(user_id NULL) in. A status with no row may be missing. On a bypass session\n(kastlan's app.bypass_rls) it counts every group: never on a platform route."
             },
             {
               "name": "open_crash",
@@ -8462,6 +8539,12 @@
           "doc": "Every attachment URL one report names — both columns AND the body's rework lines."
         },
         {
+          "name": "feedback_attention",
+          "kind": "function",
+          "signature": "feedback_attention(counts: Mapping[FeedbackStatus, int]) -> FeedbackAttention",
+          "doc": "The tiles from :meth:`~eifi1_server_kit.feedback.FeedbackRepository.count_by_status`'s\nmapping. A status missing from ``counts`` counts 0."
+        },
+        {
           "name": "feedback_recipients",
           "kind": "function",
           "signature": "feedback_recipients(*, author_id: int | None, commenter_ids: Iterable[int | None], writer_id: int | None) -> list[int]",
@@ -8823,6 +8906,266 @@
           "kind": "function",
           "signature": "feedback_router[RowT: FeedbackRow](deps: FeedbackDeps[RowT], *, prefix: str = '/feedback', tags: Sequence[str] = ('feedback',)) -> APIRouter",
           "doc": "The contract's seven routes (§3.3), on ``APIRouter(prefix=prefix, tags=tags)``, in\nthis order: ``POST /attachments``, ``GET /attachments/{key}``, ``POST \"\"``,\n``POST /crash``, ``GET /my``, ``GET \"\"``, then public feedback's routes (§9.9: the\neight with ``public_viewer``, ``POST /{feedback_id}/replies`` and\n``POST /{feedback_id}/rework`` with ``replies``), and ``PATCH /{feedback_id}`` last.\n\nRaises :class:`ValueError` when ``deps.create_model.attachment_url_policy`` is not\n``deps.policy``: two policies would let a report name a key the download refuses; and\nwhen ``deps.public_viewer`` is set without ``comments``, ``votes`` or ``people``."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.tours",
+      "summary": "Tour progress on the account (``docs/tours-harmonization.md`` §10 in ``Eifi1/ui-kit``, 0.15).",
+      "doc": "Tour progress on the account (``docs/tours-harmonization.md`` §10 in ``Eifi1/ui-kit``, 0.15).\n\nui-kit's ``useTourProgress`` keeps the record on the device; with an ``account`` it loads\nand saves it here, and the device record becomes the account's cache. Layer 1: the wire\nshapes (:class:`TourProgressResponse`, :class:`TourProgressPatch`, :data:`TOUR_ID_PATTERN`,\n:data:`TOUR_PROGRESS_LIMIT`), the pure merge rule (:func:`merge_completions`: per tour,\nthe later completion wins) and the two coded 422s. Layer 2: the store port\n:class:`TourProgressStore` each app implements over its ``tour_completions`` table and\n:class:`TourProgressService`, re-exported here without FastAPI. The routes are\n``eifi1_server_kit.tours.router.tour_progress_router`` (the ``fastapi`` extra) and the fake\n``eifi1_server_kit.tours.testing.InMemoryTourProgressStore``; neither is re-exported.",
+      "contract": {
+        "doc": "docs/tours-harmonization.md",
+        "section": "§10.2, §10.3",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/tours-harmonization.md#102-decisions-settled",
+        "links": [
+          {
+            "section": "§10.2",
+            "heading": "10.2 Decisions (settled)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/tours-harmonization.md#102-decisions-settled"
+          },
+          {
+            "section": "§10.3",
+            "heading": "10.3 What each kit ships",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/tours-harmonization.md#103-what-each-kit-ships"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "TOUR_ID_PATTERN",
+          "kind": "constant",
+          "signature": "TOUR_ID_PATTERN = r\"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$\"",
+          "doc": "A tour's id (§10.2.2): a letter or digit, then up to 63 of letters, digits, ``.``,\n``_`` and ``-``. kastlan's ids are camelCase (``addBuilding``). The server knows no\ntour list, so any well-formed id is taken."
+        },
+        {
+          "name": "TOUR_PROGRESS_CONFLICT",
+          "kind": "constant",
+          "signature": "TOUR_PROGRESS_CONFLICT: Final = \"tour_progress_conflict\"",
+          "doc": "One id both in ``completed`` and in ``forget``."
+        },
+        {
+          "name": "TOUR_PROGRESS_EXPORT_KEY",
+          "kind": "constant",
+          "signature": "TOUR_PROGRESS_EXPORT_KEY = \"tour_progress\"",
+          "doc": "Where an app's account export puts :meth:`TourProgressService.export` (§10.2.9):\n``data[\"tour_progress\"]``."
+        },
+        {
+          "name": "TOUR_PROGRESS_FULL",
+          "kind": "constant",
+          "signature": "TOUR_PROGRESS_FULL: Final = \"tour_progress_full\"",
+          "doc": "More than 500 entries in one body, or more than 500 tours on the account."
+        },
+        {
+          "name": "TOUR_PROGRESS_LIMIT",
+          "kind": "constant",
+          "signature": "TOUR_PROGRESS_LIMIT = 500",
+          "doc": "At most this many entries in one body (``completed`` and ``forget`` together) and this\nmany tours on one account; beyond either, 422 ``tour_progress_full``."
+        },
+        {
+          "name": "TourId",
+          "kind": "constant",
+          "signature": "type TourId = Annotated[str, StringConstraints(pattern=TOUR_ID_PATTERN)]",
+          "doc": "A tour id as the body names it."
+        },
+        {
+          "name": "TourInstant",
+          "kind": "constant",
+          "signature": "type TourInstant = Annotated[AwareDatetime | Literal[\"\"], BeforeValidator(_instant)]",
+          "doc": "A completion as the body sends it: an instant WITH a zone, or ``\"\"`` (no date known)."
+        },
+        {
+          "name": "TourProgressError",
+          "kind": "class",
+          "signature": "class TourProgressError(ValueError)",
+          "doc": "A coded 422: ``code`` is :data:`TOUR_PROGRESS_CONFLICT` or :data:`TOUR_PROGRESS_FULL`.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(code: TourProgressErrorCode) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TourProgressErrorCode",
+          "kind": "constant",
+          "signature": "type TourProgressErrorCode = Literal[\"tour_progress_conflict\", \"tour_progress_full\"]",
+          "doc": ""
+        },
+        {
+          "name": "TourProgressMerge",
+          "kind": "class",
+          "signature": "class TourProgressMerge(NamedTuple)",
+          "doc": "What :func:`merge_completions` decides: the rows to write, the ids to delete, the answer.",
+          "fields": [
+            {
+              "name": "upserts",
+              "type": "dict[str, datetime | None]",
+              "default": null,
+              "doc": "``{tour_id: completed_at}`` to insert or overwrite; ``None`` is ``\"\"`` (no date)."
+            },
+            {
+              "name": "deletes",
+              "type": "tuple[str, ...]",
+              "default": null,
+              "doc": "The stored ids the patch forgets, sorted."
+            },
+            {
+              "name": "answer",
+              "type": "TourProgressResponse",
+              "default": null,
+              "doc": "The account's whole record after the write."
+            }
+          ]
+        },
+        {
+          "name": "TourProgressPatch",
+          "kind": "model",
+          "signature": "class TourProgressPatch(BaseModel)",
+          "doc": "``{completed?: {[id]: ISO | \"\"}, forget?: [id]}`` (§10.2.2). Unknown fields are a 422.\n\n``completed`` merges by :func:`~eifi1_server_kit.tours.merge_completions` (the later\ncompletion wins); ``forget`` is \"Mark as not done\". An id in both is 422\n``tour_progress_conflict``; more than :data:`TOUR_PROGRESS_LIMIT` entries 422\n``tour_progress_full`` — both checked by the merge, so they carry their code.",
+          "fields": [
+            {
+              "name": "completed",
+              "type": "dict[TourId, TourInstant]",
+              "default": "dict()",
+              "doc": ""
+            },
+            {
+              "name": "forget",
+              "type": "list[TourId]",
+              "default": "list()",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TourProgressResponse",
+          "kind": "model",
+          "signature": "class TourProgressResponse(BaseModel)",
+          "doc": "``{completed: {[id]: ISO | \"\"}}``: the account's whole record, the answer of both\nroutes. Instants are UTC (``2026-10-19T14:05:00Z``).",
+          "fields": [
+            {
+              "name": "completed",
+              "type": "dict[str, datetime | Literal['']]",
+              "default": "dict()",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TourProgressService",
+          "kind": "class",
+          "signature": "class TourProgressService",
+          "doc": "``GET`` and ``PATCH /tours/progress`` over the app's :class:`~eifi1_server_kit.tours.TourProgressStore`.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(store: TourProgressStore, *, now: Clock = utc_now) -> None",
+              "doc": ""
+            },
+            {
+              "name": "progress",
+              "signature": "async progress(user_id: int) -> TourProgressResponse",
+              "doc": "The account's whole record."
+            },
+            {
+              "name": "update",
+              "signature": "async update(user_id: int, patch: TourProgressPatch) -> TourProgressResponse",
+              "doc": "Merge ``patch`` (:func:`~eifi1_server_kit.tours.merge_completions`), write what\nchanged, and answer the whole record. A refusal writes nothing."
+            },
+            {
+              "name": "export",
+              "signature": "async export(user_id: int) -> list[dict[str, str | None]]",
+              "doc": "The account export's rows (§10.2.9): ``[{tour_id, completed_at}]`` by\n``tour_id``, ``completed_at`` an ISO instant in UTC (a naive one read as UTC) or ``None`` for ``\"\"``."
+            }
+          ]
+        },
+        {
+          "name": "TourProgressStore",
+          "kind": "protocol",
+          "signature": "class TourProgressStore(Protocol)",
+          "doc": "One account's tour completions, by ``user_id`` (the session's own, never another's).",
+          "methods": [
+            {
+              "name": "completions",
+              "signature": "async completions(user_id: int) -> Mapping[str, datetime | None]",
+              "doc": "``{tour_id: completed_at}`` of this account; ``None`` is a completion with no date."
+            },
+            {
+              "name": "write",
+              "signature": "async write(user_id: int, upserts: Mapping[str, datetime | None], deletes: Collection[str]) -> None",
+              "doc": "Insert or overwrite each upsert's row, delete each id's row (absent: no-op), and\nflush; never commit. The kit sends each id once, never in both."
+            }
+          ]
+        },
+        {
+          "name": "merge_completions",
+          "kind": "function",
+          "signature": "merge_completions(stored: Mapping[str, datetime | None], patch: TourProgressPatch, *, now: datetime) -> TourProgressMerge",
+          "doc": "Merge ``patch`` into the account's ``stored`` rows (``None``: completed, no date).\n\nA :class:`~eifi1_server_kit.tours.TourProgressError` ``tour_progress_conflict`` for an\nid in both ``completed`` and ``forget``, ``tour_progress_full`` for a body of more than\n:data:`~eifi1_server_kit.tours.TOUR_PROGRESS_LIMIT` entries or an account that would\ngrow past it. Only rows that change are in ``upserts``, aware and in UTC.\n\nA naive ``stored`` value or ``now`` is read as UTC (a store over ``timestamp without\ntime zone``); such a store writes ``value.replace(tzinfo=None)``."
+        },
+        {
+          "name": "progress_response",
+          "kind": "function",
+          "signature": "progress_response(rows: Mapping[str, datetime | None]) -> TourProgressResponse",
+          "doc": "The wire shape of stored rows: by id, instants in UTC (a naive one is read as UTC),\n``None`` as ``\"\"``."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.tours.router",
+      "summary": "The tour progress routes as one router factory: ``tour_progress_router(TourProgressDeps(...))``.",
+      "doc": "The tour progress routes as one router factory: ``tour_progress_router(TourProgressDeps(...))``.\n\nLayer 2 (``docs/tours-harmonization.md`` §10.2.2, §10.3 in ``Eifi1/ui-kit``), behind the\n``fastapi`` extra (``eifi1-server-kit[fastapi]``). The app passes its own dependencies —\nthe store on the request's session, the signed-in account's id, and its guards — and\nincludes the router as it includes its own::\n\n    router = tour_progress_router(TourProgressDeps(\n        store=tour_progress_store, current_user_id=current_user_id, guards=(refuse_demo,),\n    ))\n    app.include_router(router, prefix=\"/api/v1\")\n    install_contract_error_handlers(app)\n\n``GET /tours/progress`` and ``PATCH /tours/progress``, both answering\n:class:`~eifi1_server_kit.tours.TourProgressResponse`. **The guards run first**, before\nthe account and the body, on both routes, so an app's demo refusal (kastlan's\n``demo_read_only``, Kurvenschmiede's ``demo_refused``) passes through untouched. The app's\nlimiter and CSRF go there too, as for its other writes. **The account is the session's\nown**: no route takes a user id. The kit never commits.\n\nNo ``from __future__ import annotations`` here, on purpose: the parameters'\n``Depends(deps.store)`` name the factory's locals, which FastAPI cannot resolve from a\nstring.",
+      "contract": {
+        "doc": "docs/tours-harmonization.md",
+        "section": "§10.3",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/tours-harmonization.md#103-what-each-kit-ships",
+        "links": [
+          {
+            "section": "§10.3",
+            "heading": "10.3 What each kit ships",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/tours-harmonization.md#103-what-each-kit-ships"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "TourProgressDeps",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class TourProgressDeps",
+          "doc": "What an app hands :func:`tour_progress_router` (§10.3).",
+          "fields": [
+            {
+              "name": "store",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency answering a :class:`~eifi1_server_kit.tours.TourProgressStore`\non the request's session."
+            },
+            {
+              "name": "current_user_id",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency answering the signed-in account's id (on its ``get_current_user``)."
+            },
+            {
+              "name": "guards",
+              "type": "Sequence[Callable[..., Any]]",
+              "default": "()",
+              "doc": "The app's dependencies run before anything else on both routes: its demo refusal,\nits limiter, its CSRF check. A refusal they raise is the answer."
+            },
+            {
+              "name": "now",
+              "type": "Clock",
+              "default": "<function utc_now>",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "tour_progress_router",
+          "kind": "function",
+          "signature": "tour_progress_router(deps: TourProgressDeps, *, prefix: str = '/tours', tags: Sequence[str] = ('tours',)) -> APIRouter",
+          "doc": "``GET /progress`` and ``PATCH /progress`` on ``APIRouter(prefix=prefix, tags=tags)``,\nwith ``deps.guards`` as the router's dependencies."
         }
       ]
     },
@@ -9225,7 +9568,7 @@
     {
       "name": "eifi1_server_kit.errors",
       "summary": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.",
-      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, the dev switch's\n:class:`~eifi1_server_kit.dev_switch.DevSwitchError` 404 / 409 / 422, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
+      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, the dev switch's\n:class:`~eifi1_server_kit.dev_switch.DevSwitchError` 404 / 409 / 422, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422, and tour\nprogress's :class:`~eifi1_server_kit.tours.TourProgressError` 422).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.7",
@@ -9242,7 +9585,7 @@
         {
           "name": "CONTRACT_ERRORS",
           "kind": "constant",
-          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    DevSwitchError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n    NotificationError,\n)",
+          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    DevSwitchError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n    NotificationError,\n    TourProgressError,\n)",
           "doc": "Every kit exception base that carries a ``status_code``; subclasses are covered by MRO."
         },
         {
@@ -10214,6 +10557,412 @@
           "kind": "function",
           "signature": "parse_extra_origins(raw: str, *, own_origin: str = '') -> list[str]",
           "doc": "A setting's origins as exact origins, in order, each once.\n\nkeksdose ``infrastructure/settings.py:631`` ``cors_extra_origin_list``: separated by\ncommas or whitespace (whitespace is the safe form inside Cloud Build's comma-delimited\n``--set-env-vars``); a trailing ``/`` is tolerated; anything that is not\n``http(s)://host[:port]`` — a wildcard, a path, a query, a fragment, userinfo — is\nDROPPED, as is the app's own origin, so a typo narrows the list instead of widening it."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.sync",
+      "summary": "Local-first sync, the server half (``docs/local-first-harmonization.md`` §1.5 D1, D2, D5 and §1.6 in ``Eifi1/ui-kit``): keksdose's ``/sync`` protocol, shared with kastlan.",
+      "doc": "Local-first sync, the server half (``docs/local-first-harmonization.md`` §1.5 D1, D2, D5 and\n§1.6 in ``Eifi1/ui-kit``): keksdose's ``/sync`` protocol, shared with kastlan.\n\n* :mod:`~eifi1_server_kit.sync.schemas` — the wire shapes, ``refused`` (one\n  :class:`SyncRefusal` for the whole push, moved here from billing, which re-exports it) and\n  the new per-change ``rejections``;\n* :mod:`~eifi1_server_kit.sync.merge` — whole-row LWW on the device's edit time, deletes\n  that always tombstone;\n* :mod:`~eifi1_server_kit.sync.counter` — the knowledge counter as a port;\n* :mod:`~eifi1_server_kit.sync.paging` — the ``(entity, knowledge, id)`` page cursor;\n* :mod:`~eifi1_server_kit.sync.mixin` — the columns, the ``before_flush`` stamping, the\n  tombstones and their filter, in SQLAlchemy: only with the ``sync`` extra\n  (``eifi1-server-kit[sync]``), and imported lazily, so this package loads without it.\n\n``eifi1_server_kit.sync.testing`` has :class:`InMemoryKnowledgeCounter`; it is not\nre-exported. Stays in the apps: the routes, the entity registries, tenancy and RLS, E2EE,\nbilling's refusals, unique-key merges and revival rules, and kastlan's scopes.",
+      "contract": {
+        "doc": "docs/local-first-harmonization.md",
+        "section": "§1.5, §1.6",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/local-first-harmonization.md#15-decisions-settled",
+        "links": [
+          {
+            "section": "§1.5",
+            "heading": "1.5 Decisions (settled)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/local-first-harmonization.md#15-decisions-settled"
+          },
+          {
+            "section": "§1.6",
+            "heading": "1.6 What each kit ships",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/local-first-harmonization.md#16-what-each-kit-ships"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "INCLUDE_TOMBSTONED",
+          "kind": "constant",
+          "signature": "INCLUDE_TOMBSTONED = 'include_tombstoned'",
+          "doc": ""
+        },
+        {
+          "name": "SYNC_PAGE_LIMIT",
+          "kind": "constant",
+          "signature": "SYNC_PAGE_LIMIT: Final = 2000",
+          "doc": "keksdose's page size, in rows."
+        },
+        {
+          "name": "SYNC_PLAN_LIMIT",
+          "kind": "constant",
+          "signature": "SYNC_PLAN_LIMIT: Final = \"plan_limit\"",
+          "doc": ":attr:`SyncRejection.code` for a create past the plan's limit (kastlan's photos over the\nplan, today's 402 ``planRefusal``); billing's ``plan_limit`` code, the same text."
+        },
+        {
+          "name": "SYNC_REJECTED",
+          "kind": "constant",
+          "signature": "SYNC_REJECTED: Final = \"rejected\"",
+          "doc": ":attr:`SyncRejection.code` for a change a scope rule refuses: a fixed field, a finalised\nprotocol, an entity not writable in the scope (kastlan's ``EntityRule``)."
+        },
+        {
+          "name": "KnowledgeCounter",
+          "kind": "protocol",
+          "signature": "class KnowledgeCounter(Protocol)",
+          "doc": "Hands out the next knowledge value for a tenant.",
+          "methods": [
+            {
+              "name": "bump",
+              "signature": "bump(session: Session, tenant_id: object) -> int | None",
+              "doc": "Advance ``tenant_id``'s counter and return the new value, under a row lock.\n\nSynchronous: it runs inside ``before_flush`` (an ``AsyncSession`` flushes through\nits sync ``Session``), already under ``session.no_autoflush``. Mutate the counter's\nORM row in memory (keksdose) or run one atomic statement (kastlan's ``INSERT … ON\nCONFLICT DO UPDATE … RETURNING``); never a statement that flushes. ``None`` when the\ntenant has no counter: its rows are left unstamped."
+            }
+          ]
+        },
+        {
+          "name": "PageStart",
+          "kind": "class",
+          "signature": "@dataclasses.dataclass(frozen=True, slots=True) class PageStart",
+          "doc": "Where a page begins: the entity index, the pinned window and, inside that entity,\nthe row to resume strictly after.",
+          "fields": [
+            {
+              "name": "start_index",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "window_end",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "resume",
+              "type": "tuple[int, str] | None",
+              "default": "None",
+              "doc": "``(knowledge, id)`` of the last row sent from the entity at ``start_index``; ``None``\nto start at its beginning."
+            }
+          ],
+          "methods": [
+            {
+              "name": "resume_in",
+              "signature": "resume_in(index: int) -> tuple[int, str] | None",
+              "doc": "The resume point for the entity at ``index``: only the one the cursor stopped\ninside has one."
+            }
+          ]
+        },
+        {
+          "name": "SyncChange",
+          "kind": "model",
+          "signature": "class SyncChange(BaseModel)",
+          "doc": "One row's delta on the wire. ``data`` is the full row (JSON-safe: UUIDs and money as\nstrings) for an upsert, and omitted for a delete.",
+          "fields": [
+            {
+              "name": "entity",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "id",
+              "type": "uuid.UUID | Annotated[str, Field(min_length=1, max_length=200)]",
+              "default": null,
+              "doc": "The client-minted id of the row (keksdose ``id``, kastlan ``sync_uuid``): a UUID or\ntext of 1-200 characters. The union is smart: JSON (``model_validate_json``) gives a\n``UUID`` for a UUID's text, a Python dict (``model_validate``) keeps it a ``str``. An\napp whose lookups key on UUIDs (keksdose) narrows to ``id: uuid.UUID``."
+            },
+            {
+              "name": "op",
+              "type": "Literal['upsert', 'delete']",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "data",
+              "type": "dict[str, Any] | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "updated_at",
+              "type": "_EditTime | None",
+              "default": "None",
+              "doc": "The device's edit time (D2), the LWW stamp of an upsert; ``None`` (an older client)\nfalls back to server-now for one release. A future stamp is clamped\n(:func:`~eifi1_server_kit.sync.clamp_stamp`)."
+            },
+            {
+              "name": "knowledge",
+              "type": "int | None",
+              "default": "None",
+              "doc": "The row's server cursor, on replies; ignored on requests."
+            }
+          ]
+        },
+        {
+          "name": "SyncColumns",
+          "kind": "class",
+          "signature": "class SyncColumns",
+          "doc": "The delta-sync columns, as a declarative mixin. ``updated_at`` is client-owned: it\nhas a default but no ``onupdate``, and :func:`install_sync_stamping` sets server-now\nonly when the writer did not set it."
+        },
+        {
+          "name": "SyncPageCursor",
+          "kind": "model",
+          "signature": "class SyncPageCursor(BaseModel)",
+          "doc": "Where a paged pull stopped, and the window it is walking (keksdose's LP-3 fix).\n\n``knowledge`` alone is not an exact cursor: one flush stamps every row it touches with\nONE knowledge (a bulk import gives 20,000 rows one value), so resuming \"after the last\nknowledge\" would step past the rest of that value. Hence ``id`` as the tiebreak within a\nknowledge value, and ``entity`` because entities are walked in the app's order, each\nfinished before the next begins, which keeps a paged pull FK-ordered.\n\n``window_end`` pins the walk to the tenant knowledge when the walk STARTED: a write\nlanding mid-walk has ``knowledge > window_end`` and arrives on the next sync. The helpers\nare :mod:`~eifi1_server_kit.sync.paging`.",
+          "fields": [
+            {
+              "name": "entity",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "knowledge",
+              "type": "int | None",
+              "default": "None",
+              "doc": "The last row emitted from ``entity``. Both ``None`` means \"resume at the START of that\nentity\" (a page that filled up exactly on an entity boundary)."
+            },
+            {
+              "name": "id",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "window_end",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SyncRefusal",
+          "kind": "model",
+          "signature": "class SyncRefusal(BaseModel)",
+          "doc": "The changes a sync reply refused (§12.5): ``{code, detail, change_ids}``, on the\napp's sync answer beside the updates it still sends.\n\n**A 402 is not a refusal of one change.** Sync endpoints stay on the gate's allow-list;\ninside them, a lapsed payer's changes are refused as ``billing_read_only`` and not\napplied, and the reply still carries the updates — keksdose's E2EE gate is the\nprecedent. The client keeps the refused changes queued, as \"N changes waiting for a\nplan\", and sends them after payment::\n\n    class SyncResponse(BaseModel):\n        server_knowledge: int\n        changes: list[SyncChange]\n        refused: SyncRefusal | None = None\n\n``change_ids`` are the client-minted ids of the refused changes (keksdose's and\nkastlan's ``SyncChange.id``; a UUID is written as its string). ``code`` stays\n``billing_read_only``: a create past the plan's limit is a per-change\n:class:`SyncRejection` with :data:`SYNC_PLAN_LIMIT`, never this refusal.\n\nSince 0.15 it lives in :mod:`eifi1_server_kit.sync` (local-first §1.6) and\n:mod:`eifi1_server_kit.billing` re-exports the same class. It is ONE refusal for the\nWHOLE push: a per-change refusal is a :class:`SyncRejection`, never a code here\n(keksdose's client blocks its queue for good on a code it does not know).",
+          "fields": [
+            {
+              "name": "code",
+              "type": "str",
+              "default": "'billing_read_only'",
+              "doc": "``BillingErrorCode.BILLING_READ_ONLY`` (written out: billing imports this module)."
+            },
+            {
+              "name": "detail",
+              "type": "str",
+              "default": "'Read-only for now: changes need an active plan'",
+              "doc": "``BILLING_ERROR_DETAIL[BILLING_READ_ONLY]``, written out for the same reason."
+            },
+            {
+              "name": "change_ids",
+              "type": "list[_ChangeId]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SyncRejection",
+          "kind": "model",
+          "signature": "class SyncRejection(BaseModel)",
+          "doc": "One pushed change the server did not apply, with its own reason (D1): the other\nchanges of the push apply, and the device keeps ``detail`` on that outbox row.\n``code`` is :data:`SYNC_REJECTED` or :data:`SYNC_PLAN_LIMIT`.",
+          "fields": [
+            {
+              "name": "change_id",
+              "type": "_ChangeId",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "code",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "detail",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SyncRequest",
+          "kind": "model",
+          "signature": "class SyncRequest(BaseModel)",
+          "doc": "``POST /sync``: the device's cursor, its pushed changes and what it understands.",
+          "fields": [
+            {
+              "name": "scope",
+              "type": "str | None",
+              "default": "None",
+              "doc": "What the device syncs, where an app has more than one scope (kastlan:\n``\"handover\"``); keksdose has one and sends none."
+            },
+            {
+              "name": "last_knowledge",
+              "type": "int",
+              "default": "0",
+              "doc": "The device's last-seen tenant knowledge; the pull returns rows newer than this."
+            },
+            {
+              "name": "changes",
+              "type": "Sequence[SyncChange]",
+              "default": "list()",
+              "doc": ""
+            },
+            {
+              "name": "refusals",
+              "type": "bool",
+              "default": "False",
+              "doc": "This client keeps REFUSED changes queued and reads :attr:`SyncResponse.refused` and\n:attr:`SyncResponse.rejections`. Without it the server refuses the way it always did,\nthe whole request, for one release."
+            },
+            {
+              "name": "paged",
+              "type": "bool",
+              "default": "False",
+              "doc": "This client understands a PAGED pull and follows ``page_cursor`` to the end. Opt-in:\na client that ignored the cursor would record ``server_knowledge`` after page one."
+            },
+            {
+              "name": "page_cursor",
+              "type": "SyncPageCursor | None",
+              "default": "None",
+              "doc": "Where the previous page stopped; ``None`` starts a fresh walk."
+            }
+          ]
+        },
+        {
+          "name": "SyncResponse",
+          "kind": "model",
+          "signature": "class SyncResponse(BaseModel)",
+          "doc": "The reply: the pull (``changes`` since ``last_knowledge``, losers echoed), and what\nof the push was not applied.",
+          "fields": [
+            {
+              "name": "server_knowledge",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "changes",
+              "type": "Sequence[SyncChange]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "refused",
+              "type": "SyncRefusal | None",
+              "default": "None",
+              "doc": "The WHOLE push refused (a lapsed plan, a read-only demo), the pull served all the\nsame. Only for a request that sent ``refusals: true``."
+            },
+            {
+              "name": "rejections",
+              "type": "list[SyncRejection]",
+              "default": "list()",
+              "doc": "The pushed changes refused ONE BY ONE (D1); ``[]`` for a client that knows nothing\nof them. Only for a request that sent ``refusals: true``."
+            },
+            {
+              "name": "page_cursor",
+              "type": "SyncPageCursor | None",
+              "default": "None",
+              "doc": "Set when the delta did not fit in one page: hand it back to continue. ``None`` means\nthis reply completed the walk, and ONLY then may the client record\n``server_knowledge`` as its cursor."
+            }
+          ]
+        },
+        {
+          "name": "TenantOf",
+          "kind": "constant",
+          "signature": "type TenantOf = Callable[[object], object | None]",
+          "doc": "A synced row's tenant key, or ``None`` for a row that is not stamped. keksdose: a\nbudget's ``household_id``, any other row's ``tenant_id``, falling back to the session's\nactive tenant (``object_session(obj).info``); kastlan: a constant."
+        },
+        {
+          "name": "as_utc",
+          "kind": "function",
+          "signature": "as_utc(value: datetime) -> datetime",
+          "doc": "Aware and in UTC: a naive value is read as UTC, an aware one converted."
+        },
+        {
+          "name": "begin_page",
+          "kind": "function",
+          "signature": "begin_page(cursor: SyncPageCursor | None, *, entities: Sequence[str], last_knowledge: int, server_knowledge: int) -> PageStart | None",
+          "doc": "Where the next page starts; ``None`` when there is nothing to pull (no cursor and the\ndevice is current).\n\nA cursor naming an entity this build does not know (a rolling deploy, a rollback)\ndiscards its POSITION and keeps its window: the walk restarts at the first entity.\nApplying its row tiebreak to another entity would silently skip rows below the cursor\nthe device is about to record, for good."
+        },
+        {
+          "name": "bulk_restamp",
+          "kind": "function",
+          "signature": "bulk_restamp(model: type, *where: ColumnElement[bool], values: Mapping[str, Any], knowledge: int, now: datetime) -> Update",
+          "doc": "Like :func:`bulk_tombstone` for a non-delete bulk ``UPDATE`` (an FK re-point): apply\n``values`` and stamp the fresh ``knowledge`` and ``updated_at``, so the change reaches\nevery other device."
+        },
+        {
+          "name": "bulk_tombstone",
+          "kind": "function",
+          "signature": "bulk_tombstone(model: type, *where: ColumnElement[bool], knowledge: int, now: datetime) -> Update",
+          "doc": "The Core ``UPDATE`` that soft-deletes ``model``'s rows matching ``where``, stamping\n``deleted_at``, ``knowledge`` and ``updated_at`` itself (a Core statement bypasses the\nORM hook). Pass ONE ``(knowledge, now)`` pair across every statement of one logical\ndelete, ``knowledge`` from the app's counter. Run it with ``session.execute`` (or\n``await``); its ``rowcount`` is the rows removed. A model without ``updated_at`` gets\nno stamp, and naive columns get naive UTC, as with :func:`tombstone`."
+        },
+        {
+          "name": "clamp_stamp",
+          "kind": "function",
+          "signature": "clamp_stamp(stamp: datetime | None, *, now: datetime) -> datetime",
+          "doc": "The edit time the server stores for an incoming change, aware and in UTC: ``stamp``,\nor ``now`` when there is none (an older client falls back to server-now) or when it\nlies in the future (a drifting clock never wins every later conflict)."
+        },
+        {
+          "name": "cursor_at_start",
+          "kind": "function",
+          "signature": "cursor_at_start(entity: str, window_end: int) -> SyncPageCursor",
+          "doc": "The cursor for a page that filled up before ``entity`` was touched: resume AT its\nstart rather than after an invented row."
+        },
+        {
+          "name": "cut_page",
+          "kind": "function",
+          "signature": "cut_page[R](entity: str, rows: Sequence[R], *, remaining: int, window_end: int, knowledge_of: Callable[[R], int] = _knowledge, id_of: Callable[[R], object] = _id) -> tuple[list[R], SyncPageCursor | None]",
+          "doc": "Cut one entity's ordered rows, fetched with ``LIMIT remaining + 1``, to the page's\nbudget. One row more than ``remaining`` means a next page, and the cursor points at the\nlast row kept; otherwise the entity is done (``None``)."
+        },
+        {
+          "name": "install_sync_stamping",
+          "kind": "function",
+          "signature": "install_sync_stamping(session_cls: _SessionTarget, *, counter: KnowledgeCounter, tenant_of: TenantOf, is_synced: Callable[[object], bool], now: Clock = utc_now) -> Callable[[], None]",
+          "doc": "Listen on ``session_cls`` (``Session`` itself, a subclass or a ``sessionmaker``) for\n``before_flush``, and stamp every new or modified synced row (``is_synced``) with its\ntenant's next knowledge, ONE bump per tenant per flush (keksdose\n``infrastructure/sync.py:141-186``). The counter is called under ``no_autoflush``.\n\n``updated_at`` is client-authoritative: a new row gets ``now()`` only when it has none,\na modified row only when ``updated_at`` was not set in this flush (the ``/sync`` apply\npath writes the device's stamp). Deletes are tombstone updates, so they arrive as\nmodified rows. Returns a function that removes the listener.\n\n**A synced model without an ``updated_at`` column** (kastlan's handover children) gets\nits knowledge and no stamp, checked on the mapper; it then has no LWW stamp to compare\n(:func:`~eifi1_server_kit.sync.merge_lww` with ``None`` always lets the upsert win), so\nan app that wants D2 on that table adds the column.\n\n**Naive columns** (``timestamp without time zone``, kastlan) are written naive UTC: the\nhook's ``now()`` and an aware stamp the writer set (``clamp_stamp``'s answer) are fitted\nto the column, so asyncpg never sees an aware value for a naive parameter. Aware\ncolumns (:class:`SyncColumns`) are written as given."
+        },
+        {
+          "name": "install_tombstone_filter",
+          "kind": "function",
+          "signature": "install_tombstone_filter(session_cls: _SessionTarget, *, synced: type) -> Callable[[], None]",
+          "doc": "Hide tombstoned rows (``deleted_at IS NOT NULL``) of every ``synced`` class from every\nORM ``SELECT`` on ``session_cls``, relationship loads included, unless the statement\ncarries :data:`INCLUDE_TOMBSTONED`. Returns a function that removes the listener."
+        },
+        {
+          "name": "is_after",
+          "kind": "function",
+          "signature": "is_after(knowledge: int, row_id: object, resume: tuple[int, str] | None) -> bool",
+          "doc": "Whether a row comes strictly after ``resume`` (always, without one): a higher\nknowledge, or the same knowledge and a higher id."
+        },
+        {
+          "name": "merge_delete",
+          "kind": "function",
+          "signature": "merge_delete(existing_updated: datetime | None, incoming_updated: datetime | None, *, now: datetime) -> bool",
+          "doc": "Whether a pushed delete tombstones the server's row: **always** (D2, keksdose\n``sync_service.py:1129-1180``). No stamp is compared, so an older offline delete beats a\nnewer edit, which is accepted. The tombstone is stamped ``now`` and moves ``updated_at``\nwith ``deleted_at`` (:func:`~eifi1_server_kit.sync.mixin.tombstone`), so an older upsert\ncannot revive the row. The arguments are taken so a caller reads both rules alike."
+        },
+        {
+          "name": "merge_lww",
+          "kind": "function",
+          "signature": "merge_lww(existing_updated: datetime | None, incoming_updated: datetime | None, *, now: datetime) -> bool",
+          "doc": "Whether an incoming upsert **wins** over the server's row: ``False`` only when the\nserver's ``updated_at`` is strictly newer than the incoming stamp (after\n:func:`clamp_stamp`). A row without a stamp on the server always loses. The winner is\nwritten whole, with ``updated_at = clamp_stamp(incoming_updated, now=now)``; a loser is\nechoed back to the device as the server's row in the same round."
+        },
+        {
+          "name": "page_of",
+          "kind": "function",
+          "signature": "page_of[R](rows_by_entity: Mapping[str, Iterable[R]], *, entities: Sequence[str], cursor: SyncPageCursor | None, last_knowledge: int, server_knowledge: int, limit: int = SYNC_PAGE_LIMIT, knowledge_of: Callable[[R], int] = _knowledge, id_of: Callable[[R], object] = _id) -> tuple[list[tuple[str, R]], SyncPageCursor | None]",
+          "doc": "One page of the delta over rows in memory, as ``(entity, row)`` pairs, and where to\nresume (``None`` when the walk is done). The rows of each entity may come unordered and\nunfiltered: the window ``last_knowledge < knowledge <= window_end`` and the resume point\nare applied here."
+        },
+        {
+          "name": "page_order",
+          "kind": "function",
+          "signature": "page_order(knowledge: int, row_id: object) -> tuple[int, str]",
+          "doc": "The order rows are walked in within an entity."
+        },
+        {
+          "name": "tombstone",
+          "kind": "function",
+          "signature": "tombstone(obj: object, *, now: datetime | None = None) -> None",
+          "doc": "Soft-delete a synced row: ``deleted_at`` and ``updated_at`` move together, so an older\nupsert cannot revive it (D2); the stamping hook gives it a fresh knowledge. A model\nwithout ``updated_at`` gets only ``deleted_at`` (and no D2: add the column), and a naive\ncolumn gets naive UTC."
         }
       ]
     }
