@@ -30,7 +30,12 @@ export interface TourCatalogueCardProps {
   onLaunch: (id: string) => void;
   /** "Mark as not done". Without it, the link is not drawn. */
   onReset?: (id: string) => void;
-  /** Formats the completion and update days. Default: the kit's medium date in the provider's locale. */
+  /**
+   * Formats the completion and update days. Default: the kit's medium date in the provider's locale.
+   * It gets the completion's ISO instant and the update's bare `"YYYY-MM-DD"` (`updated.date`): read
+   * the bare day on its calendar (the kit's `formatDate`, `parseIsoDate`), never `new Date(day)`,
+   * which is UTC midnight and the day before west of UTC (round 0.45, N9).
+   */
   formatDate?: (iso: string) => string;
   labels?: LabelOverride<TourCatalogueLabels>;
   className?: string;
@@ -161,6 +166,7 @@ export interface TourCatalogueProps extends TourCatalogueFilter {
   onReset?: (id: string) => void;
   /** Above the filter bar: the app's page header with its points tile (§6.1). */
   header?: ReactNode;
+  /** Each card's `formatDate`: see {@link TourCatalogueCardProps.formatDate} (a bare day for the update). */
   formatDate?: (iso: string) => string;
   /** The search's locale (case folding). Default: the provider's. */
   locale?: string;

@@ -182,9 +182,13 @@ const DATE_STYLES: Record<FormatDateStyle, Intl.DateTimeFormatOptions> = {
 };
 
 export interface FormatDateOptions extends BaseOptions {
-  /** An IANA zone ("Europe/Zurich") for a timestamp. Left out: the device's. */
+  /** An IANA zone ("Europe/Zurich") for a timestamp. Left out: the device's. A bare
+   *  "YYYY-MM-DD" ignores it: a calendar day is the day it names in every zone. */
   timeZone?: string;
 }
+
+/** A bare ISO calendar day, `"YYYY-MM-DD"`. */
+const BARE_ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** What {@link formatDate} and {@link formatRelativeTime} accept. */
 export type DateInput = string | number | Date | null | undefined;
@@ -197,7 +201,7 @@ export type DateInput = string | number | Date | null | undefined;
  */
 export function toDate(value: DateInput): Date | null {
   if (value === null || value === undefined || value === "") return null;
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return parseIsoDate(value);
+  if (typeof value === "string" && BARE_ISO_DAY.test(value)) return parseIsoDate(value);
   const d = value instanceof Date ? value : new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
 }
@@ -229,6 +233,13 @@ export function formatDate(
   const d = toDate(value);
   if (!d) return options.empty ?? EMPTY_FORMATTED_VALUE;
   const base = typeof style === "string" ? DATE_STYLES[style] : style;
+  // A bare "YYYY-MM-DD" is a calendar day, which has no zone: it is the day it names
+  // wherever it is read, so a `timeZone` (in `options` or the style) never moves it — the
+  // device's local midnight shown in a zone west of it was the day before (round 0.45, N9).
+  if (typeof value === "string" && BARE_ISO_DAY.test(value)) {
+    const day = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    return dateFormatter(options.locale, { ...base, timeZone: "UTC" }).format(day);
+  }
   return dateFormatter(options.locale, options.timeZone ? { ...base, timeZone: options.timeZone } : base).format(d);
 }
 

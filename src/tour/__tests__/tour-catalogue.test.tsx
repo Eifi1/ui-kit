@@ -204,6 +204,11 @@ describe("TourCatalogueCard", () => {
     rerender(<TourCatalogueCard tour={tour} completedAt="2026-10-12T08:00:00Z" formatDate={(i) => i.slice(0, 10)} onLaunch={() => {}} />);
     expect(screen.getByText("Completed on 2026-10-12")).toBeInTheDocument();
   });
+  it("the default format shows the update's own day, a calendar day (round 0.45, N9)", () => {
+    const tour = { ...base, updated: { date: "2026-10-10", reason: "The screen moved." } };
+    render(<TourCatalogueCard tour={tour} completedAt="2026-09-01T10:00:00Z" onLaunch={() => {}} />);
+    expect(screen.getByText("Reset on Oct 10, 2026: The screen moved.")).toBeInTheDocument();
+  });
   it("an update without a reason shows the day alone (keksdose K-S3)", () => {
     const tour = { ...base, updated: { date: "2026-10-10" } };
     render(<TourCatalogueCard tour={tour} completedAt="2026-09-01T10:00:00Z" formatDate={(iso) => iso.slice(0, 10)} onLaunch={() => {}} />);
