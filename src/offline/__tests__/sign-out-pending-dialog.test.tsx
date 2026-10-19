@@ -57,9 +57,12 @@ describe("SignOutPendingDialog — the words", () => {
     expect(screen.getByRole("button", { name: "Trotzdem abmelden" })).toBeInTheDocument();
   });
 
-  it("shows the extra line under the sentence", () => {
-    renderDialog({ extra: "2 changes waiting for a plan" });
+  it("shows the extra line under the sentence while changes wait for a plan, and not at 0", () => {
+    renderDialog({ waitingForPlan: 2, extra: "2 changes waiting for a plan" });
     expect(screen.getByText("2 changes waiting for a plan")).toBeInTheDocument();
+    cleanup();
+    renderDialog({ waitingForPlan: 0, extra: "0 changes waiting for a plan" });
+    expect(screen.queryByText("0 changes waiting for a plan")).toBeNull();
   });
 
   it("is axe-clean", async () => {
@@ -104,11 +107,25 @@ describe("SignOutPendingDialog — sync now and sign out anyway", () => {
     fireEvent.click(button);
     expect(onSyncNow).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(button).toHaveAttribute("aria-busy", "true"));
-    expect(screen.getByRole("button", { name: "Log out anyway" })).toBeDisabled();
     expect(props.onClose).not.toHaveBeenCalled();
     await act(async () => finish());
     await waitFor(() => expect(props.onClose).toHaveBeenCalledTimes(1));
     expect(props.onSignOutAnyway).not.toHaveBeenCalled();
+  });
+
+  it("log out anyway stays usable while a sync hangs: the escape hatch (keksdose S5)", async () => {
+    const { props } = renderDialog({ onSyncNow: () => new Promise<void>(() => {}) });
+    fireEvent.click(screen.getByRole("button", { name: "Sync now" }));
+    const anyway = screen.getByRole("button", { name: "Log out anyway" });
+    expect(anyway).toBeEnabled();
+    fireEvent.click(anyway);
+    expect(props.onSignOutAnyway).toHaveBeenCalledTimes(1);
+  });
+
+  it("log out anyway waits only while the waiting changes are discarded", async () => {
+    renderDialog({ waitingForPlan: 1, onDiscardWaiting: () => new Promise<void>(() => {}) });
+    fireEvent.click(screen.getByRole("button", { name: "Discard waiting changes" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Log out anyway" })).toBeDisabled());
   });
 
   it("closes after a failed sync too — the decision is the person's again", async () => {

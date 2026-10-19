@@ -6,7 +6,7 @@
 // `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` and
 // `idb-keyval` — optional peers for that reason. NOT re-exported from the main barrel, which
 // would make them everyone's install; the packaging contract test holds that line.
-export { createQueryPersistence, DEFAULT_SCRUB_FIELDS } from "./offline/query-persistence";
+export { createQueryPersistence, DEFAULT_SCRUB_FIELDS, isCacheSafe } from "./offline/query-persistence";
 export type {
   QueryPersistence,
   QueryPersistenceOptions,
@@ -23,4 +23,4 @@ export {
   isSharedComputer,
   setSharedComputer,
 } from "./offline/shared-computer";
-export type { SharedComputerChoiceProps, SharedComputerLabels } from "./offline/shared-computer";
+export type { SharedComputerChoiceProps, SharedComputerLabels, SharedComputerStorage } from "./offline/shared-computer";

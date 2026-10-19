@@ -255,6 +255,33 @@ describe("signOutTourProgress (§10.2.6)", () => {
     expect(next.saves).toEqual([]);
   });
 
+  it("a 402 (a lapsed plan) parks the pending record: kept, not re-sent on this page; the next session sends it", async () => {
+    const storageKey = freshKey();
+    const { account, saves } = fakeAccount();
+    const first = renderHook(() => useTourProgress({ storageKey, account }));
+    await settle();
+    const save = account.save as ReturnType<typeof vi.fn>;
+    save.mockRejectedValueOnce(refusal(402));
+    act(() => {
+      first.result.current.complete("budget");
+    });
+    await settle();
+    expect(save).toHaveBeenCalledTimes(1);
+    act(() => {
+      first.result.current.complete("import");
+      window.dispatchEvent(new Event("online"));
+    });
+    await settle();
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(Object.keys(pendingOf(storageKey).completed).sort()).toEqual(["budget", "import"]);
+    act(() => signOutTourProgress(storageKey));
+    first.unmount();
+    renderHook(() => useTourProgress({ storageKey, account }));
+    await settle();
+    expect(saves).toHaveLength(1);
+    expect(Object.keys(saves[0].completed!).sort()).toEqual(["budget", "import"]);
+  });
+
   it("a 401, then sign-out: the same person's next load sends the pending record", async () => {
     const storageKey = freshKey();
     const { account, saves, server } = fakeAccount();

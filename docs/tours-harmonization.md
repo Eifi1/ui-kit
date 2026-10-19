@@ -369,7 +369,7 @@ The three 0.44 adoptions found no kit fix, only these guide and test notes
    and derive the list from it, rather than `tourInfos([def], t)[0]` at the launch:
 
        export function tourInfo(def: TourDef, t: TFunction): TourInfo {
-         return { id: def.id, title: t(def.titleKey), group: def.group, points: def.points, updated: def.updated, … };
+         return { id: def.id, title: t(def.titleKey), group: def.topic, points: def.points, updated: def.updated, … };
        }
        export const tourInfos = (defs: readonly TourDef[], t: TFunction) => defs.map((def) => tourInfo(def, t));
 
@@ -646,7 +646,7 @@ in 0.44.
   is the app's `GET`, `save(body)` its `PATCH`, each returning the parsed answer, as
   `useAccountAppearance`'s `save` does; `adopt` is `{storageKey, migrate?}` or
   `{storageKey, discard: true}` (decision 5). Remembered per key like `migrate` (the first
-  one wins), so it is defined once at module level and the provider needs nothing new.
+  one wins), so it is one stable object per key (memoised per account id, `load`/`save` reading the current token) and the provider needs nothing new.
   `signOutTourProgress(storageKey)` beside `resetTourProgress`: the cache only, the
   pending record kept (decision 6). `completeTour` stays a device write (tests and seeds),
   marked pending when the key has an account. Without `account`, 0.44's behaviour byte
@@ -656,7 +656,7 @@ in 0.44.
 
 | App | Change | Size |
 |---|---|---|
-| Kurvenschmiede | Asked for it. Table + migration (plaintext columns, imports nothing), a store adapter, mount the router; the demo declaration `not_in_the_demo` (403 `demo_refused`) in `tests/api/test_demo.py`; `tour_progress_conflict` and `tour_progress_full` as coded refusals (`domain/refusals.py`, a row each in `tests/api/test_refusals.py`, a sentence in all seven catalogues); `account` in `tourProgressOptions` (app-tours.ts:27, key unchanged, no `adopt`); `signOutTourProgress` in `clear()` (auth-store.ts:64-73, the 401 path included); export key in account_export.py:125; the privacy line "tours" (storage-keys.ts:114) reworded (a copy of the account's, removed at sign-out) in 7 languages; the kind stays `never` (:150-151). | S–M |
+| Kurvenschmiede | Asked for it. Table + migration (plaintext columns, imports nothing), a store adapter, mount the router; the demo declaration `not_in_the_demo` (403 `demo_refused`) in `tests/api/test_demo.py`; `tour_progress_conflict` and `tour_progress_full` as coded refusals only if test_refusals.py covers kit codes (the hook drops a 422 and logs it, so no reader sees them); `account` in `tourProgressOptions` (app-tours.ts:27-29) only for a signed-in non-demo account (key unchanged, no `adopt`), one stable object per key; `signOutTourProgress` in `clear()` (auth-store.ts:69-73, the 401 path included), reading the id before `set({ user: null })`; export key in account_export.py:125; the privacy line "tours" (storage-keys.ts:114) reworded ("a record of finished tours not yet sent may stay until that person next signs in here") in 7 languages; the kind stays `never` (:150-151). | S–M |
 | kastlan | Table (no `company_id`, outside RLS), store, router (the `DEMO_WRITES` gate refuses a demo's PATCH as it is); a key per account `kastlan.tours.completions:<id>` with `adopt: {storageKey: "kastlan.tours.completions", discard: true}` (use-tours.tsx:19, :23-24: the old record is dropped, not adopted); `signOutTourProgress` in `logout()` itself (auth-store.ts:68-80); export (`GET /me/export`, account_router.py:101-102). In either mode: drop the device-reset registration (use-tours.tsx:26-27 and its imports :7-8). | S–M |
 | keksdose | **Stays on the device** (decision 10). Nothing in 0.45. If it ever moves: a key per account with `adopt: {storageKey: "keksdose-tour-progress", migrate: fromZustand}`, `signOutTourProgress` in `forgetPreviousAccount` (auth-store.ts:47), the pending record left out of the sync chip and the logout guard, a `proof_see_*` line, the privacy-policy line, export in `build_export` (account_export_service.py:404), a check that the local API host does not answer `/tours/progress`. | 0 |
 

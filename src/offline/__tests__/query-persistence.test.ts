@@ -213,6 +213,12 @@ describe("createQueryPersistence — clear and removeStale", () => {
     await expect(persistence.clear(broken)).resolves.toBeUndefined();
   });
 
+  it("leave never throws", async () => {
+    const { persistence } = setup();
+    const broken = { clear: () => { throw new Error("boom"); } } as unknown as QueryClient;
+    await expect(persistence.leave(broken)).resolves.toBeUndefined();
+  });
+
   it("removeStale drops this app's other caches older than maxAge; fresh ones and other apps' stay", async () => {
     const now = Date.now();
     const at = (timestamp: number) => JSON.stringify({ timestamp, buster: "1.0.0", clientState: { queries: [], mutations: [] } });
@@ -238,5 +244,43 @@ describe("createQueryPersistence — clear and removeStale", () => {
     const storage = { ...memoryStorage(), keys: async () => Promise.reject(new Error("blocked")) };
     const persistence = createQueryPersistence({ app: "kastlan", user: 7, buster: "1", maxAge: DAY, storage });
     await expect(persistence.removeStale()).resolves.toBeUndefined();
+  });
+});
+
+describe("createQueryPersistence — paused mutations and the scrub list (S6)", () => {
+  const mutation = (variables: unknown, isPaused = true) => ({ state: { isPaused, variables } });
+
+  it("never writes a paused mutation whose variables carry a scrubbed field; keeps the others", () => {
+    const { persistence } = setup();
+    const ok = persistence.persistOptions.dehydrateOptions!.shouldDehydrateMutation!;
+    const call = (m: ReturnType<typeof mutation>) => ok(m as never);
+    expect(call(mutation({ contact: 3, account: { iban: "CH93 0076 2011 6238 5295 7" } }))).toBe(false);
+    expect(call(mutation({ signature_tenant: "data:image/png;base64,…" }))).toBe(false);
+    expect(call(mutation({ estate: 1, name: "Seeblick" }))).toBe(true);
+    expect(call(mutation({ estate: 1 }, false))).toBe(false);
+  });
+
+  it("keeps every paused mutation with an empty scrub list (keksdose)", () => {
+    const { persistence } = setup({ scrubFields: [] });
+    const ok = persistence.persistOptions.dehydrateOptions!.shouldDehydrateMutation!;
+    expect(ok(mutation({ iban: "CH93" }) as never)).toBe(true);
+  });
+
+  it("drops such a mutation on restore, for what an older build wrote", async () => {
+    const { persistence, storage } = setup();
+    const kept = { mutationKey: ["save"], state: { isPaused: true, variables: { name: "Ada" } } };
+    storage.map.set(
+      persistence.key,
+      JSON.stringify({
+        timestamp: Date.now(),
+        buster: "1.0.0",
+        clientState: {
+          queries: [],
+          mutations: [kept, { mutationKey: ["bank"], state: { isPaused: true, variables: [{ iban: "CH93" }] } }],
+        },
+      }),
+    );
+    const restored = await persistence.persistOptions.persister.restoreClient();
+    expect(restored!.clientState.mutations).toEqual([kept]);
   });
 });

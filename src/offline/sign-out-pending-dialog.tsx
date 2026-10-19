@@ -14,8 +14,9 @@ import { DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS } from "./sign-out-pending-dialo
  * "Sync now" is the primary action: the queued writes are the person's own data. It runs
  * `onSyncNow`, is busy while that runs, then calls `onClose` without signing out — the
  * count has moved and the caller re-evaluates (signs out at once when nothing is left, or
- * opens this again with the new number). "Log out anyway" stays as the escape hatch: a
- * device that cannot reach the server must still be able to sign out.
+ * opens this again with the new number). "Log out anyway" stays as the escape hatch, usable
+ * while a sync runs (a hanging one would trap the person otherwise): a device that cannot
+ * reach the server must still be able to sign out. Only a running discard holds it.
  *
  * The words depend on what the app does with the queue at sign-out (`keepsChanges`):
  * kastlan keeps the outbox for its owner, keksdose wipes it — and keksdose's copy must not
@@ -54,7 +55,8 @@ export interface SignOutPendingDialogProps {
   /** `true` (kastlan): the changes stay on this device for their owner. `false`
    *  (keksdose): they are lost. Picks the words. */
   keepsChanges: boolean;
-  /** Room under the sentence — the billing kit's `waitingChanges` line. */
+  /** Room under the sentence — the billing kit's `waitingChanges` line. Shown only while
+   *  `waitingForPlan > 0`, so a 0-count line never shows. */
   extra?: ReactNode;
   /** Cancel, Escape, the X — and after "Sync now". */
   onClose: () => void;
@@ -76,7 +78,6 @@ export function SignOutPendingDialog({
   const labels = useKitLabels("signOutPending", DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS, labelsProp);
   const [syncing, setSyncing] = useState(false);
   const [discarding, setDiscarding] = useState(false);
-  const busy = syncing || discarding;
 
   const syncNow = async () => {
     setSyncing(true);
@@ -122,13 +123,13 @@ export function SignOutPendingDialog({
           <Button pending={syncing} disabled={discarding} onClick={() => void syncNow()}>
             {labels.syncNow}
           </Button>
-          <Button variant="secondary" disabled={busy} onClick={onSignOutAnyway}>
+          <Button variant="secondary" disabled={discarding} onClick={onSignOutAnyway}>
             {labels.signOutAnyway}
           </Button>
         </>
       }
     >
-      {typeof extra === "string" ? <p className="text-sm text-muted">{extra}</p> : extra}
+      {waitingForPlan > 0 && (typeof extra === "string" ? <p className="text-sm text-muted">{extra}</p> : extra)}
     </DialogFrame>
   );
 }

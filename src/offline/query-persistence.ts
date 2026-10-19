@@ -46,14 +46,18 @@ export interface QueryPersistenceOptions {
   /** The signed-in account. One cache per account (D5). */
   user: string | number;
   /** The acting company, where the app has several (kastlan): the switch changes the key,
-   *  so no wipe and no cross-company leak. */
+   *  so no wipe and no cross-company leak — provided the app switches as
+   *  {@link QueryPersistence.leave} says (leave, then remount the provider per key). */
   company?: string | number | null;
   /** The app's own rule, beside `denyRoots` — keksdose denies one exact key and every key
    *  whose second segment is `"admin"`. `false` keeps the query out. */
   shouldPersistKey?: (queryKey: readonly unknown[]) => boolean;
   /** Query roots (`queryKey[0]`) that never reach the disk: admin, billing, reports… */
   denyRoots?: readonly string[];
-  /** Replaces {@link DEFAULT_SCRUB_FIELDS}; spread it to add to it. `[]` scrubs nothing. */
+  /** Replaces {@link DEFAULT_SCRUB_FIELDS}; spread it to add to it. `[]` scrubs nothing.
+   *  A paused mutation whose variables carry one of these fields is never persisted (a
+   *  scrubbed mutation would send something else), and one an older build wrote is dropped
+   *  on restore. */
   scrubFields?: readonly ScrubField[];
   /** Told when a query's data is not plain JSON and is therefore not persisted. Default:
    *  `console.error`, as keksdose's `cacheSafeOrWarn`. */
@@ -69,14 +73,33 @@ export interface QueryPersistenceOptions {
   throttleTime?: number;
 }
 
+/**
+ * One persisted cache, for one key. **Mount it per key**: the provider subscribes once and
+ * ignores a changed `persistOptions`, so give it the key as its React key —
+ *
+ * ```tsx
+ * <PersistQueryClientProvider key={persistence.key} client={queryClient} persistOptions={persistence.persistOptions}>
+ * ```
+ *
+ * — and create the persistence once the account (and company) is known (`useMemo` on
+ * them); before sign-in, mount the plain `QueryClientProvider`. On a company switch, call
+ * {@link QueryPersistence.leave} on the old one BEFORE the new key mounts, instead of a bare
+ * `queryClient.clear()`: otherwise the old subscription saves the emptied (or the next
+ * company's) cache under the old key.
+ */
 export interface QueryPersistence {
   /** `<app>-query-cache-<user>[-<company>]`. */
   key: string;
   /** Everything `<PersistQueryClientProvider persistOptions>` needs. */
   persistOptions: Omit<PersistQueryClientOptions, "queryClient">;
-  /** Sign-out: empties the in-memory cache and deletes this key's persisted copy.
-   *  Best-effort; never throws. */
+  /** Sign-out: stops writing under this key, empties the in-memory cache and deletes this
+   *  key's persisted copy. Best-effort; never throws. */
   clear: (queryClient: QueryClient) => Promise<void>;
+  /** The company switch (or any change of key without a sign-out): stops writing under this
+   *  key — a save already scheduled is dropped too — and empties the in-memory cache, so
+   *  the next key's provider starts clean. The persisted copy stays for the way back. A
+   *  provider that mounts this persistence again re-arms it with its restore. Never throws. */
+  leave: (queryClient: QueryClient) => Promise<void>;
   /** At sign-in: deletes this app's OTHER persisted caches older than `maxAge` (another
    *  account's, another company's). Other apps' keys and fresh ones stay. Never throws. */
   removeStale: () => Promise<void>;
@@ -143,6 +166,9 @@ export function createQueryPersistence({
   const prefix = `${app}-query-cache-`;
   const key = `${prefix}${user}${company === undefined || company === null || company === "" ? "" : `-${company}`}`;
   const denied = new Set(denyRoots);
+  // Set by `leave` and `clear`: a write under this key after the person left it (a
+  // throttled save of the emptied cache) is dropped. A restore re-arms it.
+  let retired = false;
 
   const keyAllowed = (queryKey: readonly unknown[]) =>
     !denied.has(String(queryKey[0])) && (shouldPersistKey ? shouldPersistKey(queryKey) : true);
@@ -167,6 +193,21 @@ export function createQueryPersistence({
     return withScrubbedData(entry);
   };
 
+  /** Whether `value` has a scrubbed field's name anywhere in it. */
+  const carriesScrubbed = (value: unknown, depth = 0): boolean => {
+    if (scrubFields.length === 0 || depth > 12 || value === null || typeof value !== "object") return false;
+    if (Array.isArray(value)) return value.some((v) => carriesScrubbed(v, depth + 1));
+    return Object.entries(value as Record<string, unknown>).some(
+      ([name, v]) =>
+        scrubFields.some((f) => (typeof f === "string" ? f === name : f.test(name))) || carriesScrubbed(v, depth + 1),
+    );
+  };
+
+  /** The write side for mutations: TanStack's default (paused ones), minus any whose
+   *  variables carry a scrubbed field (S6). */
+  const shouldDehydrateMutation = (mutation: { state: { isPaused: boolean; variables?: unknown } }): boolean =>
+    mutation.state.isPaused && !carriesScrubbed(mutation.state.variables);
+
   const withScrubbedData = (entry: unknown): unknown => {
     const query = entry as { state?: { data?: unknown } };
     if (!query.state || !("data" in query.state)) return entry;
@@ -175,7 +216,8 @@ export function createQueryPersistence({
 
   // The scrub on the way OUT: the in-memory cache keeps the field (the page that is open
   // shows it), the disk never sees it. Mutations are a paused write queue and are kept
-  // whole — scrubbing one would change what it sends.
+  // whole — scrubbing one would change what it sends — so one carrying a scrubbed field is
+  // not written at all (`shouldDehydrateMutation`).
   const serialize = (client: PersistedClient): string =>
     JSON.stringify({
       ...client,
@@ -197,7 +239,11 @@ export function createQueryPersistence({
         timestamp,
         buster: stored,
         clientState: {
-          mutations: Array.isArray(clientState.mutations) ? clientState.mutations : [],
+          mutations: Array.isArray(clientState.mutations)
+            ? clientState.mutations.filter(
+                (m) => !carriesScrubbed((m as { state?: { variables?: unknown } } | null)?.state?.variables),
+              )
+            : [],
           queries: clientState.queries.map(restorable).filter((q) => q !== null) as PersistedClient["clientState"]["queries"],
         },
       };
@@ -208,9 +254,13 @@ export function createQueryPersistence({
 
   const persister = createAsyncStoragePersister({
     storage: {
-      getItem: async (k) => (await storage.getItem(k)) ?? null,
+      // Only the provider's restore reads: mounting this persistence again re-arms it.
+      getItem: async (k) => {
+        retired = false;
+        return (await storage.getItem(k)) ?? null;
+      },
       setItem: async (k, v) => {
-        await storage.setItem(k, v);
+        if (!retired) await storage.setItem(k, v);
       },
       removeItem: async (k) => {
         await storage.removeItem(k);
@@ -222,7 +272,17 @@ export function createQueryPersistence({
     deserialize,
   });
 
+  const leave = async (queryClient: QueryClient) => {
+    retired = true;
+    try {
+      queryClient.clear();
+    } catch {
+      /* best-effort */
+    }
+  };
+
   const clear = async (queryClient: QueryClient) => {
+    retired = true;
     try {
       queryClient.clear();
       await persister.removeClient();
@@ -255,8 +315,9 @@ export function createQueryPersistence({
 
   return {
     key,
-    persistOptions: { persister, maxAge, buster, dehydrateOptions: { shouldDehydrateQuery } },
+    persistOptions: { persister, maxAge, buster, dehydrateOptions: { shouldDehydrateQuery, shouldDehydrateMutation } },
     clear,
+    leave,
     removeStale,
   };
 }

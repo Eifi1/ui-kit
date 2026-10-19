@@ -46,9 +46,21 @@ export interface UseTourProgressOptions {
   migrate?: (raw: unknown) => Record<string, string | null> | undefined;
   /**
    * 0.45: the account's record behind the device key (§10.2.4). Remembered per key like
-   * `migrate` (the FIRST one any reader or the provider passes wins), so define it once at
-   * module level. With it, `storageKey` must be per account (a prefix plus the user id).
-   * Signed out, and in a demo, pass none: the device record works as in 0.44.
+   * `migrate` (the FIRST one any reader or the provider passes wins). With it,
+   * `storageKey` must be per account (a prefix plus the user id), so build the options per
+   * account and keep ONE stable object per key — memoise them in a `Map` by user id — and
+   * let `load`/`save` read the current token when they run, never capture one:
+   *
+   *     const byUser = new Map<string, UseTourProgressOptions>();
+   *     function tourProgressFor(user: { id: string; isDemo: boolean } | null) {
+   *       if (!user || user.isDemo) return { storageKey: "app.tours.completions" }; // no account
+   *       let options = byUser.get(user.id);
+   *       if (!options) byUser.set(user.id, (options = { storageKey: `app.tours.completions:${user.id}`, account }));
+   *       return options;
+   *     }
+   *
+   * Signed out, and in a demo, pass none (and a fixed key): the device record works as in
+   * 0.44, and a demo neither PATCHes into a 403 nor leaves an orphan key per demo id.
    */
   account?: TourProgressAccount;
 }
@@ -85,7 +97,9 @@ export type TourProgressAdopt =
  * - A write (`complete`, the provider's finish, `reset`) goes to the cache at once and to
  *   a PENDING record beside it, `<storageKey>:pending` (`{synced, completed, forget}`),
  *   sent as one PATCH and cleared by its answer. A failure with no answer (offline, 5xx,
- *   401) keeps it for the next load or `online`; a 403 or 422 drops it and logs.
+ *   401) keeps it for the next load or `online`; a 402 (a lapsed plan) keeps it but sends it
+ *   no more on this page (the next session or page load tries again); a 403 or 422 drops
+ *   it and logs.
  * - `awarded` stays the device's answer against the cache (§10.2.4).
  * - The pending record is NOT the app's outbox: leave it out of any "N waiting" count
  *   and any sign-out guard (losing a tour mark is acceptable).
@@ -255,6 +269,9 @@ const rerun = new Set<string>();
 const queued = new Set<string>();
 /** Bumped by a sign-out: an answer that comes back after it never refills the cache. */
 const epochs = new Map<string, number>();
+/** Keys whose PATCH got a 402 (a lapsed plan): the pending record is kept but not sent
+ *  again on this page; the next session (or page load) tries once more. */
+const parked = new Set<string>();
 /** The pending record where storage refused to keep it. */
 const pendingMemory = new Map<string, string>();
 let onlineListening = false;
@@ -449,6 +466,7 @@ async function sync(key: string): Promise<void> {
   try {
     const waiting = readPending(key);
     if (waiting && hasWork(waiting)) {
+      if (parked.has(key)) return;
       const body: TourProgressBody = {};
       if (Object.keys(waiting.completed).length > 0) body.completed = { ...waiting.completed };
       if (waiting.forget.length > 0) body.forget = [...waiting.forget];
@@ -461,6 +479,10 @@ async function sync(key: string): Promise<void> {
           // Refused for good (a demo, a malformed or full record): dropped, not retried.
           if ((epochs.get(key) ?? 0) === epoch) clearSent(key, body, false);
           console.warn(`[ui-kit] tour progress: the account refused the pending record (${status}); dropped.`, error);
+        } else if (status === 402) {
+          // A lapsed plan refuses every write: kept, but not re-sent after each finish
+          // and each `online` — the next session or page load tries again.
+          parked.add(key);
         }
         // No answer (offline, 5xx, 401): it stays for the next load or `online`.
         return;
@@ -496,6 +518,7 @@ export function signOutTourProgress(storageKey: string): void {
   epochs.set(storageKey, (epochs.get(storageKey) ?? 0) + 1);
   loaded.delete(storageKey);
   rerun.delete(storageKey);
+  parked.delete(storageKey);
   removeStored(storageKey);
   memory.delete(storageKey);
   cache.delete(storageKey);

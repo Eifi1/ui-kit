@@ -326,7 +326,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `createQueryPersistence`, `DEFAULT_SCRUB_FIELDS`, `SignOutPendingDialog`, `PwaUpdatePrompt`,
   // `SharedComputerChoice`, `isSharedComputer`, `setSharedComputer` and the three
   // `DEFAULT_*_LABELS`. Standalone: its TanStack and idb-keyval peers stay out of the barrel.
-  ["@eifi1/ui-kit/offline", offline, 10],
+  // `isCacheSafe` (+1, keksdose's build review: its query-client tests use it).
+  ["@eifi1/ui-kit/offline", offline, 11],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8

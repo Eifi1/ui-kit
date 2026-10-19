@@ -61,3 +61,33 @@ describe("SharedComputerChoice", () => {
     expect(await axeViolations(container)).toEqual([]);
   });
 });
+
+describe("the choice beside a persistent session (B3)", () => {
+  afterEach(() => window.localStorage.clear());
+
+  it("lives in localStorage with storage: \"local\", outliving the tab, until set false", () => {
+    setSharedComputer(true, { storage: "local" });
+    expect(window.localStorage.length).toBe(1);
+    window.sessionStorage.clear(); // the tab closed
+    expect(isSharedComputer()).toBe(true);
+    setSharedComputer(false);
+    expect(isSharedComputer()).toBe(false);
+    expect(window.localStorage.length + window.sessionStorage.length).toBe(0);
+  });
+
+  it("one place at a time: choosing again moves it", () => {
+    setSharedComputer(true);
+    setSharedComputer(true, { storage: "local" });
+    expect(window.sessionStorage.length).toBe(0);
+    setSharedComputer(true, { storage: "session" });
+    expect(window.localStorage.length).toBe(0);
+    expect(isSharedComputer()).toBe(true);
+  });
+
+  it("SharedComputerChoice stores where it is told", () => {
+    render(<SharedComputerChoice storage="local" />);
+    fireEvent.click(screen.getByRole("checkbox"));
+    expect(window.localStorage.length).toBe(1);
+    expect(window.sessionStorage.length).toBe(0);
+  });
+});

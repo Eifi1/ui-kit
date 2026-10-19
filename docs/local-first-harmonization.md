@@ -536,8 +536,10 @@ as optional peers). Size **S–M**.
 - `PwaUpdatePrompt({ needRefresh, onReload, onDismiss?, hold?, labels? })`: kk's toast with
   "Reload"; while `hold` it waits (D8). Seven languages.
 - `SharedComputerChoice` (a labelled checkbox for the sign-in form) with
-  `isSharedComputer()`/`setSharedComputer(on)`, held in `sessionStorage`, so the choice itself
-  outlives no tab. Seven languages.
+  `isSharedComputer()`/`setSharedComputer(on, {storage?})`. The choice lives as long as the
+  session it governs: `sessionStorage` by default, `localStorage` (`storage: "local"`, cleared
+  with `setSharedComputer(false)` at every end of the session) for an app whose refresh token
+  outlives the tab (kastlan; round-046 B3). Seven languages.
 - **P3, later:** `createSyncEngine`, `useSyncWorker`, `useSyncStatus()`, `readLocalFirst`/
   `isOfflineError`, and leaf utilities both apps can share (`stampAfter`, the generation guard).
   kk does not adopt the engine ("not for keksdose unless proven", P4).
