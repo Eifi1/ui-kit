@@ -792,7 +792,9 @@ export function TranslationReviewPanel({
             const writes = id !== "edit";
             return {
               key: id,
-              label: swipe.label,
+              // `edit` opens the editor: its own name, apart from the editor's submit
+              // ("Needs a change"), which saves (keksdose B2/S3).
+              label: id === "edit" ? (r.text === "" ? labels.suggestRow : labels.flagRow) : swipe.label,
               icon: <>{swipe.icon}</>,
               tone: "muted",
               commit: writes ? COMMIT_EXCEPT_BILLING : undefined,

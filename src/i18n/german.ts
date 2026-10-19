@@ -1599,6 +1599,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       approve: "Bestätigen",
       flag: "Änderung nötig",
       suggest: "Übersetzung vorschlagen",
+      flagRow: "Zur Änderung markieren…",
+      suggestRow: "Übersetzung ergänzen…",
       reset: "Als ungeprüft markieren",
       cancel: "Abbrechen",
       approveSelected: "Auswahl bestätigen",

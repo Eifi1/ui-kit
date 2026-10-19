@@ -293,14 +293,14 @@ describe("TranslationReviewPanel desktop actions from the swipe binding (dev#598
 
   it("draws approve, then the binding's actions, each once and only where the row can take it", () => {
     setup({ swipe: { end: ["approve", "clear"], start: ["edit", "clear"] } });
-    expect(actionsOf("Conditions d’utilisation")).toEqual(["Approve", "Mark unreviewed", "Needs a change"]);
-    expect(actionsOf("Annuler")).toEqual(["Approve", "Needs a change"]);
-    expect(actionsOf("Enregistrer")).toEqual(["Mark unreviewed", "Needs a change"]);
+    expect(actionsOf("Conditions d’utilisation")).toEqual(["Approve", "Mark unreviewed", "Flag for a change…"]);
+    expect(actionsOf("Annuler")).toEqual(["Approve", "Flag for a change…"]);
+    expect(actionsOf("Enregistrer")).toEqual(["Mark unreviewed", "Flag for a change…"]);
   });
 
   it("keeps approve on the desktop when the binding leaves it out", () => {
     setup({ swipe: { start: ["edit"] } });
-    expect(actionsOf("Annuler")).toEqual(["Approve", "Needs a change"]);
+    expect(actionsOf("Annuler")).toEqual(["Approve", "Flag for a change…"]);
   });
 
   it("clears from a button, with the row as the origin", async () => {
@@ -313,8 +313,17 @@ describe("TranslationReviewPanel desktop actions from the swipe binding (dev#598
 
   it("opens the editor on the wording from edit", () => {
     setup({ swipe: { start: ["edit"] } });
-    fireEvent.click(within(desktopRow("Annuler")).getByRole("button", { name: "Needs a change" }));
+    fireEvent.click(within(desktopRow("Annuler")).getByRole("button", { name: "Flag for a change…" }));
     expect(screen.getByLabelText("Better wording")).toHaveFocus();
+  });
+
+  it("names the row's edit apart from the editor's submit (keksdose B2/S3)", () => {
+    // The row's button opens the editor; the editor's "Needs a change" saves. One name
+    // each, so a screen reader (and `getByRole`) never meets two that do different things.
+    setup({ swipe: { start: ["edit"] } });
+    expect(actionsOf("Set a goal")).toEqual(["Add a translation…"]);
+    fireEvent.click(within(desktopRow("Annuler")).getByRole("button", { name: "Flag for a change…" }));
+    expect(screen.getAllByRole("button", { name: "Needs a change" })).toHaveLength(1);
   });
 
   it("is refused under a write lock rather than hidden", () => {

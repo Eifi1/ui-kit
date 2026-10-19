@@ -612,8 +612,10 @@ KS's third tile XS.
 `adminArea.tiles.awaitingVerdict` / `awaitingVerdictHint` ("Awaiting a verdict" /
 "Answered, and waiting for you or the reporter to confirm the fix") and `releasedForWork`
 / `releasedForWorkHint` ("Released for work" / "Ready, rework requested or in progress"),
-seven languages. An app's own words still win; any other key still needs its `label`
-(the type says so). The counts stay `extra` keys, as server-kit sends them.
+seven languages. An app's own words still win, and the kit's hint comes only with the
+kit's label: an entry that brings its own `label` gets no line under the count unless it
+brings its `description` too (keksdose S5, round 0.46). Any other key still needs its
+`label` (the type says so). The counts stay `extra` keys, as server-kit sends them.
 
 ### 9.6 For the reviews
 

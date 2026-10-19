@@ -1575,6 +1575,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       approve: "Approva",
       flag: "Da modificare",
       suggest: "Proponi una traduzione",
+      flagRow: "Segnala una modifica…",
+      suggestRow: "Aggiungi una traduzione…",
       reset: "Segna come non rivisto",
       cancel: "Annulla",
       approveSelected: "Approva i selezionati",

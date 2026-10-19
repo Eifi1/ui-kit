@@ -111,7 +111,8 @@ export interface AdminOwnTile {
 }
 
 /** 0.46: a tile of server-kit's feedback counts — `label` and `description` default to
- *  the kit's words; an app's own still win. */
+ *  the kit's words; an app's own still win. The kit's `description` fills in only when
+ *  `label` is left out too: an app that names the tile gets no hint line it did not ask for. */
 export interface AdminFeedbackTile extends Omit<AdminOwnTile, "key" | "label"> {
   key: AdminFeedbackTileKey;
   label?: ReactNode;
@@ -213,8 +214,14 @@ export function AdminOverview({
       const words = Object.prototype.hasOwnProperty.call(feedbackWords, t.key)
         ? feedbackWords[t.key as AdminFeedbackTileKey]
         : undefined;
+      // The kit's hint comes with the kit's label only: an app that names the tile
+      // itself gets no line it did not ask for (keksdose S5, round 0.46).
       return words
-        ? { ...t, label: t.label ?? words.label, description: t.description ?? words.description }
+        ? {
+            ...t,
+            label: t.label ?? words.label,
+            description: t.description ?? (t.label === undefined ? words.description : undefined),
+          }
         : t;
     }),
   ].filter((t) => loading || (t.count !== null && t.count !== undefined));

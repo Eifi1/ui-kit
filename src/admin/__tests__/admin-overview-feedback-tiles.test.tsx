@@ -55,6 +55,24 @@ describe("AdminOverview — the feedback tiles' default words", () => {
     expect(tile("awaiting_verdict")).not.toHaveTextContent("Awaiting a verdict");
   });
 
+  it("an app that names the tile gets no kit hint under it (keksdose S5); one that leaves the label out keeps its own line", () => {
+    render(
+      <AdminOverview
+        attention={ATTENTION}
+        extraTiles={[
+          { key: "awaiting_verdict", label: "Zu bestätigen", count: 3 },
+          { key: "released_for_work", description: "The feedback loop's queue", count: 4 },
+        ]}
+      />,
+    );
+    const t = DEFAULT_ADMIN_AREA_LABELS.tiles;
+    expect(tile("awaiting_verdict")).toHaveTextContent("Zu bestätigen");
+    expect(tile("awaiting_verdict")).not.toHaveTextContent(t.awaitingVerdictHint);
+    expect(tile("released_for_work")).toHaveTextContent(t.releasedForWork);
+    expect(tile("released_for_work")).toHaveTextContent("The feedback loop's queue");
+    expect(tile("released_for_work")).not.toHaveTextContent(t.releasedForWorkHint);
+  });
+
   it("a tile of the app's own needs its label (types)", () => {
     // @ts-expect-error — only the kit's feedback keys may leave the label out.
     const own: AdminExtraTile = { key: "beds", count: 1 };

@@ -1558,6 +1558,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       approve: "Jóváhagyás",
       flag: "Módosítandó",
       suggest: "Fordítás javaslata",
+      flagRow: "Módosításra jelölés…",
+      suggestRow: "Fordítás hozzáadása…",
       reset: "Megjelölés ellenőrizetlenként",
       cancel: "Mégse",
       approveSelected: "Kijelöltek jóváhagyása",

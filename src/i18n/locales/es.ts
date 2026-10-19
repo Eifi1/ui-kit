@@ -1563,6 +1563,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       approve: "Aprobar",
       flag: "Requiere cambios",
       suggest: "Proponer traducción",
+      flagRow: "Marcar para cambiar…",
+      suggestRow: "Añadir una traducción…",
       reset: "Marcar como sin revisar",
       cancel: "Cancelar",
       approveSelected: "Aprobar la selección",

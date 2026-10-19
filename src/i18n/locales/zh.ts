@@ -1497,6 +1497,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       approve: "通过",
       flag: "需要修改",
       suggest: "建议译文",
+      flagRow: "标记为需修改…",
+      suggestRow: "添加译文…",
       reset: "标记为未审校",
       cancel: "取消",
       approveSelected: "通过所选项",
