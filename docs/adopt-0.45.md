@@ -1,4 +1,21 @@
-# Adopting `@eifi1/ui-kit` 0.45
+# Adopting `@eifi1/ui-kit` 0.45 and `eifi1-server-kit` 0.15
+
+ui-kit 0.45 adds nothing an app must take: every new part is optional. server-kit 0.15 has one
+breaking change, `FeedbackRepository.count_by_status()` (the section on feedback counts), so
+bump server-kit together with that row. The commit check at the end is the shared one.
+
+## server-kit 0.15
+
+Install the wheel by URL, pinned by hash:
+
+```
+eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.15.0/eifi1_server_kit-0.15.0-py3-none-any.whl
+sha256: SHA256_AT_RELEASE
+```
+
+New: `tours` (+ `tours.router`, `tours.testing`), `sync` (the `sync` extra: `eifi1-server-kit[sync]`),
+`feedback.feedback_attention`, the test mail parts in `mail`, `AdminAction.GROUP_DEACTIVATE` /
+`GROUP_REACTIVATE`. `billing.SyncRefusal` is now `sync.SyncRefusal`, re-exported unchanged.
 
 ## Tours: the 0.44 adoption notes, as recipes
 
@@ -196,3 +213,18 @@ whole push; a create past the limit is a per-change `SyncRejection` (`plan_limit
 | keksdose | Nothing required (see its offline row for the notes if it takes `SyncChange` / `merge_lww`). |
 | kastlan | `install_sync_stamping(Session, counter=…, tenant_of=lambda _o: 1, is_synced=lambda o: isinstance(o, SyncMixin))`, the counter's `bump` being `lambda s, _t: next_knowledge(s)` (one database-wide counter), and REMOVE its own `before_flush` listener (kastlan/infrastructure/sync.py:79-99), or the counter is bumped N+1 times per flush. Add `updated_at` by migration to at least the handover children (HandoverRoom, HandoverDefect, HandoverPhoto) so D2 holds there; the other eight models without it (DocumentLink, ListingImage, InvoiceLineItem, PaymentAllocation, DunningConfig, BudgetLineItem, JournalEntryLine, UnitDistributionValue) are stamped without it. The delete and revive paths (sync_service.py:326, :353-355) move to `tombstone` + `merge_lww`; the losing upsert is appended to the reply, since `collect_delta` (:237) returns only rows past the cursor. The `SyncChange` subclass keeps `data: dict = Field(default_factory=dict)` (`change.get("data", {})` at :331 would meet the kit's `None`). Paging later: `id_of` must be `sync_uuid` (ids compare as text). Dev only: pin the engine's `server_settings={"timezone": "UTC"}` (local Postgres runs Europe/Berlin, so `func.now()` writes Berlin time into naive columns read as UTC). |
 | Kurvenschmiede | Nothing (online-only). |
+
+## The pre-push commit check (Eifi1/shared-workflows v1.3.0)
+
+Every commit a push would send must pass the shared Conventional Commits check, header ≤ 100
+characters (keksdose hit it only in CI on 2026-10-18). Vendor
+`actions/commit-check/check-commit-msg.cjs` and `check-pushed-commits.cjs` at v1.3.0 into
+`scripts/`, and call it from the pre-push hook with git's stdin:
+`node scripts/check-pushed-commits.cjs "$1" || exit 1` (pipe the captured stdin to it if the
+hook reads stdin itself).
+
+| App | Change |
+| --- | --- |
+| keksdose | Replace its own `scripts/check-pushed-commits.cjs` and `check-commit-msg.cjs` with the shared v1.3.0 files. One difference: an unknown remote sha now falls back to the default branch instead of failing. |
+| kastlan | Add both files and the hook line in `.husky/pre-push`. |
+| Kurvenschmiede | Add both files and the hook line (KS has no commit-msg hook, so this is its first local commit check). |
