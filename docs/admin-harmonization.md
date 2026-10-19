@@ -3,7 +3,8 @@
 **Settled 2026-10-17** (Marcel, in the ui-kit session, after the three app reviews; §6, §7).
 Planned as round 0.43; built in the same release as billing §16: **ui-kit 0.42, server-kit 0.14**.
 §6 wins over §2–§4 where they differ.
-**§9 is a DRAFT (round 0.45)** for ui-kit 0.45 / server-kit 0.15, not settled.
+**§9 (round 0.45) settled 2026-10-19** (Marcel: "As reviewed", after the three app reviews in
+audits/round-046/reviews.md; §9.7), for ui-kit 0.45 / server-kit 0.15.
 
 Led from ui-kit at Marcel's request, 2026-10-17: "Not only a billing harmonization but also
 an admin view harmonization. The admins generally (I guess) want to see similar admin
@@ -304,22 +305,24 @@ From `@eifi1/ui-kit` (the menu row also from `@eifi1/ui-kit/shell`). The words a
 - The showcase's "User administration" page shows the way in, the area, a tile and the
   403 page.
 
-## 9. The follow-ups (round 0.45) — DRAFT (round 0.45)
+## 9. The follow-ups (round 0.45) — SETTLED (round 0.45)
 
-**DRAFT (round 0.45)**, ui-kit 0.45 / server-kit 0.15. Not settled: the three apps review
-it (audits/round-046/reviews.md), then Marcel settles. It takes up what §6.14 left for
-later, kastlan's company details (inventory-kastlan 3.2, 5i) and server-kit 0.14's
-missing count helper (audits/round-042/adopt-lines-server.md:18). Read at kk
-`feat/feedback-loop-80-424-434` e7480bec, ka `feat/kit-0.44` 6c2a0c4, KS `main` b54c16e,
-server-kit 0.14.0.
+**Settled 2026-10-19** (Marcel: "As reviewed", after the three app reviews in
+audits/round-046/reviews.md; §9.7 records where each answer went, and the review's
+answers and corrections are folded into §9.1–§9.5). Built for **ui-kit 0.45 / server-kit
+0.15**. It takes up what §6.14 left for later, kastlan's company details (inventory-kastlan
+3.2, 5i) and server-kit 0.14's missing count helper (audits/round-042/adopt-lines-server.md:18).
+Drafted at kk `feat/feedback-loop-80-424-434` e7480bec, ka `feat/kit-0.44` 6c2a0c4, KS
+`main` b54c16e, server-kit 0.14.0; the reviews' corrections re-checked at kk deaf428d, ka
+6c2a0c4, KS b54c16e.
 
 | # | Item | Who | ui-kit | server-kit | Apps |
 |---|---|---|---|---|---|
-| 9.1 | The platform console's Activity | ka | none | none | ka S (M with §9.3's shell) |
+| 9.1 | The platform console's Activity, as one `SettingsLayout` | ka | XS (two log words) | XS (two actions) | ka S–M |
 | 9.2 | "Send a test mail to me" | all three | S | S | S each |
 | 9.3 | The operator's waiting count | ka | XS | none | ka S |
-| 9.4 | kastlan's company details | ka | none | none | ka M (logo) |
-| 9.5 | The feedback counts in server-kit | all three | none | S | XS each |
+| 9.4 | kastlan's company details (name, address; the logo later) | ka | none | none | ka S |
+| 9.5 | The feedback counts in server-kit | all three | none | S | XS each (KS: + a tile) |
 
 ### 9.1 The platform console's Activity (ka Q6, §6.14)
 
@@ -327,31 +330,43 @@ server-kit 0.14.0.
 admin_user_service.py:8-10) and serves them at `GET /platform/actions?limit=&offset=&target=`
 (platform_router.py:250-262, `list_actions(company_id=None)`, admin_user_service.py:407-430).
 No page reads it: the console's routes are companies, a company, users and sign-ups
-(frontend features/platform/routes.tsx:5-49), with no navigation of their own (inventory
-5f). The company admins' log is the kit's `AdminActionLog` with `groupNoun="company"`
-(features/settings/components/admin-actions-card.tsx:40-55). The operator's **plan
-changes** are logged with the company's id (platform_router.py:117-126), so they show in
-the company's log and would not show in the platform's. kk and KS have no platform scope:
-their one admin is the operator, and `/admin/activity` is already the operator's log.
+(frontend features/platform/routes.tsx:5-49, four pages of 648 lines in
+features/platform/pages/), with no navigation of their own (inventory 5f). The company
+admins' log is the kit's `AdminActionLog` with `groupNoun="company"`
+(features/settings/components/admin-actions-card.tsx:40-55). Three operator actions on
+`/platform/*` miss the platform log (ka review 1):
+- the **plan changes** are logged with the company's id (platform_router.py:117-126);
+- **`POST /platform/companies/{id}/admins`** (platform_service.py:327-341) logs its
+  `INVITE` with the company's id (invitation_service.py:121-127);
+- **`PATCH /platform/companies/{id}`** renames or (de)activates a company
+  (platform_router.py:93-105, platform_service.py:176-188) and **logs nothing at all**.
+  The (de)activation is the larger gap: it locks a whole company out.
 
-**Proposal.**
-1. A **`/platform/activity`** page in kastlan: the kit's `AdminActionLog` as it is
-   (`groupNoun="company"`, server-paged, `?target=` as the filter), with the same
-   `logEntry` mapping as admin-actions-card.tsx:19-33. No kit change.
-2. **Rec:** the platform log lists the rows with no company **and** the operator's
-   `plan` rows (a superuser actor), so every action taken on `/platform/*` is in it; the
-   company's log keeps the plan rows too (a company admin should see who changed their
-   plan).
-3. The console gets a way between its pages (inventory 5f). **Rec:** the console becomes
-   one `SettingsLayout` ("Platform", width `7xl`, as `/admin`), sections Overview (§9.3),
-   Companies, Users, Sign-ups, Activity, with `/platform/companies/:id` staying a detail
-   page under Companies. The cheaper alternative is a link row on each page.
+kk and KS have no platform scope: their one admin is the operator, and `/admin/activity`
+is already the operator's log.
 
-**Split.** ui-kit: none. server-kit: none. kastlan: the page, the hook, the filter (S);
-the shell (M, mostly moving the four pages into sections).
+**Settled.**
+1. **The console is ONE `SettingsLayout` "Platform"** (width `7xl`, as `/admin`), sections
+   **Overview** (§9.3), **Companies**, **Users**, **Sign-ups**, **Activity**;
+   `/platform/companies/:id` stays a detail page under Companies. routes.tsx:5-49 becomes
+   the section list as kastlan's `/admin` has it; each page drops its own header and page
+   wrapper, its table and hook code stay (ka review 2: S–M, mostly mechanical).
+2. **Activity** is the kit's `AdminActionLog` as it is (`groupNoun="company"`,
+   server-paged, `?target=` as the filter), with the `logEntry` mapping of
+   admin-actions-card.tsx:19-33.
+3. **Every operator action is stamped `detail.via = "platform"`.** The platform routes
+   pass it on what they log: the plan change, the company-admin invite, and the company
+   PATCH, which gains its rows: `group_rename` (`{from, to}` as KS's team rename, shared
+   with §9.4) and **`group_deactivate` / `group_reactivate`** for `is_active` (new kit
+   actions, §9.7). The platform log reads `company_id IS NULL OR detail->>'via' =
+   'platform'` (`list_actions(company_id=None)`); the company's log keeps its rows as now,
+   so a company admin still sees who changed their plan. "A superuser actor" is not the
+   filter: a superuser can also be a plain admin of their own company (ka review 1).
 
-**For Marcel.** (a) The operator's plan rows in the platform log too? (Rec: yes.) (b) The
-console as a `SettingsLayout` with sections, or one more page? (Rec: the shell.)
+**Split.** server-kit XS: `AdminAction.GROUP_DEACTIVATE` / `GROUP_REACTIVATE`
+(`ConfirmationLevel.NONE`, as `GROUP_RENAME`). ui-kit XS: `AdminActionLog` words them for
+every `groupNoun` (seven languages). kastlan S–M: the shell, the Activity section, the
+`via` stamp and filter, the PATCH's rows.
 
 ### 9.2 "Send a test mail to me" (KS inventory 5.7, §6.14)
 
@@ -359,142 +374,225 @@ console as a `SettingsLayout` with sections, or one more page? (Rec: the shell.)
 `mail_backend` (kk infrastructure/email.py:53-59 `console`/`resend`; ka
 infrastructure/email.py:40-47 adds `smtp`; KS infrastructure/email.py:109-115), and the
 kit's `InvitationsPanel` shows the console notice (src/admin/invitations-panel.tsx:318);
-KS shows its own (frontend features/admin/users-panel.tsx:489). keksdose has the push
+KS shows its own (frontend features/admin/users-panel.tsx:486-490). keksdose has the push
 equivalent: `POST /notifications/test` to the caller's devices
 (adapters/api/notifications_router.py:205-229), in its messaging section's
-`admin-push-test-card` (admin-index.ts:128, admin-page.tsx:1078). kk and KS send through
-server-kit's `ResendClient`/`ConsoleMailer` (mail.py:436-600); kastlan has its own
-transport with SMTP (infrastructure/email.py:54-140). server-kit's `Mailer.send` answers
-only `bool` and logs Resend's error (mail.py:417-433, 593-600).
+`admin-push-test-card` (admin-index.ts:128, admin-page.tsx:1123). Each app sends through
+its **own** `send_email`: kk's wraps server-kit's `ResendClient` with a `Reply-To`, one
+retry and a metric (infrastructure/email.py:62-85); KS's `Mailer` is server-kit's
+`ResendClient`/`ConsoleMailer` (mail.py:436-600), sent after the commit
+(`email.send_after_commit`, infrastructure/email.py:216); kastlan has its own transport,
+plain text from `(subject, text)`, Resend or SMTP (infrastructure/email.py:54-97, SMTP at
+:132-156). All three answer only `bool` and never raise, and **every console path answers
+`True`** (kk email.py:81-85, ka :87-97, server-kit `ConsoleMailer.send` mail.py:465), so
+`sent` alone cannot tell "logged" from "delivered". kastlan's only workaround is
+`POST /platform/users/{id}/mail` to one's own account (platform_router.py:224-234), which
+sends a verification or reset mail and logs an admin action.
 
-**Proposal.**
-1. **`POST /admin/mail/test`** (kastlan: `/platform/mail/test`, point 5), no body: one mail
-   **to the signed-in admin's own address**, never another, in the admin's language.
-   Answers `{sent, mail_backend}`. Refused in a demo; rate-limited (Rec: 3 per 10 minutes
-   per account, server-kit's limiter). Not an `admin_actions` row (no one is acted on).
-2. **server-kit `mail`**: `test_mail_message(locale, *, app_name, backend, sent_at) →
+**Settled.**
+1. **`POST /admin/mail/test`** (kastlan: **`POST /platform/mail/test`**,
+   `require_superuser`, dependencies.py:382), no body: one mail **to the signed-in
+   admin's own address**, never another, in the admin's language. Answers
+   `{sent, mail_backend}`. Refused in a demo; 3 per 10 minutes per account. Not an
+   `admin_actions` row (no one is acted on; kk admin_router.py:141-143 keeps that log for
+   actions on a person).
+2. **Through the app's own `send_email`, awaited inline.** The route calls what real mail
+   goes through, so the test exercises it, and returns its bool; never the after-commit
+   hook (the test writes nothing, and the answer must say whether the mail went; KS
+   review 2). Per app:
+   - **keksdose**: `send_email(…, kind="mail_test")` (email.py:62), so the `Reply-To`
+     (`reply_to_address()`, :45-50), the one retry and the refusal on an empty Resend key
+     (:73-77) all run; `record_email`'s `kind` docstring gains `mail_test`
+     (infrastructure/metrics.py:799-812). The route's own log line never names the
+     admin's address (email.py:15: the label and the log never carry the recipient).
+   - **Kurvenschmiede**: `await mailer.send(message)` in the request, the one inline mail
+     in KS; "mail never raises" (docs/account-rules.md) holds while `Mailer.send` stays
+     `bool`.
+   - **kastlan**: `send_email(to, subject, text, kind="mail_test")` (email.py:54; the
+     kinds are listed at :65); `email_reply_to` applies on its own. A two-line adapter
+     takes server-kit's `MailMessage` to `(subject, text)` (kastlan uses no `MailMessage`
+     today).
+3. **server-kit `mail`**: `test_mail_message(locale, *, app_name, backend, sent_at) →
    MailMessage` (subject "Test mail from {app}", a body naming the transport and the time,
-   seven languages), `MAIL_TEST_KIND = "mail_test"` for the log line, and the answer's
-   model `MailTestResult {sent: bool, mail_backend: str}`. No router factory (as billing's
-   recipes): each app's route is five lines over its own transport.
-3. **ui-kit**: `MailTestCard` (a `SettingsSection` with a sentence, the transport as a chip,
+   seven languages), `MAIL_TEST_KIND = "mail_test"` for the log line and the metric, and
+   the answer's model `MailTestResult {sent: bool, mail_backend: str}`; `MAIL_TEST_LIMIT`
+   (3 per 600 s) for the app's limiter. No router factory (as billing's recipes): each
+   app's route is a few lines over its own transport, and the recipe says "await the
+   send and return its bool".
+4. **ui-kit**: `MailTestCard` (a `SettingsSection` with a sentence, the transport as a chip,
    a "Send a test mail to me" button and the result line: "Sent to a…@example.com. Check
    the inbox." / "The console transport only logs mail; nothing was sent." / "Could not
-   send. The server log has the provider's answer."), labels in seven languages.
-4. **Where:** kk in `messaging`, beside the push test; KS a small own section **"System"**
-   before Activity (KS has no operations section; the overview's tiles are counts, not
-   actions); kastlan in the platform console (§9.1), since the transport is the
-   installation's, not a company's.
-5. **Rec:** only the operator (kk/KS ADMIN, ka superuser). A kastlan company admin gets
-   nothing to do with a transport they can't change.
+   send. The server log has the provider's answer."), labels in seven languages. **The
+   result line reads `mail_backend` first**: with `console` it says "nothing was sent"
+   whatever `sent` is.
+5. **Where.**
+   - **keksdose**: in `messaging`, beside the push test (admin-index.ts:128).
+   - **Kurvenschmiede**: an own section **"System"**, `after: "teams"` in
+     `useAdminSections` (frontend/src/features/admin/admin-catalogue.tsx:26-31), so it lands
+     before Activity and the top bar's search finds it through the same catalogue. It will
+     hold more later (the build, the jobs token's last run). The users panel's console
+     notice (users-panel.tsx:486-490) stays where it is: it explains, at the moment of
+     inviting, why a link is shown instead of mailed. Not on the overview: its tiles are
+     counts that link somewhere.
+   - **kastlan**: in the platform console (§9.1), **for the superuser only**: the
+     transport is the installation's (`KASTLAN_EMAIL_BACKEND`), and a company admin can't
+     change it.
+6. **The limiter** goes beside each app's others: kk's server-kit limiter on the admin
+   router, KS's `AuthLimiters` (infrastructure/security.py:278-296, created in
+   main.py:200), kastlan's beside `mail_limiter` (platform_router.py:233). The demo
+   refusal is declared in KS's `tests/api/test_demo.py`, although a demo never reaches
+   `/admin`.
+7. The answer says only sent / not sent; the provider's error stays in the server log
+   (no secrets on the page).
 
 **Split.** server-kit S (~60 code, ~80 test lines, seven texts). ui-kit S (card, labels,
 showcase). Apps S each (route, card, a test).
-
-**For Marcel.** (a) kastlan: the superuser only, or company admins too? (Rec: the superuser.)
-(b) KS: a "System" section for one card, or the card on the overview? (Rec: System.)
-(c) The answer only says sent / not sent; the provider's error stays in the server log
-(no secrets on the page). Enough? (Rec: yes.)
 
 ### 9.3 The operator's waiting count (ka Q3, §6.14)
 
 **Today.** kastlan's superuser reaches the console through a top-bar `IconButton`
 (top-bar.tsx:178-183) with no count. A deletion request waits on the operator: the
 account is deactivated and flagged (account_service.py:157-200, operator mode) and the
-superuser erases on `/platform/users` (admin_user_service.py:370-391). kastlan's
-`/admin/attention` answers `deletion_requests=None` (admin_attention_service.py:68),
-as §6.2 settled. Sign-up is invitation-only after the first account
-(auth_router.py:348-376); a person with no company creates one (auth_router.py:287-295).
-kk has no superuser and erases on its own (§6.2); KS's one admin already counts deletion
-requests in its badge (attention_service.py:73).
+superuser erases on `/platform/users` (admin_user_service.py:370-391). Erasing needs the
+request set and the account inactive (:370) and deletes the `users` row (:387), so a
+person with `deletion_requested_at` is a person not yet erased. A one-person company is
+flagged with its person (`ManagementCompany.deletion_requested_at`, models/property.py:90;
+account_service.py:162-183), always with exactly one person's request. kastlan's
+`/admin/attention` answers `deletion_requests=None` (admin_attention_service.py:68), as
+§6.2 settled. Sign-up is invitation-only after the first account (auth_router.py:348-376);
+a person with no company creates one (auth_router.py:287-295). kk has no superuser and
+erases on its own (§6.2); KS's one admin already counts deletion requests in its badge
+(attention_service.py:73).
 
-**Proposal.**
-1. **`GET /platform/attention`** → server-kit's `AdminAttention` as it is:
-   `deletion_requests` (persons with `deletion_requested_at`, not yet erased),
-   `users_total` / `users_new_7d` (all real accounts, demo never), `invitations_pending`
-   (the sign-up invitations open), `extra.companies_new_7d`. A superuser session, so it
-   reads across companies (dependencies.py:382-400).
-2. **The badge** on the platform button: **Rec: deletion requests only** (§6.3: only work
-   that waits on this admin). New sign-ups are a tile on the console's overview, not in
-   the badge: a count that no action brings to zero reads as noise.
-3. **ui-kit (XS):** the waiting pill of `AdminMenuRow` (shell/admin-menu.tsx:17-38) exported
+**Settled.**
+1. **`GET /platform/attention`** → server-kit's `AdminAttention` as it is, on the
+   superuser session (`get_superuser_db_session`, dependencies.py:394), so it reads
+   across companies:
+   - `deletion_requests`: users with `deletion_requested_at IS NOT NULL` (persons only);
+   - `users_total` / `users_new_7d`: `users.created_at`, `is_demo` false
+     (models/auth.py:46: demo users are real rows, deleted when stale);
+   - `invitations_pending`: the sign-up invitations, `Invitation.company_id IS NULL`, not
+     accepted, not revoked, not expired (admin_attention_service.py:49-57's predicate with
+     a NULL company);
+   - `extra.companies_new_7d`: companies created in the last 7 days, **the demo company
+     left out** (`settings.demo_company_slug`).
+
+   It never uses the kit's `count_by_status()` (§9.5): on this bypass session that would
+   count every company's feedback.
+2. **The badge** on the platform button: **deletion requests only** (§6.3: only work that
+   waits on this admin). New sign-ups are a tile on the console's overview: a count that
+   no action brings to zero reads as noise.
+3. **Persons only.** Flagged one-person companies are not counted apart: each has exactly
+   one person with a request, so a second count would double it, and the company's fate is
+   decided on that person's row.
+4. **ui-kit (XS):** the waiting pill of `AdminMenuRow` (shell/admin-menu.tsx:17-38) exported
    as `AdminWaitingBadge` for `IconButton`'s `badge` slot (components/icon-button.tsx:301),
    and a `waiting` phrase for the button's accessible name ("Platform, 2 waiting").
-4. The console's overview (§9.1.3) is `AdminOverview` with that answer and the platform's
-   hrefs.
+5. The console's Overview section (§9.1.1) is `AdminOverview` with that answer and the
+   platform's hrefs.
 
 **Split.** ui-kit XS (an export, one label). server-kit none. kastlan S (the endpoint, the
 badge, the overview section).
-
-**For Marcel.** (a) New sign-ups in the badge (Marcel's §6.14 note named them) or only on
-the overview? (Rec: overview only.) (b) Flagged one-person companies
-(`ManagementCompany.deletion_requested_at`, models/property.py:90): count them apart, or
-only the persons? (Rec: persons; the company goes with them.)
 
 ### 9.4 kastlan's company details (inventory-kastlan 3.2, 5i)
 
 **Today.** `/admin/company` has two cards, the document language and the QR-bill account
 (features/settings/admin-catalogue.ts:37-71). `PATCH /company/settings`
 (company_router.py:30-41) takes the language and the account fields only
-(schemas/property.py:32-45); the name is in the answer (:21) but read-only, and was set at
-sign-up or by `POST /auth/companies`. There is no company address apart from the QR
-account's (models/property.py:94-101) and no logo anywhere. Letters sign with the account
-holder or the company name (letter_context.py:146); the financial report prints the name
+(schemas/property.py:32-45); the name is in the answer (:21) but **a company admin cannot
+change it**. It was set at sign-up or by `POST /auth/companies`, and **the superuser can
+already rename it**, through `PATCH /platform/companies/{id}` (platform_router.py:93-105,
+platform_service.py:185-186), **unlogged** (ka review 5). There is no company address apart
+from the QR account's (models/property.py:94-101) and no logo anywhere. Letters take the
+QR account's holder and address as the sender block (letter_context.py:140-150,
+`default_account_holder or company.name`); the financial report prints the name
 (financial_report_pdf_service.py:31, :51). KS renames its teams with a logged
 `group_rename` (team_service.py:224); kastlan logs none.
 
-**Proposal.** **Rec: app-only.** A company's name, address and logo are kastlan's domain
-(its letters, its PDFs); kk's budgets and KS's teams have no address or logo. A
-"Company details" card first in `/admin/company`, on kit parts already there
-(`SettingsSection`, `Form`, `FileDropzone`, `AuthedImage`):
-- **name**: editable by an ADMIN, through the same PATCH, logged as `group_rename`
-  (kit vocabulary, `AdminActionLog` already words it for `company`); the slug stays.
-- **address**: its own fields (street, ZIP, city, country), with "Use for QR bills" as
-  the QR account's default where it is empty, so the two can differ.
-- **logo**: one image, checked with server-kit's `check_upload` and
-  `ensure_decodable_image` (uploads.py:260, :308), stored as kastlan stores documents,
-  shown on letters and PDFs. The larger part (M): storage, the PDF templates, erasure.
+**Settled.** **App-only.** A company's name, address and logo are kastlan's domain (its
+letters, its PDFs); kk's budgets and KS's teams have no address or logo. A "Company
+details" card first in `/admin/company`, on kit parts already there (`SettingsSection`,
+`Form`):
+- **name**: editable by an ADMIN, through the same PATCH, **logged as `group_rename`**
+  (kit vocabulary, `AdminActionLog` already words it for `company`), **on both paths**:
+  this PATCH and the superuser's (§9.1.3, stamped `via: "platform"`). The slug stays.
+- **address**: its own fields (street, ZIP, city, country), **apart from the QR
+  account's**. On a QR bill the creditor must be the account holder, and with a
+  Treuhandkonto that holder is not the Verwaltung, so one address can't serve both. Rule:
+  the letterhead and the sender block use the company address, the QR creditor uses the
+  account's, and each falls back to the other when empty (today's behaviour for existing
+  companies).
+- **logo: later**, when letters need it. Where it will show: every LaTeX document with a
+  sender block (invoice, dunning, lease, rent increase and service-charge PDFs:
+  invoice_pdf_service, dunning_pdf_service, lease_pdf_service, rent_increase_service,
+  service_charge_pdf_service) and the financial report (financial_report_pdf_service.py:31,
+  :51). The plumbing exists (`render_latex_pdf(…, extra_files=…)`, latex_renderer.py:59-62,
+  ships binaries to pdflatex); the templates are the work. Checked then with server-kit's
+  `check_upload` and `ensure_decodable_image` (uploads.py:260, :308), shown in the card
+  with `FileDropzone` and `AuthedImage`.
 
-**Split.** ui-kit none. server-kit none. kastlan M (S without the logo).
-
-**For Marcel.** (a) App-only? (Rec: yes.) (b) The logo now, or name and address first and
-the logo when letters need it? (Rec: name and address in this round, the logo later.)
-(c) The company address apart from the QR account's, or one address? (Rec: apart.)
+**Split.** ui-kit none. server-kit none. kastlan S (name, address, the rename's log rows);
+the logo a later round (M).
 
 ### 9.5 The feedback counts in server-kit (adopt-lines-server.md:18)
 
 **Today.** Every app counts feedback for `/admin/attention` in its own SQL, by the same
 rule (§6.1, §6.4: crash reports in, demo authors out, an erased author's report in):
-- kk: two queries with an outer join to `users` (admin_attention_service.py:56-68, :95-96);
-- ka: one `GROUP BY status` in the company's RLS scope, no demo filter (a demo's reports are
-  in the demo company) (admin_attention_service.py:45-46, :67, :72);
-- KS: a subquery over demo users, three counts (attention_service.py:53-56, :70-72, :84).
+- kk: two queries with an outer join to `users` (`_feedback_count`,
+  admin_attention_service.py:56-68, called at :95-96), OPEN and
+  `VERDICT_STATUSES = AWAITING_STATUSES - {OPEN}` (:35). kk's `feedback` table is global,
+  not RLS-scoped, and only ADMIN reaches `/admin/attention`;
+- ka: one `GROUP BY status` in the company's RLS scope, no demo filter (admin_attention_service.py:45-46,
+  :67, :72): a demo can file only crashes (`DEMO_WRITES`, dependencies.py:294), and the
+  demo company's admin gets `AdminAttention.for_demo` before any count (:42-43);
+- KS: **two** counts, OPEN (attention_service.py:70-72) and `QUEUE_STATUSES` (:84), both
+  with the demo filter `_not_by_a_demo()` (:53-56). KS shows no awaiting-verdict tile.
 
 Each counts a **set** of statuses: OPEN; IN_EVALUATION + NEEDS_LIVE_TEST (kk, ka);
 `QUEUE_STATUSES` (KS). The kit's `FeedbackRepository.inbox(status)` takes no viewer; the
 scope is the request's session (feedback/ports.py:126-142).
 
-**Proposal.** The brief's `count_by_status(status, *, viewer)` fits worse than one GROUP BY:
+**Settled.** One mapping, not the brief's per-status call, and the Protocol change:
 1. **`FeedbackRepository.count_by_status() → Mapping[FeedbackStatus, int]`**: every status's
-   count in one query, in the request's scope (as `inbox`), crash reports in, demo authors
-   out, an erased author's report in. No `viewer` (Rec), as `inbox` has none.
+   count in one `GROUP BY status`, in **the request's scope** (as `inbox`), crash reports
+   in, demo authors out, an erased author's report (`user_id IS NULL`) in. No `viewer`, as
+   `inbox` has none. The docstring says "the request's scope", not "the company": on a
+   superuser/bypass session (kastlan's `app.bypass_rls`) it counts every company, so
+   `/platform/attention` (§9.3) must not use it.
+   - kastlan: the request's session (`get_db_session`) sets `app.current_company`;
+     `feedback` has forced RLS and the ORM company filter applies on top, so the count
+     sees exactly what `inbox` sees (feedback_repository.py:72-81).
+   - keksdose: the whole table, as today (adapters/persistence/feedback_repository.py,
+     `inbox` at :56).
+   - Kurvenschmiede: `FeedbackRepository.inbox` (feedback_service.py:343) already asks
+     nothing about the caller; `_not_by_a_demo()` moves into the repository from
+     attention_service.py:53-56.
 2. **`feedback_attention(counts) → FeedbackAttention(to_triage, awaiting_verdict,
-   released_for_work)`**, from the kit's `OPEN`, `AWAITING_STATUSES - {OPEN}` and
-   `QUEUE_STATUSES` (feedback/enums.py:81-98), so a status the kit adds joins every app's
-   tile. The app passes them to `AdminAttention.of`.
+   released_for_work)`**, from the kit's `OPEN`, **`AWAITING_STATUSES - {OPEN}`** (kk's
+   `VERDICT_STATUSES` exactly) and `QUEUE_STATUSES` (feedback/enums.py:81-98), so a status
+   the kit adds joins every app's tile. The app passes them to `AdminAttention.of`.
+   - kk: the two `_feedback_count` calls become one; `released_for_work` is new and read
+     by no tile yet.
+   - ka: drops about 4 lines; keeps its `AWAITING_VERDICT` key (:33-34), filled from
+     `awaiting_verdict`.
+   - KS: `released_for_work` is exactly today's queue tile (:68, :84). The feedback loop's
+     queue (feedback_loop.py:103) is `to_triage ∪ released_for_work` on purpose and keeps
+     its own tuple. **KS adds the awaiting-verdict tile** (Marcel): IN_EVALUATION and
+     NEEDS_LIVE_TEST wait on KS's one admin (DONE is the admin's, KS CLAUDE.md "The
+     feedback loop"), XS.
 3. `InMemoryFeedbackRepository` gains it (feedback/testing.py:158).
 
 Adding a method to the Protocol makes each app's repository fail its type check until
 it is added: a 0.15 adopt line, about ten lines per app, and the attention services
-lose 10–25 lines each.
+lose 4–25 lines each.
 
 **Split.** server-kit S (~30 code, ~60 test lines). ui-kit none. Apps XS each (KS's
-repository is `feedback_service.py:343`'s class, kk/ka `adapters/persistence/feedback_repository.py`).
-
-**For Marcel.** (a) One mapping (Rec) or the brief's per-status call? (b) Worth a Protocol
-change for this saving? (Rec: yes, it moves the demo/crash rule into one tested place.)
+repository is `feedback_service.py:343`'s class, kk/ka `adapters/persistence/feedback_repository.py`),
+KS's third tile XS.
 
 ### 9.6 For the reviews
+
+Answered in audits/round-046/reviews.md; §9.7 says where each answer went.
 
 - **kastlan:** §9.1 (a), (b); §9.2 (a): who sends the test mail; §9.3 (a), (b); §9.4 (b),
   (c): the address and the logo, and where the logo shows; §9.5: your repository's scope
@@ -504,3 +602,40 @@ change for this saving? (Rec: yes, it moves the demo/crash rule into one tested 
   fits?
 - **Kurvenschmiede:** §9.2 (b): a "System" section, or elsewhere; §9.5: does `released_for_work`
   from `QUEUE_STATUSES` match the loop's queue (feedback_loop.py:103 adds OPEN)?
+
+### 9.7 The reviews (2026-10-19) and Marcel's settle
+
+The draft (ui-kit `870b916`) was reviewed on 2026-10-19 by kastlan (at `feat/kit-0.44`
+6c2a0c4), keksdose (keksdose-83, at `feat/feedback-loop-80-424-434`) and Kurvenschmiede
+(at `main` b54c16e). Marcel settled it the same day in the ui-kit session ("As
+reviewed"). Every correction was checked against the app's code before it went in. Where
+each point went:
+- **Marcel:** the console as one `SettingsLayout` → §9.1.1; operator actions stamped
+  `via: "platform"` and the platform log filtered on it → §9.1.3; the test mail through
+  each app's own `send_email` → §9.2.2; the badge deletion requests only, persons only,
+  the demo company out of `companies_new_7d` → §9.3; the name edit logged, the address
+  apart, the logo later → §9.4; one mapping and the Protocol change, KS adds the
+  awaiting-verdict tile → §9.5.
+- **kastlan:** `/platform/actions` is the source; the plan rows, the company-admin
+  invite and the unlogged company PATCH join it by `via`, not by a superuser actor →
+  §9.1 Today, §9.1.3; the (de)activation logged as `group_deactivate` /
+  `group_reactivate` (the kit has no group-activation action yet; added here, rather
+  than reusing the person's `deactivate`, so the log words it for the company) → §9.1
+  Split; the shell S–M → §9.1.1; the superuser only, the transport reports enough, the
+  console answers `True`, the `MailMessage` adapter, the limiter beside `mail_limiter`,
+  the `/platform/users/{id}/mail` workaround → §9.2; the SMTP send at :132-156 → §9.2
+  Today; the counts' predicates, the demo company out → §9.3.1; persons only → §9.3.3;
+  "Today" wrong: the superuser renames, unlogged → §9.4 Today, `group_rename` on both
+  paths → §9.4; the Treuhandkonto reason and the fallback rule → §9.4; where the logo
+  will show → §9.4; the RLS scope holds, the bypass caveat → §9.5.1.
+- **keksdose:** `messaging` beside the push test, `POST /admin/mail/test` → §9.2.5; through
+  its own `send_email` (Reply-To, the retry, the empty-key refusal, `record_email` kind
+  `mail_test`, no recipient in the log) → §9.2.2; the push card's line now :1123 → §9.2
+  Today; the helper fits with no change in the tiles, the table is global → §9.5; nothing
+  wanted from §9.1/§9.3 (a job run by hand stays an operational log line). "Today"
+  otherwise right.
+- **Kurvenschmiede:** "System" with `after: "teams"`, the console notice stays → §9.2.5;
+  the test mail awaited inline, not after the commit; the card reads `mail_backend` →
+  §9.2.2, §9.2.4; the limiter in `AuthLimiters`, the demo declaration → §9.2.6;
+  "Today" wrong: two counts, not three → §9.5 Today; `released_for_work` is today's tile,
+  the loop keeps its tuple, `_not_by_a_demo()` moves into the repository → §9.5.

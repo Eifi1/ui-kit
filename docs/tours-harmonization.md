@@ -1,7 +1,7 @@
 # Guided tours — harmonisation plan
 
 **Settled 2026-10-17** (Marcel, in the ui-kit session, after the three app reviews in
-audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. §9 (round 0.44) settled 2026-10-17 with §9.6. §10 (round 0.45) is a DRAFT for review.
+audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. §9 (round 0.44) settled 2026-10-17 with §9.6. §10 (round 0.45) settled 2026-10-19 with §10.6.
 
 Marcel, in kastlan's session, 2026-10-17, relayed by kastlan-d1: "Massively increase the
 number of tours and also have them grouped and similar filtering as in keksdose. Is that
@@ -437,13 +437,18 @@ The three 0.44 adoptions found no kit fix, only these guide and test notes
    left open across the 0.43 deploy. keksdose accepts it in code
    (`shared/state/tour-progress.ts:27-30`); the window closes once no pre-0.43 bundle
    runs. The kit changes nothing; a new storage key is the only full fix (not taken).
+   **Accepted** (Marcel, 2026-10-19, round 0.45): no code, in the kit or the apps.
 
 ## 10. Tour progress on the account
 
-**DRAFT for review (round 0.45).** Parked on 2026-10-17 ("on the account later is welcome",
-KS, audits/round-044/tours-reviews.md:64). §6.2 settled progress on the device; this
-section adds an optional account record behind the same hook. An app that does nothing
-stays exactly as in 0.44.
+**Settled 2026-10-19 (round 0.45)** (Marcel: "As reviewed", after the three app reviews in
+audits/round-046/reviews.md; §10.6 records where each answer went, and the answers and
+corrections are folded into §10.1–§10.4). Built for **ui-kit 0.45 / server-kit 0.15**.
+Parked on 2026-10-17 ("on the account later is welcome", KS,
+audits/round-044/tours-reviews.md:64). §6.2 settled progress on the device; this section
+adds an optional account record behind the same hook. **Kurvenschmiede and kastlan move
+to the account; keksdose stays on the device.** An app that does nothing stays exactly as
+in 0.44.
 
 ### 10.1 Where each one stands (2026-10-19)
 
@@ -460,35 +465,59 @@ stays exactly as in 0.44.
   `text_size`, `contrast`: backend/keksdose/domain/models/user.py:71, :157-158), written
   by `PATCH /auth/me` with server-kit's `ProfileUpdate` (domain/schemas/auth.py:272).
   keksdose is local-first: a Dexie mirror and an outbox reconciled through `/sync`
-  (frontend/src/main.tsx:15-18, :85; shared/offline/write.ts), and the service worker
-  never caches `/api/*` (src/sw.ts:57). On a 401 it keeps unsynced writes, and on sign-out
-  or a different sign-in it forgets the previous account (shared/state/auth-store.ts:38-47,
-  :83-85). The review: account sync is "low value next to the risk of a migration"
+  (frontend/src/main.tsx:15-18, :85; shared/offline/write.ts), with the sync chip
+  (`SyncStatusIndicator`, "N waiting") and a logout guard that warns before discarding
+  unsynced writes (shared/state/auth-store.ts:38-47); the service worker never caches
+  `/api/*` (src/sw.ts:57). On a 401 it keeps unsynced writes, and on sign-out or a
+  different sign-in it forgets the previous account (auth-store.ts:38-47, :83-85). Its
+  in-app privacy list "What we can still see" (`privacy.proof_see_*`: ids and routing,
+  row counts and change times, blind equality tokens) is meant to be exhaustive. The
+  review: account sync is "low value next to the risk of a migration"
   (tours-reviews.md:39).
 - **kastlan**: one device key for every account, `kastlan.tours.completions`, with
-  `fromIdList` (frontend/src/features/tours/use-tours.tsx:19-31). It **registers the key
-  with the device reset** as a "view" (:27), although settings §11.2.2 lists "tours done"
-  under what a reset never clears. Preferences are columns on `User` (`text_size`,
+  `fromIdList` (frontend/src/features/tours/use-tours.tsx:19, :23-24). Production runs
+  v0.11.0, where the record is still the old id list: ids with no dates, for a handful of
+  live users. It **registers the key with the device reset** as a "view"
+  (use-tours.tsx:26-27, imports :7-8), so "Reset this device's settings" wipes the tours,
+  although settings §11.2.2 lists "tours done" under what a reset never clears. One
+  `logout()` (features/auth/stores/auth-store.ts:68-80) serves four callers: the sign-out
+  button (app/top-bar.tsx:104), the sessions card (settings/components/sessions-card.tsx:38),
+  the account deletion (delete-account-card.tsx:25) and the session-ended hook on a
+  refused refresh (auth-store.ts:170-174). It already treats the device as shared (it
+  drops the account language, the appearance and the last page "so the next person on
+  this device does not start in this account's…") and keeps what waits to be sent for its
+  owner (the handover outbox, :71-72). Preferences are columns on `User` (`text_size`,
   `contrast`: kastlan/domain/models/auth.py:57-61) through `PATCH /auth/me`
   (adapters/api/auth_router.py:236-247). Demo accounts are throwaway and read-only
-  (models/auth.py:44-46).
+  (models/auth.py:44-46); every demo write outside `DEMO_WRITES` is refused at the
+  dependency (infrastructure/dependencies.py:291-310, 403 `demo_read_only`). The backend
+  suite runs on Postgres.
 - **Kurvenschmiede**: a key **per account**, `kurvenschmiede.tours:<id>` (`"visitor"`
-  signed out), because bench PCs are shared (frontend/src/features/tours/app-tours.ts:27-29;
-  shared/lib/storage-keys.ts:79-83). Kind `never` for the device reset (:150-151), and its
-  own privacy-policy line "tours" (:114). The provider follows the account's key
-  (features/tours/app-tour-provider.tsx:16-31). Sign-out clears the query cache and the last
-  page, not the tour keys (shared/state/auth-store.ts:16-17, :69), so every engineer's
-  record stays on the PC. Preferences are columns on `users` (backend/kurvenschmiede/domain/
-  models/user.py:138-139), `PATCH /auth/me` (adapters/api/auth_router.py:227).
+  signed out, the public pages' tours only), because bench PCs are shared
+  (frontend/src/features/tours/app-tours.ts:27-29; shared/lib/storage-keys.ts:79-83). Kind
+  `never` for the device reset (:150-151), and its own privacy-policy line "tours" (:114).
+  The provider follows the account's key (features/tours/app-tour-provider.tsx:16-31).
+  KS has **one** `clear()` for every end of a session, a 401 nothing could renew included
+  (shared/state/auth-store.ts:64-73); it clears the tokens, the query cache and the last
+  page, not the tour keys, so every engineer's record stays on the PC. Preferences are
+  columns on `users` (backend/kurvenschmiede/domain/models/user.py:132-139),
+  `PATCH /auth/me` (adapters/api/auth_router.py:227). KS's refusals are coded
+  (`domain/refusals.py`, each with a row in `tests/api/test_refusals.py` and a sentence in
+  seven catalogues), and `tests/api/test_demo.py` makes every route declare its demo
+  stance. KS is online-only (Marcel, 2026-10-19); its backend suite runs on Postgres.
 
-### 10.2 Decisions proposed
+### 10.2 Decisions (settled)
 
 1. **A table per app, rows per tour; not a column on `users`.** `tour_completions
    (user_id FK users ON DELETE CASCADE, tour_id varchar(64), completed_at timestamptz
    NULL, PRIMARY KEY (user_id, tour_id))`. One row per tour lets two devices write
-   different tours without a read-modify-write of one JSON value, and erasure is the
-   cascade. **Rec:** this, not KS's `tours_completed` column idea; and not on `/auth/me`,
-   which every page reads.
+   different tours without a read-modify-write of one JSON value (and, in KS, without an
+   `If-Match` for its version rule on shared rows); erasure is the cascade, the export
+   one select. Not on `/auth/me`, which every page reads. KS withdrew its
+   `tours_completed` column idea. The progress belongs to the person, not a company: no
+   `company_id`, outside kastlan's forced RLS, so a person in two companies has one
+   record. In KS the columns stay plaintext (an id and a date are keys, not content). The
+   migration imports nothing from the app.
 2. **The endpoint, under the settings rule (settings §6.1):**
    - `GET /tours/progress` → `{completed: {[id]: ISO | ""}}`, the stored shape of §9.6.6
      on the wire too (`""` = completed without a date; no `null`, so the PATCH rule's
@@ -501,17 +530,27 @@ stays exactly as in 0.44.
      500 tours per account (422 `tour_progress_full`). The server knows no tour list, so it
      takes any well-formed id.
    - **Auth:** the session's own account only; no admin route reads or writes someone
-     else's. A demo session is refused with the app's demo guard (403), as feedback's deps
-     take it. The app's limiter and CSRF as for its other writes.
+     else's. A demo session is refused by the app's own demo gate (403), which the
+     router's `guards` pass through: kastlan's `DEMO_WRITES` gate already refuses the
+     PATCH (`demo_read_only`), KS declares the route `not_in_the_demo` (403
+     `demo_refused`) in `tests/api/test_demo.py`. A demo session passes no `account` on
+     the client anyway (decision 6). The app's limiter and CSRF as for its other writes.
+   - **The two refusal codes** are server-kit constants. An app with coded refusals (KS)
+     maps each to its catalogue: a row in `tests/api/test_refusals.py` and a sentence in
+     all seven catalogues.
 3. **The merge rule: per tour, the later completion wins.** For each sent id: an instant
    beats `""`, `""` beats no row, and between two instants the later is kept; an instant in
-   the future is stored as now. **Rec:** the later, not the first, because it keeps §8
-   right without the server knowing `updated`: a tour is done (`isTourDone`) on the account
-   when it is done on any device, and a completion taken again after an update replaces
-   the old one, as `complete(tour)` does on the device (§8.1). The cost: two devices that
-   each took a tour for the first time show the later date. The merge runs in Python in the
-   kit's service, not as `GREATEST` (Postgres ignores a NULL there, SQLite's `max()` does
-   not, and the apps' tests run SQLite). A forget is a delete; a completion sent later
+   the future is stored as now. The later, not the first, keeps §8 right without the
+   server knowing `updated`: a tour is done (`isTourDone`) on the account when it is done
+   on any device, and a completion taken again after an update replaces the old one, as
+   `complete(tour)` does on the device (§8.1). All three cards' "Completed on" read as when
+   the tour was last taken (kastlan formats it with the kit's `formatDate`). The cost: two
+   devices that each took a tour for the first time show the later date. The merge runs
+   in Python in the kit's service, not as `GREATEST`, so the one rule is tested once in
+   the kit and `InMemoryTourProgressStore` and every backend agrees. (KS's and kastlan's
+   suites run on Postgres, so the SQL difference, Postgres's `GREATEST` ignoring a NULL
+   where SQLite's `max()` does not, matters only to keksdose's SQLite tests and to the
+   in-memory store; it is not the reason.) A forget is a delete; a completion sent later
    (an offline device) brings the tour back. Accepted: it was taken.
 4. **The device record becomes the account's cache.** With an account, the hook reads the
    device key as today, so the page paints at once and offline; it loads the account on
@@ -522,29 +561,52 @@ stays exactly as in 0.44.
    with no answer (offline, 5xx, 401) keeps it; a 403 or 422 drops it and logs.
    `awarded` stays the device's answer against the cache, so the provider and §9.6.2 do
    not change (two devices both offline may each toast; the points tile counts the
-   record, so no points are counted twice).
+   record, so no points are counted twice). **The pending record is not the app's
+   outbox:** it stays out of any "N waiting" count and any sign-out guard on purpose
+   (losing a tour mark is acceptable), in keksdose and in kastlan once it is local-first
+   (local-first §1 states the same).
 5. **Migration of today's records.** A device key never synced (no `:pending` with
    `synced: true`) is uploaded whole on its first load, by the merge rule.
    - KS: its keys are per account already, so the record goes to its owner exactly.
-   - keksdose and kastlan: the account mode needs a key per account (decision 6). The old
-     device-wide key is named as `account.adopt: {storageKey, migrate}`: read once through
-     its `migrate`, uploaded to **the first account that signs in on that device**, then
-     removed, so no second account gets it.
+   - kastlan: the account mode needs a key per account (decision 6), and **the old
+     device-wide record is DROPPED, not adopted**: office PCs may be shared (a
+     Verwaltung's reception or part-time desk), giving one person another's marks is
+     worse than losing a few, the production record is ids without dates, and every tour
+     can be taken again. The kit's option is **`adopt: {storageKey, discard: true}`**:
+     on the first load of an account key, the kit removes `adopt.storageKey` from
+     `localStorage` and drops its in-memory snapshot (its readers are told), and uploads
+     nothing. Removing an absent key is a no-op, so it runs on every first load.
+   - `adopt: {storageKey, migrate}` (without `discard`) is the other form, kept for an app
+     whose device is never shared: the old key is read once through its `migrate`,
+     uploaded to **the first account that signs in on that device**, then removed, so no
+     second account gets it. No app takes it in 0.45 (keksdose stays on the device).
+   - One `adopt` option, not a separate `forgetDeviceRecord(key)`: the kit knows the old
+     key in both forms, so the dev warning (decision 6) still catches an account key
+     equal to it.
 6. **Sign-out and the shared PC.** With an account, the key must be per account (a prefix
    plus the user id, as §9.5 and KS have it); in development the kit warns when the
-   account's key equals `adopt.storageKey`. On sign-out the app calls
-   `signOutTourProgress(storageKey)`: it tries to send the pending record (2 s), then
-   removes the cache and the pending record, so nothing of the person's progress stays on
-   a shared PC (better than KS today, where each engineer's record stays). A 401's clear
-   that keeps the session's data for the same person (keksdose's `wipeMirror: false`) does
-   not call it. Signed out, and in a demo, no `account` is passed: the device record works
-   as in 0.44 (KS's `visitor` key).
-7. **Offline (keksdose).** No outbox entry and no `/sync` entity: progress is the
-   account's, not the budget's, and the pending record is the kit's own small outbox.
-   `/tours/progress` must not be answered by keksdose's local API host (it is not one of
-   its routes), so offline the request fails and the pending record waits for `online`
-   or the next load. Several tabs may send the same pending record; the merge makes that
-   harmless.
+   account's key equals `adopt.storageKey`. On every end of a session the app calls
+   **`signOutTourProgress(storageKey)`**: it removes **the cache only** (the device key
+   and the kit's in-memory snapshot, readers told), synchronously and with no request,
+   and **keeps `<storageKey>:pending`**. The pending record sits under the per-person key,
+   so nobody else on the PC reads it; it holds tour ids and dates only (the class of
+   kastlan's handover outbox, which it already leaves for its owner) and goes out on that
+   person's next sign-in. So the call is safe on every path, a 401 included: kastlan puts
+   it in `logout()` itself (auth-store.ts:68-80, all four callers), KS in its one
+   `clear()` (auth-store.ts:64-73), and **a 401 no longer drops an unsent completion**
+   (KS's case, where the 2 s send of the draft would fail with the token gone). What
+   stays on a shared PC after a sign-out: at most one person's unsent ids and dates under
+   their own key, never a readable record (better than KS today, where each engineer's
+   whole record stays). A pending record whose owner never signs in again stays until a
+   browser clean. Signed out, and in a demo, no `account` is passed: the device record
+   works as in 0.44 (KS's `visitor` key).
+7. **Offline (keksdose, should it ever move).** No outbox entry and no `/sync` entity:
+   progress is the account's, not the budget's, and the pending record is the kit's own
+   small outbox. `/tours/progress` must not be answered by keksdose's local API host (it
+   is not one of its routes), so offline the request fails and the pending record waits
+   for `online` or the next load. Several tabs may send the same pending record; the
+   merge makes that harmless. keksdose's logout guard (auth-store.ts:38-47) and sync chip
+   leave the pending record out on purpose (decision 4).
 8. **The reset rules.**
    - §8 (an updated tour) is unchanged and stays on the client: the server stores dates
      only, and decision 3 keeps "done anywhere" true. Nothing is deleted by an update,
@@ -553,35 +615,54 @@ stays exactly as in 0.44.
    - "Reset this device's settings" (settings §11) never writes the account (§11.2). With
      an account, `resetTourProgress(key)` clears the cache only; the pending record stays
      ("anything waiting to be sent", §11.2.2) and the next load refills the cache.
+   - **Tour progress is never registered with the device reset** (settings §11.2.2:
+     "tours done" is never cleared). kastlan drops its registration (use-tours.tsx:26-27
+     and the imports :7-8) in either mode; nothing else reads it.
 9. **Export and erasure.** Each app's account export gains `tour_progress: [{tour_id,
-   completed_at}]` (by `tour_id`, `completed_at` null for `""`); erasure is the cascade.
+   completed_at}]` (by `tour_id`, `completed_at` null for `""`); erasure is the cascade
+   (kastlan's erasure deletes the `users` row, admin_user_service.py:387).
+10. **keksdose stays on the device**, in 0.45 and after unless Marcel asks. Two reasons:
+    - **Privacy:** "which features this person learned, and when" is a new category on
+      the exhaustive "What we can still see" list: usage data tied to the account, not
+      routing, and unlike `locale`/`text_size` nothing the server acts on. Moving it would
+      need a new `proof_see_*` line in four languages, a privacy-policy line, the export
+      key, and arguably leaving it off while a household is Private: a lot of promise
+      surface for a points tile.
+    - **A second outbox:** the kit's pending record would be a queue outside `/sync`, the
+      sync chip and the logout guard (decision 7).
 
 ### 10.3 What each kit ships
 
 - **server-kit 0.15, `eifi1_server_kit.tours`.** Layer 1: `TourProgressResponse`,
   `TourProgressPatch`, `TOUR_ID_PATTERN`, `TOUR_PROGRESS_LIMIT` (500), `merge_completions
   (stored, patch, *, now)` → the rows to write, the ids to delete and the answer (pure),
-  the two refusals. Layer 2: the port `TourProgressStore` (`completions(user_id)`,
-  `write(user_id, upserts, deletes)`), `TourProgressService`, `tour_progress_router(
-  TourProgressDeps(store, current_user_id, guards))` (the `fastapi` extra; the kit never
-  commits) and `testing.InMemoryTourProgressStore`. **M** (~250 code, ~400 test lines).
+  the two refusals (`TOUR_PROGRESS_CONFLICT = "tour_progress_conflict"`,
+  `TOUR_PROGRESS_FULL = "tour_progress_full"`). Layer 2: the port `TourProgressStore`
+  (`completions(user_id)`, `write(user_id, upserts, deletes)`), `TourProgressService`,
+  `tour_progress_router(TourProgressDeps(store, current_user_id, guards))` (the `fastapi`
+  extra; the kit never commits; `guards` pass the app's demo refusal through) and
+  `testing.InMemoryTourProgressStore`. **M** (~250 code, ~400 test lines).
 - **ui-kit 0.45.** `UseTourProgressOptions` gains `account?: {load, save, adopt?}`: `load()`
   is the app's `GET`, `save(body)` its `PATCH`, each returning the parsed answer, as
-  `useAccountAppearance`'s `save` does. Remembered per key like `migrate` (the first one
-  wins), so it is defined once at module level and the provider needs nothing new.
-  `signOutTourProgress(storageKey)` beside `resetTourProgress`. `completeTour` stays a
-  device write (tests and seeds), marked pending when the key has an account. Without
-  `account`, 0.44's behaviour byte for byte (the existing tests stay). **M**.
+  `useAccountAppearance`'s `save` does; `adopt` is `{storageKey, migrate?}` or
+  `{storageKey, discard: true}` (decision 5). Remembered per key like `migrate` (the first
+  one wins), so it is defined once at module level and the provider needs nothing new.
+  `signOutTourProgress(storageKey)` beside `resetTourProgress`: the cache only, the
+  pending record kept (decision 6). `completeTour` stays a device write (tests and seeds),
+  marked pending when the key has an account. Without `account`, 0.44's behaviour byte
+  for byte (the existing tests stay). **M**.
 
 ### 10.4 Per app
 
 | App | Change | Size |
 |---|---|---|
-| Kurvenschmiede | Asked for it. Table + migration, a store adapter, mount the router, demo guard; `account` in `tourProgressOptions` (app-tours.ts:27, key unchanged); `signOutTourProgress` in `clear()` (auth-store.ts:69); export key in account_export.py:125; the privacy line "tours" reworded (a copy of the account's, removed at sign-out) in 7 languages; the kind stays `never`. | S–M |
-| kastlan | Table, store, router, demo guard; a key per account `kastlan.tours.completions:<id>` with `adopt: {storageKey: "kastlan.tours.completions", migrate: fromIdList}` (use-tours.tsx:19-31); sign-out call; export (account_router.py:102). Separately, its device-reset registration (use-tours.tsx:27) contradicts settings §11.2.2: drop it, in either mode. | S–M |
-| keksdose | **Rec: stays on the device in 0.45** (its review, tours-reviews.md:39). If it moves: a key per account with `adopt` of `keksdose-tour-progress` through `fromZustand`, `signOutTourProgress` in `forgetPreviousAccount` (auth-store.ts:47) only, never on the 401 path; export in `build_export` (account_export_service.py:404); a check that the local API host does not answer `/tours/progress`. | 0 (or M) |
+| Kurvenschmiede | Asked for it. Table + migration (plaintext columns, imports nothing), a store adapter, mount the router; the demo declaration `not_in_the_demo` (403 `demo_refused`) in `tests/api/test_demo.py`; `tour_progress_conflict` and `tour_progress_full` as coded refusals (`domain/refusals.py`, a row each in `tests/api/test_refusals.py`, a sentence in all seven catalogues); `account` in `tourProgressOptions` (app-tours.ts:27, key unchanged, no `adopt`); `signOutTourProgress` in `clear()` (auth-store.ts:64-73, the 401 path included); export key in account_export.py:125; the privacy line "tours" (storage-keys.ts:114) reworded (a copy of the account's, removed at sign-out) in 7 languages; the kind stays `never` (:150-151). | S–M |
+| kastlan | Table (no `company_id`, outside RLS), store, router (the `DEMO_WRITES` gate refuses a demo's PATCH as it is); a key per account `kastlan.tours.completions:<id>` with `adopt: {storageKey: "kastlan.tours.completions", discard: true}` (use-tours.tsx:19, :23-24: the old record is dropped, not adopted); `signOutTourProgress` in `logout()` itself (auth-store.ts:68-80); export (`GET /me/export`, account_router.py:101-102). In either mode: drop the device-reset registration (use-tours.tsx:26-27 and its imports :7-8). | S–M |
+| keksdose | **Stays on the device** (decision 10). Nothing in 0.45. If it ever moves: a key per account with `adopt: {storageKey: "keksdose-tour-progress", migrate: fromZustand}`, `signOutTourProgress` in `forgetPreviousAccount` (auth-store.ts:47), the pending record left out of the sync chip and the logout guard, a `proof_see_*` line, the privacy-policy line, export in `build_export` (account_export_service.py:404), a check that the local API host does not answer `/tours/progress`. | 0 |
 
 ### 10.5 For the reviews
+
+Answered in audits/round-046/reviews.md; §10.6 says where each answer went.
 
 - All: does a table per app fit, or should it be an account-settings JSON value (KS's
   alternative)? Is "the later completion wins" right for your cards' "Completed on"?
@@ -591,3 +672,33 @@ stays exactly as in 0.44.
   device record" would give one person another's marks? Then drop the old record instead.
 - keksdose: stay on the device? If not, does tour progress on the server fit privacy
   mode's promise (ids and dates in plain text, like `locale`)?
+
+### 10.6 The reviews (2026-10-19) and Marcel's settle
+
+The draft (ui-kit `870b916`) was reviewed on 2026-10-19 by kastlan (at `feat/kit-0.44`
+6c2a0c4), keksdose (keksdose-83, at `feat/feedback-loop-80-424-434`) and Kurvenschmiede
+(at `main` b54c16e). Marcel settled it the same day in the ui-kit session ("As
+reviewed"). Every correction was checked against the app's code before it went in. Where
+each point went:
+- **Marcel:** KS and kastlan use the account table, keksdose stays on the device →
+  §10 head, decision 10; kastlan drops its old record through `adopt: {storageKey,
+  discard: true}` → decision 5, §10.3; `signOutTourProgress` removes the cache only and
+  keeps `:pending` → decision 6; the later completion wins → decision 3.
+- **kastlan:** the table, no company, the cascade → decision 1, decision 9; its suite on
+  Postgres too → decision 3; shared office PCs, `logout()` already treats the device as
+  shared, drop rather than adopt (a kit option that still lets the dev warning know the
+  old key) → §10.1, decision 5; the device-reset registration (use-tours.tsx:26-27,
+  imports :7-8) dropped in either mode, settings-harmonization.md's stale path fixed →
+  decision 8, §10.4; one `logout()` with four callers, keep the pending record for its
+  owner → §10.1, decision 6; the demo already refused by `DEMO_WRITES` → decision 2;
+  the row's `adopt` replaced and the reset line added → §10.4; the pending record out
+  of local-first's "N waiting" and sign-out guard → decision 4.
+- **keksdose:** stay on the device, privacy list and second-outbox reasons → decision 10,
+  decision 7; the table right, the later completion right → decisions 1, 3; §10.1's
+  paragraph accurate.
+- **Kurvenschmiede:** the table, KS's alternative withdrawn, plaintext columns, nothing
+  imported → decision 1; the later completion right → decision 3; removing the cache on
+  the bench PCs right, one `clear()` for every end of a session including a 401 →
+  §10.1, decision 6 (the 401 loss it pointed out is gone with the pending record kept);
+  "the apps' tests run SQLite" wrong for KS → decision 3; the demo declaration, the coded
+  refusals, the privacy line at storage-keys.ts:114 → decision 2, §10.4.
