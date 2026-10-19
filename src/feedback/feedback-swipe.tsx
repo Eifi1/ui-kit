@@ -1,7 +1,7 @@
 import { Ban, Check, ChevronsRight } from "lucide-react";
 import type { SwipeAction } from "../components/swipeable-row";
 import type { MobileSwipeActions } from "../components/data-table";
-import { nextFeedbackStatus, type FeedbackStatus } from "./feedback-vocabulary";
+import { nextFeedbackStatus, visibleFeedbackStatuses, type FeedbackStatus } from "./feedback-vocabulary";
 import type { FeedbackStatusLabels } from "./feedback-labels";
 import type { FeedbackStatusChange, FeedbackStatusRow } from "./feedback-status-undo";
 
@@ -89,9 +89,12 @@ function panel(
   { change, labels }: FeedbackSwipeOptions,
 ): SwipeAction {
   const onCommit = () => change(row, target);
+  // `id`: the binding's own (0.46, dev#598) — DataTable's desktop column tells the
+  // actions apart by it, and `feedbackSwipeOmitShown` reads the target from it.
   switch (id) {
     case "advance":
       return {
+        id,
         onCommit,
         label: labels[target],
         icon: <ChevronsRight className="size-4" aria-hidden />,
@@ -99,6 +102,7 @@ function panel(
       };
     case "done":
       return {
+        id,
         onCommit,
         label: labels.DONE,
         icon: <Check className="size-4" aria-hidden />,
@@ -106,6 +110,7 @@ function panel(
       };
     case "wont_do":
       return {
+        id,
         onCommit,
         label: labels.WONT_DO,
         icon: <Ban className="size-4" aria-hidden />,
@@ -162,4 +167,26 @@ export function feedbackSwipePlan(
   const end = side(binding.end);
   if (start.length === 0 && end.length === 0) return null;
   return { start, end };
+}
+
+/**
+ * For DataTable's `desktopSwipeActions.omit` beside the kit's status cell (0.46, keksdose
+ * dev#598 item 3): `true` for a planned action whose target status the cell already
+ * offers as its own icon — {@link visibleFeedbackStatuses}, the next and the previous step
+ * and the off-chain verdicts — so the desktop column adds only what the cell lacks ("Done"
+ * where DONE is more than one step away). Read from the action's `id` and the row, never
+ * from the translated label; an action without one of {@link FEEDBACK_SWIPE_ACTIONS} as its
+ * id (an app's own) is kept.
+ *
+ * ```tsx
+ * <DataTable
+ *   mobileSwipeActions={(row) => feedbackSwipePlan(binding, row, options)}
+ *   desktopSwipeActions={{ omit: feedbackSwipeOmitShown, name: (row) => row.title }}
+ * />
+ * ```
+ */
+export function feedbackSwipeOmitShown(action: SwipeAction, row: FeedbackStatusRow): boolean {
+  if (action.id === undefined) return false;
+  const target = targetOf(action.id, row.status);
+  return target !== null && visibleFeedbackStatuses(row.status).includes(target);
 }

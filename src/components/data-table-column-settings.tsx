@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { Tooltip } from "./tooltip";
 import type { DataTableLabels } from "./data-table-labels";
-import { ROW_ACTIONS_KEY } from "./data-table-row-actions";
+import { isTableOwnColumn } from "./data-table-row-actions";
 import { columnLabel } from "./data-table-shared";
 import type { DataTableColumn } from "./data-table";
 
@@ -101,7 +101,7 @@ export function ColumnSettingsPanel<T>({
           </button>
           <div className="flex flex-col gap-0.5">
             {columns.map((col) => {
-              if (col.key === ROW_ACTIONS_KEY) return null;
+              if (isTableOwnColumn(col.key)) return null;
               const checked = !hiddenCols.has(col.key);
               const headerLabel = columnLabel(col);
               return (

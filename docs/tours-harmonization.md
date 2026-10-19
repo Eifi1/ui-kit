@@ -599,7 +599,13 @@ in 0.44.
    their own key, never a readable record (better than KS today, where each engineer's
    whole record stays). A pending record whose owner never signs in again stays until a
    browser clean. Signed out, and in a demo, no `account` is passed: the device record
-   works as in 0.44 (KS's `visitor` key).
+   works as in 0.44 (KS's `visitor` key). **A demo's key: fixed, or per demo id** (0.46,
+   KS 5). A fixed demo key is the simple choice. A key per demo id
+   (`kurvenschmiede.tours:<demo id>`, no `account`) is the alternative KS took: it leaves no
+   orphan key only because `signOutTourProgress` runs at EVERY end of a session, the
+   demo's end included (KS's `clear()`), and a second demo on the same PC then starts
+   with no finished tours instead of inheriting the first demo's. Without that call at a
+   demo's end, keep the fixed key.
 7. **Offline (keksdose, should it ever move).** No outbox entry and no `/sync` entity:
    progress is the account's, not the budget's, and the pending record is the kit's own
    small outbox. `/tours/progress` must not be answered by keksdose's local API host (it

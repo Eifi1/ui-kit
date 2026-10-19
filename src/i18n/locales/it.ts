@@ -820,6 +820,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     writeLock: {
       reason: "Può visualizzarlo, ma non modificarlo.",
+      offline: "Richiede una connessione.",
     },
     accountState: {
       // Agreeing with "account" (masculine): the chip is the state of an account.
@@ -1892,6 +1893,10 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         invitationsPending: "Inviti in sospeso",
         users: "Utenti",
         usersNew: (count) => `${n(count)} ${plural(count, "nuovo", "nuovi")} in 7 giorni`,
+        awaitingVerdict: "In attesa di un verdetto",
+        awaitingVerdictHint: "Con risposta, in attesa che Lei o chi l’ha segnalato confermi la soluzione",
+        releasedForWork: "Pronti per la lavorazione",
+        releasedForWorkHint: "Pronti, rielaborazione richiesta o in corso",
       },
       overviewError: "Non è stato possibile caricare la panoramica.",
       retry: "Riprova",

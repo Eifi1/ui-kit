@@ -8,6 +8,7 @@ import {
   FeedbackSubject,
   ToggleGroup,
   feedbackMobileGroupBy,
+  feedbackSwipeOmitShown,
   feedbackSwipePlan,
   isFeedbackAwaiting,
   useFeedbackColumns,
@@ -208,6 +209,9 @@ export function FeedbackTable027Demo() {
               ? (row) => feedbackSwipePlan(DEFAULT_FEEDBACK_SWIPE, row, { change: changeStatus, labels: statusLabels })
               : undefined
           }
+          // The same swipes as the desktop's last column (0.46, dev#598), minus what the
+          // status cell already offers as its own icons.
+          desktopSwipeActions={{ omit: feedbackSwipeOmitShown, name: (row) => row.title }}
         />
         {canEdit && <FeedbackAwaitingToggle pressed={awaitingOnly} onPressedChange={setAwaitingOnly} />}
         <Note>
@@ -215,7 +219,10 @@ export function FeedbackTable027Demo() {
           contract's order, with both select filters listing the whole vocabulary. The subject carries the
           environment chip (non-prod {code("context.environment")}) and {code("Rework ×n")} from{" "}
           {code("reworkCount(body)")}. {code("onStatus")} is {code("useFeedbackStatusUndo(update.mutate)")} — the
-          same change the row detail and the swipes use, so every one of them offers Undo. On a phone,{" "}
+          same change the row detail and the swipes use, so every one of them offers Undo. On a wide screen the
+          swipes are also the row&apos;s last column ({code("desktopSwipeActions")}, 0.46), and{" "}
+          {code("feedbackSwipeOmitShown")} leaves out the steps the status cell already shows — “Done” stays where
+          DONE is more than one step away. On a phone,{" "}
           {code("FeedbackMobileCard")} draws both chips itself: {code("DataTable")} never renders the{" "}
           {code("mobilePrimary")} cell when {code("mobileCard")} is set, which is how keksdose&apos;s cards lost
           them. The eye at the bottom corner (phone, inbox only) narrows to In evaluation + Test when live. An app

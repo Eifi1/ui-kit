@@ -270,7 +270,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.45.0 (+6, admin §9 and tours §10): `MailTestCard`, `DEFAULT_MAIL_TEST_CARD_LABELS`,
   // `MAIL_TEST_ANCHOR`, `maskMailAddress`, and from /shell and /tour `AdminWaitingBadge`,
   // `signOutTourProgress`.
-  ["@eifi1/ui-kit", barrel, 965],
+  // 0.46.0 (+3, kastlan K4): `OFFLINE_LOCK`, `COMMIT_EXCEPT_OFFLINE`, `useOfflineWriteLock`.
+  // 0.46.0 (+1, keksdose dev#598, here and in /feedback): `feedbackSwipeOmitShown`.
+  ["@eifi1/ui-kit", barrel, 969],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -286,7 +288,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.27.0: the feedback harmonization's 55 (see the barrel's note above).
   // 0.35.0: `FeedbackComposer` removed, `ChatComposer` stays (API-6d) (−1).
   // 0.40.0: `FEEDBACK_QUEUE_STATUSES`, `feedbackReworkCount` (+2 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 102],
+  // 0.46.0: `feedbackSwipeOmitShown`, the desktop column's omit (dev#598) (+1 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 103],
   ["@eifi1/ui-kit/search", search, 9],
   // 0.31.0 (+26): the settings shell and its route, focus, context, heading and
   // catalogue helpers; PublicHeader, RootEntry, RedirectIfAuthed and the
@@ -327,7 +330,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `SharedComputerChoice`, `isSharedComputer`, `setSharedComputer` and the three
   // `DEFAULT_*_LABELS`. Standalone: its TanStack and idb-keyval peers stay out of the barrel.
   // `isCacheSafe` (+1, keksdose's build review: its query-client tests use it).
-  ["@eifi1/ui-kit/offline", offline, 11],
+  // 0.46.0 (+3, kastlan K2, K3): `removeStaleQueryCopies`, `createServiceWorkerUpdates`,
+  // `useServiceWorkerUpdate`.
+  ["@eifi1/ui-kit/offline", offline, 14],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8

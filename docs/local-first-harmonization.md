@@ -540,6 +540,28 @@ as optional peers). Size **S–M**.
   session it governs: `sessionStorage` by default, `localStorage` (`storage: "local"`, cleared
   with `setSharedComputer(false)` at every end of the session) for an app whose refresh token
   outlives the tab (kastlan; round-046 B3). Seven languages.
+- **0.46, from the 0.45 adoptions (kastlan K1–K4):**
+  - `createQueryPersistence({ …, persistMutations? })`: default `true` (kk: paused mutations wait
+    in TanStack's queue across a reload). `false` writes no mutation and drops any an older build
+    wrote on restore — for an app whose offline writes go through its own outbox (ka's Dexie
+    outbox), instead of overriding `persistOptions.dehydrateOptions` by hand.
+  - `removeStaleQueryCopies(app, maxAge, { storage?, keep? })`: `removeStale` without a
+    persistence, for the sign-in page. A session that ends with no user known (ka: the refresh
+    token refused at boot) cannot name its key for `clear`; the sign-in page sweeps that copy
+    once it is older than `maxAge`, instead of waiting for someone's next sign-in.
+    `persistence.removeStale()` is this with `keep` = its own key.
+  - `createServiceWorkerUpdates(registerSW)` → `{ start, needRefresh, subscribe, reload, dismiss }`
+    and `useServiceWorkerUpdate(updates)` → `PwaUpdatePrompt`'s `{ needRefresh, onReload,
+    onDismiss }` (D8). The app passes `registerSW` from `virtual:pwa-register` and calls `start()`
+    once in `main.tsx`, before the router: an app whose prompt sits in the signed-in shell
+    (`useRegisterSW` registers when that component mounts) would otherwise register only after
+    sign-in, and a first visit's sign-in page would have no offline shell (ka's
+    `shared/pwa/sw-update.ts`, now the kit's).
+  - The write lock's `"offline"` kind (main barrel): `OFFLINE_LOCK`, `COMMIT_EXCEPT_OFFLINE` and
+    `useOfflineWriteLock(offline, labels?)` → a `combineWriteLocks` source with
+    `writeLock.offline` ("Needs a connection.", seven languages). The online-only actions above
+    are commits under it; a control that writes to the device's copy takes
+    `commit={COMMIT_EXCEPT_OFFLINE}`. The app reads the connection itself.
 - **P3, later:** `createSyncEngine`, `useSyncWorker`, `useSyncStatus()`, `readLocalFirst`/
   `isOfflineError`, and leaf utilities both apps can share (`stampAfter`, the generation guard).
   kk does not adopt the engine ("not for keksdose unless proven", P4).

@@ -24,6 +24,15 @@ export interface AdminTileLabels {
   users: string;
   /** `users_new_7d`, the line under the users tile. */
   usersNew: (count: number) => string;
+  /** 0.46 (Kurvenschmiede 1, admin §9.5): server-kit's `awaiting_verdict` as an `extra`
+   *  tile — answered reports that wait on a verdict (IN_EVALUATION, NEEDS_LIVE_TEST). */
+  awaitingVerdict: string;
+  /** Its line under the count. */
+  awaitingVerdictHint: string;
+  /** 0.46: server-kit's `released_for_work` — the reports released for the work queue. */
+  releasedForWork: string;
+  /** Its line under the count. */
+  releasedForWorkHint: string;
 }
 
 export interface AdminAreaLabels {
@@ -83,6 +92,10 @@ export const DEFAULT_ADMIN_AREA_LABELS: AdminAreaLabels = {
     invitationsPending: "Pending invitations",
     users: "Users",
     usersNew: (count) => `${count} new in 7 days`,
+    awaitingVerdict: "Awaiting a verdict",
+    awaitingVerdictHint: "Answered, and waiting for you or the reporter to confirm the fix",
+    releasedForWork: "Released for work",
+    releasedForWorkHint: "Ready, rework requested or in progress",
   },
   overviewError: "The overview couldn’t be loaded.",
   retry: "Try again",

@@ -408,6 +408,8 @@ export * from "./components/form-actions";
 // (docs/billing-harmonization.md §12.36): the kinds, the holds, `CommitScope`,
 // `COMMIT_EXCEPT_BILLING` and the pure `writeLockFor`.
 export { WriteLockProvider, useWriteLock, writeLockFor, COMMIT_EXCEPT_BILLING, DEFAULT_WRITE_LOCK_LABELS } from "./components/write-lock";
+// 0.46 (kastlan K4): the offline lock kind, its scope and its source.
+export { OFFLINE_LOCK, COMMIT_EXCEPT_OFFLINE, useOfflineWriteLock } from "./components/write-lock";
 export type { WriteLock, WriteLockLabels, WriteLockProviderProps, WriteLockKind, WriteLockHold, CommitScope } from "./components/write-lock";
 // 0.18: the parts both apps' admin rosters repeat (Kurvenschmiede 6).
 export { RoleChip, AccountStateChip, DateMark, dateColumn, DEFAULT_ACCOUNT_STATE_LABELS, ACCOUNT_STATE_TONES } from "./components/account-chips";
@@ -808,6 +810,10 @@ export type {
   AdminExtraTile,
   AdminOverviewProps,
   AttentionTileProps,
+  // 0.46 (Kurvenschmiede 1): the feedback tiles with the kit's words.
+  AdminFeedbackTile,
+  AdminFeedbackTileKey,
+  AdminOwnTile,
 } from "./admin/admin-overview";
 export { AdminToolLinks } from "./admin/admin-tool-links";
 export type { AdminToolLink, AdminToolLinksProps } from "./admin/admin-tool-links";

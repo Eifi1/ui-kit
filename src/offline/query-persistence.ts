@@ -71,6 +71,14 @@ export interface QueryPersistenceOptions {
   storage?: QueryPersistenceStorage;
   /** Default 1000 ms, as keksdose. */
   throttleTime?: number;
+  /**
+   * 0.46 (kastlan K1): whether paused mutations are written with the cache. Default `true`
+   * (keksdose: an offline write waits in TanStack's queue and is sent after a reload).
+   * `false` keeps every mutation off the disk, and drops any an older build wrote on
+   * restore — for an app that queues offline writes in its own outbox (kastlan's Dexie
+   * outbox), instead of overriding `dehydrateOptions` by hand.
+   */
+  persistMutations?: boolean;
 }
 
 /**
@@ -111,6 +119,50 @@ const idbStorage: QueryPersistenceStorage = {
   removeItem: (key) => del(key),
   keys: () => keys(),
 };
+
+export interface RemoveStaleQueryCopiesOptions {
+  /** Default: IndexedDB (idb-keyval), the store {@link createQueryPersistence} writes to. */
+  storage?: QueryPersistenceStorage;
+  /** One key to spare whatever its age — the signed-in account's own
+   *  (`QueryPersistence.removeStale` passes its key). */
+  keep?: string;
+}
+
+/**
+ * 0.46 (kastlan K2): deletes this app's persisted query caches (`<app>-query-cache-…`)
+ * older than `maxAge`, with no persistence at hand — for the sign-in page, where no
+ * account is known. A session that ended with no user known (a refresh token refused at
+ * boot) cannot name its key for `clear`; this sweeps its copy once it is stale, without
+ * waiting for someone's next sign-in. Other apps' keys, other stores' keys and fresh
+ * caches stay; an unreadable one is stale. Never throws.
+ * {@link QueryPersistence.removeStale} is this with `keep` = its own key.
+ */
+export async function removeStaleQueryCopies(
+  app: string,
+  maxAge: number,
+  { storage = idbStorage, keep }: RemoveStaleQueryCopiesOptions = {},
+): Promise<void> {
+  const prefix = `${app}-query-cache-`;
+  try {
+    const now = Date.now();
+    for (const k of await storage.keys()) {
+      if (typeof k !== "string" || !k.startsWith(prefix) || k === keep) continue;
+      let timestamp = 0;
+      try {
+        const raw = await storage.getItem(k);
+        const parsed: unknown = raw ? JSON.parse(raw) : null;
+        if (parsed && typeof parsed === "object" && typeof (parsed as PersistedClient).timestamp === "number") {
+          timestamp = (parsed as PersistedClient).timestamp;
+        }
+      } catch {
+        /* unreadable: stale */
+      }
+      if (now - timestamp > maxAge) await storage.removeItem(k);
+    }
+  } catch {
+    /* best-effort */
+  }
+}
 
 /**
  * True when `data` still means the same thing after JSON.stringify and JSON.parse —
@@ -162,6 +214,7 @@ export function createQueryPersistence({
   maxAge,
   storage = idbStorage,
   throttleTime = 1000,
+  persistMutations = true,
 }: QueryPersistenceOptions): QueryPersistence {
   const prefix = `${app}-query-cache-`;
   const key = `${prefix}${user}${company === undefined || company === null || company === "" ? "" : `-${company}`}`;
@@ -204,9 +257,9 @@ export function createQueryPersistence({
   };
 
   /** The write side for mutations: TanStack's default (paused ones), minus any whose
-   *  variables carry a scrubbed field (S6). */
+   *  variables carry a scrubbed field (S6); none at all with `persistMutations: false`. */
   const shouldDehydrateMutation = (mutation: { state: { isPaused: boolean; variables?: unknown } }): boolean =>
-    mutation.state.isPaused && !carriesScrubbed(mutation.state.variables);
+    persistMutations && mutation.state.isPaused && !carriesScrubbed(mutation.state.variables);
 
   const withScrubbedData = (entry: unknown): unknown => {
     const query = entry as { state?: { data?: unknown } };
@@ -239,7 +292,7 @@ export function createQueryPersistence({
         timestamp,
         buster: stored,
         clientState: {
-          mutations: Array.isArray(clientState.mutations)
+          mutations: persistMutations && Array.isArray(clientState.mutations)
             ? clientState.mutations.filter(
                 (m) => !carriesScrubbed((m as { state?: { variables?: unknown } } | null)?.state?.variables),
               )
@@ -291,27 +344,7 @@ export function createQueryPersistence({
     }
   };
 
-  const removeStale = async () => {
-    try {
-      const now = Date.now();
-      for (const k of await storage.keys()) {
-        if (typeof k !== "string" || !k.startsWith(prefix) || k === key) continue;
-        let timestamp = 0;
-        try {
-          const raw = await storage.getItem(k);
-          const parsed: unknown = raw ? JSON.parse(raw) : null;
-          if (parsed && typeof parsed === "object" && typeof (parsed as PersistedClient).timestamp === "number") {
-            timestamp = (parsed as PersistedClient).timestamp;
-          }
-        } catch {
-          /* unreadable: stale */
-        }
-        if (now - timestamp > maxAge) await storage.removeItem(k);
-      }
-    } catch {
-      /* best-effort */
-    }
-  };
+  const removeStale = () => removeStaleQueryCopies(app, maxAge, { storage, keep: key });
 
   return {
     key,

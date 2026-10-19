@@ -4,6 +4,10 @@ ui-kit 0.45 adds nothing an app must take: every new part is optional. server-ki
 breaking change, `FeedbackRepository.count_by_status()` (the section on feedback counts), so
 bump server-kit together with that row. The commit check at the end is the shared one.
 
+After the bump, regenerate the API types (`npm run generate:api` or the app's own):
+server-kit 0.15 alone changes them (`AdminAction` gains `group_deactivate` /
+`group_reactivate`, `SyncRefusal`'s docstring moves; keksdose N4, noted in 0.46).
+
 ## server-kit 0.15
 
 Install the wheel by URL, pinned by hash:

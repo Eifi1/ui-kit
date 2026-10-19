@@ -277,3 +277,62 @@ describe("TranslationReviewPanel swipe binding", () => {
     );
   });
 });
+
+/**
+ * keksdose dev#598 item 2: the desktop table offers what the binding offers — `clear` was
+ * reachable only by a swipe. Approve stays on every row that can take it, as before.
+ */
+describe("TranslationReviewPanel desktop actions from the swipe binding (dev#598)", () => {
+  beforeEach(() => vi.unstubAllGlobals());
+
+  const desktopRow = (text: string) => screen.getAllByText(text)[0].closest("tr") as HTMLElement;
+  const actionsOf = (text: string) => {
+    const box = desktopRow(text).querySelector<HTMLElement>('[data-slot="row-actions"]');
+    return box ? within(box).getAllByRole("button").map((b) => b.getAttribute("aria-label")) : [];
+  };
+
+  it("draws approve, then the binding's actions, each once and only where the row can take it", () => {
+    setup({ swipe: { end: ["approve", "clear"], start: ["edit", "clear"] } });
+    expect(actionsOf("Conditions d’utilisation")).toEqual(["Approve", "Mark unreviewed", "Needs a change"]);
+    expect(actionsOf("Annuler")).toEqual(["Approve", "Needs a change"]);
+    expect(actionsOf("Enregistrer")).toEqual(["Mark unreviewed", "Needs a change"]);
+  });
+
+  it("keeps approve on the desktop when the binding leaves it out", () => {
+    setup({ swipe: { start: ["edit"] } });
+    expect(actionsOf("Annuler")).toEqual(["Approve", "Needs a change"]);
+  });
+
+  it("clears from a button, with the row as the origin", async () => {
+    const { onClear } = setup({ swipe: { end: ["clear"] } });
+    fireEvent.click(within(desktopRow("Enregistrer")).getByRole("button", { name: "Mark unreviewed" }));
+    await waitFor(() =>
+      expect(onClear).toHaveBeenCalledWith([{ locale: "fr", key: "common.save" }], { origin: "row", toasted: true }),
+    );
+  });
+
+  it("opens the editor on the wording from edit", () => {
+    setup({ swipe: { start: ["edit"] } });
+    fireEvent.click(within(desktopRow("Annuler")).getByRole("button", { name: "Needs a change" }));
+    expect(screen.getByLabelText("Better wording")).toHaveFocus();
+  });
+
+  it("is refused under a write lock rather than hidden", () => {
+    const { onSave, onClear } = setup({ swipe: { end: ["approve", "clear"] } }, (ui) => (
+      <WriteLockProvider locked reason="Read-only demo">
+        {ui}
+      </WriteLockProvider>
+    ));
+    fireEvent.click(within(desktopRow("Conditions d’utilisation")).getByRole("button", { name: "Approve" }));
+    fireEvent.click(within(desktopRow("Conditions d’utilisation")).getByRole("button", { name: "Mark unreviewed" }));
+    expect(onSave).not.toHaveBeenCalled();
+    expect(onClear).not.toHaveBeenCalled();
+  });
+
+  it("is the approve column alone without a binding, as before", () => {
+    setup({ swipe: false });
+    expect(desktopRow("Annuler").querySelector('[data-slot="row-actions"]')).toBeNull();
+    expect(within(desktopRow("Annuler")).getAllByRole("button", { name: "Approve" })).toHaveLength(1);
+    expect(within(desktopRow("Enregistrer")).queryByRole("button", { name: "Mark unreviewed" })).toBeNull();
+  });
+});

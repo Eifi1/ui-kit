@@ -832,6 +832,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     writeLock: {
       reason: "Vous pouvez consulter ceci, mais pas le modifier.",
+      offline: "Nécessite une connexion.",
     },
     accountState: {
       // Agreeing with "compte" (masculine): the chip is the state of an account.
@@ -1912,6 +1913,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         invitationsPending: "Invitations en attente",
         users: "Utilisateurs",
         usersNew: (count) => `${n(count)} ${plural(count, "nouveau", "nouveaux")} en 7 jours`,
+        awaitingVerdict: "En attente d’un verdict",
+        awaitingVerdictHint: "Traités, en attente de votre confirmation ou de celle de la personne qui les a signalés",
+        releasedForWork: "Prêts à traiter",
+        releasedForWorkHint: "Prêts, reprise demandée ou en cours",
       },
       overviewError: "La vue d’ensemble n’a pas pu être chargée.",
       retry: "Réessayer",

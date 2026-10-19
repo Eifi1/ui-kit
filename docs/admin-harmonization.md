@@ -368,6 +368,13 @@ is already the operator's log.
 every `groupNoun` (seven languages). kastlan S–M: the shell, the Activity section, the
 `via` stamp and filter, the PATCH's rows.
 
+**As kastlan built it (0.45 adoption, K7).** One Activity card serves both logs: its
+query hook (`useAdminActions`-style) takes an `enabled` flag, so only the mounted scope's
+query runs (without it the company's and the platform's both ran). The console's
+catalogue is `adminSections<Own, "invitations" | "billing">(labels, own, { leaveOut:
+["invitations", "billing"] })` with the type arguments written out, as `adminSections`
+says (inferred, the result's ids keep the left-out sections, adopt-0.43 keksdose 3).
+
 ### 9.2 "Send a test mail to me" (KS inventory 5.7, §6.14)
 
 **Today.** No app can send a test mail. Each reports its transport to the admin page as
@@ -412,6 +419,11 @@ sends a verification or reset mail and logs an admin action.
      kinds are listed at :65); `email_reply_to` applies on its own. A two-line adapter
      takes server-kit's `MailMessage` to `(subject, text)` (kastlan uses no `MailMessage`
      today).
+   - **Every app (0.46, keksdose N3): a new write route brings two touch points.** Its
+     billing/demo stance in the app's every-write-route sweep (kk:
+     `tests/api/test_billing_gate.py` `ACCOUNT_ALLOWED`; ka: `BILLING_WRITES`/`DEMO_WRITES`;
+     KS: `tests/api/test_demo.py`), and a reset seam for its process-global limiter
+     (`MAIL_TEST_LIMIT`) in the test conftest, or the third test's send is a 429.
 3. **server-kit `mail`**: `test_mail_message(locale, *, app_name, backend, sent_at) →
    MailMessage` (subject "Test mail from {app}", a body naming the transport and the time,
    seven languages), `MAIL_TEST_KIND = "mail_test"` for the log line and the metric, and
@@ -424,7 +436,11 @@ sends a verification or reset mail and logs an admin action.
    the inbox." / "The console transport only logs mail; nothing was sent." / "Could not
    send. The server log has the provider's answer."), labels in seven languages. **The
    result line reads `mail_backend` first**: with `console` it says "nothing was sent"
-   whatever `sent` is.
+   whatever `sent` is. **0.46 (keksdose N1, kastlan K6, KS 3): `mailBackend` is
+   optional.** Without it the chip shows from the first answer on and keeps the last
+   transport an answer named (a later 429 does not hide it), so an app with no cheap
+   source for `mail_backend` on its admin page (kk, ka read a one-row roster query for it)
+   adds no query only for the chip.
 5. **Where.**
    - **keksdose**: in `messaging`, beside the push test (admin-index.ts:128).
    - **Kurvenschmiede**: an own section **"System"**, `after: "teams"` in
@@ -589,6 +605,15 @@ lose 4–25 lines each.
 **Split.** server-kit S (~30 code, ~60 test lines). ui-kit none. Apps XS each (KS's
 repository is `feedback_service.py:343`'s class, kk/ka `adapters/persistence/feedback_repository.py`),
 KS's third tile XS.
+
+**0.46 (Kurvenschmiede 1): the two feedback tiles have the kit's words.** An
+`AdminOverview` `extraTiles` entry keyed `"awaiting_verdict"` or `"released_for_work"`
+(`AdminFeedbackTileKey`) may leave out `label` and `description`: they default to
+`adminArea.tiles.awaitingVerdict` / `awaitingVerdictHint` ("Awaiting a verdict" /
+"Answered, and waiting for you or the reporter to confirm the fix") and `releasedForWork`
+/ `releasedForWorkHint` ("Released for work" / "Ready, rework requested or in progress"),
+seven languages. An app's own words still win; any other key still needs its `label`
+(the type says so). The counts stay `extra` keys, as server-kit sends them.
 
 ### 9.6 For the reviews
 

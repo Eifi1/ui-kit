@@ -6,4 +6,5 @@ import type { WriteLockLabels } from "./write-lock";
 
 export const DEFAULT_WRITE_LOCK_LABELS: WriteLockLabels = {
   reason: "You can view this but not change it.",
+  offline: "Needs a connection.",
 };

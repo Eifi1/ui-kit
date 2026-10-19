@@ -816,6 +816,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     writeLock: {
       reason: "Puede verlo, pero no modificarlo.",
+      offline: "Requiere conexión.",
     },
     accountState: {
       // Agreeing with "cuenta" (feminine): the chip is the state of an account.
@@ -1873,6 +1874,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         invitationsPending: "Invitaciones pendientes",
         users: "Usuarios",
         usersNew: (count) => `${n(count)} ${plural(count, "nuevo", "nuevos")} en 7 días`,
+        awaitingVerdict: "Pendientes de veredicto",
+        awaitingVerdictHint: "Respondidos, a la espera de que usted o quien lo informó confirme la solución",
+        releasedForWork: "Listos para trabajar",
+        releasedForWorkHint: "Listos, con revisión solicitada o en curso",
       },
       overviewError: "No se pudo cargar el resumen.",
       retry: "Reintentar",

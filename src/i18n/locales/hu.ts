@@ -817,6 +817,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     writeLock: {
       reason: "Ezt megtekintheti, de nem módosíthatja.",
+      offline: "Internetkapcsolat szükséges.",
     },
     accountState: {
       active: "Aktív",
@@ -1879,6 +1880,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         invitationsPending: "Függő meghívások",
         users: "Felhasználók",
         usersNew: (count) => `${n(count)} új az elmúlt 7 napban`,
+        awaitingVerdict: "Ítéletre vár",
+        awaitingVerdictHint: "Megválaszolva, az Ön vagy a bejelentő megerősítésére vár",
+        releasedForWork: "Munkára kész",
+        releasedForWorkHint: "Kész, átdolgozás kérve vagy folyamatban",
       },
       overviewError: "Az áttekintést nem sikerült betölteni.",
       retry: "Próbálja újra",

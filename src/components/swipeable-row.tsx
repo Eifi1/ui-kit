@@ -31,6 +31,14 @@ export interface SwipePaint {
 interface SwipeActionBase {
   onCommit: () => void;
   label: string;
+  /**
+   * What the action IS, apart from its words (0.46, keksdose dev#598): `"approve"`,
+   * `"wont_do"`. The swipe itself never reads it; DataTable's desktop column does — one
+   * button per id, and `desktopSwipeActions.omit` can name the actions the row already
+   * has a button for without matching on a translated label. The kit's own plans
+   * (`feedbackSwipePlan`, `TranslationReviewPanel`'s binding) set their binding's ids.
+   */
+  id?: string;
   /** Rendered inside the panel. Icons stay the consumer's choice — this package
    *  ships no opinion about which icon set an app uses. */
   icon?: ReactNode;

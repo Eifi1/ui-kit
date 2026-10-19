@@ -2,7 +2,7 @@ import { Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState 
 import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { Card } from "./card";
 import { Spinner } from "./spinner";
-import { ROW_ACTIONS_KEY, useRowActionColumn } from "./data-table-row-actions";
+import { isTableOwnColumn, useRowActionColumn } from "./data-table-row-actions";
 import { useColumnResize } from "./data-table-resize";
 import { useRangeSelection } from "./data-table-selection";
 import {
@@ -26,6 +26,8 @@ import { nextSorts } from "./data-table-sort";
 import type { SortCycle, SortDir, SortState } from "./data-table-sort";
 import { Pagination } from "./data-table-pagination";
 import type { SwipeAction } from "./swipeable-row";
+import type { RowActionsCollapse } from "./row-actions";
+import type { CommitScope } from "./write-lock";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
@@ -472,9 +474,28 @@ export interface DataTableProps<T> {
    * Mobile only, and deliberately so: the desktop table already has room for an
    * actions column, and a drag gesture on a pointer device is a worse version of a
    * button. Wraps only the row body, so an expansion panel below stays put while the
-   * row above it slides.
+   * row above it slides. The desktop's buttons for the same actions come with it — see
+   * {@link DataTableProps.desktopSwipeActions}.
    */
   mobileSwipeActions?: (row: T) => MobileSwipeActions | null;
+  /**
+   * The desktop half of `mobileSwipeActions` (0.46, keksdose dev#598 — Marcel: every
+   * table whose phone cards swipe gets a desktop actions column with the same actions):
+   * an actions column DERIVED from the very plan the card swipes with, so the two
+   * viewports offer the same functions and cannot drift. Each button runs the swipe's own
+   * `onCommit` — the same confirm, the same undo toast. The reading-end side's actions
+   * first, then the start side's, each once (by `SwipeAction.id`, else by label); a row
+   * whose plan is `null` gets an empty cell. The column is hidden on the phone, where the
+   * actions are the swipes, kept off the column settings, and its tooltips open toward
+   * the row's start.
+   *
+   * On by default wherever `mobileSwipeActions` is given, so a new swipeable table cannot
+   * forget it — except beside `rowActions`, whose column is the desktop's already (pass
+   * `true` or options to add this one too). `false` where the desktop row carries every
+   * one of those actions as its own buttons; say so at the call site. Options:
+   * {@link DataTableDesktopSwipeActions}.
+   */
+  desktopSwipeActions?: boolean | DataTableDesktopSwipeActions<T>;
   /**
    * Renders as a full-width row above the data rows in the desktop table
    * (mobile has no equivalent list-row slot, so it's desktop-only). For a
@@ -663,6 +684,27 @@ export interface MobileSwipeActions {
   right?: SwipeAction[];
 }
 
+/** How {@link DataTableProps.desktopSwipeActions} draws the column (0.46, dev#598). */
+export interface DataTableDesktopSwipeActions<T> {
+  /** Leave an action out because the row already has its own button for it — keksdose's
+   *  feedback inbox, whose status cell offers `advance` and `wont_do`
+   *  (`feedbackSwipeOmitShown`). Match on `action.id` rather than the translated label. */
+  omit?: (action: SwipeAction, row: T) => boolean;
+  /** The row's name for the "⋯" menu ("Actions for …"). Default: the table's `rowName`. */
+  name?: (row: T) => string | null | undefined;
+  /** {@link RowActionsCollapse}; default `"auto"`. A table whose rows offer more than two
+   *  actions passes `"menu"`, so the column does not switch between icons and a menu. */
+  collapse?: RowActionsCollapse;
+  /**
+   * Whether an action COMMITS, refused with the reason under a locked
+   * `WriteLockProvider` ({@link CommitScope}) — a swipe has no such state, so a plan
+   * usually returns nothing for a locked row and the desktop shows nothing either; with
+   * this the plan can stay and the desktop says why. Per action as a function. Default:
+   * no commit scope (the plan decides).
+   */
+  commit?: CommitScope | ((action: SwipeAction, row: T) => CommitScope | undefined);
+}
+
 /**
  * A totals-row cell: pinned to the scroller's bottom edge, on the header's surface.
  * The rule above it is an inset shadow rather than a `border-t`: the table collapses
@@ -774,6 +816,7 @@ export function DataTable<T>({
   mobileCard,
   mobileSort = false,
   mobileSwipeActions,
+  desktopSwipeActions,
   leadingRow,
   density = "comfortable",
   sortCycle = "tri",
@@ -820,6 +863,8 @@ export function DataTable<T>({
     rowName,
     labels,
     density,
+    mobileSwipeActions,
+    desktopSwipeActions,
   });
   const swipeActionsFor = mobileSwipeActions ?? (rowActions ? swipesFromActions : undefined);
 
@@ -1130,16 +1175,16 @@ export function DataTable<T>({
   // show — so hiding the "Account" column moves "Total" into "Name" rather than
   // dropping it — and on the first visible column when every one carries a value.
   const footerLabelCol = showFooter
-    ? (visibleColumns.find((c) => !c.footer && c.key !== ROW_ACTIONS_KEY) ?? visibleColumns[0])
+    ? (visibleColumns.find((c) => !c.footer && !isTableOwnColumn(c.key)) ?? visibleColumns[0])
     : undefined;
   const footerValue = (col: DataTableColumn<T>) => col.footer?.(sorted, slice);
   const footerHeadingId = useId();
   // Each open row's detail row, for its disclosure button's `aria-controls`.
   const detailIdBase = useId();
   // The actions column is the table's own, not one the user can hide: out of the count.
-  const columnsCountLabel = rowActions
-    ? labels.columnsCount(visibleCount - 1, totalCount - 1)
-    : labels.columnsCount(visibleCount, totalCount);
+  const ownColumns = columns.filter((c) => isTableOwnColumn(c.key)).length;
+  const ownVisible = visibleColumns.filter((c) => isTableOwnColumn(c.key)).length;
+  const columnsCountLabel = labels.columnsCount(visibleCount - ownVisible, totalCount - ownColumns);
   // Match the `md:` breakpoint at the text size in force: we render either the table or
   // the card list — never both — so we don't double up DOM nodes that screen readers and
   // integration tests would have to disambiguate. `usePhoneLayout()` itself, not its twin

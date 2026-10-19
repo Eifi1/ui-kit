@@ -1,12 +1,13 @@
 import { isValidElement, useCallback, useMemo } from "react";
 import type { ReactNode } from "react";
 import { Pencil, Trash2 } from "lucide-react";
-import { RowActions, type RowAction } from "./row-actions";
+import { RowActions, type RowAction, type RowActionTone } from "./row-actions";
 import type { SwipeAction } from "./swipeable-row";
 import type { DataTableLabels } from "./data-table-labels";
 import type {
   DataTableColumn,
   DataTableDensity,
+  DataTableDesktopSwipeActions,
   DataTableProps,
   DataTableRowAction,
   MobileSwipeActions,
@@ -19,6 +20,66 @@ import type {
 /** The actions column's key. Not a column a caller declares, so it is kept out of the
  *  column-settings panel. */
 export const ROW_ACTIONS_KEY = "__rowActions";
+
+/** The key of the column derived from `mobileSwipeActions` (0.46, dev#598) — the
+ *  table's own too. */
+export const SWIPE_ACTIONS_KEY = "__swipeActions";
+
+/** A column the TABLE adds, not the caller: out of the column settings and the count,
+ *  never resized, never the totals row's header. */
+export function isTableOwnColumn(key: string): boolean {
+  return key === ROW_ACTIONS_KEY || key === SWIPE_ACTIONS_KEY;
+}
+
+/** A curtain's tone, as an icon button's (keksdose's `toneOf`): only the tones that MEAN
+ *  something on a quiet icon carry over; a status colour, a hue or an app's `paint` stays
+ *  on the curtain and reads muted. */
+function swipeTone(action: SwipeAction): RowActionTone {
+  switch (action.tone) {
+    case "danger":
+    case "warning":
+    case "info":
+      return action.tone;
+    default:
+      return "muted";
+  }
+}
+
+/**
+ * A row's swipe plan as desktop row actions (dev#598): `end` then `start` — the physical
+ * `right` / `left` only where the logical side is missing, as the card reads them — each
+ * action once, told apart by its `id`, else by its label (two stages with one label would
+ * be one button twice).
+ */
+export function swipePlanRowActions<T>(
+  plan: MobileSwipeActions | null | undefined,
+  row: T,
+  options: Pick<DataTableDesktopSwipeActions<T>, "omit" | "commit"> = {},
+): RowAction[] {
+  if (!plan) return [];
+  const out: RowAction[] = [];
+  const seen = new Set<string>();
+  for (const action of [...(plan.end ?? plan.right ?? []), ...(plan.start ?? plan.left ?? [])]) {
+    const key = action.id ?? action.label;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (options.omit?.(action, row)) continue;
+    const commit = typeof options.commit === "function" ? options.commit(action, row) : options.commit;
+    out.push({
+      key,
+      label: action.label,
+      icon: isValidElement(action.icon)
+        ? action.icon
+        : action.icon != null && action.icon !== false
+          ? <>{action.icon}</>
+          : undefined,
+      tone: swipeTone(action),
+      commit,
+      onSelect: action.onCommit,
+    });
+  }
+  return out;
+}
 
 interface ResolvedRowAction<T> {
   key: string;
@@ -81,12 +142,16 @@ export function useRowActionColumn<T>({
   rowName,
   labels,
   density,
+  mobileSwipeActions,
+  desktopSwipeActions,
 }: {
   columns: DataTableColumn<T>[];
   rowActions: DataTableProps<T>["rowActions"];
   rowName: DataTableProps<T>["rowName"];
   labels: DataTableLabels;
   density: DataTableDensity;
+  mobileSwipeActions?: DataTableProps<T>["mobileSwipeActions"];
+  desktopSwipeActions?: DataTableProps<T>["desktopSwipeActions"];
 }): {
   columns: DataTableColumn<T>[];
   swipesFromActions: (row: T) => MobileSwipeActions | null;
@@ -100,7 +165,54 @@ export function useRowActionColumn<T>({
         : [],
     [rowActions, labels],
   );
-  const columns = useMemo<DataTableColumn<T>[]>(
+  // dev#598: the desktop half of the caller's swipes. On by default, except beside
+  // `rowActions`, whose column already is the desktop's (and whose swipes these usually
+  // are). The options object is often a fresh literal per render; its parts are the deps.
+  const swipeOptions = typeof desktopSwipeActions === "object" ? desktopSwipeActions : undefined;
+  const swipeColumnOn =
+    !!mobileSwipeActions && (desktopSwipeActions === undefined ? !rowActions : desktopSwipeActions !== false);
+  const swipeOmit = swipeOptions?.omit;
+  const swipeName = swipeOptions?.name;
+  const swipeCollapse = swipeOptions?.collapse;
+  const swipeCommit = swipeOptions?.commit;
+  const swipeColumn = useMemo<DataTableColumn<T> | null>(
+    () =>
+      swipeColumnOn
+        ? {
+            key: SWIPE_ACTIONS_KEY,
+            header: <span className="sr-only">{labels.actions}</span>,
+            cell: (row) => (
+              <RowActions
+                actions={swipePlanRowActions(mobileSwipeActions!(row), row, { omit: swipeOmit, commit: swipeCommit })}
+                name={(swipeName ?? rowName)?.(row)}
+                collapse={swipeCollapse}
+                size={density === "compact" ? "2xs" : "xs"}
+                // The last column's tooltips open toward the row's start.
+                tooltipSide="start"
+                labels={{ actions: labels.actions }}
+                className="justify-end"
+              />
+            ),
+            className: "w-px whitespace-nowrap text-end",
+            headClassName: "w-px",
+            // On a phone the same actions are the card's swipes.
+            mobileHidden: true,
+            noRowLink: true,
+          }
+        : null,
+    [
+      swipeColumnOn,
+      mobileSwipeActions,
+      swipeOmit,
+      swipeCommit,
+      swipeName,
+      rowName,
+      swipeCollapse,
+      density,
+      labels.actions,
+    ],
+  );
+  const actionColumns = useMemo<DataTableColumn<T>[]>(
     () =>
       rowActions
         ? [
@@ -131,6 +243,10 @@ export function useRowActionColumn<T>({
           ]
         : columnsProp,
     [columnsProp, rowActions, rowActionsFor, rowName, labels.actions, density],
+  );
+  const columns = useMemo(
+    () => (swipeColumn ? [...actionColumns, swipeColumn] : actionColumns),
+    [actionColumns, swipeColumn],
   );
   const swipesFromActions = (row: T): MobileSwipeActions | null => {
     const swipes = rowActionsFor(row).filter((a) => a.swipe && !a.action.disabledReason?.(row));

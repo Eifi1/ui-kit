@@ -797,6 +797,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     },
     writeLock: {
       reason: "仅可查看，无法修改。",
+      offline: "需要网络连接。",
     },
     accountState: {
       active: "已启用",
@@ -1795,6 +1796,10 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         invitationsPending: "待接受的邀请",
         users: "用户",
         usersNew: (count) => `近 7 天新增 ${n(count)} 人`,
+        awaitingVerdict: "待确认",
+        awaitingVerdictHint: "已答复，等待您或报告人确认已解决",
+        releasedForWork: "待处理",
+        releasedForWorkHint: "已就绪、已要求返工或进行中",
       },
       overviewError: "无法加载概览。",
       retry: "重试",

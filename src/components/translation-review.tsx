@@ -46,6 +46,7 @@ import type { TranslationReviewLabels } from "./translation-review-labels";
 import { ReviewStatusChip, TranslationProgress } from "./translation-review-parts";
 import { Button } from "./button";
 import { IconButton } from "./icon-button";
+import { DEFAULT_ROW_ACTIONS_LABELS, rowActionsColumn, type RowAction } from "./row-actions";
 import { Select } from "./select";
 import { COMMIT_EXCEPT_BILLING, useWriteLock } from "./write-lock";
 
@@ -199,8 +200,10 @@ export interface TranslationReviewPanelProps {
    * where there is nothing to approve (a missing string, an approved one). A reviewer
    * limited to `areas` never sees a row outside them, so never swipes one.
    *
-   * Off by default, so no existing page gains a gesture on the bump. Phones only; the
-   * desktop table keeps its approve button.
+   * Off by default, so no existing page gains a gesture on the bump. The gesture is the
+   * phone's; on a wide screen the binding is the row's actions column instead (0.46,
+   * keksdose dev#598): Approve where the row can take it, bound or not, then the bound
+   * `edit` and `clear`, each once — under a write lock they stay and say why.
    *
    * A BINDING instead of `true` (keksdose — Marcel's live #377 rework, 2026-10-03: *"Add
    * the swipe options to be shown also to the settings /settings#interaction area where
@@ -482,6 +485,8 @@ export function TranslationReviewPanel({
   // (docs/billing-harmonization.md §12.13, §12.36): the buttons take
   // COMMIT_EXCEPT_BILLING, and the swipes read the lock as they see it.
   const lock = useWriteLock(COMMIT_EXCEPT_BILLING);
+  // The desktop actions column's plain-text name (dev#598), the provider's "Actions".
+  const rowActionLabels = useKitLabels("rowActions", DEFAULT_ROW_ACTIONS_LABELS);
   // The phone layout DataTable switches its layout on, so "a phone" means the same here
   // as in the table, at every text size: `usePhoneLayout()` itself (§10.4; 0.32.1,
   // keksdose's 0.32 report — `!useBreakpoint("md")` could disagree with it at 767.5 px).
@@ -650,11 +655,11 @@ export function TranslationReviewPanel({
   /** A swipe bound to `clear`: the row's verdict taken back, answered like an approval —
    *  the Undo toast stores the verdict again. Under the row's own key, so it queues behind
    *  (and never overlaps) an approval of the same row. */
-  const clearRow = async (row: TranslationRow) => {
+  const clearRow = async (row: TranslationRow, origin: TranslationReviewOrigin = "swipe") => {
     if (!onClear || row.review === null) return;
     const clear = onClear;
     const keys = [{ locale: row.locale, key: row.key }];
-    const ok = await run(`row:${row.id}`, () => clear(keys, { origin: "swipe", toasted: undoOn }));
+    const ok = await run(`row:${row.id}`, () => clear(keys, { origin, toasted: undoOn }));
     if (ok && undoOn) sayDone([row], row.key, true);
   };
 
@@ -763,7 +768,49 @@ export function TranslationReviewPanel({
       sortBy: (r) => REVIEW_STATUSES.indexOf(r.status),
     },
   ];
-  if (editable) {
+  if (editable && binding) {
+    // keksdose dev#598 item 2: with a binding, the desktop row offers what the card's
+    // swipes offer — `clear` was reachable only by a swipe. Approve first on every row
+    // that can take it, bound or not (the desktop always had it), then the binding's
+    // actions, end side first, each once. The swipe's words, glyphs and handlers; unlike
+    // the swipe, a locked row keeps its buttons and says why (`commit`), and a row whose
+    // write is out shows it in flight. Hidden on the phone, where the swipes are.
+    columns.push(
+      rowActionsColumn<TranslationRow>({
+        key: "actions",
+        headerText: rowActionLabels.actions,
+        name: (r) => r.key,
+        tooltipSide: "start",
+        actions: (r) =>
+          translationReviewSwipePlan(
+            { end: ["approve", ...(binding.end ?? []), ...(binding.start ?? [])] },
+            r,
+            { canClear: onClear !== undefined },
+          ).end.map((id): RowAction => {
+            const swipe = swipeAction(r, id);
+            // `edit` only opens the editor, whose own Save is the commit.
+            const writes = id !== "edit";
+            return {
+              key: id,
+              label: swipe.label,
+              icon: <>{swipe.icon}</>,
+              tone: "muted",
+              commit: writes ? COMMIT_EXCEPT_BILLING : undefined,
+              pending: writes && isQueued(`row:${r.id}`),
+              disabled: busy,
+              onSelect:
+                id === "approve"
+                  ? () => void approve(`row:${r.id}`, [r], "row", r.key)
+                  : id === "clear"
+                    ? () => void clearRow(r, "row")
+                    : // The row's group stays open while its editor is (`keepGroupOpen`).
+                      () => swipeAction(r, id, groups?.find((g) => g.rows.includes(r))?.key).onCommit(),
+            };
+          }),
+        column: { mobileHidden: true },
+      }),
+    );
+  } else if (editable) {
     columns.push({
       key: "approve",
       header: <span className="sr-only">{labels.approve}</span>,
@@ -801,6 +848,7 @@ export function TranslationReviewPanel({
     switch (id) {
       case "approve":
         return {
+          id,
           label: labels.approve,
           icon: <Check className="size-4" aria-hidden />,
           onCommit: () => void approve(`row:${r.id}`, [r], "swipe", r.key),
@@ -810,6 +858,7 @@ export function TranslationReviewPanel({
         };
       case "edit":
         return {
+          id,
           label: missing ? labels.suggest : labels.flag,
           icon: <PencilLine className="size-4" aria-hidden />,
           // Opens the editor rather than sending the string back: "needs a change"
@@ -823,6 +872,7 @@ export function TranslationReviewPanel({
         };
       case "clear":
         return {
+          id,
           label: labels.reset,
           icon: <RotateCcw className="size-4" aria-hidden />,
           onCommit: () => void clearRow(r),
@@ -935,6 +985,8 @@ export function TranslationReviewPanel({
         </div>
       )}
       mobileSwipeActions={binding ? (r) => swipeActions(r, group?.key) : undefined}
+      // The desktop's buttons for the binding are the panel's own "actions" column.
+      desktopSwipeActions={false}
       selection={selectionFor(list)}
     />
   );

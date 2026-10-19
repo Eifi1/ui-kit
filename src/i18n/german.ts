@@ -836,6 +836,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // Impersonal, like the rest of this catalogue where it can be: an app that
       // addresses its users with "du" then has fewer keys to override.
       reason: "Nur zum Ansehen – Änderungen sind hier nicht möglich.",
+      offline: "Nur mit Internetverbindung möglich.",
     },
     accountState: {
       active: "Aktiv",
@@ -1933,6 +1934,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         invitationsPending: "Offene Einladungen",
         users: "Benutzer",
         usersNew: (count) => `${n(count)} neu in 7 Tagen`,
+        awaitingVerdict: "Warten auf ein Urteil",
+        awaitingVerdictHint: "Beantwortet; Sie oder die meldende Person bestätigen die Lösung",
+        releasedForWork: "Zur Umsetzung freigegeben",
+        releasedForWorkHint: "Bereit, Nacharbeit angefordert oder in Arbeit",
       },
       overviewError: "Die Übersicht konnte nicht geladen werden.",
       retry: "Erneut versuchen",

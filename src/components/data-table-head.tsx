@@ -8,7 +8,7 @@ import { FilterPopover } from "./data-table-filter-popover";
 import { Popover } from "./popover";
 import { Tooltip } from "./tooltip";
 import type { DataTableLabels } from "./data-table-labels";
-import { ROW_ACTIONS_KEY } from "./data-table-row-actions";
+import { isTableOwnColumn } from "./data-table-row-actions";
 import { columnLabel, logicalAlign, splitCellProps } from "./data-table-shared";
 import type { DataTableColumn, DataTableProps, FilterState } from "./data-table";
 
@@ -223,7 +223,7 @@ export function DataTableHead<T>({
                   </Popover>
                 )}
               </div>
-              {resizable && col.key !== ROW_ACTIONS_KEY && (
+              {resizable && !isTableOwnColumn(col.key) && (
               /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a
                  pointer-only drag handle for a visual preference (column width); it is
                  deliberately not a tab stop, and no content or action depends on it. */

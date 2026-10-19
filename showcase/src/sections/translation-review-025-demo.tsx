@@ -275,7 +275,10 @@ export function TranslationReview025Demo() {
           “Mark unreviewed” toward the end, on an unreviewed one just “Approve”. {code('"clear"')} needs{" "}
           {code("onClear")} and answers with Undo, which stores the verdict again. {code("true")} is{" "}
           {code('{ end: ["approve"], start: ["edit"] }')}; there is no separate “needs a change”, because{" "}
-          {code('"edit"')} already is one — it opens the editor with the cursor in the wording.
+          {code('"edit"')} already is one — it opens the editor with the cursor in the wording. On a wide screen
+          the binding is the row&apos;s actions column too (0.46): Approve where the string can take it, then the
+          bound actions — so {code('"clear"')} is a button there, not a swipe only; under the write lock they stay
+          and say why.
         </Note>
       </div>
     </Example>
