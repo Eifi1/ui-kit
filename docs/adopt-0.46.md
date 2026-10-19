@@ -86,6 +86,23 @@ should keep their time set automatically (network time) all the same.
 | kastlan | **Client**: features/handover/offline/sync.ts:170-182, add `client_now: new Date().toISOString()` beside `refusals: true` (:181), inside the retry loop so each attempt reads the clock afresh. **Server**: bump to the 0.16.0 wheel (pyproject.toml:90); adapters/api/sync_router.py:61 passes `skew=clock_skew(payload.client_now, now=moment)` into `sync_service.apply_incoming` (domain/services/sync_service.py:331-333, one `moment` for both), which passes `skew=skew` to `merge_lww` (:372) and `clamp_stamp` (:392). `SyncRequest` (domain/schemas/sync.py:23) inherits the field. A test: a slow tablet's later edit beats a colleague's earlier one that synced first. **Tablets**: set date and time automatically on every handover tablet (a device setting, no code). |
 | Kurvenschmiede | Nothing (no `/sync`). |
 
+## A company's rename logs both names (server-kit 0.16.0, kastlan K8)
+
+`AdminAction.GROUP_RENAME` documented `{from, to}` for a company, but `audit_detail` took
+only short tokens, so `{"from": "Test AG"}` raised `AuditDetailError` and the rename failed
+(500). Now `audit_detail(detail, action=)` treats a `group_rename` detail's top-level `from`
+and `to` as names: free text, stripped, 1 to 200 characters (`DETAIL_NAME_MAX_LENGTH`), no
+control characters, never secret-shaped. The rest of that detail is still tokens, and every
+other action still refuses a name. `admin_action_record` passes its own action, so a call
+through it needs no change. Reading back needs none either: `AdminActionRow.detail` is a
+plain dict.
+
+| App | Change |
+| --- | --- |
+| keksdose | Nothing (no group renames). |
+| kastlan | Bump to the 0.16.0 wheel, then log the names again. In domain/services/platform_service.py:195-198, pass `detail={**VIA_PLATFORM, "from": company.name, "to": data.name}` before the name is set, and drop the comment at :196-197. In adapters/api/company_router.py:43-46, pass `detail={"from": renamed_from, "to": company.name}` and drop the comment at :44-45. The frontend already maps them: settings/components/admin-actions-card.tsx:37 turns `detail.from` / `detail.to` into the entry's `renamed`, so the row reads "Company renamed from A to B". Add a test that records a rename with spaced names, e.g. "Test AG" → "Test AG Bern". |
+| Kurvenschmiede | Nothing. A team's rename keeps `{}` (team_service.py:224); a team's name is never logged. |
+
 ## The 0.45 adoptions: guide notes
 
 - **A new write route brings two touch points** (keksdose N3, admin §9.2.2): its
