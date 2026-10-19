@@ -21,6 +21,24 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.46.0](https://github.com/Eifi1/ui-kit/compare/v0.45.0...v0.46.0) (2026-10-19)
+
+Round 0.46, the three 0.45 adoptions' notes, reviewed against all three apps before release.
+One change shows on a plain bump: a table with phone swipe actions now also gets a desktop
+actions column with the same actions (on by default, except beside `rowActions`; an app's own
+`DataTable` wrapper must forward `desktopSwipeActions`). The rest replaces the apps' 0.45
+workarounds (`MailTestCard` without `mailBackend`, the kit's words for the feedback tiles).
+The server half ships as server-kit 0.16.0 (sync clock-skew correction, a company rename's
+names logged). Per-app steps: docs/adopt-0.46.md.
+
+### Added
+
+* desktop actions from phone swipe actions, the 0.45 adoption fixes ([57775f0](https://github.com/Eifi1/ui-kit/commit/57775f09d3aaafcbf3fbc19f9793ed5d9721b724))
+
+### Fixed
+
+* **translation-review,admin:** the row action's own name; the kit's hint only with its label ([be4c6a5](https://github.com/Eifi1/ui-kit/commit/be4c6a5b03c063153de9cee1b4229ef63ae1d4c9))
+
 ## [0.45.0](https://github.com/Eifi1/ui-kit/compare/v0.44.0...v0.45.0) (2026-10-19)
 
 Round 0.45, settled by Marcel on 2026-10-19 and reviewed against all three apps before release:
