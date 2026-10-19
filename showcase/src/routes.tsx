@@ -1368,7 +1368,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
         icon: UserCog,
-        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult", "AccountRoleChip", "adminMenuEntry", "AdminMenuRow", "ADMIN_SECTIONS", "adminSections", "AdminOverview", "AttentionTile", "adminWaitingCount", "AdminToolLinks", "AdminForbidden", "adminSectionOrder", "useAdminMenuEntry"],
+        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult", "AccountRoleChip", "adminMenuEntry", "AdminMenuRow", "ADMIN_SECTIONS", "adminSections", "AdminOverview", "AttentionTile", "adminWaitingCount", "AdminToolLinks", "AdminForbidden", "adminSectionOrder", "useAdminMenuEntry", "AdminWaitingBadge", "MailTestCard"],
         Body: () => (
           <>
             <AdminWayIn042Demo />
@@ -1399,18 +1399,6 @@ export const GROUPS: ShowcaseGroup[] = [
             <BillingSwitchDemo />
           </>
         ),
-      },
-      {
-        // 0.45: beside the subscription — what an app keeps on the device, and asks before
-        // it lets it go.
-        slug: "offline",
-        title: "Offline",
-        short: "Offline",
-        blurb:
-          "Working without a connection: the persisted query cache with its scrub list, the question before signing out while changes still wait, the update prompt that waits for a tour, and the shared-computer choice.",
-        icon: CloudOff,
-        components: ["createQueryPersistence", "DEFAULT_SCRUB_FIELDS", "SignOutPendingDialog", "PwaUpdatePrompt", "SharedComputerChoice", "isSharedComputer", "setSharedComputer"],
-        Body: () => <OfflineDemo />,
       },
       {
         slug: "feedback-compose",
@@ -1528,6 +1516,18 @@ export const GROUPS: ShowcaseGroup[] = [
             <SearchParams025Demo />
           </>
         ),
+      },
+      {
+        // 0.45: what an app keeps on the device, and asks before it lets it go. In API, not App
+        // chrome: that group is at its ten pages (the phone's row of page pills).
+        slug: "offline",
+        title: "Offline",
+        short: "Offline",
+        blurb:
+          "Working without a connection: the persisted query cache with its scrub list, the question before signing out while changes still wait, the update prompt that waits for a tour, and the shared-computer choice.",
+        icon: CloudOff,
+        components: ["createQueryPersistence", "DEFAULT_SCRUB_FIELDS", "SignOutPendingDialog", "PwaUpdatePrompt", "SharedComputerChoice", "isSharedComputer", "setSharedComputer"],
+        Body: () => <OfflineDemo />,
       },
     ],
   },

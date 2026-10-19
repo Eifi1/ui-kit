@@ -852,12 +852,6 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "The permanent-grant warning — PlanPicker, PlanSwitchConfirm",
     "The portal in a new tab — openProviderPage, useCancelRequest",
   ],
-  "offline": [
-    "createQueryPersistence — the persisted query cache",
-    "SignOutPendingDialog — before a sign-out while changes wait",
-    "PwaUpdatePrompt — “A new version is available”",
-    "SharedComputerChoice — on the sign-in form",
-  ],
   "feedback-compose": [
     "FeedbackDialog",
     "Several attachments — multiple",
@@ -964,6 +958,12 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "useDialogParam — several dialogs on one param",
     "useSearchParamsState — a filter object in the URL",
     "useSearchParamState — setters called in a row compose",
+  ],
+  "offline": [
+    "createQueryPersistence — the persisted query cache",
+    "SignOutPendingDialog — before a sign-out while changes wait",
+    "PwaUpdatePrompt — “A new version is available”",
+    "SharedComputerChoice — on the sign-in form",
   ],
   "server-auth": [
     "auth · Functions",
@@ -1387,9 +1387,6 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Billing033Demo",
     "BillingSwitchDemo",
   ],
-  "offline": [
-    "OfflineDemo",
-  ],
   "feedback-compose": [
     "FeedbackCompose",
     "FeedbackAttachment016Demo",
@@ -1431,6 +1428,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   "url-state": [
     "UrlStateDemo",
     "SearchParams025Demo",
+  ],
+  "offline": [
+    "OfflineDemo",
   ],
   "server-auth": [
     "ServerModules",

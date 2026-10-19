@@ -10,6 +10,7 @@ import * as tour from "../../../src/tour";
 import * as wizard from "../../../src/wizard";
 import * as rhf from "../../../src/rhf";
 import * as tableText from "../../../src/table-text";
+import * as offline from "../../../src/offline";
 import * as testing from "../../../src/testing";
 import * as dates from "../../../src/lib/dates";
 import * as i18nDeCh from "../../../src/i18n/locales/de-CH";
@@ -50,6 +51,7 @@ const ENTRIES: Record<string, Record<string, unknown>> = {
   "./wizard": wizard,
   "./rhf": rhf,
   "./table-text": tableText,
+  "./offline": offline,
   "./testing": testing,
   "./dates": dates,
   "./i18n/de-CH": i18nDeCh,
@@ -73,6 +75,7 @@ const ENTRY_FILES = [
   "src/wizard.ts",
   "src/rhf.ts",
   "src/table-text.ts",
+  "src/offline.ts",
   "src/testing/index.ts",
   "src/lib/dates.ts",
   ...["de-CH", "en", "es", "fr", "hu", "it", "zh"].map((code) => `src/i18n/locales/${code}.ts`),
