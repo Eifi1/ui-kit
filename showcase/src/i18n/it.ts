@@ -530,10 +530,10 @@ export const it: Dictionary = {
         "La query dell’elenco utenti, le quattro azioni di amministrazione e i loro livelli di conferma, la voce di audit, l’eliminazione in due fasi e l’esportazione dei dati.",
     },
     "server-settings": {
-      title: "Impostazioni e lingua",
+      title: "Impostazioni, lingua e tour",
       short: "Impostazioni",
       blurb:
-        "Una sola regola per ogni body di impostazioni — un campo omesso resta, null lo azzera, uno sconosciuto viene rifiutato — e l’unica lingua canonica dell’account.",
+        "Una sola regola per ogni body di impostazioni — un campo omesso resta, null lo azzera, uno sconosciuto viene rifiutato — l’unica lingua canonica dell’account e i suoi progressi nei tour, dove vale il completamento più recente.",
     },
     "server-demo": {
       title: "Demo",
@@ -566,10 +566,10 @@ export const it: Dictionary = {
         "Il contratto del feedback come funzioni pure — schemi, stati, le regole del PATCH, rielaborazione, segnalazione degli arresti anomali, cancellazione — le sue route come un’unica factory di router, e allegati giudicati dai loro byte.",
     },
     "server-limits": {
-      title: "Limiti, errori e CORS",
+      title: "Limiti, errori, CORS e sincronizzazione",
       short: "Limiti",
       blurb:
-        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, CORS per qualche origine in più e il token dello scheduler sulle rotte dei job.",
+        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, CORS per qualche origine in più il token dello scheduler sulle rotte dei job e la sincronizzazione local-first: vince la modifica più recente, rifiuti per singola modifica.",
     },
     "server-translation-review": {
       title: "Revisione delle traduzioni",

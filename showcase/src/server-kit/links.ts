@@ -48,6 +48,12 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   // server-kit 0.10: the review's routes as one factory (the `fastapi` extra), nested
   // like `feedback.router`; the kit's review page talks to them.
   "translation_review.router": ["localisation", "kit-review"],
+  // server-kit 0.15: tour progress on the account and its routes, which the Tour page's
+  // `useTourProgress({account})` reads and writes (tours §10).
+  tours: ["tour"],
+  "tours.router": ["tour"],
+  // server-kit 0.15: the sync shapes behind the Offline page's cache and dialogs (local-first §1).
+  sync: ["offline"],
   // server-kit 0.10: the layer-2 services' shared clock; no page of the kit has one.
   clock: [],
   // The extra-origin CORS that lets this very site's Kit review page call keksdose.

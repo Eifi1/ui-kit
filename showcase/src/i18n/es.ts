@@ -533,10 +533,10 @@ export const es: Dictionary = {
         "La consulta de la lista de usuarios, las cuatro acciones de administración y sus niveles de confirmación, la entrada de auditoría, el borrado en dos fases y la exportación de datos.",
     },
     "server-settings": {
-      title: "Ajustes e idioma",
+      title: "Ajustes, idioma y recorridos",
       short: "Ajustes",
       blurb:
-        "Una sola regla para todo cuerpo de ajustes — lo omitido se conserva, null lo borra, lo desconocido se rechaza — y el único idioma canónico de la cuenta.",
+        "Una sola regla para todo cuerpo de ajustes — lo omitido se conserva, null lo borra, lo desconocido se rechaza — el único idioma canónico de la cuenta y su progreso en los recorridos, donde gana la finalización más reciente.",
     },
     "server-demo": {
       title: "Demo",
@@ -569,10 +569,10 @@ export const es: Dictionary = {
         "El contrato de comentarios como funciones puras — esquemas, estados, las reglas del PATCH, correcciones, registro de bloqueos, borrado — sus rutas como una fábrica de routers, y adjuntos juzgados por sus bytes.",
     },
     "server-limits": {
-      title: "Límites, errores y CORS",
+      title: "Límites, errores, CORS y sincronización",
       short: "Límites",
       blurb:
-        "El limitador de frecuencia de ventana deslizante y de quién es la dirección que cuenta, cada rechazo del kit respondido con el estado de su contrato, CORS para algunos orígenes más y el token del planificador en las rutas de tareas.",
+        "El limitador de frecuencia de ventana deslizante y de quién es la dirección que cuenta, cada rechazo del kit respondido con el estado de su contrato, CORS para algunos orígenes más el token del planificador en las rutas de tareas y la sincronización local-first: gana la edición más reciente, rechazos por cambio.",
     },
     "server-translation-review": {
       title: "Revisión de traducciones",

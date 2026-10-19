@@ -539,10 +539,10 @@ export const hu: Dictionary = {
         "A felhasználólista lekérdezése, a négy adminisztrátori művelet és megerősítési szintjeik, az auditbejegyzés, a kétlépcsős törlés és az adatexport.",
     },
     "server-settings": {
-      title: "Beállítások és nyelv",
+      title: "Beállítások, nyelv és bemutatók",
       short: "Beállítások",
       blurb:
-        "Egyetlen szabály minden beállításokat küldő kéréstörzsre — a kihagyott mező megmarad, a null törli, az ismeretlen mezőt elutasítja — és a fiók egyetlen kanonikus nyelve.",
+        "Egyetlen szabály minden beállításokat küldő kéréstörzsre — a kihagyott mező megmarad, a null törli, az ismeretlen mezőt elutasítja — a fiók egyetlen kanonikus nyelve, és a bemutatók haladása, ahol a későbbi teljesítés érvényes.",
     },
     "server-demo": {
       title: "Demó",
@@ -575,10 +575,10 @@ export const hu: Dictionary = {
         "A visszajelzési szerződés tiszta függvényekként — sémák, állapotok, a PATCH-szabályok, átdolgozás, összeomlások rögzítése, törlés —, az útvonalai egyetlen routergyárként, és a mellékletek, amelyeket a bájtjaik alapján ítél meg.",
     },
     "server-limits": {
-      title: "Korlátok, hibák és CORS",
+      title: "Korlátok, hibák, CORS és szinkronizálás",
       short: "Korlátok",
       blurb:
-        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, és az ütemező tokenje a feladatútvonalakon.",
+        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, az ütemező tokenje a feladatútvonalakon, és a local-first szinkronizálás: a legutóbbi módosítás nyer, elutasítás módosításonként.",
     },
     "server-translation-review": {
       title: "Fordítások ellenőrzése",

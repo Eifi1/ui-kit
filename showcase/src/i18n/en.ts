@@ -539,10 +539,10 @@ export const en: Dictionary = {
         "The user list's query, the four admin actions and their confirmation levels, the audit entry, two-stage deletion and the data export.",
     },
     "server-settings": {
-      title: "Settings & language",
+      title: "Settings, language & tours",
       short: "Settings",
       blurb:
-        "One rule for every settings body — left out keeps, null clears, unknown is refused — and the account's one canonical language.",
+        "One rule for every settings body — left out keeps, null clears, unknown is refused — the account's one canonical language, and its tour progress, where the later completion wins.",
     },
     "server-demo": {
       title: "Demo",
@@ -575,10 +575,10 @@ export const en: Dictionary = {
         "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — its routes as one router factory, and attachments judged by their bytes.",
     },
     "server-limits": {
-      title: "Limits, errors & CORS",
+      title: "Limits, errors, CORS & sync",
       short: "Limits",
       blurb:
-        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, and the scheduler's token on job routes.",
+        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change.",
     },
     "server-translation-review": {
       title: "Translation review",

@@ -1565,12 +1565,12 @@ export const GROUPS: ShowcaseGroup[] = [
       }),
       serverPage({
         slug: "server-settings",
-        title: "Settings & language",
+        title: "Settings, language & tours",
         short: "Settings",
         blurb:
-          "One rule for every settings body — left out keeps, null clears, unknown is refused — and the account's one canonical language.",
+          "One rule for every settings body — left out keeps, null clears, unknown is refused — the account's one canonical language, and its tour progress, where the later completion wins.",
         icon: SettingsIcon,
-        serverModules: ["settings"],
+        serverModules: ["settings", "tours", "tours.router"],
       }),
       serverPage({
         slug: "server-demo",
@@ -1624,12 +1624,12 @@ export const GROUPS: ShowcaseGroup[] = [
       }),
       serverPage({
         slug: "server-limits",
-        title: "Limits, errors & CORS",
+        title: "Limits, errors, CORS & sync",
         short: "Limits",
         blurb:
-          "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, and the scheduler's token on job routes.",
+          "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change.",
         icon: ShieldAlert,
-        serverModules: ["limiter", "errors", "cors", "jobs"],
+        serverModules: ["limiter", "errors", "cors", "jobs", "sync"],
       }),
       serverPage({
         slug: "server-translation-review",
