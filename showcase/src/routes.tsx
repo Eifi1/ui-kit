@@ -260,7 +260,7 @@ const OneTimeCode022Demo = lazySection(() => import("./sections/account-fields-0
 const OneTimeCodeUnlabelled022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCodeUnlabelled022Demo");
 const PasswordStrength022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "PasswordStrength022Demo");
 const LanguageSelect022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "LanguageSelect022Demo");
-const DateFormat046Demo = lazySection(() => import("./sections/date-format-046-demo"), "DateFormat046Demo");
+const DateFormatDemo = lazySection(() => import("./sections/date-format"), "DateFormatDemo");
 const TileRadioGroup022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "TileRadioGroup022Demo");
 const AccountNumbers022Demo = lazySection(() => import("./sections/account-numbers-022-demo"), "AccountNumbers022Demo");
 const ToggleGroup022Demo = lazySection(() => import("./sections/chips-toggles"), "ToggleGroup022Demo");
@@ -1302,7 +1302,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Settings />
             <PasswordStrength022Demo />
             <LanguageSelect022Demo />
-            <DateFormat046Demo />
+            <DateFormatDemo />
           </>
         ),
       },

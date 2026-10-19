@@ -8,7 +8,7 @@ import { Example, Note, Row, code, READOUT } from "../lib/section";
  * 0.46: keksdose's date format, lifted (Settings ▸ Appearance, feedback #180). The
  * preference is this demo's state; an app keeps it per device, as keksdose does.
  */
-export function DateFormat046Demo() {
+export function DateFormatDemo() {
   const { code: locale } = useLocale();
   const [preference, setPreference] = useState<DateFormatPreference>("auto");
   const [day, setDay] = useState("2026-09-06");

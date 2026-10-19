@@ -1366,7 +1366,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Settings",
     "PasswordStrength022Demo",
     "LanguageSelect022Demo",
-    "DateFormat046Demo",
+    "DateFormatDemo",
   ],
   "notifications": [
     "NotificationsPage",

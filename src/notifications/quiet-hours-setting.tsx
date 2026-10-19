@@ -24,7 +24,7 @@ export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div"
   /** The `GET`'s `quiet_hours_end`. */
   end: string | null;
   /** The `GET`'s `timezone`, an IANA name, or `null` (the app's zone applies).
-   *  @deprecated 0.46 (§10.3): the zone is the account's — pass `zone` instead, and the
+   *  @deprecated 0.46 — pass `zone` (§10.3: the zone is the account's); removed in 0.47. Then the
    *  card drops its picker. Read only while `zone` is left out. */
   timezone?: string | null;
   /**

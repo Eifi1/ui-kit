@@ -30,7 +30,7 @@ export interface NotificationsLabels {
   typesTitle: string;
   /** The line under it. */
   typesDescription: string;
-  /** @deprecated 0.46: the card's channels are columns now (`channelEmail`); unused,
+  /** @deprecated 0.46 — the card's channels are columns now (`channelEmail`); removed in 0.47. Unused,
    *  kept so an app's override still type-checks. */
   byEmail: string;
   /** 0.46 (§10.2): the channel columns' headings, and each switch's name. */
