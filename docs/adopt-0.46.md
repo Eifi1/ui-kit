@@ -1,4 +1,4 @@
-# Adopting `@eifi1/ui-kit` 0.46 and `eifi1-server-kit` 0.15.1
+# Adopting `@eifi1/ui-kit` 0.46 and `eifi1-server-kit` 0.16.0
 
 ui-kit 0.46 has one change that shows on a plain bump: a table with phone swipe actions now
 also gets a desktop actions column with the same actions (Marcel, dev#598; on by default, except
@@ -65,6 +65,26 @@ languages). The app reads the connection itself.
 | keksdose | Nothing. It queues offline writes as paused mutations (keep the default), and its prompt mounts at the root. |
 | kastlan | **K1** shared/offline/query-persistence.ts:58-63: the `dehydrateOptions` override → `persistMutations: false` in the `createQueryPersistence` call (:50-57). **K2** the sign-in page (features/auth/components/auth-page.tsx) runs `removeStaleQueryCopies("kastlan", PERSIST_MAX_AGE)` on mount, for the copy a session left when it ended with no user known (auth-store.ts:121, the rehydrate "ended" path); providers.tsx:51 stays. **K3** shared/pwa/sw-update.ts → `export const swUpdates = createServiceWorkerUpdates(registerSW)`; main.tsx:31 `swUpdates.start()`; app/pwa-update.tsx:18 → `useServiceWorkerUpdate(swUpdates)` (its names are `onReload` / `onDismiss`, the prompt's props). **K4** shared/offline/offline-lock.ts → the kit's `OFFLINE_LOCK` and `COMMIT_EXCEPT_OFFLINE` (for `COMMIT_OFFLINE_TOO`, in the handover's defect-form, room-inspector and meter-readings-card); app-layout.tsx:88 → `useOfflineWriteLock(!online)`, and `offlineSync.needsConnection` can go if the kit's words fit. |
 | Kurvenschmiede | Nothing (online-only). |
+
+## Sync: the device clock's skew is corrected (server-kit 0.16.0)
+
+Local-first §1.5 D2, amended in round 0.46 (Marcel, 2026-10-19). The latest DEVICE edit time
+wins, and 0.15.0 clamped only future stamps: a tablet whose clock runs SLOW had its edits
+count as older, so a colleague's edit made earlier but synced first replaced them without a
+word. Now `SyncRequest.client_now` (optional; the device's clock when it sends the push, an
+instant with a zone like `updated_at`) lets the server shift each stamp of that push by
+`server_now - client_now` before LWW and the clamp: `skew = clock_skew(payload.client_now,
+now=moment)` once per push, then `merge_lww(…, now=moment, skew=skew)` and `clamp_stamp(…,
+now=moment, skew=skew)`. Skew within 2 s is ignored (`CLOCK_SKEW_TOLERANCE`), the correction
+is capped at 24 h (`MAX_CLOCK_SKEW`). Without `client_now`, or without `skew=`, nothing
+changes. It assumes the clock did not change between edit and push, so handover tablets
+should keep their time set automatically (network time) all the same.
+
+| App | Change |
+| --- | --- |
+| keksdose | Optional. Its queued upserts carry device stamps too (shared/offline/write.ts:178, :236, `stampAfter` sync-client.ts:639-643), so a slow browser clock loses the same way, but its server merges with its own `_merge_lww` (domain/services/sync_service.py:523, called :1239 and :1279), not the kit's. To adopt: send `client_now: new Date().toISOString()` with the push (sync-client.ts:1487; the page pulls at :1284 push nothing) and shift `incoming_updated` by `clock_skew(...)` before `_merge_lww`. `stampAfter` can stay: its stamp is shifted and clamped like any other. |
+| kastlan | **Client**: features/handover/offline/sync.ts:170-182, add `client_now: new Date().toISOString()` beside `refusals: true` (:181), inside the retry loop so each attempt reads the clock afresh. **Server**: bump to the 0.16.0 wheel (pyproject.toml:90); adapters/api/sync_router.py:61 passes `skew=clock_skew(payload.client_now, now=moment)` into `sync_service.apply_incoming` (domain/services/sync_service.py:331-333, one `moment` for both), which passes `skew=skew` to `merge_lww` (:372) and `clamp_stamp` (:392). `SyncRequest` (domain/schemas/sync.py:23) inherits the field. A test: a slow tablet's later edit beats a colleague's earlier one that synced first. **Tablets**: set date and time automatically on every handover tablet (a device setting, no code). |
+| Kurvenschmiede | Nothing (no `/sync`). |
 
 ## The 0.45 adoptions: guide notes
 

@@ -369,6 +369,21 @@ at noon; "last to arrive" is wrong as soon as a second scope exists.
   its copy only when strictly newer and echoes the loser in the same round.
 - **A future stamp is clamped** to the server's now (tablets' clocks drift; tours §10.2.3 clamps
   the same way).
+- **The device clock's skew is corrected** (amendment, round 0.46, Marcel 2026-10-19; server-kit
+  0.16.0). The clamp caught a FAST clock only past the server's now; a SLOW clock's edits counted as
+  older than they were, so a colleague's earlier edit that arrived first silently replaced a later
+  one (ka's handover tablets). Every push now carries `SyncRequest.client_now`, the device's clock
+  when it SENDS the push (an instant with a zone, spelt as `updated_at`), and the server shifts
+  every change's stamp of that push by `server_now - client_now` before LWW and the clamp
+  (`clock_skew`, once per push; `merge_lww(…, skew=)`, `clamp_stamp(…, skew=)`). Slow and fast
+  clocks are both corrected, on the assumption that the device's clock did not change between the
+  edit and the push. Skew within 2 s is latency and ignored (`CLOCK_SKEW_TOLERANCE`); the
+  correction is capped at 24 h either way (`MAX_CLOCK_SKEW`: a clock off by more likely changed in
+  between, and the clamp still applies). **The client's duty:** send `client_now` on every
+  `/sync` push, read fresh for each request, retries included. A push without it is corrected not
+  at all (0.15.0's clamp alone). The server's stored `updated_at` is already corrected and is
+  never shifted. Handover tablets should still set their time automatically (network time): the
+  correction cannot see a clock that was changed between the edit and the push.
 - **An older client** that sends no `updated_at` falls back to server-now, today's ka rule, for one
   release (D1).
 - **Deletes tombstone unconditionally** (keksdose's correction, sync_service.py:1129-1180): no
@@ -507,6 +522,9 @@ they are (no ETags). KS's version contract stays KS's.
   ignores the tenant (one row).
 - `merge`: `merge_lww(existing_updated, incoming_updated, *, now) -> bool` (strictly newer keeps the
   server's, a future stamp clamped, none → now) and `merge_delete`, which always tombstones (D2).
+  **0.16.0** (amendment, round 0.46): `SyncRequest.client_now`, `clock_skew(client_now, *, now)`,
+  `correct_stamp(stamp, *, skew)`, `CLOCK_SKEW_TOLERANCE` (2 s), `MAX_CLOCK_SKEW` (24 h), and an
+  optional `skew=` on `merge_lww` and `clamp_stamp` (default none: 0.15.0's behaviour).
 - `paging`: the (entity, knowledge, id) page cursor (kk's LP-3 fix).
 - **Stays in the apps:** kk's household tenancy and FORCE RLS, E2EE and re-seal, key custody, billing
   refusals (`_refusal`), `_UNIQUE_KEYS`/remaps, revival rules, transfer cascades and trades, fx and
@@ -574,6 +592,7 @@ as optional peers). Size **S–M**.
 |---|---|---|---|---|
 | **P1 offline reads (0.45)** | ui-kit `createQueryPersistence`, `SignOutPendingDialog`, `PwaUpdatePrompt`, `SharedComputerChoice` (S–M) | moves its policy onto the kit helper, per-account key, dialog with `keepsChanges={false}` (S) | persisted cache + scrub list; "Needs a connection" on online-only actions; shared-computer choice; prompt SW (M) | none |
 | **P2 protocol (0.45)** | server-kit `sync` (M) | imports the schemas, mixin, counter port and merge (S–M) | D1 shapes, `rejections`, D2 edit time (wire), `refusals: true`; old shape kept one release (M) | none |
+| P2 amendment (0.46) | server-kit 0.16.0: `client_now`, the clock-skew correction (S) | optional: its queued upserts carry device stamps too; sends `client_now` once its merge uses the kit's (S) | sends `client_now` on every `/sync` push; passes the skew to `merge_lww` / `clamp_stamp` (S) | none |
 | P3 engine (later) | ui-kit `createSyncEngine`, `useSyncWorker` (L) | — | the handover copy onto the kit engine; `lastSyncedAt`; the indicator always shown; legacy outbox retired (M) | none |
 | P4 more scopes (later) | `SyncScope`/`EntityRule` into server-kit if shared | not for keksdose unless proven | `maintenance`, `meters`, `contacts`; owner meetings a candidate (M) | none |
 
