@@ -272,7 +272,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `signOutTourProgress`.
   // 0.46.0 (+3, kastlan K4): `OFFLINE_LOCK`, `COMMIT_EXCEPT_OFFLINE`, `useOfflineWriteLock`.
   // 0.46.0 (+1, keksdose dev#598, here and in /feedback): `feedbackSwipeOmitShown`.
-  ["@eifi1/ui-kit", barrel, 969],
+  // 0.46.0 (+10, postponed items): `DateFormatSetting`, `DATE_FORMAT_PREFERENCES`,
+  // `isDateFormatPreference`, `resolveDateFormat`, `formatDateWithPreference`, `dateFormatSample`,
+  // `dateFormatterFor`; push rotation `handlePushSubscriptionChange`, `resubscribeAfterChange`,
+  // `pushSubscriptionInput`.
+  ["@eifi1/ui-kit", barrel, 979],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

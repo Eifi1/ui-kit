@@ -1877,6 +1877,11 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Mehr Kontrast macht dezente Texte und Linien dunkler und Fokusrahmen dicker. „System“ richtet sich nach diesem Gerät.",
       contrastModes: { system: "System", standard: "Standard", more: "Mehr" },
       saveFailed: "Konnte nicht in Ihrem Konto gespeichert werden. Auf diesem Gerät gilt es trotzdem.",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "Datumsformat",
+      dateFormatHelp:
+        "Wie Datumsangaben in der ganzen App geschrieben werden. Unabhängig von der Oberflächensprache — Sie können die App also auf Englisch lesen und trotzdem deutsche Datumsangaben sehen.",
+      dateFormatAuto: "Der Sprache folgen",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Darstellung". "Theme", as `topBar.theme`; "Bereiche" for the panels

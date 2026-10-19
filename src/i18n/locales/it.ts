@@ -1837,6 +1837,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         "Il contrasto aumentato scurisce i testi tenui e le linee e ispessisce i riquadri di focus. «Sistema» segue l’impostazione di questo dispositivo.",
       contrastModes: { system: "Sistema", standard: "Standard", more: "Aumentato" },
       saveFailed: "Non è stato possibile salvarlo nel Suo account. Su questo dispositivo vale comunque.",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "Formato data",
+      dateFormatHelp:
+        "Come vengono scritte le date in tutta l’app. Indipendente dalla lingua dell’interfaccia, così può leggere l’app in inglese e vedere comunque le date in formato tedesco.",
+      dateFormatAuto: "Segui la lingua",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Aspetto". "Lei", capitalised as the rest of the catalogue.

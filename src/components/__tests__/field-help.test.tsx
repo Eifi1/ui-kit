@@ -36,6 +36,7 @@ import { Field } from "../field";
 import { FieldStrip } from "../field-strip";
 import { LanguageSelect } from "../language-select";
 import { ContrastSetting, LanguageSetting, TextSizeSetting, ThemeSetting } from "../settings-fields";
+import { DateFormatSetting } from "../date-format-setting";
 import { CurrentPasswordInput, TypedConfirmField } from "../danger-confirm";
 import { RoleSelect, RolesEditor } from "../../admin/role-select";
 import { Form } from "../../rhf/form";
@@ -198,6 +199,9 @@ const SWEEP: Record<SweptField, Make> = {
       hint={hint}
       help={help}
     />
+  ),
+  DateFormatSetting: (hint, help) => (
+    <DateFormatSetting label="Status" value="auto" onChange={noop} hint={hint} help={help} />
   ),
   TextSizeSetting: (hint, help) => (
     <TextSizeSetting label="Status" value="normal" onChange={noop} hint={hint} help={help} />

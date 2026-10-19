@@ -27,6 +27,11 @@ an account notice to an active former owner, and a retry for a notification mail
 failed to send. It amends §3.4, §3.6, §5.2.6 and §5.3 in place; §9.7 says where each
 review point went.
 
+**§10, round 0.46: DRAFT for review** (Marcel 2026-10-19, "Notifications: ALL"): the
+kit's inbox list and bell, a switch per channel (in the app, push, e-mail) and per device,
+the time zone on the account (reverses decision 6), and a queue that holds a push through
+quiet hours and bundles mails. §1–§9 stand until it is settled.
+
 ## 1. Where each one stands
 
 Read at kk `79b2949c` (`feat/kit-0.34`), ka `f2b9574` (`feat/kit-0.35`), KS `c687637`
@@ -1487,3 +1492,365 @@ reviewed the draft on 2026-10-13, and Marcel took its open questions on 2026-10-
   §9.1.
 
 The cites were re-read at settling, after each app's 0.36 adoption (§9.1).
+
+## 10. Round 0.46: the inbox and bell, switches per channel and device, the zone on the account, a queue — DRAFT for review (round 0.46)
+
+**DRAFT for review (round 0.46).** Marcel, 2026-10-19 (audits/round-047/brief-047.md,
+"Scope extension"): "Notifications: ALL". The four items §7 left for later, taken up
+together: (a) the kit's inbox list and top-bar bell; (b) a switch per channel (in the app,
+push, e-mail) and per device; (c) the time zone on the account, which **reverses decision
+6** (and Marcel's KS decision of 2026-10-12 that an account keeps no zone); (d) a queue
+that holds a push through quiet hours and sends it after, and bundles several mails into
+one. Feedback's admin alerts (feedback §11) are the first new type to use (a)–(d). §1–§9
+stand until this is settled; each part says what it amends.
+
+Read at kk `2cb460c1` (`feat/feedback-loop-80-424-434`), ka `26a2eaa` (`feat/kit-0.45`),
+KS `2b2bdab` (`feat/kit-0.45`), server-kit `a264f7f` (0.16.0), ui-kit `d9b8779`. Paths as
+in §1 (kk `backend/keksdose/`, ka `kastlan/`, KS `backend/kurvenschmiede/`, and
+`frontend/src/` in each); SK = `src/eifi1_server_kit/`.
+
+### 10.1 (a) The inbox list and the bell
+
+**Today.**
+- **keksdose** is the only app with an inbox, and **it has no bell in the bar any more**:
+  the inbox moved into Settings (kk feedback #140/#141). The bar is search · theme ·
+  feedback · tours · sync · dev · account (`app/top-bar.tsx:83-169`, order comment
+  :88-90). The unread count is a danger dot on the account avatar
+  (`app/account-menu.tsx:365-378`, from `useInboxUnreadCount()` on the always-mounted
+  trigger, :335-341) and a count chip ("99+") on the menu's Notifications row (:146-171).
+  - The list (`features/auth/notification-inbox.tsx:67-179`): an icon per type
+    (`TYPE_ICONS` :44-56, `Bell` fallback :141), absolute dates (`formatDateTime`,
+    :78-80), mark one read on click or middle-click (:84-86, :153-170), mark all
+    (:99-108), clear behind `useConfirm` (:109-127), `EmptyState` inline (:133-134), a
+    scrolling box capped at `min(24rem,70vh)` with no paging (the API's 50, :132). It is
+    the first card of `/settings/notifications` (`settings-page.tsx:168-200`); on a
+    phone it is the same page.
+  - Data (`shared/push/use-inbox.ts`): keys `["push-inbox", …]` (:24-30); the badge
+    reads `limit:1` every 60 s (:34-44); the list polls 60 s while mounted (:47-55);
+    mark-read and clear are optimistic (:70-95, :97-117); the service worker's
+    `PUSH_RECEIVED` / `PUSH_NAVIGATE` invalidate the inbox (`app/use-sw-messages.ts:50-59`,
+    :68-70).
+  - Server: `GET /notifications/inbox` (limit 50, 1–200), `POST …/read`, `DELETE`
+    (`adapters/api/notifications_router.py:171-199`); `notification_log`
+    (`domain/models/push_subscription.py:152-174`); the unread count over all pages and the
+    90-day prune (`domain/services/notification_log_service.py:56-81`, :108-114; run by
+    `infrastructure/scheduler.py:225-251`).
+- **kastlan** has no inbox and no bell. Its `app` channel is a browser poller: every 30 s
+  `GET /notifications/poll` (staff), which counts live rows for the acting company and
+  answers a card per type with its `app` switch on (`adapters/api/notification_router.py:14-28`,
+  `domain/services/notification_service.py:42-67`); the client shows a card again only
+  when a count changed, tag `kastlan:<type>` (`shared/hooks/use-notifications.ts:52-90`;
+  wired `app/app-layout.tsx:69-72`).
+- **Kurvenschmiede** has e-mail only; no inbox, push or bell
+  (`domain/models/notification.py:1-35`; `notification_service.py:49-50`).
+- **The kit:** `inbox.py` holds the wire shapes (`InboxItem`, `InboxResponse`,
+  `InboxMarkRead`, `INBOX_RETENTION`, SK `notifications/inbox.py:25-62`); `TopBarActions`
+  has no slot for a bell (`src/shell/top-bar-actions.tsx:38-51`; top-bar §2.1).
+
+**Proposal.**
+1. **ui-kit lifts keksdose's list as `NotificationInbox`**, and adds a
+   **`NotificationBell`** for the bar. **Rec:** props only, no data layer, as the other
+   cards (§4.2): `items`, `unreadCount`, `loading`, `onMarkRead(ids | null)`, `onClear()`,
+   `onOpen(item)` (marks it read, then the app routes to `item.url`), `icon(type)` (the
+   app's map, `Bell` by default), `hasMore` / `onLoadMore` (a "Show more" row; the API
+   pages already), `formatDate`, `labels`. Dates as today, absolute, through the kit's
+   `formatDate` in the account's zone (10.3). Unread rows are bold with a dot; "Mark all
+   read" and "Clear" (confirm, danger tone) in the header.
+2. **The bell:** an icon button with the unread count as a badge ("99+"), opening the
+   list in the kit's top-bar popover (`TopBarActionMenu`, a sheet on a phone as the other
+   bar menus), the newest 20 and a link "All notifications" to the app's inbox page or
+   card. **Rec: one new slot `notifications`, right before `account`** (after `platform`):
+   the person's own items end in the bell and the avatar, as most apps place them.
+   top-bar §2.1 gains it. Shown to every signed-in account in an app that keeps an
+   inbox, the demo included (settings §4.1 shows the demo its inbox).
+3. **One badge per signal.** **Rec:** the bell replaces keksdose's avatar dot; the
+   menu's Notifications row keeps its link but drops its count. Open: keksdose moved the
+   inbox out of the bar in #140/#141. The review says why, and whether a bell brings back
+   what that change removed.
+4. **Refresh:** the app polls as keksdose does (badge 60 s, `limit:1`) and invalidates
+   on its worker's push message. The kit exports `INBOX_BADGE_INTERVAL = 60_000` and
+   nothing else.
+5. **server-kit, layer 2 (new):** `InboxStore` (a port: `add`, `page(user, limit,
+   offset) -> (items, unread)`, `mark_read(user, ids | None) -> int`, `clear(user)`,
+   `prune(before)`) and `inbox_router(store, deps)` with §3.7's three routes, so a second
+   app keeps an inbox without writing them. keksdose may keep its own routes (same wire).
+6. **Who keeps an inbox. Rec:** keksdose (as today) and **kastlan**. kastlan's two staff
+   types become inbox rows written by the daily job, one per company event
+   (`invoices_overdue` already has the event key, §9.4). The poller then goes, and its
+   `app` switch means "in the app" as it does in keksdose. **KS: no inbox**: its five
+   types are e-mail, and an inbox for them alone adds a table and a bell with little
+   in it. This is a review question for KS.
+
+**Split and size.** ui-kit **M** (`NotificationInbox`, `NotificationBell`, the slot, the
+labels in seven languages, showcase). server-kit **S** (`InboxStore`, `inbox_router`,
+tests). kk **S** (swap its list for the kit's, bell in, avatar dot out). ka **M** (table,
+store, the job's rows, bell, poller out). KS none.
+
+### 10.2 (b) A switch per channel and per device
+
+**Today.**
+- **keksdose:** one `enabled` per type and account (`NotificationPreference`,
+  `domain/models/push_subscription.py:103-119`; migration
+  `alembic/versions/20260729_0035_notification_preferences.py:42-53`), gating inbox
+  **and** push together (decision 2). The registry has `app=` defaults and `quiet=`, no
+  e-mail (`push_subscription.py:34`, :39-70). The device rows (`push_subscriptions`,
+  :73-100) hold no switch.
+- **kastlan:** `(app, email)` per type and account (`notification_type_settings`,
+  `domain/models/notification.py:12-28`; `alembic/versions/a24ed3308f70_notification_type_settings.py:29-58`);
+  `app` gates the poller. No push.
+- **Kurvenschmiede:** `email` per type (`notification_preferences`,
+  `domain/models/notification.py:67-76`).
+- **The kit:** `NotificationType(id, app, email, quiet)` (SK `notifications/registry.py:41-60`),
+  `TypeSwitches(app, email)` (`resource.py:76-83`), `plan_delivery` (`delivery.py:53-62`)
+  sends the push wherever `app` is on.
+
+**Proposal.**
+1. **Three channels with a switch each: `app` (in the app: the inbox, kastlan's poller
+   until 10.1), `push`, `email`.** This amends decisions 2 and 3. `TypeSwitches` and
+   `TypeSwitchesPatch` gain `push: bool | None`, which is `null` where the app or the type
+   has no push (kastlan, KS). `NotificationType` gains `push: bool | None`, the type's
+   push default; a registry built with `push=None` on a type that has `app` set gets the
+   `app` default (so keksdose's types keep their behaviour).
+2. **Push no longer needs the inbox. Rec: independent.** Push on with in-app off sends
+   the push with no inbox row. The person asked for that; the payload carries its own
+   `url`. `plan_delivery` returns `push = switches.push and not (quiet and quiet_now)`.
+3. **Per device: a device can mute types, never add them. Rec:** each push device keeps
+   `muted_types` (a list of type ids, empty by default). A push goes to a device when the
+   type's account `push` switch is on and the device does not mute it. Wire:
+   `GET /notifications/devices` items gain `muted_types: string[]`;
+   `PATCH /notifications/devices/{id} {"muted_types": [...]}` (the whole list; a 422 for
+   an id the account doesn't receive or one without push; another account's device is a
+   404). Ids the registry dropped are ignored when read and removed on the next write.
+   The inbox and e-mail are per account, not per device.
+4. **Migration.**
+   - keksdose: each stored `enabled` becomes `app = push = enabled`. A missing row stays
+     missing, so both channels keep the default. The `/push/*` aliases' body shim
+     (decision 9) writes both too.
+   - **Rec:** while an old bundle can still send `{app}` alone, keksdose's PATCH treats
+     `app` without `push` as both: a server-kit knob `couple_push_to_app=True`. It goes
+     with the aliases, once no `/push/*` request arrives (§5.1).
+   - kastlan, KS: nothing stored moves (`push` is `null`).
+   - `muted_types` starts empty everywhere.
+5. **The card:** a type's row shows its label and description, then a switch per channel
+   the type offers. On a wide screen these are three narrow columns headed "In the app" /
+   "Push" / "E-mail"; on a phone they stack under the label. A row with one channel keeps
+   today's single switch (KS). In the device list, each row gains "Types on this device"
+   (a disclosure listing the types with push on, each a switch, all on by default).
+   `emailUnverified` and the digest cadence stay as they are.
+
+**Split and size.** server-kit **S–M** (the field, the resource, `apply_switches_patch`,
+`plan_delivery`, `device_receives(muted, type_id)`, a `PushDeviceUpdate` model, tests).
+ui-kit **M** (the types card's columns, the device disclosure, labels). kk **M** (the
+column, the migration, the device column, routes, the shim knob). ka **XS** (answers
+`push: null`). KS **XS** (the same).
+
+### 10.3 (c) The time zone on the account
+
+**Today.**
+- **keksdose:** the zone is on `notification_settings.timezone`
+  (`domain/models/push_subscription.py:181-208`). It is used for quiet hours
+  (`notification_preferences_service.py:187-200`, through `resolve_zone`, which falls
+  back to Zurich) and the digest (`push_notifications.py:1092-1119`). **Billing mails
+  read it but fall back to UTC, not Zurich** (`billing_notice_service.py:183-188`), so
+  they disagree with `resolve_zone`. Days written by the server
+  (`domain/server_text.py:130-145` `format_day`) go into a push body
+  (`push_notifications.py:291-303`) and into mails (`account_deletion_service.py:137`;
+  `billing_notice_service.py:57`, :80, :109, :139; `feedback_publish_notice_service.py:40`,
+  which takes "today" in UTC, :124). The scheduled-due sweep has a known UTC/local wart
+  (`push_notifications.py:938-960`). `users` has no zone (`domain/models/user.py`). The
+  date format is device-only, and its comment that "no server-rendered date exists yet"
+  is stale (`shared/state/date-format-store.ts:11-16`).
+- **kastlan:** no zone on the account or the company (`domain/models/auth.py:24-60`).
+  Zurich only for the billing notice's day (`billing_notices.py:36`, :72). Every other
+  "today" is the server's `date.today()`, which is UTC on Cloud Run
+  (`infrastructure/jobs.py:77`, :99, :115; `overdue_mail.py:149`;
+  `invoice_logic.py:39`, :61, and more). Mail dates are always `%d.%m.%Y`
+  (`formatting.py:29-35`, used in `overdue_mail.py:108`).
+- **Kurvenschmiede:** no zone, by Marcel's decision of 2026-10-12
+  (`billing_notice_service.py:21-24`). Its one server-written day is the billing notice's,
+  in Zurich (:390-420). Notification mails carry no dates (`notification_service.py:27-33`).
+  The frontend formats in the browser's zone (e.g. `features/settings/account-cards.tsx:67`).
+- **The kit:** `DEFAULT_ZONE`, `resolve_zone` (SK `notifications/timing.py:48`, :77). The
+  quiet-hours card sends the device's zone with the first time entered
+  (`src/notifications/quiet-hours-setting.tsx:109-115`). `formatDate` takes a `timeZone`
+  (`src/lib/format.ts:185-188`), but no app passes one. `ProfileUpdate` already carries
+  account-wide display choices (`text_size`, `contrast`, SK `auth/schemas.py:296-330`).
+
+**Proposal** (reverses decision 6 and KS's 2026-10-12 decision):
+1. **Two fields on the account:**
+   - `timezone`: the person's pick, an IANA name; `null` means "Automatic".
+   - `device_timezone`: the zone a device last reported.
+
+   The **effective zone** is `timezone`, else `device_timezone`, else the app's zone
+   (`Europe/Zurich`). A name that no longer resolves counts as unset, as today.
+2. **The fallback to the device.** The client reports `Intl…timeZone` as
+   `device_timezone` at sign-up (`RegisterRequest.device_timezone?`) and at app start
+   when it differs from the stored one (`PATCH /auth/me {device_timezone}`).
+   - **Rec:** this is allowed although settings §6.2 says "never on a session start".
+     That rule protects a *choice* from being overwritten, and `device_timezone` is an
+     observation that never touches `timezone`.
+   - With Automatic, quiet hours and the digest follow the device last used, so they
+     move with someone who travels.
+3. **What uses the effective zone:** quiet hours, the digest day, every date or time the
+   server writes for one person (push bodies, notification and account mail, billing
+   notices to a person), and "today" for a person's own reminders (kk's scheduled-due
+   sweep).
+   - **Not:** documents of a company or group (kastlan's letters, invoices and PDFs keep
+     the app's zone) and the jobs' run times (UTC crons).
+   - kastlan's UTC `date.today()` is a separate bug. **Rec:** an app-zone `today()` in
+     each job, listed for kastlan's review, not part of this item.
+4. **On screen. Rec:** dates use the picked `timezone` when there is one, else the
+   device's (as today). The provider gains `timeZone?`, and `formatDate` uses it when the
+   call gives none.
+5. **The settings row.** Settings → the group that holds the language gets
+   **`TimeZoneSetting`**: "Time zone", with "Automatic (this device: Europe/Zurich)" or
+   one picked through `TimeZoneSelect`.
+   - When the device is in another zone than a picked one, the card says "This device is
+     in {zone}." with "Use it", moved from the quiet-hours card.
+   - `QuietHoursSetting` drops its picker and says "In your time zone ({zone})" with a
+     link to the row.
+6. **Wire.**
+   - `/auth/me` and `ProfileUpdate` gain `timezone` (nullable: `null` = Automatic,
+     `is_known_zone`) and `device_timezone`; a PATCH null on the latter is refused.
+   - The export's `account` gains both.
+   - The notification settings resource keeps `timezone` for one release as an alias,
+     reading and writing the account's (keksdose's old bundles). It goes with the `/push/*`
+     aliases.
+7. **Migration.** keksdose copies `notification_settings.timezone` to `users.timezone`.
+   That stored zone was a person's pick, or the device's at the first quiet-hours entry;
+   both are treated as picked. Then the column is dropped. Its billing notices use the
+   effective zone, which ends their UTC fallback. kastlan and KS start with `null` /
+   `null`, and the first app start fills `device_timezone`.
+
+**Split and size.**
+- server-kit **S**:
+  - `auth`: `MeResponse`, `ProfileUpdate`, `RegisterRequest`.
+  - `notifications.timing.effective_zone(timezone, device_timezone, fallback=DEFAULT_ZONE) -> ZoneInfo`.
+  - `settings.local_today(zone, now)`.
+  - The resource's alias.
+- ui-kit **S–M**:
+  - `TimeZoneSetting`.
+  - `useDeviceZoneReport({stored, report})`, which reports once per start when the zone
+    differs.
+  - The provider's `timeZone`.
+  - The quiet-hours card change.
+  - Labels.
+- kk **M** (the migration, the billing fallback, every `format_day` caller given the
+  recipient's zone).
+- ka **S–M** (the columns, the overdue mail's day in the recipient's zone).
+- KS **S** (the columns, the card, the billing day per recipient).
+
+### 10.4 (d) A queue: hold a push through quiet hours, bundle mails
+
+**Today.**
+- **keksdose** drops a held push: the inbox row is written, then `_deliver_to_user`
+  returns before the push (`push_notifications.py:379-386`, :396-399).
+  - Jobs are one-shot Cloud Run Jobs (`jobs.py:1-35`, :106-151) on UTC crons
+    (`infrastructure/job_registry.py:57-65`, :174-355). Notifications run daily at 06:00
+    (:193-199); the most frequent job runs every 15 min (product metrics).
+  - There is no token route: the scheduler calls the Run API (`deploy/gcp/cloudbuild.yaml:515-554`).
+  - Markers already serve as small outboxes: `feedback_replies.notified_at`
+    (`domain/models/feedback.py:129-152`, with `feedback_events.py:48-77`, :108-125),
+    `digest_sent`, the `notified_*` ledgers (`push_subscription.py:124-252`) and
+    `price_pool_outbox`.
+- **kastlan:** Cloud Scheduler calls `POST /api/v1/ops/jobs/{name}` with `X-Jobs-Token`
+  (`adapters/api/ops_router.py:35-47`). Locally APScheduler runs the jobs
+  (`infrastructure/jobs.py:149-164`, `JOBS` :119-125). The mail retry markers live in
+  `notification_mail_sent` (`domain/models/notification.py:31-48`;
+  `overdue_mail.py:120-150`). There is no queue table.
+- **Kurvenschmiede:** one token route, `POST /ops/billing-notices`
+  (`adapters/api/ops_router.py:1-55`, "nothing else on a schedule"), with one Cloud
+  Scheduler job (`deploy/gcp/README.md:279-339`). Mail waits on the session and goes
+  after the commit (`infrastructure/email.py:212-264`). No queue.
+- **The kit:** `require_jobs_token` (SK `jobs.py:77`), the mail markers and
+  `mail_due` (`notifications/retry.py:38-138`), `MailMessage.idempotency_key`.
+
+**Proposal.**
+1. **One queue table per app, a server-kit service over it (layer 2).**
+   - `NotificationQueue` port: `enqueue(item) -> bool` (insert, no-op on a duplicate),
+     `claim(now, limit) -> items` (`FOR UPDATE SKIP LOCKED`, sets `claimed_at`,
+     `attempts += 1`), `done(ids, sent_at)`, `drop(ids, reason)`, `purge(before)`.
+   - A row: `id`, `user_id`, `type_id`, `channel` (`push` | `email`), `event` (the
+     `MAIL_EVENT_PATTERN` key), `payload` (JSON: push `{title, body, tag, url}`, mail the
+     fields its words need, **never sealed content**), `not_before`, `created_at`,
+     `claimed_at`, `attempts`, `sent_at`, `dropped`.
+   - Unique `(user_id, type_id, channel, event)`.
+2. **Hold a push.** A `quiet` type inside quiet hours is queued with `not_before` = the
+   window's end, instead of being dropped. A new layer-1 helper,
+   `quiet_hours_end(start, end, zone, now) -> datetime`, works across midnight and on DST
+   days.
+   - At the flush, the plan runs again: switches, active, the device's mutes, and the
+     quiet hours themselves, in case the window has moved.
+   - **Rec:** a type's held pushes for one person go as **one push**: the newest title,
+     the body "+{n} more" when there are several, tag `<type>:held`.
+   - A push held longer than `PUSH_TTL` (24 h) is dropped.
+   - This amends decision 4. Announcements still ignore quiet hours.
+3. **Bundle mails.** A type opts in with `NotificationType.bundle: timedelta | None`.
+   - **Rec:** 15 min for `feedback_comment` and feedback's admin alert (feedback §11);
+     `None` for the rest.
+   - A bundled type's mail is queued with `not_before = first item + bundle`. Later items
+     for the same person and type join the open bundle.
+   - At the flush, one mail per (person, type): "{n} new comments on reports you follow",
+     each line the sealed-free one-liner with its link. One item sends the ordinary mail.
+4. **The jobs route.** server-kit `notifications_jobs_router(service, require_jobs_token)`
+   → `POST /ops/notifications/flush` → `{sent, dropped, left}`. **Rec: every 15 min** in
+   all three apps.
+   - kastlan: a new `JOBS` entry and Scheduler job.
+   - KS: its second token route and Scheduler job.
+   - keksdose: a Cloud Run Job `keksdose-notifications-flush` calling the same service
+     (its pattern; no token route).
+   - So a held push lands at most 15 min after the window ends.
+5. **Idempotency.** Enqueuing is a write in the event's own transaction, so a rollback
+   queues nothing. For the bundled types the queue is also the outbox, and
+   `send_after_commit` is not needed for them.
+   - The claim commits before the send; `done` commits after.
+   - A mail carries `Idempotency-Key = queue:<first row id>:<count>`, so a resend after
+     a lost answer is a no-op at Resend.
+   - A push sent twice after a crash between send and `done` replaces itself on the
+     device through its tag.
+   - A row claimed more than 10 min ago is claimable again. After 3 attempts it is
+     dropped (`dropped = "failed"`).
+6. **Retention.** Sent and dropped rows are purged after 30 days
+   (`MAIL_MARKER_RETENTION`); a mail row still unsent 3 days after `not_before` is dropped
+   (`MAIL_LATE_DAYS`). Rows cascade with the account and are erased with it. They are not
+   in the export: they are deliveries, not the person's data.
+7. **Not queued:** a request's ordinary mail (decision 5), the digest (it has its marker),
+   service notices, the test push, kastlan's overdue mail (its markers, §9.4, stay as
+   they are).
+
+**Split and size.**
+- server-kit **M–L**: layer 1 `quiet_hours_end`, `bundle` on the type, the payload
+  models; layer 2 `NotificationQueue`, `QueueService` (`hold_push`, `queue_mail`,
+  `flush`), the jobs router, `testing` fakes.
+- ui-kit **XS** (`quietDescription` says a held push "arrives when quiet hours end").
+- kk **M** (table, the job, `_deliver_to_user` holds instead of dropping).
+- ka **S–M** (table, route entry, Scheduler job; push only after its push step).
+- KS **S–M** (table, route, Scheduler job, its bundled types).
+
+### 10.5 For the reviews
+
+- **keksdose:**
+  - (a) The bell back in the bar after #140/#141, and the avatar dot gone?
+  - (b) Push independent of the inbox, and the `couple_push_to_app` shim's end.
+  - (c) Copying the zone to `users`, and the billing fallback.
+  - (d) A 15-min Cloud Run Job, or the flush folded into an existing frequent job.
+- **kastlan:**
+  - (a) An inbox written by the jobs, with the poller retired.
+  - (c) The effective zone in the overdue mail, and the app-zone `today()` as a separate
+    fix.
+  - (d) The flush route and its Scheduler job.
+- **Kurvenschmiede:**
+  - (a) No inbox: agree?
+  - (c) The reversal of 2026-10-12, and the billing day per recipient.
+  - (d) A second token route.
+
+**Open for Marcel:**
+1. Push independent of in-app (rec), or push only while in-app is on.
+2. `muted_types` per device (rec), or a full per-device switch set.
+3. The bell's slot before `account` (rec).
+4. Automatic = the last device's zone (rec), or fill it once and never update.
+5. Dates on screen in the picked zone (rec).
+6. Held pushes collapsed into one per type (rec).
+7. A 15-min flush in every app (rec), against the cost of a Cloud Run wake every 15 min.
+
+Sizes in total: server-kit **L**, ui-kit **M–L**, kk **M–L**, ka **M**, KS **S–M**.

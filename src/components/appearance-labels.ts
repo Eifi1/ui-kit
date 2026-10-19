@@ -28,6 +28,12 @@ export interface AppearanceLabels {
    * toast or the line under the setting (0.32.1, keksdose's 0.32 report).
    */
   saveFailed: string;
+  /** The date-format setting's name (0.46, `DateFormatSetting`). */
+  dateFormat: string;
+  /** One line under it: the format is its own choice, apart from the language. */
+  dateFormatHelp: string;
+  /** Its first option, followed by that language's sample: "Follow language — 01 Aug 2026". */
+  dateFormatAuto: string;
 }
 
 export const DEFAULT_APPEARANCE_LABELS: AppearanceLabels = {
@@ -38,6 +44,10 @@ export const DEFAULT_APPEARANCE_LABELS: AppearanceLabels = {
   contrastHelp: "More contrast darkens quiet text and lines, and thickens focus frames. System follows this device.",
   contrastModes: { system: "System", standard: "Standard", more: "More" },
   saveFailed: "Couldn't save this to your account. It still applies on this device.",
+  dateFormat: "Date format",
+  dateFormatHelp:
+    "How dates are written throughout the app. Independent of the interface language, so you can read the app in English and still see German dates.",
+  dateFormatAuto: "Follow language",
 };
 
 /** The `appearance` namespace, resolved — English, then the provider, then `labels`. For

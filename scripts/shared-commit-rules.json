@@ -1,7 +1,15 @@
 {
   "repo": "Eifi1/shared-workflows",
-  "tag": "v1.2.1",
-  "commit": "fb31d9a571903c0a61eb1c274cd7dc18c4113e0b",
-  "path": "actions/commit-check/check-commit-msg.cjs",
-  "vendoredAs": "scripts/check-commit-msg.cjs"
+  "tag": "v1.3.1 (pending tag)",
+  "commit": "TODO: the v1.3.1 commit, once tagged: npm run sync:commit-rules -- v1.3.1",
+  "files": [
+    {
+      "path": "actions/commit-check/check-commit-msg.cjs",
+      "vendoredAs": "scripts/check-commit-msg.cjs"
+    },
+    {
+      "path": "actions/commit-check/check-pushed-commits.cjs",
+      "vendoredAs": "scripts/check-pushed-commits.cjs"
+    }
+  ]
 }

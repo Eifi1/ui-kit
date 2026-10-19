@@ -30,6 +30,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 8 | Amendment for 0.31 | ui-kit 0.31.0, server-kit 0.5.0 | index; folded into §2–§5 |
 | 9 | Round 0.38: public feedback (votes, comments, replies) | **§9 settled 2026-10-14 (round 0.38)**, for server-kit 0.11 / ui-kit 0.38 | amends §3.1, §3.3, §3.4 (`public`), §4.4.4 (outcome → replies), §5; server-services §2.7, §4.5; notifications §2, §5 (two types, the notice) |
 | 10 | Round 0.40: rework as a conversation entry, the feedback menu | **§10 settled 2026-10-16 (round 0.40)**, for server-kit 0.13 / ui-kit 0.40 | amends §2.1 (REWORK), §2.2, §3.4 (the rework), §4.1 (the menu), §4.3–§4.5, §5; §9.7, §9.11, §9.12, §9.13 |
+| 11 | Round 0.46: admin alerts for new reports and reworks | **DRAFT for review (round 0.46)** | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
 
 ## 1. Where each one stands
 
@@ -1521,7 +1522,9 @@ merged thread (`feedback-comment-thread.tsx:124-207`), the menu's one list link 
    <stamp> ---` block **in `body`** into a `rework` entry; `outcome` is never split. For
    **one release** (server-kit 0.13) the server still takes the old PATCH append and
    writes it as an entry: needed, since keksdose's PWA keeps an old bundle for days
-   (`registerType: "prompt"`). From server-kit 0.14 an append is a 422.
+   (`registerType: "prompt"`). ~~From server-kit 0.14 an append is a 422.~~ The conversion
+   stayed through 0.15; **from server-kit 0.16 an append is a 422 with code
+   `legacy_rework_append`** (Marcel 2026-10-19; kastlan and Kurvenschmiede agreed, 10.3).
 9. **The loops** still write replies only; `kind` and `attachment_url` are not in their
    INSERT, so a loop can never write a rework. They read `REWORK` rows and each entry's
    kind (10.5). **Kurvenschmiede keeps OPEN in its loop queue** (OPEN, READY, REWORK,
@@ -1586,10 +1589,17 @@ merged thread (`feedback-comment-thread.tsx:124-207`), the menu's one list link 
   scrubbed, kept, shown as "A user"; its file joins the keys `erase_author` purges (in
   Kurvenschmiede it already goes with the report's attachments, 10.4). **Export:**
   `data.feedback[].replies[]` gains `kind`.
-- **The legacy PATCH (server-kit 0.13 only):** an append (`is_rework_append`) is split by
+- **The legacy PATCH (server-kit 0.13–0.15):** an append (`is_rework_append`) is split by
   `split_rework_blocks` and written as the actor's rework entry when the actor is the
   author, or as a reply with status REWORK when an admin appended to someone else's
   report; `body` is not written; a log line `feedback.legacy_rework_append` per use.
+  **From server-kit 0.16** (Marcel 2026-10-19) such an append, on a row outside OPEN /
+  READY / IN_PROGRESS, by the author or an admin, is refused before anything is written:
+  422 `{"detail": "This page is out of date: reload it, then send the report back
+  again.", "code": "legacy_rework_append"}` (`LegacyReworkAppendError`). Only a tab left
+  open across the deploy still sends it; it shows the detail (the kit's toast prefers a
+  `detail`, §3.7) until it reloads. Nothing is lost silently. In the author's lane an
+  append stays an ordinary body edit.
 
 ### 10.4 Migrating the REWORK blocks
 
@@ -1813,3 +1823,162 @@ follow-up ("Yes to both"). Where each point went:
   file to copy, erasure via the report's attachments, `kind` with a dropped server
   default, `created_at` explicit, the re-seal like 0052, the seed via the service → 10.4,
   10.9; cites `endpoints.ts:603`, seed `:149-150` → 10.1.
+
+## 11. Round 0.46: admin alerts for new reports and reworks — DRAFT for review (round 0.46)
+
+**DRAFT for review (round 0.46).** Marcel, 2026-10-19 (audits/round-047/brief-047.md,
+"Scope extension"): new reports and reworks notify the app's admins, in the app and by
+e-mail, **on by default**, and each admin can switch it off. It is the "later round's new
+notification type" that §10.2 decision 10 left open, and it is a type in notifications
+§10.2 (the switch per channel). It is drafted with notifications §10, and uses its inbox
+(§10.1) and its mail bundling (§10.4). Read at kk `2cb460c1`, ka `26a2eaa`, KS
+`2b2bdab`, server-kit `a264f7f` (0.16.0). Paths as in notifications §10.
+
+### 11.1 Where each one stands
+
+**No app tells an admin about a new report, a rework or a crash.** The only signal is the
+attention badge, which the app polls.
+
+**keksdose**
+- Badge: `domain/services/admin_attention_service.py:69-91`, polled every 60 s
+  (`features/admin/use-admin-attention.ts:9-28`).
+- One admin alert already exists, for support chat. `admin_recipient_ids` picks every
+  real, active admin (`support_chat_service.py:800-817`), and
+  `notify_support_message` pushes to them (`push_notifications.py:1310-1366`).
+- The feedback stores fire `feedback_answered` and `feedback_comment` only
+  (`adapters/persistence/feedback_public_stores.py:63-88`, :135-139). `add` sends nothing
+  (`feedback_repository.py:90-105`).
+- Admin: `users.role == ADMIN` (`domain/models/user.py:28-37`, :66), checked by
+  `require_role` (`infrastructure/dependencies.py:502-510`).
+- **keksdose sends no notification mail yet.** It has no one-click unsubscribe route or
+  `/unsubscribe` page (notifications §3.6).
+
+**kastlan**
+- Feedback is company-scoped, with RLS (`domain/models/feedback.py:21-28`). Triage
+  belongs to the company's ADMIN (`adapters/api/feedback_router.py:43-51`, :91).
+- Roles are per company (`domain/models/auth.py:17-21`). The platform's `is_superuser`
+  (:40-43) has no feedback count (`admin_attention_service.py:80-92`).
+- Badge: `admin_attention_service.py:1-20`, shown at `app/top-bar.tsx:84`.
+- Existing admin mail: the billing notices go to the company's admins
+  (`billing_notices.py:67-86`), which is the pattern for these recipients.
+- The reply store mails only a reply (`feedback_reply_store.py:71-77`).
+
+**Kurvenschmiede**
+- Admin: `role == ADMIN` (`domain/models/user.py:24-58`, :93-97). Marcel is the only one
+  today.
+- `save` "no longer tells anybody anything" (`domain/services/feedback_service.py:287-291`).
+  Only a REPLY entry fires (`feedback_stores.py:111-112`).
+- Badge: `attention_service.py:9-13`.
+- The loop files reports under the first admin (`feedback_loop.py:286-291`, :363-371).
+
+**The kit**
+- `FeedbackService.create` refuses a demo and a manual CRASH (SK `feedback/service.py:295-323`).
+- `report_crash` answers `stored: false` for a demo or a spent window, and folds repeats
+  by fingerprint (:325-375).
+- `rework` refuses a demo (:759-790).
+- The reply store fires for `kind = 'reply'` only (`feedback/ports.py:335-339`).
+- `feedback_recipients` is author and commenters only (`feedback/public.py:140-155`).
+
+**Logs**
+- No production line logs a recipient address.
+- The console mailers do log one, and are for development only: SK `mail.py:589-604`;
+  kk `infrastructure/email.py:83`; ka `infrastructure/email.py:88-96`.
+- kastlan's Resend error line logs `response.text`, which could echo the address
+  (`email.py:127`).
+
+### 11.2 Proposal
+
+1. **One type, `feedback_received`. Rec:** one type covers a new report, a rework entry
+   and a new crash.
+   - Its id (`FEEDBACK_RECEIVED`) and setting words go in the kits: all three apps
+     declare it (notifications decision 1's rule).
+   - Alternative: two types, "New reports" and "Reworks", for an admin who wants only one
+     of them. That is open for Marcel.
+2. **On by default** in every channel the app offers (Marcel). This is an exception to
+   notifications decision 1's default rule, named there.
+   - Channels: keksdose in the app (inbox) + push + e-mail. kastlan e-mail, plus in the
+     app once its inbox lands (notifications §10.1). KS e-mail.
+   - `quiet = True`: a push waits for the end of quiet hours (§10.4). Each admin switches
+     it off per channel on the types card.
+3. **Who receives it** (the registry's `receivable`, notifications §3.1). Never a demo or
+   deactivated account, and never the event's actor.
+   - **keksdose:** every active `ADMIN` (`admin_recipient_ids`).
+   - **kastlan:** the active `ADMIN`s **of the report's company**, the role checked in that
+     company at delivery (as `invoices_overdue`). **Rec:** the platform superuser is not
+     told; its console has no feedback. Open for Marcel.
+   - **Kurvenschmiede:** every active `ADMIN`, not only the first.
+   - An admin who files or reworks is not told about their own report; other admins are.
+   - A report the KS loop files under the first admin tells nobody else today, since KS
+     has one admin.
+4. **What fires it:**
+   - `create` (a new report, after the write);
+   - `rework` (the entry);
+   - `report_crash`, **only when it adds a row**, never when it folds a repeat.
+   - It does not fire for a reply, a status change, a comment, a vote or a loop's write.
+   - Crashes are already capped by the window (20 an hour per account). **Rec:** they
+     alert too, and the 15-min mail bundle (§10.4) turns a burst into one mail.
+5. **The demo.** A demo cannot file or rework (403), and its crash is not stored
+   (`stored: false`), so it fires nothing. A demo admin never receives one (notifications
+   §3.3 rule 1).
+6. **The words. No sealed content, no reporter.** The push, the inbox row and the mail
+   carry the same text: "New feedback report #123 (Bug)", "Report #123 was sent back for
+   rework", "New crash report #123". The link is the admin inbox, `/feedback?row=123`.
+   - No title, no body, no reporter name or address in any of them. KS seals titles; mail
+     and push are plaintext. The admin reads the rest in the app.
+   - Category labels are the app's. The mail carries the unsubscribe footer and headers
+     (notifications §3.6).
+   - A bundle reads "{n} new feedback reports and reworks", one line each.
+7. **No recipient in logs.** The alert's path logs the type, the report id and the
+   recipient's **user id**, never an address. The console mailers stay development-only
+   (said in each app's settings check). **Rec:** kastlan's `email.py:127` logs the
+   status and Resend's error `name` instead of `response.text`.
+8. **Where it fires (server-kit).**
+   - `FeedbackService(alerts: FeedbackAlerts | None = None)`. `FeedbackAlerts` is a port:
+     `async def filed(alert: FeedbackAlert, row) -> None`.
+   - `FeedbackAlert(kind: Literal["report", "rework", "crash"], feedback_id, category,
+     actor_id)`.
+   - It is called after the write, in the request's transaction. The app resolves
+     recipients and delivers through its notification plan: an inbox row and a push
+     (kk), or a queued or after-commit mail.
+   - A layer-1 helper, `admin_alert_recipients(admin_ids, *, actor_id) -> list[int]`.
+
+### 11.3 Split and size
+
+- **server-kit S:**
+  - `FEEDBACK_RECEIVED`, `FeedbackAlert`, `FeedbackAlerts`, `admin_alert_recipients`;
+  - the three call sites;
+  - a `testing` fake that records alerts;
+  - tests: a fold fires nothing, a demo fires nothing, the actor is skipped.
+- **ui-kit XS–S:** the type's words in `useFeedbackNotificationTypes` ("New feedback and
+  reworks", "When someone files a report, sends one back, or a page crashes.") in seven
+  languages, and an "Admin" group heading the apps may use.
+- **keksdose S–M:**
+  - the type;
+  - its first notification mail, so the unsubscribe route and the `/unsubscribe` page
+    with the kit's `UnsubscribePanel` (notifications §3.6);
+  - `FeedbackAlerts` over `admin_recipient_ids`.
+- **kastlan S:**
+  - the type (staff ADMIN only);
+  - the mail through `notification_mail`;
+  - the company-scoped recipients;
+  - the `email.py:127` log fix.
+- **Kurvenschmiede S:** the type, the mail through `_tell`/`send_after_commit` (or the
+  queue), every ADMIN.
+
+### 11.4 For the reviews
+
+- **keksdose:**
+  - The admin alert as your first notification mail: the unsubscribe route and page now.
+  - The inbox and push words.
+  - Is support chat's admin push a model to fold in, or does it stay apart?
+- **kastlan:**
+  - The report's company ADMINs only, or managers too.
+  - The superuser left out.
+  - The mail's words in four languages.
+- **Kurvenschmiede:** every ADMIN; loop-filed reports silent; crashes in.
+
+**Open for Marcel:**
+1. One type (rec) or two.
+2. Crashes alert, bundled (rec), or never.
+3. kastlan's superuser told (rec: no).
+4. The bundle window, 15 min (rec).

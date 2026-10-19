@@ -78,15 +78,18 @@ languages). The app reads the connection itself.
 ## server-kit 0.16.0
 
 Install the wheel by URL, pinned by hash (0.16.0, not 0.15.1: it adds names, which server-kit's
-patches never do; nothing breaks):
+patches never do; and it removes the legacy rework append, BREAKING for a tab open across
+the deploy, see its section):
 
 ```
 eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.16.0/eifi1_server_kit-0.16.0-py3-none-any.whl
 sha256: SHA256_AT_RELEASE
 ```
 
-Two changes show on the bump itself:
+Three changes show on the bump itself:
 
+- **The legacy rework append is a 422** (`code: "legacy_rework_append"`): each app has a
+  backend test that still expects the conversion (its section, further down, names it).
 - **The tours export spells `completed_at` as the wire does:** `2026-10-18T07:00:00Z`, not
   `isoformat()`'s `+00:00` (`TourProgressService.export`). A test that pins the export's value
   fails until it is re-pinned.
@@ -152,6 +155,28 @@ raises `ValueError` on it answers 422; store `name.strip()`.
 | keksdose | Nothing (no group renames). |
 | kastlan | Bump to the 0.16.0 wheel, then log the names again. **Validate a new name by the kit's rule** (kastlan S1): `PlatformCompanyUpdate.name` (domain/schemas/platform.py:37, a bare `str \| None`: a rename to `"  "` succeeds today) and `CompanySettingsUpdate.name` (domain/schemas/property.py:45, `min_length=1` lets `"   "`, a tab or a soft hyphen through) each get a `field_validator` on `group_name_problem` → 422. The log no longer 500s either way; this keeps bad names out of the table. In domain/services/platform_service.py:195-198, pass `detail={**VIA_PLATFORM, "from": company.name, "to": data.name}` before the name is set, and drop the comment at :196-197. In adapters/api/company_router.py:43-46, pass `detail={"from": renamed_from, "to": company.name}` and drop the comment at :44-45. The frontend already maps them: settings/components/admin-actions-card.tsx:37 turns `detail.from` / `detail.to` into the entry's `renamed`, so the row reads "Company renamed from A to B". Add a test that records a rename with spaced names, e.g. "Test AG" → "Test AG Bern". |
 | Kurvenschmiede | Nothing. A team's rename keeps `{}` (team_service.py:224); a team's name is never logged. |
+
+## The legacy rework append is a 422 (server-kit 0.16.0, BREAKING)
+
+Since round 0.40 a rework is `POST /feedback/{id}/rework`; server-kit 0.13–0.15 still turned
+an old client's PATCH append (`--- REWORK <stamp> ---` added to `body`, no status) into a
+rework entry. From 0.16.0 that append, on a row outside OPEN / READY / IN_PROGRESS, by the
+author or an admin, is refused before anything is written: 422
+`{"detail": "This page is out of date: reload it, then send the report back again.", "code":
+"legacy_rework_append"}` (`LegacyReworkAppendError`, `LEGACY_REWORK_APPEND`; contract §10.3).
+`UpdatePlan.rework`, `UpdatePlan.reopened`, `legacy_rework_block` and `plan_update(prefix=)`
+are gone. All three apps already send `onRework` and answer the kit's refusals through
+`install_contract_error_handlers`, so the code reaches the wire. The only exposure is a tab
+open across the deploy: its old bundle shows the English detail (the kit's toast prefers a
+`detail`) until it reloads; nothing is lost silently. The apps' refusal catalogues need no
+words: only an old bundle ever meets the code, and it carries its old catalogue (ui-kit has
+no feedback words by code either).
+
+| App | Change |
+| --- | --- |
+| keksdose | **The bump fails a backend test**: tests/api/test_feedback.py:186-225 (`test_the_author_can_rework_a_settled_entry_by_appending_to_it`) expects 200 and a rework entry; it becomes the 422 with `code == "legacy_rework_append"` and an unchanged row. The PWA keeps an old bundle for days (`registerType: "prompt"`), so expect the toast until its users accept the update prompt. |
+| kastlan | **The bump fails two backend tests**: tests/api/test_feedback_workflow.py:391 (`test_author_rework_append_reopens_server_side`) and :410 (`test_admin_rework_append_goes_to_rework`) → the 422; :433 (an append while OPEN stays a body edit) holds. Update the module docstring (:9-10, "still turned into such an entry for one release"). **Deploying straight from 0.11** (production): a tab open across the deploy gets the 422 on a rework until it reloads. Zero risk: deploy a release on a ≤ 0.15 wheel first, then this one. |
+| Kurvenschmiede | **The bump fails a backend test**: backend/tests/api/test_feedback_api.py:570 (`test_an_old_clients_appended_body_is_written_as_the_authors_entry`) → the 422. Update `FeedbackUpdate`'s docstring (domain/schemas/feedback.py:69-72, "the kit still recognises the old shape"). `refusalMessage` (shared/api/client.ts) needs no entry: an unknown code falls through to the detail. |
 
 ## The 0.45 adoptions: guide notes
 
@@ -219,3 +244,77 @@ the same actions. This is the one 0.46 change that shows on the bump: a `DataTab
 | keksdose | **The bump breaks the wrapper** (keksdose B1/S1). frontend/src/shared/components/data-table.tsx:42 destructures `({ desktopSwipeActions, ...props })` and never forwards it, so the kit sees `undefined` and draws its own column: feedback gets two actions columns (feedback-page.test.tsx:173-176 fails), the accounts' `false` (accounts-page.tsx:906) is swallowed and the kit's column repeats the row's `RowActions` (:1035), and swipe-row-actions.test.tsx:103-131 fails on a duplicate "Approve". TypeScript does not catch it: `false \| Options` and the kit's `boolean \| DataTableDesktopSwipeActions` are compatible, and dropping only the wrapper's prop type still compiles. **Take `props` whole and forward it; delete the derivation**: data-table.tsx: delete :1-5 and :16-66 (`DesktopSwipeActionsOptions`, `KeksdoseDataTableProps.desktopSwipeActions`, the `useMemo` column) and their now-unused imports; keep `mobileExpandAsDialog ?? true` (:71). swipe-row-actions.tsx: delete `planSwipeRowActions` (:108-129) and its tests (__tests__/swipe-row-actions.test.tsx:76-88); the wrapper tests (:98-141) then check that the prop reaches the kit. Keep `boundSwipeRowActions`, `swipeColumnCollapse` and `swipeActionsColumn` for the hand-rolled transactions register (transactions-page.tsx:407-433) and the budget table (budget-table.tsx:207-210), which are not kit phone cards. **Feedback**: feedback-page.tsx:284-288 → `desktopSwipeActions={{ omit: feedbackSwipeOmitShown, name: (fb) => fb.title, commit: true }}` (the wrapper's `planSwipeRowActions` defaulted to `commit: true`, dev#496; the kit's default is no scope), and the `visibleFeedbackStatuses` import (:22) goes. **Accounts**: nothing once the prop is forwarded. **Guard**: shared/components/__tests__/swipe-desktop-parity.test.ts still holds in substance, but its comments (:19-20, :46) describe the wrapper, and the translations entry (:57-64, `via: "kit"`) plus the assertion at :115 demand the text "kit finding": the kit now derives that column, so the entry becomes a covered case (keksdose S2). **Translations**: translations-page.tsx:310 needs no change; the panel's desktop rows now show Approve plus the user's bound `edit` ("Flag for a change…") and `clear`, so translations-page.test.tsx:145 still finds one "Needs a change" (the editor's), and a test that clicks a row's edit asks for "Flag for a change…". |
 | kastlan | features/feedback/pages/feedback-page.tsx:177-181: the inbox gains the column on the bump. Add `desktopSwipeActions={{ omit: feedbackSwipeOmitShown, name: (fb) => fb.title }}` (import from `@eifi1/ui-kit`), or the column repeats the status cell's advance and won't do (`useFeedbackColumns`, :127). Optional (kastlan N2, predates 0.46): pass `commit` to the column and to the status cell, so offline they say "Needs a connection" as the rest of the app does. **Translations**: features/translations/pages/translations-page.tsx:252 passes `swipe` (the default binding, approve and edit), so the desktop's approve column (key `approve`) becomes an actions column (key `actions`) with Approve plus "Flag for a change…" / "Add a translation…". A width or visibility stored for `approve` under `storageKey="translations"` (:246) is orphaned; check the table after the bump (kastlan S4). |
 | Kurvenschmiede | features/feedback/feedback-page.tsx:220-224: the same line as kastlan, `name: (row) => row.title` (status cell from `useFeedbackColumns`, :153). Translations (translations-page.tsx:276) passes no `swipe`: unchanged. |
+
+## The date format is a kit setting (keksdose's, lifted; settings §7.1 amendment)
+
+keksdose's Settings ▸ Appearance "Date format" (feedback #180) is the kit's now: a day is
+written in an order of its own choosing, apart from the interface language.
+
+- **`DateFormatSetting`** (`value`, `onChange`, optional `label`, `hint` — `null` for none —
+  `language`, `labels`, and a `Select`'s other props): "Follow language — 01 Aug 2026" and
+  four shapes, each option labelled by the date it produces (01.08.2026, 01/08/2026,
+  08/01/2026, 2026-08-01). Its words are `appearance.dateFormat`, `dateFormatHelp`,
+  `dateFormatAuto` in all seven languages (keksdose's own words for de-CH, en, fr, it).
+- **`DateFormatPreference`** (`"auto" | "de-DE" | "en-GB" | "en-US" | "sv-SE"`),
+  **`DATE_FORMAT_PREFERENCES`**, **`isDateFormatPreference`** (for a stored value),
+  **`resolveDateFormat`**, **`dateFormatSample`**, **`formatDateWithPreference(value,
+  preference, language, { weekday })`** (keksdose's `renderDate`: a bare day is that
+  calendar day in every zone, a timestamp stays local, the weekday's name is the
+  language's) and **`dateFormatterFor(preference, language)`**.
+- **How `formatDate` reads the preference**: the app keeps it (keksdose: a persisted
+  device store, not an account column) and reads it in two places. Its own date helper
+  calls `formatDateWithPreference`; `<UiKitProvider formatDate={useMemo(() =>
+  dateFormatterFor(preference, language), [preference, language])}>` makes the kit's
+  DatePicker, DateRangePicker ends and DateMark write a day the same way (a month or a year
+  answers `""`, so the kit keeps its own rendering in the language). The kit's
+  `formatDate` / `useKitFormat().formatDate` (named styles) do not read it.
+
+| App | Change |
+| --- | --- |
+| keksdose | Optional, no visible change. features/auth/appearance-card.tsx:178-193 → `<DateFormatSetting id="date-format-select" value={dateFormat} onChange={setDateFormat} language={currentLang} />` (the kit's words are keksdose's; its `settings.date_format*` keys can go from the catalogues). shared/state/date-format-store.ts:50-54 (`DateFormatPref`, `DATE_FORMAT_PREFS`), :83-169 (`ResolvedDateFormat`, `resolveDateFormat`) and :171 (`sampleFor`) → the kit's names; keep the store (:67). shared/components/ui.tsx:52-120 (`DATE_ONLY`, `renderDate`, `withWeekday`) → `formatDateWithPreference`; shared/i18n/kit-labels.tsx:88-93 → `dateFormatterFor(pref, language)`. Its tests (shared/state/__tests__/date-format-store.test.ts) keep passing on the kit's functions. |
+| kastlan | Nothing. To offer it: a device store holding a `DateFormatPreference` (persisted, `"auto"` by default; register it with `registerDeviceSetting` so "Reset this device" clears it), the setting in its appearance card, `dateFormatterFor` on its provider, and its date helper on `formatDateWithPreference`. |
+| Kurvenschmiede | Nothing (the same three steps, if wanted). |
+
+## Push survives a rotated subscription (`pushsubscriptionchange`; server-kit 0.16.0, NT:1028)
+
+A push service may replace a browser's subscription; until now the server kept sending to
+the old endpoint, got 410, deleted the device, and the person had to turn push on again. The
+service worker now re-registers it.
+
+- **ui-kit `handlePushSubscriptionChange(self, { pushKey, replace, onOutcome? })`** for the
+  app's worker (dependency-free; `resubscribeAfterChange` is the step itself): the browser's
+  new subscription (else the one it holds, else a fresh one under the old key or
+  `pushKey()`), sent as `PushReplaceInput {old_endpoint, old_auth, subscription}`. Then every
+  open page gets `{type: PUSH_SUBSCRIPTION_CHANGED, outcome}`, and `usePushDevice` re-reads
+  on it. Outcomes: `replaced`, `no_previous` (the browser named no old subscription; Chrome
+  often doesn't: push then reads as off, as before), `push_off`, `incomplete`, `failed`.
+  `pushSubscriptionInput` is the register body of a subscription.
+- **server-kit `PushReplaceIn`** and **`push_auth_matches(stored, given)`** for the new route
+  **`POST /notifications/devices/replace`**. No session (a worker has no `Authorization`
+  header): the old endpoint and its `keys.auth`, which only that browser and the server
+  hold, are the proof, compared in constant time. No row with `old_endpoint`, or an `auth`
+  that does not match → 404 (one answer for both); the new endpoint on another account →
+  409 (`PushEndpointTakenError`); else the row moves in place (new endpoint and keys, the
+  same account, `failure_count` 0) → 200 `PushDeviceResponse`; the new endpoint already on
+  the same account → the old row goes and that one answers. Rate-limit it as the other
+  unauthenticated routes.
+
+| App | Change |
+| --- | --- |
+| keksdose | frontend/src/sw.ts: `handlePushSubscriptionChange(self, { pushKey, replace })` beside the `push` listener (:229), both requests with plain `fetch` (the worker has no token). Backend: the route beside `POST /notifications/devices/unregister`, on `PushReplaceIn`, finding the row by `old_endpoint` and checking `push_auth_matches(row.auth, body.old_auth)`; a test per answer (200 in place, 404 unknown or wrong auth, 409 another account's endpoint). |
+| kastlan | Nothing until its own push (its injectManifest worker, app list); then the same two steps. |
+| Kurvenschmiede | Nothing (no push). |
+
+## Pre-push checks every pushed commit message with the shared script (ui-kit repo only)
+
+ui-kit's `.husky/pre-push`, for a tree that already passed `npm run check`, now runs the
+shared `scripts/check-pushed-commits.cjs` over every commit the push sends (as server-kit's
+hook does), instead of `check:commits` per pushed tip. The shared rules are pinned as a
+`files[]` list in scripts/shared-commit-rules.json (`check-commit-msg.cjs`,
+`check-pushed-commits.cjs`), at **shared-workflows v1.3.1 (pending tag)**: `npm run
+check:commit-rules` says so and passes until the tag exists, then `npm run sync:commit-rules
+-- v1.3.1` pins it (`-- --from ../shared-workflows` copies a local checkout, pin untouched).
+`check:commits` stays in `npm run check` and CI. shared-workflows v1.3.1 also resolves a
+hook's exported `GIT_DIR` after a `cd` into a subdirectory (the top-level `.versionrc` still
+applies) and warns when it leads nowhere. Apps: nothing; each app's hook already vendors
+the shared script (or takes v1.3.1 with its next sync).

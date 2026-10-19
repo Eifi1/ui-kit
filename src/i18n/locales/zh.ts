@@ -1743,6 +1743,11 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       contrastHelp: "增强对比度会加深浅色文字和线条，并加粗焦点框。“跟随系统”沿用此设备的设置。",
       contrastModes: { system: "跟随系统", standard: "标准", more: "增强" },
       saveFailed: "无法保存到您的账户。此设备上仍然生效。",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "日期格式",
+      dateFormatHelp:
+        "整个应用中日期的书写方式。与界面语言无关，因此您可以用英文阅读应用，同时仍看到德式日期。",
+      dateFormatAuto: "跟随语言",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "外观".

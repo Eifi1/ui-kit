@@ -1824,6 +1824,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         "A fokozott kontraszt sötétebbé teszi a halvány szövegeket és vonalakat, a fókuszkereteket pedig vastagabbá. A „Rendszer” ennek az eszköznek a beállítását követi.",
       contrastModes: { system: "Rendszer", standard: "Normál", more: "Fokozott" },
       saveFailed: "Nem sikerült menteni a fiókjába. Ezen az eszközön ettől még érvényes.",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "Dátumformátum",
+      dateFormatHelp:
+        "Hogyan jelennek meg a dátumok az egész alkalmazásban. Független a felület nyelvétől, így az alkalmazást olvashatja angolul, a dátumokat mégis német formában láthatja.",
+      dateFormatAuto: "A nyelvet követi",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Megjelenés". "Ön", as the rest of the catalogue.

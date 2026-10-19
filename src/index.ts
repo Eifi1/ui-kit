@@ -554,6 +554,19 @@ export type {
 // actions, one of the behaviours at Large (§4, §10.7–10.9).
 export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";
 export type { AppearanceLabels } from "./components/appearance-labels";
+// 0.46 (keksdose's date format, lifted): the preference, its resolver and renderer, the
+// provider's formatter for it, and the settings field.
+export {
+  DATE_FORMAT_PREFERENCES,
+  isDateFormatPreference,
+  resolveDateFormat,
+  formatDateWithPreference,
+  dateFormatSample,
+  dateFormatterFor,
+} from "./lib/date-format";
+export type { DateFormatPreference, DateFormatOptions, ResolvedDateFormat } from "./lib/date-format";
+export { DateFormatSetting } from "./components/date-format-setting";
+export type { DateFormatSettingProps } from "./components/date-format-setting";
 export { RowActions, rowActionsColumn, DEFAULT_ROW_ACTIONS_LABELS } from "./components/row-actions";
 export type {
   RowAction,
@@ -973,6 +986,19 @@ export type {
   PushPermission,
   PushDeviceErrorCode,
 } from "./notifications/use-push-device";
+// 0.46 (NT:1028): the service worker re-registers a rotated subscription.
+export {
+  handlePushSubscriptionChange,
+  resubscribeAfterChange,
+  pushSubscriptionInput,
+} from "./notifications/push-worker";
+export type {
+  PushReplaceInput,
+  PushSubscriptionChangeOptions,
+  PushSubscriptionChangeEventLike,
+  PushResubscribeOutcome,
+  PushWorkerScope,
+} from "./notifications/push-worker";
 export { PushDeviceSetting } from "./notifications/push-device-setting";
 export type { PushDeviceSettingProps, PushDeviceAction } from "./notifications/push-device-setting";
 export { PushDevicesSetting, describeUserAgent } from "./notifications/push-devices-setting";

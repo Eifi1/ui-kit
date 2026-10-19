@@ -1818,6 +1818,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         "El contraste aumentado oscurece los textos tenues y las líneas, y engrosa los marcos de foco. «Sistema» sigue el ajuste de este dispositivo.",
       contrastModes: { system: "Sistema", standard: "Estándar", more: "Aumentado" },
       saveFailed: "No se ha podido guardar en su cuenta. En este dispositivo se aplica igualmente.",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "Formato de fecha",
+      dateFormatHelp:
+        "Cómo se escriben las fechas en toda la app. Independiente del idioma de la interfaz: puede leer la app en inglés y ver igualmente las fechas en formato alemán.",
+      dateFormatAuto: "Seguir el idioma",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Apariencia". "Restablecer", as a phone's own settings say it.

@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMediaQuery } from "../hooks/use-media-query";
 import { httpStatusOf } from "../auth/auth-errors";
+import { PUSH_SUBSCRIPTION_CHANGED, keyBytes, pushSubscriptionInput as inputOf } from "./push-worker";
+import type { PushSubscriptionInput } from "./push-worker";
+
+export { PUSH_SUBSCRIPTION_CHANGED };
+export type { PushSubscriptionInput };
 
 /**
  * This browser's Web Push subscription for the signed-in account
@@ -32,13 +37,6 @@ export class PushDeviceError extends Error {
     this.name = "PushDeviceError";
     this.code = code;
   }
-}
-
-/** What `register` sends: `POST /notifications/devices` (§3.5). */
-export interface PushSubscriptionInput {
-  endpoint: string;
-  keys: { p256dh: string; auth: string };
-  user_agent: string | null;
 }
 
 export interface UsePushDeviceOptions {
@@ -92,14 +90,15 @@ export interface PushDevice {
   sendTest: () => Promise<{ sent: number }>;
 }
 
-/**
- * The window event every mounted {@link usePushDevice} re-reads its state on. Fired by
- * every enable and disable, and by `PushDevicesSetting` when it removes this device — so
- * an app's own card on the same hook (keksdose's check-up) stays in step. The hook that
- * fires it does not re-read: it knows what it changed. Namespaced for the kit;
- * keksdose's was `"keksdose:push-subscription-changed"`.
+/*
+ * PUSH_SUBSCRIPTION_CHANGED (push-worker.ts): the window event every mounted
+ * {@link usePushDevice} re-reads its state on. Fired by every enable and disable, and by
+ * `PushDevicesSetting` when it removes this device — so an app's own card on the same
+ * hook (keksdose's check-up) stays in step. The hook that fires it does not re-read: it
+ * knows what it changed. Since 0.46 also the message a service worker posts after a
+ * rotated subscription was re-registered (`handlePushSubscriptionChange`). Namespaced
+ * for the kit; keksdose's was `"keksdose:push-subscription-changed"`.
  */
-export const PUSH_SUBSCRIPTION_CHANGED = "eifi1:push-subscription-changed";
 
 /** Tell every {@link usePushDevice} that this browser's subscription changed. */
 export function notifyPushSubscriptionChanged(): void {
@@ -149,25 +148,6 @@ async function activeRegistration(): Promise<ServiceWorkerRegistration> {
   const existing = await navigator.serviceWorker.getRegistration();
   if (!existing) throw new PushDeviceError("no_service_worker");
   return within(navigator.serviceWorker.ready, READY_TIMEOUT_MS, "no_service_worker");
-}
-
-/** A VAPID public key (base64url) as the bytes `PushManager.subscribe` wants. */
-function keyBytes(key: string): Uint8Array<ArrayBuffer> {
-  const base64 = key.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (key.length % 4)) % 4);
-  const raw = atob(base64);
-  const bytes = new Uint8Array(new ArrayBuffer(raw.length));
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-  return bytes;
-}
-
-/** A subscription's register body, or `null` when the browser handed back an incomplete
- *  one. */
-function inputOf(subscription: PushSubscription): PushSubscriptionInput | null {
-  const json = subscription.toJSON();
-  const p256dh = json.keys?.p256dh;
-  const auth = json.keys?.auth;
-  if (!json.endpoint || !p256dh || !auth) return null;
-  return { endpoint: json.endpoint, keys: { p256dh, auth }, user_agent: navigator.userAgent || null };
 }
 
 const defaultEndpointTaken = (error: unknown) => httpStatusOf(error) === 409;
@@ -289,11 +269,18 @@ export function usePushDevice(options: UsePushDeviceOptions): PushDevice {
     const heard = () => {
       if (!announcing.current) void sync();
     };
+    // The worker's word after it re-registered a rotated subscription (0.46).
+    const fromWorker = (event: MessageEvent) => {
+      if ((event.data as { type?: unknown } | null)?.type === PUSH_SUBSCRIPTION_CHANGED) void sync();
+    };
+    const worker = navigator.serviceWorker as ServiceWorkerContainer | undefined;
     void sync();
     window.addEventListener(PUSH_SUBSCRIPTION_CHANGED, heard);
+    worker?.addEventListener?.("message", fromWorker);
     return () => {
       cancelled = true;
       window.removeEventListener(PUSH_SUBSCRIPTION_CHANGED, heard);
+      worker?.removeEventListener?.("message", fromWorker);
     };
   }, [supported]);
 

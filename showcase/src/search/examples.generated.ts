@@ -765,6 +765,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DeviceResetSetting — this page's own registry",
     "PasswordSetting — strength + maxBytes",
     "LanguageSelect — a language as a form field",
+    "DateFormatSetting — how a day is written, apart from the language",
   ],
   "notifications": [
     "NotificationTypesSetting — nine types under three headings",
@@ -1358,6 +1359,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Settings",
     "PasswordStrength022Demo",
     "LanguageSelect022Demo",
+    "DateFormat046Demo",
   ],
   "notifications": [
     "NotificationsPage",

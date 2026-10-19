@@ -402,7 +402,8 @@ deletes** checks nothing: a release tag sits on a merge commit whose tree the br
 checked and CI tested, and `release.yml` will not stage a commit whose CI is red. And a green
 `npm run check` on a clean tree (nothing modified, nothing untracked) stamps that tree in
 `node_modules/.cache/check/`; pushing a tree that already passed (a reworded commit, a
-re-push) runs only `check:commits` over the pushed commits. The check runs on the **working
+re-push) checks only the messages of every commit the push sends, with the shared
+`scripts/check-pushed-commits.cjs` (0.46, as server-kit's hook). The check runs on the **working
 tree**, not the pushed commits, so the hook warns when tracked files are modified, or when a
 pushed commit is not the checked-out one.
 
@@ -443,7 +444,7 @@ by hand:
 | `check:tailwind` | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. |
 | `check:security` | `npm audit --audit-level=high`. |
 | `check:commits` | Conventional Commits over the range: locally every commit not yet on `origin/main`, in CI the pushed or PR range. The release tool derives the version and the changelog from these messages. |
-| `check:commit-rules` | The commit rules are the apps' SHARED ones: `scripts/check-commit-msg.cjs` is a byte-for-byte copy of `Eifi1/shared-workflows`' commit check, pinned in `scripts/shared-commit-rules.json`. It fails when the copy drifts from the pin; offline it says so and passes (CI always verifies). A newer shared tag is reported; take it with `npm run sync:commit-rules -- <tag>`. A copy, not the shared action, because the husky hook and `npm run check` need the rules locally. |
+| `check:commit-rules` | The commit rules are the apps' SHARED ones: every file in `scripts/shared-commit-rules.json`'s `files[]` (`scripts/check-commit-msg.cjs`, and the pre-push hook's `scripts/check-pushed-commits.cjs`) is a byte-for-byte copy of `Eifi1/shared-workflows`' commit check, pinned to one commit. It fails when a copy drifts from the pin; offline, or while the pin waits for its tag ("(pending tag)", no commit yet), it says so and passes (CI always verifies). `npm run sync:commit-rules -- --from ../shared-workflows` copies a local checkout and leaves the pin alone. A newer shared tag is reported; take it with `npm run sync:commit-rules -- <tag>`. A copy, not the shared action, because the husky hook and `npm run check` need the rules locally. |
 
 A passing group prints one line with its time; a failing one prints its whole output.
 Inside a group, a passing check prints a line, not an inventory: `build` drops tsup's per-file listing

@@ -259,6 +259,7 @@ const OneTimeCode022Demo = lazySection(() => import("./sections/account-fields-0
 const OneTimeCodeUnlabelled022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCodeUnlabelled022Demo");
 const PasswordStrength022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "PasswordStrength022Demo");
 const LanguageSelect022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "LanguageSelect022Demo");
+const DateFormat046Demo = lazySection(() => import("./sections/date-format-046-demo"), "DateFormat046Demo");
 const TileRadioGroup022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "TileRadioGroup022Demo");
 const AccountNumbers022Demo = lazySection(() => import("./sections/account-numbers-022-demo"), "AccountNumbers022Demo");
 const ToggleGroup022Demo = lazySection(() => import("./sections/chips-toggles"), "ToggleGroup022Demo");
@@ -1288,7 +1289,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
         icon: SettingsIcon,
-        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "PasswordSetting", "TwoFactorSetting", "LanguageSelect", "DeviceResetSetting", "registerDeviceSetting", "deviceSettings", "resetDeviceSettings"],
+        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "PasswordSetting", "TwoFactorSetting", "LanguageSelect", "DeviceResetSetting", "registerDeviceSetting", "deviceSettings", "resetDeviceSettings", "DateFormatSetting", "dateFormatterFor", "formatDateWithPreference"],
         Body: () => (
           <>
             <SettingsDesktop031Demo />
@@ -1298,6 +1299,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Settings />
             <PasswordStrength022Demo />
             <LanguageSelect022Demo />
+            <DateFormat046Demo />
           </>
         ),
       },

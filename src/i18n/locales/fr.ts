@@ -1858,6 +1858,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         "Le contraste renforcé assombrit les textes discrets et les lignes, et épaissit les contours de focus. «\u202fSystème\u202f» suit le réglage de cet appareil.",
       contrastModes: { system: "Système", standard: "Standard", more: "Renforcé" },
       saveFailed: "Impossible de l’enregistrer dans votre compte. Le réglage s’applique tout de même sur cet appareil.",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "Format de date",
+      dateFormatHelp:
+        "Comment les dates sont écrites dans toute l’app. Indépendant de la langue de l’interface, vous pouvez donc lire l’app en anglais et voir quand même des dates à la française.",
+      dateFormatAuto: "Suivre la langue",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Apparence". "Réglages", as `contrastHelp` says "réglage".
