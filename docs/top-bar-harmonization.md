@@ -287,6 +287,10 @@ All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
     promise keeps the spin), `hideWhenIdle`, `scope` (`{ name, offline? }`, for the tooltip
     words), `showLabel` (the short words "Offline", "Syncing…", "3 waiting"), `labels`
     and `locale`.
+  - `storage` (`"device"`, the default, or `"none"`): `"none"` is the online-only preset
+    (KS). It ignores `pending`, `blocked` and `waitingForPlan`. Offline then reads "changes
+    can't be saved until you reconnect", and a round reads "Saving…" (adopt-0.42.md:109;
+    local-first §1.4).
   - "Waiting for a plan" reuses `billing.waitingChanges`.
 - **`DevSwitchers`** (§2.7, §6.2, §6.3): role, then plan, each a `TopBarActionMenu` behind
   `RoleSwitcher`'s amber flask, with checked rows.
