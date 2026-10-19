@@ -32,6 +32,12 @@ export interface AdminAreaLabels {
   /** The row's waiting count, for a reader ("Administration, 3 waiting"); the eye sees
    *  the number in the badge. */
   waiting: (count: number) => string;
+  /**
+   * 0.45 (admin §9.3.4): a button's whole name with its count — "Platform, 2 waiting" —
+   * for an `IconButton` whose `badge` is an `AdminWaitingBadge`: the badge is decorative
+   * there, so the name carries the count. `label` is the button's own name.
+   */
+  waitingLabel: (label: string, count: number) => string;
   /** The 403 page's heading (§2.2 decision 8). */
   forbiddenTitle: string;
   /**
@@ -59,6 +65,7 @@ export interface AdminAreaLabels {
 export const DEFAULT_ADMIN_AREA_LABELS: AdminAreaLabels = {
   title: "Administration",
   waiting: (count) => `${count} waiting`,
+  waitingLabel: (label, count) => `${label}, ${count} waiting`,
   forbiddenTitle: "Only for administrators",
   forbiddenBody: (appName) => `This is where administrators run ${appName}. Your account cannot open this page.`,
   forbiddenHome: "Go to the start page",

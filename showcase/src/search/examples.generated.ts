@@ -684,6 +684,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TourStep — the shape a step actually takes",
     "Tour — the step after a spotlighted one",
     "TourCatalogue — the tours page body",
+    "useTourProgress with an account (0.45)",
   ],
   "command-palette": [
     "CommandPalette",
@@ -818,6 +819,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   ],
   "user-admin": [
     "The way in — useAdminMenuEntry, AccountRoleChip",
+    "AdminWaitingBadge — the count on an IconButton",
+    "MailTestCard — “Send a test mail to me”",
     "The admin area — adminSections, AdminOverview, AdminToolLinks",
     "One tile — AttentionTile",
     "The 403 page — AdminForbidden",
@@ -848,6 +851,12 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "The portal for the buyer only — SubscriptionActions, CancelSubscriptionConfirm",
     "The permanent-grant warning — PlanPicker, PlanSwitchConfirm",
     "The portal in a new tab — openProviderPage, useCancelRequest",
+  ],
+  "offline": [
+    "createQueryPersistence — the persisted query cache",
+    "SignOutPendingDialog — before a sign-out while changes wait",
+    "PwaUpdatePrompt — “A new version is available”",
+    "SharedComputerChoice — on the sign-in form",
   ],
   "feedback-compose": [
     "FeedbackDialog",
@@ -1377,6 +1386,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Billing032Demo",
     "Billing033Demo",
     "BillingSwitchDemo",
+  ],
+  "offline": [
+    "OfflineDemo",
   ],
   "feedback-compose": [
     "FeedbackCompose",

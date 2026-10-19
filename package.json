@@ -64,6 +64,10 @@
       "types": "./dist/rhf.d.ts",
       "import": "./dist/rhf.js"
     },
+    "./offline": {
+      "types": "./dist/offline.d.ts",
+      "import": "./dist/offline.js"
+    },
     "./i18n/*": {
       "types": "./dist/i18n/locales/*.d.ts",
       "import": "./dist/i18n/locales/*.js"
@@ -112,6 +116,10 @@
     "deps:outdated": "npm outdated || true"
   },
   "peerDependencies": {
+    "@tanstack/query-async-storage-persister": "^5",
+    "@tanstack/react-query": "^5",
+    "@tanstack/react-query-persist-client": "^5",
+    "idb-keyval": "^6",
     "lucide-react": ">=0.400.0 <2",
     "modern-screenshot": "^4.7.0",
     "react": ">=19.2",
@@ -122,6 +130,18 @@
     "sonner": ">=2"
   },
   "peerDependenciesMeta": {
+    "@tanstack/query-async-storage-persister": {
+      "optional": true
+    },
+    "@tanstack/react-query": {
+      "optional": true
+    },
+    "@tanstack/react-query-persist-client": {
+      "optional": true
+    },
+    "idb-keyval": {
+      "optional": true
+    },
     "modern-screenshot": {
       "optional": true
     },
@@ -141,6 +161,9 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/query-async-storage-persister": "^5.104.1",
+    "@tanstack/react-query": "^5.104.1",
+    "@tanstack/react-query-persist-client": "^5.104.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.7",
@@ -159,6 +182,7 @@
     "flag-icons": "^7.5.0",
     "globals": "^17.12.0",
     "husky": "^9.1.7",
+    "idb-keyval": "^6.2.6",
     "jsdom": "^30.0.1",
     "lucide-react": "^1.47.0",
     "modern-screenshot": "^4.7.0",

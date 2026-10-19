@@ -137,6 +137,12 @@ export const de: Dictionary = {
       blurb:
         "Für eine App bezahlen: die Tarifauswahl in zwei Währungen und zwei Abrechnungszeiträumen, der Status des Abonnements, die Banner von der Testphase bis zum Ablauf, Hinweis und Toast zum Tariflimit, die Nur-Lesen-Sperre und die Arten von Sperren, das Portal des Anbieters, der Rückweg aus dem Checkout, die Bezahlseite und der kommerzielle Hinweis im Impressum.",
     },
+    offline: {
+      title: "Offline",
+      short: "Offline",
+      blurb:
+        "Ohne Verbindung arbeiten: der gespeicherte Query-Cache mit seiner Streichliste, die Frage vor dem Abmelden, solange Änderungen warten, der Update-Hinweis, der auf eine Tour wartet, und die Wahl «gemeinsam genutzter Computer».",
+    },
     "auth-account": {
       title: "Anmeldung & Kontosicherheit",
       short: "Anmeldung",
@@ -642,6 +648,14 @@ export const de: Dictionary = {
       "Zahlung wird nach dem Checkout verarbeitet",
       "die Paddle-Bezahlseite ausliefern",
       "Tariflimit als Toast",
+    ],
+    offline: [
+      "Daten für ein Neuladen ohne Verbindung behalten",
+      "den Query-Cache speichern",
+      "nie IBANs auf dem Gerät speichern",
+      "vor dem Abmelden mit ungesendeten Änderungen fragen",
+      "eine neue Version ist verfügbar, neu laden",
+      "dies ist ein gemeinsam genutzter Computer",
     ],
     "auth-account": [
       "Layout der Anmeldeseite",

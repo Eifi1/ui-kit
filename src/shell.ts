@@ -20,6 +20,10 @@ export type { AdminMenuEntryOptions, AdminMenuRowProps } from "./shell/admin-men
 // 0.43.0 (kastlan): the entry with the provider's words.
 export { useAdminMenuEntry } from "./shell/admin-menu";
 export type { UseAdminMenuEntryOptions } from "./shell/admin-menu";
+// 0.45.0 (docs/admin-harmonization.md §9.3.4): the row's waiting pill on its own, for
+// IconButton's `badge` (kastlan's platform button); its name is `adminArea.waitingLabel`.
+export { AdminWaitingBadge } from "./shell/admin-menu";
+export type { AdminWaitingBadgeProps } from "./shell/admin-menu";
 // 0.31.0: the settings and admin pages' shell (docs/settings-harmonization.md §3, §5).
 export { SettingsLayout, SETTINGS_SEARCH_THRESHOLD } from "./settings/settings-layout";
 export type { SettingsLayoutProps, SettingsLayoutWidth, SettingsDocumentTitleParts } from "./settings/settings-layout";

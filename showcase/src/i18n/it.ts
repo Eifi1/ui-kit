@@ -126,6 +126,12 @@ export const it: Dictionary = {
       blurb:
         "Pagare un’app: la scelta del piano in due valute e su due periodi, lo stato dell’abbonamento, i banner dalla prova alla scadenza, l’avviso e il toast di limite del piano, il blocco di sola lettura e i tipi di blocco, il portale del fornitore, il ritorno dal checkout, la pagina di pagamento e l’avvertenza commerciale delle note legali.",
     },
+    offline: {
+      title: "Offline",
+      short: "Offline",
+      blurb:
+        "Lavorare senza connessione: la cache delle query conservata con il suo elenco di campi da togliere, la domanda prima di uscire mentre delle modifiche attendono, l’avviso di aggiornamento che aspetta la fine di un tour e la scelta «computer condiviso».",
+    },
     "auth-account": {
       title: "Accesso e sicurezza dell'account",
       short: "Accesso",
@@ -631,6 +637,14 @@ export const it: Dictionary = {
       "pagamento in elaborazione dopo il checkout",
       "servire la pagina di pagamento Paddle",
       "limite del piano come toast",
+    ],
+    offline: [
+      "conservare i dati per un ricaricamento offline",
+      "salvare la cache delle query",
+      "non salvare mai IBAN sul dispositivo",
+      "chiedere prima di uscire con modifiche non sincronizzate",
+      "è disponibile una nuova versione, ricarica",
+      "questo è un computer condiviso",
     ],
     "auth-account": [
       "layout della pagina di accesso",

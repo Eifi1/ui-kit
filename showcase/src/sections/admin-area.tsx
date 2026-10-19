@@ -16,6 +16,9 @@ import {
   AdminOverview,
   AdminToolLinks,
   AttentionTile,
+  AdminWaitingBadge,
+  IconButton,
+  MailTestCard,
   SettingsLayout,
   SettingsSection,
   Switch,
@@ -111,6 +114,7 @@ export function AdminWayIn042Demo() {
   // 0.43: adminMenuEntry with the provider's words read for it.
   const admin = useAdminMenuEntry({ badge: WAITING });
   return (
+    <>
     <Example
       label="The way in — useAdminMenuEntry, AccountRoleChip"
       hint="the Administration row with its waiting count; the role chip as a shortcut"
@@ -172,6 +176,88 @@ export function AdminWayIn042Demo() {
         every language.
       </Note>
     </Example>
+    <AdminFollowUps045 />
+    </>
+  );
+}
+
+/* ── 0.45: the waiting badge on a button, the test mail ──────────────────── */
+
+type MailOutcome = "resend" | "console" | "failed" | "limited";
+
+function AdminFollowUps045() {
+  const area = useAdminAreaLabels();
+  const [waiting, setWaiting] = useState(2);
+  const [outcome, setOutcome] = useState<MailOutcome>("resend");
+  // A pretend `POST /admin/mail/test`: the app awaits its own send and answers its bool.
+  const send = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    if (outcome === "limited") throw Object.assign(new Error("Too Many Requests"), { status: 429, headers: { "retry-after": "420" } });
+    if (outcome === "failed") return { sent: false, mail_backend: "resend" };
+    // A console answers `true`: the card still says nothing was sent.
+    return { sent: true, mail_backend: outcome };
+  };
+  return (
+    <>
+      <Example
+        label="AdminWaitingBadge — the count on an IconButton"
+        hint="kastlan's top-bar platform button: deletion requests waiting on the operator (§9.3)"
+      >
+        <ToggleGroup<string>
+          aria-label="Waiting"
+          value={String(waiting)}
+          onChange={(value) => setWaiting(Number(value))}
+          options={[
+            { value: "0", label: "None" },
+            { value: "2", label: "2" },
+            { value: "120", label: "120" },
+          ]}
+        />
+        <div className="mt-3 flex items-center gap-3">
+          <IconButton
+            label={waiting > 0 ? area.waitingLabel("Platform", waiting) : "Platform"}
+            badge={<AdminWaitingBadge count={waiting} />}
+          >
+            <ShieldCheck />
+          </IconButton>
+        </div>
+        <Note>
+          The row&apos;s pill on its own: nothing for 0, &ldquo;99+&rdquo; past 99. On an{" "}
+          {code("IconButton")} the badge is decorative, so the button&apos;s name carries the
+          count: {code("adminArea.waitingLabel(\"Platform\", n)")} reads &ldquo;
+          {area.waitingLabel("Platform", 2)}&rdquo;. Since 0.45.
+        </Note>
+      </Example>
+      <Example
+        label="MailTestCard — “Send a test mail to me”"
+        hint="one mail to the signed-in admin's own address, through the app's own send (§9.2)"
+      >
+        <ToggleGroup<MailOutcome>
+          aria-label="The pretend server answers"
+          value={outcome}
+          onChange={setOutcome}
+          options={[
+            { value: "resend", label: "Sent" },
+            { value: "console", label: "Console" },
+            { value: "failed", label: "Failed" },
+            { value: "limited", label: "429" },
+          ]}
+        />
+        <div className="mt-3">
+          <MailTestCard
+            mailBackend={outcome === "console" ? "console" : "resend"}
+            address="ada@example.com"
+            send={send}
+          />
+        </div>
+        <Note>
+          The result line reads {code("mail_backend")} first: with {code("console")} it says
+          nothing was sent whatever {code("sent")} is, since every console path answers{" "}
+          {code("true")}. The address is masked; a 429 is the limiter&apos;s line (server-kit&apos;s{" "}
+          {code("MAIL_TEST_LIMIT")}, 3 per 10 minutes). Nothing is sent from this page. Since 0.45.
+        </Note>
+      </Example>
+    </>
   );
 }
 

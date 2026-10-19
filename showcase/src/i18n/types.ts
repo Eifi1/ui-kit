@@ -89,6 +89,7 @@ export type PageSlug =
   | "landing-demo"
   | "user-admin"
   | "subscription"
+  | "offline"
   | "wizard"
   | "feedback-compose"
   | "feedback-inbox"

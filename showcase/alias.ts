@@ -26,6 +26,7 @@ export const SHOWCASE_ALIAS = {
   ),
   "@eifi1/ui-kit/dates": fileURLToPath(new URL("../src/lib/dates.ts", import.meta.url)),
   "@eifi1/ui-kit/rhf": fileURLToPath(new URL("../src/rhf.ts", import.meta.url)),
+  "@eifi1/ui-kit/offline": fileURLToPath(new URL("../src/offline.ts", import.meta.url)),
   "@eifi1/ui-kit/table-text": fileURLToPath(new URL("../src/table-text.ts", import.meta.url)),
   "@eifi1/ui-kit/testing": fileURLToPath(new URL("../src/testing/index.ts", import.meta.url)),
   "@eifi1/ui-kit": fileURLToPath(new URL("../src/index.ts", import.meta.url)),

@@ -24,6 +24,7 @@ import {
   ClipboardCopy,
   Command,
   CreditCard,
+  CloudOff,
   Compass,
   Contrast,
   Component as ComponentIcon,
@@ -325,6 +326,8 @@ const RowActions033Demo = lazySection(() => import("./sections/text-size-033-dem
 const LabelAbove033Demo = lazySection(() => import("./sections/text-size-033-demo"), "LabelAbove033Demo");
 const Billing033Demo = lazySection(() => import("./sections/billing-033-demo"), "Billing033Demo");
 const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "BillingSwitchDemo");
+// 0.45: local-first phase 1, @eifi1/ui-kit/offline (docs/local-first-harmonization.md §1.6).
+const OfflineDemo = lazySection(() => import("./sections/offline-demo"), "OfflineDemo");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
 // 0.42: the admin area's template (docs/admin-harmonization.md).
@@ -1396,6 +1399,18 @@ export const GROUPS: ShowcaseGroup[] = [
             <BillingSwitchDemo />
           </>
         ),
+      },
+      {
+        // 0.45: beside the subscription — what an app keeps on the device, and asks before
+        // it lets it go.
+        slug: "offline",
+        title: "Offline",
+        short: "Offline",
+        blurb:
+          "Working without a connection: the persisted query cache with its scrub list, the question before signing out while changes still wait, the update prompt that waits for a tour, and the shared-computer choice.",
+        icon: CloudOff,
+        components: ["createQueryPersistence", "DEFAULT_SCRUB_FIELDS", "SignOutPendingDialog", "PwaUpdatePrompt", "SharedComputerChoice", "isSharedComputer", "setSharedComputer"],
+        Body: () => <OfflineDemo />,
       },
       {
         slug: "feedback-compose",

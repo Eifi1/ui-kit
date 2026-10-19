@@ -129,6 +129,12 @@ export const es: Dictionary = {
       blurb:
         "Pagar por una aplicación: el selector de plan en dos monedas y dos periodos, el estado de la suscripción, los banners desde la prueba hasta el vencimiento, el aviso y el toast de límite del plan, el bloqueo de solo lectura y los tipos de bloqueo, el portal del proveedor, la vuelta desde el pago, la página de pago y la cláusula comercial del aviso legal.",
     },
+    offline: {
+      title: "Sin conexión",
+      short: "Sin conexión",
+      blurb:
+        "Trabajar sin conexión: la caché de consultas guardada con su lista de campos que se eliminan, la pregunta antes de cerrar sesión mientras hay cambios pendientes, el aviso de actualización que espera a que termine un recorrido y la opción «ordenador compartido».",
+    },
     "auth-account": {
       title: "Inicio de sesión y seguridad de la cuenta",
       short: "Acceso",
@@ -634,6 +640,14 @@ export const es: Dictionary = {
       "pago en proceso tras el checkout",
       "servir la página de pago de Paddle",
       "límite del plan como toast",
+    ],
+    offline: [
+      "guardar datos para recargar sin conexión",
+      "guardar la caché de consultas",
+      "no guardar nunca IBAN en el dispositivo",
+      "preguntar antes de cerrar sesión con cambios sin sincronizar",
+      "hay una nueva versión, recargar",
+      "este es un ordenador compartido",
     ],
     "auth-account": [
       "diseño de la página de inicio de sesión",

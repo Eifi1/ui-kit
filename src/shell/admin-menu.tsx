@@ -25,16 +25,53 @@ function badgeText(badge: number | null | undefined): string | null {
  * pending count's tone, with the number for the eye and `adminArea.waiting` for a reader
  * ("Administration, 3 waiting"). `null` for no count.
  */
-function WaitingBadge({ badge, labels }: { badge: number | null | undefined; labels: AdminAreaLabels }) {
+function WaitingBadge({
+  badge,
+  labels,
+  className,
+}: {
+  badge: number | null | undefined;
+  labels: AdminAreaLabels;
+  className?: string;
+}) {
   const text = badgeText(badge);
   if (text === null) return null;
   return (
-    <Chip size="sm" variant="solid" tone="warning" data-slot="admin-badge">
+    <Chip size="sm" variant="solid" tone="warning" data-slot="admin-badge" className={className}>
       <span aria-hidden>{text}</span>
       {/* The comma parts it from the row's label in the name: "Administration, 3 waiting". */}
       <span className="sr-only-fixed">, {labels.waiting(badge as number)}</span>
     </Chip>
   );
+}
+
+export interface AdminWaitingBadgeProps {
+  /** The waiting count: only work that waits on this admin. `0`, `null` or none draws
+   *  nothing; past 99 it reads "99+". */
+  count: number | null | undefined;
+  /** Prop > `<UiKitProvider labels={{ adminArea }}>` > English. */
+  labels?: LabelOverride<AdminAreaLabels>;
+  className?: string;
+}
+
+/**
+ * The waiting pill of {@link AdminMenuRow} on its own (0.45, docs/admin-harmonization.md
+ * §9.3.4): the `solid` warning count, "99+" past 99, nothing for 0. Fit for `IconButton`'s
+ * `badge` — kastlan's top-bar platform button. There the badge is DECORATIVE (`aria-hidden`
+ * by IconButton), so the button's name carries the count: `adminArea.waitingLabel`.
+ *
+ *     const area = useAdminAreaLabels();
+ *     <IconButton
+ *       label={waiting > 0 ? area.waitingLabel("Platform", waiting) : "Platform"}
+ *       badge={<AdminWaitingBadge count={waiting} />}
+ *       …
+ *     />
+ *
+ * Read on its own (outside an IconButton), the pill still says ", 3 waiting" to a reader.
+ */
+export function AdminWaitingBadge({ count, labels: labelsProp, className }: AdminWaitingBadgeProps) {
+  const labels = useAdminAreaLabels(labelsProp);
+  return <WaitingBadge badge={count} labels={labels} className={className} />;
 }
 
 export interface AdminMenuEntryOptions {
@@ -136,7 +173,7 @@ export function AdminMenuRow({ href = "/admin", badge, onNavigate, current, labe
         renderLink={({ href: to, ...p }) => <Link to={to} {...p} />}
         onClick={onNavigate ? () => onNavigate() : undefined}
         leading={<ShieldCheck className="size-4" aria-hidden />}
-        trailing={badgeText(badge) === null ? undefined : <WaitingBadge badge={badge} labels={labels} />}
+        trailing={badgeText(badge) === null ? undefined : <AdminWaitingBadge count={badge} labels={labels} />}
         current={current}
       >
         {labels.title}

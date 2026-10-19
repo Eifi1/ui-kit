@@ -72,7 +72,11 @@ export type AdminActionKind =
   | "group_rename"
   | "group_delete"
   | "membership_add"
-  | "membership_role";
+  | "membership_role"
+  // 0.45 (admin §9.1.3): a group switched off or on again — kastlan's company PATCH
+  // (`is_active`). server-kit 0.15's `AdminAction.GROUP_DEACTIVATE` / `GROUP_REACTIVATE`.
+  | "group_deactivate"
+  | "group_reactivate";
 
 /** Every {@link AdminActionKind}, in the contract's order. */
 export const ADMIN_ACTION_KINDS: readonly AdminActionKind[] = [
@@ -98,6 +102,8 @@ export const ADMIN_ACTION_KINDS: readonly AdminActionKind[] = [
   "group_delete",
   "membership_add",
   "membership_role",
+  "group_deactivate",
+  "group_reactivate",
 ];
 
 /** The app's word for its groups (§11.5): Kurvenschmiede's teams, kastlan's companies,
@@ -105,11 +111,14 @@ export const ADMIN_ACTION_KINDS: readonly AdminActionKind[] = [
  *  actions are said in. */
 export type AdminGroupNoun = "group" | "team" | "company" | "budget";
 
-/** The kinds said in the noun's words: the five of 0.34, and `membership_remove`. */
+/** The kinds said in the noun's words: the five of 0.34, `membership_remove`, and 0.45's
+ *  `group_deactivate` / `group_reactivate`. */
 type AdminGroupActionKind =
   | "group_create"
   | "group_rename"
   | "group_delete"
+  | "group_deactivate"
+  | "group_reactivate"
   | "membership_add"
   | "membership_role"
   | "membership_remove";
@@ -118,6 +127,8 @@ const GROUP_ACTION_KINDS: ReadonlySet<string> = new Set<AdminGroupActionKind>([
   "group_create",
   "group_rename",
   "group_delete",
+  "group_deactivate",
+  "group_reactivate",
   "membership_add",
   "membership_role",
   "membership_remove",
@@ -184,6 +195,13 @@ export interface AdminActionLogEntry {
   group?: AdminGroupTarget | null;
   /** The `detail` in the app's words — "Member → Admin", "12 items to Ben Example". */
   detail?: ReactNode;
+  /**
+   * 0.45 (admin §9.4, Marcel 2026-10-19): a `group_rename` row's `detail.{from, to}` —
+   * kastlan's company rename logs both names. With both, the row reads "Company renamed
+   * from A to B" (`renamedFromTo`) in place of the target. A rename that logs `{}` (KS's
+   * team rename: never a name) leaves it out and reads "Team renamed" and the group.
+   */
+  renamed?: { from?: string | null; to?: string | null } | null;
 }
 
 /** The `adminActionLog` namespace. */
@@ -206,6 +224,8 @@ export interface AdminActionLogLabels {
   showAll: string;
   /** A target name as a filter button — "Show only the actions on Ada Example". */
   filterBy: (target: string) => string;
+  /** 0.45: after "Company renamed" when the row carries both names — "from A to B". */
+  renamedFromTo: (from: string, to: string) => string;
   /** What each action is called, past tense, keyed by the vocabulary. An app adds its
    *  own here (`labels={{ actions: { plan: "Plan changed" } }}`). A word given here
    *  outranks the noun's in `groupActions` — so no catalogue holds the group kinds
@@ -223,6 +243,11 @@ interface AdminGroupActionLabels {
   group_rename: string;
   /** "Team deleted". */
   group_delete: string;
+  /** "Company deactivated" (0.45, admin §9.1.3): the group switched off — its people
+   *  locked out — not a person's `deactivate`. */
+  group_deactivate: string;
+  /** "Company reactivated" (0.45). */
+  group_reactivate: string;
   /** "Added to the team" — said of the person, so it agrees with the account where a
    *  language agrees (es "Añadida", fr "Ajouté"). */
   membership_add: string;
@@ -384,12 +409,22 @@ export function AdminActionLog({
           aria-busy={loading || undefined}
           className={cn("divide-y divide-subtle", loading && "opacity-60")}
         >
-          {entries.map((entry) => (
+          {entries.map((entry) => {
+            const from = (entry.renamed?.from ?? "").trim();
+            const to = (entry.renamed?.to ?? "").trim();
+            const renamed = entry.action === "group_rename" && from !== "" && to !== "";
+            return (
             <li key={entry.id} data-action={entry.action} className="space-y-0.5 py-2 first:pt-0 last:pb-0">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                 <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
                   <span className="font-medium text-primary">{actionText(entry.action)}</span>
-                  {entry.target !== undefined && <span className="min-w-0 break-words">{targetNode(entry)}</span>}
+                  {renamed ? (
+                    <span data-private data-renamed className="min-w-0 break-words text-primary">
+                      {labels.renamedFromTo(from, to)}
+                    </span>
+                  ) : (
+                    entry.target !== undefined && <span className="min-w-0 break-words">{targetNode(entry)}</span>
+                  )}
                   {entry.group && (
                     <span data-group className="min-w-0 break-words text-xs text-muted">
                       {groupText(entry.group)}
@@ -410,7 +445,8 @@ export function AdminActionLog({
                 )}
               </div>
             </li>
-          ))}
+            );
+          })}
         </ol>
       )}
       {paging && paging.total > 0 && (

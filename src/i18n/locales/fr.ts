@@ -1403,11 +1403,14 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       // ("Équipe créée", Kurvenschmiede's feminine "équipe"), a member's with "compte",
       // as `actions` do. `budget` is keksdose's; `company` keeps
       // `actions.membership_remove`'s string.
+      renamedFromTo: (from, to) => `de ${from} en ${to}`,
       groupActions: {
         group: {
           group_create: "Groupe créé",
           group_rename: "Groupe renommé",
           group_delete: "Groupe supprimé",
+          group_deactivate: "Groupe désactivé",
+          group_reactivate: "Groupe réactivé",
           membership_add: "Ajouté au groupe",
           membership_role: "Rôle dans le groupe modifié",
           membership_remove: "Retiré du groupe",
@@ -1417,6 +1420,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           group_create: "Équipe créée",
           group_rename: "Équipe renommée",
           group_delete: "Équipe supprimée",
+          group_deactivate: "Équipe désactivée",
+          group_reactivate: "Équipe réactivée",
           membership_add: "Ajouté à l’équipe",
           membership_role: "Rôle dans l’équipe modifié",
           membership_remove: "Retiré de l’équipe",
@@ -1426,6 +1431,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           group_create: "Entreprise créée",
           group_rename: "Entreprise renommée",
           group_delete: "Entreprise supprimée",
+          group_deactivate: "Entreprise désactivée",
+          group_reactivate: "Entreprise réactivée",
           membership_add: "Ajouté à l’entreprise",
           membership_role: "Rôle dans l’entreprise modifié",
           membership_remove: "Retiré de l’entreprise",
@@ -1435,6 +1442,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           group_create: "Budget créé",
           group_rename: "Budget renommé",
           group_delete: "Budget supprimé",
+          group_deactivate: "Budget désactivé",
+          group_reactivate: "Budget réactivé",
           membership_add: "Ajouté au budget",
           membership_role: "Rôle dans le budget modifié",
           membership_remove: "Retiré du budget",
@@ -1870,9 +1879,21 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       moreTitle: "Autres pages",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words.
+    mailTestCard: {
+      title: "E-mail de test",
+      description: "Envoie un e-mail à votre propre adresse, par le transport avec lequel cette installation envoie tous ses e-mails.",
+      transport: (backend) => `Transport : ${backend}`,
+      action: "M’envoyer un e-mail de test",
+      sent: (address) => `Envoyé à ${address}. Vérifiez la boîte de réception.`,
+      console: "Le transport console ne fait que journaliser les e-mails ; rien n’a été envoyé.",
+      failed: "Envoi impossible. Le journal du serveur contient la réponse du fournisseur.",
+      rateLimited,
+      keywords: "e-mail test courriel transport smtp resend console envoyer distribution",
+    },
     adminArea: {
       title: "Administration",
       waiting: (count) => `${n(count)} en attente`,
+      waitingLabel: (label, count) => `${label}, ${n(count)} en attente`,
       forbiddenTitle: "Réservé aux administrateurs",
       forbiddenBody: (appName) =>
         `C’est ici que les administrateurs gèrent ${appName}. Votre compte ne peut pas ouvrir cette page.`,
@@ -1940,6 +1961,31 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         backTo: (role) => `Revenir à ${role}`,
         billingOff: "La facturation est désactivée en local\u00a0: les formules ne changent rien",
       },
+    },
+    // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
+    // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.
+    signOutPending: {
+      title: "Certaines modifications ne sont pas encore enregistrées sur le serveur",
+      lost: (count) =>
+        count < 2
+          ? `${n(count)} modification attend encore la synchronisation. La déconnexion efface la copie de cet appareil, et c’est la seule.`
+          : `${n(count)} modifications attendent encore la synchronisation. La déconnexion efface la copie de cet appareil, et c’est la seule.`,
+      kept: (count) =>
+        count < 2
+          ? `${n(count)} modification attend encore la synchronisation. Elle reste sur cet appareil pour vous et sera synchronisée à votre prochaine connexion ici.`
+          : `${n(count)} modifications attendent encore la synchronisation. Elles restent sur cet appareil pour vous et seront synchronisées à votre prochaine connexion ici.`,
+      syncNow: "Synchroniser maintenant",
+      signOutAnyway: "Se déconnecter quand même",
+      discardWaiting: "Abandonner les modifications en attente",
+      cancel: "Annuler",
+    },
+    pwaUpdate: {
+      updateAvailable: "Une nouvelle version est disponible.",
+      reload: "Recharger",
+    },
+    sharedComputer: {
+      label: "C’est un ordinateur partagé",
+      hint: "Aucune copie de vos données ne reste sur cet appareil. Les pages ne s’ouvrent alors qu’avec une connexion.",
     },
   };
 }

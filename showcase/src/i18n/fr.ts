@@ -132,6 +132,12 @@ export const fr: Dictionary = {
       blurb:
         "Payer une application\u00a0: le choix de la formule en deux devises et sur deux périodes, l’état de l’abonnement, les bandeaux de l’essai à l’expiration, l’avis et le toast de limite de formule, le verrou de lecture seule et les sortes de verrous, le portail du prestataire, le retour depuis le paiement, la page de paiement et l’avertissement commercial des mentions légales.",
     },
+    offline: {
+      title: "Hors ligne",
+      short: "Hors ligne",
+      blurb:
+        "Travailler sans connexion : le cache de requêtes conservé avec sa liste d’effacement, la question avant de se déconnecter tant que des modifications attendent, l’invite de mise à jour qui attend la fin d’une visite, et le choix « ordinateur partagé ».",
+    },
     "auth-account": {
       title: "Connexion et sécurité du compte",
       short: "Connexion",
@@ -637,6 +643,14 @@ export const fr: Dictionary = {
       "paiement en cours de traitement au retour du paiement",
       "servir la page de paiement Paddle",
       "limite de formule sous forme de toast",
+    ],
+    offline: [
+      "garder les données pour un rechargement hors ligne",
+      "conserver le cache des requêtes",
+      "ne jamais stocker d’IBAN sur l’appareil",
+      "demander avant de se déconnecter avec des modifications non synchronisées",
+      "une nouvelle version est disponible, recharger",
+      "c’est un ordinateur partagé",
     ],
     "auth-account": [
       "mise en page de la connexion",

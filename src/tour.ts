@@ -11,5 +11,8 @@ export type { TourInfo, TourGroup, TourUpdate, TourCompletions } from "./tour/to
 // 0.44.0: the writer outside a page (§9.2).
 export { useTourProgress, resetTourProgress, completeTour } from "./tour/use-tour-progress";
 export type { UseTourProgressOptions, TourProgress } from "./tour/use-tour-progress";
+// 0.45.0: progress on the account (§10.2–§10.3) and the end of a session.
+export { signOutTourProgress } from "./tour/use-tour-progress";
+export type { TourProgressAccount, TourProgressAdopt, TourProgressBody } from "./tour/use-tour-progress";
 export { useTourUrlSync, useTourCatalogueUrlState } from "./tour/use-tour-url-sync";
 export type { UseTourUrlSyncOptions, TourCatalogueFilter, TourStateFilter } from "./tour/use-tour-url-sync";

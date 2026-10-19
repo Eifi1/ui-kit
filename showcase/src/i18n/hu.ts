@@ -135,6 +135,12 @@ export const hu: Dictionary = {
       blurb:
         "Fizetés egy alkalmazásért: a csomagválasztó két pénznemben és két időszakkal, az előfizetés állapota, a bannerek a próbaidőtől a lejáratig, a csomagkorlát-értesítés és -toast, a csak olvasható zár és a zárak fajtái, a szolgáltató portálja, a visszatérés a fizetésből, a fizetési oldal és az impresszum kereskedelmi nyilatkozata.",
     },
+    offline: {
+      title: "Offline",
+      short: "Offline",
+      blurb:
+        "Munka kapcsolat nélkül: a mentett lekérdezés-gyorsítótár a törlendő mezők listájával, a kérdés kijelentkezés előtt, amíg módosítások várnak, a frissítési értesítés, amely kivárja egy bemutató végét, és a „közös használatú számítógép” választás.",
+    },
     "auth-account": {
       title: "Bejelentkezés és fiókbiztonság",
       short: "Belépés",
@@ -640,6 +646,14 @@ export const hu: Dictionary = {
       "fizetés feldolgozás alatt a checkout után",
       "a Paddle fizetési oldal kiszolgálása",
       "csomagkorlát toast-értesítésként",
+    ],
+    offline: [
+      "adatok megőrzése offline újratöltéshez",
+      "a lekérdezés-gyorsítótár mentése",
+      "soha ne tároljon IBAN-t az eszközön",
+      "kérdezzen kijelentkezés előtt szinkronizálatlan módosításoknál",
+      "új verzió érhető el, újratöltés",
+      "ez egy közös használatú számítógép",
     ],
     "auth-account": [
       "bejelentkező oldal elrendezése",

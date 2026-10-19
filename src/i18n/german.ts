@@ -1409,11 +1409,14 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // 0.34 (§11.5): whole phrases per noun. `team` in Kurvenschmiede's own words ("Team
       // angelegt", "aufnehmen"), `budget` in keksdose's, `company` with the string
       // `actions.membership_remove` held until 0.34.
+      renamedFromTo: (from, to) => `von ${from} in ${to}`,
       groupActions: {
         group: {
           group_create: "Gruppe erstellt",
           group_rename: "Gruppe umbenannt",
           group_delete: "Gruppe gelöscht",
+          group_deactivate: "Gruppe deaktiviert",
+          group_reactivate: "Gruppe reaktiviert",
           membership_add: "Zur Gruppe hinzugefügt",
           membership_role: "Rolle in der Gruppe geändert",
           membership_remove: "Aus der Gruppe entfernt",
@@ -1423,6 +1426,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           group_create: "Team angelegt",
           group_rename: "Team umbenannt",
           group_delete: "Team gelöscht",
+          group_deactivate: "Team deaktiviert",
+          group_reactivate: "Team reaktiviert",
           membership_add: "Ins Team aufgenommen",
           membership_role: "Rolle im Team geändert",
           membership_remove: "Aus dem Team entfernt",
@@ -1432,6 +1437,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           group_create: "Unternehmen erstellt",
           group_rename: "Unternehmen umbenannt",
           group_delete: "Unternehmen gelöscht",
+          group_deactivate: "Unternehmen deaktiviert",
+          group_reactivate: "Unternehmen reaktiviert",
           membership_add: "Zum Unternehmen hinzugefügt",
           membership_role: "Rolle im Unternehmen geändert",
           membership_remove: "Aus dem Unternehmen entfernt",
@@ -1441,6 +1448,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           group_create: "Budget erstellt",
           group_rename: "Budget umbenannt",
           group_delete: "Budget gelöscht",
+          group_deactivate: "Budget deaktiviert",
+          group_reactivate: "Budget reaktiviert",
           membership_add: "Zum Budget hinzugefügt",
           membership_role: "Rolle im Budget geändert",
           membership_remove: "Aus dem Budget entfernt",
@@ -1892,9 +1901,21 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Verwaltung"
     // as settings §5 names the page; "mit Administratorrechten" rather than "für
     // Administratoren", which would give the reader a gender (as `transferOwnership`).
+    mailTestCard: {
+      title: "Testmail",
+      description: "Sendet eine Mail an Ihre eigene Adresse, über den Versand, mit dem diese Installation alle Mails verschickt.",
+      transport: (backend) => `Versand: ${backend}`,
+      action: "Testmail an mich senden",
+      sent: (address) => `An ${address} gesendet. Bitte prüfen Sie den Posteingang.`,
+      console: "Der Konsolen-Versand schreibt Mails nur ins Log; es wurde nichts gesendet.",
+      failed: "Senden fehlgeschlagen. Die Antwort des Anbieters steht im Server-Log.",
+      rateLimited,
+      keywords: "testmail test e-mail mail versand transport smtp resend konsole senden zustellen",
+    },
     adminArea: {
       title: "Verwaltung",
       waiting: (count) => `${n(count)} offen`,
+      waitingLabel: (label, count) => `${label}, ${n(count)} offen`,
       forbiddenTitle: "Nur mit Administratorrechten",
       forbiddenBody: (appName) => `Hier wird ${appName} verwaltet. Ihr Konto kann diese Seite nicht öffnen.`,
       forbiddenHome: "Zur Startseite",
@@ -1965,6 +1986,31 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         backTo: (role) => `Zurück zu ${role}`,
         billingOff: "Die Abrechnung ist lokal aus: Tarife ändern nichts",
       },
+    },
+    // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
+    // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.
+    signOutPending: {
+      title: "Einige Änderungen sind noch nicht auf dem Server",
+      lost: (count) =>
+        count === 1
+          ? `${n(count)} Änderung wartet noch auf die Synchronisierung. Beim Abmelden wird die Kopie auf diesem Gerät gelöscht – und das ist die einzige.`
+          : `${n(count)} Änderungen warten noch auf die Synchronisierung. Beim Abmelden wird die Kopie auf diesem Gerät gelöscht – und das ist die einzige.`,
+      kept: (count) =>
+        count === 1
+          ? `${n(count)} Änderung wartet noch auf die Synchronisierung. Sie bleibt für Sie auf diesem Gerät und wird bei Ihrer nächsten Anmeldung hier synchronisiert.`
+          : `${n(count)} Änderungen warten noch auf die Synchronisierung. Sie bleiben für Sie auf diesem Gerät und werden bei Ihrer nächsten Anmeldung hier synchronisiert.`,
+      syncNow: "Jetzt synchronisieren",
+      signOutAnyway: "Trotzdem abmelden",
+      discardWaiting: "Wartende Änderungen verwerfen",
+      cancel: "Abbrechen",
+    },
+    pwaUpdate: {
+      updateAvailable: "Eine neue Version ist verfügbar.",
+      reload: "Neu laden",
+    },
+    sharedComputer: {
+      label: "Dies ist ein gemeinsam genutzter Computer",
+      hint: "Auf diesem Gerät bleibt keine Kopie Ihrer Daten. Seiten öffnen sich dann nur mit einer Verbindung.",
     },
   };
 }

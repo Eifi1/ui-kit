@@ -5,7 +5,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { TopBarActionMenu } from "../topbar-action-menu";
 import { AppShell } from "../app-shell";
 import type { AppShellSidebarFooterItem } from "../app-shell";
-import { AdminMenuRow, adminMenuEntry } from "../admin-menu";
+import { AdminMenuRow, AdminWaitingBadge, adminMenuEntry } from "../admin-menu";
+import { IconButton } from "../../components/icon-button";
+import { useAdminAreaLabels } from "../../admin/admin-area-labels";
 import { HoverMenu } from "../../components/hover-menu";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
@@ -140,5 +142,62 @@ describe("AppShell sidebarFooterItems badge", () => {
     const admin = within(aside()).getByRole("link", { name: "Administration, 3 waiting" });
     expect(admin.querySelector("[data-badge]")).toHaveTextContent("3");
     expect(within(aside()).getByRole("link", { name: "Data import" }).querySelector("[data-badge]")).toBeNull();
+  });
+});
+
+describe("AdminWaitingBadge (0.45, admin §9.3.4)", () => {
+  it("draws nothing for 0, null or none", () => {
+    for (const count of [0, null, undefined]) {
+      const { container, unmount } = render(<AdminWaitingBadge count={count} />);
+      expect(container.querySelector("[data-slot='admin-badge']")).toBeNull();
+      unmount();
+    }
+  });
+
+  it("caps at 99+ as the row does, and reads its words alone", () => {
+    const { container } = render(<AdminWaitingBadge count={120} />);
+    const pill = container.querySelector("[data-slot='admin-badge']")!;
+    expect(within(pill as HTMLElement).getByText("99+")).toHaveAttribute("aria-hidden", "true");
+    expect(pill).toHaveTextContent(", 120 waiting");
+  });
+
+  it("fits IconButton's badge: decorative there, the name carries the count", () => {
+    function Platform({ waiting }: { waiting: number }) {
+      const area = useAdminAreaLabels();
+      return (
+        <IconButton
+          label={waiting > 0 ? area.waitingLabel("Platform", waiting) : "Platform"}
+          badge={<AdminWaitingBadge count={waiting} />}
+        >
+          <ShieldCheck />
+        </IconButton>
+      );
+    }
+    const { container } = render(<Platform waiting={2} />);
+    expect(screen.getByRole("button", { name: "Platform, 2 waiting" })).toBeInTheDocument();
+    const slot = container.querySelector("[data-slot='icon-button-badge']")!;
+    expect(slot).toHaveAttribute("aria-hidden");
+    expect(slot).toHaveTextContent("2");
+  });
+
+  it("speaks the provider's language in the pill and the phrase", () => {
+    render(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <AdminWaitingBadge count={4} />
+      </UiKitProvider>,
+    );
+    expect(document.querySelector("[data-slot='admin-badge']")).toHaveTextContent(", 4 offen");
+    expect(UI_KIT_LABELS_DE_CH.adminArea.waitingLabel("Plattform", 4)).toBe("Plattform, 4 offen");
+  });
+
+  it("is the row's pill: AdminMenuRow draws the same badge", () => {
+    render(
+      <MemoryRouter>
+        <ul>
+          <AdminMenuRow badge={5} />
+        </ul>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("menuitem", { name: "Administration, 5 waiting" }).querySelector("[data-slot='admin-badge']")).not.toBeNull();
   });
 });

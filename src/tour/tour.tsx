@@ -18,7 +18,7 @@ import { dirOf, horizontalStep } from "../lib/direction";
 import type { Direction } from "../lib/direction";
 import { DEFAULT_TOUR_LABELS } from "./tour-labels";
 import type { TourInfo } from "./tour-info";
-import { completeStored, rememberMigrate, type UseTourProgressOptions } from "./use-tour-progress";
+import { completeStored, rememberAccount, rememberMigrate, type UseTourProgressOptions } from "./use-tour-progress";
 
 /**
  * `start`/`end` follow the reading direction (`end` is the right side in LTR and the
@@ -206,9 +206,12 @@ export function TourProvider({
   // The provider's migrate becomes the key's, for readers that pass none (keksdose B-2).
   const storageKey = progress?.storageKey;
   const migrate = progress?.migrate;
+  // 0.45: and its `account` (§10.3), so a finish on an account key is sent as readers' are.
+  const account = progress?.account;
   useLayoutEffect(() => {
     if (storageKey !== undefined) rememberMigrate(storageKey, migrate);
-  }, [storageKey, migrate]);
+    if (storageKey !== undefined) rememberAccount(storageKey, account);
+  }, [storageKey, migrate, account]);
   const warnedNoTourRef = useRef(false);
   // Live mirrors so the step-control callbacks can stay stable (identity-safe for
   // consumers) while still reading the current steps/index. Synced in a layout

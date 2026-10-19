@@ -68,6 +68,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       // 0.42.0: the admin area's two counts.
       "adminArea.tiles.usersNew",
       "adminArea.waiting",
+      // 0.45.0: an IconButton's name with its count.
+      "adminArea.waitingLabel",
       "billing.grantEnding",
       "billing.trialEnding",
       "billing.waitingChanges",
@@ -119,6 +121,9 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "passwordStrength.tooLong",
       "settings.matchCount",
       "signIn.recoveryCodeHint",
+      // 0.45.0: the sign-out question's count, in both word sets (/offline).
+      "signOutPending.kept",
+      "signOutPending.lost",
       "topBarParts.sync.blocked",
       "topBarParts.sync.pending",
       "topBarParts.sync.waitingShort",

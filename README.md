@@ -65,6 +65,8 @@ when it chooses. To work on the design system and an app together, use
 | `sonner` | peer, `>=2`, **optional** | Under the kit's `toast` and `<Toaster>` (and through them `FileDropzone` and the wizard's "fill in the required fields" toast), reached only through `await import()`. Pass `onValidationFailed` to route the wizard's elsewhere. |
 | `react-hook-form` | peer, `^7.55.0`, **optional** | Only `@eifi1/ui-kit/rhf` imports it; the main barrel does not (see "Forms / refs" below). |
 | `modern-screenshot` | peer, `^4.7.0`, **optional** | The feedback dialog's "Capture screenshot" (`captureAppScreenshot`), reached only through `await import()`. Without it the capture rejects and the dialog toasts `feedbackToast.captureFailed`. |
+| `@tanstack/react-query`, `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` | peer, `^5`, **optional** | Only `@eifi1/ui-kit/offline` imports them (0.45, the persisted query cache, `createQueryPersistence`); the main barrel does not. |
+| `idb-keyval` | peer, `^6`, **optional** | The persisted cache's default IndexedDB store, in `@eifi1/ui-kit/offline` only. |
 | `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the appearance stores are singletons. |
 | `flag-icons` | **nothing — you supply the stylesheet** | See below. |
 
