@@ -3,13 +3,14 @@
 **kk** = keksdose, **ka** = kastlan, **KS** = Kurvenschmiede.
 **§1 (round 0.45) settled 2026-10-19** (Marcel, after the kastlan and keksdose reviews in
 audits/round-046/reviews.md; §1.8–§1.9). Phases 1 and 2 are built for ui-kit 0.45 / server-kit 0.15;
-phases 3 and 4 follow in later rounds. **§2 (round 0.46) is a DRAFT for review**: the sync engine (P3) and more
-offline scopes (P4), both in 0.46 (Marcel, 2026-10-19).
+phases 3 and 4 follow in round 0.46. **§2 (round 0.46) settled 2026-10-19** (Marcel, "As reviewed", after the
+kastlan and keksdose reviews in audits/round-047/reviews.md; §2.9): the sync engine (P3) and all five offline
+scopes (P4), for ui-kit 0.46 / server-kit 0.16.
 
 | § | What | Status |
 |---|---|---|
 | 1 | kastlan local-first like keksdose; KS stays online-only; what the kits lift | **SETTLED (round 0.45)**: P1+P2 in ui-kit 0.45 / server-kit 0.15 |
-| 2 | The sync engine in ui-kit (kastlan the user); `SyncScope`/`EntityRule` in server-kit; kastlan's maintenance, meters, contacts and owner-meeting scopes | **DRAFT for review (round 0.46)** |
+| 2 | The sync engine in ui-kit (kastlan the user); `SyncScope`/`EntityRule` in server-kit; kastlan's meetings, meters, maintenance and contacts scopes | **SETTLED (round 0.46)**: P3+P4 in ui-kit 0.46 / server-kit 0.16 |
 
 ## 1. kastlan becomes local-first — SETTLED (round 0.45)
 
@@ -595,8 +596,8 @@ as optional peers). Size **S–M**.
 | **P1 offline reads (0.45)** | ui-kit `createQueryPersistence`, `SignOutPendingDialog`, `PwaUpdatePrompt`, `SharedComputerChoice` (S–M) | moves its policy onto the kit helper, per-account key, dialog with `keepsChanges={false}` (S) | persisted cache + scrub list; "Needs a connection" on online-only actions; shared-computer choice; prompt SW (M) | none |
 | **P2 protocol (0.45)** | server-kit `sync` (M) | imports the schemas, mixin, counter port and merge (S–M) | D1 shapes, `rejections`, D2 edit time (wire), `refusals: true`; old shape kept one release (M) | none |
 | P2 amendment (0.46) | server-kit 0.16.0: `client_now`, the clock-skew correction (S) | optional: its queued upserts carry device stamps too; sends `client_now` once its merge uses the kit's (S) | sends `client_now` on every `/sync` push; passes the skew to `merge_lww` / `clamp_stamp` (S) | none |
-| P3 engine (later) | ui-kit `createSyncEngine`, `useSyncWorker` (L) | — | the handover copy onto the kit engine; `lastSyncedAt`; the indicator always shown; legacy outbox retired (M) | none |
-| P4 more scopes (later) | `SyncScope`/`EntityRule` into server-kit if shared | not for keksdose unless proven | `maintenance`, `meters`, `contacts`; owner meetings a candidate (M) | none |
+| P3 engine (0.46, §2) | ui-kit `/sync`: `createSyncEngine`, `useSyncWorker` (L) | — | the handover copy onto the kit engine; `lastSyncedAt`; the indicator always shown; legacy outbox drained one more release (D17) (M) | none |
+| P4 more scopes (0.46, §2) | server-kit `sync.scopes`: `SyncScope`/`EntityRule` (M) | not for keksdose unless proven | `meetings`, `meters`, `maintenance`, `contacts` (L) | none |
 
 kk also fixes its budget-switch outbox loss in place (§1.2), outside the kit.
 
@@ -634,9 +635,15 @@ kk also fixes its budget-switch outbox loss in place (§1.2), outside the kit.
 | KS | no answer; online-only re-checked at b54c16e | §1.4 |
 | tours §10.2.4 | the `:pending` record outside "N waiting" and the sign-out guard | D6 |
 
-## 2. The sync engine and more offline scopes — DRAFT for review (round 0.46)
+## 2. The sync engine and more offline scopes — SETTLED (round 0.46)
 
-**DRAFT for review (round 0.46).** Marcel, 2026-10-19 (audits/round-047/brief-047.md "Scope
+**Settled 2026-10-19** (Marcel, "As reviewed", after the kastlan and keksdose reviews in
+audits/round-047/reviews.md "Local-first §2"; §2.9 records Marcel's answers and where each review
+point went, and the reviews' corrections are folded into §2.1–§2.7, re-checked at ka
+`feat/kit-0.45` 26a2eaa and kk `feat/feedback-loop-80-424-434` 2cb460c1). **P3 and all five P4
+scopes** are built for **ui-kit 0.46 / server-kit 0.16**.
+
+As drafted: Marcel, 2026-10-19 (audits/round-047/brief-047.md "Scope
 extension"; postponed.md D1, D2): "Local-first P3 (the shared sync engine in ui-kit, kastlan the
 user; keksdose won't adopt) and P4 (more offline scopes: `SyncScope`/`EntityRule` into
 server-kit; owner meetings (votes, minutes) IN) go into 0.46." It builds on §1 as settled: D1–D9,
@@ -683,9 +690,17 @@ Nothing here changes the `/sync` wire except new `scope` values in ka and ka opt
   changes; `forgetHandoverCopy` (HO/db.ts:94-100) clears `rows` and `meta` at sign-out, so a round
   in flight at sign-out can write the pulled rows and `lastKnowledge` back into the cleared copy.
   kk guards this with `bumpSessionEpoch` + `MIRROR_GENERATION` (§1.2). The engine fixes it.
+  (Confirmed by ka's review: the company's data then stays on the device until the next
+  sign-out; no other account reads it, the database being per account and company.)
+- **The shared computer does not stop the copy.** Only the query cache checks
+  `isSharedComputer()` (FE shared/offline/query-persistence.ts:46); the handover copy and its
+  queue run on a computer marked shared too. D15 changes that.
 - **Status:** FE shared/offline/use-sync-status.ts:18-53 adds the handover outbox and photos
   (`useLive` counts) to the legacy photo queue's (`syncManager`, FE shared/offline/sync-manager.ts)
-  into the kit's `SyncStatus`; `lastSyncedAt` is not kept (D9). The top bar shows it with
+  into the kit's `SyncStatus`; `lastSyncedAt` is not kept (D9). The legacy queue is only
+  drained since v0.12.0 (ac5f542, tagged 2026-10-08), and **prod runs v0.11.0** (the last Deploy,
+  run 37601185934, about 2026-10-07): a v0.11.0 device may still hold photos in `kastlan-offline`
+  (D17). The top bar shows it with
   `hideWhenIdle` and the handover `scope` words (FE app/top-bar.tsx:177-185).
 - **Sign-out** asks through the kit's dialog with `keepsChanges` (FE
   shared/offline/use-sign-out-guard.tsx:13-37).
@@ -708,92 +723,154 @@ Nothing here changes the `/sync` wire except new `scope` values in ka and ka opt
   `HANDOVER` (sync_scopes.py:192), and `Estate.qr_iban` (BE domain/models/property.py:137,
   `EncryptedText`, decrypted on load) is a plain column to the registry, so every estate's QR-IBAN
   is pulled into the device's Dexie copy. D7 keeps the scrub list out of the query cache only;
-  nothing withholds a field from `/sync`. The two other IBAN columns do not reach the copy
+  nothing withholds a field from `/sync`. (Confirmed by ka's review through the ORM registry:
+  `_specs()["estates"].fields` holds `qr_iban` with the account holder and address.) The two
+  other IBAN columns do not reach the copy
   (`bank_accounts` is not readable in the scope; `management_companies` is not `SyncMixin`).
   §2.4 D14 closes it.
 
-### 2.2 Decisions proposed
+### 2.2 Decisions (settled)
 
-**D10 The engine is kastlan's handover client, generalised; keksdose's rules where they differ.**
+**D10 The engine is kastlan's handover client, generalised; keksdose's SERVER rules and wire
+shapes are canon, its client policies stay its own.** (Narrowed at the settle, kk's review.)
 - ka's client is the starting point: it already speaks the D1 shapes, keeps a reason per row,
-  keeps `waiting` changes and lays unsent changes over a pull. kk adds what ka lacks: the
-  generation guard, `stampAfter`, `lastSyncedAt` in `meta` (D9), the paged pull with its cursor
-  moved only at the end (§1.2), `readLocalFirst`/`isOfflineError`.
-- **Rec:** the engine owns a **generic store** (`rows`, `outbox`, `meta`; the app adds its own
-  tables, such as ka's `photos`), not kk's per-entity tables. kk does not adopt (§1.8 7), so
-  nothing forces kk's schema into the kit.
+  keeps `waiting` changes and lays unsent changes over a pull. From kk it takes what has no
+  conflict: the server rules (§1.2: deletes unconditional, `merge_lww` with the server copy kept
+  only when strictly newer, a pushed stamp clamped to the server's now, REST server-stamped), the
+  wire shapes (`paged`, `page_cursor`, `refusals: true`, D1), the generation guard, `stampAfter`,
+  the paged pull with its cursor moved only at the end, `isOfflineError`.
+- **kk's client policies are not the engine's and are not options of it**; kk keeps them in its
+  own client, and the engine's are ka's:
 
-**D11 One request per scope, a cursor per scope, all in one round.**
+  | Policy | keksdose (its client) | the engine (ka's) |
+  |---|---|---|
+  | a new write to a queued row | append-only, every write its own `db.outbox.add` (FE shared/offline/sync-client.ts:546) | merged into the row's last `pending` upsert; a never-synced row's delete forgets its queue |
+  | a stuck change | an earlier held write holds the row's tail (:1428-1440) | per change (`waiting`/`blocked`/`rejected`), later changes to the row go out |
+  | `refused` | one refusal for the whole push, nothing applied, the whole queue kept (:1551-1567); no per-change status (FE shared/offline/db.ts:32-39) | per change, by code (`holdCodes`) |
+  | billing hold | `HELD_FOR_PLAN`: nothing sent, rounds only pull, until `releaseHeldChanges` (:1002) or `discardWaitingChanges` (:1023) | `waiting`, re-sent each round |
+  | other refusal codes | `read_only`/`demo_read_only` kept, phase error, not counted blocked; any other code counted blocked and re-sent on the next kick or 30 s tick; no `retryBlocked()` | `blocked`, kept, sent on `retryBlocked()` |
+  | after a write | `kickSync()` at once | `requestSync()`, 800 ms debounce |
+  | sign-out | warn and wipe the outbox (FE shared/offline/db.ts:339-349) | `forget({keepQueue: true})`, a deliberate exception (D15, D6) |
+  | errors | no backoff (30 s worker plus `kickSync`) | capped backoff (D13, additive) |
+  | `lastSyncedAt` | in memory only (zustand `markSynced`, FE shared/offline/sync-status-store.ts:14, :72-73) | in `meta` (D9) |
+- **Rec (settled):** the engine owns a **generic store** (`rows`, `outbox`, `meta`; the app adds its
+  own tables, such as ka's `photos`), not kk's per-entity tables. kk does not adopt (§1.8 7).
+- **Keep the wire additive** (kk's review): kk's own `SyncRequest` (BE domain/schemas/sync.py:57-90)
+  has no `scope` or `client_now` and ignores extra fields; its `SyncResponse` keeps `refused` and
+  `rejected`. §2 adds `scope` values, the optional `client_now` and the server-only `withheld`,
+  renames nothing and makes nothing required. If kk ever takes server-kit's response model,
+  `rejected` stays.
+
+**D11 One request per scope, a cursor per scope, all in one round.** (Q1; ka agreed.)
 - A round sends one `POST /sync` per scope the person's role holds, in a fixed order, each with
   its own `last_knowledge` (`meta` key `lastKnowledge:<scope>`; ka's existing `lastKnowledge`
   becomes handover's). An outbox row carries the scope it was written in.
+- **The order (ka's): handover, meetings, meters, maintenance, contacts**: the two where the
+  connection is worst first, contacts (the least urgent writes) last.
+- **The caller names the scope.** `write(scope, …)` never infers it from the entity: a meter
+  reading's scope comes from its row (`handover_protocol_uuid` set: `handover`; null: `meters`). A
+  reading moved into or out of a protocol is a delete in one scope and a create in the other,
+  never an update across them.
 - Why not one request with several scopes: that is a wire change (`scope: str`, D8's one-release
   rule) and needs a per-change scope on the server anyway, because one entity can have different
-  rules per scope (`meter_readings`: inside a protocol in `handover`, outside one in `meters`).
-- Cost: up to five requests a round (handover, maintenance, meters, contacts, meetings). A scope
-  with nothing queued and nothing new answers with an empty pull; the counter is database-wide
-  (D5), so rows another scope already pulled are pulled again (an idempotent `put`).
+  rules per scope (`meter_readings`).
+- Cost: up to five requests a round. A scope with nothing queued and nothing new answers with an
+  empty pull; the counter is database-wide (D5), so rows another scope already pulled are pulled
+  again (an idempotent `put`).
 - A scope the role gained starts at cursor 0 (one full pull). A scope the role lost answers 403:
   its queued changes become `rejected` with "Not allowed to sync <scope>", and the scope leaves the
-  round.
-- **Rec:** keep ka's one database and its name; Dexie v2 adds the `scope` index to `outbox` and
-  sets `scope = "handover"` on every existing row. No outbox moves between databases (kk's warning,
-  D5).
+  round. `scopes()` is read per round, since roles are per company.
+- Keep ka's one database and its name; Dexie v2 adds the `scope` index to `outbox` and sets
+  `scope = "handover"` on every existing row. No outbox moves between databases (kk's warning, D5).
 
-**D12 Paging: ka's server pages its pull; the engine follows the cursor.**
+**D12 Paging: ka's server pages its pull now; the engine follows the cursor.** (Q2.)
 - Contacts, maintenance and meetings make a first pull far bigger than handovers. ka's
   `collect_delta` takes server-kit's `paging` helpers (`page_of`, the (entity, knowledge, id)
   cursor with `window_end`), 2000 rows a page as kk.
 - The engine sends `paged: true` (opt-in per app); the push goes with the first page only; each
   page is applied in its own transaction; the cursor is written **only with the last page**; an
   interrupted walk restarts from the old cursor (re-applying a page is harmless). Unsent changes are
-  laid back over every page.
+  laid back over every page. (kk does the same: the cursor moves only at the end of the walk,
+  sync-client.ts:1599, :1606-1618.)
 
-**D13 Retries: a capped backoff on errors; offline waits for the connection.**
+**D13 Retries: a capped backoff on errors; offline waits for the connection.** (An engine policy,
+ka's; kk has none and keeps none, D10.)
 - `offline` (no answer, or `isTransientRefreshFailure`): no retry timer; the next round is the
   `online` event or the poll (`navigator.onLine` can lie).
 - `error` (5xx, an unknown 4xx, a thrown step): the next attempt at 5 s, 15 s, 60 s, then every
   5 min; reset by a good round, `online`, or "Sync now". The queue is never dropped on an error.
+- **A `rejected` change is never retried**: only `discardRejected` or a new edit to the row moves it.
 - **`client_now` is read fresh for every request**, retries and every page and scope included
   (D2 amendment).
-- kk has no backoff and ka none (§1.2, §2.1); this is new, and only in the engine.
 
-**D14 Per-scope fields the server never sends (the sync store's scrub list).**
+**D14 Per-scope fields the server never sends (the sync store's scrub list).** (Q3: now, in 0.46.)
 - `SyncScope.withheld: frozenset[str]` of `"<entity>.<field>"`: the pull leaves them out of `data`,
   and a push that names one is rejected (`<field> cannot be written in the <scope> scope`).
-- ka: `estates.qr_iban` withheld in every scope **now** (§2.1 finding). `bank_accounts` stays
-  unreadable in every scope (ka's review, round-046 reviews.md:343-344). `handover_protocols.signature_*`
-  stays in `handover` by design (D7) and is withheld in every other scope that reads protocols (none
-  proposed).
+- ka: **`estates.qr_iban` withheld in every scope, in 0.46** (§2.1 finding). `bank_accounts` stays
+  unreadable in every scope (its `iban` is the registry's only other plaintext-sensitive field;
+  ka's review). `handover_protocols.signature_*` stays in `handover` by design (D7) and is withheld
+  in every other scope that reads protocols (none).
 - The device copy stays plaintext at rest (D7); D14 decides what reaches it.
 
-**D15 Sign-out per app, through the engine.**
+**D15 Sign-out, company switch and the shared computer, through the engine.**
 - `engine.forget({ keepQueue })` bumps the generation, then clears `rows` and `meta` (and the
-  `outbox` and app tables unless `keepQueue`). A round in flight checks the generation inside its
-  apply transaction and drops its answer.
+  `outbox` and app tables unless `keepQueue`).
+- **The generation guards every step**, not only the push/pull: a round's apply transaction and
+  every `SyncStep` (ka's photo upload too) check it before they write, and drop their result when
+  it changed. A photo upload in flight at sign-out does not mark its row uploaded.
+- **One engine per database.** ka's database is per account AND company: a company switch builds
+  a new engine on the new database and stops the old one (`useSyncWorker(engine)` keyed on it).
 - ka: `keepQueue: true` (D6: the queue and photos wait for their owner); the dialog keeps
-  `keepsChanges`. kk does not adopt; its warn-and-wipe stays its own.
-- The shared-computer choice (D6) does not touch the sync store: the handover copy keeps its rule.
+  `keepsChanges`. This is a deliberate difference from kk, which warns and wipes on purpose
+  (FE shared/offline/db.ts:339-349), pushes the queue before a budget switch and asks before
+  discarding (`pushBeforeBudgetSwitch`, sync-client.ts:947; `useBudgetSwitchGuard`,
+  features/budgets/use-budgets.ts:184), and keeps the mirror and outbox on a definitive 401
+  (sync-client.ts:1473-1475). kk does not adopt.
+- **On a computer marked shared the engine does not start** (ka's review, settled): no copy, no
+  queue. `useSyncWorker` gets `null`, and the controls that would queue are locked "Needs a
+  connection" like every other online-only action. The copy-only pages (handover, the meeting
+  recording page, D16) are not offered there: field work is done on a device that is never marked
+  shared. The handover copy loses the run it has on shared computers today (§2.1).
 
-**D16 How P4 pages read and write: kk's seam online, the copy offline.**
+**D16 How P4 pages read and write: online pages stay online, the copy offline; one id for a
+create.**
 - **Maintenance, meters, contacts** keep their online pages and REST writes while online. Offline,
   reads fall back to the copy (`readLocalFirst(online, offline)`, kk FE shared/offline/net.ts:58)
-  and writes queue (`writeLocalFirst(rest, queue)`: REST first, the outbox only on a network
-  error, kk write.ts:111-137). Online writes stay server-stamped (D2). Rewriting these pages to
-  read only the copy would be L each.
+  and writes queue (`writeLocalFirst(rest, queue)`: REST first, the outbox only on an
+  `isOfflineError`). Online writes stay server-stamped (D2). Only the order matches kk's
+  `writeLocalFirst`: kk's takes `{online, entity, id, op, data, buildOffline, optimistic}`
+  (FE shared/offline/write.ts:111-137), waits on the sealing `gate()` first and queues a sealed
+  budget even online (`mustNotUseRest`); the kit's is the plain two-callback form.
+- **Creates: the device mints one id.** Before a create, the page mints the `sync_uuid` once and
+  both paths send it: the REST create and the queued change. So a REST create that times out after
+  the server applied it, then queued, is not created twice. ka's REST create schemas in the P4
+  scopes take an optional `sync_uuid` (none does today: BE domain/schemas/maintenance.py, meter.py,
+  owner_meeting.py) and are **idempotent on it** as `/sync` is: a create whose `sync_uuid` already
+  names a row of the company answers that row (no second row, no 409). kk mints its create ids the
+  same way (write.ts:108: "Creates mint the id with randomUUID() before calling"). Updates are
+  safe as drafted.
 - **The owner meeting's recording page** is new (§2.5) and reads and writes the copy only, as the
   handover pages do: it is used where the connection is worst.
 - The write lock: a control that queues takes `commit={COMMIT_EXCEPT_OFFLINE}` (§1.6); everything
   else stays "Needs a connection".
 
-**D17 The indicator (D9, now).** ka shows the kit's `SyncStatusIndicator` always, without
-`hideWhenIdle` and without the handover `scope` words, fed by the engine's `useSyncStatus`; the
-legacy `"kastlan-offline"` photo queue and its `syncManager` are deleted (D9, after it has drained
-for one release: §2.8 Q4).
+**D17 The indicator (D9, now); the legacy photo queue is kept in 0.46.** ka shows the kit's
+`SyncStatusIndicator` always, without `hideWhenIdle` and without the handover `scope` words, fed by
+the engine's `useSyncStatus`. **The legacy `"kastlan-offline"` photo queue and its `syncManager`
+drain stay in 0.46** (Q4, changed at the settle): prod runs v0.11.0 and has never run a release
+that only drains it (§2.1). The status adds its count as today. Its removal waits for the release
+after the first deployed one that drains.
 
-### 2.3 The engine: `@eifi1/ui-kit/offline` (ui-kit 0.46)
+### 2.3 The engine: `@eifi1/ui-kit/sync` (ui-kit 0.46)
 
-`dexie` (^4; ka has ^4.4.6, FE package.json:31) becomes an optional peer of `/offline`.
+**A new subpath `/sync`, settled** (rather than `dexie` as an optional peer of `/offline`). `dexie`
+(^4; ka has ^4.4.6, FE package.json:31) becomes an optional peer imported **only** by `/sync`
+(`createSyncDb`, `createSyncEngine`, the hooks), so `/offline` (the query cache, the dialogs,
+`SharedComputerChoice`) stays importable by an app without Dexie, and kk's and KS's builds never
+resolve it. The leaf utilities that need no Dexie (`stampAfter`, `isOfflineError`,
+`readLocalFirst`, `writeLocalFirst`) live in one module (`src/offline/local-first.ts`) that both
+`/offline` and `/sync` export, so kk may take them from `/offline` and `/sync` never loads
+`/offline`'s TanStack and idb-keyval peers (the build keeps every module its own file).
 
 ```ts
 // The store: one Dexie database; the engine's tables plus the app's own.
@@ -813,9 +890,10 @@ createSyncEngine(opts: {
   send: (body: SyncRequestBody, signal: AbortSignal) => Promise<SyncResponseBody>;
   isOffline?: (err: unknown) => boolean;           // default: no response, or isTransientRefreshFailure
   planCode?: (err: unknown) => string | null;      // a whole-request 402 → every change "waiting"
-  holdCodes?: readonly string[];                   // refused.code kept as "waiting" and re-sent each
-                                                   // round; default ["billing_read_only"]; any other
-                                                   // code → "blocked", kept, sent on retryBlocked()
+  holdCodes?: readonly string[];                   // ka's policy (D10, not kk's): refused.code kept as
+                                                   // "waiting" and re-sent each round; default
+                                                   // ["billing_read_only"]; any other code →
+                                                   // "blocked", kept, sent on retryBlocked()
   paged?: boolean;                                 // D12
   steps?: SyncStep[];                              // after push/pull (ka: the photo upload)
   paused?: () => boolean;                          // ka: deviceSyncPaused (a practice tour)
@@ -823,13 +901,15 @@ createSyncEngine(opts: {
   backoffMs?: readonly number[];                   // D13: [5_000, 15_000, 60_000, 300_000]
 }): SyncEngine;
 
-interface SyncStep { name: string; run(db: SyncDb, ctx: { signal: AbortSignal }): Promise<
+interface SyncStep { name: string; run(db: SyncDb, ctx: { signal: AbortSignal; isCurrent(): boolean }): Promise<
   { offline?: boolean; changed?: boolean; counts?: Partial<SyncCounts> }> }
   // changed → one more push/pull in the same round (ka's second pass after photos)
+  // isCurrent() → false once forget() bumped the generation: the step writes nothing more (D15)
 
 interface SyncEngine {
   write(scope: string, entity: string, id: string, op: "upsert" | "delete",
-        data?: Record<string, unknown>): Promise<void>;   // ka's repo.write, stamped with stampAfter
+        data?: Record<string, unknown>): Promise<void>;   // ka's repo.write, stamped with stampAfter;
+                                                          // the caller names the scope (D11)
   start(): void; stop(): void;
   requestSync(): void;                     // soon (debounced)
   syncNow(): Promise<SyncRoundResult>;     // "Sync now"; resets the backoff
@@ -842,7 +922,9 @@ interface SyncEngineState { phase: "idle" | "syncing" | "offline" | "error"; onl
   counts: SyncCounts; lastSyncedAt: string | null; nextRetryAt: number | null }
 interface SyncCounts { pending: number; waiting: number; blocked: number; rejected: number }
 
-useSyncWorker(engine: SyncEngine | null): void;           // start/stop with the session (ka's useHandoverSyncLoop)
+useSyncWorker(engine: SyncEngine | null): void;           // start/stop with the session (ka's useHandoverSyncLoop);
+                                                          // keyed on the engine (one per database, D15);
+                                                          // null on a shared computer
 useSyncStatus(engine: SyncEngine | null): { status: SyncStatus; onSync: () => Promise<void> };
 useSyncQuery<T>(db: SyncDb | null, query: (db: SyncDb) => Promise<T>, deps: unknown[]):
   { data: T | undefined; isLoading: boolean };            // ka's useLive
@@ -861,10 +943,11 @@ stampAfter(previous: unknown): string;                    // kk sync-client.ts:6
    `rejections[]` → `rejected` with `detail`; put pulled rows (a delete removes); lay the unsent
    changes back; on the last page write `lastKnowledge:<scope>` and `lastSyncedAt`.
 4. Follow `page_cursor` with pull-only requests until it is `null` (D12).
-Then the `steps`, then one more pass if a step `changed`. One round at a time; a request during a
-round runs once more after it (ka's rule). `write()` keeps ka's merge (into the last `pending`
-upsert only; a never-synced row's delete forgets its queue) and stamps with
-`stampAfter(previous)`.
+Then the `steps` (each checks `isCurrent()` before it writes), then one more pass if a step
+`changed`. One round at a time; a request during a round runs once more after it (ka's rule).
+`scopes()` is read at the start of every round. `write()` keeps ka's merge (into the last
+`pending` upsert only; a never-synced row's delete forgets its queue; ka's policy, D10) and stamps
+with `stampAfter(previous)`. A `rejected` change is never re-sent (D13).
 
 **Status to the indicator:** `pending` = `pending` + `sending` (+ the steps' pending); `waitingForPlan`
 = `waiting`; `blocked` = `blocked` + `rejected`; `phase` and `online` from the engine;
@@ -925,16 +1008,32 @@ withheld in all of them (D14). The readable sets include what the pages show nex
 | Scope | Roles (as online) | Readable | Writable (create / update / delete) | Rules, and what stays online |
 |---|---|---|---|---|
 | `handover` (today) | `MANAGER_WRITE` | as today (sync_scopes.py:181-198) | as today (:200-223) | unchanged; its checks become `guard`s |
-| `meters` | `MANAGER_WRITE` (meter_router.py:54, :133) | `meters`, `meter_readings`, `units`, `floors`, `buildings`, `estates` | `meter_readings`: create, update, delete, `handover_protocol_uuid` must be null; `meter_uuid` fixed | a reading inside a protocol is `handover`'s (and the reverse, `_check_reading` :370-390); meters themselves (create, number, type) online |
-| `contacts` | `FINANCE_WRITE` (contact_router.py:99, :130; roles.py:23) | `contacts`, `contact_roles`, `addresses`, `units`, `estates` | `contacts`: update only `phone`, `mobile`, `email`, `notes` (contact.py:79-86) | create, addresses, roles online (duplicates, the tenant's lease); `bank_accounts` never readable |
-| `maintenance` | `MANAGER_WRITE` (maintenance_router.py:85, :116) | `maintenance_requests`, `work_orders`, `maintenance_schedules`, `unit_defects`, `units`, `unit_rooms`, `floors`, `buildings`, `estates`, `contacts` | `maintenance_requests`: create, update (`unit_uuid` fixed); `work_orders`: create (assign), update `status`, `completed_date`, `description`; `unit_defects`: create, update `status`, `description` | the request's `ASSIGNED` on a work order's create is done by the server in `after_apply`, as `assign_work_order` does online (maintenance_service.py:121-150); costs (`cost_estimate`, `actual_cost`) and schedules online (Q6) |
-| `meetings` | `MANAGER_WRITE` (owner_meeting_router.py:195) | `owner_meetings`, `agenda_items`, `meeting_invitations`, `contacts`, `estates` | `agenda_items`: create (`title`, `sort_order`), update `resolution`, `votes_for`, `votes_against`, `votes_abstain`, `minutes_text`; `owner_meetings`: update `notes`, `status` → `in_progress` only | `meeting_uuid` fixed; a **completed** meeting's rows refused ("the minutes are approved; reopen it online first"); completing and reopening online; invitations read-only (they send mail) |
+| `meetings` | `MANAGER_WRITE` (owner_meeting_router.py:195) | `owner_meetings`, `agenda_items`, `meeting_invitations`, `contacts`, `estates` | `agenda_items`: create (`title`, `sort_order`), update `resolution`, `votes_for`, `votes_against`, `votes_abstain`, `minutes_text`; `owner_meetings`: update `notes`, `status` → `in_progress` only | `meeting_uuid` fixed; a **completed** meeting's rows refused ("the minutes are approved; reopen it online first"), by the guard and online (below); completing and reopening online; invitations read-only (they send mail) |
+| `meters` | `MANAGER_WRITE` (meter_router.py:54, :133) | `meters`, `meter_readings`, `units`, `floors`, `buildings`, `estates` | `meter_readings`: create, update, delete, `handover_protocol_uuid` must be null; `meter_uuid` fixed | a reading inside a protocol is `handover`'s (and the reverse, `_check_reading` :370-390); a move across is a delete plus a create (D11); meters themselves (create, number, type) online |
+| `maintenance` | `MANAGER_WRITE` (maintenance_router.py:85, :116) | `maintenance_requests`, `work_orders`, `maintenance_schedules`, `unit_defects`, `units`, `unit_rooms`, `floors`, `buildings`, `estates`, `contacts` | `maintenance_requests`: create, update (`unit_uuid` fixed); `work_orders`: create (assign), update `status`, `completed_date`, `description`, `cost_estimate`, `actual_cost`; `maintenance_schedules`: update `last_performed`, `task_description`, `interval_months`, `responsible_contact_uuid`; `unit_defects`: create, update `status`, `description` | **costs and schedules offline** (Q6, settled): `after_apply` sets the request's `ASSIGNED` on a work order's create, as `assign_work_order` does online (maintenance_service.py:121-150), and recomputes a schedule's `next_due` from `last_performed` + `interval_months` (`calc_next_due`, :48-53) when `last_performed` changes; schedules' create and delete online |
+| `contacts` | `FINANCE_WRITE` (contact_router.py:99, :130; roles.py:23) | `contacts`, `contact_roles`, `addresses`, `units`, `estates` | `contacts`: update only `phone`, `mobile`, `email`, `notes` (the scope's `update` schema narrows the online superset `ContactUpdate`, BE domain/schemas/contact.py:55-65) | create, addresses, roles online (duplicates, the tenant's lease); `bank_accounts` never readable |
+
+Rows in the round's order (D11). **Finding (settle check): costs and schedules have no online
+writer today.** Online, the assign `POST` takes no cost (`AssignWorkOrderRequest`, BE
+domain/schemas/maintenance.py:105-108) and the status `PATCH` sets only `status`
+(maintenance_router.py:147, maintenance_service.py:155-158): nothing writes `cost_estimate` or
+`actual_cost`, though the detail page shows them (FE
+features/maintenance/pages/maintenance-detail-page.tsx:227-229); and `create_schedule` /
+`update_schedule` (maintenance_service.py:174-180) have no route and no FE page. So in 0.46 the
+cost fields and the schedules are written **through the copy** (queue, then sync, as the meeting
+page; D16's REST-first seam does not apply), and ka adds a schedules list with "Done" (sets
+`last_performed`) to the maintenance pages.
 
 **Owner meetings: votes and minutes** (BE domain/models/owner_meeting.py)
 - **What a vote is.** A vote is three counts and a resolution on the agenda item
   (`votes_for/against/abstain`, `resolution`, :121-127), not a ballot per owner; the minutes are
   `AgendaItem.minutes_text` (:128) and `OwnerMeeting.notes` (:93). Weighted votes
   (`MeetingInvitation.ownership_share`, :154-156) and attendance are not recorded today.
+- **The page records what the chair announces; it does not decide a resolution** (settled, ka's
+  review). A Stockwerkeigentümer resolution often needs both majorities, by head and by value
+  quota (ZGB 712m with 647b ff.); three plain counts record only one. The recording page takes the
+  counts and the resolution text the chair announces and computes no outcome. The double majority
+  (attendance per owner with `ownership_share`) is a later model change, its own round.
 - **Conflicts on a vote: whole-row LWW, no merge (D2).** The counts and the resolution of one item
   travel in one row, so two devices never mix counts; the latest edit wins and the other device
   gets the winner back in the same round. A second recorder at the same meeting is the only real
@@ -946,63 +1045,72 @@ withheld in all of them (D14). The readable sets include what the pages show nex
   role, domain/models/auth.py:17-21). An accountant cannot.
 - **Approved minutes are final.** Completing sets `status = COMPLETED` and `minutes_approved_at`
   (owner_meeting_service.py:87-95); the scope refuses any change to a completed meeting or its items,
-  as a finalised protocol. **Finding:** the online `PATCH /agenda-items/{id}` does not check this
-  today (owner_meeting_service.py:113-115), so approved minutes can be edited online; ka adds the
-  same check to the REST update.
+  as a finalised protocol. **Finding (wider than drafted, ka's review):** online, none of
+  `add_agenda_item` (owner_meeting_service.py:109-111), `update_agenda_item` (:113-115) and
+  `delete_agenda_item` (:117-119) checks a completed meeting, so approved minutes can be added to,
+  edited and deleted online. ka refuses all three on a completed meeting (409, "the minutes are
+  approved; reopen it first"), and `update_meeting` (:79) refuses a change to `notes` there too.
 - **Completing is online only.** It approves the minutes (a legal record, ZGB 712m) with the
   server's time; an offline "complete" would stamp the device's clock and could lose to an office
-  edit. The button says "Needs a connection". (Q7.)
+  edit. The button says "Needs a connection". (Q7, settled.)
 - **There is no page to record votes and minutes today.** The agenda form has title and
   description only (FE features/owner-meetings/components/agenda-item-form.tsx:4-40); the agenda tab
   shows the counts and the minutes (meeting-agenda-tab.tsx:73-93) but nothing writes them; the
   schema accepts them (BE domain/schemas/owner_meeting.py:78-86). P4 includes a **recording page**
-  ("meeting mode": per item the three counts, the resolution and the minutes), on the copy only
-  (D16). This is the largest single part of P4 in ka.
+  ("meeting mode": per item the three counts, the resolution and the minutes as the chair
+  announces them), on the copy only (D16), not on a shared computer (D15). This is the largest
+  single part of P4 in ka.
 
 ### 2.6 Plaintext and scrubbing, per store
 
 | Store | At rest | Never in it |
 |---|---|---|
 | Persisted query cache (P1) | plaintext, 24 h, per account and company | `DEFAULT_SCRUB_FIELDS` (`iban`, `qr_iban`, `default_qr_iban`, `signature_*`), the deny roots (FE shared/offline/query-persistence.ts:17-34), files, mutations (`persistMutations: false`) |
-| Sync copy (engine) | plaintext, per account and company, no `maxAge` (the queue must survive) | the scope's `withheld` (D14; `estates.qr_iban` in every scope), `bank_accounts` (no scope reads it), everything no scope reads (invoices, payments, journal, leases' money beyond the rent shown on the lease row) |
-| Sync copy, by design | `handover_protocols.signature_*` (D7), owner-meeting minutes and counts, contacts' phone/e-mail/notes, maintenance notes | — |
+| Sync copy (engine) | plaintext, per account and company, no `maxAge` (the queue must survive); none on a computer marked shared (D15) | the scope's `withheld` (D14; `estates.qr_iban` in every scope), `bank_accounts` (no scope reads it), everything no scope reads (invoices, payments, journal, leases' money beyond the rent shown on the lease row) |
+| Sync copy, by design | `handover_protocols.signature_*` (D7), owner-meeting minutes and counts, contacts' phone/e-mail/notes, maintenance notes and costs | — |
 | Photos (ka's own table) | the blob until uploaded | — |
 
 - The copy's `rows` and `meta` go at sign-out; the queue stays (D15). The shared-computer choice
-  keeps the query cache in memory; the sync copy follows the handover rule (D6).
-- **Q8:** minutes and maintenance notes can hold personal data about owners and tenants. They sit
-  on the device as the protocols do today; nothing more is proposed.
+  keeps the query cache in memory, and **the engine does not start there** (D15, settled): no copy,
+  no queue, so an office PC never holds contacts, minutes or notes.
+- **Q8 (settled):** minutes and notes **may** be stored unencrypted on the device, like kk's data
+  and ka's protocols today. They can hold personal data about owners and tenants; nothing more is
+  done.
 
 ### 2.7 Sizes and the build in 0.46
 
 **Sizes**
-- **ui-kit** (`/offline`): **L**. `createSyncDb`, `createSyncEngine` (round, scopes, paging,
-  refusals, rejections, backoff, generation, steps), `useSyncWorker`, `useSyncStatus`,
-  `useSyncQuery`, `readLocalFirst`/`isOfflineError`/`writeLocalFirst`, `stampAfter`; a fake
-  transport for tests (`offline/testing`). About 900–1200 lines with tests; `dexie` an optional peer.
+- **ui-kit** (`/sync`, plus the leaf utilities in `/offline`): **L**. `createSyncDb`,
+  `createSyncEngine` (round, scopes, paging, refusals, rejections, backoff, the generation over
+  every step, steps), `useSyncWorker`, `useSyncStatus`, `useSyncQuery`,
+  `readLocalFirst`/`isOfflineError`/`writeLocalFirst`, `stampAfter`; a fake transport for tests
+  (`sync/testing`). About 900–1200 lines with tests; `dexie` an optional peer of `/sync` only.
 - **server-kit** (`sync.scopes`): **M**. `SyncScope`, `EntityRule`, `ScopeRows`, `sort_changes`,
   `withhold`, `SyncScopeError`; tests on an in-memory `ScopeRows`. About 300–400 lines. Additive to
   0.16.0 (not tagged yet).
-- **kastlan**: **L**. Server: handover onto the kit's scopes (S), `withheld` (XS), paging (S), four
-  scopes with their rules and tests (M), the completed-meeting check online (XS). Client: the
-  handover copy onto the engine (M; HO/offline.test.ts is the parity suite), the three P4 page sets
-  on `readLocalFirst`/`writeLocalFirst` (M), the meeting recording page (M), the indicator and the
-  legacy queue's removal (S).
-- **keksdose**: none (it may take `stampAfter`/`isOfflineError` from the kit; not asked). **KS**:
+- **kastlan**: **L+**. Server: handover onto the kit's scopes (S), `withheld` (XS), paging (S), four
+  scopes with their rules and tests (M), the completed-meeting checks online (XS), idempotent
+  `sync_uuid` on the P4 REST creates (S). Client: the handover copy onto the engine (M;
+  HO/offline.test.ts is the parity suite), the P4 page sets on `readLocalFirst`/`writeLocalFirst`
+  (M), the meeting recording page (M), maintenance costs and the schedules list on the copy (S–M),
+  the indicator (S), the shared-computer stop (XS).
+- **keksdose**: none (it may take `stampAfter`/`isOfflineError` from `/offline`; not asked). **KS**:
   none.
 
 **The build, in order** (each step reviewable alone; nothing ships until the release)
 1. **server-kit** `sync.scopes` + `withheld` (M). ka moves `HANDOVER` onto it and withholds
    `estates.qr_iban` (the fix stands on its own, step 1 in ka).
 2. **ui-kit** the leaf utilities (`stampAfter`, `isOfflineError`, `readLocalFirst`,
-   `writeLocalFirst`, the generation guard) (S), then the engine and its hooks (L).
+   `writeLocalFirst`) (S), then `/sync`: the store, the engine with its generation guard, and the
+   hooks (L).
 3. **kastlan** the handover copy onto the engine: Dexie v2 (`scope` on the outbox), `client_now`,
-   paging, `lastSyncedAt`, the indicator always shown, the legacy queue removed (M).
-4. **kastlan** P4 scopes, smallest first: `meters`, `contacts`, `maintenance`, then `meetings` with
-   its recording page (L in all).
-- If step 4 does not fit 0.46, steps 1–3 ship alone: the engine with handover only is P3 complete.
+   paging, `lastSyncedAt`, the indicator always shown, the guarded sign-out, one engine per
+   account and company, no engine on a shared computer; the legacy photo queue's drain kept (M).
+4. **kastlan** **all five scopes in 0.46** (Q5, settled), in the round's order: `meetings` with its
+   recording page and the online completed-meeting checks, then `meters`, `maintenance` (costs and
+   schedules included), `contacts` (L in all).
 
-### 2.8 For the reviews
+### 2.8 For the reviews (as asked; answered in §2.9)
 
 **kastlan**
 1. §2.1: is anything wrong about the handover client or the server? Confirm the in-flight round at
@@ -1029,7 +1137,8 @@ withheld in all of them (D14). The readable sets include what the pages show nex
    differ (kk's sealed-household branch stays yours)?
 2. D13 backoff and D11's per-scope cursors: anything kk's experience says against them?
 3. `holdCodes` / `blocked`: the engine keeps an unknown `refused.code` as `blocked` and sends it
-   again only on `retryBlocked()`, as your client does (sync-client.ts:1530-1546). Right?
+   again only on `retryBlocked()`, as your client does (sync-client.ts:1530-1546). Right? (No:
+   kk refuses the push whole, D10; the right range is :1551-1567.)
 
 **Kurvenschmiede:** nothing (online-only, §1.4).
 
@@ -1042,3 +1151,50 @@ withheld in all of them (D14). The readable sets include what the pages show nex
 - Q6 §2.5: maintenance costs and schedules offline or online?
 - Q7 §2.5: completing a meeting (approving the minutes) online only?
 - Q8 §2.6: minutes and notes on the device in plaintext, like protocols?
+
+### 2.9 Reviews and settle (2026-10-19)
+
+**Marcel's answers** ("As reviewed")
+1. **D10 narrowed:** the engine copies kk's SERVER rules and wire shapes only; kk's client
+   policies (merge into the pending upsert, per-change blocked, `holdCodes`, the 800 ms debounce,
+   `keepQueue`, backoff) are named as the engine's own (ka's), and kk's five corrections about its
+   client are folded in.
+2. **Q4/D17:** keep ka's legacy photo-queue drain in 0.46 (prod v0.11.0 never drained it).
+3. **D16 creates:** the device mints one `sync_uuid`, sent by the REST and the offline path; the
+   REST creates are idempotent on it.
+4. **D15:** the engine guards every step (the photo upload too) with the sign-out generation; one
+   engine per database (ka: per account and company).
+5. **D15/Q8:** on a shared computer the engine does not start.
+6. **Owner meetings:** the page records the results the chair announces (no head/value-quota double
+   majority yet, ZGB 712m; a later model change); add, update and delete of agenda items and the
+   approved minutes are refused online after approval.
+7. **Q5:** all five scopes in 0.46: handover, meetings, meters, maintenance, contacts (ka's order).
+8. **Q3/D14:** withhold `estates.qr_iban` from `/sync` in 0.46 (`SyncScope.withheld`).
+9. **Q6:** maintenance costs and schedules are offline. **Q8:** minutes and notes may be stored
+   unencrypted on the device, like kk's data.
+10. **Q1:** one request per scope (D11 as drafted). **Q2:** page ka's pull now (D12). **Q7:**
+    completing a meeting is online only.
+
+**Where each review point went** (each re-checked at ka 26a2eaa / kk 2cb460c1)
+
+| Review | Point | Where |
+|---|---|---|
+| ka 1 | in-flight round at sign-out and the QR-IBAN confirmed; the draft's `:50` stands (sync-controller.ts:50, the review's `:49`); the legacy queue drained only since v0.12.0 | §2.1, D17 |
+| ka 1 | add/update/delete agenda items unchecked on a completed meeting | §2.5 |
+| ka 2 | per scope agreed; the order; `write()` given the scope; a reading's move is delete + create | D11 |
+| ka 3 | the generation guards the steps; one engine per database; `scopes()` per round; never retry `rejected` | D13, D15, §2.3 |
+| ka 4 | prod on v0.11.0 (Deploy run 37601185934, before v0.12.0): keep the drain | D17 |
+| ka 5 | a timed-out REST create duplicated: one device-minted `sync_uuid`, REST idempotent | D16 |
+| ka 6 | costs and schedules online, schedule done next round; overruled (Q6): offline in 0.46, and no online writer exists today | §2.5 |
+| ka 7 | meetings agreed; the double majority (ZGB 712m) out of this round; the page records announced results | §2.5 |
+| ka 8 | contacts agreed; citation contact.py:79-86 → :55-65 | §2.5 |
+| ka 9 | meetings and meters first, the rest may slip; overruled (Q5): all five in 0.46 | §2.7 |
+| ka + | no engine on a shared computer | D15, §2.6 |
+| kk 1 | `refused` is one batch, no per-change status, billing hold sends nothing, no `retryBlocked()`; range :1551-1567 | D10 table, §2.8 |
+| kk 2 | kk's `lastSyncedAt` is in memory only | D10 table |
+| kk 3 | kk's `writeLocalFirst` shape (`gate()`, `mustNotUseRest`); only the order matches | D16 |
+| kk 4 | D15: the budget-switch push and guard; a definitive 401 keeps mirror and outbox | D15 |
+| kk 5 | kk's outbox append-only; the tail hold | D10 table |
+| kk | the six engine defaults vs kk's client: narrow D10 | D10 (settled as narrowed) |
+| kk | shared `/sync` shapes: additive only; `rejected` kept | D10 |
+| KS | nothing asked (online-only, §1.4) | — |
