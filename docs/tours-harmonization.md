@@ -1,7 +1,7 @@
 # Guided tours — harmonisation plan
 
 **Settled 2026-10-17** (Marcel, in the ui-kit session, after the three app reviews in
-audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. §9 (round 0.44) settled 2026-10-17 with §9.6.
+audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. §9 (round 0.44) settled 2026-10-17 with §9.6. §10 (round 0.45) is a DRAFT for review.
 
 Marcel, in kastlan's session, 2026-10-17, relayed by kastlan-d1: "Massively increase the
 number of tours and also have them grouped and similar filtering as in keksdose. Is that
@@ -357,3 +357,237 @@ docs/adopt-0.44.md.
 9. **A dev warning** (keksdose nit): in development (not under vitest), the provider warns
    once when it has `progress` but a finished tour's start carried no `tour`, so `awarded`
    stays `undefined`. Tested.
+
+### 9.8 Recipes from the 0.44 adoptions (ui-kit 0.45)
+
+The three 0.44 adoptions found no kit fix, only these guide and test notes
+(audits/round-046/candidates.md). Every snippet runs in the kit's
+`src/tour/__tests__/tour-recipes.test.tsx`.
+
+1. **One tour's `TourInfo`, and the list as its map** (keksdose 4). `start(steps, {tour})`
+   takes ONE `TourInfo`, the catalogue and the menu take the list. Write the single mapper
+   and derive the list from it, rather than `tourInfos([def], t)[0]` at the launch:
+
+       export function tourInfo(def: TourDef, t: TFunction): TourInfo {
+         return { id: def.id, title: t(def.titleKey), group: def.group, points: def.points, updated: def.updated, … };
+       }
+       export const tourInfos = (defs: readonly TourDef[], t: TFunction) => defs.map((def) => tourInfo(def, t));
+
+       engine.start(steps, { tour: tourInfo(def, t), onFinish });   // the launch
+
+2. **"The toast shows only when awarded", through the real provider** (keksdose 2). No
+   mock of the kit's `TourProvider`: render the app's provider wrapper (the one holding
+   `progress` and `onComplete`) around a two-line component that captures `useTour()`,
+   start a tour with its `TourInfo`, and step past its last step with `next()`. The
+   provider records, then calls the app's `onComplete`. No overlay click and no target
+   element are needed (a step without `target` is centred):
+
+       let engine: ReturnType<typeof useTour>;
+       function Engine() { const e = useTour(); useEffect(() => { engine = e; }); return null; }
+       const finish = (def: TourDef) => {
+         act(() => engine.start([{ title: "Only", body: "One step." }], { tour: tourInfo(def, t) }));
+         act(() => engine.next());               // past the last step: record, then onComplete
+       };
+
+       beforeEach(() => act(() => resetTourProgress(TOUR_PROGRESS_KEY)));   // see 4.
+
+       it("toasts the first finish only", () => {
+         render(<AppTourProvider><Engine /></AppTourProvider>);
+         finish(BUDGET);
+         expect(toast.success).toHaveBeenCalledTimes(1);   // awarded: true
+         finish(BUDGET);
+         expect(toast.success).toHaveBeenCalledTimes(1);   // a replay: awarded false
+       });
+
+   `completeTour(KEY, id, "2026-09-01T10:00:00Z")` seeds an earlier completion, and a def
+   with `updated: {date}` after it is awarded again (§8). `engine.stop()` is a skip: no
+   write, no `onComplete`. The kit ships no helper for this: the engine is the app's
+   provider in the app's tree, and the recipe is the test. (A helper in
+   `@eifi1/ui-kit/testing` would need React and Testing Library there; that subpath stays
+   framework-free.)
+3. **A file that mocks the kit's barrel loses the setup's `toast` spy** (keksdose 3).
+   `vi.mock("@eifi1/ui-kit", factory)` in a test file replaces the setup file's mock of the
+   same module for that file, so the spies the setup put on `toast` are gone and
+   `toast.success` is whatever the file's factory returns. Either keep the barrel unmocked
+   (recipe 2 needs no mock) and assert on the setup's spy, or, where a file must mock the
+   barrel, build its `toast` from the same factory the setup uses (export it from a test
+   module, and `await import()` it inside the hoisted `vi.mock` factory), or spy in the
+   file: `vi.spyOn(toast, "success")` on the real `toast` (its methods are plain
+   properties).
+4. **One localStorage, and one kit store, per test file** (KS). jsdom keeps one
+   `localStorage` for a whole test file, and the kit's progress store is per key at module
+   level. A test that expects `awarded: true` (a toast, points) after another test in the
+   file finished the same tour gets `false`. Start each such test clean:
+   `beforeEach(() => act(() => resetTourProgress(KEY)))`. `resetTourProgress` also clears
+   what the page kept in memory and tells the mounted readers; `localStorage.clear()` does
+   neither.
+5. **`formatDate` on the catalogue gets a bare day for the update** (N9, build review
+   round 0.44). The card hands the app's `formatDate` the completion's ISO instant and
+   `updated.date` as `"YYYY-MM-DD"`. Read the bare day on its calendar (the kit's
+   `formatDate`, `parseIsoDate`), never through `new Date(day)`, which is UTC midnight and
+   so the day before west of UTC. keksdose's `renderDate` (UTC for a date-only string) and
+   kastlan's `formatDate` (the kit's) already do. The kit's own `formatDate` now keeps a
+   bare day on its day under any `timeZone` too (before, `{timeZone}` west of the device
+   showed the day before).
+6. **An old tab still on a pre-0.43 bundle** (K-S9, build review round 0.44). The 0.44
+   write guard (B-1) stops the KIT from writing over a text no `migrate` reads. It does
+   not stop an old bundle's zustand store from writing its envelope over the kit's record:
+   that text is readable through `fromZustand`, so the kit then reads only the old tab's
+   marks. The loss is the completions the old tab never knew of, on that device, for a tab
+   left open across the 0.43 deploy. keksdose accepts it in code
+   (`shared/state/tour-progress.ts:27-30`); the window closes once no pre-0.43 bundle
+   runs. The kit changes nothing; a new storage key is the only full fix (not taken).
+
+## 10. Tour progress on the account
+
+**DRAFT for review (round 0.45).** Parked on 2026-10-17 ("on the account later is welcome",
+KS, audits/round-044/tours-reviews.md:64). §6.2 settled progress on the device; this
+section adds an optional account record behind the same hook. An app that does nothing
+stays exactly as in 0.44.
+
+### 10.1 Where each one stands (2026-10-19)
+
+- **The kit** (ui-kit 0.44): `useTourProgress({storageKey, migrate?})` keeps
+  `{[id]: ISO | ""}` under the app's key (src/tour/use-tour-progress.ts:33-43). One snapshot
+  per key, an in-tab emitter and the `storage` event (:68-203). `complete` decides
+  `awarded` synchronously against that snapshot (:225-236), and the provider writes through
+  the same path (src/tour/tour.tsx:247). A precedent for "device first, account behind
+  it" exists already: `useAccountAppearance` takes the app's `save` and `isDemo` and never
+  writes the account for a demo (src/settings/use-account-appearance.ts:63-77, :124).
+- **keksdose**: one device key for every account, `keksdose-tour-progress`, with
+  `fromZustand` (frontend/src/shared/state/tour-progress.ts:17, :31-42). Not part of the
+  device reset ("usage", :14-15). Account preferences are columns on `users` (`locale`,
+  `text_size`, `contrast`: backend/keksdose/domain/models/user.py:71, :157-158), written
+  by `PATCH /auth/me` with server-kit's `ProfileUpdate` (domain/schemas/auth.py:272).
+  keksdose is local-first: a Dexie mirror and an outbox reconciled through `/sync`
+  (frontend/src/main.tsx:15-18, :85; shared/offline/write.ts), and the service worker
+  never caches `/api/*` (src/sw.ts:57). On a 401 it keeps unsynced writes, and on sign-out
+  or a different sign-in it forgets the previous account (shared/state/auth-store.ts:38-47,
+  :83-85). The review: account sync is "low value next to the risk of a migration"
+  (tours-reviews.md:39).
+- **kastlan**: one device key for every account, `kastlan.tours.completions`, with
+  `fromIdList` (frontend/src/features/tours/use-tours.tsx:19-31). It **registers the key
+  with the device reset** as a "view" (:27), although settings §11.2.2 lists "tours done"
+  under what a reset never clears. Preferences are columns on `User` (`text_size`,
+  `contrast`: kastlan/domain/models/auth.py:57-61) through `PATCH /auth/me`
+  (adapters/api/auth_router.py:236-247). Demo accounts are throwaway and read-only
+  (models/auth.py:44-46).
+- **Kurvenschmiede**: a key **per account**, `kurvenschmiede.tours:<id>` (`"visitor"`
+  signed out), because bench PCs are shared (frontend/src/features/tours/app-tours.ts:27-29;
+  shared/lib/storage-keys.ts:79-83). Kind `never` for the device reset (:150-151), and its
+  own privacy-policy line "tours" (:114). The provider follows the account's key
+  (features/tours/app-tour-provider.tsx:16-31). Sign-out clears the query cache and the last
+  page, not the tour keys (shared/state/auth-store.ts:16-17, :69), so every engineer's
+  record stays on the PC. Preferences are columns on `users` (backend/kurvenschmiede/domain/
+  models/user.py:138-139), `PATCH /auth/me` (adapters/api/auth_router.py:227).
+
+### 10.2 Decisions proposed
+
+1. **A table per app, rows per tour; not a column on `users`.** `tour_completions
+   (user_id FK users ON DELETE CASCADE, tour_id varchar(64), completed_at timestamptz
+   NULL, PRIMARY KEY (user_id, tour_id))`. One row per tour lets two devices write
+   different tours without a read-modify-write of one JSON value, and erasure is the
+   cascade. **Rec:** this, not KS's `tours_completed` column idea; and not on `/auth/me`,
+   which every page reads.
+2. **The endpoint, under the settings rule (settings §6.1):**
+   - `GET /tours/progress` → `{completed: {[id]: ISO | ""}}`, the stored shape of §9.6.6
+     on the wire too (`""` = completed without a date; no `null`, so the PATCH rule's
+     "null clears" never meets it).
+   - `PATCH /tours/progress` with `{completed?: {[id]: ISO | ""}, forget?: [id]}`
+     (`extra="forbid"`) → the whole resource. An id in both is a 422
+     (`tour_progress_conflict`). `forget` is "Mark as not done".
+   - Validation: an id matches `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$` (kastlan's ids are
+     camelCase, `addBuilding`); an instant carries a zone; at most 500 entries per body and
+     500 tours per account (422 `tour_progress_full`). The server knows no tour list, so it
+     takes any well-formed id.
+   - **Auth:** the session's own account only; no admin route reads or writes someone
+     else's. A demo session is refused with the app's demo guard (403), as feedback's deps
+     take it. The app's limiter and CSRF as for its other writes.
+3. **The merge rule: per tour, the later completion wins.** For each sent id: an instant
+   beats `""`, `""` beats no row, and between two instants the later is kept; an instant in
+   the future is stored as now. **Rec:** the later, not the first, because it keeps §8
+   right without the server knowing `updated`: a tour is done (`isTourDone`) on the account
+   when it is done on any device, and a completion taken again after an update replaces
+   the old one, as `complete(tour)` does on the device (§8.1). The cost: two devices that
+   each took a tour for the first time show the later date. The merge runs in Python in the
+   kit's service, not as `GREATEST` (Postgres ignores a NULL there, SQLite's `max()` does
+   not, and the apps' tests run SQLite). A forget is a delete; a completion sent later
+   (an offline device) brings the tour back. Accepted: it was taken.
+4. **The device record becomes the account's cache.** With an account, the hook reads the
+   device key as today, so the page paints at once and offline; it loads the account on
+   the first reader of a key, on `online`, and after each save, and replaces the cache
+   with the answer. Writes (`complete`, the provider's finish, `reset`) go to the cache at
+   once and into a **pending** record beside it (`<storageKey>:pending`: `{synced,
+   completed, forget}`), which is sent as one PATCH and cleared by its answer. A failure
+   with no answer (offline, 5xx, 401) keeps it; a 403 or 422 drops it and logs.
+   `awarded` stays the device's answer against the cache, so the provider and §9.6.2 do
+   not change (two devices both offline may each toast; the points tile counts the
+   record, so no points are counted twice).
+5. **Migration of today's records.** A device key never synced (no `:pending` with
+   `synced: true`) is uploaded whole on its first load, by the merge rule.
+   - KS: its keys are per account already, so the record goes to its owner exactly.
+   - keksdose and kastlan: the account mode needs a key per account (decision 6). The old
+     device-wide key is named as `account.adopt: {storageKey, migrate}`: read once through
+     its `migrate`, uploaded to **the first account that signs in on that device**, then
+     removed, so no second account gets it.
+6. **Sign-out and the shared PC.** With an account, the key must be per account (a prefix
+   plus the user id, as §9.5 and KS have it); in development the kit warns when the
+   account's key equals `adopt.storageKey`. On sign-out the app calls
+   `signOutTourProgress(storageKey)`: it tries to send the pending record (2 s), then
+   removes the cache and the pending record, so nothing of the person's progress stays on
+   a shared PC (better than KS today, where each engineer's record stays). A 401's clear
+   that keeps the session's data for the same person (keksdose's `wipeMirror: false`) does
+   not call it. Signed out, and in a demo, no `account` is passed: the device record works
+   as in 0.44 (KS's `visitor` key).
+7. **Offline (keksdose).** No outbox entry and no `/sync` entity: progress is the
+   account's, not the budget's, and the pending record is the kit's own small outbox.
+   `/tours/progress` must not be answered by keksdose's local API host (it is not one of
+   its routes), so offline the request fails and the pending record waits for `online`
+   or the next load. Several tabs may send the same pending record; the merge makes that
+   harmless.
+8. **The reset rules.**
+   - §8 (an updated tour) is unchanged and stays on the client: the server stores dates
+     only, and decision 3 keeps "done anywhere" true. Nothing is deleted by an update,
+     on the device or the account.
+   - "Mark as not done" (`reset(id)`) sends `forget`.
+   - "Reset this device's settings" (settings §11) never writes the account (§11.2). With
+     an account, `resetTourProgress(key)` clears the cache only; the pending record stays
+     ("anything waiting to be sent", §11.2.2) and the next load refills the cache.
+9. **Export and erasure.** Each app's account export gains `tour_progress: [{tour_id,
+   completed_at}]` (by `tour_id`, `completed_at` null for `""`); erasure is the cascade.
+
+### 10.3 What each kit ships
+
+- **server-kit 0.15, `eifi1_server_kit.tours`.** Layer 1: `TourProgressResponse`,
+  `TourProgressPatch`, `TOUR_ID_PATTERN`, `TOUR_PROGRESS_LIMIT` (500), `merge_completions
+  (stored, patch, *, now)` → the rows to write, the ids to delete and the answer (pure),
+  the two refusals. Layer 2: the port `TourProgressStore` (`completions(user_id)`,
+  `write(user_id, upserts, deletes)`), `TourProgressService`, `tour_progress_router(
+  TourProgressDeps(store, current_user_id, guards))` (the `fastapi` extra; the kit never
+  commits) and `testing.InMemoryTourProgressStore`. **M** (~250 code, ~400 test lines).
+- **ui-kit 0.45.** `UseTourProgressOptions` gains `account?: {load, save, adopt?}`: `load()`
+  is the app's `GET`, `save(body)` its `PATCH`, each returning the parsed answer, as
+  `useAccountAppearance`'s `save` does. Remembered per key like `migrate` (the first one
+  wins), so it is defined once at module level and the provider needs nothing new.
+  `signOutTourProgress(storageKey)` beside `resetTourProgress`. `completeTour` stays a
+  device write (tests and seeds), marked pending when the key has an account. Without
+  `account`, 0.44's behaviour byte for byte (the existing tests stay). **M**.
+
+### 10.4 Per app
+
+| App | Change | Size |
+|---|---|---|
+| Kurvenschmiede | Asked for it. Table + migration, a store adapter, mount the router, demo guard; `account` in `tourProgressOptions` (app-tours.ts:27, key unchanged); `signOutTourProgress` in `clear()` (auth-store.ts:69); export key in account_export.py:125; the privacy line "tours" reworded (a copy of the account's, removed at sign-out) in 7 languages; the kind stays `never`. | S–M |
+| kastlan | Table, store, router, demo guard; a key per account `kastlan.tours.completions:<id>` with `adopt: {storageKey: "kastlan.tours.completions", migrate: fromIdList}` (use-tours.tsx:19-31); sign-out call; export (account_router.py:102). Separately, its device-reset registration (use-tours.tsx:27) contradicts settings §11.2.2: drop it, in either mode. | S–M |
+| keksdose | **Rec: stays on the device in 0.45** (its review, tours-reviews.md:39). If it moves: a key per account with `adopt` of `keksdose-tour-progress` through `fromZustand`, `signOutTourProgress` in `forgetPreviousAccount` (auth-store.ts:47) only, never on the 401 path; export in `build_export` (account_export_service.py:404); a check that the local API host does not answer `/tours/progress`. | 0 (or M) |
+
+### 10.5 For the reviews
+
+- All: does a table per app fit, or should it be an account-settings JSON value (KS's
+  alternative)? Is "the later completion wins" right for your cards' "Completed on"?
+- KS: is removing the cache at sign-out right on the bench PCs, given a visitor's record
+  stays under `visitor`?
+- kastlan: are office PCs shared, so that "the first account to sign in takes the old
+  device record" would give one person another's marks? Then drop the old record instead.
+- keksdose: stay on the device? If not, does tour progress on the server fit privacy
+  mode's promise (ids and dates in plain text, like `locale`)?
