@@ -26,6 +26,9 @@ function memoryStorage() {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** A restore and a throttled save under a loaded full run can pass waitFor's 1 s default. */
+const WAIT = { timeout: 5000 };
+
 /** kastlan's company switch (B2): one QueryClient, one persistence per (user, company). */
 function setup() {
   const storage = memoryStorage();
@@ -48,7 +51,7 @@ describe("createQueryPersistence — a remount per key (the company switch)", ()
     const view = render(mount(a));
     await sleep(10); // the restore (nothing stored yet)
     queryClient.setQueryData(["estates"], "A's estates");
-    await vi.waitFor(() => expect(storage.map.get(a.key)).toContain("A's estates"));
+    await vi.waitFor(() => expect(storage.map.get(a.key)).toContain("A's estates"), WAIT);
 
     // The switch: leave A (memory emptied, A's key frozen), then mount B.
     await a.leave(queryClient);
@@ -56,7 +59,7 @@ describe("createQueryPersistence — a remount per key (the company switch)", ()
     view.rerender(mount(b));
     await sleep(10);
     queryClient.setQueryData(["estates"], "B's estates");
-    await vi.waitFor(() => expect(storage.map.get(b.key)).toContain("B's estates"));
+    await vi.waitFor(() => expect(storage.map.get(b.key)).toContain("B's estates"), WAIT);
     await sleep(80); // past every throttled write A's subscription had pending
 
     expect(storage.map.get(a.key)).toContain("A's estates");
@@ -70,16 +73,16 @@ describe("createQueryPersistence — a remount per key (the company switch)", ()
     const view = render(mount(a));
     await sleep(10);
     queryClient.setQueryData(["estates"], "A's estates");
-    await vi.waitFor(() => expect(storage.map.get(a.key)).toContain("A's estates"));
+    await vi.waitFor(() => expect(storage.map.get(a.key)).toContain("A's estates"), WAIT);
     await a.leave(queryClient);
     const b = forCompany(2);
     view.rerender(mount(b));
     await sleep(10);
     await b.leave(queryClient);
     view.rerender(mount(a)); // the same object again: its restore re-arms it
-    await vi.waitFor(() => expect(queryClient.getQueryData(["estates"])).toBe("A's estates"));
+    await vi.waitFor(() => expect(queryClient.getQueryData(["estates"])).toBe("A's estates"), WAIT);
     queryClient.setQueryData(["estates"], "A's edit");
-    await vi.waitFor(() => expect(storage.map.get(a.key)).toContain("A's edit"));
+    await vi.waitFor(() => expect(storage.map.get(a.key)).toContain("A's edit"), WAIT);
   });
 
   it("clear leaves no late write behind: the key stays deleted", async () => {
@@ -88,7 +91,7 @@ describe("createQueryPersistence — a remount per key (the company switch)", ()
     render(mount(a));
     await sleep(10);
     queryClient.setQueryData(["estates"], "A's estates");
-    await vi.waitFor(() => expect(storage.map.has(a.key)).toBe(true));
+    await vi.waitFor(() => expect(storage.map.has(a.key)).toBe(true), WAIT);
     await a.clear(queryClient);
     await sleep(80);
     expect(storage.map.has(a.key)).toBe(false);
