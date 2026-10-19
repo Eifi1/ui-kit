@@ -30,7 +30,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 8 | Amendment for 0.31 | ui-kit 0.31.0, server-kit 0.5.0 | index; folded into §2–§5 |
 | 9 | Round 0.38: public feedback (votes, comments, replies) | **§9 settled 2026-10-14 (round 0.38)**, for server-kit 0.11 / ui-kit 0.38 | amends §3.1, §3.3, §3.4 (`public`), §4.4.4 (outcome → replies), §5; server-services §2.7, §4.5; notifications §2, §5 (two types, the notice) |
 | 10 | Round 0.40: rework as a conversation entry, the feedback menu | **§10 settled 2026-10-16 (round 0.40)**, for server-kit 0.13 / ui-kit 0.40 | amends §2.1 (REWORK), §2.2, §3.4 (the rework), §4.1 (the menu), §4.3–§4.5, §5; §9.7, §9.11, §9.12, §9.13 |
-| 11 | Round 0.46: admin alerts for new reports and reworks | **DRAFT for review (round 0.46)** | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
+| 11 | Round 0.46: admin alerts for new reports and reworks | **§11 settled 2026-10-19 (round 0.46)**, for server-kit 0.16 / ui-kit 0.46 | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
 
 ## 1. Where each one stands
 
@@ -1824,9 +1824,16 @@ follow-up ("Yes to both"). Where each point went:
   default, `created_at` explicit, the re-seal like 0052, the seed via the service → 10.4,
   10.9; cites `endpoints.ts:603`, seed `:149-150` → 10.1.
 
-## 11. Round 0.46: admin alerts for new reports and reworks — DRAFT for review (round 0.46)
+## 11. Round 0.46: admin alerts for new reports and reworks — SETTLED (round 0.46)
 
-**DRAFT for review (round 0.46).** Marcel, 2026-10-19 (audits/round-047/brief-047.md,
+**Settled 2026-10-19** (Marcel, after the keksdose, kastlan and Kurvenschmiede reviews in
+audits/round-047/reviews.md "Feedback alerts §", and his decisions in the KS session).
+§11.2 ends with a **Settled** block that overrides the proposal where they differ; the
+reviews' corrections are folded into §11.1, re-checked at ka 26a2eaa, kk 23c18e71, KS
+2b2bdab and server-kit 06c0848; §11.5 records the reviews and the settle. Built for
+**server-kit 0.16 / ui-kit 0.46**, with notifications §10.
+
+As drafted: Marcel, 2026-10-19 (audits/round-047/brief-047.md,
 "Scope extension"): new reports and reworks notify the app's admins, in the app and by
 e-mail, **on by default**, and each admin can switch it off. It is the "later round's new
 notification type" that §10.2 decision 10 left open, and it is a type in notifications
@@ -1859,8 +1866,17 @@ attention badge, which the app polls.
 - Roles are per company (`domain/models/auth.py:17-21`). The platform's `is_superuser`
   (:40-43) has no feedback count (`admin_attention_service.py:80-92`).
 - Badge: `admin_attention_service.py:1-20`, shown at `app/top-bar.tsx:84`.
-- Existing admin mail: the billing notices go to the company's admins
-  (`billing_notices.py:67-86`), which is the pattern for these recipients.
+- The recipient pattern is the overdue mail's `_recipients` (`overdue_mail.py:95-116`):
+  the role in the event's company, `is_active`, `not is_demo`, `email_verified`, the
+  type's switch with its default. The billing notices to a company's admins
+  (`billing_notices.py:67-86`) are account mail (no type switch, no `email_verified`, no
+  unsubscribe parts), not the pattern.
+- `/feedback` is ADMIN-only (`require_role(*ADMIN_ONLY)`, `feedback_router.py:91`, :114,
+  :125; `infrastructure/roles.py:20`), so a manager's link would land on a 403.
+  `receivable_types` knows only "staff anywhere" (`notification_types.py:39-43`).
+- Mail is inline with a 10 s timeout per recipient (`infrastructure/email.py:37`). The
+  repository and the reply store commit each write (`feedback_repository.py:53-54`,
+  `feedback_reply_store.py:71-77`).
 - The reply store mails only a reply (`feedback_reply_store.py:71-77`).
 
 **Kurvenschmiede**
@@ -1869,13 +1885,21 @@ attention badge, which the app polls.
 - `save` "no longer tells anybody anything" (`domain/services/feedback_service.py:287-291`).
   Only a REPLY entry fires (`feedback_stores.py:111-112`).
 - Badge: `attention_service.py:9-13`.
-- The loop files reports under the first admin (`feedback_loop.py:286-291`, :363-371).
+- The loop files reports under the first admin (`feedback_loop.py:286-291`, :363-371),
+  through the kit's `FeedbackService.create` on purpose ("the one the POST endpoint
+  runs", :365), with its own constructor call.
+- Mail goes after the commit (`send_after_commit`) through `_tell`
+  (`notification_service.py:196`), with the unsubscribe footer and headers.
 
 **The kit**
-- `FeedbackService.create` refuses a demo and a manual CRASH (SK `feedback/service.py:295-323`).
+- `FeedbackService.create` refuses a demo and a manual CRASH (SK `feedback/service.py:291-319`,
+  at 06c0848).
 - `report_crash` answers `stored: false` for a demo or a spent window, and folds repeats
-  by fingerprint (:325-375).
-- `rework` refuses a demo (:759-790).
+  by fingerprint (:321-375). The fingerprint holds the user id and the app version
+  (`crash.py:70-87`): one broken page hit by 30 users is 30 rows, and an unfixed crash
+  comes back after each deploy. The 20-an-hour cap is per account and doesn't bound it.
+- `rework` refuses a demo (:720-751). It commits the entry (`store.add`, :739) before the
+  status (`repository.apply`, :751): REWORK for an admin author, OPEN otherwise.
 - The reply store fires for `kind = 'reply'` only (`feedback/ports.py:335-339`).
 - `feedback_recipients` is author and commenters only (`feedback/public.py:140-155`).
 
@@ -1942,6 +1966,80 @@ attention badge, which the app polls.
      (kk), or a queued or after-commit mail.
    - A layer-1 helper, `admin_alert_recipients(admin_ids, *, actor_id) -> list[int]`.
 
+**Settled (2026-10-19).** Rules 1–8 stand with these changes:
+1. **One type, `feedback_received`** (Open 1), for a new report, a rework and a new crash.
+2. **On by default in every channel the app offers** (as proposed). keksdose: in the app,
+   push and e-mail. kastlan: e-mail (its inbox is for `invoices_overdue` only,
+   notifications §10.1). KS: e-mail. `quiet = True`.
+3. **Mail by kind** (Open 2 amended, Open 4 as proposed):
+   - **A new report and a rework are mailed right away**, after the commit, in every app.
+   - **A crash notifies in the app** (keksdose: an inbox row and a push; kastlan and KS:
+     the attention badge, which counts OPEN) and **is mailed only inside a 15-minute
+     bundle where the app runs the queue** (notifications §10.4): keksdose. kastlan and KS
+     mail no crash; a crash burst (the fingerprint is per user and version) would be one
+     mail per row, and inline on `POST /feedback/crash` it would make a crashed page wait
+     N × 10 s.
+   - So `feedback_received.bundle = 15 min` applies to crash mails only, and only where a
+     flush runs.
+4. **Recipients (3 amended):**
+   - **keksdose:** every active `ADMIN` (`admin_recipient_ids`) but the actor.
+   - **kastlan: the ADMINs of the report's company only**, not managers (they cannot open
+     `/feedback`). The type gets its own receivability rule, **"ADMIN in some company"**
+     (beside "staff anywhere"), so managers and accountants are not offered a switch
+     they can never receive. At delivery: ADMIN in the report's company, `is_active`,
+     `not is_demo`, `email_verified`, the type's switch, the actor skipped, as
+     `_recipients` (`overdue_mail.py:95-116`). A two-company person (ADMIN in A, MANAGER
+     in B) hears only A's.
+   - **KS: every active, non-demo ADMIN but the actor** (`User.is_person` leaves out the
+     demo's system account). Its settings resource filters `feedback_received` by
+     receivability on the read and on the PATCH (notifications §10.2 Settled).
+   - **The platform superuser is not told** (Open 3); it hears this type only where it
+     is an ADMIN itself. A developer signal on entering READY/REWORK would be a separate
+     operator type.
+5. **What fires it (4 amended):**
+   - `create`, after the write; `report_crash` only when it adds a row.
+   - **`rework` after `repository.apply`**, never after the entry alone (else it could
+     announce a rework whose status move failed), and only when the rework **lands
+     OPEN** (an author's); an admin's own rework lands in REWORK, the developer's lane,
+     and tells nobody.
+   - **The loops stay silent because their service is built without alerts**: KS's
+     `feedback_loop.file_report` builds its `FeedbackService` with `alerts=None` (it has
+     its own constructor call); the kit does not tell the two apart. keksdose's and
+     kastlan's loops write by SQL past the service (§9.13, §10.5) and fire nothing.
+6. **The words name the company in kastlan** (a two-company admin acting in B sees
+   nothing of A's: RLS), as the overdue mail does (`{company}`, `overdue_mail.py:133`);
+   the link switches company, or the page says "switch to A". kastlan's subjects:
+   - de-CH: «Neue Rückmeldung #{number} ({category}) bei {company}» / «Rückmeldung
+     #{number} bei {company} wurde zur Überarbeitung zurückgeschickt»
+   - en: "New feedback report #{number} ({category}) at {company}" / "Report #{number} at
+     {company} was sent back for rework"
+   - fr: « Nouveau retour n° {number} ({category}) chez {company} » / « Le retour
+     n° {number} chez {company} a été renvoyé pour reprise »
+   - it: «Nuova segnalazione n. {number} ({category}) presso {company}» / «La
+     segnalazione n. {number} presso {company} è stata rimandata per revisione»
+
+   The type's title: "Neue Rückmeldungen und Überarbeitungen" / "New feedback and
+   reworks" / "Nouveaux retours et reprises" / "Nuove segnalazioni e revisioni"; the body
+   is `feedback_answered`'s shape ("Guten Tag {first_name}", one line, the link), formal
+   Sie/vous/Lei, in `doc_text/notifications.py` beside `feedback_answered`, under
+   `REVIEW_PENDING`. keksdose and KS name no company (one group of admins). All pushes
+   and inbox rows are quiet (no sound, no vibration); support chat's admin push stays
+   apart (conversational, `quiet=False`).
+7. **No recipient in logs (7 amended).** kastlan's `email.py:127` logs the status and the
+   JSON's `name` only (falling back to the status), never `response.text`; its SMTP
+   `logger.exception` (:153-154) logs `type(exc).__name__` (aiosmtplib's
+   `SMTPRecipientsRefused` holds the address). keksdose refuses the `console` mailer in
+   production since kk 23c18e71 (notifications §10.4 Settled); KS's console mailer is
+   development-only (`EMAIL_BACKEND=console`).
+8. **Where it fires (8 amended).** The port is called after the write; the app delivers
+   **after the commit**: kastlan in a background task (inline mail would hold the
+   request), KS through `send_after_commit`, keksdose through its notification plan
+   (inbox row and push in the transaction, the mail after commit, a crash's mail
+   queued). kastlan wires the port through `FeedbackDeps` (`feedback_router.py:84-107`).
+9. **keksdose's first notification mail** brings its unsubscribe route and the
+   `/unsubscribe` page with RFC 8058 headers, which needs `send_email`'s `headers`
+   parameter (notifications §10.2 Settled).
+
 ### 11.3 Split and size
 
 - **server-kit S:**
@@ -1965,7 +2063,7 @@ attention badge, which the app polls.
 - **Kurvenschmiede S:** the type, the mail through `_tell`/`send_after_commit` (or the
   queue), every ADMIN.
 
-### 11.4 For the reviews
+### 11.4 For the reviews (as asked; answered in §11.5)
 
 - **keksdose:**
   - The admin alert as your first notification mail: the unsubscribe route and page now.
@@ -1982,3 +2080,45 @@ attention badge, which the app polls.
 2. Crashes alert, bundled (rec), or never.
 3. kastlan's superuser told (rec: no).
 4. The bundle window, 15 min (rec).
+
+### 11.5 Reviews and settle (2026-10-19)
+
+**Marcel's answers** (2026-10-19, in this session and the KS session)
+1. **Open 1:** one type, `feedback_received` → §11.2 Settled 1.
+2. **Open 2:** new reports and reworks mailed right away; crashes notify in the app and
+   are mailed only inside a bundle where the app runs the queue (keksdose) → Settled 3.
+3. **Open 3:** the superuser is not told → Settled 4.
+4. **Open 4:** the 15-minute bundle, where a flush runs → Settled 3; notifications §10.4.
+5. kastlan: ADMINs of the report's company only, an "ADMIN somewhere" receivability rule,
+   the mail names the company, the rework alert after `apply` → Settled 4, 5, 6.
+6. KS: every ADMIN, the receivable filter on read and PATCH, the loop's service built
+   with `alerts=None` → Settled 4, 5.
+7. No recipient in logs → Settled 7.
+
+**Where each review point went** (each re-checked at ka 26a2eaa / kk 23c18e71 / KS 2b2bdab /
+server-kit 06c0848)
+
+| Review | Point | Where |
+|---|---|---|
+| kk | no admin alert today (`feedback_repository.py:90-105`, the stores, support chat's push, the 60 s poll) | §11.1 (stands) |
+| kk | the unsubscribe route and page with the first notification mail, RFC 8058, `send_email` headers | Settled 9; notifications §10.2 Settled |
+| kk | words fine, quiet; crash bursts make per-event mail noise | Settled 3, 6 |
+| kk | support chat's admin push stays apart | Settled 6 |
+| kk Marcel | in-app and push on, mail only through the bundle | **amended**: reports and reworks mailed right away, crashes bundled (Settled 3) |
+| ka S | the recipient pattern is `overdue_mail.py:95-116`, not the billing notices | §11.1, Settled 4 |
+| ka N | server-kit's lines moved (create :291, report_crash :321, rework :720) | §11.1 |
+| ka | the company's ADMINs only, not managers (`/feedback` is ADMIN-only); "ADMIN in some company"; delivery filters; a two-company person; demo safe; an admin's own report | Settled 4 |
+| ka S/B | crashes: per-user/version fingerprint, no queue in kastlan → in-app only | Settled 3 |
+| ka | superuser left out (`admin_attention_service.py:91-92`) | Settled 4 |
+| ka | registration, unsubscribe parts, the words in `doc_text/notifications.py`, REVIEW_PENDING | Settled 6 |
+| ka S | the words name the company; the link switches company; four languages' subjects, title and body | Settled 6 |
+| ka S | `email.py:127` and :153-154 log the address | Settled 7 |
+| ka | the port through `FeedbackDeps`; the stores commit each write | Settled 8 |
+| ka S | the rework alert after `apply` | Settled 5 |
+| ka S | inline mail's 10 s per recipient: a background task, crashes in-app | Settled 3, 8 |
+| ka N | alert a rework only when it lands OPEN | Settled 5 |
+| KS | every ADMIN but the actor; `is_person` | Settled 4 |
+| KS | the loop files through `FeedbackService.create`: build it with `alerts=None` | Settled 5 |
+| KS | crashes one mail each where no bundle runs | **amended** by Marcel: no crash mail without the queue (Settled 3) |
+| KS | `_tell`, `send_after_commit`, no recipient in logs | §11.1, Settled 7, 8 |
+| KS | one type is enough | Settled 1 |
