@@ -522,10 +522,20 @@ function InlineAction({
   );
 }
 
-/** The actions column's hidden header, in the provider's words. */
-function RowActionsHeader({ text, labels }: { text?: string; labels?: LabelOverride<RowActionsLabels> }) {
+/** The actions column's heading, in the provider's words: on screen since 0.46.1 (keksdose
+ *  dev#598 rework), a screen reader's name only with `hidden`. */
+function RowActionsHeader({
+  text,
+  labels,
+  hidden,
+}: {
+  text?: string;
+  labels?: LabelOverride<RowActionsLabels>;
+  hidden?: boolean;
+}) {
   const resolved = useKitLabels("rowActions", DEFAULT_ROW_ACTIONS_LABELS, labels);
-  return <span className="sr-only">{text ?? resolved.actions}</span>;
+  const word = text ?? resolved.actions;
+  return hidden ? <span className="sr-only">{word}</span> : <>{word}</>;
 }
 
 export interface RowActionsColumnOptions<T> {
@@ -546,10 +556,17 @@ export interface RowActionsColumnOptions<T> {
   /**
    * The column's name as plain text — the column-settings checklist and the phone
    * card's label read it (`DataTableColumn.headerText`). Pass the app's own word; left
-   * out, the header shows the provider's `rowActions.actions` to a screen reader and
-   * the plain-text places fall back to the column's `key`.
+   * out, the heading shows the provider's `rowActions.actions` and the plain-text
+   * places fall back to the column's `key`.
    */
   headerText?: string;
+  /**
+   * The heading (0.46.1, keksdose dev#598 rework — Marcel: a VISIBLE "Actions" heading on
+   * every table with an actions column). Default: `headerText`, else the provider's
+   * `rowActions.actions` ("Actions"), shown, end-aligned over the buttons. A node
+   * replaces it; `false` keeps the pre-0.46.1 heading, named for a screen reader only.
+   */
+  header?: ReactNode | false;
   labels?: LabelOverride<RowActionsLabels>;
   /** Anything else for the column (`mobileHidden`, `cellProps`…), merged last. */
   column?: Partial<DataTableColumn<T>>;
@@ -561,8 +578,8 @@ export interface RowActionsColumnOptions<T> {
  *
  *     columns={[...columns, rowActionsColumn({ actions: (r) => [...], name: (r) => r.name })]}
  *
- * The header is visually hidden (the icons say what the column is), the column hugs its
- * content at the row's end, and `noRowLink` keeps a `rowHref` anchor off it, so the
+ * The heading says "Actions" on screen (0.46.1; `header` changes or hides it), the
+ * column hugs its content at the row's end, and `noRowLink` keeps a `rowHref` anchor off it, so the
  * buttons keep their own clicks. On a phone it is a line of the card like any column;
  * set `column: { mobileHidden: true }` to drop it there (with `mobileDetailsInRow` it
  * then shows in the opened row instead).
@@ -576,12 +593,18 @@ export function rowActionsColumn<T>({
   glyphSize,
   tooltipSide,
   headerText,
+  header,
   labels,
   column,
 }: RowActionsColumnOptions<T>): DataTableColumn<T> {
   return {
     key,
-    header: <RowActionsHeader text={headerText} labels={labels} />,
+    header:
+      header === false || header == null ? (
+        <RowActionsHeader text={headerText} labels={labels} hidden={header === false} />
+      ) : (
+        header
+      ),
     headerText,
     cell: (row) => (
       <RowActions
@@ -595,7 +618,8 @@ export function rowActionsColumn<T>({
       />
     ),
     className: "w-px whitespace-nowrap text-end",
-    headClassName: "w-px",
+    // The heading over the buttons, at the row's end (0.46.1).
+    headClassName: "w-px text-end",
     noRowLink: true,
     ...column,
   };

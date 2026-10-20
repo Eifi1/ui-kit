@@ -1,8 +1,8 @@
 import "fake-indexeddb/auto";
-import Dexie from "dexie";
+import Dexie, { type Table } from "dexie";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createSyncDb, type SyncDb } from "../db";
-import { createSyncEngine, releaseSyncEngine, syncEngineFor, type SyncEngine, type SyncEngineOptions, type SyncEngineState } from "../engine";
+import { createSyncDb, rowByPk, SYNC_DB_PK_INDEX, type SyncDb } from "../db";
+import { createSyncEngine, releaseSyncEngine, syncEngineFor, type SyncEngine, type SyncEngineOptions, type SyncEngineState, type SyncStep } from "../engine";
 import { createFakeSyncTransport } from "../testing";
 import type { SyncRequestBody, SyncResponseBody } from "../wire";
 
@@ -614,5 +614,66 @@ describe("createSyncDb", () => {
     open.push({ db });
     expect(await db.outbox.where("scope").equals("handover").count()).toBe(1);
     expect(db.verno).toBe(2);
+  });
+});
+
+describe("SyncStep<D> (0.46.1)", () => {
+  it("hands a step the app's own database type: its tables without a cast", async () => {
+    type PhotoDb = SyncDb & { photos: Table<{ id: string; status: string }, string> };
+    n += 1;
+    const db = createSyncDb<PhotoDb>(`sync-engine-typed-step-${n}`, { extraStores: { photos: "id, status" } });
+    await db.photos.put({ id: "ph1", status: "pending" });
+    const step: SyncStep<PhotoDb> = {
+      name: "photos",
+      run: async (copy) => {
+        await copy.photos.update("ph1", { status: "uploaded" });
+        return {};
+      },
+      counts: async (copy) => ({ pending: await copy.photos.where("status").equals("pending").count() }),
+    };
+    const transport = createFakeSyncTransport();
+    const engine = createSyncEngine({ db, scopes: () => ["handover"], send: transport.send, steps: [step], sharedComputer: () => false });
+    open.push({ db, engine });
+    expect((await engine.syncNow()).outcome).toBe("synced");
+    expect((await db.photos.get("ph1"))?.status).toBe("uploaded");
+  });
+});
+
+describe("rowByPk (0.46.1)", () => {
+  const seed = async (db: SyncDb) => {
+    await db.rows.bulkPut([
+      { entity: "meters", id: "m-a", pk: 7, data: { name: "A" } },
+      { entity: "meters", id: "m-b", pk: 8, data: { name: "B" } },
+      { entity: "contacts", id: "c-7", pk: 7, data: { name: "C" } },
+      { entity: "meters", id: "m-new", pk: null, data: { name: "new" } },
+    ]);
+  };
+
+  it("finds the copy row of a server id by a filtered scan on the engine's own schema", async () => {
+    n += 1;
+    const db = createSyncDb(`sync-rowbypk-scan-${n}`);
+    open.push({ db });
+    await seed(db);
+    expect(db.rows.schema.idxByName["[entity+pk]"]).toBeUndefined();
+    expect((await rowByPk(db, "meters", 7))?.id).toBe("m-a");
+    expect((await rowByPk(db, "contacts", 7))?.id).toBe("c-7");
+    expect(await rowByPk(db, "meters", 9)).toBeUndefined();
+  });
+
+  it("uses the [entity+pk] index once an upgrade adds SYNC_DB_PK_INDEX", async () => {
+    n += 1;
+    const name = `sync-rowbypk-index-${n}`;
+    const v1 = createSyncDb(name);
+    await seed(v1);
+    v1.close();
+    const db = createSyncDb(name, { upgrades: [{ version: 2, stores: SYNC_DB_PK_INDEX }] });
+    open.push({ db });
+    expect(db.rows.schema.idxByName["[entity+pk]"]).toBeDefined();
+    const where = vi.spyOn(db.rows, "where");
+    expect((await rowByPk(db, "meters", 8))?.id).toBe("m-b");
+    expect(where).toHaveBeenCalledWith("[entity+pk]");
+    expect((await rowByPk(db, "contacts", 7))?.data).toEqual({ name: "C" });
+    expect(await rowByPk(db, "contacts", 8)).toBeUndefined();
+    expect((await db.rows.get(["meters", "m-new"]))?.pk).toBeNull(); // a row without a server id stays
   });
 });

@@ -971,15 +971,20 @@ export { NotificationTypesSetting } from "./notifications/notification-types-set
 export type { NotificationTypesSettingProps } from "./notifications/notification-types-setting";
 export { QuietHoursSetting } from "./notifications/quiet-hours-setting";
 export type { QuietHoursSettingProps } from "./notifications/quiet-hours-setting";
-export { TimeZoneSelect, timeZoneOptions, deviceTimeZone } from "./notifications/time-zone-select";
+export { TimeZoneSelect, timeZoneOptions } from "./notifications/time-zone-select";
 export type { TimeZoneSelectProps } from "./notifications/time-zone-select";
 // 0.46 (docs/notifications-harmonization.md §10.1, §10.3): the inbox list, the bell and
 // the device-zone report (the account's zone is automatic only, amended 2026-10-20).
 export { NotificationInbox, INBOX_BADGE_INTERVAL } from "./notifications/notification-inbox";
-export type { NotificationInboxItem, NotificationInboxProps } from "./notifications/notification-inbox";
+export type {
+  NotificationInboxAction,
+  NotificationInboxItem,
+  NotificationInboxProps,
+} from "./notifications/notification-inbox";
 export { NotificationBell } from "./notifications/notification-bell";
 export type { NotificationBellProps } from "./notifications/notification-bell";
-export { useDeviceZoneReport } from "./notifications/device-zone-report";
+// `deviceTimeZone` lives beside the report since 0.46.1 (keksdose N6; sign-up needs it).
+export { useDeviceZoneReport, deviceTimeZone } from "./notifications/device-zone-report";
 export type { DeviceZoneReportOptions } from "./notifications/device-zone-report";
 export {
   usePushDevice,
@@ -1016,8 +1021,10 @@ export type { PushDevicesSettingProps } from "./notifications/push-devices-setti
 export { UnsubscribePanel, unsubscribeTokenType } from "./notifications/unsubscribe-panel";
 export type { UnsubscribePanelProps } from "./notifications/unsubscribe-panel";
 // 0.38.0 (docs/feedback-harmonization.md §9.11): the two feedback types' setting words.
+// 0.46.1 (keksdose N9): `useFeedbackNotificationTypesLabels`, the words resolved, for `adminGroup`.
 export {
   useFeedbackNotificationTypes,
+  useFeedbackNotificationTypesLabels,
   DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS,
 } from "./notifications/feedback-notification-types";
 export type {

@@ -1,7 +1,9 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { useDeviceZoneReport } from "../device-zone-report";
+import { deviceTimeZone, useDeviceZoneReport } from "../device-zone-report";
+import { deviceTimeZone as deprecatedDeviceTimeZone } from "../time-zone-select";
+import { deviceTimeZone as rootDeviceTimeZone } from "../../index";
 
 /**
  * docs/notifications-harmonization.md §10.3 (amended 2026-10-20: automatic only): the
@@ -66,5 +68,13 @@ describe("useDeviceZoneReport", () => {
     renderHook(() => useDeviceZoneReport({ stored: "Australia/Perth", report }));
     await Promise.resolve();
     expect(report).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("deviceTimeZone (0.46.1: beside useDeviceZoneReport, keksdose N6)", () => {
+  it("lives here; the deprecated module and the package root hand out the same function", () => {
+    expect(deviceTimeZone()).toBe("Europe/Berlin");
+    expect(deprecatedDeviceTimeZone).toBe(deviceTimeZone);
+    expect(rootDeviceTimeZone).toBe(deviceTimeZone);
   });
 });

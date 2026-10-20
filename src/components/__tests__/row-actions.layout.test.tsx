@@ -279,7 +279,7 @@ const ROWS: Row[] = [
 const NAME: DataTableColumn<Row> = { key: "name", header: "Name", cell: (r) => r.name };
 
 describe("rowActionsColumn", () => {
-  it("is an action column in one line: hidden header, no row link, hugging the end", () => {
+  it("is an action column in one line: a visible heading, no row link, hugging the end", () => {
     const col = rowActionsColumn<Row>({ actions: () => actions(), name: (r) => r.name, headerText: "Aktionen" });
     expect(col.key).toBe("actions");
     expect(col.noRowLink).toBe(true);
@@ -291,9 +291,10 @@ describe("rowActionsColumn", () => {
         <DataTable rows={ROWS} columns={[NAME, col]} rowKey={(r) => r.id} />
       </MemoryRouter>,
     );
-    // The header is there for a screen reader only.
+    // The heading is on screen (0.46.1, keksdose dev#598 rework), over the buttons.
     const head = screen.getAllByRole("columnheader")[1];
-    expect(within(head).getByText("Aktionen")).toHaveClass("sr-only");
+    expect(within(head).getByText("Aktionen")).not.toHaveClass("sr-only");
+    expect(head).toHaveClass("text-end");
     expect(screen.getAllByRole("button", { name: "Edit" })).toHaveLength(2);
   });
 

@@ -266,6 +266,10 @@ export interface UserRosterColumnsOptions<T extends UserRosterRow, R extends str
   extra?: readonly DataTableColumn<T>[];
   /** The row's action menu (§4). Left out: no actions column. */
   actions?: (row: T) => UserRowActionList;
+  /** The actions column's heading (0.46.1, keksdose dev#598 rework — a VISIBLE "Actions"
+   *  on every table with an actions column). Default: `labels.actions`, shown. A node
+   *  replaces it; `false` keeps the pre-0.46.1 heading, a screen reader's name only. */
+  actionsHeader?: ReactNode | false;
   /**
    * Whether this row's role is a select rather than a chip, and with which reasons.
    * Left out, or `false`: a chip. kastlan's several roles are never a select here — they
@@ -344,6 +348,7 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
   stateOf = adminUserStates,
   extra = [],
   actions,
+  actionsHeader,
   editableRole,
   onRoleChange,
   roleOf,
@@ -459,7 +464,9 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
   if (actions) {
     columns.push({
       key: "actions",
-      header: <span className="sr-only">{labels.actions}</span>,
+      // On screen, as every actions column's heading is (0.46.1, keksdose dev#598 rework).
+      header:
+        actionsHeader === false ? <span className="sr-only">{labels.actions}</span> : (actionsHeader ?? labels.actions),
       headerText: labels.actions,
       // The caller's own words only: the menu reads the provider's itself, and the
       // English defaults merged in above must not shadow them.
@@ -469,7 +476,7 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
         </RowName>
       ),
       className: "w-px whitespace-nowrap text-end",
-      headClassName: "w-px",
+      headClassName: "w-px text-end",
       // The menu button keeps its own click: a row link must not wrap it.
       noRowLink: true,
     });
@@ -487,6 +494,7 @@ export function useUserRosterColumns<T extends UserRosterRow, R extends string =
   stateOf,
   extra,
   actions,
+  actionsHeader,
   editableRole,
   onRoleChange,
   roleOf,
@@ -501,12 +509,13 @@ export function useUserRosterColumns<T extends UserRosterRow, R extends string =
         stateOf,
         extra,
         actions,
+        actionsHeader,
         editableRole,
         onRoleChange,
         roleOf,
         emailColumn,
         labels,
       }),
-    [roles, stateOf, extra, actions, editableRole, onRoleChange, roleOf, emailColumn, labels],
+    [roles, stateOf, extra, actions, actionsHeader, editableRole, onRoleChange, roleOf, emailColumn, labels],
   );
 }

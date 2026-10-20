@@ -80,6 +80,28 @@ export const SYNC_DB_STORES = {
 } as const;
 
 /**
+ * The `rows` schema with an `[entity+pk]` index (0.46.1), opt-in: the D16 pages start from a
+ * server id (`/meters/7`) and {@link rowByPk} finds its copy row by this index. Not in
+ * {@link SYNC_DB_STORES}, so no database on a device changes until its app names it in a
+ * version of its own — kastlan, whose devices are on v2: `upgrades: [..., { version: 3,
+ * stores: SYNC_DB_PK_INDEX }]`. A database new to the devices may take it at once:
+ * `extraStores: { ...SYNC_DB_PK_INDEX }`.
+ */
+export const SYNC_DB_PK_INDEX = {
+  rows: "[entity+id], entity, [entity+pk]",
+} as const;
+
+/**
+ * The copy row of the server's id `pk` in `entity` (0.46.1): by the `[entity+pk]` index when
+ * the database has it ({@link SYNC_DB_PK_INDEX}), else by a scan of the entity's rows.
+ * `undefined` when the copy holds no such row.
+ */
+export async function rowByPk(db: SyncDb, entity: string, pk: number): Promise<SyncedRow | undefined> {
+  if (db.rows.schema.idxByName["[entity+pk]"]) return db.rows.where("[entity+pk]").equals([entity, pk]).first();
+  return db.rows.where("entity").equals(entity).filter((row) => row.pk === pk).first();
+}
+
+/**
  * Open (lazily, on first use) the sync database `name`: the engine's tables plus the app's
  * `extraStores`, at version 1 or the last of `upgrades`. One database per account (kastlan:
  * per account and company, `kastlan-handover-<user>-<company>`), and one engine on it (D15).

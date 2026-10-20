@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.16.0";
+export const SERVER_KIT_VERSION = "0.17.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -488,6 +488,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["NotificationType", "class"],
       ["NotificationTypeError", "class"],
       ["NotificationTypes", "class"],
+      ["PushBodyInvalidError", "class"],
       ["PushData", "model"],
       ["PushDeviceResponse", "model"],
       ["PushDeviceUpdate", "model"],
@@ -524,6 +525,8 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["mail_event", "function"],
       ["migrate_enabled_to_channels", "function"],
       ["notifications_tick", "function"],
+      ["parse_push_body", "function"],
+      ["parse_push_replace", "function"],
       ["plan_delivery", "function"],
       ["push_auth_matches", "function"],
       ["push_gone_expired", "function"],
@@ -818,6 +821,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["CONTRACT_ERRORS", "constant"],
       ["contract_error_response", "function"],
       ["install_contract_error_handlers", "function"],
+      ["validation_error_response", "function"],
     ],
   },
   {

@@ -21,6 +21,29 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.46.1](https://github.com/Eifi1/ui-kit/compare/v0.46.0...v0.46.1) (2026-10-20)
+
+The three apps' 0.46 adoption findings (round 048: keksdose, kastlan, Kurvenschmiede). No export
+is removed and no prop changes its type; one thing shows on a plain bump:
+
+- Every actions column has a visible "Actions" heading (Marcel, keksdose dev#598 rework):
+  `DataTable rowActions`, the desktop column from `mobileSwipeActions`, `rowActionsColumn`,
+  `TranslationReviewPanel` and the user roster. `rowActionsHeader={false}`,
+  `desktopSwipeActions={{ header: false }}`, `header: false` or `actionsHeader: false` keeps
+  the 0.46.0 heading (hidden, for a screen reader only).
+
+The rest is additive: the apps' adoption fixes in `/sync` and the notifications (each replacing
+an app's workaround), and `swipePlanRowActions` is public. The server half ships as server-kit
+0.17.0, a minor only because it adds names (nothing breaking): the validation 422s no longer
+echo what was sent, push bodies are parsed without echoing secrets, and `PATCH /auth/me` drops
+an unknown device zone (200, was 422); a stale `timezone` is still ignored, refused from 0.18.
+Per-app steps: `docs/adopt-0.46.md`, its 0.46.1 sections.
+
+### Fixed
+
+* **data-table:** a visible Actions heading on every actions column ([2ca1728](https://github.com/Eifi1/ui-kit/commit/2ca1728b926d8ec68637b8c28969ff1fe515b78d))
+* **sync,notifications:** the apps' 0.46 adoption findings for 0.46.1 ([4dbfa90](https://github.com/Eifi1/ui-kit/commit/4dbfa90bf005f88372fd213f7d4e21c1565618fc))
+
 ## [0.46.0](https://github.com/Eifi1/ui-kit/compare/v0.45.0...v0.46.0) (2026-10-19)
 
 Round 0.46, the three 0.45 adoptions' notes plus local-first §2, notifications §10 and feedback

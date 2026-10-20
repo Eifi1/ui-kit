@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 
 import { settle } from "../account/account-parts";
-import { deviceTimeZone } from "./time-zone-select";
 
 export interface DeviceZoneReportOptions {
   /** The account's `device_timezone` from `/auth/me`; `undefined` while it loads (no
@@ -15,6 +14,20 @@ export interface DeviceZoneReportOptions {
    *  second person signed in on a shared PC in the same start is reported too. Without it
    *  the guard is cleared when `stored` goes `undefined` (signed out). */
   account?: string | number | null;
+}
+
+/**
+ * This device's IANA zone ("Europe/Zurich"), or `"UTC"` where the runtime names none —
+ * the zone `useDeviceZoneReport` reports, which becomes the account's (§10.3, automatic
+ * only), and the one sign-up sends (`RegisterRequest.device_timezone`). Here since 0.46.1
+ * (keksdose N6); the deprecated `time-zone-select` module re-exports it until 0.47.
+ */
+export function deviceTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
 }
 
 /** The (account, stored, device) triples already reported in this start of the app. */

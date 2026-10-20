@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { NotificationInbox, INBOX_BADGE_INTERVAL } from "../notification-inbox";
-import type { NotificationInboxItem } from "../notification-inbox";
+import type { NotificationInboxAction, NotificationInboxItem } from "../notification-inbox";
 import { axeViolations } from "../../test/axe";
 
 /** docs/notifications-harmonization.md §10.1: keksdose's list, lifted. Synthetic rows. */
@@ -195,6 +195,24 @@ describe("NotificationInbox — acting", () => {
     mount({ onMarkRead: () => Promise.reject(new Error("offline")), describeError: () => "You are offline." });
     await user.click(screen.getByRole("button", { name: "Mark all as read" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("You are offline.");
+  });
+
+  it("tells `describeError` which action failed (0.46.1, keksdose N4)", async () => {
+    const user = userEvent.setup();
+    const describeError = vi.fn((_error: unknown, action: NotificationInboxAction) => `failed: ${action}`);
+    mount({
+      onMarkRead: () => Promise.reject(new Error("offline")),
+      onClear: () => Promise.reject(new Error("offline")),
+      describeError,
+    });
+    await user.click(screen.getByRole("button", { name: "Mark all as read" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("failed: readAll");
+    await user.click(row(2));
+    expect(await screen.findByText("failed: read")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Clear all" }));
+    await user.click(screen.getByRole("button", { name: "Clear all" }));
+    expect(await screen.findByText("failed: clear")).toBeInTheDocument();
+    expect(describeError.mock.calls.map(([, action]) => action)).toEqual(["readAll", "read", "clear"]);
   });
 
   it("shows more with `hasMore`", async () => {

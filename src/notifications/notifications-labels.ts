@@ -64,7 +64,9 @@ export interface NotificationsLabels {
   quietUntil: string;
   /** One time set, the other not: quiet hours fail open until both are. */
   quietIncomplete: string;
-  /** The zone picker's label. */
+  /** The zone picker's label.
+   *  @deprecated 0.46 — the zone is automatic (§10.3): only the deprecated `TimeZoneSelect` reads it, the
+   *  0.46 card does not; removed in 0.47. Kept so an app's override still type-checks. */
   timeZone: string;
   /** @deprecated 0.46 — the zone is automatic (§10.3), the card offers no device zone; removed in 0.47.
    *  Unused, kept so an app's override still type-checks. */

@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.16.0",
+  "kit_version": "0.17.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -560,7 +560,7 @@
           "name": "ProfileUpdate",
           "kind": "model",
           "signature": "class ProfileUpdate(BaseModel)",
-          "doc": "``PATCH /auth/me {first_name?, last_name?, locale?, text_size?, contrast?,\ndevice_timezone?}`` (§6.1;\nKurvenschmiede ``ProfileUpdate``; ``docs/text-size-harmonization.md`` §6, §10.6).\n\nEvery field optional, so the language picker writes the locale alone, and the text-size\nand contrast cards write theirs alone (a pick writes the device and the account). Unknown fields\nare refused (``extra=\"forbid\"``): the obvious next field somebody sends is ``role``\nor ``email``, and a schema that silently ignored it would read as having accepted it.\nAn explicit ``null`` is refused too — a name cannot be cleared, and\n``model_dump(exclude_unset=True)`` would otherwise carry it onto a NOT NULL column.\nWrite it with :func:`~eifi1_server_kit.settings.apply_patch` and\n:data:`PROFILE_NOT_NULLABLE` (settings §6.1).\n\n**The locale, from the app's languages** (settings §6.2): set :attr:`offered_locales`\nin a subclass — or build the class with\n:func:`~eifi1_server_kit.settings.profile_update_model` — and the locale goes through\n:func:`~eifi1_server_kit.settings.canonical_locale`: ``de_ch`` is stored as ``de-CH``,\n``de`` as the offered German, and a language the app doesn't offer is a 422. Unset,\nonly the tag's shape is checked, as before.\n\n**The zone** (notifications §10.3, 0.16; amended 2026-10-20, Marcel: automatic only):\n``device_timezone``, the device's report (never ``null``), an IANA name ``zoneinfo``\nknows (422 otherwise). There is no pick: a ``timezone`` field — a stale 0.45 bundle's\npicker still sends one — is **ignored in 0.16** (dropped before the checks, never\nwritten) **and refused from 0.17** as any unknown field is. A demo's zone is ignored, as\nits locale and appearance are in Kurvenschmiede::\n\n    apply_patch(user, body, not_nullable=PROFILE_NOT_NULLABLE, skip=PROFILE_ZONE_FIELDS)\n    apply_zone_update(user, body, is_demo=user.is_demo)",
+          "doc": "``PATCH /auth/me {first_name?, last_name?, locale?, text_size?, contrast?,\ndevice_timezone?}`` (§6.1;\nKurvenschmiede ``ProfileUpdate``; ``docs/text-size-harmonization.md`` §6, §10.6).\n\nEvery field optional, so the language picker writes the locale alone, and the text-size\nand contrast cards write theirs alone (a pick writes the device and the account). Unknown fields\nare refused (``extra=\"forbid\"``): the obvious next field somebody sends is ``role``\nor ``email``, and a schema that silently ignored it would read as having accepted it.\nAn explicit ``null`` is refused too — a name cannot be cleared, and\n``model_dump(exclude_unset=True)`` would otherwise carry it onto a NOT NULL column.\nWrite it with :func:`~eifi1_server_kit.settings.apply_patch` and\n:data:`PROFILE_NOT_NULLABLE` (settings §6.1).\n\n**The locale, from the app's languages** (settings §6.2): set :attr:`offered_locales`\nin a subclass — or build the class with\n:func:`~eifi1_server_kit.settings.profile_update_model` — and the locale goes through\n:func:`~eifi1_server_kit.settings.canonical_locale`: ``de_ch`` is stored as ``de-CH``,\n``de`` as the offered German, and a language the app doesn't offer is a 422. Unset,\nonly the tag's shape is checked, as before.\n\n**The zone** (notifications §10.3, 0.16; amended 2026-10-20, Marcel: automatic only):\n``device_timezone``, the device's report (never ``null``), an IANA name ``zoneinfo``\nknows; one it doesn't know (a browser's tzdata newer than the server's), or any value\nthat isn't a name, is **dropped** — left unset, never written — as\n:class:`RegisterRequest` drops it (0.17.0; ``null`` stays a 422). There is no pick: a ``timezone`` field — a stale 0.45 bundle's\npicker still sends one — is **ignored in 0.16 and 0.17** (dropped before the checks, never\nwritten) **and refused from 0.18** as any unknown field is. A demo's zone is ignored, as\nits locale and appearance are in Kurvenschmiede::\n\n    apply_patch(user, body, not_nullable=PROFILE_NOT_NULLABLE, skip=PROFILE_ZONE_FIELDS)\n    apply_zone_update(user, body, is_demo=user.is_demo)",
           "fields": [
             {
               "name": "first_name",
@@ -596,7 +596,7 @@
               "name": "device_timezone",
               "type": "ZoneName | None",
               "default": "None",
-              "doc": "The device's zone, reported at app start when it differs from the stored one; a\nreport, so ``null`` is refused. Write it with :func:`apply_zone_update`, which\nignores a demo's."
+              "doc": "The device's zone, reported at app start when it differs from the stored one; a\nreport, so ``null`` is refused, and one this server doesn't know is dropped (left\nunset, 0.17.0). Write it with :func:`apply_zone_update`, which ignores a demo's."
             },
             {
               "name": "offered_locales",
@@ -1551,7 +1551,7 @@
           "name": "AdminUserRow",
           "kind": "model",
           "signature": "class AdminUserRow(UserResponse)",
-          "doc": "One row of ``GET /admin/users`` (§3.2): the auth contract's ``UserResponse`` core —\nwith its derived ``display_name`` and ``name_incomplete`` — plus what the admin page\nshows. Reads an ORM row (``from_attributes``).\n\n``extra`` holds the app's own columns: keksdose's plan and key custody,\nKurvenschmiede's owned counts; kastlan's companies only in the PLATFORM list — a\ncompany's list never names another company (§3.2). Attributes and counts, never\ncontent (keksdose's roster rule).",
+          "doc": "One row of ``GET /admin/users`` (§3.2): the auth contract's ``UserResponse`` core —\nwith its derived ``display_name`` and ``name_incomplete`` — plus what the admin page\nshows. Reads an ORM row (``from_attributes``).\n\n``extra`` holds the app's own columns: keksdose's plan and key custody,\nKurvenschmiede's owned counts; kastlan's companies only in the PLATFORM list — a\ncompany's list never names another company (§3.2). Attributes and counts, never\ncontent (keksdose's roster rule).\n\nThe person's device zone (``UserResponse.device_timezone``) is NOT on the row (0.17.0):\nit is where their device last was — their own data, a location signal the roster has\nno use for. The row reads an account that has it and never answers it.",
           "fields": [
             {
               "name": "id",
@@ -1633,9 +1633,9 @@
             },
             {
               "name": "device_timezone",
-              "type": "str | None",
+              "type": "SkipJsonSchema[Annotated[None, BeforeValidator(_discard)]]",
               "default": "None",
-              "doc": "The zone the device last used reported (notifications §10.3, 0.16), an IANA name;\nthe client reports its own when it differs. It IS the account's zone — automatic\nonly (amended 2026-10-20), ``None`` = the app's (``effective_zone``)."
+              "doc": "Never read, never answered, not in the schema (0.17.0): see above."
             },
             {
               "name": "last_login_at",
@@ -5571,7 +5571,7 @@
             {
               "name": "still_wanted",
               "signature": "async still_wanted(user_id: int, type_id: str, channel: QueueChannel) -> bool | datetime",
-              "doc": "Re-run the plan (:func:`~.delivery.plan_delivery`) for this person, type and\nchannel: ``True`` sends, ``False`` drops (``\"unwanted\"``: the switch went off, the\naccount was deactivated), and a datetime holds the push again until then (the\nquiet hours moved: :func:`~.timing.quiet_hours_end`)."
+              "doc": "Re-run the plan (:func:`~.delivery.plan_delivery`) for this person, type and\nchannel: ``True`` sends, ``False`` drops (``\"unwanted\"``: the switch went off, the\naccount was deactivated), and a datetime holds the push again until then (the\nquiet hours moved: :func:`~.timing.quiet_hours_end`).\n\n0.17.0: a port whose ``still_wanted`` also takes a keyword ``now: datetime | None =\nNone`` gets the flush's own ``now``, to judge quiet hours at the moment the flush\nclaimed for (a retried or late tick, a test) instead of the wall clock; a port\nwithout it is called as before."
             },
             {
               "name": "send_push",
@@ -5670,6 +5670,12 @@
               "type": "str | None",
               "default": "None",
               "doc": "The company the row is about, by name, where the app's rows carry one (kastlan,\n0.16); ``None`` elsewhere. The list shows it beside the row."
+            },
+            {
+              "name": "company_id",
+              "type": "int | str | None",
+              "default": "None",
+              "doc": "The same company by its id (0.17.0), so the bell switches to it exactly before\nopening the row (kastlan: two companies may share a name); ``None`` elsewhere."
             }
           ]
         },
@@ -5974,7 +5980,7 @@
           "name": "NotificationSettingsUpdate",
           "kind": "model",
           "signature": "class NotificationSettingsUpdate(BaseModel)",
-          "doc": "``PATCH /notifications/settings`` (§3.2), checked against the app's registry.\n\nSet :attr:`registry` in the subclass, as ``ProfileUpdate.offered_locales`` is set\n(settings §7.2); a class without it is a :class:`TypeError` on its first validation.\nA type the registry doesn't know, or an ``app`` / ``push`` / ``email`` switch on a\ntype that doesn't offer it (``push`` in an app with no push), is a validation error\n(422). A type the registry knows but this\naccount doesn't receive is :func:`apply_switches_patch`'s\n:class:`~.errors.NotificationTypeError`. Unknown fields are a 422 — except\n``timezone``, which a stale 0.45 bundle sends: ignored in 0.16, refused from 0.17.",
+          "doc": "``PATCH /notifications/settings`` (§3.2), checked against the app's registry.\n\nSet :attr:`registry` in the subclass, as ``ProfileUpdate.offered_locales`` is set\n(settings §7.2); a class without it is a :class:`TypeError` on its first validation.\nA type the registry doesn't know, or an ``app`` / ``push`` / ``email`` switch on a\ntype that doesn't offer it (``push`` in an app with no push), is a validation error\n(422). A type the registry knows but this\naccount doesn't receive is :func:`apply_switches_patch`'s\n:class:`~.errors.NotificationTypeError`. Unknown fields are a 422 — except\n``timezone``, which a stale 0.45 bundle sends: ignored in 0.16 and 0.17, refused from 0.18.",
           "fields": [
             {
               "name": "types",
@@ -6072,6 +6078,19 @@
               "name": "receivable",
               "signature": "receivable(keep: Callable[[NotificationType], bool]) -> NotificationTypes",
               "doc": "The types one account can receive, in the same order: the account's narrowing.\n\nkastlan's two types go to an account that is staff in any of its companies (roles\nare per company); a tenant receives neither, so its ``GET`` lists none and a\n``PATCH`` naming one is a 422::\n\n    types = TYPES.receivable(lambda _type: is_staff_anywhere)"
+            }
+          ]
+        },
+        {
+          "name": "PushBodyInvalidError",
+          "kind": "class",
+          "signature": "class PushBodyInvalidError(NotificationError)",
+          "doc": "A push route's body that is no valid model (0.17.0, keksdose S1): 422 ``{\"detail\":\n…, \"code\": \"push_body_invalid\", \"fields\": [\"old_auth\", …]}``. Raised by\n:func:`~.push.parse_push_body` and :func:`~.push.parse_push_replace` in place of\nFastAPI's own 422, whose ``input`` would echo the body — ``old_auth``, ``keys.auth``,\nan endpoint — back into the answer and every log that keeps it. ``fields`` names the\nfailing locations only (``\"body\"`` for a body that is no object), never a value.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(fields: Iterable[str] = (), detail: str | None = None) -> None",
+              "doc": ""
             }
           ]
         },
@@ -6248,7 +6267,7 @@
           "name": "PushReplaceIn",
           "kind": "model",
           "signature": "class PushReplaceIn(BaseModel)",
-          "doc": "``POST /notifications/devices/replace``: the browser rotated a subscription\n(``pushsubscriptionchange``) and its service worker re-registers it (0.16, NT:1028).\n\nNo session: a worker has no ``Authorization`` header to send. The proof is the OLD\nsubscription — its endpoint and its ``keys.auth`` secret, which only that browser and\nthis server hold (:func:`push_auth_matches` against the stored row). The route, in\nthis order (§10.6, settled 2026-10-19):\n\n1. no device row has ``old_endpoint`` — a row marked gone (``gone_at``) within\n   :data:`PUSH_GONE_GRACE` still counts, an older one does not\n   (:func:`push_gone_expired`) —, or its stored\n   ``auth`` does not match → 404, the same answer for both (nothing to tell apart);\n   the page then shows push as off;\n2. the row's account is inactive (deactivated, a deletion request) or a demo → the\n   same 404, and the row is deleted: a signed-out or closed account keeps no pushes;\n3. only now, with the device proven, ``subscription.endpoint`` held by ANOTHER\n   account's row → 409 (:class:`~.errors.PushEndpointTakenError`), as on\n   registering — an unproven caller never learns that an endpoint is taken;\n4. else the row moves in place: the new endpoint and keys, the same account, the user\n   agent if sent, ``failure_count`` reset, ``gone_at`` cleared → 200\n   :class:`PushDeviceResponse`. The new endpoint already on the SAME account (a\n   register raced the worker) deletes the old row instead and answers the existing one.\n\nAnd around it:\n\n* **The app deletes an account's push rows** on \"sign out everywhere\", on\n  deactivation (kastlan's deletion request deactivates) and on erasure, or a\n  device's worker could rotate its subscription forever.\n* **No RLS on device rows**: a device row is the account's, never a company's (the\n  role is checked per company at send time); a sessionless route under forced RLS\n  answers 404. An app whose table is FORCE RLS (keksdose) runs the lookup and the\n  update under its bypass with an explicit endpoint filter — this route only.\n* **Never log or echo the body**: its 422 answers a plain detail, never the input (a\n  validation echo would hand ``old_auth`` back). A leaked row's ``keys.auth`` is\n  enough to redirect that person's future pushes.\n* Rate-limit it as the other unauthenticated routes.",
+          "doc": "``POST /notifications/devices/replace``: the browser rotated a subscription\n(``pushsubscriptionchange``) and its service worker re-registers it (0.16, NT:1028).\n\nNo session: a worker has no ``Authorization`` header to send. The proof is the OLD\nsubscription — its endpoint and its ``keys.auth`` secret, which only that browser and\nthis server hold (:func:`push_auth_matches` against the stored row). The route, in\nthis order (§10.6, settled 2026-10-19):\n\n1. no device row has ``old_endpoint`` — a row marked gone (``gone_at``) within\n   :data:`PUSH_GONE_GRACE` still counts, an older one does not\n   (:func:`push_gone_expired`) —, or its stored\n   ``auth`` does not match → 404, the same answer for both (nothing to tell apart);\n   the page then shows push as off;\n2. the row's account is inactive (deactivated, a deletion request) or a demo → the\n   same 404, and the row is deleted: a signed-out or closed account keeps no pushes;\n3. only now, with the device proven, ``subscription.endpoint`` held by ANOTHER\n   account's row → 409 (:class:`~.errors.PushEndpointTakenError`), as on\n   registering — an unproven caller never learns that an endpoint is taken;\n4. else the row moves in place: the new endpoint and keys, the same account, the user\n   agent if sent, ``failure_count`` reset, ``gone_at`` cleared → 200\n   :class:`PushDeviceResponse`. The new endpoint already on the SAME account (a\n   register raced the worker) deletes the old row instead and answers the existing one.\n\nAnd around it:\n\n* **The app deletes an account's push rows** on \"sign out everywhere\", on\n  deactivation (kastlan's deletion request deactivates) and on erasure, or a\n  device's worker could rotate its subscription forever.\n* **No RLS on device rows**: a device row is the account's, never a company's (the\n  role is checked per company at send time); a sessionless route under forced RLS\n  answers 404. An app whose table is FORCE RLS (keksdose) runs the lookup and the\n  update under its bypass with an explicit endpoint filter — this route only.\n* **Never log or echo the body**: its 422 answers a plain detail, never the input (a\n  validation echo would hand ``old_auth`` back) — take the body untyped and parse it\n  with :func:`parse_push_replace` (0.17.0). A leaked row's ``keys.auth`` is enough to\n  redirect that person's future pushes.\n* Rate-limit it as the other unauthenticated routes.",
           "fields": [
             {
               "name": "old_endpoint",
@@ -6487,7 +6506,7 @@
           "name": "QuietHoursUpdate",
           "kind": "model",
           "signature": "class QuietHoursUpdate(BaseModel)",
-          "doc": "The quiet hours in the ``PATCH``: ``HH:MM`` bounds; ``null`` clears each. No zone:\nit is the account's (§10.3, automatic only). A ``timezone`` (a stale 0.45 bundle's, also\nthrough keksdose's ``/push/settings`` shim) is ignored in 0.16, refused from 0.17.",
+          "doc": "The quiet hours in the ``PATCH``: ``HH:MM`` bounds; ``null`` clears each. No zone:\nit is the account's (§10.3, automatic only). A ``timezone`` (a stale 0.45 bundle's, also\nthrough keksdose's ``/push/settings`` shim) is ignored in 0.16 and 0.17, refused from 0.18.",
           "fields": [
             {
               "name": "quiet_hours_start",
@@ -6692,6 +6711,18 @@
           "doc": "The app's 15-minute tick (§10.4 Settled): flush, then purge. Call it from the app's\nown job path — keksdose's tick job, kastlan's ``/ops/jobs/notifications-flush`` — or\nmount ``eifi1_server_kit.notifications.router.notifications_jobs_router``.\n\nIdempotent, so a job runner may retry it (keksdose's product-metrics job,\n``--max-retries=1``): a sent row is done, a claimed one waits out\n:data:`QUEUE_CLAIM_TIMEOUT`, and a resend carries the same ``Idempotency-Key``."
         },
         {
+          "name": "parse_push_body",
+          "kind": "function",
+          "signature": "parse_push_body[M: BaseModel](model: type[M], body: object) -> M",
+          "doc": "``body`` validated as ``model`` — a push route's body taken untyped\n(``body: Annotated[Any, Body()]``) so FastAPI never answers it with a 422 that echoes\nthe secret inside (0.17.0, keksdose S1).\n\nA body that is no valid ``model`` raises :class:`~.errors.PushBodyInvalidError` (422,\n``push_body_invalid``) naming the failing fields, with no value and no chained\n:class:`~pydantic.ValidationError` (whose text carries the input) — so neither the\nanswer nor a logged traceback holds ``old_auth`` or a key. Log nothing of the body\neither."
+        },
+        {
+          "name": "parse_push_replace",
+          "kind": "function",
+          "signature": "parse_push_replace(body: object) -> PushReplaceIn",
+          "doc": ":class:`PushReplaceIn` from ``POST /notifications/devices/replace``'s untyped body:\n:func:`parse_push_body` for the replace route, whose ``old_auth`` must never come back\nin a 422::\n\n    @router.post(\"/notifications/devices/replace\", response_model=PushDeviceResponse)\n    async def replace(body: Annotated[Any, Body()]) -> PushDeviceResponse:\n        request = parse_push_replace(body)  # PushBodyInvalidError → plain 422\n        ..."
+        },
+        {
           "name": "plan_delivery",
           "kind": "function",
           "signature": "plan_delivery(notification_type: NotificationType, switches: TypeSwitches, *, active: bool, is_actor: bool, quiet_now: bool, email_verified: bool, keeps_inbox: bool, service: bool = False) -> Delivery",
@@ -6755,7 +6786,7 @@
           "name": "unsubscribe_key",
           "kind": "function",
           "signature": "unsubscribe_key(secret: str | bytes) -> bytes",
-          "doc": "The token's key: HMAC-SHA256 of ``eifi1-notifications-unsubscribe`` under the app's\nsigning secret (its JWT secret). 32 bytes."
+          "doc": "The token's key: HMAC-SHA256 of ``eifi1-notifications-unsubscribe`` under the app's\ndedicated unsubscribe secret (its own setting, not the JWT secret). 32 bytes."
         },
         {
           "name": "unsubscribe_token",
@@ -10384,7 +10415,7 @@
     {
       "name": "eifi1_server_kit.errors",
       "summary": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.",
-      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, the dev switch's\n:class:`~eifi1_server_kit.dev_switch.DevSwitchError` 404 / 409 / 422, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422, and tour\nprogress's :class:`~eifi1_server_kit.tours.TourProgressError` 422).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.",
+      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, the dev switch's\n:class:`~eifi1_server_kit.dev_switch.DevSwitchError` 404 / 409 / 422, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422, and tour\nprogress's :class:`~eifi1_server_kit.tours.TourProgressError` 422).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.\n\n**A 422 never echoes the request** (0.17.0). FastAPI's own ``RequestValidationError``\nanswer puts each error's ``input`` (and ``ctx``, and pydantic's ``url``) in the body — so\na too-long password in ``LoginRequest``, ``EmailChangeRequest`` or ``DeletionRequest``, a\nmalformed ``EmailChangeConfirm`` token, any body's values came back in the 422 and landed\nin request and response logs. On a FastAPI app the installer also registers\n:func:`validation_error_response`: FastAPI's same shape, ``{\"detail\": [{\"type\", \"loc\",\n\"msg\"}, ...]}``, without ``input``, ``ctx`` or ``url``, for every route — no app has to\ntake bodies untyped and parse them by hand. An app's own ``RequestValidationError``\nhandler is kept: registered before the call, the kit leaves it alone; registered after,\nit replaces the kit's as any later registration does. ``redact_validation_errors=False``\nkeeps FastAPI's echoing answer.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.7",
@@ -10413,8 +10444,14 @@
         {
           "name": "install_contract_error_handlers",
           "kind": "function",
-          "signature": "install_contract_error_handlers(app: Starlette) -> None",
-          "doc": "Answer every uncaught kit refusal at its contract status, beside any ``ValueError`` handler.\n\nCall it while building the app, before the first request (Starlette builds its\nmiddleware stack, handlers included, once). Works on a FastAPI app — it is a\nStarlette one."
+          "signature": "install_contract_error_handlers(app: Starlette, *, redact_validation_errors: bool = True) -> None",
+          "doc": "Answer every uncaught kit refusal at its contract status, beside any ``ValueError`` handler.\n\nCall it while building the app, before the first request (Starlette builds its\nmiddleware stack, handlers included, once). Works on a FastAPI app — it is a\nStarlette one.\n\nOn a FastAPI app it also answers every request validation error with\n:func:`validation_error_response` — FastAPI's 422 without the request's values\n(0.17.0) — unless the app registered its own ``RequestValidationError`` handler\nbefore the call (kept) or after it (replaces the kit's), or passes\n``redact_validation_errors=False``."
+        },
+        {
+          "name": "validation_error_response",
+          "kind": "function",
+          "signature": "async validation_error_response(_request: Request, exc: Exception) -> Response",
+          "doc": "FastAPI's 422, ``{\"detail\": [{\"type\", \"loc\", \"msg\"}, ...]}``, with no error's\n``input``, ``ctx`` or ``url`` — the ``RequestValidationError`` handler\n:func:`install_contract_error_handlers` registers on a FastAPI app (0.17.0), for an app\nthat registers it itself.\n\n``loc`` names the field (``[\"body\", \"password\"]``) and ``msg`` is pydantic's or the\nvalidator's own words — so a validator of the app's that writes the value into its\nmessage still echoes it there; the kit's never do."
         }
       ]
     },
