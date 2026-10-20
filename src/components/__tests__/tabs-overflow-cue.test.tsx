@@ -6,7 +6,7 @@ import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 /**
- * `overflowCue` (0.40, kk run 79 gap 1): the caret beside a scrolling strip below `md` —
+ * `overflowCue` (0.40, kk run 79 gap 1): the caret beside a scrolling strip (every width since 0.46) —
  * › while tabs lie past the end (a tap scrolls ~75 %), ‹ at the end (back to the first).
  * keksdose's `tab-strip-more.tsx` is what it replaces.
  *
@@ -61,8 +61,9 @@ describe("Tabs overflowCue", () => {
     const more = screen.getByRole("button", { name: "More tabs" });
     // Out of the tab order: the strip is one stop, walked with the arrow keys.
     expect(more).toHaveAttribute("tabindex", "-1");
-    // Below md only.
-    expect(more.closest("[data-tabs-overflow-cue]")).toHaveClass("md:hidden");
+    // At every width (0.46, keksdose live #410 round 3): it renders only while the strip
+    // overflows, and a wide strip overflows from md up too.
+    expect(more.closest("[data-tabs-overflow-cue]")).not.toHaveClass("md:hidden");
     fireEvent.click(more);
     expect(scrollBy).toHaveBeenCalledWith(expect.objectContaining({ left: 225 }));
   });

@@ -48,6 +48,34 @@ export interface TourStep {
    *  first, then the tour steps forward on a microtask. The spotlight hole stays
    *  click-through to the target; the rest of the page does not. */
   awaitClick?: boolean;
+  /**
+   * The spotlighted control is for USING, not only for looking at (0.46, keksdose live
+   * #436): the layers it opens sit above the scrim and work. A plain step's overlay is
+   * `z-[60]`, over every kit layer, so a field whose number pad (`NumberPadSheet`), a
+   * select's menu or a popover opens at `z-50` opened UNDER the shields, where nothing
+   * could be tapped. Here the overlay drops to `z-[45]`: still over the top bar and the
+   * page (`z-40` and below, still dimmed and shielded), under every `z-50` layer the
+   * target opens — so an app's own layer wants `z-50` or more to clear it. Keys pressed
+   * in the target or in such a layer are theirs (Escape closes the pad, arrows walk a
+   * list); from the card the tour's keys work as on any step. The overlay is not
+   * `aria-modal` then, and carries `data-tour-interactive`.
+   *
+   * The card is in the same layer as the scrim, so an open pad or sheet may cover it
+   * until it closes. Requires `target`. A `HoverMenu` (`z-40`, the top bar's menus) stays
+   * under the scrim: point an `awaitClick` step at its trigger instead.
+   */
+  interactive?: boolean;
+  /**
+   * Advance once a value was ENTERED in the spotlighted control (0.46, keksdose live
+   * #436) — `awaitClick` for a field. Implies `interactive`. Counted when focus leaves
+   * the target (the number pad's Done, a Tab, a tap elsewhere), or Enter is pressed in
+   * it, and one of its fields (`input`, `textarea`, `select`: the target itself or
+   * inside it) then holds another value than when the step began; a native `change`
+   * (a select, a checkbox) counts at once. The card swaps Next for `awaitInputHint`,
+   * as for `awaitClick`. A picker whose value is not a field's (the kit's `Select`
+   * button) has nothing to compare: call `useTour().next()` from its `onChange`.
+   */
+  awaitInput?: boolean;
   /** Runs before the step is shown — e.g. navigate to a route, open a panel.
    *  May be async; the step waits for it, then locates the target. */
   beforeStep?: () => void | Promise<void>;
@@ -60,6 +88,8 @@ export interface TourLabels {
   done: string;
   /** Shown in place of the Next button on an `awaitClick` step. */
   awaitClickHint: string;
+  /** Shown in place of the Next button on an `awaitInput` step (0.46). */
+  awaitInputHint: string;
   /** Step counter, e.g. (2, 7) => "2 / 7". */
   step: (current: number, total: number) => string;
 }
@@ -479,6 +509,48 @@ function TourOverlay({
     return () => el.removeEventListener("click", onClick);
   }, [ready, spotted, index, step, onNext]);
 
+  // An interactive step (see `TourStep.interactive`): only while the target is lit — a
+  // step whose target is missing centres its card over a full scrim, modal as ever.
+  const interactive = spotted && !!step.target && !!(step.interactive || step.awaitInput);
+
+  // awaitInput: advance once the target's fields hold another value than when the step
+  // was armed, checked when focus leaves the target or Enter is pressed in it — on the
+  // next macrotask, after the field's own blur/Enter commit has rendered. A value the
+  // number pad typed fires no native `change`, so comparing is what catches it.
+  useEffect(() => {
+    if (!ready || !spotted || !step.awaitInput || !step.target) return;
+    const el = queryVisibleTarget(step.target) as HTMLElement | null;
+    if (!el) return;
+    const read = () => fieldValues(el);
+    const before = read();
+    let timer = 0;
+    let done = false;
+    const check = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (done || read() === before) return;
+        done = true;
+        onNext();
+      }, 0);
+    };
+    const onFocusOut = (e: FocusEvent) => {
+      if (e.relatedTarget instanceof Node && el.contains(e.relatedTarget)) return;
+      check();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") check();
+    };
+    el.addEventListener("focusout", onFocusOut);
+    el.addEventListener("keydown", onKeyDown);
+    el.addEventListener("change", check);
+    return () => {
+      window.clearTimeout(timer);
+      el.removeEventListener("focusout", onFocusOut);
+      el.removeEventListener("keydown", onKeyDown);
+      el.removeEventListener("change", check);
+    };
+  }, [ready, spotted, index, step, onNext]);
+
   // Keyboard: Esc skips, Enter and the reading-direction arrow advance (→ in LTR,
   // ← in RTL), the other arrow goes back. On awaitClick steps Enter is ignored (it
   // would fire the target's click AND advance) — the forward arrow stays as an escape
@@ -490,12 +562,18 @@ function TourOverlay({
   // The same goes for arrows in a text field a step's `action` might contain.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // On an interactive step a key pressed in the target, or in a layer it opened (the
+      // number pad's Escape, a menu's arrows), is the page's. The card's and the bare
+      // page's (focus on <body>) stay the tour's.
+      if (interactive && e.target instanceof Node && e.target !== document.body && !rootRef.current?.contains(e.target)) {
+        return;
+      }
       if (e.key === "Escape") {
         onSkip();
         return;
       }
       if (e.key === "Enter") {
-        if (step.awaitClick || ownsKey(e.target, "Enter")) return;
+        if (step.awaitClick || step.awaitInput || ownsKey(e.target, "Enter")) return;
         e.preventDefault();
         onNext();
         return;
@@ -512,7 +590,7 @@ function TourOverlay({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [isFirst, step, onNext, onPrev, onSkip]);
+  }, [isFirst, step, interactive, onNext, onPrev, onSkip]);
 
   if (!ready) return null;
 
@@ -532,9 +610,12 @@ function TourOverlay({
   return createPortal(
     <div
       ref={rootRef}
-      className="pointer-events-none fixed inset-0 z-[60]"
+      // z-[45] on an interactive step: over the top bar (z-40), under the z-50 layers the
+      // target opens. See `TourStep.interactive`.
+      className={cn("pointer-events-none fixed inset-0", interactive ? "z-[45]" : "z-[60]")}
       role="dialog"
-      aria-modal="true"
+      aria-modal={interactive ? undefined : "true"}
+      data-tour-interactive={interactive ? "" : undefined}
       aria-label={step.title}
       dir={dir}
     >
@@ -588,6 +669,18 @@ function TourOverlay({
     </div>,
     document.body,
   );
+}
+
+/** The values of the fields at or inside `el`, as one string to compare (`awaitInput`). */
+function fieldValues(el: Element): string {
+  const fields = el.matches("input,textarea,select") ? [el] : Array.from(el.querySelectorAll("input,textarea,select"));
+  return fields
+    .map((f) =>
+      f instanceof HTMLInputElement && (f.type === "checkbox" || f.type === "radio")
+        ? String(f.checked)
+        : (f as HTMLInputElement).value,
+    )
+    .join("\u0000");
 }
 
 /** Does the focused element handle `key` itself? Enter on a button or link, and any
@@ -792,16 +885,16 @@ function TourCard({
                 way forward on any step whose anchor happens not to be rendered
                 for this user (a guest sees no "add account" button), leaving the
                 undocumented ArrowRight key as the sole escape. */}
-            {!(step.awaitClick && step.target && rect) && (
+            {!((step.awaitClick || step.awaitInput) && step.target && rect) && (
               <Button variant="brand" onClick={onNext} className={cn("px-2.5 py-1 text-xs")}>
                 {isLast ? labels.done : labels.next}
               </Button>
             )}
           </div>
         </div>
-        {step.awaitClick && step.target && rect && (
+        {(step.awaitClick || step.awaitInput) && step.target && rect && (
           <div className="text-center text-xs italic text-placeholder">
-            {labels.awaitClickHint}
+            {step.awaitInput && !step.awaitClick ? labels.awaitInputHint : labels.awaitClickHint}
           </div>
         )}
       </div>

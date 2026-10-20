@@ -283,7 +283,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `INBOX_BADGE_INTERVAL`, `NotificationBell`, `useDeviceZoneReport`, and `useKitTimeZone`,
   // the provider's `timeZone` (`TimeZoneSetting` dropped before release: the zone is automatic
   // only, amended 2026-10-20).
-  ["@eifi1/ui-kit", barrel, 984],
+  ["@eifi1/ui-kit", barrel, 985],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -311,7 +311,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.42.0 (+2): `adminMenuEntry`, `AdminMenuRow` (docs/admin-harmonization.md §6.6).
   // 0.42.0 (+10): the top bar's parts (docs/top-bar-harmonization.md §3.1, see the barrel).
   // 0.43.0 (+1): `useAdminMenuEntry` (the 0.42 adoptions, kastlan 2).
-  ["@eifi1/ui-kit/shell", shell, 57],
+  ["@eifi1/ui-kit/shell", shell, 58],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).

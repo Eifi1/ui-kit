@@ -612,6 +612,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       skip: "Kihagyás",
       done: "Kész",
       awaitClickHint: "A folytatáshoz kattintson a kiemelt elemre",
+      awaitInputHint: "A folytatáshoz adjon meg egy értéket a kiemelt mezőben", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page.
@@ -1853,6 +1854,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       dateFormatHelp:
         "Hogyan jelennek meg a dátumok az egész alkalmazásban. Független a felület nyelvétől, így az alkalmazást olvashatja angolul, a dátumokat mégis német formában láthatja.",
       dateFormatAuto: "A nyelvet követi",
+      // 0.46: AccountMenuTextSize (keksdose live #426).
+      textSmaller: "Kisebb szöveg",
+      textLarger: "Nagyobb szöveg",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Megjelenés". "Ön", as the rest of the catalogue.

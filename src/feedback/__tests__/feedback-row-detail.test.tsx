@@ -172,7 +172,10 @@ describe("FeedbackRowDetail — the page it was filed on", () => {
     render(<FeedbackRowDetail row={record()} canEdit={false} viewerId={OTHER} onUpdate={landing()} />);
     const link = screen.getByRole("link", { name: "/accounts?p=2#top" });
     expect(link).toHaveAttribute("href", "/accounts?p=2#top");
-    expect(screen.getByRole("link", { name: "Open page" })).toHaveAttribute("href", "/accounts?p=2#top");
+    // The one link to the page (0.46, keksdose live #449): the Replies section's "Open
+    // page" button repeated this one, a section above it.
+    expect(screen.queryByRole("link", { name: "Open page" })).toBeNull();
+    expect(screen.getAllByRole("link", { name: /accounts/ })).toHaveLength(1);
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Copy URL" }));
     });

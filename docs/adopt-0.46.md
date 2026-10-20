@@ -94,6 +94,75 @@ languages). The app reads the connection itself.
 | kastlan | **K1** shared/offline/query-persistence.ts:58-63: the `dehydrateOptions` override → `persistMutations: false` in the `createQueryPersistence` call (:50-57). **K2** the sign-in page (features/auth/pages/login-page.tsx, `LoginPage` :23) runs `removeStaleQueryCopies("kastlan", PERSIST_MAX_AGE)` on mount, for the copy a session left when it ended with no user known (auth-store.ts:121, the rehydrate "ended" path, which lands on /login through app/protected-route.tsx:87-89); providers.tsx:51 stays. Not features/auth/components/auth-page.tsx: that frame also serves not-found and the no-company page, signed in (kastlan S5). The sweep removes the ended session's copy once it is past `maxAge`, at a sign-in ≥ 24 h later (kastlan N1: what K2 asked). **K3** shared/pwa/sw-update.ts → `export const swUpdates = createServiceWorkerUpdates(registerSW)`; main.tsx:31 `swUpdates.start()`; app/pwa-update.tsx:18 → `useServiceWorkerUpdate(swUpdates)` (its names are `onReload` / `onDismiss`, the prompt's props). **K4** shared/offline/offline-lock.ts → the kit's `OFFLINE_LOCK` and `COMMIT_EXCEPT_OFFLINE` (for `COMMIT_OFFLINE_TOO`, in the handover's defect-form, room-inspector and meter-readings-card); app-layout.tsx:88 → `useOfflineWriteLock(!online)`, and `offlineSync.needsConnection` can go if the kit's words fit. |
 | Kurvenschmiede | Nothing (online-only). |
 
+## keksdose run 81: the tour's number pad, one page link, the caret, A− / A+
+
+### Tours: a step on a field is usable (`interactive`, `awaitInput`; keksdose live #436)
+
+A step's overlay sat at `z-[60]`, over every kit layer, so an `AmountInput` it spotlit
+opened its number pad (`z-50`) under the shields: on a phone nothing could be typed.
+`TourStep.interactive: true` drops the overlay to `z-[45]` (still over the top bar and the
+page, under every `z-50` layer the target opens: number pad, popovers, select menus, picker
+sheets); keys pressed in the target or its layers are theirs, and the overlay is not
+`aria-modal` then (`data-tour-interactive` marks it). `awaitInput: true` implies it and
+advances once the target's field holds a new value when focus leaves it (the pad's Done)
+or Enter is pressed — `awaitClick` for a field; the card shows `tour.awaitInputHint`
+(new, seven languages) instead of Next. A picker whose value is no field's (the kit's
+`Select`) calls `useTour().next()` from its `onChange`. Checked in Chromium (Pixel 7):
+the pad's keys are the topmost element under the tour, "42" + Done advances.
+
+| App | Change |
+| --- | --- |
+| keksdose | features/tour/tours.tsx:493 (`txn-amount`, the create-transaction tour) and features/tour/feature-tours.tsx:767 (foreign amount): add `interactive: true`, or `awaitInput: true` if typing the amount should be the step's action (then the body says "enter an amount"). |
+| kastlan, Kurvenschmiede | Optional: any step on a field, select or popover trigger. |
+
+### FeedbackRowDetail: no "Open page" button (keksdose live #449)
+
+The Replies section's "Open page" button repeated the URL section's link a section above it,
+same href; it is gone (keksdose's call; dropped rather than put behind a `showOpenPage`
+prop, since the URL link is there whenever the button was — both read the same
+`context` — so no app has a case for two). `feedbackDetail.openPage` is deprecated, removed
+in 0.47. This shows on a plain bump.
+
+| App | Change |
+| --- | --- |
+| keksdose | features/feedback/__tests__/feedback-row-link.test.tsx:114-129 ("makes the expanded row's Open page a real link") looks for the button: point it at the URL section's link (named by its path, `/budget`) or drop it. |
+| kastlan, Kurvenschmiede | Nothing, unless a test looks for the button. Drop an `openPage` override from `feedbackDetail` labels when convenient. |
+
+### Tabs: the `overflowCue` caret at every width (keksdose live #410)
+
+The caret wrapper's `md:hidden` is gone: it renders only while the strip overflows, and a
+wide strip overflows from `md` up too.
+
+| App | Change |
+| --- | --- |
+| keksdose | features/reports/reports-page.tsx:55-58 `REPORT_TABS_CUE_EVERY_WIDTH` and its use at :373 can go; reports-tab-picker.test.tsx:183 then asserts the caret without the class. |
+| kastlan, Kurvenschmiede | Nothing: a strip with `overflowCue` that overflows on a laptop now shows the caret there too. |
+
+### `AccountMenuTextSize`: A− / A+ beside the language (keksdose live #426)
+
+From `@eifi1/ui-kit` and `/shell`: `<AccountMenuTextSize value={textSize} onPick={pick} />`
+in `TopBarActionMenu`'s `children`, after `AccountMenuLanguage`. The row names the size in
+force (a polite live region) and steps Normal → Large → Extra large; A− is disabled at
+Normal, A+ at Extra large; the menu stays open. `value` defaults to the size on `<html>`;
+`onPick` is the app's (`useAccountAppearance`'s `pickTextSize`, with `appearance.saveFailed`
+as its toast). New words `appearance.textSmaller` / `textLarger`, seven languages.
+
+| App | Change |
+| --- | --- |
+| keksdose | app/account-menu.tsx:67-119 `TextSizeRow` → `<AccountMenuTextSize value={textSize} onPick={(s) => void pickTextSize(s).catch(() => toast.error(labels.saveFailed))} />` at :216; drop the `AArrowDown`/`AArrowUp`/`ALargeSmall`, `IconButton`, `TEXT_SIZES` imports (:6-8, :24, :28) if unused, and `topbar.text_smaller` / `text_larger` from the four catalogues. app/__tests__/top-bar.test.tsx:156-177 then finds the rows by the kit's words ("Smaller text" / "Larger text"). |
+| kastlan, Kurvenschmiede | Optional: the quick switch in their account menus. |
+
+### `AmountInput` and `NumberInput` take `help` (keksdose live #446)
+
+Nothing new in the kit: both have taken `help` since 0.36 (`FieldHelpProps`, the "?" on the
+label line named "About “<label>”", the hint as the caption), and the field-help sweep
+(src/components/__tests__/field-help.test.tsx:169-173) covers them, `MoneyField` and
+`NumberField` too.
+
+| App | Change |
+| --- | --- |
+| keksdose | features/transactions/fx-estimate-row.tsx:123 passes its HelpPopover through `hint`: make it `help={<HelpPopover label={t("transactions.fx_help_label")}>{hint}</HelpPopover>}`, or `help={hint}` for the kit's "About “<label>”" name (then `transactions.fx_help_label` can go). |
+
 ## server-kit 0.16.0
 
 Install the wheel by URL, pinned by hash (0.16.0, not 0.15.1: it adds names, which server-kit's

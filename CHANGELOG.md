@@ -25,7 +25,7 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 
 Round 0.46, the three 0.45 adoptions' notes plus local-first §2, notifications §10 and feedback
 §11 (all settled 2026-10-19, the zone amended 2026-10-20), reviewed against all three apps before
-release. No export is removed and no prop changes its type; four things show on a plain bump:
+release. No export is removed and no prop changes its type; five things show on a plain bump:
 
 - A table with phone swipe actions now also gets a desktop actions column with the same actions
   (on by default, except beside `rowActions`; an app's own `DataTable` wrapper must forward
@@ -38,6 +38,8 @@ release. No export is removed and no prop changes its type; four things show on 
 - `QuietHoursSetting` given the deprecated `timezone` (keksdose's quiet-hours card) loses its
   zone picker and "Use it": the zone is shown read-only, and the first time entered no longer
   sends a zone. Pass `zone` (`/auth/me`'s `device_timezone`) instead.
+- `FeedbackRowDetail` has no "Open page" button: the URL section's link above it is the one
+  link to the page (keksdose live #449; `feedbackDetail.openPage` deprecated, removed in 0.47).
 
 New: `@eifi1/ui-kit/sync` (a new subpath: the device copy, the sync engine and its hooks; `dexie`
 is an optional peer of `/sync` only) and `@eifi1/ui-kit/push-worker` (worker-safe push handling
@@ -56,6 +58,8 @@ feedback alerts, a company rename's names logged). Per-app steps: docs/adopt-0.4
 * DateFormatSetting, push rotation, the shared pre-push check; notifications + alerts drafts ([c3e090c](https://github.com/Eifi1/ui-kit/commit/c3e090cb329dd480f57c277080b0dd238f15fbd2))
 * desktop actions from phone swipe actions, the 0.45 adoption fixes ([57775f0](https://github.com/Eifi1/ui-kit/commit/57775f09d3aaafcbf3fbc19f9793ed5d9721b724))
 * **notifications:** inbox, bell, channels, TimeZoneSetting, the push-worker subpath ([59c6748](https://github.com/Eifi1/ui-kit/commit/59c6748c579cf00ceb300046f4206a439a82d0ac))
+* **shell:** `AccountMenuTextSize`, A− / A+ for the text size beside the account menu's language (keksdose live #426)
+* **tour:** `TourStep.interactive` keeps the layers a spotlit control opens (number pad, menus, popovers) above the scrim, and `awaitInput` advances once a value was entered (keksdose live #436)
 * **sync:** @eifi1/ui-kit/sync — the device copy, the sync engine and its hooks ([343a959](https://github.com/Eifi1/ui-kit/commit/343a95960d3a021a75b4228ee1542f92d82640a2))
 
 ### Fixed
@@ -63,6 +67,8 @@ feedback alerts, a company rename's names logged). Per-app steps: docs/adopt-0.4
 * **showcase,notifications:** deprecations name their removal, a family demo file, 15 needs ([6843850](https://github.com/Eifi1/ui-kit/commit/6843850b706b3eb57c7bd63dd1f45f251881df57))
 * **sync,notifications:** the build review 2 fixes; the zone automatic only ([c29a158](https://github.com/Eifi1/ui-kit/commit/c29a158b5aa08481747cb0f5b70372bc35b7b59d))
 * **sync,notifications:** a stopped engine never runs a round it waited for; zone report per account ([e0c9253](https://github.com/Eifi1/ui-kit/commit/e0c92539138f3f86ce2f07bfa21dad6cfc9be864))
+* **feedback:** FeedbackRowDetail drops the "Open page" button that repeated the URL link (keksdose live #449)
+* **tabs:** the `overflowCue` caret shows at every width while the strip overflows, not below `md` only (keksdose live #410)
 * **translation-review:** an open row's top line swipes, keeping the editor's draft; no swipe while the editor's own write is out (keksdose live #416) ([8c27e76](https://github.com/Eifi1/ui-kit/commit/8c27e76f70542fc1edb36470f0bb39d56c80e89a))
 * **translation-review,admin:** the row action's own name; the kit's hint only with its label ([be4c6a5](https://github.com/Eifi1/ui-kit/commit/be4c6a5b03c063153de9cee1b4229ef63ae1d4c9))
 

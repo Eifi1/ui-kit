@@ -34,6 +34,10 @@ export interface AppearanceLabels {
   dateFormatHelp: string;
   /** Its first option, followed by that language's sample: "Follow language — 01 Aug 2026". */
   dateFormatAuto: string;
+  /** `AccountMenuTextSize`'s A− button (0.46, keksdose live #426): one step smaller. */
+  textSmaller: string;
+  /** Its A+ button: one step larger. */
+  textLarger: string;
 }
 
 export const DEFAULT_APPEARANCE_LABELS: AppearanceLabels = {
@@ -48,6 +52,8 @@ export const DEFAULT_APPEARANCE_LABELS: AppearanceLabels = {
   dateFormatHelp:
     "How dates are written throughout the app. Independent of the interface language, so you can read the app in English and still see German dates.",
   dateFormatAuto: "Follow language",
+  textSmaller: "Smaller text",
+  textLarger: "Larger text",
 };
 
 /** The `appearance` namespace, resolved — English, then the provider, then `labels`. For
