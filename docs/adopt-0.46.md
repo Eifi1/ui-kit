@@ -70,6 +70,30 @@ its column follows the rule. A test that asserts the `sr-only` class on an actio
 (the kit's own did, row-actions.layout.test.tsx) fails on the bump; one that finds the
 column header by its name (`getByRole("columnheader", { name: "Actions" })`) still passes.
 
+### server-kit 0.16.1: the admin row drops the device zone; the profile PATCH drops an unknown zone (KS round 048)
+
+Two fixes on a plain wheel bump (0.16.0 → 0.16.1), nothing renamed:
+
+- **`AdminUserRow` no longer carries `device_timezone`** (KS 1). It inherited the field from
+  `UserResponse`, so the roster answered where each person's device last was — their own data,
+  a location signal the roster has no use for. From 0.16.1 the row reads an account that has
+  the field and never answers it (not in the dump, not in the schema). `UserResponse`, `/auth/me`
+  and the export keep it. `AdminUserRow` was the only admin-facing model built on `UserResponse`.
+- **`PATCH /auth/me` drops an unknown zone, as sign-up does** (KS 2, kastlan N1). A browser
+  whose tzdata is newer than the server's names a zone `zoneinfo` doesn't know. In 0.16.0
+  `ProfileUpdate.device_timezone` refused it with a 422, so `useDeviceZoneReport` failed on every
+  start, and silently, because it swallows the error. From 0.16.1 such a name, or any value that
+  is not a name (`42`, `""`, longer than 64), is **dropped**: left unset, so `apply_zone_update`
+  writes nothing and the rest of the PATCH still applies (200). This mirrors
+  `RegisterRequest`. An explicit `null` stays a 422. `ZoneName` itself is unchanged, so an
+  app's own field typed with it still refuses an unknown zone.
+
+| App | Touch points |
+| --- | --- |
+| keksdose | Nothing to change: the 0.16 adoption hasn't landed on main yet. Adopt 0.16.1 directly, and don't write a 422 test for an unknown zone on `PATCH /auth/me`. |
+| kastlan | tests/api/test_device_timezone.py:24-29 `test_an_unknown_zone_is_refused_and_the_stored_one_kept`: `Mars/Olympus` now answers 200 (not 422), and the stored `Europe/Zurich` is kept. Rename the test and fix the module docstring (:3, "PATCH an unknown zone is a 422"). `KastlanAdminUserRow` (domain/schemas/user_admin.py:29) loses `device_timezone` with the kit's row, so there is nothing to code. |
+| Kurvenschmiede | backend/tests/api/test_account.py:291-293 (`test_the_device_zone_is_a_report_never_a_pick`, from :281): `Mars/Olympus_Mons` answers 200, and the stored `America/New_York` stays. Reword the docstring (:283-285, "is the kit's 422"). The admin row (backend/kurvenschmiede/domain/schemas/admin.py:74-77) drops its always-null `device_timezone` and the comment. The frontend's `device_timezone?` (frontend/src/shared/types/admin.ts:41) and `test_admin_schemas` follow. **Two 0.16 touch points the 0.16.0 rows missed** (KS 3): (a) vulture: `AdminAlerts.filed` is called only through the port, so it goes in backend/.vulture-baseline:37 (with its comment at :12-14, beside `completions` at :38). (b) backend/tests/api/test_notifications.py: the 422 case `{"types": {}, "timezone": …}` answers 200 in 0.16, because `NotificationSettingsUpdate` drops `timezone` for this release. It is replaced by an unknown field, `{"types": {}, "digest": "daily"}` (:166, docstring :173-175), plus a `push` refusal (`push_channel=False`, :165). |
+
 ## The 0.45 adoptions: ui-kit fixes
 
 ### `MailTestCard`: `mailBackend` is optional (keksdose N1, kastlan K6, KS 3)
