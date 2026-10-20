@@ -63,7 +63,7 @@ feedback alerts, a company rename's names logged). Per-app steps: docs/adopt-0.4
 * **showcase,notifications:** deprecations name their removal, a family demo file, 15 needs ([6843850](https://github.com/Eifi1/ui-kit/commit/6843850b706b3eb57c7bd63dd1f45f251881df57))
 * **sync,notifications:** the build review 2 fixes; the zone automatic only ([c29a158](https://github.com/Eifi1/ui-kit/commit/c29a158b5aa08481747cb0f5b70372bc35b7b59d))
 * **sync,notifications:** a stopped engine never runs a round it waited for; zone report per account ([e0c9253](https://github.com/Eifi1/ui-kit/commit/e0c92539138f3f86ce2f07bfa21dad6cfc9be864))
-* **translation-review:** an open row's top line swipes, keeping the editor's draft; no swipe while the editor's own write is out (keksdose live #416)
+* **translation-review:** an open row's top line swipes, keeping the editor's draft; no swipe while the editor's own write is out (keksdose live #416) ([8c27e76](https://github.com/Eifi1/ui-kit/commit/8c27e76f70542fc1edb36470f0bb39d56c80e89a))
 * **translation-review,admin:** the row action's own name; the kit's hint only with its label ([be4c6a5](https://github.com/Eifi1/ui-kit/commit/be4c6a5b03c063153de9cee1b4229ef63ae1d4c9))
 
 ## [0.45.0](https://github.com/Eifi1/ui-kit/compare/v0.44.0...v0.45.0) (2026-10-19)
