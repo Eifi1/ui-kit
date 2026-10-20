@@ -58,8 +58,8 @@ feedback alerts, a company rename's names logged). Per-app steps: docs/adopt-0.4
 * DateFormatSetting, push rotation, the shared pre-push check; notifications + alerts drafts ([c3e090c](https://github.com/Eifi1/ui-kit/commit/c3e090cb329dd480f57c277080b0dd238f15fbd2))
 * desktop actions from phone swipe actions, the 0.45 adoption fixes ([57775f0](https://github.com/Eifi1/ui-kit/commit/57775f09d3aaafcbf3fbc19f9793ed5d9721b724))
 * **notifications:** inbox, bell, channels, TimeZoneSetting, the push-worker subpath ([59c6748](https://github.com/Eifi1/ui-kit/commit/59c6748c579cf00ceb300046f4206a439a82d0ac))
-* **shell:** `AccountMenuTextSize`, A− / A+ for the text size beside the account menu's language (keksdose live #426)
-* **tour:** `TourStep.interactive` keeps the layers a spotlit control opens (number pad, menus, popovers) above the scrim, and `awaitInput` advances once a value was entered (keksdose live #436)
+* **shell:** `AccountMenuTextSize`, A− / A+ for the text size beside the account menu's language (keksdose live #426) ([8366552](https://github.com/Eifi1/ui-kit/commit/83665527b7e017fd32f7475b6b8b7fccfb05c623))
+* **tour:** `TourStep.interactive` keeps the layers a spotlit control opens (number pad, menus, popovers) above the scrim, and `awaitInput` advances once a value was entered (keksdose live #436) ([8366552](https://github.com/Eifi1/ui-kit/commit/83665527b7e017fd32f7475b6b8b7fccfb05c623))
 * **sync:** @eifi1/ui-kit/sync — the device copy, the sync engine and its hooks ([343a959](https://github.com/Eifi1/ui-kit/commit/343a95960d3a021a75b4228ee1542f92d82640a2))
 
 ### Fixed
@@ -67,8 +67,8 @@ feedback alerts, a company rename's names logged). Per-app steps: docs/adopt-0.4
 * **showcase,notifications:** deprecations name their removal, a family demo file, 15 needs ([6843850](https://github.com/Eifi1/ui-kit/commit/6843850b706b3eb57c7bd63dd1f45f251881df57))
 * **sync,notifications:** the build review 2 fixes; the zone automatic only ([c29a158](https://github.com/Eifi1/ui-kit/commit/c29a158b5aa08481747cb0f5b70372bc35b7b59d))
 * **sync,notifications:** a stopped engine never runs a round it waited for; zone report per account ([e0c9253](https://github.com/Eifi1/ui-kit/commit/e0c92539138f3f86ce2f07bfa21dad6cfc9be864))
-* **feedback:** FeedbackRowDetail drops the "Open page" button that repeated the URL link (keksdose live #449)
-* **tabs:** the `overflowCue` caret shows at every width while the strip overflows, not below `md` only (keksdose live #410)
+* **feedback:** FeedbackRowDetail drops the "Open page" button that repeated the URL link (keksdose live #449) ([8366552](https://github.com/Eifi1/ui-kit/commit/83665527b7e017fd32f7475b6b8b7fccfb05c623))
+* **tabs:** the `overflowCue` caret shows at every width while the strip overflows, not below `md` only (keksdose live #410) ([8366552](https://github.com/Eifi1/ui-kit/commit/83665527b7e017fd32f7475b6b8b7fccfb05c623))
 * **translation-review:** an open row's top line swipes, keeping the editor's draft; no swipe while the editor's own write is out (keksdose live #416) ([8c27e76](https://github.com/Eifi1/ui-kit/commit/8c27e76f70542fc1edb36470f0bb39d56c80e89a))
 * **translation-review,admin:** the row action's own name; the kit's hint only with its label ([be4c6a5](https://github.com/Eifi1/ui-kit/commit/be4c6a5b03c063153de9cee1b4229ef63ae1d4c9))
 
