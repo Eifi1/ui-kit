@@ -76,7 +76,7 @@ Install the wheel by URL, pinned by hash:
 
 ```
 eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.17.0/eifi1_server_kit-0.17.0-py3-none-any.whl
-sha256: SHA256_AT_RELEASE
+sha256: 5fe7f2e6ca00e5e3a9b8c45bb843d687c930329b459c667018ab1604133aa40d
 ```
 
 Fixes on a plain wheel bump (0.16.0 → 0.17.0, a minor only because it adds names), nothing renamed:
