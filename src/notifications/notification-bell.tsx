@@ -20,7 +20,7 @@ export interface NotificationBellProps<Id extends string | number = string | num
   /** Every unread row of the account (`unread_count`): the badge. */
   unreadCount: number;
   /** Open a row: the app marks it read and routes to `item.url` (kastlan switches the
-   *  acting company first). The panel closes. */
+   *  acting company first, to `item.company_id`). The panel closes. */
   onOpen: (item: NotificationInboxItem<Id>) => void;
   /** The app's inbox page or card, for "All notifications". */
   href: string;

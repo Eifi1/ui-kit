@@ -559,14 +559,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2134 names from 350 modules** — 986 values and 1148 types. _Italic_ is a type-only export.
+**2136 names from 350 modules** — 987 values and 1149 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2134 |
+| `@eifi1/ui-kit` | 2136 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 114 |
 | `@eifi1/ui-kit/data-table` | 53 |
@@ -580,8 +580,8 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 11 |
 | `@eifi1/ui-kit/rhf` | 48 |
-| `@eifi1/ui-kit/offline` | 32 |
-| `@eifi1/ui-kit/sync` | 35 |
+| `@eifi1/ui-kit/offline` | 33 |
+| `@eifi1/ui-kit/sync` | 38 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
 
@@ -1005,16 +1005,16 @@ re-slicing of it, never a second API.
 | `notifications/notification-types` | _`DigestCadence`_, _`NotificationChannel`_, _`NotificationSettingsPatch`_, _`NotificationSwitches`_, _`NotificationTypeEntry`_, _`NotificationTypeGroup`_, _`NotificationTypesValue`_, _`PushDeviceItem`_ |
 | `notifications/notification-types-setting` | `NotificationTypesSetting`, _`NotificationTypesSettingProps`_ |
 | `notifications/quiet-hours-setting` | `QuietHoursSetting`, _`QuietHoursSettingProps`_ |
-| `notifications/time-zone-select` | `deviceTimeZone`, `timeZoneOptions`, `TimeZoneSelect`, _`TimeZoneSelectProps`_ |
-| `notifications/notification-inbox` | `INBOX_BADGE_INTERVAL`, `NotificationInbox`, _`NotificationInboxItem`_, _`NotificationInboxProps`_ |
+| `notifications/time-zone-select` | `timeZoneOptions`, `TimeZoneSelect`, _`TimeZoneSelectProps`_ |
+| `notifications/notification-inbox` | `INBOX_BADGE_INTERVAL`, `NotificationInbox`, _`NotificationInboxAction`_, _`NotificationInboxItem`_, _`NotificationInboxProps`_ |
 | `notifications/notification-bell` | `NotificationBell`, _`NotificationBellProps`_ |
-| `notifications/device-zone-report` | `useDeviceZoneReport`, _`DeviceZoneReportOptions`_ |
+| `notifications/device-zone-report` | `deviceTimeZone`, `useDeviceZoneReport`, _`DeviceZoneReportOptions`_ |
 | `notifications/use-push-device` | `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
 | `notifications/push-worker` | `handlePushSubscriptionChange`, `pushSubscriptionInput`, `resubscribeAfterChange`, _`PushReplaceInput`_, _`PushResubscribeOutcome`_, _`PushSubscriptionChangeEventLike`_, _`PushSubscriptionChangeOptions`_, _`PushWorkerScope`_ |
 | `notifications/push-device-setting` | `PushDeviceSetting`, _`PushDeviceAction`_, _`PushDeviceSettingProps`_ |
 | `notifications/push-devices-setting` | `describeUserAgent`, `PushDevicesSetting`, _`PushDevicesSettingProps`_ |
 | `notifications/unsubscribe-panel` | `UnsubscribePanel`, `unsubscribeTokenType`, _`UnsubscribePanelProps`_ |
-| `notifications/feedback-notification-types` | `DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS`, `useFeedbackNotificationTypes`, _`FeedbackNotificationTypeId`_, _`FeedbackNotificationTypesLabels`_ |
+| `notifications/feedback-notification-types` | `DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS`, `useFeedbackNotificationTypes`, `useFeedbackNotificationTypesLabels`, _`FeedbackNotificationTypeId`_, _`FeedbackNotificationTypesLabels`_ |
 
 ### demo
 

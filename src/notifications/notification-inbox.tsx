@@ -38,7 +38,14 @@ export interface NotificationInboxItem<Id extends string | number = string | num
   /** 0.46 (server-kit 0.16 `InboxItem.company`): the company the row is about, named on
    *  the row — kastlan's inbox holds every company's rows. */
   company?: string | null;
+  /** 0.46.1 (server-kit 0.16.1 `InboxItem.company_id`): the same company by its id, so
+   *  `onOpen` switches to it exactly (two companies may share a name). */
+  company_id?: number | string | null;
 }
+
+/** The inbox request that failed, as `describeError` gets it (0.46.1): one row marked read,
+ *  "Mark all as read", or "Clear all". */
+export type NotificationInboxAction = "read" | "readAll" | "clear";
 
 export interface NotificationInboxProps<Id extends string | number = string | number>
   extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
@@ -53,7 +60,7 @@ export interface NotificationInboxProps<Id extends string | number = string | nu
   onClear: () => Promise<unknown> | void;
   /**
    * Open a row: the kit marks it read first, then calls this, and the app routes to
-   * `item.url` (kastlan switches the acting company first). Every row is a button then.
+   * `item.url` (kastlan switches the acting company, `item.company_id`, first). Every row is a button then.
    * Left out, a row with a `url` is a real link — an in-app path through the provider's
    * router link, an absolute URL in a new tab — that marks itself read on a click or a
    * middle click (keksdose #451), and a row without one marks itself read.
@@ -72,8 +79,11 @@ export interface NotificationInboxProps<Id extends string | number = string | nu
   formatDate?: (iso: string) => string;
   /** The heading. Default `labels.inboxTitle` ("Inbox"). */
   title?: ReactNode;
-  /** The app's own words for a failed request, or `undefined` for the kit's `failed`. */
-  describeError?: (error: unknown) => ReactNode | undefined;
+  /** The app's own words for a failed request, or `undefined` for the kit's `failed`.
+   *  `action` (0.46.1) says which request failed: `"read"` (one row), `"readAll"` ("Mark
+   *  all as read") or `"clear"` ("Clear all") — so a failed mark-read is not worded as a
+   *  failed clear. */
+  describeError?: (error: unknown, action: NotificationInboxAction) => ReactNode | undefined;
   labels?: LabelOverride<NotificationsLabels>;
 }
 
@@ -141,7 +151,7 @@ export function NotificationInbox<Id extends string | number = string | number>(
       (error: unknown) => {
         if (!mounted.current) return;
         setBusy(null);
-        setFailure(describeFailure(describeError?.(error), labels.failed));
+        setFailure(describeFailure(describeError?.(error, which === "read" ? "readAll" : "clear"), labels.failed));
       },
     );
   };
@@ -150,7 +160,7 @@ export function NotificationInbox<Id extends string | number = string | number>(
   const markOne = (item: NotificationInboxItem<Id>) => {
     if (item.read_at !== null) return;
     settle(() => onMarkRead([item.id])).catch((error: unknown) => {
-      if (mounted.current) setFailure(describeFailure(describeError?.(error), labels.failed));
+      if (mounted.current) setFailure(describeFailure(describeError?.(error, "read"), labels.failed));
     });
   };
 

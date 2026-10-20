@@ -2,7 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { QuietHoursSetting } from "../quiet-hours-setting";
-import { deviceTimeZone, timeZoneOptions } from "../time-zone-select";
+import { timeZoneOptions } from "../time-zone-select";
+import { deviceTimeZone } from "../device-zone-report";
 import { DEFAULT_NOTIFICATIONS_LABELS } from "../notifications-labels";
 import { axeViolations } from "../../test/axe";
 

@@ -5,21 +5,17 @@ import type { LabelOverride } from "../i18n/kit-labels";
 import type { ComboOption } from "../components/combobox-core";
 import { InlineEntityCombobox } from "../components/inline-entity-combobox";
 import type { CommitScope } from "../components/write-lock";
+import { deviceTimeZone as zoneOfDevice } from "./device-zone-report";
 import { useNotificationsLabels } from "./notification-parts";
 import type { NotificationRegionLabels, NotificationsLabels } from "./notifications-labels";
 
 /**
- * This device's IANA zone ("Europe/Zurich"), or `"UTC"` where the runtime names none —
- * the zone `useDeviceZoneReport` reports, which becomes the account's (§10.3, automatic
- * only).
+ * This device's IANA zone — the same function as the package root's, which lives beside
+ * `useDeviceZoneReport` now (0.46.1).
+ * @deprecated 0.46 — import `deviceTimeZone` from `@eifi1/ui-kit` (notifications/device-zone-report); this
+ * module is removed in 0.47.
  */
-export function deviceTimeZone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-  } catch {
-    return "UTC";
-  }
-}
+export const deviceTimeZone: () => string = zoneOfDevice;
 
 /** Every zone the runtime lists; `[]` where `Intl.supportedValuesOf` is missing. */
 function runtimeZones(): string[] {

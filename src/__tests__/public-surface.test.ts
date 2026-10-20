@@ -284,7 +284,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // the provider's `timeZone` (`TimeZoneSetting` dropped before release: the zone is automatic
   // only, amended 2026-10-20).
   // 0.46.1 (+1): `swipePlanRowActions`, via the /data-table slice (keksdose N3).
-  ["@eifi1/ui-kit", barrel, 986],
+  // 0.46.1 (+1, keksdose N9): `useFeedbackNotificationTypesLabels`, the words with `adminGroup`;
+  // `deviceTimeZone` now comes from notifications/device-zone-report (N6, same name, ±0).
+  ["@eifi1/ui-kit", barrel, 987],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -347,12 +349,15 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `useServiceWorkerUpdate`.
   // 0.46.0 (+4, local-first §2.3): the leaf utilities `stampAfter`, `isOfflineError`,
   // `readLocalFirst`, `writeLocalFirst`, shared with `/sync` from one module.
-  ["@eifi1/ui-kit/offline", offline, 18],
+  // 0.46.1 (+1, kastlan N5): `uuid5`, the name-based id beside `stampAfter`.
+  ["@eifi1/ui-kit/offline", offline, 19],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the
   // four leaf utilities `/offline` exports too. Standalone: its Dexie peer stays out of the barrel.
-  ["@eifi1/ui-kit/sync", sync, 14],
+  // 0.46.1 (+3, kastlan N4/N5): `rowByPk`, `SYNC_DB_PK_INDEX` (the opt-in `[entity+pk]` index)
+  // and the leaf `uuid5`.
+  ["@eifi1/ui-kit/sync", sync, 17],
   // 0.46.0: `createFakeSyncTransport`, the scripted `/sync` server for an app's tests.
   ["@eifi1/ui-kit/sync/testing", syncTesting, 1],
   // 0.46.0 (docs/notifications-harmonization.md §10.6 rule 5): the service worker's entry —

@@ -855,6 +855,13 @@ create.**
   handover pages do: it is used where the connection is worst.
 - The write lock: a control that queues takes `commit={COMMIT_EXCEPT_OFFLINE}` (§1.6); everything
   else stays "Needs a connection".
+- **Check each queued write also has its REST twin, or make the page copy-only** (amended
+  2026-10-20, kastlan's 0.46 adoption N6). `writeLocalFirst(rest, queue)` needs an online
+  write for every change the scope queues. kastlan's work-order costs (§2.5 "costs offline") had
+  only `/work-orders/{id}/status` online, so kastlan added `PATCH /work-orders/{id}`
+  (`WorkOrderProgressUpdate`); schedules had no route at all, so their page reads and writes the
+  copy only (as the handover and recording pages do). A page starts from a server id (`/meters/7`):
+  its copy row is `rowByPk(db, entity, pk)` (ui-kit 0.46.1, by the opt-in `SYNC_DB_PK_INDEX`).
 
 **D17 The indicator (D9, now); the legacy photo queue is kept in 0.46.** ka shows the kit's
 `SyncStatusIndicator` always, without `hideWhenIdle` and without the handover `scope` words, fed by

@@ -716,7 +716,8 @@ zone `Intl.supportedValuesOf("timeZone")` lists, as its city ("Argentina / Bueno
 under its region in the kit's words; a zone with no region ("UTC") first; a region the
 labels don't know keeps its IANA name; a stored zone the runtime doesn't list is kept;
 not clearable (keksdose `notifications-card.tsx:131-146`). Also exports
-`timeZoneOptions(current, regionLabel)` and `deviceTimeZone()`.
+`timeZoneOptions(current, regionLabel)` and `deviceTimeZone()` (0.46.1: `deviceTimeZone` lives in
+`device-zone-report.ts` beside `useDeviceZoneReport`; this module keeps a deprecated alias, removed in 0.47).
 
 **`usePushDevice(options) → PushDevice`** (`use-push-device.ts`), keksdose's
 `shared/push/use-push.ts`:
@@ -1603,6 +1604,8 @@ tests). kk **S** (swap its list for the kit's, bell in, avatar dot out). ka **M*
 store, the job's rows, bell, poller out). KS none.
 
 **Settled (2026-10-19).**
+- **Its errors name the action (0.46.1, keksdose N4):** `describeError(error, action)`, `action`
+  `"read" | "readAll" | "clear"`; a one-argument callback still fits.
 - **The list as proposed (1, 4, 5).** `NotificationInbox` formats through the `formatDate`
   it is given: the app's own, which keeps the device's zone in keksdose (as today), and
   `icon(type)` falls back to `Bell` (kk's `TYPE_ICONS`). A row may carry a `company` label
@@ -1625,8 +1628,13 @@ store, the job's rows, bell, poller out). KS none.
   (`domain/models/notification.py:38-39`, which has no `company_id`); the list holds every company's rows, each
   naming its company, and opening one in another company switches the acting company
   first. `dunnings_pending` gets no row: it stays a live count on the poller. **The
-  poller stays** as kastlan's OS-level alert until its push step, fed from the inbox rows
-  (and the live dunnings count) instead of its own query, and goes then. kastlan shows
+  poller stays** as kastlan's OS-level alert until its push step, and goes then.
+  **Amended 2026-10-20 (kastlan's 0.46 adoption, N9; accepted):** the poller keeps its
+  live counts, `invoices_overdue` included, and is not fed from the inbox rows. The poller
+  is the desktop alert (for those who switched "in the app" on) and clears itself when the
+  invoices are settled; the inbox lists events (days). An unread-inbox count on the poller
+  would announce days, not invoices. Both read the same `app` switch; opening a row
+  switches to its `company_id` (server-kit 0.16.1 `InboxItem.company_id`). kastlan shows
   the inbox in the bell (it has no avatar dot). **KS: no inbox**; it takes the list the day
   it has an in-app type worth a row.
 
@@ -2128,6 +2136,7 @@ docstring and the adopt row take:
 | ka | the overdue mail's day: nothing to convert | §10.3 Settled |
 | ka (a) | inbox for `invoices_overdue` only, rows in the mailing loop, `company_id` without RLS, a click switches company; what breaks (the poll tests, `endpoints.notifications.poll`, app-layout.tsx:69-72, settings-page.tsx:312-354) | §10.1 Settled; build plan |
 | ka (a) S | `app` was desktop alerts: keep the poller until push, fed from the inbox | §10.1 Settled |
+| ka N9 (0.46 adoption) | the poller keeps its live `invoices_overdue` count, not fed from the inbox | §10.1 Settled, amended 2026-10-20 |
 | ka (b) | rule 1 makes kastlan's push `false`: an app-level "no push", 422 on `{push}` | §10.2 Settled |
 | ka (c) | two columns plus `/auth/me`; billing stays Zurich; the request-path UTC bug, an app-zone `today()` | §10.3 Settled |
 | ka (d) | no second router; `JOBS` entry, interval trigger, sixth Scheduler job; only with the first queued type | §10.4 Settled |

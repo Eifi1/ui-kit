@@ -40,12 +40,13 @@ export interface SyncStepResult {
   counts?: Partial<SyncCounts>;
 }
 
-/** Work after the push/pull, such as kastlan's photo upload. */
-export interface SyncStep {
+/** Work after the push/pull, such as kastlan's photo upload. `D` is the app's database type
+ *  (`createSyncDb<HandoverDb>`), so a step reaches the app's own tables without a cast. */
+export interface SyncStep<D extends SyncDb = SyncDb> {
   name: string;
-  run(db: SyncDb, ctx: SyncStepContext): Promise<SyncStepResult>;
+  run(db: D, ctx: SyncStepContext): Promise<SyncStepResult>;
   /** Its counts read from the device between rounds (a photo taken offline shows at once). */
-  counts?(db: SyncDb): Promise<Partial<SyncCounts>>;
+  counts?(db: D): Promise<Partial<SyncCounts>>;
 }
 
 export interface SyncEngineState {
@@ -68,8 +69,9 @@ export interface SyncRoundResult {
   error?: unknown;
 }
 
-export interface SyncEngineOptions {
-  db: SyncDb;
+export interface SyncEngineOptions<D extends SyncDb = SyncDb> {
+  /** The database; its type `D` is the one the `steps` get. */
+  db: D;
   /** The scopes this session's role holds, in round order (kastlan: handover, meetings, meters,
    *  maintenance, contacts). Read at the start of every round: roles are per company. */
   scopes: () => readonly string[];
@@ -85,7 +87,7 @@ export interface SyncEngineOptions {
   holdCodes?: readonly string[];
   /** Ask for a paged pull and follow its cursor (D12). */
   paged?: boolean;
-  steps?: readonly SyncStep[];
+  steps?: readonly SyncStep<D>[];
   /** No round while this holds (kastlan: a practice tour fakes the server's answers). */
   paused?: () => boolean;
   /** The poll (30 s) and the debounce after a write (800 ms). */
@@ -186,7 +188,7 @@ const toWire = ({ entity, id, op, data, updated_at }: OutboxChange): SyncWireCha
  * engine on the new database and stops the old one). Nothing runs until `start()`
  * (`useSyncWorker`), and `start()` does nothing on a computer marked shared.
  */
-export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
+export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineOptions<D>): SyncEngine {
   const { db } = options;
   const isOffline = options.isOffline ?? isOfflineError;
   const planCode = options.planCode ?? defaultPlanCode;
@@ -674,7 +676,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
  * changing values (scopes, the client) through functions. A database object opened afresh
  * under the same name replaces the kept engine (the old one is stopped).
  */
-export function syncEngineFor(options: SyncEngineOptions): SyncEngine {
+export function syncEngineFor<D extends SyncDb = SyncDb>(options: SyncEngineOptions<D>): SyncEngine {
   const name = options.db.name;
   const found = kept.get(name);
   if (found && found.db === options.db) return found.engine;

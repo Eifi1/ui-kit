@@ -6,6 +6,7 @@ import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import {
   DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS,
   useFeedbackNotificationTypes,
+  useFeedbackNotificationTypesLabels,
 } from "../feedback-notification-types";
 
 /**
@@ -62,5 +63,19 @@ describe("useFeedbackNotificationTypes", () => {
       "receivedDescription",
       "adminGroup",
     ]);
+  });
+});
+
+describe("useFeedbackNotificationTypesLabels (0.46.1, keksdose N9)", () => {
+  it("hands an app the resolved words, `adminGroup` among them, for its own `groups`", () => {
+    expect(renderHook(() => useFeedbackNotificationTypesLabels()).result.current).toEqual(
+      DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS,
+    );
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(UiKitProvider, { labels: { feedbackNotificationTypes: { adminGroup: "Verwaltung" } }, children });
+    const { result } = renderHook(() => useFeedbackNotificationTypesLabels({ received: "Neu" }), { wrapper });
+    expect(result.current.adminGroup).toBe("Verwaltung");
+    expect(result.current.received).toBe("Neu");
+    expect(result.current.answered).toBe(DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS.answered);
   });
 });

@@ -30,7 +30,8 @@ export type FeedbackNotificationTypeId = "feedback_answered" | "feedback_comment
  * - **"New feedback and reworks"** (`feedback_received`, 0.46, feedback §11): to the
  *   admins, when someone files a report or sends one back for rework. (A crash is mailed
  *   only inside the bundle where an app runs the queue, so the text names no crash.)
- *   `labels.adminGroup` ("Admin") is a heading an app may put over it.
+ *   `labels.adminGroup` ("Admin") is a heading an app may put over it — read it with
+ *   {@link useFeedbackNotificationTypesLabels} (0.46.1) for the app's own `groups`.
  *
  * Every entry is always returned: the card draws a type only when the server answered
  * it (notifications §2.1), so kastlan, which does not declare `feedback_comment` while its
@@ -50,4 +51,21 @@ export function useFeedbackNotificationTypes(
     ],
     [words],
   );
+}
+
+/**
+ * The `feedbackNotificationTypes` words, resolved — English, then the provider, then
+ * `labels` (0.46.1, keksdose N9): what an app reads to head its own `groups` with
+ * `adminGroup` ("Admin") in the provider's locale, as {@link useFeedbackNotificationTypes}
+ * labels the entries.
+ *
+ * ```tsx
+ * const { adminGroup } = useFeedbackNotificationTypesLabels();
+ * groups={[...appGroups, { id: "admin", label: adminGroup, types: ["feedback_received"] }]}
+ * ```
+ */
+export function useFeedbackNotificationTypesLabels(
+  labels?: LabelOverride<FeedbackNotificationTypesLabels>,
+): FeedbackNotificationTypesLabels {
+  return useKitLabels("feedbackNotificationTypes", DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS, labels);
 }

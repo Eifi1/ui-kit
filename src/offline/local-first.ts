@@ -24,6 +24,30 @@ export function stampAfter(previous: unknown): string {
 }
 
 /**
+ * A name-based UUID, version 5 (RFC 4122 §4.3: SHA-1 of the namespace's 16 bytes and the
+ * name's UTF-8), the same as Python's `uuid.uuid5(uuid.UUID(namespace), name)` — for an id
+ * the device and the server derive alike (§2: the per-owner vote id
+ * `uuid5(namespace, "<item>:<invitation>")`). Lower case, hyphenated. `namespace` is a UUID,
+ * hyphenated or not, in either case; anything else is a `TypeError`. Uses `crypto.subtle`
+ * (a secure context: https or localhost).
+ */
+export async function uuid5(namespace: string, name: string): Promise<string> {
+  const hex = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(namespace)
+    ? namespace.replaceAll("-", "")
+    : null;
+  if (!hex) throw new TypeError(`uuid5: the namespace must be a UUID, not ${JSON.stringify(namespace)}`);
+  const nameBytes = new TextEncoder().encode(name);
+  const input = new Uint8Array(16 + nameBytes.length);
+  for (let i = 0; i < 16; i += 1) input[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  input.set(nameBytes, 16);
+  const bytes = new Uint8Array(await crypto.subtle.digest("SHA-1", input)).slice(0, 16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x50; // version 5
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // the RFC 4122 variant
+  const out = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${out.slice(0, 8)}-${out.slice(8, 12)}-${out.slice(12, 16)}-${out.slice(16, 20)}-${out.slice(20)}`;
+}
+
+/**
  * The connection, not the server, failed: the request had no answer (an axios-like error
  * without `response`, or `fetch`'s `TypeError`), or the session refresh marked a 401 as
  * passing because the server was out of reach ({@link isTransientRefreshFailure}). A real

@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import { isOfflineError, readLocalFirst, stampAfter, writeLocalFirst } from "../local-first";
+import { webcrypto } from "node:crypto";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { isOfflineError, readLocalFirst, stampAfter, uuid5, writeLocalFirst } from "../local-first";
 
 const noAnswer = Object.assign(new Error("Network Error"), { isAxiosError: true, response: undefined });
 const answered = (status: number) => Object.assign(new Error(`status ${status}`), { isAxiosError: true, response: { status, data: {} } });
@@ -79,5 +80,39 @@ describe("writeLocalFirst", () => {
     const refused = answered(422);
     await expect(writeLocalFirst(() => Promise.reject(refused), queue)).rejects.toBe(refused);
     expect(queue).not.toHaveBeenCalled();
+  });
+});
+
+describe("uuid5", () => {
+  const DNS = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+  const URL_NS = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
+  const OWN = "1b4e28ba-2fa1-11d2-883f-0016d3cca427";
+
+  // jsdom's `crypto` has no `subtle`; a browser's and Node's have.
+  beforeAll(() => vi.stubGlobal("crypto", webcrypto));
+  afterAll(() => vi.unstubAllGlobals());
+
+  it("matches the RFC 4122 / Python vector uuid5(NAMESPACE_DNS, 'python.org')", async () => {
+    expect(await uuid5(DNS, "python.org")).toBe("886313e1-3b8a-5372-9b90-0c9aee199e5d");
+  });
+
+  // Each expected value is Python's `uuid.uuid5(uuid.UUID(ns), name)` for the same input.
+  it.each([
+    [URL_NS, "https://example.com/a", "6639460f-3425-5329-8097-a58f06127860"],
+    [URL_NS, "", "1b4db7eb-4057-5ddf-91e0-36dec72071f5"],
+    [OWN, "12:34", "991606dd-f64d-5f69-98df-7ba64392a2f6"],
+    [OWN, "Zürich 東京", "e3fc7d47-0796-5198-b444-a5c9a32ec893"],
+  ])("uuid5(%s, %j) is Python's %s", async (ns, name, expected) => {
+    expect(await uuid5(ns, name)).toBe(expected);
+  });
+
+  it("takes the namespace in upper case or without hyphens", async () => {
+    expect(await uuid5(DNS.toUpperCase(), "python.org")).toBe("886313e1-3b8a-5372-9b90-0c9aee199e5d");
+    expect(await uuid5(DNS.replaceAll("-", ""), "python.org")).toBe("886313e1-3b8a-5372-9b90-0c9aee199e5d");
+  });
+
+  it("refuses a namespace that is not a UUID", async () => {
+    await expect(uuid5("not-a-uuid", "x")).rejects.toThrow(TypeError);
+    await expect(uuid5("6ba7b810-9dad-11d1-80b4-00c04fd430c", "x")).rejects.toThrow(TypeError);
   });
 });

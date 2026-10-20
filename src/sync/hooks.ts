@@ -33,6 +33,11 @@ const idle = () => IDLE;
  * and in flight (and the steps' pending), `waitingForPlan` = `waiting`, `blocked` = `blocked`
  * + `rejected`, `lastSyncedAt` from `meta`. `onSync` is "Sync now". Without an engine, an
  * idle status that follows the browser's connection.
+ *
+ * With a `null` engine (signed out, or a computer marked shared) `status.online` follows
+ * `navigator.onLine` and its `online`/`offline` events, so an app may lean on
+ * `status.online` for its own offline lock (kastlan's offline write lock) whether or not an
+ * engine runs.
  */
 export function useSyncStatus(engine: SyncEngine | null): { status: SyncStatus; onSync: () => Promise<void> } {
   const state = useSyncExternalStore(

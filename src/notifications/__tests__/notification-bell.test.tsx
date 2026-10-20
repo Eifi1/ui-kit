@@ -78,6 +78,20 @@ describe("NotificationBell", () => {
     expect(onOpen).toHaveBeenCalledWith(ITEMS[1]);
   });
 
+  it("hands onOpen the row's company_id, so the app switches to that company exactly (0.46.1)", async () => {
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    const rows = [
+      { ...item(2), company: "Muster AG", company_id: 7 },
+      { ...item(1), company: "Muster AG", company_id: 3 },
+    ];
+    mount({ items: rows, onOpen });
+    await user.click(trigger());
+    const menu = screen.getByRole("menu", { name: "Notifications" });
+    await user.click(within(menu).getAllByRole("menuitem")[1]);
+    expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ id: 1, company: "Muster AG", company_id: 3 }));
+  });
+
   it("an empty inbox says so in the panel", async () => {
     const user = userEvent.setup();
     mount({ items: [], unreadCount: 0 });
