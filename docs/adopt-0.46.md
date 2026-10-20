@@ -23,6 +23,53 @@ diff: `TypeSwitches.push`, `InboxItem.company`, the auth zone field (`device_tim
 only, notifications §10.3 amended 2026-10-20), `SyncRequest.client_now`
 and the new `legacy_rework_append` code.
 
+## 0.46.1: every actions column has a visible "Actions" heading (keksdose dev#598 rework)
+
+Marcel, 2026-10-20: a VISIBLE "Actions" heading on every table with an actions column. In
+0.46.0 the kit's actions columns named themselves for a screen reader only; the feedback
+inbox's new desktop column was the one in keksdose that showed nothing (keksdose B1). From
+0.46.1 each of them shows the word on a plain bump, end-aligned over the buttons:
+
+- **`DataTable rowActions`**: the provider's `dataTable.actions`. New prop
+  **`rowActionsHeader?: ReactNode | false`**.
+- **The column derived from `mobileSwipeActions`**: the same word. New option
+  **`desktopSwipeActions: { header?: ReactNode | false }`**.
+- **`rowActionsColumn`**: `headerText`, else the provider's `rowActions.actions`. New option
+  **`header?: ReactNode | false`** (`column: { header }` still wins, as before).
+- **`TranslationReviewPanel`**: its actions column (with `swipe`) and its approve column
+  (without) both say `rowActions.actions`.
+- **`userRosterColumns` / `useUserRosterColumns`**: the menu column says `userRoster.actions`.
+  New option **`actionsHeader?: ReactNode | false`**.
+
+Each option: a node replaces the word; **`false` keeps the 0.46.0 heading** (the word in an
+`sr-only` span, so the column keeps its name for a screen reader). No new label keys: the
+words are the ones the columns were already named by, in all seven languages.
+
+Width: the heading is one word under the header row's `whitespace-nowrap`, so the column
+(still `w-px`, hugging its content) is as wide as the wider of the word and the buttons.
+Beside two icon buttons that is the same width; beside a single icon or the roster's "⋯" it
+grows by the word's width less one button (about 30 px for "Actions", 45 px for
+"Műveletek" at Normal). The column stays hidden on the phone where it was
+(`mobileHidden`); a `rowActionsColumn` kept on the phone card now labels its line too.
+
+**`swipePlanRowActions`** is public (`/data-table` and the barrel; keksdose N3): a swipe
+plan as `RowActions`' actions, the derivation the desktop column uses, for an app's own
+actions column built from the same plan.
+
+| App | Tables that gain the heading on the bump |
+| --- | --- |
+| keksdose | The feedback inbox (features/feedback/feedback-page.tsx:266-286, the kit's column from `mobileSwipeActions`); translations (features/translations/translations-page.tsx:291, the panel's actions column); the users roster (features/admin/users-panel.tsx:803-809, `actions: rowActions`). `swipeActionsColumn` (shared/components/swipe-row-actions.tsx:130-152) already shows its header by overriding `header` (:151); it now gets the kit's `text-end` head too, so its heading moves over the buttons. Optional: drop the override and its comment (:126-128) and keep `headerText`, the kit shows that word now. budget-table.test.tsx:157 (no `sr-only` under the budget table's actions heading) is the app's own column, unchanged. Accounts (accounts-page.tsx:906, `desktopSwipeActions={false}`): no kit column, unchanged. |
+| kastlan | The feedback inbox (features/feedback/pages/feedback-page.tsx:179-185); every `ResourceListPage` with actions (shared/components/data-table/resource-list-page.tsx:226, `rowActions`); meters (features/meters/pages/meters-page.tsx:41, `rowActions`); each `rowActionsColumn`: journal entries (features/accounting/components/journal-entry-columns.tsx:134), leases (features/tenancy/components/lease-columns.tsx:219), invoices (features/finance/pages/invoice-list-page.tsx:103), dunning (features/finance/pages/dunning-list-page.tsx:125), service charges (features/service-charges/pages/service-charges-list-page.tsx:46), distribution keys (features/service-charges/components/distribution-key-columns.tsx:79), signup invitations (features/platform/pages/platform-signup-invitations-page.tsx:113, which shows its own `signups.col.actions`); translations (features/translations/pages/translations-page.tsx:234); the users roster (features/settings/components/users-panel.tsx:337-339). The `rowActionsColumn` calls show their `headerText`, `common:actions.title`. |
+| Kurvenschmiede | The feedback inbox (features/feedback/feedback-page.tsx:221-229); translations (features/translations/translations-page.tsx:276-288, the panel's actions column); the users roster (features/admin/users-panel.tsx:414-416). |
+
+To keep the old hidden heading on one table, pass `false` at that call site and say why:
+`rowActionsHeader={false}` on a `DataTable` with `rowActions`, `desktopSwipeActions={{ …,
+header: false }}` on one with `mobileSwipeActions`, `header: false` to `rowActionsColumn`,
+`actionsHeader: false` to `useUserRosterColumns`. `TranslationReviewPanel` has no option:
+its column follows the rule. A test that asserts the `sr-only` class on an actions heading
+(the kit's own did, row-actions.layout.test.tsx) fails on the bump; one that finds the
+column header by its name (`getByRole("columnheader", { name: "Actions" })`) still passes.
+
 ## The 0.45 adoptions: ui-kit fixes
 
 ### `MailTestCard`: `mailBackend` is optional (keksdose N1, kastlan K6, KS 3)
@@ -125,7 +172,7 @@ in 0.47. This shows on a plain bump.
 
 | App | Change |
 | --- | --- |
-| keksdose | features/feedback/__tests__/feedback-row-link.test.tsx:114-129 ("makes the expanded row's Open page a real link") looks for the button: point it at the URL section's link (named by its path, `/budget`) or drop it. |
+| keksdose | Nothing breaks (keksdose N1; an earlier draft of this guide said features/feedback/__tests__/feedback-row-link.test.tsx:114-129 would): the test finds links named "Open page", and the URL column's cell link carries that name in `sr-only` text, so it stays green without the button. Optional: point it at the URL section's link (named by its path, `/budget`) and assert the button is gone, as keksdose did. |
 | kastlan, Kurvenschmiede | Nothing, unless a test looks for the button. Drop an `openPage` override from `feedbackDetail` labels when convenient. |
 
 ### Tabs: the `overflowCue` caret at every width (keksdose live #410)
@@ -337,7 +384,7 @@ the same actions. This is the one 0.46 change that shows on the bump: a `DataTab
 | --- | --- |
 | keksdose | **The bump breaks the wrapper** (keksdose B1/S1). frontend/src/shared/components/data-table.tsx:42 destructures `({ desktopSwipeActions, ...props })` and never forwards it, so the kit sees `undefined` and draws its own column: feedback gets two actions columns (feedback-page.test.tsx:173-176 fails), the accounts' `false` (accounts-page.tsx:906) is swallowed and the kit's column repeats the row's `RowActions` (:1035), and swipe-row-actions.test.tsx:103-131 fails on a duplicate "Approve". TypeScript does not catch it: `false \| Options` and the kit's `boolean \| DataTableDesktopSwipeActions` are compatible, and dropping only the wrapper's prop type still compiles. **Take `props` whole and forward it; delete the derivation**: data-table.tsx: delete :1-5 and :16-66 (`DesktopSwipeActionsOptions`, `KeksdoseDataTableProps.desktopSwipeActions`, the `useMemo` column) and their now-unused imports; keep `mobileExpandAsDialog ?? true` (:71). swipe-row-actions.tsx: delete `planSwipeRowActions` (:108-129) and its tests (__tests__/swipe-row-actions.test.tsx:76-88); the wrapper tests (:98-141) then check that the prop reaches the kit. Keep `boundSwipeRowActions`, `swipeColumnCollapse` and `swipeActionsColumn` for the hand-rolled transactions register (transactions-page.tsx:407-433) and the budget table (budget-table.tsx:207-210), which are not kit phone cards. **Feedback**: feedback-page.tsx:284-288 → `desktopSwipeActions={{ omit: feedbackSwipeOmitShown, name: (fb) => fb.title, commit: true }}` (the wrapper's `planSwipeRowActions` defaulted to `commit: true`, dev#496; the kit's default is no scope), and the `visibleFeedbackStatuses` import (:22) goes. **Accounts**: nothing once the prop is forwarded. **Guard**: shared/components/__tests__/swipe-desktop-parity.test.ts still holds in substance, but its comments (:19-20, :46) describe the wrapper, and the translations entry (:57-64, `via: "kit"`) plus the assertion at :115 demand the text "kit finding": the kit now derives that column, so the entry becomes a covered case (keksdose S2). **Translations**: translations-page.tsx:310 needs no change; the panel's desktop rows now show Approve plus the user's bound `edit` ("Flag for a change…") and `clear`, so translations-page.test.tsx:145 still finds one "Needs a change" (the editor's), and a test that clicks a row's edit asks for "Flag for a change…". |
 | kastlan | features/feedback/pages/feedback-page.tsx:177-181: the inbox gains the column on the bump. Add `desktopSwipeActions={{ omit: feedbackSwipeOmitShown, name: (fb) => fb.title }}` (import from `@eifi1/ui-kit`), or the column repeats the status cell's advance and won't do (`useFeedbackColumns`, :127). Optional (kastlan N2, predates 0.46): pass `commit` to the column and to the status cell, so offline they say "Needs a connection" as the rest of the app does. **Translations**: features/translations/pages/translations-page.tsx:252 passes `swipe` (the default binding, approve and edit), so the desktop's approve column (key `approve`) becomes an actions column (key `actions`) with Approve plus "Flag for a change…" / "Add a translation…". A width or visibility stored for `approve` under `storageKey="translations"` (:246) is orphaned; check the table after the bump (kastlan S4). |
-| Kurvenschmiede | features/feedback/feedback-page.tsx:220-224: the same line as kastlan, `name: (row) => row.title` (status cell from `useFeedbackColumns`, :153). Translations (translations-page.tsx:276) passes no `swipe`: unchanged. |
+| Kurvenschmiede | features/feedback/feedback-page.tsx:220-224: the same line as kastlan, `name: (row) => row.title` (status cell from `useFeedbackColumns`, :153). Translations (translations-page.tsx:276-288) passes `swipe` and `onClear`, so its approve column (key `approve`) becomes the actions column (key `actions`) with Approve, "Flag for a change…" / "Add a translation…" and Clear, as in kastlan (an earlier draft said it passed no `swipe`). |
 
 ## The date format is a kit setting (keksdose's, lifted; settings §7.1 amendment)
 

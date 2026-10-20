@@ -27,6 +27,9 @@ export type {
   DataTableRowAction,
   DataTableDesktopSwipeActions,
 } from "./components/data-table";
+// 0.46.1 (keksdose N3): a swipe plan as `RowActions`' actions — the desktop column's own
+// derivation, for an app's hand-built actions column.
+export { swipePlanRowActions } from "./components/data-table-row-actions";
 export * from "./components/data-table-cells";
 export { useTableUrlState, readTableUrlState } from "./components/use-table-state";
 export type {

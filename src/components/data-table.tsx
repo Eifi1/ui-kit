@@ -610,6 +610,14 @@ export interface DataTableProps<T> {
    */
   rowActions?: DataTableRowAction<T>[] | ((row: T) => DataTableRowAction<T>[]);
   /**
+   * The `rowActions` column's heading (0.46.1, keksdose dev#598 rework — Marcel: a
+   * VISIBLE "Actions" heading on every table with an actions column). Default: the
+   * provider's `dataTable.actions` ("Actions"), shown, end-aligned over the buttons. A
+   * node replaces it; `false` keeps the pre-0.46.1 heading, named for a screen reader
+   * only.
+   */
+  rowActionsHeader?: ReactNode | false;
+  /**
    * The bar above the table — a search field, filter chips, a create button. Inside
    * the table's frame, above the header, on desktop and phone alike (resource-list
    * pages set a search box in a `div` above the card, outside the frame it filters).
@@ -703,6 +711,13 @@ export interface DataTableDesktopSwipeActions<T> {
    * no commit scope (the plan decides).
    */
   commit?: CommitScope | ((action: SwipeAction, row: T) => CommitScope | undefined);
+  /**
+   * The column's heading (0.46.1, keksdose dev#598 rework — Marcel: a VISIBLE "Actions"
+   * heading on every table with an actions column). Default: the provider's
+   * `dataTable.actions` ("Actions"), shown, end-aligned over the buttons. A node
+   * replaces it; `false` keeps the 0.46.0 heading, named for a screen reader only.
+   */
+  header?: ReactNode | false;
 }
 
 /**
@@ -828,6 +843,7 @@ export function DataTable<T>({
   edgeFade = false,
   className,
   rowActions,
+  rowActionsHeader,
   toolbar,
   footerLabel,
   footer: footerProp,
@@ -860,6 +876,7 @@ export function DataTable<T>({
   const { columns, swipesFromActions } = useRowActionColumn({
     columns: columnsProp,
     rowActions,
+    rowActionsHeader,
     rowName,
     labels,
     density,

@@ -31,6 +31,16 @@ export function isTableOwnColumn(key: string): boolean {
   return key === ROW_ACTIONS_KEY || key === SWIPE_ACTIONS_KEY;
 }
 
+/**
+ * An actions column's heading (0.46.1, keksdose dev#598 rework — Marcel: a VISIBLE
+ * "Actions" heading on every table with an actions column): the caller's node, else the
+ * word on screen; `false` is the pre-0.46.1 heading, a screen reader's name only.
+ */
+export function actionsHeading(header: ReactNode | false | undefined, word: string): ReactNode {
+  if (header === false) return <span className="sr-only">{word}</span>;
+  return header ?? word;
+}
+
 /** A curtain's tone, as an icon button's (keksdose's `toneOf`): only the tones that MEAN
  *  something on a quiet icon carry over; a status colour, a hue or an app's `paint` stays
  *  on the curtain and reads muted. */
@@ -46,10 +56,19 @@ function swipeTone(action: SwipeAction): RowActionTone {
 }
 
 /**
- * A row's swipe plan as desktop row actions (dev#598): `end` then `start` — the physical
- * `right` / `left` only where the logical side is missing, as the card reads them — each
- * action once, told apart by its `id`, else by its label (two stages with one label would
- * be one button twice).
+ * A row's swipe plan as desktop row actions (dev#598) — what DataTable's
+ * `desktopSwipeActions` column draws, for an app that builds its own actions column (or
+ * a `RowActions` outside a table) from the same `mobileSwipeActions` plan, so the two
+ * cannot drift (public since 0.46.1, keksdose N3).
+ *
+ * `end` then `start` — the physical `right` / `left` only where the logical side is
+ * missing, as the card reads them — each action once, told apart by its `id`, else by its
+ * label (two stages with one label would be one button twice). Each button runs the
+ * swipe's own `onCommit`; a swipe's `danger` / `warning` / `info` tone carries over, any
+ * other reads `muted`. `options.omit` leaves an action out, `options.commit` gives it a
+ * `CommitScope` (see {@link DataTableDesktopSwipeActions}). A `null` plan is `[]`.
+ *
+ *     <RowActions actions={swipePlanRowActions(plan(row), row, { omit })} name={row.title} />
  */
 export function swipePlanRowActions<T>(
   plan: MobileSwipeActions | null | undefined,
@@ -139,6 +158,7 @@ function toRowAction<T>(a: ResolvedRowAction<T>, row: T): RowAction {
 export function useRowActionColumn<T>({
   columns: columnsProp,
   rowActions,
+  rowActionsHeader,
   rowName,
   labels,
   density,
@@ -147,6 +167,7 @@ export function useRowActionColumn<T>({
 }: {
   columns: DataTableColumn<T>[];
   rowActions: DataTableProps<T>["rowActions"];
+  rowActionsHeader?: DataTableProps<T>["rowActionsHeader"];
   rowName: DataTableProps<T>["rowName"];
   labels: DataTableLabels;
   density: DataTableDensity;
@@ -175,12 +196,13 @@ export function useRowActionColumn<T>({
   const swipeName = swipeOptions?.name;
   const swipeCollapse = swipeOptions?.collapse;
   const swipeCommit = swipeOptions?.commit;
+  const swipeHeader = swipeOptions?.header;
   const swipeColumn = useMemo<DataTableColumn<T> | null>(
     () =>
       swipeColumnOn
         ? {
             key: SWIPE_ACTIONS_KEY,
-            header: <span className="sr-only">{labels.actions}</span>,
+            header: actionsHeading(swipeHeader, labels.actions),
             cell: (row) => (
               <RowActions
                 actions={swipePlanRowActions(mobileSwipeActions!(row), row, { omit: swipeOmit, commit: swipeCommit })}
@@ -194,7 +216,8 @@ export function useRowActionColumn<T>({
               />
             ),
             className: "w-px whitespace-nowrap text-end",
-            headClassName: "w-px",
+            // The heading over the buttons, at the row's end (0.46.1).
+            headClassName: "w-px text-end",
             // On a phone the same actions are the card's swipes.
             mobileHidden: true,
             noRowLink: true,
@@ -208,6 +231,7 @@ export function useRowActionColumn<T>({
       swipeName,
       rowName,
       swipeCollapse,
+      swipeHeader,
       density,
       labels.actions,
     ],
@@ -219,7 +243,7 @@ export function useRowActionColumn<T>({
             ...columnsProp,
             {
               key: ROW_ACTIONS_KEY,
-              header: <span className="sr-only">{labels.actions}</span>,
+              header: actionsHeading(rowActionsHeader, labels.actions),
               // Through RowActions (0.32, §10.8): the icons inline at Normal, one "⋯"
               // menu at Large once there are two — every label at once does not fit a
               // row. Each control stops its own click: the row's handler already skips
@@ -235,14 +259,14 @@ export function useRowActionColumn<T>({
                 />
               ),
               className: "w-px whitespace-nowrap text-end",
-              headClassName: "w-px",
+              headClassName: "w-px text-end",
               // On a phone the same actions are the card's swipes.
               mobileHidden: true,
               noRowLink: true,
             },
           ]
         : columnsProp,
-    [columnsProp, rowActions, rowActionsFor, rowName, labels.actions, density],
+    [columnsProp, rowActions, rowActionsHeader, rowActionsFor, rowName, labels.actions, density],
   );
   const columns = useMemo(
     () => (swipeColumn ? [...actionColumns, swipeColumn] : actionColumns),

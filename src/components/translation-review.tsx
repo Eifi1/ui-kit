@@ -838,7 +838,9 @@ export function TranslationReviewPanel({
   } else if (editable) {
     columns.push({
       key: "approve",
-      header: <span className="sr-only">{labels.approve}</span>,
+      // On screen, as every actions column's heading is (0.46.1, keksdose dev#598 rework).
+      header: rowActionLabels.actions,
+      headerText: rowActionLabels.actions,
       cell: (r) =>
         r.status === "approved" || r.text === "" ? null : (
           <IconButton

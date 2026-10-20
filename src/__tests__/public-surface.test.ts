@@ -283,7 +283,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `INBOX_BADGE_INTERVAL`, `NotificationBell`, `useDeviceZoneReport`, and `useKitTimeZone`,
   // the provider's `timeZone` (`TimeZoneSetting` dropped before release: the zone is automatic
   // only, amended 2026-10-20).
-  ["@eifi1/ui-kit", barrel, 985],
+  // 0.46.1 (+1): `swipePlanRowActions`, via the /data-table slice (keksdose N3).
+  ["@eifi1/ui-kit", barrel, 986],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -291,7 +292,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/chart", chart, 46],
   // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
   // 0.35.0: `resolveDataTableLabels` and `missingDataTableLabels` removed (R1, API-6a) (−2).
-  ["@eifi1/ui-kit/data-table", dataTable, 26],
+  // 0.46.1: `swipePlanRowActions`, the desktop swipe column's derivation (keksdose N3) (+1).
+  ["@eifi1/ui-kit/data-table", dataTable, 27],
   // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS` (+1 here and in the barrel).
