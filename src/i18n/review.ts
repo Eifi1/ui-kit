@@ -332,7 +332,6 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "sessions.revokeItem": [["{{device}}"]],
   "notifications.quietDescription": [[false], [true], [false, true], [true, true]],
   "notifications.quietZone": [["{{zone}}"]],
-  "notifications.zoneAutomatic": [["{{zone}}"]],
   "notifications.bellUnread": one,
   "notifications.deviceZone": [["{{zone}}"]],
   "notifications.iosInstall": [["{{app}}"]],

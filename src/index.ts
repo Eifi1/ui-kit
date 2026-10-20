@@ -973,14 +973,14 @@ export { QuietHoursSetting } from "./notifications/quiet-hours-setting";
 export type { QuietHoursSettingProps } from "./notifications/quiet-hours-setting";
 export { TimeZoneSelect, timeZoneOptions, deviceTimeZone } from "./notifications/time-zone-select";
 export type { TimeZoneSelectProps } from "./notifications/time-zone-select";
-// 0.46 (docs/notifications-harmonization.md §10.1, §10.3): the inbox list, the bell, the
-// account's time-zone row and the device-zone report.
+// 0.46 (docs/notifications-harmonization.md §10.1, §10.3): the inbox list, the bell and
+// the device-zone report (the account's zone is automatic only, amended 2026-10-20).
 export { NotificationInbox, INBOX_BADGE_INTERVAL } from "./notifications/notification-inbox";
 export type { NotificationInboxItem, NotificationInboxProps } from "./notifications/notification-inbox";
 export { NotificationBell } from "./notifications/notification-bell";
 export type { NotificationBellProps } from "./notifications/notification-bell";
-export { TimeZoneSetting, useDeviceZoneReport } from "./notifications/time-zone-setting";
-export type { TimeZoneSettingProps, DeviceZoneReportOptions } from "./notifications/time-zone-setting";
+export { useDeviceZoneReport } from "./notifications/device-zone-report";
+export type { DeviceZoneReportOptions } from "./notifications/device-zone-report";
 export {
   usePushDevice,
   PUSH_SUBSCRIPTION_CHANGED,

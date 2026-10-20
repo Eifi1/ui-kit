@@ -559,14 +559,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2133 names from 348 modules** — 985 values and 1148 types. _Italic_ is a type-only export.
+**2131 names from 348 modules** — 984 values and 1147 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2133 |
+| `@eifi1/ui-kit` | 2131 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 112 |
 | `@eifi1/ui-kit/data-table` | 52 |
@@ -581,7 +581,7 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/testing` | 11 |
 | `@eifi1/ui-kit/rhf` | 48 |
 | `@eifi1/ui-kit/offline` | 32 |
-| `@eifi1/ui-kit/sync` | 33 |
+| `@eifi1/ui-kit/sync` | 34 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
 
@@ -1006,7 +1006,7 @@ re-slicing of it, never a second API.
 | `notifications/time-zone-select` | `deviceTimeZone`, `timeZoneOptions`, `TimeZoneSelect`, _`TimeZoneSelectProps`_ |
 | `notifications/notification-inbox` | `INBOX_BADGE_INTERVAL`, `NotificationInbox`, _`NotificationInboxItem`_, _`NotificationInboxProps`_ |
 | `notifications/notification-bell` | `NotificationBell`, _`NotificationBellProps`_ |
-| `notifications/time-zone-setting` | `TimeZoneSetting`, `useDeviceZoneReport`, _`DeviceZoneReportOptions`_, _`TimeZoneSettingProps`_ |
+| `notifications/device-zone-report` | `useDeviceZoneReport`, _`DeviceZoneReportOptions`_ |
 | `notifications/use-push-device` | `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
 | `notifications/push-worker` | `handlePushSubscriptionChange`, `pushSubscriptionInput`, `resubscribeAfterChange`, _`PushReplaceInput`_, _`PushResubscribeOutcome`_, _`PushSubscriptionChangeEventLike`_, _`PushSubscriptionChangeOptions`_, _`PushWorkerScope`_ |
 | `notifications/push-device-setting` | `PushDeviceSetting`, _`PushDeviceAction`_, _`PushDeviceSettingProps`_ |

@@ -1176,7 +1176,6 @@ export const de: Dictionary = {
       "wählen, welche Benachrichtigungen kommen",
       "per E-Mail benachrichtigen",
       "Ruhezeiten",
-      "Zeitzone wählen",
       "Push-Benachrichtigungen auf diesem Gerät",
       "Test-Benachrichtigung senden",
       "Geräte mit Benachrichtigungen auflisten",

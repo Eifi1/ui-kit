@@ -769,8 +769,10 @@ shapes are canon, its client policies stay its own.** (Narrowed at the settle, k
   connection is worst first, contacts (the least urgent writes) last.
 - **The caller names the scope.** `write(scope, …)` never infers it from the entity: a meter
   reading's scope comes from its row (`handover_protocol_uuid` set: `handover`; null: `meters`). A
-  reading moved into or out of a protocol is a delete in one scope and a create in the other,
-  never an update across them.
+  reading moved into or out of a protocol is a delete in one scope and a create **with a new id**
+  in the other, never an update across them: reusing the id makes the create find the tombstone
+  (`find` includes tombstones), validate as an update, and the fixed `handover_protocol_uuid`
+  refuses it (kastlan build review 2, S8).
 - Why not one request with several scopes: that is a wire change (`scope: str`, D8's one-release
   rule) and needs a per-change scope on the server anyway, because one entity can have different
   rules per scope (`meter_readings`).
@@ -1008,9 +1010,9 @@ withheld in all of them (D14). The readable sets include what the pages show nex
 | Scope | Roles (as online) | Readable | Writable (create / update / delete) | Rules, and what stays online |
 |---|---|---|---|---|
 | `handover` (today) | `MANAGER_WRITE` | as today (sync_scopes.py:181-198) | as today (:200-223) | unchanged; its checks become `guard`s |
-| `meetings` | `MANAGER_WRITE` (owner_meeting_router.py:195) | `owner_meetings`, `agenda_items`, `meeting_invitations`, `contacts`, `estates` | `agenda_items`: create (`title`, `sort_order`), update `resolution`, `votes_for`, `votes_against`, `votes_abstain`, `minutes_text`; `owner_meetings`: update `notes`, `status` → `in_progress` only | `meeting_uuid` fixed; a **completed** meeting's rows refused ("the minutes are approved; reopen it online first"), by the guard and online (below); completing and reopening online; invitations read-only (they send mail) |
+| `meetings` | `MANAGER_WRITE` (owner_meeting_router.py:195) | `owner_meetings`, `agenda_items`, `meeting_invitations`, `contacts`, `estates` | `agenda_items`: create (`title`, `sort_order`), update `resolution`, `minutes_text`; the vote rows (one per owner per item): create, update; `meeting_invitations`: update attendance only; `owner_meetings`: update `notes`, `status` → `in_progress` only | `meeting_uuid` fixed, a vote's `agenda_item_uuid` and `invitation_uuid` fixed; `votes_for/against/abstain` derived from the vote rows, never written (amendment below); a **completed** meeting's rows refused ("the minutes are approved; reopen it online first"), by the guard (a vote via its item to the meeting) and online (below); completing and reopening online; the invitations' other fields read-only (they send mail) |
 | `meters` | `MANAGER_WRITE` (meter_router.py:54, :133) | `meters`, `meter_readings`, `units`, `floors`, `buildings`, `estates` | `meter_readings`: create, update, delete, `handover_protocol_uuid` must be null; `meter_uuid` fixed | a reading inside a protocol is `handover`'s (and the reverse, `_check_reading` :370-390); a move across is a delete plus a create (D11); meters themselves (create, number, type) online |
-| `maintenance` | `MANAGER_WRITE` (maintenance_router.py:85, :116) | `maintenance_requests`, `work_orders`, `maintenance_schedules`, `unit_defects`, `units`, `unit_rooms`, `floors`, `buildings`, `estates`, `contacts` | `maintenance_requests`: create, update (`unit_uuid` fixed); `work_orders`: create (assign), update `status`, `completed_date`, `description`, `cost_estimate`, `actual_cost`; `maintenance_schedules`: update `last_performed`, `task_description`, `interval_months`, `responsible_contact_uuid`; `unit_defects`: create, update `status`, `description` | **costs and schedules offline** (Q6, settled): `after_apply` sets the request's `ASSIGNED` on a work order's create, as `assign_work_order` does online (maintenance_service.py:121-150), and recomputes a schedule's `next_due` from `last_performed` + `interval_months` (`calc_next_due`, :48-53) when `last_performed` changes; schedules' create and delete online |
+| `maintenance` | `MANAGER_WRITE` (maintenance_router.py:85, :116) | `maintenance_requests`, `work_orders`, `maintenance_schedules`, `unit_defects`, `units`, `unit_rooms`, `floors`, `buildings`, `estates`, `contacts` | `maintenance_requests`: create, update (`unit_uuid` fixed); `work_orders`: create (assign), update `status`, `completed_date`, `description`, `cost_estimate`, `actual_cost`; `maintenance_schedules`: update `last_performed`, `task_description`, `interval_months`, `responsible_contact_uuid`; `unit_defects`: create, update `status`, `description` | **costs and schedules offline** (Q6, settled): `after_apply` sets the request's `ASSIGNED` on a work order's create, as `assign_work_order` does online (maintenance_service.py:121-150), and recomputes a schedule's `next_due` from `last_performed` + `interval_months` (`calc_next_due`, :48-53) for every allowed change carrying `last_performed` or `interval_months`, from the stored row (idempotent; `found` is the live, already-applied row, so compare against the kit's before-snapshot or don't compare; kastlan build review 2, S5); schedules' create and delete online |
 | `contacts` | `FINANCE_WRITE` (contact_router.py:99, :130; roles.py:23) | `contacts`, `contact_roles`, `addresses`, `units`, `estates` | `contacts`: update only `phone`, `mobile`, `email`, `notes` (the scope's `update` schema narrows the online superset `ContactUpdate`, BE domain/schemas/contact.py:55-65) | create, addresses, roles online (duplicates, the tenant's lease); `bank_accounts` never readable |
 
 Rows in the round's order (D11). **Finding (settle check): costs and schedules have no online
@@ -1037,6 +1039,13 @@ page; D16's REST-first seam does not apply), and ka adds a schedules list with "
   are derived from those rows, on the server and on the device, and the plain counts become
   derived. The meetings scope's writable set gains the vote rows and the invitation's attendance
   (`meeting_uuid` / invitation fixed). App model and scope only: no kit change.
+- **A vote's id is deterministic** (kastlan build review 2, S7): "latest wins" needs ONE row per
+  owner per item, but two devices can create the same owner's vote. The id is `uuid5` over the
+  agenda item's and the invitation's `sync_uuid`s, minted on the device, so both devices write
+  the same row and whole-row LWW decides. (Random ids would give two votes, or a 500 on a unique
+  (item, invitation) key.) The vote model is `SyncMixin` with `updated_at`; its references are
+  `agenda_item_uuid` and `invitation_uuid`; the completed-meeting guard goes vote → item →
+  meeting.
 - **Conflicts on a vote: whole-row LWW, no merge (D2).** Each owner's vote on one item is its own
   row (since the 2026-10-19 amendment above), so two devices recording different owners never
   conflict, and the tallies are derived, never stored as a second truth; the latest edit to the

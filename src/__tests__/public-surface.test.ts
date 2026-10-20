@@ -279,10 +279,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `isDateFormatPreference`, `resolveDateFormat`, `formatDateWithPreference`, `dateFormatSample`,
   // `dateFormatterFor`; push rotation `handlePushSubscriptionChange`, `resubscribeAfterChange`,
   // `pushSubscriptionInput`.
-  // 0.46.0 (+6, docs/notifications-harmonization.md §10.1, §10.3): `NotificationInbox`,
-  // `INBOX_BADGE_INTERVAL`, `NotificationBell`, `TimeZoneSetting`, `useDeviceZoneReport`, and
-  // `useKitTimeZone`, the provider's `timeZone`.
-  ["@eifi1/ui-kit", barrel, 985],
+  // 0.46.0 (+5, docs/notifications-harmonization.md §10.1, §10.3): `NotificationInbox`,
+  // `INBOX_BADGE_INTERVAL`, `NotificationBell`, `useDeviceZoneReport`, and `useKitTimeZone`,
+  // the provider's `timeZone` (`TimeZoneSetting` dropped before release: the zone is automatic
+  // only, amended 2026-10-20).
+  ["@eifi1/ui-kit", barrel, 984],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -347,9 +348,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/offline", offline, 18],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
-  // `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the four leaf utilities `/offline`
-  // exports too. Standalone: its Dexie peer stays out of the barrel.
-  ["@eifi1/ui-kit/sync", sync, 12],
+  // `syncEngineFor`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the four leaf
+  // utilities `/offline` exports too. Standalone: its Dexie peer stays out of the barrel.
+  ["@eifi1/ui-kit/sync", sync, 13],
   // 0.46.0: `createFakeSyncTransport`, the scripted `/sync` server for an app's tests.
   ["@eifi1/ui-kit/sync/testing", syncTesting, 1],
   // 0.46.0 (docs/notifications-harmonization.md §10.6 rule 5): the service worker's entry —

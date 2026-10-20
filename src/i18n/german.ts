@@ -154,7 +154,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       comment: "Kommentare zu Meldungen, denen Sie folgen",
       commentDescription: "Wenn jemand eine Meldung kommentiert, die Sie geschrieben oder kommentiert haben.",
       received: "Neue Rückmeldungen und Überarbeitungen",
-      receivedDescription: "Wenn jemand eine Meldung erfasst, eine zurückschickt oder eine Seite abstürzt.",
+      receivedDescription: "Wenn jemand eine Meldung erfasst oder eine zurückschickt.",
       adminGroup: "Admin",
     },
     feedbackContext: {
@@ -1202,8 +1202,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           : inbox
             ? "In diesem Zeitfenster kommen keine Push-Benachrichtigungen. Im Posteingang kommen sie trotzdem an."
             : "In diesem Zeitfenster kommen keine Push-Benachrichtigungen.",
-      quietZone: (zone) => `In Ihrer Zeitzone (${zone}).`,
-      quietZoneLink: "Zeitzone ändern",
+      quietZone: (zone) => `In Ihrer Zeitzone (${zone}), die sich nach dem zuletzt verwendeten Gerät richtet.`,
       quietFrom: "Von",
       quietUntil: "Bis",
       quietIncomplete: "Legen Sie eine Start- und eine Endzeit fest. Ruhezeiten gelten erst, wenn beide gesetzt sind.",
@@ -1222,8 +1221,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         Indian: "Indischer Ozean",
         Pacific: "Pazifik",
       },
-      zoneAutomatic: (zone) => `Automatisch (dieses Gerät: ${zone})`,
-      zoneDescription: "Ruhezeiten, die Zusammenfassung und die Zeiten, die die App für Sie schreibt, richten sich danach.",
       pushTitle: "Push-Benachrichtigungen",
       pushDescription: "Benachrichtigungen auf diesem Gerät, auch wenn die App geschlossen ist.",
       unsupported: "Dieser Browser unterstützt keine Push-Benachrichtigungen.",

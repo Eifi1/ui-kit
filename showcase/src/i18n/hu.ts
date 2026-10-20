@@ -1174,7 +1174,6 @@ export const hu: Dictionary = {
       "milyen értesítéseket kapjak",
       "értesítés e-mailben",
       "csendes órák",
-      "időzóna kiválasztása",
       "push-értesítések ezen az eszközön",
       "tesztértesítés küldése",
       "értesítést kapó eszközök listája",

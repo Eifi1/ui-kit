@@ -29,7 +29,7 @@ describe("useFeedbackNotificationTypes", () => {
       {
         id: "feedback_received",
         label: "New feedback and reworks",
-        description: "When someone files a report, sends one back, or a page crashes.",
+        description: "When someone files a report or sends one back.",
       },
     ]);
   });

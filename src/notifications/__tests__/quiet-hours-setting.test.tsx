@@ -1,16 +1,14 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { MemoryRouter } from "react-router";
 import { QuietHoursSetting } from "../quiet-hours-setting";
 import { deviceTimeZone, timeZoneOptions } from "../time-zone-select";
 import { DEFAULT_NOTIFICATIONS_LABELS } from "../notifications-labels";
 import { axeViolations } from "../../test/axe";
 
 /**
- * docs/notifications-harmonization.md §2.4, §2.6, §4.2: quiet hours, the zone that
- * applies while none is stored, the device's zone sent with the first time. The suite
+ * docs/notifications-harmonization.md §2.4, §2.6, §4.2, §10.3 (amended 2026-10-20: the
+ * zone is automatic only): quiet hours, and the account's zone named read-only. The suite
  * runs in Europe/Berlin (vitest.config.ts), which is not the kit's Europe/Zurich: the
  * "another zone" case comes for free.
  */
@@ -81,16 +79,16 @@ describe("QuietHoursSetting", () => {
     expect(screen.queryByRole("combobox", { name: "Time zone" })).not.toBeInTheDocument();
   });
 
-  it("sends the device's zone with the first time entered while none is stored", () => {
+  it("never sends a zone with a time: the zone is the account's, automatic only (§10.3, 2026-10-20)", () => {
     const onChange = vi.fn();
     render(<QuietHoursSetting start={null} end={null} timezone={null} onChange={onChange} />);
     setTime(timeField("From"), "22:00");
-    expect(onChange).toHaveBeenCalledWith({ quiet_hours_start: "22:00", timezone: "Europe/Berlin" });
+    expect(onChange).toHaveBeenCalledWith({ quiet_hours_start: "22:00" });
   });
 
-  it("sends a time alone once a zone is stored, and `null` for a cleared one", () => {
+  it("sends a time alone, and `null` for a cleared one", () => {
     const onChange = vi.fn();
-    render(<QuietHoursSetting start="22:00" end="07:00" timezone="Europe/Zurich" onChange={onChange} />);
+    render(<QuietHoursSetting start="22:00" end="07:00" zone="Europe/Zurich" onChange={onChange} />);
     setTime(timeField("Until"), "06:30");
     expect(onChange).toHaveBeenLastCalledWith({ quiet_hours_end: "06:30" });
     setTime(timeField("From"), "");
@@ -106,40 +104,17 @@ describe("QuietHoursSetting", () => {
     expect(screen.queryByText(/Set both a start and an end time/)).not.toBeInTheDocument();
   });
 
-  it("shows `fallbackZone` for a stored null — the zone the server applies, never the device's", () => {
-    const { rerender } = render(<QuietHoursSetting start="22:00" end="07:00" timezone={null} onChange={vi.fn()} />);
-    expect(screen.getByRole("combobox", { name: "Time zone" })).toHaveValue("Zurich");
-    rerender(
-      <QuietHoursSetting start="22:00" end="07:00" timezone={null} fallbackZone="Europe/Vienna" onChange={vi.fn()} />,
-    );
-    expect(screen.getByRole("combobox", { name: "Time zone" })).toHaveValue("Vienna");
-  });
-
-  it("offers the device's zone when it is not the one in effect, and sends it on “Use it”", async () => {
-    const user = userEvent.setup();
-    const onChange = vi.fn();
-    const { rerender } = render(
-      <QuietHoursSetting start="22:00" end="07:00" timezone="Europe/Zurich" onChange={onChange} />,
-    );
-    expect(screen.getByText("This device is in Europe / Berlin.")).toBeInTheDocument();
-    const use = screen.getByRole("button", { name: "Use it" });
-    expect(use).toHaveAccessibleDescription("This device is in Europe / Berlin.");
-    await user.click(use);
-    expect(onChange).toHaveBeenCalledWith({ timezone: "Europe/Berlin" });
-
-    rerender(<QuietHoursSetting start="22:00" end="07:00" timezone="Europe/Berlin" onChange={onChange} />);
-    expect(screen.queryByRole("button", { name: "Use it" })).not.toBeInTheDocument();
-  });
-
-  it("sends a zone picked from the list", async () => {
-    const user = userEvent.setup();
-    const onChange = vi.fn();
-    render(<QuietHoursSetting start="22:00" end="07:00" timezone="Europe/Zurich" onChange={onChange} />);
-    const zone = screen.getByRole("combobox", { name: "Time zone" });
-    await user.clear(zone);
-    await user.type(zone, "Vienna");
-    await user.click(within(screen.getByRole("listbox")).getByRole("option", { name: /Vienna/ }));
-    expect(onChange).toHaveBeenCalledWith({ timezone: "Europe/Vienna" });
+  it("names the zone read-only: `zone`, else the deprecated `timezone`, else `fallbackZone`", () => {
+    const { rerender } = render(<QuietHoursSetting start="22:00" end="07:00" zone={null} onChange={vi.fn()} />);
+    expect(screen.getByText(/In your time zone \(Europe \/ Zurich\)/)).toBeInTheDocument();
+    rerender(<QuietHoursSetting start="22:00" end="07:00" zone={null} fallbackZone="Europe/Vienna" onChange={vi.fn()} />);
+    expect(screen.getByText(/In your time zone \(Europe \/ Vienna\)/)).toBeInTheDocument();
+    rerender(<QuietHoursSetting start="22:00" end="07:00" timezone="Pacific/Auckland" onChange={vi.fn()} />);
+    expect(screen.getByText(/In your time zone \(Pacific \/ Auckland\)/)).toBeInTheDocument();
+    // No picker and no "Use it" in any form: the zone follows the device last used.
+    expect(screen.queryByRole("combobox", { name: "Time zone" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
   it("puts a rejected time back and says so under the card", async () => {
@@ -159,7 +134,7 @@ describe("QuietHoursSetting", () => {
     expect(timeField("From")).toHaveValue("22:00");
   });
 
-  it("passes axe with a window, the zone and the device's offer", async () => {
+  it("passes axe with a window and the zone", async () => {
     const { container } = render(
       <QuietHoursSetting start="22:00" end={null} timezone="Pacific/Auckland" inbox onChange={vi.fn()} />,
     );
@@ -168,19 +143,12 @@ describe("QuietHoursSetting", () => {
 });
 
 describe("QuietHoursSetting — the account's zone (0.46, §10.3, §10.4)", () => {
-  it("with `zone`: no picker, the zone named, a link to the row, and a time sends no zone", () => {
-    const onChange = vi.fn();
-    render(
-      <MemoryRouter>
-        <QuietHoursSetting start="22:00" end={null} zone="Europe/Zurich" zoneHref="/settings/language#time-zone" onChange={onChange} />
-      </MemoryRouter>,
-    );
+  it("with `zone`: no picker, the zone named as following the device", () => {
+    render(<QuietHoursSetting start="22:00" end={null} zone="Europe/Zurich" onChange={vi.fn()} />);
     expect(screen.queryByRole("combobox", { name: "Time zone" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Use it" })).not.toBeInTheDocument();
-    expect(screen.getByText("In your time zone (Europe / Zurich).")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Change time zone" })).toHaveAttribute("href", "/settings/language#time-zone");
-    setTime(timeField("Until"), "07:00");
-    expect(onChange).toHaveBeenCalledWith({ quiet_hours_end: "07:00" });
+    expect(
+      screen.getByText("In your time zone (Europe / Zurich), which follows the device you last used."),
+    ).toBeInTheDocument();
   });
 
   it("`held`: the description says a held push arrives when the window ends", () => {
@@ -192,9 +160,7 @@ describe("QuietHoursSetting — the account's zone (0.46, §10.3, §10.4)", () =
 
   it("passes axe with the zone line", async () => {
     const { container } = render(
-      <MemoryRouter>
-        <QuietHoursSetting start="22:00" end="07:00" zone="Europe/Zurich" zoneHref="/settings" onChange={vi.fn()} />
-      </MemoryRouter>,
+      <QuietHoursSetting start="22:00" end="07:00" zone="Europe/Zurich" onChange={vi.fn()} />,
     );
     expect(await axeViolations(container)).toEqual([]);
   });

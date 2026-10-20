@@ -1174,7 +1174,6 @@ export const en: Dictionary = {
       "choose which notifications to get",
       "notify by e-mail",
       "quiet hours",
-      "pick a time zone",
       "push notifications on this device",
       "send a test notification",
       "list the devices that get notifications",

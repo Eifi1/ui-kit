@@ -135,7 +135,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       comment: "您关注的反馈中的评论",
       commentDescription: "当有人评论您提交或评论过的反馈时。",
       received: "新反馈和返工",
-      receivedDescription: "当有人提交反馈、退回反馈或页面崩溃时。",
+      receivedDescription: "当有人提交反馈或退回反馈时。",
       adminGroup: "管理员",
     },
     feedbackContext: {
@@ -1147,8 +1147,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           : inbox
             ? "此时段内不发送推送通知。通知仍会进入您的收件箱。"
             : "此时段内不发送推送通知。",
-      quietZone: (zone) => `按您的时区（${zone}）。`,
-      quietZoneLink: "更改时区",
+      quietZone: (zone) => `按您的时区（${zone}），随您最近使用的设备而定。`,
       quietFrom: "从",
       quietUntil: "到",
       quietIncomplete: "请同时设置开始和结束时间。两者都设置后，免打扰时段才会生效。",
@@ -1167,8 +1166,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         Indian: "印度洋",
         Pacific: "太平洋",
       },
-      zoneAutomatic: (zone) => `自动（此设备：${zone}）`,
-      zoneDescription: "免打扰时段、摘要以及应用为您写出的时间都以此为准。",
       pushTitle: "推送通知",
       pushDescription: "在此设备上接收通知，即使应用已关闭。",
       unsupported: "此浏览器不支持推送通知。",

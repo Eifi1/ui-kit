@@ -1171,7 +1171,6 @@ export const fr: Dictionary = {
       "choisir les notifications à recevoir",
       "notifier par e-mail",
       "heures calmes",
-      "choisir un fuseau horaire",
       "notifications push sur cet appareil",
       "envoyer une notification de test",
       "lister les appareils qui reçoivent des notifications",

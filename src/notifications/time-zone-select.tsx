@@ -10,8 +10,8 @@ import type { NotificationRegionLabels, NotificationsLabels } from "./notificati
 
 /**
  * This device's IANA zone ("Europe/Zurich"), or `"UTC"` where the runtime names none —
- * the zone quiet hours are entered in the first time (§2.6), and the one the card offers
- * when it differs from the account's.
+ * the zone `useDeviceZoneReport` reports, which becomes the account's (§10.3, automatic
+ * only).
  */
 export function deviceTimeZone(): string {
   try {
@@ -40,6 +40,7 @@ function cityOf(rest: string): string {
  * rather than trailing the last group as if it were Pacific. `current` is kept even when
  * the runtime does not list it (an old alias such as "Europe/Kiev"): a picker without its
  * own value would show an empty field.
+ * @deprecated 0.46 — the zone is automatic (§10.3, amended 2026-10-20), no app picks one; removed in 0.47.
  */
 export function timeZoneOptions(
   current: string,
@@ -73,6 +74,7 @@ export function zoneName(zone: string, regions: NotificationRegionLabels): strin
   return `${regionName(regions, region) ?? region} / ${cityOf(zone.slice(slash + 1))}`;
 }
 
+/** @deprecated 0.46 — the zone is automatic (§10.3, amended 2026-10-20), no app picks one; removed in 0.47. */
 export interface TimeZoneSelectProps {
   /** The IANA zone. Not clearable: a zone can be changed, never emptied. */
   value: string;
@@ -95,6 +97,7 @@ export interface TimeZoneSelectProps {
  * a search box instead of a 400-row wheel. Rows are the city under its region, the region
  * in the kit's words (`labels.regions`); a zone with no region first; a stored zone the
  * runtime does not list is kept. On the kit's {@link InlineEntityCombobox}.
+ * @deprecated 0.46 — the zone is automatic (§10.3, amended 2026-10-20), no app picks one; removed in 0.47.
  */
 export function TimeZoneSelect({
   value,

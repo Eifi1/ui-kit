@@ -1613,10 +1613,16 @@ store, the job's rows, bell, poller out). KS none.
   takes only `NotificationInbox`. "One badge per signal" holds: an app shows the bell or
   the avatar dot, never both.
 - **Who keeps an inbox (6 amended).** keksdose as today. **kastlan: an inbox for
-  `invoices_overdue` only**: the 00:10 job writes one row per (user, company, event) in
-  the loop that mails, with the same `event.key` (`overdue_mail.py:151-170`). The row
-  carries `company_id`, **account-scoped with no RLS** like `notification_mail_sent`
-  (`domain/models/notification.py:38-39`); the list holds every company's rows, each
+  `invoices_overdue` only**: the 00:10 job writes one row per (user, type, event), with
+  the mail's `event.key`, in **a loop of its own**, not the one that mails
+  (`overdue_mail.py:151-170`; kastlan build review 2, S10): that loop's `_recipients`
+  (:95-116) keep only the e-mail switch and `email_verified`, skip events already mailed and
+  `continue` on a failed send, so an app-on, mail-off person (the inbox's own case) would get
+  no row and a failed mail would drop it. The inbox's recipients: the app switch on, active,
+  non-demo, staff in the event's company; (user, type, event) is the table's unique key. The
+  row carries a plain `company_id` column (not `CompanyMixin`, from which kastlan builds
+  RLS), **account-scoped with no RLS** like `notification_mail_sent`
+  (`domain/models/notification.py:38-39`, which has no `company_id`); the list holds every company's rows, each
   naming its company, and opening one in another company switches the acting company
   first. `dunnings_pending` gets no row: it stays a live count on the poller. **The
   poller stays** as kastlan's OS-level alert until its push step, fed from the inbox rows
@@ -1714,7 +1720,7 @@ column, the migration, the device column, routes, the shim knob). ka **XS** (ans
   `feedback_published`) and notification mails keyed by type id slip past
   observability §5.6. kk fixes its guard to resolve enum kinds and type ids.
 
-### 10.3 (c) The time zone on the account
+### 10.3 (c) The time zone on the account (amended 2026-10-20, Marcel: automatic only)
 
 **Today.**
 - **keksdose:** the zone is on `notification_settings.timezone`
@@ -1848,6 +1854,35 @@ column, the migration, the device column, routes, the shim knob). ka **XS** (ans
   timestamps only; bare dates are never shifted (they render in UTC on purpose, kk
   `shared/components/ui.tsx:58-80`). keksdose passes none (timestamps follow the device);
   kastlan and KS may.
+
+**Amended 2026-10-20, Marcel: automatic only.** This overrides the Settled block above
+where they differ (points 1, 4, 5, 6 and 7 of the proposal):
+- **No pick, in all three apps.** The account's zone is ALWAYS the zone of the device last
+  used (`device_timezone`), reported only when it differs (a demo's ignored), else
+  `Europe/Zurich` when no device ever reported. There is no `timezone` field, no
+  "Automatic" switch and no picker: `effective_zone(device_timezone, fallback=DEFAULT_ZONE)`.
+- **Screens keep showing device time** (unchanged): no app passes the provider's
+  `timeZone` for this; it stays in the kit for an app that ever needs it.
+- **keksdose moves too** (its decision-6 zone on `notification_settings` is superseded,
+  and with it build review 2's B3 "keep decision 6" row): it adds `users.device_timezone`,
+  seeds it from `notification_settings.timezone` where set (a start value only; the next
+  app start reports the device's), drops that column, reports the device zone
+  (`useDeviceZoneReport`), and routes its UTC "today" writers and its quiet hours through
+  `effective_zone(user.device_timezone)`.
+- **server-kit 0.16:** `UserResponse.device_timezone`, `ProfileUpdate.device_timezone`,
+  `RegisterRequest.device_timezone`, `PROFILE_ZONE_FIELDS == ("device_timezone",)`; a
+  `timezone` on `PATCH /auth/me` is a 422 (unknown field), and the settings resource
+  carries no zone (no alias). The export's `account` gains `device_timezone` only.
+- **ui-kit 0.46:** no `TimeZoneSetting` (dropped before release: a read-only row on the
+  device that reports the zone would only name that device's zone);
+  `useDeviceZoneReport` stays; `QuietHoursSetting` names the account's zone read-only
+  (`zone` = `/auth/me`'s `device_timezone`, `null` = `fallbackZone`: "In your time zone
+  (Europe / Zurich), which follows the device you last used.") and never sends a zone.
+  `TimeZoneSelect` / `timeZoneOptions`, the labels `deviceZone` / `useDeviceZone`, the
+  card's `timezone` prop and `NotificationSettingsPatch.timezone` are deprecated (0.46;
+  removed in 0.47).
+- keksdose's objection (the zone flips with whichever device was used last: a wrong OS
+  zone, a VPN) stands as a known cost: the quiet-hours card shows the zone in use.
 
 ### 10.4 (d) A queue: hold a push through quiet hours, bundle mails
 
@@ -2053,6 +2088,14 @@ docstring and the adopt row take:
    Settled.
 5. **Held pushes (Open 6):** one per type, as proposed → §10.4.
 6. **The push rotation route:** the review's rules → §10.6.
+7. **Time zone, amended 2026-10-20 (Marcel): automatic only.** No pick and no picker in
+   any app: the account's zone is the device last used (reported when it differs, a
+   demo's ignored), else Zurich; screens keep device time; keksdose moves too, its
+   `notification_settings` zone superseded → §10.3 "Amended 2026-10-20".
+8. **Feedback alert mails, confirmed 2026-10-20 (Marcel):** a new report and a rework are
+   mailed at once in every app, keksdose included; a crash is mailed only inside the
+   bundle where an app runs the queue (keksdose). Build review 2's kk B4 ("bundle
+   everything") was not his call → feedback §11 Settled 3 stands.
 
 **Where each review point went** (each re-checked at ka 26a2eaa / kk 23c18e71 / KS 2b2bdab)
 
@@ -2068,6 +2111,7 @@ docstring and the adopt row take:
 | kk (b) S | the mail-kind guard misses enum kinds | §10.2 Settled |
 | kk (c) | four UTC writers through `resolve_zone`; billing fallback's comment stale | §10.3 Settled |
 | kk (c) Marcel | keep decision 6, zone later on `users` | **overruled** by Marcel's settle: the zone on the account now, §10.3 Settled |
+| kk build 2 B3, S2, S3 | keep the zone on `notification_settings`; the 0.47 removal forces the move; `/auth/me` gains zone fields | **superseded** 2026-10-20 (automatic only): kk moves to `users.device_timezone`, no pick field anywhere, §10.3 Amended |
 | kk (c) | Open 5 no for kk: bare dates UTC on purpose, timestamps device | §10.3 Settled (per app) |
 | kk (d) | held push dropped today; the reply outbox daily; one 15-min tick (product metrics renamed) with `send_queued_replies` | §10.4 Settled |
 | kk (d) B | `keksdose-notifications` on the console mailer (live, 2026-10-16); fixed at kk 23c18e71 | §10.4 Settled; feedback §11.2 rule 7 |

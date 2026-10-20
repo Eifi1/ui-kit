@@ -103,6 +103,8 @@ export interface SyncEngine {
    *  server forgets its queue; stamped with `stampAfter`. */
   write(scope: string, entity: string, id: string, op: "upsert" | "delete", data?: Record<string, unknown>): Promise<void>;
   start(): void;
+  /** Stops the poll and the timers, aborts the round in flight and drops its answer (the
+   *  queue is laid back). A new engine's round on the same database waits for it. */
   stop(): void;
   /** Sync soon (debounced): after a write. */
   requestSync(): void;
@@ -132,6 +134,13 @@ const ZERO: SyncCounts = { pending: 0, waiting: 0, blocked: 0, rejected: 0 };
 /** The started engine of each database: one engine per database (D15). */
 const running = new Map<string, SyncEngine>();
 
+/** The round in flight on each database, of whichever engine: a new engine's round waits
+ *  for it, so two never take the same queue (a company switch A→B→A within one round). */
+const flights = new Map<string, Promise<unknown>>();
+
+/** The engines {@link syncEngineFor} keeps, by database name. */
+const kept = new Map<string, { db: SyncDb; engine: SyncEngine }>();
+
 /** The generation changed under a round: its answer is dropped. */
 class Dropped extends Error {}
 
@@ -147,6 +156,17 @@ function defaultPlanCode(err: unknown): string | null {
   const body = (err as { response?: { data?: { code?: unknown; detail?: { code?: unknown } } } }).response?.data;
   const code = typeof body?.code === "string" ? body.code : body?.detail?.code;
   return typeof code === "string" ? code : null;
+}
+
+/** A refusal's `code` and `detail` from an error's body: `{code, detail}` or FastAPI's
+ *  `{detail: {code, detail}}`. */
+function refusalOf(err: unknown): { code?: string; detail?: string } {
+  const body = (err as { response?: { data?: unknown } }).response?.data as
+    | { code?: unknown; detail?: unknown }
+    | undefined;
+  const inner = body?.detail && typeof body.detail === "object" ? (body.detail as { code?: unknown; detail?: unknown }) : body;
+  const text = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+  return { code: text(inner?.code), detail: text(inner?.detail) };
 }
 
 function latest(stamps: unknown[]): string | undefined {
@@ -269,7 +289,15 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
         pulled.add(`${change.entity}\u0000${change.id}`);
         if (change.op === "delete") await db.rows.delete([change.entity, change.id]);
         else {
-          const row: CopyRow = { entity: change.entity, id: change.id, pk: change.pk ?? null, local: false, data: change.data ?? {} };
+          const row: CopyRow = {
+            entity: change.entity,
+            id: change.id,
+            pk: change.pk ?? null,
+            local: false,
+            data: change.data ?? {},
+            // The server's stamp rides beside `data`: kept, so the next edit is stamped after it.
+            updated_at: change.updated_at ?? null,
+          };
           await db.rows.put(row);
         }
       }
@@ -297,11 +325,18 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     });
   }
 
-  /** A scope the role no longer holds (403): its queue is rejected and it leaves the round. */
-  async function loseScope(scope: string): Promise<number> {
+  /** A scope the role no longer holds (403): its queue is rejected and it leaves the round.
+   *  The server's `code` and `detail` are kept (a demo's `demo_read_only`); without them,
+   *  `forbidden` and "Not allowed to sync <scope>". */
+  async function loseScope(scope: string, err: unknown): Promise<number> {
+    const why = refusalOf(err);
     return db.transaction("rw", db.outbox, async () => {
       const queue = (await db.outbox.where("scope").equals(scope).toArray()).filter((c) => UNSENT.includes(c.status));
-      await mark(queue, { status: "rejected", code: "forbidden", reason: `Not allowed to sync ${scope}` });
+      await mark(queue, {
+        status: "rejected",
+        code: why.code ?? "forbidden",
+        reason: why.code && why.detail ? why.detail : `Not allowed to sync ${scope}`,
+      });
       return queue.length;
     });
   }
@@ -332,7 +367,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
         await mark(sent, { status: "waiting", code: plan, reason: plan });
         return { offline: false, waiting: sent.length, blocked: 0, rejected: 0 };
       }
-      if (httpStatusOf(err) === 403) return { offline: false, waiting: 0, blocked: 0, rejected: await loseScope(scope) };
+      if (httpStatusOf(err) === 403) return { offline: false, waiting: 0, blocked: 0, rejected: await loseScope(scope, err) };
       throw err;
     }
     let cursor = options.paged ? (answer.page_cursor ?? null) : null;
@@ -452,7 +487,10 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       again = true;
       return current;
     }
+    const before = flights.get(db.name);
     const flight = (async () => {
+      // Another engine's round on this database (stopped, still settling) ends first.
+      if (before) await before.catch(() => undefined);
       try {
         const result = await round(withBlocked);
         settle(result);
@@ -467,6 +505,11 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       }
     })();
     current = flight;
+    flights.set(db.name, flight);
+    const done = () => {
+      if (flights.get(db.name) === flight) flights.delete(db.name);
+    };
+    void flight.then(done, done);
     return flight;
   }
 
@@ -497,7 +540,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
         const row = (await db.rows.get([entity, id])) as CopyRow | undefined;
         const ofRow = await db.outbox.where("[entity+id]").equals([entity, id]).toArray();
         ofRow.sort((a, b) => a.seq! - b.seq!);
-        const updated_at = stampAfter(latest([row?.data.updated_at, ...ofRow.map((c) => c.updated_at)]));
+        const updated_at = stampAfter(latest([row?.updated_at, row?.data.updated_at, ...ofRow.map((c) => c.updated_at)]));
         // A new edit to the row moves a rejected change out of the way (D13).
         const rejected = ofRow.filter((c) => c.scope === scope && c.status === "rejected");
         if (op === "delete") {
@@ -547,6 +590,10 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     stop() {
       if (!started) return;
       started = false;
+      // The round in flight writes nothing more: its request is aborted and its answer
+      // dropped, the queue laid back; the next engine's round waits for it to settle.
+      generation += 1;
+      controller?.abort();
       if (running.get(db.name) === engine) running.delete(db.name);
       if (poll) clearInterval(poll);
       poll = null;
@@ -614,5 +661,22 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       return () => listeners.delete(listener);
     },
   };
+  return engine;
+}
+
+/**
+ * The engine kept for `options.db` (by its name), built on first use: one engine per
+ * database for the session (D15), so a company switch A→B→A finds A's engine again instead
+ * of building a second one beside a round in flight. The first call's options stand: read
+ * changing values (scopes, the client) through functions. A database object opened afresh
+ * under the same name replaces the kept engine (the old one is stopped).
+ */
+export function syncEngineFor(options: SyncEngineOptions): SyncEngine {
+  const name = options.db.name;
+  const found = kept.get(name);
+  if (found && found.db === options.db) return found.engine;
+  found?.engine.stop();
+  const engine = createSyncEngine(options);
+  kept.set(name, { db: options.db, engine });
   return engine;
 }

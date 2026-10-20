@@ -145,7 +145,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       comment: "Comentarios en informes que sigue",
       commentDescription: "Cuando alguien comenta un informe que usted escribió o comentó.",
       received: "Nuevos informes y revisiones",
-      receivedDescription: "Cuando alguien envía un informe, devuelve uno o una página falla.",
+      receivedDescription: "Cuando alguien envía un informe o devuelve uno.",
       adminGroup: "Admin",
     },
     feedbackContext: {
@@ -1176,8 +1176,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           : inbox
             ? "Sin notificaciones push durante este intervalo. Aun así, llegan a su bandeja de entrada."
             : "Sin notificaciones push durante este intervalo.",
-      quietZone: (zone) => `En su zona horaria (${zone}).`,
-      quietZoneLink: "Cambiar zona horaria",
+      quietZone: (zone) => `En su zona horaria (${zone}), que sigue al último dispositivo que usó.`,
       quietFrom: "Desde",
       quietUntil: "Hasta",
       quietIncomplete:
@@ -1197,8 +1196,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         Indian: "Océano Índico",
         Pacific: "Pacífico",
       },
-      zoneAutomatic: (zone) => `Automática (este dispositivo: ${zone})`,
-      zoneDescription: "Las horas de silencio, el resumen y las horas que la app escribe para usted la siguen.",
       pushTitle: "Notificaciones push",
       pushDescription: "Notificaciones en este dispositivo, también con la app cerrada.",
       unsupported: "Este navegador no admite notificaciones push.",

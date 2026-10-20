@@ -28,7 +28,8 @@ export type FeedbackNotificationTypeId = "feedback_answered" | "feedback_comment
  *   author and the earlier commenters.
  *
  * - **"New feedback and reworks"** (`feedback_received`, 0.46, feedback §11): to the
- *   admins, when someone files a report, sends one back for rework, or a page crashes.
+ *   admins, when someone files a report or sends one back for rework. (A crash is mailed
+ *   only inside the bundle where an app runs the queue, so the text names no crash.)
  *   `labels.adminGroup` ("Admin") is a heading an app may put over it.
  *
  * Every entry is always returned: the card draws a type only when the server answered

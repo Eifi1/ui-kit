@@ -143,7 +143,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       comment: "Commentaires sur les retours que vous suivez",
       commentDescription: "Quand quelqu’un commente un retour que vous avez écrit ou commenté.",
       received: "Nouveaux retours et reprises",
-      receivedDescription: "Quand quelqu’un dépose un retour, en renvoie un ou qu’une page plante.",
+      receivedDescription: "Quand quelqu’un dépose un retour ou en renvoie un.",
       adminGroup: "Admin",
     },
     feedbackContext: {
@@ -1204,8 +1204,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           : inbox
             ? "Aucune notification push pendant cette plage. Elles arrivent quand même dans votre boîte de réception."
             : "Aucune notification push pendant cette plage.",
-      quietZone: (zone) => `Dans votre fuseau horaire (${zone}).`,
-      quietZoneLink: "Changer de fuseau horaire",
+      quietZone: (zone) => `Dans votre fuseau horaire (${zone}), qui suit le dernier appareil utilisé.`,
       quietFrom: "De",
       quietUntil: "Jusqu’à",
       quietIncomplete:
@@ -1225,8 +1224,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         Indian: "Océan Indien",
         Pacific: "Pacifique",
       },
-      zoneAutomatic: (zone) => `Automatique (cet appareil\u202f: ${zone})`,
-      zoneDescription: "Les heures calmes, le résumé et les heures que l’app écrit pour vous le suivent.",
       pushTitle: "Notifications push",
       pushDescription: "Les notifications sur cet appareil, même quand l’app est fermée.",
       unsupported: "Ce navigateur ne prend pas en charge les notifications push.",

@@ -14,6 +14,9 @@ export interface SyncedRow {
   id: string;
   pk: number | null;
   data: Record<string, unknown>;
+  /** The server's stamp of the row, as the pull carried it BESIDE `data` (kastlan's wire);
+   *  the next edit here is stamped after it (`stampAfter`, D2). */
+  updated_at?: string | null;
 }
 
 /**
@@ -84,9 +87,10 @@ export const SYNC_DB_STORES = {
  * An app whose database predates the engine names its next version in `upgrades` and moves
  * its data there — kastlan: `{ version: 2, upgrade: (tx) => tx.table("outbox").toCollection()
  * .modify({ scope: "handover" }) }`. Dexie diffs the schema against the one on the device.
+ * Name the app's own type for its tables: `createSyncDb<HandoverDb>(name, { extraStores })`.
  */
-export function createSyncDb(name: string, options: CreateSyncDbOptions = {}): SyncDb {
-  const db = new Dexie(name) as SyncDb;
+export function createSyncDb<D extends SyncDb = SyncDb>(name: string, options: CreateSyncDbOptions = {}): D {
+  const db = new Dexie(name) as D;
   let stores: Record<string, string | null> = { ...SYNC_DB_STORES, ...options.extraStores };
   db.version(1).stores(stores);
   const upgrades = [...(options.upgrades ?? [])].sort((a, b) => a.version - b.version);

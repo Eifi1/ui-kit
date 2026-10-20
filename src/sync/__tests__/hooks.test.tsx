@@ -1,5 +1,5 @@
 import "fake-indexeddb/auto";
-import Dexie from "dexie";
+import Dexie, { type Table } from "dexie";
 import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SyncStatusIndicator } from "../../shell/sync-status-indicator";
@@ -115,8 +115,16 @@ describe("useSyncQuery", () => {
     await waitFor(() => expect(result.current.data).toBe(1));
   });
 
-  it("is not loading without a database", () => {
+  it("is still loading without a database (the copy is not open yet: no flash of an empty page)", () => {
     const { result } = renderHook(() => useSyncQuery(null, async () => 1, []));
-    expect(result.current).toEqual({ data: undefined, isLoading: false });
+    expect(result.current).toEqual({ data: undefined, isLoading: true });
+  });
+
+  it("hands the query the app's own database type (kastlan's HandoverDb with photos)", async () => {
+    type PhotoDb = SyncDb & { photos: Table<{ id: string }, string> };
+    const typed = createSyncDb<PhotoDb>(`sync-hooks-typed-${Date.now()}`, { extraStores: { photos: "id" } });
+    db = typed;
+    const { result } = renderHook(() => useSyncQuery(typed, (d: PhotoDb) => d.photos.count(), []));
+    await waitFor(() => expect(result.current).toEqual({ data: 0, isLoading: false }));
   });
 });

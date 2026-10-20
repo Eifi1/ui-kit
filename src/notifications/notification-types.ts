@@ -60,14 +60,16 @@ export interface NotificationTypeGroup<Id extends string = string> {
  * The parts of `PATCH /notifications/settings` (§3.2) the cards send. Omitted keeps; a
  * type's `null` puts its switches back to their defaults; `quiet_hours_*: null`
  * clears a time. One switch per call from the types card (`{types: {digest: {app:
- * true}}}`), or `{digest_cadence}`; quiet hours send a time, with the device's zone the
- * first time; the zone picker sends `{timezone}`.
+ * true}}}`), or `{digest_cadence}`; quiet hours send a time. No zone: it is the
+ * account's, automatic only (§10.3, amended 2026-10-20).
  */
 export interface NotificationSettingsPatch<Id extends string = string> {
   types?: Partial<Record<Id, { app?: boolean; push?: boolean; email?: boolean } | null>>;
   digest_cadence?: DigestCadence;
   quiet_hours_start?: string | null;
   quiet_hours_end?: string | null;
+  /** @deprecated 0.46 — the zone is the account's, automatic only (§10.3), and server-kit 0.16 refuses it here;
+   *  removed in 0.47. No kit card sends it. */
   timezone?: string;
 }
 

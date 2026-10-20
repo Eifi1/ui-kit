@@ -1168,7 +1168,6 @@ export const es: Dictionary = {
       "elegir qué notificaciones recibir",
       "avisar por correo electrónico",
       "horas de silencio",
-      "elegir una zona horaria",
       "notificaciones push en este dispositivo",
       "enviar una notificación de prueba",
       "listar los dispositivos que reciben notificaciones",

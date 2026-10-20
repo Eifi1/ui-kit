@@ -145,7 +145,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       comment: "Commenti sulle segnalazioni che segue",
       commentDescription: "Quando qualcuno commenta una segnalazione che ha scritto o commentato.",
       received: "Nuove segnalazioni e revisioni",
-      receivedDescription: "Quando qualcuno invia una segnalazione, ne rimanda una o una pagina si blocca.",
+      receivedDescription: "Quando qualcuno invia una segnalazione o ne rimanda una.",
       adminGroup: "Admin",
     },
     feedbackContext: {
@@ -1188,8 +1188,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           : inbox
             ? "Nessuna notifica push in questa fascia oraria. Arrivano comunque nella Sua casella."
             : "Nessuna notifica push in questa fascia oraria.",
-      quietZone: (zone) => `Nel Suo fuso orario (${zone}).`,
-      quietZoneLink: "Cambia fuso orario",
+      quietZone: (zone) => `Nel Suo fuso orario (${zone}), che segue l’ultimo dispositivo che ha usato.`,
       quietFrom: "Dalle",
       quietUntil: "Alle",
       quietIncomplete:
@@ -1209,8 +1208,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         Indian: "Oceano Indiano",
         Pacific: "Pacifico",
       },
-      zoneAutomatic: (zone) => `Automatico (questo dispositivo: ${zone})`,
-      zoneDescription: "Le ore di silenzio, il riepilogo e gli orari che l’app scrive per Lei lo seguono.",
       pushTitle: "Notifiche push",
       pushDescription: "Notifiche su questo dispositivo, anche quando l’app è chiusa.",
       unsupported: "Questo browser non supporta le notifiche push.",

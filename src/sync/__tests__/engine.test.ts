@@ -2,7 +2,7 @@ import "fake-indexeddb/auto";
 import Dexie from "dexie";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSyncDb, type SyncDb } from "../db";
-import { createSyncEngine, type SyncEngine, type SyncEngineOptions, type SyncEngineState } from "../engine";
+import { createSyncEngine, syncEngineFor, type SyncEngine, type SyncEngineOptions, type SyncEngineState } from "../engine";
 import { createFakeSyncTransport } from "../testing";
 import type { SyncRequestBody, SyncResponseBody } from "../wire";
 
@@ -89,6 +89,22 @@ describe("write: into the copy at once and into the queue (ka's repo.write)", ()
     await engine.write("handover", "protocols", "p1", "upsert", { notes: "x" });
     const [change] = await db.outbox.toArray();
     expect(Date.parse(change.updated_at)).toBe(Date.parse(ahead) + 1);
+  });
+
+  it("stamps an edit after the server's stamp, which the pull carries BESIDE the row's data (kastlan's wire)", async () => {
+    const { db, engine, transport } = setup();
+    const ahead = new Date(Date.now() + 1_000).toISOString();
+    transport.answer({
+      server_knowledge: 1,
+      changes: [{ entity: "protocols", id: "p1", op: "upsert", pk: 1, data: { notes: "server" }, updated_at: ahead }],
+    });
+    await engine.syncNow();
+    expect(await db.rows.get(["protocols", "p1"])).toMatchObject({ updated_at: ahead, data: { notes: "server" } });
+    await engine.write("handover", "protocols", "p1", "upsert", { notes: "tablet" });
+    const [change] = await db.outbox.toArray();
+    expect(Date.parse(change.updated_at)).toBe(Date.parse(ahead) + 1);
+    // An edit laid back over a later pull keeps the server's newer stamp.
+    expect((await db.rows.get(["protocols", "p1"]))?.updated_at).toBe(ahead);
   });
 
   it("forgets the queue of a row deleted before it ever reached the server, a waiting change included", async () => {
@@ -289,6 +305,19 @@ describe("scopes (D11)", () => {
     ]);
     expect(transport.requests.map((r) => r.scope)).toEqual(["meters", "contacts"]);
   });
+
+  it.each([
+    ["flat", { code: "demo_read_only", detail: "A demo cannot change anything." }],
+    ["nested", { detail: { code: "demo_read_only", detail: "A demo cannot change anything." } }],
+  ])("keeps the server's code and detail of a 403 (%s body)", async (_shape, data) => {
+    const { db, engine, transport } = setup({ scopes: () => ["meters"] });
+    await engine.write("meters", "meter_readings", "m1", "upsert", { value: "1" });
+    transport.failStatus(403, data);
+    await engine.syncNow();
+    expect(await db.outbox.toArray()).toEqual([
+      expect.objectContaining({ status: "rejected", code: "demo_read_only", reason: "A demo cannot change anything." }),
+    ]);
+  });
 });
 
 describe("paging (D12)", () => {
@@ -417,6 +446,52 @@ describe("the worker: start, poll, backoff (D13)", () => {
     await until(second, (s) => s.phase === "idle");
     expect(heard).not.toHaveBeenCalled(); // the first no longer listens
     expect(first.transport.requests).toHaveLength(1);
+  });
+
+  it("stop() aborts the round in flight, and a new engine on the same database waits for it (A→B→A)", async () => {
+    const first = setup();
+    await first.engine.write("handover", "protocols", "p1", "upsert", { notes: "a" });
+    let release!: () => void;
+    let seen: AbortSignal | undefined;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    first.transport.answer(async (body) => {
+      await held;
+      return echoOf(body, 1);
+    });
+    const send = first.transport.send;
+    first.transport.send = (body, signal) => {
+      seen = signal;
+      return send(body, signal);
+    };
+    first.engine.start();
+    await vi.waitFor(() => expect(first.transport.requests).toHaveLength(1));
+    first.engine.stop();
+    expect(seen?.aborted).toBe(true);
+    const sent = vi.fn(async (body: SyncRequestBody) => echoOf(body, 2));
+    const second = createSyncEngine({ db: first.db, scopes: () => ["handover"], send: sent, sharedComputer: () => false });
+    open.push({ db: first.db, engine: second });
+    second.start();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(sent).not.toHaveBeenCalled(); // the first round still owns the queue
+    expect((await first.db.outbox.toArray()).map((c) => c.status)).toEqual(["sending"]);
+    release();
+    await until(second, (s) => s.lastSyncedAt !== null);
+    expect(sent).toHaveBeenCalledTimes(1);
+    // The first round's answer was dropped and its change laid back; the second sent it.
+    expect(sent.mock.calls[0][0].changes.map((c) => c.id)).toEqual(["p1"]);
+    expect(await first.db.outbox.count()).toBe(0);
+  });
+
+  it("syncEngineFor keeps one engine per database name", () => {
+    const { db } = setup();
+    const options = { db, scopes: () => ["handover"], send: vi.fn(), sharedComputer: () => false };
+    const a = syncEngineFor(options);
+    expect(syncEngineFor({ ...options, scopes: () => [] })).toBe(a);
+    open.push({ db, engine: a });
+    const other = createSyncDb(`sync-engine-test-other-${n}`);
+    const b = syncEngineFor({ ...options, db: other });
+    open.push({ db: other, engine: b });
+    expect(b).not.toBe(a);
   });
 
   it("retries after 5 s, 15 s, 60 s, then every 5 min, with a fresh client_now; a good round resets it", async () => {

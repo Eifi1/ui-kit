@@ -773,7 +773,6 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "NotificationTypesSetting — e-mail only, address unverified",
     "QuietHoursSetting — the account's zone, and a held push",
     "TimeZoneSelect",
-    "TimeZoneSetting — Automatic, or a pick",
     "NotificationInbox — keksdose's list, lifted",
     "NotificationBell — the top bar's notifications slot",
     "PushDeviceSetting — every state",

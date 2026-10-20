@@ -10,7 +10,6 @@ import {
   QuietHoursSetting,
   Switch,
   TimeZoneSelect,
-  TimeZoneSetting,
   ToggleGroup,
   UnsubscribePanel,
   unsubscribeTokenType,
@@ -31,7 +30,7 @@ import { Example, Note, code, beat } from "../lib/section";
 
 /**
  * THE NOTIFICATION CARDS (0.36, docs/notifications-harmonization.md §4.2): the types the
- * server answers with their two switches, quiet hours with the zone picker, this device's
+ * server answers with their switches, quiet hours in the account's zone, this device's
  * push, the device list, and the signed-out unsubscribe page. Every part takes the app's
  * request functions; here a pretend server answers. keksdose's nine types and its three
  * headings, kastlan's two and Kurvenschmiede's three are their words as the contract
@@ -106,7 +105,7 @@ const KEKSDOSE_TYPES: readonly NotificationTypeEntry<KeksdoseType>[] = [
   {
     id: "feedback_received",
     label: "New feedback and reworks",
-    description: "When someone files a report, sends one back, or a page crashes.",
+    description: "When someone files a report or sends one back.",
   },
 ];
 
@@ -277,28 +276,23 @@ export function NotificationTypesKurvenschmiedeDemo() {
 /* ── Quiet hours ─────────────────────────────────────────────────────────── */
 
 export function QuietHoursDemo() {
-  const [settings, setSettings] = useState<{ start: string | null; end: string | null; timezone: string | null }>({
+  const [settings, setSettings] = useState<{ start: string | null; end: string | null }>({
     start: "22:00",
     end: "07:00",
-    timezone: "Pacific/Auckland",
   });
-  const [accountZone, setAccountZone] = useState(true);
+  const [reported, setReported] = useState(true);
   const { lines, log } = useLog();
   return (
-    <Example
-      label="QuietHoursSetting — the account's zone, and a held push"
-      hint="zone, zoneHref, held (0.46); without zone the 0.36 picker"
-    >
+    <Example label="QuietHoursSetting — the account's zone, and a held push" hint="zone, held (0.46)">
       <div className="mb-3">
-        <Switch checked={accountZone} onCheckedChange={setAccountZone} label="The zone is the account's (0.46)" />
+        <Switch checked={reported} onCheckedChange={setReported} label="A device has reported its zone" />
       </div>
       <Column>
         <QuietHoursSetting
           start={settings.start}
           end={settings.end}
-          {...(accountZone
-            ? { zone: settings.timezone ?? "Europe/Zurich", zoneHref: "#time-zone-setting", held: true }
-            : { timezone: settings.timezone })}
+          zone={reported ? "Pacific/Auckland" : null}
+          held
           inbox
           onChange={async (patch) => {
             log(`PATCH ${JSON.stringify(patch)}`);
@@ -306,17 +300,17 @@ export function QuietHoursDemo() {
             setSettings((current) => ({
               start: patch.quiet_hours_start !== undefined ? patch.quiet_hours_start : current.start,
               end: patch.quiet_hours_end !== undefined ? patch.quiet_hours_end : current.end,
-              timezone: patch.timezone ?? current.timezone,
             }));
           }}
         />
       </Column>
       <Readout lines={lines} />
       <Note>
-        Since 0.46 the zone is the account&apos;s ({code("TimeZoneSetting")} below): with {code("zone")} the card names
-        it and links to that row, and a time sends no zone. {code("held")} says a held push arrives when the
-        window ends — an app that runs the notifications tick (keksdose). Switch it off for the 0.36 card: the
-        stored zone is Auckland&apos;s, so (unless you are there) it offers this device&apos;s.
+        Since 0.46 the zone is the account&apos;s, and automatic only (amended 2026-10-20): the zone of the device
+        last used ({code("/auth/me")}&apos;s {code("device_timezone")}, reported by {code("useDeviceZoneReport")} when
+        it differs, never for a demo), else Zurich. The card names it read-only and a time sends no zone; screens
+        keep showing device time. {code("held")} says a held push arrives when the window ends — an app that runs
+        the notifications tick (keksdose). Switch the report off for the fallback.
       </Note>
     </Example>
   );
@@ -325,41 +319,14 @@ export function QuietHoursDemo() {
 export function TimeZoneSelectDemo() {
   const [zone, setZone] = useState("Europe/Zurich");
   return (
-    <Example label="TimeZoneSelect" hint="every zone Intl lists, city under region">
+    <Example label="TimeZoneSelect" hint="deprecated 0.46; removed in 0.47">
       <div className="max-w-72">
         <TimeZoneSelect value={zone} onChange={setZone} />
       </div>
       <Note>
         Type &quot;Zur&quot; for Zurich. The regions are in the kit&apos;s words ({code("notifications.regions")}); a
-        stored zone the runtime no longer lists is kept. Not clearable.
-      </Note>
-    </Example>
-  );
-}
-
-export function TimeZoneSettingDemo() {
-  const [zone, setZone] = useState<string | null>(null);
-  const { lines, log } = useLog();
-  return (
-    <Example label="TimeZoneSetting — Automatic, or a pick" hint="the account's zone (0.46, §10.3)">
-      <Column>
-        <TimeZoneSetting
-          id="time-zone-setting"
-          value={zone}
-          onChange={async (next) => {
-            log(`PATCH /auth/me ${JSON.stringify({ timezone: next })}`);
-            await beat(400);
-            setZone(next);
-          }}
-        />
-      </Column>
-      <Readout lines={lines} />
-      <Note>
-        For the settings group that holds the language. Automatic follows the device last used (each start
-        reports it through {code("useDeviceZoneReport")}, only when it differs and never for a demo); off pins
-        this device&apos;s zone, and the picker changes it. A pick that is not this device&apos;s offers &quot;Use
-        it&quot;. Quiet hours, the digest and the times the server writes follow it; {code("<UiKitProvider timeZone>")}{" "}
-        shows the kit&apos;s timestamps in it, a bare date never shifted.
+        stored zone the runtime no longer lists is kept. Not clearable. Deprecated in 0.46 and removed in 0.47:
+        the zone is automatic (§10.3, amended 2026-10-20), so no app picks one.
       </Note>
     </Example>
   );
@@ -681,7 +648,6 @@ export function NotificationsPage() {
       <NotificationTypesKurvenschmiedeDemo />
       <QuietHoursDemo />
       <TimeZoneSelectDemo />
-      <TimeZoneSettingDemo />
       <NotificationInboxDemo />
       <NotificationBellDemo />
       <PushDeviceDemo />

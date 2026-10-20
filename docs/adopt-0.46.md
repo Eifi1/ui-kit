@@ -18,8 +18,9 @@ which app's workaround it replaces. After any kit bump, regenerate the API types
 (`npm run generate:api` or the app's own; keksdose's is in frontend/package.json:15): a
 server-kit bump alone can change them (0.15 did: `AdminAction` gained `group_deactivate` /
 `group_reactivate`; keksdose N4). server-kit 0.16 changes several exposed models, so expect a
-diff: `TypeSwitches.push`, `InboxItem.company`, the auth zone fields (`UserResponse.timezone` /
-`device_timezone`, `ProfileUpdate`, `RegisterRequest.device_timezone`), `SyncRequest.client_now`
+diff: `TypeSwitches.push`, `InboxItem.company`, the auth zone field (`device_timezone` on
+`UserResponse`, `ProfileUpdate` and `RegisterRequest`; no `timezone`: the zone is automatic
+only, notifications §10.3 amended 2026-10-20), `SyncRequest.client_now`
 and the new `legacy_rework_append` code.
 
 ## The 0.45 adoptions: ui-kit fixes
@@ -92,7 +93,7 @@ eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.16.0
 sha256: SHA256_AT_RELEASE
 ```
 
-Three changes show on the bump itself:
+Four changes show on the bump itself:
 
 - **The legacy rework append is a 422** (`code: "legacy_rework_append"`): each app has a
   backend test that still expects the conversion (its section, further down, names it).
@@ -100,10 +101,14 @@ Three changes show on the bump itself:
   `isoformat()`'s `+00:00` (`TourProgressService.export`). A test that pins the export's value
   fails until it is re-pinned.
 - **`test_mail_message` returns `HtmlMailMessage`**, a `MailMessage` whose `html` is a `str`.
+- **The notification settings answer gains `push`** (`TypeSwitches.push`): `null` where the
+  registry says `push_channel=False` (kastlan, KS), else answered from the stored switch, or
+  the type's default where none is stored. An app that stores one switch per type must
+  land its channel migration IN the bump, not after it (keksdose below).
 
 | App | Change |
 | --- | --- |
-| keksdose | Drop `message.html or ""` and its comment after `test_mail_message` (backend/keksdose/adapters/api/admin_router.py:495-496). No tours export (tours stay on the device). |
+| keksdose | Drop `message.html or ""` and its comment after `test_mail_message` (backend/keksdose/adapters/api/admin_router.py:495-496). No tours export (tours stay on the device). **The channel migration lands in the bump's commit** (keksdose B1): with `push_channel=True` (the default) `resolve_switches` answers `push` from the type's DEFAULT, because `_stored` sets only `app=row.enabled` (domain/services/notification_preferences_service.py:49-50), so a type turned off still shows Push on; and the 0.46 card's Push click sends `{push}`, which `patch_switches` drops (it writes only `row.enabled = switches.app`, :84-86). So in the same commit: `notification_preferences` gains `app` and `push` (`migrate_enabled_to_channels`: app = push = enabled, a missing row stays missing), `_stored` reads both, `patch_switches` writes both, and push delivery reads `push`. tests/api/test_notification_settings.py:18-30 (`_DEFAULT_TYPES`, no `"push"`) is re-pinned with it. |
 | kastlan | **The bump fails a backend test until it is re-pinned** (kastlan B1): tests/api/test_tour_progress.py:66, `"completed_at": "2026-10-01T08:00:00+00:00"` → `"2026-10-01T08:00:00Z"`. |
 | Kurvenschmiede | **The bump fails a backend test until it is re-pinned** (KS S1): backend/tests/api/test_tours_api.py:99, `"2026-10-18T07:00:00+00:00"` → `"2026-10-18T07:00:00Z"`. |
 
@@ -159,7 +164,7 @@ raises `ValueError` on it answers 422; store `name.strip()`.
 | App | Change |
 | --- | --- |
 | keksdose | Nothing (no group renames). |
-| kastlan | Bump to the 0.16.0 wheel, then log the names again. **Validate a new name by the kit's rule** (kastlan S1): `PlatformCompanyUpdate.name` (domain/schemas/platform.py:37, a bare `str \| None`: a rename to `"  "` succeeds today) and `CompanySettingsUpdate.name` (domain/schemas/property.py:45, `min_length=1` lets `"   "`, a tab or a soft hyphen through) each get a `field_validator` on `group_name_problem` → 422. The log no longer 500s either way; this keeps bad names out of the table. In domain/services/platform_service.py:195-198, pass `detail={**VIA_PLATFORM, "from": company.name, "to": data.name}` before the name is set, and drop the comment at :196-197. In adapters/api/company_router.py:43-46, pass `detail={"from": renamed_from, "to": company.name}` and drop the comment at :44-45. The frontend already maps them: settings/components/admin-actions-card.tsx:37 turns `detail.from` / `detail.to` into the entry's `renamed`, so the row reads "Company renamed from A to B". Add a test that records a rename with spaced names, e.g. "Test AG" → "Test AG Bern". |
+| kastlan | Bump to the 0.16.0 wheel, then log the names again. **Validate a new name by the kit's rule** (kastlan S1): `PlatformCompanyUpdate.name` (domain/schemas/platform.py:37, a bare `str \| None`: a rename to `"  "` succeeds today) and `CompanySettingsUpdate.name` (domain/schemas/property.py:45, `min_length=1` lets `"   "`, a tab or a soft hyphen through) each get a `field_validator` on `group_name_problem` → 422. The log no longer 500s either way; this keeps bad names out of the table. In domain/services/platform_service.py:195-198, pass `detail={**VIA_PLATFORM, "from": company.name, "to": data.name}` before the name is set, and drop the comment at :196-197. In adapters/api/company_router.py:43-46, pass `detail={"from": renamed_from, "to": company.name}` and drop the comment at :44-45. The frontend already maps them: settings/components/admin-actions-card.tsx:37 turns `detail.from` / `detail.to` into the entry's `renamed`, so the row reads "Company renamed from A to B". Add a test that records a rename with spaced names, e.g. "Test AG" → "Test AG Bern". **Two tests pin the nameless detail and change with it** (kastlan 2): tests/api/test_platform_follow_ups.py:41 (`{"via": "platform"}`) and :53 (`{}`) gain `from` / `to`. |
 | Kurvenschmiede | Nothing. A team's rename keeps `{}` (team_service.py:224); a team's name is never logged. |
 
 ## The legacy rework append is a 422 (server-kit 0.16.0, BREAKING)
@@ -180,8 +185,8 @@ no feedback words by code either).
 
 | App | Change |
 | --- | --- |
-| keksdose | **The bump fails a backend test**: tests/api/test_feedback.py:186-225 (`test_the_author_can_rework_a_settled_entry_by_appending_to_it`) expects 200 and a rework entry; it becomes the 422 with `code == "legacy_rework_append"` and an unchanged row. The PWA keeps an old bundle for days (`registerType: "prompt"`), so expect the toast until its users accept the update prompt. |
-| kastlan | **The bump fails two backend tests**: tests/api/test_feedback_workflow.py:391 (`test_author_rework_append_reopens_server_side`) and :410 (`test_admin_rework_append_goes_to_rework`) → the 422; :433 (an append while OPEN stays a body edit) holds. Update the module docstring (:9-10, "still turned into such an entry for one release"). **Deploying straight from 0.11** (production): a tab open across the deploy gets the 422 on a rework until it reloads. Zero risk: deploy a release on a ≤ 0.15 wheel first, then this one. |
+| keksdose | **The bump fails a backend test**: tests/api/test_feedback.py:186-225 (`test_the_author_can_rework_a_settled_entry_by_appending_to_it`) expects 200 and a rework entry; it becomes the 422 with `code == "legacy_rework_append"` and an unchanged row. So does :309-350 (`test_an_admins_rework_reopens_the_entry_without_being_told_to`, an ADMIN's append from NEEDS_LIVE_TEST: `plan_update` refuses an admin's too, before any write); :353 and :470 hold, and the FE sends no appends (its only rework call is `onRework`, feedback-page.tsx:244). The PWA keeps an old bundle for days (`registerType: "prompt"`), so expect the toast until its users accept the update prompt. |
+| kastlan | **The bump fails two backend tests**: tests/api/test_feedback_workflow.py:391 (`test_author_rework_append_reopens_server_side`, five parametrized statuses) and :410 (`test_admin_rework_append_goes_to_rework`) → the 422 (`code == "legacy_rework_append"`, the row unchanged); :422 (an admin's note with a status) and :433 (an append while OPEN stays a body edit) hold. Update the module docstring (:9-10, "still turned into such an entry for one release") and CLAUDE.md, which says the same twice: :86 ("an old client's body append is still converted for one release") and the PATCH row at :198 → "an old client's rework append is a 422 (`legacy_rework_append`)". **Deploying straight from 0.11** (production): a tab open across the deploy gets the 422 on a rework until it reloads. Zero risk: deploy a release on a ≤ 0.15 wheel first, then this one. |
 | Kurvenschmiede | **The bump fails a backend test**: backend/tests/api/test_feedback_api.py:570 (`test_an_old_clients_appended_body_is_written_as_the_authors_entry`) → the 422. Update `FeedbackUpdate`'s docstring (domain/schemas/feedback.py:69-72, "the kit still recognises the old shape"). `refusalMessage` (shared/api/client.ts) needs no entry: an unknown code falls through to the detail. |
 
 ## The 0.45 adoptions: guide notes
@@ -207,7 +212,9 @@ no feedback words by code either).
 - **Vulture** (KS 2): `SqlTourProgressStore.completions` is called only by the kit's
   service through the port, so a dead-code check flags it. KS baselines it in
   `backend/.vulture-baseline`, as the feedback and translation-review store methods.
-  kastlan and keksdose run no vulture.
+  keksdose runs no vulture. kastlan does (package.json:26, `check:deadcode:backend`), at
+  `--min-confidence 80`, where an unused method (60 %) is not reported, so it needs no baseline
+  line for this (kastlan 2).
 
 ## Desktop actions from the phone's swipes (keksdose dev#598)
 
@@ -307,7 +314,7 @@ service worker now re-registers it.
 
 | App | Change |
 | --- | --- |
-| keksdose | frontend/src/sw.ts: `import { handlePushSubscriptionChange } from "@eifi1/ui-kit/push-worker"` (the worker-safe subpath, never the barrel, which reaches React), `handlePushSubscriptionChange(self, { pushKey, replace })` beside the `push` listener (:229), both requests with plain `fetch` (the worker has no token). Backend: the route beside `POST /notifications/devices/unregister` (adapters/api/notifications_router.py:87), on `PushReplaceIn`, rate-limited by the per-instance `SlidingWindowRateLimiter` as the other unauthenticated routes (auth_router.py:82). §10.6's rules: **`push_subscriptions` is FORCE RLS and the route has no session**, so the lookup by `old_endpoint` and the update run inside `async with bypass_rls_for(session)` (infrastructure/tenancy.py:130) with an explicit `PushSubscription.endpoint == body.old_endpoint` filter (the only unauthenticated route that takes the bypass); **proof before the 409**: `push_auth_matches(row.auth, body.old_auth)` first, and only a proven device learns the new endpoint is taken; an **inactive or demo** account → the same 404, and its row deleted; push rows **deleted on sign out everywhere** (auth_router.py:916), **on deactivation** (`request_deletion`, account_deletion_service.py:199) and **on erasure** (`erase_one`, :337). **The reaper's race**: a 404/410 marks the row `gone_at` and stops sending to it instead of deleting it (domain/services/push_service.py:294-298 → a migration adds `push_subscriptions.gone_at`); the replace may claim a gone row within `PUSH_GONE_GRACE` (7 days, server-kit), and the daily reap deletes gone rows older than that. Never log the route's body; its 422 is a plain detail, never the input (`old_auth`). A test per answer (200 in place, 200 claiming a gone row inside the grace and 404 past it, 404 unknown or wrong auth, 404 inactive and demo, 409 another account's endpoint only after the proof). |
+| keksdose | frontend/src/sw.ts: `import { handlePushSubscriptionChange } from "@eifi1/ui-kit/push-worker"` (the worker-safe subpath, never the barrel, which reaches React), `handlePushSubscriptionChange(self, { pushKey, replace })` beside the `push` listener (:229), both requests with plain `fetch` (the worker has no token). The checkup card (features/auth/push-checkup-card.tsx:196) listens only for the window event, but a rotation arrives as the worker's `postMessage`: relay it to `PUSH_SUBSCRIPTION_CHANGED` in app/use-sw-messages.ts (keksdose N3). Backend: the route beside `POST /notifications/devices/unregister` (adapters/api/notifications_router.py:87), on `PushReplaceIn`, rate-limited by the per-instance `SlidingWindowRateLimiter` as the other unauthenticated routes (auth_router.py:82). §10.6's rules: **`push_subscriptions` is FORCE RLS and the route has no session**, so the lookup by `old_endpoint`, **the 409's lookup of `subscription.endpoint` on another account** (keksdose S5: under FORCE RLS another user's row is invisible, the move then hits `UNIQUE(endpoint)` and answers 500, not 409) and the update all run inside `async with bypass_rls_for(session)` (infrastructure/tenancy.py:130) with explicit `PushSubscription.endpoint == …` filters (the only unauthenticated route that takes the bypass); **proof before the 409**: `push_auth_matches(row.auth, body.old_auth)` first, and only a proven device learns the new endpoint is taken; an **inactive or demo** account → the same 404, and its row deleted; push rows **deleted on sign out everywhere** (auth_router.py:916), **on deactivation** (`request_deletion`, account_deletion_service.py:199) and **on erasure** (`erase_one`, :337). **The reaper's race**: a 404/410 marks the row `gone_at` and stops sending to it instead of deleting it (domain/services/push_service.py:294-298 → a migration adds `push_subscriptions.gone_at`); the replace may claim a gone row within `PUSH_GONE_GRACE` (7 days, server-kit), and the daily reap deletes gone rows older than that. Never log the route's body; its 422 is a plain detail, never the input (`old_auth`). A test per answer (200 in place, 200 claiming a gone row inside the grace and 404 past it, 404 unknown or wrong auth, 404 inactive and demo, 409 another account's endpoint only after the proof). |
 | kastlan | Nothing until its own push (its injectManifest worker, app list); then the same two steps. Then: import from `@eifi1/ui-kit/push-worker`, and §10.6's rules — device rows account-scoped **without RLS** (a sessionless route under forced RLS answers 404), push rows deleted on sign-out-everywhere, on deactivation (account_service.py:191-192) and on erasure, inactive or demo → 404, proof before the 409, the reaper's `gone_at` with the 7-day claim. |
 | Kurvenschmiede | Nothing (no push). |
 
@@ -336,26 +343,31 @@ the app passes the new props.
   `typeSwitches` (the settings `GET`'s `types`) draws "Types on this device" on each row — a
   switch per type with push on; each flip saves the device's **whole** list
   (`PATCH /notifications/devices/{id} {"muted_types": [...]}`). `PushDeviceItem.muted_types?`.
-- **`TimeZoneSetting`** (`value` = `/auth/me`'s `timezone`, `null` = Automatic; `onChange(zone |
-  null)` → `PATCH /auth/me {timezone}`) for the group that holds the language, and
-  **`useDeviceZoneReport({ stored: me.device_timezone, report, isDemo })`** once at app start
-  (reports only when the device's zone differs, once per start, never for a demo).
-- **`QuietHoursSetting`**: pass `zone` (the account's effective zone) and `zoneHref` (the zone
-  row): the picker goes, the card says "In your time zone (…)" and links there, and a time sends
-  no zone. **`timezone` is deprecated** (read only without `zone`; removed in 0.47 with the
-  settings resource's `timezone` alias). `held` (an app that runs the notifications tick) says a
-  held push arrives when the window ends.
-- **`<UiKitProvider timeZone>`**: `useKitFormat().formatDate` / `formatRelativeTime` show
-  timestamps in it when a call names none; a bare `"YYYY-MM-DD"` is never shifted.
+- **The zone is automatic only** (notifications §10.3, amended 2026-10-20, Marcel): the
+  account's zone is the device last used, else Zurich; **no picker and no time-zone row in any
+  app**, and screens keep showing device time. **`useDeviceZoneReport({ stored:
+  me.device_timezone, report, isDemo })`** once at app start (`report` = `PATCH /auth/me
+  {device_timezone}`; only when the device's zone differs, once per start, never for a demo);
+  sign-up sends `device_timezone` too.
+- **`QuietHoursSetting`**: pass `zone={me.device_timezone ?? null}` (`null` names `fallbackZone`,
+  Zurich): the card names the zone read-only ("In your time zone (Europe / Zurich), which
+  follows the device you last used.") and a time never sends a zone. **`timezone` is
+  deprecated** (shown read-only without `zone`, no picker any more; removed in 0.47), as are
+  `NotificationSettingsPatch.timezone`, `TimeZoneSelect`, `timeZoneOptions` and the labels
+  `deviceZone` / `useDeviceZone`. `held` (an app that runs the notifications tick) says a held
+  push arrives when the window ends.
+- **`<UiKitProvider timeZone>`** stays in the kit (`formatDate` / `formatRelativeTime` show
+  timestamps in it when a call names none; a bare `"YYYY-MM-DD"` is never shifted), but no app
+  passes it this round: screens keep device time.
 - New words in all seven languages (`notifications.channel*`, `inbox*`, `bell*`, `deviceTypes*`,
-  `zone*`, `quietZone*`; `quietDescription(inbox, held?)`); an app's `notifications` overrides
-  keep type-checking.
+  `quietZone`; `quietDescription(inbox, held?)`); an app's `notifications` overrides keep
+  type-checking.
 
 | App | Change |
 | --- | --- |
-| keksdose | **Inbox:** features/auth/notification-inbox.tsx:67-179 → `<NotificationInbox items={inbox.data?.items} unreadCount={inbox.data?.unread_count ?? 0} loading={inbox.isPending} onMarkRead={(ids) => markRead.mutateAsync(ids)} onClear={() => clear.mutateAsync()} icon={(type) => TYPE_ICONS[type as NotificationTypeId]} formatDate={(iso) => formatDateTime(iso, locale)} />` in settings-page.tsx:178 (the device's zone, as today: no provider `timeZone`); `TYPE_ICONS` (:44-56) stays and gains `feedback_received`; its `notifications.inbox_*` keys go (the kit's words are keksdose's). Keep the avatar dot (app/account-menu.tsx:365-378) and the menu row's count (:146-171): **no `NotificationBell`**. **Switches:** the migration `notification_preferences.enabled` → `app` and `push` (a missing row stays missing; `migrate_enabled_to_channels`); `push_subscriptions.muted_types` (FORCE RLS as today); `PATCH /notifications/devices/{id}`; the `/push/preferences` shim writes both, and `couple_push_to_app=True` while old bundles send `{app}` alone. features/auth/notification-settings-cards.tsx:165 passes the answer as is (now with `push`); :231 `PushDevicesSetting` gains `types`, `typeSwitches={settings.data?.types}` and `onMutedTypesChange`. `PushData.inbox=False` when no inbox row is written, and frontend/src/sw.ts:256 shows the notification when `data.inbox === false` even with a focused window. **Zone:** copy `notification_settings.timezone` → `users.timezone` (then drop the column); `device_timezone`; `TimeZoneSetting` in features/auth/appearance-card.tsx beside the language; `useDeviceZoneReport` in the shell; notification-settings-cards.tsx:205 `QuietHoursSetting` gets `zone={me.effective zone}`, `zoneHref`, `held` (no `timezone`); the four UTC writers through `effective_zone` (billing_notice_service.py:181-188, account_deletion_service.py:268, :274, feedback_publish_notice_service.py:124, push_notifications.py:938-960). **Queue:** the table and store; `_deliver_to_user` (push_notifications.py:396-399) holds a quiet push instead of dropping it; the 15-min product-metrics Cloud Run Job becomes the tick (`notifications_tick` + `send_queued_replies`, out of the daily job at scheduler.py:248) and carries the mail env. |
-| kastlan | **No push:** `NotificationTypes(..., push_channel=False)`; `StoredSwitches` takes the defaulted `push` (notification_settings_service.py:52, :71); the card shows two columns for `invoices_overdue` (features/settings/pages/settings-page.tsx:332), nothing to change there. **Inbox for `invoices_overdue`:** the table (`user_id`, `company_id`, account-scoped, no RLS), `InboxStore` + `inbox_router`; the 00:10 job writes a row per (user, company, event) in the mailing loop (overdue_mail.py:151-170); **`NotificationBell` in `notifications=`** (app/top-bar.tsx:136), `onOpen` switching the acting company first when `item.company` is another's; the inbox's page or card for `href`. The poller stays, fed from the inbox rows and the live `dunnings_pending` count (tests/integration/test_notification_poll.py, tests/api/test_staff_only_routes.py:174, use-notifications.test.ts follow). **Zone:** `users.timezone`, `users.device_timezone`, `/auth/me`; `TimeZoneSetting` beside `LanguageSetting` (settings-page.tsx:153); `useDeviceZoneReport`; an app-zone `today()` (Europe/Zurich) on the request paths (invoice_logic.py:39, :61; dunning_repository.py:86-87; journal_entry_service.py:474, :494, :518; accounting_router.py:373, :384, :459; deposit_service.py:143, :150); billing notices stay Zurich. Optional: `<UiKitProvider timeZone={me.timezone ?? undefined}>`. **No queue in 0.46** (`notifications-flush` in `JOBS` with its first queued type). |
-| Kurvenschmiede | **No push, no inbox, no bell:** `NotificationTypes(..., push_channel=False)`; `settings_of` and the PATCH filter by `TYPES.receivable(lambda t: t.id != FEEDBACK_RECEIVED or user.role == ADMIN)` (notification_service.py:124-127); its e-mail-only rows keep their single switch (frontend/src/features/notifications/notifications-card.tsx:29). **Zone:** the two columns, `/auth/me` (ignored for a demo, as auth_router.py:249-262); `TimeZoneSetting` beside `LanguageSetting` (frontend/src/features/settings/account-cards.tsx:127); `useDeviceZoneReport`; the billing notice's day in the recipient's effective zone (`NOTICE_ZONE` → the resolver) with a test. Optional: the provider's `timeZone`. No queue, no flush route, no Scheduler job. |
+| keksdose | **Inbox:** features/auth/notification-inbox.tsx:67-179 → `<NotificationInbox items={inbox.data?.items} unreadCount={inbox.data?.unread_count ?? 0} loading={inbox.isPending} onMarkRead={(ids) => markRead.mutateAsync(ids)} onClear={() => clear.mutateAsync()} icon={(type) => TYPE_ICONS[type as NotificationTypeId]} formatDate={(iso) => formatDateTime(iso, locale)} describeError={() => t("notifications.inbox_clear_failed")} />` **replacing the whole `<Card>` wrapper** at features/auth/settings-page.tsx:177-179 (the kit's inbox draws its own Card; keksdose N1), in the device's zone as today (no provider `timeZone`); drop `useClearInbox`'s toast (shared/push/use-inbox.ts:114), so a failed clear shows one message, the kit's line (N2). `TYPE_ICONS` (:44-56) stays and gains `feedback_received`. **Only four `notifications.inbox_*` keys go** (keksdose S6): `clear_all`, `clear_confirm`, `empty`, `mark_all_read`; `inbox_title` and `inbox_unread` (app/account-menu.tsx:162, :169, :375), `inbox_heading` (features/auth/settings-index.ts:170) and `inbox_clear_failed` (above) stay. Keep the avatar dot (app/account-menu.tsx:365-378) and the menu row's count (:146-171): **no `NotificationBell`**. **Switches:** the migration `notification_preferences.enabled` → `app` and `push` (a missing row stays missing; `migrate_enabled_to_channels`) lands IN the bump, with the storage and delivery change (server-kit section, keksdose B1); `push_subscriptions.muted_types` (FORCE RLS as today); `PATCH /notifications/devices/{id}`. **Couple only in the legacy shim** (keksdose S1): the `/push/preferences` shim (adapters/api/push_router.py:77-89) passes `couple_push_to_app=True` and so writes both, since old bundles send `{app}` alone; `PATCH /notifications/settings` never couples, or the new card's "In the app" column (it sends `{app}` alone) would flip Push too. features/auth/notification-settings-cards.tsx:165 passes the answer as is (now with `push`); :231 `PushDevicesSetting` gains `types`, `typeSwitches={settings.data?.types}` and `onMutedTypesChange`. `PushData.inbox=False` when no inbox row is written, and frontend/src/sw.ts:256 shows the notification when `data.inbox === false` even with a focused window. **Zone (automatic only, amended 2026-10-20; supersedes decision 6 and build review 2's B3):** a migration adds `users.device_timezone`, seeded from `notification_settings.timezone` where set (a start value; the next app start reports the device's), then drops that column (domain/models/push_subscription.py:203); `/auth/me` answers `device_timezone`, `PATCH /auth/me` writes it through `apply_zone_update` (`ProfileUpdateRequest` inherits it from `kit.ProfileUpdate`; a `timezone` is a 422), and sign-up stores `RegisterRequest.device_timezone`; `useDeviceZoneReport` in the shell; **no time-zone row**. Quiet hours read `effective_zone(user.device_timezone)` (domain/services/notification_preferences_service.py:199, now `resolve_zone(settings.timezone)`), and the knobs stop answering `timezone` (:171); the `/push/settings` shim (adapters/api/push_router.py:101-115) ignores a `timezone` an old bundle sends. features/auth/notification-settings-cards.tsx:205-209 `QuietHoursSetting`: `timezone=` → `zone={me.device_timezone ?? null}`, plus `held`. The UTC writers through `effective_zone(user.device_timezone)`: billing_notice_service.py:181-188 (`_zone_of`, its UTC fallback goes), account_deletion_service.py:268, :274, feedback_publish_notice_service.py:124 and the scheduled-due sweep (push_notifications.py:938-960). **Queue:** the table and store; `_deliver_to_user` (push_notifications.py:396-399) holds a quiet push instead of dropping it; the 15-min product-metrics Cloud Run Job becomes the tick (keksdose S4): run `notifications_tick` apart from `run_product_metrics` (infrastructure/scheduler.py:364-374, which re-raises), so a broken metrics collect never skips the tick; move `send_queued_replies` (scheduler.py:248) into it; and give the job the mail settings, the VAPID keys and `APP_BASE_URL` (deploy/gcp/cloudbuild.yaml:640-642 sets none of them): without them, since 23c18e71, console mail in prod answers `False` and `QueueService` drops a row "failed" after 3 attempts (about 45 min), so a crash bundle would be lost silently. |
+| kastlan | **No push:** `NotificationTypes(..., push_channel=False)`; `StoredSwitches` takes the defaulted `push` (notification_settings_service.py:52, :71); the card shows two columns for `invoices_overdue` (features/settings/pages/settings-page.tsx:332). Without `push_channel=False` the two staff types answer `push: false` and the card draws a Push column. **The bump breaks tests/api/test_notification_settings.py** (kastlan B2): `TypeSwitches` gains `push`, serialized `null` here, so every exact-dict assert fails: `DEFAULTS` (:18-24) and :37, :44, :50, :57, :61, :78, :97 (the export), :120; and `feedback_received` (below) is a third type for `test_user`, an ADMIN (tests/api/conftest.py:66-77), which also breaks the order at :38, `DEFAULTS` and :127-130 (unsubscribe-all walks the registry, notification_settings_service.py:97). **Inbox for `invoices_overdue`:** the table (`user_id`, a plain `company_id` column, NOT `CompanyMixin`: infrastructure/rls.py:41-50 builds RLS from that mixin; "like `notification_mail_sent`" means no RLS only, that table has no `company_id`, domain/models/notification.py:43-48), `InboxStore` + `inbox_router`. **The inbox can't ride the overdue mail loop** (kastlan S10; overdue_mail.py:151-170): that loop walks `_recipients` (:95-116), which keeps only the e-mail switch and `email_verified`, skips events already mailed and `continue`s on a failed send, so someone with the app switch on and mail off (the inbox's own case) gets no row, and a failed mail drops the row. The 00:10 job writes the rows in a loop of its own: recipients by the app switch, active, non-demo, staff in the event's company; one row per (user, type, event), the table's unique key. **The inbox routes' writes** (kastlan S11; POST /notifications/inbox/read, DELETE /notifications/inbox): in the OWN_ACCOUNT sweep (tests/api/test_staff_only_routes.py:56-101; not staff-gated, the rows are the account's), in `BILLING_WRITES` (infrastructure/dependencies.py:203), and a `DEMO_WRITES` decision. The kit's routes don't commit: kastlan's `InboxStore` commits. **`NotificationBell` in `notifications=`** (app/top-bar.tsx:136), `onOpen` switching the acting company first when `item.company` is another's; the inbox's page or card for `href`. The poller stays, fed from the inbox rows and the live `dunnings_pending` count (tests/integration/test_notification_poll.py, tests/api/test_staff_only_routes.py:174, use-notifications.test.ts follow). **Zone (automatic only, amended 2026-10-20):** `users.device_timezone`, `/auth/me` (`apply_zone_update`; a demo's ignored), sign-up's `device_timezone`; `useDeviceZoneReport` in the shell; **no time-zone row** (nothing beside `LanguageSetting`); an app-zone `today()` (Europe/Zurich) on the request paths (invoice_logic.py:39, :61; dunning_repository.py:86-87; journal_entry_service.py:474, :494, :518; accounting_router.py:373, :384, :459; deposit_service.py:143, :150); billing notices stay Zurich. Screens keep device time: no provider `timeZone`. **No queue in 0.46** (`notifications-flush` in `JOBS` with its first queued type). **Zone, two more points** (kastlan 2): the migration (`users.device_timezone`) lands in the bump's commit, since after the bump PATCH /auth/me accepts `device_timezone` and `apply_patch` sets it on a `User` with no column: a 200 and the value lost. The `today()` list also misses accounting_router.py:134, :351, :420, :486, :510, :554; invoice_service.py:54; finance_repository.py:340; dunning_service.py:207; rent_increase_service.py:137, :208; report_service.py:50, :519; financial_report_service.py:367; financial_report_pdf_service.py:92, :126; lease_pdf_service.py:199; schemas/tenancy.py:34. `local_today` takes an aware now, and kastlan's `clock.utc_now()` is naive (domain/services/clock.py:15-17): pass `datetime.now(UTC)`, or `utc_now().replace(tzinfo=UTC)`. |
+| Kurvenschmiede | **No push, no inbox, no bell:** `NotificationTypes(..., push_channel=False)`; `settings_of` and the PATCH filter by `TYPES.receivable(lambda t: t.id != FEEDBACK_RECEIVED or user.role == ADMIN)` (notification_service.py:124-127); its e-mail-only rows keep their single switch (frontend/src/features/notifications/notifications-card.tsx:29). **Zone (automatic only, amended 2026-10-20):** the `users.device_timezone` column; `/auth/me` (ignored for a demo, as auth_router.py:249-262) in four places, since KS's answer is hand-written (KS N1): `UserResponse` (backend/kurvenschmiede/domain/schemas/auth.py:46, not the kit's `MeResponse`) gains `device_timezone`; `ProfileUpdate` (:154) inherits it from the kit, nothing to do; the frontend mirror (frontend/src/shared/types/auth.ts) and its mirror.test.ts follow; the export's `account` (domain/services/export_service.py:167) gains it. `useDeviceZoneReport` in the shell; **no time-zone row** (nothing beside `LanguageSetting`); the billing notice's day in the recipient's zone (`NOTICE_ZONE` → `effective_zone(user.device_timezone)`) with a test. Screens keep device time: no provider `timeZone`. No queue, no flush route, no Scheduler job. |
 
 ## Feedback alerts for admins (`feedback_received`; feedback §11; server-kit 0.16.0)
 
@@ -363,22 +375,23 @@ docs/feedback-harmonization.md §11 (settled 2026-10-19). One type, `feedback_re
 report, a rework that lands OPEN, and a new crash; on by default in every channel the app offers,
 `quiet`; never the actor, a demo or the platform superuser. **ui-kit:** `useFeedbackNotificationTypes()`
 now returns a third entry, `feedback_received` ("New feedback and reworks", "When someone files a
-report, sends one back, or a page crashes."), drawn only where the server answers it (an admin);
+report or sends one back." — a crash is mailed only inside keksdose's bundle, so the line names no crash, KS S1), drawn only where the server answers it (an admin);
 `feedbackNotificationTypes.adminGroup` ("Admin") is a heading an app may put over it. **Type
 change on the bump:** `FeedbackNotificationTypeId` gains `"feedback_received"`, so an app that
 spreads the hook into a `NotificationTypeEntry<NotificationTypeId>[]` adds `feedback_received` to
 its own id union (all three declare the type in this round; keksdose
 features/auth/notification-settings-cards.tsx:145, kastlan
-features/settings/pages/settings-page.tsx:313-320, Kurvenschmiede
+features/settings/hooks/use-notification-settings.ts:13, which already spreads
+`FeedbackNotificationTypeId` and needs no edit, Kurvenschmiede
 features/notifications/notification-types.ts:29). An app that passes `groups` puts
 `feedback_received` in one (the card throws in development for a type the server answered in no
 group).
 
 | App | Change |
 | --- | --- |
-| keksdose | The type (in the app, push, e-mail on; `quiet`; `bundle` 15 min, which only crash mails use); `TYPE_ICONS.feedback_received`; a group for it in the card's `groups` (the kit's `adminGroup`). `FeedbackAlerts` over `admin_recipient_ids` minus the actor: an inbox row and a push for every kind, the mail at once (after commit) for a report or a rework, a crash's mail queued (the tick). Its **first notification mail**: `send_email(..., headers=)` (infrastructure/email.py:62) for RFC 8058, `POST /notifications/unsubscribe/{token}` (+ `/all`), the `/unsubscribe` page on `UnsubscribePanel`, a dedicated unsubscribe secret (not `jwt_secret`), the `User.email_verified` gate. The mail-kind guard (tests/unit/test_metrics.py:1057-1069) resolves enum kinds and type ids; observability §5.6 lists the billing kinds, `feedback_published`, `feedback_received`. Words: "New feedback report #123 (Bug)", "Report #123 was sent back for rework", "New crash report #123", link `/feedback?row=123`; no title, body or reporter. Support chat's admin push stays apart. |
-| kastlan | The type (e-mail on, no app), receivable "ADMIN in some company"; `FeedbackAlerts` via `FeedbackDeps` (feedback_router.py:84-107): the ADMINs of the report's company, active, non-demo, verified, switch on, not the actor (as `_recipients`, overdue_mail.py:95-116); report and rework mailed in a background task after commit; a crash → nothing (the badge). The words in doc_text/notifications.py beside `feedback_answered`, with `{company}`, four languages, `REVIEW_PENDING`. Logs: email.py:127 → the status and the JSON's `name`; :153-154 → `type(exc).__name__`. Its settings card shows the kit's entry with no change (the `types` list already spreads `useFeedbackNotificationTypes()`; add `feedback_received` to any `groups`). |
-| Kurvenschmiede | The type (e-mail on); every active non-demo ADMIN but the actor (`User.is_person`) through `_tell` / `send_after_commit`; report and rework mailed; a crash → nothing (the badge); `feedback_loop.file_report` builds `FeedbackService(alerts=None)`. The receivable filter on the settings read and PATCH (above). |
+| keksdose | The type (in the app, push, e-mail on; `quiet`; `bundle` 15 min, which only crash mails use); `TYPE_ICONS.feedback_received`; a group for it in the card's `groups` (the kit's `adminGroup`). `FeedbackAlerts` over `admin_recipient_ids` minus the actor: an inbox row and a push for every kind, the mail at once (after commit) for a report or a rework, a crash's mail queued (the tick). **Marcel, 2026-10-20:** reports and reworks are mailed at once in every app, keksdose included; only crashes go through the bundle. Build review 2's B4 ("mail only through the bundle, every kind") is not his call: keep `mails_at_once` as is. Its **first notification mail**: `send_email(..., headers=)` (infrastructure/email.py:62) for RFC 8058, `POST /notifications/unsubscribe/{token}` (+ `/all`), the `/unsubscribe` page on `UnsubscribePanel`, a dedicated unsubscribe secret (not `jwt_secret`), the `User.email_verified` gate. The mail-kind guard (tests/unit/test_metrics.py:1057-1069) resolves enum kinds and type ids; observability §5.6 lists the billing kinds, `feedback_published`, `feedback_received`. Words: "New feedback report #123 (Bug)", "Report #123 was sent back for rework", "New crash report #123", link `/feedback?row=123`; no title, body or reporter. Support chat's admin push stays apart. |
+| kastlan | The type (e-mail on, no app), receivable "ADMIN in some company"; `FeedbackAlerts` via `FeedbackDeps` (feedback_router.py:84-107): the ADMINs of the report's company, active, non-demo, verified, switch on, not the actor (as `_recipients`, overdue_mail.py:95-116); report and rework mailed at once; a crash → nothing (the badge). **The alert runs after the commit and never raises** (kastlan S12): the repository commits (adapters/persistence/feedback_repository.py:51-56) and kastlan has no `BackgroundTasks` (the request's session is closed by then), so the router awaits `filed` after the write, as `feedback_answered` is awaited after its commit (feedback_reply_store.py:71-78); kastlan's `filed` catches and logs everything, or a failed mail turns POST /feedback into a 500 with the report saved and the user sends a duplicate. The words in doc_text/notifications.py beside `feedback_answered`, with `{company}`, four languages, `REVIEW_PENDING`. Logs: email.py:127 → the status and the JSON's `name`; :153-154 → `type(exc).__name__`. Its settings card shows the kit's entry with no change (the `types` list already spreads `useFeedbackNotificationTypes()`; add `feedback_received` to any `groups`). |
+| Kurvenschmiede | The type (e-mail on); every active non-demo ADMIN but the actor (`User.is_person`) through `_tell` / `send_after_commit`; report and rework mailed; a crash → nothing (the badge); `feedback_loop.file_report` (feedback_loop.py:360-375) is the one place that builds `FeedbackService(alerts=None)`; its `resolve` goes through the reply store, which never fires `feedback_received`. `_tell`'s plan already requires an active, verified person (notification_service.py:187-190), with the unsubscribe footer and headers. **Add a test** that the loop's `--file` mails nobody, with a second admin present (KS N2). The receivable filter on the settings read and PATCH (above). |
 
 ## Pre-push checks every pushed commit message with the shared script (ui-kit repo only)
 
@@ -403,7 +416,8 @@ planCode?, holdCodes?, paged?, steps?, paused?, pollMs?, soonMs?, backoffMs? })`
 scope in `scopes()` order, read every round; `client_now` fresh per request; the paged pull's
 cursor written with the last page only; `refused` per change by `holdCodes` → `waiting`, any
 other code → `blocked` (sent on `retryBlocked()`); `rejections[]` → `rejected`, never re-sent; a
-lost scope's 403 rejects its queue "Not allowed to sync <scope>"; errors back off 5 s, 15 s,
+lost scope's 403 rejects its queue with the answer's `code` and `detail` ("Not allowed to sync
+<scope>" when it names none); errors back off 5 s, 15 s,
 60 s, then every 5 min, reset by a good round, `online` or "Sync now"; offline sets no timer;
 `forget({ keepQueue })` bumps the generation first, and every apply and every step checks it;
 one engine per database; `start()` does nothing on a computer marked shared),
@@ -422,17 +436,48 @@ come from `/sync` or `/offline` (one module, no Dexie, no TanStack). No new word
 **kastlan, server (BE `kastlan`)**
 - Take the server-kit 0.16.0 wheel's `sync.scopes`; `domain/services/sync_scopes.py`: `HANDOVER`
   onto `SyncScope`/`EntityRule`, its checks (finalised protocol, reading in the protocol's unit,
-  signature before finalising) as `guard`s, finalising in `after_apply`.
+  signature before finalising) as `guard`s, finalising in `after_apply`. `sort_changes` runs
+  inside `include_deleted_scope`; `references` come from the registry's relations, so an unlisted
+  key is a rejection, not a 500 on a NOT NULL FK. The cascade now refuses only from new rows; three
+  reason texts change (none pinned by a client or test).
+- **Exception types** (kastlan S6): `refuse_whole()` raises the kit's `SyncScopeError(ValueError)`,
+  so for an old client (no `refusals`) adapters/api/sync_router.py catches it and re-raises
+  `SyncRefusedError(exc.change_id, exc.detail)`, or the 422 becomes a 500
+  (tests/api/test_sync_handover.py:137, :143, :264 pin the 422). **A guard returns the reason**,
+  never raises: a ported guard that still raises kastlan's `SyncRefusedError`
+  (sync_scopes.py:47) escapes `sort_changes` and refuses a `refusals` client's whole push.
+- **`AfterApplyContext.found` is the live row** (kastlan S5): `rows.find` returns the
+  identity-mapped ORM row (sync_scopes.py), which the apply mutates, so a "did `last_performed`
+  change" read from `found` is always false. Compare against the kit's before-snapshot,
+  `ctx.before[change_id]` (the sent fields as the row held them before any apply); or, simplest and
+  idempotent, recompute `next_due` from the stored row for every allowed schedule change that
+  carries `last_performed` or `interval_months`.
+- Widen `SyncRequest.scope` (domain/schemas/sync.py:25, `Literal["handover"]`) and `ScopeName`
+  (domain/services/sync_scopes.py:227) to the five scopes.
 - **QR-IBAN withholding:** `withheld=frozenset({"estates.qr_iban"})` on every scope; the pull runs
   rows through `withhold`; a test that the handover pull holds no `qr_iban` and a push naming it is
-  rejected.
+  rejected. `withheld` matches wire keys; for `estates.qr_iban` the key is the column name. Call
+  `withhold` per dict on the final delta, the LWW losers included. A push naming it is refused as
+  "estates cannot be written" (no scope writes estates).
 - Paging: `collect_delta` (domain/services/sync_service.py:224-255) on the kit's `page_of`, 2000
-  rows a page; the router honours `paged`.
+  rows a page, `id_of=sync_uuid`, `ORDER BY knowledge, sync_uuid COLLATE "C"`, and `window_end`
+  from the global counter read after the apply; the router honours `paged`.
 - Four new scopes, rules per §2.5, roles as online: `MEETINGS`, `METERS`, `MAINTENANCE` (costs and
   schedules included; `after_apply`: `ASSIGNED` on a work order's create, `next_due` via
-  `calc_next_due` when `last_performed` changes), `CONTACTS` (`FINANCE_WRITE`; phone, mobile,
+  `calc_next_due` for a change carrying `last_performed` or `interval_months`, S5 above), `CONTACTS` (`FINANCE_WRITE`; phone, mobile,
   email, notes only). The router (adapters/api/sync_router.py) resolves `scope` among the five and
   answers 403 to a role without it.
+- **The double majority, per owner** (local-first §2.5, amended 2026-10-19; kastlan S7, S9): a
+  migration adds attendance to `meeting_invitations` and a new vote model (`SyncMixin` with
+  `updated_at`; references `agenda_item_uuid` and `invitation_uuid`; one row per owner per agenda
+  item, unique on (item, invitation)). **Its id is deterministic**: `uuid5` over the item's and
+  the invitation's `sync_uuid`s, minted on the device, so two devices recording the same owner
+  write ONE row and LWW decides (random ids would 500 on the unique key, or make two votes). The
+  `meetings` scope writes the vote rows and the invitation's attendance (item and invitation
+  fixed); `votes_for/against/abstain` are derived from the vote rows, on the server and on the
+  device, and are no longer writable. The completed-meeting guard walks vote → item → meeting.
+  Tests in `test_sync_meetings.py`: a vote and an attendance written, the same owner's vote from
+  two devices is one row (the later wins), the counts derived, a vote on a completed meeting refused.
 - **Completed meetings online:** owner_meeting_service.py `add_agenda_item` (:109),
   `update_agenda_item` (:113), `delete_agenda_item` (:117) refuse a COMPLETED meeting (409), and
   `update_meeting` (:79) a `notes` change on one; the `meetings` scope's guard refuses the same.
@@ -456,10 +501,33 @@ come from `/sync` or `/offline` (one module, no Dexie, no TanStack). No new word
   and its loop deleted; HO/offline.test.ts is the parity suite (`createFakeSyncTransport` or the
   mocked `apiClient`).
 - **One engine per account and company:** built from the signed-in user and company;
-  `useSyncWorker(engine)` in app/app-layout.tsx:92 replaces `useHandoverSyncLoop`; a company switch
-  builds a new one and stops the old.
+  `useSyncWorker(engine)` in app/app-layout.tsx:92 replaces `useHandoverSyncLoop`. **One engine per db name, kept** (kastlan S3): build it with the kit's
+  `syncEngineFor(options)` (`@eifi1/ui-kit/sync`, 0.46), which keeps one engine per database
+  name, as HO/db.ts:78 keeps its databases (`open`), never rebuilt in a `useMemo`; the first
+  call's options stand, so read changing values (scopes) through functions; a db reopened under
+  the same name replaces the kept engine and stops the old. A switch A→B→A within one round would
+  otherwise put a second A engine's queue beside the first's round on the same db, and an edit
+  could leave the queue. The kit's `stop()` now aborts the round in flight (its queue goes back to
+  pending), and rounds on one db name run one after another; two tabs on one db keep the same
+  race until the kit takes Web Locks (a later candidate).
+- **The server's stamp protects a device edit** (kastlan S1): the engine keeps a pulled change's
+  `updated_at` (sent beside `data`) on the stored row (`SyncedRow.updated_at`) and stamps the
+  next local edit after it, so a tablet 1 s slow no longer loses its edit to the server's write.
+  Nothing for kastlan to do. `useSyncQuery` and `createSyncDb` are generic
+  (`<D extends SyncDb>`), so `HandoverDb` queries type-check (use-handover.ts:53,
+  protocol-info-step.tsx:32/:38, use-sync-status.ts:22, handover-sync-banner.tsx:18), and with no
+  db yet `useSyncQuery` answers `isLoading: true`, as `useLive` did (features/handover/offline/use-copy.ts:34-39).
+- **A 403 keeps the server's reason** (kastlan S4): a lost scope's queue is rejected with the
+  answer's `code` and `detail` (e.g. `demo_read_only`), "Not allowed to sync <scope>" only when the
+  answer names none. A waiting change's `reason` is now the refusal's `detail`, its code in
+  `code`: HO/offline.test.ts:186 (`reason: "billing_read_only"`) changes to `code`.
+- **Never send the whole row**: the narrow update schemas rely on the outbox's partial data (an
+  update carries only the fields written). The photo step checks `ctx.isCurrent()` before each
+  `db.photos` write; `discardRejected` leaves rejected photos, so the banner keeps its own photo
+  delete. A write during backoff waits up to 5 min (or "Sync now"); a request replayed by the
+  session refresh keeps its stale `client_now` (the clamp bounds it).
 - **The guarded sign-out:** features/auth/stores/auth-store.ts:74 calls `engine.forget({ keepQueue:
-  true })` instead of `forgetHandoverCopy`; the photo step writes only while `ctx.isCurrent()`.
+  true })` instead of `forgetHandoverCopy`.
 - **Shared computer:** `isSharedComputer()` → no engine (`useSyncWorker(null)`), the queueing
   controls locked "Needs a connection", the handover pages and the meeting recording page not
   offered.
@@ -469,13 +537,17 @@ come from `/sync` or `/offline` (one module, no Dexie, no TanStack). No new word
 - **All five scopes**, in the round's order handover, meetings, meters, maintenance, contacts;
   `scopes()` from the company role.
   - **The meeting page:** a new recording page under features/owner-meetings ("meeting mode"): per
-    agenda item the three counts, the resolution and `minutes_text` as the chair announces them,
-    and the meeting's `notes`; reads and writes the copy only; no outcome computed (ZGB 712m double
-    majority later); "Complete" online only ("Needs a connection"); a completed meeting read-only;
-    invitations read-only.
+    agenda item each present owner's vote (one row per owner, its id `uuid5(item, invitation)`
+    minted here) and the tallies by head and by value quota derived from them (ZGB 712m double
+    majority, local-first §2.5 amendment), the resolution and `minutes_text`, attendance per
+    invitation, and the meeting's `notes`; reads and writes the copy only; "Complete" online only
+    ("Needs a connection"); a completed meeting read-only; the invitations' other fields read-only
+    (they send mail).
   - meters, maintenance, contacts: the online pages on `readLocalFirst`/`writeLocalFirst`; creates
     mint `sync_uuid` once and send it on both paths; queued controls take
-    `commit={COMMIT_EXCEPT_OFFLINE}`; a meter reading's scope from its row.
+    `commit={COMMIT_EXCEPT_OFFLINE}`; a meter reading's scope from its row, and a reading moved
+    into or out of a protocol is a delete in one scope and a create **with a new id** in the other
+    (local-first D11; kastlan S8).
   - maintenance costs (`cost_estimate`, `actual_cost` on the detail page) and a schedules list with
     "Done" write through the copy (no online writer exists today).
 - Words for the new page and the schedules list in all seven languages.

@@ -1165,7 +1165,6 @@ export const it: Dictionary = {
       "scegliere quali notifiche ricevere",
       "avvisare via e-mail",
       "ore di silenzio",
-      "scegliere un fuso orario",
       "notifiche push su questo dispositivo",
       "inviare una notifica di prova",
       "elencare i dispositivi che ricevono notifiche",

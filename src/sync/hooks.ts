@@ -68,10 +68,12 @@ const readOnline = () => navigator.onLine !== false;
 /**
  * A read of the copy that follows every change to it (Dexie's `liveQuery`; kastlan's
  * `useLive`). `deps` names what `query` reads; `query` itself is rebuilt every render.
+ * `query` gets the app's own database type (`HandoverDb`). Without a database (not open
+ * yet) it answers `isLoading: true`, so a page shows no "empty" before the copy opens.
  */
-export function useSyncQuery<T>(
-  db: SyncDb | null,
-  query: (db: SyncDb) => Promise<T>,
+export function useSyncQuery<T, D extends SyncDb = SyncDb>(
+  db: D | null,
+  query: (db: D) => Promise<T>,
   deps: readonly unknown[],
 ): { data: T | undefined; isLoading: boolean } {
   const [state, setState] = useState<{ data: T | undefined; isLoading: boolean }>({ data: undefined, isLoading: true });
@@ -88,4 +90,4 @@ export function useSyncQuery<T>(
   return db ? state : NO_COPY;
 }
 
-const NO_COPY = { data: undefined, isLoading: false } as const;
+const NO_COPY = { data: undefined, isLoading: true } as const;

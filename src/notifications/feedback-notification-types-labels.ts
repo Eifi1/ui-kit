@@ -28,6 +28,6 @@ export const DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS: FeedbackNotificationTyp
   comment: "Comments on reports you follow",
   commentDescription: "When someone comments on a report you wrote or commented on.",
   received: "New feedback and reworks",
-  receivedDescription: "When someone files a report, sends one back, or a page crashes.",
+  receivedDescription: "When someone files a report or sends one back.",
   adminGroup: "Admin",
 };

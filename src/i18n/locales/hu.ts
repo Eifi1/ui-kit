@@ -142,7 +142,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       comment: "Hozzászólások a követett bejelentésekhez",
       commentDescription: "Amikor valaki hozzászól egy Ön által írt vagy hozzászólt bejelentéshez.",
       received: "Új bejelentések és átdolgozások",
-      receivedDescription: "Amikor valaki bejelentést tesz, visszaküld egyet, vagy egy oldal összeomlik.",
+      receivedDescription: "Amikor valaki bejelentést tesz vagy visszaküld egyet.",
       adminGroup: "Admin",
     },
     feedbackContext: {
@@ -1187,8 +1187,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           : inbox
             ? "Ebben az idősávban nem érkeznek push-értesítések. A beérkezett értesítések közé így is bekerülnek."
             : "Ebben az idősávban nem érkeznek push-értesítések.",
-      quietZone: (zone) => `Az Ön időzónájában (${zone}).`,
-      quietZoneLink: "Időzóna módosítása",
+      quietZone: (zone) => `Az Ön időzónájában (${zone}), amely a legutóbb használt eszközét követi.`,
       quietFrom: "Ettől",
       quietUntil: "Eddig",
       quietIncomplete:
@@ -1208,8 +1207,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         Indian: "Indiai-óceán",
         Pacific: "Csendes-óceán",
       },
-      zoneAutomatic: (zone) => `Automatikus (ez az eszköz: ${zone})`,
-      zoneDescription: "A csendes órák, az összefoglaló és az app által Önnek írt időpontok ehhez igazodnak.",
       pushTitle: "Push-értesítések",
       pushDescription: "Értesítések ezen az eszközön, akkor is, ha az alkalmazás be van zárva.",
       unsupported: "Ez a böngésző nem támogatja a push-értesítéseket.",

@@ -55,11 +55,9 @@ export interface NotificationsLabels {
    *  reaches; `held` (0.46, §10.4): the app queues a held push and sends it when the
    *  window ends, instead of dropping it. */
   quietDescription: (inbox: boolean, held?: boolean) => string;
-  /** 0.46 (§10.3): the card names the account's zone instead of a picker, given the
-   *  zone as the picker names it. */
+  /** 0.46 (§10.3, automatic only): the card names the account's zone, read-only, given
+   *  the zone as `zoneName` writes it ("Europe / Zurich"); it follows the device last used. */
   quietZone: (zone: string) => string;
-  /** The link from there to the time-zone row. */
-  quietZoneLink: string;
   /** The start time's label. */
   quietFrom: string;
   /** The end time's label. */
@@ -68,20 +66,14 @@ export interface NotificationsLabels {
   quietIncomplete: string;
   /** The zone picker's label. */
   timeZone: string;
-  /** Given the device's zone, as the picker names it, when it differs from the one the
-   *  server applies. */
+  /** @deprecated 0.46 — the zone is automatic (§10.3), the card offers no device zone; removed in 0.47.
+   *  Unused, kept so an app's override still type-checks. */
   deviceZone: (zone: string) => string;
-  /** The button that takes the device's zone. */
+  /** @deprecated 0.46 — the zone is automatic (§10.3), nothing to take; removed in 0.47. Unused, kept
+   *  so an app's override still type-checks. */
   useDeviceZone: string;
-  /** The zone picker's region headings. */
+  /** The zone's region headings, in the picker and in a zone's name ("Europe / Zurich"). */
   regions: NotificationRegionLabels;
-
-  /* ── The time-zone row (0.46, §10.3) ────────────────────────────────── */
-  /** The switch that follows the device, given this device's zone as the picker names
-   *  it. */
-  zoneAutomatic: (zone: string) => string;
-  /** The line under the row: what the zone is for. */
-  zoneDescription: string;
 
   /* ── This device ────────────────────────────────────────────────────── */
   pushTitle: string;
@@ -213,8 +205,7 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
       : inbox
         ? "No push notifications during this window. They still reach your inbox."
         : "No push notifications during this window.",
-  quietZone: (zone) => `In your time zone (${zone}).`,
-  quietZoneLink: "Change time zone",
+  quietZone: (zone) => `In your time zone (${zone}), which follows the device you last used.`,
   quietFrom: "From",
   quietUntil: "Until",
   quietIncomplete: "Set both a start and an end time. Quiet hours take effect once both are set.",
@@ -233,8 +224,6 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
     Indian: "Indian Ocean",
     Pacific: "Pacific",
   },
-  zoneAutomatic: (zone) => `Automatic (this device: ${zone})`,
-  zoneDescription: "Quiet hours, the digest and the times the app writes for you follow it.",
 
   pushTitle: "Push notifications",
   pushDescription: "Notifications on this device, also while the app is closed.",
