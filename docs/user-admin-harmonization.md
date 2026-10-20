@@ -94,7 +94,9 @@ After the reviews:
 
 ### 3.2 The row
 
-`AdminUserRow` is the auth contract's `UserResponse` core plus:
+`AdminUserRow` is the auth contract's `UserResponse` core, without `device_timezone`
+(server-kit 0.17.0: where a person's device last was is their own data, not the roster's;
+the row keeps it as a field with `exclude=True`, read and never answered), plus:
 
 - `last_login_at`;
 - `password_change_required_at`;
