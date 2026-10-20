@@ -195,10 +195,18 @@ export interface TranslationReviewPanelProps {
    * DataTable's swipe sides (`mobileSwipeActions`) on {@link SwipeableRow}: the same
    * gesture, the same feedback, and the same keyboard path — every swipe is also a real
    * button, read out and reachable by Tab, so the gesture is a shortcut and never the only
-   * way. A row has no swipe while the editor under it is open, while its own write is out,
-   * under a {@link WriteLockProvider} lock, in a `readOnly` locale, and toward "Approve"
-   * where there is nothing to approve (a missing string, an approved one). A reviewer
-   * limited to `areas` never sees a row outside them, so never swipes one.
+   * way. A row has no swipe while its own write is out (a swipe's, a button's, or the open
+   * editor's own), under a {@link WriteLockProvider} lock, in a `readOnly` locale, and
+   * toward "Approve" where there is nothing to approve (a missing string, an approved one).
+   * A reviewer limited to `areas` never sees a row outside them, so never swipes one.
+   *
+   * An OPEN row swipes too, on its top line (keksdose live #416, Marcel: *"The swipe shall
+   * still be possible since it is faster than scrolling down to the buttons"*), as
+   * DataTable's open card does since 0.40: the editor below is outside the gesture, and a
+   * swipe neither toggles it shut nor resets it. A swipe acts on the STORED string, as the
+   * row's buttons do — Approve approves what the locale says, not the editor's draft — and
+   * the editor stays open with whatever was typed in it; "Needs a change" puts the cursor
+   * back at the end of that draft.
    *
    * Off by default, so no existing page gains a gesture on the bump. The gesture is the
    * phone's; on a wide screen the binding is the row's actions column instead (0.46,
@@ -221,8 +229,8 @@ export interface TranslationReviewPanelProps {
    * `onClear`). An action a row cannot offer drops out and the ladder closes up behind it
    * ({@link translationReviewSwipePlan}): `approve` on an approved or missing string,
    * `clear` on a row with no verdict. Every rule above still holds for every binding —
-   * no side swipes in a `readOnly` locale, under a write lock, with the editor open or
-   * the row's write out.
+   * no side swipes in a `readOnly` locale, under a write lock, or while the row's write
+   * (or its open editor's) is out.
    *
    * `true` is {@link DEFAULT_TRANSLATION_REVIEW_SWIPE} — `{ end: ["approve"], start:
    * ["edit"] }`, 0.25's mapping exactly — and `false` or nothing is no swipe. A binding
@@ -519,6 +527,21 @@ export function TranslationReviewPanel({
   const [failure, setFailure] = useState<ReactNode>(null);
   const busy = queued.length > 0;
   const isQueued = (key: string) => queued.includes(key);
+  // The rows whose open editor has a write of its own out: their swipes stand down until
+  // it is answered, as for a write in the queue (0.46, keksdose live #416).
+  const [editorWrites, setEditorWrites] = useState<ReadonlySet<string>>(() => new Set());
+  const whileEditorWrites = async (rowId: string, write: () => MaybePromise) => {
+    setEditorWrites((prev) => new Set(prev).add(rowId));
+    try {
+      await write();
+    } finally {
+      setEditorWrites((prev) => {
+        const next = new Set(prev);
+        next.delete(rowId);
+        return next;
+      });
+    }
+  };
 
   const rows = useMemo(
     () => (areas ? rowsProp.filter((row) => keyInAreas(row.key, areas, inArea)) : [...rowsProp]),
@@ -667,7 +690,7 @@ export function TranslationReviewPanel({
    *  not go through the queue — but an approval there is answered like any other. */
   const saveFromEditor = async (row: TranslationRow, write: TranslationReviewWrite) => {
     const toasted = undoOn && write.verdict === "APPROVED";
-    await onSave?.([write], { origin: "editor", toasted });
+    await whileEditorWrites(row.id, () => onSave?.([write], { origin: "editor", toasted }));
     if (toasted) sayDone([row], row.key);
   };
 
@@ -869,6 +892,13 @@ export function TranslationReviewPanel({
             keepGroupOpen(groupKey);
             setOpenId(r.id);
             setFocusId(r.id);
+            // On a row already open (#416) the editor is mounted and keeps its draft:
+            // the cursor goes to the end of its wording now.
+            if (openId === r.id) {
+              const field = rootRef.current?.querySelector<HTMLTextAreaElement>("[data-review-wording]");
+              field?.focus();
+              field?.setSelectionRange(field.value.length, field.value.length);
+            }
           },
           tone: missing ? "brand" : "danger",
         };
@@ -893,7 +923,7 @@ export function TranslationReviewPanel({
    * locked or absent.
    */
   const swipeActions = (r: TranslationRow, groupKey?: string): MobileSwipeActions | null => {
-    if (!binding || !editable || lock.locked || isQueued(`row:${r.id}`)) return null;
+    if (!binding || !editable || lock.locked || isQueued(`row:${r.id}`) || editorWrites.has(r.id)) return null;
     const plan = translationReviewSwipePlan(binding, r, { canClear: onClear !== undefined });
     if (plan.start.length === 0 && plan.end.length === 0) return null;
     return {
@@ -960,7 +990,11 @@ export function TranslationReviewPanel({
           readOnly={!editable}
           focusWording={focusId === r.id}
           onSave={onSave ? (write) => saveFromEditor(r, write) : undefined}
-          onClear={onClear ? (key) => onClear([key], { origin: "editor", toasted: false }) : undefined}
+          onClear={
+            onClear
+              ? (key) => whileEditorWrites(r.id, () => onClear([key], { origin: "editor", toasted: false }))
+              : undefined
+          }
           onClose={() => {
             setOpenId(null);
             setFocusId(null);

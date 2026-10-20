@@ -221,6 +221,8 @@ export function TranslationReviewEditor({
         <>
           <Textarea
             ref={wordingRef}
+            // The panel's "Needs a change" swipe on an already open row finds it here (#416).
+            data-review-wording=""
             label={missing ? labels.translation : labels.suggestion}
             lang={row.locale}
             rows={Math.min(8, Math.max(2, Math.ceil(Math.max(row.text.length, row.reference.length) / 80)))}

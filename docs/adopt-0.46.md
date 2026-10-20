@@ -54,6 +54,18 @@ types: `AdminOwnTile`, `AdminFeedbackTile`, `AdminFeedbackTileKey`.
 | kastlan | Nothing: settings/pages/admin-page.tsx:97-100 keeps `label: t("admin.tiles.awaitingVerdict")` ("Zur Prüfung" names the IN_EVALUATION status; kastlan N3), so the tile stays as it is, with no hint line. Dropping it would also drop the key from four catalogues (de-CH, en, fr, it). |
 | Kurvenschmiede | features/admin/admin-page.tsx:120-135: `awaiting_verdict` (:127-135) drops `label` and `description` (the kit's hint is KS's own sentence); `released_for_work` (:120-126) drops `label` and keeps `description` (the feedback loop's queue, `npm run feedback`). That takes three `admin.tiles.*` keys out of seven catalogues (KS N2). |
 
+### TranslationReviewPanel: an open row swipes (keksdose live #416)
+
+An open row's top line swipes as a closed one does, as DataTable's open card has since 0.40
+(Marcel: "faster than scrolling down to the buttons"). A swipe acts on the stored string and
+leaves the editor open with its draft; "Needs a change" puts the cursor back in the wording.
+No swipe while the editor's own write is out.
+
+| App | Change |
+| --- | --- |
+| keksdose | Nothing to do but bump. Optional: the comment at features/translations/translations-page.tsx:307-309 ("An OPEN card does not swipe") is out of date. |
+| kastlan, Kurvenschmiede | Nothing to do but bump. |
+
 ### Offline: `persistMutations`, `removeStaleQueryCopies`, the service-worker store, the offline lock (kastlan K1–K4)
 
 All in local-first §1.6 (0.46). From `@eifi1/ui-kit/offline`:
