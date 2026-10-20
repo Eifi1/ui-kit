@@ -58,8 +58,9 @@ describe("cross-links", () => {
     expect(serverModulesFor("user-admin")).toEqual(["user_admin"]);
     expect(serverModulesFor("auth-account")).toEqual(expect.arrayContaining(["auth", "user_admin", "mail"]));
     expect(serverModulesFor("tokens")).toEqual([]);
-    // server-kit 0.9: the Notifications page's server half, and the feedback router.
-    expect(serverModulesFor("notifications")).toEqual(["notifications"]);
+    // server-kit 0.9: the Notifications page's server half, and the feedback router;
+    // 0.16 adds the notifications router (inbox routes, the tick job).
+    expect(serverModulesFor("notifications")).toEqual(["notifications", "notifications.router"]);
     expect(serverModulesFor("feedback-compose")).toEqual(expect.arrayContaining(["feedback", "feedback.router"]));
     expect(serverPageOf("feedback.router")).toBe("server-feedback");
     expect(serverPageOf("notifications")).toBe("server-notifications");
