@@ -2,7 +2,7 @@ import "fake-indexeddb/auto";
 import Dexie from "dexie";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSyncDb, type SyncDb } from "../db";
-import { createSyncEngine, syncEngineFor, type SyncEngine, type SyncEngineOptions, type SyncEngineState } from "../engine";
+import { createSyncEngine, releaseSyncEngine, syncEngineFor, type SyncEngine, type SyncEngineOptions, type SyncEngineState } from "../engine";
 import { createFakeSyncTransport } from "../testing";
 import type { SyncRequestBody, SyncResponseBody } from "../wire";
 
@@ -480,6 +480,53 @@ describe("the worker: start, poll, backoff (D13)", () => {
     // The first round's answer was dropped and its change laid back; the second sent it.
     expect(sent.mock.calls[0][0].changes.map((c) => c.id)).toEqual(["p1"]);
     expect(await first.db.outbox.count()).toBe(0);
+  });
+
+  it("an engine stopped while it waits for another engine's round runs no round of its own (A2 stopped by a switch to B)", async () => {
+    const first = setup();
+    await first.engine.write("handover", "protocols", "p1", "upsert", { notes: "a" });
+    await first.db.meta.put({ key: "lastKnowledge:handover", value: 7 });
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    first.transport.answer(async (body) => {
+      await held;
+      return echoOf(body, 1);
+    });
+    first.engine.start();
+    await vi.waitFor(() => expect(first.transport.requests).toHaveLength(1));
+    first.engine.stop();
+    // A2: the same database name, waiting on the first engine's round.
+    const sent = vi.fn(async (body: SyncRequestBody) => ({
+      ...echoOf(body, 99),
+      changes: [{ entity: "protocols", id: "of-company-b", op: "upsert" as const, pk: 1, data: {} }],
+    }));
+    const second = createSyncEngine({ db: first.db, scopes: () => ["handover"], send: sent, sharedComputer: () => false });
+    open.push({ db: first.db, engine: second });
+    second.start();
+    await new Promise((r) => setTimeout(r, 20));
+    second.stop(); // the switch to company B
+    release();
+    await until(second, (s) => s.phase === "idle");
+    await new Promise((r) => setTimeout(r, 20));
+    expect(sent).not.toHaveBeenCalled();
+    expect(await first.db.rows.get(["protocols", "of-company-b"])).toBeUndefined();
+    expect((await first.db.meta.get("lastKnowledge:handover"))?.value).toBe(7);
+    expect((await first.db.outbox.toArray()).map((c) => c.status)).toEqual(["pending"]);
+  });
+
+  it("releaseSyncEngine stops the kept engine, closes its database and forgets it", () => {
+    const { db } = setup();
+    const options = { db, scopes: () => ["handover"], send: vi.fn(), sharedComputer: () => false };
+    const a = syncEngineFor(options);
+    const stop = vi.spyOn(a, "stop");
+    releaseSyncEngine(db.name);
+    expect(stop).toHaveBeenCalled();
+    expect(db.isOpen()).toBe(false);
+    releaseSyncEngine(db.name); // nothing kept: a no-op
+    const reopened = createSyncDb(db.name);
+    const b = syncEngineFor({ ...options, db: reopened });
+    open.push({ db: reopened, engine: b });
+    expect(b).not.toBe(a);
   });
 
   it("syncEngineFor keeps one engine per database name", () => {

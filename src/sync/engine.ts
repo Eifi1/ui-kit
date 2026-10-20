@@ -397,11 +397,11 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
 
   // ── The round ──────────────────────────────────────────────────────────────
 
-  async function round(withBlocked: boolean): Promise<SyncRoundResult> {
+  async function round(withBlocked: boolean, gen: number): Promise<SyncRoundResult> {
     const result: SyncRoundResult = { outcome: "synced", waiting: 0, blocked: 0, rejected: 0 };
+    if (gen !== generation) return { ...result, outcome: "dropped" };
     if (options.paused?.()) return { ...result, outcome: "paused" };
     if (!browserOnline()) return { ...result, outcome: "offline" };
-    const gen = generation;
     const own = new AbortController();
     controller = own;
     set({ phase: "syncing" });
@@ -488,11 +488,14 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       return current;
     }
     const before = flights.get(db.name);
+    // The generation is read before any wait: a stop() while this waits drops the round, so
+    // it never sends this copy's queue with another account's client nor pulls into it.
+    const gen = generation;
     const flight = (async () => {
       // Another engine's round on this database (stopped, still settling) ends first.
       if (before) await before.catch(() => undefined);
       try {
-        const result = await round(withBlocked);
+        const result = await round(withBlocked, gen);
         settle(result);
         await refreshCounts();
         return result;
@@ -679,4 +682,18 @@ export function syncEngineFor(options: SyncEngineOptions): SyncEngine {
   const engine = createSyncEngine(options);
   kept.set(name, { db: options.db, engine });
   return engine;
+}
+
+/**
+ * Let go of the engine {@link syncEngineFor} keeps for the database `name` (0.46): it is
+ * stopped, its database closed and forgotten, so a later `syncEngineFor` builds afresh. Call it
+ * on sign-out (and for a company left for good): every database visited in a tab otherwise
+ * keeps its engine and an open IndexedDB connection until a reload. Nothing kept: a no-op.
+ */
+export function releaseSyncEngine(name: string): void {
+  const found = kept.get(name);
+  if (!found) return;
+  kept.delete(name);
+  found.engine.stop();
+  found.db.close();
 }

@@ -581,7 +581,7 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/testing` | 11 |
 | `@eifi1/ui-kit/rhf` | 48 |
 | `@eifi1/ui-kit/offline` | 32 |
-| `@eifi1/ui-kit/sync` | 34 |
+| `@eifi1/ui-kit/sync` | 35 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
 

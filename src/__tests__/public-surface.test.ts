@@ -348,9 +348,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/offline", offline, 18],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
-  // `syncEngineFor`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the four leaf
-  // utilities `/offline` exports too. Standalone: its Dexie peer stays out of the barrel.
-  ["@eifi1/ui-kit/sync", sync, 13],
+  // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the
+  // four leaf utilities `/offline` exports too. Standalone: its Dexie peer stays out of the barrel.
+  ["@eifi1/ui-kit/sync", sync, 14],
   // 0.46.0: `createFakeSyncTransport`, the scripted `/sync` server for an app's tests.
   ["@eifi1/ui-kit/sync/testing", syncTesting, 1],
   // 0.46.0 (docs/notifications-harmonization.md §10.6 rule 5): the service worker's entry —

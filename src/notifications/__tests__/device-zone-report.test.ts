@@ -35,6 +35,26 @@ describe("useDeviceZoneReport", () => {
     expect(report).toHaveBeenCalledTimes(2);
   });
 
+  it("reports the second account signed in on a shared PC in the same start (sign-out between)", () => {
+    const report = vi.fn();
+    const { rerender } = renderHook((stored: string | null | undefined) => useDeviceZoneReport({ stored, report }), {
+      initialProps: undefined as string | null | undefined,
+    });
+    rerender(null); // engineer A, none stored
+    expect(report).toHaveBeenCalledTimes(1);
+    rerender(undefined); // signed out
+    rerender(null); // engineer B, none stored either
+    expect(report).toHaveBeenCalledTimes(2);
+  });
+
+  it("keys the once-per-start guard on the account when given", () => {
+    const report = vi.fn();
+    renderHook(() => useDeviceZoneReport({ stored: "Asia/Seoul", report, account: 1 }));
+    renderHook(() => useDeviceZoneReport({ stored: "Asia/Seoul", report, account: 1 }));
+    renderHook(() => useDeviceZoneReport({ stored: "Asia/Seoul", report, account: 2 }));
+    expect(report).toHaveBeenCalledTimes(2);
+  });
+
   it("never reports for a demo", () => {
     const report = vi.fn();
     renderHook(() => useDeviceZoneReport({ stored: "Asia/Tokyo", report, isDemo: true }));

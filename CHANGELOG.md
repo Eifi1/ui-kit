@@ -25,7 +25,7 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 
 Round 0.46, the three 0.45 adoptions' notes plus local-first §2, notifications §10 and feedback
 §11 (all settled 2026-10-19, the zone amended 2026-10-20), reviewed against all three apps before
-release. No export is removed and no prop changes its type; three things show on a plain bump:
+release. No export is removed and no prop changes its type; four things show on a plain bump:
 
 - A table with phone swipe actions now also gets a desktop actions column with the same actions
   (on by default, except beside `rowActions`; an app's own `DataTable` wrapper must forward
@@ -35,6 +35,9 @@ release. No export is removed and no prop changes its type; three things show on
   `useFeedbackNotificationTypes()` returns it as a third entry.
 - `NotificationSwitches` gains an optional `push`: the notification settings card draws a
   column per channel (in the app, push, e-mail); a server that sends `push: null` gets none.
+- `QuietHoursSetting` given the deprecated `timezone` (keksdose's quiet-hours card) loses its
+  zone picker and "Use it": the zone is shown read-only, and the first time entered no longer
+  sends a zone. Pass `zone` (`/auth/me`'s `device_timezone`) instead.
 
 New: `@eifi1/ui-kit/sync` (a new subpath: the device copy, the sync engine and its hooks; `dexie`
 is an optional peer of `/sync` only) and `@eifi1/ui-kit/push-worker` (worker-safe push handling

@@ -1870,9 +1870,16 @@ where they differ (points 1, 4, 5, 6 and 7 of the proposal):
   (`useDeviceZoneReport`), and routes its UTC "today" writers and its quiet hours through
   `effective_zone(user.device_timezone)`.
 - **server-kit 0.16:** `UserResponse.device_timezone`, `ProfileUpdate.device_timezone`,
-  `RegisterRequest.device_timezone`, `PROFILE_ZONE_FIELDS == ("device_timezone",)`; a
-  `timezone` on `PATCH /auth/me` is a 422 (unknown field), and the settings resource
-  carries no zone (no alias). The export's `account` gains `device_timezone` only.
+  `RegisterRequest.device_timezone`, `PROFILE_ZONE_FIELDS == ("device_timezone",)`; the
+  settings resource carries no zone (no alias). A `timezone` on `PATCH /auth/me`,
+  `PATCH /notifications/settings` or keksdose's `/push/settings` shim (a stale 0.45 bundle
+  still sends one, and the PWA keeps old bundles for days) is **ignored in 0.16** (dropped,
+  never written) and **refused from 0.17** as an unknown field (422). The export's
+  `account` gains `device_timezone` only.
+- **The report is per account** (build review 3, KS S1): `useDeviceZoneReport`'s
+  once-per-start guard is cleared when `stored` goes `undefined` (signed out) and keyed by
+  the optional `account` (the user id), so a second person signed in on a shared PC in the
+  same start is reported too. `report` puts the answer in the session's user (`setUser`).
 - **ui-kit 0.46:** no `TimeZoneSetting` (dropped before release: a read-only row on the
   device that reports the zone would only name that device's zone);
   `useDeviceZoneReport` stays; `QuietHoursSetting` names the account's zone read-only
