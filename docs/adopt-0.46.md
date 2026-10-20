@@ -72,7 +72,22 @@ column header by its name (`getByRole("columnheader", { name: "Actions" })`) sti
 
 ### server-kit 0.16.1: the admin row drops the device zone; the profile PATCH drops an unknown zone (KS round 048)
 
-Two fixes on a plain wheel bump (0.16.0 → 0.16.1), nothing renamed:
+Install the wheel by URL, pinned by hash:
+
+```
+eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.16.1/eifi1_server_kit-0.16.1-py3-none-any.whl
+sha256: SHA256_AT_RELEASE
+```
+
+Fixes on a plain wheel bump (0.16.0 → 0.16.1), nothing renamed:
+
+- **The validation 422s no longer echo what was sent.** FastAPI's default 422 repeated each
+  error's `input`, so a password or token (login, e-mail change, deletion, confirm) reached the
+  answer and the logs. `install_contract_error_handlers` now answers `{"detail": [{"type",
+  "loc", "msg"}]}` only (`redact_validation_errors=False` opts out; an app's own
+  `RequestValidationError` handler wins). No app code change; an app that takes a body untyped
+  and parses it by hand only to hide a secret can drop that (push bodies: `parse_push_body` /
+  `parse_push_replace`, 422 `push_body_invalid`, see keksdose's rows below).
 
 - **`AdminUserRow` no longer carries `device_timezone`** (KS 1). It inherited the field from
   `UserResponse`, so the roster answered where each person's device last was — their own data,
