@@ -1634,7 +1634,7 @@ store, the job's rows, bell, poller out). KS none.
   is the desktop alert (for those who switched "in the app" on) and clears itself when the
   invoices are settled; the inbox lists events (days). An unread-inbox count on the poller
   would announce days, not invoices. Both read the same `app` switch; opening a row
-  switches to its `company_id` (server-kit 0.16.1 `InboxItem.company_id`). kastlan shows
+  switches to its `company_id` (server-kit 0.17.0 `InboxItem.company_id`). kastlan shows
   the inbox in the bell (it has no avatar dot). **KS: no inbox**; it takes the list the day
   it has an in-app type worth a row.
 
@@ -1881,8 +1881,8 @@ where they differ (points 1, 4, 5, 6 and 7 of the proposal):
   `RegisterRequest.device_timezone`, `PROFILE_ZONE_FIELDS == ("device_timezone",)`; the
   settings resource carries no zone (no alias). A `timezone` on `PATCH /auth/me`,
   `PATCH /notifications/settings` or keksdose's `/push/settings` shim (a stale 0.45 bundle
-  still sends one, and the PWA keeps old bundles for days) is **ignored in 0.16** (dropped,
-  never written) and **refused from 0.17** as an unknown field (422). The export's
+  still sends one, and the PWA keeps old bundles for days) is **ignored in 0.16 and 0.17** (dropped,
+  never written) and **refused from 0.18** as an unknown field (422). The export's
   `account` gains `device_timezone` only.
 - **The report is per account** (build review 3, KS S1): `useDeviceZoneReport`'s
   once-per-start guard is cleared when `stored` goes `undefined` (signed out) and keyed by

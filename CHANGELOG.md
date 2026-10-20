@@ -34,8 +34,9 @@ is removed and no prop changes its type; one thing shows on a plain bump:
 
 The rest is additive: the apps' adoption fixes in `/sync` and the notifications (each replacing
 an app's workaround), and `swipePlanRowActions` is public. The server half ships as server-kit
-0.16.1, a patch: the validation 422s no longer echo what was sent, push bodies are parsed
-without echoing secrets, and `PATCH /auth/me` drops an unknown device zone (200, was 422).
+0.17.0, a minor only because it adds names (nothing breaking): the validation 422s no longer
+echo what was sent, push bodies are parsed without echoing secrets, and `PATCH /auth/me` drops
+an unknown device zone (200, was 422); a stale `timezone` is still ignored, refused from 0.18.
 Per-app steps: `docs/adopt-0.46.md`, its 0.46.1 sections.
 
 ### Fixed
