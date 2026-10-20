@@ -90,7 +90,7 @@ the deploy, see its section):
 
 ```
 eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.16.0/eifi1_server_kit-0.16.0-py3-none-any.whl
-sha256: SHA256_AT_RELEASE
+sha256: bda3430942b6ef465f5aa38c1355a506e6477f39c649551213c85d725e3297ae
 ```
 
 Four changes show on the bump itself:

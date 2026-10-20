@@ -33,6 +33,9 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   // The types, switches, quiet hours, push devices and unsubscribe token the
   // Notifications page's cards read and write (server-kit 0.9).
   notifications: ["notifications"],
+  // server-kit 0.16: the inbox routes and the queue's tick job as router factories (the
+  // `fastapi` extra), nested like `feedback.router`; the Notifications page's inbox reads them.
+  "notifications.router": ["notifications"],
   feedback: ["feedback-compose", "feedback-inbox"],
   // The same two pages' routes, as one router factory (server-kit 0.9, the `fastapi`
   // extra). Nested: its anchor is `#feedback.router` (server-kit/api.ts anchors).

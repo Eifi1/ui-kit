@@ -1624,7 +1624,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The app's notification types and each account's switches, the settings PATCH, who gets an inbox row, a push or a mail, quiet hours and the digest, the push payload and a push service's answer, and the signed one-click unsubscribe token.",
         icon: Bell,
-        serverModules: ["notifications"],
+        serverModules: ["notifications", "notifications.router"],
       }),
       serverPage({
         slug: "server-feedback",

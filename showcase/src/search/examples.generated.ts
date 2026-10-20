@@ -1033,7 +1033,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "notifications · Classes",
     "notifications · Models",
     "notifications · Enums",
+    "notifications · Protocols",
     "notifications · Constants",
+    "notifications.router · Functions",
+    "notifications.router · Classes",
   ],
   "server-feedback": [
     "feedback · Functions",
