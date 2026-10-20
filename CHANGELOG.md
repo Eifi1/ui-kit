@@ -23,20 +23,42 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 
 ## [0.46.0](https://github.com/Eifi1/ui-kit/compare/v0.45.0...v0.46.0) (2026-10-19)
 
-Round 0.46, the three 0.45 adoptions' notes, reviewed against all three apps before release.
-One change shows on a plain bump: a table with phone swipe actions now also gets a desktop
-actions column with the same actions (on by default, except beside `rowActions`; an app's own
-`DataTable` wrapper must forward `desktopSwipeActions`). The rest replaces the apps' 0.45
-workarounds (`MailTestCard` without `mailBackend`, the kit's words for the feedback tiles).
-The server half ships as server-kit 0.16.0 (sync clock-skew correction, a company rename's
-names logged). Per-app steps: docs/adopt-0.46.md.
+Round 0.46, the three 0.45 adoptions' notes plus local-first §2, notifications §10 and feedback
+§11 (all settled 2026-10-19, the zone amended 2026-10-20), reviewed against all three apps before
+release. No export is removed and no prop changes its type; three things show on a plain bump:
+
+- A table with phone swipe actions now also gets a desktop actions column with the same actions
+  (on by default, except beside `rowActions`; an app's own `DataTable` wrapper must forward
+  `desktopSwipeActions`).
+- `FeedbackNotificationTypeId` gains `"feedback_received"` (admins' alerts for new feedback and
+  reworks), so each app's own notification-type id union adds it, and
+  `useFeedbackNotificationTypes()` returns it as a third entry.
+- `NotificationSwitches` gains an optional `push`: the notification settings card draws a
+  column per channel (in the app, push, e-mail); a server that sends `push: null` gets none.
+
+New: `@eifi1/ui-kit/sync` (a new subpath: the device copy, the sync engine and its hooks; `dexie`
+is an optional peer of `/sync` only) and `@eifi1/ui-kit/push-worker` (worker-safe push handling
+for an app's service worker); `NotificationInbox` and the optional `NotificationBell`, muted types
+per device, `useDeviceZoneReport`; `DateFormatSetting`; `handlePushSubscriptionChange`. The time
+zone is automatic only (the device last used, else Zurich): `TimeZoneSetting` was removed before
+release, and `QuietHoursSetting`'s `timezone`, `NotificationSettingsPatch.timezone`,
+`TimeZoneSelect`, `timeZoneOptions` and the labels `deviceZone` / `useDeviceZone` are deprecated,
+removed in 0.47. The rest replaces the apps' 0.45 workarounds (`MailTestCard` without
+`mailBackend`, the kit's words for the feedback tiles). The server half ships as server-kit
+0.16.0, which breaks (the sync clock-skew correction, the notifications inbox, queue and channels,
+feedback alerts, a company rename's names logged). Per-app steps: docs/adopt-0.46.md.
 
 ### Added
 
+* DateFormatSetting, push rotation, the shared pre-push check; notifications + alerts drafts ([c3e090c](https://github.com/Eifi1/ui-kit/commit/c3e090cb329dd480f57c277080b0dd238f15fbd2))
 * desktop actions from phone swipe actions, the 0.45 adoption fixes ([57775f0](https://github.com/Eifi1/ui-kit/commit/57775f09d3aaafcbf3fbc19f9793ed5d9721b724))
+* **notifications:** inbox, bell, channels, TimeZoneSetting, the push-worker subpath ([59c6748](https://github.com/Eifi1/ui-kit/commit/59c6748c579cf00ceb300046f4206a439a82d0ac))
+* **sync:** @eifi1/ui-kit/sync — the device copy, the sync engine and its hooks ([343a959](https://github.com/Eifi1/ui-kit/commit/343a95960d3a021a75b4228ee1542f92d82640a2))
 
 ### Fixed
 
+* **showcase,notifications:** deprecations name their removal, a family demo file, 15 needs ([6843850](https://github.com/Eifi1/ui-kit/commit/6843850b706b3eb57c7bd63dd1f45f251881df57))
+* **sync,notifications:** the build review 2 fixes; the zone automatic only ([c29a158](https://github.com/Eifi1/ui-kit/commit/c29a158b5aa08481747cb0f5b70372bc35b7b59d))
 * **translation-review,admin:** the row action's own name; the kit's hint only with its label ([be4c6a5](https://github.com/Eifi1/ui-kit/commit/be4c6a5b03c063153de9cee1b4229ef63ae1d4c9))
 
 ## [0.45.0](https://github.com/Eifi1/ui-kit/compare/v0.44.0...v0.45.0) (2026-10-19)
