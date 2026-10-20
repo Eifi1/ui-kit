@@ -625,6 +625,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       skip: "Passer",
       done: "Terminé",
       awaitClickHint: "Cliquez sur l’élément mis en évidence pour continuer",
+      awaitInputHint: "Saisissez une valeur dans le champ mis en évidence pour continuer", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page. keksdose's reviewed words.
@@ -1887,6 +1888,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       dateFormatHelp:
         "Comment les dates sont écrites dans toute l’app. Indépendant de la langue de l’interface, vous pouvez donc lire l’app en anglais et voir quand même des dates à la française.",
       dateFormatAuto: "Suivre la langue",
+      // 0.46: AccountMenuTextSize (keksdose live #426).
+      textSmaller: "Texte plus petit",
+      textLarger: "Texte plus grand",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Apparence". "Réglages", as `contrastHelp` says "réglage".

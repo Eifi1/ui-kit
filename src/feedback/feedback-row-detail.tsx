@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
-import { Download, ExternalLink, FileText, RotateCcw } from "lucide-react";
+import { Download, FileText, RotateCcw } from "lucide-react";
 import { AuthedImage } from "../components/authed-image";
 import { CopyButton } from "../components/copy-button";
 import { TextLink } from "../components/text-link";
@@ -75,7 +75,7 @@ import { DEFAULT_FEEDBACK_COMMENTS_LABELS } from "./feedback-thread-parts-labels
  * `showSubject={false}` leaves it out), **Description** (the body; the author's
  * Edit while OPEN / READY / IN_PROGRESS), **URL**, **Attachment**, **Replies** (0.38,
  * §9.7: the timeline, the admin's reply composer with its status picker and the nudge,
- * Rework, Open page — on a row without `replies`, a server before 0.38, the frozen
+ * Rework — on a row without `replies`, a server before 0.38, the frozen
  * **Outcome** read-only in its place), **Comments** (0.38: the app's
  * `FeedbackCommentThread`, when passed), **Send for rework** (only while reworking) and
  * **Status** (with the **Visible to others** switch when `onPublicChange` is passed).
@@ -143,7 +143,9 @@ export interface FeedbackDetailLabels {
   outcomePlaceholder: string;
   /** The button that opens section 5 on an answered row. de-CH: "Nacharbeit" */
   rework: string;
-  /** The link to the page the report was filed on. de-CH: "Seite öffnen" */
+  /** The link to the page the report was filed on. de-CH: "Seite öffnen"
+   *  @deprecated 0.46 — the Replies section's "Open page" button is gone (keksdose live #449:
+   *  it repeated the URL section's link); removed in 0.47. Unused, kept for one release. */
   openPage: string;
   /** Section 5's heading. de-CH: "Zur Nacharbeit senden" */
   reworkTitle: string;
@@ -853,27 +855,20 @@ export function FeedbackRowDetail({
               commit={commit}
             />
           )}
-          {((canRework && !reworking) || pageHref) && (
+          {/* No "Open page" button here since 0.46 (keksdose live #449): the URL section
+              above already links the page, with the path on screen. */}
+          {canRework && !reworking && (
             <div className="flex flex-wrap gap-2">
-              {canRework && !reworking && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setReworking(true);
-                  }}
-                >
-                  <RotateCcw className="size-3.5" aria-hidden /> {labels.rework}
-                </Button>
-              )}
-              {pageHref && (
-                // A real href (keksdose dev #451): middle-click and ⌘/Ctrl-click are
-                // the browser's, and only a link has them.
-                <Button href={pageHref} variant="secondary" onClick={(event) => event.stopPropagation()}>
-                  <ExternalLink className="size-3.5" aria-hidden /> {labels.openPage}
-                </Button>
-              )}
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setReworking(true);
+                }}
+              >
+                <RotateCcw className="size-3.5" aria-hidden /> {labels.rework}
+              </Button>
             </div>
           )}
         </div>

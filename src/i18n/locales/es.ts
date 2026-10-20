@@ -610,6 +610,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       skip: "Omitir",
       done: "Listo",
       awaitClickHint: "Haga clic en el elemento resaltado para continuar",
+      awaitInputHint: "Introduzca un valor en el campo resaltado para continuar", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page.
@@ -1847,6 +1848,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       dateFormatHelp:
         "Cómo se escriben las fechas en toda la app. Independiente del idioma de la interfaz: puede leer la app en inglés y ver igualmente las fechas en formato alemán.",
       dateFormatAuto: "Seguir el idioma",
+      // 0.46: AccountMenuTextSize (keksdose live #426).
+      textSmaller: "Texto más pequeño",
+      textLarger: "Texto más grande",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Apariencia". "Restablecer", as a phone's own settings say it.

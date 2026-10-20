@@ -82,6 +82,9 @@ export { TopBarActions, TOP_BAR_ACTION_ORDER } from "./shell/top-bar-actions";
 export type { TopBarActionsProps } from "./shell/top-bar-actions";
 export { AccountMenuLanguage } from "./shell/account-menu-language";
 export type { AccountMenuLanguageProps, AccountMenuLanguageOption } from "./shell/account-menu-language";
+// 0.46.0 (keksdose live #426): A− / A+ for the text size, beside the language.
+export { AccountMenuTextSize } from "./shell/account-menu-text-size";
+export type { AccountMenuTextSizeProps } from "./shell/account-menu-text-size";
 export { TourMenu } from "./shell/tour-menu";
 export type { TourMenuProps, TourMenuTour } from "./shell/tour-menu";
 export { SyncStatusIndicator, syncState } from "./shell/sync-status-indicator";

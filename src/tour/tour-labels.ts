@@ -10,5 +10,6 @@ export const DEFAULT_TOUR_LABELS: TourLabels = {
   skip: "Skip",
   done: "Done",
   awaitClickHint: "Click the highlighted element to continue",
+  awaitInputHint: "Enter a value in the highlighted field to continue",
   step: (c, t) => `${c} / ${t}`,
 };

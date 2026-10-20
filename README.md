@@ -559,16 +559,16 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2131 names from 348 modules** — 984 values and 1147 types. _Italic_ is a type-only export.
+**2133 names from 349 modules** — 985 values and 1148 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2131 |
+| `@eifi1/ui-kit` | 2133 |
 | `@eifi1/ui-kit/chart` | 92 |
-| `@eifi1/ui-kit/shell` | 112 |
+| `@eifi1/ui-kit/shell` | 114 |
 | `@eifi1/ui-kit/data-table` | 52 |
 | `@eifi1/ui-kit/wizard` | 24 |
 | `@eifi1/ui-kit/tour` | 37 |
@@ -831,6 +831,7 @@ re-slicing of it, never a second API.
 | `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, `AdminWaitingBadge`, `useAdminMenuEntry`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_, _`AdminWaitingBadgeProps`_, _`UseAdminMenuEntryOptions`_ |
 | `shell/top-bar-actions` | `TOP_BAR_ACTION_ORDER`, `TopBarActions`, _`TopBarActionsProps`_ |
 | `shell/account-menu-language` | `AccountMenuLanguage`, _`AccountMenuLanguageOption`_, _`AccountMenuLanguageProps`_ |
+| `shell/account-menu-text-size` | `AccountMenuTextSize`, _`AccountMenuTextSizeProps`_ |
 | `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
 | `shell/sync-status-indicator` | `syncState`, `SyncStatusIndicator`, _`SyncState`_, _`SyncStatus`_, _`SyncStatusIndicatorProps`_, _`SyncStatusScope`_ |
 | `shell/dev-switchers` | `DEV_ORIGINAL_ROLE_KEY`, `DevSwitchers`, _`DevSwitchersProps`_ |

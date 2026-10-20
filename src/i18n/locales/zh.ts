@@ -593,6 +593,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       skip: "跳过",
       done: "完成",
       awaitClickHint: "点击高亮的元素以继续",
+      awaitInputHint: "在高亮的字段中输入一个值以继续", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page.
@@ -1774,6 +1775,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       dateFormatHelp:
         "整个应用中日期的书写方式。与界面语言无关，因此您可以用英文阅读应用，同时仍看到德式日期。",
       dateFormatAuto: "跟随语言",
+      // 0.46: AccountMenuTextSize (keksdose live #426).
+      textSmaller: "缩小文字",
+      textLarger: "放大文字",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "外观".

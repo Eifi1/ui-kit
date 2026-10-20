@@ -200,6 +200,61 @@ describe("TranslationReviewPanel swipe (phone)", () => {
     expect(within(slider("Annuler")).queryByLabelText("Better wording")).toBeNull();
   });
 
+  // keksdose live #416, again on 0.46 (Marcel: "The swipe shall still be possible since it
+  // is faster than scrolling down to the buttons"): the OPEN row's top line swipes.
+  describe("on an open row (live #416)", () => {
+    /** Open a row by a tap, as a reviewer reading it first does, and type into it. */
+    const openAndType = (text: string, typed: string) => {
+      fireEvent.click(screen.getAllByText(text)[0]);
+      const wording = screen.getByLabelText("Better wording");
+      fireEvent.change(wording, { target: { value: typed } });
+      return wording as HTMLTextAreaElement;
+    };
+    /** The opened body under a card, outside its swipe layer. */
+    const editorOf = () => screen.getByLabelText("Better wording").closest<HTMLElement>("li > div:not(:first-child)")!;
+
+    it("approves the stored string on a swipe of its top line, and keeps the editor and what was typed", async () => {
+      const { onSave } = setup({ swipe: true });
+      openAndType("Annuler", "Annuler tout");
+      drag("Annuler", 150);
+      await waitFor(() =>
+        expect(onSave).toHaveBeenCalledWith(
+          [expect.objectContaining({ key: "common.cancel", text: "Annuler", verdict: "APPROVED", suggestion: null })],
+          { origin: "swipe", toasted: true },
+        ),
+      );
+      // The drag neither toggled the row shut nor reset the editor's draft.
+      expect(screen.getByLabelText("Better wording")).toHaveValue("Annuler tout");
+    });
+
+    it("puts the cursor in the wording on a 'Needs a change' swipe, the draft intact", () => {
+      const { onSave } = setup({ swipe: true });
+      const wording = openAndType("Annuler", "Annuler tout");
+      wording.blur();
+      expect(wording).not.toHaveFocus();
+      drag("Annuler", -150);
+      expect(screen.getByLabelText("Better wording")).toBe(wording);
+      expect(wording).toHaveFocus();
+      expect(wording).toHaveValue("Annuler tout");
+      expect(onSave).not.toHaveBeenCalled();
+    });
+
+    it("stands down while the editor's own write is out, and comes back after", async () => {
+      let answer: () => void = () => {};
+      const onSave = vi.fn(() => new Promise<void>((resolve) => (answer = resolve)));
+      setup({ swipe: true, onSave });
+      fireEvent.click(screen.getAllByText("Annuler")[0]);
+      expect(swipeButtons("common.cancel")).toEqual(["Approve", "Needs a change"]);
+      fireEvent.click(within(editorOf()).getByRole("button", { name: "Approve" }));
+      await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+      // A second write of the same row would race the editor's.
+      expect(swipeButtons("common.cancel")).toEqual([]);
+      await act(async () => answer());
+      await waitFor(() => expect(screen.queryByLabelText("Better wording")).toBeNull());
+      expect(swipeButtons("common.cancel")).toEqual(["Approve", "Needs a change"]);
+    });
+  });
+
   it("mirrors the sides in a right-to-left page", async () => {
     const { onSave } = setup({ swipe: true }, (ui) => <div dir="rtl">{ui}</div>);
     // Physically right is toward the START in RTL: the editor, not an approval.

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BarChart3, FileUp, FlaskConical, GraduationCap, Target, Trophy, Wallet } from "lucide-react";
 import {
+  AmountInput,
   Button,
   Chip,
   DEFAULT_TOUR_LABELS,
@@ -79,6 +80,8 @@ export function GuidedTour() {
               ["padding?: number", "Spotlight padding around the target, px (default 8)."],
               ["placement?", '"top" | "bottom" | "start" | "end" | "left" | "right" | "center"; omit for auto. start/end follow the target\'s reading direction, left/right are physical'],
               ["awaitClick?: boolean", "Advance only when the TARGET is clicked. Needs `target`."],
+              ["interactive?: boolean", "0.46: the target is for using — the layers it opens (number pad, menus, popovers at z-50) sit above the scrim."],
+              ["awaitInput?: boolean", "0.46: advance once a value was entered in the target's field (blur or Enter). Implies interactive."],
               ["beforeStep?", "Sync or async; awaited before the target is located."],
             ]}
           />
@@ -96,6 +99,7 @@ function TourLauncher() {
   const { start, stop, active, activeId, index, total, goToStep } = useTour();
   const [outcome, setOutcome] = useState<TourOutcome>(null);
   const [pings, setPings] = useState(0);
+  const [amount, setAmount] = useState("");
 
   // `useTour` THROWS without a provider; `useTourOptional` answers null. The
   // difference matters for a launcher in app chrome: the throw's blast radius is
@@ -112,7 +116,7 @@ function TourLauncher() {
       // would do the same thing even with a target, which is the difference between
       // "there is nothing to point at" and "do not point at it".
       title: "This is the guided tour",
-      body: "Four steps over three targets planted in this section. Esc skips, Enter or → advances, ← goes back (mirrored in a right-to-left document). Tab to Back or Skip and press Enter: only that button runs.",
+      body: "Five steps over four targets planted in this section. Esc skips, Enter or → advances, ← goes back (mirrored in a right-to-left document). Tab to Back or Skip and press Enter: only that button runs.",
       action: (
         <Row>
           <Button variant="secondary" className="px-2.5 py-1 text-xs" onClick={() => goToStep(3)}>
@@ -145,6 +149,13 @@ function TourLauncher() {
       body: "This step has no Next button: it advances only when the highlighted control itself is clicked. The control's own handler runs first, so the counter ticks and then the tour moves on.",
       placement: "bottom",
       awaitClick: true,
+    },
+    {
+      target: '[data-tour="showcase-amount"]',
+      title: "awaitInput",
+      body: "An interactive step: on a phone the field's number pad opens ABOVE the scrim and its keys work. Enter an amount and press Done (or Enter, or tap away) — the value is the step's action.",
+      placement: "bottom",
+      awaitInput: true,
     },
     {
       target: '[data-tour="showcase-step-shape"]',
@@ -194,6 +205,9 @@ function TourLauncher() {
         <Button data-tour="showcase-ping" onClick={() => setPings((n) => n + 1)}>
           Ping ({pings})
         </Button>
+        <div data-tour="showcase-amount" className="w-40">
+          <AmountInput label="Amount" value={amount} onChange={setAmount} currency="CHF" />
+        </div>
       </Row>
 
       <OutTable
@@ -204,12 +218,13 @@ function TourLauncher() {
           // card shows is meaningless until the tour is running.
           ["index / total", active ? `${index + 1} / ${total}` : "— (0 / 0 while inactive)"],
           ["last outcome", outcome ?? "—"],
+          ["amount", amount || "—"],
           ["useTourOptional()", optional ? "a provider is above this component" : "null"],
         ]}
       />
 
       <Note>
-        The three targets are marked with <code className="font-mono">data-tour</code>{" "}
+        The four targets are marked with <code className="font-mono">data-tour</code>{" "}
         attributes, the same convention <code className="font-mono">AppShell</code> uses for
         its nav items. The step matches the first VISIBLE element for the selector, not the
         first in DOM order, so one selector can cover a desktop and a mobile copy of the same

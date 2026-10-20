@@ -627,6 +627,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       skip: "Überspringen",
       done: "Fertig",
       awaitClickHint: "Klicken Sie auf das hervorgehobene Element, um fortzufahren",
+      awaitInputHint: "Geben Sie im hervorgehobenen Feld einen Wert ein, um fortzufahren", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page. keksdose's reviewed words.
@@ -1906,6 +1907,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       dateFormatHelp:
         "Wie Datumsangaben in der ganzen App geschrieben werden. Unabhängig von der Oberflächensprache — Sie können die App also auf Englisch lesen und trotzdem deutsche Datumsangaben sehen.",
       dateFormatAuto: "Der Sprache folgen",
+      // 0.46: AccountMenuTextSize (keksdose live #426).
+      textSmaller: "Kleinere Schrift",
+      textLarger: "Größere Schrift",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Darstellung". "Theme", as `topBar.theme`; "Bereiche" for the panels

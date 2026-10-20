@@ -614,6 +614,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       skip: "Salta",
       done: "Fine",
       awaitClickHint: "Faccia clic sull’elemento evidenziato per continuare",
+      awaitInputHint: "Inserisca un valore nel campo evidenziato per continuare", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page. keksdose's reviewed words.
@@ -1866,6 +1867,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       dateFormatHelp:
         "Come vengono scritte le date in tutta l’app. Indipendente dalla lingua dell’interfaccia, così può leggere l’app in inglese e vedere comunque le date in formato tedesco.",
       dateFormatAuto: "Segui la lingua",
+      // 0.46: AccountMenuTextSize (keksdose live #426).
+      textSmaller: "Testo più piccolo",
+      textLarger: "Testo più grande",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Aspetto". "Lei", capitalised as the rest of the catalogue.

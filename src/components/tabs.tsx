@@ -78,7 +78,7 @@ export interface TabsProps<T extends string>
   onChange: (id: T) => void;
   className?: string;
   /**
-   * The caret beside a SCROLLING strip below `md` (0.40, kk run 79 gap 1): a › while
+   * The caret beside a SCROLLING strip (0.40, kk run 79 gap 1): a › while
    * tabs lie past the strip's end — a tap scrolls it on by three quarters of its width —
    * turning into a ‹ at the end, which goes back to the first. Shown only while the strip
    * actually overflows.
@@ -88,7 +88,8 @@ export interface TabsProps<T extends string>
    * off (keksdose live #410, whose `tab-strip-more.tsx` this replaces). One button that
    * turns round rather than two that come and go, so the strip's width never changes
    * under the thumb. Out of the tab order — the keyboard walks the strip with the arrow
-   * keys, which bring the focused tab into view. From `md` up nothing changes. Ignored on
+   * keys, which bring the focused tab into view. At every width since 0.46 (keksdose live
+   * #410 round 3: eleven report tabs overflow a laptop too); before, `md:hidden`. Ignored on
    * a vertical strip (a side nav is a column, not a row). Names:
    * `tabs.more` / `tabs.backToFirst`.
    */
@@ -269,7 +270,7 @@ export function Tabs<T extends string>({
   };
   const cueButton = cue ? (
     // The strip's bottom rule continues under the caret, so the row reads as one.
-    <div data-tabs-overflow-cue="" className="flex shrink-0 items-center self-stretch border-b border-subtle md:hidden">
+    <div data-tabs-overflow-cue="" className="flex shrink-0 items-center self-stretch border-b border-subtle">
       <IconButton
         size="sm"
         variant="ghost"

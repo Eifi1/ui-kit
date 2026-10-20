@@ -4,6 +4,7 @@ import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router"
 import { LogOut, MessageSquare, Search, Settings, Sprout } from "lucide-react";
 import {
   AccountMenuLanguage,
+  AccountMenuTextSize,
   Button,
   DevSwitchers,
   LanguageMenu,
@@ -18,7 +19,7 @@ import {
   UserAvatar,
   TOPBAR_TRIGGER_CLASS,
 } from "@eifi1/ui-kit";
-import type { AccountMenuLanguageOption, SyncStatus, ThemeMode, TourMenuTour } from "@eifi1/ui-kit";
+import type { AccountMenuLanguageOption, SyncStatus, TextSize, ThemeMode, TourMenuTour } from "@eifi1/ui-kit";
 import { Example, Note, NO_ROUTER, READOUT, code } from "../lib/section";
 
 /**
@@ -82,6 +83,8 @@ const PLANS = ["free", "pro", "unlimited"] as const;
 function Bar({ signedIn }: { signedIn: boolean }) {
   const [theme, setTheme] = useState<ThemeMode>("light");
   const [lang, setLang] = useState("en");
+  // The demo's own size, so a step here does not resize the showcase around it.
+  const [textSize, setTextSize] = useState<TextSize>("normal");
   const [role, setRole] = useState<(typeof ROLES)[number]>("ADMIN");
   const [plan, setPlan] = useState<(typeof PLANS)[number]>("free");
   const [log, setLog] = useState("—");
@@ -135,6 +138,7 @@ function Bar({ signedIn }: { signedIn: boolean }) {
                   {(close) => (
                     <>
                       <AccountMenuLanguage languages={LANGUAGES} value={lang} onPick={setLang} close={close} />
+                      <AccountMenuTextSize value={textSize} onPick={setTextSize} />
                       <li>
                         <MenuItem icon={Settings} onClick={close}>
                           Settings
@@ -167,7 +171,7 @@ function Bar({ signedIn }: { signedIn: boolean }) {
         }
       />
       <p className={`px-3 py-2 ${READOUT}`}>
-        theme {theme} · language {lang} · role {role} · plan {plan} · last: {log}
+        theme {theme} · language {lang} · text size {textSize} · role {role} · plan {plan} · last: {log}
       </p>
     </>
   );
@@ -198,7 +202,10 @@ export function TopBar042Demo() {
             The slots are named, so the order cannot drift between apps (§2.1). A slot left
             empty draws nothing, so it leaves no gap. Without {code("account")} the bar
             draws {code("language")} and {code("signIn")} where the account menu would be
-            (§6.6). Signed in, the language is the first row of the account menu.
+            (§6.6). Signed in, the language is the first row of the account menu, and
+            {" "}{code("AccountMenuTextSize")}'s A− / A+ beside it step the text size without
+            closing the menu (0.46; here the demo's own, an app passes its
+            {" "}{code("pickTextSize")}).
             {" "}{code("ThemeToggle")}'s {code("onChange")} hands over the opposite of the
             mode on screen, for the app to store as its preference.
           </Note>
