@@ -55,8 +55,9 @@ export const MAIL_TEST_ANCHOR = "admin-mail-test";
 export interface MailTestCardProps
   extends Omit<SettingsSectionProps, "anchor" | "title" | "description" | "children"> {
   /** The installation's transport, as the admin page has it (`mail_backend`): the chip
-   *  before a send. After one, the answer's. */
-  mailBackend: string;
+   *  before a send. After one, the answer's. Optional (0.46): without it the chip shows
+   *  from the first answer on, and an app needs no query only for the chip. */
+  mailBackend?: string;
   /** The app's `POST /admin/mail/test` (kastlan `/platform/mail/test`), no body: it
    *  awaits the app's own send and answers `{sent, mail_backend}`. A rejection is read
    *  for a 429 (the limiter); anything else is "could not send". */
@@ -114,6 +115,8 @@ export function MailTestCard({
   const labels = useKitLabels("mailTestCard", DEFAULT_MAIL_TEST_CARD_LABELS, labelsProp);
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  // The last transport an answer named: a later send with no answer (429, network) keeps it.
+  const [answered, setAnswered] = useState<string | undefined>(undefined);
 
   const run = async () => {
     if (busy) return;
@@ -122,6 +125,7 @@ export function MailTestCard({
     try {
       const answer = await send();
       const backend = answer.mail_backend;
+      if (backend) setAnswered(backend);
       if (backend === "console") setOutcome({ kind: "console", backend });
       else setOutcome(answer.sent ? { kind: "sent", backend } : { kind: "failed", backend });
     } catch (error) {
@@ -131,7 +135,7 @@ export function MailTestCard({
     }
   };
 
-  const backend = outcome && "backend" in outcome && outcome.backend ? outcome.backend : mailBackend;
+  const backend = answered ?? mailBackend;
 
   return (
     <SettingsSection

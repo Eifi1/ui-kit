@@ -60,6 +60,7 @@ import {
   PenLine,
   Pin,
   Puzzle,
+  RefreshCw,
   Server,
   Settings as SettingsIcon,
   ShieldAlert,
@@ -259,6 +260,7 @@ const OneTimeCode022Demo = lazySection(() => import("./sections/account-fields-0
 const OneTimeCodeUnlabelled022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCodeUnlabelled022Demo");
 const PasswordStrength022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "PasswordStrength022Demo");
 const LanguageSelect022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "LanguageSelect022Demo");
+const DateFormatDemo = lazySection(() => import("./sections/date-format"), "DateFormatDemo");
 const TileRadioGroup022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "TileRadioGroup022Demo");
 const AccountNumbers022Demo = lazySection(() => import("./sections/account-numbers-022-demo"), "AccountNumbers022Demo");
 const ToggleGroup022Demo = lazySection(() => import("./sections/chips-toggles"), "ToggleGroup022Demo");
@@ -328,6 +330,8 @@ const Billing033Demo = lazySection(() => import("./sections/billing-033-demo"), 
 const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "BillingSwitchDemo");
 // 0.45: local-first phase 1, @eifi1/ui-kit/offline (docs/local-first-harmonization.md §1.6).
 const OfflineDemo = lazySection(() => import("./sections/offline-demo"), "OfflineDemo");
+// 0.46: local-first phase 3, @eifi1/ui-kit/sync (docs/local-first-harmonization.md §2.3).
+const SyncDemo = lazySection(() => import("./sections/sync-demo"), "SyncDemo");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
 // 0.42: the admin area's template (docs/admin-harmonization.md).
@@ -1288,7 +1292,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
         icon: SettingsIcon,
-        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "PasswordSetting", "TwoFactorSetting", "LanguageSelect", "DeviceResetSetting", "registerDeviceSetting", "deviceSettings", "resetDeviceSettings"],
+        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "PasswordSetting", "TwoFactorSetting", "LanguageSelect", "DeviceResetSetting", "registerDeviceSetting", "deviceSettings", "resetDeviceSettings", "DateFormatSetting", "dateFormatterFor", "formatDateWithPreference"],
         Body: () => (
           <>
             <SettingsDesktop031Demo />
@@ -1298,6 +1302,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Settings />
             <PasswordStrength022Demo />
             <LanguageSelect022Demo />
+            <DateFormatDemo />
           </>
         ),
       },
@@ -1308,9 +1313,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Notifications",
         short: "Notifications",
         blurb:
-          "The notification settings every app shares: the types the server answers with a switch in the app and one by e-mail, quiet hours and the time zone, push on this device and the list of devices, and the page an e-mail's unsubscribe link opens.",
+          "The notification settings every app shares: the types the server answers with a switch per channel (in the app, push, e-mail), quiet hours and the account's time zone, the inbox and the top bar's bell, push on this device and the list of devices with the types each one mutes, and the page an e-mail's unsubscribe link opens.",
         icon: Bell,
-        components: ["NotificationTypesSetting", "QuietHoursSetting", "TimeZoneSelect", "timeZoneOptions", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS", "useFeedbackNotificationTypes", "DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS"],
+        components: ["NotificationTypesSetting", "QuietHoursSetting", "TimeZoneSelect", "timeZoneOptions", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS", "useFeedbackNotificationTypes", "DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS", "NotificationInbox", "NotificationBell", "INBOX_BADGE_INTERVAL", "useDeviceZoneReport"],
         Body: () => (
           <>
             <NotificationsPage />
@@ -1529,6 +1534,17 @@ export const GROUPS: ShowcaseGroup[] = [
         components: ["createQueryPersistence", "DEFAULT_SCRUB_FIELDS", "SignOutPendingDialog", "PwaUpdatePrompt", "SharedComputerChoice", "isSharedComputer", "setSharedComputer"],
         Body: () => <OfflineDemo />,
       },
+      {
+        // 0.46: the sync engine on the device's copy, beside Offline (API has room; App chrome is full).
+        slug: "sync",
+        title: "Sync engine",
+        short: "Sync",
+        blurb:
+          "Working on the device's copy: the sync engine with its queue, one request per scope, refused changes kept, the waits after an error and the guarded sign-out; its worker, its status for the indicator and the live read of the copy.",
+        icon: RefreshCw,
+        components: ["createSyncDb", "createSyncEngine", "useSyncWorker", "useSyncStatus", "useSyncQuery", "stampAfter", "isOfflineError", "readLocalFirst", "writeLocalFirst"],
+        Body: () => <SyncDemo />,
+      },
     ],
   },
   {
@@ -1608,7 +1624,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The app's notification types and each account's switches, the settings PATCH, who gets an inbox row, a push or a mail, quiet hours and the digest, the push payload and a push service's answer, and the signed one-click unsubscribe token.",
         icon: Bell,
-        serverModules: ["notifications"],
+        serverModules: ["notifications", "notifications.router"],
       }),
       serverPage({
         slug: "server-feedback",

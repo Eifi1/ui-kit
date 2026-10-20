@@ -211,6 +211,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       testSent: (count) => (count === 1 ? "Test sent to 1 device" : `Test sent to ${n(count)} devices`),
       failures: (count) =>
         count === 1 ? "1 failed delivery in a row" : `${n(count)} failed deliveries in a row`,
+      bellUnread: (count) => `${n(count)} unread`,
     },
     settings: {
       ...d.settings,

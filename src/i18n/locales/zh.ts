@@ -134,6 +134,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       answeredDescription: "当您提交或评论过的反馈收到回复时。",
       comment: "您关注的反馈中的评论",
       commentDescription: "当有人评论您提交或评论过的反馈时。",
+      received: "新反馈和返工",
+      receivedDescription: "当有人提交反馈或退回反馈时。",
+      adminGroup: "管理员",
     },
     feedbackContext: {
       user: "用户",
@@ -797,6 +800,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     },
     writeLock: {
       reason: "仅可查看，无法修改。",
+      offline: "需要网络连接。",
     },
     accountState: {
       active: "已启用",
@@ -1125,6 +1129,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       typesTitle: "通知我以下内容",
       typesDescription: "选择要接收哪些通知，以及接收方式。",
       byEmail: "通过电子邮件",
+      channelApp: "应用内",
+      channelPush: "推送",
+      channelEmail: "电子邮件",
       emailUnverified: "请先确认您的邮箱地址，才能收到这些邮件。",
       digestCadence: "频率",
       digestWeekly: "每周",
@@ -1132,8 +1139,15 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       typesLoading: "正在加载通知设置…",
       typesEmpty: "此账户没有可用的通知。",
       quietTitle: "免打扰时段",
-      quietDescription: (inbox) =>
-        inbox ? "此时段内不发送推送通知。通知仍会进入您的收件箱。" : "此时段内不发送推送通知。",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "此时段内推送通知会等待，并在时段结束时送达。通知会立即进入您的收件箱。"
+            : "此时段内推送通知会等待，并在时段结束时送达。"
+          : inbox
+            ? "此时段内不发送推送通知。通知仍会进入您的收件箱。"
+            : "此时段内不发送推送通知。",
+      quietZone: (zone) => `按您的时区（${zone}），随您最近使用的设备而定。`,
       quietFrom: "从",
       quietUntil: "到",
       quietIncomplete: "请同时设置开始和结束时间。两者都设置后，免打扰时段才会生效。",
@@ -1188,6 +1202,19 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `移除：${device}`,
       removePrompt: "停止向此设备发送通知？",
+      deviceTypes: "此设备上的类型",
+      deviceTypesDescription: "关闭某个类型，即可仅在此设备上将其静音。",
+      deviceTypesEmpty: "没有开启推送通知的类型。",
+      inboxTitle: "收件箱",
+      inboxLoading: "正在加载通知…",
+      inboxEmpty: "没有新通知。",
+      markAllRead: "全部标为已读",
+      clearAll: "全部清除",
+      clearPrompt: "删除收件箱中的所有通知？",
+      showMore: "显示更多",
+      bellLabel: "通知",
+      bellUnread: (count) => `${n(count)} 条未读`,
+      allNotifications: "所有通知",
       unsubscribeTitle: "电子邮件通知",
       unsubscribeAbout: (type) => `您会收到有关以下内容的邮件：${type}。`,
       unsubscribeGeneric: "您会收到通知邮件。",
@@ -1496,6 +1523,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       approve: "通过",
       flag: "需要修改",
       suggest: "建议译文",
+      flagRow: "标记为需修改…",
+      suggestRow: "添加译文…",
       reset: "标记为未审校",
       cancel: "取消",
       approveSelected: "通过所选项",
@@ -1740,6 +1769,11 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       contrastHelp: "增强对比度会加深浅色文字和线条，并加粗焦点框。“跟随系统”沿用此设备的设置。",
       contrastModes: { system: "跟随系统", standard: "标准", more: "增强" },
       saveFailed: "无法保存到您的账户。此设备上仍然生效。",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "日期格式",
+      dateFormatHelp:
+        "整个应用中日期的书写方式。与界面语言无关，因此您可以用英文阅读应用，同时仍看到德式日期。",
+      dateFormatAuto: "跟随语言",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "外观".
@@ -1795,6 +1829,10 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         invitationsPending: "待接受的邀请",
         users: "用户",
         usersNew: (count) => `近 7 天新增 ${n(count)} 人`,
+        awaitingVerdict: "待确认",
+        awaitingVerdictHint: "已答复，等待您或报告人确认已解决",
+        releasedForWork: "待处理",
+        releasedForWorkHint: "已就绪、已要求返工或进行中",
       },
       overviewError: "无法加载概览。",
       retry: "重试",

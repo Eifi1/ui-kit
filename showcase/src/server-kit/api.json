@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.15.0",
+  "kit_version": "0.16.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -171,6 +171,12 @@
           "doc": "bcrypt hashes at most 72 BYTES, and bcrypt 5 RAISES past it in both the hash and the\ncheck (keksdose ``infrastructure/security.py`` ``BCRYPT_MAX_PASSWORD_BYTES``)."
         },
         {
+          "name": "MAX_ZONE_LENGTH",
+          "kind": "constant",
+          "signature": "MAX_ZONE_LENGTH = 64",
+          "doc": "The longest IANA name the account's zone columns hold (``String(64)``)."
+        },
+        {
           "name": "MIN_PASSWORD_LENGTH",
           "kind": "constant",
           "signature": "MIN_PASSWORD_LENGTH = 8",
@@ -197,8 +203,14 @@
         {
           "name": "PROFILE_NOT_NULLABLE",
           "kind": "constant",
-          "signature": "PROFILE_NOT_NULLABLE: tuple[str, ...] = (\"first_name\", \"last_name\", \"locale\", \"text_size\", \"contrast\")",
+          "signature": "PROFILE_NOT_NULLABLE: tuple[str, ...] = (\n    \"first_name\",\n    \"last_name\",\n    \"locale\",\n    \"text_size\",\n    \"contrast\",\n    \"device_timezone\",\n)",
           "doc": "The fields of :class:`ProfileUpdate` that a PATCH may leave out but never null. The\ntext size and the contrast are among them (text-size §10.6): their ``null`` means only\n\"never chosen\", which a person cannot choose — \"System\" is a value of its own."
+        },
+        {
+          "name": "PROFILE_ZONE_FIELDS",
+          "kind": "constant",
+          "signature": "PROFILE_ZONE_FIELDS: tuple[str, ...] = (\"device_timezone\",)",
+          "doc": ":func:`apply_zone_update`'s fields: pass them as ``apply_patch``'s ``skip``, so a demo's\nzone is never written."
         },
         {
           "name": "REFRESH_TOKEN_EXPIRE_MINUTES",
@@ -548,7 +560,7 @@
           "name": "ProfileUpdate",
           "kind": "model",
           "signature": "class ProfileUpdate(BaseModel)",
-          "doc": "``PATCH /auth/me {first_name?, last_name?, locale?, text_size?, contrast?}`` (§6.1;\nKurvenschmiede ``ProfileUpdate``; ``docs/text-size-harmonization.md`` §6, §10.6).\n\nEvery field optional, so the language picker writes the locale alone, and the text-size\nand contrast cards write theirs alone (a pick writes the device and the account). Unknown fields\nare refused (``extra=\"forbid\"``): the obvious next field somebody sends is ``role``\nor ``email``, and a schema that silently ignored it would read as having accepted it.\nAn explicit ``null`` is refused too — a name cannot be cleared, and\n``model_dump(exclude_unset=True)`` would otherwise carry it onto a NOT NULL column.\nWrite it with :func:`~eifi1_server_kit.settings.apply_patch` and\n:data:`PROFILE_NOT_NULLABLE` (settings §6.1).\n\n**The locale, from the app's languages** (settings §6.2): set :attr:`offered_locales`\nin a subclass — or build the class with\n:func:`~eifi1_server_kit.settings.profile_update_model` — and the locale goes through\n:func:`~eifi1_server_kit.settings.canonical_locale`: ``de_ch`` is stored as ``de-CH``,\n``de`` as the offered German, and a language the app doesn't offer is a 422. Unset,\nonly the tag's shape is checked, as before.",
+          "doc": "``PATCH /auth/me {first_name?, last_name?, locale?, text_size?, contrast?,\ndevice_timezone?}`` (§6.1;\nKurvenschmiede ``ProfileUpdate``; ``docs/text-size-harmonization.md`` §6, §10.6).\n\nEvery field optional, so the language picker writes the locale alone, and the text-size\nand contrast cards write theirs alone (a pick writes the device and the account). Unknown fields\nare refused (``extra=\"forbid\"``): the obvious next field somebody sends is ``role``\nor ``email``, and a schema that silently ignored it would read as having accepted it.\nAn explicit ``null`` is refused too — a name cannot be cleared, and\n``model_dump(exclude_unset=True)`` would otherwise carry it onto a NOT NULL column.\nWrite it with :func:`~eifi1_server_kit.settings.apply_patch` and\n:data:`PROFILE_NOT_NULLABLE` (settings §6.1).\n\n**The locale, from the app's languages** (settings §6.2): set :attr:`offered_locales`\nin a subclass — or build the class with\n:func:`~eifi1_server_kit.settings.profile_update_model` — and the locale goes through\n:func:`~eifi1_server_kit.settings.canonical_locale`: ``de_ch`` is stored as ``de-CH``,\n``de`` as the offered German, and a language the app doesn't offer is a 422. Unset,\nonly the tag's shape is checked, as before.\n\n**The zone** (notifications §10.3, 0.16; amended 2026-10-20, Marcel: automatic only):\n``device_timezone``, the device's report (never ``null``), an IANA name ``zoneinfo``\nknows (422 otherwise). There is no pick: a ``timezone`` field — a stale 0.45 bundle's\npicker still sends one — is **ignored in 0.16** (dropped before the checks, never\nwritten) **and refused from 0.17** as any unknown field is. A demo's zone is ignored, as\nits locale and appearance are in Kurvenschmiede::\n\n    apply_patch(user, body, not_nullable=PROFILE_NOT_NULLABLE, skip=PROFILE_ZONE_FIELDS)\n    apply_zone_update(user, body, is_demo=user.is_demo)",
           "fields": [
             {
               "name": "first_name",
@@ -579,6 +591,12 @@
               "type": "ContrastMode | None",
               "default": "None",
               "doc": "One of :data:`CONTRAST_MODES`; left out keeps the account's, ``null`` is refused."
+            },
+            {
+              "name": "device_timezone",
+              "type": "ZoneName | None",
+              "default": "None",
+              "doc": "The device's zone, reported at app start when it differs from the stored one; a\nreport, so ``null`` is refused. Write it with :func:`apply_zone_update`, which\nignores a demo's."
             },
             {
               "name": "offered_locales",
@@ -643,6 +661,12 @@
               "type": "str | None",
               "default": "None",
               "doc": "``/register?invite=<token>`` (§4.4); its mail address must accept ``email``\n(:func:`~eifi1_server_kit.auth.invitation_accepts`)."
+            },
+            {
+              "name": "device_timezone",
+              "type": "Annotated[str | None, BeforeValidator(_known_zone_or_none)]",
+              "default": "None",
+              "doc": "The device's zone (``Intl…timeZone``, notifications §10.3, 0.16), stored as the\naccount's ``device_timezone``; one this server doesn't know is dropped, not refused."
             }
           ]
         },
@@ -825,6 +849,12 @@
               "type": "ContrastMode | None",
               "default": "None",
               "doc": "The account's contrast mode (text-size §6, §10.6); ``None`` = never chosen, which\nreads as ``\"system\"``."
+            },
+            {
+              "name": "device_timezone",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The zone the device last used reported (notifications §10.3, 0.16), an IANA name;\nthe client reports its own when it differs. It IS the account's zone — automatic\nonly (amended 2026-10-20), ``None`` = the app's (``effective_zone``)."
             }
           ],
           "methods": [
@@ -852,6 +882,12 @@
           "doc": "An instant on the wire, always ISO-8601 in UTC (``2026-10-08T09:00:00Z``): the client\ncounts down to it (landing-demo §5.3), so it must never be a local time without an\noffset, which a browser would read in ITS zone."
         },
         {
+          "name": "ZoneName",
+          "kind": "constant",
+          "signature": "ZoneName = Annotated[str, Field(max_length=MAX_ZONE_LENGTH), AfterValidator(_known_zone)]",
+          "doc": "An IANA zone ``zoneinfo`` knows (``Europe/Zurich``), at most :data:`MAX_ZONE_LENGTH`\ncharacters (notifications §10.3)."
+        },
+        {
           "name": "absent_account_check",
           "kind": "function",
           "signature": "absent_account_check[H](hash_password: Callable[[str], H], verify_password: Callable[[str, H], object], *, cost: Callable[[], Hashable] | None = None) -> Callable[[str], bool]",
@@ -868,6 +904,12 @@
           "kind": "function",
           "signature": "addresses_for_reset(email: str, tag: str) -> tuple[str, ...]",
           "doc": "The addresses a password-reset request looks up, in order (§4.5).\n\nThe submitted address first; if it finds no account, its tagged variant — a user who\ntook the tag at sign-up and forgot it still gets the link. The mail goes to the\naccount's OWN address (the tagged one), and the answer is ``204`` either way."
+        },
+        {
+          "name": "apply_zone_update",
+          "kind": "function",
+          "signature": "apply_zone_update(user: object | MutableMapping[str, object], patch: BaseModel, *, is_demo: bool) -> dict[str, object]",
+          "doc": "Write the zone field the PATCH sent (:data:`PROFILE_ZONE_FIELDS`: the device's\nreport) onto ``user`` — an ORM row (``setattr``) or a mutable mapping — and answer it;\nnothing for a demo, whose device zone is never stored (notifications §10.3 Settled).\n``patch`` is a :class:`ProfileUpdate` (or any model with the field); left out keeps."
         },
         {
           "name": "challenge_claims",
@@ -1049,6 +1091,12 @@
           "kind": "constant",
           "signature": "DETAIL_MAX_DEPTH = 3",
           "doc": "How many objects and lists may enclose a value, ``detail`` itself included:\n``{\"counts\": {\"projects\": 3}}`` encloses the 3 in two, ``{\"before\": {\"roles\":\n[\"ADMIN\"]}}`` the role in three."
+        },
+        {
+          "name": "DETAIL_NAME_MAX_LENGTH",
+          "kind": "constant",
+          "signature": "DETAIL_NAME_MAX_LENGTH = 200",
+          "doc": "The longest name a ``group_rename`` detail's ``from`` / ``to`` holds (0.16, K8)."
         },
         {
           "name": "DETAIL_TOKEN_MAX_LENGTH",
@@ -1584,6 +1632,12 @@
               "doc": "The account's contrast mode (text-size §6, §10.6); ``None`` = never chosen, which\nreads as ``\"system\"``."
             },
             {
+              "name": "device_timezone",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The zone the device last used reported (notifications §10.3, 0.16), an IANA name;\nthe client reports its own when it differs. It IS the account's zone — automatic\nonly (amended 2026-10-20), ``None`` = the app's (``effective_zone``)."
+            },
+            {
               "name": "last_login_at",
               "type": "datetime | None",
               "default": "None",
@@ -1748,6 +1802,12 @@
               "doc": ""
             }
           ]
+        },
+        {
+          "name": "GroupNameProblem",
+          "kind": "constant",
+          "signature": "type GroupNameProblem = Literal[\"blank\", \"too_long\", \"control_character\", \"secret_shaped\"]",
+          "doc": "Why :func:`group_name_problem` refuses a name."
         },
         {
           "name": "GroupRef",
@@ -2209,7 +2269,7 @@
           "name": "admin_action_record",
           "kind": "function",
           "signature": "admin_action_record(action: AdminAction | str, *, actor_id: int | None, target_user_id: int | None, target_email: str | None, detail: Mapping[str, object] | None = None, company_id: int | None = None, target_group_id: int | None = None, target_group_name: str | None = None, now: datetime) -> dict[str, Any]",
-          "doc": "The fields of one ``admin_actions`` row (§4.3), for the app's model:\n``AdminActionModel(**record)``.\n\n``{\"at\", \"actor_id\", \"action\", \"target_user_id\", \"target_email\", \"detail\"}`` — plus\n``\"company_id\"``, ``\"target_group_id\"`` and ``\"target_group_name\"`` each only when it\nis given (kastlan's company admins; Kurvenschmiede's groups), so a table without the\ncolumn takes the record as it is. No ``id``: the database assigns it.\n\n* ``action`` — an :class:`~eifi1_server_kit.user_admin.AdminAction` or its value,\n  stored as the plain string — or the app's own action (``\"reseed_demo\"``), kept as\n  written, as :class:`~eifi1_server_kit.user_admin.AdminActionRow` reads it back\n  (0.5.1). An empty or blank action is a :class:`ValueError`.\n* ``actor_id`` — who acted; ``None`` for the erasure job (its ``erase`` and\n  Kurvenschmiede's day-30 ``transfer``). A ``deletion_request`` names the user\n  themselves (§6.4).\n* ``target_user_id`` — ``None`` for an invitation to an address with no account.\n  After an erasure the app nulls it and scrubs ``target_email``; the row stays.\n* ``target_email`` — the address as it was at the time, normalised; kept so an\n  invitation's row names its invitee.\n* ``detail`` — checked by :func:`audit_detail`.\n* ``target_group_id`` — the group the row is about (``group_*``) or happened in\n  (``membership_*``, ``invite``, ``invite_resend``, ``invite_revoke``) (§11.3).\n  kastlan passes none: its ``company_id`` already names the company, and it fills the\n  read's group from that.\n* ``target_group_name`` — the name a group had, on its ``group_delete`` row only, and\n  with its ``target_group_id`` (decision 6); anywhere else a :class:`ValueError`. Kept\n  as written: the log reads it back for a group that no longer exists.\n* ``now`` — stored as given, so an app with naive UTC columns (kastlan) passes a\n  naive one."
+          "doc": "The fields of one ``admin_actions`` row (§4.3), for the app's model:\n``AdminActionModel(**record)``.\n\n``{\"at\", \"actor_id\", \"action\", \"target_user_id\", \"target_email\", \"detail\"}`` — plus\n``\"company_id\"``, ``\"target_group_id\"`` and ``\"target_group_name\"`` each only when it\nis given (kastlan's company admins; Kurvenschmiede's groups), so a table without the\ncolumn takes the record as it is. No ``id``: the database assigns it.\n\n* ``action`` — an :class:`~eifi1_server_kit.user_admin.AdminAction` or its value,\n  stored as the plain string — or the app's own action (``\"reseed_demo\"``), kept as\n  written, as :class:`~eifi1_server_kit.user_admin.AdminActionRow` reads it back\n  (0.5.1). An empty or blank action is a :class:`ValueError`.\n* ``actor_id`` — who acted; ``None`` for the erasure job (its ``erase`` and\n  Kurvenschmiede's day-30 ``transfer``). A ``deletion_request`` names the user\n  themselves (§6.4).\n* ``target_user_id`` — ``None`` for an invitation to an address with no account.\n  After an erasure the app nulls it and scrubs ``target_email``; the row stays.\n* ``target_email`` — the address as it was at the time, normalised; kept so an\n  invitation's row names its invitee.\n* ``detail`` — checked by :func:`audit_detail`, with this ``action`` (0.16): a\n  ``group_rename`` detail may name the company's names, ``{from, to}``.\n* ``target_group_id`` — the group the row is about (``group_*``) or happened in\n  (``membership_*``, ``invite``, ``invite_resend``, ``invite_revoke``) (§11.3).\n  kastlan passes none: its ``company_id`` already names the company, and it fills the\n  read's group from that.\n* ``target_group_name`` — the name a group had, on its ``group_delete`` row only, and\n  with its ``target_group_id`` (decision 6); anywhere else a :class:`ValueError`. Kept\n  as written: the log reads it back for a group that no longer exists.\n* ``now`` — stored as given, so an app with naive UTC columns (kastlan) passes a\n  naive one."
         },
         {
           "name": "assert_no_secrets",
@@ -2220,8 +2280,8 @@
         {
           "name": "audit_detail",
           "kind": "function",
-          "signature": "audit_detail(detail: Mapping[str, object] | None) -> dict[str, Any]",
-          "doc": "``detail`` checked and made JSON-ready (see the module docstring), or an\n:class:`AuditDetailError`. ``None`` is ``{}``."
+          "signature": "audit_detail(detail: Mapping[str, object] | None, *, action: AdminAction | str | None = None) -> dict[str, Any]",
+          "doc": "``detail`` checked and made JSON-ready (see the module docstring), or an\n:class:`AuditDetailError`. ``None`` is ``{}``.\n\n``action`` (0.16, K8) is the row's action: for ``group_rename`` the top-level\n``from`` and ``to`` are names, free text, cleaned rather than refused (no control or\nformat characters, whitespace collapsed, at most :data:`DETAIL_NAME_MAX_LENGTH`\ncharacters ending in ``…`` when cut; a blank or secret-shaped name is left out with\nits key); without it, or for any other action, every string is a token.\n:func:`admin_action_record` passes its own."
         },
         {
           "name": "confirm_email_matches",
@@ -2264,6 +2324,12 @@
           "kind": "function",
           "signature": "export_filename(app: str, now: datetime) -> str",
           "doc": "``keksdose-account-2026-10-07.json``: the download's name, for\n``Content-Disposition: attachment; filename=…``."
+        },
+        {
+          "name": "group_name_problem",
+          "kind": "function",
+          "signature": "group_name_problem(name: str) -> GroupNameProblem | None",
+          "doc": "Why a NEW group name is refused, or ``None`` (0.16, round-047 build review S1): the\nrule an app's request schema checks a company's new name by, so the edge answers 422\nand :func:`audit_detail` never has to clean it.\n\nThe name is judged stripped: ``\"blank\"`` (nothing left), ``\"too_long\"`` (more than\n:data:`DETAIL_NAME_MAX_LENGTH` characters), ``\"control_character\"`` (a tab, a line\nbreak, a soft hyphen, a zero-width space — any ``Cc``, ``Cf``, ``Cs``, ``Zl`` or\n``Zp`` character), ``\"secret_shaped\"``\n(:func:`~eifi1_server_kit.user_admin.looks_secret_value`). Store ``name.strip()``."
         },
         {
           "name": "invitation_status",
@@ -5006,6 +5072,44 @@
           ]
         },
         {
+          "name": "HtmlMailMessage",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class HtmlMailMessage(MailMessage)",
+          "doc": "A :class:`MailMessage` whose ``html`` is always there, as :func:`test_mail_message`\nreturns it: an app whose own send takes ``html: str`` passes ``message.html`` as it is\n(keksdose N2, 0.16.0). Every :class:`MailMessage` rule holds; ``html`` is required.",
+          "fields": [
+            {
+              "name": "subject",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "text",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "html",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "headers",
+              "type": "Mapping[str, str] | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "idempotency_key",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "MailMessage",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class MailMessage",
@@ -5211,18 +5315,18 @@
         {
           "name": "test_mail_message",
           "kind": "function",
-          "signature": "test_mail_message(locale: str | None, *, app_name: str, backend: str, sent_at: datetime) -> MailMessage",
-          "doc": "The admin's test mail (§9.2.3) in the admin's language, through :func:`pick_entry`'s\nfallback: subject \"Test mail from {app}\", a body naming the transport and the time\n(UTC, ``2026-10-19 14:05 UTC``). It names no recipient, so the route's log line and\nthe mail never carry the address. No link: a whole escaped document as\n:func:`render_message` lays one out, the plain text beside it.\n\nThe route awaits the app's own send and returns its bool — never an after-commit hook::\n\n    message = test_mail_message(admin.locale, app_name=\"Kurvenschmiede\", backend=backend, sent_at=now)\n    sent = await mailer.send(admin.email, message, kind=MAIL_TEST_KIND)\n    return MailTestResult(sent=sent, mail_backend=backend)\n\n``sent_at`` must be aware; a naive one is a :class:`ValueError`."
+          "signature": "test_mail_message(locale: str | None, *, app_name: str, backend: str, sent_at: datetime) -> HtmlMailMessage",
+          "doc": "The admin's test mail (§9.2.3) in the admin's language, through :func:`pick_entry`'s\nfallback: subject \"Test mail from {app}\", a body naming the transport and the time\n(UTC, ``2026-10-19 14:05 UTC``). It names no recipient, so the route's log line and\nthe mail never carry the address. No link: a whole escaped document as\n:func:`render_message` lays one out, the plain text beside it.\n\nThe route awaits the app's own send and returns its bool — never an after-commit hook::\n\n    message = test_mail_message(admin.locale, app_name=\"Kurvenschmiede\", backend=backend, sent_at=now)\n    sent = await mailer.send(admin.email, message, kind=MAIL_TEST_KIND)\n    return MailTestResult(sent=sent, mail_backend=backend)\n\n``sent_at`` must be aware; a naive one is a :class:`ValueError`. The answer is an\n:class:`HtmlMailMessage`: its ``html`` is a ``str``, never ``None``."
         }
       ]
     },
     {
       "name": "eifi1_server_kit.notifications",
       "summary": "Notifications, as code (``docs/notifications-harmonization.md`` §4.1 in ``Eifi1/ui-kit``).",
-      "doc": "Notifications, as code (``docs/notifications-harmonization.md`` §4.1 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions and Pydantic models — no database, no\nroutes, no network, no new dependency. The app keeps its tables, its routes (the demo's\nrefusal among them), its triggers, its words and its sending (``pywebpush``, its mailer).\nkeksdose is the source (``backend/keksdose/domain/schemas/push.py`` and its services),\ncited per rule.\n\n* :mod:`~eifi1_server_kit.notifications.registry` — the app's types, their defaults, and\n  the account's narrowing;\n* :mod:`~eifi1_server_kit.notifications.resource` — ``GET/PATCH /notifications/settings``:\n  the switches as they apply, and the PATCH's rules for ``types``;\n* :mod:`~eifi1_server_kit.notifications.delivery` — who gets an inbox row, a push, a mail;\n* :mod:`~eifi1_server_kit.notifications.timing` — quiet hours, the zone, the digest's period;\n* :mod:`~eifi1_server_kit.notifications.retry` — a job's notification mail that failed to\n  send: the window it is owed in, the marker, the ``Idempotency-Key`` (§9.4);\n* :mod:`~eifi1_server_kit.notifications.push` — the device shapes, the payload, a push\n  service's answer, the VAPID subject;\n* :mod:`~eifi1_server_kit.notifications.unsubscribe` — the signed one-click token;\n* :mod:`~eifi1_server_kit.notifications.inbox` — the inbox's shapes;\n* :mod:`~eifi1_server_kit.notifications.errors` — the coded refusals.\n\nThe mail's half — ``List-Unsubscribe`` and the footer line, and a job's mail's\n``Idempotency-Key`` — is in :mod:`eifi1_server_kit.mail`\n(:class:`~eifi1_server_kit.mail.MailUnsubscribe`,\n:attr:`~eifi1_server_kit.mail.MailMessage.idempotency_key`), and the\nPATCH's plain fields go through :func:`eifi1_server_kit.settings.apply_patch` with\n``skip=SETTINGS_SKIP``.",
+      "doc": "Notifications, as code (``docs/notifications-harmonization.md`` §4.1 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions and Pydantic models — no database, no\nroutes, no network, no new dependency. The app keeps its tables, its routes (the demo's\nrefusal among them), its triggers, its words and its sending (``pywebpush``, its mailer).\nkeksdose is the source (``backend/keksdose/domain/schemas/push.py`` and its services),\ncited per rule.\n\n* :mod:`~eifi1_server_kit.notifications.registry` — the app's types, their defaults, and\n  the account's narrowing;\n* :mod:`~eifi1_server_kit.notifications.resource` — ``GET/PATCH /notifications/settings``:\n  the switches as they apply, and the PATCH's rules for ``types``;\n* :mod:`~eifi1_server_kit.notifications.delivery` — who gets an inbox row, a push, a mail;\n* :mod:`~eifi1_server_kit.notifications.timing` — quiet hours, the zone, the digest's period;\n* :mod:`~eifi1_server_kit.notifications.retry` — a job's notification mail that failed to\n  send: the window it is owed in, the marker, the ``Idempotency-Key`` (§9.4);\n* :mod:`~eifi1_server_kit.notifications.push` — the device shapes, the payload, a push\n  service's answer, the VAPID subject;\n* :mod:`~eifi1_server_kit.notifications.unsubscribe` — the signed one-click token;\n* :mod:`~eifi1_server_kit.notifications.inbox` — the inbox's shapes, and (0.16) the\n  :class:`InboxStore` port;\n* :mod:`~eifi1_server_kit.notifications.queue` — (0.16, layer 2, opt-in) the queue that\n  holds a push through quiet hours and bundles mails, and the tick;\n* :mod:`~eifi1_server_kit.notifications.errors` — the coded refusals.\n\nRound 0.46 (server-kit 0.16, ``docs/notifications-harmonization.md`` §10): a switch per\nchannel (``app``, ``push``, ``email``) and per device (``muted_types``), the zone on the\naccount (:func:`effective_zone`), the inbox's port and the queue — ports and services\nwithout FastAPI. Their routes are ``eifi1_server_kit.notifications.router`` (the\n``fastapi`` extra: :func:`~eifi1_server_kit.notifications.router.inbox_router`,\n:func:`~eifi1_server_kit.notifications.router.notifications_jobs_router`) and the fakes\n``eifi1_server_kit.notifications.testing``; neither is re-exported.\n\nThe mail's half — ``List-Unsubscribe`` and the footer line, and a job's mail's\n``Idempotency-Key`` — is in :mod:`eifi1_server_kit.mail`\n(:class:`~eifi1_server_kit.mail.MailUnsubscribe`,\n:attr:`~eifi1_server_kit.mail.MailMessage.idempotency_key`), and the\nPATCH's plain fields go through :func:`eifi1_server_kit.settings.apply_patch` with\n``skip=SETTINGS_SKIP``.",
       "contract": {
         "doc": "docs/notifications-harmonization.md",
-        "section": "§3, §4.1, §9",
+        "section": "§3, §4.1, §9, §10",
         "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#3-the-shapes",
         "links": [
           {
@@ -5239,6 +5343,11 @@
             "section": "§9",
             "heading": "9. Round 0.37 amendment (settled 2026-10-14)",
             "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#9-round-037-amendment-settled-2026-10-14"
+          },
+          {
+            "section": "§10",
+            "heading": "10. Round 0.46: the inbox and bell, switches per channel and device, the zone on the account, a queue — SETTLED (round 0.46)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#10-round-046-the-inbox-and-bell-switches-per-channel-and-device-the-zone-on-the-account-a-queue--settled-round-046"
           }
         ]
       },
@@ -5260,6 +5369,18 @@
           "kind": "constant",
           "signature": "DIGEST_LATE_DAYS = 3",
           "doc": "How many days after the period's first local day a digest is still due (decision 5): a\nTuesday digest after a missed Monday is right, its content is the view as of that day."
+        },
+        {
+          "name": "INBOX_PAGE_DEFAULT",
+          "kind": "constant",
+          "signature": "INBOX_PAGE_DEFAULT = 50",
+          "doc": "``GET /notifications/inbox``'s page when no ``limit`` is sent (keksdose's 50)."
+        },
+        {
+          "name": "INBOX_PAGE_MAX",
+          "kind": "constant",
+          "signature": "INBOX_PAGE_MAX = 200",
+          "doc": "The largest ``limit`` the route takes (keksdose's 200)."
         },
         {
           "name": "INBOX_RETENTION",
@@ -5284,6 +5405,12 @@
           "kind": "constant",
           "signature": "MAIL_MARKER_RETENTION = timedelta(days=30)",
           "doc": "How long the app keeps a marker (decision 6); the job that sends deletes older ones."
+        },
+        {
+          "name": "PUSH_GONE_GRACE",
+          "kind": "constant",
+          "signature": "PUSH_GONE_GRACE = timedelta(days=7)",
+          "doc": "How long a device row a push service answered 404/410 for stays claimable by\n``POST /notifications/devices/replace`` (§10.6 rule 4): the browser may rotate the\nsubscription, a push hit the old endpoint, and the worker's replace comes after. The\nreaper marks the row ``gone_at`` and stops sending to it; the daily reap deletes rows\ngone longer than this."
         },
         {
           "name": "PUSH_MAX_FAILURES",
@@ -5314,6 +5441,36 @@
           "kind": "constant",
           "signature": "PUSH_TTL = 86_400",
           "doc": "Seconds a push service keeps a message for a device that is offline (keksdose\n``push_ttl_seconds``): a day."
+        },
+        {
+          "name": "QUEUE_CLAIM_TIMEOUT",
+          "kind": "constant",
+          "signature": "QUEUE_CLAIM_TIMEOUT = timedelta(minutes=10)",
+          "doc": "A claim older than this is claimable again: the run that took it died between the claim\nand ``done``."
+        },
+        {
+          "name": "QUEUE_FLUSH_LIMIT",
+          "kind": "constant",
+          "signature": "QUEUE_FLUSH_LIMIT = 500",
+          "doc": "How many rows one flush claims at most; the next tick takes the rest."
+        },
+        {
+          "name": "QUEUE_MAX_ATTEMPTS",
+          "kind": "constant",
+          "signature": "QUEUE_MAX_ATTEMPTS = 3",
+          "doc": "Claims after which an item that never went is dropped ``\"failed\"``."
+        },
+        {
+          "name": "QUEUE_MORE",
+          "kind": "constant",
+          "signature": "QUEUE_MORE = \"+{n} more\"",
+          "doc": "A collapsed held push's body when the item gave no words of its own: ``{n}`` is the\nnumber of OTHER held items. The app passes the recipient's language at enqueue\n(:meth:`QueueService.hold_push`'s ``more``)."
+        },
+        {
+          "name": "QUEUE_RETENTION",
+          "kind": "constant",
+          "signature": "QUEUE_RETENTION = MAIL_MARKER_RETENTION",
+          "doc": "Sent and dropped rows are purged after this (``MAIL_MARKER_RETENTION``, 30 days)."
         },
         {
           "name": "QUIET_HOURS_PATTERN",
@@ -5406,6 +5563,61 @@
           ]
         },
         {
+          "name": "FlushPort",
+          "kind": "protocol",
+          "signature": "class FlushPort(Protocol)",
+          "doc": "The app's delivery at the flush.",
+          "methods": [
+            {
+              "name": "still_wanted",
+              "signature": "async still_wanted(user_id: int, type_id: str, channel: QueueChannel) -> bool | datetime",
+              "doc": "Re-run the plan (:func:`~.delivery.plan_delivery`) for this person, type and\nchannel: ``True`` sends, ``False`` drops (``\"unwanted\"``: the switch went off, the\naccount was deactivated), and a datetime holds the push again until then (the\nquiet hours moved: :func:`~.timing.quiet_hours_end`)."
+            },
+            {
+              "name": "send_push",
+              "signature": "async send_push(user_id: int, payload: PushPayload) -> bool",
+              "doc": "Push to this person's devices that don't mute the type\n(:func:`~.delivery.device_receives`); ``True`` once it was handed to the push\nservices (a device's own answer is the app's, §2.7), ``False`` to try again."
+            },
+            {
+              "name": "send_mail",
+              "signature": "async send_mail(user_id: int, type_id: str, items: Sequence[QueueItem], idempotency_key: str) -> bool",
+              "doc": "One mail with every item, oldest first — \"{n} new comments on reports you\nfollow\", one line each; one item sends the ordinary mail. Pass\n``idempotency_key`` as :attr:`~eifi1_server_kit.mail.MailMessage.idempotency_key`.\nWhether the send answered ``True``."
+            }
+          ]
+        },
+        {
+          "name": "FlushResult",
+          "kind": "model",
+          "signature": "class FlushResult(BaseModel)",
+          "doc": "What one flush (or tick) did, in rows: ``POST /ops/notifications/flush``'s answer.",
+          "fields": [
+            {
+              "name": "sent",
+              "type": "int",
+              "default": "0",
+              "doc": "Rows sent."
+            },
+            {
+              "name": "dropped",
+              "type": "int",
+              "default": "0",
+              "doc": "Rows dropped this run: unwanted, expired, late or failed."
+            },
+            {
+              "name": "left",
+              "type": "int",
+              "default": "0",
+              "doc": "Rows claimed and not finished: a failed send to try again, a push held again."
+            },
+            {
+              "name": "purged",
+              "type": "int",
+              "default": "0",
+              "doc": "Finished rows deleted by the tick's purge."
+            }
+          ]
+        },
+        {
           "name": "InboxItem",
           "kind": "model",
           "signature": "class InboxItem(BaseModel)",
@@ -5452,6 +5664,12 @@
               "type": "datetime | None",
               "default": null,
               "doc": ""
+            },
+            {
+              "name": "company",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The company the row is about, by name, where the app's rows carry one (kastlan,\n0.16); ``None`` elsewhere. The list shows it beside the row."
             }
           ]
         },
@@ -5504,6 +5722,39 @@
           ]
         },
         {
+          "name": "InboxStore",
+          "kind": "protocol",
+          "signature": "class InboxStore(Protocol)",
+          "doc": "The app's inbox table (§10.1 rule 5, 0.16), on the request's session. Every method\nis the account's own: no id of another account's row is ever read, marked or deleted.\nIt flushes and never commits; the app commits (the router's request, the job's run).",
+          "methods": [
+            {
+              "name": "add",
+              "signature": "async add(item: NewInboxItem) -> None",
+              "doc": "Insert one row, in the delivery's transaction."
+            },
+            {
+              "name": "page",
+              "signature": "async page(user_id: int, limit: int, offset: int) -> tuple[Sequence[InboxItem], int]",
+              "doc": "The account's rows newest first, ``limit`` from ``offset``, and its unread count\nover ALL its rows (the badge), not just this page's."
+            },
+            {
+              "name": "mark_read",
+              "signature": "async mark_read(user_id: int, ids: Sequence[UUID | int] | None) -> int",
+              "doc": "Stamp ``read_at`` on these unread rows of the account (``None``: all of them);\nhow many changed. Another account's ids change nothing."
+            },
+            {
+              "name": "clear",
+              "signature": "async clear(user_id: int) -> None",
+              "doc": "Delete every row of the account."
+            },
+            {
+              "name": "prune",
+              "signature": "async prune(before: datetime) -> int",
+              "doc": "Delete every account's rows created before ``before`` (the daily job:\n``now - INBOX_RETENTION``); how many."
+            }
+          ]
+        },
+        {
           "name": "MailMarker",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class MailMarker",
@@ -5537,6 +5788,119 @@
           ]
         },
         {
+          "name": "NewInboxItem",
+          "kind": "model",
+          "signature": "class NewInboxItem(BaseModel)",
+          "doc": "A row to write (:meth:`InboxStore.add`): the delivery's words, never sealed content.",
+          "fields": [
+            {
+              "name": "user_id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "notification_type",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "title",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "body",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "url",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "company_id",
+              "type": "int | None",
+              "default": "None",
+              "doc": "kastlan's: the company the event belongs to."
+            },
+            {
+              "name": "push_sent",
+              "type": "bool",
+              "default": "False",
+              "doc": "Whether a push went with it (keksdose's ``push_sent``)."
+            }
+          ]
+        },
+        {
+          "name": "NewQueueItem",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class NewQueueItem",
+          "doc": "A row to insert (:meth:`NotificationQueue.enqueue`).",
+          "fields": [
+            {
+              "name": "user_id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "type_id",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "channel",
+              "type": "QueueChannel",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "event",
+              "type": "str",
+              "default": null,
+              "doc": "The event's key: the row's identity with the user, type and channel."
+            },
+            {
+              "name": "payload",
+              "type": "Mapping[str, Any]",
+              "default": null,
+              "doc": "JSON: a push's ``{title, body, tag, url, inbox, more}``, a mail's words' fields."
+            },
+            {
+              "name": "not_before",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "NotificationChannelError",
+          "kind": "class",
+          "signature": "class NotificationChannelError(NotificationError)",
+          "doc": "A switch for a channel the type doesn't offer (§10.2, 0.16) — ``push`` in an app with\nno push, a type id a device can't mute: 422 ``{\"detail\": …, \"code\":\n\"notification_channel_not_offered\", \"types\": [...], \"channel\": \"push\"}``. The settings\nmodel refuses the PATCH's switch first; :func:`~.resource.apply_switches_patch` and\n:func:`~.delivery.apply_muted_types` check it again for a caller without it.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(type_ids: Iterable[str], channel: str, detail: str | None = None) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "NotificationError",
           "kind": "class",
           "signature": "class NotificationError(ValueError)",
@@ -5546,6 +5910,49 @@
               "name": "__init__",
               "signature": "__init__(detail: str | None = None) -> None",
               "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "NotificationQueue",
+          "kind": "protocol",
+          "signature": "class NotificationQueue(Protocol)",
+          "doc": "The app's queue table. ``enqueue`` and ``open_bundle`` run in the caller's\ntransaction (flush, never commit); the tick's methods — ``claim``, ``done``, ``drop``,\n``defer``, ``purge`` — each COMMIT, so a claim holds before the send and ``done``\nafter it.",
+          "methods": [
+            {
+              "name": "enqueue",
+              "signature": "async enqueue(item: NewQueueItem) -> bool",
+              "doc": "Insert ``ON CONFLICT (user_id, type_id, channel, event) DO NOTHING``; whether a\nrow was added."
+            },
+            {
+              "name": "open_bundle",
+              "signature": "async open_bundle(user_id: int, type_id: str) -> datetime | None",
+              "doc": "The ``not_before`` of this person's unsent, unclaimed, undropped mail rows of\nthis type — the open bundle — or ``None`` when there is none."
+            },
+            {
+              "name": "claim",
+              "signature": "async claim(now: datetime, limit: int, reclaim_before: datetime) -> Sequence[QueueItem]",
+              "doc": "Up to ``limit`` rows not sent, not dropped, ``not_before <= now``, unclaimed or\nclaimed before ``reclaim_before`` — ``FOR UPDATE SKIP LOCKED`` — oldest first;\nset ``claimed_at = now`` and ``attempts += 1``, commit, and answer them updated."
+            },
+            {
+              "name": "done",
+              "signature": "async done(ids: Sequence[int], sent_at: datetime) -> None",
+              "doc": "Stamp ``sent_at``; commit."
+            },
+            {
+              "name": "drop",
+              "signature": "async drop(ids: Sequence[int], reason: str) -> None",
+              "doc": "Set ``dropped = reason``; commit."
+            },
+            {
+              "name": "defer",
+              "signature": "async defer(ids: Sequence[int], not_before: datetime) -> None",
+              "doc": "Still held (the window moved): set ``not_before``, clear ``claimed_at`` and take\nback this claim's attempt; commit."
+            },
+            {
+              "name": "purge",
+              "signature": "async purge(before: datetime) -> int",
+              "doc": "Delete the sent or dropped rows created before ``before``; how many; commit."
             }
           ]
         },
@@ -5567,13 +5974,13 @@
           "name": "NotificationSettingsUpdate",
           "kind": "model",
           "signature": "class NotificationSettingsUpdate(BaseModel)",
-          "doc": "``PATCH /notifications/settings`` (§3.2), checked against the app's registry.\n\nSet :attr:`registry` in the subclass, as ``ProfileUpdate.offered_locales`` is set\n(settings §7.2); a class without it is a :class:`TypeError` on its first validation.\nA type the registry doesn't know, or an ``app`` / ``email`` switch on a type that\ndoesn't offer it, is a validation error (422). A type the registry knows but this\naccount doesn't receive is :func:`apply_switches_patch`'s\n:class:`~.errors.NotificationTypeError`. Unknown fields are a 422.",
+          "doc": "``PATCH /notifications/settings`` (§3.2), checked against the app's registry.\n\nSet :attr:`registry` in the subclass, as ``ProfileUpdate.offered_locales`` is set\n(settings §7.2); a class without it is a :class:`TypeError` on its first validation.\nA type the registry doesn't know, or an ``app`` / ``push`` / ``email`` switch on a\ntype that doesn't offer it (``push`` in an app with no push), is a validation error\n(422). A type the registry knows but this\naccount doesn't receive is :func:`apply_switches_patch`'s\n:class:`~.errors.NotificationTypeError`. Unknown fields are a 422 — except\n``timezone``, which a stale 0.45 bundle sends: ignored in 0.16, refused from 0.17.",
           "fields": [
             {
               "name": "types",
               "type": "dict[str, TypeSwitchesPatch | None] | None",
               "default": "None",
-              "doc": "``{type id: {\"app\"?, \"email\"?} | null}``; a type left out keeps, a type's ``null``\nresets both switches. ``\"types\": null`` is refused through ``apply_patch``."
+              "doc": "``{type id: {\"app\"?, \"push\"?, \"email\"?} | null}``; a type left out keeps, a type's\n``null`` resets all its switches. ``\"types\": null`` is refused through ``apply_patch``."
             },
             {
               "name": "registry",
@@ -5587,7 +5994,7 @@
           "name": "NotificationType",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class NotificationType",
-          "doc": "One notification type (§3.1)::\n\n    NotificationType(\"support_chat\", app=True, quiet=False)  # keksdose\n    NotificationType(\"feedback_answered\", app=None, email=True)  # Kurvenschmiede\n\nA :class:`ValueError` for an id outside :data:`TYPE_ID_PATTERN`, or a type with\nneither channel.",
+          "doc": "One notification type (§3.1)::\n\n    NotificationType(\"support_chat\", app=True, quiet=False)  # keksdose\n    NotificationType(\"feedback_answered\", app=None, email=True)  # Kurvenschmiede\n    NotificationType(\"feedback_received\", app=True, email=True, bundle=timedelta(minutes=15))\n\nA :class:`ValueError` for an id outside :data:`TYPE_ID_PATTERN`, a type with no\nchannel, or a ``bundle`` that is not positive.",
           "fields": [
             {
               "name": "id",
@@ -5612,6 +6019,18 @@
               "type": "bool",
               "default": "True",
               "doc": "Quiet hours hold its push (§2.4). ``False`` for what a person sends — a share, a\nsupport reply, an announcement — and ``True`` for what the machine sends."
+            },
+            {
+              "name": "push",
+              "type": "bool | None",
+              "default": "None",
+              "doc": "The push default (§10.2, 0.16). ``None`` in a registry with a push channel takes the\n``app`` default (:class:`NotificationTypes` resolves it); in one without\n(``push_channel=False``) every type's push is ``None``: not offered."
+            },
+            {
+              "name": "bundle",
+              "type": "timedelta | None",
+              "default": "None",
+              "doc": "Mails of this type wait this long and go as one (§10.4, 0.16): the first item's\ntime plus ``bundle``, later items joining. ``None``: each mail goes on its own.\nOnly where the app runs the queue; elsewhere each mail goes after its commit."
             }
           ]
         },
@@ -5632,12 +6051,17 @@
           "name": "NotificationTypes",
           "kind": "class",
           "signature": "class NotificationTypes",
-          "doc": "The app's registry: its types, in its order (§3.1)::\n\n    TYPES = NotificationTypes(\n        NotificationType(\"invoices_overdue\", app=False, email=False),\n        NotificationType(\"dunnings_pending\", app=False),\n    )\n\nA :class:`ValueError` for an id declared twice. ``iter`` and ``len`` go over the\ntypes in order, ``\"digest\" in TYPES`` asks for an id, ``TYPES[\"digest\"]`` answers its\ntype (a :class:`KeyError` for an unknown one), :attr:`ids` the ids in order, and\n:meth:`receivable` narrows it to what one account can receive.",
+          "doc": "The app's registry: its types, in its order (§3.1)::\n\n    TYPES = NotificationTypes(\n        NotificationType(\"invoices_overdue\", app=False, email=False),\n        NotificationType(\"dunnings_pending\", app=False),\n    )\n\nA :class:`ValueError` for an id declared twice. ``iter`` and ``len`` go over the\ntypes in order, ``\"digest\" in TYPES`` asks for an id, ``TYPES[\"digest\"]`` answers its\ntype (a :class:`KeyError` for an unknown one), :attr:`ids` the ids in order, and\n:meth:`receivable` narrows it to what one account can receive.\n\n**The push channel** (§10.2, 0.16): ``push_channel=False`` declares an app with no\npush (kastlan, Kurvenschmiede): every type's ``push`` is ``None`` — not offered, never\n``false`` — so the settings answer ``push: null`` and a PATCH that sends it is a 422.\nWith it (keksdose), a type's ``push=None`` takes its ``app`` default. The types the\nregistry holds are the resolved ones: ``TYPES[\"x\"].push`` is what applies.",
           "methods": [
             {
               "name": "__init__",
-              "signature": "__init__(*types: NotificationType) -> None",
+              "signature": "__init__(*types: NotificationType, push_channel: bool = True) -> None",
               "doc": ""
+            },
+            {
+              "name": "push_channel",
+              "signature": "@property push_channel -> bool",
+              "doc": "Whether the app offers push at all (``push_channel=``)."
             },
             {
               "name": "ids",
@@ -5655,7 +6079,7 @@
           "name": "PushData",
           "kind": "model",
           "signature": "class PushData(BaseModel)",
-          "doc": "The payload's ``data``: where a click goes, and the notification's type.",
+          "doc": "The payload's ``data``: where a click goes, the notification's type, and whether\nthe inbox holds it.",
           "fields": [
             {
               "name": "url",
@@ -5668,6 +6092,12 @@
               "type": "str",
               "default": null,
               "doc": "The type id, or :data:`PUSH_TEST_TYPE` for a test push."
+            },
+            {
+              "name": "inbox",
+              "type": "bool",
+              "default": "True",
+              "doc": "An inbox row was written for it (§10.2, 0.16). ``False`` (push on, in-app off): the\nservice worker shows the notification even while a window has focus, as nothing\nelse would show it."
             }
           ]
         },
@@ -5710,6 +6140,26 @@
             {
               "name": "failure_count",
               "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "muted_types",
+              "type": "list[str]",
+              "default": "list()",
+              "doc": "The types this device mutes (§10.2 rule 3, 0.16), in the registry's order: the\nstored list through :func:`~.delivery.read_muted_types`, so an id the registry\ndropped is left out."
+            }
+          ]
+        },
+        {
+          "name": "PushDeviceUpdate",
+          "kind": "model",
+          "signature": "class PushDeviceUpdate(BaseModel)",
+          "doc": "``PATCH /notifications/devices/{id} {\"muted_types\": [...]}`` (§10.2 rule 3, 0.16):\nthe WHOLE list of types this device mutes; ``[]`` mutes none. Checked against the\naccount's registry by :func:`~.delivery.apply_muted_types` (422 for an id the account\ndoesn't receive, or one without push); another account's device is a 404.",
+          "fields": [
+            {
+              "name": "muted_types",
+              "type": "list[str]",
               "default": null,
               "doc": ""
             }
@@ -5759,7 +6209,7 @@
           "name": "PushPayload",
           "kind": "model",
           "signature": "class PushPayload(BaseModel)",
-          "doc": "What the service worker receives: ``{title, body, tag, data: {url, type}}``.\n\n``tag`` is one per event: a repeat of the same event replaces the earlier notification\n(``digest:2026-W42``), distinct events don't (``support:<uuid>``). Send\n:meth:`encode`'s bytes.",
+          "doc": "What the service worker receives: ``{title, body, tag, data: {url, type, inbox}}``.\n\n``tag`` is one per event: a repeat of the same event replaces the earlier notification\n(``digest:2026-W42``), distinct events don't (``support:<uuid>``). Send\n:meth:`encode`'s bytes.",
           "fields": [
             {
               "name": "title",
@@ -5791,6 +6241,32 @@
               "name": "encode",
               "signature": "encode(limit: int = PUSH_PAYLOAD_LIMIT) -> bytes",
               "doc": "The payload as compact UTF-8 JSON of at most ``limit`` bytes.\n\nA body that doesn't fit is cut, and ends in \"…\", at the longest length that fits; a\n:class:`ValueError` when even an empty body doesn't — a title or a tag too long for\na push."
+            }
+          ]
+        },
+        {
+          "name": "PushReplaceIn",
+          "kind": "model",
+          "signature": "class PushReplaceIn(BaseModel)",
+          "doc": "``POST /notifications/devices/replace``: the browser rotated a subscription\n(``pushsubscriptionchange``) and its service worker re-registers it (0.16, NT:1028).\n\nNo session: a worker has no ``Authorization`` header to send. The proof is the OLD\nsubscription — its endpoint and its ``keys.auth`` secret, which only that browser and\nthis server hold (:func:`push_auth_matches` against the stored row). The route, in\nthis order (§10.6, settled 2026-10-19):\n\n1. no device row has ``old_endpoint`` — a row marked gone (``gone_at``) within\n   :data:`PUSH_GONE_GRACE` still counts, an older one does not\n   (:func:`push_gone_expired`) —, or its stored\n   ``auth`` does not match → 404, the same answer for both (nothing to tell apart);\n   the page then shows push as off;\n2. the row's account is inactive (deactivated, a deletion request) or a demo → the\n   same 404, and the row is deleted: a signed-out or closed account keeps no pushes;\n3. only now, with the device proven, ``subscription.endpoint`` held by ANOTHER\n   account's row → 409 (:class:`~.errors.PushEndpointTakenError`), as on\n   registering — an unproven caller never learns that an endpoint is taken;\n4. else the row moves in place: the new endpoint and keys, the same account, the user\n   agent if sent, ``failure_count`` reset, ``gone_at`` cleared → 200\n   :class:`PushDeviceResponse`. The new endpoint already on the SAME account (a\n   register raced the worker) deletes the old row instead and answers the existing one.\n\nAnd around it:\n\n* **The app deletes an account's push rows** on \"sign out everywhere\", on\n  deactivation (kastlan's deletion request deactivates) and on erasure, or a\n  device's worker could rotate its subscription forever.\n* **No RLS on device rows**: a device row is the account's, never a company's (the\n  role is checked per company at send time); a sessionless route under forced RLS\n  answers 404. An app whose table is FORCE RLS (keksdose) runs the lookup and the\n  update under its bypass with an explicit endpoint filter — this route only.\n* **Never log or echo the body**: its 422 answers a plain detail, never the input (a\n  validation echo would hand ``old_auth`` back). A leaked row's ``keys.auth`` is\n  enough to redirect that person's future pushes.\n* Rate-limit it as the other unauthenticated routes.",
+          "fields": [
+            {
+              "name": "old_endpoint",
+              "type": "str",
+              "default": null,
+              "doc": "The rotated-away subscription's endpoint, as registered."
+            },
+            {
+              "name": "old_auth",
+              "type": "str",
+              "default": null,
+              "doc": "Its ``keys.auth``, as registered (base64url): the proof."
+            },
+            {
+              "name": "subscription",
+              "type": "PushSubscriptionIn",
+              "default": null,
+              "doc": "The browser's new subscription, as on registering."
             }
           ]
         },
@@ -5869,10 +6345,129 @@
           ]
         },
         {
+          "name": "QueueChannel",
+          "kind": "constant",
+          "signature": "QueueChannel = Literal[\"push\", \"email\"]",
+          "doc": "A queued item's channel."
+        },
+        {
+          "name": "QueueItem",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class QueueItem",
+          "doc": "One queued row as the store answers it.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "user_id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "type_id",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "channel",
+              "type": "QueueChannel",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "event",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "payload",
+              "type": "Mapping[str, Any]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "not_before",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "claimed_at",
+              "type": "datetime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "attempts",
+              "type": "int",
+              "default": "0",
+              "doc": "How many times it was claimed, this claim included."
+            },
+            {
+              "name": "sent_at",
+              "type": "datetime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "dropped",
+              "type": "str | None",
+              "default": "None",
+              "doc": "Why it was dropped: ``\"unwanted\"``, ``\"expired\"``, ``\"late\"``, ``\"failed\"``."
+            }
+          ]
+        },
+        {
+          "name": "QueueService",
+          "kind": "class",
+          "signature": "class QueueService",
+          "doc": "The queue's flows over the app's :class:`NotificationQueue` and :class:`FlushPort`::\n\nservice = QueueService(queue, port)\nawait service.hold_push(user.id, \"scan_done\", event, payload, not_before=end, now=now)\nawait notifications_tick(service, now)  # every 15 minutes",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(queue: NotificationQueue, port: FlushPort, *, limit: int = QUEUE_FLUSH_LIMIT) -> None",
+              "doc": ""
+            },
+            {
+              "name": "hold_push",
+              "signature": "async hold_push(user_id: int, type_id: str, event: str, payload: PushPayload, *, not_before: datetime, now: datetime, more: str = QUEUE_MORE) -> bool",
+              "doc": "Queue a ``quiet`` type's push the plan held (§10.4 rule 2) until ``not_before``\n(:func:`~.timing.quiet_hours_end`), in the event's transaction. ``more`` is the\ncollapsed body in the recipient's language, ``{n}`` the number of others. Whether\na row was added (``False``: this event was already held)."
+            },
+            {
+              "name": "queue_mail",
+              "signature": "async queue_mail(notification_type: NotificationType, user_id: int, event: str, payload: Mapping[str, Any], *, now: datetime) -> bool",
+              "doc": "Queue a mail of a bundled type (§10.4 rule 3), in the event's transaction: it\njoins this person's open bundle of the type, or opens one that goes at ``now`` plus\nthe type's ``bundle`` (at the next flush for a type with none). ``payload`` is\nwhat the mail's words need — never sealed content. Whether a row was added."
+            },
+            {
+              "name": "flush",
+              "signature": "async flush(now: datetime) -> FlushResult",
+              "doc": "Send what is due (§10.4): claim, drop what is spent, ask the plan again, send one\npush or one mail per person, type and channel, and mark it."
+            },
+            {
+              "name": "purge",
+              "signature": "async purge(now: datetime) -> int",
+              "doc": "Delete the sent and dropped rows older than :data:`QUEUE_RETENTION`."
+            }
+          ]
+        },
+        {
           "name": "QuietHoursFields",
           "kind": "model",
           "signature": "class QuietHoursFields(BaseModel)",
-          "doc": "The quiet hours and the zone, where the app has push (§3.2, §3.4).",
+          "doc": "The quiet hours, where the app has push (§3.2, §3.4), in the account's zone.",
           "fields": [
             {
               "name": "quiet_hours_start",
@@ -5885,12 +6480,6 @@
               "type": "str | None",
               "default": "None",
               "doc": ""
-            },
-            {
-              "name": "timezone",
-              "type": "str | None",
-              "default": "None",
-              "doc": "An IANA name; ``null`` is the app's zone, ``Europe/Zurich`` (decision 6)."
             }
           ]
         },
@@ -5898,7 +6487,7 @@
           "name": "QuietHoursUpdate",
           "kind": "model",
           "signature": "class QuietHoursUpdate(BaseModel)",
-          "doc": "The quiet hours and the zone in the ``PATCH``: ``HH:MM`` bounds, an IANA zone\n``zoneinfo`` knows; ``null`` clears each.",
+          "doc": "The quiet hours in the ``PATCH``: ``HH:MM`` bounds; ``null`` clears each. No zone:\nit is the account's (§10.3, automatic only). A ``timezone`` (a stale 0.45 bundle's, also\nthrough keksdose's ``/push/settings`` shim) is ignored in 0.16, refused from 0.17.",
           "fields": [
             {
               "name": "quiet_hours_start",
@@ -5908,12 +6497,6 @@
             },
             {
               "name": "quiet_hours_end",
-              "type": "str | None",
-              "default": "None",
-              "doc": ""
-            },
-            {
-              "name": "timezone",
               "type": "str | None",
               "default": "None",
               "doc": ""
@@ -5937,6 +6520,12 @@
               "type": "bool | None",
               "default": "None",
               "doc": ""
+            },
+            {
+              "name": "push",
+              "type": "bool | None",
+              "default": "None",
+              "doc": "0.16. kastlan's ``StoredSwitches(app, email)`` keeps working: it has no push."
             }
           ]
         },
@@ -5944,19 +6533,25 @@
           "name": "TypeSwitches",
           "kind": "model",
           "signature": "class TypeSwitches(BaseModel)",
-          "doc": "One type in the ``GET``: each switch as it applies, ``null`` where the type doesn't\noffer the channel (Kurvenschmiede: ``{\"app\": null, \"email\": true}``).",
+          "doc": "One type in the ``GET``: each switch as it applies, ``null`` where the type doesn't\noffer the channel (Kurvenschmiede: ``{\"app\": null, \"push\": null, \"email\": true}``).",
           "fields": [
             {
               "name": "app",
               "type": "bool | None",
               "default": null,
-              "doc": "The \"in the app\" switch (inbox and push); ``None``: the app has no such channel."
+              "doc": "The \"in the app\" switch (the inbox; kastlan's poller); ``None``: the app has no such channel."
             },
             {
               "name": "email",
               "type": "bool | None",
               "default": null,
               "doc": "The e-mail switch; ``None``: the type sends no mail."
+            },
+            {
+              "name": "push",
+              "type": "bool | None",
+              "default": "None",
+              "doc": "The push switch (0.16), independent of ``app``; ``None``: no push for this type or app."
             }
           ]
         },
@@ -5977,6 +6572,12 @@
               "type": "bool | None",
               "default": "None",
               "doc": ""
+            },
+            {
+              "name": "push",
+              "type": "bool | None",
+              "default": "None",
+              "doc": "0.16; a 422 where the type or the app has no push."
             }
           ]
         },
@@ -6007,10 +6608,22 @@
           "doc": "An unsubscribe link whose token doesn't verify — tampered, cut, signed with another\nsecret, or of another version (§3.6): 400. A valid token always answers 200, also for\na switch already off or an account that is gone, so the answer reveals nothing."
         },
         {
+          "name": "apply_muted_types",
+          "kind": "function",
+          "signature": "apply_muted_types(types: NotificationTypes, muted: Iterable[str]) -> list[str]",
+          "doc": "What ``PATCH /notifications/devices/{id} {\"muted_types\": [...]}`` stores (§10.2\nrule 3): the whole list, once each, in the registry's order. ``types`` is the\naccount's registry; an id it doesn't hold is a :class:`~.errors.NotificationTypeError`\nand one without push a :class:`~.errors.NotificationChannelError` (both 422), raised\nbefore anything is answered. Another account's device is the app's 404."
+        },
+        {
           "name": "apply_switches_patch",
           "kind": "function",
-          "signature": "apply_switches_patch(types: NotificationTypes, stored: Mapping[str, StoredSwitches], patch: Mapping[str, TypeSwitchesPatch | None] | None) -> dict[str, StoredSwitches]",
-          "doc": "The new stored value of each type the body names, in the registry's order (§3.2\nrules 1–2): a type's ``null`` unsets both switches, a switch's ``null`` that one, a\nswitch left out keeps its stored value. The app writes what this answers.\n\n``types`` is the account's registry (:meth:`~.registry.NotificationTypes.receivable`);\na type it doesn't hold is a :class:`~.errors.NotificationTypeError` (422,\n``notification_type_not_received``), raised before anything is answered. ``patch`` is\nthe body's ``types``; ``None`` (left out) names nothing."
+          "signature": "apply_switches_patch(types: NotificationTypes, stored: Mapping[str, StoredSwitches], patch: Mapping[str, TypeSwitchesPatch | None] | None, *, couple_push_to_app: bool = False) -> dict[str, StoredSwitches]",
+          "doc": "The new stored value of each type the body names, in the registry's order (§3.2\nrules 1–2): a type's ``null`` unsets all its switches, a switch's ``null`` that one, a\nswitch left out keeps its stored value. The app writes what this answers.\n\n``couple_push_to_app`` (§10.2 rule 4, keksdose while old bundles send ``{app}``\nalone): an ``app`` sent without ``push`` writes ``push`` too, on a type that offers\nit. It goes with the ``/push/*`` aliases.\n\n``types`` is the account's registry (:meth:`~.registry.NotificationTypes.receivable`);\na type it doesn't hold is a :class:`~.errors.NotificationTypeError` (422,\n``notification_type_not_received``), and a switch for a channel the type doesn't\noffer (``push`` in an app with no push) a :class:`~.errors.NotificationChannelError`\n(422, ``notification_channel_not_offered``), both raised before anything is answered. ``patch`` is\nthe body's ``types``; ``None`` (left out) names nothing."
+        },
+        {
+          "name": "device_receives",
+          "kind": "function",
+          "signature": "device_receives(muted_types: Iterable[str] | None, type_id: str) -> bool",
+          "doc": "Whether one device takes a push of ``type_id`` (§10.2 rule 3): a device can mute\ntypes, never add them, so this goes AFTER the account's ``push`` switch. A muted id the\nregistry has since dropped matches nothing and is ignored."
         },
         {
           "name": "digest_due",
@@ -6031,16 +6644,28 @@
           "doc": "The digest push's ``tag``: ``digest:2026-W42``, so a late copy of the same period\nreplaces the earlier notification on the device, and the next period's doesn't."
         },
         {
+          "name": "effective_zone",
+          "kind": "function",
+          "signature": "effective_zone(device_timezone: str | None, fallback: str = DEFAULT_ZONE) -> ZoneInfo",
+          "doc": "The account's zone (§10.3, 0.16; amended 2026-10-20, Marcel: automatic only): the\nzone the last device reported (``device_timezone``), else ``fallback`` — the app's\nzone, ``Europe/Zurich``. There is no pick: the zone always follows the device last\nused. A name ``zoneinfo`` no longer knows counts as unset.\n\nIt is the zone of everything the server writes for ONE person: quiet hours, the digest\nday, the dates in a push, a notification or account mail, a billing notice to a\nperson, and \"today\" of a person's own reminders. A company's documents and the jobs'\nrun times keep the app's zone (:func:`local_today` with it)::\n\n    zone = effective_zone(user.device_timezone)"
+        },
+        {
           "name": "in_quiet_hours",
           "kind": "function",
           "signature": "in_quiet_hours(start: str | None, end: str | None, zone: tzinfo, now: datetime) -> bool",
-          "doc": "Whether ``now`` falls inside the window ``start``–``end`` in ``zone`` (§2.4).\n\n``start`` is inside, ``end`` is not; a window with ``start`` after ``end`` crosses\nmidnight. **Fails open:** a half-set window, a bound that is no ``HH:MM`` or\n``start == end`` answer ``False``. ``now`` is aware (a naive one is a ``ValueError``);\n``zone`` is :func:`resolve_zone`'s answer. On a day the clocks change, the window is\nread off the local wall clock: a window inside the skipped hour never happens that\nnight, and one inside the repeated hour holds both times round.\n\nOnly a ``quiet`` type's push is held, and a held push is dropped, not delayed: the\ninbox row is written and e-mail goes as usual (:func:`~.delivery.plan_delivery`)."
+          "doc": "Whether ``now`` falls inside the window ``start``–``end`` in ``zone`` (§2.4).\n\n``start`` is inside, ``end`` is not; a window with ``start`` after ``end`` crosses\nmidnight. **Fails open:** a half-set window, a bound that is no ``HH:MM`` or\n``start == end`` answer ``False``. ``now`` is aware (a naive one is a ``ValueError``);\n``zone`` is :func:`resolve_zone`'s answer. On a day the clocks change, the window is\nread off the local wall clock: a window inside the skipped hour never happens that\nnight, and one inside the repeated hour holds both times round.\n\nOnly a ``quiet`` type's push is held: the inbox row is written and e-mail goes as\nusual (:func:`~.delivery.plan_delivery`). Where the app runs the queue (0.16), the\npush waits until :func:`quiet_hours_end` (:meth:`~.queue.QueueService.hold_push`);\nelsewhere it is dropped."
         },
         {
           "name": "is_known_zone",
           "kind": "function",
           "signature": "is_known_zone(name: str | None) -> bool",
           "doc": "Whether ``zoneinfo`` knows ``name`` — the update's check on ``timezone``.\n\n``Europe/Zurich`` and ``UTC`` are; an empty name, a region alone (``Europe``), a path\n(``../etc/passwd``) and ``None`` are not."
+        },
+        {
+          "name": "local_today",
+          "kind": "function",
+          "signature": "local_today(zone: tzinfo, now: datetime) -> date",
+          "doc": "The local date of ``now`` in ``zone`` (§10.3, 0.16): a person's \"today\" with\n:func:`effective_zone`, a company's with the app's zone (``resolve_zone(None)``). At\n22:30 UTC in summer it is already tomorrow in Zurich, where ``date.today()`` on a UTC\nserver still answers today. ``now`` is aware."
         },
         {
           "name": "mail_due",
@@ -6055,16 +6680,52 @@
           "doc": "An event key from the app's parts, joined with ``:``, a date as ISO (decision 6)::\n\n    mail_event(company.id, day)  # kastlan: \"42:2026-10-13\"\n\nThe key names the event, never a person or what happened: ids and days, no name, no\ntitle, no amount. A :class:`ValueError` for an empty part, or a key outside\n:data:`MAIL_EVENT_PATTERN` (a space, an umlaut, over 64 characters, no part at all); a\n:class:`TypeError` for a ``datetime``."
         },
         {
+          "name": "migrate_enabled_to_channels",
+          "kind": "function",
+          "signature": "migrate_enabled_to_channels(enabled: bool | None) -> StoredSwitches",
+          "doc": "keksdose's one stored ``enabled`` per type as the switches of three channels\n(§10.2 rule 4): ``app = push = enabled``, e-mail unset. ``None`` — no row — stays\nunset, so both channels keep the type's default."
+        },
+        {
+          "name": "notifications_tick",
+          "kind": "function",
+          "signature": "async notifications_tick(service: QueueService, now: datetime) -> FlushResult",
+          "doc": "The app's 15-minute tick (§10.4 Settled): flush, then purge. Call it from the app's\nown job path — keksdose's tick job, kastlan's ``/ops/jobs/notifications-flush`` — or\nmount ``eifi1_server_kit.notifications.router.notifications_jobs_router``.\n\nIdempotent, so a job runner may retry it (keksdose's product-metrics job,\n``--max-retries=1``): a sent row is done, a claimed one waits out\n:data:`QUEUE_CLAIM_TIMEOUT`, and a resend carries the same ``Idempotency-Key``."
+        },
+        {
           "name": "plan_delivery",
           "kind": "function",
           "signature": "plan_delivery(notification_type: NotificationType, switches: TypeSwitches, *, active: bool, is_actor: bool, quiet_now: bool, email_verified: bool, keeps_inbox: bool, service: bool = False) -> Delivery",
-          "doc": "The :class:`Delivery` for one recipient (§3.3).\n\n``switches`` is the recipient's, resolved (:func:`~.resource.resolve_switches`).\n``active`` is false for a deactivated account and a demo; ``is_actor`` for the\nevent's own author. ``quiet_now`` is :func:`~.timing.in_quiet_hours` for the\nrecipient, and drops only the push, only of a ``quiet`` type. ``keeps_inbox``: the\napp keeps an inbox (keksdose). ``service``: a service notice, on the app channel\nwhatever the switch says, never by mail."
+          "doc": "The :class:`Delivery` for one recipient (§3.3).\n\n``switches`` is the recipient's, resolved (:func:`~.resource.resolve_switches`).\n``active`` is false for a deactivated account and a demo; ``is_actor`` for the\nevent's own author. ``quiet_now`` is :func:`~.timing.in_quiet_hours` for the\nrecipient, and holds only the push, only of a ``quiet`` type. ``keeps_inbox``: the\napp keeps an inbox (keksdose). ``service``: a service notice, in the app and by push\nwhere the type offers them, whatever the switches say, never by mail.\n\n0.16 (§10.2): the push follows ``switches.push``, not ``app``. Push on with in-app off\nsends the push with no inbox row. A device's own mutes are :func:`device_receives`'."
+        },
+        {
+          "name": "push_auth_matches",
+          "kind": "function",
+          "signature": "push_auth_matches(stored: str, given: str) -> bool",
+          "doc": "Whether a :class:`PushReplaceIn`'s ``old_auth`` is the stored row's ``keys.auth``,\nin constant time (a timing difference would leak the secret byte by byte). Base64url\npadding is ignored on both sides: browsers send none, a stored one may carry it."
+        },
+        {
+          "name": "push_gone_expired",
+          "kind": "function",
+          "signature": "push_gone_expired(gone_at: datetime | None, now: datetime, *, grace: timedelta = PUSH_GONE_GRACE) -> bool",
+          "doc": "Whether a device row marked gone (``gone_at``, a push service's 404/410) is past its\ngrace (§10.6 rule 4): the daily reap deletes it, and the replace route treats it as\nabsent (404). ``False`` for a row that is not gone (``None``); within the grace a\nreplace may still claim it. Aware datetimes."
         },
         {
           "name": "push_outcome",
           "kind": "function",
           "signature": "push_outcome(status: int | None) -> PushOutcome",
           "doc": "The :class:`PushOutcome` of a push service's HTTP status; ``None`` — no answer, a\ntimeout, a connection error — is :attr:`PushOutcome.FAILED` (keksdose\n``push_service.py:242-273``)."
+        },
+        {
+          "name": "quiet_hours_end",
+          "kind": "function",
+          "signature": "quiet_hours_end(start: str | None, end: str | None, zone: tzinfo, now: datetime) -> datetime",
+          "doc": "When the quiet hours ``now`` falls in end, in UTC (§10.4, 0.16): a held push's\n``not_before``. ``now`` itself when it falls in none (:func:`in_quiet_hours`, which\nfails open), so a push is never held for a window that isn't there.\n\nThe end is the next local ``end`` on the wall clock — tomorrow's for a window that\ncrosses midnight and started tonight. On the day the clocks skip an hour, an ``end``\ninside it is the moment they jump (03:00 for 02:30 in Zurich); on the day they go\nback, an ``end`` inside the repeated hour is its next occurrence, and a window quiet\nagain the second time round is held again at the flush, which re-runs the plan.\n``now`` is aware; ``zone`` is :func:`effective_zone`'s answer."
+        },
+        {
+          "name": "read_muted_types",
+          "kind": "function",
+          "signature": "read_muted_types(types: NotificationTypes, stored: Iterable[str] | None) -> list[str]",
+          "doc": "A device's ``muted_types`` as ``GET /notifications/devices`` answers them: the\nstored ids the account still receives with push, in the registry's order — an id\nthe registry dropped is ignored (and goes on the next write, :func:`apply_muted_types`).\n``types`` is the account's registry."
         },
         {
           "name": "read_unsubscribe_token",
@@ -6111,18 +6772,85 @@
       ]
     },
     {
+      "name": "eifi1_server_kit.notifications.router",
+      "summary": "The inbox's routes and the queue's jobs route (§10.1 rule 5, §10.4 rule 4; 0.16).",
+      "doc": "The inbox's routes and the queue's jobs route (§10.1 rule 5, §10.4 rule 4; 0.16).\n\nLayer 2, behind the ``fastapi`` extra (``eifi1-server-kit[fastapi]``). The app passes its\nown dependencies and includes the routers as its own::\n\n    app.include_router(inbox_router(InboxDeps(\n        store=inbox_store, current_user_id=current_user_id, guards=(csrf,),\n    )), prefix=\"/api/v1\")\n    app.include_router(notifications_jobs_router(\n        queue_service, require_jobs_token(lambda: settings.jobs_token),\n    ), prefix=\"/api/v1\")\n\n* ``GET /notifications/inbox?limit&offset`` → :class:`~.inbox.InboxResponse` (``limit``\n  1–:data:`~.inbox.INBOX_PAGE_MAX`, 50 by default; ``offset`` 0 or more);\n* ``POST /notifications/inbox/read {ids?}`` → :class:`~.inbox.InboxMarkReadResponse`;\n* ``DELETE /notifications/inbox`` → 204.\n\nThe account is the session's own; no route takes a user id, and the store never touches\nanother account's rows. The demo reads its inbox (settings §4.1), so no demo guard is\nimplied: pass the app's own if it wants one. The kit never commits.\n\n``POST /ops/notifications/flush`` → :class:`~.queue.FlushResult` is OPTIONAL: an app\ncalls :func:`~.queue.notifications_tick` from its own job path instead (keksdose's tick\njob, kastlan's ``/ops/jobs/{name}``).\n\nNo ``from __future__ import annotations`` here, on purpose: the parameters'\n``Depends(deps.store)`` name the factory's locals, which FastAPI cannot resolve from a\nstring.",
+      "contract": {
+        "doc": "docs/notifications-harmonization.md",
+        "section": "§10.1, §10.4",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#101-a-the-inbox-list-and-the-bell",
+        "links": [
+          {
+            "section": "§10.1",
+            "heading": "10.1 (a) The inbox list and the bell",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#101-a-the-inbox-list-and-the-bell"
+          },
+          {
+            "section": "§10.4",
+            "heading": "10.4 (d) A queue: hold a push through quiet hours, bundle mails",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/notifications-harmonization.md#104-d-a-queue-hold-a-push-through-quiet-hours-bundle-mails"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "InboxDeps",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class InboxDeps",
+          "doc": "What an app hands :func:`inbox_router` (§10.1 rule 5).",
+          "fields": [
+            {
+              "name": "store",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency answering an :class:`~.inbox.InboxStore` on the request's session."
+            },
+            {
+              "name": "current_user_id",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "The app's dependency answering the signed-in account's id."
+            },
+            {
+              "name": "guards",
+              "type": "Sequence[Callable[..., Any]]",
+              "default": "()",
+              "doc": "The app's dependencies run before anything else on every route: its limiter, its\nCSRF check. A refusal they raise is the answer."
+            }
+          ]
+        },
+        {
+          "name": "inbox_router",
+          "kind": "function",
+          "signature": "inbox_router(deps: InboxDeps, *, prefix: str = '/notifications/inbox', tags: Sequence[str] = ('notifications',)) -> APIRouter",
+          "doc": "``GET \"\"``, ``POST /read`` and ``DELETE \"\"`` on ``APIRouter(prefix=prefix, tags=tags)``,\nwith ``deps.guards`` as the router's dependencies."
+        },
+        {
+          "name": "notifications_jobs_router",
+          "kind": "function",
+          "signature": "notifications_jobs_router(service: Callable[..., Any], require_jobs_token: Callable[..., Any], *, now: Clock = utc_now, prefix: str = '/ops/notifications', tags: Sequence[str] = ('ops',)) -> APIRouter",
+          "doc": "``POST /flush`` → :class:`~.queue.FlushResult`: the tick (flush, then purge) behind\nthe app's jobs token. ``service`` is the app's dependency answering a\n:class:`~.queue.QueueService` on the job's session; ``require_jobs_token`` the\ndependency :func:`~eifi1_server_kit.jobs.require_jobs_token` built. Optional: an app\nmay call :func:`~.queue.notifications_tick` from its own job path instead."
+        }
+      ]
+    },
+    {
       "name": "eifi1_server_kit.feedback",
       "summary": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).",
-      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.\n\nLayer 2 (0.9.0, ``docs/server-services-harmonization.md``): the flows written once against\nports each app implements — :class:`FeedbackService` over a :class:`FeedbackRepository`,\n:func:`upload_attachment` and :func:`download_attachment` over an\n:class:`AttachmentStorage`, :func:`throttle_upload` — re-exported here, without FastAPI.\nThe routes are ``eifi1_server_kit.feedback.router`` (the ``fastapi`` extra) and the fakes\nand conformance checks ``eifi1_server_kit.feedback.testing``; neither is re-exported.\n\nPublic feedback (0.11, contract §9): the rules of :mod:`~eifi1_server_kit.feedback.public`\n(the public body, who is told, the field lists), the reply, comment and vote shapes, the\nfour stores' ports and the service's public flows.\n\nRework as an entry (0.13, contract §10): ``FeedbackStatus.REWORK``, :data:`QUEUE_STATUSES`,\n:class:`FeedbackEntryKind`, :func:`plan_rework`, :class:`FeedbackReworkCreate`,\n:meth:`FeedbackService.rework`, and :func:`split_rework_blocks` for the migrations.\n\nThe admin's counts (0.15, ``docs/admin-harmonization.md`` §9.5):\n:meth:`FeedbackRepository.count_by_status` and :func:`feedback_attention`, which folds it\ninto :class:`FeedbackAttention`'s three tiles from the kit's own status sets.",
+      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.\n\nLayer 2 (0.9.0, ``docs/server-services-harmonization.md``): the flows written once against\nports each app implements — :class:`FeedbackService` over a :class:`FeedbackRepository`,\n:func:`upload_attachment` and :func:`download_attachment` over an\n:class:`AttachmentStorage`, :func:`throttle_upload` — re-exported here, without FastAPI.\nThe routes are ``eifi1_server_kit.feedback.router`` (the ``fastapi`` extra) and the fakes\nand conformance checks ``eifi1_server_kit.feedback.testing``; neither is re-exported.\n\nPublic feedback (0.11, contract §9): the rules of :mod:`~eifi1_server_kit.feedback.public`\n(the public body, who is told, the field lists), the reply, comment and vote shapes, the\nfour stores' ports and the service's public flows.\n\nRework as an entry (0.13, contract §10): ``FeedbackStatus.REWORK``, :data:`QUEUE_STATUSES`,\n:class:`FeedbackEntryKind`, :func:`plan_rework`, :class:`FeedbackReworkCreate`,\n:meth:`FeedbackService.rework`, and :func:`split_rework_blocks` for the migrations.\n\nThe admin's counts (0.15, ``docs/admin-harmonization.md`` §9.5):\n:meth:`FeedbackRepository.count_by_status` and :func:`feedback_attention`, which folds it\ninto :class:`FeedbackAttention`'s three tiles from the kit's own status sets.\n\nThe admins' alert (0.16, contract §11): :data:`FEEDBACK_RECEIVED`, :class:`FeedbackAlert`,\nthe :class:`FeedbackAlerts` port :class:`FeedbackService` tells (``alerts=``),\n:func:`admin_alert_recipients` and :func:`mails_at_once`.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
-        "section": "§3",
+        "section": "§3, §11",
         "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/feedback-harmonization.md#3-the-api-contract-a",
         "links": [
           {
             "section": "§3",
             "heading": "3. The API contract (A)",
             "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/feedback-harmonization.md#3-the-api-contract-a"
+          },
+          {
+            "section": "§11",
+            "heading": "11. Round 0.46: admin alerts for new reports and reworks — SETTLED (round 0.46)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/feedback-harmonization.md#11-round-046-admin-alerts-for-new-reports-and-reworks--settled-round-046"
           }
         ]
       },
@@ -6228,6 +6956,24 @@
           "kind": "constant",
           "signature": "FEEDBACK_CONTEXT_KEEP: frozenset[str] = frozenset(\n    {\n        \"route\",\n        \"environment\",\n        \"viewport\",\n        \"version\",\n        \"boundary\",\n        \"online\",\n        \"occurrences\",\n        \"first_seen_at\",\n        \"last_seen_at\",\n        \"auto_reported\",\n    }\n)",
           "doc": "The context keys an anonymised row KEEPS — an allow-list, never a deny-list: a\ndeny-list keeps every key nobody thought about, and those are the ones that name people.\nEverything here describes the SOFTWARE at the moment of the report.\n\n``environment`` stays (Marcel, 2026-10-04): which copy of the software, or an erased dev\nreport reads as production. ``origin`` goes although it answers the same question: on a\ndeveloper's machine it is a LAN address or an ``sslip.io`` name with an IP in it.\n``url`` goes (its query can carry what the person typed; ``route`` stays), ``ua`` goes\n(a device fingerprint), as do ``fingerprint`` and every ``user_*`` key."
+        },
+        {
+          "name": "FEEDBACK_RECEIVED",
+          "kind": "constant",
+          "signature": "FEEDBACK_RECEIVED = \"feedback_received\"",
+          "doc": "The admins' notification type (§11.2 Settled 1), declared by every app."
+        },
+        {
+          "name": "LEGACY_REWORK_APPEND",
+          "kind": "constant",
+          "signature": "LEGACY_REWORK_APPEND = \"legacy_rework_append\"",
+          "doc": "The code of :class:`LegacyReworkAppendError` (§10.3, since 0.16)."
+        },
+        {
+          "name": "LEGACY_REWORK_APPEND_DETAIL",
+          "kind": "constant",
+          "signature": "LEGACY_REWORK_APPEND_DETAIL = \"This page is out of date: reload it, then send the report back again.\"",
+          "doc": "Its sentence: only a tab older than the deploy still sends the append, and a reload mends it."
         },
         {
           "name": "MAX_ATTACHMENT_BYTES",
@@ -6785,6 +7531,63 @@
           ]
         },
         {
+          "name": "FeedbackAlert",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class FeedbackAlert",
+          "doc": "One alert, as :meth:`FeedbackAlerts.filed` receives it: ids and the category, no\nsealed content and no address.",
+          "fields": [
+            {
+              "name": "kind",
+              "type": "FeedbackAlertKind",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "feedback_id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "category",
+              "type": "FeedbackCategory | str | None",
+              "default": null,
+              "doc": "The report's category, for the words (\"New feedback report #123 (Bug)\")."
+            },
+            {
+              "name": "actor_id",
+              "type": "int",
+              "default": null,
+              "doc": "Who filed or reworked it: never told (:func:`admin_alert_recipients`)."
+            },
+            {
+              "name": "company_id",
+              "type": "int | None",
+              "default": "None",
+              "doc": "The report's company where rows carry one (kastlan's ``company_id``); ``None`` elsewhere."
+            }
+          ]
+        },
+        {
+          "name": "FeedbackAlertKind",
+          "kind": "constant",
+          "signature": "FeedbackAlertKind = Literal[\"report\", \"rework\", \"crash\"]",
+          "doc": "What happened: a new report, a report sent back that landed OPEN, a new crash row."
+        },
+        {
+          "name": "FeedbackAlerts",
+          "kind": "protocol",
+          "signature": "class FeedbackAlerts(Protocol)",
+          "doc": "The app's delivery of :data:`FEEDBACK_RECEIVED` (§11.2 rule 8).",
+          "methods": [
+            {
+              "name": "filed",
+              "signature": "async filed(alert: FeedbackAlert, row: Any) -> None",
+              "doc": "Called after the write, in the request's transaction, with the report's row.\nResolve the recipients and hand the delivery to the commit: an inbox row and a\npush in the transaction, the mail after it (or queued). Never log an address."
+            }
+          ]
+        },
+        {
           "name": "FeedbackAttachmentResponse",
           "kind": "model",
           "signature": "class FeedbackAttachmentResponse(BaseModel)",
@@ -7119,7 +7922,7 @@
           "name": "FeedbackForbiddenError",
           "kind": "class",
           "signature": "class FeedbackForbiddenError(FeedbackError)",
-          "doc": "The actor may not make this change (→ 403; keksdose ``FeedbackUpdateForbiddenError``).\n\nRaised for: not the author and not an admin; an author changing a field outside\ntitle / body / category; an author editing a row outside OPEN / READY / IN_PROGRESS\nwithout it being a rework append."
+          "doc": "The actor may not make this change (→ 403; keksdose ``FeedbackUpdateForbiddenError``).\n\nRaised for: not the author and not an admin; an author changing a field outside\ntitle / body / category; an author editing a row outside OPEN / READY / IN_PROGRESS\n(an append there is :class:`LegacyReworkAppendError` instead)."
         },
         {
           "name": "FeedbackNotFoundError",
@@ -7788,22 +8591,22 @@
           "name": "FeedbackService",
           "kind": "class",
           "signature": "class FeedbackService[RowT: FeedbackRow]",
-          "doc": "The contract's flows over the app's repository (§2.4, §2.10, §2.15).\n\n``policy`` is the app's attachment URL shape; ``foreign_row`` what a non-admin gets on\nanother person's row — ``\"forbidden\"`` lets :func:`~eifi1_server_kit.feedback.plan_update`'s\n403 speak (keksdose, kastlan), ``\"not_found\"`` answers 404 before it (Kurvenschmiede);\n``now`` stamps ``resolved_at`` and a crash's ``seen_at``.\n\nThe demo refusal and the inbox's admin check are here too, for a caller without the\nrouter (§2.8); over HTTP the app's own guards answer first.\n\nPublic feedback (0.11, §9.14), every part optional: ``replies``, ``comments``,\n``votes`` and ``people`` are the app's stores on the request's session;\n``public_viewer`` is the app's predicate on the viewer (``None``: no public parts —\nkastlan); ``public_search`` whether ``q`` may search the title (False where it is\nsealed — Kurvenschmiede). With ``public_viewer`` set, ``comments``, ``votes`` and\n``people`` are required and the repository must implement\n:class:`~eifi1_server_kit.feedback.PublicFeedbackRepository` (:class:`ValueError`).",
+          "doc": "The contract's flows over the app's repository (§2.4, §2.10, §2.15).\n\n``policy`` is the app's attachment URL shape; ``foreign_row`` what a non-admin gets on\nanother person's row — ``\"forbidden\"`` lets :func:`~eifi1_server_kit.feedback.plan_update`'s\n403 speak (keksdose, kastlan), ``\"not_found\"`` answers 404 before it (Kurvenschmiede);\n``now`` stamps ``resolved_at`` and a crash's ``seen_at``.\n\nThe demo refusal and the inbox's admin check are here too, for a caller without the\nrouter (§2.8); over HTTP the app's own guards answer first.\n\nPublic feedback (0.11, §9.14), every part optional: ``replies``, ``comments``,\n``votes`` and ``people`` are the app's stores on the request's session;\n``public_viewer`` is the app's predicate on the viewer (``None``: no public parts —\nkastlan); ``public_search`` whether ``q`` may search the title (False where it is\nsealed — Kurvenschmiede). With ``public_viewer`` set, ``comments``, ``votes`` and\n``people`` are required and the repository must implement\n:class:`~eifi1_server_kit.feedback.PublicFeedbackRepository` (:class:`ValueError`).\n\n``alerts`` (0.16, feedback §11) is the app's :class:`~eifi1_server_kit.feedback.FeedbackAlerts`:\ntold after a new report, a new crash row and a rework that lands OPEN. ``None`` tells\nnobody — a loop's service (Kurvenschmiede's ``feedback_loop``) is built without it.",
           "methods": [
             {
               "name": "__init__",
-              "signature": "__init__(repository: FeedbackRepository[RowT], *, policy: AttachmentUrlPolicy, foreign_row: Literal['forbidden', 'not_found'] = 'forbidden', now: Clock = utc_now, replies: FeedbackReplyStore[Any] | None = None, comments: FeedbackCommentStore[Any] | None = None, votes: FeedbackVoteStore | None = None, people: PeopleLookup | None = None, public_viewer: Callable[[FeedbackActor], bool] | None = None, public_search: bool = True) -> None",
+              "signature": "__init__(repository: FeedbackRepository[RowT], *, policy: AttachmentUrlPolicy, foreign_row: Literal['forbidden', 'not_found'] = 'forbidden', now: Clock = utc_now, replies: FeedbackReplyStore[Any] | None = None, comments: FeedbackCommentStore[Any] | None = None, votes: FeedbackVoteStore | None = None, people: PeopleLookup | None = None, public_viewer: Callable[[FeedbackActor], bool] | None = None, public_search: bool = True, alerts: FeedbackAlerts | None = None) -> None",
               "doc": ""
             },
             {
               "name": "create",
               "signature": "async create(actor: FeedbackActor, payload: FeedbackCreate) -> RowT",
-              "doc": "File a report (§3.3): refused for a demo, CRASH refused (422), the first status\nthe server's (:func:`~eifi1_server_kit.feedback.initial_status`), the identity in\n``context`` the session's (:func:`~eifi1_server_kit.feedback.stamp_identity`, §2.13),\n``attachment_urls`` ``None`` for none. With a vote store, the author's vote is\ncast after the report (§9.6)."
+              "doc": "File a report (§3.3): refused for a demo, CRASH refused (422), the first status\nthe server's (:func:`~eifi1_server_kit.feedback.initial_status`), the identity in\n``context`` the session's (:func:`~eifi1_server_kit.feedback.stamp_identity`, §2.13),\n``attachment_urls`` ``None`` for none. With a vote store, the author's vote is\ncast after the report (§9.6). Then the admins' alert (§11, ``\"report\"``)."
             },
             {
               "name": "report_crash",
               "signature": "async report_crash(actor: FeedbackActor, payload: CrashReportCreate, *, limiter: SlidingWindowRateLimiter | None = None) -> CrashReportResponse",
-              "doc": "File a crash, or fold it into the open row with its fingerprint (§3.6).\n\n``stored: false`` for a demo, then for a spent window — charged before the lookup,\nso repeats count (§2.11) — and never an error status: the caller is a page that\nhas just crashed."
+              "doc": "File a crash, or fold it into the open row with its fingerprint (§3.6).\n\n``stored: false`` for a demo, then for a spent window — charged before the lookup,\nso repeats count (§2.11) — and never an error status: the caller is a page that\nhas just crashed. A NEW row tells the admins (§11, ``\"crash\"``); a fold does not."
             },
             {
               "name": "list_mine",
@@ -7818,7 +8621,7 @@
             {
               "name": "update",
               "signature": "async update(actor: FeedbackActor, feedback_id: int, payload: FeedbackUpdate) -> RowT",
-              "doc": "A PATCH, in keksdose's order (§2.10): refused for a demo; CRASH refused before\nthe lookup (422); the row this actor may see, or 404; a foreign row's 404 where\nthe app chose it; :func:`~eifi1_server_kit.feedback.plan_update` (403 or 422), with\nthe row's ``filed_private``; then the one write. ``public`` is a 422 where the app\nhas no public parts (no ``public_viewer``).\n\n**The legacy append** (0.13 only, §10.3): an old client's rework append is written\nas an entry (one write per store, the report last; ``body`` untouched) — the\nactor's ``rework`` entry when the actor is the author, else (an admin on another's\nreport) a reply with status REWORK — and logged ``feedback.legacy_rework_append``.\nWithout a reply store the body is appended as before 0.13."
+              "doc": "A PATCH, in keksdose's order (§2.10): refused for a demo; CRASH refused before\nthe lookup (422); the row this actor may see, or 404; a foreign row's 404 where\nthe app chose it; :func:`~eifi1_server_kit.feedback.plan_update` (403 or 422), with\nthe row's ``filed_private``; then the one write. ``public`` is a 422 where the app\nhas no public parts (no ``public_viewer``).\n\n**The legacy append** (§10.3): an old client's rework append on an answered report\nis a :class:`~eifi1_server_kit.feedback.LegacyReworkAppendError` (coded 422, since\n0.16; 0.13–0.15 wrote it as an entry), raised by ``plan_update`` before any write."
             },
             {
               "name": "erase_author",
@@ -7858,7 +8661,7 @@
             {
               "name": "rework",
               "signature": "async rework(actor: FeedbackActor, feedback_id: int, payload: FeedbackReworkCreate) -> RowT",
-              "doc": "The author sends a report back (§10.3): refused for a demo; the file one of this\napp's URLs (422); the report this actor may see, or 404 — a foreign row 404 where\nthe app chose it; then :func:`~eifi1_server_kit.feedback.plan_rework` (403 for\nanyone but the author, an admin included, and outside the reworkable statuses).\nThe ``rework`` entry is added — the store fires nothing for it — then the report\nmoves (REWORK for an admin author, OPEN otherwise): one write per store, the\nreport last. Answers the report; the router answers it with its replies."
+              "doc": "The author sends a report back (§10.3): refused for a demo; the file one of this\napp's URLs (422); the report this actor may see, or 404 — a foreign row 404 where\nthe app chose it; then :func:`~eifi1_server_kit.feedback.plan_rework` (403 for\nanyone but the author, an admin included, and outside the reworkable statuses).\nThe ``rework`` entry is added — the store fires nothing for it — then the report\nmoves (REWORK for an admin author, OPEN otherwise): one write per store, the\nreport last. Only once the report moved, and only when it landed OPEN, the admins\nare told (§11, ``\"rework\"``). Answers the report; the router answers it with its\nreplies."
             },
             {
               "name": "list_public",
@@ -8059,6 +8862,19 @@
               "name": "delete_by_author",
               "signature": "async delete_by_author(user_id: int) -> int",
               "doc": "The erasure: delete every vote ``user_id`` cast; how many."
+            }
+          ]
+        },
+        {
+          "name": "LegacyReworkAppendError",
+          "kind": "class",
+          "signature": "class LegacyReworkAppendError(FeedbackValidationError)",
+          "doc": "A coded 422 (``code`` :data:`LEGACY_REWORK_APPEND`, since 0.16; §10.3): a body-only\nPATCH that appends to a report outside OPEN / READY / IN_PROGRESS — the rework a client\nfrom before ui-kit 0.40 sent. A rework is ``POST /feedback/{id}/rework`` now; server-kit\n0.13–0.15 still converted the append into an entry. Nothing is written.\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers` answers\n``{\"detail\": …, \"code\": \"legacy_rework_append\"}``.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(detail: str = LEGACY_REWORK_APPEND_DETAIL) -> None",
+              "doc": ""
             }
           ]
         },
@@ -8402,7 +9218,7 @@
           "name": "UpdatePlan",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class UpdatePlan",
-          "doc": "What to write onto the row: ``changes`` is the sent fields, plus the server's own\n``status`` (a rework sent back to the queue — :func:`rework_status`; ``reopened``\nsays it happened) and ``resolved_at`` (a stamp or a clear) when they apply.\n\n``rework`` (0.13 only, §10.3): set when ``reopened`` — the appended block, split, for\nthe service to write as an entry; ``body`` is then NOT in ``changes``.",
+          "doc": "What to write onto the row: ``changes`` is the sent fields, plus the server's\n``resolved_at`` (a stamp or a clear) when it applies. ``reworking`` says the PATCH was\nan append — inside the author's lane, the only place one is still accepted.",
           "fields": [
             {
               "name": "changes",
@@ -8415,20 +9231,14 @@
               "type": "bool",
               "default": null,
               "doc": ""
-            },
-            {
-              "name": "reopened",
-              "type": "bool",
-              "default": null,
-              "doc": ""
-            },
-            {
-              "name": "rework",
-              "type": "ReworkBlock | None",
-              "default": "None",
-              "doc": ""
             }
           ]
+        },
+        {
+          "name": "admin_alert_recipients",
+          "kind": "function",
+          "signature": "admin_alert_recipients(admin_ids: Iterable[int], *, actor_id: int | None) -> list[int]",
+          "doc": "The admins to tell, in the given order, once each, the actor left out: an admin\nwho files or reworks is not told of their own report; the others are. ``admin_ids``\nare the app's active, non-demo admins (of the report's company in kastlan)."
         },
         {
           "name": "anonymise_feedback",
@@ -8446,7 +9256,7 @@
           "name": "append_rework",
           "kind": "function",
           "signature": "append_rework(body: str, note: str, url: str | None = None, *, now: datetime, prefix: str = DEFAULT_ATTACHMENT_URL_PREFIX) -> str | None",
-          "doc": "``body`` with one rework round appended — the exact text the contract's PATCH carried.\n\nLegacy (§10.3): a rework is an entry now; this is the shape a migration's downgrade\nwrites back and an old client still sends for one release.\n\nMirrors the kit's ``appendRework``: the note is required and trimmed (a file alone\ncannot be sent — ``None`` for a blank note, as the kit returns ``null``); ONE file per\nround, as one ``[screenshot] <url>`` line; ``\\n\\n`` is left out when the old body is\n``\"\"``. The old body is kept byte for byte, so the result strictly extends it — which\nis what :func:`eifi1_server_kit.feedback.is_rework_append` recognises.\n\nRaises :class:`ValueError` for a ``url`` outside ``prefix``: written anyway it would sit\nin the body as prose no reader recognises as a file."
+          "doc": "``body`` with one rework round appended — the exact text the contract's PATCH carried.\n\nLegacy (§10.3): a rework is an entry now; this is the shape a migration's downgrade\nwrites back, and what an old client still sends (refused since 0.16).\n\nMirrors the kit's ``appendRework``: the note is required and trimmed (a file alone\ncannot be sent — ``None`` for a blank note, as the kit returns ``null``); ONE file per\nround, as one ``[screenshot] <url>`` line; ``\\n\\n`` is left out when the old body is\n``\"\"``. The old body is kept byte for byte, so the result strictly extends it — which\nis what :func:`eifi1_server_kit.feedback.is_rework_append` recognises.\n\nRaises :class:`ValueError` for a ``url`` outside ``prefix``: written anyway it would sit\nin the body as prose no reader recognises as a file."
         },
         {
           "name": "appended_text",
@@ -8476,7 +9286,7 @@
           "name": "check_author_edit",
           "kind": "function",
           "signature": "check_author_edit(status: FeedbackStatus | str, changes: Mapping[str, Any], *, is_author: bool, reworking: bool, filed_private: bool = False) -> None",
-          "doc": "The non-admin half of the lanes (keksdose ``feedback_service.py:152-161``), in its order.\n\nRaises :class:`FeedbackForbiddenError` with keksdose's wording: ``Not the author``;\n``Author cannot change: <fields>``; ``Entry is in <STATUS>; only OPEN / READY /\nIN_PROGRESS entries can be edited by the author`` (unless ``reworking``, or a\n``public``-only change on a ``filed_private`` report, §9.3)."
+          "doc": "The non-admin half of the lanes (keksdose ``feedback_service.py:152-161``), in its order.\n\nRaises :class:`FeedbackForbiddenError` with keksdose's wording: ``Not the author``;\n``Author cannot change: <fields>``; ``Entry is in <STATUS>; only OPEN / READY /\nIN_PROGRESS entries can be edited by the author`` (unless ``reworking`` — then\n:func:`plan_update` answers the coded 422 — or a ``public``-only change on a\n``filed_private`` report, §9.3)."
         },
         {
           "name": "context_size",
@@ -8572,13 +9382,13 @@
           "name": "is_rework_append",
           "kind": "function",
           "signature": "is_rework_append(old_body: str | None, changes: Mapping[str, Any]) -> bool",
-          "doc": "Is this PATCH an APPEND to the body — the rework composer's shape?\n\nLegacy (§10.3): server-kit 0.13 turns such a PATCH into a rework entry\n(:func:`~eifi1_server_kit.feedback.plan_update`'s ``rework``); from 0.14 it is a 422.\n\nkeksdose ``feedback_service.py:93`` ``_is_rework_append``, as the contract states it\n(§3.4): the changed fields are ``{\"body\"}`` and nothing else, and the new body strictly\nextends the old one, so the original is still there verbatim and first. A rewrite, a\ntruncation, or a body change bundled with any other field (a status included) is not\none. Asked of every actor, admins included (keksdose live #331).\n\n``changes`` is what the client actually sent — ``payload.model_dump(exclude_unset=True)``."
+          "doc": "Is this PATCH an APPEND to the body — the rework composer's shape?\n\nLegacy (§10.3): on an answered report such a PATCH is a\n:class:`~eifi1_server_kit.feedback.LegacyReworkAppendError` (coded 422, since 0.16;\nserver-kit 0.13–0.15 turned it into a rework entry).\n\nkeksdose ``feedback_service.py:93`` ``_is_rework_append``, as the contract states it\n(§3.4): the changed fields are ``{\"body\"}`` and nothing else, and the new body strictly\nextends the old one, so the original is still there verbatim and first. A rewrite, a\ntruncation, or a body change bundled with any other field (a status included) is not\none. Asked of every actor, admins included (keksdose live #331).\n\n``changes`` is what the client actually sent — ``payload.model_dump(exclude_unset=True)``."
         },
         {
-          "name": "legacy_rework_block",
+          "name": "mails_at_once",
           "kind": "function",
-          "signature": "legacy_rework_block(old_body: str | None, new_body: str, *, now: datetime, prefix: str = DEFAULT_ATTACHMENT_URL_PREFIX) -> ReworkBlock",
-          "doc": "The block an old client's append carries (§10.3): the appended text split by\n:func:`~eifi1_server_kit.feedback.split_rework_blocks` when it is exactly one\nwell-formed block; anything else appended is one round sent ``now``, its text the\nnote, no file."
+          "signature": "mails_at_once(alert: FeedbackAlert) -> bool",
+          "doc": "Whether the alert's mail goes right after the commit (§11.2 Settled 3): a report\nand a rework do; a crash does not — it is in the app (an inbox row and a push, or the\nattention badge) and mailed only inside the queue's bundle where the app runs one."
         },
         {
           "name": "normalise_crash_text",
@@ -8607,8 +9417,8 @@
         {
           "name": "plan_update",
           "kind": "function",
-          "signature": "plan_update(*, status: FeedbackStatus | str, body: str | None, changes: Mapping[str, Any], is_admin: bool, is_author: bool, now: datetime | None = None, filed_private: bool = False, prefix: str = DEFAULT_ATTACHMENT_URL_PREFIX) -> UpdatePlan",
-          "doc": "The whole PATCH rule for one row, as data (keksdose ``update_feedback``).\n\n``status`` / ``body`` are the row's STORED values; ``changes`` is what the client sent\n(``payload.model_dump(exclude_unset=True)``) and is not mutated. Raises\n:class:`CrashCategoryNotAssignableError` (→ 422) or :class:`FeedbackForbiddenError`\n(→ 403); otherwise every key of :attr:`UpdatePlan.changes` is a column to assign.\n``now`` stamps ``resolved_at`` (default: the current UTC time). ``filed_private`` is\nthe row's flag (§9.3): its author may then switch ``public`` at any status.\n\n**The legacy append** (0.13 only, §10.3): a rework append on a row outside the author's\nlane sets :attr:`UpdatePlan.rework` (:func:`legacy_rework_block`, its file found under\n``prefix``) and drops ``body`` from ``changes``; the status is :func:`rework_status`'s."
+          "signature": "plan_update(*, status: FeedbackStatus | str, body: str | None, changes: Mapping[str, Any], is_admin: bool, is_author: bool, now: datetime | None = None, filed_private: bool = False) -> UpdatePlan",
+          "doc": "The whole PATCH rule for one row, as data (keksdose ``update_feedback``).\n\n``status`` / ``body`` are the row's STORED values; ``changes`` is what the client sent\n(``payload.model_dump(exclude_unset=True)``) and is not mutated. Raises\n:class:`CrashCategoryNotAssignableError` (→ 422), :class:`FeedbackForbiddenError`\n(→ 403) or :class:`LegacyReworkAppendError` (→ coded 422, below); otherwise every key\nof :attr:`UpdatePlan.changes` is a column to assign. ``now`` stamps ``resolved_at``\n(default: the current UTC time). ``filed_private`` is the row's flag (§9.3): its\nauthor may then switch ``public`` at any status.\n\n**The legacy append** (§10.3): a rework append on a row outside the author's lane, by\nthe author or an admin, is refused with :class:`LegacyReworkAppendError` (since 0.16;\n0.13–0.15 converted it into an entry). An admin who means to annotate sends a status\nwith the body — then it is not an append at all (keksdose ``test_feedback.py:351``)."
         },
         {
           "name": "public_body",
@@ -8632,7 +9442,7 @@
           "name": "reopens",
           "kind": "function",
           "signature": "reopens(status: FeedbackStatus | str, *, reworking: bool) -> bool",
-          "doc": "Does a rework append send this row back to the queue? Yes outside OPEN / READY /\nIN_PROGRESS (keksdose ``:179``); :func:`rework_status` says to which status."
+          "doc": "Is this append the legacy rework (keksdose ``:179``)? Yes outside OPEN / READY /\nIN_PROGRESS: :func:`plan_update` refuses it with :class:`LegacyReworkAppendError`."
         },
         {
           "name": "resolved_at_change",
@@ -8892,6 +9702,12 @@
               "type": "type[FeedbackPublicResponse]",
               "default": "<class 'eifi1_server_kit.feedback.schemas.FeedbackPublicResponse'>",
               "doc": ""
+            },
+            {
+              "name": "alerts",
+              "type": "Callable[..., Any] | None",
+              "default": "None",
+              "doc": "The app's dependency answering its :class:`~eifi1_server_kit.feedback.FeedbackAlerts`\n(0.16, feedback §11): the admins told of a new report, a new crash and a rework.\n``None`` tells nobody."
             }
           ]
         },
@@ -9076,7 +9892,7 @@
             {
               "name": "export",
               "signature": "async export(user_id: int) -> list[dict[str, str | None]]",
-              "doc": "The account export's rows (§10.2.9): ``[{tour_id, completed_at}]`` by\n``tour_id``, ``completed_at`` an ISO instant in UTC (a naive one read as UTC) or ``None`` for ``\"\"``."
+              "doc": "The account export's rows (§10.2.9): ``[{tour_id, completed_at}]`` by\n``tour_id``, ``completed_at`` an ISO instant in UTC (a naive one read as UTC) or ``None`` for ``\"\"``.\n\nThe instant is spelled as ``GET /tours/progress`` answers it — ``2026-10-18T07:00:00Z``,\nnot ``isoformat()``'s ``+00:00`` — so one record has one spelling (0.16.0)."
             }
           ]
         },
@@ -10563,10 +11379,10 @@
     {
       "name": "eifi1_server_kit.sync",
       "summary": "Local-first sync, the server half (``docs/local-first-harmonization.md`` §1.5 D1, D2, D5 and §1.6 in ``Eifi1/ui-kit``): keksdose's ``/sync`` protocol, shared with kastlan.",
-      "doc": "Local-first sync, the server half (``docs/local-first-harmonization.md`` §1.5 D1, D2, D5 and\n§1.6 in ``Eifi1/ui-kit``): keksdose's ``/sync`` protocol, shared with kastlan.\n\n* :mod:`~eifi1_server_kit.sync.schemas` — the wire shapes, ``refused`` (one\n  :class:`SyncRefusal` for the whole push, moved here from billing, which re-exports it) and\n  the new per-change ``rejections``;\n* :mod:`~eifi1_server_kit.sync.merge` — whole-row LWW on the device's edit time, deletes\n  that always tombstone;\n* :mod:`~eifi1_server_kit.sync.counter` — the knowledge counter as a port;\n* :mod:`~eifi1_server_kit.sync.paging` — the ``(entity, knowledge, id)`` page cursor;\n* :mod:`~eifi1_server_kit.sync.mixin` — the columns, the ``before_flush`` stamping, the\n  tombstones and their filter, in SQLAlchemy: only with the ``sync`` extra\n  (``eifi1-server-kit[sync]``), and imported lazily, so this package loads without it.\n\n``eifi1_server_kit.sync.testing`` has :class:`InMemoryKnowledgeCounter`; it is not\nre-exported. Stays in the apps: the routes, the entity registries, tenancy and RLS, E2EE,\nbilling's refusals, unique-key merges and revival rules, and kastlan's scopes.",
+      "doc": "Local-first sync, the server half (``docs/local-first-harmonization.md`` §1.5 D1, D2, D5 and\n§1.6 in ``Eifi1/ui-kit``): keksdose's ``/sync`` protocol, shared with kastlan.\n\n* :mod:`~eifi1_server_kit.sync.schemas` — the wire shapes, ``refused`` (one\n  :class:`SyncRefusal` for the whole push, moved here from billing, which re-exports it) and\n  the new per-change ``rejections``;\n* :mod:`~eifi1_server_kit.sync.merge` — whole-row LWW on the device's edit time, corrected\n  for the device clock's skew when the push carries ``client_now`` (0.16.0), deletes that\n  always tombstone;\n* :mod:`~eifi1_server_kit.sync.counter` — the knowledge counter as a port;\n* :mod:`~eifi1_server_kit.sync.paging` — the ``(entity, knowledge, id)`` page cursor;\n* :mod:`~eifi1_server_kit.sync.scopes` — named scopes (0.16.0, §2.4): what a device reads\n  and writes, per entity rule, the fields withheld from it, and :func:`sort_changes`, which\n  refuses a push's changes one by one behind the app's :class:`ScopeRows` port;\n* :mod:`~eifi1_server_kit.sync.mixin` — the columns, the ``before_flush`` stamping, the\n  tombstones and their filter, in SQLAlchemy: only with the ``sync`` extra\n  (``eifi1-server-kit[sync]``), and imported lazily, so this package loads without it.\n\n``eifi1_server_kit.sync.testing`` has :class:`InMemoryKnowledgeCounter`; it is not\nre-exported. Stays in the apps: the routes, the entity registries, tenancy and RLS, E2EE,\nbilling's refusals, unique-key merges and revival rules, and each scope's own rules (guards).",
       "contract": {
         "doc": "docs/local-first-harmonization.md",
-        "section": "§1.5, §1.6",
+        "section": "§1.5, §1.6, §2.4",
         "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/local-first-harmonization.md#15-decisions-settled",
         "links": [
           {
@@ -10578,15 +11394,32 @@
             "section": "§1.6",
             "heading": "1.6 What each kit ships",
             "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/local-first-harmonization.md#16-what-each-kit-ships"
+          },
+          {
+            "section": "§2.4",
+            "heading": "2.4 SyncScope and EntityRule in server-kit (eifi1_server_kit.sync.scopes, 0.16.0)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/local-first-harmonization.md#24-syncscope-and-entityrule-in-server-kit-eifi1_server_kitsyncscopes-0160"
           }
         ]
       },
       "members": [
         {
+          "name": "CLOCK_SKEW_TOLERANCE",
+          "kind": "constant",
+          "signature": "CLOCK_SKEW_TOLERANCE: Final = timedelta(seconds=2)",
+          "doc": "Skew up to this much is the push's network latency, not a wrong clock: not corrected, so a\ncorrect device's stamps are stored exactly as it sent them."
+        },
+        {
           "name": "INCLUDE_TOMBSTONED",
           "kind": "constant",
           "signature": "INCLUDE_TOMBSTONED = 'include_tombstoned'",
           "doc": ""
+        },
+        {
+          "name": "MAX_CLOCK_SKEW",
+          "kind": "constant",
+          "signature": "MAX_CLOCK_SKEW: Final = timedelta(hours=24)",
+          "doc": "The largest skew corrected, either way. A clock off by more (reset to 1970, a year\nahead) has likely changed between the edit and the push, so the full shift would be a\nguess: the correction stops here, and the clamp still keeps any stamp out of the future.\nA day covers a device set to the wrong zone (up to 14 hours) and a week of drift."
         },
         {
           "name": "SYNC_PAGE_LIMIT",
@@ -10605,6 +11438,94 @@
           "kind": "constant",
           "signature": "SYNC_REJECTED: Final = \"rejected\"",
           "doc": ":attr:`SyncRejection.code` for a change a scope rule refuses: a fixed field, a finalised\nprotocol, an entity not writable in the scope (kastlan's ``EntityRule``)."
+        },
+        {
+          "name": "AfterApplyContext",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class AfterApplyContext",
+          "doc": "What :attr:`SyncScope.after_apply` sees once the allowed changes are applied.",
+          "fields": [
+            {
+              "name": "scope",
+              "type": "SyncScope",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "rows",
+              "type": "ScopeRows",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "changes",
+              "type": "Sequence[Change]",
+              "default": null,
+              "doc": "The changes the scope allowed, in push order."
+            },
+            {
+              "name": "found",
+              "type": "Mapping[str, object]",
+              "default": null,
+              "doc": "The server's rows the allowed changes touch, by change id (new rows absent). These\nare the app's LIVE rows (an ORM session hands back the same identity-mapped object\nthe apply mutates), so they show the values AFTER the apply: compare against\n:attr:`before`, never against ``found``."
+            },
+            {
+              "name": "before",
+              "type": "Mapping[str, Mapping[str, object]]",
+              "default": "dict()",
+              "doc": "A snapshot taken while sorting, before any apply: per allowed change on an existing\nrow, the fields its ``data`` sends, as the row held them (read with ``getattr``; a\nwire key that is no attribute of the row is left out; a delete's entry is empty).\nThe snapshot holds the row's own types and the wire holds JSON, so compare in the\nrow's type: \"did ``last_performed`` change\" is\n``date.fromisoformat(data[\"last_performed\"]) != before[id][\"last_performed\"]`` (a\nplain ``!=`` of the wire's ``\"2026-10-01\"`` and a ``date`` is always true). Two changes\nto one row in a push (a waiting and a pending one) each see the row as it stood\nbefore the push, not after the other; where that matters, recompute idempotently\nfrom the stored row instead."
+            }
+          ]
+        },
+        {
+          "name": "EntityRule",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class EntityRule",
+          "doc": "How a scope lets one entity be written.",
+          "fields": [
+            {
+              "name": "model",
+              "type": "type",
+              "default": null,
+              "doc": "The app's model (the kit never reads it; the app's ``ScopeRows`` may)."
+            },
+            {
+              "name": "create",
+              "type": "type[BaseModel] | None",
+              "default": null,
+              "doc": "Validates a new row's data; ``None``: rows are not created through sync."
+            },
+            {
+              "name": "update",
+              "type": "type[BaseModel]",
+              "default": null,
+              "doc": "Validates a change to an existing row."
+            },
+            {
+              "name": "deletable",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "fixed_parents",
+              "type": "tuple[str, ...]",
+              "default": "()",
+              "doc": "Relation wire keys whose target may not change once the row exists."
+            },
+            {
+              "name": "fixed_fields",
+              "type": "tuple[str, ...]",
+              "default": "()",
+              "doc": "Fields that may not change once the row exists. Both kinds may be sent again\nunchanged: a device that lost the server's answer re-sends its whole create."
+            },
+            {
+              "name": "guard",
+              "type": "Guard | None",
+              "default": "None",
+              "doc": "The app's own rule, run last (kastlan: a finalised protocol, a completed meeting, a\nreading in the protocol's unit)."
+            }
+          ]
         },
         {
           "name": "KnowledgeCounter",
@@ -10653,6 +11574,124 @@
           ]
         },
         {
+          "name": "RuleContext",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class RuleContext",
+          "doc": "What an :class:`EntityRule`'s guard sees of one change, after the kit's checks.",
+          "fields": [
+            {
+              "name": "scope",
+              "type": "SyncScope",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "entity",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "change_id",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "op",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "data",
+              "type": "Mapping[str, Any]",
+              "default": null,
+              "doc": "The change's ``data`` (``{}`` for a delete)."
+            },
+            {
+              "name": "existing",
+              "type": "object | None",
+              "default": null,
+              "doc": "The server's row as it stands (``None``: a new row)."
+            },
+            {
+              "name": "rows",
+              "type": "ScopeRows",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "push",
+              "type": "Sequence[Change]",
+              "default": null,
+              "doc": "The whole push, in order (kastlan reads a new protocol's unit from it)."
+            },
+            {
+              "name": "new_in_push",
+              "type": "frozenset[str]",
+              "default": null,
+              "doc": "The ids of the push's upserts: rows that may be new in the same request."
+            }
+          ]
+        },
+        {
+          "name": "ScopeRows",
+          "kind": "protocol",
+          "signature": "class ScopeRows(Protocol)",
+          "doc": "The port: how the app finds rows, scoped to the request's company.",
+          "methods": [
+            {
+              "name": "references",
+              "signature": "@property references -> Mapping[str, str]",
+              "doc": ""
+            },
+            {
+              "name": "find",
+              "signature": "async find(entity: str, row_id: str) -> object | None",
+              "doc": "The company's row of ``entity`` with this sync id, tombstones included; ``None``\nwhen there is none (or it is another company's)."
+            },
+            {
+              "name": "parent_id",
+              "signature": "async parent_id(row: object, wire_key: str) -> str | None",
+              "doc": "The sync id of the row ``wire_key`` of an existing ``row`` points at today."
+            }
+          ]
+        },
+        {
+          "name": "SortedChanges",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class SortedChanges",
+          "doc": ":func:`sort_changes`' answer: apply ``allowed``, send ``rejections``, then hand\n``context`` to :attr:`SyncScope.after_apply`.",
+          "fields": [
+            {
+              "name": "allowed",
+              "type": "list[Change]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "rejections",
+              "type": "list[SyncRejection]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "context",
+              "type": "AfterApplyContext",
+              "default": null,
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "refuse_whole",
+              "signature": "refuse_whole() -> None",
+              "doc": "For a client without ``refusals``: raise the first refusal as\n:class:`SyncScopeError`, so nothing of the push is written."
+            }
+          ]
+        },
+        {
           "name": "SyncChange",
           "kind": "model",
           "signature": "class SyncChange(BaseModel)",
@@ -10686,7 +11725,7 @@
               "name": "updated_at",
               "type": "_EditTime | None",
               "default": "None",
-              "doc": "The device's edit time (D2), the LWW stamp of an upsert; ``None`` (an older client)\nfalls back to server-now for one release. A future stamp is clamped\n(:func:`~eifi1_server_kit.sync.clamp_stamp`)."
+              "doc": "The device's edit time (D2), the LWW stamp of an upsert; ``None`` (an older client)\nfalls back to server-now for one release. Shifted by the push's clock skew\n(:attr:`SyncRequest.client_now`), then a future stamp is clamped\n(:func:`~eifi1_server_kit.sync.clamp_stamp`)."
             },
             {
               "name": "knowledge",
@@ -10827,6 +11866,12 @@
               "type": "SyncPageCursor | None",
               "default": "None",
               "doc": "Where the previous page stopped; ``None`` starts a fresh walk."
+            },
+            {
+              "name": "client_now",
+              "type": "_EditTime | None",
+              "default": "None",
+              "doc": "The device's clock when it SENDS this push (0.16.0), spelt as ``updated_at``. The\nserver corrects every change's stamp by its own now minus this\n(:func:`~eifi1_server_kit.sync.clock_skew`), so a slow or fast device clock neither\nloses nor wins conflicts it should not. Read it fresh for every request, retries\nincluded. ``None`` (an older client): no correction, the clamp alone."
             }
           ]
         },
@@ -10869,6 +11914,75 @@
           ]
         },
         {
+          "name": "SyncScope",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class SyncScope",
+          "doc": "One named job a device syncs: what it reads, what it writes, for which roles.",
+          "fields": [
+            {
+              "name": "name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "roles",
+              "type": "frozenset[str]",
+              "default": null,
+              "doc": "The app's role values that may sync it; the app's router checks them (403)."
+            },
+            {
+              "name": "readable",
+              "type": "frozenset[str]",
+              "default": null,
+              "doc": "The entities a device pulls (the app's entity names)."
+            },
+            {
+              "name": "writable",
+              "type": "Mapping[str, EntityRule]",
+              "default": "dict()",
+              "doc": "The entities it may write, and how."
+            },
+            {
+              "name": "withheld",
+              "type": "frozenset[str]",
+              "default": "frozenset()",
+              "doc": "``\"<entity>.<field>\"`` never pulled and never written (D14; kastlan:\n``estates.qr_iban``)."
+            },
+            {
+              "name": "after_apply",
+              "type": "Callable[[AfterApplyContext], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "Runs after the allowed changes are applied, in the same transaction (kastlan:\nwhat finalising a protocol runs online)."
+            }
+          ],
+          "methods": [
+            {
+              "name": "withheld_fields",
+              "signature": "withheld_fields(entity: str) -> frozenset[str]",
+              "doc": "The fields of ``entity`` this scope withholds."
+            },
+            {
+              "name": "pull_order",
+              "signature": "pull_order(entities: Iterable[str]) -> tuple[str, ...]",
+              "doc": "The readable entities in the app's walk order (parents first), for the paged\npull's ``entities``. Every readable entity must be in ``entities``: one left out\nwould never reach a device."
+            }
+          ]
+        },
+        {
+          "name": "SyncScopeError",
+          "kind": "class",
+          "signature": "class SyncScopeError(ValueError)",
+          "doc": "One change a scope does not allow, with its reason (kastlan's ``SyncRefusedError``).\n\n:func:`sort_changes` turns each into a rejection; :meth:`SortedChanges.refuse_whole`\nraises the first for an older client, which the app answers as a 422 with nothing\nwritten. A guard may raise it too instead of returning its reason.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(change_id: str, detail: str) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "TenantOf",
           "kind": "constant",
           "signature": "type TenantOf = Callable[[object], object | None]",
@@ -10901,8 +12015,20 @@
         {
           "name": "clamp_stamp",
           "kind": "function",
-          "signature": "clamp_stamp(stamp: datetime | None, *, now: datetime) -> datetime",
-          "doc": "The edit time the server stores for an incoming change, aware and in UTC: ``stamp``,\nor ``now`` when there is none (an older client falls back to server-now) or when it\nlies in the future (a drifting clock never wins every later conflict)."
+          "signature": "clamp_stamp(stamp: datetime | None, *, now: datetime, skew: timedelta = _NO_SKEW) -> datetime",
+          "doc": "The edit time the server stores for an incoming change, aware and in UTC: ``stamp``\ncorrected by the push's ``skew`` (:func:`clock_skew`; none by default, as in 0.15.0), or\n``now`` when there is none (an older client falls back to server-now) or when it lies in\nthe future (a drifting clock never wins every later conflict)."
+        },
+        {
+          "name": "clock_skew",
+          "kind": "function",
+          "signature": "clock_skew(client_now: datetime | None, *, now: datetime) -> timedelta",
+          "doc": "How far the device's clock is behind the server's, once per push: ``now - client_now``\n(positive for a SLOW clock, negative for a FAST one), the shift :func:`correct_stamp`\nadds to every stamp of that push. ``timedelta(0)`` without ``client_now`` (an older\nclient: 0.15.0's behaviour) or within :data:`CLOCK_SKEW_TOLERANCE`; capped at\n:data:`MAX_CLOCK_SKEW` either way. ``client_now`` is\n:attr:`~eifi1_server_kit.sync.SyncRequest.client_now`, ``now`` the server's time when it\nhandles the push; naive values are read as UTC."
+        },
+        {
+          "name": "correct_stamp",
+          "kind": "function",
+          "signature": "correct_stamp(stamp: datetime, *, skew: timedelta) -> datetime",
+          "doc": "A device's edit time on the server's clock, aware and in UTC: ``stamp + skew``\n(:func:`clock_skew`). A stamp at the calendar's edge (year 1 or 9999, valid on the wire)\nstops there instead of raising."
         },
         {
           "name": "cursor_at_start",
@@ -10920,7 +12046,7 @@
           "name": "install_sync_stamping",
           "kind": "function",
           "signature": "install_sync_stamping(session_cls: _SessionTarget, *, counter: KnowledgeCounter, tenant_of: TenantOf, is_synced: Callable[[object], bool], now: Clock = utc_now) -> Callable[[], None]",
-          "doc": "Listen on ``session_cls`` (``Session`` itself, a subclass or a ``sessionmaker``) for\n``before_flush``, and stamp every new or modified synced row (``is_synced``) with its\ntenant's next knowledge, ONE bump per tenant per flush (keksdose\n``infrastructure/sync.py:141-186``). The counter is called under ``no_autoflush``.\n\n``updated_at`` is client-authoritative: a new row gets ``now()`` only when it has none,\na modified row only when ``updated_at`` was not set in this flush (the ``/sync`` apply\npath writes the device's stamp). Deletes are tombstone updates, so they arrive as\nmodified rows. Returns a function that removes the listener.\n\n**A synced model without an ``updated_at`` column** (kastlan's handover children) gets\nits knowledge and no stamp, checked on the mapper; it then has no LWW stamp to compare\n(:func:`~eifi1_server_kit.sync.merge_lww` with ``None`` always lets the upsert win), so\nan app that wants D2 on that table adds the column.\n\n**Naive columns** (``timestamp without time zone``, kastlan) are written naive UTC: the\nhook's ``now()`` and an aware stamp the writer set (``clamp_stamp``'s answer) are fitted\nto the column, so asyncpg never sees an aware value for a naive parameter. Aware\ncolumns (:class:`SyncColumns`) are written as given."
+          "doc": "Listen on ``session_cls`` (``Session`` itself, a subclass or a ``sessionmaker``) for\n``before_flush``, and stamp every new or modified synced row (``is_synced``) with its\ntenant's next knowledge, ONE bump per tenant per flush (keksdose\n``infrastructure/sync.py:141-186``). The counter is called under ``no_autoflush``.\n\n``updated_at`` is client-authoritative: a new row gets ``now()`` only when it has none,\na modified row only when ``updated_at`` was not set in this flush (the ``/sync`` apply\npath writes the device's stamp). Deletes are tombstone updates, so they arrive as\nmodified rows. Returns a function that removes the listener.\n\n**Rows of one flush share one value**: a parent and its children written together\ncarry the same knowledge, so ``knowledge`` alone does not order them. A pull that needs\nparents first orders within a value itself — :func:`~eifi1_server_kit.sync.page_order`'s\n``(knowledge, id)`` per entity, entities in the app's order (kastlan, moving from its\nown per-row bump, sorts by ``(knowledge, entity order)``; 0.16.0).\n\n**A synced model without an ``updated_at`` column** (kastlan's handover children) gets\nits knowledge and no stamp, checked on the mapper; it then has no LWW stamp to compare\n(:func:`~eifi1_server_kit.sync.merge_lww` with ``None`` always lets the upsert win), so\nan app that wants D2 on that table adds the column.\n\n**Naive columns** (``timestamp without time zone``, kastlan) are written naive UTC: the\nhook's ``now()`` and an aware stamp the writer set (``clamp_stamp``'s answer) are fitted\nto the column, so asyncpg never sees an aware value for a naive parameter. Aware\ncolumns (:class:`SyncColumns`) are written as given."
         },
         {
           "name": "install_tombstone_filter",
@@ -10943,8 +12069,8 @@
         {
           "name": "merge_lww",
           "kind": "function",
-          "signature": "merge_lww(existing_updated: datetime | None, incoming_updated: datetime | None, *, now: datetime) -> bool",
-          "doc": "Whether an incoming upsert **wins** over the server's row: ``False`` only when the\nserver's ``updated_at`` is strictly newer than the incoming stamp (after\n:func:`clamp_stamp`). A row without a stamp on the server always loses. The winner is\nwritten whole, with ``updated_at = clamp_stamp(incoming_updated, now=now)``; a loser is\nechoed back to the device as the server's row in the same round."
+          "signature": "merge_lww(existing_updated: datetime | None, incoming_updated: datetime | None, *, now: datetime, skew: timedelta = _NO_SKEW) -> bool",
+          "doc": "Whether an incoming upsert **wins** over the server's row: ``False`` only when the\nserver's ``updated_at`` is strictly newer than the incoming stamp (after\n:func:`clamp_stamp` with the push's ``skew``). A row without a stamp on the server always\nloses. The winner is written whole, with\n``updated_at = clamp_stamp(incoming_updated, now=now, skew=skew)``; a loser is echoed back\nto the device as the server's row in the same round. The server's own ``updated_at`` was\ncorrected when it was stored, so it is not shifted::\n\n    skew = clock_skew(request.client_now, now=now)  # once per push\n    for change in request.changes:\n        if merge_lww(row.updated_at, change.updated_at, now=now, skew=skew): ..."
         },
         {
           "name": "page_of",
@@ -10959,10 +12085,22 @@
           "doc": "The order rows are walked in within an entity."
         },
         {
+          "name": "sort_changes",
+          "kind": "function",
+          "signature": "async sort_changes(scope: SyncScope, changes: Sequence[Change], rows: ScopeRows) -> SortedChanges",
+          "doc": "The changes ``scope`` allows, in push order, and a rejection for each it refuses.\n\nEach change is checked against the server's rows as they stand, in this order: the\nentity is writable; a delete is allowed (a delete of a row the server never had is\nlet through, a no-op); no withheld field is written; the data passes the rule's\n``create`` (a new row) or ``update`` schema; every reference names a row of this\ncompany or a new row of the same push; an existing row's fixed parents and fields are\nunchanged (re-sending them is fine); then the rule's ``guard``. A change that points\nat a NEW row of the push which was refused is refused with it (\"its parent was\nrefused\"), and so on down."
+        },
+        {
           "name": "tombstone",
           "kind": "function",
           "signature": "tombstone(obj: object, *, now: datetime | None = None) -> None",
           "doc": "Soft-delete a synced row: ``deleted_at`` and ``updated_at`` move together, so an older\nupsert cannot revive it (D2); the stamping hook gives it a fresh knowledge. A model\nwithout ``updated_at`` gets only ``deleted_at`` (and no D2: add the column), and a naive\ncolumn gets naive UTC."
+        },
+        {
+          "name": "withhold",
+          "kind": "function",
+          "signature": "withhold[C: (SyncChange, dict[str, Any])](scope: SyncScope, change: C) -> C",
+          "doc": "A pulled row without the fields ``scope`` withholds from its ``data`` (D14): a\n:class:`~eifi1_server_kit.sync.SyncChange` or the app's dict, answered in kind and\nnever changed in place (a ``SyncChange`` without ``data`` comes back as it is)."
         }
       ]
     }

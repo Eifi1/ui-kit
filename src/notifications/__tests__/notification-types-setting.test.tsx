@@ -1,11 +1,12 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { NotificationTypesSetting } from "../notification-types-setting";
 import type { NotificationTypeEntry, NotificationTypeGroup, NotificationTypesValue } from "../notification-types";
 import { axeViolations } from "../../test/axe";
+import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
  * docs/notifications-harmonization.md §2.1–§2.3, §4.2: the server's list is the only list;
@@ -126,7 +127,7 @@ describe("NotificationTypesSetting — what it draws", () => {
     expect(rows).toEqual(["invoices_overdue", "dunnings_pending"]);
   });
 
-  it("offers e-mail only where the type does, as a second switch named with its type", () => {
+  it("offers e-mail only where the type does: a column per channel in a group named by its type", () => {
     render(
       <NotificationTypesSetting
         types={KA_TYPES}
@@ -135,11 +136,17 @@ describe("NotificationTypesSetting — what it draws", () => {
       />,
     );
     const overdue = screen.getByRole("group", { name: "Overdue invoices" });
-    expect(within(overdue).getByRole("switch", { name: "Overdue invoices" })).toBeChecked();
-    expect(within(overdue).getByRole("switch", { name: "By e-mail" })).not.toBeChecked();
-    // `dunnings_pending` is `app` only: no group, no e-mail switch.
+    expect(within(overdue).getByRole("switch", { name: "In the app" })).toBeChecked();
+    expect(within(overdue).getByRole("switch", { name: "E-mail" })).not.toBeChecked();
+    // `dunnings_pending` is `app` only: no group, one switch named by its type.
     expect(screen.queryByRole("group", { name: "Dunnings to send" })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("switch", { name: "By e-mail" })).toHaveLength(1);
+    expect(screen.getByRole("switch", { name: "Dunnings to send" })).not.toBeChecked();
+    expect(screen.getAllByRole("switch", { name: "E-mail" })).toHaveLength(1);
+    // kastlan has no push (`push: null` or left out): no push column, no push heading.
+    expect(screen.queryByRole("switch", { name: "Push" })).not.toBeInTheDocument();
+    const headings = document.querySelector("[data-channel-headings]")!;
+    expect(headings).toHaveAttribute("aria-hidden", "true");
+    expect(headings).toHaveTextContent(/^In the appE-mail$/);
   });
 
   it("an app with no `app` channel (Kurvenschmiede): the e-mail switch is the row's", () => {
@@ -192,7 +199,7 @@ describe("NotificationTypesSetting — what it draws", () => {
         onChange={vi.fn()}
       />,
     );
-    expect(screen.getByRole("switch", { name: "By e-mail" })).toHaveAccessibleDescription(
+    expect(screen.getByRole("switch", { name: "E-mail" })).toHaveAccessibleDescription(
       "Confirm your address to receive these.",
     );
     // The `app` switches say nothing of it: the address gates mail only.
@@ -241,14 +248,14 @@ describe("NotificationTypesSetting — saving", () => {
         onChange={onChange}
       />,
     );
-    await user.click(screen.getByRole("switch", { name: "Overdue invoices" }));
+    await user.click(screen.getByRole("switch", { name: "In the app" }));
     expect(onChange).toHaveBeenLastCalledWith({ types: { invoices_overdue: { app: true } } });
-    expect(screen.getByRole("switch", { name: "Overdue invoices" })).toBeChecked();
-    await user.click(screen.getByRole("switch", { name: "By e-mail" }));
+    expect(screen.getByRole("switch", { name: "In the app" })).toBeChecked();
+    await user.click(screen.getByRole("switch", { name: "E-mail" }));
     expect(onChange).toHaveBeenLastCalledWith({ types: { invoices_overdue: { email: true } } });
     expect(onChange).toHaveBeenCalledTimes(2);
     await act(async () => pending.resolve());
-    expect(screen.getByRole("switch", { name: "Overdue invoices" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "In the app" })).toBeChecked();
   });
 
   it("an e-mail-only row sends `email`", async () => {
@@ -335,15 +342,108 @@ describe("NotificationTypesSetting — saving", () => {
   });
 });
 
+/** keksdose after 0.46 (§10.2): in the app, push and e-mail; `scan_done` has no mail. */
+const KK3_TYPES: readonly NotificationTypeEntry<"feedback_received" | "scan_done">[] = [
+  { id: "feedback_received", label: "New feedback and reworks" },
+  { id: "scan_done", label: "Finished scans" },
+];
+const KK3_VALUE: NotificationTypesValue = {
+  feedback_received: { app: true, push: false, email: true },
+  scan_done: { app: true, push: true, email: null },
+};
+
+describe("NotificationTypesSetting — a switch per channel (0.46, §10.2)", () => {
+  afterEach(() => {
+    Reflect.deleteProperty(window, "matchMedia");
+  });
+
+  it("draws three columns headed In the app / Push / E-mail, and a `null` channel not at all", () => {
+    render(<NotificationTypesSetting types={KK3_TYPES} value={KK3_VALUE} onChange={vi.fn()} />);
+    expect(document.querySelector("[data-channel-headings]")).toHaveTextContent(/^In the appPushE-mail$/);
+    const received = screen.getByRole("group", { name: "New feedback and reworks" });
+    expect(within(received).getAllByRole("switch").map((el) => el.getAttribute("aria-label"))).toEqual([
+      "In the app",
+      "Push",
+      "E-mail",
+    ]);
+    expect(within(received).getByRole("switch", { name: "Push" })).not.toBeChecked();
+    const scans = screen.getByRole("group", { name: "Finished scans" });
+    expect(within(scans).getAllByRole("switch").map((el) => el.getAttribute("aria-label"))).toEqual([
+      "In the app",
+      "Push",
+    ]);
+  });
+
+  it("sends `push` alone, independent of `app`", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn(async () => undefined);
+    render(<NotificationTypesSetting types={KK3_TYPES} value={KK3_VALUE} onChange={onChange} />);
+    const received = screen.getByRole("group", { name: "New feedback and reworks" });
+    await user.click(within(received).getByRole("switch", { name: "Push" }));
+    expect(onChange).toHaveBeenCalledWith({ types: { feedback_received: { push: true } } });
+  });
+
+  it("an app with no push (`push: null` on every type) keeps its two channels, a one-channel row its single switch", () => {
+    render(
+      <NotificationTypesSetting
+        types={KA_TYPES}
+        value={{
+          invoices_overdue: { app: true, push: null, email: true },
+          dunnings_pending: { app: true, push: null, email: null },
+        }}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("switch", { name: "Push" })).not.toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Dunnings to send" })).toBeChecked();
+    expect(document.querySelector('[data-notification-type="dunnings_pending"]')).toHaveAttribute("data-channels", "app");
+  });
+
+  it("on a phone the switches stack under the type's label, each with its channel's name in view", () => {
+    stubViewportWidth(PHONE_WIDTH);
+    render(<NotificationTypesSetting types={KK3_TYPES} value={KK3_VALUE} onChange={vi.fn()} />);
+    expect(document.querySelector("[data-channel-headings]")).toBeNull();
+    const received = screen.getByRole("group", { name: "New feedback and reworks" });
+    const stack = received.querySelector("[data-stacked]")!;
+    expect(within(stack as HTMLElement).getAllByRole("switch")).toHaveLength(3);
+    // A visible label now, not an aria-label: the column headings are gone.
+    expect(within(received).getByText("Push")).toBeVisible();
+    expect(within(received).getByRole("switch", { name: "Push" })).not.toHaveAttribute("aria-label");
+  });
+
+  it("the cadence and the app's extra show while any channel is on", () => {
+    render(
+      <NotificationTypesSetting
+        types={KK3_TYPES}
+        value={{ ...KK3_VALUE, scan_done: { app: false, push: true, email: null } }}
+        renderExtra={(id) => (id === "scan_done" ? <span>extra</span> : null)}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("extra")).toBeInTheDocument();
+  });
+
+  it("passes axe with three columns, and stacked", async () => {
+    const { container, unmount } = render(
+      <NotificationTypesSetting types={KK3_TYPES} value={KK3_VALUE} emailUnverified onChange={vi.fn()} />,
+    );
+    expect(await axeViolations(container)).toEqual([]);
+    unmount();
+    stubViewportWidth(PHONE_WIDTH);
+    const phone = render(<NotificationTypesSetting types={KK3_TYPES} value={KK3_VALUE} emailUnverified onChange={vi.fn()} />);
+    expect(await axeViolations(phone.container)).toEqual([]);
+  });
+});
+
 describe("NotificationTypesSetting — words and access", () => {
   it("takes its words from the provider's `notifications` namespace; the prop wins", () => {
     render(
-      <UiKitProvider labels={{ notifications: { typesTitle: "Benachrichtigungen zu", byEmail: "Per E-Mail" } }}>
+      <UiKitProvider labels={{ notifications: { typesTitle: "Benachrichtigungen zu", channelEmail: "E-Mail" } }}>
         <NotificationTypesSetting
           types={KA_TYPES}
           value={{ invoices_overdue: { app: true, email: true } }}
           onChange={vi.fn()}
-          labels={{ byEmail: "Prop" }}
+          labels={{ channelEmail: "Prop" }}
         />
       </UiKitProvider>,
     );

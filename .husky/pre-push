@@ -7,11 +7,15 @@
 #     whose CI is not green. Pushing v0.33.1 re-ran the whole check: 355 s for nothing.
 #   - a tree that already passed. A green `npm run check` on a clean tree stamps
 #     node_modules/.cache/check/<tree id>; when every pushed tip's tree has a stamp
-#     (a reworded commit, a re-push), only the commit messages are new, so only
-#     check:commits runs, over each pushed tip.
+#     (a reworded commit, a re-push), only the commit messages are new, so only they
+#     are checked: scripts/check-pushed-commits.cjs, the shared copy from
+#     Eifi1/shared-workflows (scripts/shared-commit-rules.json, as server-kit's hook),
+#     over every commit the push sends (0.46; it was check:commits per pushed tip).
 #
 # Otherwise the full check runs, and it checks the WORKING TREE, not the pushed commits:
 # a modified tracked file is what gets tested. That is warned about, not refused.
+# Stdin is read ONCE, into $input: the stamped path hands it to the shared script too.
+input=$(cat)
 tips=""
 while read -r local_ref local_sha remote_ref remote_sha; do
   [ -n "$local_ref" ] || continue
@@ -19,7 +23,9 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   case "$local_sha" in *[!0]*) ;; *) continue ;; esac
   case "$local_ref" in refs/tags/*) continue ;; esac
   tips="$tips $local_sha"
-done
+done <<EOF
+$input
+EOF
 
 if [ -z "$tips" ]; then
   echo "pre-push: only tags or deletes, nothing to check (their commits were checked when pushed; CI gates releases)."
@@ -40,7 +46,7 @@ for sha in $tips; do
 done
 if [ "$stamped" = yes ]; then
   echo "pre-push: this tree already passed npm run check; checking the commit messages only."
-  for sha in $tips; do HEAD_SHA="$sha" npm run -s check:commits || exit 1; done
+  printf '%s\n' "$input" | node scripts/check-pushed-commits.cjs "${1:-origin}" || exit 1
   exit 0
 fi
 

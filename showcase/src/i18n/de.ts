@@ -143,6 +143,12 @@ export const de: Dictionary = {
       blurb:
         "Ohne Verbindung arbeiten: der gespeicherte Query-Cache mit seiner Streichliste, die Frage vor dem Abmelden, solange Änderungen warten, der Update-Hinweis, der auf eine Tour wartet, und die Wahl «gemeinsam genutzter Computer».",
     },
+    sync: {
+      title: "Sync-Engine",
+      short: "Sync",
+      blurb:
+        "Auf der Kopie des Geräts arbeiten: die Sync-Engine mit ihrer Warteschlange, eine Anfrage pro Bereich, abgelehnte Änderungen, die bleiben, die Wartezeiten nach einem Fehler und die geschützte Abmeldung; dazu der Worker, der Status für die Anzeige und das Live-Lesen der Kopie.",
+    },
     "auth-account": {
       title: "Anmeldung & Kontosicherheit",
       short: "Anmeldung",
@@ -475,7 +481,7 @@ export const de: Dictionary = {
       title: "Benachrichtigungen",
       short: "Benachrichtigungen",
       blurb:
-        "Die Benachrichtigungseinstellungen, die jede App teilt: die Arten, die der Server liefert, mit einem Schalter in der App und einem per E-Mail, Ruhezeiten und die Zeitzone, Push auf diesem Gerät und die Liste der Geräte, und die Seite, die der Abmeldelink einer E-Mail öffnet.",
+        "Die Benachrichtigungseinstellungen, die jede App teilt: die Arten, die der Server liefert, mit einem Schalter pro Kanal (in der App, Push, E-Mail), Ruhezeiten und die Zeitzone des Kontos, der Posteingang und die Glocke in der oberen Leiste, Push auf diesem Gerät und die Liste der Geräte mit den Arten, die jedes stummschaltet, und die Seite, die der Abmeldelink einer E-Mail öffnet.",
     },
     settings: {
       title: "Einstellungen",
@@ -656,6 +662,14 @@ export const de: Dictionary = {
       "vor dem Abmelden mit ungesendeten Änderungen fragen",
       "eine neue Version ist verfügbar, neu laden",
       "dies ist ein gemeinsam genutzter Computer",
+    ],
+    sync: [
+      "offline gemachte Änderungen synchronisieren",
+      "Änderungen auf dem Gerät vormerken",
+      "eine fehlgeschlagene Synchronisierung später wiederholen",
+      "Änderungen bis zu einem Abo zurückhalten",
+      "den Sync-Status anzeigen",
+      "die Kopie auf dem Gerät live lesen",
     ],
     "auth-account": [
       "Layout der Anmeldeseite",
@@ -1159,19 +1173,19 @@ export const de: Dictionary = {
     ],
     notifications: [
       "Benachrichtigungseinstellungen",
-      "Benachrichtigungen ein- oder ausschalten",
       "wählen, welche Benachrichtigungen kommen",
       "per E-Mail benachrichtigen",
       "Ruhezeiten",
-      "nachts nicht stören",
-      "Zeitzone wählen",
       "Push-Benachrichtigungen auf diesem Gerät",
       "Test-Benachrichtigung senden",
       "Geräte mit Benachrichtigungen auflisten",
       "Gerät entfernen",
       "E-Mails abbestellen",
-      "Abmeldelink mit einem Klick",
       "wöchentliche oder monatliche Zusammenfassung",
+      "Posteingang der Benachrichtigungen",
+      "Glocke mit ungelesenen Benachrichtigungen",
+      "Zeitzone des Kontos automatisch übernehmen",
+      "Push pro Gerät stummschalten",
     ],
     settings: [
       "Kontoeinstellungen",

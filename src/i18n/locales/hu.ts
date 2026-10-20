@@ -141,6 +141,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       answeredDescription: "Amikor egy Ön által írt vagy hozzászólt bejelentés választ kap.",
       comment: "Hozzászólások a követett bejelentésekhez",
       commentDescription: "Amikor valaki hozzászól egy Ön által írt vagy hozzászólt bejelentéshez.",
+      received: "Új bejelentések és átdolgozások",
+      receivedDescription: "Amikor valaki bejelentést tesz vagy visszaküld egyet.",
+      adminGroup: "Admin",
     },
     feedbackContext: {
       user: "Felhasználó",
@@ -817,6 +820,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     writeLock: {
       reason: "Ezt megtekintheti, de nem módosíthatja.",
+      offline: "Internetkapcsolat szükséges.",
     },
     accountState: {
       active: "Aktív",
@@ -1165,6 +1169,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       typesTitle: "Értesítést kérek ezekről",
       typesDescription: "Válassza ki, miről és hogyan kapjon értesítést.",
       byEmail: "E-mailben",
+      channelApp: "Az appban",
+      channelPush: "Push",
+      channelEmail: "E-mail",
       emailUnverified: "Erősítse meg a címét, hogy megkapja ezeket.",
       digestCadence: "Gyakoriság",
       digestWeekly: "Hetente",
@@ -1172,10 +1179,15 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       typesLoading: "Értesítési beállítások betöltése…",
       typesEmpty: "Ehhez a fiókhoz nincsenek értesítések.",
       quietTitle: "Csendes órák",
-      quietDescription: (inbox) =>
-        inbox
-          ? "Ebben az idősávban nem érkeznek push-értesítések. A beérkezett értesítések közé így is bekerülnek."
-          : "Ebben az idősávban nem érkeznek push-értesítések.",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "Ebben az idősávban a push-értesítések várnak, és a végén érkeznek meg. A beérkezett értesítések közé azonnal bekerülnek."
+            : "Ebben az idősávban a push-értesítések várnak, és a végén érkeznek meg."
+          : inbox
+            ? "Ebben az idősávban nem érkeznek push-értesítések. A beérkezett értesítések közé így is bekerülnek."
+            : "Ebben az idősávban nem érkeznek push-értesítések.",
+      quietZone: (zone) => `Az Ön időzónájában (${zone}), amely a legutóbb használt eszközét követi.`,
       quietFrom: "Ettől",
       quietUntil: "Eddig",
       quietIncomplete:
@@ -1235,6 +1247,19 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `Eltávolítás: ${device}`,
       removePrompt: "Leállítja az értesítések küldését erre az eszközre?",
+      deviceTypes: "Típusok ezen az eszközön",
+      deviceTypesDescription: "Kapcsoljon ki egy típust, hogy csak ezen az eszközön némítsa.",
+      deviceTypesEmpty: "Egyik típusnál sincsenek bekapcsolva a push-értesítések.",
+      inboxTitle: "Beérkezett értesítések",
+      inboxLoading: "Értesítések betöltése…",
+      inboxEmpty: "Mindent elolvasott.",
+      markAllRead: "Összes megjelölése olvasottként",
+      clearAll: "Összes törlése",
+      clearPrompt: "Törli az összes értesítést?",
+      showMore: "Több megjelenítése",
+      bellLabel: "Értesítések",
+      bellUnread: (count) => `${n(count)} olvasatlan`,
+      allNotifications: "Összes értesítés",
       unsubscribeTitle: "E-mail-értesítések",
       unsubscribeAbout: (type) => `E-maileket kap erről: ${type}.`,
       unsubscribeGeneric: "Értesítő e-maileket kap.",
@@ -1557,6 +1582,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       approve: "Jóváhagyás",
       flag: "Módosítandó",
       suggest: "Fordítás javaslata",
+      flagRow: "Módosításra jelölés…",
+      suggestRow: "Fordítás hozzáadása…",
       reset: "Megjelölés ellenőrizetlenként",
       cancel: "Mégse",
       approveSelected: "Kijelöltek jóváhagyása",
@@ -1821,6 +1848,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         "A fokozott kontraszt sötétebbé teszi a halvány szövegeket és vonalakat, a fókuszkereteket pedig vastagabbá. A „Rendszer” ennek az eszköznek a beállítását követi.",
       contrastModes: { system: "Rendszer", standard: "Normál", more: "Fokozott" },
       saveFailed: "Nem sikerült menteni a fiókjába. Ezen az eszközön ettől még érvényes.",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "Dátumformátum",
+      dateFormatHelp:
+        "Hogyan jelennek meg a dátumok az egész alkalmazásban. Független a felület nyelvétől, így az alkalmazást olvashatja angolul, a dátumokat mégis német formában láthatja.",
+      dateFormatAuto: "A nyelvet követi",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Megjelenés". "Ön", as the rest of the catalogue.
@@ -1879,6 +1911,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         invitationsPending: "Függő meghívások",
         users: "Felhasználók",
         usersNew: (count) => `${n(count)} új az elmúlt 7 napban`,
+        awaitingVerdict: "Ítéletre vár",
+        awaitingVerdictHint: "Megválaszolva, az Ön vagy a bejelentő megerősítésére vár",
+        releasedForWork: "Munkára kész",
+        releasedForWorkHint: "Kész, átdolgozás kérve vagy folyamatban",
       },
       overviewError: "Az áttekintést nem sikerült betölteni.",
       retry: "Próbálja újra",

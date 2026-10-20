@@ -36,6 +36,7 @@ import { Field } from "../field";
 import { FieldStrip } from "../field-strip";
 import { LanguageSelect } from "../language-select";
 import { ContrastSetting, LanguageSetting, TextSizeSetting, ThemeSetting } from "../settings-fields";
+import { DateFormatSetting } from "../date-format-setting";
 import { CurrentPasswordInput, TypedConfirmField } from "../danger-confirm";
 import { RoleSelect, RolesEditor } from "../../admin/role-select";
 import { Form } from "../../rhf/form";
@@ -270,6 +271,7 @@ const SWEEP: Record<SweptField, (hint: ReactNode) => ReactElement> = {
   LanguageSetting: (hint) => (
     <LanguageSetting label="Status" value="en" onChange={noop} options={[{ code: "en", label: "English" }]} hint={hint} />
   ),
+  DateFormatSetting: (hint) => <DateFormatSetting label="Status" value="auto" onChange={noop} hint={hint} />,
   TextSizeSetting: (hint) => <TextSizeSetting label="Status" value="normal" onChange={noop} hint={hint} />,
   ContrastSetting: (hint) => <ContrastSetting label="Status" value="system" onChange={noop} hint={hint} />,
   Combobox: (hint) => <Combobox label="Status" value="" onChange={noop} options={["Pending"]} hint={hint} />,

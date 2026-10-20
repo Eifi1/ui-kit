@@ -131,7 +131,10 @@ describe("a module page", () => {
       expect(screen.getByRole("link", { name: /notifications-harmonization\.md §3\b/ })).toHaveAttribute("href", shapes.url);
       expect(screen.getByRole("link", { name: /notifications-harmonization\.md §4\.1/ })).toHaveAttribute("href", kitPart.url);
       const main = document.querySelector("main")!;
-      expect(within(main).getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/notifications");
+      // The module and its router (0.16) each link the kit page that uses them.
+      const kitLinks = within(main).getAllByRole("link", { name: "Notifications" });
+      expect(kitLinks.length).toBeGreaterThan(0);
+      for (const link of kitLinks) expect(link).toHaveAttribute("href", "/notifications");
       expectLinksLand("server-notifications");
     },
     MOUNT_TIMEOUT_MS,

@@ -3,7 +3,6 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 
 import type { LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import { Button } from "../components/button";
 import { Card } from "../components/card";
 import { TimeInput } from "../components/time-input";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
@@ -13,9 +12,9 @@ import { settle, useMounted } from "../account/account-parts";
 import { describeFailure, FailureLine, useNotificationsLabels, useWriteOverlay } from "./notification-parts";
 import type { NotificationsLabels } from "./notifications-labels";
 import type { NotificationSettingsPatch } from "./notification-types";
-import { deviceTimeZone, TimeZoneSelect, zoneName } from "./time-zone-select";
+import { zoneName } from "./time-zone-select";
 
-/** The zone the server applies while the account has none (§2.6): every app's. */
+/** The zone the server applies while no device ever reported one (§10.3): every app's. */
 const DEFAULT_FALLBACK_ZONE = "Europe/Zurich";
 
 export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onChange"> {
@@ -23,17 +22,29 @@ export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div"
   start: string | null;
   /** The `GET`'s `quiet_hours_end`. */
   end: string | null;
-  /** The `GET`'s `timezone`, an IANA name, or `null` (the app's zone applies). */
-  timezone: string | null;
+  /** The zone the 0.36 card showed, an IANA name, or `null`.
+   *  @deprecated 0.46 — pass `zone` (§10.3: the zone is the account's, automatic only); removed in 0.47.
+   *  Shown read-only while `zone` is left out; the card no longer offers a picker. */
+  timezone?: string | null;
   /**
-   * Save one change — `PATCH /notifications/settings`: a time (`null` when cleared), with
-   * the device's zone the first time one is entered while `timezone` is `null`; or
-   * `{timezone}`. The field shows the new value while the call runs and goes back if it
+   * 0.46 (§10.3, amended 2026-10-20: automatic only): the account's zone — `/auth/me`'s
+   * `device_timezone`, the zone of the device last used; `null` while no device has
+   * reported one, and the card then names `fallbackZone`, the zone the server applies.
+   * Shown read-only once a time is set ("In your time zone (Europe / Zurich), which follows
+   * the device you last used."). No picker: the zone is never chosen.
+   */
+  zone?: string | null;
+  /** 0.46 (§10.4): the app queues a held push and sends it when the window ends (it runs
+   *  the notifications tick); the description says so. Default `false`: dropped. */
+  held?: boolean;
+  /**
+   * Save one change — `PATCH /notifications/settings`: a time, or `null` when cleared.
+   * Never a zone. The field shows the new value while the call runs and goes back if it
    * rejects.
    */
   onChange: (patch: NotificationSettingsPatch) => Promise<unknown> | void;
-  /** The zone shown, and the one the server applies, while `timezone` is `null`.
-   *  Default `"Europe/Zurich"`, every app's (decision 6). */
+  /** The zone named while neither `zone` nor `timezone` names one: the one the server
+   *  applies. Default `"Europe/Zurich"`, every app's. */
   fallbackZone?: string;
   /** The app keeps an inbox, and the description says a held push still reaches it. */
   inbox?: boolean;
@@ -43,30 +54,32 @@ export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div"
   labels?: LabelOverride<NotificationsLabels>;
 }
 
-type QuietField = "quiet_hours_start" | "quiet_hours_end" | "timezone";
+type QuietField = "quiet_hours_start" | "quiet_hours_end";
 
 /**
  * Quiet hours (docs/notifications-harmonization.md §2.4, §2.6, §4.2): a window of local
  * times in the account's zone, which may cross midnight, when no push of a machine-sent
- * type is sent. A held push is dropped, not delayed; the inbox row and the mail go as
- * usual. keksdose's block, as a card of its own.
+ * type is sent. A held push is dropped — or, with `held` (0.46, §10.4), sent when the
+ * window ends; the inbox row and the mail go as usual. keksdose's block, as a card of its
+ * own.
+ *
+ * **0.46 (§10.3, amended 2026-10-20, Marcel): the zone is the account's, automatic
+ * only** — the zone of the device last used, else `Europe/Zurich`. The card names it
+ * read-only and never sends one; there is no picker and no "Use it".
  *
  * - **Two times**, each saved as it is entered; a cleared time sends `null`. While only
  *   one is set the card says so: the window fails open until both are.
- * - **The zone** shows while a time is set. The first time entered while the account has
- *   none sends this device's zone with it, so "22:00" means the person's 22:00
- *   (keksdose `notifications-card.tsx:288-292`). With none stored, the card shows
- *   `fallbackZone` — the zone the server then applies — never the device's (keksdose's
- *   card showed the device's zone while its server applied UTC).
- * - **"This device is in …"** with "Use it" when the device's zone is not the one in
- *   effect. Never written on its own: a zone is written by a person's pick (§2.6).
+ * - **The zone** shows while a time is set: `zone`, else the deprecated `timezone`, else
+ *   `fallbackZone`.
  *
  * Under a write lock the fields are `commit` controls exempt from billing.
  */
 export function QuietHoursSetting({
   start,
   end,
-  timezone,
+  timezone = null,
+  zone,
+  held = false,
   onChange,
   fallbackZone = DEFAULT_FALLBACK_ZONE,
   inbox = false,
@@ -77,7 +90,7 @@ export function QuietHoursSetting({
   ...rest
 }: QuietHoursSettingProps) {
   const labels = useNotificationsLabels(labelsProp);
-  const overlay = useWriteOverlay<string | null>(`${start}|${end}|${timezone}`);
+  const overlay = useWriteOverlay<string | null>(`${start}|${end}`);
   const [failure, setFailure] = useState<ReactNode>(null);
   const mounted = useMounted();
   const id = useId();
@@ -86,9 +99,7 @@ export function QuietHoursSetting({
     overlay.has(field) ? (overlay.get(field) ?? null) : server;
   const startShown = shown("quiet_hours_start", start);
   const endShown = shown("quiet_hours_end", end);
-  const zoneShown = shown("timezone", timezone);
-  const effectiveZone = zoneShown ?? fallbackZone;
-  const device = deviceTimeZone();
+  const accountZone = (zone === undefined ? timezone : zone) ?? fallbackZone;
 
   const save = (patch: NotificationSettingsPatch) => {
     const fields = Object.keys(patch) as QuietField[];
@@ -109,9 +120,7 @@ export function QuietHoursSetting({
   const saveTime = (field: "quiet_hours_start" | "quiet_hours_end", value: string) => {
     const next = value || null;
     if (next === shown(field, field === "quiet_hours_start" ? start : end)) return;
-    const patch: NotificationSettingsPatch = { [field]: next };
-    if (next && zoneShown === null) patch.timezone = device;
-    save(patch);
+    save({ [field]: next });
   };
 
   const anySet = Boolean(startShown || endShown);
@@ -121,7 +130,7 @@ export function QuietHoursSetting({
     <Card {...rest} className={cn("p-4 space-y-3", className)}>
       <div>
         <SettingsCardTitle>{labels.quietTitle}</SettingsCardTitle>
-        <div className={CARD_DESCRIPTION_CLASS}>{labels.quietDescription(inbox)}</div>
+        <div className={CARD_DESCRIPTION_CLASS}>{labels.quietDescription(inbox, held)}</div>
       </div>
       <div className="flex flex-wrap items-end gap-3">
         <TimeInput
@@ -149,35 +158,9 @@ export function QuietHoursSetting({
         </p>
       )}
       {anySet && (
-        <div className="space-y-2">
-          <TimeZoneSelect
-            id={`${id}-zone`}
-            value={effectiveZone}
-            disabled={disabled}
-            commit={COMMIT_EXCEPT_BILLING}
-            onChange={(zone) => save({ timezone: zone })}
-            className="max-w-72"
-            labels={labelsProp}
-          />
-          {device !== effectiveZone && (
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span id={`${id}-device`} className={CARD_DESCRIPTION_CLASS}>
-                {labels.deviceZone(zoneName(device, labels.regions))}
-              </span>
-              <Button
-                type="button"
-                size="sm"
-                variant="link"
-                disabled={disabled}
-                commit={COMMIT_EXCEPT_BILLING}
-                aria-describedby={`${id}-device`}
-                onClick={() => save({ timezone: device })}
-              >
-                {labels.useDeviceZone}
-              </Button>
-            </div>
-          )}
-        </div>
+        <p className={CARD_DESCRIPTION_CLASS} data-quiet-zone="">
+          {labels.quietZone(zoneName(accountZone, labels.regions))}
+        </p>
       )}
       <FailureLine>{failure}</FailureLine>
     </Card>

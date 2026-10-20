@@ -33,6 +33,9 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   // The types, switches, quiet hours, push devices and unsubscribe token the
   // Notifications page's cards read and write (server-kit 0.9).
   notifications: ["notifications"],
+  // server-kit 0.16: the inbox routes and the queue's tick job as router factories (the
+  // `fastapi` extra), nested like `feedback.router`; the Notifications page's inbox reads them.
+  "notifications.router": ["notifications"],
   feedback: ["feedback-compose", "feedback-inbox"],
   // The same two pages' routes, as one router factory (server-kit 0.9, the `fastapi`
   // extra). Nested: its anchor is `#feedback.router` (server-kit/api.ts anchors).
@@ -53,7 +56,8 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   tours: ["tour"],
   "tours.router": ["tour"],
   // server-kit 0.15: the sync shapes behind the Offline page's cache and dialogs (local-first §1).
-  sync: ["offline"],
+  // server-kit 0.16: the same shapes are the sync engine's wire (local-first §2.3).
+  sync: ["offline", "sync"],
   // server-kit 0.10: the layer-2 services' shared clock; no page of the kit has one.
   clock: [],
   // The extra-origin CORS that lets this very site's Kit review page call keksdose.

@@ -765,13 +765,16 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DeviceResetSetting — this page's own registry",
     "PasswordSetting — strength + maxBytes",
     "LanguageSelect — a language as a form field",
+    "DateFormatSetting — how a day is written, apart from the language",
   ],
   "notifications": [
-    "NotificationTypesSetting — nine types under three headings",
+    "NotificationTypesSetting — ten types under four headings, a column per channel",
     "NotificationTypesSetting — in the app, and by e-mail",
     "NotificationTypesSetting — e-mail only, address unverified",
-    "QuietHoursSetting — a device in another zone",
+    "QuietHoursSetting — the account's zone, and a held push",
     "TimeZoneSelect",
+    "NotificationInbox — keksdose's list, lifted",
+    "NotificationBell — the top bar's notifications slot",
     "PushDeviceSetting — every state",
     "PushDevicesSetting — this device marked, failures, remove",
     "UnsubscribePanel — the signed-out page",
@@ -965,6 +968,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PwaUpdatePrompt — “A new version is available”",
     "SharedComputerChoice — on the sign-in form",
   ],
+  "sync": [
+    "createSyncEngine — a Dexie copy in this browser, a pretend server in memory",
+    "The wiring — kastlan's handover copy",
+  ],
   "server-auth": [
     "auth · Functions",
     "auth · Classes",
@@ -1026,7 +1033,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "notifications · Classes",
     "notifications · Models",
     "notifications · Enums",
+    "notifications · Protocols",
     "notifications · Constants",
+    "notifications.router · Functions",
+    "notifications.router · Classes",
   ],
   "server-feedback": [
     "feedback · Functions",
@@ -1358,6 +1368,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Settings",
     "PasswordStrength022Demo",
     "LanguageSelect022Demo",
+    "DateFormatDemo",
   ],
   "notifications": [
     "NotificationsPage",
@@ -1444,6 +1455,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "offline": [
     "OfflineDemo",
+  ],
+  "sync": [
+    "SyncDemo",
   ],
   "server-auth": [
     "ServerModules",

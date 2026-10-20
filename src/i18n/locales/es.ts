@@ -144,6 +144,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       answeredDescription: "Cuando un informe que usted escribió o comentó recibe una respuesta.",
       comment: "Comentarios en informes que sigue",
       commentDescription: "Cuando alguien comenta un informe que usted escribió o comentó.",
+      received: "Nuevos informes y revisiones",
+      receivedDescription: "Cuando alguien envía un informe o devuelve uno.",
+      adminGroup: "Admin",
     },
     feedbackContext: {
       user: "Usuario",
@@ -816,6 +819,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     writeLock: {
       reason: "Puede verlo, pero no modificarlo.",
+      offline: "Requiere conexión.",
     },
     accountState: {
       // Agreeing with "cuenta" (feminine): the chip is the state of an account.
@@ -1154,6 +1158,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       typesTitle: "Avisarme de",
       typesDescription: "Elija de qué se entera y cómo.",
       byEmail: "Por correo electrónico",
+      channelApp: "En la app",
+      channelPush: "Push",
+      channelEmail: "Correo",
       emailUnverified: "Confirme su dirección para recibirlos.",
       digestCadence: "Frecuencia",
       digestWeekly: "Semanal",
@@ -1161,10 +1168,15 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       typesLoading: "Cargando los ajustes de notificaciones…",
       typesEmpty: "No hay notificaciones para esta cuenta.",
       quietTitle: "Horas de silencio",
-      quietDescription: (inbox) =>
-        inbox
-          ? "Sin notificaciones push durante este intervalo. Aun así, llegan a su bandeja de entrada."
-          : "Sin notificaciones push durante este intervalo.",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "Las notificaciones push esperan durante este intervalo y llegan cuando termina. A su bandeja de entrada llegan enseguida."
+            : "Las notificaciones push esperan durante este intervalo y llegan cuando termina."
+          : inbox
+            ? "Sin notificaciones push durante este intervalo. Aun así, llegan a su bandeja de entrada."
+            : "Sin notificaciones push durante este intervalo.",
+      quietZone: (zone) => `En su zona horaria (${zone}), que sigue al último dispositivo que usó.`,
       quietFrom: "Desde",
       quietUntil: "Hasta",
       quietIncomplete:
@@ -1226,6 +1238,19 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `Quitar ${device}`,
       removePrompt: "¿Dejar de enviar notificaciones a este dispositivo?",
+      deviceTypes: "Tipos en este dispositivo",
+      deviceTypesDescription: "Desactive un tipo para silenciarlo solo en este dispositivo.",
+      deviceTypesEmpty: "Ningún tipo tiene las notificaciones push activadas.",
+      inboxTitle: "Bandeja de entrada",
+      inboxLoading: "Cargando notificaciones…",
+      inboxEmpty: "Está al día.",
+      markAllRead: "Marcar todo como leído",
+      clearAll: "Borrar todo",
+      clearPrompt: "¿Eliminar todas las notificaciones de su bandeja de entrada?",
+      showMore: "Mostrar más",
+      bellLabel: "Notificaciones",
+      bellUnread: (count) => `${n(count)} sin leer`,
+      allNotifications: "Todas las notificaciones",
       unsubscribeTitle: "Notificaciones por correo electrónico",
       unsubscribeAbout: (type) => `Recibe correos sobre: ${type}.`,
       unsubscribeGeneric: "Recibe correos de notificación.",
@@ -1562,6 +1587,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       approve: "Aprobar",
       flag: "Requiere cambios",
       suggest: "Proponer traducción",
+      flagRow: "Marcar para cambiar…",
+      suggestRow: "Añadir una traducción…",
       reset: "Marcar como sin revisar",
       cancel: "Cancelar",
       approveSelected: "Aprobar la selección",
@@ -1815,6 +1842,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         "El contraste aumentado oscurece los textos tenues y las líneas, y engrosa los marcos de foco. «Sistema» sigue el ajuste de este dispositivo.",
       contrastModes: { system: "Sistema", standard: "Estándar", more: "Aumentado" },
       saveFailed: "No se ha podido guardar en su cuenta. En este dispositivo se aplica igualmente.",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "Formato de fecha",
+      dateFormatHelp:
+        "Cómo se escriben las fechas en toda la app. Independiente del idioma de la interfaz: puede leer la app en inglés y ver igualmente las fechas en formato alemán.",
+      dateFormatAuto: "Seguir el idioma",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Apariencia". "Restablecer", as a phone's own settings say it.
@@ -1873,6 +1905,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         invitationsPending: "Invitaciones pendientes",
         users: "Usuarios",
         usersNew: (count) => `${n(count)} ${plural(count, "nuevo", "nuevos")} en 7 días`,
+        awaitingVerdict: "Pendientes de veredicto",
+        awaitingVerdictHint: "Respondidos, a la espera de que usted o quien lo informó confirme la solución",
+        releasedForWork: "Listos para trabajar",
+        releasedForWorkHint: "Listos, con revisión solicitada o en curso",
       },
       overviewError: "No se pudo cargar el resumen.",
       retry: "Reintentar",

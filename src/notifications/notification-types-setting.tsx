@@ -10,6 +10,7 @@ import { Skeleton } from "../components/skeleton";
 import { Switch } from "../components/switch";
 import { SectionLabel } from "../components/text";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { CARD_DESCRIPTION_CLASS } from "../settings/settings-card-classes";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { settle, useMounted } from "../account/account-parts";
@@ -18,6 +19,7 @@ import type { WriteOverlay } from "./notification-parts";
 import type { NotificationsLabels } from "./notifications-labels";
 import type {
   DigestCadence,
+  NotificationChannel,
   NotificationSettingsPatch,
   NotificationSwitches,
   NotificationTypeEntry,
@@ -73,15 +75,33 @@ interface Row<Id extends string> {
 }
 
 /** A switch's key in the write overlay. */
-const switchKey = (id: string, channel: "app" | "email") => `${id}.${channel}`;
+const switchKey = (id: string, channel: NotificationChannel) => `${id}.${channel}`;
 const CADENCE_KEY = "digest_cadence";
+
+/** The grid of a several-channel row on a wide screen: the type's words, then one narrow
+ *  column per channel drawn. Literal classes, so Tailwind's scan finds them. */
+const COLUMN_GRID: Record<number, string> = {
+  1: "grid-cols-[minmax(0,1fr)_4.5rem]",
+  2: "grid-cols-[minmax(0,1fr)_repeat(2,4.5rem)]",
+  3: "grid-cols-[minmax(0,1fr)_repeat(3,4.5rem)]",
+};
+
+/** The channels in the card's column order (§10.2). */
+const CHANNELS: readonly NotificationChannel[] = ["app", "push", "email"];
+
+/** The channels a type offers: every one the server did not answer `null` (or leave out,
+ *  as `push` before server-kit 0.16). */
+const channelsOf = (switches: NotificationSwitches): NotificationChannel[] =>
+  CHANNELS.filter((channel) => switches[channel] !== null && switches[channel] !== undefined);
 
 /**
  * What the person hears about, and how (docs/notifications-harmonization.md §2.1–§2.3,
- * §4.2): one row per type the SERVER answered, the app's words on it, a switch for "in
- * the app" and "By e-mail" under it where the type offers mail. Where the app has no
- * "in the app" channel (Kurvenschmiede), the e-mail switch is the row's own, with the
- * type's label.
+ * §4.2, §10.2): one row per type the SERVER answered, the app's words on it, and a switch
+ * per channel the type offers — "In the app", "Push", "E-mail". On a wide screen they are
+ * narrow columns under those headings; on a phone they stack under the type's label. A
+ * channel the server answers `null` is not drawn (kastlan and KS offer no push; KS no
+ * "in the app"), and a row with one channel keeps a single switch named by the type
+ * (Kurvenschmiede's e-mail-only rows).
  *
  * **The server's list is the only list.** The card keeps no defaults and no list of
  * types: it draws what `value` holds, in the order of `groups`, else of `types`. A type
@@ -140,23 +160,24 @@ export function NotificationTypesSetting<Id extends string = string>({
     }
   }
 
+  const phone = usePhoneLayout();
   const rowOf = (id: Id): Row<Id> | null => {
     const switches = value?.[id];
     const entry = entries.get(id);
-    if (!switches || !entry || (switches.app === null && switches.email === null)) return null;
+    if (!switches || !entry || channelsOf(switches).length === 0) return null;
     return { entry, switches };
   };
   const rowsOf = (ids: readonly Id[]) => ids.map(rowOf).filter((row): row is Row<Id> => row !== null);
 
-  const shown = (id: string, channel: "app" | "email", server: boolean): boolean => {
+  const shown = (id: string, channel: NotificationChannel, server: boolean): boolean => {
     const key = switchKey(id, channel);
     return overlay.get(key) ?? server;
   };
-  /** The row's own switch: `app`, or `email` where the app has no `app` channel. */
-  const rowOn = ({ entry, switches }: Row<Id>) =>
-    switches.app !== null
-      ? shown(entry.id, "app", switches.app)
-      : shown(entry.id, "email", switches.email === true);
+  const channelOn = ({ entry, switches }: Row<Id>, channel: NotificationChannel) =>
+    shown(entry.id, channel, switches[channel] === true);
+  /** The type reaches the person at all: some channel is on (the cadence and the app's
+   *  extra show then). */
+  const rowOn = (row: Row<Id>) => channelsOf(row.switches).some((channel) => channelOn(row, channel));
 
   const save = <V,>(key: string, patch: NotificationSettingsPatch<Id>, which: WriteOverlay<V>, next: V) => {
     if (which.pending(key)) return;
@@ -174,7 +195,7 @@ export function NotificationTypesSetting<Id extends string = string>({
     );
   };
 
-  const flip = (id: Id, channel: "app" | "email", on: boolean) =>
+  const flip = (id: Id, channel: NotificationChannel, on: boolean) =>
     save(
       switchKey(id, channel),
       { types: { [id]: { [channel]: on } } as NotificationSettingsPatch<Id>["types"] },
@@ -190,11 +211,33 @@ export function NotificationTypesSetting<Id extends string = string>({
     </span>
   ) : null;
 
+  const channelLabel: Record<NotificationChannel, string> = {
+    app: labels.channelApp,
+    push: labels.channelPush,
+    email: labels.channelEmail,
+  };
+  /** The columns on a wide screen: every channel some several-channel row offers. */
+  const drawnRows = value && !loading ? rowsOf(groups ? groups.flatMap((group) => group.types) : types.map((entry) => entry.id)) : [];
+  const multi = drawnRows.filter((row) => channelsOf(row.switches).length > 1);
+  const columns = CHANNELS.filter((channel) => multi.some((row) => channelsOf(row.switches).includes(channel)));
+  const columnHeadings =
+    !phone && columns.length > 0 ? (
+      // The switches carry the channel's name themselves; the headings are for the eye.
+      <div aria-hidden className={cn("grid gap-x-2", COLUMN_GRID[columns.length])} data-channel-headings="">
+        <span />
+        {columns.map((channel) => (
+          <span key={channel} className="text-center text-caption font-medium text-muted">
+            {channelLabel[channel]}
+          </span>
+        ))}
+      </div>
+    ) : null;
+
   const renderRow = (row: Row<Id>) => {
     const { entry, switches } = row;
     const on = rowOn(row);
-    const emailOnly = switches.app === null;
-    const both = !emailOnly && switches.email !== null;
+    const offered = channelsOf(switches);
+    const single = offered.length === 1 ? offered[0] : null;
     const cadenceSelect =
       on && digest?.type === entry.id && cadence ? (
         <Select
@@ -213,52 +256,99 @@ export function NotificationTypesSetting<Id extends string = string>({
         </Select>
       ) : null;
     const extra = on ? renderExtra?.(entry.id) : null;
-    const description =
-      emailOnly && unverifiedLine ? (
-        <>
-          {entry.description !== undefined && <span className="block">{entry.description}</span>}
-          {unverifiedLine}
-        </>
-      ) : (
-        entry.description
+    const below =
+      cadenceSelect || hasContent(extra) ? (
+        <div className="ps-4 space-y-2">
+          {cadenceSelect}
+          {extra}
+        </div>
+      ) : null;
+
+    // One channel: today's single switch, named by the type (KS's e-mail-only rows).
+    if (single) {
+      const description =
+        single === "email" && unverifiedLine ? (
+          <>
+            {entry.description !== undefined && <span className="block">{entry.description}</span>}
+            {unverifiedLine}
+          </>
+        ) : (
+          entry.description
+        );
+      return (
+        <div key={entry.id} data-notification-type={entry.id} data-channels={single} className="space-y-2">
+          <Switch
+            label={entry.label}
+            description={description}
+            checked={channelOn(row, single)}
+            disabled={disabled}
+            commit={COMMIT_EXCEPT_BILLING}
+            onCheckedChange={(next) => flip(entry.id, single, next)}
+          />
+          {below}
+        </div>
       );
+    }
+
+    // Several channels: a group named by its type, a switch per channel — columns on a
+    // wide screen (the headings above the list name them), stacked on a phone.
+    const labelId = `${groupId}-type-${entry.id}`;
+    const unverifiedId = `${groupId}-unverified-${entry.id}`;
+    const channelSwitch = (channel: NotificationChannel) => (
+      <Switch
+        key={channel}
+        size="sm"
+        label={phone ? channelLabel[channel] : undefined}
+        aria-label={phone ? undefined : channelLabel[channel]}
+        description={phone && channel === "email" ? (unverifiedLine ?? undefined) : undefined}
+        aria-describedby={!phone && channel === "email" && unverifiedLine ? unverifiedId : undefined}
+        checked={channelOn(row, channel)}
+        disabled={disabled}
+        commit={COMMIT_EXCEPT_BILLING}
+        onCheckedChange={(next) => flip(entry.id, channel, next)}
+        data-channel={channel}
+      />
+    );
+    const text = (
+      <div className="min-w-0">
+        <div id={labelId} className="text-sm font-medium text-primary">
+          {entry.label}
+        </div>
+        {(entry.description !== undefined || (!phone && offered.includes("email") && unverifiedLine)) && (
+          <div className={CARD_DESCRIPTION_CLASS}>
+            {entry.description !== undefined && <span className="block">{entry.description}</span>}
+            {!phone && offered.includes("email") && <span id={unverifiedId}>{unverifiedLine}</span>}
+          </div>
+        )}
+      </div>
+    );
     return (
       <div
         key={entry.id}
         data-notification-type={entry.id}
-        // A row with two switches is a group named by its type, so "By e-mail" is heard
-        // with the type it belongs to.
-        role={both ? "group" : undefined}
-        aria-label={both ? entry.label : undefined}
+        data-channels={offered.join(" ")}
+        role="group"
+        aria-labelledby={labelId}
         className="space-y-2"
       >
-        <Switch
-          label={entry.label}
-          description={description}
-          checked={on}
-          disabled={disabled}
-          commit={COMMIT_EXCEPT_BILLING}
-          onCheckedChange={(next) => flip(entry.id, emailOnly ? "email" : "app", next)}
-        />
-        {both && (
-          <div className="ps-4">
-            <Switch
-              size="sm"
-              label={labels.byEmail}
-              description={unverifiedLine ?? undefined}
-              checked={shown(entry.id, "email", switches.email === true)}
-              disabled={disabled}
-              commit={COMMIT_EXCEPT_BILLING}
-              onCheckedChange={(next) => flip(entry.id, "email", next)}
-            />
+        {phone ? (
+          <>
+            {text}
+            <div className="ps-4 space-y-2" data-stacked="">
+              {offered.map(channelSwitch)}
+            </div>
+          </>
+        ) : (
+          <div className={cn("grid items-start gap-x-2", COLUMN_GRID[columns.length])}>
+            {text}
+            {columns.map((channel) => (
+              <div key={channel} className="flex justify-center pt-0.5">
+                {offered.includes(channel) ? channelSwitch(channel) : null}
+              </div>
+            ))}
           </div>
         )}
-        {(cadenceSelect || hasContent(extra)) && (
-          <div className="ps-4 space-y-2">
-            {cadenceSelect}
-            {extra}
-          </div>
-        )}
+        {below}
       </div>
     );
   };
@@ -274,7 +364,9 @@ export function NotificationTypesSetting<Id extends string = string>({
       drawn.length === 0 ? (
         <p className={CARD_DESCRIPTION_CLASS}>{labels.typesEmpty}</p>
       ) : (
-        drawn.map(({ group, rows }) => {
+        <>
+        {columnHeadings}
+        {drawn.map(({ group, rows }) => {
           const headingId = `${groupId}-${group.id}`;
           return (
             <div key={group.id} role="group" aria-labelledby={headingId} className="space-y-3">
@@ -284,7 +376,8 @@ export function NotificationTypesSetting<Id extends string = string>({
               {rows.map(renderRow)}
             </div>
           );
-        })
+        })}
+        </>
       );
   } else {
     const rows = rowsOf(types.map((entry) => entry.id));
@@ -292,7 +385,10 @@ export function NotificationTypesSetting<Id extends string = string>({
       rows.length === 0 ? (
         <p className={CARD_DESCRIPTION_CLASS}>{labels.typesEmpty}</p>
       ) : (
-        <div className="space-y-3">{rows.map(renderRow)}</div>
+        <div className="space-y-3">
+          {columnHeadings}
+          {rows.map(renderRow)}
+        </div>
       );
   }
 

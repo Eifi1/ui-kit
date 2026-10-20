@@ -86,8 +86,18 @@ export function AttentionTile({ count, href, ...tile }: AttentionTileProps) {
   return <StatTile data-slot="attention-tile" {...tile} value={count ?? null} href={href} />;
 }
 
+/**
+ * 0.46 (Kurvenschmiede 1, admin §9.5): the `extra` keys server-kit's
+ * `feedback_attention` fills, whose tiles have the kit's words
+ * (`adminArea.tiles.awaitingVerdict`, `releasedForWork`, with a line each).
+ */
+export type AdminFeedbackTileKey = "awaiting_verdict" | "released_for_work";
+
 /** One of the app's own tiles (§2.4 decision 13: keksdose's "Support waiting"). */
-export interface AdminExtraTile {
+export type AdminExtraTile = AdminOwnTile | AdminFeedbackTile;
+
+/** A tile of the app's own: it brings its words. */
+export interface AdminOwnTile {
   /** Unique among the tiles; usually the `extra` key it shows. */
   key: string;
   label: ReactNode;
@@ -98,6 +108,14 @@ export interface AdminExtraTile {
   href?: string;
   /** A line under the count. */
   description?: ReactNode;
+}
+
+/** 0.46: a tile of server-kit's feedback counts — `label` and `description` default to
+ *  the kit's words; an app's own still win. The kit's `description` fills in only when
+ *  `label` is left out too: an app that names the tile gets no hint line it did not ask for. */
+export interface AdminFeedbackTile extends Omit<AdminOwnTile, "key" | "label"> {
+  key: AdminFeedbackTileKey;
+  label?: ReactNode;
 }
 
 export interface AdminOverviewProps {
@@ -186,9 +204,26 @@ export function AdminOverview({
         attention && typeof attention.users_new_7d === "number" ? labels.tiles.usersNew(attention.users_new_7d) : undefined,
     },
   ];
+  const feedbackWords: Record<AdminFeedbackTileKey, { label: string; description: string }> = {
+    awaiting_verdict: { label: labels.tiles.awaitingVerdict, description: labels.tiles.awaitingVerdictHint },
+    released_for_work: { label: labels.tiles.releasedForWork, description: labels.tiles.releasedForWorkHint },
+  };
   const tiles = [
     ...shared.map((t) => ({ ...t, count: attention ? attention[t.key] : undefined, href: href[t.key] })),
-    ...extraTiles,
+    ...extraTiles.map((t) => {
+      const words = Object.prototype.hasOwnProperty.call(feedbackWords, t.key)
+        ? feedbackWords[t.key as AdminFeedbackTileKey]
+        : undefined;
+      // The kit's hint comes with the kit's label only: an app that names the tile
+      // itself gets no line it did not ask for (keksdose S5, round 0.46).
+      return words
+        ? {
+            ...t,
+            label: t.label ?? words.label,
+            description: t.description ?? (t.label === undefined ? words.description : undefined),
+          }
+        : t;
+    }),
   ].filter((t) => loading || (t.count !== null && t.count !== undefined));
   if (!loading && tiles.length === 0) return error ? errorBox(true) : null;
   const grid = (

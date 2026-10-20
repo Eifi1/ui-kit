@@ -13,7 +13,7 @@ import {
  * because two apps declare them; the card draws a type only when the server answered it.
  */
 describe("useFeedbackNotificationTypes", () => {
-  it("returns feedback_answered and feedback_comment with their words and a line each", () => {
+  it("returns feedback_answered, feedback_comment and feedback_received with their words and a line each", () => {
     const { result } = renderHook(() => useFeedbackNotificationTypes());
     expect(result.current).toEqual([
       {
@@ -25,6 +25,11 @@ describe("useFeedbackNotificationTypes", () => {
         id: "feedback_comment",
         label: "Comments on reports you follow",
         description: "When someone comments on a report you wrote or commented on.",
+      },
+      {
+        id: "feedback_received",
+        label: "New feedback and reworks",
+        description: "When someone files a report or sends one back.",
       },
     ]);
   });
@@ -40,7 +45,11 @@ describe("useFeedbackNotificationTypes", () => {
     const wrapper = ({ children }: { children: ReactNode }) =>
       createElement(UiKitProvider, { labels: UI_KIT_LABELS_DE_CH, children });
     const { result } = renderHook(() => useFeedbackNotificationTypes({ comment: "Kommentare" }), { wrapper });
-    expect(result.current.map((entry) => entry.label)).toEqual(["Antworten auf Ihre Meldungen", "Kommentare"]);
+    expect(result.current.map((entry) => entry.label)).toEqual([
+      "Antworten auf Ihre Meldungen",
+      "Kommentare",
+      "Neue Rückmeldungen und Überarbeitungen",
+    ]);
   });
 
   it("has English defaults", () => {
@@ -49,6 +58,9 @@ describe("useFeedbackNotificationTypes", () => {
       "answeredDescription",
       "comment",
       "commentDescription",
+      "received",
+      "receivedDescription",
+      "adminGroup",
     ]);
   });
 });

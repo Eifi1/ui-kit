@@ -2,7 +2,7 @@
 // component code, as every `*-labels.ts`: the English catalogue imports them alone.
 
 /**
- * `feedbackNotificationTypes` — the setting words of the two feedback notification types
+ * `feedbackNotificationTypes` — the setting words of the feedback notification types
  * (docs/feedback-harmonization.md §9.11). In the kit, not in each app, because two apps
  * declare them (keksdose, Kurvenschmiede; kastlan `feedback_answered` alone). The mail and
  * push texts stay the app's.
@@ -14,6 +14,12 @@ export interface FeedbackNotificationTypesLabels {
   /** `feedback_comment`: a visible comment on such a report. */
   comment: string;
   commentDescription: string;
+  /** 0.46 (feedback §11): `feedback_received`, an admin's alert for a new report, a
+   *  rework and a new crash. */
+  received: string;
+  receivedDescription: string;
+  /** A heading the apps may put over the admin's types ("Admin"). */
+  adminGroup: string;
 }
 
 export const DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS: FeedbackNotificationTypesLabels = {
@@ -21,4 +27,7 @@ export const DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS: FeedbackNotificationTyp
   answeredDescription: "When a report you wrote or commented on gets an answer.",
   comment: "Comments on reports you follow",
   commentDescription: "When someone comments on a report you wrote or commented on.",
+  received: "New feedback and reworks",
+  receivedDescription: "When someone files a report or sends one back.",
+  adminGroup: "Admin",
 };

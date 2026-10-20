@@ -115,6 +115,7 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "measuredGrid.points",
       "measuredGrid.problems",
       "multiSelect.selectedCount",
+      "notifications.bellUnread",
       "notifications.failures",
       "notifications.testSent",
       "passwordStrength.ruleLength",

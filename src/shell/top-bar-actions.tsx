@@ -24,6 +24,10 @@ export interface TopBarActionsProps {
   dev?: ReactNode;
   /** kastlan's platform button. */
   platform?: ReactNode;
+  /** 0.46 (docs/notifications-harmonization.md §10.1): `NotificationBell`, right before the
+   *  account menu. Optional per app: an app shows the bell or an unread dot on the avatar,
+   *  never both (keksdose keeps its dot and leaves this empty). */
+  notifications?: ReactNode;
   /** The account menu. When it is set the signed-out slots are not drawn. */
   account?: ReactNode;
   /** Signed out (§6.6): the bar's `LanguageMenu`, since there is no account menu to hold
@@ -45,6 +49,7 @@ export const TOP_BAR_ACTION_ORDER = [
   "sync",
   "dev",
   "platform",
+  "notifications",
   "account",
   "language",
   "signIn",
@@ -55,7 +60,7 @@ const present = (node: ReactNode) => node !== undefined && node !== null && node
 /**
  * The top bar's actions in the one order every app shares (§2.1): company switcher ·
  * Search · Theme · Feedback · Tours (· Assistant) · Sync · dev role · dev plan · platform ·
- * account menu — and, signed out, Language · Sign in where the account menu goes (§6.6).
+ * notifications (the bell, 0.46) · account menu — and, signed out, Language · Sign in where the account menu goes (§6.6).
  * The app fills the slots it has; an empty slot is skipped, so it leaves no gap.
  *
  * It draws a fragment, no box of its own: hand it to `TopBar`'s `actions`, whose row

@@ -146,6 +146,12 @@ export const en: Dictionary = {
       blurb:
         "Working without a connection: the persisted query cache with its scrub list, the question before signing out while changes still wait, the update prompt that waits for a tour, and the shared-computer choice.",
     },
+    sync: {
+      title: "Sync engine",
+      short: "Sync",
+      blurb:
+        "Working on the device's copy: the sync engine with its queue, one request per scope, refused changes kept, the waits after an error and the guarded sign-out; its worker, its status for the indicator and the live read of the copy.",
+    },
     "auth-account": {
       title: "Sign-in & account security",
       short: "Auth",
@@ -474,7 +480,7 @@ export const en: Dictionary = {
       title: "Notifications",
       short: "Notifications",
       blurb:
-        "The notification settings every app shares: the types the server answers with a switch in the app and one by e-mail, quiet hours and the time zone, push on this device and the list of devices, and the page an e-mail's unsubscribe link opens.",
+        "The notification settings every app shares: the types the server answers with a switch per channel (in the app, push, e-mail), quiet hours and the account's time zone, the inbox and the top bar's bell, push on this device and the list of devices with the types each one mutes, and the page an e-mail's unsubscribe link opens.",
     },
     settings: {
       title: "Settings",
@@ -654,6 +660,14 @@ export const en: Dictionary = {
       "ask before signing out with unsynced changes",
       "a new version is available, reload",
       "this is a shared computer",
+    ],
+    sync: [
+      "sync changes made offline",
+      "queue writes on the device",
+      "retry a failed sync later",
+      "keep changes waiting for a plan",
+      "show the sync status",
+      "read the device's copy live",
     ],
     "auth-account": [
       "login page layout",
@@ -1157,19 +1171,19 @@ export const en: Dictionary = {
     ],
     notifications: [
       "notification settings",
-      "turn notifications on or off",
       "choose which notifications to get",
       "notify by e-mail",
       "quiet hours",
-      "do not disturb at night",
-      "pick a time zone",
       "push notifications on this device",
       "send a test notification",
       "list the devices that get notifications",
       "remove a device",
       "unsubscribe from e-mails",
-      "one-click unsubscribe link",
       "weekly or monthly digest",
+      "notification inbox",
+      "bell with unread notifications",
+      "set the account's time zone automatically",
+      "mute push on one device",
     ],
     settings: [
       "account settings",

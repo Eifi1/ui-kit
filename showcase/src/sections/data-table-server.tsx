@@ -375,6 +375,7 @@ function PhoneTable() {
     return {
       end: [
         {
+          id: "done",
           label: "Done",
           icon: <Check className="size-4" />,
           onCommit: () => setStatus(r, "done"),
@@ -383,6 +384,7 @@ function PhoneTable() {
       ],
       start: [
         {
+          id: "archive",
           label: "Archive",
           icon: <Archive className="size-4" />,
           onCommit: () => setStatus(r, "archived"),
@@ -476,7 +478,11 @@ function PhoneTable() {
           Archive — and with <em>right-to-left</em> ticked the same definition swipes left for
           Done and right for Archive (<code className="font-mono">left</code> /{" "}
           <code className="font-mono">right</code> still exist for a truly physical side).
-          Archived and expanded cards do not move. With the custom
+          Archived and expanded cards do not move. On a wide screen the same two actions are the
+          row&apos;s last column, derived from the same plan (<code className="font-mono">desktopSwipeActions</code>,
+          on by default since 0.46; <code className="font-mono">false</code> where the row has its own buttons,{" "}
+          <code className="font-mono">{"{ omit }"}</code> to leave one out by its{" "}
+          <code className="font-mono">id</code>). With the custom
           card unchecked you get the default body: the <code className="font-mono">mobilePrimary</code>{" "}
           column bold on top, the rest as labelled pairs, ID skipped by{" "}
           <code className="font-mono">mobileHidden</code>.

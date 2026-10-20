@@ -153,6 +153,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       answeredDescription: "Wenn eine Meldung, die Sie geschrieben oder kommentiert haben, eine Antwort erhält.",
       comment: "Kommentare zu Meldungen, denen Sie folgen",
       commentDescription: "Wenn jemand eine Meldung kommentiert, die Sie geschrieben oder kommentiert haben.",
+      received: "Neue Rückmeldungen und Überarbeitungen",
+      receivedDescription: "Wenn jemand eine Meldung erfasst oder eine zurückschickt.",
+      adminGroup: "Admin",
     },
     feedbackContext: {
       user: "Nutzer",
@@ -836,6 +839,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // Impersonal, like the rest of this catalogue where it can be: an app that
       // addresses its users with "du" then has fewer keys to override.
       reason: "Nur zum Ansehen – Änderungen sind hier nicht möglich.",
+      offline: "Nur mit Internetverbindung möglich.",
     },
     accountState: {
       active: "Aktiv",
@@ -1180,6 +1184,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       typesTitle: "Benachrichtigungen zu",
       typesDescription: "Wählen Sie, worüber Sie benachrichtigt werden, und wie.",
       byEmail: "Per E-Mail",
+      channelApp: "In der App",
+      channelPush: "Push",
+      channelEmail: "E-Mail",
       emailUnverified: "Bestätigen Sie Ihre Adresse, um diese zu erhalten.",
       digestCadence: "Häufigkeit",
       digestWeekly: "Wöchentlich",
@@ -1187,10 +1194,15 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       typesLoading: "Benachrichtigungseinstellungen werden geladen…",
       typesEmpty: "Für dieses Konto gibt es keine Benachrichtigungen.",
       quietTitle: "Ruhezeiten",
-      quietDescription: (inbox) =>
-        inbox
-          ? "In diesem Zeitfenster kommen keine Push-Benachrichtigungen. Im Posteingang kommen sie trotzdem an."
-          : "In diesem Zeitfenster kommen keine Push-Benachrichtigungen.",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "Push-Benachrichtigungen warten in diesem Zeitfenster und kommen, sobald es endet. Im Posteingang kommen sie sofort an."
+            : "Push-Benachrichtigungen warten in diesem Zeitfenster und kommen, sobald es endet."
+          : inbox
+            ? "In diesem Zeitfenster kommen keine Push-Benachrichtigungen. Im Posteingang kommen sie trotzdem an."
+            : "In diesem Zeitfenster kommen keine Push-Benachrichtigungen.",
+      quietZone: (zone) => `In Ihrer Zeitzone (${zone}), die sich nach dem zuletzt verwendeten Gerät richtet.`,
       quietFrom: "Von",
       quietUntil: "Bis",
       quietIncomplete: "Legen Sie eine Start- und eine Endzeit fest. Ruhezeiten gelten erst, wenn beide gesetzt sind.",
@@ -1256,6 +1268,19 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `Entfernen: ${device}`,
       removePrompt: "Keine Benachrichtigungen mehr an dieses Gerät senden?",
+      deviceTypes: "Arten auf diesem Gerät",
+      deviceTypesDescription: "Schalten Sie eine Art aus, um sie nur auf diesem Gerät stummzuschalten.",
+      deviceTypesEmpty: "Für keine Art sind Push-Benachrichtigungen eingeschaltet.",
+      inboxTitle: "Posteingang",
+      inboxLoading: "Benachrichtigungen werden geladen…",
+      inboxEmpty: "Alles gelesen – nichts Neues.",
+      markAllRead: "Alle als gelesen markieren",
+      clearAll: "Alle löschen",
+      clearPrompt: "Alle Benachrichtigungen aus Ihrem Posteingang löschen?",
+      showMore: "Mehr anzeigen",
+      bellLabel: "Benachrichtigungen",
+      bellUnread: (count) => `${n(count)} ungelesen`,
+      allNotifications: "Alle Benachrichtigungen",
       unsubscribeTitle: "E-Mail-Benachrichtigungen",
       unsubscribeAbout: (type) => `Sie erhalten E-Mails zu: ${type}.`,
       unsubscribeGeneric: "Sie erhalten Benachrichtigungs-E-Mails.",
@@ -1598,6 +1623,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       approve: "Bestätigen",
       flag: "Änderung nötig",
       suggest: "Übersetzung vorschlagen",
+      flagRow: "Zur Änderung markieren…",
+      suggestRow: "Übersetzung ergänzen…",
       reset: "Als ungeprüft markieren",
       cancel: "Abbrechen",
       approveSelected: "Auswahl bestätigen",
@@ -1874,6 +1901,11 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Mehr Kontrast macht dezente Texte und Linien dunkler und Fokusrahmen dicker. „System“ richtet sich nach diesem Gerät.",
       contrastModes: { system: "System", standard: "Standard", more: "Mehr" },
       saveFailed: "Konnte nicht in Ihrem Konto gespeichert werden. Auf diesem Gerät gilt es trotzdem.",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "Datumsformat",
+      dateFormatHelp:
+        "Wie Datumsangaben in der ganzen App geschrieben werden. Unabhängig von der Oberflächensprache — Sie können die App also auf Englisch lesen und trotzdem deutsche Datumsangaben sehen.",
+      dateFormatAuto: "Der Sprache folgen",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Darstellung". "Theme", as `topBar.theme`; "Bereiche" for the panels
@@ -1933,6 +1965,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         invitationsPending: "Offene Einladungen",
         users: "Benutzer",
         usersNew: (count) => `${n(count)} neu in 7 Tagen`,
+        awaitingVerdict: "Warten auf ein Urteil",
+        awaitingVerdictHint: "Beantwortet; Sie oder die meldende Person bestätigen die Lösung",
+        releasedForWork: "Zur Umsetzung freigegeben",
+        releasedForWorkHint: "Bereit, Nacharbeit angefordert oder in Arbeit",
       },
       overviewError: "Die Übersicht konnte nicht geladen werden.",
       retry: "Erneut versuchen",

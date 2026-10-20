@@ -138,6 +138,12 @@ export const fr: Dictionary = {
       blurb:
         "Travailler sans connexion : le cache de requêtes conservé avec sa liste d’effacement, la question avant de se déconnecter tant que des modifications attendent, l’invite de mise à jour qui attend la fin d’une visite, et le choix « ordinateur partagé ».",
     },
+    sync: {
+      title: "Moteur de synchronisation",
+      short: "Sync",
+      blurb:
+        "Travailler sur la copie de l’appareil : le moteur de synchronisation et sa file d’attente, une requête par périmètre, les modifications refusées conservées, les délais après une erreur et la déconnexion protégée ; son worker, son état pour l’indicateur et la lecture en direct de la copie.",
+    },
     "auth-account": {
       title: "Connexion et sécurité du compte",
       short: "Connexion",
@@ -470,7 +476,7 @@ export const fr: Dictionary = {
       title: "Notifications",
       short: "Notifications",
       blurb:
-        "Les réglages de notification que toutes les apps partagent\u00a0: les types que le serveur renvoie, avec un interrupteur dans l’app et un par e-mail, les heures calmes et le fuseau horaire, le push sur cet appareil et la liste des appareils, et la page qu’ouvre le lien de désabonnement d’un e-mail.",
+        "Les réglages de notification que toutes les apps partagent\u00a0: les types que le serveur renvoie, avec un interrupteur par canal (dans l’app, push, e-mail), les heures calmes et le fuseau horaire du compte, la boîte de réception et la cloche de la barre du haut, le push sur cet appareil et la liste des appareils avec les types que chacun met en sourdine, et la page qu’ouvre le lien de désabonnement d’un e-mail.",
     },
     settings: {
       title: "Paramètres",
@@ -651,6 +657,14 @@ export const fr: Dictionary = {
       "demander avant de se déconnecter avec des modifications non synchronisées",
       "une nouvelle version est disponible, recharger",
       "c’est un ordinateur partagé",
+    ],
+    sync: [
+      "synchroniser les modifications faites hors ligne",
+      "mettre des écritures en file sur l’appareil",
+      "réessayer plus tard une synchronisation échouée",
+      "garder des modifications en attente d’un forfait",
+      "afficher l’état de la synchronisation",
+      "lire en direct la copie de l’appareil",
     ],
     "auth-account": [
       "mise en page de la connexion",
@@ -1154,19 +1168,19 @@ export const fr: Dictionary = {
     ],
     notifications: [
       "paramètres de notification",
-      "activer ou désactiver les notifications",
       "choisir les notifications à recevoir",
       "notifier par e-mail",
       "heures calmes",
-      "ne pas déranger la nuit",
-      "choisir un fuseau horaire",
       "notifications push sur cet appareil",
       "envoyer une notification de test",
       "lister les appareils qui reçoivent des notifications",
       "retirer un appareil",
       "se désabonner des e-mails",
-      "lien de désabonnement en un clic",
       "résumé hebdomadaire ou mensuel",
+      "boîte de réception des notifications",
+      "cloche des notifications non lues",
+      "fuseau horaire du compte automatique",
+      "couper le push sur un appareil",
     ],
     settings: [
       "paramètres du compte",

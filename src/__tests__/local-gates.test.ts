@@ -146,6 +146,10 @@ describe(".husky/pre-push (TST-2)", () => {
       join(dir, "scripts", "check-dependencies.mjs"),
       'import { appendFileSync } from "node:fs";\nappendFileSync(process.env.DEPS_LOG, "deps\\n");\nprocess.exit(Number(process.env.DEPS_EXIT ?? 0));\n',
     );
+    // The shared commit rules the hook runs for a stamped tree: the vendored copies themselves.
+    for (const name of ["check-pushed-commits.cjs", "check-commit-msg.cjs"]) {
+      writeFileSync(join(dir, "scripts", name), readFileSync(join(ROOT, "scripts", name)));
+    }
     return { dir, head: git(dir, "rev-parse", "HEAD"), tree: git(dir, "rev-parse", "HEAD^{tree}") };
   }
 
@@ -223,8 +227,23 @@ describe(".husky/pre-push (TST-2)", () => {
     expect(reworded).not.toBe(head);
     const result = push(dir, `refs/heads/main ${reworded} refs/heads/main ${head}\n`);
     expect(result.status).toBe(0);
-    expect(result.npm).toEqual([`npm run -s check:commits HEAD_SHA=${reworded}`]);
+    // The shared scripts/check-pushed-commits.cjs checks every commit the push sends (0.46),
+    // not npm's check:commits per tip (the range to origin/main, which a scratch repo lacks).
+    expect(result.npm).toEqual([]);
     expect(result.out).toMatch(/already passed/);
+  });
+
+  it("refuses a stamped push whose reworded message breaks the shared rules, naming the commit (0.46)", () => {
+    const { dir, head, tree } = repo();
+    mkdirSync(join(dir, "node_modules/.cache/check"), { recursive: true });
+    writeFileSync(join(dir, "node_modules/.cache/check", tree), "stamp\n");
+    git(dir, "commit", "-q", "--amend", "--no-verify", "-m", "reworded without a type");
+    const reworded = git(dir, "rev-parse", "HEAD");
+    const result = push(dir, `refs/heads/main ${reworded} refs/heads/main ${head}\n`);
+    expect(result.status).not.toBe(0);
+    expect(result.npm).toEqual([]);
+    expect(result.out).toContain(reworded.slice(0, 8));
+    expect(result.out).toMatch(/reworded without a type/);
   });
 
   it("runs the full check when any pushed tip's tree has no stamp", () => {

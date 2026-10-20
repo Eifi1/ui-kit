@@ -52,6 +52,11 @@ export interface TranslationReviewLabels {
   flag: string;
   /** "Needs a change" for a MISSING string: the suggestion is the translation to add. */
   suggest: string;
+  /** 0.46 (keksdose B2/S3): the desktop row's button that OPENS the editor to send a
+   *  string back — its own name, apart from the editor's `flag`, which saves. */
+  flagRow: string;
+  /** The same for a MISSING string: opens the editor to add the translation. */
+  suggestRow: string;
   /** Clear a verdict: back to unreviewed. */
   reset: string;
   /** The editor's way out without saving. */
@@ -126,6 +131,8 @@ export const DEFAULT_TRANSLATION_REVIEW_LABELS: TranslationReviewLabels = {
   approve: "Approve",
   flag: "Needs a change",
   suggest: "Suggest translation",
+  flagRow: "Flag for a change…",
+  suggestRow: "Add a translation…",
   reset: "Mark unreviewed",
   cancel: "Cancel",
   approveSelected: "Approve selected",

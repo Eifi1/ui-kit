@@ -142,6 +142,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       answeredDescription: "Quand un retour que vous avez écrit ou commenté reçoit une réponse.",
       comment: "Commentaires sur les retours que vous suivez",
       commentDescription: "Quand quelqu’un commente un retour que vous avez écrit ou commenté.",
+      received: "Nouveaux retours et reprises",
+      receivedDescription: "Quand quelqu’un dépose un retour ou en renvoie un.",
+      adminGroup: "Admin",
     },
     feedbackContext: {
       user: "Utilisateur",
@@ -832,6 +835,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     writeLock: {
       reason: "Vous pouvez consulter ceci, mais pas le modifier.",
+      offline: "Nécessite une connexion.",
     },
     accountState: {
       // Agreeing with "compte" (masculine): the chip is the state of an account.
@@ -1182,6 +1186,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       typesTitle: "Me notifier pour",
       typesDescription: "Choisissez ce dont vous êtes averti, et comment.",
       byEmail: "Par e-mail",
+      channelApp: "Dans l’app",
+      channelPush: "Push",
+      channelEmail: "E-mail",
       emailUnverified: "Confirmez votre adresse pour les recevoir.",
       digestCadence: "Fréquence",
       digestWeekly: "Hebdomadaire",
@@ -1189,10 +1196,15 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       typesLoading: "Chargement des paramètres de notification…",
       typesEmpty: "Il n’y a aucune notification pour ce compte.",
       quietTitle: "Heures calmes",
-      quietDescription: (inbox) =>
-        inbox
-          ? "Aucune notification push pendant cette plage. Elles arrivent quand même dans votre boîte de réception."
-          : "Aucune notification push pendant cette plage.",
+      quietDescription: (inbox, held) =>
+        held
+          ? inbox
+            ? "Les notifications push attendent pendant cette plage et arrivent à sa fin. Elles arrivent tout de suite dans votre boîte de réception."
+            : "Les notifications push attendent pendant cette plage et arrivent à sa fin."
+          : inbox
+            ? "Aucune notification push pendant cette plage. Elles arrivent quand même dans votre boîte de réception."
+            : "Aucune notification push pendant cette plage.",
+      quietZone: (zone) => `Dans votre fuseau horaire (${zone}), qui suit le dernier appareil utilisé.`,
       quietFrom: "De",
       quietUntil: "Jusqu’à",
       quietIncomplete:
@@ -1253,6 +1265,19 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       // Starts with `remove`, the button's visible text, for voice control.
       removeItem: (device) => `Retirer ${device}`,
       removePrompt: "Ne plus envoyer de notifications à cet appareil\u202f?",
+      deviceTypes: "Types sur cet appareil",
+      deviceTypesDescription: "Désactivez un type pour le mettre en sourdine sur cet appareil seulement.",
+      deviceTypesEmpty: "Aucun type n’a les notifications push activées.",
+      inboxTitle: "Boîte de réception",
+      inboxLoading: "Chargement des notifications…",
+      inboxEmpty: "Vous êtes à jour.",
+      markAllRead: "Tout marquer comme lu",
+      clearAll: "Tout effacer",
+      clearPrompt: "Supprimer toutes les notifications de votre boîte de réception\u202f?",
+      showMore: "Afficher plus",
+      bellLabel: "Notifications",
+      bellUnread: (count) => (count === 1 ? `${n(count)} non lue` : `${n(count)} non lues`),
+      allNotifications: "Toutes les notifications",
       unsubscribeTitle: "Notifications par e-mail",
       unsubscribeAbout: (type) => `Vous recevez des e-mails concernant\u00a0: ${type}.`,
       unsubscribeGeneric: "Vous recevez des e-mails de notification.",
@@ -1591,6 +1616,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       approve: "Approuver",
       flag: "À modifier",
       suggest: "Proposer une traduction",
+      flagRow: "Signaler une modification…",
+      suggestRow: "Ajouter une traduction…",
       reset: "Marquer comme non relu",
       cancel: "Annuler",
       approveSelected: "Approuver la sélection",
@@ -1855,6 +1882,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         "Le contraste renforcé assombrit les textes discrets et les lignes, et épaissit les contours de focus. «\u202fSystème\u202f» suit le réglage de cet appareil.",
       contrastModes: { system: "Système", standard: "Standard", more: "Renforcé" },
       saveFailed: "Impossible de l’enregistrer dans votre compte. Le réglage s’applique tout de même sur cet appareil.",
+      // 0.46: DateFormatSetting (keksdose's words where it has them).
+      dateFormat: "Format de date",
+      dateFormatHelp:
+        "Comment les dates sont écrites dans toute l’app. Indépendant de la langue de l’interface, vous pouvez donc lire l’app en anglais et voir quand même des dates à la française.",
+      dateFormatAuto: "Suivre la langue",
     },
     // 0.36.0 — docs/settings-harmonization.md §11.3: resetting this device's settings, the
     // last card of "Apparence". "Réglages", as `contrastHelp` says "réglage".
@@ -1912,6 +1944,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         invitationsPending: "Invitations en attente",
         users: "Utilisateurs",
         usersNew: (count) => `${n(count)} ${plural(count, "nouveau", "nouveaux")} en 7 jours`,
+        awaitingVerdict: "En attente d’un verdict",
+        awaitingVerdictHint: "Traités, en attente de votre confirmation ou de celle de la personne qui les a signalés",
+        releasedForWork: "Prêts à traiter",
+        releasedForWorkHint: "Prêts, reprise demandée ou en cours",
       },
       overviewError: "La vue d’ensemble n’a pas pu être chargée.",
       retry: "Réessayer",

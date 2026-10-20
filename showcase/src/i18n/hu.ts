@@ -141,6 +141,12 @@ export const hu: Dictionary = {
       blurb:
         "Munka kapcsolat nélkül: a mentett lekérdezés-gyorsítótár a törlendő mezők listájával, a kérdés kijelentkezés előtt, amíg módosítások várnak, a frissítési értesítés, amely kivárja egy bemutató végét, és a „közös használatú számítógép” választás.",
     },
+    sync: {
+      title: "Szinkronizáló motor",
+      short: "Szinkron",
+      blurb:
+        "Munka az eszköz másolatán: a szinkronizáló motor a várólistájával, hatókörönként egy kérés, a megmaradó elutasított módosítások, a hiba utáni várakozások és a védett kijelentkezés; a worker, az állapot a jelzőhöz és a másolat élő olvasása.",
+    },
     "auth-account": {
       title: "Bejelentkezés és fiókbiztonság",
       short: "Belépés",
@@ -473,7 +479,7 @@ export const hu: Dictionary = {
       title: "Értesítések",
       short: "Értesítések",
       blurb:
-        "Az értesítési beállítások, amelyeken minden alkalmazás osztozik: a szerver által visszaadott típusok egy alkalmazáson belüli és egy e-mailes kapcsolóval, a csendes órák és az időzóna, a push ezen az eszközön és az eszközök listája, valamint az oldal, amelyet egy e-mail leiratkozási linkje megnyit.",
+        "Az értesítési beállítások, amelyeken minden alkalmazás osztozik: a szerver által visszaadott típusok csatornánként egy kapcsolóval (az alkalmazásban, push, e-mail), a csendes órák és a fiók időzónája, a beérkezett értesítések és a felső sáv csengője, a push ezen az eszközön és az eszközök listája az általuk némított típusokkal, valamint az oldal, amelyet egy e-mail leiratkozási linkje megnyit.",
     },
     settings: {
       title: "Beállítások",
@@ -654,6 +660,14 @@ export const hu: Dictionary = {
       "kérdezzen kijelentkezés előtt szinkronizálatlan módosításoknál",
       "új verzió érhető el, újratöltés",
       "ez egy közös használatú számítógép",
+    ],
+    sync: [
+      "offline végzett módosítások szinkronizálása",
+      "írások sorba állítása az eszközön",
+      "sikertelen szinkronizálás későbbi újrapróbálása",
+      "módosítások megtartása egy előfizetésig",
+      "a szinkronizálás állapotának megjelenítése",
+      "az eszköz másolatának élő olvasása",
     ],
     "auth-account": [
       "bejelentkező oldal elrendezése",
@@ -1157,19 +1171,19 @@ export const hu: Dictionary = {
     ],
     notifications: [
       "értesítési beállítások",
-      "értesítések be- és kikapcsolása",
       "milyen értesítéseket kapjak",
       "értesítés e-mailben",
       "csendes órák",
-      "éjjel ne zavarjon",
-      "időzóna kiválasztása",
       "push-értesítések ezen az eszközön",
       "tesztértesítés küldése",
       "értesítést kapó eszközök listája",
       "eszköz eltávolítása",
       "leiratkozás az e-mailekről",
-      "egykattintásos leiratkozási link",
       "heti vagy havi összefoglaló",
+      "beérkezett értesítések",
+      "csengő az olvasatlan értesítésekkel",
+      "a fiók időzónája automatikusan",
+      "push némítása egy eszközön",
     ],
     settings: [
       "fiókbeállítások",

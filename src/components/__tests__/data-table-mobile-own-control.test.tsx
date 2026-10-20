@@ -157,3 +157,60 @@ describe("a control inside a phone card (keksdose live #428)", () => {
     expect(pressed()).toHaveLength(2);
   });
 });
+
+/**
+ * 0.45 note (UM): RowLink cancelled every plain left click inside a linked card in the
+ * capture phase — on a native checkbox that `preventDefault` undoes the toggle. A form
+ * field is its own activation target (the link is not followed from it), so its click
+ * keeps its default; buttons and the card itself are cancelled as before.
+ */
+describe("a native form field inside a linked phone card (rowHref)", () => {
+  const done = vi.fn();
+  const FIELD_COLUMNS: DataTableColumn<Row>[] = [
+    { key: "name", header: "Name", cell: (r) => r.name },
+    {
+      key: "done",
+      header: "Done",
+      cell: (r) => <input type="checkbox" aria-label={`Done ${r.name}`} onChange={(e) => done(r.id, e.target.checked)} />,
+    },
+    {
+      key: "flag",
+      header: "Flag",
+      cell: (r) => (
+        <label>
+          <input type="checkbox" />
+          Flag {r.name}
+        </label>
+      ),
+    },
+  ];
+
+  it("toggles a checkbox, directly and through its label, and does not open the row", () => {
+    stubPhone();
+    const onRowClick = vi.fn();
+    render(
+      <MemoryRouter>
+        <DataTable
+          rows={ROWS}
+          columns={FIELD_COLUMNS}
+          rowKey={(r) => r.id}
+          onRowClick={onRowClick}
+          rowHref={(r) => `/rows/${r.id}`}
+        />
+      </MemoryRouter>,
+    );
+    const box = screen.getByRole("checkbox", { name: "Done Alpha" }) as HTMLInputElement;
+    fireEvent.click(box);
+    expect(box.checked).toBe(true);
+    expect(done).toHaveBeenCalledWith(1, true);
+    const flag = screen.getByRole("checkbox", { name: "Flag Bravo" }) as HTMLInputElement;
+    fireEvent.click(screen.getByText("Flag Bravo"));
+    expect(flag.checked).toBe(true);
+    expect(onRowClick).not.toHaveBeenCalled();
+    // The card's own click is still cancelled and opens the row.
+    const plain = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 });
+    screen.getByText("Alpha").dispatchEvent(plain);
+    expect(plain.defaultPrevented).toBe(true);
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+  });
+});

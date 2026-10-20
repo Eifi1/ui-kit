@@ -158,6 +158,8 @@ try {
       "@tanstack/query-async-storage-persister",
       "idb-keyval",
     ],
+    // 0.46: `/sync` alone imports Dexie (§2.3); `/offline` loads without it.
+    "./sync": ["dexie"],
   };
   for (const [entry, peers] of Object.entries(optionalEntries)) {
     if (!subpaths.includes(entry)) fail(`${entry} is not in the exports map`);
@@ -194,6 +196,34 @@ try {
   for (const line of runProbe(probeLines(Object.keys(optionalEntries)))) {
     if (line.startsWith("OK")) ok(`${line.slice(3)} (with ${optionalPeers.join(", ")} installed)`);
     else fail(line.slice(4));
+  }
+
+  log("• push-worker is worker-safe: no package, a handler that runs in plain Node");
+  // 0.46 (notifications §10.6 rule 5): a service worker bundles `@eifi1/ui-kit/push-worker`,
+  // so its static closure may hold no bare import at all — React or a component's package
+  // would land in the worker. Walked in the INSTALLED package, as a bundler sees it.
+  {
+    const seen = new Set();
+    const packages = new Set();
+    const walk = (file) => {
+      if (seen.has(file)) return;
+      seen.add(file);
+      for (const [, specifier] of readFileSync(file, "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+)["']/g)) {
+        if (specifier.startsWith(".")) walk(join(file, "..", specifier));
+        else packages.add(specifier);
+      }
+    };
+    walk(join(installed, "dist", "push-worker.js"));
+    if (packages.size === 0) ok(`dist/push-worker.js reaches ${seen.size} module(s) and no package`);
+    else fail(`dist/push-worker.js reaches ${[...packages].join(", ")}`);
+    const [outcome] = runProbe(
+      `import { handlePushSubscriptionChange } from ${JSON.stringify(specifierOf("./push-worker"))};\n` +
+        `let listener; const scope = { addEventListener: (_t, l) => { listener = l; }, registration: { pushManager: {} } };\n` +
+        `handlePushSubscriptionChange(scope, { pushKey: async () => "", replace: async () => {}, onOutcome: (o) => console.log(o) });\n` +
+        `listener({ oldSubscription: null });`,
+    );
+    if (outcome === "no_previous") ok("handlePushSubscriptionChange runs by package name without a DOM");
+    else fail(`handlePushSubscriptionChange by package name answered ${outcome}`);
   }
 
   log("• table-text is pure and reads what it promises");

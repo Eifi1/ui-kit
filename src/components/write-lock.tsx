@@ -8,6 +8,8 @@ import { DEFAULT_WRITE_LOCK_LABELS } from "./write-lock-labels";
 export interface WriteLockLabels {
   /** The tooltip of a locked commit when the provider gives no `reason`. */
   reason: string;
+  /** 0.46 (kastlan K4): the reason of {@link useOfflineWriteLock} — "Needs a connection." */
+  offline: string;
 }
 
 // Defined in ./write-lock-labels, which holds no component code (0.34, KS U8).
@@ -15,13 +17,13 @@ export { DEFAULT_WRITE_LOCK_LABELS };
 
 /**
  * What kind of lock a source is (docs/billing-harmonization.md §12.36, ui-kit 0.33).
- * `"demo"` (the read-only demo, `demo.writeLocked`) and `"billing"` (a lapsed plan,
- * `billing.lockReason`) are the kit's; an app names its own — Kurvenschmiede's
+ * `"demo"` (the read-only demo, `demo.writeLocked`), `"billing"` (a lapsed plan,
+ * `billing.lockReason`) and, since 0.46, `"offline"` ({@link OFFLINE_LOCK}) are the kit's; an app names its own — Kurvenschmiede's
  * `"access"` (a curve shared to view) and `"customer"` (an account that owns nothing).
  * A control exempts itself from a kind with {@link CommitScope}; a source without a
  * kind is never exempted.
  */
-export type WriteLockKind = "demo" | "billing" | (string & {});
+export type WriteLockKind = "demo" | "billing" | "offline" | (string & {});
 
 /** One locked source, as the provider holds it: its kind and its one sentence. */
 export interface WriteLockHold {
@@ -49,6 +51,19 @@ export type CommitScope = boolean | { readonly except: readonly WriteLockKind[] 
  *  access, the account's own settings, an operator's admin route (§12.13). One constant,
  *  so the call sites read alike. */
 export const COMMIT_EXCEPT_BILLING = { except: ["billing"] } as const;
+
+/**
+ * 0.46 (kastlan K4, docs/local-first-harmonization.md D4): the kind of the lock "this
+ * device has no connection". An action that only the server can do (numbers, money,
+ * mail, people, settings) is locked with "Needs a connection." while offline; a control
+ * that writes to the device's copy and syncs later takes {@link COMMIT_EXCEPT_OFFLINE}.
+ * Feed it with {@link useOfflineWriteLock}.
+ */
+export const OFFLINE_LOCK = "offline" as const;
+
+/** Every lock but the offline one: the scope of a control that works on the device's copy
+ *  (it is still locked for a demo or a lapsed plan). */
+export const COMMIT_EXCEPT_OFFLINE = { except: [OFFLINE_LOCK] } as const;
 
 /**
  * What {@link useWriteLock} returns: whether commits are locked here as a control with
@@ -217,4 +232,22 @@ export function useWriteLock(scope: CommitScope = true): WriteLock {
 export function useCommitReason(commit: CommitScope | undefined, own: ReactNode): ReactNode {
   const lock = writeLockFor(useContext(WriteLockContext), commit);
   return lock.locked ? lock.reason : own;
+}
+
+/**
+ * 0.46 (kastlan K4): the offline lock as one source of `combineWriteLocks` —
+ * `{ locked: offline, kind: "offline", reason: writeLock.offline }` ("Needs a
+ * connection.", seven languages). `offline` is the app's own reading of the connection
+ * (`!navigator.onLine`, or its better guess); the kit does not watch the network here.
+ * List it after the demo's and billing's sources: the server refuses those first.
+ *
+ *     <WriteLockProvider {...combineWriteLocks([demo, billing, useOfflineWriteLock(!online)])}>
+ *     <Button commit={COMMIT_EXCEPT_OFFLINE}>Save handover</Button>
+ */
+export function useOfflineWriteLock(
+  offline: boolean,
+  labels?: LabelOverride<WriteLockLabels>,
+): { locked: boolean; kind: typeof OFFLINE_LOCK; reason: string } {
+  const words = useKitLabels("writeLock", DEFAULT_WRITE_LOCK_LABELS, labels);
+  return { locked: offline, kind: OFFLINE_LOCK, reason: words.offline };
 }

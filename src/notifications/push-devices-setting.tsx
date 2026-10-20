@@ -9,14 +9,16 @@ import { formatDate } from "../lib/format";
 import { Button } from "../components/button";
 import { Card } from "../components/card";
 import { Chip } from "../components/chip";
+import { Disclosure } from "../components/disclosure";
 import { Skeleton } from "../components/skeleton";
+import { Switch } from "../components/switch";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { CARD_DESCRIPTION_CLASS } from "../settings/settings-card-classes";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { settle, useMounted } from "../account/account-parts";
-import { describeFailure, FailureLine, useNotificationsLabels } from "./notification-parts";
+import { describeFailure, FailureLine, useNotificationsLabels, useWriteOverlay } from "./notification-parts";
 import type { NotificationsLabels } from "./notifications-labels";
-import type { PushDeviceItem } from "./notification-types";
+import type { NotificationTypeEntry, NotificationTypesValue, PushDeviceItem } from "./notification-types";
 import { notifyPushSubscriptionChanged } from "./use-push-device";
 
 /**
@@ -70,6 +72,17 @@ export interface PushDevicesSettingProps<Id extends string | number = string>
   locale?: string;
   /** The app's own words for a failed removal, or `undefined` for the kit's `failed`. */
   describeError?: (error: unknown) => ReactNode | undefined;
+  /**
+   * 0.46 (§10.2): "Types on this device" on each row — a switch per type whose account
+   * `push` is on, all on until the device mutes one. Save the device's WHOLE list:
+   * `PATCH /notifications/devices/{id} {"muted_types": [...]}`; refresh `devices` once it
+   * resolves. Left out, no row has the disclosure.
+   */
+  onMutedTypesChange?: (id: Id, mutedTypes: string[]) => Promise<unknown> | void;
+  /** The app's words for its types (the types card's `types`), for the disclosure. */
+  types?: readonly NotificationTypeEntry[];
+  /** The settings `GET`'s `types` (the types card's `value`): which types have push on. */
+  typeSwitches?: NotificationTypesValue;
   labels?: LabelOverride<NotificationsLabels>;
 }
 
@@ -99,7 +112,13 @@ async function unsubscribeThisBrowser(): Promise<void> {
  * `PUSH_SUBSCRIPTION_CHANGED` (keksdose `push-devices-card.tsx:83-97`), so the push card
  * stops saying "on".
  *
- * Under a write lock Remove is a `commit` control exempt from billing.
+ * **"Types on this device"** (0.46, §10.2, with `onMutedTypesChange`): a disclosure under
+ * each row with a switch per type the account gets by push; turning one off mutes it on
+ * that device only — a device can mute types, never add them. Each flip saves the
+ * device's whole `muted_types` list.
+ *
+ * Under a write lock Remove and the type switches are `commit` controls exempt from
+ * billing.
  */
 export function PushDevicesSetting<Id extends string | number = string>({
   devices,
@@ -109,11 +128,15 @@ export function PushDevicesSetting<Id extends string | number = string>({
   formatDate: formatDateProp,
   locale: localeProp,
   describeError,
+  onMutedTypesChange,
+  types,
+  typeSwitches,
   labels: labelsProp,
   className,
   ...rest
 }: PushDevicesSettingProps<Id>) {
   const labels = useNotificationsLabels(labelsProp);
+  const mutedOverlay = useWriteOverlay<string[]>(devices);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const locale = useKitLocale(localeProp);
   const [asking, setAsking] = useState<Id | null>(null);
@@ -146,6 +169,65 @@ export function PushDevicesSetting<Id extends string | number = string>({
       });
   };
 
+  // The types a device can mute: those the account gets by push, in the app's order.
+  const pushTypes = (types ?? []).filter((entry) => typeSwitches?.[entry.id]?.push === true);
+  const mutedOf = (device: PushDeviceItem<Id>): string[] =>
+    mutedOverlay.get(String(device.id)) ??
+    // Ids the registry dropped (no longer in the settings answer) are ignored.
+    (device.muted_types ?? []).filter((id) => !typeSwitches || id in typeSwitches);
+  const setMuted = (device: PushDeviceItem<Id>, id: string, on: boolean) => {
+    const key = String(device.id);
+    if (!onMutedTypesChange || mutedOverlay.pending(key)) return;
+    const current = mutedOf(device);
+    const next = on ? current.filter((muted) => muted !== id) : [...current.filter((muted) => muted !== id), id];
+    setFailure(null);
+    mutedOverlay.set(key, next);
+    settle(() => onMutedTypesChange(device.id, next)).then(
+      () => {
+        if (mounted.current) mutedOverlay.settle(key, true);
+      },
+      (error: unknown) => {
+        if (!mounted.current) return;
+        mutedOverlay.settle(key, false);
+        setFailure(describeFailure(describeError?.(error), labels.failed));
+      },
+    );
+  };
+  const typesOf = (device: PushDeviceItem<Id>, name: string): ReactNode => {
+    if (!onMutedTypesChange) return null;
+    const muted = mutedOf(device);
+    return (
+      <Disclosure
+        variant="bare"
+        title={labels.deviceTypes}
+        // Every row has one: the name says whose (it starts with the visible words).
+        triggerProps={{ "aria-label": `${labels.deviceTypes}: ${name}` }}
+        className="text-sm"
+        data-device-types=""
+      >
+        <div className="space-y-2 pt-1 ps-6">
+          {pushTypes.length === 0 ? (
+            <p className={CARD_DESCRIPTION_CLASS}>{labels.deviceTypesEmpty}</p>
+          ) : (
+            <>
+              <p className={CARD_DESCRIPTION_CLASS}>{labels.deviceTypesDescription}</p>
+              {pushTypes.map((entry) => (
+                <Switch
+                  key={entry.id}
+                  size="sm"
+                  label={entry.label}
+                  checked={!muted.includes(entry.id)}
+                  commit={COMMIT_EXCEPT_BILLING}
+                  onCheckedChange={(on) => setMuted(device, entry.id, on)}
+                />
+              ))}
+            </>
+          )}
+        </div>
+      </Disclosure>
+    );
+  };
+
   let body: ReactNode;
   if (loading || devices === undefined) {
     body = <Skeleton lines={2} label={labels.devicesLoading} />;
@@ -170,6 +252,7 @@ export function PushDevicesSetting<Id extends string | number = string>({
             onConfirm={() => remove(device)}
             labels={labels}
             cancelLabel={common.cancel}
+            types={typesOf(device, describeUserAgent(device.user_agent) ?? labels.unknownDevice)}
           />
         ))}
       </ul>
@@ -202,6 +285,7 @@ function DeviceRow<Id extends string | number>({
   onConfirm,
   labels,
   cancelLabel,
+  types,
 }: {
   device: PushDeviceItem<Id>;
   name: string;
@@ -216,6 +300,8 @@ function DeviceRow<Id extends string | number>({
   onConfirm: () => void;
   labels: NotificationsLabels;
   cancelLabel: string;
+  /** "Types on this device", under the row (0.46). */
+  types: ReactNode;
 }) {
   const cancelRef = useRef<HTMLButtonElement>(null);
   const removeRef = useRef<HTMLButtonElement>(null);
@@ -268,39 +354,42 @@ function DeviceRow<Id extends string | number>({
   }
 
   return (
-    <li {...row} className="flex items-center gap-3 py-2">
-      <MonitorSmartphone aria-hidden className="size-4 shrink-0 text-muted" />
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="min-w-0 break-words text-sm font-medium">{name}</span>
-          {current && (
-            <Chip size="sm" tone="brand">
-              {labels.thisDevice}
-            </Chip>
-          )}
+    <li {...row} className="space-y-1 py-2">
+      <div className="flex items-center gap-3">
+        <MonitorSmartphone aria-hidden className="size-4 shrink-0 text-muted" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="min-w-0 break-words text-sm font-medium">{name}</span>
+            {current && (
+              <Chip size="sm" tone="brand">
+                {labels.thisDevice}
+              </Chip>
+            )}
+          </div>
+          <div className={CARD_DESCRIPTION_CLASS}>
+            {labels.added(added)}
+            {" · "}
+            {lastDelivery ? labels.lastDelivery(lastDelivery) : labels.noDelivery}
+          </div>
+          {device.failure_count > 0 && <div className="text-xs text-warning">{labels.failures(device.failure_count)}</div>}
         </div>
-        <div className={CARD_DESCRIPTION_CLASS}>
-          {labels.added(added)}
-          {" · "}
-          {lastDelivery ? labels.lastDelivery(lastDelivery) : labels.noDelivery}
-        </div>
-        {device.failure_count > 0 && <div className="text-xs text-warning">{labels.failures(device.failure_count)}</div>}
+        <Button
+          ref={removeRef}
+          type="button"
+          size="sm"
+          variant="ghost"
+          commit={COMMIT_EXCEPT_BILLING}
+          disabled={blocked}
+          aria-label={labels.removeItem(name)}
+          onClick={() => {
+            setReturning(false);
+            onAsk();
+          }}
+        >
+          {labels.remove}
+        </Button>
       </div>
-      <Button
-        ref={removeRef}
-        type="button"
-        size="sm"
-        variant="ghost"
-        commit={COMMIT_EXCEPT_BILLING}
-        disabled={blocked}
-        aria-label={labels.removeItem(name)}
-        onClick={() => {
-          setReturning(false);
-          onAsk();
-        }}
-      >
-        {labels.remove}
-      </Button>
+      {types}
     </li>
   );
 }

@@ -4,6 +4,7 @@ import { DEFAULT_FEEDBACK_STATUS_LABELS } from "../feedback-labels";
 import {
   DEFAULT_FEEDBACK_SWIPE,
   FEEDBACK_SWIPE_ACTIONS,
+  feedbackSwipeOmitShown,
   feedbackSwipePlan,
   type FeedbackSwipeBinding,
 } from "../feedback-swipe";
@@ -103,5 +104,32 @@ describe("the chain with READY (feedback contract §8.2)", () => {
     expect(nextFeedbackStatus("OPEN")).toBe("READY");
     expect(nextFeedbackStatus("READY")).toBe("IN_PROGRESS");
     expect(labelsOf(DEFAULT_FEEDBACK_SWIPE, "READY")).toEqual({ start: ["Won't do"], end: ["In progress", "Done"] });
+  });
+});
+
+describe("the plan's ids and the desktop column (keksdose dev#598 item 3)", () => {
+  it("names every action by its binding id", () => {
+    const { out } = plan(DEFAULT_FEEDBACK_SWIPE, "OPEN");
+    expect(out?.end?.map((a) => a.id)).toEqual(["advance", "done"]);
+    expect(out?.start?.map((a) => a.id)).toEqual(["wont_do"]);
+  });
+
+  it("feedbackSwipeOmitShown leaves out what the status cell already offers, without reading labels", () => {
+    // OPEN: the status cell shows READY (advance's target) and WONT_DO, so Done is left.
+    const kept = (status: FeedbackStatus) => {
+      const { out } = plan(DEFAULT_FEEDBACK_SWIPE, status);
+      return [...(out?.end ?? []), ...(out?.start ?? [])]
+        .filter((a) => !feedbackSwipeOmitShown(a, at(status)))
+        .map((a) => a.id);
+    };
+    expect(kept("OPEN")).toEqual(["done"]);
+    // IN_PROGRESS: advance goes to IN_EVALUATION, a step the cell shows; DONE is two away.
+    expect(kept("IN_PROGRESS")).toEqual(["done"]);
+    // IN_EVALUATION: advance IS done, and the cell shows it.
+    expect(kept("IN_EVALUATION")).toEqual([]);
+    // An action without an id (an app's own) is never omitted.
+    expect(feedbackSwipeOmitShown({ label: "Ready to implement", tone: "info", onCommit: () => {} }, at("OPEN"))).toBe(
+      false,
+    );
   });
 });

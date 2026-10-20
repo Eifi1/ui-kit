@@ -1,39 +1,47 @@
 #!/usr/bin/env node
 /**
- * The commit-message rules are the SHARED ones: scripts/check-commit-msg.cjs is a
- * byte-for-byte copy of Eifi1/shared-workflows' actions/commit-check/check-commit-msg.cjs,
- * pinned to the commit in scripts/shared-commit-rules.json — the same rules every app's
- * shared commit-check action runs. A copy rather than the action because ui-kit checks
- * LOCALLY first: the husky commit-msg hook and `npm run check` need the rules on disk,
- * and CI runs those same npm scripts (see CONTRIBUTING → The gates).
+ * The commit-message rules are the SHARED ones: every file in scripts/shared-commit-rules.json
+ * `files[]` — scripts/check-commit-msg.cjs and scripts/check-pushed-commits.cjs (the pre-push
+ * hook's check of every pushed commit, 0.46) — is a byte-for-byte copy of the file of that
+ * path in Eifi1/shared-workflows, pinned to the commit in the pin file: the same rules every
+ * app's shared commit-check action runs. Copies rather than the action because ui-kit checks
+ * LOCALLY first: the husky commit-msg and pre-push hooks and `npm run check` need the rules
+ * on disk, and CI runs those same npm scripts (see CONTRIBUTING → The gates).
  *
- * This check fails when the copy no longer matches the pinned upstream file (someone
+ * This check fails when a copy no longer matches the pinned upstream file (someone
  * edited it here, or the pin moved without a sync). Offline it says so and passes: the
  * pre-push hook must not need a network, and CI — which always has one — enforces it.
- * A newer shared tag is reported, not failed: taking it is a decision, made with
- * `npm run sync:commit-rules -- <tag>`.
+ * While the pin waits for its tag ("v1.3.1 (pending tag)", no commit yet) it says so and
+ * passes too. A newer shared tag is reported, not failed: taking it is a decision, made
+ * with `npm run sync:commit-rules -- <tag>`.
  */
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 
 const pin = JSON.parse(readFileSync(new URL("./shared-commit-rules.json", import.meta.url), "utf8"));
-const local = readFileSync(new URL("../" + pin.vendoredAs, import.meta.url), "utf8");
-const url = `https://raw.githubusercontent.com/${pin.repo}/${pin.commit}/${pin.path}`;
+if (!/^[0-9a-f]{40}$/.test(pin.commit)) {
+  console.log(`• shared commit rules not verified: the pin is ${pin.tag}, no commit yet`);
+  process.exit(0);
+}
 
-let upstream;
+const differ = [];
 try {
-  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  upstream = await res.text();
+  for (const file of pin.files) {
+    const url = `https://raw.githubusercontent.com/${pin.repo}/${pin.commit}/${file.path}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const local = readFileSync(new URL("../" + file.vendoredAs, import.meta.url), "utf8");
+    if ((await res.text()) !== local) differ.push(file);
+  }
 } catch (error) {
   console.log(`• shared commit rules not verified (offline: ${error.message}); CI verifies them`);
   process.exit(0);
 }
 
-if (upstream !== local) {
+if (differ.length) {
   console.error(
-    `✖ ${pin.vendoredAs} differs from ${pin.repo}@${pin.tag} (${pin.commit.slice(0, 8)}) ${pin.path}.\n` +
-      "  The commit rules are shared: change them in shared-workflows, then run\n" +
+    differ.map((f) => `✖ ${f.vendoredAs} differs from ${pin.repo}@${pin.tag} (${pin.commit.slice(0, 8)}) ${f.path}.`).join("\n") +
+      "\n  The commit rules are shared: change them in shared-workflows, then run\n" +
       "  npm run sync:commit-rules -- <tag>",
   );
   process.exit(1);

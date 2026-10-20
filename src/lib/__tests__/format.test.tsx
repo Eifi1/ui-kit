@@ -114,3 +114,42 @@ describe("useKitFormat", () => {
     expect(result.current.formatRelativeTime(new Date(Date.now() - 3 * 3_600_000))).toBe("vor 3 Stunden");
   });
 });
+
+describe("useKitFormat — the provider's timeZone (0.46, notifications §10.3)", () => {
+  const ts = "2026-07-08T22:30:00Z";
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <UiKitProvider locale="en-GB" timeZone="Asia/Tokyo">
+      {children}
+    </UiKitProvider>
+  );
+
+  it("shows timestamps in it; a call's own zone wins", () => {
+    const { result } = renderHook(() => useKitFormat(), { wrapper });
+    // 22:30 UTC is 07:30 the next day in Tokyo.
+    expect(result.current.formatDate(ts, "dateTime")).toBe("9 Jul 2026, 07:30");
+    expect(result.current.formatDate(ts, "dateTime", { timeZone: "UTC" })).toBe("8 Jul 2026, 22:30");
+    expect(
+      result.current.formatRelativeTime(ts, { now: "2026-08-30T00:00:00Z", absoluteAfterDays: 7, absoluteStyle: "dateTime" }),
+    ).toBe("9 Jul 2026, 07:30");
+  });
+
+  it("never shifts a bare date", () => {
+    const { result } = renderHook(() => useKitFormat(), { wrapper });
+    expect(result.current.formatDate("2026-07-08", "medium")).toBe("8 Jul 2026");
+  });
+
+  it("without it, timestamps follow the device (the suite's Europe/Berlin)", () => {
+    const { result } = renderHook(() => useKitFormat("en-GB"));
+    expect(result.current.formatDate(ts, "dateTime")).toBe("9 Jul 2026, 00:30");
+  });
+
+  it("nested providers keep the outer zone unless they name one", () => {
+    const nested = ({ children }: { children: ReactNode }) => (
+      <UiKitProvider locale="en-GB" timeZone="UTC">
+        <UiKitProvider locale="en-GB">{children}</UiKitProvider>
+      </UiKitProvider>
+    );
+    const { result } = renderHook(() => useKitFormat(), { wrapper: nested });
+    expect(result.current.formatDate(ts, "time")).toBe("22:30");
+  });
+});

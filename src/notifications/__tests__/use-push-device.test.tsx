@@ -366,6 +366,27 @@ describe("PUSH_SUBSCRIPTION_CHANGED", () => {
     expect(result.current.currentEndpoint).toBeNull();
   });
 
+  it("is also the message a service worker posts after it re-registered a rotated subscription (0.46)", async () => {
+    const push = installFakePush({ existing: "https://push.example/a", permission: "granted" });
+    uninstall = push.uninstall;
+    const devices = vi.fn(async () => [{ endpoint: "https://push.example/a" }]);
+    const { result } = renderHook(() => usePushDevice(api({ devices })));
+    await waitFor(() => expect(result.current.currentEndpoint).toBe("https://push.example/a"));
+    const reads = devices.mock.calls.length;
+    // The worker replaced the subscription; the page hears it from the worker.
+    await push.current()!.unsubscribe();
+    await act(async () => {
+      push.serviceWorker.dispatchEvent(new MessageEvent("message", { data: { type: "unrelated" } }));
+    });
+    expect(devices.mock.calls.length).toBe(reads);
+    await act(async () => {
+      push.serviceWorker.dispatchEvent(
+        new MessageEvent("message", { data: { type: PUSH_SUBSCRIPTION_CHANGED, outcome: "replaced" } }),
+      );
+    });
+    await waitFor(() => expect(result.current.currentEndpoint).toBeNull());
+  });
+
   it("is the kit's own event name", () => {
     expect(PUSH_SUBSCRIPTION_CHANGED).toBe("eifi1:push-subscription-changed");
   });

@@ -65,10 +65,12 @@ export function installFakePush(options: FakePushOptions = {}) {
       subscribe,
     },
   };
-  const serviceWorker = {
+  // An EventTarget, as the real container is: a worker's `postMessage` arrives as its
+  // "message" event (0.46, a rotated subscription re-registered).
+  const serviceWorker = Object.assign(new EventTarget(), {
     getRegistration: vi.fn(async () => (options.noRegistration ? undefined : registration)),
     ready: options.neverReady ? new Promise(() => {}) : Promise.resolve(registration),
-  };
+  });
   const requestPermission = vi.fn(async () => {
     notification.permission = options.prompt ?? "granted";
     return notification.permission;
@@ -81,6 +83,7 @@ export function installFakePush(options: FakePushOptions = {}) {
 
   return {
     registration,
+    serviceWorker,
     subscribe,
     requestPermission,
     notification,

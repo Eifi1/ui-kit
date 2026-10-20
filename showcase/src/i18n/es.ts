@@ -135,6 +135,12 @@ export const es: Dictionary = {
       blurb:
         "Trabajar sin conexión: la caché de consultas guardada con su lista de campos que se eliminan, la pregunta antes de cerrar sesión mientras hay cambios pendientes, el aviso de actualización que espera a que termine un recorrido y la opción «ordenador compartido».",
     },
+    sync: {
+      title: "Motor de sincronización",
+      short: "Sync",
+      blurb:
+        "Trabajar sobre la copia del dispositivo: el motor de sincronización con su cola, una petición por ámbito, los cambios rechazados que se conservan, las esperas tras un error y el cierre de sesión protegido; su worker, su estado para el indicador y la lectura en vivo de la copia.",
+    },
     "auth-account": {
       title: "Inicio de sesión y seguridad de la cuenta",
       short: "Acceso",
@@ -467,7 +473,7 @@ export const es: Dictionary = {
       title: "Notificaciones",
       short: "Notificaciones",
       blurb:
-        "Los ajustes de notificación que comparten todas las apps: los tipos que devuelve el servidor, con un interruptor en la app y otro por correo, las horas de silencio y la zona horaria, el push en este dispositivo y la lista de dispositivos, y la página que abre el enlace para darse de baja de un correo.",
+        "Los ajustes de notificación que comparten todas las apps: los tipos que devuelve el servidor, con un interruptor por canal (en la app, push, correo), las horas de silencio y la zona horaria de la cuenta, la bandeja de entrada y la campana de la barra superior, el push en este dispositivo y la lista de dispositivos con los tipos que cada uno silencia, y la página que abre el enlace para darse de baja de un correo.",
     },
     settings: {
       title: "Ajustes",
@@ -648,6 +654,14 @@ export const es: Dictionary = {
       "preguntar antes de cerrar sesión con cambios sin sincronizar",
       "hay una nueva versión, recargar",
       "este es un ordenador compartido",
+    ],
+    sync: [
+      "sincronizar cambios hechos sin conexión",
+      "poner escrituras en cola en el dispositivo",
+      "reintentar más tarde una sincronización fallida",
+      "conservar cambios a la espera de un plan",
+      "mostrar el estado de sincronización",
+      "leer en vivo la copia del dispositivo",
     ],
     "auth-account": [
       "diseño de la página de inicio de sesión",
@@ -1151,19 +1165,19 @@ export const es: Dictionary = {
     ],
     notifications: [
       "ajustes de notificaciones",
-      "activar o desactivar notificaciones",
       "elegir qué notificaciones recibir",
       "avisar por correo electrónico",
       "horas de silencio",
-      "no molestar por la noche",
-      "elegir una zona horaria",
       "notificaciones push en este dispositivo",
       "enviar una notificación de prueba",
       "listar los dispositivos que reciben notificaciones",
       "quitar un dispositivo",
       "darse de baja de los correos",
-      "enlace para darse de baja con un clic",
       "resumen semanal o mensual",
+      "bandeja de entrada de notificaciones",
+      "campana con notificaciones sin leer",
+      "zona horaria de la cuenta automática",
+      "silenciar el push en un dispositivo",
     ],
     settings: [
       "ajustes de la cuenta",

@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { ROW_ACTIONS_KEY } from "./data-table-row-actions";
+import { isTableOwnColumn } from "./data-table-row-actions";
 import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
 import type { DataTableCellProps, DataTableColumn, DataTableHeadProps } from "./data-table";
 import type { LabelOverride } from "../i18n/kit-labels";
@@ -79,7 +79,7 @@ export function cleanAttrs(
  * should pass a string header, and that is visible in what gets announced.
  */
 export function columnLabel<T>(col: DataTableColumn<T>, labels?: DataTableLabels): string {
-  if (col.key === ROW_ACTIONS_KEY && labels) return labels.actions;
+  if (isTableOwnColumn(col.key) && labels) return labels.actions;
   return col.headerText ?? (typeof col.header === "string" ? col.header : col.key);
 }
 
@@ -162,6 +162,22 @@ export function fromOwnControl(target: EventTarget | null, row: HTMLElement): bo
   return !!hit && hit !== row && row.contains(hit) && !hit.hasAttribute("data-row-link");
 }
 
+/**
+ * The controls whose own default IS the click — a native checkbox's or radio's toggle, a
+ * label's click through to its field, a summary's disclosure (0.46, the 0.45 note from
+ * UM): cancelling the click undoes it. Each is the click's own activation target, so a
+ * click on one does not follow the link around it, and {@link RowLink} leaves its
+ * default alone.
+ */
+const OWN_DEFAULT = 'input[type="checkbox"],input[type="radio"],label,summary';
+
+/** Whether a click inside `link` landed on (or in) one of {@link OWN_DEFAULT}. */
+function onOwnDefault(target: EventTarget | null, link: HTMLElement): boolean {
+  if (!(target instanceof Element)) return false;
+  const hit = target.closest(OWN_DEFAULT);
+  return !!hit && hit !== link && link.contains(hit);
+}
+
 /** A click the APP owns. Anything else — middle, ⌘/Ctrl, Shift, Alt — belongs to
  *  the browser, and the whole feature is not touching it. */
 const isPlainLeftClick = (e: React.MouseEvent) =>
@@ -220,6 +236,9 @@ export function RowLink({
         // A click in a portal a descendant opened is not a click on the link: leave
         // it (and a link inside it) alone. See `fromOutside`.
         if (fromOutside(e.target, e.currentTarget)) return;
+        // A checkbox, a radio, a label or a summary keeps its own default: cancelling
+        // it would undo the toggle, and the link is not followed from it anyway.
+        if (onOwnDefault(e.target, e.currentTarget)) return;
         if (isPlainLeftClick(e)) e.preventDefault();
       }}
       onClick={(e) => {

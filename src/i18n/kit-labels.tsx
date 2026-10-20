@@ -552,6 +552,7 @@ interface KitI18n {
   chartTooltipPlacement?: ChartTooltipPlacement;
   formatDate?: KitDateFormatter;
   tableStorageKeyPrefix?: string;
+  timeZone?: string;
 }
 
 /** What a {@link KitDateFormatter} is told about the date it is formatting. */
@@ -686,6 +687,14 @@ export interface UiKitProviderProps {
    * view when it moves the prefix here.
    */
   tableStorageKeyPrefix?: string;
+  /**
+   * 0.46 (docs/notifications-harmonization.md §10.3): the IANA zone ("Europe/Zurich") every
+   * TIMESTAMP below is shown in through `useKitFormat().formatDate` /
+   * `formatRelativeTime`, when the call names none — the account's picked zone, for an app
+   * that shows times in it. A bare "YYYY-MM-DD" is never shifted (a calendar day is the day
+   * it names in every zone). Left out, timestamps follow the device, as before.
+   */
+  timeZone?: string;
   children: ReactNode;
 }
 
@@ -705,6 +714,7 @@ export function UiKitProvider({
   chartTooltipPlacement,
   formatDate,
   tableStorageKeyPrefix,
+  timeZone,
   children,
 }: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
@@ -717,8 +727,9 @@ export function UiKitProvider({
       chartTooltipPlacement: chartTooltipPlacement ?? outer.chartTooltipPlacement,
       formatDate: formatDate ?? outer.formatDate,
       tableStorageKeyPrefix: tableStorageKeyPrefix ?? outer.tableStorageKeyPrefix,
+      timeZone: timeZone ?? outer.timeZone,
     }),
-    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement, formatDate, tableStorageKeyPrefix],
+    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement, formatDate, tableStorageKeyPrefix, timeZone],
   );
   useTableViewsJoin(value.tableStorageKeyPrefix ?? DEFAULT_TABLE_STORAGE_KEY_PREFIX);
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
@@ -869,6 +880,12 @@ export function useKitDateFormatter(): KitDateFormatter | undefined {
  *  `storageKeyPrefix` wins over it, and the kit's `"hbui-table:"` comes after both. */
 export function useKitTableStorageKeyPrefix(): string | undefined {
   return useContext(KitI18nContext).tableStorageKeyPrefix;
+}
+
+/** The nearest provider's `timeZone` (0.46), or `undefined` — the device's. A call's own
+ *  `timeZone` wins over it. */
+export function useKitTimeZone(): string | undefined {
+  return useContext(KitI18nContext).timeZone;
 }
 
 /** {@link DEFAULT_FILE_LABELS}, but formatting in the provider's locale. */

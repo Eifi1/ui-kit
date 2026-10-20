@@ -72,6 +72,21 @@ describe("MailTestCard", () => {
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Too many attempts. Wait a moment and try again."));
   });
 
+  it("mailBackend is optional: no chip until an answer names the transport, then it stays (0.46, N1)", async () => {
+    const send = vi
+      .fn<() => Promise<MailTestAnswer>>()
+      .mockResolvedValueOnce({ sent: true, mail_backend: "smtp" })
+      .mockRejectedValueOnce({ status: 429 });
+    render(<MailTestCard send={send} address={ADDRESS} />);
+    expect(screen.queryByText(/Transport:/)).toBeNull();
+    await userEvent.click(button());
+    expect(await screen.findByText("Transport: smtp")).toBeInTheDocument();
+    // A later send that brings no answer (the limiter) keeps the transport it learnt.
+    await userEvent.click(button());
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Too many attempts."));
+    expect(screen.getByText("Transport: smtp")).toBeInTheDocument();
+  });
+
   it("is busy while sending and sends once", async () => {
     let resolve!: (answer: MailTestAnswer) => void;
     const send = vi.fn(() => new Promise<MailTestAnswer>((r) => (resolve = r)));

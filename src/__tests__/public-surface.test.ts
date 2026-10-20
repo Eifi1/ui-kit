@@ -11,6 +11,9 @@ import * as tour from "../tour";
 import * as wizard from "../wizard";
 import * as rhf from "../rhf";
 import * as offline from "../offline";
+import * as sync from "../sync";
+import * as syncTesting from "../sync/testing";
+import * as pushWorker from "../push-worker";
 import * as tableText from "../table-text";
 import * as dates from "../lib/dates";
 import * as currencies from "../currencies";
@@ -270,7 +273,17 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.45.0 (+6, admin §9 and tours §10): `MailTestCard`, `DEFAULT_MAIL_TEST_CARD_LABELS`,
   // `MAIL_TEST_ANCHOR`, `maskMailAddress`, and from /shell and /tour `AdminWaitingBadge`,
   // `signOutTourProgress`.
-  ["@eifi1/ui-kit", barrel, 965],
+  // 0.46.0 (+3, kastlan K4): `OFFLINE_LOCK`, `COMMIT_EXCEPT_OFFLINE`, `useOfflineWriteLock`.
+  // 0.46.0 (+1, keksdose dev#598, here and in /feedback): `feedbackSwipeOmitShown`.
+  // 0.46.0 (+10, postponed items): `DateFormatSetting`, `DATE_FORMAT_PREFERENCES`,
+  // `isDateFormatPreference`, `resolveDateFormat`, `formatDateWithPreference`, `dateFormatSample`,
+  // `dateFormatterFor`; push rotation `handlePushSubscriptionChange`, `resubscribeAfterChange`,
+  // `pushSubscriptionInput`.
+  // 0.46.0 (+5, docs/notifications-harmonization.md §10.1, §10.3): `NotificationInbox`,
+  // `INBOX_BADGE_INTERVAL`, `NotificationBell`, `useDeviceZoneReport`, and `useKitTimeZone`,
+  // the provider's `timeZone` (`TimeZoneSetting` dropped before release: the zone is automatic
+  // only, amended 2026-10-20).
+  ["@eifi1/ui-kit", barrel, 984],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -286,7 +299,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.27.0: the feedback harmonization's 55 (see the barrel's note above).
   // 0.35.0: `FeedbackComposer` removed, `ChatComposer` stays (API-6d) (−1).
   // 0.40.0: `FEEDBACK_QUEUE_STATUSES`, `feedbackReworkCount` (+2 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 102],
+  // 0.46.0: `feedbackSwipeOmitShown`, the desktop column's omit (dev#598) (+1 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 103],
   ["@eifi1/ui-kit/search", search, 9],
   // 0.31.0 (+26): the settings shell and its route, focus, context, heading and
   // catalogue helpers; PublicHeader, RootEntry, RedirectIfAuthed and the
@@ -327,7 +341,23 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `SharedComputerChoice`, `isSharedComputer`, `setSharedComputer` and the three
   // `DEFAULT_*_LABELS`. Standalone: its TanStack and idb-keyval peers stay out of the barrel.
   // `isCacheSafe` (+1, keksdose's build review: its query-client tests use it).
-  ["@eifi1/ui-kit/offline", offline, 11],
+  // 0.46.0 (+3, kastlan K2, K3): `removeStaleQueryCopies`, `createServiceWorkerUpdates`,
+  // `useServiceWorkerUpdate`.
+  // 0.46.0 (+4, local-first §2.3): the leaf utilities `stampAfter`, `isOfflineError`,
+  // `readLocalFirst`, `writeLocalFirst`, shared with `/sync` from one module.
+  ["@eifi1/ui-kit/offline", offline, 18],
+  // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
+  // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
+  // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the
+  // four leaf utilities `/offline` exports too. Standalone: its Dexie peer stays out of the barrel.
+  ["@eifi1/ui-kit/sync", sync, 14],
+  // 0.46.0: `createFakeSyncTransport`, the scripted `/sync` server for an app's tests.
+  ["@eifi1/ui-kit/sync/testing", syncTesting, 1],
+  // 0.46.0 (docs/notifications-harmonization.md §10.6 rule 5): the service worker's entry —
+  // `handlePushSubscriptionChange`, `resubscribeAfterChange`, `pushSubscriptionInput`,
+  // `PUSH_SUBSCRIPTION_CHANGED`. A slice of the barrel that reaches no package
+  // (packaging-contract.test.ts).
+  ["@eifi1/ui-kit/push-worker", pushWorker, 4],
   // 0.23.0: `parseTextTable`, `tableNumber` — the text door ColumnMapper reads through (+2).
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8
@@ -370,6 +400,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
 const STANDALONE = new Set([
   "@eifi1/ui-kit/rhf",
   "@eifi1/ui-kit/offline",
+  "@eifi1/ui-kit/sync",
+  "@eifi1/ui-kit/sync/testing",
   "@eifi1/ui-kit/table-text",
   "@eifi1/ui-kit/dates",
   // Test helpers, never part of an app's bundle.

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useKitLocale } from "../i18n/kit-labels";
+import { useKitLocale, useKitTimeZone } from "../i18n/kit-labels";
 import { parseIsoDate } from "./dates";
 import { roundHalfAway } from "./round";
 
@@ -244,6 +244,9 @@ export function formatDate(
 }
 
 export interface FormatRelativeTimeOptions extends BaseOptions {
+  /** The zone of the date printed past `absoluteAfterDays` (0.46). Left out: the
+   *  device's. */
+  timeZone?: string;
   /** The moment it is measured from. Default: now. */
   now?: DateInput;
   /** `"auto"` (default): "yesterday", "now", "next week". `"always"`: "1 day ago". */
@@ -348,16 +351,19 @@ export interface KitFormat {
  */
 export function useKitFormat(locale?: string): KitFormat {
   const kitLocale = useKitLocale(locale);
+  // 0.46 (§10.3): the provider's `timeZone` for timestamps; a call's own wins, and a bare
+  // "YYYY-MM-DD" ignores it (formatDate).
+  const timeZone = useKitTimeZone();
   return useMemo<KitFormat>(
     () => ({
       locale: kitLocale,
       formatNumber: (value, options) => formatNumber(value, { locale: kitLocale, ...options }),
       formatMoney: (value, currency, options) => formatMoney(value, currency, { locale: kitLocale, ...options }),
       formatPercent: (value, options) => formatPercent(value, { locale: kitLocale, ...options }),
-      formatDate: (value, style, options) => formatDate(value, style, { locale: kitLocale, ...options }),
-      formatRelativeTime: (value, options) => formatRelativeTime(value, { locale: kitLocale, ...options }),
+      formatDate: (value, style, options) => formatDate(value, style, { locale: kitLocale, timeZone, ...options }),
+      formatRelativeTime: (value, options) => formatRelativeTime(value, { locale: kitLocale, timeZone, ...options }),
     }),
-    [kitLocale],
+    [kitLocale, timeZone],
   );
 }
 

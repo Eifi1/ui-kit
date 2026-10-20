@@ -408,6 +408,8 @@ export * from "./components/form-actions";
 // (docs/billing-harmonization.md §12.36): the kinds, the holds, `CommitScope`,
 // `COMMIT_EXCEPT_BILLING` and the pure `writeLockFor`.
 export { WriteLockProvider, useWriteLock, writeLockFor, COMMIT_EXCEPT_BILLING, DEFAULT_WRITE_LOCK_LABELS } from "./components/write-lock";
+// 0.46 (kastlan K4): the offline lock kind, its scope and its source.
+export { OFFLINE_LOCK, COMMIT_EXCEPT_OFFLINE, useOfflineWriteLock } from "./components/write-lock";
 export type { WriteLock, WriteLockLabels, WriteLockProviderProps, WriteLockKind, WriteLockHold, CommitScope } from "./components/write-lock";
 // 0.18: the parts both apps' admin rosters repeat (Kurvenschmiede 6).
 export { RoleChip, AccountStateChip, DateMark, dateColumn, DEFAULT_ACCOUNT_STATE_LABELS, ACCOUNT_STATE_TONES } from "./components/account-chips";
@@ -552,6 +554,19 @@ export type {
 // actions, one of the behaviours at Large (§4, §10.7–10.9).
 export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";
 export type { AppearanceLabels } from "./components/appearance-labels";
+// 0.46 (keksdose's date format, lifted): the preference, its resolver and renderer, the
+// provider's formatter for it, and the settings field.
+export {
+  DATE_FORMAT_PREFERENCES,
+  isDateFormatPreference,
+  resolveDateFormat,
+  formatDateWithPreference,
+  dateFormatSample,
+  dateFormatterFor,
+} from "./lib/date-format";
+export type { DateFormatPreference, DateFormatOptions, ResolvedDateFormat } from "./lib/date-format";
+export { DateFormatSetting } from "./components/date-format-setting";
+export type { DateFormatSettingProps } from "./components/date-format-setting";
 export { RowActions, rowActionsColumn, DEFAULT_ROW_ACTIONS_LABELS } from "./components/row-actions";
 export type {
   RowAction,
@@ -808,6 +823,10 @@ export type {
   AdminExtraTile,
   AdminOverviewProps,
   AttentionTileProps,
+  // 0.46 (Kurvenschmiede 1): the feedback tiles with the kit's words.
+  AdminFeedbackTile,
+  AdminFeedbackTileKey,
+  AdminOwnTile,
 } from "./admin/admin-overview";
 export { AdminToolLinks } from "./admin/admin-tool-links";
 export type { AdminToolLink, AdminToolLinksProps } from "./admin/admin-tool-links";
@@ -946,6 +965,7 @@ export type {
   NotificationTypeGroup,
   NotificationSettingsPatch,
   PushDeviceItem,
+  NotificationChannel,
 } from "./notifications/notification-types";
 export { NotificationTypesSetting } from "./notifications/notification-types-setting";
 export type { NotificationTypesSettingProps } from "./notifications/notification-types-setting";
@@ -953,6 +973,14 @@ export { QuietHoursSetting } from "./notifications/quiet-hours-setting";
 export type { QuietHoursSettingProps } from "./notifications/quiet-hours-setting";
 export { TimeZoneSelect, timeZoneOptions, deviceTimeZone } from "./notifications/time-zone-select";
 export type { TimeZoneSelectProps } from "./notifications/time-zone-select";
+// 0.46 (docs/notifications-harmonization.md §10.1, §10.3): the inbox list, the bell and
+// the device-zone report (the account's zone is automatic only, amended 2026-10-20).
+export { NotificationInbox, INBOX_BADGE_INTERVAL } from "./notifications/notification-inbox";
+export type { NotificationInboxItem, NotificationInboxProps } from "./notifications/notification-inbox";
+export { NotificationBell } from "./notifications/notification-bell";
+export type { NotificationBellProps } from "./notifications/notification-bell";
+export { useDeviceZoneReport } from "./notifications/device-zone-report";
+export type { DeviceZoneReportOptions } from "./notifications/device-zone-report";
 export {
   usePushDevice,
   PUSH_SUBSCRIPTION_CHANGED,
@@ -967,6 +995,20 @@ export type {
   PushPermission,
   PushDeviceErrorCode,
 } from "./notifications/use-push-device";
+// 0.46 (NT:1028): the service worker re-registers a rotated subscription. A worker imports
+// them from `@eifi1/ui-kit/push-worker` (§10.6 rule 5); the barrel keeps them too.
+export {
+  handlePushSubscriptionChange,
+  resubscribeAfterChange,
+  pushSubscriptionInput,
+} from "./notifications/push-worker";
+export type {
+  PushReplaceInput,
+  PushSubscriptionChangeOptions,
+  PushSubscriptionChangeEventLike,
+  PushResubscribeOutcome,
+  PushWorkerScope,
+} from "./notifications/push-worker";
 export { PushDeviceSetting } from "./notifications/push-device-setting";
 export type { PushDeviceSettingProps, PushDeviceAction } from "./notifications/push-device-setting";
 export { PushDevicesSetting, describeUserAgent } from "./notifications/push-devices-setting";

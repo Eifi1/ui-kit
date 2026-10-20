@@ -25,6 +25,7 @@ export type {
   DataTableDensity,
   DataTableChrome,
   DataTableRowAction,
+  DataTableDesktopSwipeActions,
 } from "./components/data-table";
 export * from "./components/data-table-cells";
 export { useTableUrlState, readTableUrlState } from "./components/use-table-state";
