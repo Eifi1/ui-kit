@@ -559,17 +559,17 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2145 names from 351 modules** — 991 values and 1154 types. _Italic_ is a type-only export.
+**2147 names from 352 modules** — 991 values and 1156 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2145 |
+| `@eifi1/ui-kit` | 2147 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 114 |
-| `@eifi1/ui-kit/data-table` | 53 |
+| `@eifi1/ui-kit/data-table` | 55 |
 | `@eifi1/ui-kit/wizard` | 24 |
 | `@eifi1/ui-kit/tour` | 37 |
 | `@eifi1/ui-kit/feedback` | 212 |
@@ -804,6 +804,7 @@ re-slicing of it, never a second API.
 | `components/data-table-filter-popover` | `FilterPopover` |
 | `components/data-table` | `DataTable`, `DEFAULT_DATA_TABLE_SORT_LABELS`, _`DataTableCellProps`_, _`DataTableChrome`_, _`DataTableColumn`_, _`DataTableDensity`_, _`DataTableDesktopSwipeActions`_, _`DataTableHeadProps`_, _`DataTableProps`_, _`DataTableRowAction`_, _`DataTableSortLabels`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
 | `components/data-table-row-actions` | `swipePlanRowActions` |
+| `components/data-table-groups` | _`DataTableGroupBy`_, _`DataTableLoadMore`_ |
 | `components/data-table-cells` | `booleanColumn`, `BooleanMark`, _`BooleanColumnOptions`_, _`BooleanMarkProps`_ |
 | `components/use-table-state` | `readTableUrlState`, `useTableUrlState`, _`TableUrlState`_, _`TableUrlStateProps`_, _`TableUrlSync`_, _`UseTableUrlStateOptions`_, _`UseTableUrlStateReturn`_ |
 | `components/translation-review-editor` | `TranslationReviewEditor`, _`TranslationReviewEditorProps`_ |
