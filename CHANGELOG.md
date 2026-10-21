@@ -21,6 +21,35 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.48.0](https://github.com/Eifi1/ui-kit/compare/v0.47.0...v0.48.0) (2026-10-21)
+
+Round 0.48, keksdose run 83 (Marcel's live reports #451, #410, #450, #603) and the 0.47 build
+reviews. It removes `TabsLabels.backToFirst`, deprecated in 0.47: **breaking** for a build that
+still names it, which no app does. Three changes show on a plain bump:
+
+- The `Tabs` cues are bare chevrons beside the strip (1.5rem, a 48px hit area).
+- A `Disclosure` with no children (or an empty fragment) draws no body.
+- The kit's feedback columns fit the table's width: Subject grows, URL, Email and Resolved
+  leave first (and come back once they fit), and the Columns panel counts what is drawn.
+
+Opt-in: a column's `grow` and `fitPriority`, `SettingsGroup.badge` with `adminSections`'
+badges, and `DataTable`'s `leadingRowSticky`.
+
+The server half ships as server-kit 0.19.0, which breaks only a test helper:
+`check_comment_store` requires the app's `attachment_url`. Per-app steps: `docs/adopt-0.48.md`.
+
+### ⚠ BREAKING CHANGES
+
+* TabsLabels.backToFirst is removed (deprecated in 0.47; no app uses it).
+
+### Added
+
+* tables fit their width, bare tab cues, group badges, a sticky leading row ([b183b3a](https://github.com/Eifi1/ui-kit/commit/b183b3a2ad9d33e792b0cad773503c48e01667b3))
+
+### Fixed
+
+* **data-table,tabs,disclosure:** the 0.48 build reviews ([ea85513](https://github.com/Eifi1/ui-kit/commit/ea85513b0729ddfa23dbbce08158bc6f406401be))
+
 ## [0.47.0](https://github.com/Eifi1/ui-kit/compare/v0.46.1...v0.47.0) (2026-10-21)
 
 Round 0.47, the three 0.46 build reviews plus keksdose live #447 (feedback §12), #410 and dev
