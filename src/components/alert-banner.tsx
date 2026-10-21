@@ -376,7 +376,14 @@ export function AlertBanner({
         "min-w-0 text-start max-md:flex max-md:items-baseline max-md:gap-2",
       )}
     >
-      <span id={bodyId} ref={bodyRef} className={cn("max-md:min-w-0", !expanded && "max-md:line-clamp-1")}>
+      {/* The clamp is deliberate: the rest is one tap away behind More, so the size sweep's
+          truncation gate (scripts/screenshot-sizes.mjs) leaves it alone. */}
+      <span
+        id={bodyId}
+        ref={bodyRef}
+        data-truncate-ok=""
+        className={cn("max-md:min-w-0", !expanded && "max-md:line-clamp-1")}
+      >
         {children}
       </span>
       {(expanded || !fits) && (
