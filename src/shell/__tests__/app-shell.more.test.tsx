@@ -298,3 +298,48 @@ describe("the top bar keeps its icons (§4)", () => {
     expect(within(top).getByRole("button", { name: "Notifications" }).textContent).toBe("");
   });
 });
+
+/**
+ * keksdose dev#613 (R11, UX-1.5): at Normal the five-cell bar holds "Transactions" whole,
+ * so its "Trans." belongs to Large and up only. keksdose read `useTextSize()` in its
+ * layout to hand the shell a `shortLabel` or not; `shortLabelFrom` says it on the item.
+ */
+describe("AppShellNavItem shortLabelFrom", () => {
+  const nav = (from?: "normal" | "large" | "xlarge"): AppShellNavItem[] => [
+    { to: "/", label: "Home", icon: Home },
+    { to: "/transactions", label: "Transactions", shortLabel: "Trans.", shortLabelFrom: from, icon: ListChecks },
+  ];
+
+  it("uses the short label at every size by default", () => {
+    viewport(390);
+    const { container } = renderShell({ nav: nav() });
+    expect(cellNames(container)).toEqual(["Home", "Trans."]);
+  });
+
+  it("from large: the full label at Normal, the short one at Large and Extra large, live", () => {
+    viewport(390);
+    const { container } = renderShell({ nav: nav("large") });
+    expect(cellNames(container)).toEqual(["Home", "Transactions"]);
+    act(() => applyTextSize("large"));
+    expect(cellNames(container)).toEqual(["Home", "Trans."]);
+    act(() => applyTextSize("xlarge"));
+    expect(cellNames(container)).toEqual(["Home", "Trans."]);
+  });
+
+  it("from xlarge: the full label up to Large", () => {
+    viewport(390);
+    applyTextSize("large");
+    const { container } = renderShell({ nav: nav("xlarge") });
+    expect(cellNames(container)).toEqual(["Home", "Transactions"]);
+    act(() => applyTextSize("xlarge"));
+    expect(cellNames(container)).toEqual(["Home", "Trans."]);
+  });
+
+  it("keeps the full label in the sidebar either way", () => {
+    viewport(390);
+    applyTextSize("xlarge");
+    const { container } = renderShell({ nav: nav("large") });
+    const sidebarLinks = Array.from(container.querySelectorAll("aside a")).map((a) => a.textContent);
+    expect(sidebarLinks.join("|")).toContain("Transactions");
+  });
+});

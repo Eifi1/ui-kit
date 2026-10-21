@@ -1,0 +1,72 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+
+import { AlertBanner } from "../alert-banner";
+import { UiKitProvider } from "../../i18n/kit-labels";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
+import { uiKitLabelsZh } from "../../i18n/locales/zh";
+
+/**
+ * keksdose dev#611 (R10, UX-1.2): its beta notice took three to four lines (~100px) above
+ * every phone screen. `clampMobile` holds the message to ONE line below `md` with a
+ * More/Less toggle; from `md` up nothing changes (the clamp and the toggle are `max-md:` /
+ * `md:hidden`, the kit's text-size-aware `md`).
+ */
+describe("AlertBanner clampMobile", () => {
+  it("is off by default: no toggle, no clamp", () => {
+    const { container } = render(<AlertBanner tone="neutral">A long message</AlertBanner>);
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(container.innerHTML).not.toContain("line-clamp");
+  });
+
+  it("clamps the message to one line on a phone, with a More toggle that expands it", () => {
+    render(
+      <AlertBanner tone="neutral" variant="strip" clampMobile onDismiss={() => {}}>
+        A long message
+      </AlertBanner>,
+    );
+    const toggle = screen.getByRole("button", { name: "More" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle.className).toContain("md:hidden");
+    const body = document.getElementById(toggle.getAttribute("aria-controls")!)!;
+    expect(body).toHaveTextContent("A long message");
+    expect(body.className).toContain("max-md:line-clamp-1");
+
+    fireEvent.click(toggle);
+    expect(screen.getByRole("button", { name: "Less" })).toHaveAttribute("aria-expanded", "true");
+    expect(body.className).not.toContain("line-clamp");
+
+    fireEvent.click(screen.getByRole("button", { name: "Less" }));
+    expect(screen.getByRole("button", { name: "More" })).toHaveAttribute("aria-expanded", "false");
+    // The × is still its own control beside it.
+    expect(screen.getByRole("button", { name: "Dismiss" })).toBeInTheDocument();
+  });
+
+  it("names the toggle in the provider's language", () => {
+    render(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <AlertBanner clampMobile>Hinweis</AlertBanner>
+      </UiKitProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Mehr" }));
+    expect(screen.getByRole("button", { name: "Weniger" })).toBeInTheDocument();
+  });
+
+  it("is ignored on a whole-row banner, whose row is already one button", () => {
+    render(
+      <AlertBanner clampMobile onClick={() => {}}>
+        Open the budget
+      </AlertBanner>,
+    );
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+  });
+
+  it("has the words in every catalogue", () => {
+    render(
+      <UiKitProvider labels={uiKitLabelsZh()}>
+        <AlertBanner clampMobile>注意</AlertBanner>
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("button", { name: "更多" })).toBeInTheDocument();
+  });
+});

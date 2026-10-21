@@ -328,6 +328,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       opensInNewTab: "új lapon nyílik meg",
       aboutField: (field) => `Súgó: ${field}`,
       help: "Súgó",
+      showMore: "Több",
+      showLess: "Kevesebb",
     },
     dataTable: {
       columns: "Oszlopok",

@@ -336,6 +336,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       opensInNewTab: "s’ouvre dans un nouvel onglet",
       aboutField: (field) => `À propos de «\u202f${field}\u202f»`,
       help: "Aide",
+      showMore: "Plus",
+      showLess: "Moins",
     },
     dataTable: {
       columns: "Colonnes",

@@ -89,10 +89,12 @@ export interface TabsProps<T extends string>
    *
    * The edge fade alone could read as the end of the row: the last visible tab can
    * finish exactly where the fade begins, so nothing looks cut off (keksdose live #410).
-   * Since 0.48 (live #410 round 5) the carets are bare glyphs IN the row — the ‹ before
-   * the strip, the › after it — centred on the labels, muted and primary on hover, with
+   * Since 0.48 (live #410 rounds 5–6) the carets are bare glyphs BESIDE the strip — the ‹
+   * before it, the › after it — centred on the labels, muted and primary on hover, with
    * no frame, fill or shadow; until 0.47 they were framed buttons laid over the strip's
-   * last visible tabs. Each takes its room only while it is shown. Out of the tab order —
+   * last visible tabs. While the strip overflows at all it keeps a 24px gutter at both
+   * ends, and each caret sits in its own, so scrolling never changes the strip's width
+   * or moves its labels; a strip that fits has no gutters. Out of the tab order —
    * the keyboard walks the strip with the arrow keys, which bring the focused tab into
    * view. At every width. Ignored on a vertical strip (a side nav is a column, not a
    * row). Names: `tabs.more` / `tabs.previous`. keksdose's `scroll-edge-cues.tsx` is
@@ -273,40 +275,53 @@ export function Tabs<T extends string>({
     const toward = (side === "end" ? 1 : -1) * (rtl ? -1 : 1);
     strip.scrollBy({ left: toward * Math.round(strip.clientWidth * 0.75), behavior });
   };
-  // BESIDE the strip, in the row (0.48, keksdose live #410 round 5: "They are only
-  // overlayed buttons aren't they? They should be blend in […] in the same line as the
-  // report labels and centered as well with the labels"): a bare glyph — no frame, fill
-  // or shadow — muted until the pointer comes, centred on the labels above the 2px
-  // underline (`pb-0.5`), with the strip's rule carried on beneath it. The wrapper is
-  // ours because IconButton puts its tooltip's span around the button. Each cue takes
-  // its room only while something lies past its edge; the strip gives way, and the
-  // scroll position it measures never moves for it, so the cues cannot flicker.
+  // In a GUTTER of its own at the strip's end (0.48, keksdose live #410 rounds 5–6): a
+  // bare glyph — no frame, fill or shadow — muted until the pointer comes. Round 5 put
+  // each cue in the flow beside the strip, so it took 24px the moment it appeared and the
+  // labels jumped sideways at every edge the scroll crossed ("It has problems with moving
+  // to left and right especially when moving the scroll bar"). Now the strip box keeps a
+  // 24px gutter at BOTH ends for as long as the strip overflows at all (`px-6`, see
+  // `stripBox`), and each gutter is absolute in that padding, so a cue coming or going
+  // never moves the strip, its labels or the scroll position under the thumb. A strip
+  // that fits has no gutters: its width changes only when it starts or stops overflowing.
+  // The gutter carries the strip's 1px rule on beneath the glyph, and lifts the glyph
+  // onto the LABELS' centre rather than the box's: a tab's 2px underline (`border-b-2`)
+  // sits on the rule (`-mb-px`), so the labels are centred 2px above the box's bottom —
+  // the gutter's 1px rule (`border-b`) plus 1px more (`pb-px`).
   // 24px wide at every text size (KS N3): at Large `sm`'s 48px minimum made each cue
   // 48px, and at 360px the two left a two-tab strip 100px. The 48px touch target is an
   // invisible hit area round the glyph instead (`HIT_AREA_LARGE`, as `2xs`), over the
-  // strip's faded edge, not room taken from the row.
-  const cueAt = (side: "start" | "end") => (
+  // strip's faded edge, not room taken from the row. The wrapper inside the gutter is
+  // ours because IconButton puts its tooltip's span around the button.
+  const gutterAt = (side: "start" | "end", shown: boolean) => (
     <div
-      data-tabs-overflow-cue={side}
-      className="flex shrink-0 items-center self-stretch border-b border-subtle pb-0.5"
+      data-tabs-cue-gutter={side}
+      className={cn(
+        "absolute inset-y-0 flex w-6 items-center justify-center border-b border-subtle pb-px",
+        side === "start" ? "start-0" : "end-0",
+      )}
     >
-      <IconButton
-        size="sm"
-        variant="ghost"
-        className={cn(
-          "w-6 large:min-w-0 bg-transparent text-muted hover:bg-transparent hover:text-primary",
-          // Over the strip's faded edge, for ‹ too (the strip comes after it in the row).
-          HIT_AREA_LARGE,
-          "large:after:z-[1]",
-        )}
-        tabIndex={-1}
-        type="button"
-        label={side === "start" ? text.previous : text.more}
-        labelVisible={false}
-        onClick={() => onCue(side)}
-      >
-        {side === "start" ? <ChevronLeft className="rtl:-scale-x-100" /> : <ChevronRight className="rtl:-scale-x-100" />}
-      </IconButton>
+      {shown && (
+        <div data-tabs-overflow-cue={side} className="flex">
+          <IconButton
+            size="sm"
+            variant="ghost"
+            className={cn(
+              "w-6 large:min-w-0 bg-transparent text-muted hover:bg-transparent hover:text-primary",
+              // Over the strip's faded edge, for ‹ too.
+              HIT_AREA_LARGE,
+              "large:after:z-[1]",
+            )}
+            tabIndex={-1}
+            type="button"
+            label={side === "start" ? text.previous : text.more}
+            labelVisible={false}
+            onClick={() => onCue(side)}
+          >
+            {side === "start" ? <ChevronLeft className="rtl:-scale-x-100" /> : <ChevronRight className="rtl:-scale-x-100" />}
+          </IconButton>
+        </div>
+      )}
     </div>
   );
   // The OPEN tab is scrolled into the strip whenever it changes — on mount too, for a
@@ -600,13 +615,15 @@ export function Tabs<T extends string>({
         {text.remove(nameOf(activeTab))}
       </button>
     ) : null;
-  // The row the cues sit in, ‹ before the strip and › after it (see `overflowCue`).
-  // There whether or not the strip overflows right now, so a resize never re-parents it.
+  // The box the cues sit in, ‹ in the gutter before the strip and › in the one after it
+  // (see `gutterAt`). There whether or not the strip overflows right now, so a resize
+  // never re-parents it; the gutters only while it overflows at all.
+  const gutters = cue && fade.overflow !== undefined;
   const stripBox = cue ? (
-    <div className={cn("flex min-w-0", !onAdd && "flex-1")}>
-      {cueStart && cueAt("start")}
+    <div className={cn("relative flex min-w-0", !onAdd && "flex-1", gutters && "px-6")}>
       {tablist}
-      {cueEnd && cueAt("end")}
+      {gutters && gutterAt("start", cueStart)}
+      {gutters && gutterAt("end", cueEnd)}
     </div>
   ) : (
     tablist

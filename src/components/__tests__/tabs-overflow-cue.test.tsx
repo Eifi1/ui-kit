@@ -6,7 +6,7 @@ import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 /**
- * `overflowCue` (0.40, kk run 79 gap 1; every width since 0.46; 0.47 keksdose live #410 r4; 0.48 r5, in the row):
+ * `overflowCue` (0.40, kk run 79 gap 1; every width since 0.46; 0.47 keksdose live #410 r4; 0.48 r5–6, in fixed gutters beside the strip):
  * a › after the strip's end while tabs lie past it and a ‹ before its start while tabs lie
  * before it — each a step of ~75 % toward its own side, and neither ever turns round.
  * keksdose's `scroll-edge-cues.tsx` (which replaced the 0.40 caret there) is the reference.
@@ -105,25 +105,65 @@ describe("Tabs overflowCue", () => {
     expect(icon(previous()!)).toMatch(/chevron-left/);
   });
 
-  it("sits IN the row beside the strip (0.48, keksdose live #410 r5): ‹ before it, › after it", () => {
+  it("sits beside the strip, not over it (0.48, keksdose live #410 r5–6): ‹ before it, › after it", () => {
     render(strip());
     const tablist = screen.getByRole("tablist");
     const box = tablist.parentElement!;
     const endCue = more()!.closest("[data-tabs-overflow-cue]")!;
     expect(endCue).toHaveAttribute("data-tabs-overflow-cue", "end");
-    // In flow, not laid over the last visible tab.
-    expect(endCue).not.toHaveClass("absolute");
-    expect(tablist.compareDocumentPosition(endCue) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    // Centred on the labels, above the strip's rule, which carries on beneath it.
-    expect(endCue).toHaveClass("items-center", "self-stretch", "border-b", "border-subtle");
+    // In the box's end gutter (its padding), not laid over the last visible tab.
+    expect(endCue.closest("[data-tabs-cue-gutter]")).toHaveClass("end-0", "inset-y-0", "w-6");
+    expect(box).toHaveClass("relative", "px-6");
+    expect(tablist).not.toContainElement(endCue as HTMLElement);
+    // Centred on the labels, above the 2px underline, with the strip's rule beneath it.
+    expect(endCue.closest("[data-tabs-cue-gutter]")).toHaveClass("items-center", "border-b", "border-subtle", "pb-px");
     geo.left = 700;
     scrollTo_();
     const startCue = previous()!.closest("[data-tabs-overflow-cue]")!;
     expect(startCue).toHaveAttribute("data-tabs-overflow-cue", "start");
-    expect(startCue).not.toHaveClass("absolute");
-    expect(startCue.compareDocumentPosition(tablist) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(startCue.closest("[data-tabs-cue-gutter]")).toHaveClass("start-0");
     // Same box around the same strip.
     expect(screen.getByRole("tablist").parentElement).toBe(box);
+  });
+
+  it("never changes the strip's box while scrolling (keksdose live #410 r6): fixed gutters at both ends", () => {
+    // Round 5 put each cue in the flow, so it took 24px the moment it appeared and the
+    // labels jumped sideways at every edge the scroll crossed ("It has problems with
+    // moving to left and right especially when moving the scroll bar").
+    render(strip());
+    const shape = () => {
+      const tablist = screen.getByRole("tablist");
+      const box = tablist.parentElement!;
+      return {
+        box: box.getAttribute("class"),
+        tablist: tablist.getAttribute("class"),
+        // Every flow child of the box but the strip: none, at any scroll position.
+        flow: Array.from(box.children).filter((c) => c !== tablist && !c.classList.contains("absolute")).length,
+        gutters: Array.from(box.querySelectorAll("[data-tabs-cue-gutter]")).map((g) => g.getAttribute("class")),
+      };
+    };
+    const atStart = shape();
+    expect(atStart.box).toMatch(/(^|\s)px-6(\s|$)/);
+    expect(atStart.flow).toBe(0);
+    expect(atStart.gutters).toHaveLength(2);
+    geo.left = 300;
+    scrollTo_();
+    expect(shape()).toEqual(atStart);
+    geo.left = 700;
+    scrollTo_();
+    expect(shape()).toEqual(atStart);
+    // Each cue sits absolute at its own end, in its own gutter, the rule beneath it.
+    const startGutter = previous()!.closest("[data-tabs-cue-gutter]")!;
+    expect(startGutter).toHaveClass("absolute", "start-0", "w-6", "border-b", "border-subtle");
+    expect(more()).toBeNull();
+  });
+
+  it("gives a strip that fits no gutters", () => {
+    geo.scrollWidth = 300;
+    render(strip());
+    const box = screen.getByRole("tablist").parentElement!;
+    expect(box).not.toHaveClass("px-6");
+    expect(box.querySelector("[data-tabs-cue-gutter]")).toBeNull();
   });
 
   it("is a bare glyph: no frame, fill or shadow; muted, primary on hover", () => {

@@ -134,7 +134,11 @@ export interface DataTableColumn<T> {
    * is "the rest of the row" and one long title can no longer widen the table. One per
    * table. It has no resize handle, and a width stored for it (before it grew) is
    * ignored: it always takes the rest. Resize the others to change it. Opt-in: without it nothing
-   * changes. With {@link fitPriority} columns the table keeps it at least 15rem wide.
+   * changes. It keeps at least 10rem: with {@link fitPriority} columns the table leaves
+   * those out first, and scrolls sideways once none is left. Every other cell keeps one
+   * line at Normal text size (`whitespace-nowrap`; a column's own
+   * `not-large:whitespace-normal` lets its prose wrap), so a figure or a name is never
+   * broken in two to make room for it.
    */
   grow?: boolean;
   /**
@@ -824,7 +828,7 @@ const ROW_NAV_KEYS = { ArrowDown: 1, ArrowUp: 1, Home: 1, End: 1 } as const;
 
 import { DEFAULT_PERSIST_PREFIX, useTableState, type TableUrlSync } from "./use-table-state";
 import { useMobileReveal } from "./use-mobile-reveal";
-import { GROW_CELL_CLASS, useColumnFit } from "./data-table-fit";
+import { GROW_CELL_CLASS, GROW_PEER_CELL_CLASS, useColumnFit } from "./data-table-fit";
 
 export function DataTable<T>({
   rows,
@@ -1201,6 +1205,9 @@ export function DataTable<T>({
     () => columns.filter((c) => !hiddenCols.has(c.key) && !autoHidden.has(c.key)),
     [columns, hiddenCols, autoHidden],
   );
+  // With a `grow` column drawn, every other cell keeps one line at Normal (kastlan S2,
+  // 0.48): the `w-full` column squeezed them to their min-content width.
+  const growDrawn = visibleColumns.some((c) => c.grow);
 
   // Which cell carries the row's link when `rowHref` is set (feedback #451). The
   // `mobilePrimary` column is the row's headline by declaration, so it is both the
@@ -1748,6 +1755,7 @@ export function DataTable<T>({
             to the eye. The pager stays live — see `ServerPagination.isLoading`. */}
         <table
           className={cn("w-full", compact ? "text-xs" : "text-sm")}
+          data-fit-grow={growDrawn ? "" : undefined}
           aria-label={labels.table}
           aria-busy={isLoading || undefined}
         >
@@ -1957,7 +1965,7 @@ export function DataTable<T>({
                             "align-top",
                             compact ? "px-2 py-1" : "px-3 py-2",
                             width && "overflow-hidden text-ellipsis",
-                            col.grow && GROW_CELL_CLASS,
+                            col.grow ? GROW_CELL_CLASS : growDrawn && GROW_PEER_CELL_CLASS,
                             logicalAlign(own.className),
                             logicalAlign(col.className),
                           )}
@@ -2071,7 +2079,7 @@ export function DataTable<T>({
                         // A `<th>` centres by default; the label reads from the start
                         // like the cells above it, unless the column says otherwise.
                         isLabel && "text-start",
-                        col.grow && GROW_CELL_CLASS,
+                        col.grow ? GROW_CELL_CLASS : growDrawn && GROW_PEER_CELL_CLASS,
                         logicalAlign(col.className),
                       )}
                     >

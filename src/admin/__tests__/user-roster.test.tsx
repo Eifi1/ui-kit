@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DataTable } from "../../components/data-table";
 import type { DataTableColumn } from "../../components/data-table";
+import { GROW_PEER_CELL_CLASS, GROW_PEER_CHIPS_CLASS } from "../../components/data-table-fit";
 import type { RoleVocabulary } from "../../components/account-chips";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import {
@@ -90,9 +91,13 @@ afterEach(() => {
 
 const OWNED: DataTableColumn<Row> = { key: "owned", header: "Owned", cell: (r) => String(r.owned) };
 
-function Roster(props: Partial<UserRosterColumnsOptions<Row, Role>> & { rows?: Row[]; locale?: string }) {
-  const { rows = [ADA, BEN, CY], locale, ...options } = props;
-  const columns = userRosterColumns<Row, Role>({ roles: ROLES, extra: [OWNED], ...options });
+function Roster(
+  props: Partial<UserRosterColumnsOptions<Row, Role>> & { rows?: Row[]; locale?: string; grow?: string },
+) {
+  const { rows = [ADA, BEN, CY], locale, grow, ...options } = props;
+  const columns = userRosterColumns<Row, Role>({ roles: ROLES, extra: [OWNED], ...options }).map((c) =>
+    c.key === grow ? { ...c, grow: true } : c,
+  );
   return (
     <UiKitProvider locale={locale}>
       <MemoryRouter>
@@ -133,6 +138,24 @@ describe("userRosterColumns", () => {
       "deletion",
     );
     expect(within(cy).queryByText("Inactive")).not.toBeInTheDocument();
+  });
+
+  it("keeps a row's chips on one line at Normal beside a `grow` column (kastlan S2, 0.48)", () => {
+    // The table squeezes every other column to its min-content: a flex-wrap row of chips
+    // stacked one per line. In a grow table only (`data-fit-grow`), and Normal only.
+    stubViewport(true);
+    render(<Roster grow="name" />);
+    const ben = screen.getByRole("row", { name: /Ben Sample/ });
+    const states = within(ben).getByText("Unverified").closest("[data-state]")!.parentElement!;
+    expect(states).toHaveClass("flex-wrap", GROW_PEER_CHIPS_CLASS);
+    const role = within(ben).getByText("Member").closest("[data-role]")!.parentElement!;
+    expect(role).toHaveClass("flex-wrap", GROW_PEER_CHIPS_CLASS);
+    expect(GROW_PEER_CHIPS_CLASS).toBe("in-data-fit-grow:not-large:flex-nowrap");
+    expect(screen.getByRole("table")).toHaveAttribute("data-fit-grow");
+    // last_login / created: one line from the cell's own nowrap.
+    expect(within(ben).getAllByRole("cell").find((c) => c.dataset.col === "last_login")).toHaveClass(
+      GROW_PEER_CELL_CLASS,
+    );
   });
 
   it("writes the name in the reader's order", () => {

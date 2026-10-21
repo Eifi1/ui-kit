@@ -19,12 +19,30 @@ import type { DataTableColumn } from "./data-table";
 
 /** The least a `grow` column keeps before the table starts leaving columns out: about
  *  a sentence of a title. In rem, so Large text asks for more. */
-export const GROW_MIN_REM = 15;
+export const GROW_MIN_REM = 10;
 
 /** The `<th>`/`<td>` classes of a `grow` column. `truncate-until-large`: one line and an
- *  ellipsis at Normal, a wrap from Large up (text size §10.17), as every kit title. */
-export const GROW_HEAD_CLASS = "w-full max-w-0";
+ *  ellipsis at Normal, a wrap from Large up (text size §10.17), as every kit title. The
+ *  header's `min-w-[10rem]` ({@link GROW_MIN_REM}) is the floor once no `fitPriority`
+ *  column is left to leave out: the table then scrolls sideways rather than crushing the
+ *  column it exists for (Kurvenschmiede S1, 0.48: Subject was 24px at 1100px). */
+export const GROW_HEAD_CLASS = "w-full max-w-0 min-w-[10rem]";
 export const GROW_CELL_CLASS = "w-full max-w-0 truncate-until-large";
+
+/** Every OTHER cell of a table with a `grow` column (kastlan S2, 0.48). A `w-full` column
+ *  squeezes the rest to their min-content width, so any text with a space broke in two
+ *  even at 1920px ("CHF 2'568.38", "Peter Mueller", a date with its time). One line at
+ *  Normal, so a column is never narrower than its text and `fitPriority` measures what
+ *  the columns really need; from Large up the cell wraps as before (§10.17). The headers
+ *  are `whitespace-nowrap` already. A column whose prose should wrap anyway passes
+ *  `not-large:whitespace-normal` in its `className`. */
+export const GROW_PEER_CELL_CLASS = "not-large:whitespace-nowrap";
+
+/** For a cell's own flex-wrap row (chips): `white-space` does not stop a flex row from
+ *  wrapping, so a row of chips beside a `grow` column stacked one per line. One line at
+ *  Normal inside a table with a visible `grow` column (`<table data-fit-grow>`), as the
+ *  text beside it; elsewhere and from Large up it wraps as before. */
+export const GROW_PEER_CHIPS_CLASS = "in-data-fit-grow:not-large:flex-nowrap";
 
 /** The auto-hide order: lowest `fitPriority` first, the later column first on a tie. */
 export function fitHideOrder<T>(columns: DataTableColumn<T>[]): DataTableColumn<T>[] {

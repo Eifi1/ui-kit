@@ -141,6 +141,11 @@ function AlertBannerMore() {
           <AlertBanner tone="danger" variant="strip" size="sm">
             Payment past due — a small strip, no action.
           </AlertBanner>
+          <AlertBanner tone="neutral" variant="strip" clampMobile data-testid="clamp-strip">
+            clampMobile: during the closed beta the app runs on modest hardware, so a page can take a
+            moment longer to load now and then. On a phone this note keeps to one line, with More for the
+            rest; from md up it reads in full, as without the prop.
+          </AlertBanner>
           <div className="p-3 text-sm text-secondary">
             The page under the strips — the trial strip&apos;s action pressed {paid}×.{" "}
             {!strip && (

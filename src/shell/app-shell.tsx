@@ -18,7 +18,7 @@ import { useAnchoredRect } from "../hooks/use-anchored-rect";
 import { anchoredInline } from "../hooks/use-anchored-panel";
 import { useDismissLayer } from "../hooks/use-dismiss";
 import { useBreakpoint } from "../hooks/use-breakpoint";
-import { useTextSize } from "../theme/text-size";
+import { TEXT_SIZES, useTextSize } from "../theme/text-size";
 import type { TextSize } from "../theme/text-size";
 import { DEFAULT_APP_SHELL_LABELS, useKitLabels, useKitLink, type LabelOverride } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
@@ -45,6 +45,11 @@ export interface AppShellNavItem {
    *  shortening the real label, which the sidebar has ample room for and which is the
    *  name the rest of the product uses. */
   shortLabel?: string;
+  /** 0.48: the text size from which the bar uses {@link shortLabel} — `"large"` keeps the
+   *  full label at Normal, where five cells hold "Transactions" whole, and shortens it
+   *  from Large up (keksdose dev#613, which read `useTextSize()` in its layout to decide).
+   *  Default `"normal"`: the short label at every size, as before. */
+  shortLabelFrom?: TextSize;
   /** 0.31.0: leave this entry out of the MOBILE BOTTOM BAR; the sidebar keeps it.
    *  For an entry a phone reaches another way — the brand link to the start page —
    *  when one cell fewer is what keeps the others' labels whole (the bar divides its
@@ -544,9 +549,13 @@ export function AppShell({
                 one that scrolls into empty space. Guarding it per component (see
                 sr-only-containment.test) could never be complete: any page's own
                 `sr-only` span re-opened it. Here it is closed for every child at once. */}
+            {/* Below `md` the bottom room is the nav plus the larger of 1.5rem and what the
+                floating launchers take above it (`--app-float-clearance`, published by
+                every kit FAB, FloatingPanel and FloatingActionGroup while mounted — keksdose
+                dev#612: the last row ended under the help launcher). */}
             <main
               className={cn(
-                "relative flex-1 max-w-full overflow-x-clip pb-[calc(var(--app-nav-h,4rem)+1.5rem)] md:pb-0 md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable_both-edges]",
+                "relative flex-1 max-w-full overflow-x-clip pb-[calc(var(--app-nav-h,4rem)+max(1.5rem,var(--app-float-clearance,0px)))] md:pb-0 md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable_both-edges]",
                 // The list page's fill (0.40, docs/page-layout-harmonization.md §1.3): while
                 // a `fillHeight` DataTable is inside, a flex column — a banner above the
                 // page keeps its own height and the page (a `FillHeight`) takes the rest,
@@ -764,6 +773,11 @@ function MobileCellLabel({ children }: { children: ReactNode }) {
  *  nothing marked on every sub-page (the same defect the sidebar had). */
 function MobileNavItem({ item }: { item: AppShellNavItem }) {
   const subActive = useSubItemActive(item);
+  const { size } = useTextSize();
+  const short =
+    item.shortLabel !== undefined && TEXT_SIZES.indexOf(size) >= TEXT_SIZES.indexOf(item.shortLabelFrom ?? "normal")
+      ? item.shortLabel
+      : undefined;
   return (
     <NavLink
       to={item.to}
@@ -774,7 +788,7 @@ function MobileNavItem({ item }: { item: AppShellNavItem }) {
       <span className="relative">
         <item.icon className="size-5" />
       </span>
-      <MobileCellLabel>{item.shortLabel ?? item.label}</MobileCellLabel>
+      <MobileCellLabel>{short ?? item.label}</MobileCellLabel>
     </NavLink>
   );
 }

@@ -39,6 +39,8 @@ export const DEFAULT_COMMON_LABELS: CommonLabels = {
   opensInNewTab: "opens in a new tab",
   aboutField: (field) => `About “${field}”`,
   help: "Help",
+  showMore: "More",
+  showLess: "Less",
 };
 
 export const DEFAULT_DATE_PICKER_LABELS: DatePickerLabels = {

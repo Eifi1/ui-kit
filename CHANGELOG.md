@@ -25,9 +25,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 
 Round 0.48, keksdose run 83 (Marcel's live reports #451, #410, #450, #603) and the 0.47 build
 reviews. It removes `TabsLabels.backToFirst`, deprecated in 0.47: **breaking** for a build that
-still names it, which no app does. Three changes show on a plain bump:
+still names it, which no app does. Four changes show on a plain bump:
 
-- The `Tabs` cues are bare chevrons beside the strip (1.5rem, a 48px hit area).
+- On a phone `AppShell` pads `<main>` past a floating launcher, so the last row stays reachable
+  (keksdose dev #612; only an app with a launcher: keksdose).
+- The `Tabs` cues are bare chevrons beside the strip (1.5rem, a 48px hit area), each in a
+  fixed gutter kept at both ends while the strip overflows, so scrolling never moves the labels.
 - A `Disclosure` with no children (or an empty fragment) draws no body.
 - The kit's feedback columns fit the table's width: Subject grows, URL, Email and Resolved
   leave first (and come back once they fit), and the Columns panel counts what is drawn.
@@ -45,10 +48,15 @@ The server half ships as server-kit 0.19.0, which breaks only a test helper:
 ### Added
 
 * tables fit their width, bare tab cues, group badges, a sticky leading row ([b183b3a](https://github.com/Eifi1/ui-kit/commit/b183b3a2ad9d33e792b0cad773503c48e01667b3))
+* **shell,floating-panel:** below `md` `AppShell` pads `<main>` past the floating launchers: every `FloatingActionButton`, `FloatingPanel` and `FloatingActionGroup` publishes its room above the nav as `--app-float-clearance` while mounted (the largest wins), and `FloatingPanel` takes `hidden` to step aside while keeping its room and open state (keksdose dev #612; shows on a plain bump for an app with a launcher)
+* **tour:** the overlay's root carries `data-tour-overlay` on every step (keksdose dev #611)
+* **alert-banner:** `clampMobile` keeps the message to one line below `md` with a More / Less toggle (`common.showMore` / `common.showLess`, seven catalogues) (keksdose dev #611)
+* **shell:** `AppShellNavItem.shortLabelFrom` uses `shortLabel` on the phone bar only from that text size up (keksdose dev #613)
 
 ### Fixed
 
 * **data-table,tabs,disclosure:** the 0.48 build reviews ([ea85513](https://github.com/Eifi1/ui-kit/commit/ea85513b0729ddfa23dbbce08158bc6f406401be))
+* **data-table:** beside a `grow` column the other cells keep one line at Normal, the `grow` column keeps 10rem once nothing is left to leave out, and the feedback columns leave out Votes and Category last
 
 ## [0.47.0](https://github.com/Eifi1/ui-kit/compare/v0.46.1...v0.47.0) (2026-10-21)
 

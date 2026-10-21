@@ -339,6 +339,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       opensInNewTab: "öffnet in einem neuen Tab",
       aboutField: (field) => `Hilfe zu „${field}“`,
       help: "Hilfe",
+      showMore: "Mehr",
+      showLess: "Weniger",
     },
     dataTable: {
       columns: "Spalten",

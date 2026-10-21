@@ -451,7 +451,8 @@ function statusRank(status: FeedbackStatus): number {
  *   the phone's filter sheet already exposes every column filter).
  * - Fitted to the table's width (0.48, keksdose live #451): Subject `grow`s and
  *   ellipsises, and a narrow table leaves out URL, then Email, then Resolved
- *   (`fitPriority` 1–3) — the open report repeats all three. Drop the two keys with
+ *   (`fitPriority` 1–3) — the open report repeats all three — then Votes and Category
+ *   (4, 5) before Subject would drop below 10rem. Drop the two keys with
  *   `{ ...col, grow: undefined, fitPriority: undefined }` for the 0.47 layout.
  * - `/my-feedback` shows the same nine: the Email cell's context fallback exists for it
  *   (the admin list's join is absent there, §3.1), and its phone card drops the submitter
@@ -483,6 +484,9 @@ export function feedbackColumns<T extends FeedbackTableRow>({
           sortBy: (row) => row.votes ?? 0,
           filter: { type: "number", getValue: (row) => row.votes ?? 0 },
           mobileHidden: true,
+          // Fourth to go (Kurvenschmiede S1, 0.48): with only the first three, Subject was
+          // crushed to 24px at 1100px. Still reachable from the Columns panel.
+          fitPriority: 4,
         },
       ]
     : [];
@@ -512,6 +516,9 @@ export function feedbackColumns<T extends FeedbackTableRow>({
         getValue: (row) => row.category,
         options: FEEDBACK_CATEGORY_ORDER.map((value) => ({ value, label: categoryLabels[value] })),
       },
+      // Last to go (Kurvenschmiede S1, 0.48), before Subject would drop below 10rem:
+      // the open report's Subject section repeats the badge.
+      fitPriority: 5,
     },
     {
       key: "title",

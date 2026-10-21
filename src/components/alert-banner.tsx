@@ -1,3 +1,4 @@
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, MouseEvent, ReactNode, Ref } from "react";
 import { AlertTriangle, CheckCircle2, ChevronRight, Info, X } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -195,6 +196,18 @@ interface AlertBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "on
   /** Accessible name of the ×. Default: `common.dismiss` from the
    *  {@link UiKitProvider}, else "Dismiss". */
   dismissLabel?: string;
+  /**
+   * 0.48: on a phone (below the kit's text-size-aware `md`) hold the message to ONE line,
+   * with a "More" / "Less" toggle after it (`aria-expanded`, `aria-controls` the message;
+   * `common.showMore` / `common.showLess`). From `md` up nothing changes. The toggle only
+   * shows while the line actually cuts the message off.
+   *
+   * keksdose dev#611 (UX-1.2): its beta notice took three to four lines (~100px) above
+   * every phone screen, and the app built the clamp and the button around the banner's
+   * children by hand. Ignored on a whole-row banner (`href` / `onClick`): a toggle cannot
+   * sit inside the row's own link or button.
+   */
+  clampMobile?: boolean;
   children: ReactNode;
   /**
    * The banner's frame — where the rest of the props go (0.34, API-2, refactor audit
@@ -245,6 +258,7 @@ export function AlertBanner({
   icon,
   onDismiss,
   dismissLabel,
+  clampMobile = false,
   href,
   onClick,
   className,
@@ -261,6 +275,26 @@ export function AlertBanner({
   // A block-laid inline banner behaves like a box for layout: a row that may wrap.
   const inlineRow = inline && !block;
   const resolvedRole = role ?? (inline && live ? (tone === "danger" ? "alert" : "status") : undefined);
+
+  // `clampMobile`: the message's one-line clamp below `md`, and whether that line holds
+  // it all (then there is nothing to show "More" of). Measured while collapsed — the
+  // clamp is what makes `scrollHeight` exceed the box — and again whenever its box
+  // changes size, which a rotation or crossing `md` does. With no layout (a test, the
+  // server) the box is 0 tall, which reads as "may not fit": the toggle stays.
+  const clamp = clampMobile && !interactive;
+  const bodyId = useId();
+  const bodyRef = useRef<HTMLSpanElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [fits, setFits] = useState(false);
+  useLayoutEffect(() => {
+    const el = bodyRef.current;
+    if (!clamp || expanded || !el) return;
+    const check = () => setFits(el.clientHeight > 0 && el.scrollHeight <= el.clientHeight + 1);
+    check();
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(check);
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [clamp, expanded, children]);
 
   const Glyph = TONE_GLYPH[tone];
   // Onto the first line of a box's text: 2px at 14px/20px, 1px at 12px/16px.
@@ -312,7 +346,33 @@ export function AlertBanner({
   const content = (
     <>
       {glyph}
-      <span className={cn(!inlineRow && (nested ? "flex-1" : grow), "min-w-0 text-start")}>{children}</span>
+      {clamp ? (
+        // Below `md` a row: the message, clamped, then the toggle on its baseline. From
+        // `md` up a plain span with the message in it, as without the prop.
+        <span
+          className={cn(!inlineRow && grow, "min-w-0 text-start max-md:flex max-md:items-baseline max-md:gap-2")}
+        >
+          <span id={bodyId} ref={bodyRef} className={cn("max-md:min-w-0", !expanded && "max-md:line-clamp-1")}>
+            {children}
+          </span>
+          {(expanded || !fits) && (
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-controls={bodyId}
+              onClick={() => setExpanded((v) => !v)}
+              className={cn(
+                "relative z-10 shrink-0 rounded-sm font-medium underline underline-offset-2 md:hidden",
+                focusRing,
+              )}
+            >
+              {expanded ? common.showLess : common.showMore}
+            </button>
+          )}
+        </span>
+      ) : (
+        <span className={cn(!inlineRow && (nested ? "flex-1" : grow), "min-w-0 text-start")}>{children}</span>
+      )}
       {interactive && (
         <ChevronRight
           aria-hidden

@@ -189,6 +189,10 @@ export interface CommonLabels {
   aboutField: (field: string) => string;
   /** …and of a `help` "?" on a field with no label and no `aria-label` to name it by. */
   help: string;
+  /** 0.48: the toggle that shows the rest of a clamped text (`AlertBanner clampMobile`)… */
+  showMore: string;
+  /** …and folds it back to its one line. */
+  showLess: string;
 }
 
 /** `DatePicker` / `DateRangePicker` chrome. The calendar inside has its own

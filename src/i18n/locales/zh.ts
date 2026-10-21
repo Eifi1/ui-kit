@@ -320,6 +320,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       opensInNewTab: "在新标签页中打开",
       aboutField: (field) => `关于“${field}”`,
       help: "帮助",
+      showMore: "更多",
+      showLess: "收起",
     },
     dataTable: {
       columns: "列",

@@ -2,8 +2,9 @@
 
 ui-kit 0.48 removes what 0.47 deprecated for removal in 0.48 (`TabsLabels.backToFirst`), so a
 bump can break a build that still names it; none of the three apps does (checked 2026-10-21,
-below). Three changes show on a plain bump: Tabs' `overflowCue` carets are bare glyphs beside the
-strip instead of framed buttons over it (keksdose live #410 r5); a `Disclosure` with no children
+below). Four changes show on a plain bump (the fourth only for an app with a floating launcher:
+`AppShell` pads `<main>` past it, dev #612 — keksdose): Tabs' `overflowCue` carets are bare glyphs in fixed
+gutters beside the strip instead of framed buttons over it (keksdose live #410 r5–6); a `Disclosure` with no children
 draws no body (keksdose dev #603); and the kit's feedback columns fit the table's width (keksdose
 live #451): Subject grows and ellipsises, and URL, Email, Resolved leave the table in that order
 when it is too narrow, with the Columns panel counting what is drawn ("7/9", "hidden for width").
@@ -24,24 +25,36 @@ column's `grow` and `fitPriority`; `SettingsGroup.badge` (with `adminSections`' 
 | kastlan | None |
 | kurvenschmiede | None |
 
-## Tabs' `overflowCue`: bare glyphs in the row, centred on the labels (keksdose live #410 r5)
+## Tabs' `overflowCue`: bare glyphs in fixed gutters, centred on the labels (keksdose live #410 r5–6)
 
 Marcel, 2026-10-21: "They are only overlayed buttons aren't they? They should be blend in […]
 In the same line as the report labels and centered as well with the labels." The ‹ and › are
 no longer framed IconButtons laid OVER the first and last visible tab: the ‹ sits before the
 strip and the › after it, in flow, each with no border, fill or shadow — `text-muted`,
 `text-primary` on hover — vertically centred on the labels above the 2px underline, and the
-strip's rule carries on beneath them. Each is still there only while tabs lie past ITS edge
-(the strip gives way by 24px while one shows; the scroll position never moves for it, so they
-cannot flicker), steps three quarters of the width toward its own side, never turns round, and
+strip's rule carries on beneath them. Each is still there only while tabs lie past ITS edge,
+steps three quarters of the width toward its own side, never turns round, and
 follows the reading direction (‹ on the right in RTL). Still out of the tab order (`tabIndex
 -1`) and named (`tabs.previous` / `tabs.more`): the keyboard walks the strip with the arrow
 keys, which bring the focused tab into view, so a second stop per caret would only lengthen
 Tab's path to the panel; a pointer or a screen reader's virtual cursor still reaches them.
-Same prop, no code change. Checked in headless Chromium at 406px (showcase, Tabs —
-overflowCue): › only at the start (strip 33–349, › 349–373), ‹ › in the middle, ‹ only at the
-end; the glyph's centre 0.5px off the label's; border 0, background transparent, shadow none;
-in RTL the ‹ at 349–373 and the › at 33–57.
+
+Round 6 (Marcel, 2026-10-21: "Now they are not inline with the labels. It has problems with
+moving to left and right especially when moving the scroll bar"): with each cue in the flow,
+the strip gave up or regained 1.5rem whenever a cue came or went, so the labels jumped sideways
+at every edge the scroll crossed and the scroll position shifted under the thumb. Now, while
+the strip overflows at all, its box keeps a 1.5rem gutter at BOTH ends (`px-6`), and each cue
+sits absolute in its own (`[data-tabs-cue-gutter]`, `start-0` / `end-0`), with the rule beneath
+it and lifted onto the labels' centre by the underline's height (`border-b` + `pb-px` = the
+tab's 2px `border-b-2` over the strip's 1px rule). A strip that fits has no gutters, so its
+width changes only when it starts or stops overflowing, never while scrolling. Measured in
+headless Chromium (showcase, Tabs — overflowCue, Large text): at 406px the tablist stays at
+71–335 (264px) at start, middle and end, LTR and RTL; at 360px 71–289 (218px); padding 30px/30px
+throughout; ‹ at 43.5–68.5, › at 337.5–362.5 (406px) / 291.5–316.5 (360px), mirrored in RTL;
+glyph and label centres equal (0.0px apart); no glyph over a label; axe: nothing on the strip.
+
+Same prop, no code change. › only at the start, ‹ › in the middle, ‹ only at the end; border 0,
+background transparent, shadow none.
 Each cue is 1.5rem wide at every text size (24/30/36px at Normal/Large/Extra large), with the
 48px touch target from Large up as an invisible hit area over the strip's faded edge, not as
 row width (Kurvenschmiede N3): at 360px Large the showcase's "Loops" strip went from 100px to
@@ -50,7 +63,7 @@ row width (Kurvenschmiede N3): at 360px Large the showcase's "Loops" strip went 
 
 | App | Change |
 | --- | --- |
-| keksdose | The interim goes: frontend/src/features/reports/reports-page.tsx — delete `INLINE_CUES` (:84-94, its comment and the array) and `className={INLINE_CUES}` (:391); shorten the round-5 paragraph of the comment above the `Tabs` (:382-388) to "since ui-kit 0.48 the kit draws them so". The `[data-tabs-overflow-cue]` attribute stays on the kit's wrapper, but nothing in it is positioned any more, so the overrides would only fight it |
+| keksdose | The interim goes (as of 62540c4c): frontend/src/features/reports/reports-page.tsx — delete `INLINE_CUES` (:84-102, its comment and the array) and `className={INLINE_CUES}` (:406); shorten the round-5 and round-6 paragraphs of the comment above the `Tabs` (:392-403) to "since ui-kit 0.48 the kit draws them so, in fixed gutters". Left in, its `-mt-px` would lift the kit's glyph 1px off the labels' centre (the kit already allows for the underline) |
 | kastlan | Nothing: no `overflowCue` |
 | kurvenschmiede | Nothing to change: gear/sheet-tabs.tsx:80 passes `overflowCue` and gets the bare glyphs on the bump; its comment (:76-79) still reads true |
 
@@ -106,8 +119,16 @@ options, both opt-in — a table that sets neither is unchanged on a bump:
   rest (resize the others to change it). So an inbox whose Subject width was stored on 0.47
   (a drag or "Auto-size columns", e.g. Kurvenschmiede's `steering-table:feedback`) grows on
   the bump with nothing to clear; the stale entry leaves storage with the next resize.
+  It keeps at least 10rem (`min-w-[10rem]` on its header): once no `fitPriority` column is left
+  to leave out, the table scrolls sideways rather than crushing it. Every other cell of the
+  table keeps one line at Normal text size (`not-large:whitespace-nowrap`, and the kit's chip
+  rows with it), so "CHF 2'568.38", a name or a date with its time no longer breaks in two
+  beside a `grow` column (kastlan S2), the fit measures the columns at that one-line width, and
+  Large text wraps as before; a column whose prose should wrap passes
+  `not-large:whitespace-normal` in its `className`, and an app's own `truncate-until-large`
+  classes added for this can stay or go.
 - **`fitPriority: n`** — while the TABLE's scroller is narrower than the table needs (with a
-  `grow` column: the others plus 15rem for it), the table leaves the column out; lowest `n`
+  `grow` column: the others plus 10rem for it), the table leaves the column out; lowest `n`
   first, the later column first on a tie, and back in reverse as soon as the table as it is
   NOW has room for it (its need re-measured, plus the column's own width when it left), so
   narrower content (a filter, another page) brings a column back as a wider scroller does. Measured by a ResizeObserver on the table's own scroller and after
@@ -124,6 +145,7 @@ options, both opt-in — a table that sets neither is unchanged on a bump:
 **Not opt-in for the kit's feedback columns** (`feedbackColumns` / `useFeedbackColumns`): they
 adopt it, so every app's inbox changes on the bump — Subject `grow`s, and a narrow table leaves
 out URL (`fitPriority: 1`), then Email (2), then Resolved (3); the open report repeats all three.
+Then Votes (4) and Category (5), before Subject would drop below its 10rem (Kurvenschmiede S1).
 For the 0.47 layout: `columns.map((c) => ({ ...c, grow: undefined, fitPriority: undefined }))`.
 
 Checked in headless Chromium (showcase, Feedback inbox — the 0.27 table, nine columns, a 146-char
@@ -138,6 +160,50 @@ Resolved unticked with "hidden for width". axe: nothing on the table or the draw
 | keksdose | The interim goes, in the same commit as the bump: frontend/src/features/feedback/feedback-page.tsx — delete `FIT_COLUMNS` and `fitFeedbackColumns` with their comment, use `kitColumns` as `columns` (drop that `useMemo`), drop `className="@container/table"` with its comment, and drop the two imports the interim added (`type DataTableColumn` from data-table, `cn` from ui — lint fails on them otherwise). Keep both and the CSS `hidden` would make the kit measure a URL column of 0px and leave out the next candidate for nothing |
 | kastlan | Nothing to write: frontend/src/features/feedback/pages/feedback-page.tsx:139 takes `useFeedbackColumns`, so its inbox fits on the bump (no Votes column: 9 columns) |
 | kurvenschmiede | Nothing to write: frontend/src/features/feedback/feedback-page.tsx:154 takes `useFeedbackColumns` (`votes: publicReader`), so its inbox fits on the bump |
+
+## keksdose UX wave A (dev #611, #612, #613)
+
+Four asks from keksdose's UX brief of 2026-10-21, each built there as an interim on
+`feat/feedback-loop-81-410-449`. One shows on a plain bump; the rest are opt-in.
+
+- **The shell pads `<main>` past the floating launchers (dev #612, shows on a plain bump for an
+  app with one).** Below `md` the bottom room was the nav plus 1.5rem, so the last row of a page
+  ended under a `FloatingPanel`'s button or a `FloatingActionGroup`. Every kit launcher
+  (`FloatingActionButton`, so `FloatingPanel`'s too, and `FloatingActionGroup`) now publishes the
+  room it takes above the nav while it is mounted, as `--app-float-clearance` on `<html>`:
+  `offset` + 3rem + a 0.5rem gap (+2px for the group's frame); with several the largest wins
+  (`max(…)`), and unmounting gives it back. `<main>` pads
+  `calc(var(--app-nav-h) + max(1.5rem, var(--app-float-clearance, 0px)))`; from `md` up it is
+  `pb-0` as before. A `hidden` launcher keeps its room, so the page does not change length as it
+  hides and shows; `FloatingPanel` takes `hidden` (new) to step aside without unmounting: the FAB
+  and the panel leave the screen, the open state and the room stay. An app that hand-placed a
+  floating control with its own `fixed` classes is not counted; it can publish its room by
+  setting the variable itself.
+- **`data-tour-overlay` on the tour overlay's root (dev #611/#612).** On every step, interactive
+  or not, so an app that hides something while a modal is open can except the tour:
+  `[aria-modal="true"]:not([data-tour-overlay])`.
+- **`AlertBanner clampMobile` (dev #611).** Below `md` (the text-size-aware one) the message
+  keeps to one line, with a More / Less toggle after it (`aria-expanded`, `aria-controls` the
+  message; `common.showMore` / `common.showLess`, new in the seven catalogues). It shows only
+  while the line cuts the message off. From `md` up nothing changes. Ignored on a whole-row
+  banner (`href` / `onClick`).
+- **`AppShellNavItem.shortLabelFrom` (dev #613).** `"large"` or `"xlarge"`: the phone bar uses
+  `shortLabel` only from that text size up, and the full label below it. Default `"normal"`:
+  the short label at every size, as before.
+
+Checked in headless Chromium at 390px (showcase build, `vite preview`). R8, Floating actions with
+the group shown: `--app-float-clearance` = `calc(1rem + 3.5rem + 2px)`, `<main>`'s bottom padding
+169px against 119px with no launcher (nav 95px + 1.5rem), and scrolled to the end the page's last
+content ends at y=634, above the group's top edge at y=683; unticked, the variable is gone and the
+padding is 119px again. R10, Feedback's `clampMobile` strip: one 20px line with "More"
+(`aria-expanded="false"`), 140px of text with "Less" once pressed, no sideways scroll; at 1280px
+the toggle is not displayed and the text is unclamped. axe: nothing on the strip or the group.
+
+| App | Change |
+| --- | --- |
+| keksdose | **R8:** delete the rule and its comment in frontend/src/app.css:167-178; in frontend/src/features/assistant/assistant-launcher.tsx delete the clearance effect (:150-163) and the docblock's last sentences about it (:103-107), and instead of `if (!shown \|\| covered) return null` (:189) render `if (!shown) return null` with `hidden={covered}` on the `FloatingPanel`, so the room stays while an editor or a dialog covers the corner (the reason :150-152 gives). **R9:** frontend/src/features/assistant/assistant-launcher.tsx:39 becomes `'[aria-modal="true"]:not([data-tour-overlay])'`, and :27-30 of the comment say so. **R10:** frontend/src/app/beta-perf-banner.tsx:87-104 become `<AlertBanner tone="neutral" variant="strip" icon={<Server />} onDismiss={dismiss} clampMobile>{t("beta.perf_notice")}</AlertBanner>`; drop the `expanded` state (:64) and `Button` from the import (:4), the comment's last sentence (:84), and `beta.perf_more` / `beta.perf_less` in the locale JSONs (:87-88 each); its test (frontend/src/app/__tests__/beta-perf-banner.test.tsx:59-67) names the toggle "More" / "Less" (the kit's words). **R11:** frontend/src/app/layout.tsx:59 becomes `shortLabel: item.shortLabelKey ? t(item.shortLabelKey) : undefined, shortLabelFrom: "large",`, and `useTextSize` (:43, and its import on :4) goes |
+| kastlan | Nothing to write, and nothing changes: no `FloatingActionButton`, `FloatingPanel` or `FloatingActionGroup` in frontend/src (checked on `feat/kit-0.48`), so `--app-float-clearance` is never set and `<main>` keeps nav + 1.5rem |
+| kurvenschmiede | Nothing to write, and nothing changes: no floating launcher in frontend/src (checked on `feat/dynamics`). frontend/src/app/layout.tsx:45 passes `shortLabel` at every size, which stays the default |
 
 ## server-kit 0.19
 
@@ -156,7 +222,7 @@ sha256: SHA256_AT_RELEASE
 - **What the check asserts after the erasure's `apply`** (KS note): only that the comment's `attachment_url` reads
   back `None`. A store may delete the file row there or keep it as an unattached upload; the app's test asserts
   which (documented in the docstring).
-- **Dependencies:** no `pyproject.toml` floor changed. server-kit's lock took fastapi 0.142.4, pydantic 2.14.1
+- **Dependencies:** no `pyproject.toml` floor changed. server-kit's lock took fastapi 0.157.0, pydantic 2.14.1
   (pydantic-core 2.50.1), pydantic-settings 2.16.1, ruff 0.17.1, starlette 1.9.0; the full check is green on them.
 
 | App | Calls `check_comment_store` | What changes |

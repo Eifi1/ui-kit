@@ -8,6 +8,7 @@ import { AccountStateChip, RoleChip, dateColumn } from "../components/account-ch
 import type { AccountState, RoleVocabulary } from "../components/account-chips";
 import type { ChipTone } from "../components/chip";
 import type { DataTableColumn } from "../components/data-table";
+import { GROW_PEER_CHIPS_CLASS } from "../components/data-table-fit";
 import { encodeSorts } from "../components/data-table-sort";
 import type { SortState } from "../components/data-table-sort";
 import { RowActions } from "../components/row-actions";
@@ -311,7 +312,7 @@ function RowName<T extends UserRosterRow>({ row, children }: { row: T; children:
 function StateChips({ states }: { states: readonly RosterState[] }) {
   if (states.length === 0) return null;
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className={cn("flex flex-wrap gap-1", GROW_PEER_CHIPS_CLASS)}>
       {states.map((entry) => {
         const spec = typeof entry === "string" ? { state: entry } : entry;
         return (
@@ -424,7 +425,7 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
         }
         if (held.length === 0) return null;
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className={cn("flex flex-wrap gap-1", GROW_PEER_CHIPS_CLASS)}>
             {held.map((role) => (
               <RoleChip<R> key={role} value={role} roles={roles} size="xs" />
             ))}

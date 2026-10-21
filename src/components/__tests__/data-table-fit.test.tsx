@@ -1,9 +1,9 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router";
 import { DataTable } from "../data-table";
 import type { DataTableColumn } from "../data-table";
-import { fitHideOrder } from "../data-table-fit";
+import { GROW_PEER_CELL_CLASS, fitHideOrder } from "../data-table-fit";
 import { feedbackColumns } from "../../feedback/feedback-table";
 import { stubResizeObserver, type ResizeObserverStub } from "../../test/viewport";
 
@@ -60,7 +60,8 @@ function layout(table: HTMLElement) {
   // `w-full`: the table is at least the scroller's width; `min-content` (the fit's own
   // probe of what a table without a `grow` column needs) is its content's width.
   if (!growTh) return { table: table.style.width === "min-content" ? others : Math.max(avail, others), grow: 0 };
-  const grow = Math.max(avail - others, 24);
+  // `min-w-[10rem]` on the grow header: the column's floor (Kurvenschmiede S1).
+  const grow = Math.max(avail - others, growTh.className.includes("min-w-[10rem]") ? 160 : 24);
   return { table: others + grow, grow, growTh };
 }
 
@@ -114,43 +115,80 @@ describe("DataTable fit (0.48, keksdose live #451)", () => {
     expect(table.querySelector('tbody td[data-col="id"]')).not.toHaveClass("w-full");
   });
 
+  it("with a `grow` column the OTHER cells keep one line at Normal (kastlan S2)", () => {
+    // A `w-full max-w-0` column squeezes the others to their min-content width, so any
+    // text with a space ("CHF 2'568.38", "Peter Mueller") broke in two even at 1920px.
+    const { table } = renderTable(
+      FIT.map((c) => (c.key === "status" ? { ...c, footer: () => "total" } : c)),
+    );
+    expect(table).toHaveAttribute("data-fit-grow");
+    for (const k of ["id", "url", "email", "status", "resolved"]) {
+      expect(table.querySelector(`tbody td[data-col="${k}"]`)).toHaveClass(GROW_PEER_CELL_CLASS);
+      expect(table.querySelector(`tfoot [data-col="${k}"]`)).toHaveClass(GROW_PEER_CELL_CLASS);
+    }
+    // Large text keeps its wrapping: the rule is Normal-only.
+    expect(GROW_PEER_CELL_CLASS).toBe("not-large:whitespace-nowrap");
+    expect(table.querySelector('tbody td[data-col="title"]')).not.toHaveClass(GROW_PEER_CELL_CLASS);
+    // A column that wants its prose to wrap says so, and its word wins.
+    cleanup();
+    const { table: own } = renderTable(
+      FIT.map((c) => (c.key === "email" ? { ...c, className: "not-large:whitespace-normal" } : c)),
+    );
+    const email = own.querySelector('tbody td[data-col="email"]')!;
+    expect(email).toHaveClass("not-large:whitespace-normal");
+    expect(email).not.toHaveClass(GROW_PEER_CELL_CLASS);
+  });
+
+  it("keeps the `grow` column at 10rem once nothing is left to leave out: it scrolls instead (Kurvenschmiede S1)", () => {
+    const { table, scroller } = renderTable();
+    const th = [...table.querySelectorAll<HTMLElement>("thead th")].find((h) => key(h) === "title")!;
+    expect(th).toHaveClass("min-w-[10rem]");
+    // 300: every candidate out, id + status (280) + 160 for Subject = 440 > 300.
+    setWidth(scroller, 300);
+    expect(heads(table)).toEqual(["id", "title", "status"]);
+    expect(th.offsetWidth).toBe(160);
+    expect(table.offsetWidth).toBeGreaterThan(300);
+  });
+
   it("is opt-in: without `grow`/`fitPriority` nothing is classed or left out", () => {
     avail = 500;
     const { table } = renderTable(FIT.map((c) => ({ ...c, grow: undefined, fitPriority: undefined })));
     expect(table.querySelector(".max-w-0")).toBeNull();
+    expect(table).not.toHaveAttribute("data-fit-grow");
+    expect(table.querySelector(".not-large\\:whitespace-nowrap")).toBeNull();
     expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
     expect(screen.getByRole("button", { name: "Columns (6/6)" })).toBeInTheDocument();
   });
 
   it("leaves out the lowest priority first while the table is too narrow, and counts honestly", () => {
-    // Others 780 + 15rem (240) for Subject = 1020: room for all six.
+    // Others 780 + 10rem (160) for Subject = 940: room for all six.
     const { table, scroller } = renderTable();
     expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
-    // 900: short by 120 → URL (200) goes.
+    // 900: short by 40 → URL (200) goes.
     setWidth(scroller, 900);
     expect(heads(table)).toEqual(["id", "title", "email", "status", "resolved"]);
     expect(screen.getByRole("button", { name: "Columns (5/6)" })).toBeInTheDocument();
-    // 600: needs 820 → Email (180) and Resolved (120) go too, in that order.
-    setWidth(scroller, 600);
+    // 500: needs 740 → Email (180) goes, still 560 → Resolved (120) goes too, in that order.
+    setWidth(scroller, 500);
     expect(heads(table)).toEqual(["id", "title", "status"]);
     expect(screen.getByRole("button", { name: "Columns (3/6)" })).toBeInTheDocument();
   });
 
   it("brings them back in reverse order once the scroller is as wide as they needed", () => {
-    avail = 600;
+    avail = 500;
     const { table, scroller } = renderTable();
     expect(heads(table)).toEqual(["id", "title", "status"]);
-    setWidth(scroller, 720); // Resolved needed 640 → back; Email needed 820
+    setWidth(scroller, 600); // Resolved needs 440 + 120 = 560 → back; Email 560 + 180 = 740
     expect(heads(table)).toContain("resolved");
     expect(heads(table)).not.toContain("email");
-    setWidth(scroller, 1100);
+    setWidth(scroller, 1000); // URL: 740 + 200 = 940
     expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
   });
 
   it("brings a column back as soon as it fits again, when the CONTENT narrowed (keksdose S3)", () => {
-    // 900: URL left out when the table needed 1020. Then a filter drops the long status
-    // (220 → 80): the rest needs 680, URL's 200 fits in 900 — it must not wait for the
-    // scroller to reach the 1020 it needed back then.
+    // 900: URL left out when the table needed 940. Then a filter drops the long status
+    // (220 → 80): the rest needs 600, URL's 200 fits in 900 — it must not wait for the
+    // scroller to reach the 940 it needed back then.
     avail = 900;
     const { table, scroller } = renderTable();
     expect(heads(table)).not.toContain("url");
@@ -244,6 +282,19 @@ describe("the kit's feedback columns adopt it (0.48)", () => {
       categoryLabels: new Proxy({}, { get: () => "x" }) as never,
     });
     expect(cols.find((c) => c.key === "title")?.grow).toBe(true);
-    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved"]);
+    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved", "category"]);
+  });
+
+  it("then Votes and Category, before Subject would drop below 10rem (Kurvenschmiede S1)", () => {
+    const cols = feedbackColumns({
+      canEdit: true,
+      onStatus: () => {},
+      renderDate: (v) => v ?? "",
+      labels: new Proxy({}, { get: () => "x" }) as never,
+      statusLabels: new Proxy({}, { get: () => "x" }) as never,
+      categoryLabels: new Proxy({}, { get: () => "x" }) as never,
+      votes: true,
+    });
+    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved", "votes", "category"]);
   });
 });
