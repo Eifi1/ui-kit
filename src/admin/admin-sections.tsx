@@ -68,6 +68,13 @@ export interface AdminSectionsOptions<L extends AdminSharedSection = AdminShared
    * whose path then acts as an unknown one.
    */
   visible?: Partial<Record<AdminSharedSection, boolean>>;
+  /**
+   * 0.48 (keksdose live #450): a shared section's {@link SettingsGroup.badge} — the
+   * waiting work the account menu's badge counts, on the row of the section that holds
+   * it: `{ overview: <AdminWaitingBadge count={waiting} /> }`. An app's own section
+   * carries its `badge` itself.
+   */
+  badges?: Partial<Record<AdminSharedSection, ReactNode>>;
 }
 
 /** The shared sections an app keeps when it leaves out `L`. A `leaveOut` typed as the
@@ -193,6 +200,7 @@ export function adminSections<G extends string = never, L extends AdminSharedSec
       // with no entry of its own.
       ...(id === "overview" ? { standalone: true } : null),
       ...(visible === undefined ? null : { visible }),
+      ...(options.badges?.[id] == null ? null : { badge: options.badges[id] }),
     };
   });
 }

@@ -178,6 +178,8 @@ function MainTable() {
               : `Hide ${ARCHIVED_COUNT} archived rows`}
           </button>
         }
+        // 0.48: the toggle stays under the header while the rows scroll beneath it.
+        leadingRowSticky
         selection={{
           isSelectable,
           isSelected: (r) => selected.has(r.id),

@@ -340,6 +340,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       cancelSelection: "Mégse",
       rowDetails: "Részletek",
       autoSize: "Oszlopszélességek igazítása",
+      hiddenForWidth: "szélesség miatt rejtve",
       loading: "Betöltés…",
       filters: "Szűrők",
       clearAll: "Összes törlése",

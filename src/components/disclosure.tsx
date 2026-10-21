@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { Children, useEffect, useId, useState } from "react";
 import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
@@ -262,7 +262,8 @@ export interface DisclosureProps extends Omit<ComponentPropsWithRef<"div">, "tit
    * ```
    */
   controls?: string;
-  /** The body. Not rendered in trigger-only mode ({@link DisclosureProps.controls}). */
+  /** The body. Not rendered in trigger-only mode ({@link DisclosureProps.controls}),
+   *  nor when there is none (0.48): no children, no empty box under the header. */
   children?: ReactNode;
 }
 
@@ -312,8 +313,12 @@ export function Disclosure({
   const chevronAtEnd = chevronAt === "end";
   const chevronAfterTitle = chevronAt === "after-title";
   const triggerOnly = controls !== undefined;
+  // 0.48 (keksdose dev #603): no children, no body — an empty padded box under the
+  // header made an open disclosure 8px taller than a shut one, and its `aria-controls`
+  // named a region with nothing in it. `null`, `false` and `undefined` are nothing.
+  const hasBody = !triggerOnly && Children.toArray(children).length > 0;
   // The card's header squares its lower corners only when a body opens under it.
-  const joined = open && !triggerOnly;
+  const joined = open && hasBody;
   const hasTrailing = trailing !== undefined && trailing !== null && trailing !== false;
   // `trailing` beside the button, which then stretches under it; inside the button,
   // the row is simply the button.
@@ -334,7 +339,7 @@ export function Disclosure({
       type="button"
       aria-expanded={open}
       // `||`: an empty `controls` is trigger-only with nothing to name, not `aria-controls=""`.
-      aria-controls={triggerOnly ? controls || undefined : bodyId}
+      aria-controls={triggerOnly ? controls || undefined : hasBody ? bodyId : undefined}
       disabled={disabled}
       onClick={toggle}
       data-disclosure-trigger=""
@@ -424,7 +429,7 @@ export function Disclosure({
       ) : (
         header
       )}
-      {!triggerOnly && (
+      {hasBody && (
         <Collapse id={bodyId} open={open} keepMounted={keepMounted}>
           <div className={cn(card ? "space-y-3 px-4 pb-4" : !menu && "space-y-2 pt-2", bodyClassName)}>{children}</div>
         </Collapse>

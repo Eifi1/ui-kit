@@ -327,3 +327,37 @@ describe("Disclosure variant=menu", () => {
     expect(screen.getByRole("button", { name: "More" }).firstElementChild?.tagName.toLowerCase()).toBe("svg");
   });
 });
+
+describe("Disclosure with no children (0.48, keksdose dev #603)", () => {
+  it("draws no body: open, it is as tall as shut — no empty padded box under the header", () => {
+    const { container } = render(<Disclosure variant="bare" title="Upcoming" defaultOpen />);
+    const button = screen.getByRole("button", { name: "Upcoming" });
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    // Nothing under the header, and nothing for aria-controls to name.
+    expect(button.parentElement!.parentElement!.children).toHaveLength(1);
+    expect(container.querySelector(".pt-2")).toBeNull();
+    expect(button).not.toHaveAttribute("aria-controls");
+  });
+
+  it("treats null and false as no children", () => {
+    render(
+      <Disclosure title="Card" defaultOpen>
+        {null}
+        {false}
+      </Disclosure>,
+    );
+    const button = screen.getByRole("button", { name: "Card" });
+    expect(button).not.toHaveAttribute("aria-controls");
+    expect(document.querySelector("[inert], [hidden]")).toBeNull();
+  });
+
+  it("still draws a body for real children", () => {
+    render(
+      <Disclosure variant="bare" title="More" defaultOpen>
+        <p>Inside</p>
+      </Disclosure>,
+    );
+    const button = screen.getByRole("button", { name: "More" });
+    expect(document.getElementById(button.getAttribute("aria-controls")!)).toContainElement(screen.getByText("Inside"));
+  });
+});

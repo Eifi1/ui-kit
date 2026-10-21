@@ -32,6 +32,9 @@ export interface DataTableLabels extends DataTableSortLabels {
    */
   rowDetails: string;
   autoSize: string;
+  /** Beside a column in the Columns panel that the table's width leaves out
+   *  (`fitPriority`, 0.48): "hidden for width". */
+  hiddenForWidth: string;
   loading: string;
   filters: string;
   clearAll: string;
@@ -125,6 +128,7 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
   cancelSelection: "Cancel",
   rowDetails: "Details",
   autoSize: "Auto-size columns",
+  hiddenForWidth: "hidden for width",
   loading: "Loading…",
   filters: "Filters",
   clearAll: "Clear all",

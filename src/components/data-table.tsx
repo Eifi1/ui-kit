@@ -17,6 +17,7 @@ import {
 } from "./data-table-shared";
 import { MobileFilters, MobileRow, MobileSelectBar, MobileSort, StackedFields } from "./data-table-mobile";
 import { DataTableHead } from "./data-table-head";
+import { DataTableLeadingRow } from "./data-table-leading-row";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
 import { useLargeText } from "../hooks/use-large-text";
 import { cn } from "../lib/cn";
@@ -127,6 +128,27 @@ export interface DataTableColumn<T> {
    * end-aligned), its resized width, and drops out with the column when it is hidden.
    */
   footer?: (rows: T[], page: T[]) => ReactNode;
+  /**
+   * This column takes the width the others leave, and its text ellipsises (0.48,
+   * keksdose live #451): `w-full max-w-0` on its cells, so in the table's auto layout it
+   * is "the rest of the row" and one long title can no longer widen the table. One per
+   * table. A resized width still pins it; "Auto-size" leaves it to take the rest. Opt-in: without it nothing
+   * changes. With {@link fitPriority} columns the table keeps it at least 15rem wide.
+   */
+  grow?: boolean;
+  /**
+   * Leave this column out while the TABLE is too narrow for it (0.48, keksdose live
+   * #451) — measured on the table's own scroller, so a sidebar, the window and Large
+   * text count alike. The lowest number goes first (ties: the later column first), and
+   * comes back last, once the scroller is as wide as the table needed with it. Columns
+   * without it never go. Desktop only: the phone's card list is not narrowed.
+   *
+   * The Columns panel counts only what is drawn ("Columns (8/10)") and marks a column
+   * left out this way "hidden for width". Ticking it there keeps it in for as long as
+   * the table is mounted (not persisted): the table makes room by leaving out the next
+   * one instead, and scrolls sideways once none is left. Unticking hides it as any column.
+   */
+  fitPriority?: number;
 }
 
 /** A `data-*` attribute, typed so `{ "data-private": "" }` needs no cast. */
@@ -506,6 +528,14 @@ export interface DataTableProps<T> {
    */
   leadingRow?: ReactNode;
   /**
+   * 0.48 (keksdose dev #603: "it should rather be sticky, so the user can show hide them
+   * everywhere on click"): pin the {@link leadingRow} under the sticky header while the
+   * rows scroll beneath both — its `top` is the header's measured height. Desktop only,
+   * as `leadingRow` is; it sticks within the table's own scroller (a bounded body:
+   * `fillHeight` or `maxBodyHeight`). Default: it scrolls with the rows.
+   */
+  leadingRowSticky?: boolean;
+  /**
    * Row height. `"compact"` is lenkbank's in-card tables: five `text-xs` tables with
    * `px-2 py-1` cells sitting inside cards, which at the default padding came out at
    * twice their height and pushed the card's own content below the fold — the whole
@@ -793,6 +823,7 @@ const ROW_NAV_KEYS = { ArrowDown: 1, ArrowUp: 1, Home: 1, End: 1 } as const;
 
 import { DEFAULT_PERSIST_PREFIX, useTableState, type TableUrlSync } from "./use-table-state";
 import { useMobileReveal } from "./use-mobile-reveal";
+import { GROW_CELL_CLASS, useColumnFit } from "./data-table-fit";
 
 export function DataTable<T>({
   rows,
@@ -833,6 +864,7 @@ export function DataTable<T>({
   mobileSwipeActions,
   desktopSwipeActions,
   leadingRow,
+  leadingRowSticky = false,
   density = "comfortable",
   sortCycle = "tri",
   chrome = "full",
@@ -1145,9 +1177,18 @@ export function DataTable<T>({
     announce(labels.pageChanged(p + 1, totalPages));
   };
 
+  // 0.48 (keksdose live #451): the `fitPriority` columns the table's width leaves out
+  // (data-table-fit.ts). Desktop only; the scroller is read after render.
+  const { autoHidden, keep: keepColumn } = useColumnFit({
+    columns,
+    hiddenCols,
+    headRefs,
+    scroller: () => desktopScroller.current,
+    enabled: !usePhoneLayout(),
+  });
   const visibleColumns = useMemo(
-    () => columns.filter((c) => !hiddenCols.has(c.key)),
-    [columns, hiddenCols],
+    () => columns.filter((c) => !hiddenCols.has(c.key) && !autoHidden.has(c.key)),
+    [columns, hiddenCols, autoHidden],
   );
 
   // Which cell carries the row's link when `rowHref` is set (feedback #451). The
@@ -1174,7 +1215,8 @@ export function DataTable<T>({
     widths,
     setWidths,
     columns,
-    hiddenCols,
+    // The columns left out for width have no header to measure either.
+    hiddenCols: autoHidden.size > 0 ? new Set([...hiddenCols, ...autoHidden]) : hiddenCols,
   });
 
   const visibleCount = visibleColumns.length;
@@ -1735,11 +1777,9 @@ export function DataTable<T>({
             className={cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity")}
           >
             {leadingRow && (
-              <tr className="border-t border-subtle">
-                <td colSpan={totalColSpan} className="p-0">
-                  {leadingRow}
-                </td>
-              </tr>
+              <DataTableLeadingRow colSpan={totalColSpan} sticky={leadingRowSticky}>
+                {leadingRow}
+              </DataTableLeadingRow>
             )}
             {slice.map((row, rowIndex) => {
               const expanded = isExpanded?.(row) ?? false;
@@ -1906,6 +1946,7 @@ export function DataTable<T>({
                             "align-top",
                             compact ? "px-2 py-1" : "px-3 py-2",
                             width && "overflow-hidden text-ellipsis",
+                            col.grow && GROW_CELL_CLASS,
                             logicalAlign(own.className),
                             logicalAlign(col.className),
                           )}
@@ -2019,6 +2060,7 @@ export function DataTable<T>({
                         // A `<th>` centres by default; the label reads from the start
                         // like the cells above it, unless the column says otherwise.
                         isLabel && "text-start",
+                        col.grow && GROW_CELL_CLASS,
                         logicalAlign(col.className),
                       )}
                     >
@@ -2059,6 +2101,8 @@ export function DataTable<T>({
             columns={columns}
             hiddenCols={hiddenCols}
             setHiddenCols={setHiddenCols}
+            autoHidden={autoHidden}
+            keepColumn={keepColumn}
             showSettings={showSettings}
             setShowSettings={setShowSettings}
             columnsCountLabel={columnsCountLabel}

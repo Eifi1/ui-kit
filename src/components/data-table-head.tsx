@@ -10,6 +10,7 @@ import { Tooltip } from "./tooltip";
 import type { DataTableLabels } from "./data-table-labels";
 import { isTableOwnColumn } from "./data-table-row-actions";
 import { columnLabel, logicalAlign, splitCellProps } from "./data-table-shared";
+import { GROW_HEAD_CLASS } from "./data-table-fit";
 import type { DataTableColumn, DataTableProps, FilterState } from "./data-table";
 
 // DataTable's `<thead>` on a wide screen: the select-all box, and per column the sort
@@ -147,6 +148,7 @@ export function DataTableHead<T>({
                 // Each <th> carries its own bg so the row doesn't render
                 // transparent over the data rows underneath.
                 "sticky top-0 z-10 bg-surface-2 backdrop-blur-sm",
+                col.grow && GROW_HEAD_CLASS,
                 logicalAlign(ownHead.className),
                 headClass,
               )}

@@ -332,6 +332,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       cancelSelection: "取消",
       rowDetails: "详情",
       autoSize: "自动调整列宽",
+      hiddenForWidth: "宽度不足，已隐藏",
       loading: "加载中…",
       filters: "筛选条件",
       clearAll: "全部清除",

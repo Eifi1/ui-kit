@@ -369,7 +369,17 @@ export function SettingsLayout<G extends string>({
                   }
                   title={g.title}
                   subtitle={g.help}
-                  trailing={<ChevronRight aria-hidden className="size-4 rtl:-scale-x-100" />}
+                  trailing={
+                    g.badge == null ? (
+                      <ChevronRight aria-hidden className="size-4 rtl:-scale-x-100" />
+                    ) : (
+                      // The group's badge (0.48) before the chevron, the two as one end.
+                      <span className="flex items-center gap-2">
+                        {g.badge}
+                        <ChevronRight aria-hidden className="size-4 rtl:-scale-x-100" />
+                      </span>
+                    )
+                  }
                 />
               ))}
             </List>
@@ -421,13 +431,17 @@ export function SettingsLayout<G extends string>({
                   name: g.title,
                   label: <span className={cn(dim && "opacity-40")}>{g.title}</span>,
                   icon: <span className={cn("inline-flex [&_svg]:size-4", dim && "opacity-40")}>{g.icon}</span>,
-                  badge:
-                    searching && count > 0 ? (
+                  // While searching, the hit count; otherwise the group's own badge (0.48).
+                  badge: searching ? (
+                    count > 0 ? (
                       <Chip size="sm" tone="brand">
                         <span aria-hidden>{count}</span>
                         <span className="sr-only-fixed">{labels.matchCount(count)}</span>
                       </Chip>
-                    ) : undefined,
+                    ) : undefined
+                  ) : (
+                    g.badge
+                  ),
                 };
               })}
               active={(open?.id ?? route.groups[0]?.id) as G}

@@ -449,6 +449,10 @@ function statusRank(status: FeedbackStatus): number {
  *   filter that never offered it.
  * - The status column owns the status filter, and only it (keksdose live #330's revert:
  *   the phone's filter sheet already exposes every column filter).
+ * - Fitted to the table's width (0.48, keksdose live #451): Subject `grow`s and
+ *   ellipsises, and a narrow table leaves out URL, then Email, then Resolved
+ *   (`fitPriority` 1–3) — the open report repeats all three. Drop the two keys with
+ *   `{ ...col, grow: undefined, fitPriority: undefined }` for the 0.47 layout.
  * - `/my-feedback` shows the same nine: the Email cell's context fallback exists for it
  *   (the admin list's join is absent there, §3.1), and its phone card drops the submitter
  *   instead ({@link FeedbackMobileCardProps.showSubmitter}).
@@ -521,6 +525,9 @@ export function feedbackColumns<T extends FeedbackTableRow>({
         return env ? `${row.title} ${labels.environment(env)}` : row.title;
       },
       mobilePrimary: true,
+      // The rest of the row, one line and an ellipsis (0.48, keksdose live #451: one long
+      // crash title pushed Status and the row actions off the edge).
+      grow: true,
     },
     {
       key: "user",
@@ -552,6 +559,8 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       sortBy: feedbackSubmitterEmail,
       filterBy: feedbackSubmitterEmail,
       mobileHidden: true,
+      // Second to go when the table is narrow: the open report shows the submitter.
+      fitPriority: 2,
     },
     {
       key: "url",
@@ -566,6 +575,8 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       sortBy: (row) => feedbackPagePath(row.context) ?? "",
       filterBy: (row) => feedbackPagePath(row.context) ?? "",
       mobileHidden: true,
+      // First to go when the table is narrow (0.48): the open report repeats the page.
+      fitPriority: 1,
     },
     ...votesColumn,
     {
@@ -600,6 +611,8 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       sortBy: (row) => instant(row.resolved_at),
       filter: { type: "date", getValue: (row) => row.resolved_at },
       mobileHidden: true,
+      // Third to go (0.48).
+      fitPriority: 3,
     },
   ];
 }

@@ -351,6 +351,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       cancelSelection: "Abbrechen",
       rowDetails: "Details",
       autoSize: "Spaltenbreiten anpassen",
+      hiddenForWidth: "aus Platzgründen ausgeblendet",
       loading: "Wird geladen…",
       filters: "Filter",
       // Resets every active filter; "Alle löschen" would read as deleting the filters.

@@ -6,8 +6,8 @@ import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 /**
- * `overflowCue` (0.40, kk run 79 gap 1; every width since 0.46; 0.47 keksdose live #410 r4):
- * a › over the strip's end while tabs lie past it and a ‹ over its start while tabs lie
+ * `overflowCue` (0.40, kk run 79 gap 1; every width since 0.46; 0.47 keksdose live #410 r4; 0.48 r5, in the row):
+ * a › after the strip's end while tabs lie past it and a ‹ before its start while tabs lie
  * before it — each a step of ~75 % toward its own side, and neither ever turns round.
  * keksdose's `scroll-edge-cues.tsx` (which replaced the 0.40 caret there) is the reference.
  *
@@ -105,23 +105,34 @@ describe("Tabs overflowCue", () => {
     expect(icon(previous()!)).toMatch(/chevron-left/);
   });
 
-  it("sits OVER the strip's ends, so the strip never changes width as the carets come and go", () => {
+  it("sits IN the row beside the strip (0.48, keksdose live #410 r5): ‹ before it, › after it", () => {
     render(strip());
     const tablist = screen.getByRole("tablist");
     const box = tablist.parentElement!;
-    expect(box).toHaveClass("relative");
     const endCue = more()!.closest("[data-tabs-overflow-cue]")!;
-    // The position is on a wrapper of the kit's, not on the button inside its tooltip span.
     expect(endCue).toHaveAttribute("data-tabs-overflow-cue", "end");
-    expect(endCue).toHaveClass("absolute", "end-0");
-    expect(box).toContainElement(endCue as HTMLElement);
+    // In flow, not laid over the last visible tab.
+    expect(endCue).not.toHaveClass("absolute");
+    expect(tablist.compareDocumentPosition(endCue) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Centred on the labels, above the strip's rule, which carries on beneath it.
+    expect(endCue).toHaveClass("items-center", "self-stretch", "border-b", "border-subtle");
     geo.left = 700;
     scrollTo_();
     const startCue = previous()!.closest("[data-tabs-overflow-cue]")!;
     expect(startCue).toHaveAttribute("data-tabs-overflow-cue", "start");
-    expect(startCue).toHaveClass("absolute", "start-0");
+    expect(startCue).not.toHaveClass("absolute");
+    expect(startCue.compareDocumentPosition(tablist) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // Same box around the same strip.
     expect(screen.getByRole("tablist").parentElement).toBe(box);
+  });
+
+  it("is a bare glyph: no frame, fill or shadow; muted, primary on hover", () => {
+    render(strip());
+    const button = more()!;
+    const cls = button.getAttribute("class") ?? "";
+    expect(cls).not.toMatch(/(^|\s)(border|shadow-sm|bg-surface)(\s|$)/);
+    expect(cls).not.toMatch(/(^|\s)hover:bg-(?!transparent)/);
+    expect(button).toHaveClass("text-muted", "hover:text-primary", "bg-transparent");
   });
 
   it("is reading-direction aware: in a right-to-left strip › still goes on and ‹ back", () => {
@@ -162,7 +173,7 @@ describe("Tabs overflowCue", () => {
     expect(row).toContainElement(more());
   });
 
-  it("puts › over the strip's end, before an add button", () => {
+  it("puts › after the strip's end, before an add button", () => {
     render(strip({ onAdd: () => {}, addLabel: "Add report" }));
     const add = screen.getByRole("button", { name: "Add report" });
     expect(more()!.compareDocumentPosition(add) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

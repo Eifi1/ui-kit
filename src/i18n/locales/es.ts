@@ -342,6 +342,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       cancelSelection: "Cancelar",
       rowDetails: "Detalles",
       autoSize: "Ajustar ancho de columnas",
+      hiddenForWidth: "oculta por falta de espacio",
       loading: "Cargando…",
       filters: "Filtros",
       clearAll: "Borrar todo",
