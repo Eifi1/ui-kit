@@ -191,7 +191,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       outcomeUpdate: "Mettre à jour",
       outcomePlaceholder: "Ce qui a été fait ou décidé, ou pourquoi ce point ne sera pas traité.",
       rework: "Reprise",
-      openPage: "Ouvrir la page",
       reworkTitle: "Renvoyer pour reprise",
       reworkSend: "Demander la reprise",
       reworkPlaceholder:
@@ -536,7 +535,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       add: "Ajouter un onglet",
       remove: (tab) => `Supprimer ${tab}`,
       more: "Autres onglets",
-      backToFirst: "Retour au premier onglet",
+      previous: "Onglets précédents",
     },
     appShell: {
       collapse: "Réduire la barre latérale",
@@ -1186,7 +1185,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     notifications: {
       typesTitle: "Me notifier pour",
       typesDescription: "Choisissez ce dont vous êtes averti, et comment.",
-      byEmail: "Par e-mail",
       channelApp: "Dans l’app",
       channelPush: "Push",
       channelEmail: "E-mail",
@@ -1210,9 +1208,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       quietUntil: "Jusqu’à",
       quietIncomplete:
         "Définissez une heure de début et une heure de fin. Les heures calmes s’appliquent une fois les deux renseignées.",
-      timeZone: "Fuseau horaire",
-      deviceZone: (zone) => `Cet appareil est dans le fuseau ${zone}.`,
-      useDeviceZone: "L’utiliser",
       regions: {
         Africa: "Afrique",
         America: "Amériques",

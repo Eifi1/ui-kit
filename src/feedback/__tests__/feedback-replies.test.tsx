@@ -64,7 +64,8 @@ describe("FeedbackReplyTimeline — rework entries (0.40)", () => {
     expect(item).toHaveTextContent("Ada");
     expect(item.querySelector("[data-feedback-entry-rework]")).toHaveTextContent("Rework");
     expect(item.querySelector("[data-feedback-reply-status]")).toHaveAttribute("data-feedback-reply-status", "OPEN");
-    expect(item.querySelector("[data-feedback-entry-file]")).toHaveTextContent("0123456789ab.png");
+    // 0.47 (§12): its file drawn inline (a picture through the fetcher), not a name.
+    expect(item.querySelector('[data-feedback-entry-file="/api/v1/feedback/attachments/0123456789ab.png"]')).not.toBeNull();
   });
 
   it("draws a migrated rework without the arrow, and a null author as A user — never Admin", () => {

@@ -2,9 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { QuietHoursSetting } from "../quiet-hours-setting";
-import { timeZoneOptions } from "../time-zone-select";
 import { deviceTimeZone } from "../device-zone-report";
-import { DEFAULT_NOTIFICATIONS_LABELS } from "../notifications-labels";
 import { axeViolations } from "../../test/axe";
 
 /**
@@ -35,44 +33,12 @@ describe("deviceTimeZone", () => {
   });
 });
 
-describe("timeZoneOptions", () => {
-  const regions = (region: string) => DEFAULT_NOTIFICATIONS_LABELS.regions[region as "Europe"];
-
-  it("lists every zone the runtime knows, city under region, in the kit's words", () => {
-    const options = timeZoneOptions("Europe/Zurich", regions);
-    expect(options.length).toBe(Intl.supportedValuesOf("timeZone").length);
-    expect(options.find((o) => o.value === "Europe/Zurich")).toEqual({
-      value: "Europe/Zurich",
-      label: "Zurich",
-      group: "Europe",
-    });
-    expect(options.find((o) => o.value === "America/Argentina/Rio_Gallegos")).toEqual({
-      value: "America/Argentina/Rio_Gallegos",
-      label: "Argentina / Rio Gallegos",
-      group: "Americas",
-    });
-    expect(options.find((o) => o.value.startsWith("Indian/"))?.group).toBe("Indian Ocean");
-  });
-
-  it("puts a zone with no region first, and keeps a stored zone the runtime does not list", () => {
-    const utc = timeZoneOptions("UTC", regions);
-    expect(utc[0]).toEqual({ value: "UTC", label: "UTC" });
-    const stored = timeZoneOptions("Example/Old_Alias", regions);
-    // A region the labels do not know keeps its IANA name.
-    expect(stored.find((o) => o.value === "Example/Old_Alias")).toEqual({
-      value: "Example/Old_Alias",
-      label: "Old Alias",
-      group: "Example",
-    });
-  });
-});
-
 describe("QuietHoursSetting", () => {
   it("says what quiet hours do, with the inbox where the app keeps one", () => {
-    const { rerender } = render(<QuietHoursSetting start={null} end={null} timezone={null} onChange={vi.fn()} />);
+    const { rerender } = render(<QuietHoursSetting start={null} end={null} zone={null} onChange={vi.fn()} />);
     expect(screen.getByText("Quiet hours")).toBeInTheDocument();
     expect(screen.getByText("No push notifications during this window.")).toBeInTheDocument();
-    rerender(<QuietHoursSetting start={null} end={null} timezone={null} inbox onChange={vi.fn()} />);
+    rerender(<QuietHoursSetting start={null} end={null} zone={null} inbox onChange={vi.fn()} />);
     expect(
       screen.getByText("No push notifications during this window. They still reach your inbox."),
     ).toBeInTheDocument();
@@ -82,7 +48,7 @@ describe("QuietHoursSetting", () => {
 
   it("never sends a zone with a time: the zone is the account's, automatic only (§10.3, 2026-10-20)", () => {
     const onChange = vi.fn();
-    render(<QuietHoursSetting start={null} end={null} timezone={null} onChange={onChange} />);
+    render(<QuietHoursSetting start={null} end={null} zone={null} onChange={onChange} />);
     setTime(timeField("From"), "22:00");
     expect(onChange).toHaveBeenCalledWith({ quiet_hours_start: "22:00" });
   });
@@ -97,21 +63,28 @@ describe("QuietHoursSetting", () => {
   });
 
   it("says a half-set window does nothing yet", () => {
-    const { rerender } = render(<QuietHoursSetting start="22:00" end={null} timezone="Europe/Zurich" onChange={vi.fn()} />);
+    const { rerender } = render(<QuietHoursSetting start="22:00" end={null} zone="Europe/Zurich" onChange={vi.fn()} />);
     expect(
       screen.getByText("Set both a start and an end time. Quiet hours take effect once both are set."),
     ).toBeInTheDocument();
-    rerender(<QuietHoursSetting start="22:00" end="07:00" timezone="Europe/Zurich" onChange={vi.fn()} />);
+    rerender(<QuietHoursSetting start="22:00" end="07:00" zone="Europe/Zurich" onChange={vi.fn()} />);
     expect(screen.queryByText(/Set both a start and an end time/)).not.toBeInTheDocument();
   });
 
-  it("names the zone read-only: `zone`, else the deprecated `timezone`, else `fallbackZone`", () => {
+  it("names the zone read-only: `zone`, else `fallbackZone`", () => {
     const { rerender } = render(<QuietHoursSetting start="22:00" end="07:00" zone={null} onChange={vi.fn()} />);
     expect(screen.getByText(/In your time zone \(Europe \/ Zurich\)/)).toBeInTheDocument();
     rerender(<QuietHoursSetting start="22:00" end="07:00" zone={null} fallbackZone="Europe/Vienna" onChange={vi.fn()} />);
     expect(screen.getByText(/In your time zone \(Europe \/ Vienna\)/)).toBeInTheDocument();
-    rerender(<QuietHoursSetting start="22:00" end="07:00" timezone="Pacific/Auckland" onChange={vi.fn()} />);
+    rerender(<QuietHoursSetting start="22:00" end="07:00" zone="Pacific/Auckland" onChange={vi.fn()} />);
     expect(screen.getByText(/In your time zone \(Pacific \/ Auckland\)/)).toBeInTheDocument();
+    // A region the labels do not know keeps its IANA name; a zone with none is itself.
+    rerender(<QuietHoursSetting start="22:00" end="07:00" zone="America/Argentina/Rio_Gallegos" onChange={vi.fn()} />);
+    expect(screen.getByText(/In your time zone \(Americas \/ Argentina \/ Rio Gallegos\)/)).toBeInTheDocument();
+    rerender(<QuietHoursSetting start="22:00" end="07:00" zone="Example/Old_Alias" onChange={vi.fn()} />);
+    expect(screen.getByText(/In your time zone \(Example \/ Old Alias\)/)).toBeInTheDocument();
+    rerender(<QuietHoursSetting start="22:00" end="07:00" zone="UTC" onChange={vi.fn()} />);
+    expect(screen.getByText(/In your time zone \(UTC\)/)).toBeInTheDocument();
     // No picker and no "Use it" in any form: the zone follows the device last used.
     expect(screen.queryByRole("combobox", { name: "Time zone" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
@@ -124,7 +97,7 @@ describe("QuietHoursSetting", () => {
       <QuietHoursSetting
         start="22:00"
         end="07:00"
-        timezone="Europe/Zurich"
+        zone="Europe/Zurich"
         onChange={onChange}
         describeError={() => "Saved nothing: you are offline."}
       />,
@@ -137,7 +110,7 @@ describe("QuietHoursSetting", () => {
 
   it("passes axe with a window and the zone", async () => {
     const { container } = render(
-      <QuietHoursSetting start="22:00" end={null} timezone="Pacific/Auckland" inbox onChange={vi.fn()} />,
+      <QuietHoursSetting start="22:00" end={null} zone="Pacific/Auckland" inbox onChange={vi.fn()} />,
     );
     expect(await axeViolations(container)).toEqual([]);
   });

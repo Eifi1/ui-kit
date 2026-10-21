@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import type { MouseEvent, ReactNode } from "react";
-import { Download, FileText, RotateCcw } from "lucide-react";
+import type { ReactNode } from "react";
+import { RotateCcw } from "lucide-react";
 import { AuthedImage } from "../components/authed-image";
 import { CopyButton } from "../components/copy-button";
 import { TextLink } from "../components/text-link";
@@ -8,7 +8,6 @@ import { toast } from "../components/toast";
 import { Button } from "../components/button";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
-import { filenameFromDisposition, saveBlob } from "../lib/download";
 import { formatDate } from "../lib/format";
 import { DEFAULT_MAX_ATTACHMENT_BYTES } from "./feedback-attachment";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog";
@@ -29,7 +28,6 @@ import {
   FEEDBACK_AUTHOR_EDITABLE_STATUSES,
   FEEDBACK_REWORKABLE_STATUSES,
   appendRework,
-  attachmentName,
   isImageAttachment,
   replaceDescription,
   splitBodyAttachments,
@@ -41,6 +39,7 @@ import type { FeedbackStatusChange } from "./feedback-status-undo";
 import type { CommitScope } from "../components/write-lock";
 import { DEFAULT_FEEDBACK_DETAIL_LABELS } from "./feedback-row-detail-labels";
 import { FeedbackReplyComposer, FeedbackReplyTimeline, feedbackReplyNudge } from "./feedback-replies";
+import { FeedbackAttachmentDownload, plainFeedbackFetch } from "./feedback-attachment-download";
 import { FeedbackPublicSwitch } from "./feedback-public-switch";
 import { FeedbackRepliesDrawnAboveContext } from "./feedback-replies-context";
 import { DEFAULT_FEEDBACK_COMMENTS_LABELS } from "./feedback-thread-parts-labels";
@@ -143,10 +142,6 @@ export interface FeedbackDetailLabels {
   outcomePlaceholder: string;
   /** The button that opens section 5 on an answered row. de-CH: "Nacharbeit" */
   rework: string;
-  /** The link to the page the report was filed on. de-CH: "Seite öffnen"
-   *  @deprecated 0.46 — the Replies section's "Open page" button is gone (keksdose live #449:
-   *  it repeated the URL section's link); removed in 0.47. Unused, kept for one release. */
-  openPage: string;
   /** Section 5's heading. de-CH: "Zur Nacharbeit senden" */
   reworkTitle: string;
   /** Section 5's send button. de-CH: "Nacharbeit senden" */
@@ -255,75 +250,6 @@ export function feedbackAttachmentUrls(
     ),
   ];
   return [...new Set(urls)];
-}
-
-/** The bytes behind a fetcher's answer — a `Blob` as it is, a `Response` checked. */
-async function toBlob(answer: Blob | Response): Promise<Blob> {
-  if (typeof Response !== "undefined" && answer instanceof Response) {
-    if (!answer.ok) throw new Error(`HTTP ${answer.status}`);
-    return answer.blob();
-  }
-  return answer as Blob;
-}
-
-/** No fetcher: the browser's own `fetch`, with the cookies a same-origin app uses. */
-const plainFetch: AuthedFetcher = (url, { signal }) => fetch(url, { signal, credentials: "same-origin" });
-
-/**
- * A PDF or a text log (keksdose `FeedbackFileDownload`, dev #578): the bytes sit behind
- * an authenticated route that serves them as `attachment`, never inline (§3.5), so a
- * plain link would be a 401 the moment it was opened. Fetched through the app's
- * fetcher and saved with {@link saveBlob}; a failure says so in a toast.
- *
- * Saved under the name the server gives it when the fetcher answers with a `Response`
- * (server-kit's `content_disposition` puts the uploader's own name in `filename*`), and
- * under the URL's last segment — the name on the button — when it answers with a bare
- * `Blob`, which has no headers to ask.
- */
-function AttachmentDownload({
-  url,
-  fetcher,
-  labels,
-}: {
-  url: string;
-  fetcher: AuthedFetcher;
-  labels: FeedbackDetailLabels;
-}) {
-  const [busy, setBusy] = useState(false);
-  const name = attachmentName(url);
-  const download = async (event: MouseEvent) => {
-    // The row around the detail may toggle on a click.
-    event.stopPropagation();
-    setBusy(true);
-    try {
-      const answer = await fetcher(url, { signal: new AbortController().signal });
-      const blob = await toBlob(answer);
-      const saveAs =
-        typeof Response !== "undefined" && answer instanceof Response
-          ? filenameFromDisposition(answer.headers.get("Content-Disposition"), name)
-          : name;
-      saveBlob(blob, saveAs);
-    } catch {
-      toast.error(labels.downloadFailed);
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <Button
-      type="button"
-      variant="secondary"
-      size="sm"
-      pending={busy}
-      onClick={(event) => void download(event)}
-      aria-label={labels.download(name)}
-      className="max-w-full"
-    >
-      <FileText className="size-3.5 shrink-0" aria-hidden />
-      <span className="min-w-0 max-w-[14rem] truncate-until-large">{name}</span>
-      <Download className="size-3.5 shrink-0" aria-hidden />
-    </Button>
-  );
 }
 
 /* ── Who may do what (§3.4, §4.3, §4.4) ───────────────────────────────────── */
@@ -589,8 +515,8 @@ export interface FeedbackRowDetailProps {
   onUpdate: FeedbackDetailUpdate;
   /** `update.isPending`: the editors' save buttons wait for it. */
   pending?: boolean;
-  /** `POST /feedback/attachments` for the rework's one file. Left out, a rework is a
-   *  note alone. */
+  /** `POST /feedback/attachments` for the rework's one file and, since 0.47 (§12) with
+   *  `replyAttachments`, the admin reply's. Left out, a rework or a reply is text alone. */
   onUpload?: FeedbackUpload;
   /** The app's authenticated GET (`AuthedImage`'s) — the pictures and the downloads go
    *  through it, since the attachment route wants the bearer token (§3.5). Left out,
@@ -603,9 +529,11 @@ export interface FeedbackRowDetailProps {
    * page's mutation (its observer outlives the row a status filter removes).
    */
   statusChange?: FeedbackStatusChange;
-  /** For the rework's "Capture screenshot" — see {@link FeedbackReworkSectionProps}. */
+  /** For the rework's and (0.47, with `replyAttachments`) the reply composer's "Capture screenshot" — see
+   *  {@link FeedbackReworkSectionProps}. */
   onCaptureScreenshot?: () => Promise<File | null>;
-  /** The rework's file field, over the contract's defaults. */
+  /** The rework's and (0.47, with `replyAttachments`) the reply composer's file field,
+   *  over the contract's defaults. */
   reworkAttachment?: Partial<FeedbackNoteAttachment>;
   /** How the `resolved_at` date reads — the app's date cell, as a string. Default: the
    *  kit's `formatDate` in the provider's locale, `medium` style. */
@@ -629,8 +557,23 @@ export interface FeedbackRowDetailProps {
    * reply composer stands under the timeline. Return the promise: the box clears when it
    * resolves. A failure is the app's to toast — the server's `detail`, else
    * `feedbackToast.replyFailed` (0.38.1).
+   *
+   * 0.47 (§12, keksdose live #447): with `replyAttachments` (and `onUpload`) the
+   * composer takes one file as the rework note does — pasted into the box, captured or
+   * picked — uploaded first, and its URL is the third argument (`attachment_url` in the
+   * body; server-kit 0.18).
    */
-  onReply?: (body: string, status?: FeedbackStatus) => void | Promise<unknown>;
+  onReply?: (body: string, status?: FeedbackStatus, attachmentUrl?: string) => void | Promise<unknown>;
+  /**
+   * 0.47 (§12): the reply composer takes one file — through `onUpload`,
+   * `onCaptureScreenshot` and `reworkAttachment`, the rework note's. Off by default:
+   * `onUpload` alone stays the rework's, so a page that passes it and an `onReply` of
+   * `(body, status)` does not grow a file field whose file its reply would drop (round
+   * 0.47 build reviews, keksdose and kastlan B1). Turn it on in the commit that makes
+   * `onReply` send its third argument as `attachment_url`, with server-kit 0.18 (an
+   * older server answers the field with a 422).
+   */
+  replyAttachments?: boolean;
   /** 0.38: the reply is in flight. */
   replying?: boolean;
   /**
@@ -695,6 +638,7 @@ export function FeedbackRowDetail({
   commit,
   showSubject = true,
   onReply,
+  replyAttachments = false,
   replying = false,
   onRework,
   comments,
@@ -719,8 +663,10 @@ export function FeedbackRowDetail({
   const { description } = splitDescription(row.body);
   const pageHref = feedbackPageHref(row.context);
   const pageUrl = feedbackPageUrl(row.context);
-  const files = feedbackAttachmentUrls(row);
-  const fetchFile = fetcher ?? plainFetch;
+  // 0.47 (§12): with the entries, each entry's file is drawn inline in the Replies
+  // timeline, so the Attachment section holds the report's own files.
+  const files = feedbackAttachmentUrls(row.replies ? { ...row, replies: undefined } : row);
+  const fetchFile = fetcher ?? plainFeedbackFetch;
   const dateText = (iso: string) => (renderDate ? renderDate(iso) : formatDate(iso, "medium", { locale }));
 
   const saveDescription = (value: string) => {
@@ -823,7 +769,7 @@ export function FeedbackRowDetail({
                   className="max-h-64 max-w-full rounded border border-subtle"
                 />
               ) : (
-                <AttachmentDownload key={url} url={url} fetcher={fetchFile} labels={labels} />
+                <FeedbackAttachmentDownload key={url} url={url} fetcher={fetchFile} />
               ),
             )}
           </div>
@@ -841,7 +787,7 @@ export function FeedbackRowDetail({
       >
         <div className="space-y-3">
           {replies ? (
-            <FeedbackReplyTimeline replies={replies} />
+            <FeedbackReplyTimeline replies={replies} fetcher={fetchFile} />
           ) : (
             <FeedbackProse>{row.outcome || undefined}</FeedbackProse>
           )}
@@ -851,6 +797,9 @@ export function FeedbackRowDetail({
               status={row.status}
               onReply={onReply}
               pending={replying}
+              onUpload={replyAttachments ? onUpload : undefined}
+              onCaptureScreenshot={replyAttachments ? onCaptureScreenshot : undefined}
+              attachment={replyAttachments ? reworkAttachment : undefined}
               suggestedStatus={feedbackReplyNudge(row)}
               commit={commit}
             />

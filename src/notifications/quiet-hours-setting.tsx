@@ -10,22 +10,29 @@ import { CARD_DESCRIPTION_CLASS } from "../settings/settings-card-classes";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { settle, useMounted } from "../account/account-parts";
 import { describeFailure, FailureLine, useNotificationsLabels, useWriteOverlay } from "./notification-parts";
-import type { NotificationsLabels } from "./notifications-labels";
+import type { NotificationRegionLabels, NotificationsLabels } from "./notifications-labels";
 import type { NotificationSettingsPatch } from "./notification-types";
-import { zoneName } from "./time-zone-select";
 
 /** The zone the server applies while no device ever reported one (§10.3): every app's. */
 const DEFAULT_FALLBACK_ZONE = "Europe/Zurich";
+
+/** A zone for a sentence: "Europe / Zurich", the region in the kit's words (`labels.regions`);
+ *  a region the labels do not know keeps its IANA name, a zone with none ("UTC") is itself. */
+function zoneName(zone: string, regions: NotificationRegionLabels): string {
+  const slash = zone.indexOf("/");
+  if (slash < 0) return zone;
+  const region = zone.slice(0, slash);
+  const named = Object.prototype.hasOwnProperty.call(regions, region)
+    ? regions[region as keyof NotificationRegionLabels]
+    : region;
+  return `${named} / ${zone.slice(slash + 1).replace(/_/g, " ").replace(/\//g, " / ")}`;
+}
 
 export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onChange"> {
   /** The `GET`'s `quiet_hours_start`, `"HH:MM"`, or `null`. */
   start: string | null;
   /** The `GET`'s `quiet_hours_end`. */
   end: string | null;
-  /** The zone the 0.36 card showed, an IANA name, or `null`.
-   *  @deprecated 0.46 — pass `zone` (§10.3: the zone is the account's, automatic only); removed in 0.47.
-   *  Shown read-only while `zone` is left out; the card no longer offers a picker. */
-  timezone?: string | null;
   /**
    * 0.46 (§10.3, amended 2026-10-20: automatic only): the account's zone — `/auth/me`'s
    * `device_timezone`, the zone of the device last used; `null` while no device has
@@ -43,7 +50,7 @@ export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div"
    * rejects.
    */
   onChange: (patch: NotificationSettingsPatch) => Promise<unknown> | void;
-  /** The zone named while neither `zone` nor `timezone` names one: the one the server
+  /** The zone named while `zone` names none: the one the server
    *  applies. Default `"Europe/Zurich"`, every app's. */
   fallbackZone?: string;
   /** The app keeps an inbox, and the description says a held push still reaches it. */
@@ -69,15 +76,13 @@ type QuietField = "quiet_hours_start" | "quiet_hours_end";
  *
  * - **Two times**, each saved as it is entered; a cleared time sends `null`. While only
  *   one is set the card says so: the window fails open until both are.
- * - **The zone** shows while a time is set: `zone`, else the deprecated `timezone`, else
- *   `fallbackZone`.
+ * - **The zone** shows while a time is set: `zone`, else `fallbackZone`.
  *
  * Under a write lock the fields are `commit` controls exempt from billing.
  */
 export function QuietHoursSetting({
   start,
   end,
-  timezone = null,
   zone,
   held = false,
   onChange,
@@ -99,7 +104,7 @@ export function QuietHoursSetting({
     overlay.has(field) ? (overlay.get(field) ?? null) : server;
   const startShown = shown("quiet_hours_start", start);
   const endShown = shown("quiet_hours_end", end);
-  const accountZone = (zone === undefined ? timezone : zone) ?? fallbackZone;
+  const accountZone = zone ?? fallbackZone;
 
   const save = (patch: NotificationSettingsPatch) => {
     const fields = Object.keys(patch) as QuietField[];

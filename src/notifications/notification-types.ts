@@ -68,9 +68,6 @@ export interface NotificationSettingsPatch<Id extends string = string> {
   digest_cadence?: DigestCadence;
   quiet_hours_start?: string | null;
   quiet_hours_end?: string | null;
-  /** @deprecated 0.46 — the zone is the account's, automatic only (§10.3), and server-kit 0.16 refuses it here;
-   *  removed in 0.47. No kit card sends it. */
-  timezone?: string;
 }
 
 /** One registered push device, as `GET /notifications/devices` lists it (§3.5), oldest

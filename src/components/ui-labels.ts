@@ -20,5 +20,5 @@ export const DEFAULT_TABS_LABELS: TabsLabels = {
   add: "Add tab",
   remove: (tab) => `Remove ${tab}`,
   more: "More tabs",
-  backToFirst: "Back to the first tab",
+  previous: "Previous tabs",
 };

@@ -21,6 +21,44 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.47.0](https://github.com/Eifi1/ui-kit/compare/v0.46.1...v0.47.0) (2026-10-21)
+
+Round 0.47, the three 0.46 build reviews plus keksdose live #447 (feedback §12), #410 and dev
+#600. It removes what 0.46 deprecated for 0.47 (`TimeZoneSelect`, `timeZoneOptions`,
+`QuietHoursSetting`'s `timezone`, `NotificationSettingsPatch.timezone`, the unused zone labels,
+`feedbackDetail.openPage`): **breaking** for a build that still names one, which no app does
+(checked 2026-10-20). Otherwise:
+
+- `RowActionsHead`, `ROW_ACTIONS_CELL_CLASS` and `ROW_ACTIONS_HEAD_CLASS` give a hand-built
+  table the actions column `rowActionsColumn` gives a `DataTable` (keksdose N17).
+- An expanded `DataTable` row is as wide as the table's visible scroller, not the whole table,
+  so an inline editor's Save stays on screen (keksdose S4). Shows on a plain bump.
+- A file on an admin reply (opt-in: `replyAttachments`, so a plain bump shows no new field) and
+  on a public comment; every entry's and comment's picture is drawn inline.
+- `Tabs`' `overflowCue` is a › while tabs lie past the end and a ‹ while tabs lie before the
+  start, neither ever flipping; `tabs.previous` is new, `tabs.backToFirst` deprecated (ignored,
+  removed in 0.48).
+- The theme sets `color-scheme` on `<html>`, so native controls and scrollbars follow it.
+- Build: vite 8.3.4 (GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw, GHSA-587h-7wmj-h5pm).
+
+The server half ships as server-kit 0.18.0, which breaks a stale sender: a `timezone` sent to
+the notification settings, the push settings shim or `PATCH /auth/me` is a 422, as announced;
+an app with public comments adds a nullable `attachment_url` column. Per-app steps:
+`docs/adopt-0.47.md`.
+
+### ⚠ BREAKING CHANGES
+
+* TimeZoneSelect, timeZoneOptions and the other names deprecated in 0.46 are removed.
+
+### Added
+
+* **feedback,tabs,theme:** reply and comment attachments, edge cues that never flip, color-scheme ([ee5630e](https://github.com/Eifi1/ui-kit/commit/ee5630ecd443c5bda22d386cdae2377410381eba))
+* remove what 0.46 deprecated; RowActionsHead; an expansion as wide as the visible table ([d623ced](https://github.com/Eifi1/ui-kit/commit/d623cedcd0812c124cfb6970227e8bcc4998be20))
+
+### Fixed
+
+* **feedback:** the reply attachment is opt-in (replyAttachments), so a bump drops no file ([8e5d41a](https://github.com/Eifi1/ui-kit/commit/8e5d41a3c49b61350de0b56950e424299d937497))
+
 ## [0.46.1](https://github.com/Eifi1/ui-kit/compare/v0.46.0...v0.46.1) (2026-10-20)
 
 The three apps' 0.46 adoption findings (round 048: keksdose, kastlan, Kurvenschmiede). No export

@@ -190,7 +190,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       outcomeUpdate: "Frissítés",
       outcomePlaceholder: "Mi készült el, mi a döntés, vagy miért nem valósul meg.",
       rework: "Átdolgozás",
-      openPage: "Oldal megnyitása",
       reworkTitle: "Visszaküldés átdolgozásra",
       reworkSend: "Átdolgozás kérése",
       reworkPlaceholder: "Min kell még finomítani? Új feltételek vagy irányváltás.",
@@ -526,7 +525,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       add: "Lap hozzáadása",
       remove: (tab) => `${tab} eltávolítása`,
       more: "További lapok",
-      backToFirst: "Vissza az első lapra",
+      previous: "Előző lapok",
     },
     appShell: {
       collapse: "Oldalsáv összecsukása",
@@ -1169,7 +1168,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     notifications: {
       typesTitle: "Értesítést kérek ezekről",
       typesDescription: "Válassza ki, miről és hogyan kapjon értesítést.",
-      byEmail: "E-mailben",
       channelApp: "Az appban",
       channelPush: "Push",
       channelEmail: "E-mail",
@@ -1193,9 +1191,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       quietUntil: "Eddig",
       quietIncomplete:
         "Adjon meg kezdő és záró időpontot is. A csendes órák csak akkor lépnek életbe, ha mindkettő be van állítva.",
-      timeZone: "Időzóna",
-      deviceZone: (zone) => `Ez az eszköz ebben az időzónában van: ${zone}.`,
-      useDeviceZone: "Ezt használom",
       regions: {
         Africa: "Afrika",
         America: "Amerika",

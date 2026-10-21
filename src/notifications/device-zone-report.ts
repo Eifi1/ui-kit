@@ -20,7 +20,7 @@ export interface DeviceZoneReportOptions {
  * This device's IANA zone ("Europe/Zurich"), or `"UTC"` where the runtime names none —
  * the zone `useDeviceZoneReport` reports, which becomes the account's (§10.3, automatic
  * only), and the one sign-up sends (`RegisterRequest.device_timezone`). Here since 0.46.1
- * (keksdose N6); the deprecated `time-zone-select` module re-exports it until 0.47.
+ * (keksdose N6).
  */
 export function deviceTimeZone(): string {
   try {

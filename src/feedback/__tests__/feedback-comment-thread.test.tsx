@@ -193,7 +193,8 @@ describe("FeedbackCommentThread — rework entries (0.40)", () => {
     const [row] = rows();
     expect(row).toHaveTextContent("You");
     expect(row.closest("[data-own]")).not.toBeNull();
-    expect(row).toHaveTextContent("0123456789ab.png");
+    // 0.47 (§12): the file drawn inline, through the thread's fetcher.
+    expect(row.querySelector('[data-feedback-entry-file="/api/v1/feedback/attachments/0123456789ab.png"]')).not.toBeNull();
   });
 
   it("draws a migrated one without the arrow, and a null author as A user", () => {

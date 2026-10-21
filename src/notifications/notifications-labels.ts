@@ -21,7 +21,7 @@ export interface NotificationRegionLabels {
 /**
  * Every string the notification parts render — the `notifications` namespace of
  * `<UiKitProvider labels>`, overridable per instance through `labels`: the types card,
- * quiet hours and the zone picker, this device's push, the device list, and the
+ * quiet hours, this device's push, the device list, and the
  * unsubscribe page. Cancel is `common.cancel`.
  */
 export interface NotificationsLabels {
@@ -30,9 +30,6 @@ export interface NotificationsLabels {
   typesTitle: string;
   /** The line under it. */
   typesDescription: string;
-  /** @deprecated 0.46 — the card's channels are columns now (`channelEmail`); removed in 0.47. Unused,
-   *  kept so an app's override still type-checks. */
-  byEmail: string;
   /** 0.46 (§10.2): the channel columns' headings, and each switch's name. */
   channelApp: string;
   channelPush: string;
@@ -64,17 +61,7 @@ export interface NotificationsLabels {
   quietUntil: string;
   /** One time set, the other not: quiet hours fail open until both are. */
   quietIncomplete: string;
-  /** The zone picker's label.
-   *  @deprecated 0.46 — the zone is automatic (§10.3): only the deprecated `TimeZoneSelect` reads it, the
-   *  0.46 card does not; removed in 0.47. Kept so an app's override still type-checks. */
-  timeZone: string;
-  /** @deprecated 0.46 — the zone is automatic (§10.3), the card offers no device zone; removed in 0.47.
-   *  Unused, kept so an app's override still type-checks. */
-  deviceZone: (zone: string) => string;
-  /** @deprecated 0.46 — the zone is automatic (§10.3), nothing to take; removed in 0.47. Unused, kept
-   *  so an app's override still type-checks. */
-  useDeviceZone: string;
-  /** The zone's region headings, in the picker and in a zone's name ("Europe / Zurich"). */
+  /** The zone's region headings, in a zone's name ("Europe / Zurich"). */
   regions: NotificationRegionLabels;
 
   /* ── This device ────────────────────────────────────────────────────── */
@@ -187,7 +174,6 @@ export interface NotificationsLabels {
 export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
   typesTitle: "Notify me about",
   typesDescription: "Choose what you hear about, and how.",
-  byEmail: "By e-mail",
   channelApp: "In the app",
   channelPush: "Push",
   channelEmail: "E-mail",
@@ -211,9 +197,6 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
   quietFrom: "From",
   quietUntil: "Until",
   quietIncomplete: "Set both a start and an end time. Quiet hours take effect once both are set.",
-  timeZone: "Time zone",
-  deviceZone: (zone) => `This device is in ${zone}.`,
-  useDeviceZone: "Use it",
   regions: {
     Africa: "Africa",
     America: "Americas",

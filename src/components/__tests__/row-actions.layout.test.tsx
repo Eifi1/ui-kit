@@ -3,7 +3,16 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router";
 import { Archive, Pencil, Trash2 } from "lucide-react";
-import { RowActions, rowActionsColumn, type RowActionList } from "../row-actions";
+import {
+  ROW_ACTIONS_CELL_CLASS,
+  ROW_ACTIONS_HEAD_CLASS,
+  RowActions,
+  RowActionsHead,
+  rowActionsColumn,
+  type RowActionList,
+} from "../row-actions";
+import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "../table";
+import { UiKitProvider } from "../../i18n/kit-labels";
 import { DataTable } from "../data-table";
 import type { DataTableColumn } from "../data-table";
 import { WriteLockProvider } from "../write-lock";
@@ -318,6 +327,66 @@ describe("rowActionsColumn", () => {
     const col = rowActionsColumn<Row>({ key: "ops", actions: () => [], column: { mobileHidden: true } });
     expect(col.key).toBe("ops");
     expect(col.mobileHidden).toBe(true);
+  });
+});
+
+describe("RowActionsHead — a hand-built table's actions column (0.47, keksdose N17)", () => {
+  it("gives a hand-built table the heading and cell rowActionsColumn draws: visible, end-aligned", () => {
+    const col = rowActionsColumn<Row>({ actions: () => [] });
+    // One source: the column reads the same classes a hand-built table does.
+    expect(col.className).toBe(ROW_ACTIONS_CELL_CLASS);
+    expect(col.headClassName).toBe(ROW_ACTIONS_HEAD_CLASS);
+    render(
+      <UiKitProvider labels={{ rowActions: { actions: "Aktionen" } }}>
+        <Table aria-label="Budget">
+          <TableHead>
+            <TableRow>
+              <TableHeaderCell>Name</TableHeaderCell>
+              <RowActionsHead size="sm" className="py-1" />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>Alpha</TableCell>
+              <TableCell className={ROW_ACTIONS_CELL_CLASS}>
+                <RowActions actions={actions()} name="Alpha" />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </UiKitProvider>,
+    );
+    const head = screen.getByRole("columnheader", { name: "Aktionen" });
+    expect(within(head).getByText("Aktionen")).not.toHaveClass("sr-only");
+    expect(head).toHaveClass("w-px", "text-end", "py-1");
+    expect(head).not.toHaveClass("text-start");
+    expect(head).toHaveAttribute("scope", "col");
+    const cell = screen.getByRole("button", { name: "Edit" }).closest("td");
+    expect(cell).toHaveClass("w-px", "whitespace-nowrap", "text-end");
+    expect(cell).not.toHaveClass("text-start");
+  });
+
+  it("takes the app's word, or names the column for a screen reader only with `hideLabel`", () => {
+    const { rerender } = render(
+      <table>
+        <thead>
+          <tr>
+            <RowActionsHead>Ops</RowActionsHead>
+          </tr>
+        </thead>
+      </table>,
+    );
+    expect(screen.getByRole("columnheader", { name: "Ops" })).toBeInTheDocument();
+    rerender(
+      <table>
+        <thead>
+          <tr>
+            <RowActionsHead hideLabel />
+          </tr>
+        </thead>
+      </table>,
+    );
+    expect(within(screen.getByRole("columnheader", { name: "Actions" })).getByText("Actions")).toHaveClass("sr-only");
   });
 });
 

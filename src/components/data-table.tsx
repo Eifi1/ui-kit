@@ -1213,6 +1213,17 @@ export function DataTable<T>({
   const isMdUp = !usePhoneLayout();
   // `edgeFade` (0.25) on the desktop scroller; the phone list never scrolls sideways.
   const desktopScroller = useRef<HTMLDivElement | null>(null);
+  // 0.47 (keksdose S4): the scroller's visible width, as `--dt-visible-w` on it, for the
+  // expansion row's pinned content (below). Set on the element, not in state: a resize
+  // re-renders nothing. Only a table that can expand a row measures.
+  const measuresVisibleWidth = isMdUp && !!expandedRow;
+  useEffect(() => {
+    const el = desktopScroller.current;
+    if (!measuresVisibleWidth || !el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => el.style.setProperty("--dt-visible-w", `${el.clientWidth}px`));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [measuresVisibleWidth]);
   const edgeFadeProps = useEdgeFade(desktopScroller, edgeFade && isMdUp);
 
   // ---- Mobile card list (md:hidden) ----
@@ -1926,10 +1937,25 @@ export function DataTable<T>({
                           content in `w-0 min-w-full` pins the cell's preferred
                           width to ~0 (the explicit width:0 child), so it can never
                           perturb the columns; the div then fills to the full row
-                          width only at paint time, and long text wraps within it. */}
+                          width only at paint time, and long text wraps within it.
+                          Inside it the content is pinned to what the scroller SHOWS
+                          (0.47, keksdose S4): on a table wider than its scroller a
+                          table-wide panel put an inline editor's Save/Cancel off-screen.
+                          `sticky start-0` holds it at the scroller's start edge (the
+                          right one in RTL) as the row scrolls sideways, and
+                          `--dt-visible-w` (the scroller's clientWidth, measured above)
+                          sizes it; before the first measure, and in a table no wider
+                          than its scroller, it is the full width as before. */}
                       <td colSpan={totalColSpan} className="p-0">
-                        <div className={cn("w-0 min-w-full", compact ? "px-2 py-2" : "px-3 py-3")}>
-                          {expansion}
+                        <div className="w-0 min-w-full">
+                          <div
+                            className={cn(
+                              "sticky start-0 w-[var(--dt-visible-w,100%)] max-w-full",
+                              compact ? "px-2 py-2" : "px-3 py-3",
+                            )}
+                          >
+                            {expansion}
+                          </div>
                         </div>
                       </td>
                     </tr>

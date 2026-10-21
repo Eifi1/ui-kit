@@ -1,15 +1,17 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { BellOff, Paperclip } from "lucide-react";
+import { BellOff } from "lucide-react";
 import { Select } from "../components/select";
 import type { CommitScope } from "../components/write-lock";
+import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { formatDate } from "../lib/format";
 import { FeedbackStatusBadge, selectableFeedbackStatuses, type FeedbackStatus } from "./feedback-inbox";
 import { useFeedbackStatusLabels } from "./feedback-labels";
 import type { FeedbackReply } from "./feedback-public-types";
-import { FEEDBACK_DECIDED_STATUSES, FEEDBACK_REPLY_MAX, attachmentName } from "./feedback-record";
+import { FEEDBACK_DECIDED_STATUSES, FEEDBACK_REPLY_MAX } from "./feedback-record";
+import { FeedbackEntryFile, useFeedbackEntryUpload, type FeedbackEntryUploadOptions } from "./feedback-entry-file";
 import { ChatComposer } from "./feedback-thread";
 import { DEFAULT_FEEDBACK_REPLIES_LABELS } from "./feedback-thread-parts-labels";
 import { FeedbackReworkEntryChip } from "./feedback-rework-entry-chip";
@@ -82,10 +84,14 @@ export interface FeedbackReplyTimelineProps {
   renderDate?: (iso: string) => string;
   /** Tag bodies and names `data-private` (a host's screen-share blur). Default true. */
   redact?: boolean;
-  /** 0.40: how a rework entry's file (`attachment_url`) is drawn under its text. Default:
-   *  its name beside a paperclip — the file itself is in the row detail's Attachment
-   *  section, fetched with the app's credentials. */
+  /** How an entry's file (`attachment_url` — a rework's since 0.40, an admin reply's
+   *  since 0.47) is drawn under its text. Default (0.47, §12): {@link FeedbackEntryFile} —
+   *  a picture inline as a thumbnail that opens full size, any other file a download —
+   *  through `fetcher`. */
   renderAttachment?: (url: string) => ReactNode;
+  /** 0.47: the app's authenticated GET (`AuthedImage`'s) for the entries' files. Left
+   *  out, the browser's own fetch with same-origin cookies. */
+  fetcher?: AuthedFetcher | null;
   labels?: LabelOverride<FeedbackRepliesLabels>;
   className?: string;
 }
@@ -118,12 +124,16 @@ function EntryStatus({ reply, statusChanged }: { reply: FeedbackReply; statusCha
  * 0.40 (§10.3): an author's **rework** entry (`kind: "rework"`) stands among them as the
  * author's — their name (`null` → "A user", never "Admin"), the **Rework** chip, the
  * status it moved the report to (none on a migrated one) and its file.
+ *
+ * 0.47 (§12): any entry's file — a rework's, an admin reply's — is drawn under its text,
+ * a picture INLINE ({@link FeedbackEntryFile}).
  */
 export function FeedbackReplyTimeline({
   replies,
   renderDate,
   redact = true,
   renderAttachment,
+  fetcher,
   labels: labelsProp,
   className,
 }: FeedbackReplyTimelineProps) {
@@ -160,15 +170,12 @@ export function FeedbackReplyTimeline({
             <p data-private={priv} dir="auto" className="mt-0.5 whitespace-pre-wrap break-words text-start text-primary">
               {reply.body}
             </p>
-            {rework && reply.attachment_url && (
-              <div className="mt-1 min-w-0" data-private={priv} data-feedback-entry-file="">
+            {reply.attachment_url && (
+              <div className="mt-1 min-w-0" data-private={priv} data-feedback-entry-attachment="">
                 {renderAttachment ? (
                   renderAttachment(reply.attachment_url)
                 ) : (
-                  <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-xs text-secondary">
-                    <Paperclip className="size-3.5 shrink-0" aria-hidden />
-                    <span className="min-w-0 break-all">{attachmentName(reply.attachment_url)}</span>
-                  </span>
+                  <FeedbackEntryFile url={reply.attachment_url} fetcher={fetcher} />
                 )}
               </div>
             )}
@@ -204,15 +211,16 @@ const REPLY_ROW_ALIGN = cn(
   "pointer-coarse:[&_[data-chat-composer-hint]]:sr-only",
 );
 
-export interface FeedbackReplyComposerProps {
+export interface FeedbackReplyComposerProps extends FeedbackEntryUploadOptions {
   /** The report's status now — what "No change" keeps. */
   status: FeedbackStatus;
   /**
    * `POST /feedback/{id}/replies` — the body (1–{@link FEEDBACK_REPLY_MAX} after
-   * trimming) and the status picked, `undefined` for "No change". Return the promise:
-   * the box clears when it resolves, and keeps everything on a rejection.
+   * trimming), the status picked, `undefined` for "No change", and (0.47, §12) the URL
+   * of the one file uploaded with it, `undefined` for none. Return the promise: the box
+   * clears when it resolves, and keeps everything on a rejection.
    */
-  onReply: (body: string, status?: FeedbackStatus) => void | Promise<unknown>;
+  onReply: (body: string, status?: FeedbackStatus, attachmentUrl?: string) => void | Promise<unknown>;
   /** The reply is in flight. */
   pending?: boolean;
   /** Preselect this status and say the author has not been told (§9.7, the nudge) —
@@ -235,6 +243,13 @@ export interface FeedbackReplyComposerProps {
  * With `suggestedStatus` the line "The author has not been told. Add a reply." stands
  * above it and that status is picked, so the reply that answers it records the status
  * and the nudge goes away.
+ *
+ * 0.47 (§12, keksdose live #447): with `onUpload`, one file as the rework note takes it —
+ * a screenshot pasted into the box, a capture (`onCaptureScreenshot`), or a pick; the
+ * contract's types and 10 MB. It is uploaded FIRST; a failed upload toasts and sends
+ * nothing, and the draft and the file stay. `onUpload` here is the composer's own opt-in
+ * (new in 0.47, so no page passed it before); `FeedbackRowDetail` hands it on only with
+ * `replyAttachments`, since its `onUpload` is the rework note's too.
  */
 export function FeedbackReplyComposer({
   status,
@@ -242,10 +257,18 @@ export function FeedbackReplyComposer({
   pending = false,
   suggestedStatus,
   commit,
+  onUpload,
+  onCaptureScreenshot,
+  attachment,
   labels: labelsProp,
   className,
 }: FeedbackReplyComposerProps) {
   const labels = useFeedbackRepliesLabels(labelsProp);
+  const { composerAttachment, upload, uploading } = useFeedbackEntryUpload({
+    onUpload,
+    onCaptureScreenshot,
+    attachment,
+  });
   const statusNames = useFeedbackStatusLabels();
   // The pick, valid for the suggestion it was made under: a new suggestion (another
   // status set from the table) picks itself again.
@@ -255,9 +278,12 @@ export function FeedbackReplyComposer({
   });
   const picked = pick.under === suggestedStatus ? pick.value : (suggestedStatus ?? "");
 
-  const send = (body: string) => {
+  const send = async (body: string, file: File | null) => {
     const sent = picked;
-    return Promise.resolve(onReply(body, sent || undefined)).then(() => {
+    const url = await upload(file);
+    // The third argument only with a file, so a text reply calls as before 0.47.
+    const replied = url === undefined ? onReply(body, sent || undefined) : onReply(body, sent || undefined, url);
+    return Promise.resolve(replied).then(() => {
       setPick((current) => (current.value === sent ? { under: suggestedStatus, value: "" } : current));
     });
   };
@@ -272,7 +298,8 @@ export function FeedbackReplyComposer({
       )}
       <ChatComposer
         onSend={send}
-        pending={pending}
+        pending={pending || uploading}
+        attachment={composerAttachment}
         commit={commit}
         maxLength={FEEDBACK_REPLY_MAX}
         showCount
@@ -284,7 +311,7 @@ export function FeedbackReplyComposer({
           <Select
             aria-label={labels.status}
             value={picked}
-            disabled={pending}
+            disabled={pending || uploading}
             onChange={(event) =>
               setPick({ under: suggestedStatus, value: event.target.value as FeedbackStatus | "" })
             }

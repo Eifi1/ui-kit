@@ -202,7 +202,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       outcomeUpdate: "Aktualisieren",
       outcomePlaceholder: "Was wurde umgesetzt, entschieden oder warum nicht.",
       rework: "Nacharbeit",
-      openPage: "Seite öffnen",
       reworkTitle: "Zur Nacharbeit senden",
       reworkSend: "Nacharbeit senden",
       reworkPlaceholder: "Was muss noch angepasst werden? Neue Anforderungen oder Richtungswechsel.",
@@ -541,7 +540,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       add: "Tab hinzufügen",
       remove: (tab) => `${tab} entfernen`,
       more: "Weitere Tabs",
-      backToFirst: "Zurück zum ersten Tab",
+      previous: "Vorherige Tabs",
     },
     appShell: {
       collapse: "Seitenleiste einklappen",
@@ -1184,7 +1183,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     notifications: {
       typesTitle: "Benachrichtigungen zu",
       typesDescription: "Wählen Sie, worüber Sie benachrichtigt werden, und wie.",
-      byEmail: "Per E-Mail",
       channelApp: "In der App",
       channelPush: "Push",
       channelEmail: "E-Mail",
@@ -1207,9 +1205,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       quietFrom: "Von",
       quietUntil: "Bis",
       quietIncomplete: "Legen Sie eine Start- und eine Endzeit fest. Ruhezeiten gelten erst, wenn beide gesetzt sind.",
-      timeZone: "Zeitzone",
-      deviceZone: (zone) => `Dieses Gerät ist in der Zeitzone ${zone}.`,
-      useDeviceZone: "Übernehmen",
       regions: {
         Africa: "Afrika",
         America: "Amerika",

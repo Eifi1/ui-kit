@@ -286,7 +286,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.1 (+1): `swipePlanRowActions`, via the /data-table slice (keksdose N3).
   // 0.46.1 (+1, keksdose N9): `useFeedbackNotificationTypesLabels`, the words with `adminGroup`;
   // `deviceTimeZone` now comes from notifications/device-zone-report (N6, same name, ±0).
-  ["@eifi1/ui-kit", barrel, 987],
+  // 0.47.0 (−2, deprecated in 0.46): `TimeZoneSelect`, `timeZoneOptions` — the zone is
+  // automatic only (§10.3), the time-zone-select module is gone with its `deviceTimeZone` alias.
+  // 0.47.0 (+3, keksdose N17): `RowActionsHead`, `ROW_ACTIONS_CELL_CLASS`,
+  // `ROW_ACTIONS_HEAD_CLASS` — a hand-built table's actions heading and cell.
+  ["@eifi1/ui-kit", barrel, 990],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -304,7 +308,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.35.0: `FeedbackComposer` removed, `ChatComposer` stays (API-6d) (−1).
   // 0.40.0: `FEEDBACK_QUEUE_STATUSES`, `feedbackReworkCount` (+2 here and in the barrel).
   // 0.46.0: `feedbackSwipeOmitShown`, the desktop column's omit (dev#598) (+1 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 103],
+  ["@eifi1/ui-kit/feedback", feedback, 105],
   ["@eifi1/ui-kit/search", search, 9],
   // 0.31.0 (+26): the settings shell and its route, focus, context, heading and
   // catalogue helpers; PublicHeader, RootEntry, RedirectIfAuthed and the

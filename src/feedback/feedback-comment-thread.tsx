@@ -4,11 +4,13 @@ import { EyeOff } from "lucide-react";
 import { Button } from "../components/button";
 import { useConfirm } from "../components/confirm-dialog";
 import type { CommitScope } from "../components/write-lock";
+import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { FeedbackStatusBadge } from "./feedback-inbox";
 import type { FeedbackComment, FeedbackReply } from "./feedback-public-types";
 import { DEFAULT_FEEDBACK_PUBLIC_LABELS } from "./feedback-public-labels";
 import { FEEDBACK_COMMENT_MAX, attachmentName } from "./feedback-record";
+import { FeedbackEntryFile, useFeedbackEntryUpload, type FeedbackEntryUploadOptions } from "./feedback-entry-file";
 import { useFeedbackRepliesLabels } from "./feedback-replies";
 import { FeedbackRepliesDrawnAboveContext } from "./feedback-replies-context";
 import { FeedbackReworkEntryChip } from "./feedback-rework-entry-chip";
@@ -34,8 +36,13 @@ import { DEFAULT_FEEDBACK_COMMENTS_LABELS } from "./feedback-thread-parts-labels
  *   sees their text with that line; the admin sees it struck through, with **Unhide**.
  *   An admin has **Hide** on every visible comment; the writer **Delete** on their own,
  *   after a confirm (it is a hard delete). Nobody edits a comment.
- * - **The composer** (1–4 000 characters, no files) only with `onComment`: left out for
- *   a reader who may not write (a demo, a CRASH report — the app knows).
+ * - **The composer** (1–4 000 characters) only with `onComment`: left out for a reader
+ *   who may not write (a demo, a CRASH report — the app knows). Since 0.47 (§12) with
+ *   `onUpload` it takes one file as the rework note does — pasted into the box,
+ *   captured or picked — uploaded first, its URL `onComment`'s second argument.
+ * - **Files** (0.47, §12): a comment's or an entry's file under its text, a picture
+ *   INLINE — a thumbnail through `fetcher` that opens full size — any other file a
+ *   download ({@link FeedbackEntryFile}). A veiled comment shows none.
  *
  * Delete asks through `useConfirm`, so a thread with `onDelete` and a comment of the
  * viewer's needs the app's `ConfirmProvider` (each app mounts one already).
@@ -75,7 +82,7 @@ export { DEFAULT_FEEDBACK_COMMENTS_LABELS };
 
 /* ── The thread ───────────────────────────────────────────────────────────── */
 
-export interface FeedbackCommentThreadProps {
+export interface FeedbackCommentThreadProps extends FeedbackEntryUploadOptions {
   /** The report's replies (§9.7), oldest first. Left out or `[]`: none.
    *
    *  Inside `FeedbackRowDetail`'s `comments` they are dropped (0.38.1): the detail's
@@ -92,8 +99,12 @@ export interface FeedbackCommentThreadProps {
   /** `POST /feedback/{id}/comments`. Return the promise: the box clears when it
    *  resolves, and keeps the draft when it rejects. A failure is the app's to toast —
    *  the server's `detail`, else `feedbackToast.commentFailed` (0.38.1). Left out, no
-   *  composer. */
-  onComment?: (body: string) => void | Promise<unknown>;
+   *  composer. 0.47 (§12): `attachmentUrl` is the one file uploaded with it (with
+   *  `onUpload`), `undefined` for none — `attachment_url` in the body (server-kit 0.18). */
+  onComment?: (body: string, attachmentUrl?: string) => void | Promise<unknown>;
+  /** 0.47: the app's authenticated GET (`AuthedImage`'s) for the files in the thread.
+   *  Left out, the browser's own fetch with same-origin cookies. */
+  fetcher?: AuthedFetcher | null;
   /** `PATCH /feedback/{id}/comments/{comment_id} {hidden}` — the admin's. A rejection
    *  is caught (0.38.1) and is the app's to toast (`feedbackToast.updateFailed`). Left
    *  out, no Hide / Unhide. */
@@ -141,9 +152,18 @@ export function FeedbackCommentThread({
   loading = false,
   commit,
   now,
+  fetcher,
+  onUpload,
+  onCaptureScreenshot,
+  attachment,
   labels: labelsProp,
   className,
 }: FeedbackCommentThreadProps) {
+  const { composerAttachment, upload, uploading } = useFeedbackEntryUpload({
+    onUpload,
+    onCaptureScreenshot,
+    attachment,
+  });
   const labels = useKitLabels("feedbackComments", DEFAULT_FEEDBACK_COMMENTS_LABELS, labelsProp);
   const anonymous = useKitLabels("feedbackPublic", DEFAULT_FEEDBACK_PUBLIC_LABELS).anonymous;
   const replyLabels = useFeedbackRepliesLabels();
@@ -189,6 +209,10 @@ export function FeedbackCommentThread({
         author: reply.author_name ?? replyLabels.admin,
         createdAt: reply.created_at,
         body: reply.body,
+        // 0.47 (§12): an admin reply's file, where the view carries it.
+        attachments: reply.attachment_url
+          ? [{ name: attachmentName(reply.attachment_url), url: reply.attachment_url }]
+          : undefined,
         staff: true,
         badge: reply.status_to ? (
           <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1" data-feedback-reply-status={reply.status_to}>
@@ -244,6 +268,11 @@ export function FeedbackCommentThread({
         author: veiled ? undefined : comment.mine ? undefined : (comment.author_name ?? anonymous),
         createdAt: comment.created_at,
         body: veiled ? "" : (comment.body ?? ""),
+        // 0.47 (§12): its one file; none when veiled (the server sends none either).
+        attachments:
+          !veiled && comment.attachment_url
+            ? [{ name: attachmentName(comment.attachment_url), url: comment.attachment_url }]
+            : undefined,
         staff: !veiled && comment.staff,
         struck: comment.hidden && isAdmin && !veiled,
         footer: actions.length > 0 ? actions : undefined,
@@ -258,13 +287,19 @@ export function FeedbackCommentThread({
         messages={entries.map((entry) => entry.message)}
         loading={loading}
         now={now}
+        renderAttachment={(file) => (file.url ? <FeedbackEntryFile url={file.url} fetcher={fetcher} /> : file.name)}
         labels={{ thread: labels.comments, empty: labels.empty }}
       />
       {onComment && (
         <ChatComposer
           className="mt-3"
-          onSend={(body) => onComment(body)}
-          pending={pending}
+          onSend={async (body, file) => {
+            const url = await upload(file);
+            // The second argument only with a file, so a text comment calls as before 0.47.
+            return url === undefined ? onComment(body) : onComment(body, url);
+          }}
+          pending={pending || uploading}
+          attachment={composerAttachment}
           commit={commit}
           maxLength={FEEDBACK_COMMENT_MAX}
           showCount

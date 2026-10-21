@@ -183,7 +183,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       outcomeUpdate: "更新",
       outcomePlaceholder: "做了什么、作出了什么决定，或为什么不予处理。",
       rework: "返工",
-      openPage: "打开页面",
       reworkTitle: "退回返工",
       reworkSend: "提交返工",
       reworkPlaceholder: "还有哪些需要完善？如有新的限制或方向调整，请一并说明。",
@@ -514,7 +513,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       // Quoted, so the spacing rule holds whether the tab's name is Han or Latin.
       remove: (tab) => `移除“${tab}”`,
       more: "更多标签页",
-      backToFirst: "返回第一个标签页",
+      previous: "之前的标签页",
     },
     appShell: {
       collapse: "收起侧边栏",
@@ -1129,7 +1128,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     notifications: {
       typesTitle: "通知我以下内容",
       typesDescription: "选择要接收哪些通知，以及接收方式。",
-      byEmail: "通过电子邮件",
       channelApp: "应用内",
       channelPush: "推送",
       channelEmail: "电子邮件",
@@ -1152,9 +1150,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       quietFrom: "从",
       quietUntil: "到",
       quietIncomplete: "请同时设置开始和结束时间。两者都设置后，免打扰时段才会生效。",
-      timeZone: "时区",
-      deviceZone: (zone) => `此设备位于 ${zone} 时区。`,
-      useDeviceZone: "使用此时区",
       regions: {
         Africa: "非洲",
         America: "美洲",

@@ -46,6 +46,7 @@ function stubSystemTheme(initial: "light" | "dark") {
 afterEach(() => {
   localStorage.clear();
   root().classList.remove("dark");
+  root().style.removeProperty("color-scheme");
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -123,6 +124,35 @@ describe("applyPersistedTheme (before React mounts)", () => {
     vi.stubGlobal("matchMedia", undefined);
     expect(applyPersistedTheme(freshKey())).toBe("light");
     expect(isDark()).toBe(false);
+  });
+});
+
+describe("color-scheme on <html> (0.47, keksdose dev #600)", () => {
+  // The browser draws a native select's open list, a date input's popup, scrollbars and
+  // autofill itself, and only `color-scheme` tells it which theme to draw them in.
+  const scheme = () => root().style.colorScheme;
+
+  it("is set with the class by the pre-paint bootstrap", () => {
+    const key = freshKey();
+    store(key, { preference: "dark" }, 2);
+    applyPersistedTheme(key);
+    expect(scheme()).toBe("dark");
+    store(key, { preference: "light" }, 2);
+    applyPersistedTheme(key);
+    expect(scheme()).toBe("light");
+  });
+
+  it("follows the store: light, dark, and the OS while on system", () => {
+    const os = stubSystemTheme("light");
+    const { useTheme, useApplyTheme } = createThemeStore(freshKey());
+    renderHook(() => useApplyTheme());
+    expect(scheme()).toBe("light");
+    act(() => useTheme.getState().setMode("dark"));
+    expect(scheme()).toBe("dark");
+    act(() => useTheme.getState().setPreference("system"));
+    expect(scheme()).toBe("light");
+    act(() => os.set("dark"));
+    expect(scheme()).toBe("dark");
   });
 });
 
