@@ -132,7 +132,8 @@ export interface DataTableColumn<T> {
    * This column takes the width the others leave, and its text ellipsises (0.48,
    * keksdose live #451): `w-full max-w-0` on its cells, so in the table's auto layout it
    * is "the rest of the row" and one long title can no longer widen the table. One per
-   * table. A resized width still pins it; "Auto-size" leaves it to take the rest. Opt-in: without it nothing
+   * table. It has no resize handle, and a width stored for it (before it grew) is
+   * ignored: it always takes the rest. Resize the others to change it. Opt-in: without it nothing
    * changes. With {@link fitPriority} columns the table keeps it at least 15rem wide.
    */
   grow?: boolean;
@@ -953,7 +954,17 @@ export function DataTable<T>({
   // columns are ignored rather than applied: a table cannot be left in a state the
   // user has no control to get out of. They stay in storage untouched, so turning
   // the control back on brings them back.
-  const widths = useMemo(() => (resizable ? storedWidths : {}), [resizable, storedWidths]);
+  // A `grow` column takes the rest of the row by design (0.48): a width stored for it
+  // (a drag or "Auto-size columns" before it grew, KS N2) is ignored, and it has no
+  // handle, so it can never pin it again. Ignored rather than deleted from storage, as
+  // the widths above; the next resize or auto-size writes a blob without it.
+  const widths = useMemo(() => {
+    if (!resizable) return {};
+    const grow = columns.find((c) => c.grow)?.key;
+    if (!grow || !(grow in storedWidths)) return storedWidths;
+    const { [grow]: _ignored, ...rest } = storedWidths;
+    return rest;
+  }, [resizable, storedWidths, columns]);
   const hiddenCols = useMemo(
     () => (columnSettings ? storedHiddenCols : new Set<string>()),
     [columnSettings, storedHiddenCols],

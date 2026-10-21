@@ -351,6 +351,37 @@ describe("Disclosure with no children (0.48, keksdose dev #603)", () => {
     expect(document.querySelector("[inert], [hidden]")).toBeNull();
   });
 
+  it("treats an empty fragment, and fragments of nothing, as no children (keksdose N1)", () => {
+    const cond = false as boolean;
+    render(
+      <>
+        <Disclosure title="A" defaultOpen>
+          {cond ? <p>X</p> : <></>}
+        </Disclosure>
+        <Disclosure title="B" defaultOpen>
+          <>
+            {null}
+            <>{false}</>
+          </>
+        </Disclosure>
+      </>,
+    );
+    expect(screen.getByRole("button", { name: "A" })).not.toHaveAttribute("aria-controls");
+    expect(screen.getByRole("button", { name: "B" })).not.toHaveAttribute("aria-controls");
+  });
+
+  it("still draws a body for a fragment with something in it", () => {
+    render(
+      <Disclosure title="C" defaultOpen>
+        <>
+          <></>
+          <p>Inside</p>
+        </>
+      </Disclosure>,
+    );
+    expect(screen.getByRole("button", { name: "C" })).toHaveAttribute("aria-controls");
+  });
+
   it("still draws a body for real children", () => {
     render(
       <Disclosure variant="bare" title="More" defaultOpen>

@@ -25,6 +25,7 @@ import {
   HOVER_INK,
   ICON_BUTTON_PRESSED,
   RenderedButtonLink,
+  HIT_AREA_LARGE,
   TOUCH_TARGET_LARGE,
   buttonVariantClasses,
 } from "./button-look";
@@ -106,7 +107,7 @@ const ICON_BUTTON_TEXT_STRETCH_SIZES: Record<IconButtonSize, string> = {
 // (2.75rem is 55 px at Large). `md` … `xs` grow their box to it. `2xs` is the action ON
 // a chip or a tab, whose box cannot grow without growing the chip: it keeps its box and
 // gets a 48 px hit area instead — an invisible `::after` centred on it, which takes the
-// taps a finger lands round the glyph.
+// taps a finger lands round the glyph (`HIT_AREA_LARGE`).
 const ICON_BUTTON_TOUCH_LARGE: Record<IconButtonSize, string> = {
   "2xl": "",
   xl: "",
@@ -114,8 +115,7 @@ const ICON_BUTTON_TOUCH_LARGE: Record<IconButtonSize, string> = {
   md: TOUCH_TARGET_LARGE,
   sm: TOUCH_TARGET_LARGE,
   xs: TOUCH_TARGET_LARGE,
-  "2xs":
-    "relative large:after:absolute large:after:inset-[calc((100%-48px)/2)] large:after:content-['']",
+  "2xs": HIT_AREA_LARGE,
 };
 
 // A tone re-colours the glyph without changing what the variant draws around it.

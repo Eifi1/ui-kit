@@ -11,8 +11,10 @@ import type { DataTableColumn } from "./data-table";
 // - `fitPriority`: while the table is wider than its scroller — or, with a `grow` column,
 //   while that column would get less than {@link GROW_MIN_REM} — the table leaves out
 //   its `fitPriority` columns, the LOWEST number first (ties: the later column first),
-//   and brings them back in the reverse order once the scroller is as wide as the table
-//   needed with them. The scroller's own width, through a ResizeObserver: a sidebar, a
+//   and brings them back in the reverse order as soon as the table, as it is NOW, has
+//   room for them (its need re-measured, plus the column's own header width from when
+//   it was left out), so narrower content (a filter, another page) counts as much as a
+//   wider scroller. The scroller's own width, through a ResizeObserver: a sidebar, a
 //   narrower window, the Columns drawer and Large text all count the same.
 
 /** The least a `grow` column keeps before the table starts leaving columns out: about
@@ -64,9 +66,10 @@ export function useColumnFit<T>({
 } {
   const [kept, setKept] = useState<ReadonlySet<string>>(() => new Set());
   const [hidden, setHidden] = useState<string[]>([]);
-  // The width the table needed WITH a column, written when it is left out: it comes
-  // back once the scroller is at least that wide.
-  const showAt = useRef(new Map<string, number>());
+  // A column's own header width, written when it is left out: it comes back once the
+  // table's need as it is now, plus this, fits the scroller (keksdose S3, 0.48: not the
+  // whole table's need at hide time, which went stale when the content narrowed).
+  const ownWidth = useRef(new Map<string, number>());
 
   const hasFit = columns.some((c) => c.fitPriority != null);
   const active = enabled && hasFit;
@@ -102,6 +105,15 @@ export function useColumnFit<T>({
     let need = growTh
       ? table.offsetWidth - growTh.offsetWidth + GROW_MIN_REM * rem
       : table.offsetWidth;
+    if (!growTh && need <= avail + 0.5 && current.length > 0) {
+      // A `w-full` table is at least the scroller's width, which says nothing about how
+      // much room its content leaves: probe its content's width (what it takes once it
+      // overflows) for the bring-back below. Read and put back in one layout pass.
+      const before = table.style.width;
+      table.style.width = "min-content";
+      need = table.offsetWidth;
+      table.style.width = before;
+    }
     if (need > avail + 0.5) {
       // Leave out, in order, until the rest fits: each column saves its header's width
       // (the others are at their content's width while a `grow` column takes the rest).
@@ -109,17 +121,24 @@ export function useColumnFit<T>({
       for (const col of order) {
         if (need <= avail + 0.5) break;
         if (next.includes(col.key)) continue;
-        const th = headRefs.get(col.key);
-        showAt.current.set(col.key, need);
-        need -= th?.offsetWidth ?? 0;
+        const w = headRefs.get(col.key)?.offsetWidth ?? 0;
+        ownWidth.current.set(col.key, w);
+        need -= w;
         next.push(col.key);
       }
       if (next.length !== current.length) setHidden(next);
       return;
     }
-    // Bring back, the last left out first, while the scroller is as wide as they needed.
+    // Bring back, the last left out first, while the table as it is now has room for
+    // them. Should the column have grown since (wider content), the next measure leaves
+    // it out again before paint and records its new width, so it cannot flicker.
     let n = current.length;
-    while (n > 0 && avail + 0.5 >= (showAt.current.get(current[n - 1]) ?? Infinity)) n--;
+    while (n > 0) {
+      const w = ownWidth.current.get(current[n - 1]);
+      if (w == null || need + w > avail + 0.5) break;
+      need += w;
+      n--;
+    }
     if (n !== current.length) setHidden(current.slice(0, n));
   }, [headRefs]);
 

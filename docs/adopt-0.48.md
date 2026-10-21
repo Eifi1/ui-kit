@@ -42,6 +42,11 @@ Same prop, no code change. Checked in headless Chromium at 406px (showcase, Tabs
 overflowCue): › only at the start (strip 33–349, › 349–373), ‹ › in the middle, ‹ only at the
 end; the glyph's centre 0.5px off the label's; border 0, background transparent, shadow none;
 in RTL the ‹ at 349–373 and the › at 33–57.
+Each cue is 1.5rem wide at every text size (24/30/36px at Normal/Large/Extra large), with the
+48px touch target from Large up as an invisible hit area over the strip's faded edge, not as
+row width (Kurvenschmiede N3): at 360px Large the showcase's "Loops" strip went from 100px to
+136px (two 48px cues had taken 96px of a 196px row), "Report queues" from 182 to 218px; a tap
+5px outside either glyph's box lands on the cue; axe: nothing new on the page.
 
 | App | Change |
 | --- | --- |
@@ -62,8 +67,8 @@ count={n} /> } })`; an app's own section carries `badge` itself (it passes throu
 | App | Change |
 | --- | --- |
 | keksdose | frontend/src/features/admin/admin-page.tsx:1056-1084: the `groups` memo can put the counts on the rows instead of (or as well as) the help lines — `overview` gets `badge: <AdminWaitingBadge count={verdict + feedback} />`, `messaging` gets `badge: <AdminWaitingBadge count={support} />`, so the rows add up to the account menu's badge (the sum of ADMIN_WAITING_COUNTS, use-admin-attention.ts:9). Drop "the kit's section row has no badge slot yet" (:1063). If the help lines go back to the catalogue's, the memo shrinks to the two `badge`s; `AdminWaitingBadge` is in the barrel since 0.45 |
-| kastlan | Optional: the platform area's sections could carry their own waiting counts the same way; nothing changes on a bump |
-| kurvenschmiede | Nothing |
+| kastlan | Optional: the Overview row takes `<AdminWaitingBadge>` with the `ADMIN_BADGE_COUNTS` sum (frontend/src/features/settings/admin-catalogue.tsx:48, passed from features/settings/pages/admin-page.tsx:29); nothing changes on a bump. Pass it in as an option rather than reading the attention query inside `useAdminCatalogue`, which also feeds the global search (app-global-search.tsx:29) |
+| kurvenschmiede | Optional: `badges: { overview: <AdminWaitingBadge count={waiting} /> }` with the account menu's sum (`feedback_waiting` + `deletion_requests`, account-menu.tsx:142), passed into `useAdminSections` from frontend/src/features/admin/admin-page.tsx:52 rather than read inside the hook, which also feeds the top bar's search (top-bar-parts.tsx:45); nothing changes on a bump |
 
 ## `DataTable`'s `leadingRowSticky`; a `Disclosure` with no children draws no body (keksdose dev #603)
 
@@ -76,14 +81,15 @@ count={n} /> } })`; an app's own section carries `badge` itself (it passes throu
   rows as before. Checked in headless Chromium (showcase, DataTable — the whole surface, 1280px):
   the header 416–452, the leading cell 452–480.5 before and after scrolling the body 144px,
   `top: 36px`, and the leading row is what lies at its own middle (no row painted over it).
-- **`Disclosure` with no children** (null, false or nothing) renders no body and no
+- **`Disclosure` with no children** (null, false, nothing, or an empty fragment such as
+  `cond ? <X /> : <></>`) renders no body and no
   `aria-controls`: an open one was 8px taller than a shut one (the body's `pt-2`), and named a
   region with nothing in it. Trigger-only (`controls`) is unchanged and is still the way to say
   WHAT it folds.
 
 | App | Change |
 | --- | --- |
-| keksdose | frontend/src/features/transactions/transactions-page.tsx:935: add `leadingRowSticky` beside `leadingRow` (the table is `fillHeight`, :931), so the desktop's upcoming toggle stays reachable as the phone's does in the pinned search bar since #603. The phone toggle (:831-846) keeps `controls`; the comment's "without it the kit drew an empty body under the header while open, 8px taller than closed" (:828-830) is history now — a child-less Disclosure draws none. accounts-page.tsx:780 may take `leadingRowSticky` too (also `fillHeight`, :774) |
+| keksdose | frontend/src/features/transactions/transactions-page.tsx, `TransactionsPage`'s register `<DataTable<Transaction> fillHeight … leadingRow={…}>` (symbols, not lines: the register moves daily): add `leadingRowSticky` beside `leadingRow`, so the desktop's upcoming toggle stays reachable as the phone's does in the pinned search bar since #603. The phone toggle (the trigger-only `Disclosure` in the pinned search bar) keeps `controls`; its comment's "without it the kit drew an empty body under the header while open, 8px taller than closed" is history now — a child-less Disclosure draws none. accounts-page.tsx's `DataTable` with `fillHeight` and `leadingRow` may take `leadingRowSticky` too |
 | kastlan | Nothing: its `leadingRow` (features/meters/pages/meters-page.tsx:48, through resource-list-page.tsx:240) is the inline create editor, which should scroll with the rows — leave it unsticky. No `Disclosure` |
 | kurvenschmiede | Nothing |
 
@@ -96,11 +102,15 @@ options, both opt-in — a table that sets neither is unchanged on a bump:
 - **`grow: true`** — the column takes the width the others leave and its text ellipsises
   (`w-full max-w-0` on its `<th>`/`<td>`/footer cell, `truncate-until-large` on the cell: one
   line at Normal, a wrap from Large up). One long title can no longer widen the table. One per
-  table. A resized width still pins it; "Auto-size columns" leaves it unpinned.
+  table. It has no resize handle, and a width stored for it is ignored: it always takes the
+  rest (resize the others to change it). So an inbox whose Subject width was stored on 0.47
+  (a drag or "Auto-size columns", e.g. Kurvenschmiede's `steering-table:feedback`) grows on
+  the bump with nothing to clear; the stale entry leaves storage with the next resize.
 - **`fitPriority: n`** — while the TABLE's scroller is narrower than the table needs (with a
   `grow` column: the others plus 15rem for it), the table leaves the column out; lowest `n`
-  first, the later column first on a tie, and back in reverse once the scroller is as wide as
-  the table needed with it. Measured by a ResizeObserver on the table's own scroller and after
+  first, the later column first on a tie, and back in reverse as soon as the table as it is
+  NOW has room for it (its need re-measured, plus the column's own width when it left), so
+  narrower content (a filter, another page) brings a column back as a wider scroller does. Measured by a ResizeObserver on the table's own scroller and after
   every render, before paint — so the sidebar, the window, Large text and the open Columns
   drawer all count alike. Desktop only: the phone's card list is not narrowed.
 - **The Columns panel counts what is drawn** ("Columns (8/10)"), and a column left out for width
@@ -125,7 +135,7 @@ Resolved unticked with "hidden for width". axe: nothing on the table or the draw
 
 | App | Change |
 | --- | --- |
-| keksdose | The interim goes: frontend/src/features/feedback/feedback-page.tsx — delete `FIT_COLUMNS` and `fitFeedbackColumns` with their comment (:52-86), use `kitColumns` as `columns` (:242-243, drop the `useMemo`), and drop `className="@container/table"` with its comment (:265-266). Keep both and the CSS `hidden` would make the kit measure a URL column of 0px |
+| keksdose | The interim goes, in the same commit as the bump: frontend/src/features/feedback/feedback-page.tsx — delete `FIT_COLUMNS` and `fitFeedbackColumns` with their comment, use `kitColumns` as `columns` (drop that `useMemo`), drop `className="@container/table"` with its comment, and drop the two imports the interim added (`type DataTableColumn` from data-table, `cn` from ui — lint fails on them otherwise). Keep both and the CSS `hidden` would make the kit measure a URL column of 0px and leave out the next candidate for nothing |
 | kastlan | Nothing to write: frontend/src/features/feedback/pages/feedback-page.tsx:139 takes `useFeedbackColumns`, so its inbox fits on the bump (no Votes column: 9 columns) |
 | kurvenschmiede | Nothing to write: frontend/src/features/feedback/feedback-page.tsx:154 takes `useFeedbackColumns` (`votes: publicReader`), so its inbox fits on the bump |
 

@@ -225,7 +225,8 @@ export function DataTableHead<T>({
                   </Popover>
                 )}
               </div>
-              {resizable && !isTableOwnColumn(col.key) && (
+              {/* A `grow` column takes the rest: no width of its own to drag (0.48, KS N2). */}
+              {resizable && !isTableOwnColumn(col.key) && !col.grow && (
               /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a
                  pointer-only drag handle for a visual preference (column width); it is
                  deliberately not a tab stop, and no content or action depends on it. */

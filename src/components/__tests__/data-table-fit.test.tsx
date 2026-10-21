@@ -57,7 +57,9 @@ function layout(table: HTMLElement) {
   const ths = [...table.querySelectorAll<HTMLElement>("thead th")];
   const growTh = ths.find((th) => th.className.includes("w-full"));
   const others = ths.filter((th) => th !== growTh).reduce((sum, th) => sum + (WIDTH[key(th)] ?? 50), 0);
-  if (!growTh) return { table: Math.max(avail, others), grow: 0 };
+  // `w-full`: the table is at least the scroller's width; `min-content` (the fit's own
+  // probe of what a table without a `grow` column needs) is its content's width.
+  if (!growTh) return { table: table.style.width === "min-content" ? others : Math.max(avail, others), grow: 0 };
   const grow = Math.max(avail - others, 24);
   return { table: others + grow, grow, growTh };
 }
@@ -83,10 +85,10 @@ afterEach(() => {
   while (restore.length) restore.pop()!();
 });
 
-function renderTable(columns: DataTableColumn<Row>[] = FIT) {
+function renderTable(columns: DataTableColumn<Row>[] = FIT, storageKey?: string) {
   render(
     <MemoryRouter>
-      <DataTable rows={ROWS} columns={columns} rowKey={(r) => r.id} />
+      <DataTable rows={ROWS} columns={columns} rowKey={(r) => r.id} storageKey={storageKey} />
     </MemoryRouter>,
   );
   const table = screen.getByRole("table");
@@ -143,6 +145,60 @@ describe("DataTable fit (0.48, keksdose live #451)", () => {
     expect(heads(table)).not.toContain("email");
     setWidth(scroller, 1100);
     expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
+  });
+
+  it("brings a column back as soon as it fits again, when the CONTENT narrowed (keksdose S3)", () => {
+    // 900: URL left out when the table needed 1020. Then a filter drops the long status
+    // (220 → 80): the rest needs 680, URL's 200 fits in 900 — it must not wait for the
+    // scroller to reach the 1020 it needed back then.
+    avail = 900;
+    const { table, scroller } = renderTable();
+    expect(heads(table)).not.toContain("url");
+    const before = WIDTH.status;
+    WIDTH.status = 80;
+    try {
+      setWidth(scroller, 900);
+      expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
+    } finally {
+      WIDTH.status = before;
+    }
+  });
+
+  it("without a `grow` column: leaves out while the content is wider, and brings back on narrower content", () => {
+    const plain = FIT.map((c) => ({ ...c, grow: undefined }));
+    // Content 1080: 900 is short by 180 → URL (200) goes.
+    avail = 900;
+    const { table, scroller } = renderTable(plain);
+    expect(heads(table)).toEqual(["id", "title", "email", "status", "resolved"]);
+    // Wider scroller, still short: stays out.
+    setWidth(scroller, 1000);
+    expect(heads(table)).not.toContain("url");
+    // Content narrows (status 220 → 80): 740 + 200 fits 1000.
+    const before = WIDTH.status;
+    WIDTH.status = 80;
+    try {
+      setWidth(scroller, 1000);
+      expect(heads(table)).toContain("url");
+    } finally {
+      WIDTH.status = before;
+    }
+  });
+
+  it("a `grow` column ignores a stored width and has no resize handle (KS N2)", () => {
+    // A Subject width stored before 0.48 ("Auto-size columns" or a drag on 0.47).
+    localStorage.setItem("hbui-table:fit-n2", JSON.stringify({ widths: { title: 300, status: 240 } }));
+    try {
+      const { table } = renderTable(FIT, "fit-n2");
+      const th = (k: string) => [...table.querySelectorAll<HTMLElement>("thead th")].find((h) => key(h) === k)!;
+      expect(th("title").style.width).toBe("");
+      expect(table.querySelector<HTMLElement>('tbody td[data-col="title"]')!.style.width).toBe("");
+      expect(th("title").querySelector('[role="separator"]')).toBeNull();
+      // The other columns keep theirs, and their handles.
+      expect(th("status").style.width).toBe("240px");
+      expect(th("status").querySelector('[role="separator"]')).not.toBeNull();
+    } finally {
+      localStorage.removeItem("hbui-table:fit-n2");
+    }
   });
 
   it("marks the left-out columns 'hidden for width' in the panel; a tick keeps one in", () => {

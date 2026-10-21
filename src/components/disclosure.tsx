@@ -1,4 +1,4 @@
-import { Children, useEffect, useId, useState } from "react";
+import { Children, Fragment, isValidElement, useEffect, useId, useState } from "react";
 import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
@@ -263,7 +263,8 @@ export interface DisclosureProps extends Omit<ComponentPropsWithRef<"div">, "tit
    */
   controls?: string;
   /** The body. Not rendered in trigger-only mode ({@link DisclosureProps.controls}),
-   *  nor when there is none (0.48): no children, no empty box under the header. */
+   *  nor when there is none (0.48): no children, no empty box under the header.
+   *  `null`, `false`, `undefined` and an empty fragment (`<></>`) count as none. */
   children?: ReactNode;
 }
 
@@ -315,8 +316,9 @@ export function Disclosure({
   const triggerOnly = controls !== undefined;
   // 0.48 (keksdose dev #603): no children, no body — an empty padded box under the
   // header made an open disclosure 8px taller than a shut one, and its `aria-controls`
-  // named a region with nothing in it. `null`, `false` and `undefined` are nothing.
-  const hasBody = !triggerOnly && Children.toArray(children).length > 0;
+  // named a region with nothing in it. `null`, `false` and `undefined` are nothing, and
+  // so is a fragment of nothing (`cond ? <X /> : <></>`, keksdose N1).
+  const hasBody = !triggerOnly && hasBodyContent(children);
   // The card's header squares its lower corners only when a body opens under it.
   const joined = open && hasBody;
   const hasTrailing = trailing !== undefined && trailing !== null && trailing !== false;
@@ -464,5 +466,15 @@ function Chevron({
         leading ? !open && "-rotate-90 rtl:rotate-90" : open && "rotate-180",
       )}
     />
+  );
+}
+
+/** Whether `children` holds anything to draw: `null`/`false`/`undefined`/`""` are nothing,
+ *  and a fragment counts by what is in it (an empty `<></>` is nothing). */
+function hasBodyContent(children: ReactNode): boolean {
+  return Children.toArray(children).some((child) =>
+    isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment
+      ? hasBodyContent(child.props.children)
+      : child !== "",
   );
 }

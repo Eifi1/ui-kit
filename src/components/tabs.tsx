@@ -11,6 +11,7 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { mergeRefs } from "./field-parts";
 import { DEFAULT_TABS_LABELS } from "./ui-labels";
 import { IconButton } from "./icon-button";
+import { HIT_AREA_LARGE } from "./button-look";
 
 /** One tab of a {@link Tabs} strip. */
 export interface TabItem<T extends string> {
@@ -280,6 +281,10 @@ export function Tabs<T extends string>({
   // ours because IconButton puts its tooltip's span around the button. Each cue takes
   // its room only while something lies past its edge; the strip gives way, and the
   // scroll position it measures never moves for it, so the cues cannot flicker.
+  // 24px wide at every text size (KS N3): at Large `sm`'s 48px minimum made each cue
+  // 48px, and at 360px the two left a two-tab strip 100px. The 48px touch target is an
+  // invisible hit area round the glyph instead (`HIT_AREA_LARGE`, as `2xs`), over the
+  // strip's faded edge, not room taken from the row.
   const cueAt = (side: "start" | "end") => (
     <div
       data-tabs-overflow-cue={side}
@@ -288,7 +293,12 @@ export function Tabs<T extends string>({
       <IconButton
         size="sm"
         variant="ghost"
-        className="w-6 bg-transparent text-muted hover:bg-transparent hover:text-primary"
+        className={cn(
+          "w-6 large:min-w-0 bg-transparent text-muted hover:bg-transparent hover:text-primary",
+          // Over the strip's faded edge, for ‹ too (the strip comes after it in the row).
+          HIT_AREA_LARGE,
+          "large:after:z-[1]",
+        )}
         tabIndex={-1}
         type="button"
         label={side === "start" ? text.previous : text.more}

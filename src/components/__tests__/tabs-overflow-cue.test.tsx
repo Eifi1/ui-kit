@@ -135,6 +135,16 @@ describe("Tabs overflowCue", () => {
     expect(button).toHaveClass("text-muted", "hover:text-primary", "bg-transparent");
   });
 
+  it("keeps its 24px box at Large and XL, with a 48px hit area round it (KS N3)", () => {
+    // At 360px with Large text two 48px-wide cues took 96px of the row and left a
+    // two-tab strip 100px (headless Chromium, showcase "Loops"). The finger's 48px goes
+    // to an invisible ::after over the strip's faded edge, as IconButton's `2xs` does.
+    render(strip());
+    const button = more()!;
+    expect(button).toHaveClass("w-6", "large:min-w-0", "relative", "large:after:absolute", "large:after:content-['']", "large:after:z-[1]");
+    expect(button).not.toHaveClass("large:min-w-[48px]");
+  });
+
   it("is reading-direction aware: in a right-to-left strip › still goes on and ‹ back", () => {
     render(<div dir="rtl">{strip()}</div>);
     vi.spyOn(window, "getComputedStyle").mockImplementation(
