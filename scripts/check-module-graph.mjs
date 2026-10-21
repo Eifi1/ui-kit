@@ -186,7 +186,9 @@ const BUDGETS = [
   // 247 B since 0.34 (DOC-7): cn registers `ring-focus` / `outline-focus` as widths with
   // tailwind-merge (the merger itself is a dependency, outside this count).
   { label: "{ cn }", names: ["cn"], max: 272 },
-  { label: "the shell set", names: SHELL_SET, max: 81_300 },
+  // 81,343 B in 0.48: the top-bar menu triggers name themselves in the kit's Tooltip
+  // (keksdose dev #610) — meant growth.
+  { label: "the shell set", names: SHELL_SET, max: 81_600 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
