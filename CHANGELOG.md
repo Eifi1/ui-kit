@@ -57,10 +57,10 @@ The server half ships as server-kit 0.19.0, which breaks only a test helper:
 
 * **data-table,tabs,disclosure:** the 0.48 build reviews ([ea85513](https://github.com/Eifi1/ui-kit/commit/ea85513b0729ddfa23dbbce08158bc6f406401be))
 * **data-table:** beside a `grow` column the other cells keep one line at Normal, the `grow` column keeps 10rem once nothing is left to leave out, and the feedback columns leave out Votes and Category last ([7332f66](https://github.com/Eifi1/ui-kit/commit/7332f665e8b8244b85cf6c3f5bd045874acdcffe))
-* **user-roster:** the state and role chip rows wrap again beside a `grow` column (held to one line they scrolled kastlan's admin roster 21px at 1280px)
-* **feedback:** the User column is at most 12rem, one line with an ellipsis and the full value in its `title`
-* **tabs:** the `overflowCue` gutters are 24px at every text size (1.5rem left a 360px phone's strip 154 of 226px at Extra large)
-* **verify-email:** `EmailVerificationBanner` takes `clampMobile`, with the resend's outcome after "Send again", outside the clamp
+* **user-roster:** the state and role chip rows wrap again beside a `grow` column (held to one line they scrolled kastlan's admin roster 21px at 1280px) ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
+* **feedback:** the User column is at most 12rem, one line with an ellipsis and the full value in its `title` ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
+* **tabs:** the `overflowCue` gutters are 24px at every text size (1.5rem left a 360px phone's strip 154 of 226px at Extra large) ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
+* **verify-email:** `EmailVerificationBanner` takes `clampMobile`, with the resend's outcome after "Send again", outside the clamp ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
 
 ## [0.47.0](https://github.com/Eifi1/ui-kit/compare/v0.46.1...v0.47.0) (2026-10-21)
 
