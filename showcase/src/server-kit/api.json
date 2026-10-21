@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.17.0",
+  "kit_version": "0.18.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -560,7 +560,7 @@
           "name": "ProfileUpdate",
           "kind": "model",
           "signature": "class ProfileUpdate(BaseModel)",
-          "doc": "``PATCH /auth/me {first_name?, last_name?, locale?, text_size?, contrast?,\ndevice_timezone?}`` (§6.1;\nKurvenschmiede ``ProfileUpdate``; ``docs/text-size-harmonization.md`` §6, §10.6).\n\nEvery field optional, so the language picker writes the locale alone, and the text-size\nand contrast cards write theirs alone (a pick writes the device and the account). Unknown fields\nare refused (``extra=\"forbid\"``): the obvious next field somebody sends is ``role``\nor ``email``, and a schema that silently ignored it would read as having accepted it.\nAn explicit ``null`` is refused too — a name cannot be cleared, and\n``model_dump(exclude_unset=True)`` would otherwise carry it onto a NOT NULL column.\nWrite it with :func:`~eifi1_server_kit.settings.apply_patch` and\n:data:`PROFILE_NOT_NULLABLE` (settings §6.1).\n\n**The locale, from the app's languages** (settings §6.2): set :attr:`offered_locales`\nin a subclass — or build the class with\n:func:`~eifi1_server_kit.settings.profile_update_model` — and the locale goes through\n:func:`~eifi1_server_kit.settings.canonical_locale`: ``de_ch`` is stored as ``de-CH``,\n``de`` as the offered German, and a language the app doesn't offer is a 422. Unset,\nonly the tag's shape is checked, as before.\n\n**The zone** (notifications §10.3, 0.16; amended 2026-10-20, Marcel: automatic only):\n``device_timezone``, the device's report (never ``null``), an IANA name ``zoneinfo``\nknows; one it doesn't know (a browser's tzdata newer than the server's), or any value\nthat isn't a name, is **dropped** — left unset, never written — as\n:class:`RegisterRequest` drops it (0.17.0; ``null`` stays a 422). There is no pick: a ``timezone`` field — a stale 0.45 bundle's\npicker still sends one — is **ignored in 0.16 and 0.17** (dropped before the checks, never\nwritten) **and refused from 0.18** as any unknown field is. A demo's zone is ignored, as\nits locale and appearance are in Kurvenschmiede::\n\n    apply_patch(user, body, not_nullable=PROFILE_NOT_NULLABLE, skip=PROFILE_ZONE_FIELDS)\n    apply_zone_update(user, body, is_demo=user.is_demo)",
+          "doc": "``PATCH /auth/me {first_name?, last_name?, locale?, text_size?, contrast?,\ndevice_timezone?}`` (§6.1;\nKurvenschmiede ``ProfileUpdate``; ``docs/text-size-harmonization.md`` §6, §10.6).\n\nEvery field optional, so the language picker writes the locale alone, and the text-size\nand contrast cards write theirs alone (a pick writes the device and the account). Unknown fields\nare refused (``extra=\"forbid\"``): the obvious next field somebody sends is ``role``\nor ``email``, and a schema that silently ignored it would read as having accepted it.\nAn explicit ``null`` is refused too — a name cannot be cleared, and\n``model_dump(exclude_unset=True)`` would otherwise carry it onto a NOT NULL column.\nWrite it with :func:`~eifi1_server_kit.settings.apply_patch` and\n:data:`PROFILE_NOT_NULLABLE` (settings §6.1).\n\n**The locale, from the app's languages** (settings §6.2): set :attr:`offered_locales`\nin a subclass — or build the class with\n:func:`~eifi1_server_kit.settings.profile_update_model` — and the locale goes through\n:func:`~eifi1_server_kit.settings.canonical_locale`: ``de_ch`` is stored as ``de-CH``,\n``de`` as the offered German, and a language the app doesn't offer is a 422. Unset,\nonly the tag's shape is checked, as before.\n\n**The zone** (notifications §10.3, 0.16; amended 2026-10-20, Marcel: automatic only):\n``device_timezone``, the device's report (never ``null``), an IANA name ``zoneinfo``\nknows; one it doesn't know (a browser's tzdata newer than the server's), or any value\nthat isn't a name, is **dropped** — left unset, never written — as\n:class:`RegisterRequest` drops it (0.17.0; ``null`` stays a 422). There is no pick: a ``timezone`` field — only a stale ≤0.45 bundle's\npicker still sends one — is **a 422 from 0.18** as any unknown field is (ignored in 0.16\nand 0.17). A demo's zone is ignored, as\nits locale and appearance are in Kurvenschmiede::\n\n    apply_patch(user, body, not_nullable=PROFILE_NOT_NULLABLE, skip=PROFILE_ZONE_FIELDS)\n    apply_zone_update(user, body, is_demo=user.is_demo)",
           "fields": [
             {
               "name": "first_name",
@@ -5980,7 +5980,7 @@
           "name": "NotificationSettingsUpdate",
           "kind": "model",
           "signature": "class NotificationSettingsUpdate(BaseModel)",
-          "doc": "``PATCH /notifications/settings`` (§3.2), checked against the app's registry.\n\nSet :attr:`registry` in the subclass, as ``ProfileUpdate.offered_locales`` is set\n(settings §7.2); a class without it is a :class:`TypeError` on its first validation.\nA type the registry doesn't know, or an ``app`` / ``push`` / ``email`` switch on a\ntype that doesn't offer it (``push`` in an app with no push), is a validation error\n(422). A type the registry knows but this\naccount doesn't receive is :func:`apply_switches_patch`'s\n:class:`~.errors.NotificationTypeError`. Unknown fields are a 422 — except\n``timezone``, which a stale 0.45 bundle sends: ignored in 0.16 and 0.17, refused from 0.18.",
+          "doc": "``PATCH /notifications/settings`` (§3.2), checked against the app's registry.\n\nSet :attr:`registry` in the subclass, as ``ProfileUpdate.offered_locales`` is set\n(settings §7.2); a class without it is a :class:`TypeError` on its first validation.\nA type the registry doesn't know, or an ``app`` / ``push`` / ``email`` switch on a\ntype that doesn't offer it (``push`` in an app with no push), is a validation error\n(422). A type the registry knows but this\naccount doesn't receive is :func:`apply_switches_patch`'s\n:class:`~.errors.NotificationTypeError`. Unknown fields are a 422 — ``timezone`` too\n(a stale ≤0.45 bundle's: ignored in 0.16 and 0.17, refused from 0.18).",
           "fields": [
             {
               "name": "types",
@@ -6506,7 +6506,7 @@
           "name": "QuietHoursUpdate",
           "kind": "model",
           "signature": "class QuietHoursUpdate(BaseModel)",
-          "doc": "The quiet hours in the ``PATCH``: ``HH:MM`` bounds; ``null`` clears each. No zone:\nit is the account's (§10.3, automatic only). A ``timezone`` (a stale 0.45 bundle's, also\nthrough keksdose's ``/push/settings`` shim) is ignored in 0.16 and 0.17, refused from 0.18.",
+          "doc": "The quiet hours in the ``PATCH``: ``HH:MM`` bounds; ``null`` clears each. No zone:\nit is the account's (§10.3, automatic only). A ``timezone`` (a stale ≤0.45 bundle's, also\nthrough keksdose's ``/push/settings`` shim) is a 422 from 0.18, as any unknown field is.",
           "fields": [
             {
               "name": "quiet_hours_start",
@@ -6663,6 +6663,12 @@
           "doc": "The digest push's ``tag``: ``digest:2026-W42``, so a late copy of the same period\nreplaces the earlier notification on the device, and the next period's doesn't."
         },
         {
+          "name": "documented_body",
+          "kind": "function",
+          "signature": "documented_body(model: type[BaseModel]) -> dict[str, Any]",
+          "doc": "The ``openapi_extra`` of a route that takes its body untyped (0.18, keksdose\n``_documented_body``): FastAPI documents ``Annotated[Any, Body()]`` as ``{}``, so the\nmodel's schema is given here as the required JSON request body, its nested models\ninlined — no route types them, so there is no component to point at. Parsing stays\n:func:`parse_push_body`'s, so a bad body still echoes nothing::\n\n    @router.post(\"/notifications/devices\", status_code=204,\n                 openapi_extra=documented_body(PushSubscriptionIn))\n    async def register(body: Annotated[Any, Body()]) -> None:\n        subscription = parse_push_body(PushSubscriptionIn, body)"
+        },
+        {
           "name": "effective_zone",
           "kind": "function",
           "signature": "effective_zone(device_timezone: str | None, fallback: str = DEFAULT_ZONE) -> ZoneInfo",
@@ -6714,13 +6720,13 @@
           "name": "parse_push_body",
           "kind": "function",
           "signature": "parse_push_body[M: BaseModel](model: type[M], body: object) -> M",
-          "doc": "``body`` validated as ``model`` — a push route's body taken untyped\n(``body: Annotated[Any, Body()]``) so FastAPI never answers it with a 422 that echoes\nthe secret inside (0.17.0, keksdose S1).\n\nA body that is no valid ``model`` raises :class:`~.errors.PushBodyInvalidError` (422,\n``push_body_invalid``) naming the failing fields, with no value and no chained\n:class:`~pydantic.ValidationError` (whose text carries the input) — so neither the\nanswer nor a logged traceback holds ``old_auth`` or a key. Log nothing of the body\neither."
+          "doc": "``body`` validated as ``model`` — a push route's body taken untyped\n(``body: Annotated[Any, Body()]``) so FastAPI never answers it with a 422 that echoes\nthe secret inside (0.17.0, keksdose S1).\n\nA body that is no valid ``model`` raises :class:`~.errors.PushBodyInvalidError` (422,\n``push_body_invalid``) naming the failing fields, with no value and no chained\n:class:`~pydantic.ValidationError` (whose text carries the input) — so neither the\nanswer nor a logged traceback holds ``old_auth`` or a key. Log nothing of the body\neither. A body that isn't valid JSON never gets here: FastAPI refuses it first, in the\nredacted validation shape (``json_invalid``), so the route answers two 422 shapes, both\nwithout the body (module docstring)."
         },
         {
           "name": "parse_push_replace",
           "kind": "function",
           "signature": "parse_push_replace(body: object) -> PushReplaceIn",
-          "doc": ":class:`PushReplaceIn` from ``POST /notifications/devices/replace``'s untyped body:\n:func:`parse_push_body` for the replace route, whose ``old_auth`` must never come back\nin a 422::\n\n    @router.post(\"/notifications/devices/replace\", response_model=PushDeviceResponse)\n    async def replace(body: Annotated[Any, Body()]) -> PushDeviceResponse:\n        request = parse_push_replace(body)  # PushBodyInvalidError → plain 422\n        ..."
+          "doc": ":class:`PushReplaceIn` from ``POST /notifications/devices/replace``'s untyped body:\n:func:`parse_push_body` for the replace route, whose ``old_auth`` must never come back\nin a 422::\n\n    @router.post(\"/notifications/devices/replace\", response_model=PushDeviceResponse,\n                 openapi_extra=documented_body(PushReplaceIn))\n    async def replace(body: Annotated[Any, Body()]) -> PushDeviceResponse:\n        request = parse_push_replace(body)  # PushBodyInvalidError → plain 422\n        ..."
         },
         {
           "name": "plan_delivery",
@@ -6938,7 +6944,7 @@
           "name": "COMMENT_MAX",
           "kind": "constant",
           "signature": "COMMENT_MAX = 4000",
-          "doc": "A comment's body, after trimming: 1–4000 characters, plain text, no files (9.8)."
+          "doc": "A comment's body, after trimming: 1–4000 characters, plain text (9.8); its one file, since\n0.18, is a field of its own (§12), never a URL in the text."
         },
         {
           "name": "CONTEXT_KEYS",
@@ -7075,8 +7081,8 @@
         {
           "name": "PUBLIC_COMMENT_FIELDS",
           "kind": "constant",
-          "signature": "PUBLIC_COMMENT_FIELDS: frozenset[str] = frozenset(\n    {\"id\", \"author_name\", \"mine\", \"staff\", \"body\", \"hidden\", \"created_at\"}\n)",
-          "doc": "What a comment says to anyone (9.10); ``body`` is null when hidden, but for its writer\nand an admin."
+          "signature": "PUBLIC_COMMENT_FIELDS: frozenset[str] = frozenset(\n    {\"id\", \"author_name\", \"mine\", \"staff\", \"body\", \"hidden\", \"created_at\", \"attachment_url\"}\n)",
+          "doc": "What a comment says to anyone (9.10); ``body`` is null when hidden, but for its writer\nand an admin. ``attachment_url`` (0.18, §12): the comment's own file, posted to be seen\nwith it, null when hidden as ``body`` is — the one attachment URL a public answer carries."
         },
         {
           "name": "PUBLIC_PAGE_MAX",
@@ -7259,7 +7265,7 @@
             {
               "name": "read",
               "signature": "async read(key: str, *, viewer: FeedbackActor) -> StoredAttachment | None",
-              "doc": "The file, or None: missing, or not this viewer's to read (KS).\n\n**The files predicate** (feedback §9.10, decision 12) is not the report's: a file\nis read by its uploader, the author of a report naming it, or an admin — never\n\"anyone who can see the report\". Public feedback shows other people a report,\nnever its files: no key reaches them (``public_body``), and a store that serves\nany signed-in user (keksdose, kastlan) stays safe only because of that."
+              "doc": "The file, or None: missing, or not this viewer's to read (KS).\n\n**The files predicate** (feedback §9.10, decision 12) is not the report's: a file\nis read by its uploader, the author of a report naming it, or an admin — never\n\"anyone who can see the report\". Public feedback shows other people a report,\nnever its files: no key reaches them (``public_body``), and a store that serves\nany signed-in user (keksdose, kastlan) stays safe only because of that.\n\n**Amended in 0.18** (§12): \"a report naming it\" includes its entries, so the\nauthor reads the file an admin replied with; and a file a VISIBLE comment names is\nread by anyone who sees that comment's report for its comments (§9.9) — the one\nfile public feedback shows other people, because its writer posted it to be seen.\nHidden, it is back to its writer and an admin."
             }
           ]
         },
@@ -7690,13 +7696,38 @@
           "name": "FeedbackCommentCreate",
           "kind": "model",
           "signature": "class FeedbackCommentCreate(BaseModel)",
-          "doc": "``POST /feedback/{id}/comments`` (§9.8): plain text, 1–:data:`COMMENT_MAX`\ncharacters after trimming, no files.",
+          "doc": "``POST /feedback/{id}/comments`` (§9.8): plain text, 1–:data:`COMMENT_MAX`\ncharacters after trimming, and since 0.18 (§12) at most one file — one of this app's\nattachment URLs (:attr:`attachment_url_policy`, else 422). The file is shown with the\ncomment to whoever reads its body.",
           "fields": [
             {
               "name": "body",
               "type": "str",
               "default": null,
               "doc": ""
+            },
+            {
+              "name": "attachment_url",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "attachment_url_policy",
+              "type": "ClassVar[AttachmentUrlPolicy]",
+              "default": "AttachmentUrlPolicy(key_pattern='[\\\\w-][\\\\w.-]*', prefix='/api/v1/feedback/attachments/')",
+              "doc": "Which URL may be named. Narrow it in the app's subclass; the service checks its own\npolicy too."
+            }
+          ]
+        },
+        {
+          "name": "FeedbackCommentFilePurge",
+          "kind": "protocol",
+          "signature": "@runtime_checkable class FeedbackCommentFilePurge(Protocol)",
+          "doc": "0.18 (§12.6 (2)): what becomes of a deleted comment's file is the app's to decide.\nA :class:`FeedbackCommentStore` that ALSO has ``purge_files`` is handed the keys\n:meth:`~eifi1_server_kit.feedback.FeedbackService.delete_comment` answers: the bare\nkey of the comment's file, when no report, entry or comment still names it (the\nerasure's shared-key check, ``urls_named_except``). Called after ``delete`` flushed,\nbefore the commit, never with an empty list: arm an after-commit delete (keksdose's\npurge) or delete after the app's one commit. A store without it keeps the file as an\nunattached upload, as before 0.18 (the app's sweep, if it has one).",
+          "methods": [
+            {
+              "name": "purge_files",
+              "signature": "async purge_files(keys: Sequence[str]) -> None",
+              "doc": "The deleted comment's keys nothing names any more; never empty."
             }
           ]
         },
@@ -7761,6 +7792,12 @@
               "type": "datetime",
               "default": null,
               "doc": ""
+            },
+            {
+              "name": "attachment_url",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The comment's one file (0.18, §12), shown with its body: ``None`` when it has none,\nand, like ``body``, when hidden, but for its writer and an admin."
             }
           ]
         },
@@ -7768,7 +7805,7 @@
           "name": "FeedbackCommentRow",
           "kind": "protocol",
           "signature": "class FeedbackCommentRow(Protocol)",
-          "doc": "One comment (§9.8): ``feedback_comments``, read-only. ``user_id`` is ``None`` once\nits writer is erased; ``hidden_at`` is set while an admin hides it.",
+          "doc": "One comment (§9.8): ``feedback_comments``, read-only. ``user_id`` is ``None`` once\nits writer is erased; ``hidden_at`` is set while an admin hides it; ``attachment_url``\n(0.18, §12, a nullable ``VARCHAR(500)``) is its one file.",
           "methods": [
             {
               "name": "id",
@@ -7809,6 +7846,11 @@
               "name": "hidden_by",
               "signature": "@property hidden_by -> int | None",
               "doc": ""
+            },
+            {
+              "name": "attachment_url",
+              "signature": "@property attachment_url -> str | None",
+              "doc": ""
             }
           ]
         },
@@ -7836,7 +7878,7 @@
             {
               "name": "add",
               "signature": "async add(new: NewFeedbackComment, *, actor: FeedbackActor) -> CommentRowT",
-              "doc": "Insert and flush. Fires ``feedback_comment``, sent after the commit."
+              "doc": "Insert and flush, ``attachment_url`` included (0.18). Fires ``feedback_comment``,\nsent after the commit."
             },
             {
               "name": "get",
@@ -7846,12 +7888,12 @@
             {
               "name": "apply",
               "signature": "async apply(comment: CommentRowT, changes: Mapping[str, Any], *, actor: FeedbackActor | None) -> CommentRowT",
-              "doc": "Assign and flush: ``hidden_at`` / ``hidden_by`` (a hide), or the erasure's\n``body`` / ``user_id`` (``actor=None``)."
+              "doc": "Assign and flush: ``hidden_at`` / ``hidden_by`` (a hide), or the erasure's\n``body`` / ``user_id`` / ``attachment_url`` (``actor=None``)."
             },
             {
               "name": "delete",
               "signature": "async delete(comment: CommentRowT) -> None",
-              "doc": "Delete it (its writer's own) and flush."
+              "doc": "Delete it (its writer's own) and flush. A store whose files hang on the comment\n(Kurvenschmiede's ``comment_id``) takes the file with it here."
             },
             {
               "name": "by_author",
@@ -8188,7 +8230,7 @@
           "name": "FeedbackReplyCreate",
           "kind": "model",
           "signature": "class FeedbackReplyCreate(BaseModel)",
-          "doc": "``POST /feedback/{id}/replies`` (§9.7), admin only: the answer, 1–:data:`REPLY_MAX`\ncharacters after trimming, and the status it moves the report to, if any.",
+          "doc": "``POST /feedback/{id}/replies`` (§9.7), admin only: the answer, 1–:data:`REPLY_MAX`\ncharacters after trimming, the status it moves the report to, if any, and since 0.18\n(§12) at most one file — one of this app's attachment URLs (:attr:`attachment_url_policy`,\nelse 422), kept in the entry's ``attachment_url`` as a rework's is.",
           "fields": [
             {
               "name": "body",
@@ -8201,6 +8243,18 @@
               "type": "FeedbackStatus | None",
               "default": "None",
               "doc": ""
+            },
+            {
+              "name": "attachment_url",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "attachment_url_policy",
+              "type": "ClassVar[AttachmentUrlPolicy]",
+              "default": "AttachmentUrlPolicy(key_pattern='[\\\\w-][\\\\w.-]*', prefix='/api/v1/feedback/attachments/')",
+              "doc": "Which URL may be named. Narrow it in the app's subclass; the service checks its own\npolicy too."
             }
           ]
         },
@@ -8256,7 +8310,7 @@
               "name": "attachment_url",
               "type": "str | None",
               "default": "None",
-              "doc": "A rework entry's one file (§10.3); ``None`` for a reply. The admin's and the\nauthor's views only — never the public detail."
+              "doc": "The entry's one file: a rework's (§10.3) or, since 0.18, an admin reply's (§12);\n``None`` for none. The admin's and the author's views only — never the public detail."
             }
           ]
         },
@@ -8390,7 +8444,7 @@
             {
               "name": "urls_named_except",
               "signature": "async urls_named_except(row_ids: Collection[int]) -> set[str]",
-              "doc": "Every attachment URL the rows outside row_ids name, in a column or the body\n(feedback_attachment_urls), and the ``attachment_url`` of their rework entries\n(0.13): the erasure's shared-key check."
+              "doc": "The erasure's shared-key check: every attachment URL the rows outside row_ids\nname, in a column or the body (feedback_attachment_urls), and — since 0.18 (§12),\non EVERY report, row_ids' included — every entry's ``attachment_url`` (a rework's,\nan admin reply's) and every comment's. The erasure clears the person's own entries\nand comments before it asks, so what is left names a file somebody else still shows."
             }
           ]
         },
@@ -8657,7 +8711,7 @@
             {
               "name": "erase_author",
               "signature": "async erase_author(user_id: int, identifiers: Iterable[str | None]) -> ErasedFeedback",
-              "doc": "Take an erased account out of its reports, and answer the files to delete (§2.15).\n\nEach of the author's rows is anonymised\n(:func:`~eifi1_server_kit.feedback.anonymise_feedback`) and written with\n``actor=None``: an erasure claims nothing and answers nobody. ``keys`` are the bare\nkeys of the URLs those rows named — columns and the body's rework lines — that no\nother row still names, sorted. Call it inside the app's own erasure transaction,\nwith a repository that does not commit; the app deletes the keys at its commit\n(keksdose prefixes ``feedback/`` and arms its after-commit purge, kastlan deletes\nafter its one commit, Kurvenschmiede ignores them).\n\nWith the public-feedback stores (§9.12): the person's **comments** are scrubbed and\nun-named (kept, shown as \"A user\"), their **votes** deleted, their **replies** (an\nadmin's) and **rework entries** (an author's, §10.3) un-named and scrubbed (kept),\neach rework file taken off its entry and joining ``keys``\n(:func:`~eifi1_server_kit.feedback.anonymise_reply`), and ``hidden_by`` cleared\nwhere it was them."
+              "doc": "Take an erased account out of its reports, and answer the files to delete (§2.15).\n\nEach of the author's rows is anonymised\n(:func:`~eifi1_server_kit.feedback.anonymise_feedback`) and written with\n``actor=None``: an erasure claims nothing and answers nobody. ``keys`` are the bare\nkeys of the URLs those rows named — columns and the body's rework lines — that no\nother row still names, sorted. Call it inside the app's own erasure transaction,\nwith a repository that does not commit; the app deletes the keys at its commit\n(keksdose prefixes ``feedback/`` and arms its after-commit purge, kastlan deletes\nafter its one commit, Kurvenschmiede ignores them).\n\nWith the public-feedback stores (§9.12): the person's **comments** are scrubbed and\nun-named (kept, shown as \"A user\"), their **votes** deleted, their **replies** (an\nadmin's) and **rework entries** (an author's, §10.3) un-named and scrubbed (kept),\neach rework file taken off its entry and joining ``keys``\n(:func:`~eifi1_server_kit.feedback.anonymise_reply`), and ``hidden_by`` cleared\nwhere it was them. Since 0.18 (§12) an admin reply's file goes as a rework's, and a\ncomment's file is taken off the comment and joins ``keys``; the entries and comments\nare written BEFORE the shared-key check, which then counts every file still named."
             },
             {
               "name": "sees_public",
@@ -8687,7 +8741,7 @@
             {
               "name": "reply",
               "signature": "async reply(actor: FeedbackActor, feedback_id: int, payload: FeedbackReplyCreate) -> RowT",
-              "doc": "An admin's answer (§9.7): refused for a demo, 403 \"Insufficient role\" for anyone\nelse, 404 for a report the admin cannot see. The reply is added (the store fires\n``feedback_answered``); with a ``status`` the report moves by\n:func:`~eifi1_server_kit.feedback.plan_reply` — the reply first, the report last.\nWith ``status`` REWORK it is how an admin sends any report back (§10.3): still a\nreply, and it notifies. Answers the report; :meth:`admin_view` makes it the answer\nwith its replies."
+              "doc": "An admin's answer (§9.7): refused for a demo, 403 \"Insufficient role\" for anyone\nelse, 404 for a report the admin cannot see. The reply is added (the store fires\n``feedback_answered``); with a ``status`` the report moves by\n:func:`~eifi1_server_kit.feedback.plan_reply` — the reply first, the report last.\nWith ``status`` REWORK it is how an admin sends any report back (§10.3): still a\nreply, and it notifies. Since 0.18 (§12) it may carry one file, checked against\n:attr:`policy` (422) before anything is read or written, kept in the entry's\n``attachment_url`` and shown to the admin and the author, never the public.\nAnswers the report; :meth:`admin_view` makes it the answer with its replies."
             },
             {
               "name": "rework",
@@ -8712,7 +8766,7 @@
             {
               "name": "comment",
               "signature": "async comment[CommentT: FeedbackCommentResponse = FeedbackCommentResponse](actor: FeedbackActor, feedback_id: int, payload: FeedbackCommentCreate, *, limiter: SlidingWindowRateLimiter | None = None, model: type[CommentT] = FeedbackCommentResponse) -> CommentT",
-              "doc": "A comment (§9.8): refused for a demo; the window charged before the work\n(429); 404 unless the actor sees the report for its comments; on any status, never\non a CRASH. The store's ``add`` fires ``feedback_comment``."
+              "doc": "A comment (§9.8): refused for a demo; the window charged before the work\n(429); 404 unless the actor sees the report for its comments; on any status, never\non a CRASH. Since 0.18 (§12) it may carry one file, checked against :attr:`policy`\n(422). The store's ``add`` fires ``feedback_comment``."
             },
             {
               "name": "hide_comment",
@@ -8721,8 +8775,8 @@
             },
             {
               "name": "delete_comment",
-              "signature": "async delete_comment(actor: FeedbackActor, feedback_id: int, comment_id: int) -> None",
-              "doc": "Its writer deletes their own comment (§9.8), a hard delete; anyone else — an\nadmin too, who hides instead — gets 404 \"Comment not found\". Refused for a demo."
+              "signature": "async delete_comment(actor: FeedbackActor, feedback_id: int, comment_id: int) -> tuple[str, ...]",
+              "doc": "Its writer deletes their own comment (§9.8), a hard delete; anyone else — an\nadmin too, who hides instead — gets 404 \"Comment not found\". Refused for a demo.\n\n0.18 (§12.6 (2)): answers the bare key of the comment's file when nothing else\nnames it any more — no report's columns or body, no entry, no other comment\n(``urls_named_except`` over every report, asked after the delete) — else ``()``;\na store that is a :class:`~eifi1_server_kit.feedback.FeedbackCommentFilePurge` is\nhanded the same keys. Keep or purge: the app decides."
             },
             {
               "name": "vote",
@@ -8981,7 +9035,7 @@
           "name": "NewFeedbackComment",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class NewFeedbackComment",
-          "doc": "A comment to insert (§9.8): never ``staff``, never hidden.",
+          "doc": "A comment to insert (§9.8): never ``staff``, never hidden; since 0.18 (§12) with at\nmost one file, already checked against the app's policy. Where the app records who\nuploaded a file (Kurvenschmiede), its store's ``add`` claims it as the writer's and\nrefuses another person's.",
           "fields": [
             {
               "name": "feedback_id",
@@ -9000,6 +9054,12 @@
               "type": "str",
               "default": null,
               "doc": ""
+            },
+            {
+              "name": "attachment_url",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
             }
           ]
         },
@@ -9007,7 +9067,7 @@
           "name": "NewFeedbackReply",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class NewFeedbackReply",
-          "doc": "An entry to insert (§9.7, §10.3): a reply, or a ``rework`` with its one file. The\nstore adds ``created_at`` (``server_default now()``) unless one is given — the\nmigration's explicit stamp — and the app its own columns (kastlan's ``company_id``,\nkeksdose's ``notified_at``).",
+          "doc": "An entry to insert (§9.7, §10.3): a reply or a ``rework``, each with at most one\nfile (a reply's since 0.18, §12). The\nstore adds ``created_at`` (``server_default now()``) unless one is given — the\nmigration's explicit stamp — and the app its own columns (kastlan's ``company_id``,\nkeksdose's ``notified_at``).",
           "fields": [
             {
               "name": "feedback_id",
@@ -9715,6 +9775,18 @@
               "type": "type[FeedbackReworkCreate]",
               "default": "<class 'eifi1_server_kit.feedback.schemas.FeedbackReworkCreate'>",
               "doc": "``POST /{feedback_id}/rework``'s body (§10.3): subclass it to narrow its\n``attachment_url_policy``; the service checks ``policy`` either way."
+            },
+            {
+              "name": "reply_model",
+              "type": "type[FeedbackReplyCreate]",
+              "default": "<class 'eifi1_server_kit.feedback.schemas.FeedbackReplyCreate'>",
+              "doc": "``POST /{feedback_id}/replies``'s and ``POST /{feedback_id}/comments``' bodies\n(0.18, §12: each with one file): subclass them to narrow ``attachment_url_policy``;\nthe service checks ``policy`` either way."
+            },
+            {
+              "name": "comment_model",
+              "type": "type[FeedbackCommentCreate]",
+              "default": "<class 'eifi1_server_kit.feedback.schemas.FeedbackCommentCreate'>",
+              "doc": ""
             },
             {
               "name": "comment_response_model",

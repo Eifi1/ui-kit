@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.17.0";
+export const SERVER_KIT_VERSION = "0.18.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -517,6 +517,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["digest_due", "function"],
       ["digest_period", "function"],
       ["digest_tag", "function"],
+      ["documented_body", "function"],
       ["effective_zone", "function"],
       ["in_quiet_hours", "function"],
       ["is_known_zone", "function"],
@@ -626,6 +627,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["FeedbackAttention", "class"],
       ["FeedbackCategory", "enum"],
       ["FeedbackCommentCreate", "model"],
+      ["FeedbackCommentFilePurge", "protocol"],
       ["FeedbackCommentHide", "model"],
       ["FeedbackCommentResponse", "model"],
       ["FeedbackCommentRow", "protocol"],

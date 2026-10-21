@@ -123,7 +123,7 @@ Install the wheel by URL, pinned by hash:
 
 ```
 eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.18.0/eifi1_server_kit-0.18.0-py3-none-any.whl
-sha256: SHA256_AT_RELEASE
+sha256: 7f43cce3c4f54d21c8162a493f50b2c800ee9a4656c7f1c492d47556ff3b23ad
 ```
 
 - **A sent `timezone` is a 422 (BREAKING, as announced: ignored in 0.16 and 0.17).** The notifications settings
