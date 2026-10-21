@@ -48,10 +48,16 @@ export interface TabsLabels {
   add: string;
   /** Accessible name of a tab's × — "Remove <tab>". */
   remove: (tab: string) => string;
-  /** The `overflowCue` caret while tabs lie past the strip's end: "More tabs". */
+  /** The `overflowCue` › over the strip's end, while tabs lie past it: "More tabs". */
   more: string;
-  /** The `overflowCue` caret at the strip's end, which goes back to the first tab. */
-  backToFirst: string;
+  /** The `overflowCue` ‹ over the strip's start, while tabs lie before it: "Previous tabs". */
+  previous: string;
+  /**
+   * @deprecated 0.47: not drawn any more — the caret that turned into "back to the
+   * first tab" at the strip's end is now a ‹ of its own (`previous`). Accepted and
+   * ignored; removed in 0.48.
+   */
+  backToFirst?: string;
 }
 
 // Defined in ./ui-labels, which holds no component code (0.34, KS U8).
@@ -78,20 +84,22 @@ export interface TabsProps<T extends string>
   onChange: (id: T) => void;
   className?: string;
   /**
-   * The caret beside a SCROLLING strip (0.40, kk run 79 gap 1): a › while
-   * tabs lie past the strip's end — a tap scrolls it on by three quarters of its width —
-   * turning into a ‹ at the end, which goes back to the first. Shown only while the strip
-   * actually overflows.
+   * Carets over the ends of a SCROLLING strip (0.40, kk run 79 gap 1; 0.47, keksdose
+   * live #410 round 4): a › over the strip's end while tabs lie past it, and a ‹ over
+   * its start while tabs lie before it — each there only while something is hidden
+   * past ITS edge (1 px slack, so a few cut-off pixels count), each a step of three
+   * quarters of the strip's width toward its own side. Neither ever changes direction:
+   * until 0.46 one caret turned round into "back to the first" at the end, and read as
+   * an arrow pointing the wrong way. Start and end follow the reading direction.
    *
-   * The edge fade alone could read as the end of the row: at the default scroll position
-   * the last visible tab can finish exactly where the fade begins, so nothing looks cut
-   * off (keksdose live #410, whose `tab-strip-more.tsx` this replaces). One button that
-   * turns round rather than two that come and go, so the strip's width never changes
-   * under the thumb. Out of the tab order — the keyboard walks the strip with the arrow
-   * keys, which bring the focused tab into view. At every width since 0.46 (keksdose live
-   * #410 round 3: eleven report tabs overflow a laptop too); before, `md:hidden`. Ignored on
-   * a vertical strip (a side nav is a column, not a row). Names:
-   * `tabs.more` / `tabs.backToFirst`.
+   * The edge fade alone could read as the end of the row: the last visible tab can
+   * finish exactly where the fade begins, so nothing looks cut off (keksdose live #410).
+   * The carets sit OVER the strip's ends (positioned, on the page's surface), not beside
+   * it, so the strip's width never changes as they come and go. Out of the tab order —
+   * the keyboard walks the strip with the arrow keys, which bring the focused tab into
+   * view. At every width. Ignored on a vertical strip (a side nav is a column, not a
+   * row). Names: `tabs.more` / `tabs.previous`. keksdose's `scroll-edge-cues.tsx` is
+   * the reference this replaces.
    */
   overflowCue?: boolean;
   /**
@@ -254,36 +262,43 @@ export function Tabs<T extends string>({
   const stripRef = useRef<HTMLDivElement>(null);
   const setStrip = useMemo(() => mergeRefs(stripRef, ref), [ref]);
   const fade = useStripFade(stripRef);
-  // See `overflowCue`. `start` alone means the strip is scrolled to its end.
-  const cue = overflowCue && !vertical && fade.overflow !== undefined;
-  const cueAtEnd = fade.overflow === "start";
-  const onCue = () => {
+  // See `overflowCue`: a ‹ over the start while tabs lie before it, a › over the end
+  // while tabs lie past it — `fade.overflow` names the cut ends in reading-direction terms.
+  const cue = overflowCue && !vertical;
+  const cueStart = cue && (fade.overflow === "start" || fade.overflow === "both");
+  const cueEnd = cue && (fade.overflow === "end" || fade.overflow === "both");
+  // Three quarters of the visible width toward `side`; an RTL strip runs leftward.
+  const onCue = (side: "start" | "end") => {
     const strip = stripRef.current;
     if (!strip) return;
     const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
-    if (cueAtEnd) {
-      strip.scrollTo({ left: 0, behavior });
-      return;
-    }
     const rtl = getComputedStyle(strip).direction === "rtl";
-    strip.scrollBy({ left: (rtl ? -1 : 1) * Math.round(strip.clientWidth * 0.75), behavior });
+    const toward = (side === "end" ? 1 : -1) * (rtl ? -1 : 1);
+    strip.scrollBy({ left: toward * Math.round(strip.clientWidth * 0.75), behavior });
   };
-  const cueButton = cue ? (
-    // The strip's bottom rule continues under the caret, so the row reads as one.
-    <div data-tabs-overflow-cue="" className="flex shrink-0 items-center self-stretch border-b border-subtle">
+  // OVER the strip's end, on the page's surface, so the caret reads as a control and not
+  // as one more faded tab — and so it can come and go without the strip changing width
+  // under the thumb. The position sits on a wrapper of ours: IconButton puts its
+  // tooltip's span around the button, and a class on the button would land inside it.
+  const cueAt = (side: "start" | "end") => (
+    <div
+      data-tabs-overflow-cue={side}
+      className={cn("absolute top-1/2 z-10 flex -translate-y-1/2", side === "start" ? "start-0" : "end-0")}
+    >
       <IconButton
         size="sm"
-        variant="ghost"
-        tone="muted"
+        variant="secondary"
+        className="bg-surface shadow-sm"
         tabIndex={-1}
         type="button"
-        aria-label={cueAtEnd ? text.backToFirst : text.more}
-        onClick={onCue}
+        label={side === "start" ? text.previous : text.more}
+        labelVisible={false}
+        onClick={() => onCue(side)}
       >
-        {cueAtEnd ? <ChevronLeft className="rtl:-scale-x-100" /> : <ChevronRight className="rtl:-scale-x-100" />}
+        {side === "start" ? <ChevronLeft className="rtl:-scale-x-100" /> : <ChevronRight className="rtl:-scale-x-100" />}
       </IconButton>
     </div>
-  ) : null;
+  );
   // The OPEN tab is scrolled into the strip whenever it changes — on mount too, for a
   // deep link to the seventh report. A selection behind the cut edge was the worst
   // case of the overflow above: the one tab the panel below belongs to, sliced to
@@ -407,7 +422,7 @@ export function Tabs<T extends string>({
       // — it is the box a caller's margin or width is meant for.
       className={cn(
         vertical ? TABLIST_VERTICAL_CLASSES : TABLIST_CLASSES,
-        onAdd ? "min-w-0" : overflowCue && !vertical ? "min-w-0 flex-1" : className,
+        cue ? "min-w-0 flex-1" : onAdd ? "min-w-0" : className,
       )}
     >
       {tabs.map((tab) => {
@@ -575,16 +590,24 @@ export function Tabs<T extends string>({
         {text.remove(nameOf(activeTab))}
       </button>
     ) : null;
-  if (!onAdd && overflowCue && !vertical) {
-    // The caret needs a row to sit in beside the strip, and `className` goes there — it
-    // is the box a caller's margin or width is meant for, as with an add button. The box
-    // is there whether or not the strip overflows right now, so a resize never moves
-    // the caller's class from one element to another.
+  // The positioned box the carets sit in, over the strip's two ends (see `overflowCue`).
+  // There whether or not the strip overflows right now, so a resize never re-parents it.
+  const stripBox = cue ? (
+    <div className={cn("relative flex min-w-0", !onAdd && "flex-1")}>
+      {tablist}
+      {cueStart && cueAt("start")}
+      {cueEnd && cueAt("end")}
+    </div>
+  ) : (
+    tablist
+  );
+  if (!onAdd && cue) {
+    // `className` goes on the row around the strip — it is the box a caller's margin or
+    // width is meant for, as with an add button — and stays there at every scroll position.
     return (
       <div className={cn("flex items-end", className)}>
-        {tablist}
+        {stripBox}
         {removeButton}
-        {cueButton}
       </div>
     );
   }
@@ -614,9 +637,8 @@ export function Tabs<T extends string>({
   }
   return (
     <div className={cn("flex items-end", className)}>
-      {tablist}
+      {stripBox}
       {removeButton}
-      {cueButton}
       {/* Outside the tablist: an action, not a tab — and a tablist may own only
           tabs. The rule under the strip carries on beneath it. */}
       <div

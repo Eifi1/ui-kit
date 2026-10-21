@@ -30,3 +30,4 @@ export * from "./feedback/feedback-public-types";
 export * from "./feedback/feedback-vote-button";
 export * from "./feedback/feedback-comment-thread";
 export * from "./feedback/feedback-replies";
+export * from "./feedback/feedback-entry-file";

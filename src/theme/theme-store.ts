@@ -47,20 +47,28 @@ function preferenceFromState(
   return "system";
 }
 
-/** Toggle the `.dark` class on <html> for a resolved light/dark mode. */
+/**
+ * Toggle the `.dark` class on <html> for a resolved light/dark mode, and say the same
+ * to the BROWSER through `color-scheme` (0.47, keksdose dev #600): the class switches
+ * the kit's tokens, but everything the browser paints itself — a native `<select>`'s
+ * open list, a date input's popup, scrollbars, autofill — follows `color-scheme` only,
+ * and stayed light on the dark theme. Inline on <html>, so it holds whatever an app's
+ * stylesheet says, and it is set by the pre-paint {@link applyPersistedTheme} too.
+ */
 function applyThemeClass(mode: ThemeMode): void {
   const root = document.documentElement;
   if (mode === "dark") root.classList.add("dark");
   else root.classList.remove("dark");
+  root.style.colorScheme = mode;
 }
 
 /**
  * Pre-hydration: read the theme PREFERENCE persisted under `storageKey` straight
  * from localStorage, resolve it to a concrete light/dark mode, and toggle the
- * `.dark` class on <html> — BEFORE React and the store mount, so the first paint
- * already has the right theme (no flash). Returns the resolved mode so the caller
- * can chain {@link applyPersistedPalette}. Encapsulates the zustand-persist
- * envelope + the legacy `mode`→`preference` fallback so apps never re-type the
+ * `.dark` class (and `color-scheme`) on <html> — BEFORE React and the store mount,
+ * so the first paint already has the right theme (no flash). Returns the resolved
+ * mode so the caller can chain {@link applyPersistedPalette}. Encapsulates the
+ * zustand-persist envelope + the legacy `mode`→`preference` fallback so apps never re-type the
  * storage shape in their entrypoint.
  */
 export function applyPersistedTheme(storageKey: string): ThemeMode {

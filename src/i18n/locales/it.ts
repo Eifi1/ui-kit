@@ -530,7 +530,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       add: "Aggiungi scheda",
       remove: (tab) => `Rimuovi ${tab}`,
       more: "Altre schede",
-      backToFirst: "Torna alla prima scheda",
+      previous: "Schede precedenti",
     },
     appShell: {
       collapse: "Comprimi barra laterale",

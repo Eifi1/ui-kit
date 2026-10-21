@@ -6,9 +6,10 @@ import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 /**
- * `overflowCue` (0.40, kk run 79 gap 1): the caret beside a scrolling strip (every width since 0.46) —
- * › while tabs lie past the end (a tap scrolls ~75 %), ‹ at the end (back to the first).
- * keksdose's `tab-strip-more.tsx` is what it replaces.
+ * `overflowCue` (0.40, kk run 79 gap 1; every width since 0.46; 0.47 keksdose live #410 r4):
+ * a › over the strip's end while tabs lie past it and a ‹ over its start while tabs lie
+ * before it — each a step of ~75 % toward its own side, and neither ever turns round.
+ * keksdose's `scroll-edge-cues.tsx` (which replaced the 0.40 caret there) is the reference.
  *
  * jsdom lays nothing out, so the strip's geometry is stubbed: a 300 px strip over 1000 px
  * of tabs, scrolled where `geo.left` says.
@@ -55,47 +56,88 @@ function strip(props: Partial<Parameters<typeof Tabs<string>>[0]> = {}) {
   return createElement(Tabs<string>, { tabs: TABS, active: "t0", onChange: () => {}, overflowCue: true, ...props });
 }
 
+const scrollTo_ = () => {
+  act(() => {
+    screen.getByRole("tablist").dispatchEvent(new Event("scroll"));
+  });
+};
+const more = () => screen.queryByRole("button", { name: "More tabs" });
+const previous = () => screen.queryByRole("button", { name: "Previous tabs" });
+
 describe("Tabs overflowCue", () => {
-  it("shows › while tabs lie past the end; a tap scrolls the strip on by ~75 %", () => {
+  it("at the start: only ›, and a tap scrolls the strip on by ~75 %", () => {
     render(strip());
-    const more = screen.getByRole("button", { name: "More tabs" });
+    expect(previous()).toBeNull();
+    const next = more()!;
     // Out of the tab order: the strip is one stop, walked with the arrow keys.
-    expect(more).toHaveAttribute("tabindex", "-1");
-    // At every width (0.46, keksdose live #410 round 3): it renders only while the strip
-    // overflows, and a wide strip overflows from md up too.
-    expect(more.closest("[data-tabs-overflow-cue]")).not.toHaveClass("md:hidden");
-    fireEvent.click(more);
+    expect(next).toHaveAttribute("tabindex", "-1");
+    fireEvent.click(next);
     expect(scrollBy).toHaveBeenCalledWith(expect.objectContaining({ left: 225 }));
   });
 
-  it("turns into ‹ at the end, which goes back to the first tab", () => {
-    render(strip());
-    geo.left = 700;
-    act(() => {
-      screen.getByRole("tablist").dispatchEvent(new Event("scroll"));
-    });
-    const back = screen.getByRole("button", { name: "Back to the first tab" });
-    fireEvent.click(back);
-    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ left: 0 }));
-    expect(screen.queryByRole("button", { name: "More tabs" })).toBeNull();
-  });
-
-  it("stays › in the middle, where tabs lie on both sides", () => {
+  it("in the middle: both, each scrolling toward its own side", () => {
     render(strip());
     geo.left = 300;
-    act(() => {
-      screen.getByRole("tablist").dispatchEvent(new Event("scroll"));
-    });
-    expect(screen.getByRole("button", { name: "More tabs" })).toBeInTheDocument();
+    scrollTo_();
+    fireEvent.click(more()!);
+    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: 225 }));
+    fireEvent.click(previous()!);
+    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: -225 }));
   });
 
-  it("scrolls the other way in a right-to-left strip", () => {
+  it("at the end: only ‹, which steps back rather than jumping to the first tab", () => {
+    render(strip());
+    geo.left = 700;
+    scrollTo_();
+    expect(more()).toBeNull();
+    expect(screen.queryByRole("button", { name: "Back to the first tab" })).toBeNull();
+    fireEvent.click(previous()!);
+    expect(scrollBy).toHaveBeenCalledWith(expect.objectContaining({ left: -225 }));
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("never changes a caret's direction: › always points to the end, ‹ to the start", () => {
+    render(strip());
+    geo.left = 300;
+    scrollTo_();
+    const icon = (b: HTMLElement) => b.querySelector("svg")!.getAttribute("class") ?? "";
+    expect(icon(more()!)).toMatch(/chevron-right/);
+    expect(icon(previous()!)).toMatch(/chevron-left/);
+  });
+
+  it("sits OVER the strip's ends, so the strip never changes width as the carets come and go", () => {
+    render(strip());
+    const tablist = screen.getByRole("tablist");
+    const box = tablist.parentElement!;
+    expect(box).toHaveClass("relative");
+    const endCue = more()!.closest("[data-tabs-overflow-cue]")!;
+    // The position is on a wrapper of the kit's, not on the button inside its tooltip span.
+    expect(endCue).toHaveAttribute("data-tabs-overflow-cue", "end");
+    expect(endCue).toHaveClass("absolute", "end-0");
+    expect(box).toContainElement(endCue as HTMLElement);
+    geo.left = 700;
+    scrollTo_();
+    const startCue = previous()!.closest("[data-tabs-overflow-cue]")!;
+    expect(startCue).toHaveAttribute("data-tabs-overflow-cue", "start");
+    expect(startCue).toHaveClass("absolute", "start-0");
+    // Same box around the same strip.
+    expect(screen.getByRole("tablist").parentElement).toBe(box);
+  });
+
+  it("is reading-direction aware: in a right-to-left strip › still goes on and ‹ back", () => {
     render(<div dir="rtl">{strip()}</div>);
     vi.spyOn(window, "getComputedStyle").mockImplementation(
       () => ({ direction: "rtl", getPropertyValue: () => "" }) as unknown as CSSStyleDeclaration,
     );
-    fireEvent.click(screen.getByRole("button", { name: "More tabs" }));
-    expect(scrollBy).toHaveBeenCalledWith(expect.objectContaining({ left: -225 }));
+    // An RTL strip counts scrollLeft negative from its start.
+    geo.left = -300;
+    scrollTo_();
+    fireEvent.click(more()!);
+    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: -225 }));
+    fireEvent.click(previous()!);
+    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: 225 }));
+    // The carets are mirrored with the direction, so each still points outward.
+    expect(more()!.querySelector("svg")).toHaveClass("rtl:-scale-x-100");
     vi.restoreAllMocks();
   });
 
@@ -107,28 +149,32 @@ describe("Tabs overflowCue", () => {
 
   it("is off by default, and the strip stays the root", () => {
     const { container } = render(strip({ overflowCue: undefined, className: "mt-2" }));
-    expect(screen.queryByRole("button", { name: "More tabs" })).toBeNull();
+    expect(more()).toBeNull();
     expect(container.firstElementChild).toHaveAttribute("role", "tablist");
     expect(container.firstElementChild).toHaveClass("mt-2");
   });
 
-  it("puts the caller's className on the row that holds the strip and the caret", () => {
+  it("puts the caller's className on the row that holds the strip and the carets", () => {
     const { container } = render(strip({ className: "mt-2" }));
     const row = container.firstElementChild as HTMLElement;
     expect(row).toHaveClass("mt-2", "flex");
     expect(screen.getByRole("tablist")).not.toHaveClass("mt-2");
-    expect(row).toContainElement(screen.getByRole("button", { name: "More tabs" }));
+    expect(row).toContainElement(more());
   });
 
-  it("sits between the strip and an add button", () => {
+  it("puts › over the strip's end, before an add button", () => {
     render(strip({ onAdd: () => {}, addLabel: "Add report" }));
-    const more = screen.getByRole("button", { name: "More tabs" });
     const add = screen.getByRole("button", { name: "Add report" });
-    expect(more.compareDocumentPosition(add) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(more()!.compareDocumentPosition(add) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("tablist").parentElement).toContainElement(more());
+    expect(screen.getByRole("tablist").parentElement).not.toContainElement(add);
   });
 
   it("speaks the provider's language", () => {
     render(<UiKitProvider labels={UI_KIT_LABELS_DE_CH}>{strip()}</UiKitProvider>);
     expect(screen.getByRole("button", { name: "Weitere Tabs" })).toBeInTheDocument();
+    geo.left = 700;
+    scrollTo_();
+    expect(screen.getByRole("button", { name: "Vorherige Tabs" })).toBeInTheDocument();
   });
 });

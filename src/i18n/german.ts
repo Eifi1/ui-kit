@@ -540,7 +540,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       add: "Tab hinzufügen",
       remove: (tab) => `${tab} entfernen`,
       more: "Weitere Tabs",
-      backToFirst: "Zurück zum ersten Tab",
+      previous: "Vorherige Tabs",
     },
     appShell: {
       collapse: "Seitenleiste einklappen",

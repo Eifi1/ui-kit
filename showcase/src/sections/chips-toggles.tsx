@@ -103,7 +103,7 @@ function OverflowTabStrip() {
   return (
     <Example
       label="Tabs — overflowCue"
-      hint="ten tabs; narrow below 768px and a caret beside the strip says the row goes on"
+      hint="ten tabs; a › over the end while tabs lie past it, a ‹ over the start while tabs lie before it"
     >
       <Tabs<ReportTab>
         overflowCue
@@ -121,12 +121,12 @@ function OverflowTabStrip() {
       </div>
       <div className="mt-3">
         <Note>
-          Below <code className="font-mono">md</code> the strip scrolls sideways, and its edge fade
-          alone can end exactly on a tab&apos;s end and read as &quot;no more&quot;. With{" "}
-          <code className="font-mono">overflowCue</code> a › beside the strip scrolls it on by three
-          quarters of its width and turns into a ‹ at the end, which goes back to the first tab.
-          Shown only while the strip overflows; from <code className="font-mono">md</code> up
-          nothing changes. It replaced <code className="font-mono">wrap</code>, removed in 0.41.
+          A strip wider than its room scrolls sideways, and its edge fade alone can end exactly
+          on a tab&apos;s end and read as &quot;no more&quot;. With{" "}
+          <code className="font-mono">overflowCue</code> a › sits over the strip&apos;s end while
+          tabs lie past it and a ‹ over its start while tabs lie before it; each steps three
+          quarters of the width toward its own side and never turns round (0.47). They sit over
+          the strip, so it never changes width as they come and go.
         </Note>
       </div>
     </Example>

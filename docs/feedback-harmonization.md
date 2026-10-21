@@ -31,6 +31,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 9 | Round 0.38: public feedback (votes, comments, replies) | **§9 settled 2026-10-14 (round 0.38)**, for server-kit 0.11 / ui-kit 0.38 | amends §3.1, §3.3, §3.4 (`public`), §4.4.4 (outcome → replies), §5; server-services §2.7, §4.5; notifications §2, §5 (two types, the notice) |
 | 10 | Round 0.40: rework as a conversation entry, the feedback menu | **§10 settled 2026-10-16 (round 0.40)**, for server-kit 0.13 / ui-kit 0.40 | amends §2.1 (REWORK), §2.2, §3.4 (the rework), §4.1 (the menu), §4.3–§4.5, §5; §9.7, §9.11, §9.12, §9.13 |
 | 11 | Round 0.46: admin alerts for new reports and reworks | **§11 settled 2026-10-19 (round 0.46)**, for server-kit 0.16 / ui-kit 0.46 | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
+| 12 | Round 0.47: attachments on admin replies and public comments, inline images | **§12 settled 2026-10-21 (Marcel)**, for server-kit 0.18 / ui-kit 0.47; the apps review it in the build review | amends §9.7 (a reply's file), §9.8 (a comment's file), §9.10 (the files predicate, a comment's URL), §9.12 (erasure), §10.3 (who draws an entry's file), §4.4.3 (the Attachment section) |
 
 ## 1. Where each one stands
 
@@ -2122,3 +2123,155 @@ server-kit 06c0848)
 | KS | crashes one mail each where no bundle runs | **amended** by Marcel: no crash mail without the queue (Settled 3) |
 | KS | `_tell`, `send_after_commit`, no recipient in logs | §11.1, Settled 7, 8 |
 | KS | one type is enough | Settled 1 |
+
+## 12. Round 0.47: attachments on admin replies and public comments, inline images — SETTLED (Marcel, 2026-10-21)
+
+**Settled by Marcel on 2026-10-21** in the ui-kit session, from keksdose feedback loop run 82
+R1 (live #447 r2, audits/round-048/candidates.md): *"Why is the possibility gone to paste a
+screenshot from the clipboard here rightaway. That was nice and should be added again, also
+to the comments, where these attachments then can be observed inline."* Since §10.2 decision 6
+an admin answers, their own report included, with the reply composer (status `REWORK` among
+the statuses), and that composer took no file, so the rework section's paste / capture / pick
+was gone for an admin. Built for **server-kit 0.18** and **ui-kit 0.47**; the three apps
+review it in the build review (§12.6). §1–§11 stand; where this section changes them it says
+so.
+
+### 12.1 Decisions
+
+1. **An admin's reply takes one file**, exactly as the author's rework note does (§10.3):
+   pasted from the clipboard into the box, captured, or picked; one file; the contract's
+   types and 10 MB (§3.5), uploaded first through `POST /feedback/attachments` (its 20 / h
+   window), and named by URL. It is stored in the **existing**
+   `feedback_replies.attachment_url` (§10.4's column): no migration for replies.
+2. **A public comment takes one file** the same way: a new nullable column
+   `feedback_comments.attachment_url` (the app's migration, §12.5), a new body field, the
+   same policy and limits. The comment's text stays required (1–4 000): a file does not
+   stand in for the words, as for a rework (§4.4.5).
+3. **Pictures are drawn inline**: an image file (`png`, `jpg`, `webp`, `gif`, by the key's
+   extension, which the server minted from the sniffed bytes) is a thumbnail fetched through
+   the app's authenticated GET (`AuthedImage`, as today), a tap opens it full size in a tab
+   (the `blob:` URL, never the API path); a PDF or a text file stays a download. In the
+   reply timeline, the comment thread and the public detail's conversation alike.
+4. **Who attaches:** whoever may write the entry — an admin on a reply (the route's admin
+   guard, §9.9), anyone who may comment on a comment (§9.8: who sees the report for its
+   comments, not a demo, not on a CRASH). The loops never attach: their `INSERT` grant
+   stays without `attachment_url` (§9.13, §10.5).
+5. **Who sees it:** a **reply's** file as a rework's — the admin's and the author's views
+   (`FeedbackReplyResponse.attachment_url`), **never the public detail**
+   (`PUBLIC_REPLY_FIELDS` unchanged; an admin's screenshot often shows the admin's own
+   screen). A **comment's** file goes with the comment to everyone who reads its body: its
+   writer posted it to be seen (`PUBLIC_COMMENT_FIELDS` gains `attachment_url`); hidden, it
+   is `null` for everyone but its writer and an admin, as the body is.
+
+### 12.2 The wire
+
+```jsonc
+// FeedbackReplyCreate — POST /feedback/{id}/replies (admin)
+{ "body": "Is this the corner you mean?", "status": "REWORK",
+  "attachment_url": "/api/v1/feedback/attachments/<key>" }   // optional, one; the app's policy, else 422
+// FeedbackCommentCreate — POST /feedback/{id}/comments
+{ "body": "Same here on the tablet.",
+  "attachment_url": "/api/v1/feedback/attachments/<key>" }   // optional, one; the app's policy, else 422
+// FeedbackCommentResponse gains
+{ "attachment_url": "…" }   // null: none, or hidden from this viewer
+// FeedbackReplyResponse.attachment_url: now a rework's OR a reply's file (admin and author views)
+```
+
+- Both bodies keep `extra="forbid"`; `attachment_url` is checked by the schema's
+  `attachment_url_policy` (a class variable an app narrows in its subclass) and again by the
+  service against `FeedbackService.policy`, before anything is read or written. ≤ 500
+  characters (`MAX_SCREENSHOT_URL_LENGTH`).
+- `FeedbackDeps` gains `reply_model` and `comment_model` (as `rework_model`, §10.7), so an
+  app passes its narrowed subclasses; the default bodies take the default policy.
+- A text-only reply or comment is the body it was: an old client keeps working, and a new
+  client against server-kit ≤ 0.17 gets a 422 only when it sends a file.
+
+### 12.3 Privacy, the files predicate, erasure
+
+- **§9.10 amended.** "Never any attachment URL" holds for every public answer **but a
+  comment's own `attachment_url`**, which must be one of the app's URLs or null
+  (`testing.assert_public_view` checks exactly that). A URL pasted into a comment's TEXT is
+  still stripped by `public_text`.
+- **The files predicate (decision 12 of §9) amended** in `AttachmentStorage.read`'s
+  docstring: a file is read by its uploader, the author of a report naming it — **its
+  entries included**, so the author reads the file an admin replied with —, an admin, and
+  **anyone who sees a VISIBLE comment naming it** (who sees the report for its comments,
+  §9.9). keksdose and kastlan serve any key to any signed-in user, so nothing changes there;
+  Kurvenschmiede's `readable_files` must let a visible comment's readers in (§12.5).
+- **A file named by someone else.** A commenter could name a key they did not upload. In
+  keksdose a key is a capability any signed-in user may already read; Kurvenschmiede
+  records uploaders and **claims the comment's file as the writer's own unfiled upload**
+  (422 otherwise), as its reply store does for an entry's file (`hang_rework_file`).
+- **Erasure (§9.12 amended).** An erased person's comment keeps its scrubbed text and loses
+  its file: `attachment_url` NULL and the URL joins `ErasedFeedback.keys`. An admin reply's
+  file goes as a rework's (`anonymise_reply`, since 0.13). The entries and comments are
+  written **before** the shared-key check, and `FeedbackRepository.urls_named_except` now
+  answers **every** entry's and comment's `attachment_url` on **any** report, the erased
+  rows' included: an admin who replied with the same screenshot the author filed keeps it.
+- **Delete:** a writer's deleted comment takes its row, not its file: the file is an
+  unattached upload, the app's to sweep as any (§3.5); keksdose and kastlan keep it.
+- **Mail and push** carry no content, files included (notifications §2.8): unchanged. The
+  thumbnails are `data-private` (the thread's redaction), as the names and bodies are.
+- **Export:** a person's comments and replies carry `attachment_url` where the app exports
+  them (recommended; keksdose pins its exported reply's keys, §12.5).
+
+### 12.4 What the kits ship
+
+**server-kit 0.18** (`feedback/`): `FeedbackReplyCreate.attachment_url`,
+`FeedbackCommentCreate.attachment_url` (each with `attachment_url_policy`),
+`FeedbackCommentResponse.attachment_url`; `PUBLIC_COMMENT_FIELDS` + `attachment_url`;
+`FeedbackCommentRow.attachment_url` (a protocol member: an app's comment row must have the
+column), `NewFeedbackComment.attachment_url = None`; `FeedbackService.reply` / `.comment`
+check and store the file, `_comment_view` answers it (null when veiled), `erase_author`
+clears and purges a comment's file before the shared-key check; `FeedbackDeps.reply_model`,
+`.comment_model`; `testing`: `MemoryCommentRow.attachment_url`, the in-memory stores and
+`urls_named_except` (every entry and comment), `check_comment_store(policy=,
+attachment_url=)` (a file read back and cleared by `apply`), `assert_public_view` (a
+comment's own URL allowed). Tests: `tests/feedback/test_entry_attachments.py`.
+
+**ui-kit 0.47** (`./feedback`):
+- `FeedbackReplyComposer`: `onUpload`, `onCaptureScreenshot`, `attachment` (the rework
+  section's three, `FeedbackEntryUploadOptions`); `onReply(body, status?, attachmentUrl?)`
+  — the third argument only with a file. `FeedbackRowDetail` hands its `onUpload`,
+  `onCaptureScreenshot` and `reworkAttachment` to the composer as it does to the rework
+  section, and its `fetcher` to the timeline.
+- `FeedbackCommentThread` and `FeedbackPublicDetail`: the same three plus `fetcher`;
+  `onComment(body, attachmentUrl?)`, the second argument only with a file.
+- `FeedbackReplyTimeline`: `fetcher`; every entry's file (a reply's too) drawn by
+  `FeedbackEntryFile` unless `renderAttachment` says otherwise. `FeedbackCommentThread`
+  draws a comment's and a reply's file the same way; a veiled comment shows none.
+- New: `FeedbackEntryFile` (a picture inline, opens full size; else a download; a picture
+  that fails falls back to the download) and `useFeedbackEntryUpload` (the composer's field:
+  paste into the box, capture, pick; the contract's types and 10 MB; the upload first, a
+  failure toasts `feedbackAttachment.attachmentUploadFailed` and sends nothing).
+- **§4.4.3 amended:** with entries (`row.replies`), the row detail's **Attachment** section
+  holds the report's own files (screenshot, `attachment_urls`, legacy body lines); each
+  entry's file — a rework's since 0.40, a reply's now — is drawn inline under its entry in
+  the Replies timeline instead. `feedbackAttachmentUrls(row)` is unchanged.
+- `FeedbackComment.attachment_url?`, `FeedbackReply.attachment_url` documented for replies.
+- No new words: the field reads `feedbackAttachment`, the image's `alt` is
+  `feedbackDetail.attachment`, the download `feedbackDetail.download`.
+
+### 12.5 Per app (migration, routes, the tests that pin the old bodies)
+
+The rows, with file:line, are in [adopt-0.47.md](adopt-0.47.md) ("Attachments on admin
+replies and public comments"). In short:
+- **keksdose:** one Alembic step after `0133_notification_queue`: `feedback_comments.attachment_url`
+  (Text NULL, as 0130's `feedback_replies.attachment_url`); the comment store's `add` writes
+  it; `urls_named_except` reads every reply's and comment's file; the client passes
+  `onUpload` / `onCaptureScreenshot` / `fetcher` to the composer and the threads.
+- **kastlan:** no migration (no `feedback_comments` table, no comment routes since
+  `b4d6f8a0c2e4`); the reply route takes the file at once; `urls_named_except` reads every
+  reply's file; the client passes the upload to `FeedbackRowDetail` (it does already).
+- **Kurvenschmiede:** one step after `0056`: `feedback_comments.attachment_url
+  String(500) NULL` (plaintext, classified `lookup` beside the replies' column); the comment
+  store claims the file (`hang_rework_file` or a `comment` kind) and `readable_files` lets a
+  visible comment's readers read it; its reply store already hangs a reply's file.
+
+### 12.6 For the build review
+
+1. A reply's file stays out of the public detail (decision 5) — or should a public report
+   show the admin's picture too?
+2. A deleted comment's file stays as an unattached upload (§12.3) — purge it instead?
+3. Kurvenschmiede: hang a comment's file as `rework` (today's kind for entry files) or a new
+   `comment` kind; the read rule for a visible comment.

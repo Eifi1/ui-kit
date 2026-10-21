@@ -7,6 +7,7 @@ import { IconButton } from "../components/icon-button";
 import { SearchField } from "../components/search-field";
 import { ToggleGroup } from "../components/toggle-group";
 import type { CommitScope } from "../components/write-lock";
+import type { AuthedFetcher } from "../hooks/use-authed-src";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { FILL_HEIGHT_CLASS } from "../shell/fill-height";
@@ -14,6 +15,7 @@ import { EMPTY_FORMATTED_VALUE } from "../lib/format";
 import { FeedbackCategoryBadge, FeedbackDetail, FeedbackDetailSection, FeedbackProse, FeedbackStatusBadge } from "./feedback-inbox";
 import { useFeedbackCategoryLabels } from "./feedback-labels";
 import { FeedbackCommentThread, type FeedbackCommentsLabels } from "./feedback-comment-thread";
+import type { FeedbackEntryUploadOptions } from "./feedback-entry-file";
 import { DEFAULT_FEEDBACK_PUBLIC_LABELS, type FeedbackPublicLabels } from "./feedback-public-labels";
 import type {
   FeedbackComment,
@@ -394,8 +396,18 @@ export interface FeedbackPublicDetailProps {
   /** The viewer is the app's admin: Hide / Unhide on the comments. */
   isAdmin?: boolean;
   /** `POST /feedback/{id}/comments`. Left out — a demo, a reader who may not write — no
-   *  composer. */
-  onComment?: (body: string) => void | Promise<unknown>;
+   *  composer. 0.47 (§12): `attachmentUrl` is the one file uploaded with it (with
+   *  `onUpload`). */
+  onComment?: (body: string, attachmentUrl?: string) => void | Promise<unknown>;
+  /** 0.47 (§12): `POST /feedback/attachments` — the comment box then takes one file,
+   *  pasted, captured or picked, as the rework note does. Left out, text only. */
+  onUpload?: FeedbackEntryUploadOptions["onUpload"];
+  /** 0.47: the comment box's "Capture screenshot". */
+  onCaptureScreenshot?: FeedbackEntryUploadOptions["onCaptureScreenshot"];
+  /** 0.47: the comment box's file field, over the contract's defaults. */
+  attachment?: FeedbackEntryUploadOptions["attachment"];
+  /** 0.47: the app's authenticated GET for the comments' pictures, drawn inline. */
+  fetcher?: AuthedFetcher | null;
   /** The admin's hide (`PATCH …/comments/{id} {hidden}`). */
   onHide?: (comment: FeedbackComment, hidden: boolean) => void | Promise<unknown>;
   /** The writer's delete (`DELETE …/comments/{id}`), after a confirm. */
@@ -425,8 +437,9 @@ export interface FeedbackPublicDetailProps {
  * add one.
  *
  * What it never draws, because the public record never carries it (§9.10): an address,
- * a last name, a screenshot, a file, the page the report was filed on. The body is the
- * server's `public_body` — the client strips nothing and adds nothing.
+ * a last name, the report's screenshot or files, the page the report was filed on. The
+ * body is the server's `public_body` — the client strips nothing and adds nothing. The
+ * one file it shows (0.47, §12) is a comment's own, posted with it to be seen.
  */
 export function FeedbackPublicDetail({
   row,
@@ -436,6 +449,10 @@ export function FeedbackPublicDetail({
   onComment,
   onHide,
   onDelete,
+  onUpload,
+  onCaptureScreenshot,
+  attachment,
+  fetcher,
   pending,
   commit,
   voteDisabled,
@@ -480,6 +497,10 @@ export function FeedbackPublicDetail({
           onComment={onComment}
           onHide={onHide}
           onDelete={onDelete}
+          onUpload={onUpload}
+          onCaptureScreenshot={onCaptureScreenshot}
+          attachment={attachment}
+          fetcher={fetcher}
           pending={pending}
           commit={commit}
           now={now}

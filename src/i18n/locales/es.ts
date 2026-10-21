@@ -527,7 +527,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       add: "Añadir pestaña",
       remove: (tab) => `Quitar ${tab}`,
       more: "Más pestañas",
-      backToFirst: "Volver a la primera pestaña",
+      previous: "Pestañas anteriores",
     },
     appShell: {
       collapse: "Contraer barra lateral",

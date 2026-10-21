@@ -525,7 +525,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       add: "Lap hozzáadása",
       remove: (tab) => `${tab} eltávolítása`,
       more: "További lapok",
-      backToFirst: "Vissza az első lapra",
+      previous: "Előző lapok",
     },
     appShell: {
       collapse: "Oldalsáv összecsukása",

@@ -559,20 +559,20 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2137 names from 349 modules** — 988 values and 1149 types. _Italic_ is a type-only export.
+**2143 names from 350 modules** — 990 values and 1153 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2137 |
+| `@eifi1/ui-kit` | 2143 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 114 |
 | `@eifi1/ui-kit/data-table` | 53 |
 | `@eifi1/ui-kit/wizard` | 24 |
 | `@eifi1/ui-kit/tour` | 37 |
-| `@eifi1/ui-kit/feedback` | 206 |
+| `@eifi1/ui-kit/feedback` | 212 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
@@ -892,6 +892,7 @@ re-slicing of it, never a second API.
 | `feedback/feedback-vote-button` | `DEFAULT_FEEDBACK_VOTE_LABELS`, `FeedbackVoteButton`, _`FeedbackVoteButtonProps`_, _`FeedbackVoteLabels`_ |
 | `feedback/feedback-comment-thread` | `DEFAULT_FEEDBACK_COMMENTS_LABELS`, `FeedbackCommentThread`, _`FeedbackCommentsLabels`_, _`FeedbackCommentThreadProps`_ |
 | `feedback/feedback-replies` | `DEFAULT_FEEDBACK_REPLIES_LABELS`, `FeedbackReplyComposer`, `feedbackReplyNudge`, `FeedbackReplyTimeline`, `useFeedbackRepliesLabels`, _`FeedbackRepliesLabels`_, _`FeedbackReplyComposerProps`_, _`FeedbackReplyTimelineProps`_ |
+| `feedback/feedback-entry-file` | `FeedbackEntryFile`, `useFeedbackEntryUpload`, _`FeedbackEntryFileProps`_, _`FeedbackEntryUpload`_, _`FeedbackEntryUploadOptions`_, _`FeedbackEntryUploadState`_ |
 | `feedback/feedback-vocabulary` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `feedbackCategoryRank`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackStatus`_ |
 
 ### wizard

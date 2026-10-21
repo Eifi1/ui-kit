@@ -28,8 +28,9 @@ export interface FeedbackReply {
   /** 0.40 (§10.3): `"reply"` (absent: a server before server-kit 0.13, all replies) or
    *  `"rework"`, the author's entry. */
   kind?: FeedbackEntryKind;
-  /** 0.40: a rework entry's one file (`/api/v1/feedback/attachments/<key>`) — the admin
-   *  and author views only; `null` or absent otherwise (never in the public view, §9.10). */
+  /** The entry's one file (`/api/v1/feedback/attachments/<key>`): a rework's (0.40) or,
+   *  since 0.47 (§12, server-kit 0.18), an admin reply's — the admin and author views
+   *  only; `null` or absent otherwise (never in the public view, §9.10). */
   attachment_url?: string | null;
   /** The status this reply moved the report to; `null` = no status change — and on a
    *  rework migrated out of the body (§10.4), whose move was never recorded. */
@@ -52,6 +53,10 @@ export interface FeedbackComment {
   /** `null` when hidden, but for its writer and an admin. */
   body: string | null;
   hidden: boolean;
+  /** 0.47 (§12, server-kit 0.18): the comment's one file, shown with it to whoever reads
+   *  its body; `null` when it has none or is hidden from this viewer, absent from an
+   *  older server. */
+  attachment_url?: string | null;
   /** ISO 8601. */
   created_at: string;
 }

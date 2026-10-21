@@ -535,7 +535,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       add: "Ajouter un onglet",
       remove: (tab) => `Supprimer ${tab}`,
       more: "Autres onglets",
-      backToFirst: "Retour au premier onglet",
+      previous: "Onglets précédents",
     },
     appShell: {
       collapse: "Réduire la barre latérale",

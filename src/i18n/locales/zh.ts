@@ -513,7 +513,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       // Quoted, so the spacing rule holds whether the tab's name is Han or Latin.
       remove: (tab) => `移除“${tab}”`,
       more: "更多标签页",
-      backToFirst: "返回第一个标签页",
+      previous: "之前的标签页",
     },
     appShell: {
       collapse: "收起侧边栏",

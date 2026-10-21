@@ -314,6 +314,7 @@ const FeedbackThread038Demo = lazySection(() => import("./sections/feedback-inbo
 const FeedbackReplies038Demo = lazySection(() => import("./sections/feedback-inbox/thread-038"), "FeedbackReplies038Demo");
 const FeedbackRework040Demo = lazySection(() => import("./sections/feedback-inbox/rework-040"), "FeedbackRework040Demo");
 const FeedbackMenu040Demo = lazySection(() => import("./sections/feedback-inbox/rework-040"), "FeedbackMenu040Demo");
+const FeedbackAttachments047Demo = lazySection(() => import("./sections/feedback-inbox/attachments-047"), "FeedbackAttachments047Demo");
 // 0.32.0: text size and contrast, and billing.
 const TextSize032Demo = lazySection(() => import("./sections/text-size-032-demo"), "TextSize032Demo");
 const TextSizeComponents032Demo = lazySection(
@@ -1430,7 +1431,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
-        components: ["FeedbackSubject", "FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan", "FeedbackVoteButton", "FeedbackCommentThread", "FeedbackReplyTimeline", "FeedbackReplyComposer", "FeedbackPublicList", "FeedbackPublicDetail", "FeedbackPublicSwitch", "feedbackPublicSwitchAllowed", "useFeedbackPublicLabels", "DEFAULT_FEEDBACK_PUBLIC_LABELS"],
+        components: ["FeedbackSubject", "FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan", "FeedbackVoteButton", "FeedbackCommentThread", "FeedbackReplyTimeline", "FeedbackReplyComposer", "FeedbackEntryFile", "useFeedbackEntryUpload", "FeedbackPublicList", "FeedbackPublicDetail", "FeedbackPublicSwitch", "feedbackPublicSwitchAllowed", "useFeedbackPublicLabels", "DEFAULT_FEEDBACK_PUBLIC_LABELS"],
         Body: () => (
           <>
             <FeedbackInbox />
@@ -1443,6 +1444,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackReplies038Demo />
             <FeedbackRework040Demo />
             <FeedbackMenu040Demo />
+            <FeedbackAttachments047Demo />
             <FeedbackRecordDemo />
             <FeedbackComposerDemo />
           </>
