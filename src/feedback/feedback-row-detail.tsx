@@ -515,8 +515,8 @@ export interface FeedbackRowDetailProps {
   onUpdate: FeedbackDetailUpdate;
   /** `update.isPending`: the editors' save buttons wait for it. */
   pending?: boolean;
-  /** `POST /feedback/attachments` for the rework's one file and, since 0.47 (§12), the
-   *  admin reply's. Left out, a rework or a reply is text alone. */
+  /** `POST /feedback/attachments` for the rework's one file and, since 0.47 (§12) with
+   *  `replyAttachments`, the admin reply's. Left out, a rework or a reply is text alone. */
   onUpload?: FeedbackUpload;
   /** The app's authenticated GET (`AuthedImage`'s) — the pictures and the downloads go
    *  through it, since the attachment route wants the bearer token (§3.5). Left out,
@@ -529,11 +529,11 @@ export interface FeedbackRowDetailProps {
    * page's mutation (its observer outlives the row a status filter removes).
    */
   statusChange?: FeedbackStatusChange;
-  /** For the rework's and (0.47) the reply composer's "Capture screenshot" — see
+  /** For the rework's and (0.47, with `replyAttachments`) the reply composer's "Capture screenshot" — see
    *  {@link FeedbackReworkSectionProps}. */
   onCaptureScreenshot?: () => Promise<File | null>;
-  /** The rework's and (0.47) the reply composer's file field, over the contract's
-   *  defaults. */
+  /** The rework's and (0.47, with `replyAttachments`) the reply composer's file field,
+   *  over the contract's defaults. */
   reworkAttachment?: Partial<FeedbackNoteAttachment>;
   /** How the `resolved_at` date reads — the app's date cell, as a string. Default: the
    *  kit's `formatDate` in the provider's locale, `medium` style. */
@@ -558,11 +558,22 @@ export interface FeedbackRowDetailProps {
    * resolves. A failure is the app's to toast — the server's `detail`, else
    * `feedbackToast.replyFailed` (0.38.1).
    *
-   * 0.47 (§12, keksdose live #447): with `onUpload` the composer takes one file as the
-   * rework note does — pasted into the box, captured or picked — uploaded first, and its
-   * URL is the third argument (`attachment_url` in the body; server-kit 0.18).
+   * 0.47 (§12, keksdose live #447): with `replyAttachments` (and `onUpload`) the
+   * composer takes one file as the rework note does — pasted into the box, captured or
+   * picked — uploaded first, and its URL is the third argument (`attachment_url` in the
+   * body; server-kit 0.18).
    */
   onReply?: (body: string, status?: FeedbackStatus, attachmentUrl?: string) => void | Promise<unknown>;
+  /**
+   * 0.47 (§12): the reply composer takes one file — through `onUpload`,
+   * `onCaptureScreenshot` and `reworkAttachment`, the rework note's. Off by default:
+   * `onUpload` alone stays the rework's, so a page that passes it and an `onReply` of
+   * `(body, status)` does not grow a file field whose file its reply would drop (round
+   * 0.47 build reviews, keksdose and kastlan B1). Turn it on in the commit that makes
+   * `onReply` send its third argument as `attachment_url`, with server-kit 0.18 (an
+   * older server answers the field with a 422).
+   */
+  replyAttachments?: boolean;
   /** 0.38: the reply is in flight. */
   replying?: boolean;
   /**
@@ -627,6 +638,7 @@ export function FeedbackRowDetail({
   commit,
   showSubject = true,
   onReply,
+  replyAttachments = false,
   replying = false,
   onRework,
   comments,
@@ -785,9 +797,9 @@ export function FeedbackRowDetail({
               status={row.status}
               onReply={onReply}
               pending={replying}
-              onUpload={onUpload}
-              onCaptureScreenshot={onCaptureScreenshot}
-              attachment={reworkAttachment}
+              onUpload={replyAttachments ? onUpload : undefined}
+              onCaptureScreenshot={replyAttachments ? onCaptureScreenshot : undefined}
+              attachment={replyAttachments ? reworkAttachment : undefined}
               suggestedStatus={feedbackReplyNudge(row)}
               commit={commit}
             />

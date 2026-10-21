@@ -247,7 +247,9 @@ export interface FeedbackReplyComposerProps extends FeedbackEntryUploadOptions {
  * 0.47 (§12, keksdose live #447): with `onUpload`, one file as the rework note takes it —
  * a screenshot pasted into the box, a capture (`onCaptureScreenshot`), or a pick; the
  * contract's types and 10 MB. It is uploaded FIRST; a failed upload toasts and sends
- * nothing, and the draft and the file stay.
+ * nothing, and the draft and the file stay. `onUpload` here is the composer's own opt-in
+ * (new in 0.47, so no page passed it before); `FeedbackRowDetail` hands it on only with
+ * `replyAttachments`, since its `onUpload` is the rework note's too.
  */
 export function FeedbackReplyComposer({
   status,

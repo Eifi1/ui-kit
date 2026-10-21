@@ -134,6 +134,7 @@ export function FeedbackAttachments047Demo() {
           viewerId={ADMIN}
           onUpdate={update}
           onUpload={onUpload}
+          replyAttachments
           fetcher={fetcher}
           showSubject={false}
           onReply={async (body: string, status?: FeedbackStatus, attachmentUrl?: string) =>
@@ -180,10 +181,12 @@ export function FeedbackAttachments047Demo() {
         />
       </div>
       <Note>
-        The admin answers with a reply, so the reply composer takes the rework note's one file: pasted from the
-        clipboard into the box, captured ({code("onCaptureScreenshot")}) or picked, the contract's types and 10 MB.
-        It is uploaded first through {code("onUpload")}; its URL is {code("onReply")}'s third argument and the
-        reply body's {code("attachment_url")} (server-kit 0.18). The comment box does the same with{" "}
+        The admin answers with a reply, so with {code("replyAttachments")} the reply composer takes the rework
+        note's one file: pasted from the clipboard into the box, captured ({code("onCaptureScreenshot")}) or picked,
+        the contract's types and 10 MB. It is uploaded first through {code("onUpload")}; its URL is{" "}
+        {code("onReply")}'s third argument and the reply body's {code("attachment_url")} (server-kit 0.18). Off by
+        default: {code("onUpload")} alone stays the rework's, so a bump never shows a file field an{" "}
+        {code("onReply(body, status)")} would drop. The comment box does the same with{" "}
         {code("onComment(body, attachmentUrl)")}. A picture — a reply's, a rework's, a comment's — is drawn inline
         through the app's {code("fetcher")} ({code("FeedbackEntryFile")}), a tap opens it full size; any other file is
         a download. The Attachment section keeps the report's own files.

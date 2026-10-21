@@ -2208,12 +2208,32 @@ so.
   written **before** the shared-key check, and `FeedbackRepository.urls_named_except` now
   answers **every** entry's and comment's `attachment_url` on **any** report, the erased
   rows' included: an admin who replied with the same screenshot the author filed keeps it.
-- **Delete:** a writer's deleted comment takes its row, not its file: the file is an
-  unattached upload, the app's to sweep as any (§3.5); keksdose and kastlan keep it.
+- **Erasure works both ways (build review, kastlan N2).** The report's AUTHOR erased: the
+  admin's reply and its file are kept (only the author's own entries are scrubbed), so a
+  screenshot of the author's data in an admin's reply survives — the contract's choice. The
+  ADMIN erased: `anonymise_reply` takes the file off the reply and it is purged unless
+  another entry or report names it, so the author loses the picture.
+- **An app whose files are rows (Kurvenschmiede, build review B1)** ignores the keys, as
+  its report files go with the report. That does not cover what §12 adds: the erased
+  person's comment files on OTHER people's reports, and the reply files an erased admin
+  hung on other people's reports. Its erasure deletes those rows itself (by the comment, or
+  by uploader on a report whose author is someone else); else they stay readable by that
+  report's author and every admin with nothing naming them.
+- **Delete: the app decides** (§12.6 (2)). A writer's deleted comment takes its row.
+  `FeedbackService.delete_comment` (server-kit 0.18) answers the bare key of its file when
+  nothing else names it any more — the erasure's shared-key check, `urls_named_except` over
+  every report, asked after the delete — and a comment store that also implements
+  `FeedbackCommentFilePurge.purge_files(keys)` is handed those keys before the commit (never
+  an empty list) to purge after it. A store without it keeps the file, an unattached upload
+  for the app's sweep as any (§3.5): keksdose for 0.47 (it may add `purge_files` later),
+  kastlan has no comments. Kurvenschmiede ties the file to its comment (`comment` kind,
+  `ON DELETE CASCADE`), so its `delete` takes the file with the row.
 - **Mail and push** carry no content, files included (notifications §2.8): unchanged. The
   thumbnails are `data-private` (the thread's redaction), as the names and bodies are.
-- **Export:** a person's comments and replies carry `attachment_url` where the app exports
-  them (recommended; keksdose pins its exported reply's keys, §12.5).
+- **Export: the app's own rule.** Kurvenschmiede exports a comment's `attachment_url` (the
+  writer's own file). keksdose and kastlan export a COUNT of files, never a key (keksdose
+  §10.8); kastlan adds its author's rework files to the report's count. An admin reply's
+  file is another person's data: at most a count, never in the author's export as a URL.
 
 ### 12.4 What the kits ship
 
@@ -2227,14 +2247,20 @@ clears and purges a comment's file before the shared-key check; `FeedbackDeps.re
 `.comment_model`; `testing`: `MemoryCommentRow.attachment_url`, the in-memory stores and
 `urls_named_except` (every entry and comment), `check_comment_store(policy=,
 attachment_url=)` (a file read back and cleared by `apply`), `assert_public_view` (a
-comment's own URL allowed). Tests: `tests/feedback/test_entry_attachments.py`.
+comment's own URL allowed), `check_repository(…, replies=, comments=)` (0.18's
+`urls_named_except` rule: an entry's and a comment's file on an excepted report are named);
+`FeedbackService.delete_comment` answers the keys to purge and hands them to a store's
+`purge_files` (`FeedbackCommentFilePurge`, §12.3). Tests: `tests/feedback/test_entry_attachments.py`.
 
 **ui-kit 0.47** (`./feedback`):
 - `FeedbackReplyComposer`: `onUpload`, `onCaptureScreenshot`, `attachment` (the rework
   section's three, `FeedbackEntryUploadOptions`); `onReply(body, status?, attachmentUrl?)`
   — the third argument only with a file. `FeedbackRowDetail` hands its `onUpload`,
-  `onCaptureScreenshot` and `reworkAttachment` to the composer as it does to the rework
-  section, and its `fetcher` to the timeline.
+  `onCaptureScreenshot` and `reworkAttachment` to the composer **only with
+  `replyAttachments`** (off by default; build reviews B1: all three apps pass `onUpload` for
+  the rework already, with an `onReply(body, status)` that would drop the file), and its
+  `fetcher` to the timeline. An app turns it on in the commit that wires `onReply`'s third
+  argument and installs server-kit 0.18.
 - `FeedbackCommentThread` and `FeedbackPublicDetail`: the same three plus `fetcher`;
   `onComment(body, attachmentUrl?)`, the second argument only with a file.
 - `FeedbackReplyTimeline`: `fetcher`; every entry's file (a reply's too) drawn by
@@ -2262,7 +2288,8 @@ replies and public comments"). In short:
   `onUpload` / `onCaptureScreenshot` / `fetcher` to the composer and the threads.
 - **kastlan:** no migration (no `feedback_comments` table, no comment routes since
   `b4d6f8a0c2e4`); the reply route takes the file at once; `urls_named_except` reads every
-  reply's file; the client passes the upload to `FeedbackRowDetail` (it does already).
+  reply's file; the client passes the upload to `FeedbackRowDetail` (it does already) and
+  turns on `replyAttachments` with the `onReply` wiring.
 - **Kurvenschmiede:** one step after `0056`: `feedback_comments.attachment_url
   String(500) NULL` (plaintext, classified `lookup` beside the replies' column); the comment
   store claims the file (`hang_rework_file` or a `comment` kind) and `readable_files` lets a
@@ -2275,3 +2302,9 @@ replies and public comments"). In short:
 2. A deleted comment's file stays as an unattached upload (§12.3) — purge it instead?
 3. Kurvenschmiede: hang a comment's file as `rework` (today's kind for entry files) or a new
    `comment` kind; the read rule for a visible comment.
+
+**Answers (build reviews, 2026-10-21):** (1) all three: yes, a reply's file stays out of the
+public detail. (2) The app decides (§12.3 Delete): keksdose keeps it for 0.47, kastlan has no
+comments, Kurvenschmiede purges (cascade). (3) Kurvenschmiede: a new `comment` kind tied to
+its comment (`feedback_attachment.comment_id`), read by whoever reads the comment's body.
+The rows are in adopt-0.47.md.

@@ -240,7 +240,10 @@ describe("FeedbackRowDetail and FeedbackPublicDetail (§12)", () => {
       onSuccess();
     });
 
-  it("gives the admin's composer the file field, and draws the entries' files in the timeline only", async () => {
+  it("keeps the admin's composer text only on a plain bump: the rework's onUpload alone opts nothing in", async () => {
+    // keksdose and kastlan build review B1 (round 0.47): both already pass onUpload for the
+    // rework note while their onReply takes (body, status) — a file field there would
+    // upload a file the reply then drops without a word.
     const onReply = vi.fn(async () => {});
     const onUpload = vi.fn(async () => PDF);
     const { container } = render(
@@ -251,6 +254,34 @@ describe("FeedbackRowDetail and FeedbackPublicDetail (§12)", () => {
         onUpdate={landing()}
         onReply={onReply}
         onUpload={onUpload}
+        onCaptureScreenshot={async () => null}
+        fetcher={blobFetcher()}
+      />,
+    );
+    const composer = container.querySelector("[data-feedback-reply-composer]") as HTMLElement;
+    expect(composer).not.toBeNull();
+    expect(composer.querySelector('input[type="file"]')).toBeNull();
+    expect(within(composer).queryByRole("button", { name: /screenshot/i })).toBeNull();
+    fireEvent.change(within(composer).getByRole("textbox"), { target: { value: "Text alone" } });
+    await act(async () => {
+      fireEvent.click(within(composer).getByRole("button", { name: "Reply" }));
+    });
+    expect(onReply).toHaveBeenCalledWith("Text alone", "DONE");
+    expect(onUpload).not.toHaveBeenCalled();
+  });
+
+  it("gives the admin's composer the file field with replyAttachments, and draws the entries' files in the timeline only", async () => {
+    const onReply = vi.fn(async () => {});
+    const onUpload = vi.fn(async () => PDF);
+    const { container } = render(
+      <FeedbackRowDetail
+        row={row()}
+        canEdit
+        viewerId={1}
+        onUpdate={landing()}
+        onReply={onReply}
+        onUpload={onUpload}
+        replyAttachments
         fetcher={blobFetcher()}
       />,
     );
