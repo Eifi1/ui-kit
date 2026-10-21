@@ -289,7 +289,7 @@ Install the wheel by URL, pinned by hash (the release fills in the line):
 
 ```
 eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.19.0/eifi1_server_kit-0.19.0-py3-none-any.whl
-sha256: SHA256_AT_RELEASE
+sha256: 77762c1877407bee4810ac9d526d1911d60133f34293c1d0b99fb87bf22e6259
 ```
 
 - **`check_comment_store(…, attachment_url=)` is required, and must be one of `policy=`'s URLs (BREAKING for a
