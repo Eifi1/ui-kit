@@ -154,6 +154,18 @@ export interface DataTableColumn<T> {
    * one instead, and scrolls sideways once none is left. Unticking hides it as any column.
    */
   fitPriority?: number;
+  /**
+   * Start this column HIDDEN (0.48, keksdose dev #617) — for as long as the view saved
+   * under `storageKey` holds no entry for it: on a first visit, on a device whose saved
+   * view predates the column (or the flag), and for a column the app adds later. The
+   * user's own choice in the Columns panel always wins: ticking it is remembered
+   * (`shown` in the saved view), unticking it again stores it as any hidden column. The
+   * default itself is never written into the saved view, so dropping the flag brings the
+   * column back on every device where nobody chose. In the panel it is simply unticked —
+   * not "hidden for width", which `fitPriority` alone says. Ignored, like every hidden
+   * column, with `columnSettings={false}`: nothing could bring it back.
+   */
+  defaultHidden?: boolean;
 }
 
 /** A `data-*` attribute, typed so `{ "data-private": "" }` needs no cast. */

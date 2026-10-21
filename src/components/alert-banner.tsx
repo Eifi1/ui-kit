@@ -208,6 +208,22 @@ interface AlertBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "on
    * sit inside the row's own link or button.
    */
   clampMobile?: boolean;
+  /**
+   * Where a box's {@link action} goes on a phone (below `sm`). 0.48.
+   *
+   * `own-line` (default): a line of its own under the message, lined up with it
+   * (kastlan 53 — a long message beside a long button squeezed into a column).
+   *
+   * `flow`: on the message's line while the message (with its glyph) keeps 10rem, else at the END of the
+   * next line — for a short message and a short action, which a line of their own each
+   * would stack for nothing. keksdose dev #623: the budget card's "5 underfunded
+   * categories" + "Assign" built this with descendant overrides on the kit's classes.
+   * The basis is in rem, so it grows with the text size: at Large the action drops a
+   * line sooner, by itself. The × stays at the top end either way; `clampMobile` works
+   * alongside. From `sm` up nothing changes. Ignored by `strip` (which flows like this
+   * already) and `inline`.
+   */
+  actionPlacement?: "own-line" | "flow";
   children: ReactNode;
   /**
    * The banner's frame — where the rest of the props go (0.34, API-2, refactor audit
@@ -259,6 +275,7 @@ export function AlertBanner({
   onDismiss,
   dismissLabel,
   clampMobile = false,
+  actionPlacement = "own-line",
   href,
   onClick,
   className,
@@ -319,7 +336,14 @@ export function AlertBanner({
   // squeezed "Please confirm your email address…" into a ~100px column beside a
   // "Resend verification email" button. There the action takes a line of its own under
   // the message, and the × stays at the top end; from sm up the box is one row as before.
-  const boxWraps = !inline && !strip && action !== undefined && action !== null;
+  const boxAction = !inline && !strip && action !== undefined && action !== null;
+  // `flow` (0.48): glyph + message and the action in a row of their own that wraps
+  // below sm; the × stays outside it, at the top end.
+  const flow = boxAction && actionPlacement === "flow";
+  const boxWraps = boxAction && !flow;
+  const flowRow = cn("flex min-w-0 flex-1 items-center max-sm:flex-wrap", sm ? "gap-1.5" : "gap-2");
+  // The 10rem the message keeps beside the action before the action wraps.
+  const flowBasis = flow ? "max-sm:basis-40" : undefined;
   const row = cn(
     inlineRow
       ? "inline-flex items-center"
@@ -343,36 +367,42 @@ export function AlertBanner({
       );
   const focusRing = cn(FOCUS_RING, "focus-visible:ring-offset-1 focus-visible:ring-offset-surface");
 
+  const contentBody = clamp ? (
+    // Below `md` a row: the message, clamped, then the toggle on its baseline. From
+    // `md` up a plain span with the message in it, as without the prop.
+    <span
+      className={cn(
+        !inlineRow && grow,
+        "min-w-0 text-start max-md:flex max-md:items-baseline max-md:gap-2",
+      )}
+    >
+      <span id={bodyId} ref={bodyRef} className={cn("max-md:min-w-0", !expanded && "max-md:line-clamp-1")}>
+        {children}
+      </span>
+      {(expanded || !fits) && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={bodyId}
+          onClick={() => setExpanded((v) => !v)}
+          className={cn(
+            "relative z-10 shrink-0 rounded-sm font-medium underline underline-offset-2 md:hidden",
+            focusRing,
+          )}
+        >
+          {expanded ? common.showLess : common.showMore}
+        </button>
+      )}
+    </span>
+  ) : (
+    <span className={cn(!inlineRow && (nested ? "flex-1" : grow), "min-w-0 text-start")}>
+      {children}
+    </span>
+  );
   const content = (
     <>
       {glyph}
-      {clamp ? (
-        // Below `md` a row: the message, clamped, then the toggle on its baseline. From
-        // `md` up a plain span with the message in it, as without the prop.
-        <span
-          className={cn(!inlineRow && grow, "min-w-0 text-start max-md:flex max-md:items-baseline max-md:gap-2")}
-        >
-          <span id={bodyId} ref={bodyRef} className={cn("max-md:min-w-0", !expanded && "max-md:line-clamp-1")}>
-            {children}
-          </span>
-          {(expanded || !fits) && (
-            <button
-              type="button"
-              aria-expanded={expanded}
-              aria-controls={bodyId}
-              onClick={() => setExpanded((v) => !v)}
-              className={cn(
-                "relative z-10 shrink-0 rounded-sm font-medium underline underline-offset-2 md:hidden",
-                focusRing,
-              )}
-            >
-              {expanded ? common.showLess : common.showMore}
-            </button>
-          )}
-        </span>
-      ) : (
-        <span className={cn(!inlineRow && (nested ? "flex-1" : grow), "min-w-0 text-start")}>{children}</span>
-      )}
+      {contentBody}
       {interactive && (
         <ChevronRight
           aria-hidden
@@ -414,7 +444,7 @@ export function AlertBanner({
         className={cn(
           "relative z-10 flex max-w-full shrink-0 flex-wrap items-center gap-2",
           !strip && !inlineRow && "self-center",
-          strip && "ms-auto",
+          (strip || flow) && "ms-auto",
           // Last, on a line of its own, lined up with the message (past the glyph).
           boxWraps && cn("max-sm:order-last max-sm:basis-full", glyph && (sm ? "max-sm:ps-5" : "max-sm:ps-6")),
         )}
@@ -438,8 +468,24 @@ export function AlertBanner({
         role={resolvedRole}
         className={cn(row, frame, TONE_TEXT[tone], className)}
       >
-        {content}
-        {trailing}
+        {flow ? (
+          <>
+            <div className={flowRow} data-action-flow="">
+              {/* The glyph rides with the message, on its first line; the two are
+                  centred against the action as one, as the whole-row button is. */}
+              <span className={cn("flex min-w-0 flex-1 items-start", flowBasis, sm ? "gap-1.5" : "gap-2")}>
+                {glyph}
+                {contentBody}
+              </span>
+              {trailing}
+            </div>
+          </>
+        ) : (
+          <>
+            {content}
+            {trailing}
+          </>
+        )}
         {dismiss}
       </div>
     );
@@ -453,6 +499,7 @@ export function AlertBanner({
     ? cn(
         "flex min-w-0 text-start",
         grow,
+        flowBasis,
         sm ? "gap-1.5" : "gap-2",
         inlineRow || strip ? "items-center" : "items-start",
         "outline-none after:absolute after:inset-0 after:content-['']",
@@ -500,8 +547,18 @@ export function AlertBanner({
       role={resolvedRole}
       className={cn("relative", row, frame, TONE_TEXT[tone], hover, className)}
     >
-      {rowAction}
-      {trailing}
+      {flow ? (
+        // Not positioned: the row's stretched `after:` target must still cover the frame.
+        <div className={flowRow} data-action-flow="">
+          {rowAction}
+          {trailing}
+        </div>
+      ) : (
+        <>
+          {rowAction}
+          {trailing}
+        </>
+      )}
       {dismiss}
     </div>
   );

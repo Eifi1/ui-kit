@@ -445,6 +445,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ProgressBar — meter",
     "ProgressBar — tones and sizes",
     "Skeleton — shapes and lines",
+    "TableSkeleton — a table or list while it loads",
     "EmptyState — icon and action",
     "EmptyState — headingAs and node title / hint",
     "AlertBanner — four tones",

@@ -58,19 +58,25 @@ export function ThemeToggle({
   // icon button with no name — a reader heard "button" and nothing else.
   const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { theme: ariaLabel });
   const Icon = mode === "dark" ? Moon : Sun;
+  const button = (
+    <button
+      type="button"
+      onClick={() => {
+        onChange?.(mode === "dark" ? "light" : "dark");
+        onToggle?.();
+      }}
+      aria-label={labels.theme}
+      className={cn(TOPBAR_TRIGGER_CLASS, className)}
+    >
+      <Icon className="size-5" />
+    </button>
+  );
+  // The name on hover and focus even without a `title` (0.48, keksdose dev#610); a bubble
+  // that only repeats it is visual, in a fragment as on IconButton — see OptionSwitcherMenu.
+  const tip = title ?? labels.theme;
   return (
-    <Tooltip label={title} portal>
-      <button
-        type="button"
-        onClick={() => {
-          onChange?.(mode === "dark" ? "light" : "dark");
-          onToggle?.();
-        }}
-        aria-label={labels.theme}
-        className={cn(TOPBAR_TRIGGER_CLASS, className)}
-      >
-        <Icon className="size-5" />
-      </button>
+    <Tooltip label={tip} portal>
+      {tip === labels.theme ? <>{button}</> : button}
     </Tooltip>
   );
 }

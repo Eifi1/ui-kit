@@ -25,8 +25,11 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 
 Round 0.48, keksdose run 83 (Marcel's live reports #451, #410, #450, #603) and the 0.47 build
 reviews. It removes `TabsLabels.backToFirst`, deprecated in 0.47: **breaking** for a build that
-still names it, which no app does. Four changes show on a plain bump:
+still names it, which no app does. Six changes show on a plain bump:
 
+- A list opened inside a `Popover` (a select, a combobox, a date picker) no longer closes it
+  (keksdose dev #623).
+- The top-bar menu triggers name themselves in the kit's Tooltip on hover and focus (dev #610).
 - On a phone `AppShell` pads `<main>` past a floating launcher, so the last row stays reachable
   (keksdose dev #612; only an app with a launcher: keksdose).
 - The `Tabs` cues are bare chevrons beside the strip (24px, a 48px hit area), each in a
@@ -52,6 +55,11 @@ The server half ships as server-kit 0.19.0, which breaks only a test helper:
 * **tour:** the overlay's root carries `data-tour-overlay` on every step (keksdose dev #611) ([7332f66](https://github.com/Eifi1/ui-kit/commit/7332f665e8b8244b85cf6c3f5bd045874acdcffe))
 * **alert-banner:** `clampMobile` keeps the message to one line below `md` with a More / Less toggle (`common.showMore` / `common.showLess`, seven catalogues) (keksdose dev #611) ([7332f66](https://github.com/Eifi1/ui-kit/commit/7332f665e8b8244b85cf6c3f5bd045874acdcffe))
 * **shell:** `AppShellNavItem.shortLabelFrom` uses `shortLabel` on the phone bar only from that text size up (keksdose dev #613) ([7332f66](https://github.com/Eifi1/ui-kit/commit/7332f665e8b8244b85cf6c3f5bd045874acdcffe))
+* **data-table:** a column's `defaultHidden` starts it hidden while the saved view has no entry for it; the user's choice in the Columns panel wins (keksdose dev #617)
+* **skeleton:** `TableSkeleton`, a table/list loading preset (rows × columns, groups, a tile row, a grid variant) with one "Loading…" status (keksdose dev #628)
+* **alert-banner:** `actionPlacement="flow"` keeps a box's action on the message's line on a phone while the message keeps 10rem, else at the end of the next line (keksdose dev #623)
+* **shell:** `TopBarActionMenu`'s trigger (the feedback, avatar and tours menus), `OptionSwitcherMenu` and `ThemeToggle` show their name in the kit's Tooltip on hover and focus, without describing the trigger by its own name (keksdose dev #610)
+* **hooks:** `useOutsideClick` returns an `onPointerDownCapture` that makes every press through that element's React tree, portals included, an inside press
 
 ### Fixed
 
@@ -61,6 +69,7 @@ The server half ships as server-kit 0.19.0, which breaks only a test helper:
 * **feedback:** the User column is at most 12rem, one line with an ellipsis and the full value in its `title` ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
 * **tabs:** the `overflowCue` gutters are 24px at every text size (1.5rem left a 360px phone's strip 154 of 226px at Extra large) ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
 * **verify-email:** `EmailVerificationBanner` takes `clampMobile`, with the resend's outcome after "Send again", outside the clamp ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
+* **popover,hover-menu,dropdown,combobox:** a press on a portalled panel opened from inside — a `CurrencySelect`'s list in a `Popover`, at any depth — no longer closes the owner as an outside press, so the choice lands (keksdose dev #623)
 
 ## [0.47.0](https://github.com/Eifi1/ui-kit/compare/v0.46.1...v0.47.0) (2026-10-21)
 

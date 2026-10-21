@@ -111,6 +111,19 @@ function AlertBannerMore() {
           </AlertBanner>
         )}
 
+        <AlertBanner
+          tone="warning"
+          actionPlacement="flow"
+          data-testid="flow-banner"
+          action={
+            <Button size="sm" variant="secondary">
+              Assign
+            </Button>
+          }
+        >
+          flow: 5 underfunded categories
+        </AlertBanner>
+
         <div className="max-w-sm space-y-1.5">
           <Input label="Exchange rate" value={rate} onChange={(e) => setRate(e.target.value)} />
           {rate === "" && (

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { SetStateAction } from "react";
 import { useLocation, useSearchParams } from "react-router";
 import { useKitTableStorageKeyPrefix } from "../i18n/kit-labels";
 import { readStored, writeStored } from "../lib/safe-storage";
@@ -24,6 +25,17 @@ interface PersistedState {
   pageSize: number | "all";
   widths?: Record<string, number>;
   hidden?: string[];
+  /** 0.48: the `defaultHidden` columns the user ticked back on — an entry that beats the
+   *  default. Written only when non-empty, so a table without such columns stores what
+   *  it always did. */
+  shown?: string[];
+}
+
+/** The hidden set as drawn: the stored one plus every `defaultHidden` column the view
+ *  holds no entry for (neither hidden nor `shown`). */
+function withDefaultHidden(view: { hidden: Set<string>; shown: Set<string> }, defaults: string[]): Set<string> {
+  const extra = defaults.filter((k) => !view.hidden.has(k) && !view.shown.has(k));
+  return extra.length === 0 ? view.hidden : new Set([...view.hidden, ...extra]);
 }
 
 export const DEFAULT_PERSIST_PREFIX = "hbui-table:";
@@ -338,7 +350,45 @@ export function useTableState<T>({
   );
   const pageSize = pageSizeProp ?? internalPageSize;
   const [widths, setWidths] = useState<Record<string, number>>(() => initial.widths ?? {});
-  const [hiddenCols, setHiddenCols] = useState<Set<string>>(() => new Set(initial.hidden ?? []));
+  // Hidden columns (0.48, keksdose #617): what the user chose — `hidden`, and `shown`
+  // for a `defaultHidden` column ticked back on — kept apart from the defaults, which
+  // are applied on read and never stored. Keyed on the default keys as a string: every
+  // call site builds `columns` inline, so the array is new on every render.
+  const [view, setView] = useState(() => ({
+    hidden: new Set<string>(initial.hidden ?? []),
+    shown: new Set<string>(initial.shown ?? []),
+  }));
+  const defaultHiddenSig = columns
+    .filter((c) => c.defaultHidden)
+    .map((c) => c.key)
+    .join("\u0000");
+  const hiddenCols = useMemo(
+    () => withDefaultHidden(view, defaultHiddenSig ? defaultHiddenSig.split("\u0000") : []),
+    [view, defaultHiddenSig],
+  );
+  // The panel hands over the next DRAWN set; what changed is recorded as a choice.
+  const setHiddenCols = useCallback(
+    (action: SetStateAction<Set<string>>) =>
+      setView((v) => {
+        const defaults = defaultHiddenSig ? defaultHiddenSig.split("\u0000") : [];
+        const prev = withDefaultHidden(v, defaults);
+        const next = typeof action === "function" ? action(prev) : action;
+        const hidden = new Set(v.hidden);
+        const shown = new Set(v.shown);
+        for (const k of next) {
+          if (prev.has(k)) continue;
+          hidden.add(k);
+          shown.delete(k);
+        }
+        for (const k of prev) {
+          if (next.has(k)) continue;
+          hidden.delete(k);
+          if (defaults.includes(k)) shown.add(k);
+        }
+        return { hidden, shown };
+      }),
+    [defaultHiddenSig],
+  );
   const [showSettings, setShowSettings] = useState(false);
   const headRefs = useMemo(() => new Map<string, HTMLTableCellElement>(), []);
 
@@ -360,7 +410,8 @@ export function useTableState<T>({
         filters,
         pageSize: pageSize === Infinity ? "all" : pageSize,
         widths,
-        hidden: Array.from(hiddenCols),
+        hidden: Array.from(view.hidden),
+        ...(view.shown.size > 0 ? { shown: Array.from(view.shown) } : {}),
       });
   useEffect(() => {
     if (!storageKey) return;

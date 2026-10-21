@@ -28,6 +28,8 @@ export function OptionSwitcherMenu<T extends string>({
   /** Names the trigger and the menu. Required: the trigger is an icon (refactor audit
    *  2026-10, API-1 — the `ariaLabel` spelling went in 0.35). */
   "aria-label": string;
+  /** The trigger's tooltip. Default: `aria-label` (0.48) — the name, shown on hover and
+   *  focus. A different text also describes the trigger (`aria-describedby`). */
   title?: string;
   heading?: string;
   options: OptionSwitcherOption<T>[];
@@ -37,13 +39,23 @@ export function OptionSwitcherMenu<T extends string>({
   return (
     <HoverMenu
       aria-label={ariaLabel}
-      trigger={({ toggle }) => (
-        <Tooltip label={title} portal>
+      trigger={({ toggle }) => {
+        const button = (
           <button type="button" onClick={toggle} aria-label={ariaLabel} className={TOPBAR_TRIGGER_CLASS}>
             {icon}
           </button>
-        </Tooltip>
-      )}
+        );
+        // The name on hover and focus even without a `title` (0.48, keksdose dev#610). A
+        // bubble that repeats the name sits round the button in a fragment, as IconButton's
+        // does, so it does not describe the button by its own name — a reader heard "Text
+        // size, button, Text size". A `title` that says more still describes it.
+        const tip = title ?? ariaLabel;
+        return (
+          <Tooltip label={tip} portal>
+            {tip === ariaLabel ? <>{button}</> : button}
+          </Tooltip>
+        );
+      }}
     >
       {(close) => (
         <ul className="py-1">

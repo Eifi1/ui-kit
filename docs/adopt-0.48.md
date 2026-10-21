@@ -2,8 +2,10 @@
 
 ui-kit 0.48 removes what 0.47 deprecated for removal in 0.48 (`TabsLabels.backToFirst`), so a
 bump can break a build that still names it; none of the three apps does (checked 2026-10-21,
-below). Four changes show on a plain bump (the fourth only for an app with a floating launcher:
-`AppShell` pads `<main>` past it, dev #612 — keksdose): Tabs' `overflowCue` carets are bare glyphs in fixed
+below). Six changes show on a plain bump (wave B adds two: a list opened inside a `Popover`
+no longer closes it, dev #623, and the top-bar menu triggers name themselves in a Tooltip, dev
+#610; the fourth is only for an app with a floating launcher: `AppShell` pads `<main>` past it,
+dev #612 — keksdose): Tabs' `overflowCue` carets are bare glyphs in fixed
 gutters beside the strip instead of framed buttons over it (keksdose live #410 r5–6); a `Disclosure` with no children
 draws no body (keksdose dev #603); and the kit's feedback columns fit the table's width (keksdose
 live #451): Subject grows and ellipsises, and URL, Email, Resolved leave the table in that order
@@ -223,6 +225,63 @@ the toggle is not displayed and the text is unclamped. axe: nothing on the strip
 | keksdose | **R8:** delete the rule and its comment in frontend/src/app.css:167-178; in frontend/src/features/assistant/assistant-launcher.tsx delete the clearance effect (:150-163) and the docblock's last sentences about it (:103-107), and instead of `if (!shown \|\| covered) return null` (:189) render `if (!shown) return null` with `hidden={covered}` on the `FloatingPanel`, so the room stays while an editor or a dialog covers the corner (the reason :150-152 gives). **R9:** frontend/src/features/assistant/assistant-launcher.tsx:39 becomes `'[aria-modal="true"]:not([data-tour-overlay])'`, and :27-30 of the comment say so. **R10:** frontend/src/app/beta-perf-banner.tsx:87-104 become `<AlertBanner tone="neutral" variant="strip" icon={<Server />} onDismiss={dismiss} clampMobile>{t("beta.perf_notice")}</AlertBanner>`; drop the `expanded` state (:64) and `Button` from the import (:4), the comment's last sentence (:84), and `beta.perf_more` / `beta.perf_less` in the locale JSONs (:87-88 each); its test (frontend/src/app/__tests__/beta-perf-banner.test.tsx:59-67) names the toggle "More" / "Less" (the kit's words). **R11:** frontend/src/app/layout.tsx:59 becomes `shortLabel: item.shortLabelKey ? t(item.shortLabelKey) : undefined, shortLabelFrom: "large",`, and `useTextSize` (:43, and its import on :4) goes |
 | kastlan | Nothing to write, and nothing changes: no `FloatingActionButton`, `FloatingPanel` or `FloatingActionGroup` in frontend/src (checked on `feat/kit-0.48`), so `--app-float-clearance` is never set and `<main>` keeps nav + 1.5rem. Optional (S2): `clampMobile` on the `EmailVerificationBanner` in frontend/src/features/auth/components/verify-email-banner.tsx:18-22 (`VerifyEmailBanner`), the ~110px banner on a 390px phone (prod feedback #22, KX-5); the resend's "Sent" / error then shows after "Send again" |
 | kurvenschmiede | Nothing to write, and nothing changes: no floating launcher in frontend/src (checked on `feat/dynamics`). frontend/src/app/layout.tsx:45 passes `shortLabel` at every size, which stays the default. Optional: `clampMobile` on the deletion-requests strip (frontend/src/features/admin/deletion-requests.tsx:44-58, `DeletionRequestsBanner`'s `AlertBanner`); nothing changes on a bump |
+
+## keksdose UX wave B (dev #610, #617, #623, #628)
+
+Opt-in, nothing changes on a plain bump — except the last two items (R12, R13), which show on a
+plain bump and need nothing written.
+
+- **`DataTableColumn.defaultHidden` (dev #617).** The column starts hidden while the view saved
+  under `storageKey` holds no entry for it: a first visit, a saved view from before the column or
+  the flag, a column added later. The user's tick in the Columns panel wins and is remembered
+  (`shown` in the saved view, written only when non-empty); unticking stores it as any hidden
+  column. The default is never written into the saved view, so dropping the flag brings the
+  column back wherever nobody chose. In the panel it is unticked, not "hidden for width"
+  (that stays `fitPriority`'s). Ignored, like every hidden column, with `columnSettings={false}`.
+- **`TableSkeleton` (dev #628, new export).** A table/list outline while data loads: `rows` ×
+  `columns` (a name bar, the figures at the row's end; from three columns up they go under the
+  name below `sm`), `variant="grid"` (a label column and one block per column, clipped: a
+  heatmap), `groups` (header bars over `rows` rows each), `tiles` (stat-tile outlines above),
+  `heading` (title + hint lines), `framed` (default `true`). ONE `role="status"` region with
+  `common.loading` ("Loading…", seven catalogues already) or `label`; every bar `aria-hidden`; no
+  pulse under reduced motion. Props and `ref` go to the region.
+- **`AlertBanner actionPlacement="flow"` (dev #623).** Below `sm` a box's `action` stays on the
+  message's line while glyph + message keep 10rem, else it goes to the END of the next line;
+  default `"own-line"` (its own line under the message, as before). The × stays at the top end;
+  `clampMobile` works alongside; works on whole-row (`onClick` / `href`) banners. The basis is in
+  rem, so at Large the action drops a line sooner by itself. Ignored by `strip` and `inline`.
+- **A list opened inside a popover is inside it (dev #623, fix, plain bump).** A press on a
+  portalled panel opened from inside a `Popover` — a `CurrencySelect`'s or a combobox's list,
+  a `DropdownPanel`, another popover, at any depth — no longer counts as outside: the popover
+  stays open and the choice lands. Same for `HoverMenu`, `useDropdown` and the combobox core.
+  The kit's panels pass every press on through the React tree, where a portal still sits inside
+  its opener. `useOutsideClick` now returns an `onPointerDownCapture` for an app's own owner
+  element (ignore it and nothing changes).
+- **Top-bar triggers name themselves in the kit's Tooltip (dev #610, plain bump).**
+  `TopBarActionMenu` (the feedback menu, the avatar menu, the tours menu, every icon trigger
+  built on it), `OptionSwitcherMenu` and `ThemeToggle` show their `aria-label` on hover and
+  focus. The bubble is visual only (in a fragment, as on `IconButton`): it is not the trigger's
+  `aria-describedby`, so a screen reader hears the name once. `OptionSwitcherMenu`'s and
+  `ThemeToggle`'s `title` default to the name; a different `title` still describes the trigger.
+
+Checked in headless Chromium at 390px (showcase build, `vite preview`, Feedback page). The flow
+banner: "Assign" on the message's line (centres within 12px), the banner 52px tall; narrowed to
+230px the button drops to the next line and ends at the row's end (right 250 = row right 250).
+`TableSkeleton`: three demos, three status regions each "Loading…"; four-column rows put the
+figures under the name; `animation-name` `pulse`, and `none` under reduced motion; no sideways
+scroll (scrollWidth 390). At 1280px the figures sit at the row's end. axe: nothing on either.
+R12, Popovers page at 1280px with a real mouse click: the `CurrencySelect` list in the pencil
+popover is portalled outside its panel; clicking USD keeps the popover open and names the field
+"Currency: USD"; a click on the page then closes it. R13: every top-bar menu trigger shows its
+bubble on hover and focus, with no `title` and no self-describing `aria-describedby`.
+
+| App | Change |
+| --- | --- |
+| keksdose | **R14:** frontend/src/features/transactions/use-transaction-columns.tsx:410 the `flag` column gains `defaultHidden: true`; delete frontend/src/features/transactions/register-default-columns.ts and its test (\_\_tests\_\_/register-default-columns.test.ts), and in transactions-page.tsx the import (:61) and `useState(seedRegisterHiddenColumns)` (:96). The `#seeded-hidden` marker key can stay or be cleared; it is no longer read. A device where someone re-showed Flag after the seed hides it once more (the old view has no `shown`). **R15:** frontend/src/features/budget/budget-skeleton.tsx becomes `<TableSkeleton groups={2} rows={4} columns={4} label={label} aria-busy="true" data-testid="budget-skeleton" />` (or drop the file and use it at budget-page.tsx:420); frontend/src/features/reports/tab-parts.tsx:37-69 `TabSkeleton` becomes `<TableSkeleton heading rows={6} columns={2} />` for `list`, `tiles={3} heading` for `tiles` (the `chart` shape keeps a `Skeleton shape="block"`), and :95-118 `VarianceHeatmapSkeleton` becomes `<TableSkeleton variant="grid" heading rows={rows} columns={cols + 1} />` |
+| keksdose | **R16:** frontend/src/features/budget/budget-summary-card.tsx:455-474 the banner takes `actionPlacement={large ? "own-line" : "flow"}` and its `className` keeps only `"sm:items-center"`: the `max-sm:[&>button]:…` / `[&>div]:…` overrides (:472-473) go, and the comment at :460-467 says the kit does it |
+| keksdose | **R12:** frontend/src/features/budget/budget-summary-card.tsx:172-188 the interim native `Select` for "Show in" can go back to the `CurrencySelect` #308 asked for (`value`, `onChange={onChangeDisplayCurrency}`, `options={currencyOptions}`), and the comment at :172-176 goes. **R13:** nothing to write; the feedback, avatar and tours triggers show their names |
+| kastlan | Nothing to write. R12 and R13 show on a plain bump (the top-bar menus gain their tooltip); the rest are opt-in |
+| kurvenschmiede | Nothing to write. R12 and R13 show on a plain bump (the top-bar menus gain their tooltip); the rest are opt-in |
 
 ## server-kit 0.19
 
