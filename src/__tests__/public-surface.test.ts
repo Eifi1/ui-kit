@@ -286,7 +286,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.1 (+1): `swipePlanRowActions`, via the /data-table slice (keksdose N3).
   // 0.46.1 (+1, keksdose N9): `useFeedbackNotificationTypesLabels`, the words with `adminGroup`;
   // `deviceTimeZone` now comes from notifications/device-zone-report (N6, same name, ±0).
-  ["@eifi1/ui-kit", barrel, 987],
+  // 0.47.0 (−2, deprecated in 0.46): `TimeZoneSelect`, `timeZoneOptions` — the zone is
+  // automatic only (§10.3), the time-zone-select module is gone with its `deviceTimeZone` alias.
+  // 0.47.0 (+3, keksdose N17): `RowActionsHead`, `ROW_ACTIONS_CELL_CLASS`,
+  // `ROW_ACTIONS_HEAD_CLASS` — a hand-built table's actions heading and cell.
+  ["@eifi1/ui-kit", barrel, 988],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

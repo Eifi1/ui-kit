@@ -479,7 +479,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Normal, Large and Extra large on one root scale, with the breakpoints that move with it, the More contrast step, the account rule that carries both between devices — and what the components do at Large.",
         icon: ALargeSmall,
-        components: ["TextSizeSetting", "ContrastSetting", "useTextSize", "useBreakpoint", "usePhoneLayout", "useAccountAppearance", "RowActions", "rowActionsColumn", "IconButton", "CompactControls", "AppShell", "DataTable", "Input", "FieldHint"],
+        components: ["TextSizeSetting", "ContrastSetting", "useTextSize", "useBreakpoint", "usePhoneLayout", "useAccountAppearance", "RowActions", "rowActionsColumn", "RowActionsHead", "IconButton", "CompactControls", "AppShell", "DataTable", "Input", "FieldHint"],
         Body: () => (
           <>
             <TextSize032Demo />
@@ -1315,7 +1315,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The notification settings every app shares: the types the server answers with a switch per channel (in the app, push, e-mail), quiet hours and the account's time zone, the inbox and the top bar's bell, push on this device and the list of devices with the types each one mutes, and the page an e-mail's unsubscribe link opens.",
         icon: Bell,
-        components: ["NotificationTypesSetting", "QuietHoursSetting", "TimeZoneSelect", "timeZoneOptions", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS", "useFeedbackNotificationTypes", "DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS", "NotificationInbox", "NotificationBell", "INBOX_BADGE_INTERVAL", "useDeviceZoneReport"],
+        components: ["NotificationTypesSetting", "QuietHoursSetting", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS", "useFeedbackNotificationTypes", "DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS", "NotificationInbox", "NotificationBell", "INBOX_BADGE_INTERVAL", "useDeviceZoneReport"],
         Body: () => (
           <>
             <NotificationsPage />

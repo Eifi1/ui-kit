@@ -9,7 +9,6 @@ import {
   PushDevicesSetting,
   QuietHoursSetting,
   Switch,
-  TimeZoneSelect,
   ToggleGroup,
   UnsubscribePanel,
   unsubscribeTokenType,
@@ -311,22 +310,6 @@ export function QuietHoursDemo() {
         it differs, never for a demo), else Zurich. The card names it read-only and a time sends no zone; screens
         keep showing device time. {code("held")} says a held push arrives when the window ends — an app that runs
         the notifications tick (keksdose). Switch the report off for the fallback.
-      </Note>
-    </Example>
-  );
-}
-
-export function TimeZoneSelectDemo() {
-  const [zone, setZone] = useState("Europe/Zurich");
-  return (
-    <Example label="TimeZoneSelect" hint="deprecated 0.46; removed in 0.47">
-      <div className="max-w-72">
-        <TimeZoneSelect value={zone} onChange={setZone} />
-      </div>
-      <Note>
-        Type &quot;Zur&quot; for Zurich. The regions are in the kit&apos;s words ({code("notifications.regions")}); a
-        stored zone the runtime no longer lists is kept. Not clearable. Deprecated in 0.46 and removed in 0.47:
-        the zone is automatic (§10.3, amended 2026-10-20), so no app picks one.
       </Note>
     </Example>
   );
@@ -647,7 +630,6 @@ export function NotificationsPage() {
       <NotificationTypesKastlanDemo />
       <NotificationTypesKurvenschmiedeDemo />
       <QuietHoursDemo />
-      <TimeZoneSelectDemo />
       <NotificationInboxDemo />
       <NotificationBellDemo />
       <PushDeviceDemo />

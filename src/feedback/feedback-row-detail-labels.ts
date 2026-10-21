@@ -24,7 +24,6 @@ export const DEFAULT_FEEDBACK_DETAIL_LABELS: FeedbackDetailLabels = {
   outcomeUpdate: "Update",
   outcomePlaceholder: "What was done, decided, or why this won't be addressed.",
   rework: "Rework",
-  openPage: "Open page",
   reworkTitle: "Send for rework",
   reworkSend: "Send rework",
   reworkPlaceholder: "What still needs refinement? Any new constraints or change of direction.",

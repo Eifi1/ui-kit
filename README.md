@@ -559,14 +559,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2136 names from 350 modules** — 987 values and 1149 types. _Italic_ is a type-only export.
+**2137 names from 349 modules** — 988 values and 1149 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2136 |
+| `@eifi1/ui-kit` | 2137 |
 | `@eifi1/ui-kit/chart` | 92 |
 | `@eifi1/ui-kit/shell` | 114 |
 | `@eifi1/ui-kit/data-table` | 53 |
@@ -784,7 +784,7 @@ re-slicing of it, never a second API.
 | `components/legal-page` | `LEGAL_SKELETON`, `LegalAcceptCheckbox`, `LegalKitSection`, `LegalPage`, _`LegalAcceptCheckboxProps`_, _`LegalDisclaimerVariant`_, _`LegalKitSectionKey`_, _`LegalKitSectionProps`_, _`LegalPageProps`_, _`LegalSectionOwner`_, _`LegalSkeletonEntry`_, _`LegalSkeletonPage`_ |
 | `components/appearance-labels` | `DEFAULT_APPEARANCE_LABELS`, `useAppearanceLabels`, _`AppearanceLabels`_ |
 | `components/date-format-setting` | `DateFormatSetting`, _`DateFormatSettingProps`_ |
-| `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `RowActions`, `rowActionsColumn`, _`RowAction`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_, _`RowActionTone`_ |
+| `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `ROW_ACTIONS_CELL_CLASS`, `ROW_ACTIONS_HEAD_CLASS`, `RowActions`, `rowActionsColumn`, `RowActionsHead`, _`RowAction`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsHeadProps`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_, _`RowActionTone`_ |
 | `components/checkbox-group` | `CheckboxGroup`, _`CheckboxGroupLegendVisibility`_, _`CheckboxGroupOption`_, _`CheckboxGroupProps`_ |
 | `components/one-time-code-input` | `OneTimeCodeInput`, _`OneTimeCodeInputProps`_ |
 | `components/language-select` | `LanguageSelect`, _`LanguageSelectProps`_ |
@@ -1005,7 +1005,6 @@ re-slicing of it, never a second API.
 | `notifications/notification-types` | _`DigestCadence`_, _`NotificationChannel`_, _`NotificationSettingsPatch`_, _`NotificationSwitches`_, _`NotificationTypeEntry`_, _`NotificationTypeGroup`_, _`NotificationTypesValue`_, _`PushDeviceItem`_ |
 | `notifications/notification-types-setting` | `NotificationTypesSetting`, _`NotificationTypesSettingProps`_ |
 | `notifications/quiet-hours-setting` | `QuietHoursSetting`, _`QuietHoursSettingProps`_ |
-| `notifications/time-zone-select` | `timeZoneOptions`, `TimeZoneSelect`, _`TimeZoneSelectProps`_ |
 | `notifications/notification-inbox` | `INBOX_BADGE_INTERVAL`, `NotificationInbox`, _`NotificationInboxAction`_, _`NotificationInboxItem`_, _`NotificationInboxProps`_ |
 | `notifications/notification-bell` | `NotificationBell`, _`NotificationBellProps`_ |
 | `notifications/device-zone-report` | `deviceTimeZone`, `useDeviceZoneReport`, _`DeviceZoneReportOptions`_ |

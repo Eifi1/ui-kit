@@ -2,7 +2,6 @@ import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { deviceTimeZone, useDeviceZoneReport } from "../device-zone-report";
-import { deviceTimeZone as deprecatedDeviceTimeZone } from "../time-zone-select";
 import { deviceTimeZone as rootDeviceTimeZone } from "../../index";
 
 /**
@@ -72,9 +71,8 @@ describe("useDeviceZoneReport", () => {
 });
 
 describe("deviceTimeZone (0.46.1: beside useDeviceZoneReport, keksdose N6)", () => {
-  it("lives here; the deprecated module and the package root hand out the same function", () => {
+  it("lives here, and the package root hands out the same function", () => {
     expect(deviceTimeZone()).toBe("Europe/Berlin");
-    expect(deprecatedDeviceTimeZone).toBe(deviceTimeZone);
     expect(rootDeviceTimeZone).toBe(deviceTimeZone);
   });
 });

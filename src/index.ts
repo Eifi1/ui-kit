@@ -567,7 +567,15 @@ export {
 export type { DateFormatPreference, DateFormatOptions, ResolvedDateFormat } from "./lib/date-format";
 export { DateFormatSetting } from "./components/date-format-setting";
 export type { DateFormatSettingProps } from "./components/date-format-setting";
-export { RowActions, rowActionsColumn, DEFAULT_ROW_ACTIONS_LABELS } from "./components/row-actions";
+export {
+  RowActions,
+  rowActionsColumn,
+  DEFAULT_ROW_ACTIONS_LABELS,
+  // 0.47.0 (keksdose N17): a hand-built table's actions heading and cell.
+  RowActionsHead,
+  ROW_ACTIONS_CELL_CLASS,
+  ROW_ACTIONS_HEAD_CLASS,
+} from "./components/row-actions";
 export type {
   RowAction,
   RowActionList,
@@ -576,6 +584,7 @@ export type {
   RowActionsCollapse,
   RowActionsSize,
   RowActionsColumnOptions,
+  RowActionsHeadProps,
   RowActionTone,
 } from "./components/row-actions";
 // 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits).
@@ -971,8 +980,6 @@ export { NotificationTypesSetting } from "./notifications/notification-types-set
 export type { NotificationTypesSettingProps } from "./notifications/notification-types-setting";
 export { QuietHoursSetting } from "./notifications/quiet-hours-setting";
 export type { QuietHoursSettingProps } from "./notifications/quiet-hours-setting";
-export { TimeZoneSelect, timeZoneOptions } from "./notifications/time-zone-select";
-export type { TimeZoneSelectProps } from "./notifications/time-zone-select";
 // 0.46 (docs/notifications-harmonization.md §10.1, §10.3): the inbox list, the bell and
 // the device-zone report (the account's zone is automatic only, amended 2026-10-20).
 export { NotificationInbox, INBOX_BADGE_INTERVAL } from "./notifications/notification-inbox";

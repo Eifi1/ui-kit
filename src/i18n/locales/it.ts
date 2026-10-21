@@ -193,7 +193,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       outcomeUpdate: "Aggiorna",
       outcomePlaceholder: "Cosa è stato fatto o deciso, oppure perché non verrà affrontato.",
       rework: "Rielaborazione",
-      openPage: "Apri pagina",
       reworkTitle: "Rimanda in rielaborazione",
       reworkSend: "Richiedi rielaborazione",
       reworkPlaceholder: "Cosa va ancora perfezionato? Eventuali nuovi vincoli o cambi di direzione.",
@@ -1170,7 +1169,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     notifications: {
       typesTitle: "Avvisami per",
       typesDescription: "Scelga di cosa essere avvisato, e come.",
-      byEmail: "Per e-mail",
       channelApp: "Nell’app",
       channelPush: "Push",
       channelEmail: "E-mail",
@@ -1194,9 +1192,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       quietUntil: "Alle",
       quietIncomplete:
         "Imposti sia l’ora di inizio sia quella di fine. Le ore di silenzio valgono solo quando sono impostate entrambe.",
-      timeZone: "Fuso orario",
-      deviceZone: (zone) => `Questo dispositivo è nel fuso ${zone}.`,
-      useDeviceZone: "Usa questo",
       regions: {
         Africa: "Africa",
         America: "Americhe",

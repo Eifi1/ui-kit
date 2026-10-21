@@ -333,7 +333,6 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "notifications.quietDescription": [[false], [true], [false, true], [true, true]],
   "notifications.quietZone": [["{{zone}}"]],
   "notifications.bellUnread": one,
-  "notifications.deviceZone": [["{{zone}}"]],
   "notifications.iosInstall": [["{{app}}"]],
   "notifications.testSent": one,
   "notifications.explainerBody": [["{{app}}"]],

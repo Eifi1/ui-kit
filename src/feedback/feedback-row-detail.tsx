@@ -143,10 +143,6 @@ export interface FeedbackDetailLabels {
   outcomePlaceholder: string;
   /** The button that opens section 5 on an answered row. de-CH: "Nacharbeit" */
   rework: string;
-  /** The link to the page the report was filed on. de-CH: "Seite öffnen"
-   *  @deprecated 0.46 — the Replies section's "Open page" button is gone (keksdose live #449:
-   *  it repeated the URL section's link); removed in 0.47. Unused, kept for one release. */
-  openPage: string;
   /** Section 5's heading. de-CH: "Zur Nacharbeit senden" */
   reworkTitle: string;
   /** Section 5's send button. de-CH: "Nacharbeit senden" */

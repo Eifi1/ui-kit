@@ -13,6 +13,7 @@ import { useCommitReason, type CommitScope } from "./write-lock";
 import type { IconButtonGlyphSize, IconButtonSize } from "./icon-button";
 import type { TooltipSide } from "./tooltip";
 import type { DataTableColumn } from "./data-table";
+import { TableHeaderCell, type TableHeaderCellProps } from "./table";
 import { DEFAULT_ROW_ACTIONS_LABELS } from "./row-actions-labels";
 
 /**
@@ -538,6 +539,43 @@ function RowActionsHeader({
   return hidden ? <span className="sr-only">{word}</span> : <>{word}</>;
 }
 
+/** The actions cell's classes — `rowActionsColumn`'s `className`: the column hugs its
+ *  buttons, on one line, at the row's end. A hand-built table's `<TableCell>` takes them
+ *  around its {@link RowActions} (0.47, keksdose N17). */
+export const ROW_ACTIONS_CELL_CLASS = "w-px whitespace-nowrap text-end";
+/** The actions heading's classes — `rowActionsColumn`'s `headClassName`, which
+ *  {@link RowActionsHead} draws: hugging, end-aligned over the buttons (0.47, N17). */
+export const ROW_ACTIONS_HEAD_CLASS = "w-px text-end";
+
+export interface RowActionsHeadProps extends Omit<TableHeaderCellProps, "children"> {
+  /** The heading. Default: the provider's `rowActions.actions` ("Actions"). */
+  children?: ReactNode;
+  /** Named for a screen reader only — `rowActionsColumn`'s `header: false`. */
+  hideLabel?: boolean;
+  labels?: LabelOverride<RowActionsLabels>;
+}
+
+/**
+ * A hand-built table's actions heading (0.47, keksdose N17): the `<th>` `rowActionsColumn`
+ * gives a DataTable — "Actions" on screen in the provider's words, end-aligned over the
+ * buttons, hugging them. Pair it with `<TableCell className={ROW_ACTIONS_CELL_CLASS}>`
+ * around each row's {@link RowActions}. Every other `TableHeaderCell` prop passes on
+ * (`size`, the app's `className`, merged last).
+ *
+ *     <RowActionsHead size="sm" className={TH} />
+ */
+export function RowActionsHead({ children, hideLabel, labels, className, ...rest }: RowActionsHeadProps) {
+  return (
+    <TableHeaderCell align="end" {...rest} className={cn(ROW_ACTIONS_HEAD_CLASS, className)}>
+      {typeof children === "string" || children == null ? (
+        <RowActionsHeader text={children ?? undefined} labels={labels} hidden={hideLabel} />
+      ) : (
+        children
+      )}
+    </TableHeaderCell>
+  );
+}
+
 export interface RowActionsColumnOptions<T> {
   /** The column's key. Default `"actions"`. */
   key?: string;
@@ -617,9 +655,10 @@ export function rowActionsColumn<T>({
         labels={labels}
       />
     ),
-    className: "w-px whitespace-nowrap text-end",
-    // The heading over the buttons, at the row's end (0.46.1).
-    headClassName: "w-px text-end",
+    className: ROW_ACTIONS_CELL_CLASS,
+    // The heading over the buttons, at the row's end (0.46.1); a hand-built table's
+    // `RowActionsHead` (0.47).
+    headClassName: ROW_ACTIONS_HEAD_CLASS,
     noRowLink: true,
     ...column,
   };

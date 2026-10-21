@@ -5,8 +5,16 @@ import {
   DatePicker,
   FieldHint,
   Input,
+  ROW_ACTIONS_CELL_CLASS,
   RowActions,
+  RowActionsHead,
   Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
   TextSizeSetting,
   Textarea,
   ToggleGroup,
@@ -124,6 +132,40 @@ export function RowActions033Demo() {
           </div>
         </div>
 
+        {/* A hand-built table's actions column (0.47, keksdose N17): RowActionsHead and
+            ROW_ACTIONS_CELL_CLASS give it rowActionsColumn's heading and cell. */}
+        <Table aria-label="Beds" framed>
+          <TableHead>
+            <TableRow>
+              <TableHeaderCell>Bed</TableHeaderCell>
+              <TableHeaderCell numeric>Area</TableHeaderCell>
+              <RowActionsHead />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {[
+              { name: "South bed", area: "12 m²" },
+              { name: "Herb spiral", area: "4 m²" },
+            ].map((bed) => (
+              <TableRow key={bed.name}>
+                <TableCell>{bed.name}</TableCell>
+                <TableCell numeric>{bed.area}</TableCell>
+                <TableCell className={ROW_ACTIONS_CELL_CLASS}>
+                  <RowActions
+                    name={bed.name}
+                    collapse={collapse}
+                    tooltipSide="start"
+                    actions={[
+                      { label: "Rename the bed", icon: Pencil, tone: "muted", onSelect: () => setLog(`Rename ${bed.name}`) },
+                      { label: "Delete the bed", icon: Trash2, tone: "danger", onSelect: () => setLog(`Delete ${bed.name}`) },
+                    ]}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
         <ul className={`space-y-0.5 ${READOUT_WRAP}`} aria-live="polite">
           <li>
             watched: {String(watched)} · flagged: {String(flagged)} · share open: {String(shareOpen)} · last: {log}
@@ -141,7 +183,9 @@ export function RowActions033Demo() {
         &ldquo;⋯&rdquo;&apos;s `data-slot="row-actions"` box, so the selector resolves to a box the size of the
         button and a tap still reaches it; never on the entry in the open menu, which is portalled after the row
         and would only make the selector match twice. `glyphSize` and `tooltipSide` (&ldquo;start&rdquo; in a
-        table&apos;s last column) are the row&apos;s; `rowActionsColumn` passes both through.
+        table&apos;s last column) are the row&apos;s; `rowActionsColumn` passes both through. A hand-built
+        table gets the column&apos;s visible, end-aligned &ldquo;Actions&rdquo; heading from `RowActionsHead` and
+        its cell from `ROW_ACTIONS_CELL_CLASS` (0.47).
       </Note>
     </Example>
   );
