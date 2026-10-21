@@ -113,8 +113,28 @@ the dark theme. `useApplyTheme` and the pre-paint `applyPersistedTheme` now set
 
 ## server-kit 0.18
 
-(S18 — the sent `timezone` refused on the settings PATCH, the `/push/settings` shim and
-`PATCH /auth/me`; the push bodies documented in OpenAPI again; the two-422-shapes note.)
+Install the wheel by URL, pinned by hash:
+
+```
+eifi1-server-kit @ https://github.com/Eifi1/server-kit/releases/download/v0.18.0/eifi1_server_kit-0.18.0-py3-none-any.whl
+sha256: SHA256_AT_RELEASE
+```
+
+- **A sent `timezone` is a 422 (BREAKING, as announced: ignored in 0.16 and 0.17).** The notifications settings
+  PATCH (`NotificationSettingsUpdate`), the `/push/settings` shim (`QuietHoursUpdate`) and `PATCH /auth/me`
+  (`ProfileUpdate`) refuse it like any unknown field. Only a stale ≤ 0.45 bundle sends it.
+- **`documented_body(model)`** puts a push route's body back into OpenAPI (the routes take the body untyped so
+  `parse_push_body` can refuse without echoing). keksdose can replace its own `_inline_defs` + `_documented_body`.
+- **Two 422 shapes on a push route** (documented): a body that isn't valid JSON is refused by FastAPI first, in the
+  redacted `{type, loc, msg}` shape (`json_invalid`); a body the model refuses gets `push_body_invalid`. Neither
+  echoes what was sent.
+- **Attachments on replies and comments** (§12): see "Attachments on admin replies and public comments" below.
+
+| App | Change |
+| --- | --- |
+| keksdose | Tests that pinned "timezone ignored" now expect 422: `test_auth_full.py:230-233`, `test_notification_settings.py:87`, `:93`, `:100-102`, `:129-143`, `test_push_preferences.py:105`, `:113-115`, `:138-141`. `_inline_defs` + `_documented_body` (`notifications_router.py:85-102`, used `:113`, `:139`, `:169`) → the kit's `documented_body`. |
+| kastlan | No test sends a `timezone`; nothing for the refusal. |
+| Kurvenschmiede | `test_notifications.py:173-175`'s docstring says "a 422 from 0.17": it is 0.18. |
 
 ## Attachments on admin replies and public comments, pictures inline (keksdose run 82 R1, live #447)
 
