@@ -7,6 +7,7 @@ import { EMPTY_FORMATTED_VALUE, formatDate, toDate } from "../lib/format";
 import { useKitDateFormatter, useKitLabels, useKitLink, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import type { KitLinkProps } from "../i18n/kit-labels";
 import { Chip } from "../components/chip";
+import { Tooltip } from "../components/tooltip";
 import { FloatingAction, FloatingActionGroup } from "../components/floating-panel";
 import type { FloatingCorner } from "../components/floating-panel";
 import { pickLinkRenderer } from "../components/text-link";
@@ -539,16 +540,16 @@ export function feedbackColumns<T extends FeedbackTableRow>({
     {
       key: "user",
       header: labels.columnUser,
-      // At most 12rem, one line and an ellipsis, the whole value in the title (0.48 build
+      // At most 12rem, one line and an ellipsis, the whole value in the kit's Tooltip (0.48 build
       // review 2, keksdose N2): beside the grow Subject every other cell keeps one line, so
       // an email standing in for a missing name widened the column and cost Votes and
       // Category their room first. The open report shows both in full.
       cell: (row) => {
         const who = feedbackSubmitter(row, labels);
         return (
-          <span title={who} className="block max-w-[12rem] truncate-until-large text-secondary">
-            {who}
-          </span>
+          <Tooltip label={who} portal lazy>
+            <span className="block max-w-[12rem] truncate-until-large text-secondary">{who}</span>
+          </Tooltip>
         );
       },
       sortBy: (row) => feedbackSubmitter(row, labels),
