@@ -986,6 +986,8 @@ export const fr: Dictionary = {
       "masquer ou réordonner les colonnes",
       "grille de données",
       "rechercher dans un tableau",
+      "regrouper les lignes d’un tableau par mois avec totaux",
+      "charger plus de lignes en faisant défiler",
     ],
     "data-table-server": [
       "pagination côté serveur",

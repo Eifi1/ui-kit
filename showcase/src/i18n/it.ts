@@ -980,6 +980,8 @@ export const it: Dictionary = {
       "nascondere o riordinare le colonne",
       "griglia di dati",
       "cercare in una tabella",
+      "raggruppare le righe di una tabella per mese con totali",
+      "caricare altre righe scorrendo",
     ],
     "data-table-server": [
       "paginazione lato server",

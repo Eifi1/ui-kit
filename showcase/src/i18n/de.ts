@@ -991,6 +991,8 @@ export const de: Dictionary = {
       "Spalten ausblenden oder umsortieren",
       "Datentabelle",
       "in einer Tabelle suchen",
+      "Tabellenzeilen nach Monat gruppieren, mit Summen",
+      "beim Scrollen weitere Zeilen laden",
     ],
     "data-table-server": [
       "serverseitige Paginierung",

@@ -18,6 +18,16 @@ import {
 import { MobileFilters, MobileRow, MobileSelectBar, MobileSort, StackedFields } from "./data-table-mobile";
 import { DataTableHead } from "./data-table-head";
 import { DataTableLeadingRow } from "./data-table-leading-row";
+import {
+  DataTableGroupBand,
+  DataTableLoadMoreFooter,
+  groupLevels,
+  groupRows,
+  useGroupBandTops,
+  type DataTableGroupBy,
+  type DataTableLoadMore,
+} from "./data-table-groups";
+export type { DataTableGroupBy, DataTableLoadMore } from "./data-table-groups";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
 import { useLargeText } from "../hooks/use-large-text";
 import { cn } from "../lib/cn";
@@ -472,7 +482,9 @@ export interface DataTableProps<T> {
    * contiguous (pair with a matching default sort). `mobileGroupLabel` formats
    * the header. Desktop is unaffected. Feedback #317.
    */
-  mobileGroupBy?: (row: T) => string;
+  mobileGroupBy?: ((row: T) => string) | DataTableGroupBy<T>;
+  /** The section header's words for `mobileGroupBy`'s key. Wins over a level's own
+   *  `label` when `mobileGroupBy` is a {@link DataTableGroupBy}. */
   mobileGroupLabel?: (key: string) => ReactNode;
   /**
    * Fully replace the default mobile card body (bold primary + labelled
@@ -552,6 +564,32 @@ export interface DataTableProps<T> {
    * `fillHeight` or `maxBodyHeight`). Default: it scrolls with the rows.
    */
   leadingRowSticky?: boolean;
+  /**
+   * 0.48 (keksdose dev #605): group the desktop table's rows under full-width bands, one
+   * level or two (period → day). Each band is a row header spanning the visible columns
+   * (selection column included, hidden and fit-hidden columns not) with a label and an
+   * end slot (counts, totals), and opens its own `<tbody>`, so a screen reader announces
+   * it as the reader enters the group; the period band opens the first day's. Rows must
+   * already be ordered so equal keys are contiguous (as for `mobileGroupBy`); grouping
+   * runs over the rows on screen, page by page.
+   *
+   * The bands are sticky: the period under the header (and under a sticky
+   * {@link leadingRow}), the day under the period — measured offsets, inside the table's
+   * own scroller (`fillHeight` or `maxBodyHeight`). The `leadingRow` stays above the first
+   * group. On a phone pass the same level to `mobileGroupBy`:
+   * `groupBy={[period, day]} mobileGroupBy={period}`. See {@link DataTableGroupBy}.
+   */
+  groupBy?: DataTableGroupBy<T> | readonly [DataTableGroupBy<T>, DataTableGroupBy<T>?];
+  /**
+   * 0.48 (keksdose dev #605): a "load more" footer in place of the pager. The table
+   * renders every row it is given (as `paginated={false}` does — pass that too, to say
+   * so), and the footer asks the owner for the next slice: as it scrolls into view (an
+   * IntersectionObserver, guarded against double calls while one is in flight) and with
+   * a button the keyboard reaches, named by the app ("Load August 2026"). With
+   * `serverPagination` it replaces that pager as well. Both layouts: on a phone it is the
+   * card list's last item. See {@link DataTableLoadMore}.
+   */
+  loadMore?: DataTableLoadMore;
   /**
    * Row height. `"compact"` is lenkbank's in-card tables: five `text-xs` tables with
    * `px-2 py-1` cells sitting inside cards, which at the default padding came out at
@@ -807,14 +845,17 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
 
-/** Arrow/Home/End between the focusable rows of one `<tbody>` — the roving half of
+/** Arrow/Home/End between the focusable rows of the table's bodies — the roving half of
  *  the keyboard-activatable rows (see the row's `onKeyDown`). */
 function moveRowFocus(from: HTMLElement, key: string): boolean {
   if (!(key in ROW_NAV_KEYS)) return false;
-  const body = from.parentElement;
-  if (!body) return false;
-  const rows = Array.from(body.children).filter(
-    (el): el is HTMLElement => el instanceof HTMLElement && el.hasAttribute("data-row-nav"),
+  // Every body of the table: a grouped table (`groupBy`, 0.48) has one per group.
+  const table = from.closest("table");
+  if (!table) return false;
+  const rows = Array.from(table.tBodies).flatMap((body) =>
+    Array.from(body.children).filter(
+      (el): el is HTMLElement => el instanceof HTMLElement && el.hasAttribute("data-row-nav"),
+    ),
   );
   const i = rows.indexOf(from);
   const target =
@@ -882,6 +923,8 @@ export function DataTable<T>({
   desktopSwipeActions,
   leadingRow,
   leadingRowSticky = false,
+  groupBy,
+  loadMore,
   density = "comfortable",
   sortCycle = "tri",
   chrome = "full",
@@ -1076,7 +1119,7 @@ export function DataTable<T>({
   // `paginated={false}` is expressed as "page size = everything" rather than as a
   // second code path, so slicing, the page clamp and the range summary all keep
   // exactly one definition.
-  const unpaged = !isServer && !paginated;
+  const unpaged = !isServer && (!paginated || !!loadMore);
   const effectivePageSize = isServer
     ? serverPagination!.pageSize
     : unpaged || pageSize === Infinity
@@ -1288,7 +1331,9 @@ export function DataTable<T>({
   // 0.47 (keksdose S4): the scroller's visible width, as `--dt-visible-w` on it, for the
   // expansion row's pinned content (below). Set on the element, not in state: a resize
   // re-renders nothing. Only a table that can expand a row measures.
-  const measuresVisibleWidth = isMdUp && !!expandedRow;
+  // The group bands and the load-more footer pin their content the same way (0.48).
+  const levels = groupLevels(groupBy);
+  const measuresVisibleWidth = isMdUp && (!!expandedRow || levels.length > 0 || !!loadMore);
   useEffect(() => {
     const el = desktopScroller.current;
     if (!measuresVisibleWidth || !el || typeof ResizeObserver === "undefined") return;
@@ -1491,9 +1536,20 @@ export function DataTable<T>({
   // Consecutive grouping of the (already-sorted) mobile slice into labelled
   // sections for the "assistance"-style list (feedback #317). Null unless the
   // caller opts in via `mobileGroupBy`.
-  const mobileGroups: { key: string; rows: T[] }[] | null = mobileGroupBy
+  // The desktop's bands (0.48, keksdose dev #605), over the rows on screen.
+  const tableRef = useRef<HTMLTableElement | null>(null);
+  const desktopGroups = isMdUp && levels.length > 0 ? groupRows(slice, levels) : null;
+  const bandTops = useGroupBandTops(
+    tableRef,
+    !!desktopGroups,
+    `${levels.length}:${leadingRowSticky && !!leadingRow}:${desktopGroups?.[0]?.key ?? ""}`,
+  );
+  // `mobileGroupBy` may be a desktop `groupBy` level (0.48), its label and end slot too.
+  const mobileLevel = typeof mobileGroupBy === "function" ? null : (mobileGroupBy ?? null);
+  const mobileKey = typeof mobileGroupBy === "function" ? mobileGroupBy : mobileGroupBy?.key;
+  const mobileGroups: { key: string; rows: T[] }[] | null = mobileKey
     ? mobileSlice.reduce<{ key: string; rows: T[] }[]>((acc, row) => {
-        const key = mobileGroupBy(row);
+        const key = mobileKey(row);
         const last = acc[acc.length - 1];
         if (last && last.key === key) last.rows.push(row);
         else acc.push({ key, rows: [row] });
@@ -1631,8 +1687,15 @@ export function DataTable<T>({
           {mobileGroups
             ? mobileGroups.map((g) => (
                 <Fragment key={`hb-group:${g.key}`}>
-                  <li className="sticky top-0 z-10 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur">
-                    {mobileGroupLabel ? mobileGroupLabel(g.key) : g.key}
+                  <li className="sticky top-0 z-10 flex flex-wrap items-baseline justify-between gap-x-3 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur">
+                    <span className="min-w-0">
+                      {mobileGroupLabel
+                        ? mobileGroupLabel(g.key)
+                        : mobileLevel?.label
+                          ? mobileLevel.label(g.key, g.rows)
+                          : g.key}
+                    </span>
+                    {mobileLevel?.end && <span className="ms-auto tabular-nums">{mobileLevel.end(g.key, g.rows)}</span>}
                   </li>
                   {g.rows.map(renderMobileRow)}
                 </Fragment>
@@ -1658,6 +1721,16 @@ export function DataTable<T>({
               {/* Isolated for the reason spelled out on LoadingText. */}
               <bdi>{labels.loading}</bdi>
             </li>
+          )}
+          {/* The owner's next slice (0.48), once every row held is revealed. */}
+          {loadMore && !canRevealMoreMobile && (
+            <DataTableLoadMoreFooter
+              as="li"
+              loadMore={loadMore}
+              rowCount={sorted.length}
+              labels={labels}
+              compact={compact}
+            />
           )}
         </ul>
         {/* The phone's totals: a summary card after the list rather than one more
@@ -1705,7 +1778,7 @@ export function DataTable<T>({
         )}
         {/* Client-side mobile lists scroll endlessly (sentinel above); only
             server-paginated tables keep the pager here. */}
-        {isServer && (
+        {isServer && !loadMore && (
           <Pagination
             page={safePage}
             totalPages={totalPages}
@@ -1766,6 +1839,7 @@ export function DataTable<T>({
             the rows that are about to be replaced, and the dimmed body says the same
             to the eye. The pager stays live — see `ServerPagination.isLoading`. */}
         <table
+          ref={tableRef}
           className={cn("w-full", compact ? "text-xs" : "text-sm")}
           data-fit-grow={growDrawn ? "" : undefined}
           aria-label={labels.table}
@@ -1804,15 +1878,14 @@ export function DataTable<T>({
             moveResize={moveResize}
             finishResize={finishResize}
           />
-          <tbody
-            className={cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity")}
-          >
-            {leadingRow && (
+          {(() => {
+            const bodyClass = cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity");
+            const leading = leadingRow ? (
               <DataTableLeadingRow colSpan={totalColSpan} sticky={leadingRowSticky}>
                 {leadingRow}
               </DataTableLeadingRow>
-            )}
-            {slice.map((row, rowIndex) => {
+            ) : null;
+            const renderRow = (row: T, rowIndex: number) => {
               const expanded = isExpanded?.(row) ?? false;
               const expansion = expanded ? expandedRow?.(row) : null;
               const rowInteractive = !!onRowClick || !!selection;
@@ -2034,20 +2107,70 @@ export function DataTable<T>({
                   )}
                 </Fragment>
               );
-            })}
-            {slice.length === 0 && (
-              <tr>
-                <td
-                  colSpan={totalColSpan}
-                  className={cn("text-center text-muted", compact ? "px-2 py-2" : "px-3 py-4")}
-                >
-                  {/* Nothing is not the same as not-yet: "no results" while the first
-                      page is still in flight is a claim the table cannot make. */}
-                  {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? labels.empty)}
-                </td>
-              </tr>
-            )}
-          </tbody>
+            };
+            const emptyRow =
+              slice.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={totalColSpan}
+                    className={cn("text-center text-muted", compact ? "px-2 py-2" : "px-3 py-4")}
+                  >
+                    {/* Nothing is not the same as not-yet: "no results" while the first
+                        page is still in flight is a claim the table cannot make. */}
+                    {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? labels.empty)}
+                  </td>
+                </tr>
+              ) : null;
+            if (!desktopGroups) {
+              return (
+                <tbody className={bodyClass}>
+                  {leading}
+                  {slice.map(renderRow)}
+                  {emptyRow}
+                </tbody>
+              );
+            }
+            // Grouped (0.48, keksdose dev #605): one `<tbody>` per innermost group, its
+            // band the row header; the leading row (and the empty state) in their own
+            // before the first group.
+            const band = (level: 1 | 2, def: DataTableGroupBy<T>, g: { key: string; rows: T[] }) => (
+              <DataTableGroupBand
+                level={level}
+                colSpan={totalColSpan}
+                top={level === 1 ? bandTops[0] : bandTops[1]}
+                compact={compact}
+                label={def.label ? def.label(g.key, g.rows) : g.key}
+                end={def.end?.(g.key, g.rows)}
+              />
+            );
+            const rowsOf = (g: { rows: T[]; start: number }) => g.rows.map((r, i) => renderRow(r, g.start + i));
+            return (
+              <>
+                {(leading || emptyRow) && (
+                  <tbody className={bodyClass}>
+                    {leading}
+                    {emptyRow}
+                  </tbody>
+                )}
+                {desktopGroups.map((g1) =>
+                  g1.children ? (
+                    g1.children.map((g2, j) => (
+                      <tbody key={`g:${g1.key}:${g2.key}:${g2.start}`} className={bodyClass}>
+                        {j === 0 && band(1, levels[0], g1)}
+                        {band(2, levels[1], g2)}
+                        {rowsOf(g2)}
+                      </tbody>
+                    ))
+                  ) : (
+                    <tbody key={`g:${g1.key}:${g1.start}`} className={bodyClass}>
+                      {band(1, levels[0], g1)}
+                      {rowsOf(g1)}
+                    </tbody>
+                  ),
+                )}
+              </>
+            );
+          })()}
           {showFooter && (
             // Sticky to the scroller's bottom edge for the same reason the header is
             // sticky to its top: the body scrolls inside a bounded wrapper, and a
@@ -2103,8 +2226,13 @@ export function DataTable<T>({
             </tfoot>
           )}
         </table>
+        {/* In the scroller, after the rows (0.48): it comes into view as the last row
+            does, under `fillHeight` too, where the body is the scroller. */}
+        {loadMore && (
+          <DataTableLoadMoreFooter loadMore={loadMore} rowCount={sorted.length} labels={labels} compact={compact} />
+        )}
       </div>
-          {!unpaged && (
+          {!unpaged && !loadMore && (
             <Pagination
               page={safePage}
               totalPages={totalPages}

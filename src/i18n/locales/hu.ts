@@ -392,6 +392,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       booleanTrue: "Igen",
       booleanFalse: "Nem",
       booleanUnset: "Nincs megadva",
+      loadMore: "Továbbiak betöltése",
+      allLoaded: "Minden sor betöltve",
       sortBy: "Rendezés alapja",
       sortDefault: "Alapértelmezett sorrend",
       sortAscending: "Növekvő",

@@ -283,6 +283,55 @@ bubble on hover and focus, with no `title` and no self-describing `aria-describe
 | kastlan | Nothing to write. R12 and R13 show on a plain bump (the top-bar menus gain their tooltip); the rest are opt-in |
 | kurvenschmiede | Nothing to write. R12 and R13 show on a plain bump (the top-bar menus gain their tooltip); the rest are opt-in |
 
+## keksdose dev #605: period groups and load more
+
+Opt-in, nothing changes on a plain bump. keksdose docs/transactions-by-period.md §6 (Marcel
+accepted it, 2026-10-21).
+
+- **`groupBy`** (new type `DataTableGroupBy<T>`: `key`, `label?`, `end?`) takes one level or a
+  pair, `[period, day]`. Each group opens its own `<tbody>` headed by a band row: one
+  `<th scope="rowgroup">` spanning the visible columns (selection column included; hidden and
+  `fitPriority`-hidden columns not), the label at the start and the `end` slot at the visible
+  end (pinned to the scroller's width like the expansion panel). Grouping runs over the rows on
+  screen, consecutive runs of equal keys, so the rows must arrive in that order (the date sort).
+  `end(key, rows)` gets the group's loaded rows; a total over a period not fully loaded is the
+  app's own figure, looked up by `key`. The `leadingRow` keeps its place above the first group.
+- **Sticky, stacked:** the period band sticks under the header (and under a sticky
+  `leadingRow`), `z-[4]`; the day band under the period, `z-[3]`; offsets measured and followed
+  (Large text, a wrapping end slot). A new period scrolling up covers the day still pinned above
+  it. Works wherever the body is the scroller: `fillHeight` or `maxBodyHeight`.
+- **Keyboard and screen reader:** the bands are row headers, announced as the reader enters a
+  group; they are not tab stops. The rows' Arrow/Home/End roving now runs across every `<tbody>`.
+- **`mobileGroupBy`** also takes a level: `mobileGroupBy={period}` gives the phone's sections the
+  same label and end slot. One level only on the phone (its sticky section header).
+- **`loadMore`** (new type `DataTableLoadMore`: `hasMore`, `onLoadMore`, `loading?`, `label?`,
+  `endLabel?`, `auto?`): the table renders every row it is given and draws a footer in place of
+  the pager, in the scroller after the last row (on a phone, the card list's last item). As it
+  nears the view (an IntersectionObserver, 200px ahead) it calls `onLoadMore` once per row count,
+  never while `loading`, and asks again only when a fresh observation finds it still in view
+  after the rows arrived (a short slice). The button stays for the keyboard, named by the app
+  (default `dataTable.loadMore`, "Load more"); while `loading` it says "Loading…", stays
+  focusable and ignores presses; at the end `endLabel` (default `dataTable.allLoaded`, "All rows
+  loaded"; `null` for nothing), which takes the focus if the button had it. With
+  `serverPagination` it replaces that pager too. Pass `paginated={false}` beside it on a client
+  table, to say so. New keys `dataTable.loadMore` / `dataTable.allLoaded`, seven catalogues.
+
+Checked in headless Chromium (showcase build, `vite preview`, Data table → "Period groups and
+load more", 218 rows over three months, `fillHeight`, sticky leading row on), at 1280 and 1545
+with the sidebar: header 36px, leading row to 64, the period band stuck at `top: 64px`, the day
+bands at `100px` (period over day at y 75, day at y 100 by hit test); a new month's band slid
+over the pinned day band (screenshot); every end slot's right edge equal (1155 / 1420, the
+scroller's 1182 / 1447 less its padding and gutter); scrolled to the end the footer said
+"Loading…" and loaded August once (1 load, 147 rows; the first build loaded twice — the stale
+"in view" — fixed and pinned by a test); Tab reached "Load July 2026", Enter loaded it (218 rows)
+and focus moved to "No older transactions"; no sideways scroll on the page or the scroller.
+
+| App | Change |
+| --- | --- |
+| keksdose | frontend/src/features/transactions/transactions-page.tsx, the register's `<DataTable<Transaction> fillHeight … serverPagination={…}>` (symbols, not lines): under the date sort pass `groupBy={[period, day]}` (period: `key: tx => tx.booking_date.slice(0, 7)` or the week key of §3.3, `label` the month name, `end` the §5 period figures "count · in · out" by key; day: `key: tx => tx.booking_date`, `label` the phone list's `formatGroupLabel`, `end` "2 transactions") and `loadMore={{ hasMore: !!next_cursor, loading: txns.isFetching, onLoadMore, label: t("…load", { period }) /* "Load August 2026" / "Load more of September 2026" from next_booking_date */ }}`; under any other sort pass neither and keep `serverPagination`'s pager (§3.1). `leadingRowSticky` (dev #603) stacks above the bands. The interim "bands as `rowAttributes`-styled rows" (§6) is not needed. Phone: mobile-transaction-list.tsx keeps its own cards, day bands (`SectionLabel variant="band"`, sticky) and sentinel (:119-133, :251-257) — the kit's `mobileGroupBy` is one level and keksdose's phone list is not a DataTable; its new period band (§3.2) stays app code, the sentinel can move to the cursor as is. accounts-page.tsx:803 (`mobileGroupBy={(a) => a.type}`) and feedback-page.tsx:335 keep their function form |
+| kastlan | Nothing, unless a list wants groups or load more |
+| kurvenschmiede | Nothing, unless a list wants groups or load more |
+
 ## server-kit 0.19
 
 Install the wheel by URL, pinned by hash (the release fills in the line):

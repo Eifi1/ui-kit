@@ -400,6 +400,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       booleanTrue: "Oui",
       booleanFalse: "Non",
       booleanUnset: "Non défini",
+      loadMore: "Charger plus",
+      allLoaded: "Toutes les lignes sont chargées",
       sortBy: "Trier par",
       sortDefault: "Ordre par défaut",
       sortAscending: "Croissant",

@@ -396,6 +396,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       booleanTrue: "Sì",
       booleanFalse: "No",
       booleanUnset: "Non impostato",
+      loadMore: "Carica altro",
+      allLoaded: "Tutte le righe caricate",
       sortBy: "Ordina per",
       sortDefault: "Ordine predefinito",
       sortAscending: "Crescente",

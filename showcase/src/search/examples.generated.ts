@@ -525,6 +525,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Column cellProps and headProps",
     "fillHeight — a table in a bounded pane",
     "The list page fills the window — FillHeight in an AppShell",
+    "Period groups and load more — groupBy, loadMore",
     "Right-to-left",
     "rowActions, toolbar and the empty label",
     "Totals row: a trial balance",

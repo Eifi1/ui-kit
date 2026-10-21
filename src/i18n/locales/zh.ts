@@ -383,6 +383,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       booleanTrue: "是",
       booleanFalse: "否",
       booleanUnset: "未设置",
+      loadMore: "加载更多",
+      allLoaded: "已加载全部行",
       sortBy: "排序依据",
       sortDefault: "默认顺序",
       sortAscending: "升序",

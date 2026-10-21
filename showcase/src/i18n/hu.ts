@@ -989,6 +989,8 @@ export const hu: Dictionary = {
       "oszlopok elrejtése vagy átrendezése",
       "adatrács",
       "keresés táblázatban",
+      "táblázat sorainak csoportosítása hónap szerint, összegekkel",
+      "további sorok betöltése görgetés közben",
     ],
     "data-table-server": [
       "szerveroldali lapozás",

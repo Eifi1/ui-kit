@@ -115,6 +115,13 @@ export interface DataTableLabels extends DataTableSortLabels {
   booleanTrue: string;
   booleanFalse: string;
   booleanUnset: string;
+
+  // ---- Load more (0.48, keksdose dev #605) ----
+
+  /** The `loadMore` footer's button when the app names nothing ("Load August 2026"). */
+  loadMore: string;
+  /** The `loadMore` footer once nothing is left, unless the app says `endLabel`. */
+  allLoaded: string;
 }
 
 export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
@@ -178,6 +185,8 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
   booleanTrue: "Yes",
   booleanFalse: "No",
   booleanUnset: "Not set",
+  loadMore: "Load more",
+  allLoaded: "All rows loaded",
   // The phone sort control (0.22.0). The same words as `DEFAULT_DATA_TABLE_SORT_LABELS`
   // in data-table.tsx, written out rather than spread in: importing that VALUE here
   // would make data-table.tsx and this module import each other (data-table.tsx reads

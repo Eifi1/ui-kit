@@ -405,6 +405,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       booleanTrue: "Ja",
       booleanFalse: "Nein",
       booleanUnset: "Nicht festgelegt",
+      loadMore: "Mehr laden",
+      allLoaded: "Alle Zeilen geladen",
       sortBy: "Sortieren nach",
       sortDefault: "Standardreihenfolge",
       sortAscending: "Aufsteigend",
