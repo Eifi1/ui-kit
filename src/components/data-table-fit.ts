@@ -38,11 +38,9 @@ export const GROW_CELL_CLASS = "w-full max-w-0 truncate-until-large";
  *  `not-large:whitespace-normal` in its `className`. */
 export const GROW_PEER_CELL_CLASS = "not-large:whitespace-nowrap";
 
-/** For a cell's own flex-wrap row (chips): `white-space` does not stop a flex row from
- *  wrapping, so a row of chips beside a `grow` column stacked one per line. One line at
- *  Normal inside a table with a visible `grow` column (`<table data-fit-grow>`), as the
- *  text beside it; elsewhere and from Large up it wraps as before. */
-export const GROW_PEER_CHIPS_CLASS = "in-data-fit-grow:not-large:flex-nowrap";
+// A cell's own flex-wrap row (chips) is left to wrap beside a `grow` column: a row of
+// badges reads as well stacked, and held to one line it widened the user roster's Status
+// until kastlan's admin pane scrolled 21px at 1280px (0.48 build review 2, kastlan S1).
 
 /** The auto-hide order: lowest `fitPriority` first, the later column first on a tie. */
 export function fitHideOrder<T>(columns: DataTableColumn<T>[]): DataTableColumn<T>[] {

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DataTable } from "../../components/data-table";
 import type { DataTableColumn } from "../../components/data-table";
-import { GROW_PEER_CELL_CLASS, GROW_PEER_CHIPS_CLASS } from "../../components/data-table-fit";
+import { GROW_PEER_CELL_CLASS } from "../../components/data-table-fit";
 import type { RoleVocabulary } from "../../components/account-chips";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import {
@@ -140,17 +140,20 @@ describe("userRosterColumns", () => {
     expect(within(cy).queryByText("Inactive")).not.toBeInTheDocument();
   });
 
-  it("keeps a row's chips on one line at Normal beside a `grow` column (kastlan S2, 0.48)", () => {
-    // The table squeezes every other column to its min-content: a flex-wrap row of chips
-    // stacked one per line. In a grow table only (`data-fit-grow`), and Normal only.
+  it("lets a row's chips stack beside a `grow` column; its text cells keep one line (kastlan S1, 0.48 review 2)", () => {
+    // 0.48's first fix held the chip rows to one line too: "Active" and "Not verified"
+    // side by side widened Status, and kastlan's roster (583px admin pane, both
+    // `fitPriority` columns out, Name at its 10rem floor) scrolled 21px at 1280px. A row
+    // of badges reads as well stacked, so it wraps again.
     stubViewport(true);
     render(<Roster grow="name" />);
     const ben = screen.getByRole("row", { name: /Ben Sample/ });
     const states = within(ben).getByText("Unverified").closest("[data-state]")!.parentElement!;
-    expect(states).toHaveClass("flex-wrap", GROW_PEER_CHIPS_CLASS);
+    expect(states).toHaveClass("flex-wrap");
+    expect(states.className).not.toMatch(/flex-nowrap/);
     const role = within(ben).getByText("Member").closest("[data-role]")!.parentElement!;
-    expect(role).toHaveClass("flex-wrap", GROW_PEER_CHIPS_CLASS);
-    expect(GROW_PEER_CHIPS_CLASS).toBe("in-data-fit-grow:not-large:flex-nowrap");
+    expect(role).toHaveClass("flex-wrap");
+    expect(role.className).not.toMatch(/flex-nowrap/);
     expect(screen.getByRole("table")).toHaveAttribute("data-fit-grow");
     // last_login / created: one line from the cell's own nowrap.
     expect(within(ben).getAllByRole("cell").find((c) => c.dataset.col === "last_login")).toHaveClass(

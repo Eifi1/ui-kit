@@ -43,7 +43,7 @@ Round 6 (Marcel, 2026-10-21: "Now they are not inline with the labels. It has pr
 moving to left and right especially when moving the scroll bar"): with each cue in the flow,
 the strip gave up or regained 1.5rem whenever a cue came or went, so the labels jumped sideways
 at every edge the scroll crossed and the scroll position shifted under the thumb. Now, while
-the strip overflows at all, its box keeps a 1.5rem gutter at BOTH ends (`px-6`), and each cue
+the strip overflows at all, its box keeps a 24px gutter at BOTH ends (`px-[24px]`), and each cue
 sits absolute in its own (`[data-tabs-cue-gutter]`, `start-0` / `end-0`), with the rule beneath
 it and lifted onto the labels' centre by the underline's height (`border-b` + `pb-px` = the
 tab's 2px `border-b-2` over the strip's 1px rule). A strip that fits has no gutters, so its
@@ -55,11 +55,15 @@ glyph and label centres equal (0.0px apart); no glyph over a label; axe: nothing
 
 Same prop, no code change. › only at the start, ‹ › in the middle, ‹ only at the end; border 0,
 background transparent, shadow none.
-Each cue is 1.5rem wide at every text size (24/30/36px at Normal/Large/Extra large), with the
-48px touch target from Large up as an invisible hit area over the strip's faded edge, not as
-row width (Kurvenschmiede N3): at 360px Large the showcase's "Loops" strip went from 100px to
-136px (two 48px cues had taken 96px of a 196px row), "Report queues" from 182 to 218px; a tap
-5px outside either glyph's box lands on the cue; axe: nothing new on the page.
+Each gutter and cue is 24 PIXELS wide at every text size, with the 48px touch target from
+Large up as an invisible hit area over the strip's faded edge (`HIT_AREA_LARGE`, the `::after`),
+not as row width (Kurvenschmiede N3). Not 1.5rem: the rem grows with the text size (24/30/36px),
+and at Extra large on a 360px phone the two 36px gutters left Kurvenschmiede's sheet strip 154 of
+226px, so a sheet tab wrapped to 7 lines (build review 2, KS N1). Measured in headless Chromium
+(showcase, Tabs — overflowCue, 360px): gutters 24/24px at Normal, Large and Extra large; the
+tablist at x 57 / 65 / 73, width 246 / 230 / 214px of a 294 / 278 / 262px box, the same at the
+start, middle and end of the scroll (no jumps); glyph centre to label centre 0 / 0.5 / 0px; hit
+area 48×48px from Large up.
 
 | App | Change |
 | --- | --- |
@@ -79,7 +83,7 @@ count={n} /> } })`; an app's own section carries `badge` itself (it passes throu
 
 | App | Change |
 | --- | --- |
-| keksdose | frontend/src/features/admin/admin-page.tsx:1056-1084: the `groups` memo can put the counts on the rows instead of (or as well as) the help lines — `overview` gets `badge: <AdminWaitingBadge count={verdict + feedback} />`, `messaging` gets `badge: <AdminWaitingBadge count={support} />`, so the rows add up to the account menu's badge (the sum of ADMIN_WAITING_COUNTS, use-admin-attention.ts:9). Drop "the kit's section row has no badge slot yet" (:1063). If the help lines go back to the catalogue's, the memo shrinks to the two `badge`s; `AdminWaitingBadge` is in the barrel since 0.45 |
+| keksdose | frontend/src/features/admin/admin-page.tsx, the `groups` memo (`const groups = useMemo(…)`, with the #450 help-line code; lines drift): keep the help lines — they say what the number is, which the badge does not — AND add the counts to the rows: `overview` gets `badge: <AdminWaitingBadge count={verdict + feedback} />`, `messaging` gets `badge: <AdminWaitingBadge count={support} />`, so the rows add up to the account menu's badge (the sum of ADMIN_WAITING_COUNTS, use-admin-attention.ts:9). Drop "the kit's section row has no badge slot yet" from the comment above the memo. `AdminWaitingBadge` is in the barrel since 0.45 |
 | kastlan | Optional: the Overview row takes `<AdminWaitingBadge>` with the `ADMIN_BADGE_COUNTS` sum (frontend/src/features/settings/admin-catalogue.tsx:48, passed from features/settings/pages/admin-page.tsx:29); nothing changes on a bump. Pass it in as an option rather than reading the attention query inside `useAdminCatalogue`, which also feeds the global search (app-global-search.tsx:29) |
 | kurvenschmiede | Optional: `badges: { overview: <AdminWaitingBadge count={waiting} /> }` with the account menu's sum (`feedback_waiting` + `deletion_requests`, account-menu.tsx:142), passed into `useAdminSections` from frontend/src/features/admin/admin-page.tsx:52 rather than read inside the hook, which also feeds the top bar's search (top-bar-parts.tsx:45); nothing changes on a bump |
 
@@ -121,12 +125,15 @@ options, both opt-in — a table that sets neither is unchanged on a bump:
   the bump with nothing to clear; the stale entry leaves storage with the next resize.
   It keeps at least 10rem (`min-w-[10rem]` on its header): once no `fitPriority` column is left
   to leave out, the table scrolls sideways rather than crushing it. Every other cell of the
-  table keeps one line at Normal text size (`not-large:whitespace-nowrap`, and the kit's chip
-  rows with it), so "CHF 2'568.38", a name or a date with its time no longer breaks in two
+  table keeps one line at Normal text size (`not-large:whitespace-nowrap`), so "CHF 2'568.38", a name or a date with its time no longer breaks in two
   beside a `grow` column (kastlan S2), the fit measures the columns at that one-line width, and
   Large text wraps as before; a column whose prose should wrap passes
   `not-large:whitespace-normal` in its `className`, and an app's own `truncate-until-large`
-  classes added for this can stay or go.
+  classes added for this can go (kastlan N1). A cell's own row of chips (the user roster's states
+  and roles) still wraps: held to one line it widened the roster's Status until kastlan's
+  583px admin pane scrolled 21px at 1280px (build review 2, kastlan S1). The kit's feedback User
+  column is at most 12rem, one line and an ellipsis with the full value in its `title`, so an
+  email standing in for a missing name no longer costs Votes and Category their room (keksdose N2).
 - **`fitPriority: n`** — while the TABLE's scroller is narrower than the table needs (with a
   `grow` column: the others plus 10rem for it), the table leaves the column out; lowest `n`
   first, the later column first on a tie, and back in reverse as soon as the table as it is
@@ -154,11 +161,16 @@ and Email out), at 900px 6/9 (Resolved too); at each, scroller `scrollWidth == c
 sideways scroll), the last column ends inside the scroller, the subject ellipsises (cell 303 /
 275 / 118px), rows stay one line (45px). With the drawer open at 1178px: 6/9, and Email, URL and
 Resolved unticked with "hidden for width". axe: nothing on the table or the drawer.
+At Large and Extra large (build review 2, kastlan N2; showcase Feedback inbox, the first table,
+sidebar open): Large 1440px fits (Subject 235px, Category out); Large 1280px 791px of room, Subject at its
+200px floor, scrolls 125px; Extra large 1440 / 1280px 863 / 703px of room, Subject 240px (its
+floor), scrolls 236 / 396px. Every candidate is out by then: the rest (#, Date, Subject, User,
+Status, actions) grow with the text and the table scrolls sideways as designed; the page never does.
 
 | App | Change |
 | --- | --- |
 | keksdose | The interim goes, in the same commit as the bump: frontend/src/features/feedback/feedback-page.tsx — delete `FIT_COLUMNS` and `fitFeedbackColumns` with their comment, use `kitColumns` as `columns` (drop that `useMemo`), drop `className="@container/table"` with its comment, and drop the two imports the interim added (`type DataTableColumn` from data-table, `cn` from ui — lint fails on them otherwise). Keep both and the CSS `hidden` would make the kit measure a URL column of 0px and leave out the next candidate for nothing |
-| kastlan | Nothing to write: frontend/src/features/feedback/pages/feedback-page.tsx:139 takes `useFeedbackColumns`, so its inbox fits on the bump (no Votes column: 9 columns) |
+| kastlan | Nothing to write: frontend/src/features/feedback/pages/feedback-page.tsx:139 takes `useFeedbackColumns`, so its inbox fits on the bump (no Votes column: 9 columns). The 8 `truncate-until-large(-words)` classes the `grow` adoption on `feat/kit-0.48` added (lease rent columns, phone, journal debit/credit, unit building, request reporter, estate name) can go: the kit keeps those cells one line at Normal (N1). The user roster (users-panel.tsx) needs nothing: its chips stack again |
 | kurvenschmiede | Nothing to write: frontend/src/features/feedback/feedback-page.tsx:154 takes `useFeedbackColumns` (`votes: publicReader`), so its inbox fits on the bump |
 
 ## keksdose UX wave A (dev #611, #612, #613)
@@ -186,7 +198,14 @@ Four asks from keksdose's UX brief of 2026-10-21, each built there as an interim
   keeps to one line, with a More / Less toggle after it (`aria-expanded`, `aria-controls` the
   message; `common.showMore` / `common.showLess`, new in the seven catalogues). It shows only
   while the line cuts the message off. From `md` up nothing changes. Ignored on a whole-row
-  banner (`href` / `onClick`).
+  banner (`href` / `onClick`). `EmailVerificationBanner` takes `clampMobile` too (kastlan S2): it
+  passes it through and moves the resend's outcome ("Sent", the error) out of the message to sit
+  after "Send again", at every width, so it is never hidden behind "More".
+  **Testing it:** the toggle shows unless the line is measured to hold the message, and jsdom
+  lays nothing out (`clientHeight` is 0), so in a jsdom test "More" ALWAYS renders. Assert the
+  toggle and the `max-md:line-clamp-1` on the message (`aria-controls`) there; "no More when it
+  fits" needs a real browser (Playwright), or stub `clientHeight` / `scrollHeight` on the
+  message's element.
 - **`AppShellNavItem.shortLabelFrom` (dev #613).** `"large"` or `"xlarge"`: the phone bar uses
   `shortLabel` only from that text size up, and the full label below it. Default `"normal"`:
   the short label at every size, as before.
@@ -202,8 +221,8 @@ the toggle is not displayed and the text is unclamped. axe: nothing on the strip
 | App | Change |
 | --- | --- |
 | keksdose | **R8:** delete the rule and its comment in frontend/src/app.css:167-178; in frontend/src/features/assistant/assistant-launcher.tsx delete the clearance effect (:150-163) and the docblock's last sentences about it (:103-107), and instead of `if (!shown \|\| covered) return null` (:189) render `if (!shown) return null` with `hidden={covered}` on the `FloatingPanel`, so the room stays while an editor or a dialog covers the corner (the reason :150-152 gives). **R9:** frontend/src/features/assistant/assistant-launcher.tsx:39 becomes `'[aria-modal="true"]:not([data-tour-overlay])'`, and :27-30 of the comment say so. **R10:** frontend/src/app/beta-perf-banner.tsx:87-104 become `<AlertBanner tone="neutral" variant="strip" icon={<Server />} onDismiss={dismiss} clampMobile>{t("beta.perf_notice")}</AlertBanner>`; drop the `expanded` state (:64) and `Button` from the import (:4), the comment's last sentence (:84), and `beta.perf_more` / `beta.perf_less` in the locale JSONs (:87-88 each); its test (frontend/src/app/__tests__/beta-perf-banner.test.tsx:59-67) names the toggle "More" / "Less" (the kit's words). **R11:** frontend/src/app/layout.tsx:59 becomes `shortLabel: item.shortLabelKey ? t(item.shortLabelKey) : undefined, shortLabelFrom: "large",`, and `useTextSize` (:43, and its import on :4) goes |
-| kastlan | Nothing to write, and nothing changes: no `FloatingActionButton`, `FloatingPanel` or `FloatingActionGroup` in frontend/src (checked on `feat/kit-0.48`), so `--app-float-clearance` is never set and `<main>` keeps nav + 1.5rem |
-| kurvenschmiede | Nothing to write, and nothing changes: no floating launcher in frontend/src (checked on `feat/dynamics`). frontend/src/app/layout.tsx:45 passes `shortLabel` at every size, which stays the default |
+| kastlan | Nothing to write, and nothing changes: no `FloatingActionButton`, `FloatingPanel` or `FloatingActionGroup` in frontend/src (checked on `feat/kit-0.48`), so `--app-float-clearance` is never set and `<main>` keeps nav + 1.5rem. Optional (S2): `clampMobile` on the `EmailVerificationBanner` in frontend/src/features/auth/components/verify-email-banner.tsx:18-22 (`VerifyEmailBanner`), the ~110px banner on a 390px phone (prod feedback #22, KX-5); the resend's "Sent" / error then shows after "Send again" |
+| kurvenschmiede | Nothing to write, and nothing changes: no floating launcher in frontend/src (checked on `feat/dynamics`). frontend/src/app/layout.tsx:45 passes `shortLabel` at every size, which stays the default. Optional: `clampMobile` on the deletion-requests strip (frontend/src/features/admin/deletion-requests.tsx:44-58, `DeletionRequestsBanner`'s `AlertBanner`); nothing changes on a bump |
 
 ## server-kit 0.19
 

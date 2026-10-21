@@ -280,7 +280,7 @@ export function Tabs<T extends string>({
   // each cue in the flow beside the strip, so it took 24px the moment it appeared and the
   // labels jumped sideways at every edge the scroll crossed ("It has problems with moving
   // to left and right especially when moving the scroll bar"). Now the strip box keeps a
-  // 24px gutter at BOTH ends for as long as the strip overflows at all (`px-6`, see
+  // 24px gutter at BOTH ends for as long as the strip overflows at all (`px-[24px]`, see
   // `stripBox`), and each gutter is absolute in that padding, so a cue coming or going
   // never moves the strip, its labels or the scroll position under the thumb. A strip
   // that fits has no gutters: its width changes only when it starts or stops overflowing.
@@ -289,7 +289,10 @@ export function Tabs<T extends string>({
   // sits on the rule (`-mb-px`), so the labels are centred 2px above the box's bottom —
   // the gutter's 1px rule (`border-b`) plus 1px more (`pb-px`).
   // 24px wide at every text size (KS N3): at Large `sm`'s 48px minimum made each cue
-  // 48px, and at 360px the two left a two-tab strip 100px. The 48px touch target is an
+  // 48px, and at 360px the two left a two-tab strip 100px. 24 PIXELS, not `w-6`: the rem
+  // grows with the text size (24 / 30 / 36px), and at Extra large on a 360px phone the two
+  // gutters took 72px of a 226px strip and a sheet tab wrapped to seven lines (0.48 build
+  // review 2, KS N1). The 48px touch target is an
   // invisible hit area round the glyph instead (`HIT_AREA_LARGE`, as `2xs`), over the
   // strip's faded edge, not room taken from the row. The wrapper inside the gutter is
   // ours because IconButton puts its tooltip's span around the button.
@@ -297,7 +300,7 @@ export function Tabs<T extends string>({
     <div
       data-tabs-cue-gutter={side}
       className={cn(
-        "absolute inset-y-0 flex w-6 items-center justify-center border-b border-subtle pb-px",
+        "absolute inset-y-0 flex w-[24px] items-center justify-center border-b border-subtle pb-px",
         side === "start" ? "start-0" : "end-0",
       )}
     >
@@ -307,7 +310,7 @@ export function Tabs<T extends string>({
             size="sm"
             variant="ghost"
             className={cn(
-              "w-6 large:min-w-0 bg-transparent text-muted hover:bg-transparent hover:text-primary",
+              "w-[24px] large:min-w-0 bg-transparent text-muted hover:bg-transparent hover:text-primary",
               // Over the strip's faded edge, for ‹ too.
               HIT_AREA_LARGE,
               "large:after:z-[1]",
@@ -620,7 +623,7 @@ export function Tabs<T extends string>({
   // never re-parents it; the gutters only while it overflows at all.
   const gutters = cue && fade.overflow !== undefined;
   const stripBox = cue ? (
-    <div className={cn("relative flex min-w-0", !onAdd && "flex-1", gutters && "px-6")}>
+    <div className={cn("relative flex min-w-0", !onAdd && "flex-1", gutters && "px-[24px]")}>
       {tablist}
       {gutters && gutterAt("start", cueStart)}
       {gutters && gutterAt("end", cueEnd)}

@@ -199,6 +199,40 @@ describe("EmailVerificationBanner", () => {
   });
 });
 
+describe("EmailVerificationBanner — clampMobile (0.48, kastlan S2)", () => {
+  it("passes clampMobile to its AlertBanner: the message clamps, with More", () => {
+    render(<EmailVerificationBanner onResend={() => {}} clampMobile />);
+    const more = screen.getByRole("button", { name: "More" });
+    const body = document.getElementById(more.getAttribute("aria-controls")!)!;
+    expect(body).toHaveClass("max-md:line-clamp-1");
+    expect(body).toHaveTextContent("Please confirm your email address.");
+  });
+
+  it("keeps the resend's outcome OUTSIDE the clamp, beside 'Send again', never behind More", async () => {
+    const user = userEvent.setup();
+    let fail!: (error: unknown) => void;
+    render(<EmailVerificationBanner onResend={() => new Promise((_, reject) => (fail = reject))} clampMobile />);
+    const more = screen.getByRole("button", { name: "More" });
+    const body = document.getElementById(more.getAttribute("aria-controls")!)!;
+    // One live region, there from the start (a region added later is often not read out).
+    const status = document.querySelectorAll(STATUS);
+    expect(status).toHaveLength(1);
+    expect(body.contains(status[0]!)).toBe(false);
+    await user.click(screen.getByRole("button", { name: "Send again" }));
+    fail(new Error("500"));
+    const failed = await screen.findByText("Could not send the confirmation email", { selector: STATUS });
+    expect(body.contains(failed)).toBe(false);
+    expect(failed.parentElement).toContainElement(screen.getByRole("button", { name: "Send again" }));
+  });
+
+  it("leaves the status in the message without clampMobile, as before", () => {
+    render(<EmailVerificationBanner onResend={() => {}} />);
+    expect(screen.queryByRole("button", { name: "More" })).toBeNull();
+    const status = document.querySelector(STATUS)!;
+    expect(status.parentElement).toHaveTextContent("Please confirm your email address.");
+  });
+});
+
 describe("EmailVerificationBanner — describeError (0.30.0)", () => {
   it("shows the server's own sentence for a refused resend, else the kit's", async () => {
     const throttled = Object.assign(new Error("429"), { detail: "Try again in 5 minutes." });

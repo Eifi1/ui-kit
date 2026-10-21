@@ -539,7 +539,18 @@ export function feedbackColumns<T extends FeedbackTableRow>({
     {
       key: "user",
       header: labels.columnUser,
-      cell: (row) => <span className="text-secondary">{feedbackSubmitter(row, labels)}</span>,
+      // At most 12rem, one line and an ellipsis, the whole value in the title (0.48 build
+      // review 2, keksdose N2): beside the grow Subject every other cell keeps one line, so
+      // an email standing in for a missing name widened the column and cost Votes and
+      // Category their room first. The open report shows both in full.
+      cell: (row) => {
+        const who = feedbackSubmitter(row, labels);
+        return (
+          <span title={who} className="block max-w-[12rem] truncate-until-large text-secondary">
+            {who}
+          </span>
+        );
+      },
       sortBy: (row) => feedbackSubmitter(row, labels),
       // Name AND email, so either finds the person; the erased ones by the placeholder
       // (their context holds no name any more).

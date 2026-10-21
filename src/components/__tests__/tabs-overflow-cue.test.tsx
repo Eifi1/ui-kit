@@ -112,8 +112,8 @@ describe("Tabs overflowCue", () => {
     const endCue = more()!.closest("[data-tabs-overflow-cue]")!;
     expect(endCue).toHaveAttribute("data-tabs-overflow-cue", "end");
     // In the box's end gutter (its padding), not laid over the last visible tab.
-    expect(endCue.closest("[data-tabs-cue-gutter]")).toHaveClass("end-0", "inset-y-0", "w-6");
-    expect(box).toHaveClass("relative", "px-6");
+    expect(endCue.closest("[data-tabs-cue-gutter]")).toHaveClass("end-0", "inset-y-0", "w-[24px]");
+    expect(box).toHaveClass("relative", "px-[24px]");
     expect(tablist).not.toContainElement(endCue as HTMLElement);
     // Centred on the labels, above the 2px underline, with the strip's rule beneath it.
     expect(endCue.closest("[data-tabs-cue-gutter]")).toHaveClass("items-center", "border-b", "border-subtle", "pb-px");
@@ -143,7 +143,7 @@ describe("Tabs overflowCue", () => {
       };
     };
     const atStart = shape();
-    expect(atStart.box).toMatch(/(^|\s)px-6(\s|$)/);
+    expect(atStart.box).toMatch(/(^|\s)px-\[24px\](\s|$)/);
     expect(atStart.flow).toBe(0);
     expect(atStart.gutters).toHaveLength(2);
     geo.left = 300;
@@ -154,7 +154,7 @@ describe("Tabs overflowCue", () => {
     expect(shape()).toEqual(atStart);
     // Each cue sits absolute at its own end, in its own gutter, the rule beneath it.
     const startGutter = previous()!.closest("[data-tabs-cue-gutter]")!;
-    expect(startGutter).toHaveClass("absolute", "start-0", "w-6", "border-b", "border-subtle");
+    expect(startGutter).toHaveClass("absolute", "start-0", "w-[24px]", "border-b", "border-subtle");
     expect(more()).toBeNull();
   });
 
@@ -162,7 +162,7 @@ describe("Tabs overflowCue", () => {
     geo.scrollWidth = 300;
     render(strip());
     const box = screen.getByRole("tablist").parentElement!;
-    expect(box).not.toHaveClass("px-6");
+    expect(box).not.toHaveClass("px-[24px]");
     expect(box.querySelector("[data-tabs-cue-gutter]")).toBeNull();
   });
 
@@ -176,12 +176,15 @@ describe("Tabs overflowCue", () => {
   });
 
   it("keeps its 24px box at Large and XL, with a 48px hit area round it (KS N3)", () => {
+    // 0.48 build review 2 (KS N1): 24 PIXELS, not 1.5rem. The rem grew with the text size
+    // (24 / 30 / 36px), so at Extra large on a 360px phone the two gutters took 72 of a
+    // 226px strip and a sheet tab wrapped to seven lines. The hit area is the ::after.
     // At 360px with Large text two 48px-wide cues took 96px of the row and left a
     // two-tab strip 100px (headless Chromium, showcase "Loops"). The finger's 48px goes
     // to an invisible ::after over the strip's faded edge, as IconButton's `2xs` does.
     render(strip());
     const button = more()!;
-    expect(button).toHaveClass("w-6", "large:min-w-0", "relative", "large:after:absolute", "large:after:content-['']", "large:after:z-[1]");
+    expect(button).toHaveClass("w-[24px]", "large:min-w-0", "relative", "large:after:absolute", "large:after:content-['']", "large:after:z-[1]");
     expect(button).not.toHaveClass("large:min-w-[48px]");
   });
 

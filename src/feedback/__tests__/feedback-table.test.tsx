@@ -316,6 +316,17 @@ describe("the desktop table", () => {
     expect(within(typo).getAllByText("joined@example.test")).toHaveLength(2);
   });
 
+  it("caps the User cell's width, one line and an ellipsis, the whole value in its title (keksdose N2, 0.48 review 2)", () => {
+    // Beside the grow Subject every other cell keeps one line at Normal, so an email
+    // standing in for a name widened User and cost Votes and Category their room first.
+    renderTable();
+    const typo = screen.getByText("Typo in the footer").closest("tr")!;
+    const user = typo.querySelector('td[data-col="user"]')!.firstElementChild!;
+    expect(user).toHaveTextContent("joined@example.test");
+    expect(user).toHaveClass("block", "max-w-[12rem]", "truncate-until-large");
+    expect(user).toHaveAttribute("title", "joined@example.test");
+  });
+
   it("changes a status through onStatus, with the row", () => {
     const onStatus = vi.fn();
     renderTable({ onStatus });
