@@ -533,7 +533,6 @@ export function Media016Demo() {
           <p className={READOUT}>row clicks: {rowClicks} (the image does not count)</p>
         </div>
       </div>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }
