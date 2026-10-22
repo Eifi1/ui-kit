@@ -444,7 +444,6 @@ export function CheckboxGroup022Demo() {
         value no option carries is kept. {code("required")} puts the star on the legend and the native{" "}
         {code("required")} on every box while none is ticked.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -498,7 +497,6 @@ export function Choices022Demo() {
           keys still walk them — and the reason shows under the row.
         </Note>
       </div>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }

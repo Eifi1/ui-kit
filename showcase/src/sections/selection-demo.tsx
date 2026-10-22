@@ -562,8 +562,8 @@ export function SelectionDemo() {
           With <code className="font-mono">allowEmpty</code> the options are toggle buttons
           (<code className="font-mono">aria-pressed</code>) rather than radios, and{" "}
           <code className="font-mono">onChange</code> is typed to receive{" "}
-          <code className="font-mono">null</code> — without it, nothing changes for existing
-          callers. Since 0.7 the value type is inferred from{" "}
+          <code className="font-mono">null</code> — without it, a pick is always one of the
+          options. The value type is inferred from{" "}
           <code className="font-mono">value</code> and <code className="font-mono">onChange</code>{" "}
           in both modes, so a <code className="font-mono">useState&lt;Status | null&gt;</code>{" "}
           setter goes straight in — no <code className="font-mono">&lt;ToggleGroup&lt;Status&gt;&gt;</code>.

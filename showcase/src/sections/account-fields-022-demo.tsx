@@ -217,7 +217,7 @@ export function TileRadioGroup022Demo() {
       </div>
       <div className="mt-3 space-y-2">
         <Note>
-          The machinery under SwatchPicker and IconPicker, public since 0.22: one tab stop, arrows to move and choose,
+          The machinery under SwatchPicker and IconPicker, public: one tab stop, arrows to move and choose,
           a bubble with each tile&apos;s name. It draws the tiles only — the {code('role="radiogroup"')} element and its
           name are the caller&apos;s. For an option that has to be read (a plan with a price and features), use{" "}
           {code('ChoiceCardGroup type="radio"')} instead.
