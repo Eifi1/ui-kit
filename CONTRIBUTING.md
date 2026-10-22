@@ -550,6 +550,8 @@ styling inventory are generated** (edit `scripts/gen-export-inventory.mjs` or
 dependency/peer table is load-bearing for installation — a wrong entry there is the defect
 class that broke two of three consumers silently. When a release's adoption notes are
 adopted by all three apps, move them to `docs/archive/adopt/` and update `docs/README.md`.
+Each adoption note's head repeats the bump's standing line: restart the Vite dev server after
+the install (its `.vite/deps` pre-bundle keeps serving the old kit; ADOPTING.md → Every later bump).
 
 **The contracts follow the build.** Apps implement from the bodies of
 `docs/*-harmonization.md`, so a round's last commit folds its `docs/adopt-0.x.md` list

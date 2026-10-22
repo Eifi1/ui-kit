@@ -8,6 +8,13 @@ written with that work.
 **server-kit: no change.** Pin `@eifi1/ui-kit` `^0.50` beside the `eifi1-server-kit` 0.19.0
 wheel, as for 0.49.
 
+**Restart the Vite dev server after the bump.** Vite pre-bundles dependencies into
+`node_modules/.vite/deps` and keeps serving that copy while the dev server runs, so after
+`npm install` of a new kit the open dev server still runs the OLD kit (no error; the new
+props simply do nothing). Stop it and start it again; if a change still does not show, start
+it once with `vite --force` (or delete `node_modules/.vite`). Tests and `vite build` are not
+affected.
+
 ## `@eifi1/ui-kit/testing/react`: `rowMenuAction` opens a row's "⋯"
 
 New entry, for an app's own tests: `rowMenuAction(row, action, labels?)` opens the row's "⋯"

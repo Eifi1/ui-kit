@@ -152,6 +152,14 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
      `fireEvent.submit(screen.getByRole("dialog").querySelector("form")!)`. A real
      browser needs nothing (Kurvenschmiede's 0.30 adoption).
 
+## Every later bump
+
+Read that release's `docs/adopt-0.NN.md` (the CHANGELOG points to it), and **restart the Vite
+dev server after `npm install`**: Vite pre-bundles dependencies into `node_modules/.vite/deps`
+and keeps serving that copy while it runs, so an open dev server goes on running the OLD kit
+with no error. If a change still does not show, start it once with `vite --force` (or delete
+`node_modules/.vite`). Tests and `vite build` are not affected.
+
 ## Reference
 
 | | |
