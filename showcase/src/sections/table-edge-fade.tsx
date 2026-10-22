@@ -245,7 +245,6 @@ export function DataTableEdgeFadeDemo() {
         scrolled clear of it. Off by default: it changes how every overflowing desktop table
         looks. The phone layout is a list of cards, which never scrolls sideways.
       </Note>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }

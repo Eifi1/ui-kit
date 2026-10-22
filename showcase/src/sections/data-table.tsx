@@ -62,7 +62,7 @@ function DataTableSection() {
     <>
       <Note>
         <strong>
-          A Router is needed only with <code className="font-mono">urlSync</code> (0.49).
+          A Router is needed only with <code className="font-mono">urlSync</code>.
         </strong>{" "}
         Without it a <code className="font-mono">DataTable</code> keeps its sort, filters and
         page in local state and mounts anywhere — no{" "}
@@ -224,10 +224,10 @@ function MainTable() {
           reload. If you return to this page and a column is missing, that is the feature —
           re-tick it in the panel. The default prefix is{" "}
           <code className="font-mono">hbui-table:</code>; it is a prop so several apps can
-          share one localStorage origin without colliding. Since 0.34 an app sets its prefix
+          share one localStorage origin without colliding. An app sets its prefix
           once, on <code className="font-mono">{"<UiKitProvider tableStorageKeyPrefix>"}</code>,
           and every kit table below takes it — <code className="font-mono">TranslationReviewPanel</code>
-          too, which took none — while a table&apos;s own prop still wins. The stored key is the
+          too — while a table&apos;s own prop still wins. The stored key is the
           prefix plus <code className="font-mono">storageKey</code>, so an app that wrapped
           DataTable to pass its prefix keeps every reader&apos;s saved view when it moves the
           prefix to the provider.
@@ -504,7 +504,7 @@ function ShortTable() {
         <Note>
           <code className="font-mono">paginated=&#123;false&#125;</code> holds on a phone too:
           every line is a card, with no endless-scroll chunking and no “Loading…” sentinel for
-          rows that are already in memory. Qty and Line total still say the pre-0.7{" "}
+          rows that are already in memory. Qty and Line total say a physical{" "}
           <code className="font-mono">text-right</code>; the table rewrites a bare{" "}
           <code className="font-mono">text-right</code> / <code className="font-mono">text-left</code>{" "}
           to <code className="font-mono">text-end</code> / <code className="font-mono">text-start</code>,
@@ -881,11 +881,11 @@ function FillHeightTable() {
           flex parent (a viewport-locked app shell, a split pane) there is nothing to fill
           and the prop does nothing — which is why the main table above uses{" "}
           <code className="font-mono">maxBodyHeight</code> instead. From{" "}
-          <code className="font-mono">md</code> the body never shrinks below 12rem (0.40):
+          <code className="font-mono">md</code> the body never shrinks below 12rem:
           a pane shorter than the header, that floor and the pager lets the table run past it.
         </Note>
         <Note>
-          <strong>Two scrollbars</strong> (0.34): the default{" "}
+          <strong>Two scrollbars</strong>: the default{" "}
           <code className="font-mono">maxBodyHeight</code>,{" "}
           <code className="font-mono">calc(100dvh - 12rem)</code>, scrolls the body inside a
           page that scrolls itself, so a long table under a page header shows two scrollbars
@@ -947,7 +947,7 @@ function ListPageTable() {
       </div>
       <div className="mt-3">
         <Note>
-          docs/page-layout-harmonization.md §1 (0.40). The table marks itself under{" "}
+          docs/page-layout-harmonization.md §1. The table marks itself under{" "}
           <code className="font-mono">fillHeight</code> (<code className="font-mono">data-fill-height</code>);
           while one is inside, AppShell&apos;s <code className="font-mono">&lt;main&gt;</code> becomes a
           flex column from <code className="font-mono">md</code>, so the banner keeps its own row
@@ -1335,7 +1335,6 @@ function DataTableActionsDemo() {
           button: its tooltip leaves the scroller rather than being clipped by it.
         </Note>
       </div>
-      <Note>Since 0.12.</Note>
     </Example>
   );
 }
@@ -1445,7 +1444,6 @@ function DataTableTotalsDemo() {
         table returns its totals with the page and ignores the {code("rows")} argument:{" "}
         {code("footer: () => fmt(page.totalDebit)")}.
       </Note>
-      <Note>Since 0.17.</Note>
     </Example>
   );
 }
@@ -1512,7 +1510,6 @@ function DataTableMobileSort022Demo() {
         &ldquo;Default order&rdquo; is offered only until the table is ranked. A column whose header is not text names
         its option with {code("headerText")}. Off by default.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
