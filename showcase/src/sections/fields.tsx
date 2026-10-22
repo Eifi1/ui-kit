@@ -563,9 +563,9 @@ export function Fields() {
       >
         <Stage>
           <div className="space-y-4">
-            {/* The status explanation, ~500 characters, was a
-                FieldHint, and since 0.32 a FieldHint prints its words under the field on a
-                touch screen and at Large — the longest thing in the form. Help the field
+            {/* The status explanation, ~500 characters, is no
+                FieldHint: a FieldHint prints its words under the field on a touch screen and
+                at Large — the longest thing in the form. Help the field
                 is usable without goes behind this "?" instead; a fact stays a FieldHint. */}
             <Select
               className="w-64 max-w-full"
@@ -665,7 +665,7 @@ export function Fields() {
           </div>
         </Stage>
         <Note>
-          <strong>One &ldquo;?&rdquo; per field</strong> (text size §4, round 0.36): <code className="font-mono">hint</code>{" "}
+          <strong>One &ldquo;?&rdquo; per field</strong> (text size §4): <code className="font-mono">hint</code>{" "}
           is the fact, a caption under the field that its <code className="font-mono">aria-describedby</code> names;{" "}
           <code className="font-mono">help</code> is the help, a HelpPopover on the label line named &ldquo;About{" "}
           <em>label</em>&rdquo; in the reader&apos;s language (pass a HelpPopover to name it yourself). While{" "}
@@ -997,7 +997,6 @@ export function TextareaEdge025Demo() {
           disabled or read-only, both themes), its scrollbar inset and its RTL side.
         </Note>
       </div>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }
@@ -1047,7 +1046,6 @@ export function Fields022Demo() {
         field and is announced only on entering the last tenth and at the limit — type into Subject to see the colours
         turn.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
