@@ -315,6 +315,11 @@ accepted it, 2026-10-21).
   loaded"; `null` for nothing), which takes the focus if the button had it. With
   `serverPagination` it replaces that pager too. Pass `paginated={false}` beside it on a client
   table, to say so. New keys `dataTable.loadMore` / `dataTable.allLoaded`, seven catalogues.
+  **Rows the server already filtered and sorted:** without `serverPagination` the table still
+  filters and sorts the rows it holds on the client, which can drop or reorder server rows
+  (keksdose's transfer-merge test lost the other leg of each transfer). Until a kit flag exists
+  (round 0.49 candidate K-052-1), pass `serverPagination` beside `loadMore` — page 0, pageSize =
+  the rows' length, no-op handlers — and the loadMore footer replaces its pager.
 
 Checked in headless Chromium (showcase build, `vite preview`, Data table → "Period groups and
 load more", 218 rows over three months, `fillHeight`, sticky leading row on), at 1280 and 1545
