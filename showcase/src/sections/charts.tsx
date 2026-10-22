@@ -406,7 +406,7 @@ export function Charts() {
             are CVD-safe against each other, but the sign and the label still have to carry the
             meaning. The eight <code className="font-mono">--chart-N</code> tokens behind{" "}
             <code className="font-mono">paletteFor</code> are anyplot&apos;s &ldquo;Imprint&rdquo;
-            hues (the default since 0.49; Paul Tol&apos;s &ldquo;Muted&rdquo; stays in the
+            hues (the default; Paul Tol&apos;s &ldquo;Muted&rdquo; is in the
             palette menu), chosen to survive protanopia, deuteranopia and tritanopia.
           </Note>
         </div>
