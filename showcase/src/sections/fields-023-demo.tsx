@@ -153,8 +153,8 @@ export function AmountClass023Demo() {
         <MoneyField aria-label="VAT" value={vat} onCommit={setVat} calculator={false} inputClassName="text-end tabular-nums" />
       </div>
       <Note>
-        A money column right-aligns its figures so the decimal points line up (a VAT cell, say). It used to
-        take {code("className=\"[&_input]:text-end\"")}; {code("inputClassName")} is the element&apos;s own, merged
+        A money column right-aligns its figures so the decimal points line up (a VAT cell, say), with no{" "}
+        {code("className=\"[&_input]:text-end\"")}: {code("inputClassName")} is the element&apos;s own, merged
         after the field&apos;s base and before the room the calculator and the currency chip reserve and the invalid
         border — as on {code("NumberInput")} and {code("Input")}. {code("RhfMoneyField")} takes it too.
       </Note>
