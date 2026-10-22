@@ -560,14 +560,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2173 names from 357 modules** — 1008 values and 1165 types. _Italic_ is a type-only export.
+**2174 names from 358 modules** — 1009 values and 1165 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2173 |
+| `@eifi1/ui-kit` | 2174 |
 | `@eifi1/ui-kit/chart` | 100 |
 | `@eifi1/ui-kit/shell` | 117 |
 | `@eifi1/ui-kit/data-table` | 55 |
@@ -610,6 +610,7 @@ re-slicing of it, never a second API.
 | `lib/isin` | `formatIsin`, `isinCheckDigit`, `isValidIsin` |
 | `lib/phone` | `formatNationalPhone`, `formatPhone`, `isE164`, `parsePhone`, `PHONE_COUNTRIES`, `PHONE_DIAL_CODES`, _`ParsedPhone`_, _`PhoneCountry`_, _`PhoneCountryCode`_ |
 | `lib/column-mapping` | `assignColumnRole`, `guessMapping`, `missingRoles`, `readMappedTable`, `readTextFile`, `roleOfColumn`, _`ColumnMapperResult`_, _`ColumnMapping`_, _`ColumnRole`_ |
+| `lib/clipboard-minus` | `asciiMinusInNumbers` |
 | `lib/document-title` | `DEFAULT_DOCUMENT_TITLE_FORMAT`, `formatDocumentTitle`, _`DocumentTitleParts`_ |
 | `lib/status-tone` | `STATUS_KINDS`, `statusTone`, _`StatusKind`_, _`StatusTone`_ |
 | `lib/date-format` | `DATE_FORMAT_PREFERENCES`, `dateFormatSample`, `dateFormatterFor`, `formatDateWithPreference`, `isDateFormatPreference`, `resolveDateFormat`, _`DateFormatOptions`_, _`DateFormatPreference`_, _`ResolvedDateFormat`_ |

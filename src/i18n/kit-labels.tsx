@@ -714,6 +714,15 @@ export interface UiKitProviderProps {
   /** 0.49 KIT-9: the app's name, the `{app}` of the window's title ("Kastlan"). Left
    *  out, titles end at the page or section. */
   appName?: string;
+  /**
+   * 0.49 KIT-1b: while a person copies a selection in the page, a U+2212 minus standing
+   * before a number ("−CHF 1,250.50") goes to the clipboard as "-", in `text/plain` and
+   * `text/html` (what Excel pastes), so a spreadsheet reads a number; the page keeps "−".
+   * A copy out of an input, a textarea or an editable element is left alone. Installed
+   * once per document, by the first provider that has it on. Default `true`; `false` on
+   * the outermost provider leaves the clipboard to the browser.
+   */
+  copyAsciiMinus?: boolean;
   children: ReactNode;
 }
 
@@ -736,6 +745,7 @@ export function UiKitProvider({
   timeZone,
   documentTitleFormat,
   appName,
+  copyAsciiMinus = true,
   children,
 }: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
@@ -767,6 +777,7 @@ export function UiKitProvider({
     ],
   );
   useTableViewsJoin(value.tableStorageKeyPrefix ?? DEFAULT_TABLE_STORAGE_KEY_PREFIX);
+  useClipboardMinus(copyAsciiMinus);
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
 }
 
@@ -802,6 +813,30 @@ function useTableViewsJoin(prefix: string): void {
       leave?.();
     };
   }, [prefix]);
+}
+
+/**
+ * The copy handler (lib/clipboard-minus, 0.49 KIT-1b), through a literal `import()` for
+ * the reason {@link useTableViewsJoin} gives: a catalogue may reach nothing outside i18n/.
+ * It is in place a microtask after the mount — long before a person selects and copies.
+ */
+function useClipboardMinus(on: boolean): void {
+  useEffect(() => {
+    if (!on || typeof document === "undefined") return;
+    let uninstall: (() => void) | undefined;
+    let gone = false;
+    import("../lib/clipboard-minus").then(
+      ({ installClipboardMinus }) => {
+        if (!gone) uninstall = installClipboardMinus(document);
+      },
+      // Not loaded: copying works as the browser does it.
+      () => undefined,
+    );
+    return () => {
+      gone = true;
+      uninstall?.();
+    };
+  }, [on]);
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {

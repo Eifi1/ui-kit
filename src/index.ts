@@ -156,6 +156,8 @@ export { useRowSwipe } from "./hooks/use-row-swipe";
 export { useNoIndex } from "./hooks/use-noindex";
 // 0.49 KIT-9: the window's title from page, section and app, in the provider's format.
 export { useDocumentTitle } from "./hooks/use-document-title";
+// 0.49 KIT-1b: U+2212 before a number as "-", the copy handler's rule, for an app's text.
+export { asciiMinusInNumbers } from "./lib/clipboard-minus";
 export { DEFAULT_DOCUMENT_TITLE_FORMAT, formatDocumentTitle } from "./lib/document-title";
 export type { DocumentTitleParts } from "./lib/document-title";
 export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-row-swipe";
