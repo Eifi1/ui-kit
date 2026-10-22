@@ -476,8 +476,8 @@ function AutocompleteDemo() {
         </Stage>
         <p className="mt-2 text-xs text-secondary">
           The disabled Project field is dimmed as a whole, label and chevron included, the way a
-          disabled <code className="font-mono">EntityCombobox</code> is — before 0.7.0 only the
-          grey fill changed, and a disabled combobox read like a filled-in one beside it. Its
+          disabled <code className="font-mono">EntityCombobox</code> is, so it never reads like a
+          filled-in one beside it. Its
           suggestion list, like every portalled combobox list, carries the field&apos;s{" "}
           <code className="font-mono">dir</code>.
         </p>
@@ -541,7 +541,7 @@ function ComboboxClipsDemo() {
       <div className="mt-3">
         <Note>
           The list is a scroll container ({code("max-height")} + {code("overflow-y: auto")}), and a
-          bubble drawn inside it is cut off at its edge. Since 0.12 the listbox carries {code("data-clips")}
+          bubble drawn inside it is cut off at its edge. The listbox carries {code("data-clips")}
           (the kit's {code("CLIPS_ATTRIBUTE")}), which the Tooltip's auto-portal reads as well as the
           computed overflow — so the bubble goes to {code("document.body")}, above the panel. The marker
           matters most under jsdom, which computes no overflow: there a bubble left in the row became
@@ -549,7 +549,6 @@ function ComboboxClipsDemo() {
           same list is a {code("PickerSheet")}, whose scroller carries the marker too.
         </Note>
       </div>
-      <Note>Since 0.12.</Note>
     </Example>
   );
 }
@@ -608,7 +607,6 @@ function PickerHints022Demo() {
           hint={<FieldHint label="Leave empty for all" />}
         />
       </div>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -873,12 +871,11 @@ function AutocompleteHint024Demo() {
         />
       </div>
       <Note>
-        The family&apos;s rule since 0.22, on Autocomplete since 0.24: a field that is passed {code("hint")} at all —
-        even {code("undefined")} — keeps one box, so on an unlabelled field the end-edge row the &quot;?&quot; sits in
-        is there whether or not the &quot;?&quot; is. Before, the row came and went with it, the {code("<input>")}{" "}
-        was re-parented, and the first letter typed lost focus.
+        The family&apos;s rule, Autocomplete included: a field that is passed {code("hint")} at all — even{" "}
+        {code("undefined")} — keeps one box, so on an unlabelled field the end-edge row the &quot;?&quot; sits in is
+        there whether or not the &quot;?&quot; is. The {code("<input>")} is never re-parented, and the first letter
+        typed keeps focus.
       </Note>
-      <Note>Since 0.24.</Note>
     </Example>
   );
 }
