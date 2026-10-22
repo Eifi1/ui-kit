@@ -4,6 +4,78 @@ ui-kit 0.49 is the design-review round (KIT-1 … KIT-15). This guide lists, per
 each app does, with the places found in keksdose, kastlan and Kurvenschmiede on 2026-10-22
 (`frontend/src`, production code; line numbers at that date).
 
+## KIT-1: one minus sign, U+2212 (`minus: "ascii"` for exports)
+
+BREAKING (on a bump, no code): `formatNumber`, `formatMoney`, `formatPercent` (compact notation
+included), `useKitFormat`, and the kit components' own number formatting (StatTile, Sparkline,
+SeriesChart, Treemap, PieChart, CalendarHeatmap, ProgressBar parts, ChartTooltipContent's bare
+value) print a negative with the typographic minus **U+2212** ("−CHF 5.00", "−12%"), as
+`SignedAmount` always has; `Intl` writes a hyphen in en, de-CH, fr, it, es, hu and zh. Only
+the parts `Intl` marks as a minus are swapped. Editable fields (AmountInput, NumberInput,
+MeasuredGrid drafts) keep the typable "-".
+
+- `minus: "ascii"` (type `MinusStyle`) gives U+002D for text a machine reads back — a CSV, a
+  clipboard string built in code. A copy by hand needs nothing since KIT-1b (below).
+- Tests that pin a formatted negative must expect "−": write `"−CHF 5.00"` or paste the
+  character; a test that parses formatted output passes `minus: "ascii"` or reads the number.
+
+| App | What changes on a bump | Steps |
+|---|---|---|
+| keksdose | Every negative from a kit formatter. About 156 test files hold a hyphen before a digit or currency in a string, mostly fixture inputs (API payloads such as `"-500"`, which stay); about 37 assert a formatted hyphen. Those touching kit output: `features/reports/__tests__/tax-tab.test.tsx:172` (`"-€2,000.00"`), `investments-tab.test.tsx:218–219` (`"-€150.00"`, `"-13.0%"`), `report-amount-tones.test.tsx:113` (`"-€450.00"`), `features/transactions/__tests__/transaction-cells-fx.test.tsx:104`, `:106`, `:135` (`"(-€100.00)"` beside a U+2212). Already on U+2212 or hyphens in fixtures only: `features/reports/__tests__/reports-page.test.tsx` (`:56` fixture), `features/transactions/__tests__/use-transaction-columns.test.tsx:101`, `features/budget/__tests__/auto-assign-preview.test.tsx:154`. | Change the asserted hyphens to "−". Exports: CSV goes through `shared/lib/download-csv.ts:50` with raw numbers (`String(v)`), not kit formatters — nothing to pass; no CopyButton copies a figure. |
+| kastlan | Every negative from its wrappers `shared/utils/formatters.ts:26` (`formatNumber`) and `:50` (`formatCurrency`), which call the kit. No test pins a formatted hyphen. | Nothing required. No export or copy of formatted figures found. |
+| Kurvenschmiede | Negatives from kit formatters. Tests pinning a hyphen from them: `features/corner/corner-page.test.tsx:444` (`"-75.0 mm"`), `features/gear/gear-page.test.tsx:604` (`"… · -30.0 mm"`) — 2 clear cases, not 4. Not kit output: `gear-page.test.tsx:504` (an input's value), `features/control/control-page.test.tsx:221` (server text), `features/steering/plan-view.test.tsx:90` (an SVG attribute). `shared/ui/checks-list.test.tsx:69` already expects U+2212. | Change the two asserted hyphens to "−". No export or copy of formatted figures found. |
+
+## KIT-2: numeric strings format; invalid values warn in development
+
+`formatNumber`, `formatMoney`, `formatPercent` and their `useKitFormat` bindings take a
+**numeric string** as well as a number (`"1850.00"`, `"-12.5"`, `"1e3"` — a Decimal as JSON
+sends it) and format it like the number (read with `Number()`: more than ~15–17 significant
+digits round to the nearest double). `null` / `undefined` still print `empty` ("—") silently.
+Anything else (`"abc"`, `"12,50"`, an object, `NaN`, ±`Infinity`, a boolean) prints `empty`,
+and a development build warns once per call site with the value and its type (never under
+vitest, never in production). `0`, `"0"` and `-0` print zero, never "—" and never a minus.
+
+BREAKING (small): a numeric string that printed "—" now prints the figure; `NaN` / `Infinity`
+now warn in development (output unchanged).
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | Decimals arrive as strings from the API; call sites that wrapped them in `Number(…)` before formatting keep working. | Optional: drop the `Number(…)` around kit formatter arguments; watch the dev console for "[ui-kit] formatMoney got … which is not a number" lines. |
+| kastlan | 9 call sites pass `Number(…)` to its wrappers: `features/accounting/components/wizard/journal-entry-review-step.tsx:59`, `:60`, `features/insurance/components/wizard/insurance-dates-review-step.tsx:110`, `features/finance/components/wizard/payment-allocate-step.tsx:193`, `features/finance/pages/invoice-list-page.tsx:173`, `:181`, `features/service-charges/components/service-charges-costs-tab.tsx:76`, `features/meters/components/meter-readings-dialog.tsx:148`, `features/mortgages/components/wizard/mortgage-review-step.tsx:60`. | The wrappers (`shared/utils/formatters.ts:26`, `:50`) are typed `number \| null \| undefined`: widen them to the kit's `FormattableNumber`, then the `Number(…)` can go. Keep it where the value can be `""` (an empty field): that now prints "—" with a warning instead of 0. |
+| Kurvenschmiede | — | Nothing required. |
+
+## KIT-3: a DataTable without `urlSync` needs no Router
+
+`DataTable` (and `useTableUrlState`) no longer call react-router's hooks without a Router: the
+table keeps sort, filters and page in local state. With `urlSync` and no Router a development
+build throws "DataTable urlSync requires a Router: …"; production falls back to local state.
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | No test wraps a DataTable in a `MemoryRouter` of its own: every DataTable test renders through `renderWithProviders`, whose Router is at `test/render.tsx:99` and serves the pages' links too. | Nothing to remove (the expected two table-only wrappers were not found). |
+| kastlan | — | Nothing. |
+| Kurvenschmiede | — | Nothing. |
+
+## The anyplot palette: Imprint by default, eight hues, the same in dark
+
+BREAKING (on a bump, no code): the default preset (`DEFAULT_PRESET`, id `"default"`) is anyplot's
+**Imprint**: eight categorical hues in slot order — green `#009e73`, lavender `#c475fd`, blue
+`#4467a3`, ochre `#bd8233`, matte red `#ae3030`, cyan `#2abccd`, rose `#954477`, lime
+`#99b314` — the same in light and dark (amber left the pool). `PALETTE_SIZE` is 8 and
+`paletteFor(i)` cycles eight (was nine); `--chart-9` repeats slot 1. New: `--chart-ink` /
+`--chart-muted` and `CHART_ROLES` (other/rest/disabled/band → muted; total/baseline/outline →
+ink), sequential green→blue and diverging red↔paper↔blue heat scales, and a 1px ink edge on
+bars, areas and treemap tiles whose hue is under 3:1 on the surface (`chartEdge`; the fill keeps
+its hue). Chart money keeps the money tokens. Paul Tol's "Muted" stays as `PAUL_TOL_PRESET` (id
+`"paul-tol"`, now in `PALETTES` after the default); `IMPRINT_PRESET` is a deprecated alias of
+`DEFAULT_PRESET`.
+
+| App | What changes on a bump | Steps |
+|---|---|---|
+| keksdose | The chart-colour picker `features/auth/appearance-card.tsx:150–160` maps `PALETTES` (`:156`) and labels the default `t("settings.chart_palette_default")` (`:158`) = "Muted (default)" (`shared/i18n/locales/en.json:2030`; de-CH "Muted (Standard)", fr "Muted (par défaut)", it "Muted (predefinita)", same line) — now wrong: the default is Imprint, and Paul Tol appears as its own entry by `p.name` ("Paul Tol muted"). `features/reports/charts/income-expense-bar.tsx:89` `paletteFor(7)` is now lime `#99b314` (slot 8). | Relabel the key to "Imprint (default)" in the four locales and give `paul-tol` a translated label; fix the help text `settings.chart_palette_help` (`en.json:2031`) and `tour.mk.theme_body` (`:3976`, which contradicts "Both options"); `legal.impressum.credits.body` (`:97`) can stay. Check that lime suits the income/expense bar or pick a slot by meaning (`CHART_ROLES`). |
+| kastlan | Charts recolour; no fixed slot found. | Look at the charts in light and dark. |
+| Kurvenschmiede | `main.tsx:65` `usePalette.setState({ id: DEFAULT_PRESET.id })` now selects Imprint. Slot 8 no longer exists (`hex[8]` is `undefined`): `features/dynamics/colours.ts:22` `HUE.fourth: 8`, used by `features/dynamics/lesson-reduction.tsx:189`; `features/setpoint/curve-chart-model.ts:191` `OVERLAY_HUES = [8, 1, 3, 5, 7, 0, 2, 4, 6]` and `:204` `COMMANDED_HUES = [4, 6, 8]`; `features/control/comparison-panel.tsx:39` `OVERLAY_HUES = [2, 4, 8]`. Fixed slots elsewhere change hue with the palette: `curve-chart-model.ts:29–32`, `:100`, `:112`, `:122`, `steering/ackermann-chart.tsx:37–42`, `gear/transmission-charts.tsx:151–170`, `setpoint/load-command-dialog.tsx:551`, `:676–677`, `control/tracking-chart.tsx:64–78`, `steering/plan-view.tsx:227–317`, the `hex[HUE.*]` uses in `features/dynamics/lesson-*.tsx`, `pole-plane.tsx`, `phase-portrait.tsx`. | Replace every 8 with a slot 0–7 (or index with `% 8`; `OVERLAY_HUES` holds nine, so one repeats); keep `DEFAULT_PRESET.id` if Imprint is wanted, or set `"paul-tol"` to keep the old look. Look at the dynamics lessons and setpoint curves in light and dark. |
+
 ## KIT-5: Button variants `default` and `accent` (`primary` and `brand` deprecated)
 
 `variant="primary"` drew the quiet warm chip and `variant="brand"` the solid brand call to
