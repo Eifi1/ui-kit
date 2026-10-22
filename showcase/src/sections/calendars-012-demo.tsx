@@ -99,7 +99,7 @@ export function MonthStepperDemo() {
       </p>
       <div className="mt-3">
         <Note>
-          What a calendar page used to assemble by hand around the field. The heading is a button that
+          What a calendar page would otherwise assemble by hand around the field. The heading is a button that
           opens the month grid; its text is its name and it is {code("aria-live")}, so pressing ‹ or ›
           (focus stays on the arrow) still says where the arrow went. Today jumps to the current month
           and is disabled when that is outside the bounds; the arrows disable at {code("min")}/
