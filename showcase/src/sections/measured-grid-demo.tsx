@@ -374,7 +374,6 @@ function EnvelopeTable() {
         keeps it open with the failure under it. With {code("commit")} under a lock, the value stays a button,{" "}
         {code("aria-disabled")}, with the reason — never a field that takes keys it cannot save.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -404,7 +403,6 @@ function Rename() {
         under the field, described and spoken; the next keystroke clears it. Focus returns to the value after Enter or
         Escape, and stays where you went after a save that came from leaving the field.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }

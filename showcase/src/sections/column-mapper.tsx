@@ -92,7 +92,6 @@ function CurveExample() {
         column holds moves it there. Drop a `.csv` on the box or the button; a Windows-1252 file is
         read as such. The rows are strings; convert with `tableNumber(cell, result.decimalComma)`.
       </Note>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }
@@ -150,7 +149,6 @@ function BankExample() {
         sideways in its own box on a phone. A two-step wizard reading the file itself uses
         `parseTextTable` for step one and `readMappedTable` at the end.
       </Note>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }
@@ -239,7 +237,6 @@ function FadeExample() {
         none says {code("(required)")} — it told no option from another and cut{" "}
         {code("Zeit (s) (erforderl…")} short; the {code("Still needed")} line names what is missing.
       </Note>
-      <Note>Since 0.24.</Note>
     </Example>
   );
 }
@@ -287,7 +284,6 @@ function PrivateExample() {
         rows. Here some roles are optional, so the required one still says so — Booking date —
         and a group&apos;s members do not: the line under the table names the group.
       </Note>
-      <Note>Since 0.24.</Note>
     </Example>
   );
 }
@@ -399,7 +395,6 @@ function ColumnRoleRequired025Demo() {
           Short roles keep the 9rem column they had.
         </Note>
       </div>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }
