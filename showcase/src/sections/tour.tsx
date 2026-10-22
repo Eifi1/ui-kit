@@ -425,7 +425,7 @@ function PlacementTour() {
         centred step): Enter and the forward arrow advance — → in LTR, ← in RTL, as on Target D
         above — the other arrow goes back, Esc skips. Enter on a focused control belongs to that
         control: Tab to <strong>Zurück</strong> or <strong>Überspringen</strong> and press Enter,
-        and only that button runs (it used to run AND step forward). The page is blocked outside
+        and only that button runs; the tour does not step forward too. The page is blocked outside
         the card and the spotlit target — try clicking <strong>Start the labelled tour</strong>{" "}
         mid-tour — while the target itself stays clickable for{" "}
         <code className="font-mono">awaitClick</code>.
