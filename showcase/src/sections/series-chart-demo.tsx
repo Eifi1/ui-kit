@@ -265,8 +265,8 @@ export function SeriesChartDemo() {
         </p>
         <div className="mt-3">
           <Note>
-            <em>every axis</em> is <code className="font-mono">axisBudget="off"</code>, the chart before
-            0.15.1: on a phone the four bands leave the curves a sliver. <em>auto</em> is the default —
+            <em>every axis</em> is <code className="font-mono">axisBudget="off"</code>, every axis
+            drawn: on a phone the four bands leave the curves a sliver. <em>auto</em> is the default —
             it changes nothing on a desktop and draws one axis a side once the plot would drop under
             160 px. <em>one a side</em> is{" "}
             <code className="font-mono">maxVisibleAxes=&#123;&#123; left: 1, right: 1 &#125;&#125;</code>{" "}
