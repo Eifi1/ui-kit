@@ -832,7 +832,6 @@ export function Numbers016Demo() {
         </li>
         <li>roundToCurrency(1.005, &quot;EUR&quot;, &#123; fallbackDigits: 0 &#125;) → {String(roundToCurrency(1.005, "EUR", { fallbackDigits: 0 }))}</li>
       </ul>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }

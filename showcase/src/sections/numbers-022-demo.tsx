@@ -56,8 +56,7 @@ function LocaleMarks() {
           de-DE, "3.5" for de-CH and en-US, as {code("Intl")} has it. What it reports stays dot-decimal, so{" "}
           {code("Number(value)")} keeps working. Typing reads grouping the way {code("AmountInput")} does: both marks
           present, the one that is not the locale's is grouping; a lone "." in thousands shape is grouping in a comma
-          locale; a lone "," stays a decimal in a dot locale. Before 0.22 NumberInput showed "3.5" everywhere and read
-          "1.234,56" as 1.23456. While you type, the field keeps your own text (the caret never jumps); it is re-spelt
+          locale; a lone "," stays a decimal in a dot locale. While you type, the field keeps your own text (the caret never jumps); it is re-spelt
           without grouping when it settles.
         </Note>
       </div>
@@ -118,8 +117,8 @@ function InlineCell() {
       <Note>
         In an editor that closes on blur, a click on the calculator icon blurs the field and tears the editor down
         before the popover can open. {code("calculator={false}")} drops the icon (and the room reserved for it); a typed
-        sum — {code("200+50")}, then Enter — still evaluates, and a phone keeps its numpad. NumberInput has had the prop
-        all along; AmountInput and MoneyField have it now.
+        sum — {code("200+50")}, then Enter — still evaluates, and a phone keeps its numpad. NumberInput, AmountInput and
+        MoneyField all take the prop.
       </Note>
     </Example>
   );
