@@ -13,10 +13,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   ],
   "tokens": [
     "The active TokenSet",
-    "chart — 9 categorical hues",
+    "chart — the categorical hues",
     "heat — heatmap interpolation stops",
     "paletteFor(i)",
     "CHART_COLORS",
+    "CHART_ROLES · chartEdge",
     "PALETTE_HEX",
     "HEATMAP_HEX",
     "lerpHex + textOn",
@@ -568,6 +569,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Right-to-left — the plot stays, the chrome follows",
     "Legend — isolate one series (activeKey)",
     "ChartContainer — config the shell refuses",
+    "Imprint — eight series, the ink edge, the rest bucket",
     "Where the colours come from",
   ],
   "tile-chart": [

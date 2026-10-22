@@ -152,8 +152,8 @@ export function Foundations() {
       </Note>
 
       <Example
-        label={`chart — ${tokens.chart.length} categorical hues`}
-        hint="the array field of the same TokenSet — the same hues in light and dark"
+        label="chart — the categorical hues"
+        hint={`the array field of the same TokenSet — ${tokens.chart.length} here, the same hues in light and dark`}
       >
         <div className="grid gap-3 sm:grid-cols-3">
           {tokens.chart.map((hex, i) => (

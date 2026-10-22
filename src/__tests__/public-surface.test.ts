@@ -291,12 +291,12 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.47.0 (+3, keksdose N17): `RowActionsHead`, `ROW_ACTIONS_CELL_CLASS`,
   // `ROW_ACTIONS_HEAD_CLASS` — a hand-built table's actions heading and cell.
   // 0.48.0 (+1, keksdose dev #628): `TableSkeleton`, the table/list loading preset.
-  ["@eifi1/ui-kit", barrel, 991],
+  ["@eifi1/ui-kit", barrel, 999],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
   // 0.35.0 (−13): the zoom maths and `withChartZoom` are the kit's own (API-6b).
-  ["@eifi1/ui-kit/chart", chart, 46],
+  ["@eifi1/ui-kit/chart", chart, 53],
   // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
   // 0.35.0: `resolveDataTableLabels` and `missingDataTableLabels` removed (R1, API-6a) (−2).
   // 0.46.1: `swipePlanRowActions`, the desktop swipe column's derivation (keksdose N3) (+1).

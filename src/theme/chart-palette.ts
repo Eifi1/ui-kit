@@ -1,23 +1,45 @@
 // Chart colour system. Single source of truth lives in the design tokens
 // (:root / .dark in tokens.css): brand = indigo, money = teal/amber/purple,
-// chart-1..9 = Paul Tol "Muted" (CVD-safe across protan/deutan/tritan).
+// chart-1..8 = anyplot's "Imprint" hues (https://anyplot.ai/palette, 0.49 — Paul Tol
+// "Muted" before, still selectable as the `paul-tol` preset).
 // Returning CSS vars here makes every Recharts series theme-aware for free — the
 // SVG fill/stroke resolves --chart-N against the current light/dark token set.
 
 import { contrast, parseHex as parseRgbHex } from "./color";
 
-const PALETTE_SIZE = 9;
+/** How many categorical slots `paletteFor` cycles through: anyplot's eight hues. Amber,
+ *  anyplot's ninth colour, is a semantic warning anchor and not a series slot. A preset
+ *  that carries more hues (Paul Tol's nine) still writes them as `--chart-N`, but the
+ *  by-index ramp wraps after eight, so the same series keeps the same colour whichever
+ *  preset is active. */
+export const PALETTE_SIZE = 8;
+
+/** anyplot's colour-vision-deficiency-optimal order over the eight slots — the order
+ *  that keeps the FIRST n series furthest apart under protan/deutan/tritan simulation.
+ *  An option (`paletteFor(i, { order: "cvd" })`), not the default: the default order is
+ *  anyplot's own slot order, so series 1 is always the green. */
+export const CVD_ORDER = [0, 1, 7, 6, 4, 5, 2, 3] as const;
+
+export interface PaletteForOptions {
+  /** `"slot"` (default): anyplot's slot order. `"cvd"`: {@link CVD_ORDER}. */
+  order?: "slot" | "cvd";
+}
 
 /** CVD-safe categorical colour for series `index`, as a theme-aware CSS var.
  *
+ *  The first series is always slot 0 (`--chart-1`, anyplot's green), and the ramp
+ *  wraps after {@link PALETTE_SIZE}.
+ *
  *  Wraps in both directions, the way `strokeDash` does: JS `%` keeps the sign,
- *  so `-1 % 9` is `-1` and the plain formula named `--chart-0`, a token that does not
+ *  so `-1 % 8` is `-1` and the plain formula named `--chart-0`, a token that does not
  *  exist — a series with no stroke at all. A fractional index is truncated, and one
  *  that is not a number (NaN, ±Infinity — an `indexOf` miss divided by something)
  *  takes the first colour rather than `var(--chart-NaN)`. */
-export function paletteFor(index: number): string {
+export function paletteFor(index: number, options?: PaletteForOptions): string {
   const i = Number.isFinite(index) ? Math.trunc(index) : 0;
-  return `var(--chart-${(((i % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE) + 1})`;
+  const position = ((i % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE;
+  const slot = options?.order === "cvd" ? CVD_ORDER[position] : position;
+  return `var(--chart-${slot + 1})`;
 }
 
 /** Semantic money colours, theme-aware via tokens. Pair with +/- and arrow
@@ -26,9 +48,64 @@ export const CHART_COLORS = {
   income: "var(--money-income)",
   expense: "var(--money-expense)",
   net: "var(--money-net)",
+  neutral: "var(--money-neutral)",
   assigned: "var(--brand)",
   activity: "var(--money-expense)",
+  /** A generic total line — not money-coloured, the chart's neutral ink. */
+  total: "var(--chart-ink)",
 } as const;
+
+/**
+ * What a chart draws that is NOT a series (anyplot's roles, 0.49). Two inks, which are
+ * the only chart colours that change between light and dark — the eight hues do not:
+ *
+ * - `other` / `rest` / `disabled` and confidence-`band` fills → the MUTED ink. A
+ *   treemap's "rest" bucket or a pie's "Other" slice takes this instead of wrapping
+ *   round to a hue the reader will match to a real series.
+ * - `total` / `baseline` / `outline` → the neutral INK.
+ */
+export const CHART_ROLES = {
+  other: "var(--chart-muted)",
+  rest: "var(--chart-muted)",
+  disabled: "var(--chart-muted)",
+  band: "var(--chart-muted)",
+  total: "var(--chart-ink)",
+  baseline: "var(--chart-ink)",
+  outline: "var(--chart-ink)",
+} as const;
+
+/** `--chart-ink` per theme, as hex (tokens.css holds the same two). */
+export const CHART_INK_HEX = { light: "#1a1a17", dark: "#f0efe8" } as const;
+/** `--chart-muted` per theme, as hex (tokens.css holds the same two). */
+export const CHART_MUTED_HEX = { light: "#6b6a63", dark: "#a8a79f" } as const;
+
+/** The 3:1 WCAG 1.4.11 asks of a filled graphical object against its surface. */
+export const EDGE_MIN_CONTRAST = 3;
+
+/**
+ * The 1px edge a FILLED mark (a bar, an area, a treemap tile) needs, or `undefined`.
+ *
+ * anyplot's answer to hues that sit under 3:1 on the ground (cyan, lime, lavender, ochre
+ * and green on cream; matte red and rose on the dark ground): outline the shape in ink,
+ * so its boundary is legible while the fill keeps the hue that identifies the series.
+ * Only those — a hue that clears 3:1 on every surface given stays unstroked, because an
+ * outline on every bar is noise.
+ *
+ * `fill` must be a measurable `#rgb`/`#rrggbb`; `surfaces` are the grounds the mark can
+ * sit on (the card and the page), and the WORST of them decides. Anything it cannot
+ * measure gets no edge rather than a guessed one.
+ */
+export function chartEdge(
+  fill: string,
+  surfaces: readonly string[],
+  ink: string = CHART_ROLES.outline,
+): string | undefined {
+  if (!parseRgbHex(fill)) return undefined;
+  const measurable = surfaces.filter((s) => parseRgbHex(s));
+  if (measurable.length === 0) return undefined;
+  const worst = Math.min(...measurable.map((s) => contrast(fill, s)));
+  return worst < EDGE_MIN_CONTRAST ? ink : undefined;
+}
 
 // ── Raw hex stops, by theme ────────────────────────────────────────────────
 // The heatmaps interpolate colours in JS (CSS vars can't be lerped), so they
@@ -42,9 +119,14 @@ export const CHART_COLORS = {
 // DEFAULT_PRESET" — which is not optional: they HAD drifted, five of the six light
 // heat stops, and the light `neutral` was still Tailwind's slate-100, a cool grey on
 // the warm cream page this theme has used since #328.
+//
+// 0.49: the same eight hues in both themes — anyplot does not re-tune a hue for the dark
+// ground, and neither does the kit any more; `chartEdge` outlines the two that fall
+// under 3:1 there (matte red, rose) instead of lifting them into different colours.
+const IMPRINT_HEX = ["#009e73", "#c475fd", "#4467a3", "#bd8233", "#ae3030", "#2abccd", "#954477", "#99b314"] as const;
 export const PALETTE_HEX = {
-  light: ["#332288", "#88ccee", "#44aa99", "#117733", "#999933", "#ddcc77", "#cc6677", "#882255", "#aa4499"],
-  dark: ["#7e72d6", "#9fd8f2", "#5fc4b0", "#3fa45f", "#bfbf5e", "#e8dda0", "#e08c9a", "#c25a78", "#cc78be"],
+  light: IMPRINT_HEX,
+  dark: IMPRINT_HEX,
 } as const;
 
 /** A heatmap's interpolation stops for one theme. Open string fields so any
@@ -59,24 +141,24 @@ export interface HeatStops {
 }
 
 /** Diverging (variance: under←0→over) and sequential (spending intensity)
-    heatmap stops, per theme. Teal = under/good, amber = over/spend = bad. */
+    heatmap stops, per theme — anyplot's scales (0.49). Sequential runs anyplot green →
+    blue; diverging runs blue (under) ↔ paper/ink (0, the midpoint) ↔ matte red (over).
+    The hues are the same in both themes; only the midpoint flips with the ground. */
 export const HEATMAP_HEX = {
   light: {
-    neutral: "#f1e7d2", // the cream surface itself, not a cool grey
-    under: "#0b6650", // DEFAULT_PRESET.light.moneyIncome
-    over: "#9c6418", // DEFAULT_PRESET.light.moneyExpense, warmed to the page
-    seqLow: "#f6ecd0",
-    seqHigh: "#9c6418",
+    neutral: "#faf8f1", // anyplot's light paper — the diverging scale's 0
+    under: "#4467a3",
+    over: "#ae3030",
+    seqLow: "#009e73",
+    seqHigh: "#4467a3",
     empty: "rgba(148,163,184,0.14)",
   },
   dark: {
-    neutral: "#363a5a", // one step above --border on the indigo-noir surface
-    under: "#22c3b6", // DEFAULT_PRESET.dark.moneyIncome
-    // Brighter than dark.moneyExpense (#e4b035) on purpose: a gradient endpoint is
-    // meant to be the loudest thing in its scale, and it is a fill, not a figure.
-    over: "#fbbf24",
-    seqLow: "#3a2c14", // dim amber, sits just above the page
-    seqHigh: "#fbbf24",
+    neutral: "#1a1a17", // anyplot's ink — the diverging scale's 0 on the dark ground
+    under: "#4467a3",
+    over: "#ae3030",
+    seqLow: "#009e73",
+    seqHigh: "#4467a3",
     empty: "rgba(148,163,184,0.10)",
   },
 } as const;

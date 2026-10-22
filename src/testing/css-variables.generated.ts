@@ -3,16 +3,16 @@
 // fails while this is stale.
 
 /** Every custom property tokens.css declares, `@theme inline` names and `--app-nav-h`
- *  left out (100 names). */
+ *  left out (102 names). */
 export const KIT_NAMES =
   "--bg-active --bg-hover --bg-inverse --bg-page --bg-surface --bg-surface-2 --border " +
   "--border-strong --brand --brand-bg --brand-bg-hover --brand-contrast --brand-hover --brand-muted " +
   "--breakpoint-3xl --chart-1 --chart-2 --chart-3 --chart-4 --chart-5 --chart-6 --chart-7 --chart-8 " +
-  "--chart-9 --danger --danger-bg --danger-border --danger-border-strong --danger-contrast " +
-  "--danger-hover --flyout-from --focus-ring-width --hue-blue --hue-blue-bg --hue-blue-border " +
-  "--hue-blue-contrast --hue-indigo --hue-indigo-bg --hue-indigo-border --hue-indigo-contrast " +
-  "--hue-orange --hue-orange-bg --hue-orange-border --hue-orange-contrast --hue-purple " +
-  "--hue-purple-bg --hue-purple-border --hue-purple-contrast --hue-teal --hue-teal-bg " +
+  "--chart-9 --chart-ink --chart-muted --danger --danger-bg --danger-border --danger-border-strong " +
+  "--danger-contrast --danger-hover --flyout-from --focus-ring-width --hue-blue --hue-blue-bg " +
+  "--hue-blue-border --hue-blue-contrast --hue-indigo --hue-indigo-bg --hue-indigo-border " +
+  "--hue-indigo-contrast --hue-orange --hue-orange-bg --hue-orange-border --hue-orange-contrast " +
+  "--hue-purple --hue-purple-bg --hue-purple-border --hue-purple-contrast --hue-teal --hue-teal-bg " +
   "--hue-teal-border --hue-teal-contrast --info --info-bg --info-border --info-contrast --media-ink " +
   "--media-scrim --media-scrim-hover --money-expense --money-expense-contrast --money-income " +
   "--money-income-contrast --money-net --money-net-contrast --money-neutral " +

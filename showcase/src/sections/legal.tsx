@@ -193,7 +193,7 @@ const IMPRESSUM = (
     <LegalKitSection section="operator" />
     <LegalKitSection section="contact" />
     <LegalKitSection section="disclaimer" />
-    <LegalSection key="credits" heading="Credits" body="The chart palette is Paul Tol's “Muted” scheme." />
+    <LegalSection key="credits" heading="Credits" body="The chart palette is anyplot's “Imprint” scheme (anyplot.ai)." />
   </>
 );
 

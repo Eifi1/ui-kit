@@ -12,7 +12,8 @@ import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ComponentProps, ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { Treemap as RechartsTreemap } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
-import { PALETTE_HEX, textOn } from "../theme/chart-palette";
+import { PALETTE_HEX, PALETTE_SIZE, textOn } from "../theme/chart-palette";
+import { resolveChartColor, useChartEdge } from "./chart-edge";
 import { parseHex } from "../theme/color";
 import { dirOf, type Direction } from "../lib/direction";
 import { cn } from "../lib/cn";
@@ -40,7 +41,9 @@ export interface TreemapNode {
   value: number;
   /** Overrides the by-index palette colour for this tile — e.g. to paint every child
    *  in its parent group's colour, so the groups stay legible in one picture. A
-   *  concrete `#rrggbb` or a bare `var(--chart-N)` keeps the label ink measured;
+   *  concrete `#rrggbb` or a bare `var(--chart-N)` keeps the label ink measured — so
+   *  does `CHART_ROLES.other` (`var(--chart-muted)`), the colour for a "rest" bucket,
+   *  which should not wrap round to a hue the reader matches to a real node;
    *  anything else (another var, a `color-mix()`) gets `currentColor` ink, because
    *  there is nothing to measure — set `labelColor` then. */
   fill?: string;
@@ -102,7 +105,8 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
   maxTiles?: number;
   /**
    * The categorical ramp tiles take by index, as concrete hex. Default: the page's
-   * live `--chart-1…9` tokens (see `useChartTokenHex`). Pass one when the host
+   * live `--chart-1…8` tokens (see `useChartTokenHex`), cycled after eight like
+   * `paletteFor` (0.49). Pass one when the host
    * already holds the active palette — e.g. `createPaletteStore`'s `useChartHex()` —
    * so a caller colouring a legend beside the map is guaranteed the same list.
    */
@@ -120,7 +124,7 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
 // re-read whenever <html>'s class or style changes — which is exactly when a theme
 // toggle or a palette switch lands.
 
-const CHART_TOKENS = 9;
+const CHART_TOKENS = PALETTE_SIZE;
 
 /** The resolved ramp, joined into ONE string so `useSyncExternalStore` compares a
  *  primitive: a fresh array per read would never be `Object.is`-equal to the last and
@@ -164,9 +168,12 @@ const CHART_TOKEN_REF = /^var\(\s*--chart-(\d+)\s*\)$/;
 function measurableFill(fill: string, tokens: readonly string[]): string | null {
   if (parseHex(fill)) return fill;
   const m = CHART_TOKEN_REF.exec(fill.trim());
-  if (!m) return null;
-  const hex = tokens[Number(m[1]) - 1];
-  return hex && parseHex(hex) ? hex : null;
+  const hex = m ? tokens[Number(m[1]) - 1] : undefined;
+  if (hex && parseHex(hex)) return hex;
+  // Any other bare token the page declares — `var(--chart-muted)` for a rest bucket,
+  // `var(--chart-9)`, a money colour — read off <html> as it resolves.
+  if (typeof document === "undefined") return null;
+  return resolveChartColor(fill, getComputedStyle(document.documentElement));
 }
 
 // ── Tile ──────────────────────────────────────────────────────────────────
@@ -242,6 +249,7 @@ export function TreemapCell({
   // Before the early return: a hook has to run on every render of the cell.
   const tokenHex = useChartTokenHex();
   const { scale } = useTextSize();
+  const edgeFor = useChartEdge();
   // Depth 0 is recharts' synthetic root, which spans the whole chart.
   if (!depth) return null;
   // Whole pixels: a rect on a half pixel renders its edge across two half-lit
@@ -253,6 +261,9 @@ export function TreemapCell({
   const tileFill = fill ?? "var(--chart-1)";
   const measured = measurableFill(tileFill, tokenHex);
   const ink = labelColor ?? (measured ? textOn(measured) : "currentColor");
+  // A tile in a hue under 3:1 against the card gets a 1px ink edge inside the gutter
+  // (WCAG 1.4.11, anyplot's rule); a hue that clears it stays bare.
+  const edge = measured ? edgeFor(measured) : undefined;
   // The halo only on an OPAQUE fill we could measure. A translucent fill (a
   // `color-mix(… transparent)`) composited twice — once as the tile, once as the halo
   // over it — draws a darker ring round every glyph, which read as doubled text on the
@@ -311,6 +322,20 @@ export function TreemapCell({
         strokeWidth={2}
         rx={3}
       />
+      {edge && pw > 3 && ph > 3 && (
+        <rect
+          data-edge=""
+          x={px + 1.5}
+          y={py + 1.5}
+          width={pw - 3}
+          height={ph - 3}
+          fill="none"
+          stroke={edge}
+          strokeWidth={1}
+          rx={2}
+          style={{ pointerEvents: "none" }}
+        />
+      )}
       {label != null && (
         <text
           // A plain attribute, so the host's `[data-private]` rule reaches an SVG

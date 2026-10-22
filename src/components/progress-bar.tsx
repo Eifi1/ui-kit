@@ -58,6 +58,7 @@ const TRACK_HEIGHT: Record<ProgressBarSize, string> = { sm: "h-1", slim: "h-1.5"
 
 // A segment with no tone of its own takes the next categorical chart colour, so a
 // stacked bar of unnamed parts is still a set of tellable parts rather than one fill.
+// Eight, cycled like `paletteFor` (0.49): `--chart-9` only repeats slot 1.
 const SERIES_FILL = [
   "bg-[var(--chart-1)]",
   "bg-[var(--chart-2)]",
@@ -67,7 +68,6 @@ const SERIES_FILL = [
   "bg-[var(--chart-6)]",
   "bg-[var(--chart-7)]",
   "bg-[var(--chart-8)]",
-  "bg-[var(--chart-9)]",
 ];
 
 /** Each segment's fill classes: its own classes, else its tone, else (with no `color`)

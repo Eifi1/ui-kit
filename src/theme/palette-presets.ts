@@ -1,7 +1,8 @@
 // Appearance presets — the single source of truth for the "palette switcher"
 // (feedback #307). Each preset is a full set of design-token values for BOTH
 // light and dark, covering the page/surface backgrounds, the brand accent, the
-// semantic money trio and the 9-colour categorical chart palette, plus the
+// semantic money trio and the categorical chart palette (anyplot's eight "Imprint"
+// hues by default since 0.49, Paul Tol's nine in `PAUL_TOL_PRESET`), plus the
 // heatmap stops. A preset is applied at runtime by writing these as CSS custom
 // properties onto <html> (see palette-store.ts), which instantly re-skins every
 // token-driven surface and chart. The two heatmaps and the treemap interpolate
@@ -40,7 +41,9 @@ export interface TokenSet {
   moneyExpense: string;
   moneyNet: string;
   moneyNeutral: string;
-  // Categorical chart series (Paul Tol "Muted" by default — CVD-safe), exactly 9
+  // Categorical chart series, written as `--chart-1…9`. anyplot's eight "Imprint" hues by
+  // default (0.49), Paul Tol "Muted"'s nine in `PAUL_TOL_PRESET`. `paletteFor` cycles
+  // eight; a shorter ramp is repeated to fill `--chart-9` (see `applyTokenSet`).
   chart: string[];
   // Heatmap interpolation stops (variance diverging + spending sequential)
   heat: HeatStops;
@@ -54,6 +57,59 @@ export interface PalettePreset {
   dark: TokenSet;
 }
 
+// ── "Imprint" chart hues (feedback #119; the default since 0.49) ─────────────
+// anyplot's categorical palette (https://anyplot.ai/palette), by a colleague of
+// Marcel's. 8 hues + an amber semantic anchor, derived from Wong 2011 by a
+// Petroff-style max-min ΔE search in CAM02-UCS with Machado 2009 CVD simulation —
+// the same lineage as Paul Tol "Muted", one generation on, and tuned for exactly the
+// warm cream paper our light theme uses.
+//
+// 0.49 (Marcel, 2026-10-22): the DEFAULT, in anyplot's slot order, eight slots — amber
+// #DDCC77 left the pool, it is anyplot's semantic warning anchor, not a series colour.
+// The SAME hues in both themes: 0.48 lifted matte red and rose for the dark ground
+// (#BF413E, #A25083), which made the dark chart a different palette from the light one.
+// anyplot answers a hue under 3:1 with a 1px ink edge instead, and so does the kit now
+// (`chartEdge`, drawn by SeriesChart's bars and areas and by Treemap's tiles).
+//
+// Measured on our surfaces (CIEDE2000, Machado severity-100, 8 like-for-like slots on
+// the cream light surface #f6ecd9) — neither palette dominates:
+//   Paul Tol Muted  min-contrast 1.38 · worst-CVD ΔE00 11.8 · normal ΔE00 16.1
+//   imprint         min-contrast 1.95 · worst-CVD ΔE00  7.2 · normal ΔE00 22.2
+// i.e. imprint is punchier and has no near-invisible pale slot (Tol's #88ccee sits at
+// 1.5:1 on cream), while Tol separates better under colour-vision deficiency — which is
+// why `paletteFor` offers anyplot's CVD-optimal order (`{ order: "cvd" }`).
+const IMPRINT_HUES = [
+  "#009e73", // brand green   — first series, always
+  "#c475fd", // lavender      — creative
+  "#4467a3", // blue          — cool / info
+  "#bd8233", // ochre         — earth / commodity
+  "#ae3030", // matte red     — bad / loss / error
+  "#2abccd", // cyan          — sky / tech-cool
+  "#954477", // rose          — wellness / health
+  "#99b314", // lime          — growth / nature
+];
+
+/** anyplot's scales (0.49): sequential green → blue, diverging blue (under) ↔ paper or
+ *  ink (0) ↔ matte red (over). `chart-palette.ts`'s `HEATMAP_HEX` holds the same. */
+const ANYPLOT_HEAT: Record<"light" | "dark", HeatStops> = {
+  light: {
+    neutral: "#faf8f1",
+    under: "#4467a3",
+    over: "#ae3030",
+    seqLow: "#009e73",
+    seqHigh: "#4467a3",
+    empty: "rgba(148,163,184,0.14)",
+  },
+  dark: {
+    neutral: "#1a1a17",
+    under: "#4467a3",
+    over: "#ae3030",
+    seqLow: "#009e73",
+    seqHigh: "#4467a3",
+    empty: "rgba(148,163,184,0.10)",
+  },
+};
+
 // The shipped default (feedback #328): SOLAR-DUSK warm light + INDIGO-NOIR deep
 // dark surfaces — the two curated presets the user picked per mode — but with a
 // SINGLE unified brand accent (indigo) across both modes rather than each
@@ -62,10 +118,15 @@ export interface PalettePreset {
 // the dark block is Indigo Noir (already indigo). The money trio
 // (income/expense/net) drives the chart bars and stays palette-driven so those
 // semantic colours adapt to each mode's contrast (best practice — feedback #328).
+//
+// 0.49: its chart ramp and heat stops are anyplot's ("Imprint", above) — the money
+// trio stays the kit's own (Marcel, 2026-10-22: chart income/expense/net/neutral keep
+// the money tokens, never anyplot's green/red). The 0.48 default, the same surfaces
+// with Paul Tol's ramp, is `PAUL_TOL_PRESET`.
 export const DEFAULT_PRESET: PalettePreset = {
   id: "default",
-  name: "Default",
-  blurb: "Solar-dusk light · indigo-noir dark",
+  name: "Imprint",
+  blurb: "anyplot.ai chart hues · solar-dusk light · indigo-noir dark",
   light: {
     // Solar Dusk (light) surfaces, with the brand unified to indigo (see above).
     bgPage: "#ede3cf",
@@ -84,15 +145,8 @@ export const DEFAULT_PRESET: PalettePreset = {
     moneyExpense: "#905902",
     moneyNet: "#7a4fa3",
     moneyNeutral: "#6b6453",
-    chart: ["#332288", "#88ccee", "#44aa99", "#117733", "#999933", "#ddcc77", "#cc6677", "#882255", "#aa4499"],
-    heat: {
-      neutral: "#f1e7d2",
-      under: "#0b6650",
-      over: "#9c6418",
-      seqLow: "#f6ecd0",
-      seqHigh: "#9c6418",
-      empty: "rgba(148,163,184,0.14)",
-    },
+    chart: IMPRINT_HUES,
+    heat: ANYPLOT_HEAT.light,
   },
   dark: {
     // Indigo Noir (dark)
@@ -115,6 +169,36 @@ export const DEFAULT_PRESET: PalettePreset = {
     moneyExpense: "#e4b035",
     moneyNet: "#b39aef",
     moneyNeutral: "#9aa1bd",
+    chart: IMPRINT_HUES,
+    heat: ANYPLOT_HEAT.dark,
+  },
+};
+
+
+/**
+ * The 0.48 default: the same surfaces, brand and money, with Paul Tol's "Muted" nine
+ * as the chart ramp and the teal/amber heat stops that went with it. Selectable, no
+ * longer the default (0.49). `paletteFor` cycles eight, so its ninth hue (#aa4499) is
+ * reachable only as `var(--chart-9)`.
+ */
+export const PAUL_TOL_PRESET: PalettePreset = {
+  id: "paul-tol",
+  name: "Paul Tol muted",
+  blurb: "Paul Tol's CVD-safe chart hues · solar-dusk light · indigo-noir dark",
+  light: {
+    ...DEFAULT_PRESET.light,
+    chart: ["#332288", "#88ccee", "#44aa99", "#117733", "#999933", "#ddcc77", "#cc6677", "#882255", "#aa4499"],
+    heat: {
+      neutral: "#f1e7d2",
+      under: "#0b6650",
+      over: "#9c6418",
+      seqLow: "#f6ecd0",
+      seqHigh: "#9c6418",
+      empty: "rgba(148,163,184,0.14)",
+    },
+  },
+  dark: {
+    ...DEFAULT_PRESET.dark,
     chart: ["#7e72d6", "#9fd8f2", "#5fc4b0", "#3fa45f", "#bfbf5e", "#e8dda0", "#e08c9a", "#c25a78", "#cc78be"],
     heat: {
       neutral: "#363a5a",
@@ -127,73 +211,20 @@ export const DEFAULT_PRESET: PalettePreset = {
   },
 };
 
-// ── "Imprint" chart hues (feedback #119) ──────────────────────────────────────
-// anyplot's categorical palette (https://anyplot.ai/palette), by a colleague of
-// Marcel's. 8 hues + an amber semantic anchor, derived from Wong 2011 by a
-// Petroff-style max-min ΔE search in CAM02-UCS with Machado 2009 CVD simulation —
-// the same lineage as our default Paul Tol "Muted", one generation on, and tuned
-// for exactly the warm cream paper our light theme uses.
-//
-// This preset is DEFAULT_PRESET with ONLY the 9 categorical chart hues swapped;
-// surfaces, brand and the semantic money trio stay put, because those were their
-// own deliberate decisions (#307/#328) and are not what the palette is for. The
-// heatmap stops likewise stay teal/amber: they encode under/over, and imprint's
-// own diverging ramp is red↔blue, which would fight the money semantics.
-//
-// Measured on our surfaces (CIEDE2000, Machado severity-100, 8 like-for-like
-// slots on the cream light surface #f6ecd9) — neither palette dominates:
-//   Paul Tol Muted  min-contrast 1.38 · worst-CVD ΔE00 11.8 · normal ΔE00 16.1
-//   imprint         min-contrast 1.95 · worst-CVD ΔE00  7.2 · normal ΔE00 22.2
-// i.e. imprint is punchier and has no near-invisible pale slot (Tol's #88ccee
-// sits at 1.5:1 on cream), while Tol separates better under colour-vision
-// deficiency. So this ships as a CHOICE, not as a new default.
-//
-// The dark set keeps imprint's hues verbatim except matte-red and rose, whose
-// lightness is lifted (oklch L 0.50→0.55) because verbatim they land at 2.67:1
-// and 2.76:1 on our deep-indigo dark surface — under WCAG 2.1 SC 1.4.11's 3:1
-// non-text minimum. Lifted they clear it at 3.30:1 / 3.28:1. anyplot documents
-// the same shortfall on their own dark ground and answers it with a stroke halo;
-// lifting keeps the fix in the token layer instead of every chart component.
-const IMPRINT_HUES_LIGHT = [
-  "#009E73", // brand green   — first series
-  "#C475FD", // lavender      — creative
-  "#4467A3", // blue          — cool / info
-  "#BD8233", // ochre         — earth / commodity
-  "#AE3030", // matte red     — bad / loss / error
-  "#2ABCCD", // cyan          — sky / tech-cool
-  "#954477", // rose          — wellness / health
-  "#99B314", // lime          — growth / nature
-  "#DDCC77", // amber         — anyplot's semantic anchor, used here as slot 9
-];
-const IMPRINT_HUES_DARK = [
-  "#009E73",
-  "#C475FD",
-  "#4467A3",
-  "#BD8233",
-  "#BF413E", // matte red, L-lifted for our dark surface
-  "#2ABCCD",
-  "#A25083", // rose, L-lifted for our dark surface
-  "#99B314",
-  "#DDCC77",
-];
-
-export const IMPRINT_PRESET: PalettePreset = {
-  id: "imprint",
-  name: "Imprint",
-  blurb: "Colourblind-safe chart hues by anyplot.ai",
-  light: { ...DEFAULT_PRESET.light, chart: IMPRINT_HUES_LIGHT },
-  dark: { ...DEFAULT_PRESET.dark, chart: IMPRINT_HUES_DARK },
-};
+/** @deprecated 0.49 — Imprint IS the default now; use `DEFAULT_PRESET`. A persisted
+ *  `"imprint"` id resolves to it through `presetById`'s fallback. */
+export const IMPRINT_PRESET: PalettePreset = DEFAULT_PRESET;
 
 // The full-theme switcher from #307 stayed retired (feedback #328) — the default
 // is still the single source of truth for surfaces, brand and money (its five
 // alternatives are gone, see the header). What IS selectable is
-// the categorical chart ramp (feedback #119), so these two presets are the live
-// set; presetById falls back to the default for any stale persisted id.
+// the categorical chart ramp (feedback #119), so Imprint (the default) and Paul Tol are
+// the live set; presetById falls back to the default for any stale persisted id.
 /**
  * The categorical chart ramp, shared by every derived preset below.
  *
- * Paul Tol's "Muted" set, unchanged, and deliberately NOT re-derived per preset. A
+ * The default's ramp (anyplot's eight since 0.49, Paul Tol's "Muted" before), and
+ * deliberately NOT re-derived per preset. A
  * categorical ramp solves a different problem from a UI palette — separability among
  * nine unknown siblings, rather than contrast against one known surface — and a set
  * optimised against real dichromat confusion lines beats one spaced evenly by formula.
@@ -205,7 +236,7 @@ export const IMPRINT_PRESET: PalettePreset = {
  * SINGLE_LIGHTNESS_MAX_SERIES — so a chart with more than four series must carry a
  * second channel (a direct label, a pattern, a legend adjacent to the mark).
  */
-const PAUL_TOL = {
+const KIT_RAMP = {
   light: DEFAULT_PRESET.light.chart,
   dark: DEFAULT_PRESET.dark.chart,
 } as const;
@@ -249,7 +280,7 @@ export const DERIVED_PRESETS: PalettePreset[] = [
       moneyExpense: "#8e5900",
       moneyNet: "#7356a2",
       moneyNeutral: "#61646c",
-      chart: PAUL_TOL.light,
+      chart: KIT_RAMP.light,
       heat: {
         neutral: "#dce2ef",
         under: "#00725f",
@@ -274,7 +305,7 @@ export const DERIVED_PRESETS: PalettePreset[] = [
       moneyExpense: "#b77b29",
       moneyNet: "#9679c9",
       moneyNeutral: "#a1a5ac",
-      chart: PAUL_TOL.dark,
+      chart: KIT_RAMP.dark,
       heat: {
         neutral: "#1d212b",
         under: "#009a80",
@@ -304,7 +335,7 @@ export const DERIVED_PRESETS: PalettePreset[] = [
       moneyExpense: "#8e5900",
       moneyNet: "#7356a2",
       moneyNeutral: "#5f6662",
-      chart: PAUL_TOL.light,
+      chart: KIT_RAMP.light,
       heat: {
         neutral: "#d8e6dd",
         under: "#00725f",
@@ -329,7 +360,7 @@ export const DERIVED_PRESETS: PalettePreset[] = [
       moneyExpense: "#b87c2a",
       moneyNet: "#977ac9",
       moneyNeutral: "#9fa7a2",
-      chart: PAUL_TOL.dark,
+      chart: KIT_RAMP.dark,
       heat: {
         neutral: "#1a241e",
         under: "#009a80",
@@ -359,7 +390,7 @@ export const DERIVED_PRESETS: PalettePreset[] = [
       moneyExpense: "#8d5800",
       moneyNet: "#7355a2",
       moneyNeutral: "#676269",
-      chart: PAUL_TOL.light,
+      chart: KIT_RAMP.light,
       heat: {
         neutral: "#e7dfea",
         under: "#00715e",
@@ -384,7 +415,7 @@ export const DERIVED_PRESETS: PalettePreset[] = [
       moneyExpense: "#b77b29",
       moneyNet: "#9679c9",
       moneyNeutral: "#a8a2aa",
-      chart: PAUL_TOL.dark,
+      chart: KIT_RAMP.dark,
       heat: {
         neutral: "#251f27",
         under: "#009980",
@@ -414,7 +445,7 @@ export const DERIVED_PRESETS: PalettePreset[] = [
       moneyExpense: "#8d5800",
       moneyNet: "#7255a1",
       moneyNeutral: "#616467",
-      chart: PAUL_TOL.light,
+      chart: KIT_RAMP.light,
       heat: {
         neutral: "#e1e2e3",
         under: "#00715e",
@@ -439,7 +470,7 @@ export const DERIVED_PRESETS: PalettePreset[] = [
       moneyExpense: "#b77b29",
       moneyNet: "#9679c9",
       moneyNeutral: "#a2a5a8",
-      chart: PAUL_TOL.dark,
+      chart: KIT_RAMP.dark,
       heat: {
         neutral: "#212122",
         under: "#009a80",
@@ -452,7 +483,7 @@ export const DERIVED_PRESETS: PalettePreset[] = [
   },
 ];
 
-export const PALETTES: PalettePreset[] = [DEFAULT_PRESET, IMPRINT_PRESET, ...DERIVED_PRESETS];
+export const PALETTES: PalettePreset[] = [DEFAULT_PRESET, PAUL_TOL_PRESET, ...DERIVED_PRESETS];
 
 export function presetById(id: string): PalettePreset {
   return PALETTES.find((p) => p.id === id) ?? DEFAULT_PRESET;
@@ -508,5 +539,11 @@ export function applyTokenSet(
   el.style.setProperty("--money-expense", step?.well?.moneyExpense ?? t.moneyExpense);
   el.style.setProperty("--money-net", step?.well?.moneyNet ?? t.moneyNet);
   el.style.setProperty("--money-neutral", step?.well?.moneyNeutral ?? t.moneyNeutral);
-  t.chart.forEach((c, i) => el.style.setProperty(`--chart-${i + 1}`, c));
+  // All nine `--chart-N`, a shorter ramp repeated: Imprint's eight write `--chart-9` as
+  // slot 0 — what `paletteFor(8)` names — so a host addressing `var(--chart-9)` directly
+  // follows the cycle, and switching away from Paul Tol's nine leaves no stale ninth hue.
+  // An empty ramp (a `derivePalette` set) leaves whatever was there, deliberately.
+  if (t.chart.length > 0) {
+    for (let i = 0; i < 9; i++) el.style.setProperty(`--chart-${i + 1}`, t.chart[i % t.chart.length]);
+  }
 }

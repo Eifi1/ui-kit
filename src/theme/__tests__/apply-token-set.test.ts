@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PALETTES, applyTokenSet, type TokenSet } from "../palette-presets";
+import { DEFAULT_PRESET, PALETTES, PAUL_TOL_PRESET, applyTokenSet, type TokenSet } from "../palette-presets";
 
 /**
  * Every field of a `TokenSet` has to reach the element.
@@ -38,13 +38,15 @@ describe("applyTokenSet", () => {
         for (const key of scalars) {
           expect(el.style.getPropertyValue(cssName(key))).toBe(t[key as keyof TokenSet]);
         }
-        t.chart.forEach((c, i) => {
-          expect(el.style.getPropertyValue(`--chart-${i + 1}`)).toBe(c);
-        });
+        // All nine slots, a shorter ramp repeated (0.49: Imprint's eight write
+        // `--chart-9` as slot 1, where `paletteFor(8)` lands).
+        for (let i = 0; i < 9; i++) {
+          expect(el.style.getPropertyValue(`--chart-${i + 1}`)).toBe(t.chart[i % t.chart.length]);
+        }
 
         // Nothing beyond those, so a stale property left behind by a renamed token
         // shows up here rather than silently shadowing the stylesheet.
-        expect(el.style.length).toBe(scalars.length + t.chart.length);
+        expect(el.style.length).toBe(scalars.length + 9);
       });
     }
   }
@@ -52,6 +54,14 @@ describe("applyTokenSet", () => {
   it("is not vacuous — a preset really does carry the fields being counted", () => {
     const t = PALETTES[0].light;
     expect(Object.keys(t).length).toBeGreaterThan(10);
-    expect(t.chart).toHaveLength(9);
+    expect(t.chart).toHaveLength(8);
+  });
+
+  it("leaves no stale ninth hue when switching from Paul Tol back to the default", () => {
+    const el = document.createElement("div");
+    applyTokenSet(el, PAUL_TOL_PRESET.light);
+    expect(el.style.getPropertyValue("--chart-9")).toBe("#aa4499");
+    applyTokenSet(el, DEFAULT_PRESET.light);
+    expect(el.style.getPropertyValue("--chart-9")).toBe(DEFAULT_PRESET.light.chart[0]);
   });
 });

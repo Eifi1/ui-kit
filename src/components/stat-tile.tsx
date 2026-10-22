@@ -597,14 +597,21 @@ function FigureRow({
   // next row stayed on one — two layouts in one list, and a figure no longer beside
   // the period it belongs to. Now the label breaks within itself and the amount stays
   // on the label's first line, end-aligned like every other row.
+  //
+  // 0.49: between WORDS only. `overflow-wrap:anywhere` (with `min-w-0`) cut a single
+  // word at any letter — "PROJECT|ED" in a 160px KPI tile at 360px. The label now keeps
+  // a flex item's own floor, its longest word; only a word that cannot share the line
+  // with the figure sends the figure to the next line, still end-aligned. `break-word`
+  // is the last resort for a word wider than the whole tile, and does not lower that
+  // floor the way `anywhere` did.
   return (
     <div
       className={cn(
         "flex text-xs tabular-nums text-muted",
-        stacked ? "flex-col items-start" : "items-baseline gap-x-2",
+        stacked ? "flex-col items-start" : "flex-wrap items-baseline gap-x-2",
       )}
     >
-      <dt className="min-w-0 uppercase tracking-wide [overflow-wrap:anywhere]">{figure.label}</dt>
+      <dt className="max-w-full uppercase tracking-wide [overflow-wrap:break-word]">{figure.label}</dt>
       <dd
         data-private={priv}
         className={cn(

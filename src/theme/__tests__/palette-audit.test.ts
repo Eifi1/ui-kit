@@ -1,6 +1,6 @@
 import { contrast, hexToOklch } from "../color";
 import { auditChartRamp, auditPalette, derivePalette, type SemanticTokens } from "../palette-derive";
-import { DEFAULT_PRESET, DERIVED_PRESETS, IMPRINT_PRESET, PALETTES } from "../palette-presets";
+import { DEFAULT_PRESET, DERIVED_PRESETS, PALETTES, PAUL_TOL_PRESET } from "../palette-presets";
 import { hexOf, over, resolveTokens } from "../../test/tokens-css";
 
 const TOKENS_CSS = Object.values(
@@ -165,14 +165,14 @@ describe("the categorical chart ramp", () => {
    * quietly reverses it — chasing the contrast number and collapsing two hues together —
    * fails here instead of shipping.
    */
-  it.each([DEFAULT_PRESET, IMPRINT_PRESET].map((p) => [p.id, p] as const))(
+  it.each([DEFAULT_PRESET, PAUL_TOL_PRESET].map((p) => [p.id, p] as const))(
     "%s keeps its series separable under every dichromacy",
     (id, preset) => {
       for (const mode of ["light", "dark"] as const) {
         const t = preset[mode];
         const report = auditChartRamp(t.chart, [t.bgPage, t.bgSurface, t.bgSurface2]);
         expect(report.minSeparation, `${id}/${mode} separation`).toBeGreaterThanOrEqual(0.03);
-        expect(report.colors).toHaveLength(9);
+        expect(report.colors).toHaveLength(preset.light.chart.length);
       }
     },
   );
