@@ -154,6 +154,10 @@ export { useCloseTransition, OVERLAY_EXIT_MS } from "./hooks/use-close-transitio
 export { useRowSwipe } from "./hooks/use-row-swipe";
 // 0.28: keksdose's noindex marker, for the legal and auth pages of every app.
 export { useNoIndex } from "./hooks/use-noindex";
+// 0.49 KIT-9: the window's title from page, section and app, in the provider's format.
+export { useDocumentTitle } from "./hooks/use-document-title";
+export { DEFAULT_DOCUMENT_TITLE_FORMAT, formatDocumentTitle } from "./lib/document-title";
+export type { DocumentTitleParts } from "./lib/document-title";
 export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-row-swipe";
 // Any element as a file drop target, screened like FileButton (kastlan).
 export { useFileDrop, dragHasFiles } from "./hooks/use-file-drop";

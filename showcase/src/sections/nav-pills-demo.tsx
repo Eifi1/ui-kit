@@ -125,7 +125,7 @@ export function SectionNavDemo() {
       hint="one row that scrolls sideways under the title, the open page scrolled into view; 44 px pills, 48 px tall"
     >
       <div className="max-w-sm overflow-hidden rounded-md border border-subtle bg-page p-3">
-        <PageHeader title="Page header" description="App chrome" />
+        <PageHeader as="h2" title="Page header" description="App chrome" />
         <SectionNav
           label="App chrome"
           items={CHROME_PAGES}

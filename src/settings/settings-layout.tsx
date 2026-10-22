@@ -323,6 +323,7 @@ export function SettingsLayout<G extends string>({
       <div className={pageClass} data-settings-view="group">
         <PageHeader
           size="compact"
+          documentTitle={false}
           title={open.title}
           description={open.help}
           breadcrumbs={
@@ -347,7 +348,7 @@ export function SettingsLayout<G extends string>({
       </div>
     ) : (
       <div className={pageClass} data-settings-view="list">
-        <PageHeader size="compact" title={pageTitle} />
+        <PageHeader size="compact" documentTitle={false} title={pageTitle} />
         {searchField}
         {searching ? (
           results
@@ -409,7 +410,7 @@ export function SettingsLayout<G extends string>({
       );
     body = (
       <div className={pageClass} data-settings-view="desktop">
-        <PageHeader size="compact" title={pageTitle} />
+        <PageHeader size="compact" documentTitle={false} title={pageTitle} />
         {searchField}
         <div className="md:grid md:grid-cols-[14rem_minmax(0,1fr)] md:gap-6">
           {withSidebarFooter(

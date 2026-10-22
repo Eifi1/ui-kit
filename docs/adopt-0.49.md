@@ -168,3 +168,33 @@ showcase's Colour roles page opens with "Which tone for which status", one sente
 | keksdose | `features/admin/jobs-panel.tsx:258` `VERDICT_TONE` (StatusDot, `ok: "success"`, …); the transaction status column (`features/transactions/use-transaction-columns.tsx:297`) draws its own indicators. | Replace `VERDICT_TONE` with a verdict → `StatusKind` map and `<StatusDot status=…>`; any `tone="brand"` on a status chip becomes the kind it means. |
 | kastlan | One registry, `shared/enums/enum-meta.ts` (79 `tone:` entries; `StatusBadge` in `shared/components/feedback/status-badge.tsx:18` reads it). Statuses use semantic tones and hues side by side: invoices `OPEN: "blue"`, `PARTIALLY_PAID: "warning"`, `PAID: "success"`, `OVERDUE: "danger"`, `CANCELLED: "neutral"` (`enum-meta.ts:136–157`); units `VACANT: "success"`, `RENTED: "danger"`, `RENOVATION: "warning"` (`:77–89`). | Give the *status* enums (invoice, lease `:105`, deposit `:175`, request `:225`, dunning `:335`, unit, protocol, period, budget, journal entry) a `status: StatusKind` in `EnumMeta` instead of `tone`, and let `StatusBadge` pass `status=`: invoices open → `active`, partially paid → `attention`, paid → `good`, overdue → `problem`, cancelled → `inactive`. Decide units: a rented unit is not a problem — `rented → active` (or `good`), `vacant → attention`, `renovation → inactive`. Categories that are not states (meter type, insurance type, invoice type) keep their hues. |
 | Kurvenschmiede | No status chips with a semantic meaning found (`frontend/src`, 2026-10-22). | Nothing; use `status=` for new ones. |
+
+## KIT-9: page titles — `useDocumentTitle`, `PageHeader.documentTitle`, `Breadcrumbs.hideCurrent`
+
+BREAKING (on a bump, no code): a `PageHeader` that is the page's `h1` (the default `as`) with a
+**string** `title` now writes the window's title while it is mounted and puts the old one back
+when it unmounts. Without `appName` on the provider that title is the page alone ("Units"),
+no longer the app's name from `index.html`. And a `Breadcrumbs` passed to a `PageHeader`'s
+`breadcrumbs` hides its current entry (the title right below names it); the entry before stays
+a link and no entry carries `aria-current`. The header draws no trail when only the home entry
+(`home: true`, or `href: "/"`) would be left.
+
+New:
+- `UiKitProvider appName="Kastlan"` (the `{app}` part) and `documentTitleFormat` (default
+  `DEFAULT_DOCUMENT_TITLE_FORMAT`, `"{page} · {section} · {app}"`). A missing part drops with
+  its separator: "Units · Kastlan", never "Units ·  · Kastlan".
+- `useDocumentTitle([page, section?, app?])` for a page without a `PageHeader`;
+  `formatDocumentTitle(format, { page, section, app })`, `useKitDocumentTitle()`.
+- `PageHeader.documentTitle`: a string (for a title that is not a string, such as a name with
+  a chip), `[page, section]`, or `false` to leave the window alone. An `h2`/`h3` header writes
+  nothing unless given one. `SettingsLayout` keeps writing its own title (its headers pass
+  `false`).
+- `Breadcrumbs.hideCurrent` (default `true` inside a `PageHeader`, `false` elsewhere);
+  `hideCurrent={false}` keeps the current entry as text with `aria-current="page"`;
+  `BreadcrumbItem.home`.
+
+| App | What changes on a bump | Steps |
+|---|---|---|
+| keksdose | Its 18 `PageHeader`s with a string title rename the tab to the page ("Budget"); none passes `breadcrumbs`. | Pass `appName="Keksdose"` to the provider (`shared/i18n/kit-labels.tsx:108`); check app tests that read `document.title`. |
+| kastlan | Its pages' `PageHeader`s (65, through `shared/components/display/page-header.tsx:8`) rename the tab. Its trail is drawn by the layout above the page (`app/app-layout.tsx:184`, `shared/components/layout/breadcrumbs.tsx`), outside the header, so it keeps its current entry. | `appName="Kastlan"` on the provider (`app/providers.tsx:79`). To stop the trail repeating the title: pass `hideCurrent` in `shared/components/layout/breadcrumbs.tsx` (the route trail), or move it into the `PageHeader`'s `breadcrumbs`. A section can go in as `documentTitle={[title, t("nav.group.finance")]}`. |
+| Kurvenschmiede | The `PageHeader`s with a string title rename the tab; the settings and admin titles ("Security · Settings · Kurvenschmiede") are `SettingsLayout`'s and do not change. Its two `breadcrumbs` are back links, not `Breadcrumbs` (`features/setpoint/session-page.tsx:340`, `features/corner/corner-page.tsx:315`): unchanged. | `appName="Kurvenschmiede"` on the provider (`main.tsx:85`). |

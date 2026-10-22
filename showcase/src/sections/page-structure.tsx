@@ -107,7 +107,7 @@ function PageHeaders() {
       <p className={`mt-4 ${READOUT}`}>
         title element: &lt;{as}&gt; · readings created: {created}
       </p>
-      <div className="mt-3">
+      <div className="mt-3 space-y-2">
         <Note>
           <code className="font-mono">as</code> is the title&apos;s element and defaults to{" "}
           <code className="font-mono">h1</code> — a page has one, and this is it; the specimen uses{" "}
@@ -117,6 +117,18 @@ function PageHeaders() {
           above it; <code className="font-mono">size=&quot;sm&quot;</code> is the dense tool page&apos;s title.
           The header has no outer margin — the page&apos;s own rhythm places it. Narrow the window: the
           three actions drop under the title and wrap instead of running off the screen.
+        </Note>
+        <Note>
+          The trail ends at &ldquo;Units&rdquo;, a link: inside a header with a title,{" "}
+          <code className="font-mono">Breadcrumbs</code> hides its current entry (
+          <code className="font-mono">hideCurrent</code>, default <code className="font-mono">true</code> there), so
+          the title is not said twice, and the header draws no trail when only the home entry would be left.{" "}
+          <code className="font-mono">hideCurrent={"{false}"}</code> keeps the current entry as text with{" "}
+          <code className="font-mono">aria-current=&quot;page&quot;</code>. An <code className="font-mono">h1</code>{" "}
+          header also titles the window: <code className="font-mono">documentTitle</code> (default: a string{" "}
+          <code className="font-mono">title</code>) goes through <code className="font-mono">useDocumentTitle</code>{" "}
+          in the provider&apos;s format, <code className="font-mono">&quot;{"{page} · {section} · {app}"}&quot;</code>,
+          a missing part dropping with its separator.
         </Note>
       </div>
     </Example>

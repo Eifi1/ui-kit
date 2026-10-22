@@ -557,6 +557,8 @@ interface KitI18n {
   formatDate?: KitDateFormatter;
   tableStorageKeyPrefix?: string;
   timeZone?: string;
+  documentTitleFormat?: string;
+  appName?: string;
 }
 
 /** What a {@link KitDateFormatter} is told about the date it is formatting. */
@@ -699,6 +701,16 @@ export interface UiKitProviderProps {
    * it names in every zone). Left out, timestamps follow the device, as before.
    */
   timeZone?: string;
+  /**
+   * 0.49 KIT-9: how `useDocumentTitle` and every `PageHeader`'s `h1` write the window's
+   * title, from `{page}`, `{section}` and `{app}`. Default
+   * `"{page} · {section} · {app}"` (`DEFAULT_DOCUMENT_TITLE_FORMAT`); a missing part
+   * drops with its separator.
+   */
+  documentTitleFormat?: string;
+  /** 0.49 KIT-9: the app's name, the `{app}` of the window's title ("Kastlan"). Left
+   *  out, titles end at the page or section. */
+  appName?: string;
   children: ReactNode;
 }
 
@@ -719,6 +731,8 @@ export function UiKitProvider({
   formatDate,
   tableStorageKeyPrefix,
   timeZone,
+  documentTitleFormat,
+  appName,
   children,
 }: UiKitProviderProps) {
   const outer = useContext(KitI18nContext);
@@ -732,8 +746,22 @@ export function UiKitProvider({
       formatDate: formatDate ?? outer.formatDate,
       tableStorageKeyPrefix: tableStorageKeyPrefix ?? outer.tableStorageKeyPrefix,
       timeZone: timeZone ?? outer.timeZone,
+      documentTitleFormat: documentTitleFormat ?? outer.documentTitleFormat,
+      appName: appName ?? outer.appName,
     }),
-    [outer, labels, locale, weekStartsOn, linkComponent, chartTooltipPlacement, formatDate, tableStorageKeyPrefix, timeZone],
+    [
+      outer,
+      labels,
+      locale,
+      weekStartsOn,
+      linkComponent,
+      chartTooltipPlacement,
+      formatDate,
+      tableStorageKeyPrefix,
+      timeZone,
+      documentTitleFormat,
+      appName,
+    ],
   );
   useTableViewsJoin(value.tableStorageKeyPrefix ?? DEFAULT_TABLE_STORAGE_KEY_PREFIX);
   return <KitI18nContext.Provider value={value}>{children}</KitI18nContext.Provider>;
@@ -890,6 +918,15 @@ export function useKitTableStorageKeyPrefix(): string | undefined {
  *  `timeZone` wins over it. */
 export function useKitTimeZone(): string | undefined {
   return useContext(KitI18nContext).timeZone;
+}
+
+/** The nearest provider's `documentTitleFormat` and `appName`, or `undefined` each —
+ *  what `useDocumentTitle` writes with (the format's default is
+ *  `DEFAULT_DOCUMENT_TITLE_FORMAT`, applied there: this module reaches nothing outside
+ *  i18n/). */
+export function useKitDocumentTitle(): { format: string | undefined; appName: string | undefined } {
+  const { documentTitleFormat, appName } = useContext(KitI18nContext);
+  return { format: documentTitleFormat, appName };
 }
 
 /** {@link DEFAULT_FILE_LABELS}, but formatting in the provider's locale. */

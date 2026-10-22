@@ -294,7 +294,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.49.0 (+3, KIT-6, 2026-10-22): `SectionNav`, and from /shell `pickMobileBar` and
   // `DEFAULT_MOBILE_MAX_ITEMS`, the phone bar counted in cells.
   // 0.49.0 (+2, KIT-8, 2026-10-22): `statusTone`, `STATUS_KINDS` — Chip/StatusDot `status`.
-  ["@eifi1/ui-kit", barrel, 1004],
+  // 0.49.0 (+4, KIT-9, 2026-10-22): `useDocumentTitle`, `formatDocumentTitle`,
+  // `DEFAULT_DOCUMENT_TITLE_FORMAT`, and the provider's `useKitDocumentTitle`.
+  ["@eifi1/ui-kit", barrel, 1008],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

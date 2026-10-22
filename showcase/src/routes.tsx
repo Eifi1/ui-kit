@@ -1273,7 +1273,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The parts of a page that are not its content: the header with its trail and actions, the breadcrumbs on their own, and the section label, caption and status dot.",
         icon: PanelTop,
-        components: ["PageHeader", "Breadcrumbs", "SectionLabel", "Caption", "StatusDot", "NavPills", "SectionNav", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
+        components: ["PageHeader", "Breadcrumbs", "useDocumentTitle", "formatDocumentTitle", "SectionLabel", "Caption", "StatusDot", "NavPills", "SectionNav", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
         Body: () => (
           <>
             <PageStructure />
