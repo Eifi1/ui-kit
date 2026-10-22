@@ -1048,7 +1048,7 @@ export const useTx = create<TxState>()(
 
       <Example
         label="saveBlob(blob, filename) · filenameFromDisposition(header, fallback)"
-        hint="0.34: one download for a file the page fetched itself, and the name the server asked for."
+        hint="one download for a file the page fetched itself, and the name the server asked for."
       >
         <SaveBlobSpecimen />
         <OutTable rows={DISPOSITION_CASES} />
