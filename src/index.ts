@@ -387,6 +387,9 @@ export * from "./components/section-nav";
 // given — and the list field built from it. Distinct from Button on purpose: a row of
 // buttons reads as "choose an action", a row of chips as "here are the things".
 export * from "./components/chip";
+// 0.49.0 (KIT-8): five domain-free status kinds and their tones — Chip/StatusDot `status`.
+export { statusTone, STATUS_KINDS } from "./lib/status-tone";
+export type { StatusKind, StatusTone } from "./lib/status-tone";
 // ChipInput's own module since MOD-9: it renders Chip, so chip.tsx re-exports only its types.
 export * from "./components/chip-input";
 export * from "./components/wizard-stepper";

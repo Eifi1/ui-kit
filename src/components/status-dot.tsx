@@ -1,5 +1,6 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { statusTone, type StatusKind } from "../lib/status-tone";
 import type { ProgressBarTone } from "./progress-bar";
 import type { ChipHue } from "./chip";
 
@@ -90,6 +91,9 @@ const DOT_ON_FIRST_LINE: Record<StatusDotSize, string> = {
 
 export interface StatusDotProps extends Omit<ComponentPropsWithRef<"span">, "children"> {
   tone?: StatusDotTone;
+  /** What the dot means as a status (0.49 KIT-8), instead of a `tone` — see Chip's
+   *  `status` and {@link statusTone}. An explicit `tone` wins. */
+  status?: StatusKind;
   size?: StatusDotSize;
   /**
    * Visible text beside the dot — a legend entry ("Rented") or a status ("Online"). It
@@ -122,7 +126,8 @@ export interface StatusDotProps extends Omit<ComponentPropsWithRef<"span">, "chi
  * this.
  */
 export function StatusDot({
-  tone = "neutral",
+  tone: toneProp,
+  status,
   size = "sm",
   label,
   ring = false,
@@ -131,6 +136,7 @@ export function StatusDot({
   "aria-label": ariaLabel,
   ...rest
 }: StatusDotProps) {
+  const tone: StatusDotTone = toneProp ?? (status ? statusTone(status) : "neutral");
   const dot = (
     <span
       // The tone as data (0.34, refactor audit 2026-10, TST-9): a stable hook for a test or

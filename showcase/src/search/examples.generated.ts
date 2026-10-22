@@ -29,6 +29,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "createThemeStore · createPaletteStore",
   ],
   "colour-roles": [
+    "Which tone for which status",
     "Every fill and its foreground",
     "Each tone as text, wash and line",
     "The strong lines",

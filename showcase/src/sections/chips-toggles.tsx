@@ -302,11 +302,12 @@ export function ChipsToggles() {
 
 /* ── 0.8.0: variant, shape, caps, renderLink, removeDisabled ──────────────── */
 
+// Statuses by what they mean (`status`, 0.49): never `brand`, which is the app's colour.
 const STATUS_BADGES = [
-  { text: "Paid", tone: "success" },
-  { text: "Draft", tone: "neutral" },
-  { text: "Overdue", tone: "danger" },
-  { text: "Admin", tone: "brand" },
+  { text: "Paid", status: "good" },
+  { text: "Unpaid", status: "attention" },
+  { text: "Overdue", status: "problem" },
+  { text: "Draft", status: "inactive" },
 ] as const;
 
 /** react-router's Link takes `to`, not `href` — so the chip hands its props over and the
@@ -315,7 +316,7 @@ const routerLink = ({ href, ...props }: ChipLinkProps) => <Link to={href} {...pr
 
 function ChipVariants() {
   const [unread, setUnread] = useState(7);
-  const [on, setOn] = useState(["Overdue"]);
+  const [on, setOn] = useState(["Rent"]);
   const toggle = (v: string) => setOn((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
   return (
     <Example
@@ -336,19 +337,19 @@ function ChipVariants() {
         <Row>
           <span className="w-16 font-mono text-caption text-muted">caps</span>
           {STATUS_BADGES.map((b) => (
-            <Chip key={b.text} tone={b.tone} size="sm" caps>
+            <Chip key={b.text} status={b.status} size="sm" caps>
               {b.text}
             </Chip>
           ))}
           {STATUS_BADGES.map((b) => (
-            <Chip key={`o-${b.text}`} tone={b.tone} size="sm" caps variant="outline" shape="square">
+            <Chip key={`o-${b.text}`} status={b.status} size="sm" caps variant="outline" shape="square">
               {b.text}
             </Chip>
           ))}
         </Row>
         <Row>
           <span className="w-16 font-mono text-caption text-muted">square</span>
-          {["Overdue", "EUR", "Q3"].map((v) => (
+          {["Rent", "EUR", "Q3"].map((v) => (
             <Chip key={v} shape="square" tone="brand" variant="outline" selected={on.includes(v)} onClick={() => toggle(v)}>
               {v}
             </Chip>
@@ -581,8 +582,8 @@ function Chips() {
           <Chip href="#/chips-toggles#chip-the-three-shapes" icon={Hash}>
             a link
           </Chip>
-          {["Unpaid", "Overdue"].map((v) => (
-            <Chip key={v} onClick={() => toggle(v)} selected={pressed.includes(v)} tone="brand">
+          {(["Unpaid", "Overdue"] as const).map((v) => (
+            <Chip key={v} onClick={() => toggle(v)} selected={pressed.includes(v)} status={v === "Unpaid" ? "attention" : "problem"}>
               {v}
             </Chip>
           ))}
@@ -666,8 +667,8 @@ function Chips() {
 
 function ChipStates() {
   const [inflow, setInflow] = useState(false);
-  const [filters, setFilters] = useState(["Overdue", "EUR"]);
-  const [on, setOn] = useState<string[]>(["Overdue"]);
+  const [filters, setFilters] = useState(["Rent", "EUR"]);
+  const [on, setOn] = useState<string[]>(["Rent"]);
   const [log, setLog] = useState("—");
   const [locked, setLocked] = useState(true);
   return (
@@ -721,7 +722,7 @@ function ChipStates() {
             <em>not plain text</em>
           </Chip>
           {filters.length < 2 && (
-            <Button variant="ghost" onClick={() => setFilters(["Overdue", "EUR"])}>
+            <Button variant="ghost" onClick={() => setFilters(["Rent", "EUR"])}>
               Restore the filters
             </Button>
           )}
@@ -754,7 +755,7 @@ function ChipStates() {
         <code className="font-mono">aria-current</code>. A remove beside a link or a toggle is a
         sibling button, not a nested one, and removing never follows the link — but both sit in
         ONE pill: the wrapper carries the border, the tone and your{" "}
-        <code className="font-mono">className</code>, so &ldquo;Overdue ×&rdquo; reads as a single
+        <code className="font-mono">className</code>, so &ldquo;Rent ×&rdquo; reads as a single
         chip, and the link or toggle part gets its own focus ring and a hover wash inside it. A chip whose
         content is not plain text has no value to name its × after, so it falls back to{" "}
         <code className="font-mono">removeLabel</code> (here &ldquo;Unpin&rdquo;) — otherwise the

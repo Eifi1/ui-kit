@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { Button, Card, Checkbox, cn, contrast } from "@eifi1/ui-kit";
-import type { Rgb } from "@eifi1/ui-kit";
+import { Button, Card, Checkbox, Chip, STATUS_KINDS, StatusDot, cn, contrast, statusTone } from "@eifi1/ui-kit";
+import type { Rgb, StatusKind } from "@eifi1/ui-kit";
 // `@eifi1/ui-kit/testing` in an app. The showcase maps only the main entry and its
 // sub-paths `rhf`, `dates` and `table-text` (alias.ts and tsconfig.json's `paths`), so
 // the entry is reached by its file here — the code shown beside the specimen uses the
@@ -734,9 +734,65 @@ function GuardDemo() {
 }
 
 /** The "Colour roles" page. */
+/** One sentence per kind: when a status is that kind, with an example. */
+const STATUS_WHEN: Record<StatusKind, { example: string; when: string }> = {
+  good: { example: "Paid", when: "Done, settled or healthy: the reader has nothing to do." },
+  attention: { example: "Unpaid", when: "Needs a look or an action soon, but nothing is wrong yet." },
+  problem: { example: "Overdue", when: "Something is wrong or late and needs action now." },
+  active: { example: "Sent", when: "In progress or current: neither good nor bad, just moving." },
+  inactive: { example: "Draft", when: "Over, paused or not started: out of the reader's way." },
+};
+
+/** KIT-8 (0.49): which tone a status takes, decided by what it means. */
+function StatusTonesDemo() {
+  return (
+    <Example
+      label="Which tone for which status"
+      hint="statusTone(kind), or status= on Chip and StatusDot — never brand, never the money pair"
+    >
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[18rem] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-subtle text-start text-xs text-muted">
+              <th scope="col" className="py-2 pe-3 text-start font-medium">Status</th>
+              <th scope="col" className="py-2 pe-3 text-start font-medium">Kind → tone</th>
+              <th scope="col" className="py-2 text-start font-medium">When</th>
+            </tr>
+          </thead>
+          <tbody>
+            {STATUS_KINDS.map((kind) => (
+              <tr key={kind} className="border-b border-subtle align-top last:border-b-0">
+                <td className="py-2 pe-3">
+                  <span className="flex flex-col items-start gap-1.5">
+                    <Chip size="sm" status={kind}>
+                      {STATUS_WHEN[kind].example}
+                    </Chip>
+                    <StatusDot status={kind} label={STATUS_WHEN[kind].example} />
+                  </span>
+                </td>
+                <td className="whitespace-nowrap py-2 pe-3 font-mono text-xs text-secondary">
+                  {kind} → {statusTone(kind)}
+                </td>
+                <td className="py-2 text-secondary">{STATUS_WHEN[kind].when}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Note>
+        Map each of your statuses to one of the five kinds once — {code('<Chip status="problem">Overdue</Chip>')},
+        or {code("statusTone(kind)")} where a tone is wanted — and the same meaning has the same colour in every
+        table. {code("brand")} is the app&apos;s own colour, not a state; {code("income")} and {code("expense")} say
+        which way money flows, not how a record stands. An explicit {code("tone")} still wins over {code("status")}.
+      </Note>
+    </Example>
+  );
+}
+
 export function ColourRoles033Demo() {
   return (
     <>
+      <StatusTonesDemo />
       <FillsDemo />
       <TonesDemo />
       <LinesDemo />

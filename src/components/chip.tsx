@@ -3,6 +3,7 @@ import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode, Ref } from "re
 import { Check, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
+import { statusTone, type StatusKind } from "../lib/status-tone";
 import { TOUCH_TARGET_LARGE } from "./button-look";
 import { FOCUS_RING } from "./focus-ring";
 import { assignRef, LockedReason, type DisabledReasonDisplay } from "./field-parts";
@@ -342,6 +343,12 @@ const REMOVE_HIT_AREA_LARGE =
 interface ChipBaseProps {
   children: ReactNode;
   tone?: ChipTone;
+  /**
+   * What the value means as a status (0.49 KIT-8), instead of a `tone`: `good` (success),
+   * `attention` (warning), `problem` (danger), `active` (info), `inactive` (neutral) —
+   * {@link statusTone}. An explicit `tone` wins. Never `brand` for a status.
+   */
+  status?: StatusKind;
   size?: ChipSize;
   /** See {@link ChipVariant}. Default `soft`. */
   variant?: ChipVariant;
@@ -537,7 +544,8 @@ export type ChipProps = ChipBaseProps &
 export function Chip({
   ref,
   children,
-  tone = "neutral",
+  tone: toneProp,
+  status,
   size = "md",
   variant = "soft",
   shape = "pill",
@@ -563,6 +571,7 @@ export function Chip({
   commit,
   ...rest
 }: ChipProps) {
+  const tone: ChipTone = toneProp ?? (status ? statusTone(status) : "neutral");
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS, { remove: removeLabel });
   const reasonId = useId();
   const disabledReason = useCommitReason(commit, ownDisabledReason);

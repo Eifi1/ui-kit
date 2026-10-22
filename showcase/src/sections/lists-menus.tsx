@@ -192,7 +192,7 @@ function RowStates() {
           icon={Wallet}
           title="Overdue rent reminder"
           subtitle="status — a mark of your own in the unread dot's place"
-          status={<StatusDot tone="danger" size="md" aria-label="Overdue" />}
+          status={<StatusDot status="problem" size="md" aria-label="Overdue" />}
           onClick={() => {}}
         />
         <ListItem
