@@ -689,7 +689,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TourStep — the shape a step actually takes",
     "Tour — the step after a spotlighted one",
     "TourCatalogue — the tours page body",
-    "useTourProgress with an account (0.45)",
+    "useTourProgress with an account",
   ],
   "command-palette": [
     "CommandPalette",

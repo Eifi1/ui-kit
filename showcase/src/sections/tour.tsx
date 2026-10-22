@@ -80,8 +80,8 @@ export function GuidedTour() {
               ["padding?: number", "Spotlight padding around the target, px (default 8)."],
               ["placement?", '"top" | "bottom" | "start" | "end" | "left" | "right" | "center"; omit for auto. start/end follow the target\'s reading direction, left/right are physical'],
               ["awaitClick?: boolean", "Advance only when the TARGET is clicked. Needs `target`."],
-              ["interactive?: boolean", "0.46: the target is for using — the layers it opens (number pad, menus, popovers at z-50) sit above the scrim."],
-              ["awaitInput?: boolean", "0.46: advance once a value was entered in the target's field (blur or Enter). Implies interactive."],
+              ["interactive?: boolean", "The target is for using — the layers it opens (number pad, menus, popovers at z-50) sit above the scrim."],
+              ["awaitInput?: boolean", "Advance once a value was entered in the target's field (blur or Enter). Implies interactive."],
               ["beforeStep?", "Sync or async; awaited before the target is located."],
             ]}
           />
@@ -234,7 +234,7 @@ function TourLauncher() {
         <code className="font-mono">stop()</code> sits in the welcome step&apos;s{" "}
         <code className="font-mono">action</code> rather than beside the launcher: while a tour
         runs the page outside the card and the spotlit target takes no clicks (the tour is{" "}
-        <code className="font-mono">aria-modal</code>, and since 0.7.0 the pointer is held to that
+        <code className="font-mono">aria-modal</code>, and the pointer is held to that
         too), so a Stop button out on the page could never be pressed.
       </Note>
     </div>
@@ -464,12 +464,10 @@ export function TourStaleSpotlight022Demo() {
         </Button>
       </div>
       <Note>
-        Before 0.22 a step with no target (or a missing one) right after a spotlighted step kept that step&apos;s hole and
-        parked its card beside it, and Back→Next kept it indefinitely. React 19
-        dropped the overlay&apos;s render-phase reset while the follow interval had an update queued; the located rect now
-        carries the step it was found for, and a rect from another step is never drawn. Walk it with the arrows too.
+        A step with no target (or a missing one) right after a spotlighted step draws no hole and centres its card,
+        Back→Next included: the located rect carries the step it was found for, and a rect from another step is never
+        drawn, even while the follow interval has an update queued. Walk it with the arrows too.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -602,7 +600,7 @@ function TourAccountDemo() {
   const [online, setOnline] = useState(true);
   return (
     <Example
-      label="useTourProgress with an account (0.45)"
+      label="useTourProgress with an account"
       hint="the device key as the account's cache, the :pending record, signOutTourProgress (docs/tours-harmonization.md §10)"
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -747,7 +745,7 @@ function TourCatalogueBody({ toast }: { toast: string | null }) {
         `useTourUrlSync` starts a tour from `?tour=` and mirrors `&tourStep=`. Progress is `useTourProgress` on this
         device; &quot;Goals&quot; was completed before its update, so it is to do again, with the reason. The header
         counts with `doneCount` and `earnedPoints`, and &ldquo;Forget&rdquo; is `resetTourProgress`, what the device
-        reset calls. Since 0.43. Since 0.44 the `TourProvider` takes `progress` and `onComplete(tour, {'{'}awarded{'}'})`:
+        reset calls. The `TourProvider` takes `progress` and `onComplete(tour, {'{'}awarded{'}'})`:
         a launch passes `start(steps, {'{'} tour {'}'})`, the provider writes the completion once and the app shows its
         toast there. &ldquo;Seed&rdquo; is `completeTour`, for an app&apos;s tests and seeds.
       </Note>
