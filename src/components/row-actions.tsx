@@ -262,7 +262,7 @@ function toneAttr(tone: RowActionTone | undefined) {
  * A row's actions, inline or as a "⋯" menu — see {@link RowActionsCollapse}. Every
  * control stops its click (and the Enter/Space it stands for) from reaching the row, so
  * a clickable row or a DataTable `rowLink` does not open as well; in a DataTable column
- * also set `noRowLink: true`, as {@link rowActionsColumn} does.
+ * also set `noRowLink: true` and `role: "actions"`, as {@link rowActionsColumn} does.
  *
  * Inline, the icons sit in a {@link CompactControls} region at Normal: their labels
  * stay the names and the tooltips, and a locked one keeps its reason in the tooltip — a
@@ -724,7 +724,7 @@ export interface RowActionsColumnOptions<T> {
    */
   header?: ReactNode | false;
   labels?: LabelOverride<RowActionsLabels>;
-  /** Anything else for the column (`mobileHidden`, `cellProps`…), merged last. */
+  /** Anything else for the column (`mobileHidden`, `cellProps`, another `role`…), merged last. */
   column?: Partial<DataTableColumn<T>>;
 }
 
@@ -736,9 +736,10 @@ export interface RowActionsColumnOptions<T> {
  *
  * The heading says "Actions" on screen (0.46.1; `header` changes or hides it), the
  * column hugs its content at the row's end, and `noRowLink` keeps a `rowHref` anchor off it, so the
- * buttons keep their own clicks. On a phone it is a line of the card like any column;
- * set `column: { mobileHidden: true }` to drop it there (with `mobileDetailsInRow` it
- * then shows in the opened row instead).
+ * buttons keep their own clicks. It is `role: "actions"` (0.49 KIT-7): DataTable's default
+ * phone card draws it after its three fields, at the card's end, and never counts it as
+ * one of them. Set `column: { mobileHidden: true }` to drop it there (with
+ * `mobileDetailsInRow` it then shows in the opened row instead).
  */
 export function rowActionsColumn<T>({
   key = "actions",
@@ -778,6 +779,8 @@ export function rowActionsColumn<T>({
     // `RowActionsHead` (0.47).
     headClassName: ROW_ACTIONS_HEAD_CLASS,
     noRowLink: true,
+    // After the phone card's fields, never one of them (0.49 KIT-7).
+    role: "actions",
     ...column,
   };
 }

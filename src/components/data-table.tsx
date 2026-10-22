@@ -11,6 +11,7 @@ import {
   MobileSelectBar,
   MobileSort,
   StackedFields,
+  keepsOwnClicks,
   mobileCardColumns,
   useCardColumnWarnings,
 } from "./data-table-mobile";
@@ -78,17 +79,26 @@ export interface DataTableColumn<T> {
    * is left out of that card. The columns the card does not show go into the opened
    * row with `mobileDetailsInRow`. A `noRowLink` column (the cell's own buttons or link)
    * counts as a field: past the third it leaves the card with its action, and a
-   * development build says so once per column key.
+   * development build says so once per table and column key. Give a column of row
+   * actions `role: "actions"` instead: it is then no field, and the card draws it after
+   * them.
    */
   mobile?: "primary" | "secondary" | "hidden";
   /**
-   * What the column is (0.49 KIT-7). `"status"`: on the phone's default card its value
-   * sits as a chip beside the title instead of as a label/value line, and takes none of
-   * the card's three fields. A cell that returns text is drawn in a neutral `Chip`; one
-   * that returns an element (a `Chip` with its own tone, a `StatusDot`) is drawn as it
-   * is. The desktop table is unchanged.
+   * What the column is (0.49 KIT-7), for the phone's default card; the desktop table is
+   * unchanged.
+   *
+   * - `"status"`: its value sits as a chip beside the title instead of as a label/value
+   *   line, and takes none of the card's three fields. A cell that returns text is drawn
+   *   in a neutral `Chip`; one that returns an element (a `Chip` with its own tone, a
+   *   `StatusDot`) is drawn as it is.
+   * - `"actions"`: the row's buttons (`rowActionsColumn` sets it). Never the card's title
+   *   and never one of its three fields: the card draws it after them, at its end,
+   *   whether or not other columns are marked `mobile: "secondary"`; only `mobileHidden`
+   *   / `mobile: "hidden"` take it off. Its cell keeps its own clicks, as `noRowLink`:
+   *   no row link wraps it, and a card that draws it is not a link.
    */
-  role?: "status";
+  role?: "status" | "actions";
   /**
    * Set on a column whose cell renders its own `<a>` (or anything else that must
    * keep its own click): the row anchor of `rowHref` then skips it and lands on
@@ -1340,14 +1350,14 @@ export function DataTable<T>({
   // column panel. Resolved from `visibleColumns` for exactly that reason — off a
   // raw `columns` lookup a hidden headline would leave the row with no link at all.
   //
-  // `noRowLink` columns are skipped in BOTH steps: wrapping a cell that owns an
-  // anchor nests two links and disables the inner one (see the prop's note). If
-  // nothing visible is left to wrap, the row gets NO anchor — an anchor over the
-  // one cell there is would cancel that cell's own click and hand back nothing,
-  // and a row without a link still behaves exactly as it did before #451.
+  // `noRowLink` (and `role: "actions"`) columns are skipped in BOTH steps: wrapping a
+  // cell that owns an anchor nests two links and disables the inner one (see the prop's
+  // note). If nothing visible is left to wrap, the row gets NO anchor — an anchor
+  // over the one cell there is would cancel that cell's own click and hand back
+  // nothing, and a row without a link still behaves exactly as it did before #451.
   const linkColumn = rowHref
-    ? (visibleColumns.find((c) => c.mobilePrimary && !c.noRowLink) ??
-      visibleColumns.find((c) => !c.noRowLink))
+    ? (visibleColumns.find((c) => c.mobilePrimary && !keepsOwnClicks(c)) ??
+      visibleColumns.find((c) => !keepsOwnClicks(c)))
     : undefined;
 
   // ---- Column resize ---- (data-table-resize.ts: pointer capture, one `setWidths` per
@@ -1423,19 +1433,27 @@ export function DataTable<T>({
     [visibleColumns],
   );
   // The default card (0.49 KIT-7): the title, the status chips beside it, at most three
-  // fields — the ones marked `mobile: "secondary"`, else the first after the title.
-  const { primary: mobilePrimaryCol, status: mobileStatusColumns, fields: mobileSecondaryColumns } = useMemo(
-    () => mobileCardColumns(mobileColumns),
-    [mobileColumns],
-  );
+  // fields — the ones marked `mobile: "secondary"`, else the first after the title — and
+  // the `role: "actions"` columns after them.
+  const {
+    primary: mobilePrimaryCol,
+    status: mobileStatusColumns,
+    fields: mobileSecondaryColumns,
+    actions: mobileActionColumns,
+  } = useMemo(() => mobileCardColumns(mobileColumns), [mobileColumns]);
   // A development build names a `noRowLink` column (a per-row delete) the card drops.
-  useCardColumnWarnings(columns, !mobileCard && !mobileDetailsInRow);
+  useCardColumnWarnings(
+    columns,
+    !mobileCard && !mobileDetailsInRow,
+    storageKey ?? (typeof urlSync === "object" ? urlSync.prefix : undefined),
+  );
   // The columns the card leaves out, for the opened row (`mobileDetailsInRow`): the
   // hidden ones and, without a `mobileCard`, the ones past the card's three fields.
   const onCard = new Set<DataTableColumn<T>>([
     ...(mobilePrimaryCol ? [mobilePrimaryCol] : []),
     ...mobileStatusColumns,
     ...mobileSecondaryColumns,
+    ...mobileActionColumns,
   ]);
   const mobileDetailColumns = mobileDetailsInRow
     ? visibleColumns.filter((c) => (mobileCard ? c.mobileHidden || c.mobile === "hidden" : !onCard.has(c)))
@@ -1464,7 +1482,7 @@ export function DataTable<T>({
   // opens the row and leaves the cell's own link working. A caller's `mobileCard`
   // renderer is opaque to us; a link inside one is the caller's to declare by
   // marking the column it comes from.
-  const mobileCardLinkable = (mobileCard ? mobileColumns : [...onCard]).every((c) => !c.noRowLink);
+  const mobileCardLinkable = (mobileCard ? mobileColumns : [...onCard]).every((c) => !keepsOwnClicks(c));
   // The card list's reading direction, for the one thing on it CSS cannot flip: which
   // physical drag a logical `start`/`end` swipe action means. Read off the DOM through
   // a ref callback (it runs at commit, like a layout effect) because `dir` is an
@@ -1636,6 +1654,7 @@ export function DataTable<T>({
         mobilePrimaryCol={mobilePrimaryCol}
         mobileStatusColumns={mobileStatusColumns}
         mobileSecondaryColumns={mobileSecondaryColumns}
+        mobileActionColumns={mobileActionColumns}
         mobileExpandAsDialog={mobileExpandAsDialog}
         compact={compact}
         large={large}

@@ -408,6 +408,7 @@ export interface DataTableMobileRowProps<T>
     | "mobilePrimaryCol"
     | "mobileStatusColumns"
     | "mobileSecondaryColumns"
+    | "mobileActionColumns"
     | "mobileExpandAsDialog"
     | "compact"
     | "large"

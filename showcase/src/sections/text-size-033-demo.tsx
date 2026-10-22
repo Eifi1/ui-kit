@@ -183,7 +183,9 @@ export function RowActions033Demo() {
         &ldquo;⋯&rdquo;&apos;s `data-slot="row-actions"` box, so the selector resolves to a box the size of the
         button and a tap still reaches it; never on the entry in the open menu, which is portalled after the row
         and would only make the selector match twice. `glyphSize` and `tooltipSide` (&ldquo;start&rdquo; in a
-        table&apos;s last column) are the row&apos;s; `rowActionsColumn` passes both through. A hand-built
+        table&apos;s last column) are the row&apos;s; `rowActionsColumn` passes both through. Its column is
+        `role: "actions"`: DataTable&apos;s phone card draws it after the card&apos;s three fields, at the
+        card&apos;s end, and never counts it as one of them. A hand-built
         table gets the column&apos;s visible, end-aligned &ldquo;Actions&rdquo; heading from `RowActionsHead` and
         its cell from `ROW_ACTIONS_CELL_CLASS`.
       </Note>

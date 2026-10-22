@@ -101,25 +101,37 @@ export const MOBILE_CARD_FIELDS = 3;
 /**
  * The default phone card's columns (0.49 KIT-7), out of the phone's columns (visible,
  * not `mobileHidden`): the title — `mobile: "primary"` or `mobilePrimary`, else the
- * first that is not a status — the `role: "status"` columns for beside it, and at most
+ * first that is not a status — the `role: "status"` columns for beside it, at most
  * {@link MOBILE_CARD_FIELDS} fields: those marked `mobile: "secondary"` when any is,
- * else the first after the title.
+ * else the first after the title, and the `role: "actions"` columns, drawn after the
+ * fields. An actions column is never the title and never one of the fields, so the
+ * fields and the marks leave it on the card; only `mobileHidden` / `mobile: "hidden"`
+ * (which keep it out of `columns`) remove it.
  */
 export function mobileCardColumns<T>(columns: DataTableColumn<T>[]): {
   primary: DataTableColumn<T> | null;
   status: DataTableColumn<T>[];
   fields: DataTableColumn<T>[];
+  actions: DataTableColumn<T>[];
 } {
+  const titles = columns.filter((c) => c.role !== "actions");
   const primary =
-    columns.find((c) => c.mobile === "primary") ??
-    columns.find((c) => c.mobilePrimary) ??
-    columns.find((c) => c.role !== "status") ??
-    columns[0] ??
+    titles.find((c) => c.mobile === "primary") ??
+    titles.find((c) => c.mobilePrimary) ??
+    titles.find((c) => c.role !== "status") ??
+    titles[0] ??
     null;
   const status = columns.filter((c) => c !== primary && c.role === "status");
-  const rest = columns.filter((c) => c !== primary && c.role !== "status");
+  const actions = columns.filter((c) => c.role === "actions");
+  const rest = titles.filter((c) => c !== primary && c.role !== "status");
   const marked = rest.filter((c) => c.mobile === "secondary");
-  return { primary, status, fields: (marked.length > 0 ? marked : rest).slice(0, MOBILE_CARD_FIELDS) };
+  return { primary, status, fields: (marked.length > 0 ? marked : rest).slice(0, MOBILE_CARD_FIELDS), actions };
+}
+
+/** A column whose cell keeps its own clicks — `noRowLink`, or `role: "actions"`: no row
+ *  link may wrap it, and a card that draws it is not a link itself. */
+export function keepsOwnClicks<T>(col: DataTableColumn<T>): boolean {
+  return !!col.noRowLink || col.role === "actions";
 }
 
 /** The kit's dev switch, as `lib/logger.ts` reads it: a development build, never a
@@ -128,33 +140,37 @@ function devWarnings(): boolean {
   return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
 }
 
-const warnedCardColumns = new Set<string>();
-
 /**
  * A development build's note on the default phone card (0.49 KIT-7): a `noRowLink`
  * column past its three fields. Such a column holds the cell's own controls — a per-row
  * delete, a link — and the card leaves it out with them, so on a phone the action is
- * gone. Read off the declared `columns` (not the ones a person or the width hid), and
- * only while the table lets the card choose: `enabled` is false with a `mobileCard` or
+ * gone. Never for a `role: "actions"` column, which the card draws after its fields.
+ * Read off the declared `columns` (not the ones a person or the width hid), and only
+ * while the table lets the card choose: `enabled` is false with a `mobileCard` or
  * `mobileDetailsInRow` (the column is then in the opened row), and a column marked
- * `mobile: "secondary"` means the app chose. Once per column key.
+ * `mobile: "secondary"` means the app chose. Once per table and column key; `name`
+ * (the table's `storageKey` or `urlSync` prefix) says which table, else its title
+ * column does.
  */
-export function useCardColumnWarnings<T>(columns: DataTableColumn<T>[], enabled: boolean): void {
+export function useCardColumnWarnings<T>(columns: DataTableColumn<T>[], enabled: boolean, name?: string): void {
+  const warned = useRef<Set<string> | null>(null);
   useEffect(() => {
     if (!enabled || !devWarnings()) return;
     const phone = columns.filter((c) => !c.mobileHidden && c.mobile !== "hidden");
     if (phone.some((c) => c.mobile === "secondary")) return;
-    const { primary, status, fields } = mobileCardColumns(phone);
-    const onCard = new Set<DataTableColumn<T> | null>([primary, ...status, ...fields]);
+    const { primary, status, fields, actions } = mobileCardColumns(phone);
+    const onCard = new Set<DataTableColumn<T> | null>([primary, ...status, ...fields, ...actions]);
+    const table = name ? ` "${name}"` : primary ? ` (title column "${primary.key}")` : "";
+    warned.current ??= new Set();
     for (const col of phone) {
-      if (onCard.has(col) || !col.noRowLink || warnedCardColumns.has(col.key)) continue;
-      warnedCardColumns.add(col.key);
+      if (onCard.has(col) || !col.noRowLink || warned.current.has(col.key)) continue;
+      warned.current.add(col.key);
       console.warn(
-        `[ui-kit] DataTable: column "${col.key}" (noRowLink) is past the phone card's three fields and ` +
-          'leaves the card — mark it mobile: "secondary", or move its action to rowActions.',
+        `[ui-kit] DataTable${table}: column "${col.key}" (noRowLink) is past the phone card's three fields and ` +
+          'leaves the card — give it role: "actions" (drawn after the fields), or move its action to rowActions.',
       );
     }
-  }, [columns, enabled]);
+  }, [columns, enabled, name]);
 }
 
 /**
@@ -297,6 +313,8 @@ export interface MobileRowProps<T> {
   /** The `role: "status"` columns, drawn as chips beside the title (0.49 KIT-7). */
   mobileStatusColumns: DataTableColumn<T>[];
   mobileSecondaryColumns: DataTableColumn<T>[];
+  /** The `role: "actions"` columns, drawn after the fields at the card's end (0.49 KIT-7). */
+  mobileActionColumns: DataTableColumn<T>[];
   mobileExpandAsDialog: boolean;
   compact: boolean;
   /** The text size is Large or Extra large (§4). */
@@ -335,6 +353,7 @@ export function MobileRow<T>({
   mobilePrimaryCol,
   mobileStatusColumns,
   mobileSecondaryColumns,
+  mobileActionColumns,
   mobileExpandAsDialog,
   compact,
   large,
@@ -407,6 +426,7 @@ export function MobileRow<T>({
   // gets no line. Not computed for a `mobileCard`, which draws its own.
   const fields = mobileCard ? [] : filledFields(mobileSecondaryColumns, row);
   const statuses = mobileCard ? [] : filledFields(mobileStatusColumns, row);
+  const actionCells = mobileCard ? [] : filledFields(mobileActionColumns, row);
   const cardInner = (
     <>
       {/* The card's own content keeps the column it always had; the chevron sits
@@ -474,6 +494,17 @@ export function MobileRow<T>({
                   </Fragment>
                 ))}
               </dl>
+            )}
+            {/* The row's actions after the fields, at the card's end (0.49 KIT-7): its
+                buttons keep their own clicks, and RowActions folds into "⋯" at Large. */}
+            {actionCells.length > 0 && (
+              <div data-card-actions="" className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                {actionCells.map(({ col, value }) => (
+                  <div key={col.key} {...dataAttrsOf(col.cellProps?.(row))} className="flex min-w-0 justify-end">
+                    {value}
+                  </div>
+                ))}
+              </div>
             )}
           </>
         )}

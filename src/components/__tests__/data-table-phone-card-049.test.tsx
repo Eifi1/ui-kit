@@ -1,11 +1,12 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DataTable } from "../data-table";
 import type { DataTableColumn, DataTableProps } from "../data-table";
 import { Chip } from "../chip";
 import { booleanColumn } from "../data-table-cells";
-import { isEmptyCell } from "../data-table-mobile";
+import { isEmptyCell, mobileCardColumns } from "../data-table-mobile";
+import { rowActionsColumn } from "../row-actions";
 import { applyTextSize } from "../../theme/text-size";
 import { viewportMatchMedia } from "../../test/viewport";
 
@@ -185,15 +186,34 @@ describe("the dev warning for a noRowLink column the card drops (KIT-7)", () => 
     return [...COLUMNS.slice(0, at), bin, ...COLUMNS.slice(at)];
   }
 
-  it("a development build names it once per column key", () => {
+  it("a development build names it once per table and column key, and names the table", () => {
     const warn = devBuild();
-    renderTable({}, withButtons("bin"));
-    renderTable({}, withButtons("bin"));
+    const columns = withButtons("bin");
+    const { rerender } = renderTable({ storageKey: "invoices" }, columns);
+    rerender(
+      <MemoryRouter>
+        <DataTable rows={ROWS} columns={[...columns]} rowKey={(r) => r.id} storageKey="invoices" />
+      </MemoryRouter>,
+    );
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]![0]).toBe(
-      '[ui-kit] DataTable: column "bin" (noRowLink) is past the phone card\'s three fields and leaves the card — ' +
-        'mark it mobile: "secondary", or move its action to rowActions.',
+      '[ui-kit] DataTable "invoices": column "bin" (noRowLink) is past the phone card\'s three fields and leaves ' +
+        'the card — give it role: "actions" (drawn after the fields), or move its action to rowActions.',
     );
+    // A second table with a column of the same key warns too; without a storageKey or
+    // urlSync prefix its title column names it.
+    renderTable({}, columns);
+    renderTable({ urlSync: { prefix: "dun." } }, columns);
+    expect(warn).toHaveBeenCalledTimes(3);
+    expect(warn.mock.calls[1]![0]).toMatch(/^\[ui-kit\] DataTable \(title column "number"\): column "bin" /);
+    expect(warn.mock.calls[2]![0]).toMatch(/^\[ui-kit\] DataTable "dun\.": column "bin" /);
+  });
+
+  it("never fires for a role: \"actions\" column", () => {
+    const warn = devBuild();
+    renderTable({}, withButtons("bin-actions").map((c) => (c.key === "bin-actions" ? { ...c, role: "actions" as const } : c)));
+    renderTable({}, [...COLUMNS, rowActionsColumn<Invoice>({ actions: () => [{ label: "Delete", onSelect: () => {} }] })]);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("stays silent when the column is a field, or the app chose the card", () => {
@@ -217,5 +237,64 @@ describe("the dev warning for a noRowLink column the card drops (KIT-7)", () => 
     vi.stubEnv("DEV", false);
     renderTable({}, withButtons("bin-production"));
     expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+describe("a role: \"actions\" column on the default phone card (KIT-7)", () => {
+  const onDelete = vi.fn();
+  const actions = rowActionsColumn<Invoice>({
+    actions: (r) => [{ key: "delete", label: `Delete ${r.number}`, onSelect: () => onDelete(r.id) }],
+    collapse: "inline",
+  });
+
+  it("rowActionsColumn is role: \"actions\", and its column option still overrides it", () => {
+    expect(actions.role).toBe("actions");
+    expect(actions.noRowLink).toBe(true);
+    expect(rowActionsColumn<Invoice>({ actions: () => [], column: { role: undefined } }).role).toBeUndefined();
+  });
+
+  it("is never the title or a field, and comes back as the card's actions", () => {
+    const card = mobileCardColumns<Invoice>([actions, ...COLUMNS]);
+    expect(card.primary?.key).toBe("number");
+    expect(card.fields.map((c) => c.key)).toEqual(["tenant", "due", "amount"]);
+    expect(card.actions).toEqual([actions]);
+  });
+
+  it("draws the actions after the three fields, at the card's end", () => {
+    viewport(390);
+    renderTable({}, [...COLUMNS, actions]);
+    const card = cardOf("INV-1");
+    expect(labels(card)).toEqual(["Tenant", "Due", "Amount"]);
+    const row = card.querySelector("[data-card-actions]") as HTMLElement;
+    expect(row).not.toBeNull();
+    expect(within(row).getByRole("button", { name: "Delete INV-1" })).toBeInTheDocument();
+    // After the fields, in document order.
+    const fields = card.querySelector("dl")!;
+    expect(fields.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("draws them whatever is marked mobile: \"secondary\", and only mobileHidden takes them off", () => {
+    viewport(390);
+    const marked = COLUMNS.map((c) => (c.key === "note" ? { ...c, mobile: "secondary" as const } : c));
+    const { unmount } = renderTable({}, [...marked, actions]);
+    expect(labels(cardOf("INV-2"))).toEqual(["Note"]);
+    expect(within(cardOf("INV-2")).getByRole("button", { name: "Delete INV-2" })).toBeInTheDocument();
+    unmount();
+    renderTable({}, [...COLUMNS, { ...actions, mobileHidden: true }]);
+    expect(cardOf("INV-1").querySelector("[data-card-actions]")).toBeNull();
+  });
+
+  it("keeps its own clicks: the card is no link, and a press does not open the row", () => {
+    viewport(390);
+    onDelete.mockClear();
+    const onRowClick = vi.fn();
+    // Without noRowLink: the role alone keeps the card from being a link.
+    const own = { ...actions, noRowLink: undefined };
+    renderTable({ onRowClick, rowHref: (r) => `/invoices/${r.id}` }, [...COLUMNS, own]);
+    const card = cardOf("INV-1");
+    expect(card.querySelector("a[href]")).toBeNull();
+    fireEvent.click(within(card).getByRole("button", { name: "Delete INV-1" }));
+    expect(onDelete).toHaveBeenCalledWith(1);
+    expect(onRowClick).not.toHaveBeenCalled();
   });
 });
