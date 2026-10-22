@@ -185,7 +185,7 @@ export function RowActions033Demo() {
         and would only make the selector match twice. `glyphSize` and `tooltipSide` (&ldquo;start&rdquo; in a
         table&apos;s last column) are the row&apos;s; `rowActionsColumn` passes both through. A hand-built
         table gets the column&apos;s visible, end-aligned &ldquo;Actions&rdquo; heading from `RowActionsHead` and
-        its cell from `ROW_ACTIONS_CELL_CLASS` (0.47).
+        its cell from `ROW_ACTIONS_CELL_CLASS`.
       </Note>
     </Example>
   );
@@ -247,12 +247,11 @@ export function LabelAbove033Demo() {
         like any text and the field no longer reserves its height. Every floating-label field in every app shows
         it at Large without a change (a Skeleton placed from the strip needs re-anchoring).
         `truncate-until-large` is the one name for &ldquo;truncate at Normal, wrap at Large&rdquo; (`overflow-wrap:
-        anywhere`) — it replaced five copies in the kit, and it follows the attribute in CSS, so an app&apos;s{" "}
+        anywhere`), and it follows the attribute in CSS, so an app&apos;s{" "}
         {code('!large && "truncate"')} can go. For a FIGURE — an amount, a date, a count with its unit — use
-        `truncate-until-large-words` (0.33.1): it wraps at spaces only, so a number never splits; give its cell
-        the room for the widest one. The size sweep (`scripts/screenshot-sizes.mjs`) now reports a
-        one-line ellipsis that cuts at Large, and a pinned box taller than half the screen: report-only in 0.33,
-        gating from 0.34; `data-truncate-ok` marks a deliberate one, never on a name or an email.
+        `truncate-until-large-words`: it wraps at spaces only, so a number never splits; give its cell
+        the room for the widest one. The size sweep (`scripts/screenshot-sizes.mjs`) fails on a
+        one-line ellipsis that cuts at Large, and on a pinned box taller than half the screen; `data-truncate-ok` marks a deliberate one, never on a name or an email.
       </Note>
     </Example>
   );
