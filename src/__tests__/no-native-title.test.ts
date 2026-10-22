@@ -27,8 +27,9 @@ function sources(dir: string): string[] {
 }
 
 const ROOT = join(__dirname, "..");
-// An intrinsic element's opening tag, up to its end, and a `title=` inside it.
-const INTRINSIC_WITH_TITLE = /<([a-z][a-z0-9]*)\b(?:[^<>{}]|\{(?:[^{}]|\{[^{}]*\})*\})*?\btitle=/g;
+// An intrinsic element's opening tag, up to its end, and a `title=` inside it — the
+// attribute itself, not a `data-card-title=` that ends in it.
+const INTRINSIC_WITH_TITLE = /<([a-z][a-z0-9]*)\b(?:[^<>{}]|\{(?:[^{}]|\{[^{}]*\})*\})*?(?<![\w-])title=/g;
 
 describe("no native title tooltips in the kit", () => {
   it("finds none outside the allowed opt-ins", () => {
