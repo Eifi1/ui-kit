@@ -41,10 +41,11 @@ import {
 } from "./field-parts";
 import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
+import { dataAttributes, type DataAttributes } from "../lib/data-attributes";
 
 /** {@link AmountInput}'s props — exported since 0.34 (refactor audit 2026-10, API-9): a
  *  wrapper typed itself off `ComponentProps<typeof AmountInput>` until then. */
-export interface AmountInputProps extends FieldHelpProps {
+export interface AmountInputProps extends FieldHelpProps, DataAttributes {
   value: string;
   onChange: (value: string) => void;
   currency?: string;
@@ -533,7 +534,7 @@ export function AmountInput(props: AmountInputProps) {
   const selected = getCurrency(currency);
 
   return (
-    <div className={cn("w-full", className)}>
+    <div {...dataAttributes(props)} className={cn("w-full", className)}>
       {/* Inner relative box holds the input + its absolutely-positioned
           trailing controls (calculator / currency), so those stay anchored to
           the INPUT even when the mobile math bar is rendered below (#334). It is

@@ -67,6 +67,20 @@ string that goes into a parser (KaTeX, a CSV) keeps the hyphen (`minus: "ascii"`
 | kastlan | The wrappers `shared/utils/formatters.ts:26` (`formatNumber`) and `:50` (`formatCurrency`) call the kit already. `features/dashboard/components/revenue-chart.tsx:56–59` (`abbreviateTick`) builds "-1.2M" / "-5k" with `toFixed`, a hyphen on a negative tick. | Optional: `abbreviateTick` through `formatNumber(value, { options: { notation: "compact" } })` (the kit's compact notation already carries "−"). |
 | Kurvenschmiede | `features/dynamics/exercise.tsx:32` `formatSig` (its own `Intl.NumberFormat`, significant digits) prints the exercises' inputs and answers into `t()` text (`:74`, `:75`, `:140`, `:174`); answers can be negative. `features/landing/landing-visuals.tsx:190–191` formats positive constants only. | `formatSig`: `return formatWithMinus(new Intl.NumberFormat(…), value)` — plain text, not TeX (`tex.tsx` keeps its own sign handling from 0.49). |
 
+## `AmountInput` and `NumberInput` keep `data-*` (keksdose)
+
+Additive. `data-tour`, `data-testid` and any other `data-*` prop now reach the field's root, as on
+`Input`, `Select`, `Combobox`, `DatePicker`, `IbanInput` and `Checkbox`. Before, both dropped them
+without a type error (TypeScript does not check hyphenated JSX attributes), so a tour step anchored
+on one silently fell back to the centre. `AmountInput`'s root is its `w-full` box; a bare
+`NumberInput` gains a plain root `div` only when it is given a `data-*` prop.
+
+| App | What changes on a bump | Steps |
+|---|---|---|
+| keksdose | Nothing breaks. Its `w-full` wrappers around AmountInput / NumberInput (holding quantity, goal amount, loan rate, asset worth, the transfer `AmountRow`) exist only to carry `data-tour`. | Optional: move `data-tour` onto the field and drop the wrapper. |
+| kastlan | Nothing. | — |
+| Kurvenschmiede | Nothing. | — |
+
 ## kastlan K1: `EmailVerificationBanner` takes `actionPlacement`
 
 `actionPlacement?: "own-line" | "flow"` is passed through to the banner's `AlertBanner` (0.48):

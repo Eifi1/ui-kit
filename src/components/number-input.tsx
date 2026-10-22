@@ -16,10 +16,11 @@ import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
 import { commitExpression, formatResult } from "../lib/calc";
+import { dataAttributes, type DataAttributes } from "../lib/data-attributes";
 
 /** {@link NumberInput}'s props — exported since 0.34 (refactor audit 2026-10, API-9): a
  *  wrapper typed itself off `ComponentProps<typeof NumberInput>` until then. */
-export interface NumberInputProps extends FieldHelpProps {
+export interface NumberInputProps extends FieldHelpProps, DataAttributes {
   /** The text, DOT-decimal ("1234.5", or a calculation being typed: "12+5"), as
    *  `onChange` reports it — so a caller's `Number(value)` reads it. The field SHOWS it
    *  in the locale's mark (see `locale`). A comma here is read as the decimal mark too,
@@ -549,12 +550,16 @@ export function NumberInput(props: NumberInputProps) {
   ) : (
     field
   );
-  if (numeric.hint.captionText === undefined && numeric.errorEl === null && !reserve) return box;
+  const data = dataAttributes(props);
+  if (numeric.hint.captionText === undefined && numeric.errorEl === null && !reserve) {
+    // Bare, unless the caller tags it: then the same plain root as below carries the tags.
+    return Object.keys(data).length > 0 ? <div {...data}>{box}</div> : box;
+  }
   // Outside the field's own `relative` box, as Select's caption is: the calculator
   // and the unit are `inset-y-0` in it and would stretch down over a second line.
   // `className` stays on the field, so adding a caption cannot change what it styles.
   return (
-    <div>
+    <div {...data}>
       {box}
       <FieldCaption parts={numeric.hint} />
       {numeric.errorEl}
