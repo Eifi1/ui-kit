@@ -513,7 +513,7 @@ export function SeriesChartMarks() {
       <Note>
         <strong>Needs <code className="font-mono">recharts</code></strong>, like every chart. The first
         page, &ldquo;Series chart&rdquo;, has the numeric measurement plots, the zoom and the axis helpers;
-        this one has what 0.8.0 added for money and time.
+        this one has the marks for money and time.
       </Note>
       <GroupedBars />
       <Stacks />
@@ -581,7 +581,6 @@ export function MinBarLengthDemo() {
           axis is fitted to the values, and hovering Sunday still says €0.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
