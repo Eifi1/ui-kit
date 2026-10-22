@@ -288,12 +288,11 @@ function TooltipAutoPortal() {
           <code className="font-mono">position: fixed</code> node on <code className="font-mono">&lt;body&gt;</code>{" "}
           — no sideways scroll, and hovering shows it whole over the box&apos;s edge. Right, forced in place: the
           invisible bubbles still count towards the box&apos;s scrollable width (the readout), and a hovered
-          one is cut off by the edge. That is the phantom scroll; before 0.10.0 every tooltip in
-          a table had to remember <code className="font-mono">portal</code>. Outside any such box the cheaper
+          one is cut off by the edge. That is the phantom scroll, and no tooltip in a table needs{" "}
+          <code className="font-mono">portal</code> to avoid it. Outside any such box the cheaper
           in-place bubble is still used.
         </Note>
       </div>
-      <Note>Since 0.10.</Note>
     </Example>
   );
 }
@@ -354,7 +353,6 @@ function ClipsMarkerDemo() {
           DataTable&apos;s body and Table&apos;s wrapper carry it already.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
@@ -424,7 +422,6 @@ function TooltipLazyDemo() {
           without a hover.
         </Note>
       </div>
-      <Note>Since 0.13.</Note>
     </Example>
   );
 }
@@ -466,7 +463,6 @@ function TooltipClampDemo() {
           bubble that already fits is not touched. Works the same in RTL.
         </Note>
       </div>
-      <Note>Since 0.14.</Note>
     </Example>
   );
 }
@@ -543,7 +539,6 @@ function TooltipTapDemo() {
           says <code className="font-mono">tap=&quot;toggle&quot;</code>.
         </Note>
       </div>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }

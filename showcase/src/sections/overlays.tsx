@@ -180,10 +180,10 @@ export function PopoversMenusTooltips() {
         <code className="font-mono">align</code>: <code className="font-mono">start</code> and{" "}
         <code className="font-mono">end</code> (the default) follow the reading direction —{" "}
         <code className="font-mono">end</code> is the trigger&apos;s right edge here and its left
-        in RTL (see the right-to-left example below). The physical{" "}
-        <code className="font-mono">left</code>/<code className="font-mono">right</code> went in
-        0.35: <code className="font-mono">right</code> is <code className="font-mono">end</code> in
-        a left-to-right page.
+        in RTL (see the right-to-left example below). There is no physical{" "}
+        <code className="font-mono">left</code>/<code className="font-mono">right</code>:{" "}
+        <code className="font-mono">right</code> is <code className="font-mono">end</code> in a
+        left-to-right page.
         Keyboard: Tab to a trigger and press ↓ (or Enter/Space) — the menu opens with focus on
         its first item, ↑ opens onto the last; ↑/↓ wrap, Home/End jump, Tab moves on and
         closes, Escape closes and puts focus back on the trigger. A hover-opened menu does not
@@ -1184,7 +1184,7 @@ function OverlaysRtl() {
         <code className="font-mono">HoverMenu</code>&apos;s <code className="font-mono">align</code>{" "}
         takes <code className="font-mono">start</code>/<code className="font-mono">end</code>{" "}
         (default <code className="font-mono">end</code>), which mirror here, and nothing
-        physical since 0.35. <code className="font-mono">Popover</code> reads the
+        physical. <code className="font-mono">Popover</code> reads the
         trigger&apos;s direction when it opens: the portalled panel carries that{" "}
         <code className="font-mono">dir</code> (so its text runs right to left although it lives
         under <code className="font-mono">&lt;body&gt;</code>) and aligns to the trigger&apos;s END
