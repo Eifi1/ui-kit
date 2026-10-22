@@ -14,7 +14,7 @@ server-kit 0.19.0's API export. Pin `@eifi1/ui-kit` `^0.49` beside the `eifi1-se
 `mobileBarMax` and `DEFAULT_MOBILE_BAR_MAX` (KIT-6) and `IMPRINT_PRESET` are removed in
 **0.51** — the kit's deprecation test fails a release two minors past a deprecation, so 0.51
 cannot ship with them, and at the current pace 0.51 is days away, not months. The codemod
-below takes 10–20 minutes per app; doing it in the bump keeps 0.51 a non-event.
+below takes 5–20 minutes per app; doing it in the bump keeps 0.51 a non-event.
 
 ## KIT-1: one minus sign, U+2212 (`minus: "ascii"` for exports)
 
@@ -122,24 +122,41 @@ silent change of look.
 A blind `sed` is wrong for one case: `FloatingAction(Button) variant="primary"` must become
 `accent`, not `default`. Change those by hand first, then run the rest.
 
-Quick (sed), in `frontend/`:
+Quick (sed), in `frontend/`. Each step is given twice: with `rg`, and with `grep` for a shell
+that has no `rg` on its PATH (`which rg` prints nothing):
 
 ```sh
-# 0) the FAB sites that must NOT become "default" — fix these by hand to variant="accent"
-rg -n -U '<FloatingAction(Button)?\b[^>]*variant="primary"' src
+# 0) the FAB sites that must NOT become "default" — fix these by hand to variant="accent".
+#    The variant can come after other props (keksdose's "+" has icon={<Plus />} first), so
+#    print the 15 lines after each tag and keep the variant lines; read each hit in its file.
+rg -n -A15 '<FloatingAction(Button)?\b' src | rg 'variant="primary"'
+grep -rn -A15 -E '<FloatingAction(Button)?\b' src | grep 'variant="primary"'
 # 1) the button-variant props, literal attributes
 rg -l --glob '*.tsx' '(variant|submitVariant|cancelVariant|confirmVariant|finishVariant|buttonVariant|attachmentButtonVariant)="(primary|brand)"' src \
  | xargs sed -i -E \
    -e 's/\b(variant|submitVariant|cancelVariant|confirmVariant|finishVariant|buttonVariant|attachmentButtonVariant)="primary"/\1="default"/g' \
    -e 's/\b(variant|submitVariant|cancelVariant|confirmVariant|finishVariant|buttonVariant|attachmentButtonVariant)="brand"/\1="accent"/g'
-# 2) what is left (ternaries, objects, local types): tsc does not flag the aliases, rg does
+grep -rlE --include='*.tsx' '(variant|submitVariant|cancelVariant|confirmVariant|finishVariant|buttonVariant|attachmentButtonVariant)="(primary|brand)"' src \
+ | xargs sed -i -E \
+   -e 's/\b(variant|submitVariant|cancelVariant|confirmVariant|finishVariant|buttonVariant|attachmentButtonVariant)="primary"/\1="default"/g' \
+   -e 's/\b(variant|submitVariant|cancelVariant|confirmVariant|finishVariant|buttonVariant|attachmentButtonVariant)="brand"/\1="accent"/g'
+# 2) what is left (ternaries, objects, local types): tsc does not flag the aliases, a search does
 rg -n '"(primary|brand)"' src | rg -i 'variant'
+grep -rnE '"(primary|brand)"' src | grep -i variant
 ```
+
+Run one form of step 1, not both. In keksdose (2026-10-22) step 0 prints
+`src/features/transactions/transactions-page.tsx-860-            variant="primary"`, the "+" of
+the phone's `FloatingActionGroup`; a step 0 that stops at the first `>` misses it, and step 1
+then turns it into the quiet `default` member without a type error or a warning. Step 1 takes
+test files too, since `*.tsx` under `src` includes them.
 
 Read the `git diff`: step 1 also rewrites a `variant="brand"` on a component that is not a
 button. None of the three apps has one today (Chip and Badge take `tone=`), but check.
 
-Robust (ts-morph, rewrites only button-like tags and the FAB, ternaries included):
+Robust (ts-morph, rewrites only button-like tags and the FAB, ternaries included; it matches
+the tag, so prop order does not matter). `tsConfigFilePath` is your app's tsconfig that
+includes `src` (keksdose and Kurvenschmiede: `tsconfig.json`; kastlan: `tsconfig.app.json`):
 
 ```ts
 import { Project, SyntaxKind, Node } from "ts-morph";
@@ -147,7 +164,7 @@ const BUTTONLIKE = new Set(["Button", "IconButton", "FileButton", "ResendButton"
 const FAB = new Set(["FloatingAction", "FloatingActionButton"]);
 const PROPS = new Set(["variant", "submitVariant", "cancelVariant", "confirmVariant", "finishVariant", "buttonVariant", "attachmentButtonVariant"]);
 const MAP: Record<string, string> = { primary: "default", brand: "accent" };
-const p = new Project({ tsConfigFilePath: "tsconfig.app.json" });
+const p = new Project({ tsConfigFilePath: "tsconfig.json" }); // kastlan: "tsconfig.app.json"
 for (const sf of p.getSourceFiles("src/**/*.tsx")) {
   sf.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((a) => {
     const prop = a.getNameNode().getText();
@@ -166,14 +183,14 @@ for (const sf of p.getSourceFiles("src/**/*.tsx")) {
 p.saveSync();
 ```
 
-Afterwards the check is the dev console (no `[ui-kit] … is deprecated` line) or the `rg` of
+Afterwards the check is the dev console (no `[ui-kit] … is deprecated` line) or the search of
 step 2. Implicit buttons (no `variant`) and FormActions without `submitVariant` need nothing.
 
 | App | `variant="primary"` | `submitVariant="primary"` | `variant="brand"` | ternaries / local types | FAB `primary` (→ `accent`!) | Effort |
 |---|---|---|---|---|---|---|
-| keksdose | 2 Button: `features/translations/kit-showcase-handoff.tsx:67`, `features/reports/tabs/matching-tab.tsx:517` | 18: `budgets/flag-names-card.tsx:84`, `rules/rule-editor.tsx:475`, `accounts/loan-payment-panel.tsx:333`, `accounts/accounts-page.tsx:1130`, `:1163`, `transactions/convert-transfer-control.tsx:186`, `:270`, `invoices/image-cropper.tsx:242`, `invoices/invoice-attach-panel.tsx:188`, `payees/payee-editor.tsx:136`, `admin/support-panel.tsx:730`, `payees/merge-payees-dialog.tsx:94`, `support/support-page.tsx:454`, `payees/transfer-cleanup-modal.tsx:93`, `reports/product-merge-modal.tsx:452`, `assistant/assistant-handoff.tsx:175`, `reports/tabs/matching-tab.tsx:845`, `payees/payee-backfill-modal.tsx:136` (+ the comment at `invoices/image-cropper.tsx:237`) | 9: Button `budgets/budgets-page.tsx:623`, `budgets/guest-key-control.tsx:135`, `budgets/budget-share-card.tsx:224`, `admin/admin-page.tsx:703`, `:782`, `:920`, `admin/users-panel.tsx:240`; IconButton `transactions/mobile-bulk-bar.tsx:91`, `invoices/invoice-lines-bulk-bar.tsx:276` | 0 | **1**: `features/transactions/transactions-page.tsx:860` (FloatingAction) | ≈ 30–45 min; the 51 Buttons without `variant` and 4 FormActions without `submitVariant` stay |
-| kastlan | 1: `features/platform/pages/platform-signup-invitations-page.tsx:173` | 0 | 51 (50 Button, mostly the "New" action in `PageHeader actions`, e.g. `accounting/pages/journal-entries-page.tsx:37`; 1 FileButton `property/components/unit-document-gallery.tsx:45`) | 0 | 0 | ≈ 15–20 min, sed is enough |
-| Kurvenschmiede | 0 | 0 | 14 Button (e.g. `gear/kinematics-tab.tsx:186`, `setpoint/sessions-page.tsx:182`, `dynamics/exercise.tsx:154`) | 2: `features/dynamics/lesson-valve.tsx:132`, `features/dynamics/lesson-vacuum.tsx:280` | 0 | ≈ 10–15 min (ts-morph or by hand) |
+| keksdose | 2 Button: `features/translations/kit-showcase-handoff.tsx:67`, `features/reports/tabs/matching-tab.tsx:515` | 18: `budgets/flag-names-card.tsx:84`, `rules/rule-editor.tsx:475`, `accounts/loan-payment-panel.tsx:333`, `accounts/accounts-page.tsx:1048`, `:1081`, `transactions/convert-transfer-control.tsx:186`, `:270`, `invoices/image-cropper.tsx:242`, `invoices/invoice-attach-panel.tsx:188`, `payees/payee-editor.tsx:136`, `admin/support-panel.tsx:730`, `payees/merge-payees-dialog.tsx:94`, `support/support-page.tsx:454`, `payees/transfer-cleanup-modal.tsx:93`, `reports/product-merge-modal.tsx:452`, `assistant/assistant-handoff.tsx:175`, `reports/tabs/matching-tab.tsx:843`, `payees/payee-backfill-modal.tsx:136` (+ the comment at `invoices/image-cropper.tsx:237`) | 9: Button `budgets/budgets-page.tsx:623`, `budgets/guest-key-control.tsx:135`, `budgets/budget-share-card.tsx:224`, `admin/admin-page.tsx:703`, `:782`, `:920`, `admin/users-panel.tsx:240`; IconButton `transactions/mobile-bulk-bar.tsx:91`, `invoices/invoice-lines-bulk-bar.tsx:276` | 1: `features/ynab-import/ynab-import-panel.tsx:320` `finishVariant={replaceExisting ? "danger" : "brand"}` → `"accent"` (step 2 finds it) | **1**: `features/transactions/transactions-page.tsx:860` (FloatingAction; `icon` comes first, step 0 finds it) | **31 sites**. ≈ 10–15 min: the FAB and the ternary by hand, then step 1, then read the diff. Step 1 also takes the test `shared/components/__tests__/ui.test.tsx:163` (`<Button variant="primary">`). The 51 Buttons without `variant` and 4 FormActions without `submitVariant` stay |
+| kastlan | 1: `features/platform/pages/platform-signup-invitations-page.tsx:173` | 0 | 51 (50 Button, mostly the "New" action in `PageHeader actions`, e.g. `accounting/pages/journal-entries-page.tsx:37`; 1 FileButton `property/components/unit-document-gallery.tsx:46`, the tag opens at `:45`) | 0 | 0 | **52 sites in 49 files**, none in a test. ≈ 15–20 min, step 1 is enough. Step 2 also prints a Chip's `tone={… ? "brand" : "neutral"}` (`tenancy/components/lease-overview-tab.tsx:113`), which stays |
+| Kurvenschmiede | 0 | 0 | 14 Button (e.g. `gear/kinematics-tab.tsx:186`, `setpoint/sessions-page.tsx:182`, `dynamics/exercise.tsx:154`) | 2: `features/dynamics/lesson-valve.tsx:132`, `features/dynamics/lesson-vacuum.tsx:280` | 0 | **14 + 2 ternaries**, none in a test. ≈ 5–10 min: step 1 takes the 14, the two ternaries by hand |
 
 No app uses `buttonClasses(…)`, `FloatingActionButton`, `ConfirmDialog tone="warning"` or
 `DangerConfirm tone="warning"`. The `tone="brand"` on Chip, StatTile, Sparkline and friends is a
