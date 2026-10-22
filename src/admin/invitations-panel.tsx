@@ -472,8 +472,8 @@ export function InvitationsPanel<R extends string = string>({
                             pressed, which a menu entry that closes cannot. */}
                         {link && open && <CopyButton size="xs" tone="muted" text={link} label={labels.copyLink} />}
                         {/* Resend and revoke are the row's actions (docs/text-size-
-                            harmonization.md §10.8): two icons at Normal, one "⋯" menu at
-                            Large, where both names as text ("Send … a new link") would
+                            harmonization.md §10.8): resend an icon at Normal, revoke in
+                            the "⋯" menu (0.49 KIT-12); both in the menu at Large, where both names as text ("Send … a new link") would
                             not fit a phone's row beside the copy icon. */}
                         <RowActions
                           name={invitation.email}
@@ -496,6 +496,10 @@ export function InvitationsPanel<R extends string = string>({
                               label: labels.revoke(invitation.email),
                               icon: Trash2,
                               tone: "danger",
+                              // Level `none` (user admin §4.2): re-inviting undoes it, so
+                              // the kit's KIT-12 question stays out; an app may ask in
+                              // `onRevoke` (keksdose does).
+                              confirm: false,
                               // Removing access stays open under a lapsed plan (§12.36).
                               commit: COMMIT_EXCEPT_BILLING,
                               pending: busy === `revoke:${key}`,

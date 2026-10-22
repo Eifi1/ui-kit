@@ -340,6 +340,11 @@ danger button, focus on Cancel; `onSelect` runs only on a yes. Seven catalogues.
   `confirm: false` (a swipe commits as the plan says).
 - IconButton and RowActions docs: destructive actions belong in the row menu or the
   selection bar ("2 selected" → Delete) and confirm through `useConfirm`.
+- The kit's `InvitationsPanel`: Revoke moves into the row's "⋯" menu (Resend stays an icon
+  at Normal) and still asks nothing — its level is `none` (user admin §4.2, re-inviting undoes
+  it), so the panel passes `confirm: false`. keksdose's own question in `onRevoke`
+  (`features/admin/admin-page.tsx:484`) stays the only one; kastlan and Kurvenschmiede
+  change nothing.
 
 Every danger row action found below already asks in its `onSelect` — pass `confirm: false`
 there, or delete the app's own question and let the kit ask (then `confirm: { title, body }`

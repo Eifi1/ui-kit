@@ -294,12 +294,18 @@ describe("The kit's IconButtons at Large (§10.8)", () => {
     ];
     const rowOf = (email: string) => screen.getByText(email).closest("li")!;
 
-    it("two icons at Normal, beside the copy icon — named as before", () => {
+    it("resend an icon at Normal beside the copy icon, revoke in the ⋯ menu (KIT-12) — named as before", async () => {
+      const user = userEvent.setup();
       render(<InvitationsPanel<Role> invitations={rows} onResend={vi.fn()} onRevoke={vi.fn()} />);
       const row = within(rowOf("ada@example.com"));
       expect(row.getByRole("button", { name: "Copy invitation link" })).toBeInTheDocument();
       expect(row.getByRole("button", { name: "Send ada@example.com a new link" })).toBeInTheDocument();
-      expect(row.getByRole("button", { name: "Revoke the invitation for ada@example.com" })).toBeInTheDocument();
+      expect(row.queryByRole("button", { name: "Revoke the invitation for ada@example.com" })).toBeNull();
+      await user.click(row.getByRole("button", { name: "Actions for ada@example.com" }));
+      const menu = await screen.findByRole("dialog", { name: "Actions for ada@example.com" });
+      expect(within(menu).getAllByRole("button").map((b) => b.textContent)).toEqual([
+        "Revoke the invitation for ada@example.com",
+      ]);
       // An accepted invitation has nothing to resend or revoke.
       expect(within(rowOf("grace@example.com")).queryAllByRole("button")).toHaveLength(0);
     });
@@ -321,6 +327,7 @@ describe("The kit's IconButtons at Large (§10.8)", () => {
         "Revoke the invitation for ada@example.com",
       ]);
       await user.click(within(menu).getByRole("button", { name: "Revoke the invitation for ada@example.com" }));
+      // Level `none` (user admin §4.2): no KIT-12 question in between.
       expect(onRevoke).toHaveBeenCalledWith(rows[0]);
       expect(more).toHaveAttribute("aria-busy", "true");
       await act(async () => answer());
