@@ -5,17 +5,9 @@ import { Spinner } from "./spinner";
 import { isTableOwnColumn, useRowActionColumn } from "./data-table-row-actions";
 import { useColumnResize } from "./data-table-resize";
 import { useRangeSelection } from "./data-table-selection";
-import {
-  RowLink,
-  cleanAttrs,
-  columnLabel,
-  fromOutside,
-  fromOwnControl,
-  logicalAlign,
-  resolveDataTableLabels,
-  splitCellProps,
-} from "./data-table-shared";
-import { MobileFilters, MobileRow, MobileSelectBar, MobileSort, StackedFields, mobileCardColumns } from "./data-table-mobile";
+import { columnLabel, logicalAlign, resolveDataTableLabels } from "./data-table-shared";
+import { MobileFilters, MobileSelectBar, MobileSort, StackedFields, mobileCardColumns } from "./data-table-mobile";
+import { DataTableMobileRow, DataTableRow, type DataTableRowCtx } from "./data-table-row";
 import { DataTableHead } from "./data-table-head";
 import { DataTableLeadingRow } from "./data-table-leading-row";
 import {
@@ -26,8 +18,11 @@ import {
   useGroupBandTops,
   type DataTableGroupBy,
   type DataTableLoadMore,
+  type RowGroup,
 } from "./data-table-groups";
 export type { DataTableGroupBy, DataTableLoadMore } from "./data-table-groups";
+import { VIRTUAL_SELECT_COL, rowNavTarget, useRowWindow, type DataTableVirtualize, type VirtualGroup } from "./data-table-virtual";
+export type { DataTableVirtualize } from "./data-table-virtual";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
 import { useLargeText } from "../hooks/use-large-text";
 import { cn } from "../lib/cn";
@@ -630,6 +625,43 @@ export interface DataTableProps<T> {
    */
   loadMore?: DataTableLoadMore;
   /**
+   * 0.48.2 (keksdose dev #632, Marcel: "The table is extremely slow. Is it virtualised…?"):
+   * render only the desktop rows near the visible part of the scroller, plus `overscan`
+   * rows each side ({@link DataTableVirtualize}), with spacer rows standing in for the
+   * rest. For long lists — keksdose's register under `loadMore` holds 1000+ rows. Opt-in;
+   * without it every row renders, as before.
+   *
+   * - **Scroller:** the bounded body (`fillHeight` or `maxBodyHeight`), or the page when the
+   *   body is unbounded (`maxBodyHeight="none"`): the window is what of the table both the
+   *   scroller and the browser window show.
+   * - **Kept rendered:** the header, the `leadingRow`, the group bands (sticky and stacked
+   *   as before; a period's band while any of its rows is in view), every OPEN row (so an
+   *   inline editor in `expandedRow` keeps its state), the roving tab stop and a row
+   *   holding the focus. The `loadMore` footer follows the last spacer and loads once.
+   * - **Heights:** each rendered row is measured and remembered by its key; a row not yet
+   *   seen counts as the measured average (`estimateRowHeight` before any). The scroll
+   *   height settles as the rows are seen; the browser's scroll anchoring holds the rows in
+   *   view while a spacer above is corrected (Safari has none: a jump of the difference
+   *   is possible there on the first pass).
+   * - **Columns:** the header widths are measured once and locked in a `<colgroup>`, so the
+   *   columns do not move as rows come and go; a wider cell scrolling in widens its column
+   *   (once). Re-measured when the rows, the columns, a width or the scroller's width
+   *   change. A `grow` column and a resized one are not locked.
+   * - **Keyboard and screen reader:** Arrow/Home/End move over every row — the target is
+   *   rendered, then focused (End reaches the last row); Shift+click ranges and select-all
+   *   work on the data, not the DOM. The table has `aria-rowcount`, every rendered row its
+   *   `aria-rowindex` (bands, details and the totals row counted); spacers are
+   *   `aria-hidden`.
+   * - **Trade-offs:** the browser's find-in-page sees only the rendered rows, and so does
+   *   print; an `id` from `rowAttributes` (an anchor, an `aria-controls` target, a
+   *   `scrollIntoView` on a fresh row) exists only while its row is rendered. Memoise
+   *   `columns` (and `mobileCard`): the rows bail out of a render only then, and a scroll
+   *   renders the rows that come in, not the whole window.
+   * - **Phone:** desktop only. The card list renders every row it holds (`loadMore`,
+   *   `paginated={false}`) or reveals them in chunks as it is scrolled (client paging).
+   */
+  virtualize?: boolean | DataTableVirtualize;
+  /**
    * Row height. `"compact"` is lenkbank's in-card tables: five `text-xs` tables with
    * `px-2 py-1` cells sitting inside cards, which at the default padding came out at
    * twice their height and pushed the card's own content below the fold — the whole
@@ -884,35 +916,14 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
 
-/** Arrow/Home/End between the focusable rows of the table's bodies — the roving half of
- *  the keyboard-activatable rows (see the row's `onKeyDown`). */
-function moveRowFocus(from: HTMLElement, key: string): boolean {
-  if (!(key in ROW_NAV_KEYS)) return false;
-  // Every body of the table: a grouped table (`groupBy`, 0.48) has one per group.
-  const table = from.closest("table");
-  if (!table) return false;
-  const rows = Array.from(table.tBodies).flatMap((body) =>
-    Array.from(body.children).filter(
-      (el): el is HTMLElement => el instanceof HTMLElement && el.hasAttribute("data-row-nav"),
-    ),
-  );
-  const i = rows.indexOf(from);
-  const target =
-    key === "ArrowDown"
-      ? rows[i + 1]
-      : key === "ArrowUp"
-        ? rows[i - 1]
-        : key === "Home"
-          ? rows[0]
-          : key === "End"
-            ? rows[rows.length - 1]
-            : undefined;
-  // At either end the key is still consumed, or ArrowDown on the last row would
-  // scroll the page out from under a focused row.
-  target?.focus();
-  return true;
-}
-const ROW_NAV_KEYS = { ArrowDown: 1, ArrowUp: 1, Home: 1, End: 1 } as const;
+// `virtualize`'s constants (0.48.2): the band levels a group's `<tbody>` opens with.
+const NO_BANDS: readonly (1 | 2)[] = [];
+const BAND_1: readonly (1 | 2)[] = [1];
+const BAND_2: readonly (1 | 2)[] = [2];
+const BAND_1_2: readonly (1 | 2)[] = [1, 2];
+const NO_VIRTUAL_OPTIONS: DataTableVirtualize = {};
+
+// `moveRowFocus` (the roving rows' Arrow/Home/End) lives with the row in data-table-row.tsx.
 
 // ---------- Main DataTable ----------
 
@@ -965,6 +976,7 @@ export function DataTable<T>({
   leadingRowSticky = false,
   groupBy,
   loadMore,
+  virtualize = false,
   density = "comfortable",
   sortCycle = "tri",
   chrome = "full",
@@ -1293,12 +1305,16 @@ export function DataTable<T>({
 
   // 0.48 (keksdose live #451): the `fitPriority` columns the table's width leaves out
   // (data-table-fit.ts). Desktop only; the scroller is read after render.
+  // Large and Extra large: read here, as the fit re-measures when it changes.
+  const large = useLargeText();
   const { autoHidden, keep: keepColumn } = useColumnFit({
     columns,
     hiddenCols,
     headRefs,
     scroller: () => desktopScroller.current,
     enabled: !usePhoneLayout(),
+    // Measured only when one of these changed (0.48.2): not on a ticked box.
+    content: [slice, columns, hiddenCols, widths, density, large],
   });
   const visibleColumns = useMemo(
     () => columns.filter((c) => !hiddenCols.has(c.key) && !autoHidden.has(c.key)),
@@ -1392,26 +1408,31 @@ export function DataTable<T>({
   // of a horizontally-scrolling table. Column settings stay desktop-only; the
   // filters come through a bottom sheet (feedback #299) and the sort through the
   // opt-in `mobileSort` row (keksdose K10), both on the table's own state.
-  const mobileColumns = visibleColumns.filter((c) => !c.mobileHidden && c.mobile !== "hidden");
+  // Memoised on `visibleColumns`: the cards compare their columns by identity (0.48.2).
+  const mobileColumns = useMemo(
+    () => visibleColumns.filter((c) => !c.mobileHidden && c.mobile !== "hidden"),
+    [visibleColumns],
+  );
   // The default card (0.49 KIT-7): the title, the status chips beside it, at most three
   // fields — the ones marked `mobile: "secondary"`, else the first after the title.
-  const { primary: mobilePrimaryCol, status: mobileStatusColumns, fields: mobileSecondaryColumns } =
-    mobileCardColumns(mobileColumns);
+  const { primary: mobilePrimaryCol, status: mobileStatusColumns, fields: mobileSecondaryColumns } = useMemo(
+    () => mobileCardColumns(mobileColumns),
+    [mobileColumns],
+  );
+  // The columns the card leaves out, for the opened row (`mobileDetailsInRow`): the
+  // hidden ones and, without a `mobileCard`, the ones past the card's three fields.
   const onCard = new Set<DataTableColumn<T>>([
     ...(mobilePrimaryCol ? [mobilePrimaryCol] : []),
     ...mobileStatusColumns,
     ...mobileSecondaryColumns,
   ]);
-  // The columns the card leaves out, for the opened row (`mobileDetailsInRow`): the
-  // hidden ones and, without a `mobileCard`, the ones past the card's three fields.
   const mobileDetailColumns = mobileDetailsInRow
     ? visibleColumns.filter((c) => (mobileCard ? c.mobileHidden || c.mobile === "hidden" : !onCard.has(c)))
     : [];
   // Large and Extra large (§4 "DataTable phone card"): the card's labels go ABOVE their
   // values, nothing in it truncates, and the rows get more room. Most of it is a
   // `large:` class; the label/value grid needs a different STRUCTURE (each pair in a
-  // box of its own), which a class cannot write.
-  const large = useLargeText();
+  // box of its own), which a class cannot write. (`large` is read above, by the fit.)
   // What an opened phone row shows: the card's left-out columns first (when asked
   // for), then the app's own `expandedRow`. Desktop keeps `expandedRow` alone.
   const opensRow = !!expandedRow || mobileDetailColumns.length > 0;
@@ -1496,7 +1517,7 @@ export function DataTable<T>({
   const phoneSelecting = !!selection && !isMdUp && (phoneSelectMode || anySelected);
   // ---- Shift+click range selection ---- (data-table-selection.ts; feedback #289,
   // anchored on the row's KEY so a sort, filter or page change cannot move it)
-  const { selectionAnchor, rangeClick, canSelect, selectRange } = useRangeSelection({
+  const { canSelect, selectRange, setAnchor, markRangeClick, takeRangeClick } = useRangeSelection({
     selection,
     slice,
     rowKey,
@@ -1529,6 +1550,42 @@ export function DataTable<T>({
         ? rowKey(slice[0])
         : null;
 
+  // What the memoised rows' handlers read at event time (0.48.2, K-052-2): the latest
+  // props, refreshed every commit, so a row that bailed out of a render still toggles
+  // through the current `selection` and opens through the current `onRowClick`.
+  // `virtualize` (0.48.2): desktop only, and only with rows to window. Arrow/Home/End then
+  // move over every row, rendered or not: the target is rendered, then focused.
+  const virtualOn = !!virtualize && isMdUp && slice.length > 0;
+  const focusRowRef = useRef<((index: number) => void) | undefined>(undefined);
+  const latestRowCtx: DataTableRowCtx<T> = {
+    moveFocus: virtualOn
+      ? (from, key) => {
+          const target = rowNavTarget(from, key, slice.length);
+          if (target === null) return false;
+          focusRowRef.current?.(target);
+          return true;
+        }
+      : undefined,
+    onRowClick,
+    onToggle: selection?.onToggle,
+    isSelected: (row) => !!selection?.isSelected(row),
+    canSelect,
+    selectRange,
+    setAnchor,
+    markRangeClick,
+    takeRangeClick,
+    setFocusRowKey,
+    onLongPress: (row) => {
+      setPhoneSelectMode(true);
+      setAnchor(rowKey(row));
+      if (selection && !selection.isSelected(row)) selection.onToggle(row, true);
+    },
+  };
+  const rowCtx = useRef(latestRowCtx);
+  useLayoutEffect(() => {
+    rowCtx.current = latestRowCtx;
+  });
+
   // When dialog-mode is on, the expanded row's detail goes into a bottom-sheet
   // modal instead of unfolding inline. Only one row is ever expanded at a time.
   const mobileDialogRow = mobileExpandAsDialog && !isMdUp ? mobileSlice.find((r) => isExpanded?.(r)) : undefined;
@@ -1545,47 +1602,39 @@ export function DataTable<T>({
 
   // One mobile card (`MobileRow`, data-table-mobile.tsx). A function so the flat list
   // and the grouped list (below) share identical row markup.
-  const renderMobileRow = (row: T) => (
-    <MobileRow
-      key={rowKey(row)}
-      row={row}
-      isExpanded={isExpanded}
-      openedRowContent={openedRowContent}
-      opensRow={opensRow}
-      rowClassName={rowClassName}
-      rowAttributes={rowAttributes}
-      onRowClick={onRowClick}
-      rowHref={rowHref}
-      swipeActionsFor={swipeActionsFor}
-      mobileDir={mobileDir}
-      mobileCardLinkable={mobileCardLinkable}
-      mobileCard={mobileCard}
-      mobilePrimaryCol={mobilePrimaryCol}
-      mobileStatusColumns={mobileStatusColumns}
-      mobileSecondaryColumns={mobileSecondaryColumns}
-      mobileExpandAsDialog={mobileExpandAsDialog}
-      compact={compact}
-      large={large}
-      select={
-        selection
-          ? {
-              active: phoneSelecting,
-              selectable: canSelect(row),
-              selected: selection.isSelected(row),
-              onToggle: (checked) => {
-                selectionAnchor.current = rowKey(row);
-                selection.onToggle(row, checked);
-              },
-              onLongPress: () => {
-                setPhoneSelectMode(true);
-                selectionAnchor.current = rowKey(row);
-                if (!selection.isSelected(row)) selection.onToggle(row, true);
-              },
-            }
-          : null
-      }
-    />
-  );
+  const renderMobileRow = (row: T) => {
+    const key = rowKey(row);
+    const expanded = isExpanded?.(row) ?? false;
+    return (
+      <DataTableMobileRow<T>
+        key={key}
+        ctx={rowCtx}
+        rowKey={key}
+        row={row}
+        expanded={expanded}
+        expansion={expanded ? openedRowContent(row) : null}
+        opensRow={opensRow}
+        className={rowClassName?.(row)}
+        attrs={rowAttributes?.(row)}
+        interactive={!!onRowClick}
+        href={mobileCardLinkable ? rowHref?.(row) : undefined}
+        swipeActionsFor={swipeActionsFor}
+        mobileDir={mobileDir}
+        mobileCardLinkable={mobileCardLinkable}
+        mobileCard={mobileCard}
+        mobilePrimaryCol={mobilePrimaryCol}
+        mobileStatusColumns={mobileStatusColumns}
+        mobileSecondaryColumns={mobileSecondaryColumns}
+        mobileExpandAsDialog={mobileExpandAsDialog}
+        compact={compact}
+        large={large}
+        selectionOn={!!selection}
+        selectActive={phoneSelecting}
+        selectable={canSelect(row)}
+        selected={!!selection && selection.isSelected(row)}
+      />
+    );
+  };
 
   // Consecutive grouping of the (already-sorted) mobile slice into labelled
   // sections for the "assistance"-style list (feedback #317). Null unless the
@@ -1598,6 +1647,57 @@ export function DataTable<T>({
     !!desktopGroups,
     `${levels.length}:${leadingRowSticky && !!leadingRow}:${desktopGroups?.[0]?.key ?? ""}`,
   );
+  // ---- Row windowing ---- (0.48.2, keksdose dev #632; data-table-virtual.ts)
+  // One run per innermost group, with its bands (`virtualOn` is above, with the rows' context).
+  const virtualGroups: VirtualGroup[] = [];
+  const virtualBands: { g1: RowGroup<T>; g2: RowGroup<T> | null }[] = [];
+  if (virtualOn) {
+    if (!desktopGroups) virtualGroups.push({ start: 0, end: slice.length, bands: NO_BANDS, first: 0 });
+    else
+      for (const g1 of desktopGroups) {
+        const first = virtualGroups.length;
+        if (!g1.children) {
+          virtualGroups.push({ start: g1.start, end: g1.start + g1.rows.length, bands: BAND_1, first });
+          virtualBands.push({ g1, g2: null });
+          continue;
+        }
+        g1.children.forEach((g2, j) => {
+          virtualGroups.push({ start: g2.start, end: g2.start + g2.rows.length, bands: j === 0 ? BAND_1_2 : BAND_2, first });
+          virtualBands.push({ g1, g2 });
+        });
+      }
+  }
+  const expandedIndices: number[] = [];
+  if (virtualOn && isExpanded && expandedRow) slice.forEach((r, i) => isExpanded(r) && expandedIndices.push(i));
+  const virtualColKeys = [...(selection ? [VIRTUAL_SELECT_COL] : []), ...visibleColumns.map((c) => c.key)];
+  const virtualLockable = new Set(
+    virtualColKeys.filter((k) => !widths[k] && !visibleColumns.some((c) => c.key === k && c.grow)),
+  );
+  const rowWindow = useRowWindow({
+    enabled: virtualOn,
+    rows: slice,
+    rowKey,
+    groups: virtualGroups,
+    expanded: expandedIndices,
+    pinnedKeys: [tabRowKey],
+    scrollerRef: desktopScroller,
+    tableRef,
+    options: typeof virtualize === "object" ? virtualize : NO_VIRTUAL_OPTIONS,
+    compact,
+    rowsBefore: 1 + (leadingRow ? 1 : 0),
+    rowsAfter: showFooter ? 1 : 0,
+    colKeys: virtualColKeys,
+    lockable: virtualLockable,
+    resetKey: `${Object.entries(widths).join(";")}|${density}|${large}|${slice.length}:${
+      slice.length ? `${rowKey(slice[0])}:${rowKey(slice[slice.length - 1])}` : ""
+    }`,
+  });
+  // What `moveFocus` (in the rows' context, above) reaches: the window's focus mover.
+  const focusRowAt = rowWindow?.focusRow;
+  useLayoutEffect(() => {
+    focusRowRef.current = focusRowAt;
+  }, [focusRowAt]);
+
   // `mobileGroupBy` may be a desktop `groupBy` level (0.48), its label and end slot too.
   const mobileLevel = typeof mobileGroupBy === "function" ? null : (mobileGroupBy ?? null);
   const mobileKey = typeof mobileGroupBy === "function" ? mobileGroupBy : mobileGroupBy?.key;
@@ -1898,7 +1998,20 @@ export function DataTable<T>({
           data-fit-grow={growDrawn ? "" : undefined}
           aria-label={labels.table}
           aria-busy={isLoading || undefined}
+          // `virtualize` (0.48.2): every row counted, rendered or not.
+          aria-rowcount={rowWindow?.rowCount}
+          data-virtualized={rowWindow ? "" : undefined}
         >
+          {/* The locked column widths (0.48.2, `virtualize`): rows coming and going no
+              longer move the columns. */}
+          {rowWindow && (
+            <colgroup>
+              {virtualColKeys.map((key) => {
+                const w = rowWindow.colWidths?.[key];
+                return <col key={key} style={w !== undefined ? { width: w } : undefined} />;
+              })}
+            </colgroup>
+          )}
           {/* Sticky header. position:sticky pins to the nearest scroll-container
               ancestor — so the header can only stick to THIS wrapper, never the
               page. For that to actually hold the header in place, the wrapper
@@ -1931,235 +2044,57 @@ export function DataTable<T>({
             startResize={startResize}
             moveResize={moveResize}
             finishResize={finishResize}
+            ariaRowIndex={rowWindow ? 1 : undefined}
+            lockedWidths={rowWindow?.colWidths}
+            selectionLockKey={VIRTUAL_SELECT_COL}
           />
           {(() => {
             const bodyClass = cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity");
             const leading = leadingRow ? (
-              <DataTableLeadingRow colSpan={totalColSpan} sticky={leadingRowSticky}>
+              <DataTableLeadingRow
+                colSpan={totalColSpan}
+                sticky={leadingRowSticky}
+                ariaRowIndex={rowWindow ? 2 : undefined}
+              >
                 {leadingRow}
               </DataTableLeadingRow>
             ) : null;
+            // One memoised row each (0.48.2, K-052-2; data-table-row.tsx): the table
+            // derives each row's own inputs here, as primitives, so a tick re-renders
+            // only the rows whose inputs changed.
             const renderRow = (row: T, rowIndex: number) => {
               const expanded = isExpanded?.(row) ?? false;
-              const expansion = expanded ? expandedRow?.(row) : null;
-              const rowInteractive = !!onRowClick || !!selection;
-              const href = rowHref?.(row);
               const key = rowKey(row);
-              const detailId = `${detailIdBase}-${rowIndex}`;
-              // Whether the row is open, said where ARIA allows it (round 0.34, the
-              // showcase's axe check): `aria-expanded` belongs to a treegrid's row, not a
-              // table's, and the <tr> wore it. A disclosure button in the first cell carries
-              // it now, with `aria-controls` on the detail row while that is there.
-              // Visually hidden and not a tab stop: the row stays the one roving stop, with
-              // Enter/Space and the whole-row click — this is the screen reader cursor's
-              // way in, and where it hears the state. Named by `aria-label`, so the cell's
-              // text stays the cell's own.
-              const disclosure =
-                rowsFocusable && expandedRow ? (
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    className="sr-only-fixed"
-                    aria-label={labels.rowDetails}
-                    aria-expanded={expanded}
-                    aria-controls={expansion ? detailId : undefined}
-                    // The row's own handler leaves a click on a control inside it alone.
-                    onClick={() => onRowClick!(row)}
-                  />
-                ) : null;
               return (
-                <Fragment key={key}>
-                  <tr
-                    {...cleanAttrs(rowAttributes?.(row))}
-                    data-row-nav={rowsFocusable ? "" : undefined}
-                    tabIndex={rowsFocusable ? (key === tabRowKey ? 0 : -1) : undefined}
-                    onFocus={
-                      rowsFocusable
-                        ? (e) => {
-                            if (e.target === e.currentTarget) setFocusRowKey(key);
-                          }
-                        : undefined
-                    }
-                    onKeyDown={
-                      rowsFocusable
-                        ? (e) => {
-                            // Only the row's own key presses: Enter on a nested button
-                            // or link is that control's, and Space in a nested input
-                            // is a space.
-                            if (e.target !== e.currentTarget) return;
-                            if (e.altKey || e.ctrlKey || e.metaKey) return;
-                            if (e.key === "Enter" || e.key === " ") {
-                              // Space would otherwise scroll the table.
-                              e.preventDefault();
-                              onRowClick!(row);
-                              return;
-                            }
-                            if (e.shiftKey) return;
-                            if (moveRowFocus(e.currentTarget, e.key)) e.preventDefault();
-                          }
-                        : undefined
-                    }
-                    className={cn(
-                      "border-t border-subtle",
-                      rowInteractive && "cursor-pointer hover:bg-hover",
-                      // The kit's focus frame width (§5, `--focus-ring-width`), drawn as an
-                      // OUTLINE rather than FOCUS_RING's box-shadow: a shadow on a `<tr>`
-                      // is not painted by every engine, an outline is.
-                      rowsFocusable &&
-                        "focus-visible:bg-hover focus-visible:outline-focus focus-visible:-outline-offset-2 focus-visible:outline-brand",
-                      rowClassName?.(row),
-                    )}
-                    onClick={
-                      rowInteractive
-                        ? (e) => {
-                            // A click on a control inside the row (a button, a link,
-                            // an input the cell renders) is that control's — it must
-                            // not also open the row. Cells no longer have to
-                            // `stopPropagation` to get that.
-                            if (fromOwnControl(e.target, e.currentTarget)) return;
-                            if (fromOutside(e.target, e.currentTarget)) return;
-                            // Modifier-clicks anywhere in the row drive
-                            // selection instead of expanding it (feedback #289):
-                            // Ctrl/Cmd toggles a single row, Shift selects the
-                            // range from the last-toggled row (inclusive of this
-                            // one) — the same as the checkbox, but for the whole
-                            // row, which is what the checkbox-only version was
-                            // missing.
-                            if (selection && canSelect(row)) {
-                              if (e.shiftKey) {
-                                // Drop the text selection a shift-click would
-                                // otherwise smear across the rows.
-                                window.getSelection?.()?.removeAllRanges();
-                                if (selectRange(rowIndex)) return;
-                                // No anchor yet: treat it as the first pick.
-                                selectionAnchor.current = rowKey(row);
-                                selection.onToggle(row, !selection.isSelected(row));
-                                return;
-                              }
-                              if (e.metaKey || e.ctrlKey) {
-                                selectionAnchor.current = rowKey(row);
-                                selection.onToggle(row, !selection.isSelected(row));
-                                return;
-                              }
-                            }
-                            onRowClick?.(row);
-                          }
-                        : undefined
-                    }
-                  >
-                    {selection && (
-                      <td
-                        className={cn("align-top", compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2")}
-                        // Don't let selecting a row also trigger the row click
-                        // (which expands/edits it).
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {canSelect(row) && (
-                          <input
-                            type="checkbox"
-                            className={cn("accent-indigo-600", compact ? "size-3.5" : "size-4")}
-                            checked={selection.isSelected(row)}
-                            // Shift+click selects the range from the last toggled
-                            // row. `preventDefault` puts the box back, but it does NOT
-                            // stop React's `onChange`: React derives a checkbox's
-                            // change from the `click` itself, after the browser has
-                            // already flipped `checked` and before the cancellation
-                            // reverts it — so the same click also reported itself as
-                            // a single toggle, and the owner got `onToggleMany` and
-                            // then `onToggle` for the clicked row. The click is
-                            // remembered by identity and its change is dropped; a
-                            // boolean flag would outlive a click whose change never
-                            // came and swallow the user's next real one.
-                            onClick={(e) => {
-                              if (e.shiftKey && selectRange(rowIndex)) {
-                                e.preventDefault();
-                                rangeClick.current = e.nativeEvent;
-                              }
-                            }}
-                            onChange={(e) => {
-                              if (rangeClick.current && e.nativeEvent === rangeClick.current) {
-                                rangeClick.current = null;
-                                return;
-                              }
-                              selectionAnchor.current = rowKey(row);
-                              selection.onToggle(row, e.target.checked);
-                            }}
-                            aria-label={labels.selectRow}
-                          />
-                        )}
-                      </td>
-                    )}
-                    {visibleColumns.map((col, colIndex) => {
-                      const width = widths[col.key];
-                      // The caller's first, the table's over it — see `cellProps`.
-                      const own = splitCellProps(col.cellProps?.(row));
-                      const pinned = width ? { width, minWidth: width, maxWidth: width } : undefined;
-                      return (
-                        <td
-                          {...own.attrs}
-                          key={col.key}
-                          data-col={col.key}
-                          style={own.style || pinned ? { ...own.style, ...pinned } : undefined}
-                          className={cn(
-                            "align-top",
-                            compact ? "px-2 py-1" : "px-3 py-2",
-                            width && "overflow-hidden text-ellipsis",
-                            col.grow ? GROW_CELL_CLASS : growDrawn && GROW_PEER_CELL_CLASS,
-                            logicalAlign(own.className),
-                            logicalAlign(col.className),
-                          )}
-                        >
-                          {colIndex === 0 && disclosure}
-                          {col === linkColumn && href ? (
-                            // No `onActivate`: the click is left to bubble to the
-                            // <tr> handler above, which already owns expand-vs-select.
-                            // Calling it here as well would toggle the row twice.
-                            <RowLink href={href} className="block" data-row-link="">
-                              {col.cell(row)}
-                            </RowLink>
-                          ) : (
-                            col.cell(row)
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                  {expansion && (
-                    <tr id={disclosure ? detailId : undefined} className="bg-surface-2 border-t border-subtle">
-                      {/* The detail panel spans every column. In an `auto` table
-                          layout (the default here — columns only get fixed style
-                          widths once the user resizes/auto-sizes them) the cell's
-                          content preferred-width is redistributed across the
-                          spanned columns, so a long expansion visibly re-sizes the
-                          columns above it — and one-line content does not, since
-                          its preferred width is small (feedback #104). Wrapping the
-                          content in `w-0 min-w-full` pins the cell's preferred
-                          width to ~0 (the explicit width:0 child), so it can never
-                          perturb the columns; the div then fills to the full row
-                          width only at paint time, and long text wraps within it.
-                          Inside it the content is pinned to what the scroller SHOWS
-                          (0.47, keksdose S4): on a table wider than its scroller a
-                          table-wide panel put an inline editor's Save/Cancel off-screen.
-                          `sticky start-0` holds it at the scroller's start edge (the
-                          right one in RTL) as the row scrolls sideways, and
-                          `--dt-visible-w` (the scroller's clientWidth, measured above)
-                          sizes it; before the first measure, and in a table no wider
-                          than its scroller, it is the full width as before. */}
-                      <td colSpan={totalColSpan} className="p-0">
-                        <div className="w-0 min-w-full">
-                          <div
-                            className={cn(
-                              "sticky start-0 w-[var(--dt-visible-w,100%)] max-w-full",
-                              compact ? "px-2 py-2" : "px-3 py-3",
-                            )}
-                          >
-                            {expansion}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
+                <DataTableRow<T>
+                  key={key}
+                  row={row}
+                  rowIndex={rowIndex}
+                  rowKey={key}
+                  ctx={rowCtx}
+                  columns={visibleColumns}
+                  widths={widths}
+                  growDrawn={growDrawn}
+                  linkColumn={linkColumn}
+                  href={rowHref?.(row)}
+                  selectionColumn={!!selection}
+                  selectable={canSelect(row)}
+                  selected={!!selection && selection.isSelected(row)}
+                  expanded={expanded}
+                  expansion={expanded ? expandedRow?.(row) : null}
+                  disclosure={rowsFocusable && !!expandedRow}
+                  detailId={`${detailIdBase}-${rowIndex}`}
+                  rowsFocusable={rowsFocusable}
+                  rowInteractive={!!onRowClick || !!selection}
+                  tabbable={key === tabRowKey}
+                  className={rowClassName?.(row)}
+                  attrs={rowAttributes?.(row)}
+                  compact={compact}
+                  totalColSpan={totalColSpan}
+                  rowDetailsLabel={labels.rowDetails}
+                  selectRowLabel={labels.selectRow}
+                  ariaRowIndex={rowWindow?.ariaRow(rowIndex)}
+                />
               );
             };
             const emptyRow =
@@ -2175,6 +2110,60 @@ export function DataTable<T>({
                   </td>
                 </tr>
               ) : null;
+            const band = (
+              level: 1 | 2,
+              def: DataTableGroupBy<T>,
+              g: { key: string; rows: T[] },
+              ariaRowIndex?: number,
+            ) => (
+              <DataTableGroupBand
+                level={level}
+                colSpan={totalColSpan}
+                top={level === 1 ? bandTops[0] : bandTops[1]}
+                compact={compact}
+                label={def.label ? def.label(g.key, g.rows) : g.key}
+                end={def.end?.(g.key, g.rows)}
+                ariaRowIndex={ariaRowIndex}
+              />
+            );
+            if (rowWindow) {
+              // Windowed (0.48.2): each group's own `<tbody>` with its bands and the
+              // rendered rows, spacer rows between; one spacer `<tbody>` per run of groups
+              // with nothing rendered. Spacers are hidden from the accessibility tree.
+              const spacer = (key: string, height: number) => (
+                <tr key={key} aria-hidden="true" data-vt-spacer="">
+                  <td colSpan={totalColSpan} style={{ height, padding: 0, border: 0 }} />
+                </tr>
+              );
+              return (
+                <>
+                  {leading && <tbody className={bodyClass}>{leading}</tbody>}
+                  {rowWindow.bodies.map((b) => {
+                    if (b.kind === "spacer")
+                      return (
+                        <tbody key={b.key} data-vt-body="" aria-hidden="true">
+                          {spacer("s", b.height)}
+                        </tbody>
+                      );
+                    const g = virtualGroups[b.group];
+                    const vb = virtualBands[b.group];
+                    return (
+                      <tbody
+                        key={vb ? `vg:${vb.g1.key}:${vb.g2?.key ?? ""}:${g.start}` : "vg"}
+                        data-vt-body=""
+                        className={bodyClass}
+                      >
+                        {vb && g.bands.includes(1) && band(1, levels[0], vb.g1, rowWindow.ariaBand(b.group, 1))}
+                        {vb?.g2 && band(2, levels[1], vb.g2, rowWindow.ariaBand(b.group, 2))}
+                        {b.items.map((it) =>
+                          it.kind === "gap" ? spacer(it.key, it.height) : renderRow(slice[it.index], it.index),
+                        )}
+                      </tbody>
+                    );
+                  })}
+                </>
+              );
+            }
             if (!desktopGroups) {
               return (
                 <tbody className={bodyClass}>
@@ -2187,16 +2176,6 @@ export function DataTable<T>({
             // Grouped (0.48, keksdose dev #605): one `<tbody>` per innermost group, its
             // band the row header; the leading row (and the empty state) in their own
             // before the first group.
-            const band = (level: 1 | 2, def: DataTableGroupBy<T>, g: { key: string; rows: T[] }) => (
-              <DataTableGroupBand
-                level={level}
-                colSpan={totalColSpan}
-                top={level === 1 ? bandTops[0] : bandTops[1]}
-                compact={compact}
-                label={def.label ? def.label(g.key, g.rows) : g.key}
-                end={def.end?.(g.key, g.rows)}
-              />
-            );
             const rowsOf = (g: { rows: T[]; start: number }) => g.rows.map((r, i) => renderRow(r, g.start + i));
             return (
               <>
@@ -2238,7 +2217,7 @@ export function DataTable<T>({
                 isLoading && "opacity-60 transition-opacity",
               )}
             >
-              <tr>
+              <tr aria-rowindex={rowWindow?.rowCount}>
                 {/* The selection column has nothing to total: an empty cell keeps the
                     values under their own headers. */}
                 {selection && (

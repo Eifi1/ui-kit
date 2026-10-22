@@ -706,7 +706,13 @@ export function AppShell({
                 // into the rest from a zero basis, and a window too short for the page's
                 // floor scrolls `<main>`. Every other page lays out as before. Below `md`
                 // the document scrolls and nothing fills.
-                "md:has-[[data-fill-height]]:flex md:has-[[data-fill-height]]:flex-col md:has-[[data-fill-height]]:*:shrink-0",
+                // The children's `shrink-0` carries no `:has`: `flex-shrink` does nothing
+                // outside a flex container, and a `:has(…) > *` rule cost a style recalc of
+                // the whole page on every DOM insertion under it (17–45 ms per scrolled step
+                // of a `virtualize` table, 0.48.2). `[&&>*]` doubles the class, so it stays
+                // as specific as FillHeight's `has-[…]:flex-1` (whose `flex: 1` would set
+                // shrink 1) and, emitted after it, still wins.
+                "md:has-[[data-fill-height]]:flex md:has-[[data-fill-height]]:flex-col md:[&&>*]:shrink-0",
                 // Embedded there is no document scroll to lean on below `md` either.
                 embedded && "min-h-0 overflow-y-auto",
               )}
