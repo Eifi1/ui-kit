@@ -26,9 +26,9 @@ export interface BreadcrumbItem {
   /** A stable React key, when `label` is not a string. */
   key?: string;
   /**
-   * The app's home entry (0.49 KIT-9). Default: an entry whose `href` is `"/"`. A
-   * `PageHeader` draws no trail when, after its current entry is hidden, only home
-   * entries are left — "Home" above a page's title says nothing.
+   * The app's home entry (0.49 KIT-9). Default: an entry whose `href` is `"/"`. No trail
+   * is drawn when only home entries are left — inside a `PageHeader`, or wherever the
+   * current entry is hidden (`hideCurrent`): "Home" above a page's title says nothing.
    */
   home?: boolean;
 }
@@ -69,9 +69,11 @@ export interface BreadcrumbsProps extends Omit<ComponentPropsWithRef<"nav">, "ch
    * link, and no entry carries `aria-current`: the page's title names where you are.
    *
    * Default `true` inside a `PageHeader`'s `breadcrumbs` (the title is right below, so
-   * the trail would repeat it), `false` elsewhere. Inside a `PageHeader` the trail is
-   * drawn only when at least one entry that is not home is left. `false` keeps the
-   * current entry as text with `aria-current="page"`.
+   * the trail would repeat it), `false` elsewhere. With the current entry hidden — and
+   * inside a `PageHeader` either way — the trail is drawn only when at least one entry
+   * that is not home ({@link BreadcrumbItem.home}) is left, so a trail drawn by the
+   * layout above the page shows no lone "Home" link either. `false` keeps the current
+   * entry as text with `aria-current="page"`.
    */
   hideCurrent?: boolean;
 }
@@ -114,8 +116,9 @@ export function Breadcrumbs({
   const hides = hideCurrent ?? host?.titled ?? false;
   const shown = hides ? allItems.slice(0, -1) : allItems;
   if (shown.length === 0) return null;
-  // In a PageHeader a trail of home entries alone repeats nothing worth a line.
-  if (host && !shown.some((item) => !(item.home ?? item.href === "/"))) return null;
+  // A trail of home entries alone repeats nothing worth a line: in a PageHeader, and
+  // wherever the current entry is hidden (a layout's trail above the page's title).
+  if ((host || hides) && !shown.some((item) => !(item.home ?? item.href === "/"))) return null;
   const items = shown;
 
   const end = Math.max(1, keepEnd);

@@ -102,6 +102,35 @@ describe("Breadcrumbs", () => {
     const { container } = render(<Breadcrumbs items={[]} />);
     expect(container).toBeEmptyDOMElement();
   });
+
+  // 0.49 KIT-9, kastlan S3: a layout's trail above the page's title, with its current entry
+  // hidden, shows no lone home link either — not only a trail inside a PageHeader.
+  it("with hideCurrent, outside a PageHeader, renders nothing when only home entries are left", () => {
+    const marked = [
+      { label: "Dashboard", href: "/dashboard", home: true },
+      { label: "Invoices", href: "/invoices" },
+    ];
+    const { container, rerender } = render(<Breadcrumbs items={marked} hideCurrent />);
+    expect(container).toBeEmptyDOMElement();
+    // An entry linking to "/" counts as home without the mark.
+    rerender(<Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Invoices" }]} hideCurrent />);
+    expect(container).toBeEmptyDOMElement();
+    // Without hideCurrent the current entry stays, and the trail with it.
+    rerender(<Breadcrumbs items={marked} />);
+    expect(screen.getByRole("navigation")).toHaveTextContent("Invoices");
+  });
+
+  it("with hideCurrent, outside a PageHeader, renders the trail while an entry that is not home is left", () => {
+    const items = [
+      { label: "Dashboard", href: "/dashboard", home: true },
+      { label: "Invoices", href: "/invoices" },
+      { label: "INV-1" },
+    ];
+    render(<Breadcrumbs items={items} hideCurrent collapse={false} />);
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/dashboard");
+    expect(screen.getByRole("link", { name: "Invoices" })).toHaveAttribute("href", "/invoices");
+    expect(screen.queryByText("INV-1")).toBeNull();
+  });
 });
 
 const routerLink: KitLinkComponent = ({ href, children, ...p }) => (

@@ -122,7 +122,9 @@ function PageHeaders() {
           The trail ends at &ldquo;Units&rdquo;, a link: inside a header with a title,{" "}
           <code className="font-mono">Breadcrumbs</code> hides its current entry (
           <code className="font-mono">hideCurrent</code>, default <code className="font-mono">true</code> there), so
-          the title is not said twice, and the header draws no trail when only the home entry would be left.{" "}
+          the title is not said twice, and no trail is drawn when only the home entry would be left — in a
+          header, and wherever <code className="font-mono">hideCurrent</code> hides the current entry, such as a
+          trail the layout draws above the page.{" "}
           <code className="font-mono">hideCurrent={"{false}"}</code> keeps the current entry as text with{" "}
           <code className="font-mono">aria-current=&quot;page&quot;</code>. An <code className="font-mono">h1</code>{" "}
           header also titles the window: <code className="font-mono">documentTitle</code> (default: a string{" "}

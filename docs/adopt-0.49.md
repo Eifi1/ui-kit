@@ -287,8 +287,9 @@ BREAKING (on a bump, no code): a `PageHeader` that is the page's `h1` (the defau
 when it unmounts. Without `appName` on the provider that title is the page alone ("Units"),
 no longer the app's name from `index.html`. And a `Breadcrumbs` passed to a `PageHeader`'s
 `breadcrumbs` hides its current entry (the title right below names it); the entry before stays
-a link and no entry carries `aria-current`. The header draws no trail when only the home entry
-(`home: true`, or `href: "/"`) would be left.
+a link and no entry carries `aria-current`. No trail is drawn when only home entries
+(`home: true`, or `href: "/"`) would be left: in a `PageHeader`, and wherever the current entry
+is hidden (`hideCurrent`), so a trail the layout draws above the page shows no lone home link.
 
 New:
 - `UiKitProvider appName="Kastlan"` (the `{app}` part) and `documentTitleFormat` (default
@@ -302,12 +303,12 @@ New:
   `false`).
 - `Breadcrumbs.hideCurrent` (default `true` inside a `PageHeader`, `false` elsewhere);
   `hideCurrent={false}` keeps the current entry as text with `aria-current="page"`;
-  `BreadcrumbItem.home`.
+  `BreadcrumbItem.home`, the entry that does not count as a trail on its own.
 
 | App | What changes on a bump | Steps |
 |---|---|---|
 | keksdose | Its 18 `PageHeader`s with a string title rename the tab to the page ("Budget"); none passes `breadcrumbs`. | Pass `appName="Keksdose"` to the provider (`shared/i18n/kit-labels.tsx:108`); check app tests that read `document.title`. |
-| kastlan | Its pages' `PageHeader`s (65, through `shared/components/display/page-header.tsx:8`) rename the tab. Its trail is drawn by the layout above the page (`app/app-layout.tsx:184`, `shared/components/layout/breadcrumbs.tsx`), outside the header, so it keeps its current entry. | `appName="Kastlan"` on the provider (`app/providers.tsx:79`). To stop the trail repeating the title: pass `hideCurrent` in `shared/components/layout/breadcrumbs.tsx` (the route trail), or move it into the `PageHeader`'s `breadcrumbs`. A section can go in as `documentTitle={[title, t("nav.group.finance")]}`. |
+| kastlan | Its pages' `PageHeader`s (65, through `shared/components/display/page-header.tsx:8`) rename the tab. Its trail is drawn by the layout above the page (`app/app-layout.tsx:184`, `shared/components/layout/breadcrumbs.tsx`), outside the header, so it keeps its current entry. | `appName="Kastlan"` on the provider (`app/providers.tsx:79`). To stop the trail repeating the title (prod #25, KX-8), either: in `shared/components/layout/breadcrumbs.tsx` pass `hideCurrent` (to both `KitBreadcrumbs`, `:30` and `:57`) **and** mark the root crumb `home: true` — the root route's crumb (`app/routes.tsx:53`) is rewritten to `/dashboard` (`breadcrumbs.tsx:53–54`), not `/`, so it is not home by itself, and with only `hideCurrent` /invoices shows a lone "Dashboard" link — or move the trail into the `PageHeader`'s `breadcrumbs`. A section can go in as `documentTitle={[title, t("nav.group.finance")]}`. |
 | Kurvenschmiede | The `PageHeader`s with a string title rename the tab; the settings and admin titles ("Security · Settings · Kurvenschmiede") are `SettingsLayout`'s and do not change. Its two `breadcrumbs` are back links, not `Breadcrumbs` (`features/setpoint/session-page.tsx:340`, `features/corner/corner-page.tsx:315`): unchanged. | `appName="Kurvenschmiede"` on the provider (`main.tsx:85`). |
 
 ## KIT-10: the language trigger shows the flag and the code
