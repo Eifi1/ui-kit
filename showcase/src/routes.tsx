@@ -292,7 +292,7 @@ const ColumnMapperDemo = lazySection(() => import("./sections/column-mapper"), "
 // 0.24.0: the apps' 0.23 adoption round.
 const Textarea024Demo = lazySection(() => import("./sections/textarea-024-demo"), "Textarea024Demo");
 const RhfInlineEntity024Demo = lazySection(() => import("./sections/combobox"), "RhfInlineEntity024Demo");
-// 0.25.0: keksdose's feedback run 72 and the polish list.
+// 0.25.0: the feedback run and the polish list.
 const SearchParams025Demo = lazySection(() => import("./sections/search-params-025-demo"), "SearchParams025Demo");
 const TranslationReview025Demo = lazySection(() => import("./sections/translation-review-025-demo"), "TranslationReview025Demo");
 const TextareaEdge025Demo = lazySection(() => import("./sections/fields"), "TextareaEdge025Demo");
@@ -539,7 +539,7 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Kit review (live)",
         short: "Kit review",
         blurb:
-          "The kit's own words in every language keksdose ships, reviewed against keksdose's review database: the same kit. rows and verdicts as its Translations page, opened from there with a review token.",
+          "The kit's own words in every language the configured app ships, reviewed against that app's review database: the same kit. rows and verdicts as its Translations page, opened from there with a review token.",
         icon: ListChecks,
         components: ["TranslationReviewPanel", "TranslationLocaleTabs", "ServerWakeNotice", "createServerWake", "useServerWakeStage"],
         Body: KitReviewPage,

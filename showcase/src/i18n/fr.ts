@@ -207,7 +207,7 @@ export const fr: Dictionary = {
       title: "Revue du kit (en direct)",
       short: "Revue du kit",
       blurb:
-        "Les textes du kit dans chaque langue que livre keksdose, relus contre la base de relecture de keksdose : les mêmes lignes kit. et les mêmes verdicts que sa page Traductions, ouverte depuis là avec un jeton de relecture.",
+        "Les textes du kit dans chaque langue que livre l’app configurée, relus contre la base de relecture de cette app : les mêmes lignes kit. et les mêmes verdicts que sa page Traductions, ouverte depuis là avec un jeton de relecture.",
     },
     inputs: {
       title: "Saisie",
@@ -752,7 +752,7 @@ export const fr: Dictionary = {
       "relire les traductions du kit",
       "approuver une traduction",
       "réveiller un serveur endormi",
-      "ouvrir la relecture depuis keksdose",
+      "ouvrir la relecture depuis l’app",
       "exporter les corrections",
     ],
     inputs: [

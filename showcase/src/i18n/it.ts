@@ -201,7 +201,7 @@ export const it: Dictionary = {
       title: "Revisione del kit (live)",
       short: "Revisione kit",
       blurb:
-        "I testi del kit in ogni lingua che keksdose distribuisce, rivisti sul database di revisione di keksdose: le stesse righe kit. e gli stessi verdetti della sua pagina Traduzioni, aperta da lì con un token di revisione.",
+        "I testi del kit in ogni lingua che l’app configurata distribuisce, rivisti sul database di revisione di quell’app: le stesse righe kit. e gli stessi verdetti della sua pagina Traduzioni, aperta da lì con un token di revisione.",
     },
     inputs: {
       title: "Input",
@@ -746,7 +746,7 @@ export const it: Dictionary = {
       "rivedere le traduzioni del kit",
       "approvare una traduzione",
       "svegliare un server addormentato",
-      "aprire la revisione da keksdose",
+      "aprire la revisione dall’app",
       "esportare le correzioni",
     ],
     inputs: [

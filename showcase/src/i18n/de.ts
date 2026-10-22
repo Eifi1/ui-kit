@@ -212,7 +212,7 @@ export const de: Dictionary = {
       title: "Kit-Prüfung (live)",
       short: "Kit-Prüfung",
       blurb:
-        "Die Texte des Kits in jeder Sprache, die keksdose ausliefert, geprüft gegen die Prüfdatenbank von keksdose: dieselben kit.-Zeilen und Urteile wie auf seiner Übersetzungsseite, von dort mit einem Prüf-Token geöffnet.",
+        "Die Texte des Kits in jeder Sprache, die die konfigurierte App ausliefert, geprüft gegen die Prüfdatenbank dieser App: dieselben kit.-Zeilen und Urteile wie auf seiner Übersetzungsseite, von dort mit einem Prüf-Token geöffnet.",
     },
     inputs: {
       title: "Eingaben",
@@ -757,7 +757,7 @@ export const de: Dictionary = {
       "Übersetzungen des Kits prüfen",
       "Übersetzung freigeben",
       "schlafenden Server aufwecken",
-      "Prüfung aus keksdose öffnen",
+      "Prüfung aus der App öffnen",
       "Korrekturen exportieren",
     ],
     inputs: [

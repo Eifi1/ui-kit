@@ -210,7 +210,7 @@ export const hu: Dictionary = {
       title: "A csomag ellenőrzése (élő)",
       short: "Ellenőrzés",
       blurb:
-        "A csomag szövegei a keksdose minden nyelvén, a keksdose ellenőrzési adatbázisa alapján: ugyanazok a kit. sorok és ítéletek, mint a Fordítások oldalán, ahonnan ellenőrzési tokennel nyitható meg.",
+        "A csomag szövegei a beállított alkalmazás minden nyelvén, az alkalmazás ellenőrzési adatbázisa alapján: ugyanazok a kit. sorok és ítéletek, mint a Fordítások oldalán, ahonnan ellenőrzési tokennel nyitható meg.",
     },
     inputs: {
       title: "Bevitel",
@@ -755,7 +755,7 @@ export const hu: Dictionary = {
       "a csomag fordításainak ellenőrzése",
       "fordítás jóváhagyása",
       "alvó szerver felébresztése",
-      "ellenőrzés megnyitása a keksdose-ból",
+      "ellenőrzés megnyitása az alkalmazásból",
       "javítások exportálása",
     ],
     inputs: [

@@ -4,11 +4,11 @@
  * (Safari private browsing, a partitioned webview), and an unguarded read during render
  * is a blank page, not a lost token.
  *
- *  - the review token: `sessionStorage`, so it dies with the tab. keksdose mints it
+ *  - the review token: `sessionStorage`, so it dies with the tab. The app mints it
  *    short-lived and scoped to the review; it is never written to `localStorage`, and it
  *    leaves the URL as soon as the page has read it.
  *  - a development API base: `localStorage`, dev builds only — so the page can be tried
- *    against a local keksdose without a rebuild.
+ *    against a local copy of the app without a rebuild.
  */
 
 export const TOKEN_KEY = "uikit-kit-review-token";

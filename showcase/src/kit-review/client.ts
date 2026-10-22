@@ -6,11 +6,11 @@ import type {
 } from "@eifi1/ui-kit";
 
 /**
- * The kit review's line to keksdose's API — the same three routes keksdose's own
+ * The kit review's line to the configured app's API — the same three routes the app's own
  * /translations page calls (backend `adapters/api/translations_router.py`), plus its
  * public `/health`.
  *
- * WHY IT RETRIES. keksdose runs on Cloud Run with no minimum instance: after a quiet
+ * WHY IT RETRIES. The app may run on Cloud Run with no minimum instance: after a quiet
  * spell the container is gone, and the first request has to start it — tens of seconds,
  * during which the front end may answer 502/503/504 or simply hold the connection. And a
  * gateway error from Google's front end carries no CORS headers, so the browser does not
@@ -40,9 +40,9 @@ import type {
  * one level up.
  */
 
-/** `GET /translations/reviews` — keksdose's `TranslationReviewsResponse`. */
+/** `GET /translations/reviews` — the app's `TranslationReviewsResponse`. */
 export interface ApiTranslationReviews {
-  /** The locales the token's holder may review, in keksdose's UI order. */
+  /** The locales the token's holder may review, in the app's UI order. */
   locales: string[];
   /** The areas they are limited to (`["legal"]`), `null` for every area. */
   areas?: string[] | null;
@@ -63,7 +63,7 @@ const RETRY_STATUSES = new Set([502, 503, 504]);
 export type ReviewErrorKind =
   /** 401: the token expired or was revoked. The page drops it. */
   | "unauthorized"
-  /** 403: keksdose refused — `detail` is its words. */
+  /** 403: the app refused — `detail` is its words. */
   | "forbidden"
   /** Any other status that is not worth repeating (400, 404, 422, 500 …). */
   | "http"
@@ -75,7 +75,7 @@ export type ReviewErrorKind =
 export class ReviewApiError extends Error {
   readonly kind: ReviewErrorKind;
   readonly status: number | undefined;
-  /** keksdose's own words (FastAPI's `detail`), when it sent any. */
+  /** The app's own words (FastAPI's `detail`), when it sent any. */
   readonly detail: string | undefined;
 
   constructor(kind: ReviewErrorKind, message: string, status?: number, detail?: string) {
@@ -91,7 +91,7 @@ export const isReviewApiError = (error: unknown, kind?: ReviewErrorKind): error 
   error instanceof ReviewApiError && (kind === undefined || error.kind === kind);
 
 export interface ReviewClientOptions {
-  /** `https://keksdose.app/api/v1` — the paths below are appended. */
+  /** `https://app.example/api/v1` — the paths below are appended. */
   base: string;
   /** The review token, sent as `Authorization: Bearer …`. Not needed for `health()`. */
   token?: string | null;
@@ -159,7 +159,7 @@ export function createReviewClient({
         headers,
         body: call.body === undefined ? undefined : JSON.stringify(call.body),
         signal: controller.signal,
-        // No cookies: the token is the whole credential, and keksdose's CORS answer then
+        // No cookies: the token is the whole credential, and the app's CORS answer then
         // does not have to name this origin as one it trusts with a session.
         credentials: "omit",
         cache: "no-store",
@@ -199,7 +199,7 @@ export function createReviewClient({
         }
         if (status === 403) {
           const detail = detailOf(text);
-          throw new ReviewApiError("forbidden", detail ?? "keksdose refused this.", status, detail);
+          throw new ReviewApiError("forbidden", detail ?? "The app refused this.", status, detail);
         }
         if (status === 429) {
           const after = retryAfterMs(outcome.retryAfter);
@@ -209,7 +209,7 @@ export function createReviewClient({
           last = String(status);
         } else {
           const detail = detailOf(text);
-          throw new ReviewApiError("http", `keksdose answered ${status}${detail ? `: ${detail}` : "."}`, status, detail);
+          throw new ReviewApiError("http", `The app answered ${status}${detail ? `: ${detail}` : "."}`, status, detail);
         }
       } else {
         last = outcome.cause === "timeout" ? "no answer within the attempt's timeout" : "a network error";
@@ -255,7 +255,7 @@ function unavailable(budgetMs: number, attempts: number, last: string): ReviewAp
   const tries = attempts === 1 ? "1 attempt" : `${attempts} attempts`;
   return new ReviewApiError(
     "unavailable",
-    `keksdose did not answer within ${Math.round(budgetMs / 1000)} s (${tries}${last ? `, the last: ${last}` : ""}). It may still be starting — try again.`,
+    `The app did not answer within ${Math.round(budgetMs / 1000)} s (${tries}${last ? `, the last: ${last}` : ""}). It may still be starting — try again.`,
   );
 }
 
@@ -264,7 +264,7 @@ function parse(text: string, status: number): unknown {
   try {
     return JSON.parse(text);
   } catch {
-    throw new ReviewApiError("http", `keksdose answered ${status} with something that is not JSON.`, status);
+    throw new ReviewApiError("http", `The app answered ${status} with something that is not JSON.`, status);
   }
 }
 

@@ -199,7 +199,7 @@ describe("answers that are not repeated", () => {
       const client = createReviewClient({ base: BASE, token: "abc", fetch });
       const error = ((await settle(client.list())) as { error: ReviewApiError }).error;
       expect(error.kind).toBe("http");
-      expect(error.message).toBe(`keksdose answered ${status}: field required`);
+      expect(error.message).toBe(`The app answered ${status}: field required`);
       expect(fetch).toHaveBeenCalledTimes(1);
     }
   });
@@ -236,7 +236,7 @@ describe("abort", () => {
 });
 
 describe("the routes", () => {
-  it("PUTs the writes and POSTs the clear, as keksdose's router takes them", async () => {
+  it("PUTs the writes and POSTs the clear, as the app's router takes them", async () => {
     const stored = { locale: "fr", key: "kit.common.close", text: "Fermer", reference_text: "Close", verdict: "APPROVED", note: null, suggestion: null, reviewer_name: "R", reviewed_at: "2026-10-03T10:00:00Z" };
     const fetch = scripted(reply(200, { reviews: [stored] }), reply(200, { cleared: 1 }));
     const client = createReviewClient({ base: BASE, token: "abc", fetch });

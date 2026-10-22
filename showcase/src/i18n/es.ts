@@ -204,7 +204,7 @@ export const es: Dictionary = {
       title: "Revisión del kit (en vivo)",
       short: "Revisión del kit",
       blurb:
-        "Los textos del kit en cada idioma que publica keksdose, revisados contra la base de datos de revisión de keksdose: las mismas filas kit. y los mismos veredictos que su página Traducciones, abierta desde allí con un token de revisión.",
+        "Los textos del kit en cada idioma que publica la app configurada, revisados contra la base de datos de revisión de esa app: las mismas filas kit. y los mismos veredictos que su página Traducciones, abierta desde allí con un token de revisión.",
     },
     inputs: {
       title: "Entradas",
@@ -749,7 +749,7 @@ export const es: Dictionary = {
       "revisar las traducciones del kit",
       "aprobar una traducción",
       "despertar un servidor dormido",
-      "abrir la revisión desde keksdose",
+      "abrir la revisión desde la app",
       "exportar las correcciones",
     ],
     inputs: [

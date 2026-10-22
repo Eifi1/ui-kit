@@ -3,7 +3,7 @@
 // and the package must not learn about it.
 interface ImportMetaEnv {
   /**
-   * keksdose's API base for the live kit review (`https://…/api/v1`). Set by the Pages
+   * The configured app's API base for the live kit review (`https://…/api/v1`). Set by the Pages
    * build from the repository variable `REVIEW_API_BASE` (.github/workflows/ci.yml);
    * absent in a local dev server and in a fork, where the page says it is not configured.
    */
