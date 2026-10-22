@@ -198,3 +198,20 @@ New:
 | keksdose | Its 18 `PageHeader`s with a string title rename the tab to the page ("Budget"); none passes `breadcrumbs`. | Pass `appName="Keksdose"` to the provider (`shared/i18n/kit-labels.tsx:108`); check app tests that read `document.title`. |
 | kastlan | Its pages' `PageHeader`s (65, through `shared/components/display/page-header.tsx:8`) rename the tab. Its trail is drawn by the layout above the page (`app/app-layout.tsx:184`, `shared/components/layout/breadcrumbs.tsx`), outside the header, so it keeps its current entry. | `appName="Kastlan"` on the provider (`app/providers.tsx:79`). To stop the trail repeating the title: pass `hideCurrent` in `shared/components/layout/breadcrumbs.tsx` (the route trail), or move it into the `PageHeader`'s `breadcrumbs`. A section can go in as `documentTitle={[title, t("nav.group.finance")]}`. |
 | Kurvenschmiede | The `PageHeader`s with a string title rename the tab; the settings and admin titles ("Security · Settings · Kurvenschmiede") are `SettingsLayout`'s and do not change. Its two `breadcrumbs` are back links, not `Breadcrumbs` (`features/setpoint/session-page.tsx:340`, `features/corner/corner-page.tsx:315`): unchanged. | `appName="Kurvenschmiede"` on the provider (`main.tsx:85`). |
+
+## KIT-10: the language trigger shows the flag and the code
+
+On a bump, no code: `LanguageMenu`'s trigger shows the active flag **and the language code in
+capitals** ("DE", "FR", "IT"), so de-CH, fr-CH and it-CH — one Swiss flag each — differ without
+opening the menu. It is as tall as the other top-bar triggers and as wide as it needs (about
+60 px instead of 36). `trigger="code"` or `trigger="flag"` keeps one of the two;
+`trigger="flag"` is the 0.48 look. The trigger is named by the new `topBar.languageCurrent`
+("Choose language, current: Deutsch", seven catalogues) unless the app passes its own
+`aria-label`, which still names menu and trigger as given. `AccountMenuLanguage`'s row shows the
+code beside the flag too, and its name carries the language's own name.
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | `features/landing/landing-header.tsx:51` (`LanguageMenu`, `aria-label={t("topbar.language")}`); `app/account-menu.tsx:172` (`AccountMenuLanguage`). Languages `shared/i18n/languages.ts:33–36`: de-CH (ch) shows "DE". | Drop the `aria-label` so the trigger says which language is on (or keep it: then it stays "Language"). |
+| kastlan | `shared/components/language-switcher.tsx:11` (auth pages, `aria-label={t("nav.language")}`); `app/top-bar.tsx:226` (`AccountMenuLanguage`). | As keksdose: drop the `aria-label`, keep `heading`. |
+| Kurvenschmiede | `app/chrome-controls.tsx:32` (`LanguageMenu`, no `aria-label`) and `:26` (`AccountMenuLanguage`). | Nothing; the name is the kit's. |

@@ -529,6 +529,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       theme: "切换主题",
       palette: "外观预设",
       language: "语言",
+      languageCurrent: (name) => `选择语言，当前：${name}`,
       switchRole: "切换角色",
       role: (value) => `角色：${value}`,
     },

@@ -283,6 +283,9 @@ export interface TopBarLabels {
   theme: string;
   palette: string;
   language: string;
+  /** 0.49 KIT-10: the language menu's trigger, given the current language's name —
+   *  "Choose language, current: Deutsch". */
+  languageCurrent: (name: string) => string;
   switchRole: string;
   /** The role switcher's tooltip, given the active role's name. */
   role: (value: string) => string;

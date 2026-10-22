@@ -560,16 +560,16 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2171 names from 357 modules** — 1008 values and 1163 types. _Italic_ is a type-only export.
+**2172 names from 357 modules** — 1008 values and 1164 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2171 |
+| `@eifi1/ui-kit` | 2172 |
 | `@eifi1/ui-kit/chart` | 100 |
-| `@eifi1/ui-kit/shell` | 116 |
+| `@eifi1/ui-kit/shell` | 117 |
 | `@eifi1/ui-kit/data-table` | 55 |
 | `@eifi1/ui-kit/wizard` | 24 |
 | `@eifi1/ui-kit/tour` | 37 |
@@ -828,7 +828,7 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageOption`_ |
+| `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageMenuTrigger`_, _`LanguageOption`_ |
 | `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
 | `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_BAR_MAX`, `DEFAULT_MOBILE_MAX_ITEMS`, `pickMobileBar`, `splitMobileBar`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
 | `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |

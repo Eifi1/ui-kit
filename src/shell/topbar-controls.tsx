@@ -5,6 +5,7 @@ import type { PalettePreset } from "../theme/palette-presets";
 import type { ThemeMode } from "../theme/theme-store";
 import { Tooltip } from "../components/tooltip";
 import { DEFAULT_TOP_BAR_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { languageCodeLabel } from "./language-code";
 
 /** Shared square icon-button styling for top-bar triggers, so app-owned controls
  *  (account/feedback menus) line up with the shared ones. */
@@ -179,33 +180,51 @@ export interface LanguageOption {
   country: string;
 }
 
+/** What {@link LanguageMenu}'s trigger shows of the active language (0.49 KIT-10). */
+export type LanguageMenuTrigger = "flag+code" | "code" | "flag";
+
+/** The trigger with a code: as tall as the others, as wide as flag and code need. */
+const LANGUAGE_TRIGGER_WIDE_CLASS = TOPBAR_TRIGGER_CLASS.replace("size-9", "h-9 min-w-9 gap-1.5 px-2");
+
+const FLAG_CLASS =
+  "inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]";
+
 /** Language switcher: a hover menu of options with flags and a check on the
  *  active one. Controlled — the app owns the current code and change handler.
  *
- *  The trigger is the *active* option's flag, not an icon: lucide's `Languages`
+ *  The trigger is the *active* option's flag and its language code in capitals
+ *  ("DE", "FR", "IT"; `trigger`, 0.49 KIT-10), not an icon: lucide's `Languages`
  *  glyph (文A) is the same mark Chrome puts in the omnibox for "translate this
  *  page", so it read as machine-translation rather than "pick the UI language"
- *  (Keksdose feedback #121). The flag also shows which language is currently on,
- *  which no icon can, and costs the same width on a crowded mobile bar. A globe
- *  covers the case where `current` matches nothing in `options`. */
+ *  (Keksdose feedback #121). A flag alone could not tell de-CH, fr-CH and it-CH
+ *  apart — one Swiss flag each — so the code is beside it. It is named "Choose
+ *  language, current: Deutsch" (`topBar.languageCurrent`). A globe covers the
+ *  case where `current` matches nothing in `options`. */
 export function LanguageMenu({
   options,
   current,
   onChange,
   "aria-label": ariaLabel,
   heading,
+  trigger = "flag+code",
 }: {
   options: LanguageOption[];
   current: string | undefined;
   onChange: (code: string) => void;
-  /** Default: `topBar.language` from the {@link UiKitProvider}, else English. */
+  /** The menu's name, and the trigger's as given. Default: the menu `topBar.language`,
+   *  the trigger `topBar.languageCurrent(<the active label>)`, from the
+   *  {@link UiKitProvider}, else English. */
   "aria-label"?: string;
   /** Optional small heading row above the list — as on `TopBarActionMenu`,
    *  `OptionSwitcherMenu` and `PaletteMenu`. */
   heading?: string;
+  /** What the trigger shows: `"flag+code"` (default), `"code"` or `"flag"`. */
+  trigger?: LanguageMenuTrigger;
 }) {
   const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { language: ariaLabel });
   const active = options.find((o) => o.code === current);
+  const triggerName = ariaLabel ?? (active ? labels.languageCurrent(active.label) : labels.language);
+  const showsCode = active !== undefined && trigger !== "flag";
   return (
     <HoverMenu
       aria-label={labels.language}
@@ -214,14 +233,18 @@ export function LanguageMenu({
           <button
             type="button"
             onClick={toggle}
-            aria-label={labels.language}
-            className={TOPBAR_TRIGGER_CLASS}
+            aria-label={triggerName}
+            className={showsCode ? LANGUAGE_TRIGGER_WIDE_CLASS : TOPBAR_TRIGGER_CLASS}
           >
             {active ? (
-              <span
-                aria-hidden
-                className={`fi fi-${active.country} inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
-              />
+              <>
+                {trigger !== "code" && <span aria-hidden className={`fi fi-${active.country} ${FLAG_CLASS}`} />}
+                {showsCode && (
+                  <span aria-hidden className="text-xs font-semibold tabular-nums tracking-wide">
+                    {languageCodeLabel(active.code)}
+                  </span>
+                )}
+              </>
             ) : (
               <Globe className="size-5" />
             )}
@@ -245,10 +268,7 @@ export function LanguageMenu({
                   className={TOPBAR_MENU_ITEM_CLASS}
                 >
                   <span className="flex items-center gap-2">
-                    <span
-                      aria-hidden
-                      className={`fi fi-${lang.country} inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`}
-                    />
+                    <span aria-hidden className={`fi fi-${lang.country} ${FLAG_CLASS}`} />
                     {lang.label}
                   </span>
                   {isActive && <Check className="size-4 text-secondary" />}

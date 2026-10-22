@@ -541,6 +541,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       theme: "Téma váltása",
       palette: "Megjelenési séma",
       language: "Nyelv",
+      languageCurrent: (name) => `Nyelv kiválasztása, jelenlegi: ${name}`,
       switchRole: "Szerepkör váltása",
       role: (value) => `Szerepkör: ${value}`,
     },

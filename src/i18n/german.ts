@@ -556,6 +556,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       theme: "Theme wechseln",
       palette: "Darstellungsvorlage",
       language: "Sprache",
+      languageCurrent: (name) => `Sprache wählen, aktuell: ${name}`,
       switchRole: "Rolle wechseln",
       role: (value) => `Rolle: ${value}`,
     },

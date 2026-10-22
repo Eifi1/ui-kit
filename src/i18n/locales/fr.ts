@@ -551,6 +551,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       theme: "Changer de thème",
       palette: "Préréglage d’apparence",
       language: "Langue",
+      languageCurrent: (name) => `Choisir la langue, actuelle\u00a0: ${name}`,
       switchRole: "Changer de rôle",
       role: (value) => `Rôle\u00a0: ${value}`,
     },

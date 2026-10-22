@@ -41,6 +41,7 @@ import {
 import type {
   AppShellNavItem,
   AppShellSidebarFooterItem,
+  LanguageMenuTrigger,
   LanguageOption,
   OptionSwitcherOption,
   TopBarMenuEntry,
@@ -78,6 +79,13 @@ const LANGUAGES: LanguageOption[] = [
   { code: "de", label: "Deutsch", country: "de" },
   { code: "fr", label: "Français", country: "fr" },
   { code: "pt", label: "Português", country: "br" },
+];
+
+/** Three languages under one flag: the code tells them apart. */
+const SWISS_LANGUAGES: LanguageOption[] = [
+  { code: "de-CH", label: "Deutsch", country: "ch" },
+  { code: "fr-CH", label: "Français", country: "ch" },
+  { code: "it-CH", label: "Italiano", country: "ch" },
 ];
 
 type Env = "dev" | "staging" | "prod";
@@ -147,7 +155,7 @@ export function ShellSection() {
 
       <Example
         label="LanguageMenu"
-        hint="The trigger is the active flag, not an icon; an unknown code falls back to a globe."
+        hint="The trigger is the active flag and its code, not an icon; an unknown code falls back to a globe."
       >
         <Languages />
       </Example>
@@ -401,6 +409,7 @@ function Languages() {
   // menu itself can only ever produce a valid code.
   const [lang, setLang] = useState<string | undefined>("de");
   const [withHeading, setWithHeading] = useState(true);
+  const [trigger, setTrigger] = useState<LanguageMenuTrigger>("flag+code");
 
   return (
     <div className="space-y-3">
@@ -409,7 +418,7 @@ function Languages() {
           options={LANGUAGES}
           current={lang}
           onChange={setLang}
-          aria-label="Language"
+          trigger={trigger}
           heading={withHeading ? "Language" : undefined}
         />
         <Switch label="heading" checked={withHeading} onCheckedChange={setWithHeading} />
@@ -417,6 +426,25 @@ function Languages() {
           Clear the selection
         </button>
         <span className={READOUT_STRONG}>current: {lang ?? "undefined"}</span>
+      </Row>
+      <Row>
+        <ToggleGroup<LanguageMenuTrigger>
+          aria-label="trigger"
+          size="sm"
+          value={trigger}
+          onChange={setTrigger}
+          options={[
+            { value: "flag+code", label: "flag+code" },
+            { value: "code", label: "code" },
+            { value: "flag", label: "flag" },
+          ]}
+        />
+      </Row>
+      <Row>
+        {SWISS_LANGUAGES.map((o) => (
+          <LanguageMenu key={o.code} options={SWISS_LANGUAGES} current={o.code} onChange={() => {}} />
+        ))}
+        <span className={READOUT_STRONG}>de-CH · fr-CH · it-CH, closed</span>
       </Row>
       <Note>
         The flags are <code className="font-mono">flag-icons</code> spans (
@@ -426,6 +454,15 @@ function Languages() {
         <code className="font-mono">br</code>. <code className="font-mono">flag-icons</code> is a
         dependency of the package that nothing inside the package imports, so a consumer that
         never imports the stylesheet gets empty boxes and no error.
+      </Note>
+      <Note>
+        The trigger shows the active flag and the language code in capitals (
+        <code className="font-mono">trigger=&quot;flag+code&quot;</code>, the default;{" "}
+        <code className="font-mono">&quot;code&quot;</code> or <code className="font-mono">&quot;flag&quot;</code>{" "}
+        alone): the three Swiss languages share one flag, and only the code tells them apart without opening the
+        menu. Its name is <code className="font-mono">topBar.languageCurrent</code>, &ldquo;Choose language,
+        current: Deutsch&rdquo; in seven languages; an <code className="font-mono">aria-label</code> of the
+        app&apos;s own names it as given.
       </Note>
       <Note>
         <code className="font-mono">heading</code> (new in 0.7.0) is the same small uppercase
