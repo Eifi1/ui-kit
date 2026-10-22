@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DataTable } from "../../components/data-table";
 import type { DataTableColumn } from "../../components/data-table";
 import { GROW_PEER_CELL_CLASS } from "../../components/data-table-fit";
+import { mobileCardColumns } from "../../components/data-table-mobile";
 import type { RoleVocabulary } from "../../components/account-chips";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import {
@@ -112,6 +113,13 @@ describe("userRosterColumns", () => {
     const keys = userRosterColumns<Row, Role>({ roles: ROLES, extra: [OWNED], actions: () => [] }).map((c) => c.key);
     expect(keys).toEqual(["name", "role", "state", "created", "last_login", "owned", "actions"]);
     expect(userRosterColumns<Row, Role>({ roles: ROLES, emailColumn: true }).map((c) => c.key)).toContain("email");
+  });
+
+  it("draws its actions in the phone card's actions row, never one of the three fields (0.49)", () => {
+    const columns = userRosterColumns<Row, Role>({ roles: ROLES, extra: [{ ...OWNED, mobile: "secondary" }], actions: () => [] });
+    const { fields, actions } = mobileCardColumns(columns.filter((c) => !c.mobileHidden && c.mobile !== "hidden"));
+    expect(actions.map((c) => c.key)).toEqual(["actions"]);
+    expect(fields.map((c) => c.key)).toEqual(["role", "last_login", "owned"]);
   });
 
   it("renders identity, role, states, dates and the app's column", () => {

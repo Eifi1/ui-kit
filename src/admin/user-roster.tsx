@@ -337,11 +337,12 @@ function StateChips({ states }: { states: readonly RosterState[] }) {
  * | `created` | `dateColumn` | instant | hidden |
  * | `last_login` | `dateColumn`, relative, "Never" | instant | field |
  * | …`extra` | the app's | the app's | off the card unless marked `mobile: "secondary"` |
- * | `actions` | {@link UserRowActions} | — | field |
+ * | `actions` | {@link UserRowActions} | — | the card's actions row (`role: "actions"`) |
  *
- * The card holds three fields, so an `extra` column marked `mobile: "secondary"` takes the
- * place of a later one (the actions come last): mark it only with `role`, `last_login` or
- * `actions` dropped from the card (`mobile: "hidden"`), or draw a `mobileCard`.
+ * The card holds three fields — `role`, `last_login` and one more: an `extra` column marked
+ * `mobile: "secondary"` takes that place. The actions are `role: "actions"` (0.49), drawn
+ * after the fields and never one of the three. Drop them from the card with
+ * `mobile: "hidden"`, or draw a `mobileCard`.
  *
  * Pure: hand it resolved words, or use {@link useUserRosterColumns}. The keys are stable,
  * so an app may drop or move a column (`columns.filter((c) => c.key !== "created")`).
@@ -493,8 +494,8 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
       headClassName: "w-px text-end",
       // The menu button keeps its own click: a row link must not wrap it.
       noRowLink: true,
-      // Always on the phone card: the actions must stay reachable there.
-      mobile: "secondary",
+      // Always on the phone card, after the fields and never one of the three (0.49).
+      role: "actions",
     });
   }
   return columns;
