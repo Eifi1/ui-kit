@@ -441,8 +441,7 @@ function AlertTonesDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">neutral</code> used to be withheld from the banner: a
-          triangle with no colour is a warning that looks like a note. Since 0.8.0 the glyph
+          A triangle with no colour would be a warning that looks like a note, so the glyph
           follows the tone — the triangle for the two that mean &ldquo;something is wrong&rdquo;,
           the ⓘ for <code className="font-mono">info</code> and <code className="font-mono">neutral</code>{" "}
           — so a neutral banner is simply a note. The colours are the semantic{" "}

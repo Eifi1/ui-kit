@@ -253,7 +253,6 @@ export function AlertBannerBlockDemo() {
           with it on every mount. A {code("role")} you pass still wins.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
@@ -287,7 +286,6 @@ export function EmptyStateSmallDemo() {
           its own there.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
@@ -317,7 +315,6 @@ export function LoadingState016Demo() {
         {code("label={null}")} used to print &ldquo;Loading…&rdquo; anyway; now it hides the words and the status region
         keeps announcing {code("common.loading")}. {code("compact")} is the step between {code("sm")} and {code("md")}.
       </Note>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }

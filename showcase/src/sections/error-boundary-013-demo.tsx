@@ -24,7 +24,7 @@ function DefaultScreenDemo() {
   const [error, setError] = useState<unknown>(undefined);
   return (
     <Example
-      label="ErrorBoundary 0.13 — the one crash screen"
+      label="ErrorBoundary — the one crash screen"
       hint="appVersion, reportExtras; showMessage, showDetails and copyReport are on by default"
     >
       <Row>

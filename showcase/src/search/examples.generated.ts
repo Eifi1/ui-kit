@@ -472,7 +472,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ErrorBoundary — Retry, details and a fallback of your own",
     "ProgressBar — unlimited, hint, overage and legend values",
     "LoadingState — hidden label and compact padding",
-    "ErrorBoundary 0.13 — the one crash screen",
+    "ErrorBoundary — the one crash screen",
     "onReport — filed once per page load, the reference on screen",
     "A lazy chunk that did not load — a new version, or offline",
   ],

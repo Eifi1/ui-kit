@@ -166,7 +166,7 @@ function ErrorBoundaryDemo() {
       <div className="mt-3">
         <Note>
           The default fallback is {code('EmptyState tone="danger"')} with {code('role="alert"')}, its words from{" "}
-          {code("errorBoundary.*")}. {code("showDetails")} is the disclosure with the full report (on by default since 0.13 — see
+          {code("errorBoundary.*")}. {code("showDetails")} is the disclosure with the full report (on by default — see
           the crash-screen examples below). A change in {code("resetKeys")} clears a shown error
           (pass the route path so a broken page does not carry its fallback to the next). The browser console logs
           the throw too — that is React, not a second failure.
