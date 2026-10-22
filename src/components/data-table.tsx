@@ -5,17 +5,9 @@ import { Spinner } from "./spinner";
 import { isTableOwnColumn, useRowActionColumn } from "./data-table-row-actions";
 import { useColumnResize } from "./data-table-resize";
 import { useRangeSelection } from "./data-table-selection";
-import {
-  RowLink,
-  cleanAttrs,
-  columnLabel,
-  fromOutside,
-  fromOwnControl,
-  logicalAlign,
-  resolveDataTableLabels,
-  splitCellProps,
-} from "./data-table-shared";
-import { MobileFilters, MobileRow, MobileSelectBar, MobileSort, StackedFields } from "./data-table-mobile";
+import { columnLabel, logicalAlign, resolveDataTableLabels } from "./data-table-shared";
+import { MobileFilters, MobileSelectBar, MobileSort, StackedFields } from "./data-table-mobile";
+import { DataTableMobileRow, DataTableRow, type DataTableRowCtx } from "./data-table-row";
 import { DataTableHead } from "./data-table-head";
 import { DataTableLeadingRow } from "./data-table-leading-row";
 import {
@@ -862,35 +854,7 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
 
-/** Arrow/Home/End between the focusable rows of the table's bodies — the roving half of
- *  the keyboard-activatable rows (see the row's `onKeyDown`). */
-function moveRowFocus(from: HTMLElement, key: string): boolean {
-  if (!(key in ROW_NAV_KEYS)) return false;
-  // Every body of the table: a grouped table (`groupBy`, 0.48) has one per group.
-  const table = from.closest("table");
-  if (!table) return false;
-  const rows = Array.from(table.tBodies).flatMap((body) =>
-    Array.from(body.children).filter(
-      (el): el is HTMLElement => el instanceof HTMLElement && el.hasAttribute("data-row-nav"),
-    ),
-  );
-  const i = rows.indexOf(from);
-  const target =
-    key === "ArrowDown"
-      ? rows[i + 1]
-      : key === "ArrowUp"
-        ? rows[i - 1]
-        : key === "Home"
-          ? rows[0]
-          : key === "End"
-            ? rows[rows.length - 1]
-            : undefined;
-  // At either end the key is still consumed, or ArrowDown on the last row would
-  // scroll the page out from under a focused row.
-  target?.focus();
-  return true;
-}
-const ROW_NAV_KEYS = { ArrowDown: 1, ArrowUp: 1, Home: 1, End: 1 } as const;
+// `moveRowFocus` (the roving rows' Arrow/Home/End) lives with the row in data-table-row.tsx.
 
 // ---------- Main DataTable ----------
 
@@ -1370,10 +1334,14 @@ export function DataTable<T>({
   // of a horizontally-scrolling table. Column settings stay desktop-only; the
   // filters come through a bottom sheet (feedback #299) and the sort through the
   // opt-in `mobileSort` row (keksdose K10), both on the table's own state.
-  const mobileColumns = visibleColumns.filter((c) => !c.mobileHidden);
+  // Memoised on `visibleColumns`: the cards compare their columns by identity (0.48.2).
+  const mobileColumns = useMemo(() => visibleColumns.filter((c) => !c.mobileHidden), [visibleColumns]);
   const mobilePrimaryCol =
     mobileColumns.find((c) => c.mobilePrimary) ?? mobileColumns[0] ?? null;
-  const mobileSecondaryColumns = mobileColumns.filter((c) => c !== mobilePrimaryCol);
+  const mobileSecondaryColumns = useMemo(
+    () => mobileColumns.filter((c) => c !== mobilePrimaryCol),
+    [mobileColumns, mobilePrimaryCol],
+  );
   // The columns the card leaves out, for the opened row (`mobileDetailsInRow`).
   const mobileDetailColumns = mobileDetailsInRow ? visibleColumns.filter((c) => c.mobileHidden) : [];
   // Large and Extra large (§4 "DataTable phone card"): the card's labels go ABOVE their
@@ -1465,7 +1433,7 @@ export function DataTable<T>({
   const phoneSelecting = !!selection && !isMdUp && (phoneSelectMode || anySelected);
   // ---- Shift+click range selection ---- (data-table-selection.ts; feedback #289,
   // anchored on the row's KEY so a sort, filter or page change cannot move it)
-  const { selectionAnchor, rangeClick, canSelect, selectRange } = useRangeSelection({
+  const { canSelect, selectRange, setAnchor, markRangeClick, takeRangeClick } = useRangeSelection({
     selection,
     slice,
     rowKey,
@@ -1498,6 +1466,30 @@ export function DataTable<T>({
         ? rowKey(slice[0])
         : null;
 
+  // What the memoised rows' handlers read at event time (0.48.2, K-052-2): the latest
+  // props, refreshed every commit, so a row that bailed out of a render still toggles
+  // through the current `selection` and opens through the current `onRowClick`.
+  const latestRowCtx: DataTableRowCtx<T> = {
+    onRowClick,
+    onToggle: selection?.onToggle,
+    isSelected: (row) => !!selection?.isSelected(row),
+    canSelect,
+    selectRange,
+    setAnchor,
+    markRangeClick,
+    takeRangeClick,
+    setFocusRowKey,
+    onLongPress: (row) => {
+      setPhoneSelectMode(true);
+      setAnchor(rowKey(row));
+      if (selection && !selection.isSelected(row)) selection.onToggle(row, true);
+    },
+  };
+  const rowCtx = useRef(latestRowCtx);
+  useLayoutEffect(() => {
+    rowCtx.current = latestRowCtx;
+  });
+
   // When dialog-mode is on, the expanded row's detail goes into a bottom-sheet
   // modal instead of unfolding inline. Only one row is ever expanded at a time.
   const mobileDialogRow = mobileExpandAsDialog && !isMdUp ? mobileSlice.find((r) => isExpanded?.(r)) : undefined;
@@ -1514,46 +1506,38 @@ export function DataTable<T>({
 
   // One mobile card (`MobileRow`, data-table-mobile.tsx). A function so the flat list
   // and the grouped list (below) share identical row markup.
-  const renderMobileRow = (row: T) => (
-    <MobileRow
-      key={rowKey(row)}
-      row={row}
-      isExpanded={isExpanded}
-      openedRowContent={openedRowContent}
-      opensRow={opensRow}
-      rowClassName={rowClassName}
-      rowAttributes={rowAttributes}
-      onRowClick={onRowClick}
-      rowHref={rowHref}
-      swipeActionsFor={swipeActionsFor}
-      mobileDir={mobileDir}
-      mobileCardLinkable={mobileCardLinkable}
-      mobileCard={mobileCard}
-      mobilePrimaryCol={mobilePrimaryCol}
-      mobileSecondaryColumns={mobileSecondaryColumns}
-      mobileExpandAsDialog={mobileExpandAsDialog}
-      compact={compact}
-      large={large}
-      select={
-        selection
-          ? {
-              active: phoneSelecting,
-              selectable: canSelect(row),
-              selected: selection.isSelected(row),
-              onToggle: (checked) => {
-                selectionAnchor.current = rowKey(row);
-                selection.onToggle(row, checked);
-              },
-              onLongPress: () => {
-                setPhoneSelectMode(true);
-                selectionAnchor.current = rowKey(row);
-                if (!selection.isSelected(row)) selection.onToggle(row, true);
-              },
-            }
-          : null
-      }
-    />
-  );
+  const renderMobileRow = (row: T) => {
+    const key = rowKey(row);
+    const expanded = isExpanded?.(row) ?? false;
+    return (
+      <DataTableMobileRow<T>
+        key={key}
+        ctx={rowCtx}
+        rowKey={key}
+        row={row}
+        expanded={expanded}
+        expansion={expanded ? openedRowContent(row) : null}
+        opensRow={opensRow}
+        className={rowClassName?.(row)}
+        attrs={rowAttributes?.(row)}
+        interactive={!!onRowClick}
+        href={mobileCardLinkable ? rowHref?.(row) : undefined}
+        swipeActionsFor={swipeActionsFor}
+        mobileDir={mobileDir}
+        mobileCardLinkable={mobileCardLinkable}
+        mobileCard={mobileCard}
+        mobilePrimaryCol={mobilePrimaryCol}
+        mobileSecondaryColumns={mobileSecondaryColumns}
+        mobileExpandAsDialog={mobileExpandAsDialog}
+        compact={compact}
+        large={large}
+        selectionOn={!!selection}
+        selectActive={phoneSelecting}
+        selectable={canSelect(row)}
+        selected={!!selection && selection.isSelected(row)}
+      />
+    );
+  };
 
   // Consecutive grouping of the (already-sorted) mobile slice into labelled
   // sections for the "assistance"-style list (feedback #317). Null unless the
@@ -1907,227 +1891,41 @@ export function DataTable<T>({
                 {leadingRow}
               </DataTableLeadingRow>
             ) : null;
+            // One memoised row each (0.48.2, K-052-2; data-table-row.tsx): the table
+            // derives each row's own inputs here, as primitives, so a tick re-renders
+            // only the rows whose inputs changed.
             const renderRow = (row: T, rowIndex: number) => {
               const expanded = isExpanded?.(row) ?? false;
-              const expansion = expanded ? expandedRow?.(row) : null;
-              const rowInteractive = !!onRowClick || !!selection;
-              const href = rowHref?.(row);
               const key = rowKey(row);
-              const detailId = `${detailIdBase}-${rowIndex}`;
-              // Whether the row is open, said where ARIA allows it (round 0.34, the
-              // showcase's axe check): `aria-expanded` belongs to a treegrid's row, not a
-              // table's, and the <tr> wore it. A disclosure button in the first cell carries
-              // it now, with `aria-controls` on the detail row while that is there.
-              // Visually hidden and not a tab stop: the row stays the one roving stop, with
-              // Enter/Space and the whole-row click — this is the screen reader cursor's
-              // way in, and where it hears the state. Named by `aria-label`, so the cell's
-              // text stays the cell's own.
-              const disclosure =
-                rowsFocusable && expandedRow ? (
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    className="sr-only-fixed"
-                    aria-label={labels.rowDetails}
-                    aria-expanded={expanded}
-                    aria-controls={expansion ? detailId : undefined}
-                    // The row's own handler leaves a click on a control inside it alone.
-                    onClick={() => onRowClick!(row)}
-                  />
-                ) : null;
               return (
-                <Fragment key={key}>
-                  <tr
-                    {...cleanAttrs(rowAttributes?.(row))}
-                    data-row-nav={rowsFocusable ? "" : undefined}
-                    tabIndex={rowsFocusable ? (key === tabRowKey ? 0 : -1) : undefined}
-                    onFocus={
-                      rowsFocusable
-                        ? (e) => {
-                            if (e.target === e.currentTarget) setFocusRowKey(key);
-                          }
-                        : undefined
-                    }
-                    onKeyDown={
-                      rowsFocusable
-                        ? (e) => {
-                            // Only the row's own key presses: Enter on a nested button
-                            // or link is that control's, and Space in a nested input
-                            // is a space.
-                            if (e.target !== e.currentTarget) return;
-                            if (e.altKey || e.ctrlKey || e.metaKey) return;
-                            if (e.key === "Enter" || e.key === " ") {
-                              // Space would otherwise scroll the table.
-                              e.preventDefault();
-                              onRowClick!(row);
-                              return;
-                            }
-                            if (e.shiftKey) return;
-                            if (moveRowFocus(e.currentTarget, e.key)) e.preventDefault();
-                          }
-                        : undefined
-                    }
-                    className={cn(
-                      "border-t border-subtle",
-                      rowInteractive && "cursor-pointer hover:bg-hover",
-                      // The kit's focus frame width (§5, `--focus-ring-width`), drawn as an
-                      // OUTLINE rather than FOCUS_RING's box-shadow: a shadow on a `<tr>`
-                      // is not painted by every engine, an outline is.
-                      rowsFocusable &&
-                        "focus-visible:bg-hover focus-visible:outline-focus focus-visible:-outline-offset-2 focus-visible:outline-brand",
-                      rowClassName?.(row),
-                    )}
-                    onClick={
-                      rowInteractive
-                        ? (e) => {
-                            // A click on a control inside the row (a button, a link,
-                            // an input the cell renders) is that control's — it must
-                            // not also open the row. Cells no longer have to
-                            // `stopPropagation` to get that.
-                            if (fromOwnControl(e.target, e.currentTarget)) return;
-                            if (fromOutside(e.target, e.currentTarget)) return;
-                            // Modifier-clicks anywhere in the row drive
-                            // selection instead of expanding it (feedback #289):
-                            // Ctrl/Cmd toggles a single row, Shift selects the
-                            // range from the last-toggled row (inclusive of this
-                            // one) — the same as the checkbox, but for the whole
-                            // row, which is what the checkbox-only version was
-                            // missing.
-                            if (selection && canSelect(row)) {
-                              if (e.shiftKey) {
-                                // Drop the text selection a shift-click would
-                                // otherwise smear across the rows.
-                                window.getSelection?.()?.removeAllRanges();
-                                if (selectRange(rowIndex)) return;
-                                // No anchor yet: treat it as the first pick.
-                                selectionAnchor.current = rowKey(row);
-                                selection.onToggle(row, !selection.isSelected(row));
-                                return;
-                              }
-                              if (e.metaKey || e.ctrlKey) {
-                                selectionAnchor.current = rowKey(row);
-                                selection.onToggle(row, !selection.isSelected(row));
-                                return;
-                              }
-                            }
-                            onRowClick?.(row);
-                          }
-                        : undefined
-                    }
-                  >
-                    {selection && (
-                      <td
-                        className={cn("align-top", compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2")}
-                        // Don't let selecting a row also trigger the row click
-                        // (which expands/edits it).
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {canSelect(row) && (
-                          <input
-                            type="checkbox"
-                            className={cn("accent-indigo-600", compact ? "size-3.5" : "size-4")}
-                            checked={selection.isSelected(row)}
-                            // Shift+click selects the range from the last toggled
-                            // row. `preventDefault` puts the box back, but it does NOT
-                            // stop React's `onChange`: React derives a checkbox's
-                            // change from the `click` itself, after the browser has
-                            // already flipped `checked` and before the cancellation
-                            // reverts it — so the same click also reported itself as
-                            // a single toggle, and the owner got `onToggleMany` and
-                            // then `onToggle` for the clicked row. The click is
-                            // remembered by identity and its change is dropped; a
-                            // boolean flag would outlive a click whose change never
-                            // came and swallow the user's next real one.
-                            onClick={(e) => {
-                              if (e.shiftKey && selectRange(rowIndex)) {
-                                e.preventDefault();
-                                rangeClick.current = e.nativeEvent;
-                              }
-                            }}
-                            onChange={(e) => {
-                              if (rangeClick.current && e.nativeEvent === rangeClick.current) {
-                                rangeClick.current = null;
-                                return;
-                              }
-                              selectionAnchor.current = rowKey(row);
-                              selection.onToggle(row, e.target.checked);
-                            }}
-                            aria-label={labels.selectRow}
-                          />
-                        )}
-                      </td>
-                    )}
-                    {visibleColumns.map((col, colIndex) => {
-                      const width = widths[col.key];
-                      // The caller's first, the table's over it — see `cellProps`.
-                      const own = splitCellProps(col.cellProps?.(row));
-                      const pinned = width ? { width, minWidth: width, maxWidth: width } : undefined;
-                      return (
-                        <td
-                          {...own.attrs}
-                          key={col.key}
-                          data-col={col.key}
-                          style={own.style || pinned ? { ...own.style, ...pinned } : undefined}
-                          className={cn(
-                            "align-top",
-                            compact ? "px-2 py-1" : "px-3 py-2",
-                            width && "overflow-hidden text-ellipsis",
-                            col.grow ? GROW_CELL_CLASS : growDrawn && GROW_PEER_CELL_CLASS,
-                            logicalAlign(own.className),
-                            logicalAlign(col.className),
-                          )}
-                        >
-                          {colIndex === 0 && disclosure}
-                          {col === linkColumn && href ? (
-                            // No `onActivate`: the click is left to bubble to the
-                            // <tr> handler above, which already owns expand-vs-select.
-                            // Calling it here as well would toggle the row twice.
-                            <RowLink href={href} className="block" data-row-link="">
-                              {col.cell(row)}
-                            </RowLink>
-                          ) : (
-                            col.cell(row)
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                  {expansion && (
-                    <tr id={disclosure ? detailId : undefined} className="bg-surface-2 border-t border-subtle">
-                      {/* The detail panel spans every column. In an `auto` table
-                          layout (the default here — columns only get fixed style
-                          widths once the user resizes/auto-sizes them) the cell's
-                          content preferred-width is redistributed across the
-                          spanned columns, so a long expansion visibly re-sizes the
-                          columns above it — and one-line content does not, since
-                          its preferred width is small (feedback #104). Wrapping the
-                          content in `w-0 min-w-full` pins the cell's preferred
-                          width to ~0 (the explicit width:0 child), so it can never
-                          perturb the columns; the div then fills to the full row
-                          width only at paint time, and long text wraps within it.
-                          Inside it the content is pinned to what the scroller SHOWS
-                          (0.47, keksdose S4): on a table wider than its scroller a
-                          table-wide panel put an inline editor's Save/Cancel off-screen.
-                          `sticky start-0` holds it at the scroller's start edge (the
-                          right one in RTL) as the row scrolls sideways, and
-                          `--dt-visible-w` (the scroller's clientWidth, measured above)
-                          sizes it; before the first measure, and in a table no wider
-                          than its scroller, it is the full width as before. */}
-                      <td colSpan={totalColSpan} className="p-0">
-                        <div className="w-0 min-w-full">
-                          <div
-                            className={cn(
-                              "sticky start-0 w-[var(--dt-visible-w,100%)] max-w-full",
-                              compact ? "px-2 py-2" : "px-3 py-3",
-                            )}
-                          >
-                            {expansion}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
+                <DataTableRow<T>
+                  key={key}
+                  row={row}
+                  rowIndex={rowIndex}
+                  rowKey={key}
+                  ctx={rowCtx}
+                  columns={visibleColumns}
+                  widths={widths}
+                  growDrawn={growDrawn}
+                  linkColumn={linkColumn}
+                  href={rowHref?.(row)}
+                  selectionColumn={!!selection}
+                  selectable={canSelect(row)}
+                  selected={!!selection && selection.isSelected(row)}
+                  expanded={expanded}
+                  expansion={expanded ? expandedRow?.(row) : null}
+                  disclosure={rowsFocusable && !!expandedRow}
+                  detailId={`${detailIdBase}-${rowIndex}`}
+                  rowsFocusable={rowsFocusable}
+                  rowInteractive={!!onRowClick || !!selection}
+                  tabbable={key === tabRowKey}
+                  className={rowClassName?.(row)}
+                  attrs={rowAttributes?.(row)}
+                  compact={compact}
+                  totalColSpan={totalColSpan}
+                  rowDetailsLabel={labels.rowDetails}
+                  selectRowLabel={labels.selectRow}
+                />
               );
             };
             const emptyRow =

@@ -76,6 +76,8 @@ export function readKeyboardInset({ minimum = MIN_KEYBOARD_PX }: KeyboardInsetOp
   return inset >= minimum ? inset : 0;
 }
 
+const UNMEASURED_VIEWPORT: ViewportBox = { top: 0, height: 0 };
+
 function readViewport(): ViewportBox {
   if (typeof window === "undefined") return { top: 0, height: 0 };
   const vv = window.visualViewport;
@@ -356,7 +358,13 @@ export function useAnchoredPanel<T extends HTMLElement>(
   options: AnchoredPanelOptions = {},
 ): AnchoredPanel {
   const rect = useAnchoredRect(ref, open);
-  const [viewport, setViewport] = useState<ViewportBox>(readViewport);
+  // Not read while rendering (0.48.2, keksdose K-052-2): in Chromium `visualViewport`'s
+  // geometry forces a style and layout pass on a dirty DOM, and every anchored panel —
+  // closed ones too — paid it on mount (a bulk bar's pickers appearing on the first
+  // ticked row of a long table paid a layout of the whole table). Nothing reads this
+  // before the layout effect below has filled it: `rect` is null until the panel is open
+  // and measured, and that same effect pass measures the viewport.
+  const [viewport, setViewport] = useState<ViewportBox>(UNMEASURED_VIEWPORT);
   // A panel of rows wants room for the same number of rows at every text size; the gap
   // and the edge margin are not text and stay px.
   const { scale } = useTextSize();
