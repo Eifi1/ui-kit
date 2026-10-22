@@ -315,11 +315,10 @@ accepted it, 2026-10-21).
   loaded"; `null` for nothing), which takes the focus if the button had it. With
   `serverPagination` it replaces that pager too. Pass `paginated={false}` beside it on a client
   table, to say so. New keys `dataTable.loadMore` / `dataTable.allLoaded`, seven catalogues.
-  **Rows the server already filtered and sorted:** without `serverPagination` the table still
-  filters and sorts the rows it holds on the client, which can drop or reorder server rows
-  (keksdose's transfer-merge test lost the other leg of each transfer). Until a kit flag exists
-  (round 0.49 candidate K-052-1), pass `serverPagination` beside `loadMore` — page 0, pageSize =
-  the rows' length, no-op handlers — and the loadMore footer replaces its pager.
+  **From 0.48.1 `loadMore` implies `serverRows`:** the rows are rendered in the order given and
+  never filtered or sorted on the client; `serverRows={false}` keeps a client table's own filter
+  and sort (see "ui-kit 0.48.1" below). In 0.48.0 a table without `serverPagination` filtered and
+  sorted the loaded rows itself, which dropped server rows (keksdose K-052-1).
 
 Checked in headless Chromium (showcase build, `vite preview`, Data table → "Period groups and
 load more", 218 rows over three months, `fillHeight`, sticky leading row on), at 1280 and 1545
@@ -336,6 +335,32 @@ and focus moved to "No older transactions"; no sideways scroll on the page or th
 | keksdose | frontend/src/features/transactions/transactions-page.tsx, the register's `<DataTable<Transaction> fillHeight … serverPagination={…}>` (symbols, not lines): under the date sort pass `groupBy={[period, day]}` (period: `key: tx => tx.booking_date.slice(0, 7)` or the week key of §3.3, `label` the month name, `end` the §5 period figures "count · in · out" by key; day: `key: tx => tx.booking_date`, `label` the phone list's `formatGroupLabel`, `end` "2 transactions") and `loadMore={{ hasMore: !!next_cursor, loading: txns.isFetching, onLoadMore, label: t("…load", { period }) /* "Load August 2026" / "Load more of September 2026" from next_booking_date */ }}`; under any other sort pass neither and keep `serverPagination`'s pager (§3.1). `leadingRowSticky` (dev #603) stacks above the bands. The interim "bands as `rowAttributes`-styled rows" (§6) is not needed. Phone: mobile-transaction-list.tsx keeps its own cards, day bands (`SectionLabel variant="band"`, sticky) and sentinel (:119-133, :251-257) — the kit's `mobileGroupBy` is one level and keksdose's phone list is not a DataTable; its new period band (§3.2) stays app code, the sentinel can move to the cursor as is. accounts-page.tsx:803 (`mobileGroupBy={(a) => a.type}`) and feedback-page.tsx:335 keep their function form |
 | kastlan | Nothing, unless a list wants groups or load more |
 | kurvenschmiede | Nothing, unless a list wants groups or load more |
+
+## ui-kit 0.48.1: `DataTable`'s `serverRows`; `loadMore` implies it (keksdose K-052-1)
+
+A patch, nothing breaking for an app that pages on the server or on the client.
+
+- **`serverRows?: boolean`** says "these rows are already filtered and sorted by the server:
+  render them as given". No client filter, no client sort, no client paging (every row shows, as
+  with `paginated={false}`; no pager). The filter and sort UI work as under `serverPagination`:
+  hidden unless the owner passes `onFiltersChange` / `onSortsChange`, and then a header click or a
+  filter only reports the next state to that callback; the rows keep their order until the owner
+  re-queries and passes new ones. `serverPagination` implies it (unchanged, and
+  `serverRows={false}` does not undo it).
+- **`loadMore` implies `serverRows`** unless the app passes `serverRows={false}` — a client table
+  that loads more chunks but filters and sorts what it holds itself. In 0.48.0 a `loadMore` table
+  without `serverPagination` filtered and sorted the loaded rows on the client, which dropped or
+  reordered server rows (keksdose's transfer-merge test lost the other leg of each transfer).
+- The one behaviour change to check: a `loadMore` table whose columns have `sortBy` / filters but
+  no `onSortsChange` / `onFiltersChange` loses those controls (nobody would act on them). Pass the
+  callbacks, or `serverRows={false}` to keep client-side sorting. None of the three apps has one
+  (kastlan and kurvenschmiede use no `loadMore`; the showcase's ledger has no sortable columns).
+
+| App | Change |
+| --- | --- |
+| keksdose | frontend/src/features/transactions/transactions-page.tsx, the register's `<DataTable<Transaction> … serverPagination={…}>` (symbols, not lines; :1113-1135 at f8b4f0f2): drop the dummy `serverPagination` under the date sort (the `desktopGroups.loadMore ? { page: 0, pageSize: Math.max(1, rows.length), total: rows.length, onPageChange: () => {}, onPageSizeChange: () => {} }` branch) — pass `serverPagination={desktopGroups.loadMore ? undefined : { page: txnPage, … }}` and delete the comment above it. `loadMore` alone now renders the rows as given; `filters`/`onFiltersChange` and `sorts`/`onSortsChange` keep reporting to the app as before. The transfer-merge test stays as the pin |
+| kastlan | Nothing |
+| kurvenschmiede | Nothing |
 
 ## server-kit 0.19
 
