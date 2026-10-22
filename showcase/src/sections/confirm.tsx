@@ -220,7 +220,6 @@ function TypedConfirm018Demo() {
           confirm a field that does not match), and Enter confirms once it does. <code>typedMatch</code>:{" "}
           <code>&quot;caseless&quot;</code> (default) · <code>&quot;trim&quot;</code> · <code>&quot;exact&quot;</code>.
         </Note>
-        <Note>Since 0.18.</Note>
       </Example>
       <Example
         label="DangerConfirm — caseless phrase, inline under a row"
@@ -252,7 +251,6 @@ function TypedConfirm018Demo() {
             />
           )}
         </div>
-        <Note>Since 0.18.</Note>
       </Example>
     </>
   );
@@ -307,7 +305,6 @@ function Reauth018Demo() {
           add(`closed → ${confirmed}`);
         }}
       />
-      <Note>Since 0.18.</Note>
     </Example>
   );
 }
