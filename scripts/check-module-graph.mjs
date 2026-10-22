@@ -187,8 +187,10 @@ const BUDGETS = [
   // tailwind-merge (the merger itself is a dependency, outside this count).
   { label: "{ cn }", names: ["cn"], max: 272 },
   // 81,343 B in 0.48: the top-bar menu triggers name themselves in the kit's Tooltip
-  // (keksdose dev #610) — meant growth.
-  { label: "the shell set", names: SHELL_SET, max: 81_600 },
+  // (keksdose dev #610) — meant growth. 84,949 B in 0.49: AppShell's phone tab bar
+  // (KIT-6: mobileMaxItems, mobilePriority, the parent sheet), hideWhenOverlay (KIT-11),
+  // LanguageMenu's flag+code trigger (KIT-10) and the status tones (KIT-8) — meant growth.
+  { label: "the shell set", names: SHELL_SET, max: 85_400 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
