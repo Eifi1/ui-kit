@@ -464,7 +464,7 @@ function Languages() {
         app&apos;s own names it as given.
       </Note>
       <Note>
-        <code className="font-mono">heading</code> (new in 0.7.0) is the same small uppercase
+        <code className="font-mono">heading</code> is the same small uppercase
         row <code className="font-mono">PaletteMenu</code>,{" "}
         <code className="font-mono">OptionSwitcherMenu</code> and{" "}
         <code className="font-mono">TopBarActionMenu</code> draw, so a row of top-bar menus
@@ -1185,7 +1185,6 @@ export function AccountHeaderLinkDemo() {
         leaves the panel open over the page it navigated to. The plain {code("ReactNode")}{" "}
         form still works for a chip that is only a label.
       </Note>
-      <Note>Since 0.13.</Note>
     </Example>
   );
 }

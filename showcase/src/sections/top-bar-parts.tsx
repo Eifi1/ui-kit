@@ -204,7 +204,7 @@ export function TopBar042Demo() {
             draws {code("language")} and {code("signIn")} where the account menu would be
             (§6.6). Signed in, the language is the first row of the account menu, and
             {" "}{code("AccountMenuTextSize")}'s A− / A+ beside it step the text size without
-            closing the menu (0.46; here the demo's own, an app passes its
+            closing the menu (here the demo's own, an app passes its
             {" "}{code("pickTextSize")}).
             {" "}{code("ThemeToggle")}'s {code("onChange")} hands over the opposite of the
             mode on screen, for the app to store as its preference.
