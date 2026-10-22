@@ -29,11 +29,11 @@ describe("RowAction pressed — a toggle", () => {
   ];
 
   it("inline: aria-pressed and IconButton's on look, the same label in both states", () => {
-    const { rerender } = render(<RowActions actions={actions(true)} name="Household" />);
+    const { rerender } = render(<RowActions actions={actions(true)} name="Household" dangerPlacement="inline" />);
     const share = screen.getByRole("button", { name: "Share budget" });
     expect(share).toHaveAttribute("aria-pressed", "true");
     expect(share).toHaveClass("bg-brand-soft");
-    rerender(<RowActions actions={actions(false)} name="Household" />);
+    rerender(<RowActions actions={actions(false)} name="Household" dangerPlacement="inline" />);
     expect(screen.getByRole("button", { name: "Share budget" })).toHaveAttribute("aria-pressed", "false");
     // An action that is no toggle says nothing about pressing.
     expect(screen.getByRole("button", { name: "Delete" })).not.toHaveAttribute("aria-pressed");
@@ -84,7 +84,8 @@ describe("RowAction tones", () => {
   ];
 
   it("inline: IconButton's tone, named in data-tone", () => {
-    render(<RowActions actions={actions} name="Household" />);
+    // `dangerPlacement="inline"`: a danger action otherwise goes to the ⋯ menu (0.49 KIT-12).
+    render(<RowActions actions={actions} name="Household" dangerPlacement="inline" />);
     expect(screen.getByRole("button", { name: "Open" })).toHaveAttribute("data-tone", "muted");
     const reconcile = screen.getByRole("button", { name: "Reconcile" });
     expect(reconcile).toHaveAttribute("data-tone", "info");

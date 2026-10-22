@@ -241,3 +241,34 @@ mounted) and `FloatingPanel.hidden`. 0.49 adds:
 | keksdose | `features/assistant/assistant-launcher.tsx:175` `<FloatingPanel hidden={covered}>`, with a MutationObserver over a `COVERING` selector (`:36–53`) for an open editor, modal or bulk bar; `features/transactions/transactions-page.tsx:846` `FloatingActionGroup`, unmounted while the form or the phone selection is open (`:843`). | On a bump the kit modals and sheets already hide both. Keep `covered` for what is not a kit overlay (the inline editor, the bulk bar), or shrink the `COVERING` selector to those. No app CSS reads `--app-float-clearance`. |
 | kastlan | No floating launchers. | Nothing. |
 | Kurvenschmiede | No floating launchers. | Nothing. |
+
+## KIT-12: a delete is in the row's menu, and it asks first
+
+BREAKING (on a bump, no code): in `RowActions` (and so in DataTable `rowActions`,
+`desktopSwipeActions` and `UserRowActions`) an action with `tone: "danger"` no longer draws an
+icon in every row: it goes into the row's "⋯" menu, the other actions stay inline
+(`dangerPlacement`, default `"menu"`; `"inline"` keeps the 0.48 strip; `collapse="inline"` keeps
+every action inline). And choosing it **opens a confirmation first**: a `ConfirmDialog`
+through the app's `ConfirmProvider` (or one of the row's own when there is none), titled
+"Delete “Ada Example”?" (`rowActions.confirmTitle`, the action's label and the row's `name`),
+"This cannot be undone." under it (`rowActions.confirmBody`), the action's label on the
+danger button, focus on Cancel; `onSelect` runs only on a yes. Seven catalogues.
+
+- `RowAction.confirm`: `false` when the app asks in `onSelect` itself or offers an undo;
+  `{ title, body, confirmLabel }` for its own words; on another tone it makes that action ask.
+  A link action never asks.
+- Not doubled where the kit already asks the app: a DataTable `rowActions` entry with its own
+  `confirm` keeps only that one; `swipePlanRowActions` / `desktopSwipeActions` pass
+  `confirm: false` (a swipe commits as the plan says).
+- IconButton and RowActions docs: destructive actions belong in the row menu or the
+  selection bar ("2 selected" → Delete) and confirm through `useConfirm`.
+
+Every danger row action found below already asks in its `onSelect` — pass `confirm: false`
+there, or delete the app's own question and let the kit ask (then `confirm: { title, body }`
+for its words). Otherwise the user is asked twice.
+
+| App | Danger row actions (all ask already unless noted) | Steps |
+|---|---|---|
+| keksdose | 12: `features/accounts/loan-payment-panel.tsx:238`, `accounts/holdings-panel.tsx:661`, `accounts/asset-loan-panel.tsx:128`, `rules/rules-page.tsx:407`, `accounts/accounts-page.tsx:553`, `admin/support-panel.tsx:678`, `budgets/budgets-page.tsx:405` (a two-step confirm inside the row), `budget/group-admin-actions.tsx:94` (dialog), `budget/budget-cells.tsx:341` (`categoryDeleteAction`, dialog), `transactions/transactions-page.tsx:418` (the swipe plan through the app's own `shared/components/swipe-row-actions.tsx:88` `boundSwipeRowActions`, asking in `transaction-swipe-plan.ts:117`; also used by `budget/budget-table.tsx:227`), `admin/users-panel.tsx:732` (roster deactivate, dialog); **`budgets/budget-share-card.tsx:289` "Revoke" asks nothing today** — the kit's question is new there. | `confirm: false` on the ten that ask (once in `swipe-row-actions.tsx`'s `toRowAction` for the swipe-built ones, as the kit's `swipePlanRowActions` does); drop the row's two-step confirm at `budgets-page.tsx:405` for the kit's. Per-row bins outside RowActions: `invoices/vat-summary.tsx:320`, `invoices/invoice-lines-table.tsx:1146` (editing lines of a form: may stay). |
+| kastlan | 11: DataTable `shared/components/data-table/resource-list-page.tsx:176` (`kind: "delete"` with `confirm:` — kept as the one question); `accounting/components/journal-entry-columns.tsx:153`, `service-charges/components/distribution-key-columns.tsx:92`, `service-charges/pages/service-charges-list-page.tsx:53`, `platform/pages/platform-signup-invitations-page.tsx:129`, `handover/components/room-inspector.tsx:192`, `property/components/unit-defects-tab.tsx:245`, `property/components/unit-rooms-tab.tsx:214`, roster `settings/components/users-panel.tsx:270`, `:290`, `:308`. | `confirm: false` on the ten outside DataTable. 9 per-row danger IconButtons that ask (e.g. `contacts/components/contact-addresses-tab.tsx:104`, `meters/components/meter-readings-dialog.tsx:160`) can become `RowActions` with the kit's question. |
+| Kurvenschmiede | 7: `setpoint/profile-bar.tsx:171`, `setpoint/segment-parts.tsx:104`, `projects/projects-page.tsx:115`, `teams/team-card.tsx:143` (dialog), `teams/team-card.tsx:250`, roster `admin/users-panel.tsx:348`, `:366`. | `confirm: false` on all seven, or let the kit ask. The per-row bin of `shared/lib/table-columns.tsx:124` (`deleteColumn`) can become a `RowActions` entry. |

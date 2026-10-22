@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useKitLabels } from "../i18n/kit-labels";
@@ -8,6 +8,7 @@ import { DialogFrame } from "./dialog-frame";
 import { Button } from "./button";
 import { useWriteLock, writeLockFor, type CommitScope } from "./write-lock";
 import { DEFAULT_CONFIRM_DIALOG_LABELS } from "./confirm-dialog-labels";
+import { ConfirmContext } from "./confirm-context";
 
 /**
  * The `confirmDialog` namespace of `<UiKitProvider labels>`: the two buttons' fallback
@@ -89,7 +90,6 @@ export interface ConfirmOptions {
 
 export type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
 
-const ConfirmContext = createContext<ConfirmFn | null>(null);
 
 /**
  * `const confirm = useConfirm()` → `if (!(await confirm({ title }))) return`.

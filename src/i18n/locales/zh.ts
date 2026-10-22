@@ -1796,6 +1796,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     rowActions: {
       actions: "操作",
       actionsFor: (name) => `${name} 的操作`,
+      confirmTitle: (action, name) => (name ? `${action}“${name}”？` : `${action}？`),
+      confirmBody: "此操作无法撤销。",
     },
     appShellMore: {
       more: "更多",

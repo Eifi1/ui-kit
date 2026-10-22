@@ -1876,6 +1876,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     rowActions: {
       actions: "Műveletek",
       actionsFor: (name) => `${name} – műveletek`,
+      confirmTitle: (action, name) => (name ? `${action}: „${name}”?` : `${action}?`),
+      confirmBody: "Ez nem vonható vissza.",
     },
     appShellMore: {
       more: "Továbbiak",

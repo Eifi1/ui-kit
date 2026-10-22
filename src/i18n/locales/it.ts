@@ -1889,6 +1889,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     rowActions: {
       actions: "Azioni",
       actionsFor: (name) => `Azioni per ${name}`,
+      confirmTitle: (action, name) => (name ? `${action} «${name}»?` : `${action}?`),
+      confirmBody: "Questa azione non può essere annullata.",
     },
     appShellMore: {
       more: "Altro",

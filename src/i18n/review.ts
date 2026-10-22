@@ -280,6 +280,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "signChip.direction": [["{{current}}", "{{next}}"]],
   "signChip.switchTo": [["{{next}}"]],
   "rowActions.actionsFor": [["{{name}}"]],
+  "rowActions.confirmTitle": [["{{action}}", "{{name}}"], ["{{action}}"]],
   "columnMapper.readError": [["{{name}}"]],
   "columnMapper.summary": [
     [1, 1],

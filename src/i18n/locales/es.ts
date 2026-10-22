@@ -1870,6 +1870,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     rowActions: {
       actions: "Acciones",
       actionsFor: (name) => `Acciones de ${name}`,
+      confirmTitle: (action, name) => (name ? `¿${action} «${name}»?` : `¿${action}?`),
+      confirmBody: "Esta acción no se puede deshacer.",
     },
     appShellMore: {
       more: "Más",

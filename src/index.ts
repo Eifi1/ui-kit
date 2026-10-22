@@ -598,6 +598,8 @@ export type {
   RowActionsColumnOptions,
   RowActionsHeadProps,
   RowActionTone,
+  // 0.49 KIT-12: a danger action's confirmation words.
+  RowActionConfirm,
 } from "./components/row-actions";
 // 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits).
 export * from "./components/checkbox-group";

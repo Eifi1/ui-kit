@@ -678,6 +678,17 @@ function withIconButtonBadge(control: ReactElement, badge: ReactNode, stretch: b
 
 // Declared link-first, as Button is, so `<IconButton href>` picks the link props and
 // `ComponentProps<typeof IconButton>` (the LAST signature) is still the button's.
+/**
+ * An icon-only button whose `label` is its name and its tooltip.
+ *
+ * Destructive actions (0.49 KIT-12): a delete, revoke or erase is NOT an icon repeated in
+ * every row of a list — one stray tap away, and a bin per row draws the eye to the one
+ * thing nobody should do by accident. Put it in the row's menu, `RowActions` (where a
+ * `tone: "danger"` action goes by default and opens a `ConfirmDialog` first), or in the
+ * selection bar ("2 selected" → Delete), and confirm it through `useConfirm`. A single
+ * standalone delete — a card's own, a bulk bar's — may be an IconButton
+ * `tone="danger"`; it still asks first.
+ */
 export function IconButton(props: IconButtonLinkProps): ReactElement;
 export function IconButton(props: IconButtonProps): ReactElement;
 export function IconButton(props: IconButtonProps | IconButtonLinkProps): ReactElement {

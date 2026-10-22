@@ -1910,6 +1910,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     rowActions: {
       actions: "Actions",
       actionsFor: (name) => `Actions pour ${name}`,
+      confirmTitle: (action, name) => (name ? `${action} «\u00a0${name}\u00a0»\u00a0?` : `${action}\u00a0?`),
+      confirmBody: "Cette action est irréversible.",
     },
     appShellMore: {
       more: "Plus",

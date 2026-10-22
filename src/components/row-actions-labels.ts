@@ -7,4 +7,6 @@ import type { RowActionsLabels } from "./row-actions";
 export const DEFAULT_ROW_ACTIONS_LABELS: RowActionsLabels = {
   actions: "Actions",
   actionsFor: (name) => `Actions for ${name}`,
+  confirmTitle: (action, name) => (name ? `${action} “${name}”?` : `${action}?`),
+  confirmBody: "This cannot be undone.",
 };

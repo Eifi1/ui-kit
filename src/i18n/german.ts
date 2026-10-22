@@ -1930,6 +1930,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     rowActions: {
       actions: "Aktionen",
       actionsFor: (name) => `Aktionen für ${name}`,
+      confirmTitle: (action, name) => (name ? `${action}: «${name}»?` : `${action}?`),
+      confirmBody: "Das lässt sich nicht rückgängig machen.",
     },
     appShellMore: {
       more: "Mehr",

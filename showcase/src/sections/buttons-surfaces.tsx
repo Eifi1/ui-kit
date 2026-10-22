@@ -32,10 +32,12 @@ import {
   CardHeader,
   CardTitle,
   IconButton,
+  RowActions,
   Spinner,
   UserAvatar,
   avatarInitials,
   buttonClasses,
+  useConfirm,
 } from "@eifi1/ui-kit";
 import type { ButtonVariant } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
@@ -743,6 +745,7 @@ function IconButtonQuiet() {
   const [selected, setSelected] = useState(2);
   const [deleted, setDeleted] = useState(0);
   const [flags, setFlags] = useState<string[]>([]);
+  const confirm = useConfirm();
   return (
     <Example
       label="IconButton — quiet"
@@ -756,10 +759,18 @@ function IconButtonQuiet() {
           tone="danger"
           quiet={false}
           disabled={selected === 0}
-          onClick={() => {
-            setDeleted((n) => n + selected);
-            setSelected(0);
-          }}
+          onClick={() =>
+            void confirm({
+              title: `Delete ${selected} row${selected === 1 ? "" : "s"}?`,
+              body: "This cannot be undone.",
+              confirmLabel: "Delete",
+              tone: "danger",
+            }).then((ok) => {
+              if (!ok) return;
+              setDeleted((n) => n + selected);
+              setSelected(0);
+            })
+          }
         >
           <Trash2 />
         </IconButton>
@@ -790,9 +801,12 @@ function IconButtonQuiet() {
             <IconButton aria-label={`Details of ${row}`} tone="info" quiet size="sm">
               <Info />
             </IconButton>
-            <IconButton aria-label={`Delete ${row}`} tone="danger" size="sm">
-              <Trash2 />
-            </IconButton>
+            {/* Delete lives in the row's menu and asks first (KIT-12), never a bin per row. */}
+            <RowActions
+              name={row}
+              size="sm"
+              actions={[{ label: "Delete", icon: Trash2, tone: "danger", onSelect: () => setDeleted((n) => n + 1) }]}
+            />
           </li>
         ))}
       </ul>
@@ -811,11 +825,15 @@ function IconButtonQuiet() {
       <div className="mt-3">
         <Note>
           The bulk bar&apos;s delete is <code className="font-mono">tone=&quot;danger&quot; quiet=&#123;false&#125;</code>:
-          red at rest, because it stands alone and a touch screen never hovers to reveal it. In the list,
-          the flag is <code className="font-mono">tone=&quot;warning&quot;</code> with{" "}
+          red at rest, because it stands alone and a touch screen never hovers to reveal it, and it asks
+          first (<code className="font-mono">useConfirm</code>). In the list, the flag is{" "}
+          <code className="font-mono">tone=&quot;warning&quot;</code> with{" "}
           <code className="font-mono">quiet</code> until you flag the row (then toned amber), the info button
-          is <code className="font-mono">tone=&quot;info&quot; quiet</code>, and delete keeps danger&apos;s quiet
-          default — hover or Tab onto a grey one and its tone arrives. Left out,{" "}
+          is <code className="font-mono">tone=&quot;info&quot; quiet</code> — hover or Tab onto a grey one and its
+          tone arrives. Delete is not a bin in every row: it sits in the row&apos;s{" "}
+          <code className="font-mono">RowActions</code> menu (&ldquo;⋯&rdquo;), where a{" "}
+          <code className="font-mono">tone: &quot;danger&quot;</code> action goes by default and opens a
+          confirmation before it runs. Left out,{" "}
           <code className="font-mono">quiet</code> keeps each tone&apos;s old default (last row): danger quiet,
           warning and info toned. It is ignored for <code className="font-mono">muted</code> and{" "}
           <code className="font-mono">default</code>.

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Copy, Pencil, Trash2, TriangleAlert } from "lucide-react";
-import { IconButton, Input, Label, SearchField, Select, Tabs } from "@eifi1/ui-kit";
+import { IconButton, Input, Label, RowActions as KitRowActions, SearchField, Select, Tabs } from "@eifi1/ui-kit";
 import type { TabItem } from "@eifi1/ui-kit";
 import { Example, Note, Row, Stage } from "../lib/section";
 
@@ -93,14 +93,11 @@ function RowActions() {
             >
               <Copy />
             </IconButton>
-            <IconButton
-              size="xs"
-              tone="danger"
-              aria-label={`Delete ${name}`}
-              onClick={() => setLog(`Deleted ${name}`)}
-            >
-              <Trash2 />
-            </IconButton>
+            {/* Delete in the row's menu, asking first (KIT-12): never a bin in every row. */}
+            <KitRowActions
+              name={name}
+              actions={[{ label: "Delete", icon: Trash2, tone: "danger", onSelect: () => setLog(`Deleted ${name}`) }]}
+            />
           </div>
         </div>
       ))}
