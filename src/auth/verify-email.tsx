@@ -366,6 +366,14 @@ export interface EmailVerificationBannerProps {
    * is never hidden behind "More". Default `false`: the outcome stays in the message.
    */
   clampMobile?: boolean;
+  /**
+   * 0.50 (kastlan K1): where "Send again" goes on a phone in the `box` variant —
+   * {@link AlertBanner}'s `actionPlacement`, passed through. `"flow"` keeps it on the
+   * message's line while the message keeps 10rem, else at the end of the next line,
+   * instead of a line of its own (kastlan's ≤ 56px banner on a 390px phone, KX-5).
+   * Default `"own-line"`, as before. The `strip` variant flows like that already.
+   */
+  actionPlacement?: "own-line" | "flow";
 }
 
 /**
@@ -388,6 +396,7 @@ export function EmailVerificationBanner({
   className,
   labels: labelsProp,
   clampMobile = false,
+  actionPlacement,
 }: EmailVerificationBannerProps) {
   const labels = useKitLabels("verifyEmail", DEFAULT_VERIFY_EMAIL_LABELS, labelsProp);
   const resend = useResend(onResend, cooldown);
@@ -421,6 +430,7 @@ export function EmailVerificationBanner({
       onDismiss={onDismiss}
       dismissLabel={onDismiss ? labels.dismiss : undefined}
       clampMobile={clampMobile}
+      actionPlacement={actionPlacement}
       className={className}
     >
       {labels.banner}

@@ -66,3 +66,20 @@ string that goes into a parser (KaTeX, a CSV) keeps the hyphen (`minus: "ascii"`
 | keksdose | Done in the 0.49 bump (f9e8f387): `formatCurrency` (`shared/components/ui.tsx:313`), `formatBareAmount` (`:306`) and `formatQuantity` (`:288`) call the kit. Left: the `catch` fallback `${n.toFixed(2)} ${currency}` at `ui.tsx:337` (only for an unknown currency code). `features/transactions/transaction-cells.tsx:298` formats the magnitude through `shared/lib/intl-cache.ts:40` `numberFormat` — no sign, nothing to do. | Optional: the fallback at `ui.tsx:337` as `formatNumber(n, { digits: 2 })` + the code. |
 | kastlan | The wrappers `shared/utils/formatters.ts:26` (`formatNumber`) and `:50` (`formatCurrency`) call the kit already. `features/dashboard/components/revenue-chart.tsx:56–59` (`abbreviateTick`) builds "-1.2M" / "-5k" with `toFixed`, a hyphen on a negative tick. | Optional: `abbreviateTick` through `formatNumber(value, { options: { notation: "compact" } })` (the kit's compact notation already carries "−"). |
 | Kurvenschmiede | `features/dynamics/exercise.tsx:32` `formatSig` (its own `Intl.NumberFormat`, significant digits) prints the exercises' inputs and answers into `t()` text (`:74`, `:75`, `:140`, `:174`); answers can be negative. `features/landing/landing-visuals.tsx:190–191` formats positive constants only. | `formatSig`: `return formatWithMinus(new Intl.NumberFormat(…), value)` — plain text, not TeX (`tex.tsx` keeps its own sign handling from 0.49). |
+
+## kastlan K1: `EmailVerificationBanner` takes `actionPlacement`
+
+`actionPlacement?: "own-line" | "flow"` is passed through to the banner's `AlertBanner` (0.48):
+with `variant="box"`, `"flow"` keeps "Send again" on the message's line while the message keeps
+10rem, else at the end of the next line, instead of a line of its own on a phone. Works with
+`clampMobile` (the resend's outcome stays after the button, in the same row). Default
+`"own-line"`: no change on a bump.
+
+**The `strip` variant (the default) ignores it**, as `AlertBanner` does: a strip already flows,
+its message keeping 12rem before the action wraps. So the prop only moves a `box` banner.
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | `features/auth/verify-email-banner.tsx:28`, the strip at the top of the shell. | Nothing. |
+| kastlan | `features/auth/components/verify-email-banner.tsx:20`: no `variant`, so the **strip**, with `clampMobile`. The K1 report ("Send again keeps its own line", banner ≤ 56px on 390 × 844, KX-5) is the strip's 12rem rule, which `actionPlacement` does not change. | To use it: `variant="box" actionPlacement="flow"` (keeps `clampMobile`), then measure at 390 × 844. If the strip should stay, say so in the 0.50 adoption: the strip's 12rem basis would be a kit change of its own. |
+| Kurvenschmiede | `app/layout.tsx:79`, the strip. | Nothing. |
