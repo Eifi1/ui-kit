@@ -449,7 +449,6 @@ export function SectionLabelMdDemo() {
           {code("md")} rather than slotted into order because {code("sm")} was already the default.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
@@ -485,7 +484,6 @@ export function StatusDotHuesDemo() {
           for values that mean something (overdue is {code("danger")}).
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
