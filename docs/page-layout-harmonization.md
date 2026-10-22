@@ -113,7 +113,7 @@ The wiring moves into the kit; the apps keep only the page's own padding.
    (`data-table.tsx:1391`), at every width.
 2. **AppShell's `<main>`** becomes a flex column from `md` up while it holds a filling
    table: `md:has-[[data-fill-height]]:flex md:has-[[data-fill-height]]:flex-col
-   md:has-[[data-fill-height]]:*:shrink-0` (`app-shell.tsx:548`). The banners then take
+   md:[&&>*]:shrink-0` (`app-shell.tsx:548`). The banners then take
    their own height (`shrink-0`, so a banner of a fixed height or `overflow-hidden` keeps
    it too), the page the rest; `<main>` no longer overflows by a banner's height. The
    descendant `has-` (not `has-[>…]`) finds the table under any wrapper, a fixed row such
