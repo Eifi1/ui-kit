@@ -353,6 +353,21 @@ export interface DataTableProps<T> {
    */
   serverPagination?: ServerPagination;
   /**
+   * 0.48.1 (keksdose K-052-1): the rows are already filtered and sorted by the server —
+   * render them as given. No client filter, no client sort, no client paging (every row
+   * shows, as with `paginated={false}`). The column filters and sort headers behave as
+   * under `serverPagination`: hidden unless the owner takes them over with
+   * `onFiltersChange` / `onSortsChange`, and then a click only REPORTS the new state (a
+   * header click calls `onSortsChange` with the next sort and the rows keep their order
+   * until the owner re-queries and passes new ones).
+   *
+   * Defaults to `true` when {@link loadMore} is set — the slices it loads come from the
+   * server in its order, and re-filtering them dropped rows (the other leg of each
+   * transfer). Pass `serverRows={false}` for a client table that loads more chunks but
+   * filters and sorts what it holds itself. `serverPagination` implies it regardless.
+   */
+  serverRows?: boolean;
+  /**
    * Controlled filter/sort state. When the `on*Change` callback is provided
    * the table stops owning that piece of state: it renders `filters`/`sorts`
    * as given and reports user interactions through the callback (including
@@ -587,7 +602,9 @@ export interface DataTableProps<T> {
    * IntersectionObserver, guarded against double calls while one is in flight) and with
    * a button the keyboard reaches, named by the app ("Load August 2026"). With
    * `serverPagination` it replaces that pager as well. Both layouts: on a phone it is the
-   * card list's last item. See {@link DataTableLoadMore}.
+   * card list's last item. Since 0.48.1 it implies {@link serverRows} — the rows are
+   * rendered in the order given, unfiltered — unless `serverRows={false}`. See
+   * {@link DataTableLoadMore}.
    */
   loadMore?: DataTableLoadMore;
   /**
@@ -901,6 +918,7 @@ export function DataTable<T>({
   fillHeight = false,
   maxBodyHeight = "calc(100dvh - 12rem)",
   serverPagination,
+  serverRows: serverRowsProp,
   filters: filtersProp,
   onFiltersChange,
   sorts: sortsProp,
@@ -946,6 +964,10 @@ export function DataTable<T>({
   const resizable = resizableProp ?? !minimal;
   const multiSort = multiSortProp ?? !minimal;
   const isServer = !!serverPagination;
+  // The server filtered and sorted these rows (0.48.1, K-052-1): no client filter, sort
+  // or paging, and the sort/filter UI only reports to the owner. `isServer` keeps
+  // meaning "the server pages" (its pager, its page and page size).
+  const serverRows = isServer || (serverRowsProp ?? !!loadMore);
   const isLoading = !!serverPagination?.isLoading;
   // prop > provider > English, through the table's own resolver rather than
   // `useKitLabels`: that resolver derives `columnsCount` from a translated `columns`,
@@ -1077,7 +1099,7 @@ export function DataTable<T>({
   }, [columnSig, selectOptionsSig, rows]);
 
   const filtered = useMemo(() => {
-    if (isServer) return rows;
+    if (serverRows) return rows;
     let result = rows;
     for (const col of columns) {
       const state = filters[col.key];
@@ -1086,10 +1108,10 @@ export function DataTable<T>({
     }
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, columnSig, filters, isServer, locale]);
+  }, [rows, columnSig, filters, serverRows, locale]);
 
   const sorted = useMemo(() => {
-    if (isServer) return filtered;
+    if (serverRows) return filtered;
     // Priority chain: the first sort key that distinguishes two rows wins;
     // nulls sort last for that key regardless of direction (as before).
     const chain = sorts
@@ -1114,12 +1136,12 @@ export function DataTable<T>({
     });
     return copy;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, sorts, columnSig, isServer]);
+  }, [filtered, sorts, columnSig, serverRows]);
 
   // `paginated={false}` is expressed as "page size = everything" rather than as a
   // second code path, so slicing, the page clamp and the range summary all keep
   // exactly one definition.
-  const unpaged = !isServer && (!paginated || !!loadMore);
+  const unpaged = !isServer && (!paginated || !!loadMore || serverRows);
   const effectivePageSize = isServer
     ? serverPagination!.pageSize
     : unpaged || pageSize === Infinity
@@ -1202,7 +1224,7 @@ export function DataTable<T>({
   // "clear all"). Only touches keys the table actually exposes as filters.
   const clearAllFilters = () => {
     const keys = columns
-      .filter((col) => ((!isServer || onFiltersChange) ? resolveFilter(col) : null))
+      .filter((col) => ((!serverRows || onFiltersChange) ? resolveFilter(col) : null))
       .map((col) => col.key);
     if (!keys.length) return;
     if (onFiltersChange) {
@@ -1236,9 +1258,9 @@ export function DataTable<T>({
     // some later render from the caller, and `serverPagination.total` is ALREADY the
     // filtered total — so the "n of m" sentence has no second number to give here.
     // Saying nothing is better than announcing the page size as a result count.
-    if (isServer) return;
+    if (serverRows) return;
     announce(labels.filterResults(filtered.length, rows.length));
-  }, [filterKey, filtered.length, rows.length, isServer, announce, labels]);
+  }, [filterKey, filtered.length, rows.length, serverRows, announce, labels]);
 
   // 1-based, because that is what the page strip shows and what a person says.
   const goToPage = (p: number) => {
@@ -1612,12 +1634,12 @@ export function DataTable<T>({
         {/* Mobile filter access (feedback #299): the per-column filter popovers
             live in the desktop header, which the card list doesn't render — so
             expose the same filters through a bottom sheet here. */}
-        {(!isServer || onFiltersChange) && (
+        {(!serverRows || onFiltersChange) && (
           <MobileFilters
             columns={columns}
             filters={filters}
             selectOptionsByKey={selectOptionsByKey}
-            isServer={isServer}
+            isServer={serverRows}
             hasFilterCallback={!!onFiltersChange}
             onSetFilter={setFilterValue}
             onClearFilter={clearFilter}
@@ -1628,7 +1650,7 @@ export function DataTable<T>({
         )}
         {mobileSort && (
           <MobileSort
-            columns={visibleColumns.filter((c) => (!isServer || !!onSortsChange) && !!c.sortBy)}
+            columns={visibleColumns.filter((c) => (!serverRows || !!onSortsChange) && !!c.sortBy)}
             sorts={sorts}
             sortCycle={sortCycle}
             compact={compact}
@@ -1860,7 +1882,7 @@ export function DataTable<T>({
             compact={compact}
             labels={labels}
             locale={locale}
-            isServer={isServer}
+            isServer={serverRows}
             hasSortCallback={!!onSortsChange}
             hasFilterCallback={!!onFiltersChange}
             sorts={sorts}

@@ -21,6 +21,16 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.48.1](https://github.com/Eifi1/ui-kit/compare/v0.48.0...v0.48.1) (2026-10-22)
+
+From keksdose's 0.48 adoption (K-052-1): a `loadMore` table no longer filters, sorts or pages
+the server's rows on the client; `serverRows={false}` keeps the old behaviour. keksdose drops its
+dummy `serverPagination`; kastlan and Kurvenschmiede need nothing (docs/adopt-0.48.md, 0.48.1).
+
+### Fixed
+
+* **data-table:** loadMore renders the server's rows as given (serverRows) ([aad63a0](https://github.com/Eifi1/ui-kit/commit/aad63a0beb5629e7fd332d3c6ba13eb438705296))
+
 ## [0.48.0](https://github.com/Eifi1/ui-kit/compare/v0.47.0...v0.48.0) (2026-10-21)
 
 Round 0.48, keksdose run 83 (Marcel's live reports #451, #410, #450, #603) and the 0.47 build
