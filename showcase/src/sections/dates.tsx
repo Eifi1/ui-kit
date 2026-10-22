@@ -640,8 +640,7 @@ export function Dates() {
           chevron and × sit at the field&apos;s logical end. The picker&apos;s calendar is portalled
           to <code className="font-mono">&lt;body&gt;</code>, outside this{" "}
           <code className="font-mono">dir</code>; it reads the direction off the field when it
-          opens and carries it, so the popover grid is right-to-left too (it opened left-to-right
-          before 0.7.0).
+          opens and carries it, so the popover grid is right-to-left too.
         </p>
       </Example>
 
@@ -1075,7 +1074,6 @@ export function Dates022Demo() {
           {code("Select")}. {code("error")} goes under the whole row (steppers included) and implies{" "}
           {code("invalid")}; step past today to see it.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
       <Example label="<UiKitProvider formatDate>" hint="one date look for every picker trigger and DateMark">
         <div className="flex flex-col gap-3">
@@ -1106,7 +1104,6 @@ export function Dates022Demo() {
           {code('""')} falls back to the kit&apos;s own. A field&apos;s own {code("formatValue")} or{" "}
           {code("formatOptions")} still wins.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
     </>
   );
