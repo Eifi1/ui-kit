@@ -451,7 +451,6 @@ export function PickerSheetClipsDemo() {
           scroller's edge would clip it. Hover (or focus) a group badge.
         </Note>
       </div>
-      <Note>Since 0.12.</Note>
     </Example>
   );
 }
