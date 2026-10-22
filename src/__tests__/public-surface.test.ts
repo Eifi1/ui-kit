@@ -291,7 +291,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.47.0 (+3, keksdose N17): `RowActionsHead`, `ROW_ACTIONS_CELL_CLASS`,
   // `ROW_ACTIONS_HEAD_CLASS` — a hand-built table's actions heading and cell.
   // 0.48.0 (+1, keksdose dev #628): `TableSkeleton`, the table/list loading preset.
-  ["@eifi1/ui-kit", barrel, 999],
+  // 0.49.0 (+3, KIT-6, 2026-10-22): `SectionNav`, and from /shell `pickMobileBar` and
+  // `DEFAULT_MOBILE_MAX_ITEMS`, the phone bar counted in cells.
+  ["@eifi1/ui-kit", barrel, 1002],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -320,7 +322,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.42.0 (+2): `adminMenuEntry`, `AdminMenuRow` (docs/admin-harmonization.md §6.6).
   // 0.42.0 (+10): the top bar's parts (docs/top-bar-harmonization.md §3.1, see the barrel).
   // 0.43.0 (+1): `useAdminMenuEntry` (the 0.42 adoptions, kastlan 2).
-  ["@eifi1/ui-kit/shell", shell, 58],
+  // 0.49.0 (+2, KIT-6, 2026-10-22): `pickMobileBar`, `DEFAULT_MOBILE_MAX_ITEMS`.
+  ["@eifi1/ui-kit/shell", shell, 60],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).

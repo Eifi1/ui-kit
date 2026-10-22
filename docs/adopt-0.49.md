@@ -93,3 +93,37 @@ step 2. Implicit buttons (no `variant`) and FormActions without `submitVariant` 
 No app uses `buttonClasses(…)`, `FloatingActionButton`, `ConfirmDialog tone="warning"` or
 `DangerConfirm tone="warning"`. The `tone="brand"` on Chip, StatTile, Sparkline and friends is a
 colour role, not a button variant, and does not change.
+
+## KIT-6: the phone bar holds five cells; groups open a sheet; SectionNav
+
+BREAKING (on a bump, no code): the phone bar holds at most **five cells at Normal and Large,
+four at Extra large, "More" included** (`AppShell.mobileMaxItems`, default
+`DEFAULT_MOBILE_MAX_ITEMS`). Until 0.48 Normal showed every entry. Eight entries are now four and
+"More"; the More sheet lists the rest, each group with its pages. And an entry **with `items`**
+no longer links to its `to` on the phone: its cell opens a sheet of its pages, its own page first
+as "Overview" (`appShellMore.overview`, 7 languages) when none of the pages is that page. Tours
+keep finding it by `a[href]` and `dataTour` (an inert anchor over the cell, as on More).
+
+New, opt-in:
+- `AppShellNavItem.mobilePriority` (number, lower first): which entries keep a cell when they do
+  not all fit; the bar still shows them in the list's order. Unset: the list's order.
+- `AppShellNavItem.shortLabelIsAlias`: a development build now warns once when `shortLabel` does
+  not start with the label's first word (an abbreviation, "Trans." for "Transactions", counts).
+  The warning names the text size the bar uses it from (`shortLabelFrom`). Pass
+  `shortLabelIsAlias: true` when the other word is meant.
+- `SectionNav` (root entry): a section's pages on the phone as one sideways-scrolling row of
+  pills under the page title, the open one scrolled into view, 44 px targets, 48 px tall;
+  `NavPills` with the new `layout="scroll"`. Phone only by default (`phoneOnly`). Use it or the
+  shell's own row above the bar (`mobileSubNav`) for the same pages, not both.
+- `pickMobileBar(entries, maxItems, priority?)` (/shell, root): the split the bar uses.
+
+DEPRECATED: `AppShell.mobileBarMax` (entries before "More") → `mobileMaxItems` (cells, "More"
+included; `mobileBarMax={4}` is `mobileMaxItems={5}`), and `DEFAULT_MOBILE_BAR_MAX` →
+`DEFAULT_MOBILE_MAX_ITEMS`. Both still work, the prop with a development warning; removed no
+earlier than 0.51.
+
+| App | What changes on a bump | Steps |
+|---|---|---|
+| keksdose | Nothing visible: its 7 entries (`shared/lib/nav-items.ts:50`) already ran at `MOBILE_BAR_MAX = { normal: 4, large: 4, xlarge: 3 }` (`nav-items.ts:101`), which is the new default. No entry has `items`. The dev console warns once for `shortLabel` "Activity" on "Transactions" (`nav-items.ts:65`, passed with `shortLabelFrom: "large"` in `app/layout.tsx:58–59`). | Delete `MOBILE_BAR_MAX` and `mobileBarMax={MOBILE_BAR_MAX}` (`app/layout.tsx:126`), or rename it to `mobileMaxItems={{ normal: 5, large: 5, xlarge: 4 }}`. Pass `shortLabelIsAlias: true` for Transactions (or a shortening such as "Trans."; the budget's "Activity" column is the other "Activity", `nav-items.ts:53–60`). Optional: `mobilePriority` 1–4 on Budget, Accounts, Transactions, Reports instead of relying on the order, so Imports/Rules/Payees can move in the list without reaching the bar. |
+| kastlan | Normal: its 6 entries (Dashboard + 5 groups, `app/nav.ts:78–145`) become 4 and "More" (was 6 cells). On the phone each group cell (`app/nav.ts:209`) opens a sheet of its pages, with "Overview" leading to `/overview/<group>`, instead of linking to the overview page. | Nothing required. `FIRST_GROUPS` (`app/nav.ts:156`) can become `mobilePriority` on the four leading groups if the sidebar order should differ from the bar's. No hand-rolled section pill row was found (`frontend/src`, 2026-10-22): a group's pages show in the shell's row above the bar (`mobileSubNav`, on by default, `app/app-layout.tsx:161`). For SectionNav under a page title instead — e.g. the finance pages `/invoices` … `/accounting/reports` (`app/nav.ts:114–125`) — render `<SectionNav label={t("nav.group.finance")} items=… current=…>` under the PageHeader and pass `mobileSubNav={false}`. |
+| Kurvenschmiede | Nothing visible: 5 entries (`shared/lib/nav-items.ts:14–20`) fit five cells; Extra large stays 3 + More. The dev console warns once for `shortLabel` "Equations" on "Differential equations" (`nav-items.ts:17`, `nav.dynamics_short`). | `shortLabelIsAlias: true` for Dynamics (or a shortening). The steering area's strip (`features/steering/steering-layout.tsx:56`, `NavPills size="sm"`) is a SectionNav candidate on the phone: `<SectionNav label={t("steering.area")} items={items} current={areaOf(pathname)} />` keeps it one line instead of wrapping. |

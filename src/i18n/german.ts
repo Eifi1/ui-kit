@@ -1933,6 +1933,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     appShellMore: {
       more: "Mehr",
       moreTitle: "Weitere Seiten",
+      overview: "Übersicht",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Verwaltung"
     // as settings §5 names the page; "mit Administratorrechten" rather than "für

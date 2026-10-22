@@ -1913,6 +1913,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     appShellMore: {
       more: "Plus",
       moreTitle: "Autres pages",
+      overview: "Vue d’ensemble",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words.
     mailTestCard: {

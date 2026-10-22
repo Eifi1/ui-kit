@@ -50,6 +50,19 @@ export interface AppShellNavItem {
    *  from Large up (keksdose dev#613, which read `useTextSize()` in its layout to decide).
    *  Default `"normal"`: the short label at every size, as before. */
   shortLabelFrom?: TextSize;
+  /** 0.49: `shortLabel` is another word for the page, not a shortening of `label` —
+   *  keksdose's "Activity" for "Transactions". Without it a development build warns once
+   *  when `shortLabel` does not start with `label`'s first word (an abbreviation of that
+   *  word, "Trans." for "Transactions", counts), because a bar cell that names a page
+   *  differently from the sidebar, the title and the palette is a page the reader
+   *  looks for twice. */
+  shortLabelIsAlias?: boolean;
+  /** 0.49: which entries sit in the phone bar when they do not all fit
+   *  ({@link AppShellProps.mobileMaxItems}). Lower first: the entries with a priority take
+   *  the bar's cells in its order, then the rest in the list's order; the bar still shows
+   *  its entries in the list's order, and the others go under "More". Unset: the list's
+   *  order decides (as before). */
+  mobilePriority?: number;
   /** 0.31.0: leave this entry out of the MOBILE BOTTOM BAR; the sidebar keeps it.
    *  For an entry a phone reaches another way — the brand link to the start page —
    *  when one cell fewer is what keeps the others' labels whole (the bar divides its
@@ -65,8 +78,10 @@ export interface AppShellNavItem {
   dataTour?: string;
   /** Optional sub-items. When present, hovering (or focusing) the item opens a
    *  flyout to the right of the sidebar with a header (this item's label) and the
-   *  sub-items as icon + title links. Works collapsed or expanded; the mobile
-   *  bottom bar ignores sub-items and links to `to`. */
+   *  sub-items as icon + title links. Works collapsed or expanded. On the phone (0.49)
+   *  the bar's cell opens a sheet of them instead of linking to `to` — the sheet lists
+   *  `to` first as "Overview" when no sub-item is that page — and the pages of the group
+   *  the reader is in show as the row above the bar (`mobileSubNav`). */
   items?: AppShellSubItem[];
 }
 
@@ -128,21 +143,64 @@ export interface AppShellMoreLabels {
   more: string;
   /** The sheet's heading, and so its accessible name. */
   moreTitle: string;
+  /** 0.49: a parent entry's own page in the sheet its bar cell opens, above its pages,
+   *  when no page is that one — "Overview". */
+  overview: string;
 }
 
 // Defined in ./app-shell-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_APP_SHELL_MORE_LABELS };
 
 /**
- * The most entries the phone bar shows before the rest go under "More", per text size
- * (§10.7): every entry at Normal, four at Large, three at Extra large. A fifth of a
- * 360 px phone at 150 % is 48 px of Normal-sized room, and the cells hold a word each.
+ * The most cells the phone bar holds, "More" included, per text size (0.49 KIT-6; 0.32
+ * §10.7): five at Normal and Large, four at Extra large. Eight entries are four and
+ * "More" at Normal; a fifth of a 390 px phone holds one word of the bar's type, and a
+ * sixth no longer does once the type grows. A fifth of a 360 px phone at 150 % is 48 px
+ * of Normal-sized room.
+ */
+export const DEFAULT_MOBILE_MAX_ITEMS: Readonly<Record<TextSize, number>> = {
+  normal: 5,
+  large: 5,
+  xlarge: 4,
+};
+
+/**
+ * @deprecated 0.49: the bar is sized in cells, "More" included —
+ * {@link DEFAULT_MOBILE_MAX_ITEMS} and `AppShell`'s `mobileMaxItems`. This is the same
+ * default counted as entries before "More" (one fewer). Removed no earlier than 0.51.
  */
 export const DEFAULT_MOBILE_BAR_MAX: Readonly<Record<TextSize, number>> = {
-  normal: Number.POSITIVE_INFINITY,
-  large: 4,
-  xlarge: 3,
+  normal: DEFAULT_MOBILE_MAX_ITEMS.normal - 1,
+  large: DEFAULT_MOBILE_MAX_ITEMS.large - 1,
+  xlarge: DEFAULT_MOBILE_MAX_ITEMS.xlarge - 1,
 };
+
+/**
+ * The phone bar's cells (0.49 KIT-6): every entry when there are at most `maxItems`,
+ * else `maxItems − 1` entries and a "More" cell for the rest. Which entries stay is
+ * `priority`'s call — lower first, entries without one after them in the list's order —
+ * and both halves keep the list's order. Never fewer than one entry beside More.
+ */
+export function pickMobileBar<T>(
+  entries: readonly T[],
+  maxItems: number,
+  priority?: (entry: T) => number | undefined,
+): { shown: T[]; hidden: T[] } {
+  const cells = Math.max(1, Math.floor(maxItems));
+  if (entries.length <= cells) return { shown: [...entries], hidden: [] };
+  const keep = Math.max(1, cells - 1);
+  const rank = (i: number) => priority?.(entries[i]!) ?? Number.POSITIVE_INFINITY;
+  const chosen = new Set(
+    entries
+      .map((_, i) => i)
+      .sort((a, b) => rank(a) - rank(b) || a - b)
+      .slice(0, keep),
+  );
+  return {
+    shown: entries.filter((_, i) => chosen.has(i)),
+    hidden: entries.filter((_, i) => !chosen.has(i)),
+  };
+}
 
 /**
  * Split the bar's entries into the cells shown and the ones under "More", in the app's
@@ -151,9 +209,85 @@ export const DEFAULT_MOBILE_BAR_MAX: Readonly<Record<TextSize, number>> = {
  * all: the cell count is the same either way, and a real entry beats a detour.
  */
 export function splitMobileBar<T>(entries: readonly T[], max: number): { shown: T[]; hidden: T[] } {
+  // Entries before More, as 0.32 counted them; {@link pickMobileBar} counts cells.
   const limit = Math.max(1, Math.floor(max));
   if (entries.length <= limit + 1) return { shown: [...entries], hidden: [] };
   return { shown: entries.slice(0, limit), hidden: entries.slice(limit) };
+}
+
+/** The bar's cell count at `size`: `mobileMaxItems`, else the deprecated `mobileBarMax`
+ *  read as cells (one more), else the default. */
+function mobileCells(
+  maxItems: AppShellProps["mobileMaxItems"],
+  barMax: AppShellProps["mobileBarMax"],
+  size: TextSize,
+): number {
+  if (maxItems !== undefined) {
+    return typeof maxItems === "number" ? maxItems : (maxItems[size] ?? DEFAULT_MOBILE_MAX_ITEMS[size]);
+  }
+  if (barMax !== undefined) {
+    const entries = typeof barMax === "number" ? barMax : barMax[size];
+    if (entries !== undefined) return entries + 1;
+  }
+  return DEFAULT_MOBILE_MAX_ITEMS[size];
+}
+
+/** The kit's dev switch, as `lib/logger.ts` reads it: a development build, never a
+ *  production one, never under vitest. Read per call so a test can switch it on. */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
+const warnedNav = new Set<string>();
+
+function warnNavOnce(key: string, message: string): void {
+  if (warnedNav.has(key)) return;
+  warnedNav.add(key);
+  console.warn(message);
+}
+
+/** The first word of a label, lower-cased: letters and digits up to the first other
+ *  character ("Import & Export" → "import", "Trans." → "trans"). */
+function firstWord(text: string): string {
+  return (text.trim().match(/^[\p{L}\p{N}]+/u)?.[0] ?? "").toLocaleLowerCase();
+}
+
+/** Whether `short` names `label`: its first word is `label`'s first word or an
+ *  abbreviation of it ("Trans." for "Transactions"), or the other way round. */
+function shortLabelNamesLabel(short: string, label: string): boolean {
+  const s = firstWord(short);
+  const l = firstWord(label);
+  return s === "" || l === "" || l.startsWith(s) || s.startsWith(l);
+}
+
+const TEXT_SIZE_WORDS: Record<TextSize, string> = { normal: "Normal", large: "Large", xlarge: "Extra large" };
+
+/** A development build's notes on `nav` (0.49 KIT-6): a `shortLabel` that is another word
+ *  than its `label` without `shortLabelIsAlias`, and the deprecated `mobileBarMax`. */
+function useNavDevWarnings(nav: AppShellNavItem[], deprecatedBarMax: boolean): void {
+  useEffect(() => {
+    if (!devWarnings()) return;
+    if (deprecatedBarMax) {
+      warnNavOnce(
+        "mobileBarMax",
+        "[ui-kit] AppShell mobileBarMax is deprecated: use mobileMaxItems, which counts the bar's cells with " +
+          '"More" (mobileBarMax={4} is mobileMaxItems={5}). Removed no earlier than 0.51.',
+      );
+    }
+    for (const item of nav) {
+      if (item.shortLabel === undefined || item.shortLabelIsAlias) continue;
+      if (shortLabelNamesLabel(item.shortLabel, item.label)) continue;
+      const from = item.shortLabelFrom ?? "normal";
+      const where = from === "normal" ? "at every text size" : `from ${TEXT_SIZE_WORDS[from]} text up`;
+      warnNavOnce(
+        `shortLabel|${item.to}|${item.shortLabel}|${item.label}`,
+        `[ui-kit] AppShell nav "${item.to}": shortLabel "${item.shortLabel}" does not start with ` +
+          `"${item.label.trim().split(/\s+/)[0]}", the first word of its label "${item.label}". The phone bar ` +
+          `shows it ${where}, so the page has another name there than in the sidebar and its title. ` +
+          "Shorten the label instead, or pass shortLabelIsAlias: true if the other word is meant.",
+      );
+    }
+  }, [nav, deprecatedBarMax]);
 }
 
 /**
@@ -222,17 +356,23 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    */
   mobileSubNavLayout?: "wrap" | "scroll";
   /**
-   * The most entries the phone bar shows; the rest move into a "More" cell that opens a
-   * sheet listing them, each group with its pages (0.32, docs/text-size-harmonization.md
-   * §4, §10.7). The bar takes `nav` in the app's order — after `mobileHidden` — so the
-   * app puts its most used entries first (or orders by role: kastlan's manager and
-   * accountant see different firsts).
+   * The most cells the phone bar holds, "More" included (0.49 KIT-6). When `nav` (after
+   * `mobileHidden`) has more entries, the bar keeps `mobileMaxItems − 1` of them and a
+   * last "More" cell opens a sheet with the rest, each group with its pages. Which
+   * entries stay is the items' `mobilePriority`, else the list's order (so the app puts
+   * its most used entries first, or orders by role: kastlan's manager and accountant see
+   * different firsts).
    *
-   * Default {@link DEFAULT_MOBILE_BAR_MAX}: unlimited at Normal, 4 at Large, 3 at Extra
-   * large, because the cells' words grow with the text and the phone does not. A number
-   * replaces the default at every size; `{ large: 5 }` replaces it at one size only.
-   * Never fewer than one entry; and one entry over the limit shows in full rather than
-   * behind a More that would take the same cell.
+   * Default {@link DEFAULT_MOBILE_MAX_ITEMS}: 5 at Normal and Large, 4 at Extra large —
+   * eight entries are four and "More". A number replaces the default at every size;
+   * `{ xlarge: 5 }` replaces it at one size only. Never fewer than one entry beside More.
+   */
+  mobileMaxItems?: number | Partial<Record<TextSize, number>>;
+  /**
+   * @deprecated 0.49: use `mobileMaxItems`, which counts the bar's cells, "More"
+   * included — `mobileBarMax={4}` is `mobileMaxItems={5}`. Read as that (one more, per
+   * size), with a development warning; ignored when `mobileMaxItems` is given. Removed no
+   * earlier than 0.51.
    */
   mobileBarMax?: number | Partial<Record<TextSize, number>>;
   /** The More cell's words over the provider's `appShellMore`. */
@@ -357,6 +497,7 @@ export function AppShell({
   subNav = "flyout",
   mobileSubNav = true,
   mobileSubNavLayout: mobileSubNavLayoutProp,
+  mobileMaxItems,
   mobileBarMax,
   moreLabels,
   toggleGroupLabel,
@@ -370,15 +511,14 @@ export function AppShell({
   const large = textSize !== "normal";
   const mobileSubNavLayout = mobileSubNavLayoutProp ?? (large ? "scroll" : "wrap");
   // The bottom bar's cells: every entry the phone does not reach another way, up to the
-  // text size's limit; the rest go under More (§10.7).
-  const barMax =
-    typeof mobileBarMax === "number"
-      ? mobileBarMax
-      : (mobileBarMax?.[textSize] ?? DEFAULT_MOBILE_BAR_MAX[textSize]);
-  const { shown: barNav, hidden: moreNav } = splitMobileBar(
+  // text size's limit, More included; the rest go under More (§10.7, KIT-6).
+  const maxItems = mobileCells(mobileMaxItems, mobileBarMax, textSize);
+  const { shown: barNav, hidden: moreNav } = pickMobileBar(
     nav.filter((item) => !item.mobileHidden),
-    barMax,
+    maxItems,
+    (item) => item.mobilePriority,
   );
+  useNavDevWarnings(nav, mobileBarMax !== undefined && mobileMaxItems === undefined);
   // An embedded shell sharing the default key would overwrite the outer app's sidebar
   // preference with its own — so it persists only when given a key of its own.
   const collapseStorageKey =
@@ -591,9 +731,13 @@ export function AppShell({
             className="grid"
             style={{ gridTemplateColumns: `repeat(${barNav.length + (moreNav.length ? 1 : 0)}, minmax(0, 1fr))` }}
           >
-            {barNav.map((item) => (
-              <MobileNavItem key={item.to} item={item} />
-            ))}
+            {barNav.map((item) =>
+              item.items?.length ? (
+                <MobileGroupCell key={item.to} item={item} labels={moreLabels} />
+              ) : (
+                <MobileNavItem key={item.to} item={item} />
+              ),
+            )}
             {moreNav.length > 0 && <MobileMoreCell hidden={moreNav} labels={moreLabels} />}
           </nav>
         </div>
@@ -773,11 +917,7 @@ function MobileCellLabel({ children }: { children: ReactNode }) {
  *  nothing marked on every sub-page (the same defect the sidebar had). */
 function MobileNavItem({ item }: { item: AppShellNavItem }) {
   const subActive = useSubItemActive(item);
-  const { size } = useTextSize();
-  const short =
-    item.shortLabel !== undefined && TEXT_SIZES.indexOf(size) >= TEXT_SIZES.indexOf(item.shortLabelFrom ?? "normal")
-      ? item.shortLabel
-      : undefined;
+  const label = useCellLabel(item);
   return (
     <NavLink
       to={item.to}
@@ -788,8 +928,119 @@ function MobileNavItem({ item }: { item: AppShellNavItem }) {
       <span className="relative">
         <item.icon className="size-5" />
       </span>
-      <MobileCellLabel>{short ?? item.label}</MobileCellLabel>
+      <MobileCellLabel>{label}</MobileCellLabel>
     </NavLink>
+  );
+}
+
+/** The bar cell's label: `shortLabel` from its text size up (0.48), else `label`. */
+function useCellLabel(item: AppShellNavItem): string {
+  const { size } = useTextSize();
+  return item.shortLabel !== undefined &&
+    TEXT_SIZES.indexOf(size) >= TEXT_SIZES.indexOf(item.shortLabelFrom ?? "normal")
+    ? item.shortLabel
+    : item.label;
+}
+
+/** A link in one of the phone's sheets — an entry (`level="entry"`) or a page under one. */
+function SheetLink({
+  to,
+  end,
+  icon: Icon,
+  label,
+  onClick,
+  level,
+}: {
+  to: string;
+  end?: boolean;
+  icon: LucideIcon;
+  label: string;
+  onClick: () => void;
+  level: "entry" | "page";
+}) {
+  return (
+    <NavLink
+      to={to}
+      end={end ?? true}
+      onClick={onClick}
+      className={({ isActive }) =>
+        cn(
+          level === "entry"
+            ? "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors"
+            : "flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
+          isActive ? "bg-inverse text-inverse" : level === "entry" ? "text-primary hover:bg-hover" : "text-secondary hover:bg-hover",
+        )
+      }
+    >
+      <Icon aria-hidden className={level === "entry" ? "size-5 shrink-0" : "size-4 shrink-0 opacity-70"} />
+      <span className="min-w-0 break-words leading-snug">{label}</span>
+    </NavLink>
+  );
+}
+
+/**
+ * A bar cell for an entry with pages (0.49 KIT-6): on a phone the entry opens a sheet of
+ * its pages instead of linking to its own `to` — a tap on "Reports" used to land on the
+ * overview with the pages one more step away, in the row above the bar, which only
+ * appears once you are in the group. The sheet lists the entry's own page first, as
+ * "Overview", when none of the pages is that page. Marked while the entry's page or one
+ * of its pages is current, as the link was.
+ *
+ * Tours find the entry by `a[href]` or its `dataTour`, as on the More cell: an inert,
+ * pointer-transparent anchor over the button carries them (see {@link MobileMoreCell}).
+ */
+function MobileGroupCell({
+  item,
+  labels: labelsProp,
+}: {
+  item: AppShellNavItem;
+  labels?: LabelOverride<AppShellMoreLabels>;
+}) {
+  const labels: AppShellMoreLabels = useKitLabels("appShellMore", DEFAULT_APP_SHELL_MORE_LABELS, labelsProp);
+  const { pathname } = useLocation();
+  const [open, setOpen] = useState(false);
+  const label = useCellLabel(item);
+  const active = entryIsCurrent(item, pathname);
+  const close = () => setOpen(false);
+  const pages = item.items ?? [];
+  const ownPageListed = pages.some((sub) => sub.to === item.to);
+  return (
+    <div data-slot="app-shell-group" className="relative min-w-0">
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        // The cell may show a shortLabel; the button's name is the entry's.
+        aria-label={label === item.label ? undefined : item.label}
+        onClick={() => setOpen(true)}
+        className={mobileCellClass(active)}
+      >
+        <span className="relative">
+          <item.icon aria-hidden className="size-5" />
+        </span>
+        <MobileCellLabel>{label}</MobileCellLabel>
+      </button>
+      <TourAnchor to={item.to} dataTour={item.dataTour} />
+      {pages
+        .filter((sub) => sub.to !== item.to)
+        .map((sub) => (
+          <TourAnchor key={sub.to} to={sub.to} />
+        ))}
+      <DialogFrame open={open} onClose={close} title={item.label} closeButton bodyClassName="space-y-1">
+        <ul className="space-y-1">
+          {!ownPageListed && (
+            <li>
+              <SheetLink to={item.to} end={item.end} icon={item.icon} label={labels.overview} onClick={close} level="entry" />
+            </li>
+          )}
+          {pages.map((sub) => (
+            <li key={sub.to}>
+              <SheetLink to={sub.to} end={sub.end} icon={sub.icon} label={sub.label} onClick={close} level="entry" />
+            </li>
+          ))}
+        </ul>
+      </DialogFrame>
+    </div>
   );
 }
 
@@ -868,42 +1119,12 @@ function MobileMoreCell({
         <ul className="space-y-1">
           {hidden.map((item) => (
             <li key={item.to}>
-              <NavLink
-                to={item.to}
-                end={item.end ?? true}
-                onClick={close}
-                className={({ isActive }) =>
-                  cn(
-                    "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                    isActive
-                      ? "bg-inverse text-inverse"
-                      : "text-primary hover:bg-hover",
-                  )
-                }
-              >
-                <item.icon aria-hidden className="size-5 shrink-0" />
-                <span className="min-w-0 break-words leading-snug">{item.label}</span>
-              </NavLink>
+              <SheetLink to={item.to} end={item.end} icon={item.icon} label={item.label} onClick={close} level="entry" />
               {!!item.items?.length && (
                 <ul aria-label={item.label} className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-subtle ps-2">
                   {item.items.map((sub) => (
                     <li key={sub.to}>
-                      <NavLink
-                        to={sub.to}
-                        end={sub.end ?? true}
-                        onClick={close}
-                        className={({ isActive }) =>
-                          cn(
-                            "flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
-                            isActive
-                              ? "bg-inverse text-inverse"
-                              : "text-secondary hover:bg-hover",
-                          )
-                        }
-                      >
-                        <sub.icon aria-hidden className="size-4 shrink-0 opacity-70" />
-                        <span className="min-w-0 break-words leading-snug">{sub.label}</span>
-                      </NavLink>
+                      <SheetLink to={sub.to} end={sub.end} icon={sub.icon} label={sub.label} onClick={close} level="page" />
                     </li>
                   ))}
                 </ul>

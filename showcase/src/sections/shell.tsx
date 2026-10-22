@@ -4,6 +4,10 @@ import {
   ArrowLeftRight,
   Bell,
   BookOpen,
+  Landmark,
+  PiggyBank,
+  Store,
+  Tags,
   Building2,
   LayoutDashboard,
   LifeBuoy,
@@ -97,12 +101,13 @@ const ROLES = ["admin", "accountant", "viewer"] as const;
  */
 const NAV_REFERENCE: AppShellNavItem[] = [
   { to: "/budget", label: "Budget", icon: Wallet, dataTour: "nav-budget" },
-  { to: "/transactions", label: "Transactions", shortLabel: "Txns", icon: ArrowLeftRight },
+  { to: "/transactions", label: "Transactions", shortLabel: "Trans.", icon: ArrowLeftRight },
   { to: "/reports", label: "Reports", icon: PieChart, end: false },
   {
     to: "/data",
     label: "Import & Export",
     shortLabel: "Data",
+    shortLabelIsAlias: true,
     icon: Upload,
     items: [
       { to: "/data/import", label: "Import a statement", icon: Upload },
@@ -226,11 +231,14 @@ export function ShellSection() {
           rows={[
             ["to", <span className={PROSE}>Route path, the NavLink target — and the React key in both navs, so two items may not share one.</span>],
             ["label", <span className={PROSE}>Sidebar text, the tooltip when collapsed, and the flyout header.</span>],
-            ["shortLabel?", <span className={PROSE}>Mobile bottom bar only. The bar divides the viewport into nav.length equal cells, so every entry added shrinks the room a label has.</span>],
+            ["shortLabel?", <span className={PROSE}>Mobile bottom bar only. The bar divides the viewport into equal cells, so every entry added shrinks the room a label has. It shortens the label: a development build warns when it does not start with the label&apos;s first word (or an abbreviation of it).</span>],
+            ["shortLabelFrom?", <span className={PROSE}>The text size from which the bar uses shortLabel — &quot;large&quot; keeps the full label at Normal. Default &quot;normal&quot;.</span>],
+            ["shortLabelIsAlias?", <span className={PROSE}>shortLabel is another word for the page on purpose (&quot;Data&quot; for &quot;Import &amp; Export&quot;): no warning.</span>],
+            ["mobilePriority?", <span className={PROSE}>Which entries sit in the phone bar when they do not all fit: lower first, then the list&apos;s order. The bar still shows them in the list&apos;s order.</span>],
             ["icon", <span className={PROSE}>A LucideIcon — the component itself (Wallet), never an element (&lt;Wallet /&gt;). AppShell renders it as &lt;item.icon /&gt; at size-4 in the sidebar and size-5 in the bar.</span>],
             ["end?", <span className={PROSE}>NavLink exact match. Defaults to TRUE, which is the opposite of react-router's own default: pass end: false for a section whose children are routes.</span>],
             ["dataTour?", <span className={PROSE}>data-tour on this item's link in BOTH navs, so a tour can spotlight one entry instead of matching by href.</span>],
-            ["items?", <span className={PROSE}>AppShellSubItem[] (to/label/icon/end). Opens a portalled flyout beside the sidebar on hover or focus, collapsed or expanded. The mobile bar ignores sub-items and links to `to`.</span>],
+            ["items?", <span className={PROSE}>AppShellSubItem[] (to/label/icon/end). Opens a portalled flyout beside the sidebar on hover or focus, collapsed or expanded. On the phone the bar&apos;s cell opens a sheet of these pages (its own page first, as &quot;Overview&quot;) instead of linking to `to`.</span>],
           ]}
         />
       </Example>
@@ -240,6 +248,13 @@ export function ShellSection() {
         hint="A second shell, nested in this page's — so embedded — with its own router. Below 768px it shows the phone bar, docked on the box."
       >
         <AppShellPlayground />
+      </Example>
+
+      <Example
+        label="AppShell on the phone — eight entries"
+        hint="Below 768px: four entries and More in the bar; Books opens a sheet of its pages"
+      >
+        <PhoneNavExample />
       </Example>
 
       <Example
@@ -657,6 +672,7 @@ const DEMO_NAV: AppShellNavItem[] = [
     to: "/data",
     label: "Import & Export",
     shortLabel: "Data",
+    shortLabelIsAlias: true,
     icon: Upload,
     items: [
       { to: "/data/import", label: "Import", icon: Upload },
@@ -664,6 +680,63 @@ const DEMO_NAV: AppShellNavItem[] = [
     ],
   },
 ];
+
+/** Eight entries — one more than keksdose's seven — for the phone bar's five cells. */
+const PHONE_NAV: AppShellNavItem[] = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  {
+    to: "/books",
+    label: "Books",
+    icon: BookOpen,
+    items: [
+      { to: "/books/ledger", label: "Ledger", icon: Wallet },
+      { to: "/books/receipts", label: "Receipts", icon: Receipt },
+      { to: "/books/invoices", label: "Invoices", icon: ArrowLeftRight },
+    ],
+  },
+  { to: "/reports", label: "Reports", icon: PieChart },
+  { to: "/banking", label: "Banking", icon: Landmark },
+  { to: "/budgets", label: "Budgets", icon: PiggyBank },
+  { to: "/payees", label: "Payees", icon: Store },
+  { to: "/rules", label: "Rules", icon: Tags },
+  { to: "/data", label: "Import & Export", shortLabel: "Import", icon: Upload },
+];
+
+function PhoneNavExample() {
+  const [rulesFirst, setRulesFirst] = useState(false);
+  const nav = rulesFirst ? PHONE_NAV.map((item) => (item.to === "/rules" ? { ...item, mobilePriority: 1 } : item)) : PHONE_NAV;
+  return (
+    <div className="space-y-3">
+      <Switch
+        label="mobilePriority: 1 on Rules"
+        description="Rules takes a cell in the bar; the bar keeps the list's order"
+        checked={rulesFirst}
+        onCheckedChange={setRulesFirst}
+      />
+      <div className="h-[24rem] max-w-sm overflow-hidden rounded-md border border-subtle bg-page">
+        <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
+          <MemoryRouter initialEntries={["/books/ledger"]}>
+            <AppShell
+              nav={nav}
+              embedded
+              topBar={<div className="flex h-12 items-center px-3 text-sm font-semibold text-primary">Acme Books</div>}
+            >
+              <DemoShellPage />
+            </AppShell>
+          </MemoryRouter>
+        </UNSAFE_LocationContext.Provider>
+      </div>
+      <Note>
+        {code("mobileMaxItems")} (default 5 cells, More included; 4 at Extra large): eight entries are four and
+        &ldquo;More&rdquo;, whose sheet lists the other four. {code("mobilePriority")} picks which entries keep a cell;
+        without it the list&apos;s order does. Books has pages, so on the phone its cell opens a sheet of them —
+        Overview, Ledger, Receipts, Invoices — instead of linking to /books, and while one of them is open the row
+        above the bar lists them too. The bar is the phone layout&apos;s: narrow the window (or open the device
+        preview) to see it.
+      </Note>
+    </div>
+  );
+}
 
 /** The sidebar's bottom area as data (0.12): a version link with a hint, a link that
  *  leaves the app, and the legal links as one group — one icon when collapsed. */

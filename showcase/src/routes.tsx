@@ -158,6 +158,7 @@ const AccountMenuDemo = lazySection(() => import("./sections/account-menu-demo")
 const ToggleCaptionDemo = lazySection(() => import("./sections/toggle-caption-demo"), "ToggleCaptionDemo");
 const ActionCardDemo = lazySection(() => import("./sections/action-card-demo"), "ActionCardDemo");
 const NavPillsDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsDemo");
+const SectionNavDemo = lazySection(() => import("./sections/nav-pills-demo"), "SectionNavDemo");
 const ProgressSegmentsDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressSegmentsDemo");
 const ProgressLegendTone018Demo = lazySection(() => import("./sections/progress-018-demo"), "ProgressLegendTone018Demo");
 const FieldDemo = lazySection(() => import("./sections/field-demo"), "FieldDemo");
@@ -1272,11 +1273,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The parts of a page that are not its content: the header with its trail and actions, the breadcrumbs on their own, and the section label, caption and status dot.",
         icon: PanelTop,
-        components: ["PageHeader", "Breadcrumbs", "SectionLabel", "Caption", "StatusDot", "NavPills", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
+        components: ["PageHeader", "Breadcrumbs", "SectionLabel", "Caption", "StatusDot", "NavPills", "SectionNav", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
         Body: () => (
           <>
             <PageStructure />
             <NavPillsDemo />
+            <SectionNavDemo />
             <SectionLabelMdDemo />
             <Layout013Demo />
             <PageHeader014Demo />

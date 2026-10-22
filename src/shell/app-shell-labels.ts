@@ -7,4 +7,5 @@ import type { AppShellMoreLabels } from "./app-shell";
 export const DEFAULT_APP_SHELL_MORE_LABELS: AppShellMoreLabels = {
   more: "More",
   moreTitle: "More pages",
+  overview: "Overview",
 };

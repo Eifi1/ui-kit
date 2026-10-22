@@ -1799,6 +1799,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     appShellMore: {
       more: "更多",
       moreTitle: "更多页面",
+      overview: "概览",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words.
     mailTestCard: {

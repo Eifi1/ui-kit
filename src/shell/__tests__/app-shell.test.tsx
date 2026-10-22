@@ -143,8 +143,9 @@ describe("AppShell — the phone's page row", () => {
 
   it("marks the group in the bar while one of its pages is open", () => {
     const { container } = renderGrouped("/dates");
+    // 0.49 KIT-6: on the phone a group's cell is a button that opens a sheet of its pages.
     const cell = within(phoneNav(container))
-      .getAllByRole("link", { name: "Forms" })
+      .getAllByRole("button", { name: "Forms" })
       .find((a) => a.closest("[data-tour=nav]"))!;
     expect(cell).toHaveClass("text-brand");
   });

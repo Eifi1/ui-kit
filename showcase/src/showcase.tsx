@@ -106,6 +106,8 @@ function useTranslatedNav(): AppShellNavItem[] {
           shortLabel: item.shortLabel
             ? (t.groupShort[group.label] ?? en.groupShort[group.label] ?? item.shortLabel)
             : undefined,
+          // Chosen names for the bar ("Tokens" for "Foundations"), not shortenings.
+          shortLabelIsAlias: item.shortLabel ? true : undefined,
           items: item.items?.map((sub) => {
             const slug = sub.to.replace(/^\//, "");
             return { ...sub, label: phone ? short(slug) : title(slug) };

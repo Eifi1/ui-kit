@@ -1873,6 +1873,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     appShellMore: {
       more: "Más",
       moreTitle: "Más páginas",
+      overview: "Resumen",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Usted",
     // as the rest of the catalogue.

@@ -381,6 +381,8 @@ export * from "./components/alert-banner";
 export * from "./components/toggle-group";
 // A wrapping set of links/buttons marked `aria-current` — Tabs-like looks, not tabs.
 export * from "./components/nav-pills";
+// 0.49.0 (KIT-6): a section's pages on the phone, one scrolling row of pills.
+export * from "./components/section-nav";
 // A pill carrying one VALUE — inert, a link, or a toggle, depending on which prop it is
 // given — and the list field built from it. Distinct from Button on purpose: a row of
 // buttons reads as "choose an action", a row of chips as "here are the things".

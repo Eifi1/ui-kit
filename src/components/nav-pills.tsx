@@ -1,5 +1,7 @@
+import { useLayoutEffect, useRef } from "react";
 import type { ComponentPropsWithoutRef, ComponentType, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
+import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { useKitLink } from "../i18n/kit-labels";
 import { FOCUS_RING } from "./focus-ring";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
@@ -50,6 +52,13 @@ export interface NavPillsProps<T extends string> extends Omit<ComponentPropsWith
   landmark?: boolean;
   /** Classes for every pill. */
   itemClassName?: string;
+  /**
+   * 0.49: `wrap` (default) puts the pills on as many rows as they need. `scroll` keeps
+   * them on ONE row that scrolls sideways — faded at a cut edge, the current pill
+   * scrolled into view (the row only, never the page) — for a strip that must stay one
+   * line high, as {@link SectionNav} under a page title on a phone.
+   */
+  layout?: "wrap" | "scroll";
   /** The `<nav>` (or the `<div role="group">`) — hence `HTMLElement` (0.34, API-2,
    *  refactor audit 2026-10). */
   ref?: Ref<HTMLElement>;
@@ -89,12 +98,22 @@ export function NavPills<T extends string>({
   size = "md",
   landmark = true,
   itemClassName,
+  layout = "wrap",
   className,
   ref,
   ...rest
 }: NavPillsProps<T>) {
   const kitLink = useKitLink();
   const Root = landmark ? "nav" : "div";
+  const scroll = layout === "scroll";
+  const listRef = useRef<HTMLUListElement>(null);
+  const fade = useStripFade(listRef);
+  // The current pill into view — the row only, never the page.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const currentPill = list?.querySelector<HTMLElement>("[aria-current]");
+    if (scroll && list && currentPill) scrollIntoStrip(list, currentPill);
+  }, [scroll, current]);
   return (
     <Root
       {...rest}
@@ -102,7 +121,15 @@ export function NavPills<T extends string>({
       role={landmark ? undefined : "group"}
       className={cn("min-w-0", className)}
     >
-      <ul className="m-0 flex list-none flex-wrap gap-1 p-0">
+      <ul
+        ref={listRef}
+        className={cn(
+          "m-0 flex list-none gap-1 p-0",
+          scroll ? "flex-nowrap overflow-x-auto overscroll-x-contain [scrollbar-width:none]" : "flex-wrap",
+        )}
+        data-overflow={scroll ? fade.overflow : undefined}
+        style={scroll && fade.mask ? { maskImage: fade.mask, WebkitMaskImage: fade.mask } : undefined}
+      >
         {items.map((item) => {
           const isCurrent = item.value === current;
           const Icon = item.icon;
@@ -152,7 +179,7 @@ export function NavPills<T extends string>({
             );
           }
           return (
-            <li key={item.value} className="flex">
+            <li key={item.value} className={cn("flex", scroll && "shrink-0")}>
               {pill}
             </li>
           );

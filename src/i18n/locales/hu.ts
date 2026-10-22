@@ -1879,6 +1879,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     appShellMore: {
       more: "Továbbiak",
       moreTitle: "További oldalak",
+      overview: "Áttekintés",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Ön", as
     // the rest of the catalogue.

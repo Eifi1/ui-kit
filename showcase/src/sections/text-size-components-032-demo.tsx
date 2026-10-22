@@ -19,7 +19,7 @@ import {
   CompactControls,
   DataTable,
   DateMark,
-  DEFAULT_MOBILE_BAR_MAX,
+  DEFAULT_MOBILE_MAX_ITEMS,
   FieldHint,
   FieldSyncIndicator,
   FormActions,
@@ -53,7 +53,7 @@ import { Example, Note, code, NO_ROUTER } from "../lib/section";
  * Button, IconButton (`labelVisible`, `disabledReasonDisplay`), CompactControls,
  * RowActions, DataTable (`mobileDetailsInRow`, `rowName`), ListItem, FormActions
  * (`stack`), FieldHint, Switch, Checkbox, ToggleGroup, StatTile, DateMark, SignChip,
- * FieldSyncIndicator, AppShell (`mobileBarMax`), useWindowedRows.
+ * FieldSyncIndicator, AppShell (`mobileMaxItems`), useWindowedRows.
  *
  * Ada Example and her garden are SYNTHETIC. Nothing sends a request.
  */
@@ -317,7 +317,7 @@ const SHELL_NAV: AppShellNavItem[] = [
 function ShellDemo() {
   const { size } = useTextSize();
   return (
-    <Example label="The phone bar folds into More" hint="six entries: all six at Normal, four + More at Large, three + More at Extra large">
+    <Example label="The phone bar folds into More" hint="six entries: four + More at Normal and Large, three + More at Extra large">
       <div className="h-[24rem] max-w-sm overflow-hidden rounded-md border border-subtle bg-page">
         <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
           <MemoryRouter initialEntries={["/beds"]}>
@@ -327,15 +327,15 @@ function ShellDemo() {
               topBar={<div className="flex h-12 items-center px-3 text-sm font-semibold">Ada&apos;s Garden Planner</div>}
             >
               <div className="p-4 text-sm text-secondary">
-                The bar shows {DEFAULT_MOBILE_BAR_MAX[size] === Number.POSITIVE_INFINITY ? "every entry" : `${DEFAULT_MOBILE_BAR_MAX[size]} entries and More`} at this size.
+                The bar holds {DEFAULT_MOBILE_MAX_ITEMS[size]} cells at this size: {DEFAULT_MOBILE_MAX_ITEMS[size] - 1} entries and More.
               </div>
             </AppShell>
           </MemoryRouter>
         </UNSAFE_LocationContext.Provider>
       </div>
       <Note>
-        `mobileBarMax` takes the app&apos;s order: the first entries stay, the rest open from
-        "More" as a sheet, each group with its pages. The More cell carries the hidden
+        `mobileMaxItems` counts the bar&apos;s cells, More included; the entries&apos; `mobilePriority`, else the
+        app&apos;s order, decides which stay, and the rest open from "More" as a sheet, each group with its pages. The More cell carries the hidden
         entries&apos; links and `dataTour` anchors, so a tour step aimed at "Allotment members"
         lands on More. Labels wrap to two lines instead of truncating; the sidebar never
         collapses to icons at Large. The bar is the phone layout&apos;s: narrow the window (or

@@ -1892,6 +1892,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     appShellMore: {
       more: "Altro",
       moreTitle: "Altre pagine",
+      overview: "Panoramica",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Lei", as
     // the rest of the catalogue.

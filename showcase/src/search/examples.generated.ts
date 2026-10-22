@@ -722,6 +722,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AppShellNavItem — a real list",
     "AppShellNavItem — field by field",
     "AppShell — every prop on a switch",
+    "AppShell on the phone — eight entries",
     "AppShell — the contracts",
     "TopBarActionMenu — an account menu",
     "TopBarBrand — logo and name, the name hidden on a phone",
@@ -742,6 +743,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "StatusDot — every tone, sizes, ring and label",
     "NavPills — links through renderLink",
     "NavPills — buttons with onSelect, icons, disabled, sizes and landmark={false}",
+    "SectionNav — a section's pages on the phone",
     "SectionLabel — size md",
     "PageHeader — size compact",
     "PageHeader — mobileLayout inline",
@@ -1359,6 +1361,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   "page-structure": [
     "PageStructure",
     "NavPillsDemo",
+    "SectionNavDemo",
     "SectionLabelMdDemo",
     "Layout013Demo",
     "PageHeader014Demo",
