@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from "react";
 import { isComposing } from "../lib/ime";
 
@@ -220,12 +220,52 @@ export function useEscapeKey(handler: () => void, enabled = true): void {
   useDismissLayer(enabled, handler);
 }
 
+/** Called with each native press an owner's React tree saw — see {@link useOutsideClick}. */
+type PressMark = (press: Event) => void;
+
+/** The outside-click hooks watching each ref, for {@link pressInside}. */
+const watchers = new WeakMap<RefObject<HTMLElement | null>, Set<PressMark>>();
+
+/** What an `onPointerDownCapture` hands over: a React event, its press inside. */
+type ReactPress = { nativeEvent: Event };
+
+/**
+ * An `onPointerDownCapture` for a panel whose `ref` an outside-click hook watches but
+ * whose element the hook's owner does not render — {@link DropdownPanel} and
+ * `ComboboxPanel` take `panelRef` from `useDropdown` / `useComboboxCore`. Every press
+ * that reaches the panel through the React tree, a portalled list opened inside it
+ * included, is marked inside for each hook watching `ref`. See {@link useOutsideClick}.
+ */
+export function pressInside(ref: RefObject<HTMLElement | null> | undefined): ((e: ReactPress) => void) | undefined {
+  if (!ref) return undefined;
+  return (e) => {
+    watchers.get(ref)?.forEach((mark) => mark(e.nativeEvent));
+  };
+}
+
 /**
  * Calls `handler` on a press that lands outside every supplied element, while
  * `enabled` — the outside-click-to-close half of the same dismissal story. Pass one
  * ref or several (trigger + panel); a press inside any of them is ignored. Refs and
  * `handler` are read live, so an inline `[triggerRef, panelRef]` array is fine and
  * won't churn the listener.
+ *
+ * ## A panel opened from inside is inside (0.48, keksdose dev#623)
+ *
+ * A CurrencySelect in a Popover: the currency list is portalled to `<body>`, so in the
+ * DOM it is outside the popover's panel, and the first press on a currency closed the
+ * POPOVER at pointerdown — the list went with it and the choice never landed. The same
+ * for a combobox, a menu, a date picker's popover, a dropdown, at any depth.
+ *
+ * In the React tree the portal is still where it was opened from, and React passes a
+ * press up that tree, through portals. So the hook hands back an
+ * `onPointerDownCapture`: put it on the element the press should count as inside of —
+ * the kit's Popover panel, HoverMenu, DropdownPanel and ComboboxPanel do — and every
+ * press that travels through that element in React, portalled panels opened inside it
+ * included, is not outside. React's listeners sit on the root and on each portal's
+ * container, so they hear the press before this document listener does. No owner chain
+ * to keep: depth is free, and an app's own portal inside a kit panel is covered too. A
+ * panel the hook's owner does not render takes {@link pressInside} with the watched ref.
  *
  * **`pointerdown`, not `mousedown`** — one event covering mouse, touch and pen.
  * This listened for `mousedown` alone, which on a touch platform is a SYNTHESISED
@@ -245,17 +285,35 @@ export function useOutsideClick(
   refs: RefObject<HTMLElement | null> | RefObject<HTMLElement | null>[],
   handler: () => void,
   enabled = true,
-): void {
+): (e: ReactPress) => void {
   const refsRef = useRef(refs);
   const handlerRef = useRef(handler);
+  // The last press this owner's React tree saw: the one the document listener is about
+  // to hear, when it went through a panel the owner marked.
+  const insideRef = useRef<Event | null>(null);
   // In an effect rather than during render — see the note in useDismissLayer.
   useEffect(() => {
     refsRef.current = refs;
     handlerRef.current = handler;
   });
+  const markInside = useCallback((e: ReactPress) => {
+    insideRef.current = e.nativeEvent;
+  }, []);
   useEffect(() => {
     if (!enabled) return;
+    const mark: PressMark = (press) => {
+      insideRef.current = press;
+    };
+    const watched = Array.isArray(refsRef.current) ? refsRef.current : [refsRef.current];
+    for (const r of watched) {
+      const set = watchers.get(r) ?? new Set<PressMark>();
+      set.add(mark);
+      watchers.set(r, set);
+    }
     const onPointerDown = (e: Event) => {
+      const inside = insideRef.current === e;
+      insideRef.current = null;
+      if (inside) return;
       const target = e.target as Node;
       const list = Array.isArray(refsRef.current) ? refsRef.current : [refsRef.current];
       for (const r of list) {
@@ -264,6 +322,10 @@ export function useOutsideClick(
       handlerRef.current();
     };
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      for (const r of watched) watchers.get(r)?.delete(mark);
+    };
   }, [enabled]);
+  return markInside;
 }

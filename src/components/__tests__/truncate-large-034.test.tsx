@@ -171,6 +171,9 @@ describe("no part of group 4 truncates at Large", () => {
 const TRUNCATE_OK = new Map([
   // The phone bar's cell label: two lines, then a clamp (0.32, §10.7).
   ["shell/app-shell.tsx", 1],
+  // AlertBanner clampMobile: one line on a phone with the rest behind More (0.48, keksdose
+  // dev #611; the release's truncation sweep flagged it otherwise).
+  ["components/alert-banner.tsx", 1],
 ]);
 
 describe("data-truncate-ok", () => {

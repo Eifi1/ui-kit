@@ -19,7 +19,7 @@ import { Spinner } from "./spinner";
 import { useAnchorDir } from "./use-anchor-dir";
 import { type AnchorRect } from "../hooks/use-anchored-rect";
 import { anchoredInline, useAnchoredPanel, viewportSize, type AnchoredPanel } from "../hooks/use-anchored-panel";
-import { takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
+import { pressInside, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { isImeEnter } from "../lib/ime";
 import { foldForSearch } from "../lib/text-match";
@@ -1066,6 +1066,12 @@ export function ComboboxPanel<V extends string | number>({
       ref={panelRef}
       dir={dir}
       onKeyDown={onKeyDown}
+      // A press in a panel opened from a row is inside this list for the core's outside
+      // press, though portalled elsewhere (dev#623).
+      onPointerDownCapture={(e) => {
+        rest.onPointerDownCapture?.(e);
+        pressInside(panelRef)?.(e);
+      }}
       // `placement` keeps the panel inside the region actually on screen: on a phone
       // the search box below pulls up the keyboard, and a panel pinned under a
       // low trigger would otherwise sit entirely behind it (feedback #135). Flipped

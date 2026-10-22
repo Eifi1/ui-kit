@@ -41,6 +41,12 @@ const BUTTON_BASE = cn(
  */
 export const TOUCH_TARGET_LARGE = "large:min-h-[48px] large:min-w-[48px]";
 
+/** The 48 px target at Large for a control whose BOX cannot grow (a chip's or a tab's
+ *  action, IconButton `2xs`; Tabs' overflow cues, 0.48 KS N3): an invisible `::after`
+ *  centred on it takes the taps a finger lands round the glyph. Not public. */
+export const HIT_AREA_LARGE =
+  "relative large:after:absolute large:after:inset-[calc((100%-48px)/2)] large:after:content-['']";
+
 export type ButtonSize = "sm" | "md";
 
 // Box geometry per size, split out of the base so the two cannot be merged into one

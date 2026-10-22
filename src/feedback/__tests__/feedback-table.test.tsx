@@ -316,6 +316,21 @@ describe("the desktop table", () => {
     expect(within(typo).getAllByText("joined@example.test")).toHaveLength(2);
   });
 
+  it("caps the User cell's width, one line and an ellipsis, the whole value in the kit's Tooltip (keksdose N2, 0.48 review 2)", () => {
+    // Beside the grow Subject every other cell keeps one line at Normal, so an email
+    // standing in for a name widened User and cost Votes and Category their room first.
+    // The whole value is in the kit's Tooltip, never a native title (no-native-title).
+    renderTable();
+    const typo = screen.getByText("Typo in the footer").closest("tr")!;
+    const cell = typo.querySelector('td[data-col="user"]')!;
+    const user = cell.querySelector(".max-w-\\[12rem\\]")!;
+    expect(user).toHaveTextContent("joined@example.test");
+    expect(user).toHaveClass("block", "truncate-until-large");
+    // The kit's lazy Tooltip carries the whole value on hover (its own tests cover that);
+    // never a native title.
+    expect(cell.querySelector("[title]")).toBeNull();
+  });
+
   it("changes a status through onStatus, with the row", () => {
     const onStatus = vi.fn();
     renderTable({ onStatus });

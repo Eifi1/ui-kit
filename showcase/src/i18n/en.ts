@@ -989,6 +989,8 @@ export const en: Dictionary = {
       "hide or reorder columns",
       "data grid",
       "search in a table",
+      "group table rows by month with totals",
+      "load more rows while scrolling",
     ],
     "data-table-server": [
       "server-side pagination",

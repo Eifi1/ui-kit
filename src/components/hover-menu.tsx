@@ -163,7 +163,8 @@ export function HoverMenu({
     };
   }, [open, close]);
 
-  useOutsideClick(wrapperRef, close, open);
+  // A press in a panel opened from a row (a popover, its lists) is inside (dev#623).
+  const markInside = useOutsideClick(wrapperRef, close, open);
 
   const menuRef = useRef<HTMLDivElement>(null);
   /** Set by a keyboard press on the trigger, so the open that follows moves focus into
@@ -290,6 +291,10 @@ export function HoverMenu({
       className={cn("relative", className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onPointerDownCapture={(e) => {
+        rest.onPointerDownCapture?.(e);
+        markInside(e);
+      }}
       onKeyDown={(e) => {
         // The caller's handler sees Escape only while this menu is the layer on top: a
         // tooltip on one of its rows takes that press first (round 0.35 R2, the rule

@@ -83,7 +83,10 @@ const ROWS: FeedbackRecord[] = [
     id: 45,
     user_id: 2,
     user_email: "user@example.test",
-    title: "[crash] TypeError: x is undefined",
+    // Long, as a real crash title is (0.48, keksdose live #451): the Subject column grows
+    // into the rest of the row and ellipsises it rather than widening the table.
+    title:
+      "[crash] TypeError: Cannot read properties of undefined (reading 'map') in ImportReviewTable while rendering the statement review after an upload",
     category: "CRASH",
     status: "IN_PROGRESS",
     context: { route: "/imports", boundary: "page", occurrences: 3, auto_reported: true },
@@ -226,7 +229,10 @@ export function FeedbackTable027Demo() {
           {code("FeedbackMobileCard")} draws both chips itself: {code("DataTable")} never renders the{" "}
           {code("mobilePrimary")} cell when {code("mobileCard")} is set, which is how keksdose&apos;s cards lost
           them. The eye at the bottom corner (phone, inbox only) narrows to In evaluation + Test when live. An app
-          adds {code('urlSync storageKey="feedback"')}, its {code("?row=")} deep link and the row detail.
+          adds {code('urlSync storageKey="feedback"')}, its {code("?row=")} deep link and the row detail. Since
+          0.48 the table fits its own width: Subject {code("grow")}s and ellipsises, and a narrow table leaves out
+          URL, then Email, then Resolved ({code("fitPriority")}) — the Columns rail counts what is drawn and marks
+          those “hidden for width”.
         </Note>
       </div>
       <Note>Since 0.27.</Note>

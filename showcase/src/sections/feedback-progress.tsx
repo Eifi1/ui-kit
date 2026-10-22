@@ -6,6 +6,7 @@ import {
   EmptyState,
   ProgressBar,
   Skeleton,
+  TableSkeleton,
   Spinner,
   alertFrameClass,
   toneFrameClass,
@@ -277,6 +278,29 @@ function SkeletonDemo() {
           two thirds, so the block reads as a paragraph rather than a table. The pulse stops under
           reduced motion. The same look is the loading state inside{" "}
           <code className="font-mono">StatTile</code>, so a tile wall and a list beside it pulse alike.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+function TableSkeletonDemo() {
+  return (
+    <Example
+      label="TableSkeleton — a table or list while it loads"
+      hint="one role=status “Loading…”, every bar aria-hidden; the figures go under the name on a phone"
+    >
+      <div className="space-y-5" data-testid="table-skeleton-demo">
+        <TableSkeleton tiles={3} heading rows={3} columns={2} />
+        <TableSkeleton groups={2} rows={3} columns={4} />
+        <TableSkeleton variant="grid" rows={4} columns={13} heading />
+      </div>
+      <div className="mt-3">
+        <Note>
+          <code className="font-mono">rows</code> × <code className="font-mono">columns</code>, with{" "}
+          <code className="font-mono">tiles</code> above, <code className="font-mono">groups</code> of rows under
+          header bars, or <code className="font-mono">variant=&quot;grid&quot;</code> for a heatmap. Reduced motion
+          keeps the shapes and drops the pulse.
         </Note>
       </div>
     </Example>
@@ -578,6 +602,7 @@ export function FeedbackProgress() {
       <ProgressMeter />
       <ProgressTonesSizes />
       <SkeletonDemo />
+      <TableSkeletonDemo />
       <EmptyStateDemo />
       <EmptyStateRich />
       <AlertTonesDemo />

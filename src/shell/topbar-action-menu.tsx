@@ -6,6 +6,7 @@ import { HoverMenu, type HoverMenuProps } from "../components/hover-menu";
 import { MenuItem } from "../components/menu-item";
 import type { MenuItemTone } from "../components/menu-item";
 import { StatusDot } from "../components/status-dot";
+import { Tooltip } from "../components/tooltip";
 import type { UserAvatarBadge } from "../components/user-avatar";
 import { TOPBAR_TRIGGER_CLASS } from "./topbar-controls";
 
@@ -296,16 +297,27 @@ export function TopBarActionMenu({
       trigger={({ open, toggle, close }) => {
         // One element for both kinds: the router's link when `href` is set, else the
         // kit's button. Same classes and face either way.
-        const control = (className: string, children: ReactNode, label?: string) =>
-          href ? (
-            <Link {...triggerAttributes} to={href} onClick={close} aria-label={label} className={className}>
-              {children}
-            </Link>
-          ) : (
-            <button {...triggerAttributes} type="button" onClick={toggle} aria-label={label} className={className}>
-              {children}
-            </button>
-          );
+        //
+        // Its name in the kit's Tooltip on hover and focus (0.48, keksdose dev#610): an
+        // icon alone told a sighted user nothing the screen reader was told. In a
+        // fragment, as IconButton does it, so the bubble is not the trigger's
+        // `aria-describedby` — the name it repeats is the trigger's own, and a reader
+        // would hear it twice. Portalled, like the top bar's other triggers.
+        const control = (className: string, children: ReactNode, label?: string) => (
+          <Tooltip label={ariaLabel} portal>
+            <>
+              {href ? (
+                <Link {...triggerAttributes} to={href} onClick={close} aria-label={label} className={className}>
+                  {children}
+                </Link>
+              ) : (
+                <button {...triggerAttributes} type="button" onClick={toggle} aria-label={label} className={className}>
+                  {children}
+                </button>
+              )}
+            </>
+          </Tooltip>
+        );
         if (trigger) {
           return control(
             cn(TOPBAR_TRIGGER_CLASS, "relative", triggerClassName),

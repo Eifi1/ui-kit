@@ -3,6 +3,7 @@ import type {
   ComponentPropsWithoutRef,
   ComponentPropsWithRef,
   KeyboardEvent as ReactKeyboardEvent,
+  PointerEvent as ReactPointerEvent,
   ReactNode,
   Ref,
   RefObject,
@@ -10,7 +11,7 @@ import type {
 import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
 import { anchoredInline, useAnchoredPanel } from "../hooks/use-anchored-panel";
-import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
+import { pressInside, runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import type { DismissLayer } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
@@ -371,6 +372,13 @@ export function DropdownPanel({
     runOwnKeyDown(e, onKeyDown, panelRef && listLayers.get(panelRef));
     takeEscape(e);
   };
+  // A press in a panel opened from a row (a popover, its lists) is inside the list for
+  // `useDropdown`'s outside press, though portalled elsewhere (dev#623).
+  const markInside = pressInside(panelRef);
+  const handlePointerDownCapture = (e: ReactPointerEvent<HTMLDivElement>) => {
+    rest.onPointerDownCapture?.(e);
+    markInside?.(e);
+  };
   const body = (
     <>
       {header}
@@ -399,6 +407,7 @@ export function DropdownPanel({
         style={style}
         ref={setPanel}
         onKeyDown={handleKeyDown}
+        onPointerDownCapture={handlePointerDownCapture}
         className={cn(
           "absolute z-30 mt-1 rounded-md border border-subtle bg-surface shadow-lg",
           "[&>ul]:max-h-64",
@@ -425,6 +434,7 @@ export function DropdownPanel({
       ref={setPanel}
       dir={dir}
       onKeyDown={handleKeyDown}
+      onPointerDownCapture={handlePointerDownCapture}
       // The caller's `style` is kept underneath, but the placement is measured rather
       // than chosen (dev#548: an `overflow` ancestor clipped a third of this panel
       // away), so these values are the panel's own. Flipped above, it hangs from its

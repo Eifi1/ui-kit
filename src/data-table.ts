@@ -30,6 +30,8 @@ export type {
 // 0.46.1 (keksdose N3): a swipe plan as `RowActions`' actions — the desktop column's own
 // derivation, for an app's hand-built actions column.
 export { swipePlanRowActions } from "./components/data-table-row-actions";
+// 0.48 (keksdose dev #605): a `groupBy` level (also `mobileGroupBy`'s) and the `loadMore` footer.
+export type { DataTableGroupBy, DataTableLoadMore } from "./components/data-table-groups";
 export * from "./components/data-table-cells";
 export { useTableUrlState, readTableUrlState } from "./components/use-table-state";
 export type {

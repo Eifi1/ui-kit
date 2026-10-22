@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DataTable } from "../../components/data-table";
 import type { DataTableColumn } from "../../components/data-table";
+import { GROW_PEER_CELL_CLASS } from "../../components/data-table-fit";
 import type { RoleVocabulary } from "../../components/account-chips";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import {
@@ -90,9 +91,13 @@ afterEach(() => {
 
 const OWNED: DataTableColumn<Row> = { key: "owned", header: "Owned", cell: (r) => String(r.owned) };
 
-function Roster(props: Partial<UserRosterColumnsOptions<Row, Role>> & { rows?: Row[]; locale?: string }) {
-  const { rows = [ADA, BEN, CY], locale, ...options } = props;
-  const columns = userRosterColumns<Row, Role>({ roles: ROLES, extra: [OWNED], ...options });
+function Roster(
+  props: Partial<UserRosterColumnsOptions<Row, Role>> & { rows?: Row[]; locale?: string; grow?: string },
+) {
+  const { rows = [ADA, BEN, CY], locale, grow, ...options } = props;
+  const columns = userRosterColumns<Row, Role>({ roles: ROLES, extra: [OWNED], ...options }).map((c) =>
+    c.key === grow ? { ...c, grow: true } : c,
+  );
   return (
     <UiKitProvider locale={locale}>
       <MemoryRouter>
@@ -133,6 +138,27 @@ describe("userRosterColumns", () => {
       "deletion",
     );
     expect(within(cy).queryByText("Inactive")).not.toBeInTheDocument();
+  });
+
+  it("lets a row's chips stack beside a `grow` column; its text cells keep one line (kastlan S1, 0.48 review 2)", () => {
+    // 0.48's first fix held the chip rows to one line too: "Active" and "Not verified"
+    // side by side widened Status, and kastlan's roster (583px admin pane, both
+    // `fitPriority` columns out, Name at its 10rem floor) scrolled 21px at 1280px. A row
+    // of badges reads as well stacked, so it wraps again.
+    stubViewport(true);
+    render(<Roster grow="name" />);
+    const ben = screen.getByRole("row", { name: /Ben Sample/ });
+    const states = within(ben).getByText("Unverified").closest("[data-state]")!.parentElement!;
+    expect(states).toHaveClass("flex-wrap");
+    expect(states.className).not.toMatch(/flex-nowrap/);
+    const role = within(ben).getByText("Member").closest("[data-role]")!.parentElement!;
+    expect(role).toHaveClass("flex-wrap");
+    expect(role.className).not.toMatch(/flex-nowrap/);
+    expect(screen.getByRole("table")).toHaveAttribute("data-fit-grow");
+    // last_login / created: one line from the cell's own nowrap.
+    expect(within(ben).getAllByRole("cell").find((c) => c.dataset.col === "last_login")).toHaveClass(
+      GROW_PEER_CELL_CLASS,
+    );
   });
 
   it("writes the name in the reader's order", () => {

@@ -135,8 +135,9 @@ describe("the top-bar search", () => {
     act(() => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
     });
-    // The empty query shows the "Try" list.
-    expect(await screen.findByRole("group", { name: "Try" })).toBeInTheDocument();
+    // The empty query shows the "Try" list. The palette is lazy: under a loaded full run its chunk
+    // can take longer than findBy's 1 s default to arrive.
+    expect(await screen.findByRole("group", { name: "Try" }, { timeout: 10_000 })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /ask before deleting/ })).toBeInTheDocument();
 
     const [slug, labels] = Object.entries(PAGE_EXAMPLE_LABELS).find(([s]) => s === "popovers")!;

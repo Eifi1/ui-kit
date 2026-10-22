@@ -21,6 +21,58 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.48.0](https://github.com/Eifi1/ui-kit/compare/v0.47.0...v0.48.0) (2026-10-21)
+
+Round 0.48, keksdose run 83 (Marcel's live reports #451, #410, #450, #603) and the 0.47 build
+reviews. It removes `TabsLabels.backToFirst`, deprecated in 0.47: **breaking** for a build that
+still names it, which no app does. Six changes show on a plain bump:
+
+- A list opened inside a `Popover` (a select, a combobox, a date picker) no longer closes it
+  (keksdose dev #623).
+- The top-bar menu triggers name themselves in the kit's Tooltip on hover and focus (dev #610).
+- On a phone `AppShell` pads `<main>` past a floating launcher, so the last row stays reachable
+  (keksdose dev #612; only an app with a launcher: keksdose).
+- The `Tabs` cues are bare chevrons beside the strip (24px, a 48px hit area), each in a
+  fixed gutter kept at both ends while the strip overflows, so scrolling never moves the labels.
+- A `Disclosure` with no children (or an empty fragment) draws no body.
+- The kit's feedback columns fit the table's width: Subject grows, URL, Email and Resolved
+  leave first (and come back once they fit), and the Columns panel counts what is drawn.
+
+Opt-in: a column's `grow` and `fitPriority`, `SettingsGroup.badge` with `adminSections`'
+badges, and `DataTable`'s `leadingRowSticky`.
+
+The server half ships as server-kit 0.19.0, which breaks only a test helper:
+`check_comment_store` requires the app's `attachment_url`. Per-app steps: `docs/adopt-0.48.md`.
+
+### ⚠ BREAKING CHANGES
+
+* TabsLabels.backToFirst is removed (deprecated in 0.47; no app uses it).
+
+### Added
+
+* tables fit their width, bare tab cues, group badges, a sticky leading row ([b183b3a](https://github.com/Eifi1/ui-kit/commit/b183b3a2ad9d33e792b0cad773503c48e01667b3))
+* **shell,floating-panel:** below `md` `AppShell` pads `<main>` past the floating launchers: every `FloatingActionButton`, `FloatingPanel` and `FloatingActionGroup` publishes its room above the nav as `--app-float-clearance` while mounted (the largest wins), and `FloatingPanel` takes `hidden` to step aside while keeping its room and open state (keksdose dev #612; shows on a plain bump for an app with a launcher) ([7332f66](https://github.com/Eifi1/ui-kit/commit/7332f665e8b8244b85cf6c3f5bd045874acdcffe))
+* **tour:** the overlay's root carries `data-tour-overlay` on every step (keksdose dev #611) ([7332f66](https://github.com/Eifi1/ui-kit/commit/7332f665e8b8244b85cf6c3f5bd045874acdcffe))
+* **alert-banner:** `clampMobile` keeps the message to one line below `md` with a More / Less toggle (`common.showMore` / `common.showLess`, seven catalogues) (keksdose dev #611) ([7332f66](https://github.com/Eifi1/ui-kit/commit/7332f665e8b8244b85cf6c3f5bd045874acdcffe))
+* **shell:** `AppShellNavItem.shortLabelFrom` uses `shortLabel` on the phone bar only from that text size up (keksdose dev #613) ([7332f66](https://github.com/Eifi1/ui-kit/commit/7332f665e8b8244b85cf6c3f5bd045874acdcffe))
+* **data-table:** a column's `defaultHidden` starts it hidden while the saved view has no entry for it; the user's choice in the Columns panel wins (keksdose dev #617) ([aa28ef2](https://github.com/Eifi1/ui-kit/commit/aa28ef2787d2b95830ef59a1bf99c239aa8cf730))
+* **skeleton:** `TableSkeleton`, a table/list loading preset (rows × columns, groups, a tile row, a grid variant) with one "Loading…" status (keksdose dev #628) ([aa28ef2](https://github.com/Eifi1/ui-kit/commit/aa28ef2787d2b95830ef59a1bf99c239aa8cf730))
+* **alert-banner:** `actionPlacement="flow"` keeps a box's action on the message's line on a phone while the message keeps 10rem, else at the end of the next line (keksdose dev #623) ([aa28ef2](https://github.com/Eifi1/ui-kit/commit/aa28ef2787d2b95830ef59a1bf99c239aa8cf730))
+* **shell:** `TopBarActionMenu`'s trigger (the feedback, avatar and tours menus), `OptionSwitcherMenu` and `ThemeToggle` show their name in the kit's Tooltip on hover and focus, without describing the trigger by its own name (keksdose dev #610) ([aa28ef2](https://github.com/Eifi1/ui-kit/commit/aa28ef2787d2b95830ef59a1bf99c239aa8cf730))
+* **hooks:** `useOutsideClick` returns an `onPointerDownCapture` that makes every press through that element's React tree, portals included, an inside press ([aa28ef2](https://github.com/Eifi1/ui-kit/commit/aa28ef2787d2b95830ef59a1bf99c239aa8cf730))
+* **data-table:** `groupBy` groups the desktop rows under full-width bands in one or two levels (period → day): a row header (`<th scope="rowgroup">`) opening its own `<tbody>`, spanning the visible columns, with a label and an end slot; sticky and stacked under the header (and a sticky `leadingRow`), also under `fillHeight`; `mobileGroupBy` takes the same level object (keksdose dev #605) ([27e7463](https://github.com/Eifi1/ui-kit/commit/27e7463589bd888c7021d11fda8e99ece82815a9))
+* **data-table:** `loadMore` replaces the pager (client or server) with a footer that loads the next slice as it scrolls into view, once per row count and never while `loading`, plus an app-named button for the keyboard ("Load August 2026") and an end line; `dataTable.loadMore` / `allLoaded` in seven catalogues (keksdose dev #605) ([27e7463](https://github.com/Eifi1/ui-kit/commit/27e7463589bd888c7021d11fda8e99ece82815a9))
+
+### Fixed
+
+* **data-table,tabs,disclosure:** the 0.48 build reviews ([ea85513](https://github.com/Eifi1/ui-kit/commit/ea85513b0729ddfa23dbbce08158bc6f406401be))
+* **data-table:** beside a `grow` column the other cells keep one line at Normal, the `grow` column keeps 10rem once nothing is left to leave out, and the feedback columns leave out Votes and Category last ([7332f66](https://github.com/Eifi1/ui-kit/commit/7332f665e8b8244b85cf6c3f5bd045874acdcffe))
+* **user-roster:** the state and role chip rows wrap again beside a `grow` column (held to one line they scrolled kastlan's admin roster 21px at 1280px) ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
+* **feedback:** the User column is at most 12rem, one line with an ellipsis and the full value in its `title` ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
+* **tabs:** the `overflowCue` gutters are 24px at every text size (1.5rem left a 360px phone's strip 154 of 226px at Extra large) ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
+* **verify-email:** `EmailVerificationBanner` takes `clampMobile`, with the resend's outcome after "Send again", outside the clamp ([4874f65](https://github.com/Eifi1/ui-kit/commit/4874f65c2b5c501e2e59ecac59a2db7b0cb131d0))
+* **popover,hover-menu,dropdown,combobox:** a press on a portalled panel opened from inside — a `CurrencySelect`'s list in a `Popover`, at any depth — no longer closes the owner as an outside press, so the choice lands (keksdose dev #623) ([aa28ef2](https://github.com/Eifi1/ui-kit/commit/aa28ef2787d2b95830ef59a1bf99c239aa8cf730))
+
 ## [0.47.0](https://github.com/Eifi1/ui-kit/compare/v0.46.1...v0.47.0) (2026-10-21)
 
 Round 0.47, the three 0.46 build reviews plus keksdose live #447 (feedback §12), #410 and dev

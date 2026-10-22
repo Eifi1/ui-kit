@@ -358,6 +358,14 @@ export interface EmailVerificationBannerProps {
   children?: ReactNode;
   className?: string;
   labels?: LabelOverride<VerifyEmailLabels>;
+  /**
+   * 0.48: on a phone hold the message to one line with a More / Less toggle —
+   * {@link AlertBanner}'s `clampMobile`, passed through (kastlan S2: its banner took ~110px
+   * of a 390px phone). The resend's outcome ("Sent", the error) then moves out of the
+   * message to sit after "Send again", at every width, so the line that answers the press
+   * is never hidden behind "More". Default `false`: the outcome stays in the message.
+   */
+  clampMobile?: boolean;
 }
 
 /**
@@ -379,28 +387,45 @@ export function EmailVerificationBanner({
   children,
   className,
   labels: labelsProp,
+  clampMobile = false,
 }: EmailVerificationBannerProps) {
   const labels = useKitLabels("verifyEmail", DEFAULT_VERIFY_EMAIL_LABELS, labelsProp);
   const resend = useResend(onResend, cooldown);
+  // One live region either way, mounted from the start (a region added later is often not
+  // read out): in the message, or — clamped — after the button, outside the clamp.
+  const status = (
+    <ResendStatus
+      phase={resend.phase}
+      error={resend.error}
+      describeError={describeError}
+      labels={labels}
+      className="font-medium"
+    />
+  );
+  const button = <ResendButton state={resend} labels={labels} variant="secondary" />;
   return (
     <AlertBanner
       tone="warning"
       variant={variant}
       icon={<MailWarning />}
-      action={<ResendButton state={resend} labels={labels} variant="secondary" />}
+      action={
+        clampMobile ? (
+          <>
+            {button}
+            {status}
+          </>
+        ) : (
+          button
+        )
+      }
       onDismiss={onDismiss}
       dismissLabel={onDismiss ? labels.dismiss : undefined}
+      clampMobile={clampMobile}
       className={className}
     >
       {labels.banner}
-      {children != null && children !== false && <> {children}</>}{" "}
-      <ResendStatus
-        phase={resend.phase}
-        error={resend.error}
-        describeError={describeError}
-        labels={labels}
-        className="font-medium"
-      />
+      {children != null && children !== false && <> {children}</>}
+      {!clampMobile && <> {status}</>}
     </AlertBanner>
   );
 }

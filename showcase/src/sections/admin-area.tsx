@@ -282,6 +282,8 @@ export function AdminArea042Demo() {
     ],
     {
       leaveOut: ["billing"],
+      // 0.48: the waiting work on the row of the section that holds it.
+      badges: { overview: <AdminWaitingBadge count={3} /> },
     },
   );
   // 0.43: the overview needs no entry of its own (it is `standalone`).
@@ -387,7 +389,9 @@ export function AdminArea042Demo() {
         without {code("href")} is a quiet count, a failed answer shows{" "}
         {code("error")} with &ldquo;Try again&rdquo;, and{" "}
         {code("adminSectionOrder(own, { leaveOut })")} gives the ids alone:{" "}
-        {order.join(", ")}.
+        {order.join(", ")}. Since 0.48 a group&apos;s {code("badge")} sits on its row in the
+        sidebar and the phone list — here {code("badges: { overview: <AdminWaitingBadge /> }")},
+        so the account menu&apos;s count leads to the section that holds the work.
       </Note>
     </Example>
   );

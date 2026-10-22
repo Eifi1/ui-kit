@@ -17,6 +17,7 @@ import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { dirOf, type Direction } from "../lib/direction";
 import { registerFloating } from "../lib/floating-stack";
+import { useFloatClearance } from "../lib/float-clearance";
 import { isComposing } from "../lib/ime";
 import { takeEscape } from "../hooks/use-dismiss";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
@@ -179,6 +180,11 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
  *
  * While mounted it reports its box (`lib/floating-stack.ts`), so `ServerWakeNotice`
  * stacks above it rather than over it.
+ *
+ * 0.48: while mounted, `hidden` or not, it also publishes the room it takes above the
+ * nav (`offset` + 3rem + a 0.5rem gap) as `--app-float-clearance` on `<html>` (the
+ * largest of several wins), and `AppShell` pads its `<main>` past it on a phone, so the
+ * page's last row no longer ends under the button (keksdose dev#612).
  */
 export function FloatingActionButton({
   label,
@@ -206,6 +212,10 @@ export function FloatingActionButton({
   // The fixed element — the button, or the wrapper when there is a tooltip.
   const [fixed, setFixed] = useState<HTMLElement | null>(null);
   useEffect(() => (fixed ? registerFloating(fixed) : undefined), [fixed]);
+  // The room it takes above the nav, for AppShell's <main> to pad past (keksdose
+  // dev#612). Hidden too: the room is the launcher's while it is mounted, so the page
+  // does not change length under the reader as it hides and shows.
+  useFloatClearance(offset);
   const buttonRef = useCallback(
     (node: HTMLButtonElement | null) => {
       assignRef(ref, node);
@@ -332,6 +342,14 @@ export interface FloatingPanelProps {
   className?: string;
   /** Extra classes for the scrolling body. */
   bodyClassName?: string;
+  /**
+   * 0.48: take the FAB and the panel off screen while keeping both mounted — the open
+   * state and the bottom room (`--app-float-clearance`) stay, and an open panel is back
+   * when this turns `false`. keksdose's assistant launcher steps aside while an editor
+   * or a modal covers its corner (dev#612); unmounting it instead would give the room
+   * back and shorten the page under the reader's thumb.
+   */
+  hidden?: boolean;
   children: ReactNode;
 }
 
@@ -382,6 +400,7 @@ export function FloatingPanel({
   initialFocus,
   className,
   bodyClassName,
+  hidden = false,
   children,
 }: FloatingPanelProps) {
   const labels = useKitLabels(
@@ -457,8 +476,9 @@ export function FloatingPanel({
         offset={offset}
         nativeTitle={fabNativeTitle}
         tooltip={fabTooltip}
+        hidden={hidden || undefined}
         aria-expanded={open}
-        aria-controls={open ? panelId : undefined}
+        aria-controls={open && !hidden ? panelId : undefined}
         onClick={() => {
           // A press ON the FAB closing the panel: the FAB keeps focus by being clicked,
           // nothing to hand back.
@@ -467,6 +487,7 @@ export function FloatingPanel({
         }}
       />
       {open &&
+        !hidden &&
         typeof document !== "undefined" &&
         createPortal(
           // A container for Escape bubbling up from anything inside it, as a dialog is.
@@ -572,6 +593,8 @@ export function FloatingActionGroup({
   ...rest
 }: FloatingActionGroupProps) {
   const [marker, dir] = usePortalDir();
+  // As the FAB's (keksdose dev#612): its 3rem members plus the frame's 1px borders.
+  useFloatClearance(offset, "2px");
   return (
     <>
       <span ref={marker} hidden />

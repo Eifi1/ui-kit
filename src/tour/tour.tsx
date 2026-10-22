@@ -615,6 +615,11 @@ function TourOverlay({
       className={cn("pointer-events-none fixed inset-0", interactive ? "z-[45]" : "z-[60]")}
       role="dialog"
       aria-modal={interactive ? undefined : "true"}
+      // A stable marker for the overlay, on every step (0.48, keksdose dev#611–613): an
+      // app that hides its floating help launcher while a modal is open excepts the
+      // tour, which may spotlight that launcher — `[aria-modal="true"]:not([data-tour-overlay])`.
+      // keksdose matched the `pointer-events-none` class until now, which is the kit's to change.
+      data-tour-overlay=""
       data-tour-interactive={interactive ? "" : undefined}
       aria-label={step.title}
       dir={dir}

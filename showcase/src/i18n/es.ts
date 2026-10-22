@@ -983,6 +983,8 @@ export const es: Dictionary = {
       "ocultar o reordenar columnas",
       "cuadrícula de datos",
       "buscar en una tabla",
+      "agrupar filas de una tabla por mes con totales",
+      "cargar más filas al desplazarse",
     ],
     "data-table-server": [
       "paginación en el servidor",

@@ -886,7 +886,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "How far a job has got, that content is on its way, that there is nothing here, and that something needs reading: progress bars and meters, skeletons, empty states and banners.",
         icon: Loader,
-        components: ["ProgressBar", "Skeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass", "toast", "Toaster", "LoadingState", "ErrorBoundary", "ServerWakeNotice"],
+        components: ["ProgressBar", "Skeleton", "TableSkeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass", "toast", "Toaster", "LoadingState", "ErrorBoundary", "ServerWakeNotice"],
         Body: () => (
           <>
             <FeedbackProgress />

@@ -175,7 +175,8 @@ export function useColumnResize<T>({
       const next: Record<string, number> = {};
       const cols = columns.filter((c) => !hiddenCols.has(c.key));
       cols.forEach((col, idx) => {
-        if (idx === cols.length - 1) return;
+        // A `grow` column takes the rest by design: pinning it would undo that (0.48).
+        if (idx === cols.length - 1 || col.grow) return;
         const th = headRefs.get(col.key);
         if (th) next[col.key] = Math.ceil(th.getBoundingClientRect().width);
       });

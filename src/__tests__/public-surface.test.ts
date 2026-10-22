@@ -290,7 +290,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // automatic only (§10.3), the time-zone-select module is gone with its `deviceTimeZone` alias.
   // 0.47.0 (+3, keksdose N17): `RowActionsHead`, `ROW_ACTIONS_CELL_CLASS`,
   // `ROW_ACTIONS_HEAD_CLASS` — a hand-built table's actions heading and cell.
-  ["@eifi1/ui-kit", barrel, 990],
+  // 0.48.0 (+1, keksdose dev #628): `TableSkeleton`, the table/list loading preset.
+  ["@eifi1/ui-kit", barrel, 991],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

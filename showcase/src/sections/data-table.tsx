@@ -30,6 +30,7 @@ import type {
   SortCycle,
   SortState,
   DataTableRowAction,
+  DataTableGroupBy,
 } from "@eifi1/ui-kit";
 import { Example, Note, NO_ROUTER, OutTable, Row, code, READOUT } from "../lib/section";
 import {
@@ -78,6 +79,7 @@ function DataTableSection() {
       <PrivateCellsTable />
       <FillHeightTable />
       <ListPageTable />
+      <PeriodGroupsTable />
       <RtlTable />
     </>
   );
@@ -178,6 +180,8 @@ function MainTable() {
               : `Hide ${ARCHIVED_COUNT} archived rows`}
           </button>
         }
+        // 0.48: the toggle stays under the header while the rows scroll beneath it.
+        leadingRowSticky
         selection={{
           isSelectable,
           isSelected: (r) => selected.has(r.id),
@@ -959,6 +963,176 @@ function ListPageTable() {
           window — the page keeps the header and that much body, and{" "}
           <code className="font-mono">&lt;main&gt;</code> scrolls instead of leaving a slit of
           rows. On a phone nothing fills: the page scrolls as one, the card list in its flow.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── period groups and load more (0.48, keksdose dev #605) ─────────────────── */
+
+interface LedgerRow {
+  id: number;
+  date: string;
+  payee: string;
+  category: string;
+  amount: number;
+}
+
+const LEDGER_PAYEES: Array<[payee: string, category: string, min: number, max: number]> = [
+  ["Migros", "Groceries", -180, -8],
+  ["Coop", "Groceries", -140, -6],
+  ["SBB", "Transport", -96, -3],
+  ["Swisscom", "Phone", -79, -49],
+  ["Digitec", "Electronics", -420, -25],
+  ["Café Sprüngli", "Eating out", -38, -6],
+  ["Freelance client", "Income", 300, 2400],
+  ["Refund", "Income", 12, 140],
+];
+const LEDGER_MONTHS = ["2026-09", "2026-08", "2026-07"] as const;
+const MONTH_NAME: Record<string, string> = { "2026-09": "September 2026", "2026-08": "August 2026", "2026-07": "July 2026" };
+
+/** ~200 rows over three months, newest first, the same every load (a seeded walk). */
+const LEDGER: LedgerRow[] = (() => {
+  let seed = 605;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  const rows: LedgerRow[] = [];
+  for (const month of LEDGER_MONTHS) {
+    const days = month === "2026-09" ? 30 : 31;
+    for (let d = days; d >= 1; d--) {
+      const date = `${month}-${String(d).padStart(2, "0")}`;
+      const n = 1 + Math.floor(rand() * 3.4);
+      for (let i = 0; i < n; i++) {
+        const [payee, category, min, max] = LEDGER_PAYEES[Math.floor(rand() * LEDGER_PAYEES.length)];
+        rows.push({ id: rows.length + 1, date, payee, category, amount: Math.round((min + rand() * (max - min)) * 20) / 20 });
+      }
+      if (d === 25) rows.push({ id: rows.length + 1, date, payee: "Employer AG", category: "Salary", amount: 8200 });
+    }
+  }
+  return rows;
+})();
+
+const CHF = new Intl.NumberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" });
+const DAY_FMT = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
+
+/** "176 · +8’782.30 · −3’200.10": the count, what came in, what went out. */
+function bandTotals(rows: LedgerRow[]) {
+  const income = rows.reduce((s, r) => (r.amount > 0 ? s + r.amount : s), 0);
+  const spent = rows.reduce((s, r) => (r.amount < 0 ? s + r.amount : s), 0);
+  return `${rows.length} · ${CHF.format(income)} · ${CHF.format(spent).replace("-", "−")}`;
+}
+
+const LEDGER_PERIOD: DataTableGroupBy<LedgerRow> = {
+  key: (r) => r.date.slice(0, 7),
+  label: (k) => MONTH_NAME[k] ?? k,
+  // The month's totals over ALL its rows — the app's own figure, not just the loaded rows.
+  end: (k) => bandTotals(LEDGER.filter((r) => r.date.startsWith(k))),
+};
+const LEDGER_DAY: DataTableGroupBy<LedgerRow> = {
+  key: (r) => r.date,
+  label: (k) => DAY_FMT.format(new Date(`${k}T12:00:00`)),
+  end: (_k, rows) => bandTotals(rows),
+};
+
+const LEDGER_COLUMNS: DataTableColumn<LedgerRow>[] = [
+  { key: "date", header: "Date", cell: (r) => r.date, className: "whitespace-nowrap tabular-nums" },
+  { key: "payee", header: "Payee", cell: (r) => r.payee, grow: true },
+  { key: "category", header: "Category", cell: (r) => r.category },
+  {
+    key: "amount",
+    header: "Amount",
+    cell: (r) => CHF.format(r.amount).replace("-", "−"),
+    className: "text-end tabular-nums whitespace-nowrap",
+    headClassName: "text-end",
+  },
+];
+
+function PeriodGroupsTable() {
+  const [months, setMonths] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [twoLevels, setTwoLevels] = useState(true);
+  const [stickyLead, setStickyLead] = useState(true);
+  const [loads, setLoads] = useState(0);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const rows = useMemo(() => {
+    const shown = new Set<string>(LEDGER_MONTHS.slice(0, months));
+    return LEDGER.filter((r) => shown.has(r.date.slice(0, 7)));
+  }, [months]);
+  const next = LEDGER_MONTHS[months];
+  return (
+    <Example
+      label="Period groups and load more — groupBy, loadMore"
+      hint={
+        <>
+          {code("groupBy")} in two levels (month → day) with sticky, stacked bands and their end
+          slots; {code("loadMore")} in place of the pager, loading the next month as the footer
+          scrolls into view — or by its button. Inside {code("fillHeight")}.
+        </>
+      }
+    >
+      <Row>
+        <Switch label="Day bands under the month" checked={twoLevels} onCheckedChange={setTwoLevels} />
+        <Switch label="Sticky leading row" checked={stickyLead} onCheckedChange={setStickyLead} />
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            window.clearTimeout(timer.current);
+            setMonths(1);
+            setLoads(0);
+            setLoading(false);
+          }}
+        >
+          Start over
+        </Button>
+      </Row>
+      <div className="mt-3 flex h-[32rem] flex-col rounded-md border border-dashed border-subtle p-2" data-demo="period-groups">
+        <DataTable
+          rows={rows}
+          columns={LEDGER_COLUMNS}
+          rowKey={(r) => r.id}
+          groupBy={twoLevels ? [LEDGER_PERIOD, LEDGER_DAY] : LEDGER_PERIOD}
+          mobileGroupBy={LEDGER_PERIOD}
+          leadingRow={<div className="px-3 py-1.5 text-xs text-secondary">3 upcoming transactions (hidden)</div>}
+          leadingRowSticky={stickyLead}
+          paginated={false}
+          fillHeight
+          labels={{ table: "Transactions by month" }}
+          loadMore={{
+            hasMore: !!next,
+            loading,
+            label: next ? `Load ${MONTH_NAME[next]}` : undefined,
+            endLabel: "No older transactions",
+            onLoadMore: () => {
+              setLoading(true);
+              setLoads((n) => n + 1);
+              timer.current = window.setTimeout(() => {
+                setMonths((m) => Math.min(LEDGER_MONTHS.length, m + 1));
+                setLoading(false);
+              }, 600);
+            },
+          }}
+        />
+      </div>
+      <p className={READOUT} data-demo="period-loads">
+        {rows.length} of {LEDGER.length} rows · {loads} {loads === 1 ? "load" : "loads"}
+      </p>
+      <div className="mt-3">
+        <Note>
+          keksdose dev #605 (its docs/transactions-by-period.md §6). Each band is a row header
+          ({code("<th scope=\"rowgroup\">")}) opening its own {code("<tbody>")}, spanning the
+          visible columns; the month band sticks under the header (and under a sticky leading
+          row), the day band under the month, and a new month covers the day still pinned
+          above it. The month&apos;s end slot is the app&apos;s total over the whole month; the
+          day&apos;s is over its rows. The same level drives the phone&apos;s sections:{" "}
+          {code("mobileGroupBy={period}")}.
+        </Note>
+        <Note>
+          The footer is observed: it calls {code("onLoadMore")} once as it nears the view, not
+          again while {code("loading")} or until the rows arrive. The button is there for the
+          keyboard — Tab reaches it after the rows — and says what it loads; at the end the
+          app&apos;s {code("endLabel")} (default “All rows loaded”).
         </Note>
       </div>
     </Example>

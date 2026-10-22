@@ -17,6 +17,8 @@ export function ColumnSettingsPanel<T>({
   columns,
   hiddenCols,
   setHiddenCols,
+  autoHidden,
+  keepColumn,
   showSettings,
   setShowSettings,
   columnsCountLabel,
@@ -27,6 +29,11 @@ export function ColumnSettingsPanel<T>({
   columns: DataTableColumn<T>[];
   hiddenCols: Set<string>;
   setHiddenCols: Dispatch<SetStateAction<Set<string>>>;
+  /** The columns the table's width leaves out (`fitPriority`, 0.48): unticked, and
+   *  marked "hidden for width". */
+  autoHidden: Set<string>;
+  /** A tick keeps a column in whatever the width; an untick drops that (data-table-fit.ts). */
+  keepColumn: (key: string, on: boolean) => void;
   showSettings: boolean;
   setShowSettings: (open: boolean) => void;
   /** "Columns (n/m)", the rail's text and name. */
@@ -102,7 +109,10 @@ export function ColumnSettingsPanel<T>({
           <div className="flex flex-col gap-0.5">
             {columns.map((col) => {
               if (isTableOwnColumn(col.key)) return null;
-              const checked = !hiddenCols.has(col.key);
+              // Ticked = drawn: a column left out for width is unticked, so the boxes
+              // and "Columns (8/10)" say the same (keksdose live #451).
+              const forWidth = !hiddenCols.has(col.key) && autoHidden.has(col.key);
+              const checked = !hiddenCols.has(col.key) && !forWidth;
               const headerLabel = columnLabel(col);
               return (
                 <label
@@ -114,6 +124,7 @@ export function ColumnSettingsPanel<T>({
                     className="size-3.5 shrink-0"
                     checked={checked}
                     onChange={(e) => {
+                      keepColumn(col.key, e.target.checked);
                       setHiddenCols((s) => {
                         const next = new Set(s);
                         if (e.target.checked) next.delete(col.key);
@@ -125,7 +136,17 @@ export function ColumnSettingsPanel<T>({
                   {/* The panel is `w-56`: a long column name wraps from Large up rather
                       than reading "Accoun…" beside its box (text size §10.17, round
                       0.34 T1). */}
-                  <span className="min-w-0 truncate-until-large">{headerLabel}</span>
+                  {forWidth ? (
+                    // Under the name, as part of the box's name: "Email, hidden for width".
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate-until-large">{headerLabel}</span>
+                      <span className="text-micro text-muted" data-hidden-for-width="">
+                        {labels.hiddenForWidth}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="min-w-0 truncate-until-large">{headerLabel}</span>
+                  )}
                 </label>
               );
             })}

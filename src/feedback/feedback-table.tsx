@@ -7,6 +7,7 @@ import { EMPTY_FORMATTED_VALUE, formatDate, toDate } from "../lib/format";
 import { useKitDateFormatter, useKitLabels, useKitLink, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import type { KitLinkProps } from "../i18n/kit-labels";
 import { Chip } from "../components/chip";
+import { Tooltip } from "../components/tooltip";
 import { FloatingAction, FloatingActionGroup } from "../components/floating-panel";
 import type { FloatingCorner } from "../components/floating-panel";
 import { pickLinkRenderer } from "../components/text-link";
@@ -449,6 +450,11 @@ function statusRank(status: FeedbackStatus): number {
  *   filter that never offered it.
  * - The status column owns the status filter, and only it (keksdose live #330's revert:
  *   the phone's filter sheet already exposes every column filter).
+ * - Fitted to the table's width (0.48, keksdose live #451): Subject `grow`s and
+ *   ellipsises, and a narrow table leaves out URL, then Email, then Resolved
+ *   (`fitPriority` 1–3) — the open report repeats all three — then Votes and Category
+ *   (4, 5) before Subject would drop below 10rem. Drop the two keys with
+ *   `{ ...col, grow: undefined, fitPriority: undefined }` for the 0.47 layout.
  * - `/my-feedback` shows the same nine: the Email cell's context fallback exists for it
  *   (the admin list's join is absent there, §3.1), and its phone card drops the submitter
  *   instead ({@link FeedbackMobileCardProps.showSubmitter}).
@@ -479,6 +485,9 @@ export function feedbackColumns<T extends FeedbackTableRow>({
           sortBy: (row) => row.votes ?? 0,
           filter: { type: "number", getValue: (row) => row.votes ?? 0 },
           mobileHidden: true,
+          // Fourth to go (Kurvenschmiede S1, 0.48): with only the first three, Subject was
+          // crushed to 24px at 1100px. Still reachable from the Columns panel.
+          fitPriority: 4,
         },
       ]
     : [];
@@ -508,6 +517,9 @@ export function feedbackColumns<T extends FeedbackTableRow>({
         getValue: (row) => row.category,
         options: FEEDBACK_CATEGORY_ORDER.map((value) => ({ value, label: categoryLabels[value] })),
       },
+      // Last to go (Kurvenschmiede S1, 0.48), before Subject would drop below 10rem:
+      // the open report's Subject section repeats the badge.
+      fitPriority: 5,
     },
     {
       key: "title",
@@ -521,11 +533,25 @@ export function feedbackColumns<T extends FeedbackTableRow>({
         return env ? `${row.title} ${labels.environment(env)}` : row.title;
       },
       mobilePrimary: true,
+      // The rest of the row, one line and an ellipsis (0.48, keksdose live #451: one long
+      // crash title pushed Status and the row actions off the edge).
+      grow: true,
     },
     {
       key: "user",
       header: labels.columnUser,
-      cell: (row) => <span className="text-secondary">{feedbackSubmitter(row, labels)}</span>,
+      // At most 12rem, one line and an ellipsis, the whole value in the kit's Tooltip (0.48 build
+      // review 2, keksdose N2): beside the grow Subject every other cell keeps one line, so
+      // an email standing in for a missing name widened the column and cost Votes and
+      // Category their room first. The open report shows both in full.
+      cell: (row) => {
+        const who = feedbackSubmitter(row, labels);
+        return (
+          <Tooltip label={who} portal lazy>
+            <span className="block max-w-[12rem] truncate-until-large text-secondary">{who}</span>
+          </Tooltip>
+        );
+      },
       sortBy: (row) => feedbackSubmitter(row, labels),
       // Name AND email, so either finds the person; the erased ones by the placeholder
       // (their context holds no name any more).
@@ -552,6 +578,8 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       sortBy: feedbackSubmitterEmail,
       filterBy: feedbackSubmitterEmail,
       mobileHidden: true,
+      // Second to go when the table is narrow: the open report shows the submitter.
+      fitPriority: 2,
     },
     {
       key: "url",
@@ -566,6 +594,8 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       sortBy: (row) => feedbackPagePath(row.context) ?? "",
       filterBy: (row) => feedbackPagePath(row.context) ?? "",
       mobileHidden: true,
+      // First to go when the table is narrow (0.48): the open report repeats the page.
+      fitPriority: 1,
     },
     ...votesColumn,
     {
@@ -600,6 +630,8 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       sortBy: (row) => instant(row.resolved_at),
       filter: { type: "date", getValue: (row) => row.resolved_at },
       mobileHidden: true,
+      // Third to go (0.48).
+      fitPriority: 3,
     },
   ];
 }

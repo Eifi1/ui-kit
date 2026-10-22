@@ -339,6 +339,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       opensInNewTab: "öffnet in einem neuen Tab",
       aboutField: (field) => `Hilfe zu „${field}“`,
       help: "Hilfe",
+      showMore: "Mehr",
+      showLess: "Weniger",
     },
     dataTable: {
       columns: "Spalten",
@@ -351,6 +353,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       cancelSelection: "Abbrechen",
       rowDetails: "Details",
       autoSize: "Spaltenbreiten anpassen",
+      hiddenForWidth: "aus Platzgründen ausgeblendet",
       loading: "Wird geladen…",
       filters: "Filter",
       // Resets every active filter; "Alle löschen" would read as deleting the filters.
@@ -402,6 +405,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       booleanTrue: "Ja",
       booleanFalse: "Nein",
       booleanUnset: "Nicht festgelegt",
+      loadMore: "Mehr laden",
+      allLoaded: "Alle Zeilen geladen",
       sortBy: "Sortieren nach",
       sortDefault: "Standardreihenfolge",
       sortAscending: "Aufsteigend",

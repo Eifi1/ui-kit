@@ -6,8 +6,8 @@ import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 
 /**
- * `overflowCue` (0.40, kk run 79 gap 1; every width since 0.46; 0.47 keksdose live #410 r4):
- * a › over the strip's end while tabs lie past it and a ‹ over its start while tabs lie
+ * `overflowCue` (0.40, kk run 79 gap 1; every width since 0.46; 0.47 keksdose live #410 r4; 0.48 r5–6, in fixed gutters beside the strip):
+ * a › after the strip's end while tabs lie past it and a ‹ before its start while tabs lie
  * before it — each a step of ~75 % toward its own side, and neither ever turns round.
  * keksdose's `scroll-edge-cues.tsx` (which replaced the 0.40 caret there) is the reference.
  *
@@ -105,23 +105,87 @@ describe("Tabs overflowCue", () => {
     expect(icon(previous()!)).toMatch(/chevron-left/);
   });
 
-  it("sits OVER the strip's ends, so the strip never changes width as the carets come and go", () => {
+  it("sits beside the strip, not over it (0.48, keksdose live #410 r5–6): ‹ before it, › after it", () => {
     render(strip());
     const tablist = screen.getByRole("tablist");
     const box = tablist.parentElement!;
-    expect(box).toHaveClass("relative");
     const endCue = more()!.closest("[data-tabs-overflow-cue]")!;
-    // The position is on a wrapper of the kit's, not on the button inside its tooltip span.
     expect(endCue).toHaveAttribute("data-tabs-overflow-cue", "end");
-    expect(endCue).toHaveClass("absolute", "end-0");
-    expect(box).toContainElement(endCue as HTMLElement);
+    // In the box's end gutter (its padding), not laid over the last visible tab.
+    expect(endCue.closest("[data-tabs-cue-gutter]")).toHaveClass("end-0", "inset-y-0", "w-[24px]");
+    expect(box).toHaveClass("relative", "px-[24px]");
+    expect(tablist).not.toContainElement(endCue as HTMLElement);
+    // Centred on the labels, above the 2px underline, with the strip's rule beneath it.
+    expect(endCue.closest("[data-tabs-cue-gutter]")).toHaveClass("items-center", "border-b", "border-subtle", "pb-px");
     geo.left = 700;
     scrollTo_();
     const startCue = previous()!.closest("[data-tabs-overflow-cue]")!;
     expect(startCue).toHaveAttribute("data-tabs-overflow-cue", "start");
-    expect(startCue).toHaveClass("absolute", "start-0");
+    expect(startCue.closest("[data-tabs-cue-gutter]")).toHaveClass("start-0");
     // Same box around the same strip.
     expect(screen.getByRole("tablist").parentElement).toBe(box);
+  });
+
+  it("never changes the strip's box while scrolling (keksdose live #410 r6): fixed gutters at both ends", () => {
+    // Round 5 put each cue in the flow, so it took 24px the moment it appeared and the
+    // labels jumped sideways at every edge the scroll crossed ("It has problems with
+    // moving to left and right especially when moving the scroll bar").
+    render(strip());
+    const shape = () => {
+      const tablist = screen.getByRole("tablist");
+      const box = tablist.parentElement!;
+      return {
+        box: box.getAttribute("class"),
+        tablist: tablist.getAttribute("class"),
+        // Every flow child of the box but the strip: none, at any scroll position.
+        flow: Array.from(box.children).filter((c) => c !== tablist && !c.classList.contains("absolute")).length,
+        gutters: Array.from(box.querySelectorAll("[data-tabs-cue-gutter]")).map((g) => g.getAttribute("class")),
+      };
+    };
+    const atStart = shape();
+    expect(atStart.box).toMatch(/(^|\s)px-\[24px\](\s|$)/);
+    expect(atStart.flow).toBe(0);
+    expect(atStart.gutters).toHaveLength(2);
+    geo.left = 300;
+    scrollTo_();
+    expect(shape()).toEqual(atStart);
+    geo.left = 700;
+    scrollTo_();
+    expect(shape()).toEqual(atStart);
+    // Each cue sits absolute at its own end, in its own gutter, the rule beneath it.
+    const startGutter = previous()!.closest("[data-tabs-cue-gutter]")!;
+    expect(startGutter).toHaveClass("absolute", "start-0", "w-[24px]", "border-b", "border-subtle");
+    expect(more()).toBeNull();
+  });
+
+  it("gives a strip that fits no gutters", () => {
+    geo.scrollWidth = 300;
+    render(strip());
+    const box = screen.getByRole("tablist").parentElement!;
+    expect(box).not.toHaveClass("px-[24px]");
+    expect(box.querySelector("[data-tabs-cue-gutter]")).toBeNull();
+  });
+
+  it("is a bare glyph: no frame, fill or shadow; muted, primary on hover", () => {
+    render(strip());
+    const button = more()!;
+    const cls = button.getAttribute("class") ?? "";
+    expect(cls).not.toMatch(/(^|\s)(border|shadow-sm|bg-surface)(\s|$)/);
+    expect(cls).not.toMatch(/(^|\s)hover:bg-(?!transparent)/);
+    expect(button).toHaveClass("text-muted", "hover:text-primary", "bg-transparent");
+  });
+
+  it("keeps its 24px box at Large and XL, with a 48px hit area round it (KS N3)", () => {
+    // 0.48 build review 2 (KS N1): 24 PIXELS, not 1.5rem. The rem grew with the text size
+    // (24 / 30 / 36px), so at Extra large on a 360px phone the two gutters took 72 of a
+    // 226px strip and a sheet tab wrapped to seven lines. The hit area is the ::after.
+    // At 360px with Large text two 48px-wide cues took 96px of the row and left a
+    // two-tab strip 100px (headless Chromium, showcase "Loops"). The finger's 48px goes
+    // to an invisible ::after over the strip's faded edge, as IconButton's `2xs` does.
+    render(strip());
+    const button = more()!;
+    expect(button).toHaveClass("w-[24px]", "large:min-w-0", "relative", "large:after:absolute", "large:after:content-['']", "large:after:z-[1]");
+    expect(button).not.toHaveClass("large:min-w-[48px]");
   });
 
   it("is reading-direction aware: in a right-to-left strip › still goes on and ‹ back", () => {
@@ -162,7 +226,7 @@ describe("Tabs overflowCue", () => {
     expect(row).toContainElement(more());
   });
 
-  it("puts › over the strip's end, before an add button", () => {
+  it("puts › after the strip's end, before an add button", () => {
     render(strip({ onAdd: () => {}, addLabel: "Add report" }));
     const add = screen.getByRole("button", { name: "Add report" });
     expect(more()!.compareDocumentPosition(add) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

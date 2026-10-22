@@ -24,6 +24,16 @@ export interface SettingsGroup<G extends string = string> {
   /** One line under the heading and in the phone list, where it is cut to one line. */
   help: string;
   /**
+   * 0.48 (keksdose live #450): a count or a mark drawn on the group's ROW — at the end of
+   * its desktop sidebar row and before the chevron of its phone list row — never on the
+   * heading over its cards. The admin area's waiting work: `<AdminWaitingBadge count={n} />`
+   * (nothing for 0), so the account menu's badge leads to the section that holds it. It
+   * sits inside the row's link and is read with its name, so say what the number is (the
+   * waiting pill does: "3, 3 waiting"). While the page is searched the sidebar shows the
+   * hit count in its place. Default: none.
+   */
+  badge?: ReactNode;
+  /**
    * `false` hides the group: no row, no hits, and its path acts as an unknown one — it
    * lands on the default group (desktop) or the list (phone), never on a 404 (§3.1).
    * kastlan's `/admin/billing` while billing is off. Default: visible.

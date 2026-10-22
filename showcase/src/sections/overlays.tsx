@@ -2,6 +2,7 @@ import { useContext, useId, useState } from "react";
 import { Pencil } from "lucide-react";
 import {
   Button,
+  CurrencySelect,
   FullBleedDialog,
   HoverMenu,
   IconButton,
@@ -785,6 +786,7 @@ function FullBleedSearch() {
 
 function Popovers() {
   const [tag, setTag] = useState("none");
+  const [currency, setCurrency] = useState("CHF");
 
   return (
     <Row>
@@ -841,6 +843,11 @@ function Popovers() {
             <p className="text-xs text-muted">
               Outside-click listens on <code className="font-mono">pointerdown</code>, so a
               touch-drag that starts outside dismisses at touch-down.
+            </p>
+            <CurrencySelect label="Currency" value={currency} options={["CHF", "EUR", "USD"]} onChange={setCurrency} />
+            <p className="text-xs text-muted">
+              A list opened from inside — this currency list, a combobox, a date picker, another
+              popover — is inside, though portalled: choosing in it keeps the popover open.
             </p>
             <button type="button" onClick={close} className={buttonClasses("ghost", "text-xs")}>
               Close

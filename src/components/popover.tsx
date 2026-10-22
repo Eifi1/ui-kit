@@ -157,7 +157,9 @@ export function Popover({
       }
     : null;
 
-  useOutsideClick([triggerRef, panelRef], close, open);
+  // A press in a list opened from inside — a CurrencySelect's, a combobox's, another
+  // popover's — reaches the panel through the React tree and is inside (dev#623).
+  const markInside = useOutsideClick([triggerRef, panelRef], close, open);
   // A layer on the Escape stack while open (Wave 2, DUP-1): a list opened inside closes
   // first, and the dialog this popover sits in only after it — the calculator on an
   // amount field in a Modal is exactly that.
@@ -216,6 +218,10 @@ export function Popover({
             // silently do nothing on a panel whose children are not yet tabbable.
             tabIndex={-1}
             onKeyDown={handleKeyDown}
+            onPointerDownCapture={(e) => {
+              rest.onPointerDownCapture?.(e);
+              markInside(e);
+            }}
             style={{
               // Merged over the caller's, never replaced by it: these are measured
               // against the trigger every scroll and resize, and a panel that dropped
