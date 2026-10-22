@@ -218,7 +218,6 @@ export function FeedbackThread038Demo() {
         for the writer. {code("FeedbackVoteButton")} is optimistic and rolls back on a failure; on one's own report it
         is pressed and says why it is disabled.
       </Note>
-      <Note>Since 0.38.</Note>
     </Example>
   );
 }
@@ -245,7 +244,6 @@ export function FeedbackReplies038Demo() {
           }}
         />
       </div>
-      <Note>Since 0.38.</Note>
     </Example>
   );
 }

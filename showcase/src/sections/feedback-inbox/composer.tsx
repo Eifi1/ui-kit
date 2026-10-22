@@ -243,7 +243,6 @@ function ComposerCannedRepliesDemo() {
         draft here is controlled; a resolved send still clears only what was sent,
         reaching the host as {code('onValueChange("")')}.
       </Note>
-      <Note>Since 0.13.</Note>
     </Example>
   );
 }
@@ -358,7 +357,6 @@ function Feedback014Demo() {
         host keeps their refs, reads them in {code("onSend")} and passes{" "}
         {code("canSend")} so a message of files alone can go.
       </Note>
-      <Note>Since 0.14.</Note>
     </Example>
   );
 }
@@ -387,12 +385,11 @@ function ChatComposer022Demo() {
       </div>
       <Note>
         {code("ChatComposer")} is the composer under a name that is not about feedback, for a chat that is
-        not a report ({code("FeedbackComposer")}, the old name, was deprecated in 0.34 and removed in 0.35). It
+        not a report. It
         puts {code("id")} and any {code("data-*")} on its root (the box, or the{" "}
         {code("disabledReason")} line in its place): a tour step can point at{" "}
         {code('[data-tour="assistant-ask"]')}.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -482,7 +479,6 @@ function ChatComposerCount023Demo() {
         trimmed. The picker in {code("attachmentSlot")} is {code("FeedbackAttachmentField refs")} with{" "}
         {code("disabled={pending}")}.
       </Note>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }
@@ -591,7 +587,6 @@ function ChatComposerSlot024Demo() {
         narrower than its content, so a long name like the one above ran off a 390px composer unless the host bounded
         the field itself.
       </Note>
-      <Note>Since 0.24.</Note>
     </Example>
   );
 }

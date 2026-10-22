@@ -215,7 +215,6 @@ export function FeedbackPublic038Demo() {
           viewer&apos;s own report counts as their vote and is locked. The detail names people by first name, or
           &quot;A user&quot;, and merges the admin&apos;s replies with the comments, oldest first.
         </Note>
-        <Note>Since 0.38.</Note>
       </div>
     </Example>
   );
@@ -258,7 +257,7 @@ export function FeedbackPublicSwitch038Demo() {
             ]}
           />
           <ToggleGroup
-            aria-label="Filed before 0.38"
+            aria-label="How it became public"
             value={row.filed_private ? "yes" : "no"}
             onChange={(v) => setRow((r) => ({ ...r, filed_private: v === "yes" }))}
             options={[
@@ -281,12 +280,11 @@ export function FeedbackPublicSwitch038Demo() {
         />
         <Note>
           {code("PATCH /feedback/{id} {public}")}. The author flips it while the report is OPEN, READY or
-          IN_PROGRESS, and at any status on a report the 0.38 migration made public ({code("filed_private")}, the
+          IN_PROGRESS, and at any status on a report the migration made public ({code("filed_private")}, the
           opt-out the notice offers); past that it is locked with the reason. Never drawn on a CRASH, nor for anyone
           but the author and an admin. {code("feedbackPublicSwitchAllowed(row, {isAdmin, viewerId})")} is the rule
           on its own.
         </Note>
-        <Note>Since 0.38.</Note>
       </div>
     </Example>
   );

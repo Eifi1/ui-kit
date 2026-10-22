@@ -223,18 +223,17 @@ export function FeedbackTable027Demo() {
           environment chip (non-prod {code("context.environment")}) and {code("Rework ×n")} from{" "}
           {code("reworkCount(body)")}. {code("onStatus")} is {code("useFeedbackStatusUndo(update.mutate)")} — the
           same change the row detail and the swipes use, so every one of them offers Undo. On a wide screen the
-          swipes are also the row&apos;s last column ({code("desktopSwipeActions")}, 0.46), and{" "}
+          swipes are also the row&apos;s last column ({code("desktopSwipeActions")}), and{" "}
           {code("feedbackSwipeOmitShown")} leaves out the steps the status cell already shows — “Done” stays where
           DONE is more than one step away. On a phone,{" "}
           {code("FeedbackMobileCard")} draws both chips itself: {code("DataTable")} never renders the{" "}
           {code("mobilePrimary")} cell when {code("mobileCard")} is set. The eye at the bottom corner (phone, inbox only) narrows to In evaluation + Test when live. An app
-          adds {code('urlSync storageKey="feedback"')}, its {code("?row=")} deep link and the row detail. Since
-          0.48 the table fits its own width: Subject {code("grow")}s and ellipsises, and a narrow table leaves out
+          adds {code('urlSync storageKey="feedback"')}, its {code("?row=")} deep link and the row detail. The table
+          fits its own width: Subject {code("grow")}s and ellipsises, and a narrow table leaves out
           URL, then Email, then Resolved ({code("fitPriority")}) — the Columns rail counts what is drawn and marks
           those “hidden for width”.
         </Note>
       </div>
-      <Note>Since 0.27.</Note>
     </Example>
   );
 }

@@ -198,7 +198,7 @@ export function FeedbackDetail027Demo() {
   return (
     <Example
       label="The row detail"
-      hint="switch who is looking — the admin sets the status, the author sends it back for rework; the outcome is read-only since 0.38"
+      hint="switch who is looking — the admin sets the status, the author sends it back for rework; the outcome is read-only"
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-2">
@@ -235,7 +235,6 @@ export function FeedbackDetail027Demo() {
         (uploaded first) and PATCHes the body alone; the server reopens the row. Send a rework as the author: the row goes
         back to Open, and the Edit button appears.
       </Note>
-      <Note>Since 0.27.</Note>
     </Example>
   );
 }
