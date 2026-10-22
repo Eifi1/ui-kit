@@ -125,7 +125,7 @@ function OverflowTabStrip() {
           on a tab&apos;s end and read as &quot;no more&quot;. With{" "}
           <code className="font-mono">overflowCue</code> a › follows the strip while tabs lie past
           its end and a ‹ precedes it while tabs lie before its start; each steps three quarters
-          of the width toward its own side and never turns round (0.47). Since 0.48 they are bare
+          of the width toward its own side and never turns round. They are bare
           glyphs in the row, centred on the labels, muted until hovered — no frame over the tabs.
         </Note>
       </div>
@@ -596,10 +596,9 @@ function Chips() {
           A chip is deliberately <em>not</em> a Button: a row of buttons reads as
           &ldquo;choose an action&rdquo;, a row of chips as &ldquo;here are the things&rdquo;.{" "}
           <code className="font-mono">href</code> and <code className="font-mono">onClick</code>{" "}
-          no longer collide: a bare <code className="font-mono">onClick</code> is a toggle or an action
+          do not collide: a bare <code className="font-mono">onClick</code> is a toggle or an action
           button, and <code className="font-mono">{"<Chip href=\"…\" onClick={…}>"}</code> is a LINK that
-          runs code on its way (before 0.7.0 that <code className="font-mono">onClick</code> was dropped
-          silently) — see &ldquo;Chip — a link with onClick&rdquo; below.
+          runs code on its way — see &ldquo;Chip — a link with onClick&rdquo; below.
         </Note>
       </Example>
 
@@ -931,7 +930,6 @@ export function Chips016Demo() {
           sm for scale
         </Chip>
       </Row>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }
@@ -987,11 +985,10 @@ export function ToggleGroup022Demo() {
           />
         </div>
         <Note>
-          The active fill starts 21px down, 3.25px below the 11px label&apos;s line (it was 17px, touching it). {code('size="sm"')} keeps its 12px type inside the chrome. The joined pair
+          The active fill starts 21px down, 3.25px below the 11px label&apos;s line, clear of it. {code('size="sm"')} keeps its 12px type inside the chrome. The joined pair
           squares the shared edge from {code("md")} up with {code('chromeClassName="md:rounded-s-none"')} and{" "}
           {code('className="md:-ms-px"')}; on a phone the two stack.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
       <Example label='ToggleGroup labelPlacement="strip"' hint="a group that is not a field, on its neighbours' label line">
         <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
@@ -1008,10 +1005,8 @@ export function ToggleGroup022Demo() {
         </div>
         <Note>
           20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line, and the label and its
-          &ldquo;?&rdquo; clear of the group&apos;s border (over the 16px strip it had, they crossed it by
-          2px).
+          &ldquo;?&rdquo; clear of the group&apos;s border.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
       <Example label="commit / disabledReason on a group and a chip" hint="under a WriteLockProvider: reachable, refusing, saying why">
         <div className="flex flex-col gap-3">
@@ -1032,7 +1027,6 @@ export function ToggleGroup022Demo() {
           nothing. Without the lock (or the {code("commit")} prop) both behave as before. {code("disabledReason")}{" "}
           is the same refusal with a reason of the control&apos;s own.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
     </>
   );
