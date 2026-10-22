@@ -431,7 +431,6 @@ export function IconButtonDisabledReasonDemo() {
           described by the reason ({code("aria-describedby")}), and a click or Enter does nothing.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }

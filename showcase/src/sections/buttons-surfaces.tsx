@@ -90,7 +90,7 @@ function ButtonVariants() {
           paints from the semantic <code className="font-mono">--danger</code> family instead:
           destructive is a meaning, not a brand colour, so a preset does not move it — but a
           consumer can re-point that one family on purpose. <code className="font-mono">link</code>{" "}
-          (0.8.0) drops the box altogether — see &ldquo;Button — link&rdquo; below.
+          drops the box altogether — see &ldquo;Button — link&rdquo; below.
         </Note>
       </div>
     </Example>
@@ -178,8 +178,8 @@ function ButtonRef() {
           <code className="font-mono">ButtonProps</code> declares{" "}
           <code className="font-mono">ref?: Ref&lt;HTMLButtonElement&gt;</code>. React 19 hands a
           function component its <code className="font-mono">ref</code> as a prop, so it rides onto
-          the element with no <code className="font-mono">forwardRef</code>; the declaration only
-          makes TypeScript accept it — before 0.7.0 this line did not compile.
+          the element with no <code className="font-mono">forwardRef</code>; the declaration
+          makes TypeScript accept it.
         </Note>
       </div>
     </Example>
