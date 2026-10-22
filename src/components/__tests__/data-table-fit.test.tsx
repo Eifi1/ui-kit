@@ -1,5 +1,6 @@
+import { Profiler } from "react";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router";
 import { DataTable } from "../data-table";
 import type { DataTableColumn } from "../data-table";
@@ -24,6 +25,9 @@ const ROWS: Row[] = [{ id: 1, title: "A very long subject ".repeat(20) }];
 
 // Natural widths of the non-grow columns, px.
 const WIDTH: Record<string, number> = { id: 60, title: 300, url: 200, email: 180, status: 220, resolved: 120 };
+// What a column costs the table beyond its header's own width once drawn (keksdose B2:
+// under `virtualize`'s locked widths a 40px header cost the table ≈ 45). None by default.
+const EXTRA: Record<string, number> = {};
 let avail = 2000;
 
 function col(key: string, extra: Partial<DataTableColumn<Row>> = {}): DataTableColumn<Row> {
@@ -56,7 +60,9 @@ const key = (th: HTMLElement) => th.textContent?.trim() ?? "";
 function layout(table: HTMLElement) {
   const ths = [...table.querySelectorAll<HTMLElement>("thead th")];
   const growTh = ths.find((th) => th.className.includes("w-full"));
-  const others = ths.filter((th) => th !== growTh).reduce((sum, th) => sum + (WIDTH[key(th)] ?? 50), 0);
+  const others = ths
+    .filter((th) => th !== growTh)
+    .reduce((sum, th) => sum + (WIDTH[key(th)] ?? 50) + (EXTRA[key(th)] ?? 0), 0);
   // `w-full`: the table is at least the scroller's width; `min-content` (the fit's own
   // probe of what a table without a `grow` column needs) is its content's width.
   if (!growTh) return { table: table.style.width === "min-content" ? others : Math.max(avail, others), grow: 0 };
@@ -84,6 +90,7 @@ beforeEach(() => {
 afterEach(() => {
   ro.restore();
   while (restore.length) restore.pop()!();
+  for (const k of Object.keys(EXTRA)) delete EXTRA[k];
 });
 
 function renderTable(columns: DataTableColumn<Row>[] = FIT, storageKey?: string) {
@@ -200,6 +207,80 @@ describe("DataTable fit (0.48, keksdose live #451)", () => {
     } finally {
       WIDTH.status = before;
     }
+  });
+
+  describe("a column that costs more drawn than its header measured (keksdose B2, 0.48.3)", () => {
+    // Drawn, Resolved costs its header (120) + 5, as a 40px header cost ≈ 45 under
+    // `virtualize`'s locked widths. At 562, with URL and Email out, the table needs 440
+    // without it: 440 + 120 ≤ 562 brings it back, drawn it needs 565 and goes again, with
+    // the same 120 recorded. 0.48.2 repeated that until React's update limit (#185).
+    function renderCounted() {
+      let commits = 0;
+      render(
+        <MemoryRouter>
+          <Profiler id="fit" onRender={() => commits++}>
+            <DataTable rows={ROWS} columns={FIT} rowKey={(r) => r.id} />
+          </Profiler>
+        </MemoryRouter>,
+      );
+      const table = screen.getByRole("table");
+      const scroller = table.closest("[data-clips]") as HTMLElement;
+      return { table, scroller, commits: () => commits };
+    }
+
+    it("stays out after one invisible flip: renders bounded, no update-depth error", () => {
+      EXTRA.resolved = 5;
+      const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const { table, scroller, commits } = renderCounted();
+        expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
+        const before = commits();
+        expect(() => setWidth(scroller, 562)).not.toThrow();
+        expect(heads(table)).toEqual(["id", "title", "status"]);
+        // Three out, Resolved back, out again: three commits, then stable.
+        expect(commits() - before).toBeLessThanOrEqual(4);
+        // The same width measured again: no second flip.
+        const settled = commits();
+        setWidth(scroller, 562);
+        expect(commits()).toBe(settled);
+        expect(heads(table)).toEqual(["id", "title", "status"]);
+        expect(errors.mock.calls.flat().map(String).join("\n")).not.toMatch(/Maximum update depth/);
+      } finally {
+        errors.mockRestore();
+      }
+    });
+
+    it("comes back once the scroller is wider than at the flip", () => {
+      EXTRA.resolved = 5;
+      const { table, scroller } = renderCounted();
+      setWidth(scroller, 562);
+      expect(heads(table)).not.toContain("resolved");
+      // 563: more room, so it is tried once more, and out again (one flip, no loop).
+      expect(() => setWidth(scroller, 563)).not.toThrow();
+      expect(heads(table)).not.toContain("resolved");
+      // 566: 440 + 125 drawn fits.
+      setWidth(scroller, 566);
+      expect(heads(table)).toEqual(["id", "title", "status", "resolved"]);
+      // Narrower again: out, and at 562 stuck as before rather than looping.
+      setWidth(scroller, 562);
+      expect(heads(table)).toEqual(["id", "title", "status"]);
+    });
+
+    it("comes back when the CONTENT leaves it more room than at the flip (keksdose S3)", () => {
+      EXTRA.resolved = 5;
+      const { table, scroller } = renderCounted();
+      setWidth(scroller, 562);
+      expect(heads(table)).not.toContain("resolved");
+      // A filter narrows Status (220 → 200): 420 + 125 fits 562, at the same width.
+      const before = WIDTH.status;
+      WIDTH.status = 200;
+      try {
+        setWidth(scroller, 562);
+        expect(heads(table)).toEqual(["id", "title", "status", "resolved"]);
+      } finally {
+        WIDTH.status = before;
+      }
+    });
   });
 
   it("without a `grow` column: leaves out while the content is wider, and brings back on narrower content", () => {
