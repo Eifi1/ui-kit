@@ -5,10 +5,10 @@ import { Button, IconButton, TextLink, Tone } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
- * LINKS (0.13): `replace` and `reloadDocument` on every kit link (keksdose F1), the
- * icon-only link — IconButton `href` (keksdose F2, kastlan 45) — TextLink's
- * `primary` / `secondary` (keksdose F3) and `warning` (kastlan 46) tones, and
- * IconButton's per-theme `toneColor` pair (keksdose).
+ * LINKS (0.13): `replace` and `reloadDocument` on every kit link, the
+ * icon-only link — IconButton `href` — TextLink's
+ * `primary` / `secondary` and `warning` tones, and
+ * IconButton's per-theme `toneColor` pair.
  */
 
 /* ── replace / reloadDocument ─────────────────────────────────────────────── */
@@ -21,7 +21,7 @@ function ReplaceAndReload() {
   const depth = typeof window === "undefined" ? 0 : window.history.length;
   const reloaded = typeof window === "undefined" ? false : new URLSearchParams(window.location.search).has("reloaded");
   return (
-    <Example label="replace and reloadDocument" hint="keksdose F1 — Button, TextLink, IconButton">
+    <Example label="replace and reloadDocument" hint="Button, TextLink, IconButton">
       <Row>
         <Button href="/links?via=pushed" variant="secondary" size="sm">
           Push an entry
@@ -60,7 +60,7 @@ function ReplaceAndReload() {
 function IconButtonLinks() {
   const [rowOpens, setRowOpens] = useState(0);
   return (
-    <Example label="IconButton — href" hint="keksdose F2, kastlan 45: an icon action that navigates is a link">
+    <Example label="IconButton — href" hint="an icon action that navigates is a link">
       <Row>
         <IconButton href="/buttons" label="Buttons page">
           <Settings />
@@ -102,7 +102,7 @@ function IconButtonLinks() {
 
 function TextLinkTones013() {
   return (
-    <Example label="TextLink — primary, secondary, warning" hint="keksdose F3, kastlan 46">
+    <Example label="TextLink — primary, secondary, warning" hint="three tones of a text link">
       <div className="space-y-2 text-sm">
         <p className="text-primary">
           Booked by{" "}
@@ -143,7 +143,7 @@ function TextLinkTones013() {
 
 function ToneColorPair() {
   return (
-    <Example label="IconButton — toneColor per theme" hint="keksdose: one inline colour cannot follow dark mode">
+    <Example label="IconButton — toneColor per theme" hint="one inline colour cannot follow dark mode">
       <Row>
         <IconButton label="Single colour" toneColor="#be123c">
           <CloudCheck />

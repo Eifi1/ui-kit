@@ -7,7 +7,7 @@ import { numberFormat } from "../lib/number-format";
 
 /**
  * ProgressBar `legendTone` (0.18): the legend's figures in a text tone of their own —
- * keksdose's tax card, whose parts are one bucket at three certainties (a class ramp)
+ * A tax card, whose parts are one bucket at three certainties (a class ramp)
  * while the figures carry the bucket's money direction.
  */
 

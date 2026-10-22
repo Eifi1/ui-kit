@@ -23,7 +23,7 @@ import { numberFormat } from "../lib/number-format";
  * dots, stroke weight, curve and fill, clicks, the zoom a chart's marks imply, and the
  * two helpers that keep a legend's colours still while series are switched off.
  *
- * The data is money over months and a price over irregular days — keksdose's reports,
+ * The data is money over months and a price over irregular days — an app's reports,
  * which is what these marks were built for. Every row is fixed rather than derived from
  * today, so the page is the same page whenever it is opened. No colour is written
  * except where a series must be a meaning (income, expense) rather than a position.
@@ -526,7 +526,7 @@ export function SeriesChartMarks() {
   );
 }
 
-/* ── since 0.11 (keksdose's 0.10 feedback) ─────────────────────────────────── */
+/* ── since 0.11 ─────────────────────────────────── */
 
 const WEEKDAYS = [
   { day: "Mon", thisWeek: 42, average: 38 },

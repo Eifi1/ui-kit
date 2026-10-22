@@ -34,7 +34,7 @@ describe("the colour roles page", () => {
     render(<ColourRoles033Demo />);
     const list = screen.getByRole("list", { name: "undeclaredCssVariables(sources)" });
     const lines = () => within(list).getAllByRole("listitem").map((li) => li.textContent);
-    // Kurvenschmiede's `--surface`, a bare `--app-nav-h`, and an `@theme inline` name that
+    // An app's `--surface`, a bare `--app-nav-h`, and an `@theme inline` name that
     // Tailwind never emits — not the chart key, the runtime write, the comment, the
     // fallback or the listed Radix variable.
     expect(lines()).toEqual([

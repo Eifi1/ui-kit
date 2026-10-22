@@ -11,7 +11,7 @@ import { numberFormat } from "../lib/number-format";
 
 const eur = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
-/** keksdose's discretionary-spending bar: the steps of ONE hue, from classes. */
+/** A discretionary-spending bar: the steps of ONE hue, from classes. */
 const STEP_CLASS = [
   "bg-[color-mix(in_oklab,var(--brand)_100%,var(--bg-surface))]",
   "bg-[color-mix(in_oklab,var(--brand)_70%,var(--bg-surface))]",

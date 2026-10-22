@@ -11,7 +11,7 @@ import type {
 import { Example, Note, code } from "../../lib/section";
 
 /**
- * Round 0.47 (docs/feedback-harmonization.md §12; keksdose run 82 R1, live #447): the
+ * Round 0.47 (docs/feedback-harmonization.md §12): the
  * admin's reply composer and the comment box take one file as the rework note does —
  * pasted from the clipboard, captured or picked — and every entry's and comment's
  * picture is drawn inline. The upload and the authenticated GET are faked in memory;

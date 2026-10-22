@@ -163,7 +163,7 @@ const TERMS: Array<[term: string, raises: string, costs: string]> = [
   ["D — derivative", "Damping: it brakes before the target", "Noise amplified straight into the output"],
 ];
 
-/** lenkbank L5 (0.15.2): a table of sentences stacks into labelled blocks on a phone. */
+/** 0.15.2: a table of sentences stacks into labelled blocks on a phone. */
 export function TableStackDemo() {
   return (
     <Example label={'Table — stack="phone", a table of prose on a phone'} hint="narrow the window below 640px: each row becomes a labelled block">

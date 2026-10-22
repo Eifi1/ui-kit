@@ -4,9 +4,9 @@ import type { KitLanguageCode } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
- * 0.22.0 account fields: the verification-code field (kastlan 3, keksdose K8), the
- * strength meter on PasswordSetting (kastlan), the language form field
- * (Kurvenschmiede) and the now-public TileRadioGroup. Every value is synthetic.
+ * 0.22.0 account fields: the verification-code field, the
+ * strength meter on PasswordSetting, the language form field
+ * and the now-public TileRadioGroup. Every value is synthetic.
  */
 
 /* ── OneTimeCodeInput — page: auth-account ──────────────────────────────── */
@@ -73,7 +73,7 @@ export function OneTimeCode022Demo() {
   );
 }
 
-/** Unlabelled, named by the prompt above it — kastlan's login shape. */
+/** Unlabelled, named by the prompt above it — a login shape. */
 export function OneTimeCodeUnlabelled022Demo() {
   const [value, setValue] = useState("");
   return (

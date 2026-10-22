@@ -15,7 +15,7 @@ import { Example, Note, Row } from "../lib/section";
  * 0.16 on the Formatting page: the money palette for a verdict and a "no change" band
  * (`palette`, `flatWithin`), a part's signed value in a ProgressBar legend, the
  * StatusDot colour table as a function, and StaticLegend without the list framing —
- * keksdose's harmonisation sweep (P1, P9).
+ * the harmonisation sweep.
  */
 
 const PRICES = [

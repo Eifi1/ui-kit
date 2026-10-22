@@ -12,7 +12,7 @@
 @source "../../src";
 
 /* The toasts demo's "demo mode": the kit's `redact` puts data-private on a toast's
-   message, and an app decides what that looks like (keksdose blurs it). The toaster's
+   message, and an app decides what that looks like (blurring it, say). The toaster's
    z-index is the kit's own now (`--z-toast`), so the pin that used to be here went. */
 .demo-mode [data-private] {
   filter: blur(0.35rem);

@@ -873,7 +873,7 @@ export function HooksLib() {
         <PlacementMath />
         <Note>
           Split out of the hook so the geometry is testable without a browser and a fake
-          keyboard. The third row is the case the whole thing exists for (feedback #135): on
+          keyboard. The third row is the case the whole thing exists for: on
           Android the layout viewport does NOT shrink when the on-screen keyboard opens, so a
           panel pinned below a trigger in the lower half of the screen ends up behind it with
           nothing the user can do — <code className="font-mono">position: fixed</code> does not

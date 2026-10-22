@@ -63,7 +63,7 @@ const SWEEP = Array.from({ length: 121 }, (_, i) => {
   };
 });
 
-/** lenkbank's curve plot: three kinematic channels and a load, four units. */
+/** A curve plot: three kinematic channels and a load, four units. */
 const CURVE = SWEEP.map((row) => ({
   x: row.x,
   velocity: row.velocity,

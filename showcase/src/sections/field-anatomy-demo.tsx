@@ -264,8 +264,8 @@ export function TabControls() {
       </Example>
 
       <Note>
-        For a remove that happens at once, with nothing to confirm it (lenkbank deletes a
-        measurement sheet), <code>removeOn=&quot;active&quot;</code> narrows the Delete key to the
+        For a remove that happens at once, with nothing to confirm it (deleting a
+        measurement sheet, say), <code>removeOn=&quot;active&quot;</code> narrows the Delete key to the
         tab you are looking at — the same one that wears the ×. Arrow onto a closed tab and press
         Delete: nothing goes. The ×&apos;s room stays reserved on every tab either way.
       </Note>

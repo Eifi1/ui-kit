@@ -5,7 +5,7 @@ import type { TopBarMenuEntry } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
- * Group headings in `TopBarActionMenu` (0.23, keksdose's guided-tours menu): the tours
+ * Group headings in `TopBarActionMenu` (0.23, a guided-tours menu): the tours
  * filed by topic, each block named by a heading instead of fenced off by a bare divider.
  * The tours here are made up; an app's are its own.
  */

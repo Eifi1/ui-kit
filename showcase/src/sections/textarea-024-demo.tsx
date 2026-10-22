@@ -3,7 +3,7 @@ import { FieldHint, Textarea, ToggleGroup } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../lib/section";
 
 /**
- * 0.24: the Textarea's floated label on a scrolled field (Kurvenschmiede). Fields page
+ * 0.24: the Textarea's floated label on a scrolled field. Fields page
  * (slug `fields`).
  *
  * Both fields open already scrolled a few lines down — that is the state the bug lived

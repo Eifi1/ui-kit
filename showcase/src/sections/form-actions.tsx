@@ -259,7 +259,7 @@ function FormActionsShortcut022Demo() {
         and it does nothing while Save could not be pressed: {code("pending")}, {code("submitDisabled")}, or a{" "}
         {code("commit")} under a locked {code("WriteLockProvider")}. It listens on the document after every React
         handler, so a field that takes the chord for itself ({code("preventDefault")} / {code("stopPropagation")}) keeps
-        it. {code("submitShortcutHint")} shows the dimmed hint; {code("aria-keyshortcuts")} is always set. keksdose K14.
+        it. {code("submitShortcutHint")} shows the dimmed hint; {code("aria-keyshortcuts")} is always set.
       </Note>
       <Note>Since 0.22.</Note>
     </Example>
@@ -268,7 +268,7 @@ function FormActionsShortcut022Demo() {
 
 /* ── since 0.23 ─────────────────────────────────────────────────────────── */
 
-/** A dense inline confirm under a table row, as keksdose's admin plan row draws it. */
+/** A dense inline confirm under a table row, as an admin plan row draws it. */
 function FormActions023Demo() {
   const [small, setSmall] = useState(true);
   const [ticked, setTicked] = useState(false);

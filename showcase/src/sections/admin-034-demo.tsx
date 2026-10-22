@@ -4,7 +4,7 @@ import type { AdminActionLogEntry, AdminGroupNoun, AdminGroupTarget } from "@eif
 import { Example, Note, beat } from "../lib/section";
 
 /**
- * GROUPS IN THE AUDIT (0.34, docs/user-admin-harmonization.md §11): Kurvenschmiede's team
+ * GROUPS IN THE AUDIT (0.34, docs/user-admin-harmonization.md §11): team
  * operations as log rows, a target that is a group or something else, the group a
  * membership row happened in, each app's noun, and deleting a group at `acknowledge`.
  * Belongs on the "User administration" page, after the roster.
@@ -18,7 +18,7 @@ const ago = (days: number) => new Date(Date.now() - days * day).toISOString();
 const ADA = { id: 1, first: "Ada", last: "Example", email: "ada@example.com" };
 const BEN = { id: 2, first: "Ben", last: "Sample", email: "ben@example.com" };
 
-/** Kurvenschmiede's, kastlan's, keksdose's, and the default. */
+/** Three apps' nouns, and the default. */
 const NOUNS: { value: AdminGroupNoun; label: string }[] = [
   { value: "team", label: "team" },
   { value: "company", label: "company" },
@@ -57,7 +57,7 @@ export function GroupActions034Demo() {
   ]);
 
   return (
-    <Example label="Groups in the audit — AdminActionLog groupNoun, AdminActionConfirm" hint="Kurvenschmiede's team operations">
+    <Example label="Groups in the audit — AdminActionLog groupNoun, AdminActionConfirm" hint="team operations">
       <div className="flex flex-col gap-3">
         <ToggleGroup label="groupNoun" overflow="wrap" value={noun} onChange={setNoun} options={NOUNS} />
         <div>

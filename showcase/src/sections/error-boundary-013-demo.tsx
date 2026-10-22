@@ -4,8 +4,8 @@ import type { CrashReport, CrashReportResult } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
- * The 0.13 crash screen on the Feedback page: the one fallback lenkbank, keksdose and
- * kastlan all reduce to — the quoted message, Try again AND Reload, the copy-report
+ * The 0.13 crash screen on the Feedback page: the one fallback the apps
+ * all reduce to — the quoted message, Try again AND Reload, the copy-report
  * button and the report in a disclosure, `onReport` with dedupe and the reference on
  * screen, the `actions` slot, and the chunk-load title.
  */
@@ -50,7 +50,7 @@ function DefaultScreenDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          This is lenkbank&rsquo;s whole boundary now: {code("<ErrorBoundary resetKeys={[pathname]} appVersion={__VERSION__} />")}.
+          A whole boundary can be this: {code("<ErrorBoundary resetKeys={[pathname]} appVersion={__VERSION__} />")}.
           The error&rsquo;s own words are quoted, because three sentences that are true of every crash identify none
           of them. Try again resets the boundary; Reload reloads the page — a deterministic crash survives Try again,
           so there is always a way forward. The copy button puts the plain-text report on the clipboard (error line,
@@ -155,7 +155,7 @@ function OnReportDemo() {
           filing&rsquo;s reference. A throw or a rejection from {code("onReport")} never reaches the boundary; the
           screen claims nothing and keeps the copy button. {code("{ filed: false }")} is the app saying it chose not to
           file (a demo session, a buffered offline report). What the report may carry is the app&rsquo;s call: rewrite
-          it in {code("redact")} (an allow-list of query params, as keksdose&rsquo;s crash-report.ts does) and the
+          it in {code("redact")} (an allow-list of query params, say) and the
           screen, the clipboard and {code("onReport")} all get the redacted one.
         </Note>
       </div>
@@ -205,7 +205,7 @@ function ChunkLoadDemo() {
       <pre className={`${READOUT} mt-1 whitespace-pre-wrap`}>{formatCrashReport(sample)}</pre>
       <div className="mt-3">
         <Note>
-          {code("isChunkLoadError")} (keksdose&rsquo;s patterns: Vite, webpack, a service worker&rsquo;s failed fetch)
+          {code("isChunkLoadError")} (the patterns of Vite, webpack, a service worker&rsquo;s failed fetch)
           turns the screen into &ldquo;A new version is available&rdquo;; with {code("navigator.onLine === false")} any
           crash reads &ldquo;You&rsquo;re offline&rdquo;. Either way Reload is the primary action, and a chunk failure
           is never handed to {code("onReport")} — it is a deploy or a dropped connection, not a defect.

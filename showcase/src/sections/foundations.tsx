@@ -146,7 +146,7 @@ export function Foundations() {
         <code className="font-mono">tokens.css</code> mirror the default preset and are live CSS
         (this note used to call them documentation that Tailwind strips; Tailwind 4 keeps them):
         in an app with a palette layer the inline write beats them, and in one without
-        (Kurvenschmiede) they are what paints. A test holds the mirror to{" "}
+        they are what paints. A test holds the mirror to{" "}
         <code className="font-mono">DEFAULT_PRESET</code>. The semantic layer — every fill and its
         foreground, the lines, the well — is on the Colour roles page.
       </Note>

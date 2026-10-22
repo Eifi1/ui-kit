@@ -571,7 +571,7 @@ function DensityTable() {
       </div>
       <div className="mt-3">
         <Note>
-          Lenkbank&apos;s in-card tables were hand-rolled <code className="font-mono">&lt;table&gt;</code>s
+          In-card tables were hand-rolled <code className="font-mono">&lt;table&gt;</code>s
           because at the default padding a table inside a card came out twice its height and pushed
           the card&apos;s own content below the fold. <code className="font-mono">density=&quot;compact&quot;</code>{" "}
           is <code className="font-mono">text-xs</code> with <code className="font-mono">px-2 py-1</code>{" "}
@@ -653,7 +653,7 @@ function ReportTable() {
   return (
     <Example
       label="A report table — firstSort, sortCycle, chrome, frame={false}, keyboard rows"
-      hint="the half-width summary keksdose's reports need: ranked by size, no power-user chrome, inside the app's own card"
+      hint="the half-width summary a report needs: ranked by size, no power-user chrome, inside the app's own card"
     >
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-secondary">
         <span className={CONTROL}>
@@ -885,7 +885,7 @@ function FillHeightTable() {
           a pane shorter than the header, that floor and the pager lets the table run past it.
         </Note>
         <Note>
-          <strong>Two scrollbars</strong> (0.34, kastlan feedback 55): the default{" "}
+          <strong>Two scrollbars</strong> (0.34): the default{" "}
           <code className="font-mono">maxBodyHeight</code>,{" "}
           <code className="font-mono">calc(100dvh - 12rem)</code>, scrolls the body inside a
           page that scrolls itself, so a long table under a page header shows two scrollbars
@@ -969,7 +969,7 @@ function ListPageTable() {
   );
 }
 
-/* ── period groups and load more (0.48, keksdose dev #605) ─────────────────── */
+/* ── period groups and load more (0.48) ─────────────────── */
 
 interface LedgerRow {
   id: number;
@@ -1120,7 +1120,7 @@ function PeriodGroupsTable() {
       </p>
       <div className="mt-3">
         <Note>
-          keksdose dev #605 (its docs/transactions-by-period.md §6). Each band is a row header
+          Each band is a row header
           ({code("<th scope=\"rowgroup\">")}) opening its own {code("<tbody>")}, spanning the
           visible columns; the month band sticks under the header (and under a sticky leading
           row), the day band under the month, and a new month covers the day still pinned
@@ -1344,7 +1344,7 @@ function DataTableActionsDemo() {
 
 /**
  * DATA TABLE 0.17 — the totals row: a column's `footer` and the table's `footerLabel`
- * (kastlan 54, the trial balance that hand-built its totals under the table).
+ * (a trial balance that would otherwise hand-build its totals under the table).
  */
 
 interface Account {
@@ -1510,7 +1510,7 @@ function DataTableMobileSort022Demo() {
         them. They drive the table&apos;s own sort, so the header shows what the phone chose and the other way round,
         a picked column starts in its {code("firstSort")} like a header click, and under {code('sortCycle="toggle"')}
         &ldquo;Default order&rdquo; is offered only until the table is ranked. A column whose header is not text names
-        its option with {code("headerText")}. keksdose K10 (its aggregated report tables, #258). Off by default.
+        its option with {code("headerText")}. Off by default.
       </Note>
       <Note>Since 0.22.</Note>
     </Example>

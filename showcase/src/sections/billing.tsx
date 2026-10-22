@@ -168,12 +168,12 @@ export function PayPageApps039Demo() {
         ]}
       />
       <Note>
-        Since 0.39. Paddle has one default payment link per account ({code("pay.keksdose.app")}), and its e-mails send every
+        Since 0.39. Paddle has one default payment link per account ({code("pay.my-app.example")}), and its e-mails send every
         app&apos;s payment-method update there. So each pay page reads {code("custom_data.app")} on{" "}
         {code("checkout.loaded")}, frames that app from the map in its {code("pay-config.json")}, and on{" "}
         {code("checkout.completed")} goes to that app&apos;s {code("checkoutReturnUrl(returnUrl)")}. A tag the map
         doesn&apos;t know gets no name and no Back, keeps the host&apos;s Terms and Privacy, and says `payDone` once
-        paid. The bin writes the map: {code("eifi1-pay-page --out /srv-pay --app keksdose --app-url \"$PAY_APP_URL\"")}.
+        paid. The bin writes the map: {code("eifi1-pay-page --out /srv-pay --app my-app --app-url \"$PAY_APP_URL\"")}.
       </Note>
     </Example>
   );

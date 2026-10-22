@@ -190,7 +190,7 @@ const ADDRESSES = [
 ];
 
 /** The search-then-act specimen's lock: a row in Bern is listed but `disabled` —
- *  keksdose's write-locked result, which must be seen and must not be taken. */
+ *  a write-locked result, which must be seen and must not be taken. */
 const lockedRow = (o: ComboOption<string>): ComboOption<string> =>
   o.label.includes("Bern") ? { ...o, disabled: true, sublabel: "Read-only in this demo" } : o;
 
@@ -280,7 +280,7 @@ function AutocompleteDemo() {
 
       <Example
         label="Autocomplete — free text"
-        hint="the text is the value; a suggestion completes it (kastlan's address field)"
+        hint="the text is the value; a suggestion completes it (an address field)"
       >
         <Stage>
           <Autocomplete
@@ -362,7 +362,7 @@ function AutocompleteDemo() {
           <>
             <code>fillOnSelect={"{false}"}</code>, <code>size=&quot;sm&quot;</code>,{" "}
             <code>disabled</code> rows and <code>open</code> held shut while a pick is confirmed
-            (keksdose&apos;s address search)
+            (an address search)
           </>
         }
       >
@@ -448,7 +448,7 @@ function AutocompleteDemo() {
 
       <Example
         label="Combobox — error and disabled"
-        hint="free text over existing values, the datalist replacement (lenkbank's scope fields)"
+        hint="free text over existing values, the datalist replacement (scope fields)"
       >
         <Stage>
           <Combobox
@@ -488,7 +488,7 @@ function AutocompleteDemo() {
 
 /* ── since 0.12 ─────────────────────────────────────────────────────────── */
 
-/** Proposals that follow the UI language, as keksdose's category field has them. */
+/** Proposals that follow the UI language, as a category field has them. */
 const CATEGORIES = ["Groceries", "Rent", "Transport", "Leisure", "Utilities", "Insurance", "Gifts", "Coffee"];
 
 const TRANSLATED = new Set(["Groceries", "Rent", "Transport", "Leisure", "Utilities", "Insurance"]);
@@ -569,7 +569,7 @@ function PickerHints022Demo() {
   const [address, setAddress] = useState("");
   const [filter, setFilter] = useState<(string | number)[]>([]);
   return (
-    <Example label="hint on the combobox family" hint="keksdose K4 — the same anatomy as Input and Select">
+    <Example label="hint on the combobox family" hint="the same anatomy as Input and Select">
       <div className="grid gap-4 sm:grid-cols-2">
         <Combobox
           label="Payee"
@@ -707,7 +707,7 @@ function ComboboxFamilyLock023Demo() {
 
 let nextId = 0;
 
-/** keksdose G9: "Create cash account" as the picker's last row, not a separate button. */
+/** "Create cash account" as the picker's last row, not a separate button. */
 function InlineCreateRow023Demo() {
   const [options, setOptions] = useState<ComboOption<string>[]>(ACCOUNTS_023.filter((a) => a.group === "Cash"));
   const [value, setValue] = useState<string | null>(null);
@@ -756,7 +756,7 @@ function InlineCreateRow023Demo() {
 /**
  * 0.24 for the Combobox family. Two demos, two pages:
  *
- *  - {@link RhfInlineEntity024Demo} (Forms): kastlan's budget line item — an inline
+ *  - {@link RhfInlineEntity024Demo} (Forms): a budget line item — an inline
  *    account picker bound in one line, and a failed Save lands focus in it;
  *  - {@link AutocompleteHint024Demo} (Comboboxes): an unlabelled Autocomplete whose "?"
  *    comes and goes while you type, and the field keeps the caret.

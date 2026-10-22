@@ -15,8 +15,8 @@ import { Example, Note, code } from "../lib/section";
 /* ── since 0.23 ─────────────────────────────────────────────────────────── */
 
 /**
- * ColumnMapper and ColumnRoleTable (0.23): Kurvenschmiede's columns input and
- * keksdose's bank-file mapping step as one kit part. Synthetic data only.
+ * ColumnMapper and ColumnRoleTable (0.23): a measurement columns input and a
+ * bank-file mapping step as one kit part. Synthetic data only.
  */
 
 type CurveRole = "time" | "setpoint" | "actual";
@@ -144,7 +144,7 @@ function BankExample() {
       </div>
       <Note>
         The preview with the role selects alone, controlled, over rows the caller already has —
-        keksdose&apos;s step two, whose rows come from its server&apos;s sniff. `required: "money"` makes
+        an import&apos;s step two, whose rows come from its server&apos;s sniff. `required: "money"` makes
         a group: any one of Amount, Debit and Credit satisfies it, so a bank that splits debit and
         credit needs no amount column. Ignored columns are dimmed, not hidden. The table scrolls
         sideways in its own box on a phone. A two-step wizard reading the file itself uses
@@ -174,7 +174,7 @@ function ColumnMapper023Demo() {
 
 type BenchRole = "time" | "setpoint" | "actual" | "valve";
 
-// Kurvenschmiede's shape: every part required and a number.
+// A measurement shape: every part required and a number.
 const BENCH_ROLES: ColumnRole<BenchRole>[] = [
   { value: "time", label: "Time (s)", required: true, numeric: true },
   { value: "setpoint", label: "Setpoint (°C)", required: true, numeric: true },
@@ -230,7 +230,7 @@ function FadeExample() {
         </div>
       </div>
       <Note>
-        Kurvenschmiede, on a phone: the fourth column&apos;s select sat past the right edge and
+        On a phone the fourth column&apos;s select sat past the right edge and
         nothing said there was more. The edge with columns behind it now fades — measured, so
         a table that fits is drawn as before; both edges once scrolled into the middle; the
         reading direction&apos;s own end in RTL. It is the Tabs strip&apos;s fade, a{" "}
@@ -262,7 +262,7 @@ function PrivateExample() {
   const [demoMode, setDemoMode] = useState(true);
   const [mapping, setMapping] = useState<ColumnMapping<BankRole>>({ booking_date: 0, payee: 1 });
   return (
-    <Example label="bodyProps / rowProps — attributes on the preview's body and rows" hint="keksdose's demo mode">
+    <Example label="bodyProps / rowProps — attributes on the preview's body and rows" hint="an app's demo mode">
       <div className="min-w-0 space-y-3">
         <Switch label="Demo mode (blurs [data-private])" checked={demoMode} onCheckedChange={setDemoMode} />
         {/* The app's rule, here as a class: `.demo-mode [data-private]` blurs. */}
@@ -280,9 +280,8 @@ function PrivateExample() {
         </div>
       </div>
       <Note>
-        keksdose&apos;s sample rows are the user&apos;s own bank data, and its demo mode blurs{" "}
-        {code("[data-private]")}. It set that on the table&apos;s {code("<tbody>")} from a layout effect
-        after every commit; now it is {code('bodyProps={{ "data-private": "" }}')}. The head stays
+        Sample rows may be the user&apos;s own bank data, and a demo mode blurs{" "}
+        {code("[data-private]")}. On the table&apos;s {code("<tbody>")} that is {code('bodyProps={{ "data-private": "" }}')}. The head stays
         readable: the column names and role selects are what demo mode shows. {code("rowProps(row, index)")}{" "}
         puts attributes on each previewed {code("<tr>")}, as LineItems&apos; {code("rowProps")} does on its
         rows. Here some roles are optional, so the required one still says so — Booking date —
@@ -390,7 +389,7 @@ function ColumnRoleRequired025Demo() {
           />
         </div>
         <Note>
-          keksdose, on a phone: the closed select said {code("Booking date (re…")} — the mark took
+          On a phone the closed select said {code("Booking date (re…")} — the mark took
           the room the role&apos;s name needed. It is short now, {code("Booking date *")}, and the
           option is still NAMED {code("Booking date (required)")} ({code("aria-label")}), so a
           screen reader hears the word, not &ldquo;star&rdquo;; {code("requiredRoleShort")} and{" "}

@@ -235,7 +235,7 @@ export function MonthPickerDemo() {
 
 /* ── since 0.22 ─────────────────────────────────────────────────────────── */
 
-/** MonthPicker: year mode (kastlan 7, keksdose tax tab), size sm (K13), error (K4). */
+/** MonthPicker: year mode, size sm, error. */
 export function Month022Demo() {
   const thisYear = 2026;
   const [taxYear, setTaxYear] = useState(String(thisYear));
@@ -280,7 +280,7 @@ export function Month022Demo() {
           />
         </div>
         <Note>
-          keksdose&apos;s tax tab (this year and four before) opens on five years and no paging; kastlan&apos;s
+          A tax tab (this year and four before) opens on five years and no paging; a
           fiscal year pages twelve at a time from {code("min")}. The stepper steps a year; its Today reads
           &ldquo;This year&rdquo;. Values are strings: {code("String(year)")} in, {code("Number(key)")} out.
         </Note>
@@ -318,8 +318,7 @@ export function Month022Demo() {
           </div>
         </div>
         <Note>
-          {code('size="sm"')} is an {code("IconButton")}&apos;s 36px and only as wide as the month (keksdose live
-          #260 wrote {code("h-9 w-auto py-0")} by hand). Unlabelled only, as on {code("Select")}. Step past October
+          {code('size="sm"')} is an {code("IconButton")}&apos;s 36px and only as wide as the month (no {code("h-9 w-auto py-0")} by hand). Unlabelled only, as on {code("Select")}. Step past October
           to see the error.
         </Note>
         <Note>Since 0.22.</Note>

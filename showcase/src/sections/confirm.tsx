@@ -160,7 +160,7 @@ function DangerStates() {
 /* ── since 0.18 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.18.0 — the two confirmations both Kurvenschmiede and keksdose had built beside the
+ * 0.18.0 — the two confirmations apps had built beside the
  * kit: typing the TARGET's address before an admin action (`requireTyped`, and
  * `phraseMatch="caseless"` for the inline tile), and the current-password step-up
  * before adding a passkey (`ReauthDialog`).
@@ -226,7 +226,7 @@ function TypedConfirm018Demo() {
       </Example>
       <Example
         label="DangerConfirm — caseless phrase, inline under a row"
-        hint="keksdose keeps the question under the row, so the row being acted on stays in view"
+        hint="the question under the row, so the row being acted on stays in view"
       >
         <div className="space-y-2 rounded-lg border border-subtle p-3">
           {/* Wraps: at Extra large the address and "Reset password…" ran past a 360 px phone. */}
@@ -321,7 +321,7 @@ function AcknowledgeAndConsequences() {
   return (
     <Example
       label="DangerConfirm — requireAcknowledge, consequences"
-      hint="keksdose's admin password reset: what will happen, then a tick or the typed address"
+      hint="an admin password reset: what will happen, then a tick or the typed address"
     >
       <Stage>
         <DangerConfirm
@@ -419,9 +419,9 @@ function TypedField() {
 /* ── since 0.23 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.23: FormActions' Cancel variant and button size (keksdose G3), and DangerConfirm's
- * held confirm — which says which guard is still open (G4a) — and the guards' answers
- * handed to `onConfirm` (G4b). Synthetic data only.
+ * 0.23: FormActions' Cancel variant and button size, and DangerConfirm's
+ * held confirm — which says which guard is still open — and the guards' answers
+ * handed to `onConfirm`. Synthetic data only.
  */
 
 /* ── Signature, password & confirmation page (slug "signature-password") ── */
@@ -503,8 +503,7 @@ function DangerConfirm023Demo() {
 /* ── since 0.24 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.24 (keksdose, after moving `UserActionConfirm` and `UserPlanEditor` onto the tile in
- * 0.23): the confirm's variant apart from `tone`, a guard of the caller's own that holds
+ * 0.24: the confirm's variant apart from `tone`, a guard of the caller's own that holds
  * the confirm without the lock's printed line, fields of the caller's inside the tile,
  * and why Cancel waits while the action runs. Synthetic data only.
  */
@@ -520,7 +519,7 @@ function DangerConfirm024Demo() {
   );
 }
 
-/** keksdose's plan editor: the picker inside the tile, held until a different plan. */
+/** A plan editor: the picker inside the tile, held until a different plan. */
 function PlanEditorExample() {
   // The account's plan, and the one picked in the tile — seeded from it on every arm.
   const [current, setCurrent] = useState<string>("FREE");
@@ -606,7 +605,7 @@ function PlanEditorExample() {
   );
 }
 
-/** keksdose's admin password reset: the amber question, the red Go. */
+/** An admin password reset: the amber question, the red Go. */
 function ConfirmVariantExample() {
   const [variant, setVariant] = useState<"tone" | "danger">("danger");
   const [log, setLog] = useState("—");

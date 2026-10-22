@@ -563,7 +563,7 @@ export function Fields() {
       >
         <Stage>
           <div className="space-y-4">
-            {/* keksdose K3 (live #400): the status explanation, ~500 characters, was a
+            {/* The status explanation, ~500 characters, was a
                 FieldHint, and since 0.32 a FieldHint prints its words under the field on a
                 touch screen and at Large — the longest thing in the form. Help the field
                 is usable without goes behind this "?" instead; a fact stays a FieldHint. */}
@@ -630,7 +630,7 @@ export function Fields() {
       >
         <Stage>
           <div className="space-y-4">
-            {/* Round 0.36 (Kurvenschmiede's "How it was measured"): a field with a fact AND
+            {/* Round 0.36 (a "How it was measured" field): a field with a fact AND
                 help had one slot for both. Now the fact is `hint` and the help is `help`;
                 the help's "?" is the field's only one, so the FieldHint beside it is
                 printed as the caption at every size instead of drawing a second "?". */}
@@ -987,7 +987,7 @@ export function TextareaEdge025Demo() {
           />
         </div>
         <Note>
-          Kurvenschmiede, on 0.24: under the label strip, a line scrolled most of the way out
+          Under the label strip, a line scrolled most of the way out
           left a row of comma tails above the first whole line. The strip&apos;s edge now follows
           the scroll. Half a line or less left: covered, solid, to exactly where that line ends —
           the strip snaps to the line box, and the next line is untouched. More than half: a 3px
@@ -1011,7 +1011,7 @@ export function Fields022Demo() {
   return (
     <Example
       label="Placeholder, hint and counter on a labelled field"
-      hint="kastlan 8, keksdose K4 and K11"
+      hint="the field anatomy, one slot each"
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="Access note" placeholder="e.g. the key is with the caretaker" />

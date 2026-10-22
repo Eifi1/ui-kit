@@ -987,8 +987,7 @@ export function ToggleGroup022Demo() {
           />
         </div>
         <Note>
-          The active fill starts 21px down, 3.25px below the 11px label&apos;s line (it was 17px, touching it —
-          keksdose feedback #117). {code('size="sm"')} keeps its 12px type inside the chrome. The joined pair
+          The active fill starts 21px down, 3.25px below the 11px label&apos;s line (it was 17px, touching it). {code('size="sm"')} keeps its 12px type inside the chrome. The joined pair
           squares the shared edge from {code("md")} up with {code('chromeClassName="md:rounded-s-none"')} and{" "}
           {code('className="md:-ms-px"')}; on a phone the two stack.
         </Note>
@@ -1008,9 +1007,8 @@ export function ToggleGroup022Demo() {
           <Input label="Amount" defaultValue="1,250.00" />
         </div>
         <Note>
-          20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line
-          (keksdose&apos;s measured {code("ClearedStatusPicker")}, live #288 / #431), and the label and its
-          &ldquo;?&rdquo; clear of the group&apos;s border (dev#593: over the 16px strip it had, they crossed it by
+          20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line, and the label and its
+          &ldquo;?&rdquo; clear of the group&apos;s border (over the 16px strip it had, they crossed it by
           2px).
         </Note>
         <Note>Since 0.22.</Note>

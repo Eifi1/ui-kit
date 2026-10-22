@@ -235,8 +235,8 @@ function OwnNav() {
       />
       <div className="mt-3">
         <Note>
-          Called as <code className="font-mono">useRhfWizardStep(form, onValid)</code> — the positional shape kastlan
-          kept — it validates the WHOLE form through <code className="font-mono">handleSubmit</code>: every rule and a
+          Called as <code className="font-mono">useRhfWizardStep(form, onValid)</code> — the positional
+          shape — it validates the WHOLE form through <code className="font-mono">handleSubmit</code>: every rule and a
           resolver run, focus follows the form&apos;s own <code className="font-mono">shouldFocusError</code>, and{" "}
           <code className="font-mono">onValid</code> receives the (transformed) values. There is no{" "}
           <code className="font-mono">StepperNav</code> here, so there is no wizard to register with; the hook returns

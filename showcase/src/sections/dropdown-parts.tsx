@@ -378,7 +378,7 @@ export function DropdownParts() {
 /* ── since 0.12 ─────────────────────────────────────────────────────────── */
 
 /**
- * `data-clips` on the dropdown lists (keksdose E8). Combobox's listbox and PickerSheet's
+ * `data-clips` on the dropdown lists. Combobox's listbox and PickerSheet's
  * scroller now carry the {@link CLIPS_ATTRIBUTE} marker, so a Tooltip inside a row — the
  * `optionAdornment` badge that says what an option IS — sees a scroll container above it
  * and portals its bubble out, instead of being cut off by the list's edge (and, in jsdom,

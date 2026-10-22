@@ -7,9 +7,9 @@ import { Switch } from "../../../src/components/switch";
 import { Example, Note, Row } from "../lib/section";
 
 /**
- * Chip `snapEdges` and Toaster `dismissOnMiddleClick` (0.18): keksdose dev #576 (the
- * FAILED badge whose left border looked thinner on a 125 % display) and dev #583 (a
- * middle click closes a toast, the way it closes a tab).
+ * Chip `snapEdges` and Toaster `dismissOnMiddleClick` (0.18): a badge whose left
+ * border looked thinner on a 125 % display, and a middle click that closes a toast,
+ * the way it closes a tab.
  */
 
 const STATUSES: Array<{ label: string; tone: ChipTone }> = [

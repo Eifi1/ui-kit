@@ -9,8 +9,8 @@ import { Example, Note, OutTable, Row, Stage, READOUT } from "../lib/section";
  *
  * The failure specimens SIMULATE a browser without a clipboard: for the length of one
  * click they shadow `navigator.clipboard` and `document.execCommand` with versions that
- * refuse, then put the real ones back. That is the plain-http LAN build keksdose
- * reported, reproduced on demand — the kit code that runs is the real one.
+ * refuse, then put the real ones back. That is a plain-http LAN build,
+ * reproduced on demand — the kit code that runs is the real one.
  */
 
 /** Shadow both copy paths with refusing stand-ins until the next macrotask — long
@@ -186,7 +186,7 @@ function DebouncedValue() {
         <Note>
           The first render returns the value itself, not <code className="font-mono">undefined</code>,
           so the list is filled immediately. Every change restarts the wait and the effect&apos;s
-          cleanup clears the old timer — the line two of kastlan&apos;s hand-rolled copies forgot, so
+          cleanup clears the old timer — the line hand-rolled copies forget, so
           a stale query landed after the fresh one.
         </Note>
       </div>

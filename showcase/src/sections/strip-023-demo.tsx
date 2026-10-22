@@ -15,7 +15,7 @@ import {
 import { Example, Note, code } from "../lib/section";
 
 /**
- * 0.23.0: the label strip on its own (keksdose G8) and a lock reason per option on the
+ * 0.23.0: the label strip on its own and a lock reason per option on the
  * tile pickers (the kit's later list). Two specimens: `FieldStrip023Demo` (page:
  * fields) and `TileLock023Demo` (page: choices). Every value is synthetic.
  */

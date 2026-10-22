@@ -152,7 +152,7 @@ function RowKinds() {
 const MESSAGES = [
   { id: "m1", from: "Hausverwaltung Nord", text: "The heating will be serviced on Thursday between 8 and 12." },
   { id: "m2", from: "Stadtwerke", text: "Your meter reading for September is due by the 30th." },
-  { id: "m3", from: "Kastlan support", text: "We have answered your question about the service-charge statement." },
+  { id: "m3", from: "Property support", text: "We have answered your question about the service-charge statement." },
 ];
 
 function RowStates() {

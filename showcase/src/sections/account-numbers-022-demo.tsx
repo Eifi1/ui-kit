@@ -18,8 +18,8 @@ import type { IbanKind } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, code } from "../lib/section";
 
 /**
- * Account numbers (0.22): IbanInput and the IBAN/ISIN helpers (kastlan, keksdose) and
- * PhoneInput (kastlan). Every sample is synthetic — zeros with a single 1, the check
+ * Account numbers (0.22): IbanInput and the IBAN/ISIN helpers and
+ * PhoneInput. Every sample is synthetic — zeros with a single 1, the check
  * digits computed by the kit's own helpers — so nothing here is anybody's account.
  */
 

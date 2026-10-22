@@ -3,8 +3,8 @@ import { Button, CountrySelect, FieldHint, ToggleGroup, WriteLockProvider } from
 import { Example, Note, code } from "../lib/section";
 
 /**
- * CountrySelect (0.22): kastlan's address country with its six neighbours on top, and
- * keksdose's bank picker restricted to fifteen countries. The names are the browser's
+ * CountrySelect (0.22): an address country with its six neighbours on top, and
+ * a bank picker restricted to fifteen countries. The names are the browser's
  * own (`Intl.DisplayNames`), so switching the locale below renames all 249 rows
  * without the kit shipping a single country name.
  */
@@ -16,8 +16,8 @@ const LOCALES = [
   { value: "it-CH", label: "Italiano (CH)" },
 ];
 
-const KASTLAN_PREFERRED = ["CH", "LI", "DE", "AT", "FR", "IT"];
-const KEKSDOSE_BANKS = ["DE", "AT", "CH", "FR", "IT", "ES", "NL", "BE", "PT", "PL", "SE", "DK", "FI", "GB", "IE"];
+const NEIGHBOURS_PREFERRED = ["CH", "LI", "DE", "AT", "FR", "IT"];
+const BANK_COUNTRIES = ["DE", "AT", "CH", "FR", "IT", "ES", "NL", "BE", "PT", "PL", "SE", "DK", "FI", "GB", "IE"];
 
 export function Country022Demo() {
   const [locale, setLocale] = useState("de-CH");
@@ -39,7 +39,7 @@ export function Country022Demo() {
               label="Country"
               value={address}
               onChange={setAddress}
-              preferred={KASTLAN_PREFERRED}
+              preferred={NEIGHBOURS_PREFERRED}
               locale={locale}
               flags
               hint={<FieldHint label="Where the customer lives. The six countries most customers live in come first." />}
@@ -58,14 +58,14 @@ export function Country022Demo() {
         </div>
       </Example>
 
-      <Example label="Restricted list — keksdose's bank countries" hint="countries, error, invalid">
+      <Example label="Restricted list — fifteen bank countries" hint="countries, error, invalid">
         <div className="flex items-start gap-3">
           <CountrySelect
             className="min-w-0 flex-1 sm:max-w-xs"
             label="Bank country"
             value={bank}
             onChange={setBank}
-            countries={KEKSDOSE_BANKS}
+            countries={BANK_COUNTRIES}
             flags
             error={bank ? undefined : "Pick the country your bank is in"}
             aria-required

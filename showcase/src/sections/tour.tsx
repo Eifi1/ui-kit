@@ -456,7 +456,7 @@ export function TourStaleSpotlight022Demo() {
   return (
     <Example
       label="Tour — the step after a spotlighted one"
-      hint="keksdose tours audit §1.0 A: the old hole stayed, and the card sat beside it"
+      hint="a step without a target draws no hole and centres its card"
     >
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="secondary" data-tour="showcase-stale-a" onClick={() => start(STALE_STEPS)}>
@@ -465,7 +465,7 @@ export function TourStaleSpotlight022Demo() {
       </div>
       <Note>
         Before 0.22 a step with no target (or a missing one) right after a spotlighted step kept that step&apos;s hole and
-        parked its card beside it — in 15 steps of keksdose&apos;s 16 tours — and Back→Next kept it indefinitely. React 19
+        parked its card beside it, and Back→Next kept it indefinitely. React 19
         dropped the overlay&apos;s render-phase reset while the follow interval had an update queued; the located rect now
         carries the step it was found for, and a rect from another step is never drawn. Walk it with the arrows too.
       </Note>
@@ -633,8 +633,8 @@ function TourAccountDemo() {
         With {"`account: {load, save, adopt?}`"} the device key is the account&apos;s cache: the page paints from it,
         loads the account on the first reader, on `online` and after each save. A completion goes to the cache and to
         `&lt;key&gt;:pending`, sent as one PATCH; a failure with no answer keeps it, a 403 or 422 drops it.
-        `signOutTourProgress(key)` removes the cache only and keeps the pending record for its owner. kastlan passes
-        `adopt: {"{"}storageKey, discard: true{"}"}` to drop its old device-wide record. Nothing leaves this page.
+        `signOutTourProgress(key)` removes the cache only and keeps the pending record for its owner. An app moving off a device-wide record passes
+        `adopt: {"{"}storageKey, discard: true{"}"}` to drop it. Nothing leaves this page.
       </Note>
     </Example>
   );
@@ -695,7 +695,7 @@ function TourCatalogueBody({ toast }: { toast: string | null }) {
   return (
     <Example
       label="TourCatalogue — the tours page body"
-      hint="keksdose's /tours (docs/tours-harmonization.md): sections per group, the filter bar, keksdose's card"
+      hint="an app's /tours (docs/tours-harmonization.md): sections per group, the filter bar, the tour card"
     >
       <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted">
         The same list in the top bar&apos;s menu:

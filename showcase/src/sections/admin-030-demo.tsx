@@ -48,7 +48,7 @@ interface Person extends UserRosterRow {
   owned: number;
   translation_review_locales: string[];
   translation_review_areas: string[] | null;
-  /** kastlan's case: the account also belongs to other companies. */
+  /** A multi-company app's case: the account also belongs to other companies. */
   otherCompanies?: boolean;
 }
 
@@ -323,7 +323,7 @@ export function UserRoster030Demo() {
           {code("adminUserStates")} (deletion with its day), the two dates, the app&apos;s {code("Owned")} column and the
           row&apos;s menu. Every action asks at the level the pretend server states: resend and reactivate at{" "}
           {code("none")}, the role and the password requirement at {code("acknowledge")}, deactivation at{" "}
-          {code("type_email")}. Deactivating Eva answers kastlan&apos;s {code("other_companies")}.
+          {code("type_email")}. Deactivating Eva answers {code("other_companies")}: the account belongs to other companies too.
         </Note>
       </Example>
 
@@ -412,7 +412,7 @@ export function RolesEditor030Demo() {
   const [lastAdmin, setLastAdmin] = useState(true);
   const [roles, setRoles] = useState<CompanyRole[]>(["ADMIN", "ACCOUNTANT"]);
   return (
-    <Example label="Several roles — RolesEditor" hint="kastlan: the roles in the current company">
+    <Example label="Several roles — RolesEditor" hint="the roles in the current company">
       <div className="space-y-3">
         <Switch label="Ben is the company’s last admin" checked={lastAdmin} onCheckedChange={setLastAdmin} />
         <RolesEditor<CompanyRole>
@@ -504,7 +504,7 @@ export function Invitations030Demo() {
         />
       </div>
       <Note>
-        No word in it says &ldquo;admin&rdquo;: keksdose&apos;s budget owners invite from their sharing too. The address
+        No word in it says &ldquo;admin&rdquo;: an owner can invite from a sharing screen too. The address
         field offers no {code("+app")} tag — it is someone else&apos;s address. With the console backend the answer
         carries the one-time link, and the row offers to copy it until the page is left.
       </Note>

@@ -5,8 +5,8 @@ import { useLocale } from "../i18n";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
- * 0.46: keksdose's date format, lifted (Settings ▸ Appearance, feedback #180). The
- * preference is this demo's state; an app keeps it per device, as keksdose does.
+ * 0.46: an app's date format, lifted (Settings ▸ Appearance). The
+ * preference is this demo's state; an app keeps it per device.
  */
 export function DateFormatDemo() {
   const { code: locale } = useLocale();

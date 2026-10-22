@@ -867,8 +867,7 @@ function show(result: ValidateResult): string {
 /* ── since 0.23 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.23 for the Combobox family and the wizard (keksdose G1, G2, G9 and the kit's later
- * list). Three parts, three pages:
+ * 0.23 for the Combobox family and the wizard. Three parts, three pages:
  *
  *   - {@link ComboboxFamilyLock023Demo} — Entity pickers: the write lock on all five
  *     pickers (Autocomplete included), and MultiEntityCombobox's `hint`;
@@ -884,7 +883,7 @@ const STEPS: WizardStepConfig[] = [
   { id: "done", label: "Done" },
 ];
 
-/** keksdose G1: Finish takes the write lock itself — no `renderFinish` clone. */
+/** Finish takes the write lock itself — no `renderFinish` clone. */
 export function StepperNavFinishLock023Demo() {
   const [locked, setLocked] = useState(true);
   // Done starts the demo wizard over: a fresh key is a fresh `useWizard`.

@@ -196,7 +196,7 @@ export function CommitControls022Demo() {
   return (
     <Example
       label="commit on the controls that save themselves"
-      hint="keksdose K3 — Switch, Checkbox, Select and a ListItem click, Button's pattern; the fields saved on blur since 0.33.1 / 0.34"
+      hint="Switch, Checkbox, Select and a ListItem click, Button's pattern; the fields saved on blur since 0.33.1 / 0.34"
     >
       <div className="flex flex-col gap-4">
         <Switch checked={locked} onCheckedChange={setLocked} label="Viewing a budget shared to read" />
@@ -210,7 +210,7 @@ export function CommitControls022Demo() {
                 <option value="admin">Admin</option>
               </Select>
               {/* Fields that ARE their own save (committed on blur): NumberField since 0.33.1,
-                  Input and the amount fields since 0.34 (KS U10, round 0.34 C2). */}
+                  Input and the amount fields since 0.34. */}
               <Input commit label="Profile name" value={profile} onChange={(e) => setProfile(e.target.value)} />
               <NumberField commit label="Wheelbase (mm)" value={wheelbase} onCommit={setWheelbase} />
               <MoneyField commit label="Assigned" currency="CHF" value={assigned} onCommit={setAssigned} />

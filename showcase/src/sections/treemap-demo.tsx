@@ -285,7 +285,7 @@ export function TreemapDemo() {
   );
 }
 
-/** keksdose's recency plot: one hue, faded by age with `color-mix` — a fill with no
+/** A recency plot: one hue, faded by age with `color-mix` — a fill with no
  *  hex to measure, so without `labelColor` the ink is `currentColor`. */
 function LabelColorTreemaps() {
   const [withInk, setWithInk] = useState(true);

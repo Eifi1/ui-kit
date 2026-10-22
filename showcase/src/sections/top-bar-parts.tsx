@@ -44,7 +44,7 @@ function Where() {
   return <p className={`px-3 py-2 ${READOUT}`}>frame at {pathname}</p>;
 }
 
-/** The app draws its own flags: flag-icons here, as keksdose does. */
+/** The app draws its own flags: flag-icons here. */
 const flag = (country: string) => (
   <span aria-hidden className={`fi fi-${country} inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm`} />
 );
@@ -248,7 +248,7 @@ function SyncStates() {
         </div>
         <Note>
           With {code("onSync")} it is a "sync now" button, disabled offline and mid-round but
-          keeping its colour; without it, a status (§6.9). The second row is kastlan's: a
+          keeping its colour; without it, a status (§6.9). The second row is a
           status only, {code("hideWhenIdle")} (the third one, in sync, draws nothing), the
           short words beside the cloud, and the {code("scope")} words in the tooltip
           (§6.10).
@@ -281,7 +281,7 @@ function Tours() {
           The tours are data — id, title, route, new, taken — and {code("onLaunch")} starts
           one with the kit's {code("TourProvider")}, so the menu needs no registry. The list:
           the tours that start on this page, up to three new ones, a rule and "All tours…".
-          Without {code("href")} (Kurvenschmiede, §6.7) the compass opens the menu and the
+          Without {code("href")} (§6.7) the compass opens the menu and the
           remaining tours follow the rule.
         </Note>
       </div>

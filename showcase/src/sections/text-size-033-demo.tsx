@@ -113,7 +113,7 @@ export function RowActions033Demo() {
         </div>
 
         <div className="rounded-md border border-subtle">
-          {/* A category group's header strip: smaller buttons, 14 px glyphs (keksdose). */}
+          {/* A category group's header strip: smaller buttons, 14 px glyphs. */}
           <div className="flex items-center gap-2 bg-surface-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-secondary">
             <span className="min-w-0 flex-1">Vegetables</span>
             <RowActions
@@ -132,7 +132,7 @@ export function RowActions033Demo() {
           </div>
         </div>
 
-        {/* A hand-built table's actions column (0.47, keksdose N17): RowActionsHead and
+        {/* A hand-built table's actions column (0.47): RowActionsHead and
             ROW_ACTIONS_CELL_CLASS give it rowActionsColumn's heading and cell. */}
         <Table aria-label="Beds" framed>
           <TableHead>
@@ -225,7 +225,7 @@ export function LabelAbove033Demo() {
           <p className="w-48 max-w-full truncate-until-large rounded-md border border-subtle px-2 py-1 text-sm text-primary">
             Sow the second sweetcorn batch in the cold frame by the shed
           </p>
-          {/* 0.33.1 (keksdose): a figure in a narrow cell. The first breaks the amount
+          {/* 0.33.1: a figure in a narrow cell. The first breaks the amount
               mid-number at Large; the second wraps at the space only. */}
           <p className="pt-1 text-xs text-muted">
             The same amount with {code("truncate-until-large")} and {code("truncate-until-large-words")}, in 6rem
@@ -245,7 +245,7 @@ export function LabelAbove033Demo() {
         At Normal the label floats in the field&apos;s top strip, as it always has. At Large and Extra large it
         is a static label above the field — the phone card&apos;s &ldquo;label above value&rdquo; — so it wraps
         like any text and the field no longer reserves its height. Every floating-label field in every app shows
-        it at Large without a change (keksdose re-anchors one Skeleton that was placed from the strip).
+        it at Large without a change (a Skeleton placed from the strip needs re-anchoring).
         `truncate-until-large` is the one name for &ldquo;truncate at Normal, wrap at Large&rdquo; (`overflow-wrap:
         anywhere`) — it replaced five copies in the kit, and it follows the attribute in CSS, so an app&apos;s{" "}
         {code('!large && "truncate"')} can go. For a FIGURE — an amount, a date, a count with its unit — use

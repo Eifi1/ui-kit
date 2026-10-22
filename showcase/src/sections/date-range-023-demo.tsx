@@ -3,7 +3,7 @@ import { DatePicker, DateRangePicker, Switch, type DateRangePickerPreset } from 
 import { Example, Note, code } from "../lib/section";
 
 /**
- * 0.23.0, kastlan: a long range is quick to pick. `monthJump` makes the panel's caption
+ * 0.23.0: a long range is quick to pick. `monthJump` makes the panel's caption
  * open a month grid with year steps — a July-to-June service-charge period was eleven
  * month arrows past its start. Belongs on the `calendars` page.
  */

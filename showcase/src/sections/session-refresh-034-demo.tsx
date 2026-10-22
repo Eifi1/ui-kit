@@ -133,7 +133,7 @@ const CAPTIONS: Record<Answer, string> = {
   renewal: "Stored once, and each request replayed once with the new token.",
   ended: "Definitive: onEnded once, however many requests waited.",
   busy: "Transient: three attempts, 1 s and 3 s apart; each request rejects with its own 401, marked.",
-  elsewhere: "Stored, nothing replayed: kastlan's refresh that landed in another company.",
+  elsewhere: "Stored, nothing replayed: a refresh that landed in another company.",
 };
 
 /** The pretend app and its log live beside the page, as the cold-start demo's watcher

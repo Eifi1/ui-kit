@@ -111,7 +111,7 @@ function ToastUndo() {
           Delete a row (its &ldquo;⋯&rdquo; menu — a delete is never a bin in every row): the toast offers the
           step back, which is why this one passes <code className="font-mono">confirm: false</code> instead of
           asking first, and undoing it offers the step forward again —
-          keksdose&apos;s journal pattern, with the journal left to the app. Any toast with an{" "}
+          a journal pattern, with the journal left to the app. Any toast with an{" "}
           <code className="font-mono">action</code> stays up 8s rather than 4s unless it is given a{" "}
           <code className="font-mono">duration</code>, so the button can be reached. The action is a real
           button inside the toaster&apos;s polite live region: it is announced with the message, Tab reaches

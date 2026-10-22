@@ -200,7 +200,7 @@ function FloatingPanels() {
             fabLabel="Open the assistant"
             fabIcon={<Bot />}
             corner={corner}
-            // Raised to clear the standalone button below it — keksdose's assistant clears
+            // Raised to clear the standalone button below it — an assistant button clears
             // the transactions page's own action group the same way.
             offset="calc(1rem + 4rem)"
             fabNativeTitle={nativeTitles}

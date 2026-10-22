@@ -319,18 +319,18 @@ window.location.assign(payPageUrl(url, i18n.language));`;
 const BUILD = `# The web image's build stage — the kit's static page, configured once:
 RUN npx eifi1-pay-page --out /srv-pay \\
       --token "$PADDLE_CLIENT_TOKEN" --environment "$PADDLE_ENVIRONMENT" \\
-      --app keksdose --app-url "$PAY_APP_URL"   # 0.39: the host's app, from the kit's map`;
+      --app my-app --app-url "$PAY_APP_URL"   # the host's app, a tag of the kit's map`;
 
 const CONFIG = `// /srv-pay/pay-config.json, as the script writes it
 {
   "token": "live_…",
   "environment": "live",
-  "app": "keksdose",
+  "app": "my-app",
   "apps": {
-    "keksdose": { "name": "Keksdose", "returnUrl": "https://keksdose.app/settings/subscription",
-                  "termsUrl": "https://keksdose.app/terms", "privacyUrl": "https://keksdose.app/privacy" },
-    "kastlan": { "name": "kastlan", "returnUrl": "https://kastlan.app/admin/billing", … },
-    "kurvenschmiede": { "name": "Kurvenschmiede", … }
+    "my-app": { "name": "My App", "returnUrl": "https://my-app.example/settings/subscription",
+                "termsUrl": "https://my-app.example/terms", "privacyUrl": "https://my-app.example/privacy" },
+    "other-app": { "name": "Other App", "returnUrl": "https://other-app.example/admin/billing", … },
+    …
   }
 }`;
 
@@ -350,7 +350,7 @@ http://{$PAY_HOST:pay.invalid}:{$PORT} {
 
 export function PayPage033Demo() {
   const labels = useBillingLabels();
-  const link = "https://pay.keksdose.app/?_ptxn=txn_01j9example";
+  const link = "https://pay.my-app.example/?_ptxn=txn_01j9example";
   const hosted = "https://sandbox-checkout.paddle.com/checkout/custom/abc";
   return (
     <Example label="The pay page — dist/pay on pay.<app>" hint="a static page the kit ships; each app serves it on its own pay host. Paddle.js runs only there">
@@ -363,8 +363,8 @@ export function PayPage033Demo() {
             ['paddleLocale("de-CH")', paddleLocale("de-CH")],
             ['paddleLocale("zh")', paddleLocale("zh")],
             ['paddleLocale("hu")', paddleLocale("hu")],
-            ['checkoutReturnUrl("https://keksdose.app/settings/subscription")', checkoutReturnUrl("https://keksdose.app/settings/subscription")],
-            ['checkoutReturnUrl("https://kastlan.app/admin/billing?tab=plans#invoices")', checkoutReturnUrl("https://kastlan.app/admin/billing?tab=plans#invoices")],
+            ['checkoutReturnUrl("https://my-app.example/settings/subscription")', checkoutReturnUrl("https://my-app.example/settings/subscription")],
+            ['checkoutReturnUrl("https://other-app.example/admin/billing?tab=plans#invoices")', checkoutReturnUrl("https://other-app.example/admin/billing?tab=plans#invoices")],
           ]}
         />
         <pre className={PRE}>{BUILD}</pre>
@@ -383,7 +383,7 @@ export function PayPage033Demo() {
       </div>
       <Note>
         Paddle.js is a third-party script, always the latest from Paddle&apos;s CDN. On an app&apos;s own origin it
-        would run beside what one injected script could take — session tokens in localStorage, keksdose&apos;s data
+        would run beside what one injected script could take — session tokens in localStorage, an app&apos;s data
         key in IndexedDB — and a CSP relaxed for a `/pay` route cannot help: storage is per origin, not per path.
         So the kit ships `dist/pay/` (an `index.html` with no inline script or style, `pay.js`, `pay.css`, and
         Paddle&apos;s Apple Pay file), with no React, no sign-in, no storage and no request to the app, and each
@@ -432,7 +432,7 @@ export function WriteLockKinds033Demo() {
   const lock = combineWriteLocks([
     { locked: demo, reason: demoLabels.writeLocked, kind: "demo" },
     billingLock,
-    // An app's own kind, Kurvenschmiede's "access": a curve shared to view.
+    // An app's own kind, "access": a record shared to view.
     { locked: access, reason: "Shared with you to read.", kind: "access" },
   ]);
   return (
@@ -548,7 +548,7 @@ export function ShareCardBillingLock033Demo() {
         grantee and withdrawing an invitation stay live; the add form is locked with the billing reason; and the
         role choice reads `roles` narrowest first — Ben, a viewer, has only raises (locked); Cleo, an editor, can be
         lowered to viewer while manager is dimmed and refused; Dan, a manager, can only be lowered (live). Under the
-        demo&apos;s lock nothing moves. Kurvenschmiede&apos;s server refuses exactly that: a widening while lapsed,
+        demo&apos;s lock nothing moves. A server following the contract refuses exactly that: a widening while lapsed,
         not a narrowing. Pass `roles` in that order — the doc of `SharePanelProps.roles` now says so.
       </Note>
     </Example>

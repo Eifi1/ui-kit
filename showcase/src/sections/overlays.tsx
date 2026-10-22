@@ -200,7 +200,7 @@ export function PopoversMenusTooltips() {
         <strong>Only one HoverMenu in the whole document may be open at a time.</strong> The
         “currently open menu” is a module-level variable, so opening one of these closes the
         other — and closes the palette and language menus in the top bar too, which are the same
-        component. That is feedback #251 (adjacent top-bar menus overlapping) and it is correct
+        component. That keeps adjacent top-bar menus from overlapping, and it is correct
         for a top bar; it is worth knowing before you file it as a bug here.
       </Note>
 
@@ -465,7 +465,7 @@ function BackdropClose() {
         <p className="text-xs text-muted">
           A plain <code className="font-mono">onClick</code> fires on mouseup and targets the
           common ancestor of the down and up elements, so both directions of that drag used to
-          close a dialog mid-edit (feedback #254).
+          close a dialog mid-edit.
         </p>
       </div>
     </div>

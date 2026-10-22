@@ -461,7 +461,7 @@ function RedactPaletteDemo() {
 
 function ControlledQueryDemo() {
   const [open, setOpen] = useState(false);
-  // The query is the URL's `q`, as keksdose binds it: it survives a reload, can be sent
+  // The query is the URL's `q`, as an app binds it: it survives a reload, can be sent
   // as a link, and Back walks through the searches. `replace` so each keystroke does not
   // become a history entry of its own.
   const [params, setParams] = useSearchParams();

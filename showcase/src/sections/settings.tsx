@@ -333,7 +333,7 @@ function PasswordRow() {
         </div>
         <div className="mt-3">
           <Note>
-            Since 0.34 (Kurvenschmiede&apos;s U3) the card reads a rejection by its code: server-kit&apos;s{" "}
+            Since 0.34 the card reads a rejection by its code: server-kit&apos;s{" "}
             <code className="font-mono">400 password_incorrect</code> is said under the current password, in{" "}
             <code className="font-mono">labels.wrongPassword</code> — the words the email-change and deletion cards
             use — and that field takes the focus. <code className="font-mono">describeError</code> is asked first, for

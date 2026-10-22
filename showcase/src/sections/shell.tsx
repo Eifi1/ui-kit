@@ -103,8 +103,7 @@ const ROLES = ["admin", "accountant", "viewer"] as const;
 /**
  * A real `AppShellNavItem[]`, typed against the exported interface so this block
  * cannot drift from the shape it documents: rename a field in the kit and this file
- * stops compiling. "Import & Export" is the entry from the source's own war story
- * (keksdose live #210) — the label that wrapped to two lines in the mobile bar and
+ * stops compiling. "Import & Export" is the entry whose label wrapped to two lines in the mobile bar and
  * pushed its cell taller than the rest, which is what `shortLabel` was added for.
  */
 const NAV_REFERENCE: AppShellNavItem[] = [
@@ -180,7 +179,7 @@ export function ShellSection() {
 
       <Example
         label="TopBarActionMenu href — the icon is a link too"
-        hint="hover opens the list; a click goes where the menu's last row goes (keksdose dev #585)"
+        hint="hover opens the list; a click goes where the menu's last row goes"
       >
         <div className="space-y-3">
           <Row>
@@ -718,7 +717,7 @@ const DEMO_NAV: AppShellNavItem[] = [
   },
 ];
 
-/** Eight entries — one more than keksdose's seven — for the phone bar's five cells. */
+/** Eight entries — more than fit — for the phone bar's five cells. */
 const PHONE_NAV: AppShellNavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   {
@@ -1133,12 +1132,12 @@ function PageContentsExample() {
 /* ── since 0.13 ─────────────────────────────────────────────────────────── */
 
 /**
- * The 0.13 follow-ups from keksdose: a header link that can close the account menu
- * (F7), and a support composer that canned-reply chips can write into, with a hint of
- * the caller's own (F9).
+ * A header link that can close the account menu,
+ * and a support composer that canned-reply chips can write into, with a hint of
+ * the caller's own.
  */
 
-/** keksdose F7: the admin role chip in the account header links to the admin area. */
+/** The admin role chip in the account header links to the admin area. */
 export function AccountHeaderLinkDemo() {
   const [log, setLog] = useState("—");
   return (

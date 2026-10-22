@@ -26,13 +26,13 @@ import {
 import { Example, Note, code, beat } from "../lib/section";
 
 /**
- * 0.19 — the translation review as kit parts (H1): keksdose's /translations, which kastlan
- * was about to build a second time. The "server" is component state and a timeout; the
- * app's bundles are a dozen keksdose-style strings, and the kit's own words come from
+ * 0.19 — the translation review as kit parts: one app's /translations, before a second
+ * app built it again. The "server" is component state and a timeout; the
+ * app's bundles are a dozen app-style strings, and the kit's own words come from
  * `kitLabelStrings` under `kit.`, as every app's review will list them.
  */
 
-// The app's own strings, keksdose-style: dotted keys, English as the reference.
+// The app's own strings: dotted keys, English as the reference.
 const APP: Record<string, Record<string, unknown>> = {
   en: {
     budget: {
@@ -47,7 +47,7 @@ const APP: Record<string, Record<string, unknown>> = {
     },
   },
   fr: {
-    // `goal_hint` is missing: kastlan's French lacks 172 strings, and this is one.
+    // `goal_hint` is missing: an app's French may lack strings, and this is one.
     budget: { rta: "À attribuer", overspent: "Dépassement de {{amount}}" },
     common: { save: "Enregistrer", cancel: "Annuler", items: "des éléments", deleted_user: "<utilisateur supprimé>" },
     legal: {
@@ -150,7 +150,7 @@ export function TranslationReviewDemo() {
   const editorRow = rowsByLocale.get("fr")?.find((row) => row.key === "legal.terms");
 
   // The app's request, here a timeout: answers with the rows it wrote, which the page
-  // merges into its copy — as keksdose's cache patch does.
+  // merges into its copy — as an app's cache patch does.
   const save = async (writes: TranslationReviewWrite[]) => {
     await beat(500);
     if (refuse) throw new Error("403");

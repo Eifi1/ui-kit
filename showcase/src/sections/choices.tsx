@@ -148,7 +148,7 @@ export function Choices() {
         label="Checkbox — on a field's baseline"
         hint={<code className="font-mono">className=&quot;self-end pb-2&quot;</code>}
       >
-        {/* Lenkbank's CheckboxField shape: a bare box has no floating label, so in a
+        {/* A CheckboxField shape: a bare box has no floating label, so in a
             grid of fields it has to drop to the bottom of its cell to sit on the row. */}
         <Stage>
           <div data-stage="wide" className="mx-auto grid max-w-2xl grid-cols-2 gap-3">
@@ -414,7 +414,7 @@ export function CheckboxGroup022Demo() {
   const [locales, setLocales] = useState<string[]>(["de", "fr"]);
   const [layout, setLayout] = useState<string[]>([]);
   return (
-    <Example label="CheckboxGroup — a reviewer's languages" hint="Kurvenschmiede's reviewer dialog, for every app">
+    <Example label="CheckboxGroup — a reviewer's languages" hint="a reviewer dialog, for every app">
       <div className="flex flex-col gap-6">
         <CheckboxGroup
           legend="Languages this reviewer may approve"

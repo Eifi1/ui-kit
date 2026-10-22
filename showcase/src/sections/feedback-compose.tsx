@@ -446,7 +446,7 @@ function Multiple() {
         <code className="font-mono">maxAttachments</code>, default {DEFAULT_MAX_ATTACHMENTS}).
         Two pastes are two files: the second is named{" "}
         <code className="font-mono">pasted-2.png</code>, because a backend that stores by name
-        would otherwise keep only one of them — the loss keksdose reported (dev#578).
+        would otherwise keep only one of them.
       </Note>
     </div>
   );
@@ -724,7 +724,7 @@ export function FeedbackAttachmentRefs022Demo() {
         Every way in — pick, paste, capture — is validated as in the File modes, then handed to {code("onUpload")}; a
         chip with a spinner stands in until it answers, and the ref joins {code("value")}. A rejection drops the chip and
         reports {code('onError("upload", error)')}. Removal goes by key ({code("onRemove")}). Uploads in flight count
-        against {code("max")}. keksdose K16 (the support chat&apos;s AttachmentPicker).
+        against {code("max")}.
       </Note>
       <Note>Since 0.22.</Note>
     </Example>
@@ -807,7 +807,7 @@ export function FeedbackDialogButtons025Demo() {
         />
         <Note>
           FeedbackAttachmentField took {code("buttonVariant")} / {code("buttonSize")} in 0.24
-          (keksdose&apos;s support chat), but the dialog builds its field itself and passed neither.
+          (a support chat&apos;s picker), but the dialog builds its field itself and passed neither.
           It now takes {code("attachmentButtonVariant")} / {code("attachmentButtonSize")}, named like
           its other attachment options ({code("attachmentAccept")}, {code("onAttachmentError")}),
           in both {code("attachments")} modes. Left out, the buttons are secondary / md as before.
@@ -906,10 +906,10 @@ export function FeedbackAttachment016Demo() {
 /* ── since 0.23 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.23.0, from keksdose's 0.22 adoption report (the support chat): the attachment
- * field's refusals name the file and the limit (G5a), the field holds while a send is in
- * flight and, uploading on pick, takes the write lock (G5b), and the composer counts
- * against the server's limit as Textarea does (G6).
+ * 0.23.0, a support chat: the attachment
+ * field's refusals name the file and the limit, the field holds while a send is in
+ * flight and, uploading on pick, takes the write lock, and the composer counts
+ * against the server's limit as Textarea does.
  */
 
 const ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf", "text/plain"];
@@ -978,7 +978,7 @@ export function FeedbackAttachment023Demo() {
         {code("filePicker")} labels FileButton uses: “photo.png” is larger than 200 kB. {code("disabled")} holds the field
         while a send is in flight — the chips stay, nothing is added or removed. {code("refs")} mode uploads on pick, so
         it is a commit: {code("disabledReason")} (or {code("commit")} under a locked WriteLockProvider) keeps the
-        buttons focusable and says why. keksdose G5a / G5b.
+        buttons focusable and says why.
       </Note>
       <Note>Since 0.23.</Note>
     </Example>
@@ -989,8 +989,8 @@ export function FeedbackAttachment023Demo() {
 
 /**
  * 0.27's submit side of feedback (docs/feedback-harmonization.md §4.1, §4.2): the top-bar
- * menu, the wired dialog, the context box and the screenshot capture — what keksdose,
- * kastlan and Kurvenschmiede each built around the kit's dialog, once. Synthetic data
+ * menu, the wired dialog, the context box and the screenshot capture — what each app
+ * built around the kit's dialog, once. Synthetic data
  * only; nothing leaves the page.
  */
 
@@ -1026,7 +1026,7 @@ export function FeedbackSubmit027Demo() {
     version: "0.27.0",
   });
 
-  // keksdose's extra rows, as an app passes them: the help assistant and the support chat
+  // An app's extra rows, as it passes them: the help assistant and the support chat
   // with its unread count.
   const extraEntries: TopBarMenuEntry[] = [
     { kind: "link", key: "assistant", to: HERE, icon: <Sparkles className="size-4" />, label: "Help assistant" },

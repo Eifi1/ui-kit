@@ -14,7 +14,7 @@ import { Example, Note, code, beat } from "../lib/section";
 
 /**
  * THE ACCOUNT'S OWN SETTINGS (0.30, docs/user-admin-harmonization.md §6): first and last
- * name, the email change with its confirmation link, "sign out everywhere" and kastlan's
+ * name, the email change with its confirmation link, "sign out everywhere" and the
  * device list, deleting the account in either mode, and the data export — plus the
  * sign-in extras from the apps' 0.29 adoption (a backup code on the 2FA step, the
  * challenge token in its slot, "too many attempts"). Every part takes callbacks; here a
@@ -159,9 +159,9 @@ export function Sessions030Demo() {
   const [sessions, setSessions] = useState(DEVICES);
   const { lines, log } = useLog();
   return (
-    <Example label="SessionsSetting — sign out everywhere, and kastlan's device list" hint="this device signs out too">
+    <Example label="SessionsSetting — sign out everywhere, and the device list" hint="this device signs out too">
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Switch checked={withList} onCheckedChange={setWithList} label="Sessions stored (kastlan)" />
+        <Switch checked={withList} onCheckedChange={setWithList} label="Sessions stored" />
         <Button size="sm" variant="secondary" onClick={() => setSessions(DEVICES)}>
           Reset the list
         </Button>
@@ -238,9 +238,9 @@ export function DeleteAccount030Demo() {
       <Readout lines={lines} />
       <Note>
         The password is {code(`"${PASSWORD}"`)}; the address is compared in any case. The mode&apos;s sentence sits
-        under the title, read before anything is pressed. &quot;Owns shared work&quot; adds Kurvenschmiede&apos;s
+        under the title, read before anything is pressed. &quot;Owns shared work&quot; adds the
         hand-over line ({code("handOverCount")}); &quot;Last admin&quot; answers {code("409 {code: \"last_admin\"}")}
-        — in the operator mode with kastlan&apos;s {code("companies")}, which the sentence names. A wrong password
+        — in the operator mode with the app&apos;s {code("companies")}, which the sentence names. A wrong password
         is server-kit&apos;s {code("400 password_incorrect")}, said under the field.
       </Note>
     </Example>
@@ -321,7 +321,7 @@ export function SignInExtras030Demo() {
               answer(
                 `onSubmit({ email: "${email}" })`,
                 beat(700).then((): SignInAnswer => {
-                  // keksdose's shape: uncoded, with the wait in a Retry-After header.
+                  // One app's shape: uncoded, with the wait in a Retry-After header.
                   if (email === "slow@example.com")
                     throw Object.assign(refusal(429), {
                       response: { status: 429, headers: { "retry-after": "30" }, data: { detail: "Too many requests" } },

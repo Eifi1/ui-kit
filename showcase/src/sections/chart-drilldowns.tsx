@@ -19,7 +19,7 @@ import { useChartHex } from "../stores";
 import { numberFormat } from "../lib/number-format";
 
 /**
- * Chart drilldowns — the pattern keksdose's reports use, on fixture data.
+ * Chart drilldowns — the pattern an app's reports use, on fixture data.
  *
  * The shape is the same in both specimens:
  *  - the drill state is a PATH (the ids chosen so far), never a copy of the data, so
@@ -31,7 +31,7 @@ import { numberFormat } from "../lib/number-format";
  *  - the change is announced through `useAnnounce`, and focus that the remount would
  *    have dropped on <body> is put back on the level's title.
  *
- * keksdose keeps the path in the URL (`?group=`), so the browser's Back button drills
+ * An app keeps the path in the URL (`?group=`), so the browser's Back button drills
  * up and a drilled view can be shared. The showcase keeps it in component state: this
  * page's hash is the router's, and two demos writing query params would fight.
  */
@@ -662,7 +662,7 @@ function TreemapDrilldown() {
   const { announce, regionProps } = useAnnounce();
   const pathKey = `${path.group ?? "all"}/${path.category ?? ""}`;
   const { rootRef, titleRef } = useDrillFocus(pathKey);
-  // Concrete hex for the active palette, as keksdose's `useChartHex()`: a child tile
+  // Concrete hex for the active palette, as an app's `useChartHex()`: a child tile
   // painted in its group's colour gets label ink MEASURED against that colour, which a
   // `var(--chart-N)` fill cannot (the kit falls back to currentColor for those).
   const pal = useChartHex();

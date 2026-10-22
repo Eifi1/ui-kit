@@ -5,8 +5,8 @@ import { Button, ToggleGroup, useSearchParamState, useSearchParamsState } from "
 import { Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
- * 0.25 — URL writes that compose (keksdose live #378), for the "State in the URL" page
- * (`url-state`). keksdose wired TranslationReviewPanel's `onFilterChange` to four
+ * 0.25 — URL writes that compose, for the "State in the URL" page
+ * (`url-state`). An app wired TranslationReviewPanel's `onFilterChange` to four
  * `useSearchParamState` setters; react-router hands each setter's updater the RENDER's
  * params, so the last one wrote the other three's old values back and no filter had
  * any effect. Now the setters build on each other, one handler adds one history entry,
@@ -179,7 +179,7 @@ function ChainedSettersDemo() {
         <Note>
           A preset calls {code('setFrom("2026-01-01")')} and then {code('setTo("2026-03-31")')}. Before 0.25 the
           second started from the URL as it was rendered and wrote the old {code("from")} back, so only{" "}
-          {code("to")} landed (keksdose live #378). Now the second builds on the first, and one Back undoes the
+          {code("to")} landed. Now the second builds on the first, and one Back undoes the
           preset. Writing what the URL already says navigates nowhere — no dead history entry.
         </Note>
       </div>

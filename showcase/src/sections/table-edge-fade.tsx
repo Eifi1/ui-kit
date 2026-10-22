@@ -130,7 +130,7 @@ export function TableEdgeFadeDemo() {
                 <TableHeaderCell numeric>Net</TableHeaderCell>
                 <TableHeaderCell numeric>VAT</TableHeaderCell>
                 <TableHeaderCell>Status</TableHeaderCell>
-                {/* On screen, as every actions column's heading is (0.46.1, dev#598). */}
+                {/* On screen, as every actions column's heading is (0.46.1). */}
                 <TableHeaderCell>Actions</TableHeaderCell>
               </TableRow>
             </TableHead>

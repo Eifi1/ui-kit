@@ -4,7 +4,7 @@ import { Checkbox, Chip, List, ListItem, ProgressBar, SignedAmount, Tooltip } fr
 import { Example, Note, OutTable } from "../lib/section";
 
 /**
- * ListItem's 0.16 slots (keksdose P2): `content` inside the target, `overline`,
+ * ListItem's 0.16 slots: `content` inside the target, `overline`,
  * `metaWrap`, `trailingTone`, `renderRow`, `leadingActions`, and the expandable row.
  */
 

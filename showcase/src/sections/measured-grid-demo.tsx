@@ -400,7 +400,7 @@ function Rename() {
         </div>
       </Stage>
       <Note>
-        keksdose&rsquo;s budgets rename was an {code("Input")} with Save and Cancel and no Escape. The failure is shown
+        A rename field with Save and Cancel needs Escape too. The failure is shown
         under the field, described and spoken; the next keystroke clears it. Focus returns to the value after Enter or
         Escape, and stays where you went after a save that came from leaving the field.
       </Note>

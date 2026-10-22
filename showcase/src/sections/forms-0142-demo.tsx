@@ -3,8 +3,8 @@ import { IntegerField, MoneyField, formatMoney } from "@eifi1/ui-kit";
 import { Example, Note, READOUT } from "../lib/section";
 
 /**
- * 0.14.2 on the Forms page: `MoneyField` (kastlan 52), a number-valued money input for
- * rows and cells outside a form, and `IntegerField` (kastlan 51), the plain whole-number
+ * 0.14.2 on the Forms page: `MoneyField`, a number-valued money input for
+ * rows and cells outside a form, and `IntegerField`, the plain whole-number
  * preset.
  */
 

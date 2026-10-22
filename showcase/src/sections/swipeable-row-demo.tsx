@@ -355,7 +355,7 @@ function SwipeTones() {
   );
 }
 
-/** keksdose's three curtains (§12.6): UNCLEARED is exactly its status pill's fill, and
+/** An app's three curtains (§12.6): UNCLEARED is exactly its status pill's fill, and
  *  the two deletes keep their two strengths. Palette hex, the same in both themes. */
 const PAINTS: Array<{ label: string; paint: SwipePaint; icon: ReactNode }> = [
   { label: "Uncleared", paint: { fill: "#d97706", foreground: "#0f172a" }, icon: <CircleSlash className="size-4" /> },
@@ -384,7 +384,7 @@ function SwipePaints() {
         {`{ label: "Uncleared", paint: { fill: "#d97706", foreground: "#0f172a" }, onCommit }`}
       </pre>
       <Note>
-        `paint` is for the case a tone cannot say: keksdose&apos;s UNCLEARED curtain must be its pill&apos;s own
+        `paint` is for the case a tone cannot say: an UNCLEARED curtain must be its pill&apos;s own
         amber, and its two deletes are two strengths of one red on purpose. The kit lays the fill on the panel as
         a custom property: idle is `color-mix(in oklab, fill 14%, var(--bg-surface))` under the body ink — a
         mid-tone as text on its own wash would be 2.4:1 — armed is the fill under the foreground. Values are CSS

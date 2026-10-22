@@ -41,8 +41,8 @@ function SignOutPendingDemo() {
           value={words}
           onChange={setWords}
           options={[
-            { value: "kept", label: "keepsChanges (kastlan)" },
-            { value: "lost", label: "keepsChanges={false} (keksdose)" },
+            { value: "kept", label: "keepsChanges" },
+            { value: "lost", label: "keepsChanges={false}" },
           ]}
         />
         <Switch checked={plan} onCheckedChange={setPlan} label="Some wait for a plan" />
@@ -130,7 +130,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { createQueryPersistence, isSharedComputer } from "@eifi1/ui-kit/offline";
 
 const persistence = createQueryPersistence({
-  app: "kastlan",
+  app: "my-app",
   user: me.id,
   company: me.companyId,           // the switch changes the key: no wipe, no leak
   denyRoots: ["admin", "platform", "billing", "translations", "assistant", "reports", "bank-accounts"],

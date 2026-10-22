@@ -201,7 +201,7 @@ function AdminFollowUps045() {
     <>
       <Example
         label="AdminWaitingBadge — the count on an IconButton"
-        hint="kastlan's top-bar platform button: deletion requests waiting on the operator (§9.3)"
+        hint="a top-bar platform button: deletion requests waiting on the operator (§9.3)"
       >
         <ToggleGroup<string>
           aria-label="Waiting"

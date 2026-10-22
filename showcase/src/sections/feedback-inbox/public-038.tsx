@@ -211,7 +211,7 @@ export function FeedbackPublic038Demo() {
         <Note>
           {code("GET /feedback/public")} carries titles only — no body, no submitter, no file (§9.10) — and the
           server sorts: {code("newest")}, {code("votes")} (most, then newest) or {code("updated")}. The search box is
-          drawn only with {code("onSearchChange")}; Kurvenschmiede seals its titles and passes none. The
+          drawn only with {code("onSearchChange")}; an app that seals its titles passes none. The
           viewer&apos;s own report counts as their vote and is locked. The detail names people by first name, or
           &quot;A user&quot;, and merges the admin&apos;s replies with the comments, oldest first.
         </Note>
@@ -334,7 +334,7 @@ export function FeedbackPublicCompose038Demo() {
           {code('<FeedbackMenu publicHref="/all-feedback" />')} adds <strong>All feedback</strong> above the list
           link, for everyone; &quot;My feedback&quot; stays. {code("useFeedbackSubmit({ publicNotice: true })")}{" "}
           writes &quot;Other users will see the title and text (never your screenshots or files)&quot; under the
-          body. Leave both out where the app has no public parts (kastlan) or the viewer may not read them.
+          body. Leave both out where the app has no public parts or the viewer may not read them.
         </Note>
         <Note>Since 0.38.</Note>
       </div>
@@ -374,8 +374,8 @@ export function FeedbackNotificationTypes038Demo() {
       <Note>
         {code("feedback_answered")} fires on a reply, {code("feedback_comment")} on a visible comment, to the author
         and the earlier commenters, never the writer; no content in the mail or the push. Spread the entries into
-        the app&apos;s own {code("types")}: the card draws only what the server answered, so kastlan, which declares{" "}
-        {code("feedback_answered")} alone, shows one.
+        the app&apos;s own {code("types")}: the card draws only what the server answered, so an app that declares{" "}
+        {code("feedback_answered")} alone shows one.
       </Note>
       <Note>Since 0.38.</Note>
     </Example>

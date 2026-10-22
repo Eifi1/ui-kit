@@ -26,7 +26,7 @@ import { Example, Note, code } from "../lib/section";
 /* ── since 0.19 ─────────────────────────────────────────────────────────── */
 
 /**
- * The legal pages' shell (0.19, harmonisation H10): keksdose's and kastlan's two copies,
+ * The legal pages' shell (0.19): the apps' copies,
  * once, for every app. The texts here are placeholders; an app's are its own.
  */
 
@@ -76,8 +76,8 @@ function Legal019Demo() {
           </LegalLayout>
         </div>
         <Note>
-          {code("LegalLayout")} is a column, not a page: keksdose puts it inside its landing header and footer,
-          kastlan inside {code('<AuthLayout width="wide" card={false}>')} — whose footer then takes{" "}
+          {code("LegalLayout")} is a column, not a page: one app puts it inside its landing header and footer,
+          another inside {code('<AuthLayout width="wide" card={false}>')} — whose footer then takes{" "}
           {code("<LegalLinks links currentHref nav={false} />")}, since AuthLayout names its own {code("<nav>")}.{" "}
           {code("notice")} is per page (a {code('role="note"')} banner, not an alert); {code("LegalSection")} keeps a
           translation&apos;s line breaks in {code("body")} and takes children for links. Review the texts under the{" "}
@@ -260,7 +260,7 @@ function Legal028Demo() {
   return (
     <Example
       label="LegalPage — the three pages, the kit's wording, numbers and references"
-      hint="keksdose's frame; the shared sections are the kit's, the rest the app's"
+      hint="an app's frame; the shared sections are the kit's, the rest the app's"
     >
       <div className="flex flex-col gap-3">
         <ToggleGroup

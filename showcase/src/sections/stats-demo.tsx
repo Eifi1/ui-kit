@@ -164,8 +164,8 @@ export function StatsDemo() {
         </StatTileGrid>
         <Note>
           <code className="font-mono">projection</code> is drawn directly under the value, before the
-          delta and the history rows, with only a hair of space — keksdose&apos;s &ldquo;Projected
-          €1,850&rdquo; under a to-date €420, which it used to smuggle into{" "}
+          delta and the history rows, with only a hair of space — a &ldquo;Projected
+          €1,850&rdquo; under a to-date €420, not smuggled into{" "}
           <code className="font-mono">description</code>. A sub-value&apos;s{" "}
           <code className="font-mono">tone: &quot;none&quot;</code> leaves the figure in the row&apos;s own
           muted text even on a toned tile (the Net tile: August follows <code className="font-mono">signed</code>,
@@ -186,7 +186,7 @@ export function StatsDemo() {
           <StatTile size="sm" label="Kündigungen im laufenden Quartal (wraps)" value={12} tone="warning" />
         </StatTileGrid>
         <Note>
-          keksdose&apos;s admin wall: German labels wrapped onto two or three lines and put each
+          An admin wall: German labels wrapped onto two or three lines and put each
           tile&apos;s figure at a different height. With <code className="font-mono">truncateLabel</code>{" "}
           the first and third are cut and show the whole label on hover and focus; &ldquo;Neue
           Konten&rdquo; fits and gets no bubble repeating itself. The last tile is the default, which

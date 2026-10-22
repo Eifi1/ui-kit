@@ -71,7 +71,7 @@ function Passkeys018Demo() {
   const [asking, setAsking] = useState(false);
   const [password, setPassword] = useState("");
   const [log, setLog] = useState("—");
-  // The step's answer, and what it produced for onAdd — Kurvenschmiede's server mints
+  // The step's answer, and what it produced for onAdd — a server mints
   // the registration options only once the password is right.
   const answer = useRef<(go: boolean) => void>(() => {});
   const options = useRef<string | null>(null);

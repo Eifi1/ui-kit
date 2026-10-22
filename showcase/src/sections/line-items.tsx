@@ -153,7 +153,7 @@ function LineItemsTotals() {
  * 0.16 on the Forms page: `LineItems`' `summary` (a split's remainder, toned, with an
  * action that settles it), `fieldLabels="floating"` (the form's own floating-label
  * fields in the lines) and `narrowColumns={2}` (two short fields to a row on a phone)
- * — what keksdose's split editor needed to stop being a local copy.
+ * — what a split editor needs.
  */
 
 type Split = { id: number; category: string; amount: number | null; date: string };
@@ -278,9 +278,9 @@ function LineItems016Demo() {
 /* ── since 0.17 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.17 on the Forms page: `LineItems`' summary grows a `status` slot (kastlan's
+ * 0.17 on the Forms page: `LineItems`' summary grows a `status` slot (a
  * "Balanced" chip beside a journal entry's difference), the money tones, a tone for a
- * value-less state line and a link-style action (keksdose's split remainder); the rows
+ * value-less state line and a link-style action (a split remainder); the rows
  * grow `removePlacement="inline"` (the delete button beside the last field on a phone)
  * and `removeAlign` (level with a floating field on the wide grid).
  */
@@ -572,8 +572,8 @@ function LineItemsRowProps022Demo() {
       <Note>
         The row&apos;s {code("role")}, its {code("aria-label")} ({code("rowLabel")}) and {code("data-line-items-row")} stay
         the list&apos;s; a {code("className")} is added after the row&apos;s own, and an {code("onKeyDown")} runs before
-        the row&apos;s Ctrl/⌘+Enter &ldquo;add a row&rdquo; ({code("preventDefault()")} keeps it from adding). keksdose K20:
-        its rule editor&apos;s tour step anchored on a span around one field (dev#495).
+        the row&apos;s Ctrl/⌘+Enter &ldquo;add a row&rdquo; ({code("preventDefault()")} keeps it from adding). A tour step can
+        anchor on the row itself rather than on a span around one field.
       </Note>
       <Note>Since 0.22.</Note>
     </Example>

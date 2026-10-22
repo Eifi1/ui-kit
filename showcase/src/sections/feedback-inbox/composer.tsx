@@ -206,7 +206,7 @@ const CANNED = [
   "Could you send a screenshot of the error?",
 ];
 
-/** keksdose F9: canned replies for the support admin, and a hint naming the member. */
+/** Canned replies for the support admin, and a hint naming the member. */
 function ComposerCannedRepliesDemo() {
   const composer = useRef<FeedbackComposerHandle>(null);
   const [draft, setDraft] = useState("");
@@ -251,7 +251,7 @@ function ComposerCannedRepliesDemo() {
 /* ── since 0.14 ─────────────────────────────────────────────────────────── */
 
 /**
- * The 0.14 follow-ups from keksdose G4/G5: its support chat on FeedbackThread +
+ * A support chat on FeedbackThread +
  * ChatComposer — event lines, day lines and clock times in the thread; Enter to
  * send and files uploaded ahead of the send in the composer.
  */
@@ -283,7 +283,7 @@ const SEED_014: FeedbackThreadItem[] = [
   { kind: "event", id: "e3", createdAt: NOW_014 - 89 * MINUTE, body: "Reopened by Jana" },
 ];
 
-/** keksdose G4/G5: a support chat — event lines, day lines, clock times, Enter to send
+/** A support chat — event lines, day lines, clock times, Enter to send
  *  and several pre-uploaded files. */
 function Feedback014Demo() {
   const [items, setItems] = useState<FeedbackThreadItem[]>(SEED_014);
@@ -389,8 +389,8 @@ function ChatComposer022Demo() {
         {code("ChatComposer")} is the composer under a name that is not about feedback, for a chat that is
         not a report ({code("FeedbackComposer")}, the old name, was deprecated in 0.34 and removed in 0.35). It
         puts {code("id")} and any {code("data-*")} on its root (the box, or the{" "}
-        {code("disabledReason")} line in its place): keksdose&apos;s assistant tour points at{" "}
-        {code('[data-tour="assistant-ask"]')}. keksdose K17.
+        {code("disabledReason")} line in its place): a tour step can point at{" "}
+        {code('[data-tour="assistant-ask"]')}.
       </Note>
       <Note>Since 0.22.</Note>
     </Example>
@@ -475,12 +475,12 @@ function ChatComposerCount023Demo() {
         />
       </div>
       <Note>
-        The reply box of keksdose&apos;s support chat: {code("maxLength={120}")} caps the box (the server&apos;s limit — 4,000
+        The reply box of a support chat: {code("maxLength={120}")} caps the box (the server&apos;s limit — 4,000
         there) and {code("showCount")} draws Textarea&apos;s own counter under it, read with the box on focus and announced
         only near and at the limit. Under {code('size="sm"')} the hidden send hint is still the box&apos;s description,
         the count after it. A canned reply inserted past the limit is kept whole and holds Send back until it is
         trimmed. The picker in {code("attachmentSlot")} is {code("FeedbackAttachmentField refs")} with{" "}
-        {code("disabled={pending}")}. keksdose G6.
+        {code("disabled={pending}")}.
       </Note>
       <Note>Since 0.23.</Note>
     </Example>
@@ -490,7 +490,7 @@ function ChatComposerCount023Demo() {
 /* ── since 0.24 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.24.0, from keksdose's 0.23 adoption report (the support chat's reply box): the
+ * The support chat's reply box: the
  * composer hands its slot the root a paste bubbles to, the attachment field's buttons
  * take a look, and the field stays inside a phone-width composer whatever its chips are
  * called.
@@ -582,14 +582,14 @@ function ChatComposerSlot024Demo() {
       <Note>
         {code("attachmentSlot")} may be a function of {code("{ root, pending }")}: {code("root")} is the composer&apos;s
         own element, round the box and the slot, as a ref — exactly what {code("pasteFrom")} takes — so a screenshot
-        pasted into the reply lands in the field, where keksdose had wrapped the whole composer in a ref&apos;d{" "}
-        {code("<div>")} of its own to have something to hand over. It is attached before the field&apos;s first effect,
+        pasted into the reply lands in the field, with no ref&apos;d{" "}
+        {code("<div>")} of the app&apos;s own round the composer to hand over. It is attached before the field&apos;s first effect,
         so the first paste works and nothing renders twice. {code("pending")} is the field&apos;s {code("disabled")}. A
         plain node still works as before. The field&apos;s add and capture buttons take {code('buttonVariant="ghost"')}{" "}
-        and {code('buttonSize="sm"')} (every mode; default secondary / md), the quiet small buttons keksdose&apos;s own
-        picker had beside Send. And the field&apos;s root is {code("min-w-0 max-w-full")} now: a flex item is never
+        and {code('buttonSize="sm"')} (every mode; default secondary / md), the quiet small buttons that suit a picker
+        beside Send. And the field&apos;s root is {code("min-w-0 max-w-full")} now: a flex item is never
         narrower than its content, so a long name like the one above ran off a 390px composer unless the host bounded
-        the field itself — keksdose passed {code('className="min-w-0 max-w-full"')}; it can drop it.
+        the field itself.
       </Note>
       <Note>Since 0.24.</Note>
     </Example>

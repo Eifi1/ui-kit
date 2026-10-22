@@ -95,7 +95,7 @@ function AlertBannerMore() {
       <div className="space-y-4">
         <AlertBanner tone="success">The import finished: 214 rows booked, 3 skipped.</AlertBanner>
 
-        {/* A box with an action and a dismiss (kastlan 53): on a phone the action takes
+        {/* A box with an action and a dismiss: on a phone the action takes
             its own line under the message instead of squeezing it into a narrow column. */}
         {!verifyDismissed && (
           <AlertBanner
@@ -195,7 +195,7 @@ function AlertBannerMore() {
           it sits BESIDE a whole-row banner&apos;s own button or link (interactive content may not nest).{" "}
           <code className="font-mono">elevated</code> puts the tone&apos;s wash on an opaque surface with a
           shadow — switch it off in the dark theme and the page text shows through the translucent tint,
-          which is keksdose #209. The success glyph is the check in a circle.
+          which is what it is for. The success glyph is the check in a circle.
         </Note>
       </div>
     </Example>

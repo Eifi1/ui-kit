@@ -475,7 +475,7 @@ function WellDemo() {
       </div>
       <Note>
         Before 0.33 the light well stood 1.02–1.05:1 off the card — invisible, and with it the kit&apos;s zebra
-        rows, DataTable&apos;s header bands and Kurvenschmiede&apos;s selected rows. Now a well stands out from the
+        rows, DataTable&apos;s header bands and an app&apos;s selected rows. Now a well stands out from the
         card exactly as much as the card does from the page; dark keeps its 1.11–1.13. Nothing re-solved: every
         text role was already audited against the page. The price is on the right — a well straight on the page
         vanishes in light, so `Card variant="inset"` and a {code("DataTable frame={false}")} belong inside a card.
@@ -555,7 +555,7 @@ function HoverDemo() {
         The rule: a hover differs from its rest by at least 1.08:1, and every text role on it keeps 4.5:1. On a
         well that left one fill, the card — every fill darker than the light well fails the text half, because the
         page is already the darkest surface the text roles are solved against. A row whose well marks a STATE
-        (Kurvenschmiede&apos;s selected rows) keeps its fill and draws a 1px inside outline in `--border-strong`
+        (selected rows, say) keeps its fill and draws a 1px inside outline in `--border-strong`
         ({code("hover:outline-strong")}), an outline because a shadow on a {code("<tr>")} is not painted by every
         engine. Button `secondary` and `ghost` and IconButton&apos;s muted tone hover with a translucent ink,{" "}
         {code("color-mix(in srgb, var(--text-primary) 7%, transparent)")} ({code("bg-inverse/7")} here), which
@@ -605,8 +605,8 @@ function UtilitiesDemo() {
         on every one — `hover:bg-brand` generated nothing while `.bg-brand` was a plain class. The money classes
         stay plain (`.text-money-pos`, `.bg-money-neg` …): a site that needs a variant keeps the `[var()]` form.
         Since 0.34 the kit&apos;s own markup uses the names too: every `[var(--role)]` class with a name of the same
-        role and property moved, and a ratchet keeps the count at zero (`npm run check:tokens`). In kastlan,
-        `text-primary` is now the ink, not its shadcn brand.
+        role and property moved, and a ratchet keeps the count at zero (`npm run check:tokens`). In an app that came from shadcn,
+        `text-primary` is the ink, not shadcn&apos;s brand.
       </Note>
     </Example>
   );
@@ -616,8 +616,8 @@ function UtilitiesDemo() {
 
 /**
  * A pretend app's source — ten files, the fewest the guard accepts. One reads the
- * token Kurvenschmiede's control diagram painted with, `--surface`, which has never
- * existed (the kit's is `--bg-surface`): black boxes on a public page (F79).
+ * token a diagram painted with, `--surface`, which has never
+ * existed (the kit's is `--bg-surface`): black boxes on a public page.
  */
 const APP_SOURCES: Record<string, string> = {
   "/src/app.css": [
@@ -720,7 +720,7 @@ function GuardDemo() {
       </div>
       <Note>
         A `var(--x)` that nothing declares, read without a fallback, invalidates its whole declaration: `fill`
-        inherits, and Kurvenschmiede&apos;s diagram drew black boxes. The class compiled, the build passed, the
+        inherits, and a diagram draws black boxes. The class compiled, the build passed, the
         type checker had no opinion. Declared means: the kit&apos;s tokens (`KIT_CSS_VARIABLES`, generated from
         the installed tokens.css — without the `@theme inline` names, which Tailwind never emits, and without
         AppShell&apos;s `--app-nav-h`, set only while a shell is mounted), the app&apos;s own stylesheets and

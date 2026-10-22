@@ -18,7 +18,7 @@ import { Example, Note, code } from "../../lib/section";
 
 /**
  * 0.27's row detail (docs/feedback-harmonization.md §4.4): the panel a feedback table
- * unfolds under a row, lifted from keksdose's `FeedbackRow`. The PATCH, the upload and
+ * unfolds under a row, lifted from an app's `FeedbackRow`. The PATCH, the upload and
  * the authenticated GET are faked in memory here; every row and key is synthetic.
  */
 
@@ -33,7 +33,7 @@ function picture(label: string, hue: number): Blob {
 
 const KEYS = {
   shot: `${ATT}/000000000001.png`,
-  // kastlan's key shape (§3.5): <uuid32>_<sha12>.<ext> — the kit matches [\w.-]+.
+  // A key shape (§3.5): <uuid32>_<sha12>.<ext> — the kit matches [\w.-]+.
   log: `${ATT}/00000000000000000000000000000000_000000000002.txt`,
   rework: `${ATT}/000000000003.png`,
 };
