@@ -25,6 +25,13 @@ module so consumers can still tree-shake it (see the `sideEffects` note in
 entry chunk). Tailwind classes are emitted as-is; each app still compiles them
 with its own Tailwind config.
 
+## Compatibility with server-kit
+
+The backend half, [`eifi1-server-kit`](https://github.com/Eifi1/server-kit), is a separate
+package with its own version and changelog. **ui-kit 0.49 ↔ server-kit 0.19**: this release
+is tested against server-kit 0.19.0's API export (the showcase's Server kit pages and the
+vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
+
 ## Documentation
 
 | | |

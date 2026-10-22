@@ -4,6 +4,12 @@ ui-kit 0.49 is the design-review round (KIT-1 … KIT-15). This guide lists, per
 each app does, with the places found in keksdose, kastlan and Kurvenschmiede on 2026-10-22
 (`frontend/src`, production code; line numbers at that date).
 
+**Compatibility: ui-kit 0.49 ↔ server-kit 0.19.** Two packages with their own versions and
+changelogs, tested together: this release's Server kit pages and
+`showcase/src/__tests__/server-kit-vocabularies.test.ts` (KIT-15) check the kit against
+server-kit 0.19.0's API export. Pin `@eifi1/ui-kit` `^0.49` beside the `eifi1-server-kit`
+0.19.0 wheel.
+
 ## KIT-1: one minus sign, U+2212 (`minus: "ascii"` for exports)
 
 BREAKING (on a bump, no code): `formatNumber`, `formatMoney`, `formatPercent` (compact notation
