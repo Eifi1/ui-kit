@@ -164,13 +164,13 @@ function FormatterTable() {
           Decimal off a Python API — is formatted like the number, and zero ({code("0")}, {code('"0"')}) is a
           figure, never the dash. Anything else — {code('"abc"')}, an object, {code("NaN")}, {code("Infinity")}{" "}
           — prints the dash as well, and a development build warns on the console once per call site with the value
-          and its type (0.49). A bare{" "}
+          and its type. A bare{" "}
           {code('"YYYY-MM-DD"')} is a calendar day read on the local calendar; relative times here are measured
           from a fixed {code("now")} ({NOW.toISOString()}) so the rows do not drift.
         </Note>
         <Note>
           A negative figure carries the typographic minus, U+2212 (&ldquo;−&rdquo;), in every locale and every
-          kit component (0.49) — {code("Intl")} writes a hyphen in most. It is as wide as &ldquo;+&rdquo; and the
+          kit component — {code("Intl")} writes a hyphen in most. It is as wide as &ldquo;+&rdquo; and the
           digits, so a column of signed figures lines up. For text a machine reads back — a CSV download, the
           clipboard — pass {code('minus: "ascii"')}: the hyphen-minus that {code("Number()")} and a spreadsheet
           parse.
