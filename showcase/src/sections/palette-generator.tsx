@@ -932,7 +932,7 @@ export function PaletteGenerator() {
         <code className="font-mono">deriveChartRamp</code> does no such search — it spaces
         hues evenly starting from YOUR brand&rsquo;s hue, so most brands do not land on it
         even at four series. The shipped ramps (anyplot&rsquo;s &ldquo;Imprint&rdquo;, the
-        default since 0.49, and Paul Tol&rsquo;s &ldquo;Muted&rdquo;) are curated for the same
+        default, and Paul Tol&rsquo;s &ldquo;Muted&rdquo;) are curated for the same
         reason: they were optimised against real confusion lines rather than spaced by
         formula, and <code className="font-mono">MIN_SEPARATION</code> was
         calibrated just under what it achieves, so an audit that failed it would be an
