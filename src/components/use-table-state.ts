@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SetStateAction } from "react";
+import * as ReactRouter from "react-router";
 import { useLocation, useSearchParams } from "react-router";
 import { useKitTableStorageKeyPrefix } from "../i18n/kit-labels";
 import { readStored, writeStored } from "../lib/safe-storage";
@@ -101,6 +102,62 @@ function urlKeys(prefix = ""): UrlKeys {
     pageSize: prefix + URL_PAGE_SIZE_KEY,
     search: prefix + URL_SEARCH_KEY,
   };
+}
+
+/** What a table reads and writes the URL through: react-router's, or none. */
+interface TableSearch {
+  searchParams: URLSearchParams;
+  setSearchParams: ReturnType<typeof useSearchParams>[1];
+  locationState: unknown;
+}
+
+function useRouterSearch(): TableSearch {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  return { searchParams, setSearchParams, locationState: location.state };
+}
+
+const NO_ROUTER_SEARCH: TableSearch = {
+  searchParams: new URLSearchParams(),
+  setSearchParams: () => {},
+  locationState: null,
+};
+function useNoRouterSearch(): TableSearch {
+  return NO_ROUTER_SEARCH;
+}
+
+/**
+ * `useInRouterContext`, read off the namespace inside a `try` like
+ * use-search-param-state's probe: a test's `vi.mock("react-router", () => ({ … }))`
+ * without it throws on the read. Missing, a table assumes a Router, as before 0.49.
+ */
+function readInRouterContext(): () => boolean {
+  try {
+    return (ReactRouter as unknown as { useInRouterContext?: () => boolean }).useInRouterContext ?? (() => true);
+  } catch {
+    return () => true;
+  }
+}
+const useInRouterContext = readInRouterContext();
+
+/**
+ * The URL access a table needs (0.49, KIT-3). Without `urlSync` a table needs no Router:
+ * before 0.49 it called `useSearchParams()` unconditionally and threw outside one even
+ * with URL sync off. With `urlSync` and no Router, a development build throws a message
+ * that names the fix; a production build keeps the view in local state rather than
+ * crash the page. Whether a Router is around does not change during a table's life, so
+ * which hook runs is stable from render to render.
+ */
+function useTableSearch(urlSync: boolean, owner: string): TableSearch {
+  const inRouter = useInRouterContext();
+  if (!inRouter && urlSync && import.meta.env?.DEV) {
+    throw new Error(
+      `${owner} urlSync requires a Router: render it inside a react-router Router ` +
+        "(BrowserRouter, a data router or a MemoryRouter), or leave urlSync off.",
+    );
+  }
+  const useSearch = inRouter ? useRouterSearch : useNoRouterSearch;
+  return useSearch();
 }
 
 /** `urlSync` split into "is it on" and "under which prefix". */
@@ -295,10 +352,9 @@ export function useTableState<T>({
 }) {
   const { enabled: urlSync, prefix: urlPrefix } = resolveTableUrlSync(urlSyncOption);
   const keys = useMemo(() => urlKeys(urlPrefix), [urlPrefix]);
-  // Called unconditionally (a Router is required either way — see src/data-table.ts),
-  // and the SAME pair is used to read and to write; see `readTableUrlState`.
-  const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
+  // The SAME pair is used to read and to write; see `readTableUrlState`. No Router is
+  // needed without `urlSync` (0.49, KIT-3; see `useTableSearch`).
+  const { searchParams, setSearchParams, locationState } = useTableSearch(urlSync, "DataTable");
   // Read URL once on mount so URL-encoded views (e.g. shared links, deep links from
   // other pages) populate initial state. After mount, state is local.
   const [urlInitial] = useState<TableUrlState>(() =>
@@ -436,7 +492,7 @@ export function useTableState<T>({
     // `columns` is deliberately not a dependency and does not need to be: the
     // signature above is computed from it, so a column set that would produce a
     // different address produces a different signature first.
-    writeUrlState(setSearchParams, columns, sorts, filters, pageSize, page, defaultPageSize, undefined, location.state, keys);
+    writeUrlState(setSearchParams, columns, sorts, filters, pageSize, page, defaultPageSize, undefined, locationState, keys);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlSync, urlSig]);
 
@@ -620,8 +676,7 @@ export function useTableUrlState<T>({
   const urlSync = resolved.enabled;
   const urlPrefix = urlPrefixOption ?? resolved.prefix;
   const keys = useMemo(() => urlKeys(urlPrefix), [urlPrefix]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
+  const { searchParams, setSearchParams, locationState } = useTableSearch(urlSync, "useTableUrlState");
   const [state, setState] = useState<OwnedState>(() => {
     const url = urlSync ? readTableUrlState(searchParams, columns, urlPrefix) : {};
     return {
@@ -653,7 +708,7 @@ export function useTableUrlState<T>({
       state.page,
       defaultPageSize,
       manageSearch ? state.search : undefined,
-      location.state,
+      locationState,
       keys,
     );
     // Keyed on the signature, which is computed from everything the write reads — see

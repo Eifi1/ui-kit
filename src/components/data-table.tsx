@@ -280,7 +280,10 @@ export interface DataTableProps<T> {
    * When true, mirror filter/sort/page state into URL search params so views are
    * shareable and bookmarkable. URL params used: `f.<column>`, `sort`, `p`, `ps`.
    * URL state takes precedence over localStorage on initial load. Requires the
-   * consuming app to render inside a react-router Router.
+   * consuming app to render inside a react-router Router (0.49: only with `urlSync` — a
+   * table without it needs none). With `urlSync` and no Router, a development build
+   * throws "DataTable urlSync requires a Router"; a production build keeps the view in
+   * local state instead.
    *
    * `{ prefix }` namespaces them, for two URL-synced tables on one page:
    * `urlSync={{ prefix: "inv." }}` uses `inv.f.<column>`, `inv.sort`, `inv.p`, `inv.ps`.

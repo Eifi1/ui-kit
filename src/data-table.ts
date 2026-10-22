@@ -1,8 +1,8 @@
 // `@eifi1/ui-kit/data-table` — the table suite.
 //
-// A re-slicing of the main barrel, not a new API. This entry point requires
-// `react-router`: DataTable calls useSearchParams unconditionally, above any `urlSync`
-// branch, so a Router is needed even with URL sync switched off.
+// A re-slicing of the main barrel, not a new API. This entry point imports
+// `react-router` (a peer dependency), but since 0.49 (KIT-3) a Router is needed only for
+// a table with `urlSync`: without it DataTable keeps its view in local state alone.
 export * from "./components/data-table-labels";
 export * from "./components/data-table-sort";
 export * from "./components/data-table-filters";

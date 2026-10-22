@@ -62,15 +62,14 @@ function DataTableSection() {
     <>
       <Note>
         <strong>
-          A Router is a hard requirement, with or without{" "}
-          <code className="font-mono">urlSync</code>.
+          A Router is needed only with <code className="font-mono">urlSync</code> (0.49).
         </strong>{" "}
-        <code className="font-mono">DataTable</code> calls{" "}
-        <code className="font-mono">useSearchParams()</code> unconditionally at the top of
-        the component — the flag only decides whether anything is ever written back. Mount
-        it outside a router and it throws on the first render, so a consumer that has no
-        routing at all still has to wrap the table in a{" "}
-        <code className="font-mono">MemoryRouter</code>.
+        Without it a <code className="font-mono">DataTable</code> keeps its sort, filters and
+        page in local state and mounts anywhere — no{" "}
+        <code className="font-mono">MemoryRouter</code> wrapper for an app with no routing.
+        With <code className="font-mono">urlSync</code> and no Router, a development build
+        throws &ldquo;DataTable urlSync requires a Router&rdquo;; a production build falls
+        back to local state rather than crash the page.
       </Note>
       <MainTable />
       <ControlledTable />
