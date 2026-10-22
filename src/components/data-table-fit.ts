@@ -178,8 +178,8 @@ export function useColumnFit<T>({
     // them by their recorded header width. A column that costs more drawn than that is
     // left out again by the next measure, before paint. That alone does not settle it:
     // the re-hide records its header's width again, and the header can measure the same
-    // while the column costs more (`virtualize`'s locked widths, keksdose B2, 0.48.3: a
-    // 40px header cost the table ≈ 45), so it came back, went, came back … until React's
+    // while the column costs more (`virtualize`'s locked widths, keksdose B2, 0.48.3: the
+    // drawn column cost the table ~80–110px more than its header), so it came back, went, came back … until React's
     // update limit (#185). So a column whose return the next measure undid, at the same
     // scroller width, waits for more room than it had then: a wider scroller or narrower
     // content. Whatever the error in its width, that is one invisible flip per room it is
