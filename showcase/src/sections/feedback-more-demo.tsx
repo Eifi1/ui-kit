@@ -312,8 +312,7 @@ export function LoadingState016Demo() {
         </div>
       </div>
       <Note>
-        {code("label={null}")} used to print &ldquo;Loading…&rdquo; anyway; now it hides the words and the status region
-        keeps announcing {code("common.loading")}. {code("compact")} is the step between {code("sm")} and {code("md")}.
+        {code("label={null}")} hides the words, and the status region keeps announcing {code("common.loading")}. {code("compact")} is the step between {code("sm")} and {code("md")}.
       </Note>
     </Example>
   );
