@@ -123,14 +123,17 @@ describe("AppShell's <main> becomes the fill's flex column", () => {
     expect(main).toHaveClass(
       "md:has-[[data-fill-height]]:flex",
       "md:has-[[data-fill-height]]:flex-col",
-      // A banner keeps its height even when it is fixed or clips its overflow.
-      "md:has-[[data-fill-height]]:*:shrink-0",
+      // A banner keeps its height even when it is fixed or clips its overflow. No `:has`
+      // on this one (a `:has(…) > *` rule restyled the page on every insertion, 0.48.2);
+      // the doubled class outranks FillHeight's `flex-1`.
+      "md:[&&>*]:shrink-0",
       // Still the scroller from md: a window below the floor scrolls `<main>`.
       "md:overflow-y-auto",
       "md:min-h-0",
     );
     // Unconditional `flex` would change every other page's layout.
     expect(main).not.toHaveClass("flex", "md:flex");
+    expect(main.className).not.toMatch(/has-\[[^\s]*\]:\*:/);
     expect(main.querySelector("[data-fill-height]")).not.toBeNull();
   });
 });

@@ -272,7 +272,8 @@ export function useRowActionColumn<T>({
     () => (swipeColumn ? [...actionColumns, swipeColumn] : actionColumns),
     [actionColumns, swipeColumn],
   );
-  const swipesFromActions = (row: T): MobileSwipeActions | null => {
+  // A stable function (0.48.2): the phone cards compare it by identity.
+  const swipesFromActions = useCallback((row: T): MobileSwipeActions | null => {
     const swipes = rowActionsFor(row).filter((a) => a.swipe && !a.action.disabledReason?.(row));
     if (!swipes.length) return null;
     const toSwipe = (a: ResolvedRowAction<T>): SwipeAction => ({
@@ -287,6 +288,6 @@ export function useRowActionColumn<T>({
       start: swipes.filter((a) => a.swipe === "start").map(toSwipe),
       end: swipes.filter((a) => a.swipe === "end").map(toSwipe),
     };
-  };
+  }, [rowActionsFor]);
   return { columns, swipesFromActions };
 }

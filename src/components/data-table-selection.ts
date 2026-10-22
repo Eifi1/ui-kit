@@ -51,5 +51,21 @@ export function useRangeSelection<T>({
     else for (const r of range) selection.onToggle(r, true);
     return true;
   };
-  return { selectionAnchor, rangeClick, canSelect, selectRange };
+  // The ref writes as functions (0.48.2): the memoised rows (data-table-row.tsx) reach
+  // them through DataTable's row context rather than holding the refs themselves.
+  /** Every single-row toggle anchors the next Shift+click's range on its row. */
+  const setAnchor = (key: string | number) => {
+    selectionAnchor.current = key;
+  };
+  /** Remember the checkbox click that drew a range. */
+  const markRangeClick = (e: Event) => {
+    rangeClick.current = e;
+  };
+  /** True — once — for the change event of the click that drew a range. */
+  const takeRangeClick = (e: Event) => {
+    if (!rangeClick.current || rangeClick.current !== e) return false;
+    rangeClick.current = null;
+    return true;
+  };
+  return { selectionAnchor, rangeClick, canSelect, selectRange, setAnchor, markRangeClick, takeRangeClick };
 }

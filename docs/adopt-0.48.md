@@ -362,6 +362,77 @@ A patch, nothing breaking for an app that pages on the server or on the client.
 | kastlan | Nothing |
 | kurvenschmiede | Nothing |
 
+## ui-kit 0.48.2: `DataTable`'s `virtualize` (keksdose dev #632)
+
+Opt-in, nothing changes on a plain bump. Marcel (dev #632): "The table is extremely slow. Is it
+virtualised or is everytime the whole table rendered?" — 0.48.2 answers both halves: a tick
+re-renders only the rows it touches (the memoised rows), and `virtualize` renders only the rows
+near the view.
+
+- **`virtualize?: boolean | DataTableVirtualize`** (new type: `overscan?` rows beyond each edge,
+  default 12; `estimateRowHeight?` px before a row is measured, default 37, compact 29). The
+  desktop table renders the rows in the visible part of its scroller plus the overscan; spacer
+  rows (`aria-hidden`) stand in for the rest inside each group's own `<tbody>`, so the sticky,
+  stacked group bands behave as on a full table (a run of groups with nothing in view is one
+  spacer `<tbody>`; the period the view starts in keeps its band). The scroller is the bounded
+  body (`fillHeight`, `maxBodyHeight`) **or the page** (`maxBodyHeight="none"`): the window is
+  what both show.
+- **Always rendered:** the header, `leadingRow`, the bands of every group with a rendered row,
+  every OPEN row (`isExpanded` — an inline editor in `expandedRow` keeps its state while the rows
+  scroll), the roving tab stop and a row holding the focus. The `loadMore` footer follows the
+  last spacer and loads once per row count, as before.
+- **Heights:** each rendered row is measured (in the next animation frame, where the browser lays
+  the table out anyway) and remembered by its key; an unseen row counts as the measured average.
+  The scroll height settles as rows are seen; the browser's scroll anchoring holds the rows in
+  view meanwhile (Safari has none: a first-pass jump of the estimate's error is possible there).
+- **Columns hold still:** the header widths are measured once and locked (a `<colgroup>` and the
+  header cells' `min-width`); a wider cell scrolling in widens its column once, a narrower one
+  leaving narrows nothing. Re-measured when the rows, the columns, a stored width, the text size
+  or the scroller's width change. A `grow` column and a resized one are not locked.
+- **Keyboard, selection, screen reader:** Arrow/Home/End move over every row — the target row is
+  rendered, then focused, and its focus scrolls it into view (End reaches the last row);
+  Shift+click ranges and select-all work on the data, not the DOM. `aria-rowcount` on the table
+  and `aria-rowindex` on every rendered row (header 1, the leading row, bands, open rows' detail
+  rows and the totals row counted).
+- **Trade-offs:** the browser's find-in-page sees only the rendered rows, and so does print. An
+  `id` from `rowAttributes` (an anchor, an `aria-controls` target, a `scrollIntoView` lookup)
+  exists only while its row is rendered. Desktop only: the phone card list renders every row it
+  holds (`loadMore`, `paginated={false}`) or reveals them in chunks (client paging).
+- **Memoise `columns` (and `mobileCard`):** the rows compare their columns by identity
+  (`perf(data-table)` 1d10446): with an inline array every row re-renders on every render — and
+  under `virtualize` every rendered row on every scrolled step.
+- **`useColumnFit`** (the `fitPriority` columns) now measures only when the rows on screen, the
+  columns, the stored widths, the density or the text size changed — a ticked box no longer
+  forces a layout of the whole table.
+
+Checked in headless Chromium (showcase build, Data table → "Period groups and load more", the
+new "1000 rows" / "3000 rows" and "Virtualize rows" toggles; two-level groups, `fillHeight`, sticky
+leading row and bands, selection; 1400×1000):
+
+| | 1000 off | 1000 on | 3000 off | 3000 on |
+| --- | --- | --- | --- | --- |
+| DOM nodes (page / table) | 14 263 / 10 410 | 4 329 / 476 | 35 029 / 31 176 | 4 329 / 476 |
+| forced relayout of the table | 155 ms | 6 ms | 567 ms | 12 ms |
+| checkbox click, event duration (INP) | 136 ms | 32 ms | 416 ms | 40 ms |
+| checkbox click, processing | 9 ms | 2 ms | 29 ms | 3 ms |
+| scroll top → bottom (70 % steps), wall time | 36 s | 29 s | 227 s | 76 s |
+
+Scrolled top to bottom in 138 / 415 steps: the period and day bands matched the first row under
+them at every step, no spacer was in view after a step settled, no row under the reading line
+moved (0 px), and the header widths never changed. End on a focused row focused row 999 / 2999
+(`aria-rowindex` = `aria-rowcount`, 1344 / 4028) in view. The three-month ledger with
+`virtualize` loaded twice (once per month) to 218 rows. axe: no violations (top, mid-scroll with
+an open row kept, the end). Page scroll (`maxBodyHeight="none"`, 2000 rows): no spacer in view
+over 118 window-scroll steps.
+
+| App | Change |
+| --- | --- |
+| keksdose | frontend/src/features/transactions/transactions-page.tsx, the register's `<DataTable<Transaction> fillHeight …>` (symbols, not lines): add `virtualize` (no options needed; `density="compact"` picks the 29px estimate). Keep `columns={desktopColumns}` memoised — its `useMemo` deps (`columns` from `useTransactionColumns`, `t`, `txSwipePrefs`, `todayIso`, `swipeMutations`, `confirm`, `anySwipePending`, `density`) must keep their identity between renders, or every row re-renders on each tick and each scrolled step. The `leadingRow`'s `Disclosure controls` lists `txn-row-s…` ids of the upcoming rows, which exist only while those rows are rendered (they sit at the top, under the toggle — rendered whenever the toggle is in view). The created-row reveal (`focusRowId`, `.txn-row-flash`): the new row is the newest, at the top of the date sort — scroll the table's body to the top before looking it up by class, as a row not rendered has no element. Phone: unchanged (mobile-transaction-list.tsx is not a DataTable) |
+| kastlan | Nothing, unless a long list wants it |
+| kurvenschmiede | Nothing, unless a long list wants it |
+
+**AppShell, every page with a `fillHeight` table (nothing to change in the apps):** `<main>`'s `md:has-[[data-fill-height]]:*:shrink-0` is now `md:[&&>*]:shrink-0` — the `:has(…) > *` rule restyled ~4,300 elements on every DOM insertion under it (a virtualised table's scrolled step: style recalc mean 11.2 → 1.1 ms, p90 27 → 2.9 ms, max 41–76 → 3.8 ms; showcase, 3000 rows, 1280×800); the layout is the same (children's `flex-shrink`, the FillHeight's and the banner's boxes, a short window scrolling `<main>` — compared in Chromium), and the doubled class still outranks FillHeight's `flex-1`.
+
 ## server-kit 0.19
 
 Install the wheel by URL, pinned by hash (the release fills in the line):

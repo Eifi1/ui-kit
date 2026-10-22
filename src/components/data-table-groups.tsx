@@ -94,19 +94,27 @@ export function useGroupBandTops(
   useLayoutEffect(() => {
     const table = tableRef.current;
     if (!enabled || !table) return;
-    const parts = [
+    // Looked up afresh on each measure: under `virtualize` (0.48.2) the first band can
+    // leave the DOM as the rows scroll, and a detached cell measures 0 — the bands would
+    // stack on one another. A band missing for now keeps the height it had.
+    const parts = () => [
       table.tHead,
       table.querySelector<HTMLElement>("[data-leading-row='sticky']"),
       table.querySelector<HTMLElement>("th[data-group-band='1']"),
     ];
+    let bandHeight = 0;
     const measure = () => {
-      const [head, lead, band] = parts.map((el) => (el ? el.getBoundingClientRect().height : 0));
+      const [headEl, leadEl, bandEl] = parts();
+      const head = headEl ? headEl.getBoundingClientRect().height : 0;
+      const lead = leadEl ? leadEl.getBoundingClientRect().height : 0;
+      if (bandEl) bandHeight = bandEl.getBoundingClientRect().height;
+      const band = bandHeight;
       setTops((prev) => (prev[0] === head + lead && prev[1] === head + lead + band ? prev : [head + lead, head + lead + band]));
     };
     measure();
     if (typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(measure);
-    for (const el of parts) if (el) observer.observe(el);
+    for (const el of parts()) if (el) observer.observe(el);
     return () => observer.disconnect();
   }, [tableRef, enabled, signature]);
   return tops;
@@ -127,6 +135,7 @@ export function DataTableGroupBand({
   compact,
   label,
   end,
+  ariaRowIndex,
 }: {
   level: 1 | 2;
   colSpan: number;
@@ -134,9 +143,11 @@ export function DataTableGroupBand({
   compact: boolean;
   label: ReactNode;
   end: ReactNode;
+  /** Under `virtualize` (0.48.2). */
+  ariaRowIndex?: number;
 }) {
   return (
-    <tr data-group-row={level}>
+    <tr data-group-row={level} aria-rowindex={ariaRowIndex}>
       <th
         scope="rowgroup"
         colSpan={colSpan}

@@ -58,7 +58,9 @@ const ok = (msg) => {
 };
 
 log("• packing");
-const packed = JSON.parse(run("npm", ["pack", "--json", "--pack-destination", tmpdir()], root));
+// npm < 11 answers a list of packs; npm 11+ an object keyed by package name.
+const packedJson = JSON.parse(run("npm", ["pack", "--json", "--pack-destination", tmpdir()], root));
+const packed = Array.isArray(packedJson) ? packedJson : Object.values(packedJson);
 const tarball = join(tmpdir(), packed[0].filename);
 const shipped = new Set(packed[0].files.map((f) => f.path));
 

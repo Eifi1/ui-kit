@@ -16,10 +16,13 @@ import { cn } from "../lib/cn";
 export function DataTableLeadingRow({
   colSpan,
   sticky = false,
+  ariaRowIndex,
   children,
 }: {
   colSpan: number;
   sticky?: boolean;
+  /** Under `virtualize` (0.48.2). */
+  ariaRowIndex?: number;
   children: ReactNode;
 }) {
   const cellRef = useRef<HTMLTableCellElement>(null);
@@ -36,7 +39,7 @@ export function DataTableLeadingRow({
     return () => observer.disconnect();
   }, [sticky]);
   return (
-    <tr className={cn(!sticky && "border-t border-subtle")}>
+    <tr aria-rowindex={ariaRowIndex} className={cn(!sticky && "border-t border-subtle")}>
       <td
         ref={cellRef}
         colSpan={colSpan}

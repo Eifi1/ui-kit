@@ -21,6 +21,24 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.48.2](https://github.com/Eifi1/ui-kit/compare/v0.48.1...v0.48.2) (2026-10-22)
+
+keksdose dev #632 (Marcel: "The table is extremely slow. Is it virtualised…?"): a DataTable tick re-renders only
+the rows it touches (memoised rows; keep `columns`, `rowActions`, `mobileSwipeActions` and `mobileCard` stable),
+an anchored panel no longer forces a layout while closed, `<main>`'s fill-height rule no longer
+re-evaluates `:has` on every insertion, and opt-in `virtualize` renders only the rows near the view
+(sticky bands kept). At 3000 rows: table DOM nodes 31,176 → 476, checkbox INP 416 → 40 ms. Nothing
+changes for an app until it opts in (docs/adopt-0.48.md, 0.48.2).
+
+### Added
+
+* **data-table:** opt-in row windowing (virtualize) with sticky bands and measured heights ([ec083c0](https://github.com/Eifi1/ui-kit/commit/ec083c0f943bfd6be056442babf0392ca50a1d02))
+
+### Changed
+
+* **data-table:** a selection or expansion change renders only the rows it touches ([1d10446](https://github.com/Eifi1/ui-kit/commit/1d10446ca9f923295e17ef0cd170aea09a6d1912))
+* **shell:** <main>'s children keep shrink-0 without a :has re-evaluated on every insertion ([49b906e](https://github.com/Eifi1/ui-kit/commit/49b906e56ace866cb2a32c203630f214ad47c8d8))
+
 ## [0.48.1](https://github.com/Eifi1/ui-kit/compare/v0.48.0...v0.48.1) (2026-10-22)
 
 From keksdose's 0.48 adoption (K-052-1): a `loadMore` table no longer filters, sorts or pages
