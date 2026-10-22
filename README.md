@@ -75,6 +75,7 @@ when it chooses. To work on the design system and an app together, use
 | `@tanstack/react-query`, `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` | peer, `^5`, **optional** | Only `@eifi1/ui-kit/offline` imports them (0.45, the persisted query cache, `createQueryPersistence`); the main barrel does not. |
 | `idb-keyval` | peer, `^6`, **optional** | The persisted cache's default IndexedDB store, in `@eifi1/ui-kit/offline` only. |
 | `dexie` | peer, `^4`, **optional** | The sync engine's device copy, in `@eifi1/ui-kit/sync` only (0.46); `/offline` loads without it. |
+| `@testing-library/react` | peer, `>=16`, **optional** | `rowMenuAction` in `@eifi1/ui-kit/testing/react` only (0.50), for an app's own tests; `@eifi1/ui-kit/testing` stays pure. |
 | `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the appearance stores are singletons. |
 | `flag-icons` | **nothing — you supply the stylesheet** | See below. |
 
@@ -587,6 +588,7 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/currencies` | 3 |
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 11 |
+| `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 48 |
 | `@eifi1/ui-kit/offline` | 33 |
 | `@eifi1/ui-kit/sync` | 38 |

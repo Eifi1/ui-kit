@@ -60,6 +60,10 @@
       "types": "./dist/testing/index.d.ts",
       "import": "./dist/testing/index.js"
     },
+    "./testing/react": {
+      "types": "./dist/testing/react.d.ts",
+      "import": "./dist/testing/react.js"
+    },
     "./rhf": {
       "types": "./dist/rhf.d.ts",
       "import": "./dist/rhf.js"
@@ -131,6 +135,7 @@
     "@tanstack/query-async-storage-persister": "^5",
     "@tanstack/react-query": "^5",
     "@tanstack/react-query-persist-client": "^5",
+    "@testing-library/react": ">=16",
     "dexie": "^4",
     "idb-keyval": "^6",
     "lucide-react": ">=0.400.0 <2",
@@ -150,6 +155,9 @@
       "optional": true
     },
     "@tanstack/react-query-persist-client": {
+      "optional": true
+    },
+    "@testing-library/react": {
       "optional": true
     },
     "dexie": {

@@ -18,6 +18,7 @@ import * as tableText from "../table-text";
 import * as dates from "../lib/dates";
 import * as currencies from "../currencies";
 import * as testing from "../testing";
+import * as testingReact from "../testing/react";
 import * as eslintPlugin from "../eslint";
 import * as i18nDeCh from "../i18n/locales/de-CH";
 import * as i18nEn from "../i18n/locales/en";
@@ -394,6 +395,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `stubViewportWidth`, `viewportMatchMedia`, `stubResizeObserver`.
   // 0.35 (+1): `setViewportWidth`, a live resize of the active stub (keksdose's 0.34 report).
   ["@eifi1/ui-kit/testing", testing, 7],
+  // 0.50: `rowMenuAction`, the row "⋯" opener (keksdose's test/row-menu.ts). Its own entry:
+  // it needs Testing Library, and `/testing` reaches no package.
+  ["@eifi1/ui-kit/testing/react", testingReact, 1],
   // 0.35: the ESLint plugin, its `default` export only (`role-utilities`, KS Q6): an app's
   // lint config imports it in Node, so it imports nothing else of the kit.
   ["@eifi1/ui-kit/eslint", eslintPlugin, 1],
@@ -425,6 +429,7 @@ const STANDALONE = new Set([
   "@eifi1/ui-kit/dates",
   // Test helpers, never part of an app's bundle.
   "@eifi1/ui-kit/testing",
+  "@eifi1/ui-kit/testing/react",
   // Lint tooling, the same.
   "@eifi1/ui-kit/eslint",
   ...ENTRIES.map(([name]) => name).filter((name) => name.startsWith("@eifi1/ui-kit/i18n/")),
