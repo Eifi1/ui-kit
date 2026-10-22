@@ -83,3 +83,23 @@ its message keeping 12rem before the action wraps. So the prop only moves a `box
 | keksdose | `features/auth/verify-email-banner.tsx:28`, the strip at the top of the shell. | Nothing. |
 | kastlan | `features/auth/components/verify-email-banner.tsx:20`: no `variant`, so the **strip**, with `clampMobile`. The K1 report ("Send again keeps its own line", banner ≤ 56px on 390 × 844, KX-5) is the strip's 12rem rule, which `actionPlacement` does not change. | To use it: `variant="box" actionPlacement="flow"` (keeps `clampMobile`), then measure at 390 × 844. If the strip should stay, say so in the 0.50 adoption: the strip's 12rem basis would be a kit change of its own. |
 | Kurvenschmiede | `app/layout.tsx:79`, the strip. | Nothing. |
+
+## kastlan K2: the user roster fits by default (`grow` / `fitPriority`)
+
+`useUserRosterColumns` / `userRosterColumns` now set what kastlan mapped by hand (its
+`ROSTER_FIT`): **Name `grow`** (takes the rest of the row, ellipsises at Normal, keeps 10rem
+before the table scrolls), **Created `fitPriority: 1`**, **Last login `fitPriority: 2`** — a table
+narrower than its columns leaves out Created, then Last login (the Columns button counts them),
+as the kit's feedback columns have since 0.48. The 0.48 rules hold: the role and state chip rows
+still wrap in their cells (kastlan S1), the other cells keep one line at Normal (`not-large:whitespace-nowrap`).
+The phone card is unchanged.
+
+BREAKING (layout only, on a bump): every roster becomes a fitting table. To keep the 0.49
+layout: `columns.map((c) => ({ ...c, grow: undefined, fitPriority: undefined }))`. An `extra`
+column joins with a `fitPriority` of its own; one `grow` per table (the first one wins).
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | `features/admin/users-panel.tsx:804` (`useUserRosterColumns`), the `name` cell replaced at `:818–826` with `className="md:max-w-[14rem]"` (`:826`) on `UserIdentityCell`. | Keep `...column` in the replacement (it does): Name then grows. The `md:max-w-[14rem]` cap leaves Name at 14rem inside a growing cell — drop it so the name and address use the room, or keep it on purpose. Check the admin page at 1280px. |
+| kastlan | `features/settings/components/users-panel.tsx:81–85` `ROSTER_FIT` (the same values), applied at `:382`. | Delete `ROSTER_FIT` and the `map` at `:381–384` (the kit's columns carry it). The extra columns (`companies`, `reviews`, `:350–375`) stay without a priority unless you want them to leave too. |
+| Kurvenschmiede | `features/admin/users-panel.tsx:418`; the admin page widened its area to `7xl` for the roster (`features/admin/admin-page.tsx:87`, the comment above it). | On the bump the roster fits; check whether the `7xl` widening is still needed (1280px and 1100px). The extra columns (`planColumn`, `owned`) can take a `fitPriority` (e.g. 3) if the roster should give them up before Name reaches 10rem. |

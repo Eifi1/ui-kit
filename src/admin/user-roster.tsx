@@ -328,16 +328,22 @@ function StateChips({ states }: { states: readonly RosterState[] }) {
 /**
  * The roster's columns, in the contract's order (§3.3):
  *
- * | key | cell | sort | phone |
- * |---|---|---|---|
- * | `name` | {@link UserIdentityCell} | last, first | the card's headline |
- * | `email` | the address (`emailColumn` only) | address | hidden |
- * | `role` | `RoleChip`(s), or {@link RoleSelect} where `editableRole` | role | field |
- * | `state` | `AccountStateChip`s from `stateOf` | — | chips beside the headline |
- * | `created` | `dateColumn` | instant | hidden |
- * | `last_login` | `dateColumn`, relative, "Never" | instant | field |
- * | …`extra` | the app's | the app's | off the card unless marked `mobile: "secondary"` |
- * | `actions` | {@link UserRowActions} | — | the card's actions row (`role: "actions"`) |
+ * | key | cell | sort | phone | fit (0.50) |
+ * |---|---|---|---|---|
+ * | `name` | {@link UserIdentityCell} | last, first | the card's headline | `grow` |
+ * | `email` | the address (`emailColumn` only) | address | hidden | — |
+ * | `role` | `RoleChip`(s), or {@link RoleSelect} where `editableRole` | role | field | — |
+ * | `state` | `AccountStateChip`s from `stateOf` | — | chips beside the headline | — |
+ * | `created` | `dateColumn` | instant | hidden | `fitPriority: 1` |
+ * | `last_login` | `dateColumn`, relative, "Never" | instant | field | `fitPriority: 2` |
+ * | …`extra` | the app's | the app's | off the card unless marked `mobile: "secondary"` | the app's |
+ * | `actions` | {@link UserRowActions} | — | the card's actions row (`role: "actions"`) | — |
+ *
+ * The fit (0.50, kastlan K2): Name takes the rest of the row, and a table narrower than
+ * its columns leaves out Created, then Last login (DataTable's `grow` / `fitPriority`).
+ * The role and state chips still wrap in their cells (0.48), and the other cells keep one
+ * line at Normal. `{ ...col, grow: undefined, fitPriority: undefined }` restores the 0.49
+ * layout; an `extra` column takes a `fitPriority` of its own to leave too.
  *
  * The card holds three fields — `role`, `last_login` and one more: an `extra` column marked
  * `mobile: "secondary"` takes that place. The actions are `role: "actions"` (0.49), drawn
@@ -385,6 +391,9 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
           .filter(Boolean)
           .join(" "),
       mobilePrimary: true,
+      // Takes the rest of the row and ellipsises (0.50, kastlan K2): the roster fits its
+      // pane — a settings column, an admin page — instead of scrolling sideways.
+      grow: true,
     },
   ];
   if (emailColumn) {
@@ -461,7 +470,8 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
       key: "created",
       header: labels.created,
       value: (row) => row.created_at ?? null,
-      column: { mobileHidden: true },
+      // The first to leave a narrow table (0.50, kastlan K2), then last login.
+      column: { mobileHidden: true, fitPriority: 1 },
     }),
     // How long ago rather than a date — the question is "recently?" — with the exact
     // time beside it (keksdose's last-seen column, Kurvenschmiede's; 0.32 §4: never only
@@ -472,7 +482,7 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
       value: (row) => row.last_login_at ?? null,
       display: "relative",
       empty: labels.never,
-      column: { mobile: "secondary" },
+      column: { mobile: "secondary", fitPriority: 2 },
     }),
     ...extra,
   );
