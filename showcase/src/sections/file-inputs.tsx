@@ -587,7 +587,7 @@ function DropzoneFeedback() {
         toast through sonner&apos;s own). Drag a file over the zone to see the drag-over wash.
         The zone is a named <code className="font-mono">role=&quot;group&quot;</code>, not a
         button: Tab reaches Browse (and the remove button) directly, and a click anywhere on the
-        zone is a pointer shortcut for Browse — the zone used to be a{" "}
+        zone is a pointer shortcut for Browse — no{" "}
         <code className="font-mono">role=&quot;button&quot;</code> with real buttons nested in
         it, which ARIA forbids.
       </Note>
