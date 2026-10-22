@@ -32,6 +32,8 @@ export type {
 export { swipePlanRowActions } from "./components/data-table-row-actions";
 // 0.48 (keksdose dev #605): a `groupBy` level (also `mobileGroupBy`'s) and the `loadMore` footer.
 export type { DataTableGroupBy, DataTableLoadMore } from "./components/data-table-groups";
+// 0.48.2 (keksdose dev #632): `virtualize`'s options.
+export type { DataTableVirtualize } from "./components/data-table-virtual";
 export * from "./components/data-table-cells";
 export { useTableUrlState, readTableUrlState } from "./components/use-table-state";
 export type {

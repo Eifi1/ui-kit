@@ -45,6 +45,9 @@ export function DataTableHead<T>({
   startResize,
   moveResize,
   finishResize,
+  ariaRowIndex,
+  lockedWidths,
+  selectionLockKey,
 }: {
   visibleColumns: DataTableColumn<T>[];
   selection: DataTableProps<T>["selection"];
@@ -71,13 +74,25 @@ export function DataTableHead<T>({
   startResize: (e: React.PointerEvent<HTMLElement>, key: string) => void;
   moveResize: (e: React.PointerEvent<HTMLElement>) => void;
   finishResize: (e: React.PointerEvent<HTMLElement>, commit: boolean) => void;
+  /** Under `virtualize` (0.48.2): 1. */
+  ariaRowIndex?: number;
+  /** Under `virtualize` (0.48.2): each column's locked width, as the header cell's
+   *  `min-width` — a `<col>` width alone gave way to a `grow` column's 100%. */
+  lockedWidths?: Record<string, number> | null;
+  /** The selection column's key in `lockedWidths`. */
+  selectionLockKey?: string;
 }) {
   return (
     <thead className="bg-surface-2 text-secondary">
-      <tr className="text-start">
+      <tr className="text-start" aria-rowindex={ariaRowIndex}>
         {selection && (
           <th
             scope="col"
+            style={
+              selectionLockKey && lockedWidths?.[selectionLockKey] !== undefined
+                ? { minWidth: lockedWidths[selectionLockKey] }
+                : undefined
+            }
             className={cn(
               "sticky top-0 z-10 bg-surface-2 align-middle backdrop-blur-sm",
               compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2",
@@ -140,7 +155,15 @@ export function DataTableHead<T>({
                     : "none"
                   : undefined
               }
-              style={ownHead.style || pinnedHead ? { ...ownHead.style, ...pinnedHead } : undefined}
+              style={
+                ownHead.style || pinnedHead || lockedWidths?.[col.key] !== undefined
+                  ? {
+                      ...ownHead.style,
+                      ...(lockedWidths?.[col.key] !== undefined ? { minWidth: lockedWidths[col.key] } : null),
+                      ...pinnedHead,
+                    }
+                  : undefined
+              }
               className={cn(
                 "relative font-medium align-middle whitespace-nowrap",
                 compact ? "px-2 py-1" : "px-3 py-2",

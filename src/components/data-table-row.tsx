@@ -44,6 +44,9 @@ export interface DataTableRowCtx<T> {
   setFocusRowKey: (key: string | number) => void;
   /** The phone card's long press: enter selection mode with this row selected. */
   onLongPress: (row: T) => void;
+  /** Under `virtualize` (0.48.2): Arrow/Home/End over every row, rendered or not. True
+   *  when the key was one of them. Without it the roving walks the rendered rows. */
+  moveFocus?: (fromIndex: number, key: string) => boolean;
 }
 
 /** `rowAttributes`' result compared key by key: a call site returns a fresh object (or
@@ -129,6 +132,9 @@ export interface DataTableRowProps<T> {
   totalColSpan: number;
   rowDetailsLabel: string;
   selectRowLabel: string;
+  /** Under `virtualize` (0.48.2): the row's `aria-rowindex` (its open detail row is the
+   *  next), and the row is marked with its index for the window's measuring. */
+  ariaRowIndex?: number;
 }
 
 function DataTableRowImpl<T>({
@@ -157,7 +163,9 @@ function DataTableRowImpl<T>({
   totalColSpan,
   rowDetailsLabel,
   selectRowLabel,
+  ariaRowIndex,
 }: DataTableRowProps<T>) {
+  const windowed = ariaRowIndex !== undefined;
   // Whether the row is open, said where ARIA allows it (round 0.34, the
   // showcase's axe check): `aria-expanded` belongs to a treegrid's row, not a
   // table's, and the <tr> wore it. A disclosure button in the first cell carries
@@ -182,6 +190,8 @@ function DataTableRowImpl<T>({
     <Fragment>
       <tr
         {...cleanAttrs(attrs)}
+        aria-rowindex={ariaRowIndex}
+        data-row-index={windowed ? rowIndex : undefined}
         data-row-nav={rowsFocusable ? "" : undefined}
         tabIndex={rowsFocusable ? (tabbable ? 0 : -1) : undefined}
         onFocus={
@@ -206,7 +216,8 @@ function DataTableRowImpl<T>({
                   return;
                 }
                 if (e.shiftKey) return;
-                if (moveRowFocus(e.currentTarget, e.key)) e.preventDefault();
+                const move = ctx.current.moveFocus;
+                if (move ? move(rowIndex, e.key) : moveRowFocus(e.currentTarget, e.key)) e.preventDefault();
               }
             : undefined
         }
@@ -335,7 +346,12 @@ function DataTableRowImpl<T>({
         })}
       </tr>
       {expansion && (
-        <tr id={hasDisclosure ? detailId : undefined} className="bg-surface-2 border-t border-subtle">
+        <tr
+          id={hasDisclosure ? detailId : undefined}
+          aria-rowindex={windowed ? ariaRowIndex + 1 : undefined}
+          data-row-detail={windowed ? rowIndex : undefined}
+          className="bg-surface-2 border-t border-subtle"
+        >
           {/* The detail panel spans every column. In an `auto` table
               layout (the default here — columns only get fixed style
               widths once the user resizes/auto-sizes them) the cell's

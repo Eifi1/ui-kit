@@ -65,6 +65,7 @@ export function useColumnFit<T>({
   headRefs,
   scroller,
   enabled,
+  content,
 }: {
   columns: DataTableColumn<T>[];
   /** The user's hidden columns: never candidates (they are out already). */
@@ -74,6 +75,13 @@ export function useColumnFit<T>({
   scroller: () => HTMLElement | null;
   /** The wide layout. On a phone (the card list) nothing is left out for width. */
   enabled: boolean;
+  /**
+   * What can change the columns' widths besides the scroller (0.48.2): the rows on
+   * screen, the columns, the stored widths, the text size. Compared item by item after
+   * each render, and the table is measured only when one changed — a selection tick no
+   * longer forces a layout of the whole table. Without it, every render measures.
+   */
+  content?: readonly unknown[];
 }): {
   /** The columns left out for width now — empty while off. */
   autoHidden: Set<string>;
@@ -158,9 +166,16 @@ export function useColumnFit<T>({
     if (n !== current.length) setHidden(current.slice(0, n));
   }, [headRefs]);
 
-  // After every render: rows, a filter or a page can widen a column as much as a resize.
-  // Before paint, so a column the table cannot hold is never drawn first.
+  // After a render that changed what is drawn: rows, a filter or a page can widen a
+  // column as much as a resize. Before paint, so a column the table cannot hold is never
+  // drawn first. A render that changed none of it (a ticked box, a focused row) skips the
+  // measure, which forces a layout of the whole table (0.48.2, keksdose dev #632).
+  const lastContent = useRef<readonly unknown[] | null>(null);
   useLayoutEffect(() => {
+    const now = content ? [...content, order, current, growKey, active] : null;
+    const prev = lastContent.current;
+    lastContent.current = now;
+    if (now && prev && prev.length === now.length && prev.every((v, i) => Object.is(v, now[i]))) return;
     measure();
   });
 

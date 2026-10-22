@@ -1047,8 +1047,40 @@ const LEDGER_COLUMNS: DataTableColumn<LedgerRow>[] = [
   },
 ];
 
+/** 0.48.2 (`virtualize`): a long ledger, newest first, for the windowing toggle — the
+ *  same seeded walk over as many days back as `n` rows take. */
+function bigLedger(n: number): LedgerRow[] {
+  let seed = 632;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  const rows: LedgerRow[] = [];
+  const day = new Date("2026-09-30T12:00:00Z");
+  while (rows.length < n) {
+    const date = day.toISOString().slice(0, 10);
+    const count = 1 + Math.floor(rand() * 5);
+    for (let i = 0; i < count && rows.length < n; i++) {
+      const [payee, category, min, max] = LEDGER_PAYEES[Math.floor(rand() * LEDGER_PAYEES.length)];
+      rows.push({ id: rows.length + 1, date, payee, category, amount: Math.round((min + rand() * (max - min)) * 20) / 20 });
+    }
+    day.setUTCDate(day.getUTCDate() - 1);
+  }
+  return rows;
+}
+const MONTH_FMT = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+const BIG_PERIOD: DataTableGroupBy<LedgerRow> = {
+  key: (r) => r.date.slice(0, 7),
+  label: (k) => MONTH_FMT.format(new Date(`${k}-01T12:00:00Z`)),
+  end: (_k, rows) => bandTotals(rows),
+};
+type LedgerSize = "months" | "1000" | "3000";
+
 function PeriodGroupsTable() {
   const [months, setMonths] = useState(1);
+  // 0.48.2: the long ledger and `virtualize`, for keksdose dev #632's register.
+  const [size, setSize] = useState<LedgerSize>("months");
+  const [virtual, setVirtual] = useState(false);
+  const [picked, setPicked] = useState<Set<number>>(() => new Set());
+  const [openId, setOpenId] = useState<number | null>(null);
+  const big = useMemo(() => (size === "months" ? null : bigLedger(Number(size))), [size]);
   const [loading, setLoading] = useState(false);
   const [twoLevels, setTwoLevels] = useState(true);
   const [stickyLead, setStickyLead] = useState(true);
@@ -1056,10 +1088,12 @@ function PeriodGroupsTable() {
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
   const rows = useMemo(() => {
+    if (big) return big;
     const shown = new Set<string>(LEDGER_MONTHS.slice(0, months));
     return LEDGER.filter((r) => shown.has(r.date.slice(0, 7)));
-  }, [months]);
-  const next = LEDGER_MONTHS[months];
+  }, [months, big]);
+  const next = big ? undefined : LEDGER_MONTHS[months];
+  const period = big ? BIG_PERIOD : LEDGER_PERIOD;
   return (
     <Example
       label="Period groups and load more — groupBy, loadMore"
@@ -1074,6 +1108,20 @@ function PeriodGroupsTable() {
       <Row>
         <Switch label="Day bands under the month" checked={twoLevels} onCheckedChange={setTwoLevels} />
         <Switch label="Sticky leading row" checked={stickyLead} onCheckedChange={setStickyLead} />
+        <ToggleGroup<LedgerSize>
+          aria-label="Rows"
+          value={size}
+          onChange={(v) => {
+            setSize(v);
+            setPicked(new Set());
+          }}
+          options={[
+            { value: "months", label: "3 months" },
+            { value: "1000", label: "1000 rows" },
+            { value: "3000", label: "3000 rows" },
+          ]}
+        />
+        <Switch label="Virtualize rows" checked={virtual} onCheckedChange={setVirtual} />
         <Button
           variant="secondary"
           size="sm"
@@ -1092,8 +1140,45 @@ function PeriodGroupsTable() {
           rows={rows}
           columns={LEDGER_COLUMNS}
           rowKey={(r) => r.id}
-          groupBy={twoLevels ? [LEDGER_PERIOD, LEDGER_DAY] : LEDGER_PERIOD}
-          mobileGroupBy={LEDGER_PERIOD}
+          groupBy={twoLevels ? [period, LEDGER_DAY] : period}
+          mobileGroupBy={period}
+          virtualize={virtual}
+          onRowClick={big ? (r) => setOpenId((id) => (id === r.id ? null : r.id)) : undefined}
+          isExpanded={big ? (r) => r.id === openId : undefined}
+          expandedRow={
+            big
+              ? (r) => (
+                  <label className="flex items-center gap-2 text-sm">
+                    Note for {r.payee}
+                    <input className="rounded border border-subtle bg-surface px-2 py-1" defaultValue="" />
+                  </label>
+                )
+              : undefined
+          }
+          selection={
+            big
+              ? {
+                  isSelected: (r) => picked.has(r.id),
+                  onToggle: (r, on) =>
+                    setPicked((s) => {
+                      const n = new Set(s);
+                      if (on) n.add(r.id);
+                      else n.delete(r.id);
+                      return n;
+                    }),
+                  onToggleMany: (rs, on) =>
+                    setPicked((s) => {
+                      const n = new Set(s);
+                      for (const r of rs) if (on) n.add(r.id);
+                      else n.delete(r.id);
+                      return n;
+                    }),
+                  allSelected: picked.size === rows.length,
+                  someSelected: picked.size > 0 && picked.size < rows.length,
+                  onToggleAll: (on) => setPicked(on ? new Set(rows.map((r) => r.id)) : new Set()),
+                }
+              : undefined
+          }
           leadingRow={<div className="px-3 py-1.5 text-xs text-secondary">3 upcoming transactions (hidden)</div>}
           leadingRowSticky={stickyLead}
           paginated={false}
@@ -1116,7 +1201,9 @@ function PeriodGroupsTable() {
         />
       </div>
       <p className={READOUT} data-demo="period-loads">
-        {rows.length} of {LEDGER.length} rows · {loads} {loads === 1 ? "load" : "loads"}
+        {big
+          ? `${rows.length} rows · ${picked.size} selected`
+          : `${rows.length} of ${LEDGER.length} rows · ${loads} ${loads === 1 ? "load" : "loads"}`}
       </p>
       <div className="mt-3">
         <Note>
@@ -1133,6 +1220,14 @@ function PeriodGroupsTable() {
           again while {code("loading")} or until the rows arrive. The button is there for the
           keyboard — Tab reaches it after the rows — and says what it loads; at the end the
           app&apos;s {code("endLabel")} (default “All rows loaded”).
+        </Note>
+        <Note>
+          0.48.2: {code("virtualize")} renders only the rows near the view (and 12 more each
+          side), spacer rows standing in for the rest inside each day&apos;s{" "}
+          {code("<tbody>")} — the bands stay sticky and stacked. Switch to 1000 or 3000 rows
+          and compare: the columns hold still while the rows come and go, End on a focused
+          row reaches the last one, a Shift+click range covers the rows not drawn, and an
+          open row stays. Find-in-page only sees the rows drawn.
         </Note>
       </div>
     </Example>

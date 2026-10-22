@@ -18,8 +18,11 @@ import {
   useGroupBandTops,
   type DataTableGroupBy,
   type DataTableLoadMore,
+  type RowGroup,
 } from "./data-table-groups";
 export type { DataTableGroupBy, DataTableLoadMore } from "./data-table-groups";
+import { VIRTUAL_SELECT_COL, rowNavTarget, useRowWindow, type DataTableVirtualize, type VirtualGroup } from "./data-table-virtual";
+export type { DataTableVirtualize } from "./data-table-virtual";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
 import { useLargeText } from "../hooks/use-large-text";
 import { cn } from "../lib/cn";
@@ -600,6 +603,43 @@ export interface DataTableProps<T> {
    */
   loadMore?: DataTableLoadMore;
   /**
+   * 0.48.2 (keksdose dev #632, Marcel: "The table is extremely slow. Is it virtualised…?"):
+   * render only the desktop rows near the visible part of the scroller, plus `overscan`
+   * rows each side ({@link DataTableVirtualize}), with spacer rows standing in for the
+   * rest. For long lists — keksdose's register under `loadMore` holds 1000+ rows. Opt-in;
+   * without it every row renders, as before.
+   *
+   * - **Scroller:** the bounded body (`fillHeight` or `maxBodyHeight`), or the page when the
+   *   body is unbounded (`maxBodyHeight="none"`): the window is what of the table both the
+   *   scroller and the browser window show.
+   * - **Kept rendered:** the header, the `leadingRow`, the group bands (sticky and stacked
+   *   as before; a period's band while any of its rows is in view), every OPEN row (so an
+   *   inline editor in `expandedRow` keeps its state), the roving tab stop and a row
+   *   holding the focus. The `loadMore` footer follows the last spacer and loads once.
+   * - **Heights:** each rendered row is measured and remembered by its key; a row not yet
+   *   seen counts as the measured average (`estimateRowHeight` before any). The scroll
+   *   height settles as the rows are seen; the browser's scroll anchoring holds the rows in
+   *   view while a spacer above is corrected (Safari has none: a jump of the difference
+   *   is possible there on the first pass).
+   * - **Columns:** the header widths are measured once and locked in a `<colgroup>`, so the
+   *   columns do not move as rows come and go; a wider cell scrolling in widens its column
+   *   (once). Re-measured when the rows, the columns, a width or the scroller's width
+   *   change. A `grow` column and a resized one are not locked.
+   * - **Keyboard and screen reader:** Arrow/Home/End move over every row — the target is
+   *   rendered, then focused (End reaches the last row); Shift+click ranges and select-all
+   *   work on the data, not the DOM. The table has `aria-rowcount`, every rendered row its
+   *   `aria-rowindex` (bands, details and the totals row counted); spacers are
+   *   `aria-hidden`.
+   * - **Trade-offs:** the browser's find-in-page sees only the rendered rows, and so does
+   *   print; an `id` from `rowAttributes` (an anchor, an `aria-controls` target, a
+   *   `scrollIntoView` on a fresh row) exists only while its row is rendered. Memoise
+   *   `columns` (and `mobileCard`): the rows bail out of a render only then, and a scroll
+   *   renders the rows that come in, not the whole window.
+   * - **Phone:** desktop only. The card list renders every row it holds (`loadMore`,
+   *   `paginated={false}`) or reveals them in chunks as it is scrolled (client paging).
+   */
+  virtualize?: boolean | DataTableVirtualize;
+  /**
    * Row height. `"compact"` is lenkbank's in-card tables: five `text-xs` tables with
    * `px-2 py-1` cells sitting inside cards, which at the default padding came out at
    * twice their height and pushed the card's own content below the fold — the whole
@@ -854,6 +894,13 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
 
+// `virtualize`'s constants (0.48.2): the band levels a group's `<tbody>` opens with.
+const NO_BANDS: readonly (1 | 2)[] = [];
+const BAND_1: readonly (1 | 2)[] = [1];
+const BAND_2: readonly (1 | 2)[] = [2];
+const BAND_1_2: readonly (1 | 2)[] = [1, 2];
+const NO_VIRTUAL_OPTIONS: DataTableVirtualize = {};
+
 // `moveRowFocus` (the roving rows' Arrow/Home/End) lives with the row in data-table-row.tsx.
 
 // ---------- Main DataTable ----------
@@ -907,6 +954,7 @@ export function DataTable<T>({
   leadingRowSticky = false,
   groupBy,
   loadMore,
+  virtualize = false,
   density = "comfortable",
   sortCycle = "tri",
   chrome = "full",
@@ -1235,12 +1283,16 @@ export function DataTable<T>({
 
   // 0.48 (keksdose live #451): the `fitPriority` columns the table's width leaves out
   // (data-table-fit.ts). Desktop only; the scroller is read after render.
+  // Large and Extra large: read here, as the fit re-measures when it changes.
+  const large = useLargeText();
   const { autoHidden, keep: keepColumn } = useColumnFit({
     columns,
     hiddenCols,
     headRefs,
     scroller: () => desktopScroller.current,
     enabled: !usePhoneLayout(),
+    // Measured only when one of these changed (0.48.2): not on a ticked box.
+    content: [slice, columns, hiddenCols, widths, density, large],
   });
   const visibleColumns = useMemo(
     () => columns.filter((c) => !hiddenCols.has(c.key) && !autoHidden.has(c.key)),
@@ -1347,8 +1399,7 @@ export function DataTable<T>({
   // Large and Extra large (§4 "DataTable phone card"): the card's labels go ABOVE their
   // values, nothing in it truncates, and the rows get more room. Most of it is a
   // `large:` class; the label/value grid needs a different STRUCTURE (each pair in a
-  // box of its own), which a class cannot write.
-  const large = useLargeText();
+  // box of its own), which a class cannot write. (`large` is read above, by the fit.)
   // What an opened phone row shows: the card's left-out columns first (when asked
   // for), then the app's own `expandedRow`. Desktop keeps `expandedRow` alone.
   const opensRow = !!expandedRow || mobileDetailColumns.length > 0;
@@ -1469,7 +1520,19 @@ export function DataTable<T>({
   // What the memoised rows' handlers read at event time (0.48.2, K-052-2): the latest
   // props, refreshed every commit, so a row that bailed out of a render still toggles
   // through the current `selection` and opens through the current `onRowClick`.
+  // `virtualize` (0.48.2): desktop only, and only with rows to window. Arrow/Home/End then
+  // move over every row, rendered or not: the target is rendered, then focused.
+  const virtualOn = !!virtualize && isMdUp && slice.length > 0;
+  const focusRowRef = useRef<((index: number) => void) | undefined>(undefined);
   const latestRowCtx: DataTableRowCtx<T> = {
+    moveFocus: virtualOn
+      ? (from, key) => {
+          const target = rowNavTarget(from, key, slice.length);
+          if (target === null) return false;
+          focusRowRef.current?.(target);
+          return true;
+        }
+      : undefined,
     onRowClick,
     onToggle: selection?.onToggle,
     isSelected: (row) => !!selection?.isSelected(row),
@@ -1550,6 +1613,57 @@ export function DataTable<T>({
     !!desktopGroups,
     `${levels.length}:${leadingRowSticky && !!leadingRow}:${desktopGroups?.[0]?.key ?? ""}`,
   );
+  // ---- Row windowing ---- (0.48.2, keksdose dev #632; data-table-virtual.ts)
+  // One run per innermost group, with its bands (`virtualOn` is above, with the rows' context).
+  const virtualGroups: VirtualGroup[] = [];
+  const virtualBands: { g1: RowGroup<T>; g2: RowGroup<T> | null }[] = [];
+  if (virtualOn) {
+    if (!desktopGroups) virtualGroups.push({ start: 0, end: slice.length, bands: NO_BANDS, first: 0 });
+    else
+      for (const g1 of desktopGroups) {
+        const first = virtualGroups.length;
+        if (!g1.children) {
+          virtualGroups.push({ start: g1.start, end: g1.start + g1.rows.length, bands: BAND_1, first });
+          virtualBands.push({ g1, g2: null });
+          continue;
+        }
+        g1.children.forEach((g2, j) => {
+          virtualGroups.push({ start: g2.start, end: g2.start + g2.rows.length, bands: j === 0 ? BAND_1_2 : BAND_2, first });
+          virtualBands.push({ g1, g2 });
+        });
+      }
+  }
+  const expandedIndices: number[] = [];
+  if (virtualOn && isExpanded && expandedRow) slice.forEach((r, i) => isExpanded(r) && expandedIndices.push(i));
+  const virtualColKeys = [...(selection ? [VIRTUAL_SELECT_COL] : []), ...visibleColumns.map((c) => c.key)];
+  const virtualLockable = new Set(
+    virtualColKeys.filter((k) => !widths[k] && !visibleColumns.some((c) => c.key === k && c.grow)),
+  );
+  const rowWindow = useRowWindow({
+    enabled: virtualOn,
+    rows: slice,
+    rowKey,
+    groups: virtualGroups,
+    expanded: expandedIndices,
+    pinnedKeys: [tabRowKey],
+    scrollerRef: desktopScroller,
+    tableRef,
+    options: typeof virtualize === "object" ? virtualize : NO_VIRTUAL_OPTIONS,
+    compact,
+    rowsBefore: 1 + (leadingRow ? 1 : 0),
+    rowsAfter: showFooter ? 1 : 0,
+    colKeys: virtualColKeys,
+    lockable: virtualLockable,
+    resetKey: `${Object.entries(widths).join(";")}|${density}|${large}|${slice.length}:${
+      slice.length ? `${rowKey(slice[0])}:${rowKey(slice[slice.length - 1])}` : ""
+    }`,
+  });
+  // What `moveFocus` (in the rows' context, above) reaches: the window's focus mover.
+  const focusRowAt = rowWindow?.focusRow;
+  useLayoutEffect(() => {
+    focusRowRef.current = focusRowAt;
+  }, [focusRowAt]);
+
   // `mobileGroupBy` may be a desktop `groupBy` level (0.48), its label and end slot too.
   const mobileLevel = typeof mobileGroupBy === "function" ? null : (mobileGroupBy ?? null);
   const mobileKey = typeof mobileGroupBy === "function" ? mobileGroupBy : mobileGroupBy?.key;
@@ -1850,7 +1964,20 @@ export function DataTable<T>({
           data-fit-grow={growDrawn ? "" : undefined}
           aria-label={labels.table}
           aria-busy={isLoading || undefined}
+          // `virtualize` (0.48.2): every row counted, rendered or not.
+          aria-rowcount={rowWindow?.rowCount}
+          data-virtualized={rowWindow ? "" : undefined}
         >
+          {/* The locked column widths (0.48.2, `virtualize`): rows coming and going no
+              longer move the columns. */}
+          {rowWindow && (
+            <colgroup>
+              {virtualColKeys.map((key) => {
+                const w = rowWindow.colWidths?.[key];
+                return <col key={key} style={w !== undefined ? { width: w } : undefined} />;
+              })}
+            </colgroup>
+          )}
           {/* Sticky header. position:sticky pins to the nearest scroll-container
               ancestor — so the header can only stick to THIS wrapper, never the
               page. For that to actually hold the header in place, the wrapper
@@ -1883,11 +2010,18 @@ export function DataTable<T>({
             startResize={startResize}
             moveResize={moveResize}
             finishResize={finishResize}
+            ariaRowIndex={rowWindow ? 1 : undefined}
+            lockedWidths={rowWindow?.colWidths}
+            selectionLockKey={VIRTUAL_SELECT_COL}
           />
           {(() => {
             const bodyClass = cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity");
             const leading = leadingRow ? (
-              <DataTableLeadingRow colSpan={totalColSpan} sticky={leadingRowSticky}>
+              <DataTableLeadingRow
+                colSpan={totalColSpan}
+                sticky={leadingRowSticky}
+                ariaRowIndex={rowWindow ? 2 : undefined}
+              >
                 {leadingRow}
               </DataTableLeadingRow>
             ) : null;
@@ -1925,6 +2059,7 @@ export function DataTable<T>({
                   totalColSpan={totalColSpan}
                   rowDetailsLabel={labels.rowDetails}
                   selectRowLabel={labels.selectRow}
+                  ariaRowIndex={rowWindow?.ariaRow(rowIndex)}
                 />
               );
             };
@@ -1941,6 +2076,60 @@ export function DataTable<T>({
                   </td>
                 </tr>
               ) : null;
+            const band = (
+              level: 1 | 2,
+              def: DataTableGroupBy<T>,
+              g: { key: string; rows: T[] },
+              ariaRowIndex?: number,
+            ) => (
+              <DataTableGroupBand
+                level={level}
+                colSpan={totalColSpan}
+                top={level === 1 ? bandTops[0] : bandTops[1]}
+                compact={compact}
+                label={def.label ? def.label(g.key, g.rows) : g.key}
+                end={def.end?.(g.key, g.rows)}
+                ariaRowIndex={ariaRowIndex}
+              />
+            );
+            if (rowWindow) {
+              // Windowed (0.48.2): each group's own `<tbody>` with its bands and the
+              // rendered rows, spacer rows between; one spacer `<tbody>` per run of groups
+              // with nothing rendered. Spacers are hidden from the accessibility tree.
+              const spacer = (key: string, height: number) => (
+                <tr key={key} aria-hidden="true" data-vt-spacer="">
+                  <td colSpan={totalColSpan} style={{ height, padding: 0, border: 0 }} />
+                </tr>
+              );
+              return (
+                <>
+                  {leading && <tbody className={bodyClass}>{leading}</tbody>}
+                  {rowWindow.bodies.map((b) => {
+                    if (b.kind === "spacer")
+                      return (
+                        <tbody key={b.key} data-vt-body="" aria-hidden="true">
+                          {spacer("s", b.height)}
+                        </tbody>
+                      );
+                    const g = virtualGroups[b.group];
+                    const vb = virtualBands[b.group];
+                    return (
+                      <tbody
+                        key={vb ? `vg:${vb.g1.key}:${vb.g2?.key ?? ""}:${g.start}` : "vg"}
+                        data-vt-body=""
+                        className={bodyClass}
+                      >
+                        {vb && g.bands.includes(1) && band(1, levels[0], vb.g1, rowWindow.ariaBand(b.group, 1))}
+                        {vb?.g2 && band(2, levels[1], vb.g2, rowWindow.ariaBand(b.group, 2))}
+                        {b.items.map((it) =>
+                          it.kind === "gap" ? spacer(it.key, it.height) : renderRow(slice[it.index], it.index),
+                        )}
+                      </tbody>
+                    );
+                  })}
+                </>
+              );
+            }
             if (!desktopGroups) {
               return (
                 <tbody className={bodyClass}>
@@ -1953,16 +2142,6 @@ export function DataTable<T>({
             // Grouped (0.48, keksdose dev #605): one `<tbody>` per innermost group, its
             // band the row header; the leading row (and the empty state) in their own
             // before the first group.
-            const band = (level: 1 | 2, def: DataTableGroupBy<T>, g: { key: string; rows: T[] }) => (
-              <DataTableGroupBand
-                level={level}
-                colSpan={totalColSpan}
-                top={level === 1 ? bandTops[0] : bandTops[1]}
-                compact={compact}
-                label={def.label ? def.label(g.key, g.rows) : g.key}
-                end={def.end?.(g.key, g.rows)}
-              />
-            );
             const rowsOf = (g: { rows: T[]; start: number }) => g.rows.map((r, i) => renderRow(r, g.start + i));
             return (
               <>
@@ -2004,7 +2183,7 @@ export function DataTable<T>({
                 isLoading && "opacity-60 transition-opacity",
               )}
             >
-              <tr>
+              <tr aria-rowindex={rowWindow?.rowCount}>
                 {/* The selection column has nothing to total: an empty cell keeps the
                     values under their own headers. */}
                 {selection && (
