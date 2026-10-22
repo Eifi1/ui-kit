@@ -636,11 +636,9 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
       <Note>
         <strong>Double-click Next.</strong> Step 2&apos;s <code className="font-mono">validate</code>{" "}
         is async (a 600ms pretend server check). Pick a size and double-click Next: the counter
-        in the table below goes up by one, not two, and the wizard moves one step. Before 0.7.0
-        the second click validated the same step again and advanced twice — from step 1 that
-        walked straight past step 2&apos;s check. <code className="font-mono">goNext</code>,{" "}
-        <code className="font-mono">skip</code> and <code className="font-mono">finish</code> now
-        refuse to start while a move is in flight, and a move decided on a step that is no
+        in the table below goes up by one, not two, and the wizard moves one step.{" "}
+        <code className="font-mono">goNext</code>, <code className="font-mono">skip</code> and{" "}
+        <code className="font-mono">finish</code> refuse to start while a move is in flight, and a move decided on a step that is no
         longer current is dropped; a double-click on Finish calls{" "}
         <code className="font-mono">onComplete</code> once.
       </Note>
@@ -903,7 +901,6 @@ export function StepperNavFinishLock023Demo() {
           {code("renderFinish")} that clones {code("commit")} in keeps working.
         </Note>
       </div>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }
