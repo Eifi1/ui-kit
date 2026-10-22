@@ -148,7 +148,7 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
   variant?:
     | "accent"
     | "surface"
-    /** @deprecated 0.49: use `accent` (same look). Removed no earlier than 0.51. */
+    /** @deprecated 0.49 — use `accent` (same look); removed in 0.51. */
     | "primary";
   /**
    * Hover and focus label in the kit {@link Tooltip}, instead of the native `title` —
@@ -707,7 +707,7 @@ export interface FloatingActionProps extends Omit<ButtonHTMLAttributes<HTMLButto
   variant?:
     | "default"
     | "accent"
-    /** @deprecated 0.49: use `accent` (same look). Removed no earlier than 0.51. */
+    /** @deprecated 0.49 — use `accent` (same look); removed in 0.51. */
     | "primary";
   /**
    * A count in a dot at the member's top end corner — the /transactions invoices link's

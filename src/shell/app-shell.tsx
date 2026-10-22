@@ -165,9 +165,9 @@ export const DEFAULT_MOBILE_MAX_ITEMS: Readonly<Record<TextSize, number>> = {
 };
 
 /**
- * @deprecated 0.49: the bar is sized in cells, "More" included —
- * {@link DEFAULT_MOBILE_MAX_ITEMS} and `AppShell`'s `mobileMaxItems`. This is the same
- * default counted as entries before "More" (one fewer). Removed no earlier than 0.51.
+ * @deprecated 0.49 — use {@link DEFAULT_MOBILE_MAX_ITEMS} and `AppShell`'s
+ * `mobileMaxItems`: the bar is sized in cells, "More" included; removed in 0.51. This is
+ * the same default counted as entries before "More" (one fewer).
  */
 export const DEFAULT_MOBILE_BAR_MAX: Readonly<Record<TextSize, number>> = {
   normal: DEFAULT_MOBILE_MAX_ITEMS.normal - 1,
@@ -369,10 +369,10 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    */
   mobileMaxItems?: number | Partial<Record<TextSize, number>>;
   /**
-   * @deprecated 0.49: use `mobileMaxItems`, which counts the bar's cells, "More"
-   * included — `mobileBarMax={4}` is `mobileMaxItems={5}`. Read as that (one more, per
-   * size), with a development warning; ignored when `mobileMaxItems` is given. Removed no
-   * earlier than 0.51.
+   * @deprecated 0.49 — use `mobileMaxItems`, which counts the bar's cells, "More"
+   * included: `mobileBarMax={4}` is `mobileMaxItems={5}`; removed in 0.51. Read as that
+   * (one more, per size), with a development warning; ignored when `mobileMaxItems` is
+   * given.
    */
   mobileBarMax?: number | Partial<Record<TextSize, number>>;
   /** The More cell's words over the provider's `appShellMore`. */

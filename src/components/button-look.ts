@@ -35,9 +35,9 @@ export type ButtonVariant =
   | "ghost"
   | "danger"
   | "link"
-  /** @deprecated 0.49: use `default` (same look). Removed no earlier than 0.51. */
+  /** @deprecated 0.49 — use `default` (same look); removed in 0.51. */
   | "primary"
-  /** @deprecated 0.49: use `accent` (same look). Removed no earlier than 0.51. */
+  /** @deprecated 0.49 — use `accent` (same look); removed in 0.51. */
   | "brand";
 
 /** @internal A {@link ButtonVariant} without the deprecated aliases. */
