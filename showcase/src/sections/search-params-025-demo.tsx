@@ -177,10 +177,9 @@ function ChainedSettersDemo() {
         </Row>
         <QueryReadout extra={[["from → to", from || to ? `${from || "…"} → ${to || "…"}` : "any date"]]} />
         <Note>
-          A preset calls {code('setFrom("2026-01-01")')} and then {code('setTo("2026-03-31")')}. Before 0.25 the
-          second started from the URL as it was rendered and wrote the old {code("from")} back, so only{" "}
-          {code("to")} landed. Now the second builds on the first, and one Back undoes the
-          preset. Writing what the URL already says navigates nowhere — no dead history entry.
+          A preset calls {code('setFrom("2026-01-01")')} and then {code('setTo("2026-03-31")')}. The second
+          builds on the first rather than on the URL as it was rendered, so both land, and one Back
+          undoes the preset. Writing what the URL already says navigates nowhere — no dead history entry.
         </Note>
       </div>
     </Example>
