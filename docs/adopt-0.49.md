@@ -131,7 +131,9 @@ that has no `rg` on its PATH (`which rg` prints nothing):
 #    print the 15 lines after each tag and keep the variant lines; read each hit in its file.
 rg -n -A15 '<FloatingAction(Button)?\b' src | rg 'variant="primary"'
 grep -rn -A15 -E '<FloatingAction(Button)?\b' src | grep 'variant="primary"'
-# 1) the button-variant props, literal attributes
+# 1) the button-variant props, literal attributes.
+#    STOP: fix every hit of step 0 by hand FIRST — step 1 matches the FAB too and would
+#    turn it into "default" (quiet) without a type error or a warning.
 rg -l --glob '*.tsx' '(variant|submitVariant|cancelVariant|confirmVariant|finishVariant|buttonVariant|attachmentButtonVariant)="(primary|brand)"' src \
  | xargs sed -i -E \
    -e 's/\b(variant|submitVariant|cancelVariant|confirmVariant|finishVariant|buttonVariant|attachmentButtonVariant)="primary"/\1="default"/g' \
