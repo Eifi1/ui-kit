@@ -326,7 +326,6 @@ function SignIn() {
         {code("@eifi1/ui-kit/rhf")}. {code("busy")} makes it read-only, not disabled, so the focus Enter left in it
         is still there when the answer comes. Not for a NEW password: that is {code("new-password")}.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
