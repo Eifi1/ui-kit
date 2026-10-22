@@ -150,7 +150,7 @@ export function DescriptionPlaceholderDemo() {
           The placeholder is drawn in the muted ink, so an absent value does not read as a value of “—”.
           Precedence: the item&apos;s {code("placeholder")}, else the list&apos;s, else{" "}
           {code("descriptionList.empty")} from the provider — switch the language to see it translated —
-          else “—”. {code("placeholder={null}")} shows nothing, as before 0.12.
+          else “—”. {code("placeholder={null}")} shows nothing.
         </Note>
       </div>
     </Example>

@@ -374,7 +374,6 @@ export function TableHeaderValignDemo() {
           class on the row could not): at {code("top")} the figures sit above the middle of the field beside them.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
@@ -430,7 +429,6 @@ export function TableRefs016Demo() {
         so a row can be scrolled into view without {code("useId")} +{" "}
         {code("getElementById")}.
       </Note>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }

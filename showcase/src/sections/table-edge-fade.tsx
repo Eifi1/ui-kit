@@ -164,10 +164,9 @@ export function TableEdgeFadeDemo() {
         animation; the wrapper&apos;s own scrollbars stay out of it. An Open button tabbed to
         behind the fade is scrolled clear of it, and while the scroll box itself holds keyboard
         focus the fade lifts so its outline is drawn whole. The wrapper says{" "}
-        {code('data-overflow="start" | "end" | "both"')}. ColumnRoleTable&apos;s preview (0.24)
+        {code('data-overflow="start" | "end" | "both"')}. ColumnRoleTable&apos;s preview
         is this prop.
       </Note>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }
