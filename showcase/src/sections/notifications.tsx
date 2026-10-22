@@ -138,7 +138,7 @@ export function NotificationTypesFinanceDemo() {
   return (
     <Example
       label="NotificationTypesSetting — ten types under four headings, a column per channel"
-      hint="In the app · Push · E-mail (0.46); groups, digest, renderExtra; one PATCH per switch"
+      hint="In the app · Push · E-mail; groups, digest, renderExtra; one PATCH per switch"
     >
       <Column>
         <NotificationTypesSetting<FinanceType>
@@ -173,7 +173,7 @@ export function NotificationTypesFinanceDemo() {
         The server&apos;s {code("types")} is the only list: the card draws what it answered, in the order of the
         app&apos;s {code("groups")}, with the app&apos;s words and headings. A type the server answers that is in no
         group throws in development — a compile-time guard, at run time. The cadence shows under
-        the digest while it is on, the threshold under Low balance ({code("renderExtra")}). Since 0.46 each
+        the digest while it is on, the threshold under Low balance ({code("renderExtra")}). Each
         channel is a column — &quot;In the app&quot;, &quot;Push&quot;, &quot;E-mail&quot; — stacked under the label on a
         phone; a channel the server answers {code("null")} is not drawn, so the e-mail column holds the admin&apos;s{" "}
         {code("feedback_received")} alone.
@@ -282,7 +282,7 @@ export function QuietHoursDemo() {
   const [reported, setReported] = useState(true);
   const { lines, log } = useLog();
   return (
-    <Example label="QuietHoursSetting — the account's zone, and a held push" hint="zone, held (0.46)">
+    <Example label="QuietHoursSetting — the account's zone, and a held push" hint="zone, held">
       <div className="mb-3">
         <Switch checked={reported} onCheckedChange={setReported} label="A device has reported its zone" />
       </div>
@@ -305,7 +305,7 @@ export function QuietHoursDemo() {
       </Column>
       <Readout lines={lines} />
       <Note>
-        Since 0.46 the zone is the account&apos;s, and automatic only (amended 2026-10-20): the zone of the device
+        The zone is the account&apos;s, and automatic only: the zone of the device
         last used ({code("/auth/me")}&apos;s {code("device_timezone")}, reported by {code("useDeviceZoneReport")} when
         it differs, never for a demo), else Zurich. The card names it read-only and a time sends no zone; screens
         keep showing device time. {code("held")} says a held push arrives when the window ends — an app that runs
@@ -556,7 +556,7 @@ export function PushDevicesDemo() {
       <Note>
         Removing this device also unsubscribes the browser and fires {code("PUSH_SUBSCRIPTION_CHANGED")}, so the
         push card stops saying &quot;on&quot;. The browser and system come from the stored user agent
-        ({code("describeUserAgent")}). &quot;Types on this device&quot; (0.46) lists the types with push on; a device
+        ({code("describeUserAgent")}). &quot;Types on this device&quot; lists the types with push on; a device
         can mute one, never add one, and each flip saves its whole {code("muted_types")} list.
       </Note>
     </Example>

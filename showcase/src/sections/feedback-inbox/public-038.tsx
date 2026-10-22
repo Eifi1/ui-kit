@@ -374,7 +374,6 @@ export function FeedbackNotificationTypes038Demo() {
         the app&apos;s own {code("types")}: the card draws only what the server answered, so an app that declares{" "}
         {code("feedback_answered")} alone shows one.
       </Note>
-      <Note>Since 0.38.</Note>
     </Example>
   );
 }
