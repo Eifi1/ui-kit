@@ -302,7 +302,7 @@ function PasswordRow() {
             <code className="font-mono">tooShort</code> and{" "}
             <code className="font-mono">mismatch</code> — because the card has no strings of its
             own and no way to translate one. The check runs on click, not while typing, so the
-            message stands under the field it is about (0.34) and clears as that field is typed in.
+            message stands under the field it is about and clears as that field is typed in.
           </Note>
           <Note>
             The card holds the three passwords itself and never lifts them; the app sees them
@@ -333,7 +333,7 @@ function PasswordRow() {
         </div>
         <div className="mt-3">
           <Note>
-            Since 0.34 the card reads a rejection by its code: server-kit&apos;s{" "}
+            The card reads a rejection by its code: server-kit&apos;s{" "}
             <code className="font-mono">400 password_incorrect</code> is said under the current password, in{" "}
             <code className="font-mono">labels.wrongPassword</code> — the words the email-change and deletion cards
             use — and that field takes the focus. <code className="font-mono">describeError</code> is asked first, for
@@ -528,8 +528,7 @@ function ProfileLoadingRow() {
       <div className="mt-3">
         <Note>
           Two cards on one page, as here: the display-name field&apos;s{" "}
-          <code className="font-mono">id</code> is generated per card (it was the literal{" "}
-          <code className="font-mono">display-name</code> before 0.7.0), so each label focuses its
+          <code className="font-mono">id</code> is generated per card, so each label focuses its
           own input — click this card&apos;s label and the caret lands here, not in the card above.
         </Note>
       </div>
@@ -602,7 +601,7 @@ function DeviceResetRow() {
         )}
       </div>
       <Note>
-        Since 0.36 (docs/settings-harmonization.md §11). The appearance group&apos;s last card.
+        docs/settings-harmonization.md §11: the appearance group&apos;s last card.
         The kit&apos;s stores join `registerDeviceSetting` when they are created, `UiKitProvider`
         and `AppShell` while mounted; an app adds its own keys beside the store that owns each.
         A confirm, not an undo, and no commit: nothing is written to the account, so a write

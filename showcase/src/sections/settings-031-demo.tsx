@@ -359,7 +359,7 @@ export function SettingsDesktop031Demo() {
         settings. Ten entries are over the threshold of eight, so the search shows: try “dark”, “2fa” or “sécurité”
         — accents fold, and a group&rsquo;s name finds its settings. “Legacy link” is an old
         {code("#security")} URL, converted with the whole query while the page stays mounted. “Mail link” rings the
-        passkeys card, focuses its heading and removes only {code("focus")}. Since 0.34 the browser tab follows the
+        passkeys card, focuses its heading and removes only {code("focus")}. The browser tab follows the
         open group — “Security · Garden Planner settings · Garden Planner”, from {code("appName")} — and gets its
         old title back when the layout unmounts; {code("documentTitle")} takes a function for another order, or{" "}
         {code("false")}, which the phone and admin specimens pass.
