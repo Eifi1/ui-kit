@@ -109,8 +109,8 @@ export function GroupActions034Demo() {
         it has the person as its target and the group as its `group`, drawn after the person by its name alone, muted,
         with no preposition for a language to inflect. The words say the app&apos;s noun (`groupNoun`): whole phrases per
         noun, since a noun dropped into one phrase breaks the participle&apos;s agreement in French and Italian and the
-        suffix in Hungarian. The `company` set&apos;s &ldquo;Removed from the company&rdquo; is the string the log said
-        before 0.34. A group with no name left reads as the noun&apos;s &ldquo;a deleted team&rdquo;; only a missing
+        suffix in Hungarian. The `company` set&apos;s &ldquo;Removed from the company&rdquo; is the log&apos;s plain
+        wording. A group with no name left reads as the noun&apos;s &ldquo;a deleted team&rdquo;; only a missing
         person is &ldquo;an erased account&rdquo;, and a `kind: &quot;other&quot;` target is said by its `label`.
         Deleting a group is `acknowledge`: a tick under the app&apos;s own sentence of what goes with it — a group has no
         address to type, so its types allow it only at `none` and `acknowledge`.

@@ -181,7 +181,7 @@ export function PlanChange033Demo() {
         `onSortsChange` and the server sorts — and filters over `filterPlans`. The usage&apos;s `label` may give
         the word&apos;s plural forms (`one` &ldquo;bed&rdquo;, `other` &ldquo;beds&rdquo;), and the tooltip
         takes the limit&apos;s. `PlanChangeConfirm` is `AdminActionConfirm` at `acknowledge`: the current
-        plan and the usage — the column&apos;s `used`, `limit` and `label` in the column&apos;s sentence since 0.34,
+        plan and the usage — the column&apos;s `used`, `limit` and `label` in the column&apos;s sentence,
         or the app&apos;s own — a plan select, and — with `grantEnd`, only while billing is on —
         &ldquo;Free until&rdquo;, sent as the END of the picked day in the operator&apos;s time zone. The confirm
         is held while nothing would change, and it stays live under your own lapsed plan (`COMMIT_EXCEPT_BILLING`,
