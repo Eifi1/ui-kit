@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { cn } from "../lib/cn";
 import { isRtl } from "../lib/direction";
+import { TYPOGRAPHIC_MINUS } from "../lib/minus";
 
 export interface ChartSeriesConfig {
   label: ReactNode;
@@ -376,7 +377,8 @@ export function ChartTooltipContent({
     if (inRow && !shown) text = NO_VALUE;
     else if (formatValue) text = formatValue(raw);
     else if (raw == null) text = NO_VALUE;
-    else text = valueFormatter ? valueFormatter(raw) : raw;
+    // The bare number's minus is U+2212, as every kit figure's (0.49, KIT-1).
+    else text = valueFormatter ? valueFormatter(raw) : String(raw).replace(/-/g, TYPOGRAPHIC_MINUS);
     return (
       <div
         key={`${cfgKey}-${i}`}

@@ -41,6 +41,13 @@ const SCOPES = [
 
 const rowOf = (email: string) => screen.getByText(email).closest("li")!;
 
+/** 0.49 KIT-12: revoke sits in the row's "⋯" menu — and asks nothing (level `none`, §4.2). */
+async function revoke(user: ReturnType<typeof userEvent.setup>, email: string) {
+  await user.click(within(rowOf(email)).getByRole("button", { name: `Actions for ${email}` }));
+  await user.click(await screen.findByRole("button", { name: `Revoke the invitation for ${email}` }));
+  expect(screen.queryByRole("alertdialog")).toBeNull();
+}
+
 describe("InvitationsPanel", () => {
   it("invites with the address, role, scope, language and note — and offers no address tag", async () => {
     const user = userEvent.setup();
@@ -115,12 +122,12 @@ describe("InvitationsPanel", () => {
 
     await user.click(screen.getByRole("button", { name: "Send old@example.com a new link" }));
     expect(onResend).toHaveBeenCalledWith(ROWS[2]);
-    await user.click(screen.getByRole("button", { name: "Revoke the invitation for nina@example.com" }));
-    expect(onRevoke).toHaveBeenCalledWith(ROWS[0]);
+    await revoke(user, "nina@example.com");
+    await waitFor(() => expect(onRevoke).toHaveBeenCalledWith(ROWS[0]));
     // 0.31: an expired row can be removed too — otherwise it stays listed for good
     // in an app that keeps its rows (Kurvenschmiede's 0.30 adoption).
-    await user.click(screen.getByRole("button", { name: "Revoke the invitation for old@example.com" }));
-    expect(onRevoke).toHaveBeenLastCalledWith(ROWS[2]);
+    await revoke(user, "old@example.com");
+    await waitFor(() => expect(onRevoke).toHaveBeenLastCalledWith(ROWS[2]));
   });
 
   it("leaves its list heading out with listTitle={null}, keeping the list's name", () => {
@@ -171,7 +178,7 @@ describe("InvitationsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Invite" }));
     expect(onInvite).toHaveBeenCalledWith(expect.not.objectContaining({ role: expect.anything() }));
     expect(await screen.findByText("pat@example.com is invited, but the mail couldn’t be sent. Resend it.")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Revoke the invitation for nina@example.com" }));
+    await revoke(user, "nina@example.com");
     expect(await screen.findByText("The invitation is gone already.")).toBeInTheDocument();
   });
 });
@@ -225,23 +232,26 @@ describe("InvitationsPanel under a write lock (0.33, billing §12.36)", () => {
     expect(onInvite).not.toHaveBeenCalled();
     expect(onResend).not.toHaveBeenCalled();
 
-    const revoke = screen.getByRole("button", { name: "Revoke the invitation for nina@example.com" });
+    fireEvent.click(screen.getByRole("button", { name: "Actions for nina@example.com" }));
+    const revoke = await screen.findByRole("button", { name: "Revoke the invitation for nina@example.com" });
     expect(revoke).not.toHaveAttribute("aria-disabled");
     fireEvent.click(revoke);
-    expect(onRevoke).toHaveBeenCalledWith(ROWS[0]);
+    await waitFor(() => expect(onRevoke).toHaveBeenCalledWith(ROWS[0]));
     // The row's busy state clears once the call settles.
     await waitFor(() => expect(screen.getByRole("button", { name: "Invite" })).not.toBeDisabled());
   });
 
-  it("refuses all three, revoke too, under a demo lock beside it", () => {
+  it("refuses all three, revoke too, under a demo lock beside it", async () => {
     const { onRevoke } = underLock([
       { kind: "demo", reason: DEMO },
       { kind: "billing", reason: PLAN },
     ]);
-    const revoke = screen.getByRole("button", { name: "Revoke the invitation for nina@example.com" });
+    fireEvent.click(screen.getByRole("button", { name: "Actions for nina@example.com" }));
+    const revoke = await screen.findByRole("button", { name: "Revoke the invitation for nina@example.com" });
     expect(revoke).toHaveAttribute("aria-disabled", "true");
     expect(revoke).toHaveAccessibleDescription(DEMO);
     fireEvent.click(revoke);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(onRevoke).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Invite" })).toHaveAccessibleDescription(DEMO);
   });

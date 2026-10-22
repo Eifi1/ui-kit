@@ -3,8 +3,7 @@ import { ButtonGroup, IconButton, PageHeader, SectionLabel, Select } from "@eifi
 import { Example, Note, code } from "../lib/section";
 
 /**
- * The 0.14 PageHeader props, all from keksdose adopting 0.13: `truncateTitle` (G6a,
- * payees), `secondaryActions` (G6b, budget) and `actionsAlign` (G8, reports).
+ * The 0.14 PageHeader props: `truncateTitle`, `secondaryActions` and `actionsAlign`.
  */
 
 function PageHeaderTruncate() {

@@ -11,7 +11,7 @@ import type { ButtonVariant } from "../button-look";
  * is disabled.
  */
 
-const VARIANTS: ButtonVariant[] = ["primary", "secondary", "ghost", "danger", "brand", "link"];
+const VARIANTS = ["default", "accent", "secondary", "ghost", "danger", "link"] as const satisfies readonly ButtonVariant[];
 
 describe("Button size", () => {
   it("md is the default and the pre-0.8.0 geometry", () => {
@@ -98,12 +98,12 @@ describe("IconButton tone=info", () => {
 
 describe("IconButton disabled", () => {
   it("pins every variant's resting fill under disabled:hover", () => {
-    const rest: Record<ButtonVariant, string> = {
-      primary: "disabled:hover:bg-surface-2",
+    const rest: Record<(typeof VARIANTS)[number], string> = {
+      default: "disabled:hover:bg-surface-2",
+      accent: "disabled:hover:bg-brand",
       secondary: "disabled:hover:bg-transparent",
       ghost: "disabled:hover:bg-transparent",
       danger: "disabled:hover:bg-danger",
-      brand: "disabled:hover:bg-brand",
       link: "disabled:hover:bg-transparent",
     };
     for (const variant of VARIANTS) {

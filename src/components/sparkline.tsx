@@ -3,6 +3,7 @@ import { cn } from "../lib/cn";
 import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { useTextSize } from "../theme/text-size";
 import { DEFAULT_SPARKLINE_LABELS } from "./sparkline-labels";
+import { formatWithMinus } from "../lib/minus";
 
 /**
  * The words a sparkline speaks. It has no axes, no tooltip and no legend, so its
@@ -118,7 +119,7 @@ function defaultFormat(locale: string | undefined): (v: number) => string {
     f = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
     formatters.set(key, f);
   }
-  return (v) => f.format(v);
+  return (v) => formatWithMinus(f, v);
 }
 
 const isValue = (v: number | null | undefined): v is number => typeof v === "number" && Number.isFinite(v);

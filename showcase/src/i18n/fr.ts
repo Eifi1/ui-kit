@@ -183,7 +183,7 @@ export const fr: Dictionary = {
       title: "Rôles de couleur",
       short: "Rôles",
       blurb:
-        "La couche sémantique au-dessus de la palette\u00a0: chaque aplat avec la couleur de premier plan qu’il nomme, chaque ton en texte, en fond doux et en trait, les traits forts, le panneau en creux sur une carte, la règle du survol, les utilitaires de rôle qui remplacent text-[var(--…)], et le test qui repère une variable que rien ne déclare.",
+        "La couche sémantique au-dessus de la palette\u00a0: le ton que prend un statut, chaque aplat avec la couleur de premier plan qu’il nomme, chaque ton en texte, en fond doux et en trait, les traits forts, le panneau en creux sur une carte, la règle du survol, les utilitaires de rôle qui remplacent text-[var(--…)], et le test qui repère une variable que rien ne déclare.",
     },
     "text-size": {
       title: "Taille du texte et contraste",
@@ -207,7 +207,7 @@ export const fr: Dictionary = {
       title: "Revue du kit (en direct)",
       short: "Revue du kit",
       blurb:
-        "Les textes du kit dans chaque langue que livre keksdose, relus contre la base de relecture de keksdose : les mêmes lignes kit. et les mêmes verdicts que sa page Traductions, ouverte depuis là avec un jeton de relecture.",
+        "Les textes du kit dans chaque langue que livre l’app configurée, relus contre la base de relecture de cette app : les mêmes lignes kit. et les mêmes verdicts que sa page Traductions, ouverte depuis là avec un jeton de relecture.",
     },
     inputs: {
       title: "Saisie",
@@ -752,7 +752,7 @@ export const fr: Dictionary = {
       "relire les traductions du kit",
       "approuver une traduction",
       "réveiller un serveur endormi",
-      "ouvrir la relecture depuis keksdose",
+      "ouvrir la relecture depuis l’app",
       "exporter les corrections",
     ],
     inputs: [

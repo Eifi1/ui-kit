@@ -15,6 +15,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { DataTableColumn } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /* ── since 0.25 ─────────────────────────────────────────────────────────── */
 
@@ -26,7 +27,7 @@ import { Example, Note, code } from "../lib/section";
  */
 
 const gbp = (n: number) =>
-  new Intl.NumberFormat("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+  numberFormat("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 interface Payment {
   id: string;
@@ -129,7 +130,7 @@ export function TableEdgeFadeDemo() {
                 <TableHeaderCell numeric>Net</TableHeaderCell>
                 <TableHeaderCell numeric>VAT</TableHeaderCell>
                 <TableHeaderCell>Status</TableHeaderCell>
-                {/* On screen, as every actions column's heading is (0.46.1, dev#598). */}
+                {/* On screen, as every actions column's heading is (0.46.1). */}
                 <TableHeaderCell>Actions</TableHeaderCell>
               </TableRow>
             </TableHead>
@@ -163,10 +164,9 @@ export function TableEdgeFadeDemo() {
         animation; the wrapper&apos;s own scrollbars stay out of it. An Open button tabbed to
         behind the fade is scrolled clear of it, and while the scroll box itself holds keyboard
         focus the fade lifts so its outline is drawn whole. The wrapper says{" "}
-        {code('data-overflow="start" | "end" | "both"')}. ColumnRoleTable&apos;s preview (0.24)
+        {code('data-overflow="start" | "end" | "both"')}. ColumnRoleTable&apos;s preview
         is this prop.
       </Note>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }
@@ -244,7 +244,6 @@ export function DataTableEdgeFadeDemo() {
         scrolled clear of it. Off by default: it changes how every overflowing desktop table
         looks. The phone layout is a list of cards, which never scrolls sideways.
       </Note>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }

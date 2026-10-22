@@ -15,11 +15,12 @@ import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
+import { warnDeprecatedVariant } from "./button-look";
 import { dirOf, type Direction } from "../lib/direction";
 import { registerFloating } from "../lib/floating-stack";
 import { useFloatClearance } from "../lib/float-clearance";
 import { isComposing } from "../lib/ime";
-import { takeEscape } from "../hooks/use-dismiss";
+import { takeEscape, useOverlayOpen } from "../hooks/use-dismiss";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { assignRef } from "./field-parts";
 import { pickLinkRenderer } from "./text-link";
@@ -137,13 +138,18 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
    */
   live?: boolean;
   /**
-   * `primary` (default): the solid brand disc of a page's main action. `surface`: the
-   * page's surface with a hairline border — for a FAB that is a status rather than a
-   * call to action, as kastlan's offline pill is (a brand pill would shout "press me"
-   * at a user who is merely offline). Ignored while `pressed` is set; a toggle has its
-   * own two looks.
+   * `accent` (default): the solid brand disc of a page's main action, as Button's
+   * `accent`. `surface`: the page's surface with a hairline border — for a FAB that is a
+   * status rather than a call to action, as kastlan's offline pill is (a brand pill would
+   * shout "press me" at a user who is merely offline). Ignored while `pressed` is set; a
+   * toggle has its own two looks. `primary` is a deprecated alias of `accent` (0.49; a
+   * development build warns once), removed in 0.51.
    */
-  variant?: "primary" | "surface";
+  variant?:
+    | "accent"
+    | "surface"
+    /** @deprecated 0.49 — use `accent` (same look); removed in 0.51. */
+    | "primary";
   /**
    * Hover and focus label in the kit {@link Tooltip}, instead of the native `title` —
    * keksdose has ONE tooltip (dev#523) and wrapped its assistant launcher by hand,
@@ -158,7 +164,21 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
   /** Where the {@link tooltip} opens. Default `top`; the bubble is portalled and kept on
    *  screen, so a corner button's label is not pushed off the edge. */
   tooltipSide?: TooltipSide;
+  /**
+   * 0.49 KIT-11: step aside (as `hidden` does: off screen, the room kept) while a dialog,
+   * a sheet, a popover, a hover menu or a list is open, instead of floating over it or
+   * beside it. Default `true`; `false` keeps it on screen. A tooltip does not count.
+   */
+  hideWhenOverlay?: boolean;
   ref?: Ref<HTMLButtonElement>;
+}
+
+/** FloatingActionButton's and FloatingAction's `primary` was always the solid brand
+ *  fill: it reads as `accent` (warning once in development), never as Button's
+ *  `default`. */
+function deprecatedPrimary(component: string): "accent" {
+  warnDeprecatedVariant(component, "primary", "accent");
+  return "accent";
 }
 
 /**
@@ -195,17 +215,22 @@ export function FloatingActionButton({
   pressed,
   extended = false,
   live = false,
-  variant = "primary",
+  variant: givenVariant = "accent",
   tooltip,
   tooltipSide = "top",
+  hideWhenOverlay = true,
   className,
   style,
   type = "button",
   title,
+  hidden: hiddenProp,
   ref,
   ...rest
 }: FloatingActionButtonProps) {
+  const overlay = useOverlayOpen(hideWhenOverlay);
+  const hidden = hiddenProp || overlay || undefined;
   const [marker, dir] = usePortalDir();
+  const variant = givenVariant === "primary" ? deprecatedPrimary("FloatingActionButton variant") : givenVariant;
   const toggle = pressed !== undefined;
   const tip = tooltip === true ? label : tooltip === false || tooltip === "" ? undefined : tooltip;
   const wrapped = tip !== undefined && tip !== null;
@@ -229,6 +254,7 @@ export function FloatingActionButton({
   const button = (
           <button
             {...rest}
+            hidden={wrapped ? undefined : hidden}
             ref={buttonRef}
             type={type}
             dir={dir}
@@ -243,7 +269,7 @@ export function FloatingActionButton({
               extended ? "h-12 gap-2 px-4 text-sm font-medium [&_svg]:size-5" : "size-12 [&_svg]:size-6",
               "shadow-lg transition-colors disabled:cursor-default",
               !toggle &&
-                variant === "primary" &&
+                variant === "accent" &&
                 "bg-brand text-brand-contrast hover:bg-brand-hover",
               !toggle &&
                 variant === "surface" &&
@@ -280,7 +306,7 @@ export function FloatingActionButton({
               <div
                 ref={setFixed}
                 dir={dir}
-                hidden={rest.hidden}
+                hidden={hidden}
                 style={cornerStyle(corner, offset)}
                 className="fixed z-40 inline-flex"
               >
@@ -350,6 +376,13 @@ export interface FloatingPanelProps {
    * back and shorten the page under the reader's thumb.
    */
   hidden?: boolean;
+  /**
+   * 0.49 KIT-11: the FAB steps aside while a dialog, a sheet, a popover, a hover menu or
+   * a list is open elsewhere (see {@link FloatingActionButtonProps.hideWhenOverlay}).
+   * Default `true`. An OPEN panel stays: what opens from inside it (a select, a date
+   * picker) is its own content.
+   */
+  hideWhenOverlay?: boolean;
   children: ReactNode;
 }
 
@@ -400,7 +433,8 @@ export function FloatingPanel({
   initialFocus,
   className,
   bodyClassName,
-  hidden = false,
+  hidden: hiddenProp = false,
+  hideWhenOverlay = true,
   children,
 }: FloatingPanelProps) {
   const labels = useKitLabels(
@@ -410,6 +444,8 @@ export function FloatingPanel({
   );
   const [ownOpen, setOwnOpen] = useState(defaultOpen);
   const open = openProp ?? ownOpen;
+  const overlay = useOverlayOpen(hideWhenOverlay && !open);
+  const hidden = hiddenProp || overlay;
   const setOpen = (next: boolean) => {
     if (openProp === undefined) setOwnOpen(next);
     onOpenChange?.(next);
@@ -477,6 +513,7 @@ export function FloatingPanel({
         nativeTitle={fabNativeTitle}
         tooltip={fabTooltip}
         hidden={hidden || undefined}
+        hideWhenOverlay={false}
         aria-expanded={open}
         aria-controls={open && !hidden ? panelId : undefined}
         onClick={() => {
@@ -564,6 +601,9 @@ export interface FloatingActionGroupProps extends Omit<HTMLAttributes<HTMLDivEle
   offset?: string;
   /** {@link FloatingAction}s, in reading order. */
   children: ReactNode;
+  /** 0.49 KIT-11: step aside while a dialog, a sheet, a popover, a hover menu or a list
+   *  is open — see {@link FloatingActionButtonProps.hideWhenOverlay}. Default `true`. */
+  hideWhenOverlay?: boolean;
   ref?: Ref<HTMLDivElement>;
 }
 
@@ -587,12 +627,15 @@ export interface FloatingActionGroupProps extends Omit<HTMLAttributes<HTMLDivEle
 export function FloatingActionGroup({
   corner = "bottom-end",
   offset = "1rem",
+  hideWhenOverlay = true,
+  hidden,
   className,
   style,
   children,
   ...rest
 }: FloatingActionGroupProps) {
   const [marker, dir] = usePortalDir();
+  const overlay = useOverlayOpen(hideWhenOverlay);
   // As the FAB's (keksdose dev#612): its 3rem members plus the frame's 1px borders.
   useFloatClearance(offset, "2px");
   return (
@@ -602,6 +645,7 @@ export function FloatingActionGroup({
         createPortal(
           <div
             {...rest}
+            hidden={hidden || overlay || undefined}
             role="group"
             dir={dir}
             data-corner={corner}
@@ -655,10 +699,16 @@ export interface FloatingActionProps extends Omit<ButtonHTMLAttributes<HTMLButto
    */
   pressedStyle?: "tint" | "plain";
   /**
-   * `primary`: the brand-filled member, for the group's main action (the /transactions
-   * "+"). Default: the quiet one.
+   * `accent`: the brand-filled member, for the group's main action (the /transactions
+   * "+"), as Button's `accent`. `default` (default): the quiet one. `primary` is a
+   * deprecated alias of `accent` (0.49; a development build warns once), removed no
+   * earlier than 0.51.
    */
-  variant?: "default" | "primary";
+  variant?:
+    | "default"
+    | "accent"
+    /** @deprecated 0.49 — use `accent` (same look); removed in 0.51. */
+    | "primary";
   /**
    * A count in a dot at the member's top end corner — the /transactions invoices link's
    * pending count. Nothing is drawn for `0` or less; above 99 it reads `99+`. The count
@@ -704,7 +754,7 @@ export function FloatingAction({
   icon,
   pressed,
   pressedStyle = "tint",
-  variant = "default",
+  variant: givenVariant = "default",
   badge,
   badgeLabel,
   badgeTone = "warning",
@@ -723,12 +773,13 @@ export function FloatingAction({
   const counted = badge !== undefined && badge > 0;
   const name = counted ? `${label}, ${badgeLabel ?? labels.badge(badge)}` : label;
   const isLink = href !== undefined;
+  const variant = givenVariant === "primary" ? deprecatedPrimary("FloatingAction variant") : givenVariant;
   const look = cn(
     "relative flex size-12 items-center justify-center transition-colors",
     "outline-none focus-visible:ring-inset",
     FOCUS_RING,
     "disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-5",
-    variant === "primary"
+    variant === "accent"
       ? "bg-brand text-brand-contrast hover:bg-brand-hover"
       : pressed && !isLink && pressedStyle === "tint"
         ? "bg-brand-soft text-brand hover:bg-brand-soft-hover hover:text-brand-muted"

@@ -116,7 +116,9 @@ import {
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
+import { useChartEdge } from "./chart-edge";
 import { cn } from "../lib/cn";
+import { formatWithMinus } from "../lib/minus";
 
 export interface SeriesChartSeries {
   /** The row key this line reads — and the `--color-<key>` it is painted with, so it
@@ -764,7 +766,8 @@ function useDefaultFormat(localeProp: string | undefined): (value: number) => st
   const locale = useKitLocale(localeProp);
   return useMemo(() => {
     const format = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
-    return (value: number) => format.format(value);
+    // U+2212 on a negative tick and in the tooltip (0.49, KIT-1).
+    return (value: number) => formatWithMinus(format, value);
   }, [locale]);
 }
 
@@ -1019,6 +1022,7 @@ function SeriesPlot({
   // grows by itself — and the axes aim at three ticks instead of five from Large up.
   // Strokes, dashes and the grid stay px.
   const { scale } = useTextSize();
+  const edgeFor = useChartEdge();
   const ticksAim = tickTarget(scale);
   const grow = (px: number) => (scale === 1 ? px : Math.round(px * scale));
   // The keyboard stops' roving tab stop, and the one that has focus (see `PointKeys`).
@@ -1552,6 +1556,9 @@ function SeriesPlot({
           const type = entry.type ?? "line";
           const yAxisId = entry.axis ?? DEFAULT_Y_AXIS;
           const color = `var(--color-${entry.key})`;
+          // A filled mark in a hue under 3:1 against the ground gets a 1px ink edge
+          // (WCAG 1.4.11, anyplot's rule) — measured on the colour the config paints.
+          const edge = edgeFor(config[entry.key]?.color);
           const own = entry.dash ?? (entry.dashed ? 1 : 0);
           const dash = entry.step ? strokeDash(STEP_DASH) : typeof own === "string" ? own : strokeDash(own);
           const curve = entry.step ? "stepAfter" : (entry.curve ?? "monotone");
@@ -1566,6 +1573,7 @@ function SeriesPlot({
                 stackId={entry.stack}
                 fill={color}
                 fillOpacity={entry.fillOpacity}
+                {...(edge ? { stroke: edge, strokeWidth: 1 } : {})}
                 radius={entry.stack === undefined ? BAR_RADIUS : 0}
                 // Read off the row rather than recharts' `value`: in a stack that is the
                 // layer's running top, which a hole has too — and a hole gets no stub.
@@ -1596,8 +1604,9 @@ function SeriesPlot({
                 type={curve}
                 dataKey={entry.key}
                 stackId={entry.stack}
-                stroke={color}
-                strokeWidth={width}
+                // The edge replaces the hue on the area's outline only; the fill keeps it.
+                stroke={edge ?? color}
+                strokeWidth={edge ? 1 : width}
                 strokeDasharray={dash}
                 fill={color}
                 fillOpacity={entry.fillOpacity ?? (entry.stack !== undefined ? 0.55 : 0.2)}

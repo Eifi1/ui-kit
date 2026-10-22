@@ -141,7 +141,7 @@ function RhfExample() {
             rules={{ validate: (v) => v === true || "Confirm the receipt is attached." }}
           />
           <div className="flex gap-2 sm:col-span-2">
-            <Button type="submit" variant="brand">
+            <Button type="submit" variant="accent">
               Submit
             </Button>
             <Button
@@ -171,12 +171,11 @@ function RhfExample() {
         <code className="font-mono">react-hook-form</code>, an optional peer.
       </Note>
       <Note>
-        The shadcn scaffold the adapter started as — <code className="font-mono">FormField</code>,{" "}
+        There is no shadcn scaffold — no <code className="font-mono">FormField</code>,{" "}
         <code className="font-mono">FormItem</code>, <code className="font-mono">FormLabel</code>,{" "}
         <code className="font-mono">FormControl</code>, <code className="font-mono">FormDescription</code>,{" "}
-        <code className="font-mono">FormMessage</code> and <code className="font-mono">useFormField</code> — was
-        deprecated in 0.34 and left the package in 0.35. Each bound field is those parts in one
-        element; <code className="font-mono">RhfField</code> wraps a control of your own the same way.
+        <code className="font-mono">FormMessage</code> or <code className="font-mono">useFormField</code>: each
+        bound field is those parts in one element; <code className="font-mono">RhfField</code> wraps a control of your own the same way.
       </Note>
     </Example>
   );
@@ -196,7 +195,7 @@ export function CommitControls022Demo() {
   return (
     <Example
       label="commit on the controls that save themselves"
-      hint="keksdose K3 — Switch, Checkbox, Select and a ListItem click, Button's pattern; the fields saved on blur since 0.33.1 / 0.34"
+      hint="Switch, Checkbox, Select and a ListItem click, Button's pattern; the fields that save on blur"
     >
       <div className="flex flex-col gap-4">
         <Switch checked={locked} onCheckedChange={setLocked} label="Viewing a budget shared to read" />
@@ -209,8 +208,8 @@ export function CommitControls022Demo() {
                 <option value="member">Member</option>
                 <option value="admin">Admin</option>
               </Select>
-              {/* Fields that ARE their own save (committed on blur): NumberField since 0.33.1,
-                  Input and the amount fields since 0.34 (KS U10, round 0.34 C2). */}
+              {/* Fields that ARE their own save (committed on blur): NumberField, Input and the
+                  amount fields. */}
               <Input commit label="Profile name" value={profile} onChange={(e) => setProfile(e.target.value)} />
               <NumberField commit label="Wheelbase (mm)" value={wheelbase} onCommit={setWheelbase} />
               <MoneyField commit label="Assigned" currency="CHF" value={assigned} onCommit={setAssigned} />
@@ -236,7 +235,6 @@ export function CommitControls022Demo() {
         fields offer no calculator, numpad or currency picker. A field that only reaches the server through the
         form&apos;s Save leaves {code("commit")} off and stays editable.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -476,7 +474,6 @@ export function RhfFieldsDemo() {
           and the totals row sums the watched values.
         </Note>
       </div>
-      <Note>Since 0.12.</Note>
     </Example>
   );
 }

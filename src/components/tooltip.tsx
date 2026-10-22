@@ -580,7 +580,9 @@ function useTooltipTrigger(
   // A layer on the Escape stack while up (Wave 2, DUP-1): over a dialog, the first
   // Escape dismisses the bubble — WCAG 1.4.13, without moving focus — and the next one
   // the dialog. Inside a Modal the bubble used to be beyond reach of the key.
-  useDismissLayer(open, () => setDismissed(true));
+  // Not an overlay: a tooltip annotates what it is on, so a floating launcher with one
+  // does not step aside for its own bubble (`hideWhenOverlay`, 0.49 KIT-11).
+  useDismissLayer(open, () => setDismissed(true), { overlay: false });
   // A press anywhere else closes it — the case a blur does not cover: Safari moves no
   // focus on a tap, and a tap on plain text moves it nowhere.
   useOutsideClick(triggerRef, close, open);

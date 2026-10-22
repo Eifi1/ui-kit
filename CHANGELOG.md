@@ -21,6 +21,77 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.49.0](https://github.com/Eifi1/ui-kit/compare/v0.48.2...v0.49.0) (2026-10-22)
+
+### ⚠ BREAKING CHANGES
+
+* **data-table:** a DataTable without `mobileCard` shows at most three
+  fields under the title on a phone (was every visible column not
+  mobileHidden) and leaves out fields with an empty value. Mark the fields
+  with `mobile: "secondary"` or keep the old card with `mobileCard`.
+* **floating-panel:** a floating launcher is hidden while a kit overlay is
+  open (pass `hideWhenOverlay={false}` to keep it), and from `md` up
+  AppShell's <main> gains bottom padding while a launcher is mounted.
+* **page-header:** a PageHeader rendered as the page's h1 with a string
+  title now sets the window's title (the page alone unless the provider
+  has `appName`), and a Breadcrumbs inside a PageHeader hides its current
+  entry by default. Pass `documentTitle={false}` / `hideCurrent={false}`
+  to keep the old behaviour.
+* **row-actions:** a RowActions / DataTable rowActions action with
+  tone "danger" moves into the row's "⋯" menu and asks for confirmation
+  before `onSelect`; an app that already confirms there asks twice until
+  it passes `confirm: false` (or `dangerPlacement="inline"` for the old
+  layout). RowActionsLabels gains the required `confirmTitle` and
+  `confirmBody`.
+* **shell:** at Normal the phone bar no longer shows every entry: more
+  than five entries become four and "More" (pass mobileMaxItems to keep more
+  cells), and on the phone an entry with `items` opens a sheet of its pages
+  instead of navigating to its `to`.
+* **shell:** LanguageMenu's trigger is wider (flag and code, about
+  60 px instead of 36) and is named "Choose language, current: <name>"
+  unless the app passes `aria-label`; `trigger="flag"` keeps the 0.48
+  look. TopBarLabels gains the required `languageCurrent`: an app that
+  builds a whole TopBarLabels object by hand must add it.
+* **format:** NaN and ±Infinity passed to formatNumber / formatMoney /
+  formatPercent now log a dev-only console.warn (output unchanged: `empty`); pass
+  null/undefined for a missing value. Numeric strings that used to print "—"
+  now print the figure.
+* **format:** the default output of formatNumber, formatMoney,
+  formatPercent, StatTile, Sparkline, SeriesChart/Treemap/PieChart/
+  CalendarHeatmap default formats, ProgressBar parts and ChartTooltipContent's
+  bare value changes for negative numbers from "-" (U+002D) to "−" (U+2212).
+  Tests pinning "-CHF 5.00" or "-12%" must expect "−"; code that parses
+  formatted output must pass `minus: "ascii"` (or use the raw number).
+* **chart:** the default palette and chart colours change on a bump; PALETTE_SIZE is 8 and
+  paletteFor cycles 8 (was 9); IMPRINT_PRESET is a deprecated alias of DEFAULT_PRESET.
+
+### Added
+
+* **button:** KIT-5 variants default and accent; primary and brand become aliases ([335e5e7](https://github.com/Eifi1/ui-kit/commit/335e5e72c48199cbd7a558cc25b16d6bbcf0250d))
+* **chart:** anyplot's palette — Imprint as the default, 8 hues, the same in dark ([1b123ea](https://github.com/Eifi1/ui-kit/commit/1b123ea210cfc30c337a2eab70f5495d23b85306))
+* **data-table:** KIT-7 a dev build names a noRowLink column the phone card drops (KS S1) ([043edfb](https://github.com/Eifi1/ui-kit/commit/043edfbf3083ebb8357b9df308d2a3373171348c))
+* **data-table:** KIT-7 default phone card — title, three fields, no empties, status chip ([99b8a02](https://github.com/Eifi1/ui-kit/commit/99b8a02134a387ad383a898f071024c24c9f509b))
+* **floating-panel:** KIT-11 --kit-floating-inset and hideWhenOverlay ([6c79277](https://github.com/Eifi1/ui-kit/commit/6c79277f209d05fdd3e5911dd1809e20981927e3))
+* **format:** KIT-1b: copying a negative puts "-" in the clipboard ([211bad0](https://github.com/Eifi1/ui-kit/commit/211bad03a48542e7b14f3b2e4c77ae18d2702d10))
+* **format:** KIT-2 numeric strings format; invalid values warn once in dev ([3e0fd6d](https://github.com/Eifi1/ui-kit/commit/3e0fd6d68e37b32bbd17c90344a2480a40040e86))
+* **page-header:** KIT-9 window titles from the page header; trails hide the current page ([7f28b9e](https://github.com/Eifi1/ui-kit/commit/7f28b9e143a6dd6af73cfc25d3eebaa39b05dfb7))
+* **row-actions:** KIT-12 a danger action sits in the row menu and asks first ([28dbe65](https://github.com/Eifi1/ui-kit/commit/28dbe65051940e9dd662c82ebff3a46c009705ff))
+* **shell:** KIT-10 the language trigger shows the flag and the code (DE, FR, IT) ([9332c4d](https://github.com/Eifi1/ui-kit/commit/9332c4de54b08a861058179cce98fe746f591255))
+* **shell:** KIT-6 phone bar of five cells, group sheets, mobilePriority, SectionNav ([7628c74](https://github.com/Eifi1/ui-kit/commit/7628c74576388811c5ec61ba7a2d1ed37b2a7c60))
+* **status:** KIT-8 statusTone(kind) and status= on Chip and StatusDot ([fff0f2f](https://github.com/Eifi1/ui-kit/commit/fff0f2f86205a11c31887d7d369a9f07546b1d3b))
+
+### Fixed
+
+* **breadcrumbs:** KIT-9 a hideCurrent trail of home entries alone is not drawn (kastlan S3) ([ef3c06e](https://github.com/Eifi1/ui-kit/commit/ef3c06e98a1d8183d1af6d353a03091176a188bd))
+* **data-table:** a fit column whose return the next measure undoes stays out (keksdose B2) ([ecc6705](https://github.com/Eifi1/ui-kit/commit/ecc6705e82b009b5e42b63735adb6322d6b7b080))
+* **data-table:** KIT-3 DataTable without urlSync needs no Router ([f766f71](https://github.com/Eifi1/ui-kit/commit/f766f717fa327054c1ea19d25e33171c33a7bf74))
+* **data-table:** KIT-7 role: "actions" keeps a row's actions on the phone card (kastlan S1) ([3c833ab](https://github.com/Eifi1/ui-kit/commit/3c833abd193bde37d32a2a6a63589a5b74552bf6))
+* **format:** KIT-1 one minus sign, U+2212, in every formatter and component ([6c29009](https://github.com/Eifi1/ui-kit/commit/6c290095bd0389965cc3eeff3858f4393a4a6c01))
+* **invitations:** KIT-12 revoke sits in the row menu and asks nothing (level none) ([b4307c5](https://github.com/Eifi1/ui-kit/commit/b4307c59bd559caca7458f96e736fc3815af1644))
+* **showcase:** KIT-8 the colour-roles blurb names the status tones in all seven dictionaries ([91071ff](https://github.com/Eifi1/ui-kit/commit/91071ff3508498ca3184685d16113b74c883534e))
+* **user-roster:** KIT-7 the phone card keeps the actions; states sit beside the name ([d6fb804](https://github.com/Eifi1/ui-kit/commit/d6fb80443580613b46639ff26964973a0fe2a1e8))
+* **user-roster:** KIT-7 the roster's actions are role: "actions", not a card field ([b99a6b7](https://github.com/Eifi1/ui-kit/commit/b99a6b7735b9963edf80853e693407dcad9fb253))
+
 ## [0.48.2](https://github.com/Eifi1/ui-kit/compare/v0.48.1...v0.48.2) (2026-10-22)
 
 keksdose dev #632 (Marcel: "The table is extremely slow. Is it virtualised…?"): a DataTable tick re-renders only

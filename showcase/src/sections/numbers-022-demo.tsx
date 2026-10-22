@@ -13,10 +13,10 @@ import {
 import { Example, Note, code, READOUT_WRAP } from "../lib/section";
 
 /**
- * 0.22 on the Numbers & money page: NumberInput's locale marks and grouping parse
- * (keksdose K5), its money guard (kastlan 5), `calculator={false}` on the money fields
- * (keksdose K6), `error` and `hint` where the field anatomy had gaps (keksdose K4), and
- * the exported sign chip (keksdose K15).
+ * 0.22 on the Numbers & money page: NumberInput's locale marks and grouping parse,
+ * its money guard, `calculator={false}` on the money fields,
+ * `error` and `hint` where the field anatomy had gaps, and
+ * the exported sign chip.
  */
 
 const LOCALES = [
@@ -56,8 +56,7 @@ function LocaleMarks() {
           de-DE, "3.5" for de-CH and en-US, as {code("Intl")} has it. What it reports stays dot-decimal, so{" "}
           {code("Number(value)")} keeps working. Typing reads grouping the way {code("AmountInput")} does: both marks
           present, the one that is not the locale's is grouping; a lone "." in thousands shape is grouping in a comma
-          locale; a lone "," stays a decimal in a dot locale. Before 0.22 NumberInput showed "3.5" everywhere and read
-          "1.234,56" as 1.23456. While you type, the field keeps your own text (the caret never jumps); it is re-spelt
+          locale; a lone "," stays a decimal in a dot locale. While you type, the field keeps your own text (the caret never jumps); it is re-spelt
           without grouping when it settles.
         </Note>
       </div>
@@ -84,8 +83,8 @@ function MoneyNotNumber() {
       </div>
       <Note>
         Type {code("12.345")} or {code("100/3")} into both and leave the field. NumberInput never rounds, so a
-        3-decimal amount reaches a 2-decimal Money column (kastlan 5: a 422, in a wizard whose first record was already
-        saved). AmountInput (a string value) and MoneyField (a number) settle to the currency's minor unit. In a
+        3-decimal amount reaches a 2-decimal Money column (a 422 from the server, possibly in a wizard whose first
+        record was already saved). AmountInput (a string value) and MoneyField (a number) settle to the currency's minor unit. In a
         development build a NumberInput with a currency as its unit, or in the label of a field with no unit, warns
         once on the console — never in production, never under vitest, and never for a unit of measure ("mm", "N·m",
         "%") at any number of decimals.
@@ -118,8 +117,8 @@ function InlineCell() {
       <Note>
         In an editor that closes on blur, a click on the calculator icon blurs the field and tears the editor down
         before the popover can open. {code("calculator={false}")} drops the icon (and the room reserved for it); a typed
-        sum — {code("200+50")}, then Enter — still evaluates, and a phone keeps its numpad. NumberInput has had the prop
-        all along; AmountInput and MoneyField have it now (keksdose K6).
+        sum — {code("200+50")}, then Enter — still evaluates, and a phone keeps its numpad. NumberInput, AmountInput and
+        MoneyField all take the prop.
       </Note>
     </Example>
   );
@@ -180,7 +179,7 @@ function Sign() {
         <SignChip negative={negative} onNegativeChange={setNegative} />
       </div>
       <Note>
-        keksdose's direction chip as a kit piece (K15). It takes the same {code("negative")} /{" "}
+        The direction chip as a kit piece. It takes the same {code("negative")} /{" "}
         {code("onNegativeChange")} pair as AmountInput, so one state feeds both, and wears the same money tones as the
         figure. The word IS the state, so it is an action button with no {code("aria-pressed")}; its name says the state
         and what a press does. Words from the {code("signChip")} labels namespace.

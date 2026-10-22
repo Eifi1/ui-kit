@@ -13,6 +13,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { AlertTone, ProgressBarSize, ProgressBarTone, SkeletonShape } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, Row, Stage } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * FEEDBACK & PROGRESS — what a page says about itself rather than about its data: how
@@ -70,7 +71,7 @@ function ProgressDeterminate() {
         <Button variant="secondary" onClick={() => setValue((v) => Math.min(100, v + 10))} disabled={running}>
           +10
         </Button>
-        <Button variant="brand" onClick={run} disabled={running}>
+        <Button variant="accent" onClick={run} disabled={running}>
           {running ? "Uploading…" : "Simulate an upload"}
         </Button>
         <span className="font-mono text-xs text-muted">value={value}</span>
@@ -148,7 +149,7 @@ function ProgressMeter() {
           size="lg"
           locale="en-GB"
           formatValue={(v, max) =>
-            `${new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v)} of ${new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(max)}`
+            `${numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v)} of ${numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(max)}`
           }
         />
         <ProgressBar variant="meter" value={71} label="Disk used" showValue tone="neutral" locale="de-DE" />
@@ -323,7 +324,7 @@ function EmptyStateDemo() {
               title="No invoices yet"
               hint="Imported invoices will appear here."
               action={
-                <Button variant="brand" onClick={() => setRows(SAMPLE_ROWS)}>
+                <Button variant="accent" onClick={() => setRows(SAMPLE_ROWS)}>
                   Import three invoices
                 </Button>
               }
@@ -440,8 +441,7 @@ function AlertTonesDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">neutral</code> used to be withheld from the banner: a
-          triangle with no colour is a warning that looks like a note. Since 0.8.0 the glyph
+          A triangle with no colour would be a warning that looks like a note, so the glyph
           follows the tone — the triangle for the two that mean &ldquo;something is wrong&rdquo;,
           the ⓘ for <code className="font-mono">info</code> and <code className="font-mono">neutral</code>{" "}
           — so a neutral banner is simply a note. The colours are the semantic{" "}

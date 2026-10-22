@@ -147,7 +147,7 @@ export function AcceptInvitation({
           ? "accepting"
           : "signIn";
 
-  const continueButton = (variant: "brand" | "secondary") => (
+  const continueButton = (variant: "accent" | "secondary") => (
     <Button href={continueHref} replace variant={variant}>
       {labels.continue}
     </Button>
@@ -162,7 +162,7 @@ export function AcceptInvitation({
         tone="success"
         icon={<CheckCircle2 />}
         title={settled?.name ? labels.joined(settled.name) : labels.accepted}
-        action={continueButton("brand")}
+        action={continueButton("accent")}
         className={OUTCOME_CLASS}
       />
     );
@@ -174,7 +174,7 @@ export function AcceptInvitation({
         hint={labels.signInHint}
         action={
           <>
-            <Button href={signInHref} variant="brand">
+            <Button href={signInHref} variant="accent">
               {labels.signIn}
             </Button>
             {registerHref !== undefined && (

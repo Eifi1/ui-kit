@@ -39,20 +39,32 @@ function actions(overrides: Partial<Record<"edit" | "archive" | "remove", () => 
     { label: "Archive", icon: <Archive />, onSelect: overrides.archive ?? vi.fn() },
     false,
     null,
-    { label: "Delete", icon: Trash2, tone: "danger", onSelect: overrides.remove ?? vi.fn() },
+    // `confirm: false`: these tests are about layout; the confirmation (0.49 KIT-12) has
+    // its own file, row-actions-danger-049.test.tsx.
+    { label: "Delete", icon: Trash2, tone: "danger", confirm: false, onSelect: overrides.remove ?? vi.fn() },
   ];
 }
 
 describe("RowActions at Normal", () => {
-  it("draws each action as an inline icon named by its label, leaving out false and null", () => {
+  it("draws each action as an inline icon named by its label, leaving out false and null; danger goes to ⋯", () => {
     render(<RowActions actions={actions()} name="Ada Example" />);
+    // 0.49 KIT-12: the danger action is in the row's menu, the others stay icons.
+    expect(screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual([
+      "Edit",
+      "Archive",
+      "Actions for Ada Example",
+    ]);
+    // The icons stay icons: no label drawn as text.
+    expect(document.querySelector('[data-slot="icon-button-label"]')).toBeNull();
+  });
+
+  it('dangerPlacement="inline" keeps all three inline', () => {
+    render(<RowActions actions={actions()} name="Ada Example" dangerPlacement="inline" />);
     expect(screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual([
       "Edit",
       "Archive",
       "Delete",
     ]);
-    // The icons stay icons: no label drawn as text.
-    expect(document.querySelector('[data-slot="icon-button-label"]')).toBeNull();
     expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull();
   });
 
@@ -203,7 +215,7 @@ describe("RowActions — commit, pending, disabled (an admin panel's row, 0.32)"
   it("inline: the one in flight is busy, the rest disabled, and neither runs", () => {
     const onResend = vi.fn();
     const onRevoke = vi.fn();
-    render(<RowActions actions={flight(onResend, onRevoke)} name="ada@example.com" />);
+    render(<RowActions actions={flight(onResend, onRevoke)} name="ada@example.com" dangerPlacement="inline" />);
     const resend = screen.getByRole("button", { name: "Resend" });
     expect(resend).toHaveAttribute("aria-busy", "true");
     // Pending keeps its focus: `aria-disabled`, not `disabled`.
@@ -411,7 +423,8 @@ describe("RowActions — an action that navigates (href, 0.32.1)", () => {
     const edit = screen.getByRole("link", { name: "Edit" });
     expect(edit).toHaveAttribute("href", "/leases/7/edit");
     expect(screen.getByRole("link", { name: "Write to the tenant" })).toHaveAttribute("href", "mailto:ada@example.com");
-    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    // The danger action is in the row's menu (0.49 KIT-12).
+    expect(screen.getByRole("button", { name: "Actions for Ada Example" })).toBeInTheDocument();
     fireEvent.click(edit);
     expect(onEdit).toHaveBeenCalledTimes(1);
     // The row doesn't open as well.

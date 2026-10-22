@@ -10,8 +10,8 @@ import { join } from "node:path";
  * changelog: 88 such files in 0.34, holding 161 of the 251 lazy sections. The 0.34 merge
  * folded the worst families into one module each (form-actions.tsx, line-items.tsx,
  * confirm.tsx, tooltip.tsx, combobox.tsx, feedback-inbox/, …), each specimen keeping its
- * label and saying "Since 0.NN." in a Note. The rest go the same way when they are next
- * touched.
+ * label (and formerly a "Since 0.NN." note; since KIT-14 the notes describe current
+ * behaviour only). The rest go the same way when they are next touched.
  *
  * A RATCHET: the count may only fall. A release adds to the family file
  * (CONTRIBUTING.md, "The showcase"). When a merge lowers the count, lower

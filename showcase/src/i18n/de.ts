@@ -188,7 +188,7 @@ export const de: Dictionary = {
       title: "Farbrollen",
       short: "Rollen",
       blurb:
-        "Die semantische Schicht über der Palette: jede Füllfarbe mit der Vordergrundfarbe, die sie nennt, jeder Farbton als Text, Fläche und Linie, die kräftigen Linien, die eingelassene Fläche auf einer Karte, die Hover-Regel, die Rollen-Utilities, die text-[var(--…)] ersetzen, und der Test, der eine Variable findet, die nichts deklariert.",
+        "Die semantische Schicht über der Palette: welchen Farbton ein Status bekommt, jede Füllfarbe mit der Vordergrundfarbe, die sie nennt, jeder Farbton als Text, Fläche und Linie, die kräftigen Linien, die eingelassene Fläche auf einer Karte, die Hover-Regel, die Rollen-Utilities, die text-[var(--…)] ersetzen, und der Test, der eine Variable findet, die nichts deklariert.",
     },
     "text-size": {
       title: "Textgrösse & Kontrast",
@@ -212,7 +212,7 @@ export const de: Dictionary = {
       title: "Kit-Prüfung (live)",
       short: "Kit-Prüfung",
       blurb:
-        "Die Texte des Kits in jeder Sprache, die keksdose ausliefert, geprüft gegen die Prüfdatenbank von keksdose: dieselben kit.-Zeilen und Urteile wie auf seiner Übersetzungsseite, von dort mit einem Prüf-Token geöffnet.",
+        "Die Texte des Kits in jeder Sprache, die die konfigurierte App ausliefert, geprüft gegen die Prüfdatenbank dieser App: dieselben kit.-Zeilen und Urteile wie auf seiner Übersetzungsseite, von dort mit einem Prüf-Token geöffnet.",
     },
     inputs: {
       title: "Eingaben",
@@ -757,7 +757,7 @@ export const de: Dictionary = {
       "Übersetzungen des Kits prüfen",
       "Übersetzung freigeben",
       "schlafenden Server aufwecken",
-      "Prüfung aus keksdose öffnen",
+      "Prüfung aus der App öffnen",
       "Korrekturen exportieren",
     ],
     inputs: [

@@ -556,6 +556,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       theme: "Theme wechseln",
       palette: "Darstellungsvorlage",
       language: "Sprache",
+      languageCurrent: (name) => `Sprache wählen, aktuell: ${name}`,
       switchRole: "Rolle wechseln",
       role: (value) => `Rolle: ${value}`,
     },
@@ -1929,10 +1930,13 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     rowActions: {
       actions: "Aktionen",
       actionsFor: (name) => `Aktionen für ${name}`,
+      confirmTitle: (action, name) => (name ? `${action}: «${name}»?` : `${action}?`),
+      confirmBody: "Das lässt sich nicht rückgängig machen.",
     },
     appShellMore: {
       more: "Mehr",
       moreTitle: "Weitere Seiten",
+      overview: "Übersicht",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Verwaltung"
     // as settings §5 names the page; "mit Administratorrechten" rather than "für

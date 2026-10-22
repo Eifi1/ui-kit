@@ -152,7 +152,7 @@ function RowKinds() {
 const MESSAGES = [
   { id: "m1", from: "Hausverwaltung Nord", text: "The heating will be serviced on Thursday between 8 and 12." },
   { id: "m2", from: "Stadtwerke", text: "Your meter reading for September is due by the 30th." },
-  { id: "m3", from: "Kastlan support", text: "We have answered your question about the service-charge statement." },
+  { id: "m3", from: "Property support", text: "We have answered your question about the service-charge statement." },
 ];
 
 function RowStates() {
@@ -192,7 +192,7 @@ function RowStates() {
           icon={Wallet}
           title="Overdue rent reminder"
           subtitle="status — a mark of your own in the unread dot's place"
-          status={<StatusDot tone="danger" size="md" aria-label="Overdue" />}
+          status={<StatusDot status="problem" size="md" aria-label="Overdue" />}
           onClick={() => {}}
         />
         <ListItem
@@ -825,7 +825,6 @@ export function MenuItemBadgeDemo() {
           with the Lindqvist family Shared&rdquo;, so keep a badge text.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
@@ -931,7 +930,6 @@ export function BulkActionBarPanelDemo() {
           60% of the viewport&apos;s height.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }

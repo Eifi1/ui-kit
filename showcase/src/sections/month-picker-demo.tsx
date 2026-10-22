@@ -225,8 +225,7 @@ export function MonthPickerDemo() {
         <p className="mt-2 text-xs text-secondary">
           The panel is portalled out of this <code className="font-mono">dir</code> but reads it off
           the field when it opens and carries it: the months run from the right, the year chevrons
-          are mirrored, and ← moves to the NEXT month (the one to its left). Before 0.7.0 the panel
-          opened left-to-right and only the arrow keys were reversed.
+          are mirrored, and ← moves to the NEXT month (the one to its left).
         </p>
       </Example>
     </>
@@ -235,7 +234,7 @@ export function MonthPickerDemo() {
 
 /* ── since 0.22 ─────────────────────────────────────────────────────────── */
 
-/** MonthPicker: year mode (kastlan 7, keksdose tax tab), size sm (K13), error (K4). */
+/** MonthPicker: year mode, size sm, error. */
 export function Month022Demo() {
   const thisYear = 2026;
   const [taxYear, setTaxYear] = useState(String(thisYear));
@@ -280,11 +279,10 @@ export function Month022Demo() {
           />
         </div>
         <Note>
-          keksdose&apos;s tax tab (this year and four before) opens on five years and no paging; kastlan&apos;s
+          A tax tab (this year and four before) opens on five years and no paging; a
           fiscal year pages twelve at a time from {code("min")}. The stepper steps a year; its Today reads
           &ldquo;This year&rdquo;. Values are strings: {code("String(year)")} in, {code("Number(key)")} out.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
       <Example label='MonthPicker size="sm" and error' hint="the 36px toolbar trigger between two icon buttons">
         <div className="flex flex-col gap-4">
@@ -318,11 +316,9 @@ export function Month022Demo() {
           </div>
         </div>
         <Note>
-          {code('size="sm"')} is an {code("IconButton")}&apos;s 36px and only as wide as the month (keksdose live
-          #260 wrote {code("h-9 w-auto py-0")} by hand). Unlabelled only, as on {code("Select")}. Step past October
+          {code('size="sm"')} is an {code("IconButton")}&apos;s 36px and only as wide as the month (no {code("h-9 w-auto py-0")} by hand). Unlabelled only, as on {code("Select")}. Step past October
           to see the error.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
     </>
   );

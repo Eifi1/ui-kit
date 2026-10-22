@@ -546,6 +546,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       theme: "Cambia tema",
       palette: "Preset di aspetto",
       language: "Lingua",
+      languageCurrent: (name) => `Scegli la lingua, attuale: ${name}`,
       switchRole: "Cambia ruolo",
       role: (value) => `Ruolo: ${value}`,
     },
@@ -1888,10 +1889,13 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     rowActions: {
       actions: "Azioni",
       actionsFor: (name) => `Azioni per ${name}`,
+      confirmTitle: (action, name) => (name ? `${action} «${name}»?` : `${action}?`),
+      confirmBody: "Questa azione non può essere annullata.",
     },
     appShellMore: {
       more: "Altro",
       moreTitle: "Altre pagine",
+      overview: "Panoramica",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Lei", as
     // the rest of the catalogue.

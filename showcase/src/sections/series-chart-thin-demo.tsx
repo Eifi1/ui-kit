@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { SeriesChart, ToggleGroup } from "@eifi1/ui-kit";
 import { Example, Note } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
- * SERIES CHART — the row budget (0.34, Kurvenschmiede's U2): `maxRows` thins a long table
+ * SERIES CHART — the row budget (0.34): `maxRows` thins a long table
  * by ENVELOPE, and for comparison the stride the app used before, which aliases.
  */
 
@@ -11,7 +12,7 @@ const RATE = 1000;
 const SECONDS = 10;
 
 /** Ten seconds at 1 kHz: a 160 Hz tone whose swing grows and shrinks, over a slow drift,
- *  with one spike a single sample wide at t = 6.283 s — Kurvenschmiede's acoustic sweep,
+ *  with one spike a single sample wide at t = 6.283 s — an acoustic sweep,
  *  and the jerk spike a stride steps over. */
 function sweepRows() {
   return Array.from({ length: RATE * SECONDS }, (_, i) => {
@@ -28,7 +29,7 @@ const STRIDED = ROWS.filter((_, i) => i % 6 === 0);
 
 type Mode = "envelope" | "stride" | "all";
 
-const TWO = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 2 });
+const TWO = numberFormat("en-GB", { maximumFractionDigits: 2 });
 
 export function RowBudgetDemo() {
   const [mode, setMode] = useState<Mode>("envelope");

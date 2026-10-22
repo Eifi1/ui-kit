@@ -15,7 +15,9 @@ import type { DataTableColumn } from "./data-table";
 //   room for them (its need re-measured, plus the column's own header width from when
 //   it was left out), so narrower content (a filter, another page) counts as much as a
 //   wider scroller. The scroller's own width, through a ResizeObserver: a sidebar, a
-//   narrower window, the Columns drawer and Large text all count the same.
+//   narrower window, the Columns drawer and Large text all count the same. A column
+//   whose return the very next measure undoes stays out until the table has more room
+//   for it than it had then (0.48.3, keksdose B2: see the bring-back in `measure`).
 
 /** The least a `grow` column keeps before the table starts leaving columns out: about
  *  a sentence of a title. In rem, so Large text asks for more. */
@@ -94,6 +96,13 @@ export function useColumnFit<T>({
   // table's need as it is now, plus this, fits the scroller (keksdose S3, 0.48: not the
   // whole table's need at hide time, which went stale when the content narrowed).
   const ownWidth = useRef(new Map<string, number>());
+  // A column whose return the very next measure undid, at the same scroller width: the
+  // room the table had for it when it came back (keksdose B2, 0.48.3). It stays out
+  // until the table has more. Dropped once the column is no longer left out for width.
+  const stuck = useRef(new Map<string, number>());
+  // What the last measure brought back, each column with the room it had then, and at
+  // which scroller width: read (and cleared) by the measure right after it.
+  const lastShown = useRef<{ avail: number; rooms: Map<string, number> } | null>(null);
 
   const hasFit = columns.some((c) => c.fitPriority != null);
   const active = enabled && hasFit;
@@ -118,6 +127,10 @@ export function useColumnFit<T>({
 
   const measure = useCallback(() => {
     const { order, current, growKey, active, scroller } = latest.current;
+    // Only the measure right after a bring-back can undo it.
+    const flip = lastShown.current;
+    lastShown.current = null;
+    for (const k of stuck.current.keys()) if (!current.includes(k)) stuck.current.delete(k);
     const el = scroller();
     if (!active || !el) return;
     const table = el.querySelector("table");
@@ -150,20 +163,42 @@ export function useColumnFit<T>({
         need -= w;
         next.push(col.key);
       }
-      if (next.length !== current.length) setHidden(next);
+      if (next.length === current.length) return;
+      // The last measure brought these back at this same width, and the table cannot
+      // hold them: their header width fell short of what they cost drawn (see below).
+      if (flip && Math.abs(flip.avail - avail) <= 0.5)
+        for (const k of next.slice(current.length)) {
+          const room = flip.rooms.get(k);
+          if (room != null) stuck.current.set(k, room);
+        }
+      setHidden(next);
       return;
     }
     // Bring back, the last left out first, while the table as it is now has room for
-    // them. Should the column have grown since (wider content), the next measure leaves
-    // it out again before paint and records its new width, so it cannot flicker.
+    // them by their recorded header width. A column that costs more drawn than that is
+    // left out again by the next measure, before paint. That alone does not settle it:
+    // the re-hide records its header's width again, and the header can measure the same
+    // while the column costs more (`virtualize`'s locked widths, keksdose B2, 0.48.3: the
+    // drawn column cost the table ~80–110px more than its header), so it came back, went, came back … until React's
+    // update limit (#185). So a column whose return the next measure undid, at the same
+    // scroller width, waits for more room than it had then: a wider scroller or narrower
+    // content. Whatever the error in its width, that is one invisible flip per room it is
+    // tried at.
     let n = current.length;
+    const rooms = new Map<string, number>();
     while (n > 0) {
-      const w = ownWidth.current.get(current[n - 1]);
+      const k = current[n - 1];
+      const w = ownWidth.current.get(k);
       if (w == null || need + w > avail + 0.5) break;
+      const room = stuck.current.get(k);
+      if (room != null && avail - need <= room + 0.5) break;
+      rooms.set(k, avail - need);
       need += w;
       n--;
     }
-    if (n !== current.length) setHidden(current.slice(0, n));
+    if (n === current.length) return;
+    lastShown.current = { avail, rooms };
+    setHidden(current.slice(0, n));
   }, [headRefs]);
 
   // After a render that changed what is drawn: rows, a filter or a page can widen a

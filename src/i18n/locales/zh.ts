@@ -529,6 +529,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       theme: "切换主题",
       palette: "外观预设",
       language: "语言",
+      languageCurrent: (name) => `选择语言，当前：${name}`,
       switchRole: "切换角色",
       role: (value) => `角色：${value}`,
     },
@@ -1795,10 +1796,13 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     rowActions: {
       actions: "操作",
       actionsFor: (name) => `${name} 的操作`,
+      confirmTitle: (action, name) => (name ? `${action}“${name}”？` : `${action}？`),
+      confirmBody: "此操作无法撤销。",
     },
     appShellMore: {
       more: "更多",
       moreTitle: "更多页面",
+      overview: "概览",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words.
     mailTestCard: {

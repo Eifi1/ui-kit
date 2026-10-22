@@ -646,7 +646,7 @@ export function Numbers() {
               and you have to be able to scroll to the figure it is covering.
             </Note>
             <Row>
-              <Button type="button" variant="primary" onClick={() => setPadOpen(true)}>
+              <Button type="button" variant="default" onClick={() => setPadOpen(true)}>
                 Open the number pad
               </Button>
               <Button type="button" variant="secondary" onClick={() => setDePadOpen(true)}>
@@ -832,7 +832,6 @@ export function Numbers016Demo() {
         </li>
         <li>roundToCurrency(1.005, &quot;EUR&quot;, &#123; fallbackDigits: 0 &#125;) → {String(roundToCurrency(1.005, "EUR", { fallbackDigits: 0 }))}</li>
       </ul>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }

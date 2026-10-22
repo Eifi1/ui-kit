@@ -177,7 +177,7 @@ export const it: Dictionary = {
       title: "Ruoli dei colori",
       short: "Ruoli",
       blurb:
-        "Lo strato semantico sopra la tavolozza: ogni riempimento con il colore di primo piano che indica, ogni tono come testo, sfondo tenue e linea, le linee forti, il pannello incassato su una scheda, la regola dell’hover, le utility di ruolo che sostituiscono text-[var(--…)] e il test che trova una variabile che nulla dichiara.",
+        "Lo strato semantico sopra la tavolozza: quale tono prende uno stato, ogni riempimento con il colore di primo piano che indica, ogni tono come testo, sfondo tenue e linea, le linee forti, il pannello incassato su una scheda, la regola dell’hover, le utility di ruolo che sostituiscono text-[var(--…)] e il test che trova una variabile che nulla dichiara.",
     },
     "text-size": {
       title: "Dimensione del testo e contrasto",
@@ -201,7 +201,7 @@ export const it: Dictionary = {
       title: "Revisione del kit (live)",
       short: "Revisione kit",
       blurb:
-        "I testi del kit in ogni lingua che keksdose distribuisce, rivisti sul database di revisione di keksdose: le stesse righe kit. e gli stessi verdetti della sua pagina Traduzioni, aperta da lì con un token di revisione.",
+        "I testi del kit in ogni lingua che l’app configurata distribuisce, rivisti sul database di revisione di quell’app: le stesse righe kit. e gli stessi verdetti della sua pagina Traduzioni, aperta da lì con un token di revisione.",
     },
     inputs: {
       title: "Input",
@@ -746,7 +746,7 @@ export const it: Dictionary = {
       "rivedere le traduzioni del kit",
       "approvare una traduzione",
       "svegliare un server addormentato",
-      "aprire la revisione da keksdose",
+      "aprire la revisione dall’app",
       "esportare le correzioni",
     ],
     inputs: [

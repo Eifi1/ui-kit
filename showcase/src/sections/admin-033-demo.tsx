@@ -18,8 +18,8 @@ import { Example, Note, READOUT_WRAP, beat } from "../lib/section";
 /**
  * THE OPERATOR'S PLAN PARTS (0.33, docs/billing-harmonization.md §14.12, decision 27):
  * `planColumn` in the roster, `PlanChangeConfirm` for the grant, and `usePlanChangeResult`
- * for what the server's answer says — keksdose's column and dialog, lifted for all three
- * apps. Belongs on the "User administration" page, after the roster.
+ * for what the server's answer says — one app's column and dialog, lifted for every
+ * app. Belongs on the "User administration" page, after the roster.
  *
  * The accounts, the plans and the pretend server are SYNTHETIC; nothing is sent.
  */
@@ -52,7 +52,7 @@ const ACCOUNTS: Account[] = [
   { id: 1, name: "Ada Example", email: "ada@example.com", plan: "gardener", status: "active", beds: 12 },
   { id: 2, name: "Ben Sample", email: "ben@example.com", plan: "seedling", status: "trialing", beds: 2 },
   { id: 3, name: "Cleo Muster", email: "cleo@example.com", plan: "gardener", status: "comped", beds: 7, beta: true },
-  // keksdose's legacy upper case: the column reads a code without case (§12.16).
+  // A legacy upper case: the column reads a code without case (§12.16).
   { id: 4, name: "Dan Beispiel", email: "dan@example.com", plan: "SEEDLING", status: "expired", beds: 5 },
   { id: 5, name: "Eva Exemple", email: "eva@example.com", plan: null, beds: 0 },
 ];
@@ -181,7 +181,7 @@ export function PlanChange033Demo() {
         `onSortsChange` and the server sorts — and filters over `filterPlans`. The usage&apos;s `label` may give
         the word&apos;s plural forms (`one` &ldquo;bed&rdquo;, `other` &ldquo;beds&rdquo;), and the tooltip
         takes the limit&apos;s. `PlanChangeConfirm` is `AdminActionConfirm` at `acknowledge`: the current
-        plan and the usage — the column&apos;s `used`, `limit` and `label` in the column&apos;s sentence since 0.34,
+        plan and the usage — the column&apos;s `used`, `limit` and `label` in the column&apos;s sentence,
         or the app&apos;s own — a plan select, and — with `grantEnd`, only while billing is on —
         &ldquo;Free until&rdquo;, sent as the END of the picked day in the operator&apos;s time zone. The confirm
         is held while nothing would change, and it stays live under your own lapsed plan (`COMMIT_EXCEPT_BILLING`,

@@ -164,7 +164,7 @@ function EditDialogDemo() {
     >
       <Row>
         <Button
-          variant="brand"
+          variant="accent"
           onClick={() => {
             setDraft(name);
             setOpen(true);
@@ -189,7 +189,7 @@ function EditDialogDemo() {
             Cancel
           </Button>
           <Button
-            variant="brand"
+            variant="accent"
             onClick={() => {
               setName(draft.trim() || name);
               setOpen(false);
@@ -250,7 +250,7 @@ function SharedDialogParamDemo() {
         </h4>
         <Input label="Email" type="email" placeholder="name@example.com" />
         <Row className="justify-end">
-          <Button variant="brand" onClick={() => setInviteOpen(false)}>
+          <Button variant="accent" onClick={() => setInviteOpen(false)}>
             Send invite
           </Button>
         </Row>
@@ -270,7 +270,7 @@ function SharedDialogParamDemo() {
           <Button variant="secondary" onClick={() => setArchiveOpen(false)}>
             Keep
           </Button>
-          <Button variant="brand" tone="danger" onClick={() => setArchiveOpen(false)}>
+          <Button variant="accent" tone="danger" onClick={() => setArchiveOpen(false)}>
             Archive
           </Button>
         </Row>

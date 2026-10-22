@@ -3,7 +3,7 @@ import { Delta, ProgressBar, SignedAmount, Switch } from "@eifi1/ui-kit";
 import { Example, Note, Row, code } from "../lib/section";
 
 /**
- * 0.17 additions from keksdose's adoption of 0.16 (Q4, Q6, Q7): a percent change in
+ * 0.17 additions: a percent change in
  * POINTS (`ratio={false}`), a ProgressBar whose printed figures are tagged for the
  * demo-mode blur (`sensitive`), and a FormActions row that is sticky on a phone only
  * and bleeds over its pane's padding (`placement` per breakpoint, `bleed`).

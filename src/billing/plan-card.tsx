@@ -471,7 +471,7 @@ export function PlanPicker({
       <div className="flex justify-end">
         <Button
           type="button"
-          variant="primary"
+          variant="default"
           className="max-sm:w-full"
           disabledReason={blocked}
           pending={pending}
@@ -538,7 +538,7 @@ export function GrantWarningConfirm({ open, onOpenChange, onConfirm, labels: lab
             {common.back}
           </Button>
           <Button
-            variant="primary"
+            variant="default"
             onClick={() => {
               onConfirm();
               onOpenChange(false);

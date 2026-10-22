@@ -551,6 +551,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       theme: "Changer de thème",
       palette: "Préréglage d’apparence",
       language: "Langue",
+      languageCurrent: (name) => `Choisir la langue, actuelle\u00a0: ${name}`,
       switchRole: "Changer de rôle",
       role: (value) => `Rôle\u00a0: ${value}`,
     },
@@ -1909,10 +1910,13 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     rowActions: {
       actions: "Actions",
       actionsFor: (name) => `Actions pour ${name}`,
+      confirmTitle: (action, name) => (name ? `${action} «\u00a0${name}\u00a0»\u00a0?` : `${action}\u00a0?`),
+      confirmBody: "Cette action est irréversible.",
     },
     appShellMore: {
       more: "Plus",
       moreTitle: "Autres pages",
+      overview: "Vue d’ensemble",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words.
     mailTestCard: {

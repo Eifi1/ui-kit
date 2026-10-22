@@ -7,8 +7,8 @@ import { CurrentPasswordInput } from "../../../src/components/danger-confirm";
 /**
  * SignaturePad and PasswordStrengthMeter.
  *
- * Two small field-adjacent components that each app had written for itself: Kastlan's
- * handover signature and Keksdose's password meter. Every specimen shows what the
+ * Two small field-adjacent components that each app had written for itself: a
+ * handover signature and a password meter. Every specimen shows what the
  * component hands back, because both are judged by their output — a PNG that has to
  * be legible on paper, a score a form may gate on.
  */
@@ -78,7 +78,7 @@ function SignatureSpecimens() {
         <Preview src={typed.png} />
       </Example>
 
-      <Example label="SignaturePad — Save button" hint="onSave, the Kastlan handover shape">
+      <Example label="SignaturePad — Save button" hint="onSave, the handover shape">
         <Stage>
           <SignaturePad
             label="Tenant signature"
@@ -99,7 +99,7 @@ function SignatureSpecimens() {
         <Row className="mt-3">
           <Button
             type="button"
-            variant="brand"
+            variant="accent"
             onClick={() => {
               setSubmitted(true);
               setRefValue(pad.current?.toDataURL() ?? null);
@@ -315,7 +315,7 @@ function SignIn() {
             busy={busy}
             error={error}
           />
-          <Button type="submit" variant="brand" pending={busy}>
+          <Button type="submit" variant="accent" pending={busy}>
             Sign in
           </Button>
         </form>
@@ -326,7 +326,6 @@ function SignIn() {
         {code("@eifi1/ui-kit/rhf")}. {code("busy")} makes it read-only, not disabled, so the focus Enter left in it
         is still there when the answer comes. Not for a NEW password: that is {code("new-password")}.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }

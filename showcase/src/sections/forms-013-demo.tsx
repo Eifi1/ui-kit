@@ -6,9 +6,9 @@ import { Form, RhfIntegerField, RhfMoneyField, RhfTextField } from "@eifi1/ui-ki
 import { Example, Note, Row, code, READOUT_PRE } from "../lib/section";
 
 /**
- * 0.13 on the Forms page: the amount field in the locale's decimal mark (kastlan 40),
- * `RhfIntegerField` (41), `RhfTextField`'s `inputClassName` (42), `WizardStep`'s
- * header `actions` (43) and `formatNumber`'s `unit` (lenkbank P8).
+ * 0.13 on the Forms page: the amount field in the locale's decimal mark,
+ * `RhfIntegerField`, `RhfTextField`'s `inputClassName`, `WizardStep`'s
+ * header `actions` and `formatNumber`'s `unit`.
  */
 
 const LOCALES = ["fr-CH", "de-DE", "de-CH", "en-US"] as const;
@@ -24,7 +24,7 @@ function AmountLocaleDemo() {
       <div className="space-y-3">
         <Row>
           {LOCALES.map((l) => (
-            <Button key={l} size="sm" variant={l === locale ? "primary" : "secondary"} onClick={() => setLocale(l)}>
+            <Button key={l} size="sm" variant={l === locale ? "default" : "secondary"} onClick={() => setLocale(l)}>
               {l}
             </Button>
           ))}

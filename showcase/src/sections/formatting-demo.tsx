@@ -37,8 +37,11 @@ const DAY = 24 * HOUR;
 
 interface Specimen {
   expr: string;
-  run: (locale: string, value: number) => string;
+  run: (locale: string, value: number | null) => string;
 }
+
+/** `-v`, keeping a cleared field missing (`null`) rather than turning it into 0. */
+const neg = (v: number | null) => (v === null ? null : -v);
 
 const SPECIMENS: Specimen[] = [
   { expr: "formatNumber(v)", run: (locale, v) => formatNumber(v, { locale }) },
@@ -46,9 +49,14 @@ const SPECIMENS: Specimen[] = [
   { expr: "formatNumber(v, { compact: true })", run: (locale, v) => formatNumber(v, { locale, compact: true }) },
   {
     expr: 'formatNumber(-v, { signDisplay: "exceptZero" })',
-    run: (locale, v) => formatNumber(-v, { locale, signDisplay: "exceptZero" }),
+    run: (locale, v) => formatNumber(neg(v), { locale, signDisplay: "exceptZero" }),
   },
   { expr: 'formatMoney(v, "CHF")', run: (locale, v) => formatMoney(v, "CHF", { locale }) },
+  { expr: 'formatMoney(-v, "CHF")', run: (locale, v) => formatMoney(neg(v), "CHF", { locale }) },
+  {
+    expr: 'formatNumber(-v, { minus: "ascii", options: { useGrouping: false } }) — for a CSV',
+    run: (locale, v) => formatNumber(neg(v), { locale, minus: "ascii", options: { useGrouping: false } }),
+  },
   {
     expr: 'formatMoney(v, "EUR", { currencyDisplay: "code" })',
     run: (locale, v) => formatMoney(v, "EUR", { locale, currencyDisplay: "code" }),
@@ -76,13 +84,19 @@ const SPECIMENS: Specimen[] = [
     run: (locale) => formatRelativeTime(ago(40 * DAY), { locale, now: NOW, absoluteAfterDays: 7 }),
   },
   { expr: "formatNumber(null)", run: (locale) => formatNumber(null, { locale }) },
+  { expr: 'formatMoney("1850.00", "CHF")', run: (locale) => formatMoney("1850.00", "CHF", { locale }) },
+  { expr: 'formatMoney("-12.5", "CHF")', run: (locale) => formatMoney("-12.5", "CHF", { locale }) },
+  { expr: 'formatMoney("0", "CHF")', run: (locale) => formatMoney("0", "CHF", { locale }) },
+  { expr: 'formatMoney("abc", "CHF")', run: (locale) => formatMoney("abc", "CHF", { locale }) },
   { expr: 'formatDate("not a date", "medium", { empty: "n/a" })', run: (locale) => formatDate("not a date", "medium", { locale, empty: "n/a" }) },
 ];
 
 function FormatterTable() {
   const [raw, setRaw] = useState("12345.678");
   const parsed = Number(raw);
-  const value = raw.trim() === "" || Number.isNaN(parsed) ? Number.NaN : parsed;
+  // A cleared or unreadable field is a MISSING value (null), not NaN: NaN is an invalid
+  // one, which a development build warns about (0.49, KIT-2).
+  const value = raw.trim() === "" || Number.isNaN(parsed) ? null : parsed;
   return (
     <Example
       label="Formatters — one input, five locales"
@@ -144,11 +158,30 @@ function FormatterTable() {
       </div>
       <div className="mt-3">
         <Note>
-          A missing value — {code("null")}, {code("undefined")}, {code("NaN")}, an unparseable date — prints{" "}
-          {code("empty")} (default {code(`"${EMPTY_FORMATTED_VALUE}"`)}), never &ldquo;NaN&rdquo; or &ldquo;Invalid
-          Date&rdquo;: clear the field above and every number column turns into the dash. A bare{" "}
+          A missing value — {code("null")}, {code("undefined")}, an unparseable date — prints {code("empty")}{" "}
+          (default {code(`"${EMPTY_FORMATTED_VALUE}"`)}), never &ldquo;NaN&rdquo; or &ldquo;Invalid Date&rdquo;: clear
+          the field above and every number column turns into the dash. A numeric string — {code('"1850.00"')}, a
+          Decimal off a Python API — is formatted like the number, and zero ({code("0")}, {code('"0"')}) is a
+          figure, never the dash. Anything else — {code('"abc"')}, an object, {code("NaN")}, {code("Infinity")}{" "}
+          — prints the dash as well, and a development build warns on the console once per call site with the value
+          and its type. A bare{" "}
           {code('"YYYY-MM-DD"')} is a calendar day read on the local calendar; relative times here are measured
           from a fixed {code("now")} ({NOW.toISOString()}) so the rows do not drift.
+        </Note>
+        <Note>
+          A negative figure carries the typographic minus, U+2212 (&ldquo;−&rdquo;), in every locale and every
+          kit component — {code("Intl")} writes a hyphen in most. It is as wide as &ldquo;+&rdquo; and the
+          digits, so a column of signed figures lines up. For text a machine reads back — a CSV download, the
+          clipboard — pass {code('minus: "ascii"')}: the hyphen-minus that {code("Number()")} and a spreadsheet
+          parse.
+        </Note>
+        <Note>
+          Copying by hand needs nothing: select a few rows of this table and copy. {code("UiKitProvider")}{" "}
+          puts &ldquo;-&rdquo; in the clipboard wherever a &ldquo;−&rdquo; stands before a number (after a
+          currency code or symbol too: &ldquo;−CHF 1,250.50&rdquo; pastes as &ldquo;-CHF 1,250.50&rdquo;), in
+          plain text and in the HTML a spreadsheet pastes as cells; the page keeps &ldquo;−&rdquo;. A copy out
+          of a field is left alone; {code("copyAsciiMinus={false}")} turns it off, and{" "}
+          {code("asciiMinusInNumbers(text)")} is the same rule for an app&apos;s own text.
         </Note>
       </div>
     </Example>

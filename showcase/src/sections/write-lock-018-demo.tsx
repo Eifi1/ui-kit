@@ -17,8 +17,8 @@ import { WriteLockProvider, useWriteLock } from "../../../src/components/write-l
 import { Example, Note, code } from "../lib/section";
 
 /**
- * WriteLockProvider (0.18): keksdose's read-only demo budget and Kurvenschmiede's
- * shared-to-view curve — everything renders, only the commit is locked.
+ * WriteLockProvider (0.18): a read-only demo budget and a
+ * shared-to-view record — everything renders, only the commit is locked.
  */
 
 /** A control that IS its own commit reads the lock itself. */

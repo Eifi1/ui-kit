@@ -288,12 +288,11 @@ function TooltipAutoPortal() {
           <code className="font-mono">position: fixed</code> node on <code className="font-mono">&lt;body&gt;</code>{" "}
           — no sideways scroll, and hovering shows it whole over the box&apos;s edge. Right, forced in place: the
           invisible bubbles still count towards the box&apos;s scrollable width (the readout), and a hovered
-          one is cut off by the edge. That phantom scroll is keksdose dev#488; before 0.10.0 every tooltip in
-          a table had to remember <code className="font-mono">portal</code>. Outside any such box the cheaper
+          one is cut off by the edge. That is the phantom scroll, and no tooltip in a table needs{" "}
+          <code className="font-mono">portal</code> to avoid it. Outside any such box the cheaper
           in-place bubble is still used.
         </Note>
       </div>
-      <Note>Since 0.10.</Note>
     </Example>
   );
 }
@@ -354,7 +353,6 @@ function ClipsMarkerDemo() {
           DataTable&apos;s body and Table&apos;s wrapper carry it already.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
@@ -362,8 +360,8 @@ function ClipsMarkerDemo() {
 /* ── since 0.13 ─────────────────────────────────────────────────────────── */
 
 /**
- * TOOLTIP — `lazy` (keksdose F6): the in-place bubble, mounted only while it is up. Shown
- * as the button-with-an-icon shape F6 names, beside the same button with the default
+ * TOOLTIP — `lazy`: the in-place bubble, mounted only while it is up. Shown
+ * as a button with an icon, beside the same button with the default
  * always-mounted bubble, with each button's live `textContent` read out underneath.
  */
 
@@ -418,14 +416,12 @@ function TooltipLazyDemo() {
           <code className="font-mono">textContent</code> while the bubble is closed: the default one carries
           the bubble&apos;s sentence (it is always mounted, so it is in the button&apos;s accessible name and in
           every <code className="font-mono">getAllByRole(&quot;tooltip&quot;)</code> too); the{" "}
-          <code className="font-mono">lazy</code> one reads only its own label. keksdose pinned{" "}
-          <code className="font-mono">portal</code> on header tooltips, a direction toggle, an fx-estimate row,
-          a FlagBadge and a toast for that alone — <code className="font-mono">lazy</code> is the fix that
-          keeps the cheaper in-place bubble. It is opt-in because existing tests find the default bubble
+          <code className="font-mono">lazy</code> one reads only its own label. Rather than pin{" "}
+          <code className="font-mono">portal</code> on header tooltips, toggles, rows, badges and toasts for that
+          alone, <code className="font-mono">lazy</code> keeps the cheaper in-place bubble. It is opt-in because existing tests find the default bubble
           without a hover.
         </Note>
       </div>
-      <Note>Since 0.13.</Note>
     </Example>
   );
 }
@@ -433,8 +429,8 @@ function TooltipLazyDemo() {
 /* ── since 0.14 ─────────────────────────────────────────────────────────── */
 
 /**
- * TOOLTIP — the in-place bubble's viewport clamp (keksdose G7). A long label on a trigger
- * at a row's start edge, as in keksdose's jobs panel: on a phone the centred bubble used
+ * TOOLTIP — the in-place bubble's viewport clamp. A long label on a trigger
+ * at a row's start edge, as in a jobs panel: on a phone the centred bubble used
  * to hang off the screen; now it measures itself on open and slides back in.
  */
 
@@ -467,7 +463,6 @@ function TooltipClampDemo() {
           bubble that already fits is not touched. Works the same in RTL.
         </Note>
       </div>
-      <Note>Since 0.14.</Note>
     </Example>
   );
 }
@@ -475,8 +470,8 @@ function TooltipClampDemo() {
 /* ── since 0.25 ─────────────────────────────────────────────────────────── */
 
 /**
- * TOOLTIP — taps and the page edge (keksdose run 72, live #379 / #381). A top-bar row as
- * keksdose has it: three IconButtons at the end edge, the sync chip with a sentence-long
+ * TOOLTIP — taps and the page edge. A top-bar row as
+ * an app has it: three IconButtons at the end edge, the sync chip with a sentence-long
  * label opening `bottom`. On a phone a tap used to leave each label up until the next tap
  * elsewhere, and the sync bubble, centred under an icon near the edge, widened the page.
  * Below it, the taps that DO show a bubble: on a control that does nothing when tapped.
@@ -529,8 +524,8 @@ function TooltipTapDemo() {
 
       <div className="mt-3 space-y-2">
         <Note>
-          On a phone, tap the three icons: each does its job and leaves no label behind (it used to stay up
-          over whatever the tap opened). With a keyboard, Tab onto them: the label shows, as it does on a
+          On a phone, tap the three icons: each does its job and leaves no label behind over whatever the tap
+          opened. With a keyboard, Tab onto them: the label shows, as it does on a
           desktop hover. A desktop click lets the label go once the pointer leaves.
         </Note>
         <Note>
@@ -544,7 +539,6 @@ function TooltipTapDemo() {
           says <code className="font-mono">tap=&quot;toggle&quot;</code>.
         </Note>
       </div>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }

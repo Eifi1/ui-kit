@@ -81,7 +81,7 @@ export function NotFoundPage({
       <p className="max-w-prose text-sm text-secondary">{labels.body}</p>
       {children}
       <div className="mt-4 flex flex-wrap justify-center gap-3">
-        <Button href={homeHref} variant="brand">
+        <Button href={homeHref} variant="accent">
           {labels.home}
         </Button>
         {appHref !== undefined && (

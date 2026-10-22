@@ -13,17 +13,21 @@ import {
 } from "recharts";
 import {
   CHART_COLORS,
+  CHART_ROLES,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  SeriesChart,
+  Treemap,
   paletteFor,
   useChart,
   toggleHidden,
 } from "@eifi1/ui-kit";
 import type { ChartConfig, ChartSeriesConfig } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, Swatch } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * Charts.
@@ -43,17 +47,34 @@ import { Example, Note, OutTable, Row, Swatch } from "../lib/section";
  * this shell exists, and the thing a hardcoded `fill="#4f46e5"` would quietly break.
  */
 
+// ── Imprint specimen (0.49) ────────────────────────────────────────────────────
+// Eight series, one per slot, so every hue shows with or without its edge.
+const IMPRINT_KEYS = ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"];
+const IMPRINT_ROWS = ["Q1", "Q2"].map((q, r) => ({
+  q,
+  ...Object.fromEntries(IMPRINT_KEYS.map((k, i) => [k, 40 + ((i * 17 + r * 23) % 50)])),
+}));
+const IMPRINT_TILES = [
+  { id: "home", name: "Home", value: 880 },
+  { id: "food", name: "Food", value: 420 },
+  { id: "travel", name: "Travel", value: 310 },
+  { id: "health", name: "Health", value: 190 },
+  { id: "fun", name: "Fun", value: 160 },
+  { id: "tech", name: "Tech", value: 140 },
+  { id: "rest", name: "Rest", value: 260, fill: CHART_ROLES.other },
+];
+
 // ── Formatters ───────────────────────────────────────────────────────────────
 // Module scope on purpose: an Intl formatter is expensive to construct and these are
 // stateless. Nothing here touches `window`, so the render test can mount the section.
 
-const MONEY = new Intl.NumberFormat("en-GB", {
+const MONEY = numberFormat("en-GB", {
   style: "currency",
   currency: "GBP",
   maximumFractionDigits: 0,
 });
 
-const COMPACT = new Intl.NumberFormat("en-GB", { notation: "compact" });
+const COMPACT = numberFormat("en-GB", { notation: "compact" });
 
 // Both halves must agree on UTC. `"2025-03-01T00:00:00Z"` is UTC midnight, and a
 // formatter left on the viewer's zone would render it as 28 February for anyone west
@@ -383,9 +404,10 @@ export function Charts() {
           <Note>
             Colour is never the only signal in this kit&apos;s money charts — teal/amber/violet
             are CVD-safe against each other, but the sign and the label still have to carry the
-            meaning. The nine <code className="font-mono">--chart-N</code> tokens behind{" "}
-            <code className="font-mono">paletteFor</code> are Paul Tol&apos;s &ldquo;Muted&rdquo;
-            set, chosen to survive protanopia, deuteranopia and tritanopia.
+            meaning. The eight <code className="font-mono">--chart-N</code> tokens behind{" "}
+            <code className="font-mono">paletteFor</code> are anyplot&apos;s &ldquo;Imprint&rdquo;
+            hues (the default; Paul Tol&apos;s &ldquo;Muted&rdquo; is in the
+            palette menu), chosen to survive protanopia, deuteranopia and tritanopia.
           </Note>
         </div>
       </Example>
@@ -724,6 +746,35 @@ export function Charts() {
       </Example>
 
       <Example
+        label="Imprint — eight series, the ink edge, the rest bucket"
+        hint="bars in a hue under 3:1 on this ground get a 1px ink edge; the rest tile is muted ink"
+      >
+        <SeriesChart
+          rows={IMPRINT_ROWS}
+          x={{ type: "category", key: "q" }}
+          series={IMPRINT_KEYS.map((key) => ({ key, label: key, type: "bar" as const }))}
+          height="14rem"
+          valueFormat={(v) => COMPACT.format(v)}
+        />
+        <div className="mt-3">
+          <Treemap
+            data={IMPRINT_TILES}
+            height="12rem"
+            valueFormatter={(v) => MONEY.format(v)}
+          />
+        </div>
+        <div className="mt-3">
+          <Note>
+            Series 1 is always the green. The hues are the same in light and dark; what changes is
+            which of them sit under 3:1 against the ground (WCAG 1.4.11) — on cream the green,
+            lavender, ochre, cyan and lime, on the dark ground the red and rose — and only those
+            get the edge. The &ldquo;Rest&rdquo; tile is <code className="font-mono">CHART_ROLES.other</code>,
+            the muted ink, so it does not wrap round to a hue a reader would match to a real group.
+          </Note>
+        </div>
+      </Example>
+
+      <Example
         label="Where the colours come from"
         hint="these swatches are painted by the same vars the charts above are"
       >
@@ -741,15 +792,18 @@ export function Charts() {
           <OutTable
             rows={[
               ["paletteFor(0)", paletteFor(0)],
-              ["paletteFor(8)", paletteFor(8)],
-              // Nine colours, then it starts again — a tenth series is indistinguishable
-              // from the first, so split the data before you reach for a tenth key.
-              ["paletteFor(9)", `${paletteFor(9)}  // wraps`],
+              ["paletteFor(7)", paletteFor(7)],
+              // Eight colours, then it starts again — a ninth series is indistinguishable
+              // from the first, so split the data before you reach for a ninth key.
+              ["paletteFor(8)", `${paletteFor(8)}  // wraps`],
+              ['paletteFor(2, { order: "cvd" })', `${paletteFor(2, { order: "cvd" })}  // anyplot's CVD order`],
               ["paletteFor(-1)", `${paletteFor(-1)}  // wraps backwards`],
               ["paletteFor(2.7)", `${paletteFor(2.7)}  // truncated`],
               ["paletteFor(NaN)", `${paletteFor(NaN)}  // first colour, never --chart-NaN`],
               ["CHART_COLORS.income", CHART_COLORS.income],
               ["CHART_COLORS.assigned", CHART_COLORS.assigned],
+              ["CHART_COLORS.total", CHART_COLORS.total],
+              ["CHART_ROLES.other", CHART_ROLES.other],
             ]}
           />
         </div>

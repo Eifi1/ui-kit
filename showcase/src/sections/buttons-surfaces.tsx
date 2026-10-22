@@ -32,10 +32,12 @@ import {
   CardHeader,
   CardTitle,
   IconButton,
+  RowActions,
   Spinner,
   UserAvatar,
   avatarInitials,
   buttonClasses,
+  useConfirm,
 } from "@eifi1/ui-kit";
 import type { ButtonVariant } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
@@ -53,14 +55,14 @@ import { IconButtonControls } from "./field-anatomy-demo";
  * into their own app without untangling it from the eleven blocks around it.
  */
 
-const VARIANTS: ButtonVariant[] = ["primary", "secondary", "ghost", "danger", "brand", "link"];
+const VARIANTS: ButtonVariant[] = ["default", "accent", "secondary", "ghost", "danger", "link"];
 
 function ButtonVariants() {
   const [last, setLast] = useState<ButtonVariant | null>(null);
   return (
     <Example
       label="Button — the six variants"
-      hint="only danger, brand and link leave the neutral tokens"
+      hint="only accent, danger and link leave the neutral tokens"
     >
       <Row>
         {VARIANTS.map((variant) => (
@@ -80,14 +82,15 @@ function ButtonVariants() {
       </p>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">primary</code> is the warm bordered chip, not a
-          saturated fill — <code className="font-mono">brand</code> is the solid accent, kept
-          for the one strong call to action on a screen. Both draw from the palette tokens, so
+          <code className="font-mono">default</code> is the warm bordered chip, not a
+          saturated fill, and what a Button with no variant draws —{" "}
+          <code className="font-mono">accent</code> is the solid brand fill, kept for the one
+          strong call to action on a screen. Both draw from the palette tokens, so
           they move when you switch preset in the top bar. <code className="font-mono">danger</code>{" "}
           paints from the semantic <code className="font-mono">--danger</code> family instead:
           destructive is a meaning, not a brand colour, so a preset does not move it — but a
           consumer can re-point that one family on purpose. <code className="font-mono">link</code>{" "}
-          (0.8.0) drops the box altogether — see &ldquo;Button — link&rdquo; below.
+          drops the box altogether — see &ldquo;Button — link&rdquo; below.
         </Note>
       </div>
     </Example>
@@ -159,7 +162,7 @@ function ButtonRef() {
         </Button>
         <Button
           ref={saveRef}
-          variant="brand"
+          variant="accent"
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         >
@@ -175,8 +178,8 @@ function ButtonRef() {
           <code className="font-mono">ButtonProps</code> declares{" "}
           <code className="font-mono">ref?: Ref&lt;HTMLButtonElement&gt;</code>. React 19 hands a
           function component its <code className="font-mono">ref</code> as a prop, so it rides onto
-          the element with no <code className="font-mono">forwardRef</code>; the declaration only
-          makes TypeScript accept it — before 0.7.0 this line did not compile.
+          the element with no <code className="font-mono">forwardRef</code>; the declaration
+          makes TypeScript accept it.
         </Note>
       </div>
     </Example>
@@ -196,8 +199,8 @@ function ButtonClasses() {
         <a className={buttonClasses("secondary")} href="#/buttons#buttonclasses">
           an &lt;a&gt; wearing buttonClasses(&quot;secondary&quot;)
         </a>
-        <a className={buttonClasses("brand")} href="#/tokens">
-          …and buttonClasses(&quot;brand&quot;)
+        <a className={buttonClasses("accent")} href="#/tokens">
+          …and buttonClasses(&quot;accent&quot;)
         </a>
       </Row>
       <div className="mt-4">
@@ -209,7 +212,7 @@ function ButtonClasses() {
         <Note>
           These strings are computed live by the real helper, not transcribed — if the base
           ring or a variant changes, this list changes with it. The helper defaults to{" "}
-          <code className="font-mono">primary</code>, so{" "}
+          <code className="font-mono">default</code>, so{" "}
           <code className="font-mono">buttonClasses()</code> is the first row above. Prefer{" "}
           <code className="font-mono">&lt;Button&gt;</code> anywhere a real button element
           works.
@@ -233,7 +236,7 @@ function IconButtons() {
           aria-pressed={starred}
           aria-label={starred ? "Unstar" : "Star"}
           title={starred ? "Unstar" : "Star"}
-          variant={starred ? "brand" : "ghost"}
+          variant={starred ? "accent" : "ghost"}
           onClick={() => setStarred((v) => !v)}
         >
           <Star fill={starred ? "currentColor" : "none"} />
@@ -241,7 +244,7 @@ function IconButtons() {
         <IconButton variant="secondary" aria-label="Edit" title="Edit">
           <Pencil />
         </IconButton>
-        <IconButton variant="primary" aria-label="Copy" title="Copy">
+        <IconButton variant="default" aria-label="Copy" title="Copy">
           <Copy />
         </IconButton>
         <IconButton variant="danger" aria-label="Delete" title="Delete">
@@ -313,7 +316,7 @@ function PlanCard() {
           </dl>
         </CardContent>
         <CardFooter className="gap-2 pt-4">
-          <Button variant="brand" onClick={() => setSeats((n) => n + 1)}>
+          <Button variant="accent" onClick={() => setSeats((n) => n + 1)}>
             Add a seat
           </Button>
           <Button variant="secondary" onClick={() => setAutoRenew((v) => !v)}>
@@ -364,7 +367,7 @@ function SpinnerDemo() {
         <Spinner className="size-8 border-4" />
         {/* Inside a button whose text already says it: decorative, or the button's
             name becomes "Loading… Saving…". */}
-        <Button variant="primary" onClick={() => setBusy((v) => !v)} disabled={busy}>
+        <Button variant="default" onClick={() => setBusy((v) => !v)} disabled={busy}>
           {busy && <Spinner className="size-4 border-2" label={null} />}
           {busy ? "Saving…" : "Save"}
         </Button>
@@ -625,7 +628,7 @@ function ButtonGroups() {
             ).map(([value, Icon]) => (
               <IconButton
                 key={value}
-                variant={align === value ? "brand" : "secondary"}
+                variant={align === value ? "accent" : "secondary"}
                 aria-label={`Align ${value}`}
                 aria-pressed={align === value}
                 onClick={() => setAlign(value)}
@@ -677,7 +680,7 @@ function ButtonSizes() {
         <Button size="sm" variant="ghost">
           Reset
         </Button>
-        <Button size="sm" variant="brand">
+        <Button size="sm" variant="accent">
           <Plus className="size-3.5" aria-hidden /> New budget
         </Button>
         <a className={buttonClasses("secondary", { size: "sm" })} href="#/buttons#buttonclasses">
@@ -742,6 +745,7 @@ function IconButtonQuiet() {
   const [selected, setSelected] = useState(2);
   const [deleted, setDeleted] = useState(0);
   const [flags, setFlags] = useState<string[]>([]);
+  const confirm = useConfirm();
   return (
     <Example
       label="IconButton — quiet"
@@ -755,10 +759,18 @@ function IconButtonQuiet() {
           tone="danger"
           quiet={false}
           disabled={selected === 0}
-          onClick={() => {
-            setDeleted((n) => n + selected);
-            setSelected(0);
-          }}
+          onClick={() =>
+            void confirm({
+              title: `Delete ${selected} row${selected === 1 ? "" : "s"}?`,
+              body: "This cannot be undone.",
+              confirmLabel: "Delete",
+              tone: "danger",
+            }).then((ok) => {
+              if (!ok) return;
+              setDeleted((n) => n + selected);
+              setSelected(0);
+            })
+          }
         >
           <Trash2 />
         </IconButton>
@@ -789,9 +801,12 @@ function IconButtonQuiet() {
             <IconButton aria-label={`Details of ${row}`} tone="info" quiet size="sm">
               <Info />
             </IconButton>
-            <IconButton aria-label={`Delete ${row}`} tone="danger" size="sm">
-              <Trash2 />
-            </IconButton>
+            {/* Delete lives in the row's menu and asks first (KIT-12), never a bin per row. */}
+            <RowActions
+              name={row}
+              size="sm"
+              actions={[{ label: "Delete", icon: Trash2, tone: "danger", onSelect: () => setDeleted((n) => n + 1) }]}
+            />
           </li>
         ))}
       </ul>
@@ -810,11 +825,15 @@ function IconButtonQuiet() {
       <div className="mt-3">
         <Note>
           The bulk bar&apos;s delete is <code className="font-mono">tone=&quot;danger&quot; quiet=&#123;false&#125;</code>:
-          red at rest, because it stands alone and a touch screen never hovers to reveal it. In the list,
-          the flag is <code className="font-mono">tone=&quot;warning&quot;</code> with{" "}
+          red at rest, because it stands alone and a touch screen never hovers to reveal it, and it asks
+          first (<code className="font-mono">useConfirm</code>). In the list, the flag is{" "}
+          <code className="font-mono">tone=&quot;warning&quot;</code> with{" "}
           <code className="font-mono">quiet</code> until you flag the row (then toned amber), the info button
-          is <code className="font-mono">tone=&quot;info&quot; quiet</code>, and delete keeps danger&apos;s quiet
-          default — hover or Tab onto a grey one and its tone arrives. Left out,{" "}
+          is <code className="font-mono">tone=&quot;info&quot; quiet</code> — hover or Tab onto a grey one and its
+          tone arrives. Delete is not a bin in every row: it sits in the row&apos;s{" "}
+          <code className="font-mono">RowActions</code> menu (&ldquo;⋯&rdquo;), where a{" "}
+          <code className="font-mono">tone: &quot;danger&quot;</code> action goes by default and opens a
+          confirmation before it runs. Left out,{" "}
           <code className="font-mono">quiet</code> keeps each tone&apos;s old default (last row): danger quiet,
           warning and info toned. It is ignored for <code className="font-mono">muted</code> and{" "}
           <code className="font-mono">default</code>.

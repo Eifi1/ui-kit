@@ -196,7 +196,7 @@ function AnchoredPanelSpecimen() {
         <button
           type="button"
           ref={triggerRef}
-          className={buttonClasses(open ? "brand" : "secondary")}
+          className={buttonClasses(open ? "accent" : "secondary")}
           onClick={() => setOpen((v) => !v)}
         >
           {open ? "Close the panel" : "Open a panel under this trigger"}
@@ -377,7 +377,7 @@ function DismissSpecimen() {
         <button
           type="button"
           ref={triggerRef}
-          className={buttonClasses(open ? "brand" : "secondary")}
+          className={buttonClasses(open ? "accent" : "secondary")}
           onClick={() => (open ? closeBy("the trigger") : setOpen(true))}
         >
           {open ? "Close" : "Open a dismissible panel"}
@@ -467,7 +467,7 @@ function CloseTransitionSpecimen() {
   return (
     <div className="space-y-3">
       <Row>
-        <Button variant={open ? "brand" : "secondary"} onClick={() => setOpen(true)} disabled={open}>
+        <Button variant={open ? "accent" : "secondary"} onClick={() => setOpen(true)} disabled={open}>
           Open
         </Button>
         {/* `requestClose`, never the raw setter — that is the whole contract. Calling
@@ -567,7 +567,7 @@ function FocusTrapSpecimen() {
           />
           <Row>
             {/* The kit's Button takes a ref (0.7.0), which the thunk needs. */}
-            <Button ref={save} variant="brand" onClick={() => setOpen(false)}>
+            <Button ref={save} variant="accent" onClick={() => setOpen(false)}>
               Save
             </Button>
             <Button variant="secondary" onClick={() => setNested(true)} disabled={nested}>
@@ -720,10 +720,10 @@ function ScrollLockSpecimen() {
   return (
     <div className="space-y-3">
       <Row>
-        <Button variant={dialog ? "brand" : "secondary"} onClick={() => setDialog((v) => !v)}>
+        <Button variant={dialog ? "accent" : "secondary"} onClick={() => setDialog((v) => !v)}>
           {dialog ? "Release lock A" : "Lock A (a dialog)"}
         </Button>
-        <Button variant={sheet ? "brand" : "secondary"} onClick={() => setSheet((v) => !v)}>
+        <Button variant={sheet ? "accent" : "secondary"} onClick={() => setSheet((v) => !v)}>
           {sheet ? "Release lock B" : "Lock B (a sheet on top of it)"}
         </Button>
       </Row>
@@ -873,7 +873,7 @@ export function HooksLib() {
         <PlacementMath />
         <Note>
           Split out of the hook so the geometry is testable without a browser and a fake
-          keyboard. The third row is the case the whole thing exists for (feedback #135): on
+          keyboard. The third row is the case the whole thing exists for: on
           Android the layout viewport does NOT shrink when the on-screen keyboard opens, so a
           panel pinned below a trigger in the lower half of the screen ends up behind it with
           nothing the user can do — <code className="font-mono">position: fixed</code> does not
@@ -1048,7 +1048,7 @@ export const useTx = create<TxState>()(
 
       <Example
         label="saveBlob(blob, filename) · filenameFromDisposition(header, fallback)"
-        hint="0.34: one download for a file the page fetched itself, and the name the server asked for."
+        hint="one download for a file the page fetched itself, and the name the server asked for."
       >
         <SaveBlobSpecimen />
         <OutTable rows={DISPOSITION_CASES} />

@@ -80,8 +80,8 @@ export function GuidedTour() {
               ["padding?: number", "Spotlight padding around the target, px (default 8)."],
               ["placement?", '"top" | "bottom" | "start" | "end" | "left" | "right" | "center"; omit for auto. start/end follow the target\'s reading direction, left/right are physical'],
               ["awaitClick?: boolean", "Advance only when the TARGET is clicked. Needs `target`."],
-              ["interactive?: boolean", "0.46: the target is for using — the layers it opens (number pad, menus, popovers at z-50) sit above the scrim."],
-              ["awaitInput?: boolean", "0.46: advance once a value was entered in the target's field (blur or Enter). Implies interactive."],
+              ["interactive?: boolean", "The target is for using — the layers it opens (number pad, menus, popovers at z-50) sit above the scrim."],
+              ["awaitInput?: boolean", "Advance once a value was entered in the target's field (blur or Enter). Implies interactive."],
               ["beforeStep?", "Sync or async; awaited before the target is located."],
             ]}
           />
@@ -170,7 +170,7 @@ function TourLauncher() {
     <div className="space-y-3">
       <Row>
         <Button
-          variant="brand"
+          variant="accent"
           data-tour="showcase-tour-start"
           disabled={active}
           onClick={() => {
@@ -234,7 +234,7 @@ function TourLauncher() {
         <code className="font-mono">stop()</code> sits in the welcome step&apos;s{" "}
         <code className="font-mono">action</code> rather than beside the launcher: while a tour
         runs the page outside the card and the spotlit target takes no clicks (the tour is{" "}
-        <code className="font-mono">aria-modal</code>, and since 0.7.0 the pointer is held to that
+        <code className="font-mono">aria-modal</code>, and the pointer is held to that
         too), so a Stop button out on the page could never be pressed.
       </Note>
     </div>
@@ -388,7 +388,7 @@ function PlacementTour() {
           </select>
         </label>
         <Button
-          variant="brand"
+          variant="accent"
           disabled={active}
           onClick={() => {
             setRevealed(false);
@@ -425,7 +425,7 @@ function PlacementTour() {
         centred step): Enter and the forward arrow advance — → in LTR, ← in RTL, as on Target D
         above — the other arrow goes back, Esc skips. Enter on a focused control belongs to that
         control: Tab to <strong>Zurück</strong> or <strong>Überspringen</strong> and press Enter,
-        and only that button runs (it used to run AND step forward). The page is blocked outside
+        and only that button runs; the tour does not step forward too. The page is blocked outside
         the card and the spotlit target — try clicking <strong>Start the labelled tour</strong>{" "}
         mid-tour — while the target itself stays clickable for{" "}
         <code className="font-mono">awaitClick</code>.
@@ -456,7 +456,7 @@ export function TourStaleSpotlight022Demo() {
   return (
     <Example
       label="Tour — the step after a spotlighted one"
-      hint="keksdose tours audit §1.0 A: the old hole stayed, and the card sat beside it"
+      hint="a step without a target draws no hole and centres its card"
     >
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="secondary" data-tour="showcase-stale-a" onClick={() => start(STALE_STEPS)}>
@@ -464,12 +464,10 @@ export function TourStaleSpotlight022Demo() {
         </Button>
       </div>
       <Note>
-        Before 0.22 a step with no target (or a missing one) right after a spotlighted step kept that step&apos;s hole and
-        parked its card beside it — in 15 steps of keksdose&apos;s 16 tours — and Back→Next kept it indefinitely. React 19
-        dropped the overlay&apos;s render-phase reset while the follow interval had an update queued; the located rect now
-        carries the step it was found for, and a rect from another step is never drawn. Walk it with the arrows too.
+        A step with no target (or a missing one) right after a spotlighted step draws no hole and centres its card,
+        Back→Next included: the located rect carries the step it was found for, and a rect from another step is never
+        drawn, even while the follow interval has an update queued. Walk it with the arrows too.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -602,7 +600,7 @@ function TourAccountDemo() {
   const [online, setOnline] = useState(true);
   return (
     <Example
-      label="useTourProgress with an account (0.45)"
+      label="useTourProgress with an account"
       hint="the device key as the account's cache, the :pending record, signOutTourProgress (docs/tours-harmonization.md §10)"
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -633,8 +631,8 @@ function TourAccountDemo() {
         With {"`account: {load, save, adopt?}`"} the device key is the account&apos;s cache: the page paints from it,
         loads the account on the first reader, on `online` and after each save. A completion goes to the cache and to
         `&lt;key&gt;:pending`, sent as one PATCH; a failure with no answer keeps it, a 403 or 422 drops it.
-        `signOutTourProgress(key)` removes the cache only and keeps the pending record for its owner. kastlan passes
-        `adopt: {"{"}storageKey, discard: true{"}"}` to drop its old device-wide record. Nothing leaves this page.
+        `signOutTourProgress(key)` removes the cache only and keeps the pending record for its owner. An app moving off a device-wide record passes
+        `adopt: {"{"}storageKey, discard: true{"}"}` to drop it. Nothing leaves this page.
       </Note>
     </Example>
   );
@@ -651,7 +649,7 @@ function TourAccountBody() {
           <Button
             key={tour.id}
             size="sm"
-            variant={progress.completed[tour.id] !== undefined ? "primary" : "secondary"}
+            variant={progress.completed[tour.id] !== undefined ? "default" : "secondary"}
             onClick={() => {
               if (progress.completed[tour.id] !== undefined) progress.reset(tour.id);
               else progress.complete(tour);
@@ -695,7 +693,7 @@ function TourCatalogueBody({ toast }: { toast: string | null }) {
   return (
     <Example
       label="TourCatalogue — the tours page body"
-      hint="keksdose's /tours (docs/tours-harmonization.md): sections per group, the filter bar, keksdose's card"
+      hint="an app's /tours (docs/tours-harmonization.md): sections per group, the filter bar, the tour card"
     >
       <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted">
         The same list in the top bar&apos;s menu:
@@ -747,7 +745,7 @@ function TourCatalogueBody({ toast }: { toast: string | null }) {
         `useTourUrlSync` starts a tour from `?tour=` and mirrors `&tourStep=`. Progress is `useTourProgress` on this
         device; &quot;Goals&quot; was completed before its update, so it is to do again, with the reason. The header
         counts with `doneCount` and `earnedPoints`, and &ldquo;Forget&rdquo; is `resetTourProgress`, what the device
-        reset calls. Since 0.43. Since 0.44 the `TourProvider` takes `progress` and `onComplete(tour, {'{'}awarded{'}'})`:
+        reset calls. The `TourProvider` takes `progress` and `onComplete(tour, {'{'}awarded{'}'})`:
         a launch passes `start(steps, {'{'} tour {'}'})`, the provider writes the completion once and the app shows its
         toast there. &ldquo;Seed&rdquo; is `completeTour`, for an app&apos;s tests and seeds.
       </Note>

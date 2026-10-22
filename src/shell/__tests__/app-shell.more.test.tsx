@@ -92,15 +92,23 @@ describe("splitMobileBar", () => {
     expect(splitMobileBar([1, 2, 3], 0)).toEqual({ shown: [1], hidden: [2, 3] });
   });
 
-  it("defaults to every entry at Normal, four at Large, three at Extra large", () => {
-    expect(DEFAULT_MOBILE_BAR_MAX).toEqual({ normal: Number.POSITIVE_INFINITY, large: 4, xlarge: 3 });
+  it("is the default counted as entries before More: four at Normal and Large, three at Extra large", () => {
+    // Deprecated in 0.49 for DEFAULT_MOBILE_MAX_ITEMS, which counts cells (KIT-6).
+    expect(DEFAULT_MOBILE_BAR_MAX).toEqual({ normal: 4, large: 4, xlarge: 3 });
   });
 });
 
 describe("mobileBarMax (§10.7)", () => {
-  it("shows every entry at Normal, with no More cell", () => {
+  it("shows four entries and More at Normal too (0.49 KIT-6: five cells)", () => {
     viewport(390);
     const { container } = renderShell();
+    expect(cellNames(container)).toEqual(["Home", "Budget", "Transactions", "Accounts", "More"]);
+    expect(phoneBar(container).style.gridTemplateColumns).toBe("repeat(5, minmax(0, 1fr))");
+  });
+
+  it("shows every entry when mobileMaxItems holds them all, with no More cell", () => {
+    viewport(390);
+    const { container } = renderShell({ mobileMaxItems: 7 });
     expect(cellNames(container)).toEqual(NAV.map((n) => n.label));
     expect(phoneBar(container).style.gridTemplateColumns).toBe("repeat(7, minmax(0, 1fr))");
   });
@@ -123,11 +131,11 @@ describe("mobileBarMax (§10.7)", () => {
   it("follows a size switch while mounted", () => {
     viewport(390);
     const { container } = renderShell();
-    expect(cellNames(container)).toHaveLength(7);
+    expect(cellNames(container)).toHaveLength(5);
     act(() => applyTextSize("xlarge"));
     expect(cellNames(container)).toHaveLength(4);
     act(() => applyTextSize("normal"));
-    expect(cellNames(container)).toHaveLength(7);
+    expect(cellNames(container)).toHaveLength(5);
   });
 
   it("takes a number for every size, and a per-size override", () => {

@@ -291,12 +291,18 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.47.0 (+3, keksdose N17): `RowActionsHead`, `ROW_ACTIONS_CELL_CLASS`,
   // `ROW_ACTIONS_HEAD_CLASS` — a hand-built table's actions heading and cell.
   // 0.48.0 (+1, keksdose dev #628): `TableSkeleton`, the table/list loading preset.
-  ["@eifi1/ui-kit", barrel, 991],
+  // 0.49.0 (+3, KIT-6, 2026-10-22): `SectionNav`, and from /shell `pickMobileBar` and
+  // `DEFAULT_MOBILE_MAX_ITEMS`, the phone bar counted in cells.
+  // 0.49.0 (+2, KIT-8, 2026-10-22): `statusTone`, `STATUS_KINDS` — Chip/StatusDot `status`.
+  // 0.49.0 (+4, KIT-9, 2026-10-22): `useDocumentTitle`, `formatDocumentTitle`,
+  // `DEFAULT_DOCUMENT_TITLE_FORMAT`, and the provider's `useKitDocumentTitle`.
+  // 0.49.0 (+1, KIT-1b, 2026-10-22): `asciiMinusInNumbers`, the copy handler's rule.
+  ["@eifi1/ui-kit", barrel, 1009],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
   // 0.35.0 (−13): the zoom maths and `withChartZoom` are the kit's own (API-6b).
-  ["@eifi1/ui-kit/chart", chart, 46],
+  ["@eifi1/ui-kit/chart", chart, 53],
   // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
   // 0.35.0: `resolveDataTableLabels` and `missingDataTableLabels` removed (R1, API-6a) (−2).
   // 0.46.1: `swipePlanRowActions`, the desktop swipe column's derivation (keksdose N3) (+1).
@@ -320,7 +326,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.42.0 (+2): `adminMenuEntry`, `AdminMenuRow` (docs/admin-harmonization.md §6.6).
   // 0.42.0 (+10): the top bar's parts (docs/top-bar-harmonization.md §3.1, see the barrel).
   // 0.43.0 (+1): `useAdminMenuEntry` (the 0.42 adoptions, kastlan 2).
-  ["@eifi1/ui-kit/shell", shell, 58],
+  // 0.49.0 (+2, KIT-6, 2026-10-22): `pickMobileBar`, `DEFAULT_MOBILE_MAX_ITEMS`.
+  ["@eifi1/ui-kit/shell", shell, 60],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).

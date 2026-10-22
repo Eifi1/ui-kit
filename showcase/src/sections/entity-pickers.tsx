@@ -324,7 +324,7 @@ export function EntityPickers() {
           <code className="font-mono">aria-describedby</code>;{" "}
           <code className="font-mono">invalid</code> carries no text. A disabled picker drops its
           clear button — a settled field offers no action, and it is dimmed as a whole, label
-          included (the inline picker used to keep full contrast and look filled-in).{" "}
+          included, so it never looks filled-in.{" "}
           <code className="font-mono">MultiSelect</code> takes the same{" "}
           <code className="font-mono">error</code> (implies <code className="font-mono">invalid</code>,
           described on the trigger) and <code className="font-mono">disabled</code> (no chevron, no

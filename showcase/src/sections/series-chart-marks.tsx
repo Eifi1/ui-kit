@@ -15,6 +15,7 @@ import type {
   ZoomAxesSetting,
 } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, code } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * SERIES CHART — BARS, AREAS & TIME. The 0.8.0 half of the series chart: per-series
@@ -22,15 +23,15 @@ import { Example, Note, OutTable, Row, code } from "../lib/section";
  * dots, stroke weight, curve and fill, clicks, the zoom a chart's marks imply, and the
  * two helpers that keep a legend's colours still while series are switched off.
  *
- * The data is money over months and a price over irregular days — keksdose's reports,
+ * The data is money over months and a price over irregular days — an app's reports,
  * which is what these marks were built for. Every row is fixed rather than derived from
  * today, so the page is the same page whenever it is opened. No colour is written
  * except where a series must be a meaning (income, expense) rather than a position.
  */
 
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-const EUR2 = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const WHOLE = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
+const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const EUR2 = numberFormat("en-GB", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const WHOLE = numberFormat("en-GB", { maximumFractionDigits: 0 });
 const MONTH = new Intl.DateTimeFormat("en-GB", { month: "short" });
 
 /** A year of a household's months, keyed by the ISO period — the caller's own value. */
@@ -362,10 +363,10 @@ function StableLegend() {
       hint="resolve the colours on the FULL list, then filter; switch Housing off and compare"
     >
       <Row className="mb-3">
-        <Button variant={naive ? "secondary" : "brand"} onClick={() => setNaive(false)}>
+        <Button variant={naive ? "secondary" : "accent"} onClick={() => setNaive(false)}>
           visibleSeries(series, hidden)
         </Button>
-        <Button variant={naive ? "brand" : "secondary"} onClick={() => setNaive(true)}>
+        <Button variant={naive ? "accent" : "secondary"} onClick={() => setNaive(true)}>
           series.filter(…) — the bug
         </Button>
       </Row>
@@ -512,7 +513,7 @@ export function SeriesChartMarks() {
       <Note>
         <strong>Needs <code className="font-mono">recharts</code></strong>, like every chart. The first
         page, &ldquo;Series chart&rdquo;, has the numeric measurement plots, the zoom and the axis helpers;
-        this one has what 0.8.0 added for money and time.
+        this one has the marks for money and time.
       </Note>
       <GroupedBars />
       <Stacks />
@@ -525,7 +526,7 @@ export function SeriesChartMarks() {
   );
 }
 
-/* ── since 0.11 (keksdose's 0.10 feedback) ─────────────────────────────────── */
+/* ── since 0.11 ─────────────────────────────────── */
 
 const WEEKDAYS = [
   { day: "Mon", thisWeek: 42, average: 38 },
@@ -580,7 +581,6 @@ export function MinBarLengthDemo() {
           axis is fitted to the values, and hovering Sunday still says €0.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }

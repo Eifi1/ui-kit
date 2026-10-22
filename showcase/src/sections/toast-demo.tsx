@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Trash2 } from "lucide-react";
-import { Button, IconButton, Switch, toast } from "@eifi1/ui-kit";
+import { Button, RowActions, Switch, toast } from "@eifi1/ui-kit";
 import { Example, Note, Row } from "../lib/section";
 
 /**
@@ -82,9 +82,11 @@ function ToastUndo() {
         {items.map((name) => (
           <li key={name} className="flex items-center justify-between px-3 py-1.5 text-sm text-primary">
             {name}
-            <IconButton label={`Delete ${name}`} tone="muted" onClick={() => remove(name)}>
-              <Trash2 />
-            </IconButton>
+            {/* In the row's menu; no confirmation, the toast's Undo is the way back. */}
+            <RowActions
+              name={name}
+              actions={[{ label: "Delete", icon: Trash2, tone: "danger", confirm: false, onSelect: () => remove(name) }]}
+            />
           </li>
         ))}
         {items.length === 0 && <li className="px-3 py-1.5 text-sm text-muted">Nothing left.</li>}
@@ -106,8 +108,10 @@ function ToastUndo() {
       </Row>
       <div className="mt-3">
         <Note>
-          Delete a row: the toast offers the step back, and undoing it offers the step forward again —
-          keksdose&apos;s journal pattern, with the journal left to the app. Any toast with an{" "}
+          Delete a row (its &ldquo;⋯&rdquo; menu — a delete is never a bin in every row): the toast offers the
+          step back, which is why this one passes <code className="font-mono">confirm: false</code> instead of
+          asking first, and undoing it offers the step forward again —
+          a journal pattern, with the journal left to the app. Any toast with an{" "}
           <code className="font-mono">action</code> stays up 8s rather than 4s unless it is given a{" "}
           <code className="font-mono">duration</code>, so the button can be reached. The action is a real
           button inside the toaster&apos;s polite live region: it is announced with the message, Tab reaches

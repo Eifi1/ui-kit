@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useContext, useEffect, useRef, useState } from "react";
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from "react";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -6,6 +6,7 @@ import { FOCUS_RING } from "./focus-ring";
 import { useKitLabels, useKitLink, type LabelOverride } from "../i18n/kit-labels";
 import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 import { DEFAULT_BREADCRUMBS_LABELS } from "./breadcrumbs-labels";
+import { PageHeaderTrailContext } from "./page-header-context";
 
 export interface BreadcrumbsLabels {
   /** The `nav` landmark's name — what a screen reader lists it as. */
@@ -24,6 +25,12 @@ export interface BreadcrumbItem {
   href?: string;
   /** A stable React key, when `label` is not a string. */
   key?: string;
+  /**
+   * The app's home entry (0.49 KIT-9). Default: an entry whose `href` is `"/"`. No trail
+   * is drawn when only home entries are left — inside a `PageHeader`, or wherever the
+   * current entry is hidden (`hideCurrent`): "Home" above a page's title says nothing.
+   */
+  home?: boolean;
 }
 
 /** What {@link BreadcrumbsProps.renderLink} is handed. Spread it onto your router's
@@ -57,6 +64,18 @@ export interface BreadcrumbsProps extends Omit<ComponentPropsWithRef<"nav">, "ch
   keepEnd?: number;
   /** Overrides the {@link UiKitProvider}'s `breadcrumbs` labels. */
   labels?: LabelOverride<BreadcrumbsLabels>;
+  /**
+   * Leave out the last entry, the current page (0.49 KIT-9). The entry before it stays a
+   * link, and no entry carries `aria-current`: the page's title names where you are.
+   *
+   * Default `true` inside a `PageHeader`'s `breadcrumbs` (the title is right below, so
+   * the trail would repeat it), `false` elsewhere. With the current entry hidden — and
+   * inside a `PageHeader` either way — the trail is drawn only when at least one entry
+   * that is not home ({@link BreadcrumbItem.home}) is left, so a trail drawn by the
+   * layout above the page shows no lone "Home" link either. `false` keeps the current
+   * entry as text with `aria-current="page"`.
+   */
+  hideCurrent?: boolean;
 }
 
 /**
@@ -69,16 +88,18 @@ export interface BreadcrumbsProps extends Omit<ComponentPropsWithRef<"nav">, "ch
  * the server's first paint is already right.
  */
 export function Breadcrumbs({
-  items,
+  items: allItems,
   renderLink,
   separator,
   collapse = true,
   keepEnd = 2,
   labels: labelsProp,
+  hideCurrent,
   className,
   "aria-label": ariaLabel,
   ...rest
 }: BreadcrumbsProps) {
+  const host = useContext(PageHeaderTrailContext);
   const labels = useKitLabels("breadcrumbs", DEFAULT_BREADCRUMBS_LABELS, labelsProp);
   const kitLink = useKitLink();
   const [expanded, setExpanded] = useState(false);
@@ -92,7 +113,13 @@ export function Breadcrumbs({
     const li = revealedRef.current;
     (li?.querySelector<HTMLElement>("a[href]") ?? li)?.focus();
   }, [expanded]);
-  if (items.length === 0) return null;
+  const hides = hideCurrent ?? host?.titled ?? false;
+  const shown = hides ? allItems.slice(0, -1) : allItems;
+  if (shown.length === 0) return null;
+  // A trail of home entries alone repeats nothing worth a line: in a PageHeader, and
+  // wherever the current entry is hidden (a layout's trail above the page's title).
+  if ((host || hides) && !shown.some((item) => !(item.home ?? item.href === "/"))) return null;
+  const items = shown;
 
   const end = Math.max(1, keepEnd);
   // Crumbs [1, firstKept) are the collapsible middle. Collapsing a single crumb into a
@@ -116,7 +143,8 @@ export function Breadcrumbs({
     <nav {...rest} aria-label={ariaLabel ?? labels.label} className={cn("min-w-0 text-sm", className)}>
       <ol className="m-0 flex min-w-0 list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0 text-muted">
         {items.map((item, i) => {
-          const last = i === items.length - 1;
+          // With the current entry hidden, the last one shown is a parent: a link.
+          const last = !hides && i === items.length - 1;
           const key = item.key ?? (typeof item.label === "string" ? `${i}-${item.label}` : String(i));
           let content: ReactNode;
           if (last) {

@@ -469,7 +469,7 @@ export function FeedbackNoteEditor({
         <Button variant="ghost" onClick={onCancel}>
           {cancelLabel}
         </Button>
-        <Button variant="brand" disabled={pending || blank} commit={commit} onClick={submit}>
+        <Button variant="accent" disabled={pending || blank} commit={commit} onClick={submit}>
           {saveLabel}
         </Button>
       </div>

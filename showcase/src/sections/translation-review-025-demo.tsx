@@ -15,18 +15,14 @@ import {
 import { Example, Note, code, beat } from "../lib/section";
 
 /**
- * 0.25 — swiping and grouping in the translation review (keksdose live #377, Marcel
- * reviewing on a phone: "Add swiping. And also grouping to the translation review entries
- * for faster reviewing."). The "server" is component state and a timeout; the strings are
- * a few dozen keksdose-style ones in four areas.
+ * 0.25 — swiping and grouping in the translation review, for reviewing on a phone. The "server" is component state and a timeout; the strings are
+ * a few dozen app-style ones in four areas.
  *
- * 0.25.1 — "Many areas" swaps in a catalogue of keksdose's shape (122 areas, ~4700
+ * 0.25.1 — "Many areas" swaps in a catalogue of a large app's shape (122 areas, ~4700
  * synthetic strings), on which 0.25.0 opened every group on a wide screen; and the
  * "Groups start" switch is `defaultGroupsOpen`.
  *
- * The "Swipe" switch binds the swipes as an app's settings would (keksdose, Marcel's live
- * #377 rework: "Add the swipe options to be shown also to the settings
- * /settings#interaction area where the other swipe options are defined").
+ * The "Swipe" switch binds the swipes as an app's settings would.
  */
 
 const EN = {
@@ -108,7 +104,7 @@ const SEED: TranslationReview[] = [
   { locale: "fr", key: "legal.terms", text: "Conditions d’utilisation", referenceText: "Terms of Service", verdict: "NEEDS_CHANGE", note: "« conditions générales »", suggestion: "Conditions générales d’utilisation", reviewerName: null, reviewedAt: at },
 ];
 
-/** keksdose's shape, in synthetic strings: 20 long areas and 102 short ones. Every ninth
+/** A large app's shape, in synthetic strings: 20 long areas and 102 short ones. Every ninth
  *  French string is missing, every seventh differs from the reference in a placeholder. */
 function manyAreas(): { en: Record<string, string>; fr: Record<string, string> } {
   const en: Record<string, string> = {};
@@ -175,7 +171,7 @@ export function TranslationReview025Demo() {
 
   return (
     <Example
-      label="Swipe and group — 0.25"
+      label="Swipe and group"
       hint="on a phone: swipe a card — by default toward the end to approve, toward the start for “Needs a change”"
     >
       <div className="min-w-0 space-y-4">
@@ -241,7 +237,7 @@ export function TranslationReview025Demo() {
               // The showcase's example heading is an h3.
               groupHeadingAs="h4"
               // The "budget" area's batch (12) is larger than a page, so it asks first. The
-              // many areas page as keksdose's do, 50 rows at a time.
+              // many areas page as a large app's do, 50 rows at a time.
               pageSize={many ? 50 : 10}
             />
           </WriteLockProvider>
@@ -262,21 +258,21 @@ export function TranslationReview025Demo() {
           “Approve unreviewed (n)” — one write, one Undo; larger than a page, it asks first. Filters narrow before
           grouping; each area pages on its own; a column sort orders every area alike. On a phone the areas start
           folded. {code("onSave(writes, { origin, toasted })")} tells the app when the kit has toasted, so its own
-          “Saved” is skipped. Since 0.25.1 a folded area renders its header only, and on a wide screen the areas
-          start folded once opening them all would render more than 100 rows — “Many areas” is keksdose&apos;s
-          catalogue, which 0.25.0 opened as 122 tables. {code("defaultGroupsOpen")} ({code("\"auto\"")},{" "}
+          “Saved” is skipped. A folded area renders its header only, and on a wide screen the areas
+          start folded once opening them all would render more than 100 rows — “Many areas” is a large app&apos;s
+          catalogue, 122 areas. {code("defaultGroupsOpen")} ({code("\"auto\"")},{" "}
           {code("true")}, {code("false")}) overrides it; an area the reviewer opens or folds keeps that.
         </Note>
         <Note>
-          {code("swipe")} also takes a binding, for an app whose users bind their swipes in its settings (keksdose
-          lists every list&apos;s there): per logical side an ordered ladder of {code('"approve"')},{" "}
+          {code("swipe")} also takes a binding, for an app whose users bind their swipes in its settings (one place
+          for every list&apos;s): per logical side an ordered ladder of {code('"approve"')},{" "}
           {code('"edit"')} and {code('"clear"')} — index 0 at the first threshold, index 1 at the longer drag. An
           action a card cannot offer drops out and the ladder closes up: “Two stages” on an approved string is just
           “Mark unreviewed” toward the end, on an unreviewed one just “Approve”. {code('"clear"')} needs{" "}
           {code("onClear")} and answers with Undo, which stores the verdict again. {code("true")} is{" "}
           {code('{ end: ["approve"], start: ["edit"] }')}; there is no separate “needs a change”, because{" "}
           {code('"edit"')} already is one — it opens the editor with the cursor in the wording. On a wide screen
-          the binding is the row&apos;s actions column too (0.46): Approve where the string can take it, then the
+          the binding is the row&apos;s actions column too: Approve where the string can take it, then the
           bound actions — so {code('"clear"')} is a button there, not a swipe only; under the write lock they stay
           and say why.
         </Note>

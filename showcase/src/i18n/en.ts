@@ -191,7 +191,7 @@ export const en: Dictionary = {
       title: "Colour roles",
       short: "Roles",
       blurb:
-        "The semantic layer over the palette: every fill with the foreground it names, each tone as text, wash and line, the strong lines, the well on a card, the hover rule, the role utilities that replace text-[var(--…)], and the test that catches a variable nothing declares.",
+        "The semantic layer over the palette: which tone a status takes, every fill with the foreground it names, each tone as text, wash and line, the strong lines, the well on a card, the hover rule, the role utilities that replace text-[var(--…)], and the test that catches a variable nothing declares.",
     },
     "text-size": {
       title: "Text size & contrast",
@@ -215,7 +215,7 @@ export const en: Dictionary = {
       title: "Kit review (live)",
       short: "Kit review",
       blurb:
-        "The kit's own words in every language keksdose ships, reviewed against keksdose's review database: the same kit. rows and verdicts as its Translations page, opened from there with a review token.",
+        "The kit's own words in every language the configured app ships, reviewed against that app's review database: the same kit. rows and verdicts as its Translations page, opened from there with a review token.",
     },
     inputs: {
       title: "Inputs",
@@ -755,7 +755,7 @@ export const en: Dictionary = {
       "review the kit's translations",
       "approve a translation",
       "wake a sleeping server",
-      "open the review from keksdose",
+      "open the review from the app",
       "export translation corrections",
     ],
     inputs: [

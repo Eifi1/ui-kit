@@ -1088,7 +1088,7 @@ export function TranslationReviewPanel({
                         el.focus();
                       }
                     }}
-                    variant="primary"
+                    variant="default"
                     size="sm"
                     commit={COMMIT_EXCEPT_BILLING}
                     aria-describedby={questionId}
@@ -1204,7 +1204,7 @@ export function TranslationReviewPanel({
       {editable && (
         <BulkActionBar count={selectedRows.length} onClear={() => setSelected(new Set())}>
           <Button
-            variant="primary"
+            variant="default"
             size="sm"
             commit={COMMIT_EXCEPT_BILLING}
             pending={isQueued("bulk-approve")}

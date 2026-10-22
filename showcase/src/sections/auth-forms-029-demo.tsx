@@ -71,7 +71,7 @@ function Frame({ height, children }: { height: string; children: ReactNode }) {
 
 const PASSWORD = "correct horse";
 
-/** Pretend `/auth/login`: keksdose's three answers, mapped to the kit's. */
+/** Pretend `/auth/login`: an app's three answers, mapped to the kit's. */
 async function pretendLogin(email: string, password: string): Promise<SignInAnswer> {
   await beat(700);
   // A deactivated account answers exactly like a wrong password (§2.10).
@@ -105,7 +105,7 @@ export function SignInForm029Demo() {
   return (
     <Example
       label="SignInForm — credentials, passkey, second factor, a new password"
-      hint="callbacks only; the pretend server answers with keksdose's shapes"
+      hint="callbacks only; the pretend server answers with the contract's shapes"
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Button
@@ -176,7 +176,7 @@ export function SignInForm029Demo() {
         Every password is {code(`"${PASSWORD}"`)}. {code("ada@example.com")} signs in; {code("grace@example.com")} gets
         the second factor (code {code("123456")}; {code("000000")} plays an expired challenge, which goes back to the
         credentials); {code("alan@example.com")} must choose a new password, and the challenge&apos;s{" "}
-        {code("extra.encrypted")} shows keksdose&apos;s note through {code("passwordChangeContent")};{" "}
+        {code("extra.encrypted")} shows the app&apos;s note through {code("passwordChangeContent")};{" "}
         {code("lin@example.com")} is deactivated and gets the same {code("invalid_credentials")} as a wrong password,
         with the two hints under it — {code("deactivatedContact")} and the {code("emailTag")} one. The passkey button
         asks for no email. In an app, {code("onSubmit")} maps {code("{requires_2fa, challenge_token}")} to{" "}
@@ -200,7 +200,7 @@ export function RegisterForm029Demo() {
   const log = useCallback((line: string) => setLines((l) => [...l.slice(-5), line]), []);
   const link = usePreviewLink(log);
 
-  // kastlan: Company is required unless an invitation names the company (§2.11).
+  // An app's own field: Company is required unless an invitation names the company (§2.11).
   const companyRequired = company && !invited;
 
   const submit = async (values: RegisterValues) => {
@@ -227,7 +227,7 @@ export function RegisterForm029Demo() {
           }}
         />
         <Switch
-          label="kastlan's Company field"
+          label="An app's Company field"
           description="appFields + appFieldsComplete"
           checked={company}
           onCheckedChange={setCompany}
@@ -287,7 +287,7 @@ export function RegisterForm029Demo() {
         Type an address and the form offers {code("you+exampleapp@…")} as one click — never applied on its own (§4.5).
         {code("taken@example.com")} answers {code("email_taken")} under the field; {code("closed@example.com")} answers{" "}
         {code("registration_closed")} above the button. With an invitation the address is fixed, the invitee may still
-        take its tagged form and go back, and kastlan&apos;s Company disappears: the invitation names the company. The
+        take its tagged form and go back, and the app&apos;s Company field disappears: the invitation names the company. The
         language field is controlled by the app ({code("locale")} + {code("onLocaleChange")}), so it can be the
         app&apos;s own language switch; {code("languageField")} replaces it with the app&apos;s control.
       </Note>
@@ -326,7 +326,7 @@ export function CompleteName029Demo() {
       )}
       <Readout lines={lines} />
       <Note>
-        A keksdose or Kurvenschmiede account&apos;s old display name moved whole into the first name (§3.3); the app
+        An account&apos;s old display name moved whole into the first name (§3.3); the app
         shows this while {code("/auth/me")} answers {code("name_incomplete: true")}, never for a demo user. A last name
         of {code("Fail")} plays a failed save: the dialog stays open with the names.
       </Note>
@@ -343,9 +343,9 @@ export function AuthHelpers029Demo() {
     <Example label="taggedEmail and isAuthError" hint="for an app's own fields and its own error handling">
       <OutTable
         rows={[
-          ['taggedEmail("ada@example.com", "kastlan")', String(taggedEmail("ada@example.com", "kastlan"))],
-          ['taggedEmail("ada+bank@example.com", "kastlan")', String(taggedEmail("ada+bank@example.com", "kastlan"))],
-          ['taggedEmail("ada@example", "kastlan")', String(taggedEmail("ada@example", "kastlan"))],
+          ['taggedEmail("ada@example.com", "my-app")', String(taggedEmail("ada@example.com", "my-app"))],
+          ['taggedEmail("ada+bank@example.com", "my-app")', String(taggedEmail("ada+bank@example.com", "my-app"))],
+          ['taggedEmail("ada@example", "my-app")', String(taggedEmail("ada@example", "my-app"))],
           ['isAuthError(axios 401 {code: "invalid_credentials"})', String(isAuthError(unauthorised))],
           ['isAuthError(axios 401 …, "email_taken")', String(isAuthError(unauthorised, "email_taken"))],
           ['authErrorCode(axios "ERR_NETWORK")', String(authErrorCode(network))],

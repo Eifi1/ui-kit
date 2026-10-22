@@ -604,14 +604,14 @@ function ErrorFallback({
   const errorLine = details.message ? `${details.name}: ${details.message}` : details.name;
 
   const reloadButton = (
-    <Button key="reload" variant={mode === "error" ? "secondary" : "primary"} onClick={reloadPage}>
+    <Button key="reload" variant={mode === "error" ? "secondary" : "default"} onClick={reloadPage}>
       {text.reload}
     </Button>
   );
   // Not after a chunk failure: `React.lazy` keeps the rejected import, so Try again
   // could only throw the same error again.
   const retryButton = chunk ? null : (
-    <Button key="retry" variant={mode === "error" ? "primary" : "secondary"} onClick={reset}>
+    <Button key="retry" variant={mode === "error" ? "default" : "secondary"} onClick={reset}>
       {text.retry}
     </Button>
   );

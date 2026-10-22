@@ -170,7 +170,7 @@ export function AdminWayIn042Demo() {
         counts that wait on this admin — here To triage and the app's own seeds,
         never invitations or users. A menu built from {code("HoverMenu")}{" "}
         children takes {code("AdminMenuRow")}, the same row.{" "}
-        {code("useAdminMenuEntry")} (0.43) is{" "}
+        {code("useAdminMenuEntry")} is{" "}
         {code("adminMenuEntry({ labels: useAdminAreaLabels() })")}: the plain
         function reads no provider, so without {code("labels")} it is English in
         every language.
@@ -201,7 +201,7 @@ function AdminFollowUps045() {
     <>
       <Example
         label="AdminWaitingBadge — the count on an IconButton"
-        hint="kastlan's top-bar platform button: deletion requests waiting on the operator (§9.3)"
+        hint="a top-bar platform button: deletion requests waiting on the operator (§9.3)"
       >
         <ToggleGroup<string>
           aria-label="Waiting"
@@ -225,7 +225,7 @@ function AdminFollowUps045() {
           The row&apos;s pill on its own: nothing for 0, &ldquo;99+&rdquo; past 99. On an{" "}
           {code("IconButton")} the badge is decorative, so the button&apos;s name carries the
           count: {code("adminArea.waitingLabel(\"Platform\", n)")} reads &ldquo;
-          {area.waitingLabel("Platform", 2)}&rdquo;. Since 0.45.
+          {area.waitingLabel("Platform", 2)}&rdquo;.
         </Note>
       </Example>
       <Example
@@ -254,7 +254,7 @@ function AdminFollowUps045() {
           The result line reads {code("mail_backend")} first: with {code("console")} it says
           nothing was sent whatever {code("sent")} is, since every console path answers{" "}
           {code("true")}. The address is masked; a 429 is the limiter&apos;s line (server-kit&apos;s{" "}
-          {code("MAIL_TEST_LIMIT")}, 3 per 10 minutes). Nothing is sent from this page. Since 0.45.
+          {code("MAIL_TEST_LIMIT")}, 3 per 10 minutes). Nothing is sent from this page.
         </Note>
       </Example>
     </>
@@ -385,11 +385,11 @@ export function AdminArea042Demo() {
         deletion requests to act on — and each tile is a link to where the work
         is. The Tools list sits under the sidebar ({code("sidebarFooter")}) and
         in the phone footer; the feedback inbox is not in it, the top bar
-        reaches it. Since 0.43 the Overview shows with no entry, an extra tile
+        reaches it. The Overview shows with no entry, an extra tile
         without {code("href")} is a quiet count, a failed answer shows{" "}
         {code("error")} with &ldquo;Try again&rdquo;, and{" "}
         {code("adminSectionOrder(own, { leaveOut })")} gives the ids alone:{" "}
-        {order.join(", ")}. Since 0.48 a group&apos;s {code("badge")} sits on its row in the
+        {order.join(", ")}. A group&apos;s {code("badge")} sits on its row in the
         sidebar and the phone list — here {code("badges: { overview: <AdminWaitingBadge /> }")},
         so the account menu&apos;s count leads to the section that holds the work.
       </Note>

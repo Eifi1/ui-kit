@@ -190,7 +190,7 @@ const ADDRESSES = [
 ];
 
 /** The search-then-act specimen's lock: a row in Bern is listed but `disabled` —
- *  keksdose's write-locked result, which must be seen and must not be taken. */
+ *  a write-locked result, which must be seen and must not be taken. */
 const lockedRow = (o: ComboOption<string>): ComboOption<string> =>
   o.label.includes("Bern") ? { ...o, disabled: true, sublabel: "Read-only in this demo" } : o;
 
@@ -280,7 +280,7 @@ function AutocompleteDemo() {
 
       <Example
         label="Autocomplete — free text"
-        hint="the text is the value; a suggestion completes it (kastlan's address field)"
+        hint="the text is the value; a suggestion completes it (an address field)"
       >
         <Stage>
           <Autocomplete
@@ -362,7 +362,7 @@ function AutocompleteDemo() {
           <>
             <code>fillOnSelect={"{false}"}</code>, <code>size=&quot;sm&quot;</code>,{" "}
             <code>disabled</code> rows and <code>open</code> held shut while a pick is confirmed
-            (keksdose&apos;s address search)
+            (an address search)
           </>
         }
       >
@@ -448,7 +448,7 @@ function AutocompleteDemo() {
 
       <Example
         label="Combobox — error and disabled"
-        hint="free text over existing values, the datalist replacement (lenkbank's scope fields)"
+        hint="free text over existing values, the datalist replacement (scope fields)"
       >
         <Stage>
           <Combobox
@@ -476,8 +476,8 @@ function AutocompleteDemo() {
         </Stage>
         <p className="mt-2 text-xs text-secondary">
           The disabled Project field is dimmed as a whole, label and chevron included, the way a
-          disabled <code className="font-mono">EntityCombobox</code> is — before 0.7.0 only the
-          grey fill changed, and a disabled combobox read like a filled-in one beside it. Its
+          disabled <code className="font-mono">EntityCombobox</code> is, so it never reads like a
+          filled-in one beside it. Its
           suggestion list, like every portalled combobox list, carries the field&apos;s{" "}
           <code className="font-mono">dir</code>.
         </p>
@@ -488,7 +488,7 @@ function AutocompleteDemo() {
 
 /* ── since 0.12 ─────────────────────────────────────────────────────────── */
 
-/** Proposals that follow the UI language, as keksdose's category field has them. */
+/** Proposals that follow the UI language, as a category field has them. */
 const CATEGORIES = ["Groceries", "Rent", "Transport", "Leisure", "Utilities", "Insurance", "Gifts", "Coffee"];
 
 const TRANSLATED = new Set(["Groceries", "Rent", "Transport", "Leisure", "Utilities", "Insurance"]);
@@ -541,7 +541,7 @@ function ComboboxClipsDemo() {
       <div className="mt-3">
         <Note>
           The list is a scroll container ({code("max-height")} + {code("overflow-y: auto")}), and a
-          bubble drawn inside it is cut off at its edge. Since 0.12 the listbox carries {code("data-clips")}
+          bubble drawn inside it is cut off at its edge. The listbox carries {code("data-clips")}
           (the kit's {code("CLIPS_ATTRIBUTE")}), which the Tooltip's auto-portal reads as well as the
           computed overflow — so the bubble goes to {code("document.body")}, above the panel. The marker
           matters most under jsdom, which computes no overflow: there a bubble left in the row became
@@ -549,7 +549,6 @@ function ComboboxClipsDemo() {
           same list is a {code("PickerSheet")}, whose scroller carries the marker too.
         </Note>
       </div>
-      <Note>Since 0.12.</Note>
     </Example>
   );
 }
@@ -569,7 +568,7 @@ function PickerHints022Demo() {
   const [address, setAddress] = useState("");
   const [filter, setFilter] = useState<(string | number)[]>([]);
   return (
-    <Example label="hint on the combobox family" hint="keksdose K4 — the same anatomy as Input and Select">
+    <Example label="hint on the combobox family" hint="the same anatomy as Input and Select">
       <div className="grid gap-4 sm:grid-cols-2">
         <Combobox
           label="Payee"
@@ -608,7 +607,6 @@ function PickerHints022Demo() {
           hint={<FieldHint label="Leave empty for all" />}
         />
       </div>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -696,18 +694,17 @@ function ComboboxFamilyLock023Demo() {
           lock&apos;s sentence in the kit Tooltip and on {code("aria-describedby")}; no list opens, the clear
           &quot;×&quot; is gone and nothing reaches {code("onChange")}. The three typed fields are{" "}
           {code("readOnly")} and swallow Enter. A picker inside a form with its own Save leaves {code("commit")}{" "}
-          off and stays live: the Save is the commit. {code("MultiEntityCombobox")} also takes {code("hint")} now,
-          like the rest of the family since 0.22.
+          off and stays live: the Save is the commit. {code("MultiEntityCombobox")} also takes {code("hint")},
+          like the rest of the family.
         </Note>
       </div>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }
 
 let nextId = 0;
 
-/** keksdose G9: "Create cash account" as the picker's last row, not a separate button. */
+/** "Create cash account" as the picker's last row, not a separate button. */
 function InlineCreateRow023Demo() {
   const [options, setOptions] = useState<ComboOption<string>[]>(ACCOUNTS_023.filter((a) => a.group === "Cash"));
   const [value, setValue] = useState<string | null>(null);
@@ -746,7 +743,6 @@ function InlineCreateRow023Demo() {
           and stays live, minting a record is the write.
         </Note>
       </div>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }
@@ -756,7 +752,7 @@ function InlineCreateRow023Demo() {
 /**
  * 0.24 for the Combobox family. Two demos, two pages:
  *
- *  - {@link RhfInlineEntity024Demo} (Forms): kastlan's budget line item — an inline
+ *  - {@link RhfInlineEntity024Demo} (Forms): a budget line item — an inline
  *    account picker bound in one line, and a failed Save lands focus in it;
  *  - {@link AutocompleteHint024Demo} (Comboboxes): an unlabelled Autocomplete whose "?"
  *    comes and goes while you type, and the field keeps the caret.
@@ -839,10 +835,8 @@ export function RhfInlineEntity024Demo() {
         the message under it; the hint is the form&apos;s description, so the picker&apos;s box never changes. The
         form&apos;s label names the input and titles the phone sheet. {code("commit")}, {code("disabledReason")} and
         the create row ({code("onCreate")}, {code("createEmptyLabel")}, {code("createCommit")}) pass through — type
-        a name nothing matches to see it. Every Combobox-family member takes a {code("ref")} to its focusable control
-        since 0.24.
+        a name nothing matches to see it. Every Combobox-family member takes a {code("ref")} to its focusable control.
       </Note>
-      <Note>Since 0.24.</Note>
     </Example>
   );
 }
@@ -875,12 +869,11 @@ function AutocompleteHint024Demo() {
         />
       </div>
       <Note>
-        The family&apos;s rule since 0.22, on Autocomplete since 0.24: a field that is passed {code("hint")} at all —
-        even {code("undefined")} — keeps one box, so on an unlabelled field the end-edge row the &quot;?&quot; sits in
-        is there whether or not the &quot;?&quot; is. Before, the row came and went with it, the {code("<input>")}{" "}
-        was re-parented, and the first letter typed lost focus.
+        The family&apos;s rule, Autocomplete included: a field that is passed {code("hint")} at all — even{" "}
+        {code("undefined")} — keeps one box, so on an unlabelled field the end-edge row the &quot;?&quot; sits in is
+        there whether or not the &quot;?&quot; is. The {code("<input>")} is never re-parented, and the first letter
+        typed keeps focus.
       </Note>
-      <Note>Since 0.24.</Note>
     </Example>
   );
 }

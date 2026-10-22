@@ -446,7 +446,7 @@ function Multiple() {
         <code className="font-mono">maxAttachments</code>, default {DEFAULT_MAX_ATTACHMENTS}).
         Two pastes are two files: the second is named{" "}
         <code className="font-mono">pasted-2.png</code>, because a backend that stores by name
-        would otherwise keep only one of them — the loss keksdose reported (dev#578).
+        would otherwise keep only one of them.
       </Note>
     </div>
   );
@@ -502,7 +502,7 @@ function ProviderLabels() {
         <p className="text-xs font-medium text-secondary">
           The page&apos;s provider (this page&apos;s language)
         </p>
-        {/* No labels at all — legal since 0.7.0; the field reads `feedbackAttachment`. */}
+        {/* No labels at all; the field reads `feedbackAttachment`. */}
         <FeedbackAttachmentField
           value={plain}
           onChange={setPlain}
@@ -528,9 +528,9 @@ function ProviderLabels() {
       </div>
       <div className="md:col-span-2">
         <Note>
-          Before 0.7.0 <code className="font-mono">labels</code> was required and the two optional
-          keys fell back to hard-coded English, so a German app relying on its provider got
-          &ldquo;Capture screenshot&rdquo; under a German form. Switch this page&apos;s language:
+          <code className="font-mono">labels</code> is optional: the field reads its words, the two
+          optional keys included, from the provider, so a German app gets German under a German
+          form. Switch this page&apos;s language:
           the left field follows; the right one keeps the nested provider&apos;s German. The
           heading (<code className="font-mono">attachment</code>) is not in the namespace — a note
           editor wants none — so it stays a prop.
@@ -724,9 +724,8 @@ export function FeedbackAttachmentRefs022Demo() {
         Every way in — pick, paste, capture — is validated as in the File modes, then handed to {code("onUpload")}; a
         chip with a spinner stands in until it answers, and the ref joins {code("value")}. A rejection drops the chip and
         reports {code('onError("upload", error)')}. Removal goes by key ({code("onRemove")}). Uploads in flight count
-        against {code("max")}. keksdose K16 (the support chat&apos;s AttachmentPicker).
+        against {code("max")}.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -806,14 +805,12 @@ export function FeedbackDialogButtons025Demo() {
           attachmentButtonSize={LOOKS[look].size}
         />
         <Note>
-          FeedbackAttachmentField took {code("buttonVariant")} / {code("buttonSize")} in 0.24
-          (keksdose&apos;s support chat), but the dialog builds its field itself and passed neither.
-          It now takes {code("attachmentButtonVariant")} / {code("attachmentButtonSize")}, named like
-          its other attachment options ({code("attachmentAccept")}, {code("onAttachmentError")}),
-          in both {code("attachments")} modes. Left out, the buttons are secondary / md as before.
+          FeedbackAttachmentField takes {code("buttonVariant")} / {code("buttonSize")}; the dialog,
+          which builds its field itself, takes them as {code("attachmentButtonVariant")} /{" "}
+          {code("attachmentButtonSize")}, named like its other attachment options ({code("attachmentAccept")},{" "}
+          {code("onAttachmentError")}), in both {code("attachments")} modes. Left out, the buttons are secondary / md.
         </Note>
       </div>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }
@@ -898,7 +895,6 @@ export function FeedbackAttachment016Demo() {
         parent has not re-rendered yet. {code("<FeedbackDialog attachments=\"multiple\">")}{" "}
         heads the list with {code("attachmentList")}.
       </Note>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }
@@ -906,10 +902,10 @@ export function FeedbackAttachment016Demo() {
 /* ── since 0.23 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.23.0, from keksdose's 0.22 adoption report (the support chat): the attachment
- * field's refusals name the file and the limit (G5a), the field holds while a send is in
- * flight and, uploading on pick, takes the write lock (G5b), and the composer counts
- * against the server's limit as Textarea does (G6).
+ * 0.23.0, a support chat: the attachment
+ * field's refusals name the file and the limit, the field holds while a send is in
+ * flight and, uploading on pick, takes the write lock, and the composer counts
+ * against the server's limit as Textarea does.
  */
 
 const ACCEPT = ["image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf", "text/plain"];
@@ -971,16 +967,14 @@ export function FeedbackAttachment023Demo() {
         )}
       </div>
       <Note>
-        {code("onError")} now carries what was refused: {code("onError(kind, info)")} in the File modes,{" "}
-        {code("onError(kind, error, info)")} in {code("refs")} mode — the second place stays the upload&apos;s error, as
-        in 0.22. {code("info")} holds {code("file")}, {code("files")} (the surplus, for {code('"count"')}),{" "}
+        {code("onError")} carries what was refused: {code("onError(kind, info)")} in the File modes,{" "}
+        {code("onError(kind, error, info)")} in {code("refs")} mode — the second place is the upload&apos;s error. {code("info")} holds {code("file")}, {code("files")} (the surplus, for {code('"count"')}),{" "}
         {code("maxBytes")}, {code("accept")}, {code("max")} and a translated {code("message")} from the{" "}
         {code("filePicker")} labels FileButton uses: “photo.png” is larger than 200 kB. {code("disabled")} holds the field
         while a send is in flight — the chips stay, nothing is added or removed. {code("refs")} mode uploads on pick, so
         it is a commit: {code("disabledReason")} (or {code("commit")} under a locked WriteLockProvider) keeps the
-        buttons focusable and says why. keksdose G5a / G5b.
+        buttons focusable and says why.
       </Note>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }
@@ -989,8 +983,8 @@ export function FeedbackAttachment023Demo() {
 
 /**
  * 0.27's submit side of feedback (docs/feedback-harmonization.md §4.1, §4.2): the top-bar
- * menu, the wired dialog, the context box and the screenshot capture — what keksdose,
- * kastlan and Kurvenschmiede each built around the kit's dialog, once. Synthetic data
+ * menu, the wired dialog, the context box and the screenshot capture — what each app
+ * built around the kit's dialog, once. Synthetic data
  * only; nothing leaves the page.
  */
 
@@ -1026,7 +1020,7 @@ export function FeedbackSubmit027Demo() {
     version: "0.27.0",
   });
 
-  // keksdose's extra rows, as an app passes them: the help assistant and the support chat
+  // An app's extra rows, as it passes them: the help assistant and the support chat
   // with its unread count.
   const extraEntries: TopBarMenuEntry[] = [
     { kind: "link", key: "assistant", to: HERE, icon: <Sparkles className="size-4" />, label: "Help assistant" },
@@ -1094,7 +1088,7 @@ export function FeedbackSubmit027Demo() {
           <Note>
             {code("<FeedbackMenu onFile={feedback.open} isAdmin={…} />")} draws §4.1: Bug · Idea · Question · Other,
             a rule, the app&apos;s {code("extraEntries")}, then the list links: {code("Feedback discussion")} with{" "}
-            {code("publicHref")}, {code("My feedback")} for everyone and {code("Feedback inbox")} for an admin (0.40) —
+            {code("publicHref")}, {code("My feedback")} for everyone and {code("Feedback inbox")} for an admin —
             never a Crash row. {code("useFeedbackSubmit")} takes the
             app&apos;s {code("upload(file) → url")} and {code("create(payload)")} and owns the rest: multiple attachments
             (one screenshot + 5 files, images/PDF/text, 10 MB), the capture, the context box, uploads before the create,
@@ -1102,7 +1096,6 @@ export function FeedbackSubmit027Demo() {
             {code("detail")} instead of the generic failure.
           </Note>
         </div>
-        <Note>Since 0.27.</Note>
       </Example>
 
       <Example
@@ -1124,7 +1117,6 @@ export function FeedbackSubmit027Demo() {
           {code("origin")} and {code("environment")} are never withheld — which copy of the app is not personal, and
           triage asks it first.
         </Note>
-        <Note>Since 0.27.</Note>
       </Example>
     </>
   );

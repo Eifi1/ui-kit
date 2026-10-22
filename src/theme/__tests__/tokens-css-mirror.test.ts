@@ -100,7 +100,7 @@ describe("tokens.css mirrors DEFAULT_PRESET", () => {
     // failure mode of the mirror it is guarding.
     expect(Object.keys(declarationsUnder(":root")).length).toBeGreaterThan(20);
     expect(Object.keys(declarationsUnder(".dark")).length).toBeGreaterThan(20);
-    expect(Object.keys(expectedFrom(DEFAULT_PRESET.light))).toHaveLength(23);
+    expect(Object.keys(expectedFrom(DEFAULT_PRESET.light))).toHaveLength(22);
   });
 });
 

@@ -14,6 +14,7 @@ import {
 import { Example, Note, Stage, code } from "../lib/section";
 import { CheckboxGroup } from "../../../src/components/checkbox-group";
 import { Coffee, Home, ShoppingCart, Star } from "lucide-react";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * CHOICES — checkbox, switch and slider.
@@ -29,8 +30,8 @@ const ROWS = ["Groceries", "Rent", "Transport"] as const;
 /** The measured speeds a gear set was swept at — the stops SpeedSlider marks. */
 const MEASURED = [20, 50, 80, 110];
 
-const oneDecimal = new Intl.NumberFormat("en", { maximumFractionDigits: 1 });
-const twoDecimals = new Intl.NumberFormat("en", { maximumFractionDigits: 2 });
+const oneDecimal = numberFormat("en", { maximumFractionDigits: 1 });
+const twoDecimals = numberFormat("en", { maximumFractionDigits: 2 });
 
 export function Choices() {
   const [stop, setStop] = useState(true);
@@ -147,7 +148,7 @@ export function Choices() {
         label="Checkbox — on a field's baseline"
         hint={<code className="font-mono">className=&quot;self-end pb-2&quot;</code>}
       >
-        {/* Lenkbank's CheckboxField shape: a bare box has no floating label, so in a
+        {/* A CheckboxField shape: a bare box has no floating label, so in a
             grid of fields it has to drop to the bottom of its cell to sit on the row. */}
         <Stage>
           <div data-stage="wide" className="mx-auto grid max-w-2xl grid-cols-2 gap-3">
@@ -413,7 +414,7 @@ export function CheckboxGroup022Demo() {
   const [locales, setLocales] = useState<string[]>(["de", "fr"]);
   const [layout, setLayout] = useState<string[]>([]);
   return (
-    <Example label="CheckboxGroup — a reviewer's languages" hint="Kurvenschmiede's reviewer dialog, for every app">
+    <Example label="CheckboxGroup — a reviewer's languages" hint="a reviewer dialog, for every app">
       <div className="flex flex-col gap-6">
         <CheckboxGroup
           legend="Languages this reviewer may approve"
@@ -443,7 +444,6 @@ export function CheckboxGroup022Demo() {
         value no option carries is kept. {code("required")} puts the star on the legend and the native{" "}
         {code("required")} on every box while none is ticked.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -497,7 +497,6 @@ export function Choices022Demo() {
           keys still walk them — and the reason shows under the row.
         </Note>
       </div>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }

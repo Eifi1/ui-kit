@@ -3,7 +3,7 @@ import { Button, Card, CardAction, CardContent, CardDescription, CardHeader, Car
 import { Example, Note, code } from "../lib/section";
 
 /**
- * The 0.17 Card props from keksdose's Q3: `density="compact"` (the small settings
+ * The 0.17 Card props: `density="compact"` (the small settings
  * card's title / description / header-gap classes, set once on the Card) and
  * `toneFill` (the tone's wash, opt-in, on top of either frame strength).
  */

@@ -170,7 +170,7 @@ function SyncChip() {
   return (
     <Example
       label="IconButton — glyphSize, badge and disabledStyle"
-      hint="keksdose's sync chip: a 24px round chip round a 20px cloud, a check on its corner"
+      hint="a sync chip: a 24px round chip round a 20px cloud, a check on its corner"
     >
       <Row className="mb-3">
         <span className="text-xs text-muted">state</span>

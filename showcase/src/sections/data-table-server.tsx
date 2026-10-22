@@ -43,6 +43,7 @@ import {
   useCallbackLog,
 } from "./data-table-fixture";
 import type { Status, TableRow } from "./data-table-fixture";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * DATA TABLE: SERVER, URL & PHONE — the three shapes in which the table does not own
@@ -477,10 +478,10 @@ function PhoneTable() {
           <code className="font-mono">start</code>, so a card swipes right for Done and left for
           Archive — and with <em>right-to-left</em> ticked the same definition swipes left for
           Done and right for Archive (<code className="font-mono">left</code> /{" "}
-          <code className="font-mono">right</code> still exist for a truly physical side).
+          <code className="font-mono">right</code> exist for a truly physical side).
           Archived and expanded cards do not move. On a wide screen the same two actions are the
           row&apos;s last column, derived from the same plan (<code className="font-mono">desktopSwipeActions</code>,
-          on by default since 0.46; <code className="font-mono">false</code> where the row has its own buttons,{" "}
+          on by default; <code className="font-mono">false</code> where the row has its own buttons,{" "}
           <code className="font-mono">{"{ omit }"}</code> to leave one out by its{" "}
           <code className="font-mono">id</code>). With the custom
           card unchecked you get the default body: the <code className="font-mono">mobilePrimary</code>{" "}
@@ -527,7 +528,7 @@ const UNITS: Unit[] = Array.from({ length: 23 }, (_, i) => {
   };
 });
 
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 const UNIT_COLUMNS: DataTableColumn<Unit>[] = [
   {
@@ -563,7 +564,8 @@ const UNIT_COLUMNS: DataTableColumn<Unit>[] = [
   {
     key: "free",
     header: "Free from",
-    cell: (r) => <span className="tabular-nums">{r.free ?? "—"}</span>,
+    // "—" for no date: the table shows it, the phone card leaves the field out.
+    cell: (r) => (r.free ? <span className="tabular-nums">{r.free}</span> : "—"),
     sortBy: (r) => r.free,
     filter: dateFilter((r) => r.free),
     className: "whitespace-nowrap",
@@ -709,7 +711,6 @@ export function DataTableUrlFiltersDemo() {
           {code("units.q")}, and the two tables no longer share a sort or a page.
         </Note>
       </div>
-      <Note>Since 0.12.</Note>
     </Example>
   );
 }

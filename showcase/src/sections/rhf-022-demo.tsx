@@ -6,7 +6,7 @@ import { Form, RhfDateRangePicker, RhfTimeInput, RhfToggleGroup } from "@eifi1/u
 import { Example, Note, code, READOUT_PRE } from "../lib/section";
 
 /**
- * 0.22 on the Forms page (kastlan 4): the three controls kastlan's forms still wired
+ * 0.22 on the Forms page: the three controls an app's forms still wired
  * by hand through RhfField's render — a meeting time, a period stored as two fields,
  * and a segmented choice — bound in one line each.
  */

@@ -14,7 +14,7 @@ import { WriteLockProvider } from "../../../src/components/write-lock";
 import { Example, Note, OutTable, READOUT, beat } from "../lib/section";
 
 /**
- * 0.18.0 — `ShareCard` / `ShareDialog`: Kurvenschmiede's share dialog and keksdose's
+ * 0.18.0 — `ShareCard` / `ShareDialog`: a share dialog and a
  * budget share card on one presentational component. The "server" here is a timeout;
  * any address starting with `fail` is refused, so the error box can be seen.
  */
@@ -143,7 +143,7 @@ function DialogExample() {
   const [open, setOpen] = useState(false);
   const shares = useFakeShares([{ id: 4, name: "Lena Fischer", email: "lena@example.com", role: "editor" }], []);
   return (
-    <Example label="ShareDialog — the same panel in a dialog" hint="Kurvenschmiede's form; commits as it goes">
+    <Example label="ShareDialog — the same panel in a dialog" hint="a dialog form; commits as it goes">
       <Button onClick={() => setOpen(true)}>Share…</Button>
       <ShareDialog
         open={open}
@@ -151,7 +151,7 @@ function DialogExample() {
         description="Front wing, rev. A"
         roles={ROLES.slice(0, 2)}
         candidates={CANDIDATES}
-        // eslint-disable-next-line jsx-a11y/no-autofocus -- a dialog that exists to add somebody, as Kurvenschmiede's does.
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- a dialog that exists to add somebody.
         autoFocus
         {...shares}
         caption={(c) => (c ? null : "Only an admin's grant also lets the address register.")}

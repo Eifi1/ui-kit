@@ -187,7 +187,8 @@ describe("tokens.css, measured in every shipped preset", () => {
   });
 
   it("draws the strong lines and the field-sync marks at 3:1 against every surface", () => {
-    const lines = ["--danger-border-strong", "--warning-border-strong", "--status-synced", "--status-pending", "--status-edited", "--status-error"];
+    // 0.49: the chart inks — an edge, a baseline, an "other" slice — are lines too.
+    const lines = ["--danger-border-strong", "--warning-border-strong", "--status-synced", "--status-pending", "--status-edited", "--status-error", "--chart-ink", "--chart-muted"];
     expect(
       audit((t, fail) => {
         for (const line of lines) {

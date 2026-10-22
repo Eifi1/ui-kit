@@ -81,9 +81,9 @@ describe("StatTile", () => {
         ]}
       />,
     );
-    expect(screen.getByText("-50")).toHaveClass("text-money-expense");
+    expect(screen.getByText("\u221250")).toHaveClass("text-money-expense");
     expect(screen.getByText("120")).toHaveClass("text-money-income");
-    expect(screen.getByText("-30")).toHaveClass("text-money-expense");
+    expect(screen.getByText("\u221230")).toHaveClass("text-money-expense");
     expect(screen.getByText("AUG").tagName).toBe("DT");
   });
 
@@ -286,7 +286,7 @@ describe("StatTile — the provider's router link", () => {
 });
 
 describe("StatTile history rows", () => {
-  it("keeps a row's figure on its label's line: the label wraps, the figure never moves", () => {
+  it("keeps a row's figure on its label's line: the label wraps between its words", () => {
     render(
       <StatTile
         label="Net"
@@ -299,8 +299,20 @@ describe("StatTile history rows", () => {
     );
     const label = screen.getByText("AUG (signed)");
     const row = label.parentElement!;
-    expect(row).not.toHaveClass("flex-wrap");
-    expect(label).toHaveClass("min-w-0");
-    expect(row.querySelector("dd")).toHaveClass("shrink-0", "whitespace-nowrap");
+    // The label breaks between its words and never below its longest word (a flex
+    // item's own min-content floor, so no `min-w-0`); only a word that cannot share
+    // the line with the figure sends the figure down, still end-aligned.
+    expect(row).toHaveClass("flex-wrap");
+    expect(label).not.toHaveClass("min-w-0");
+    expect(row.querySelector("dd")).toHaveClass("shrink-0", "whitespace-nowrap", "ms-auto");
+  });
+
+  it("never breaks a label mid-word — 'PROJECT|ED' in a 160px KPI tile at 360px (0.49)", () => {
+    render(<StatTile label="Spent" value={420} projection={{ label: "Projected", value: 1850.75 }} />);
+    const label = screen.getByText("Projected");
+    // `anywhere` let the browser cut a word at any letter to keep the figure beside it.
+    expect(label.className).not.toMatch(/overflow-wrap:anywhere/);
+    expect(label).toHaveClass("[overflow-wrap:break-word]", "max-w-full");
+    expect(label.parentElement).toHaveClass("flex-wrap");
   });
 });

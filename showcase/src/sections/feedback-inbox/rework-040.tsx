@@ -171,7 +171,6 @@ export function FeedbackRework040Demo() {
         offers Rework requested like every status. The thread below draws the same entries for the author
         ({code("isAuthor")}): at the reading end, with the file.
       </Note>
-      <Note>Since 0.40.</Note>
     </Example>
   );
 }
@@ -222,7 +221,6 @@ export function FeedbackMenu040Demo() {
         everyone, admins included, and <strong>Feedback inbox</strong> for an admin. Keys {code("all-feedback")},{" "}
         {code("my-feedback")}, {code("view-feedback")} and the routes are unchanged.
       </Note>
-      <Note>Since 0.40.</Note>
     </Example>
   );
 }

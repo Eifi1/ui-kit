@@ -4,9 +4,9 @@ import type { KitLanguageCode } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
- * 0.22.0 account fields: the verification-code field (kastlan 3, keksdose K8), the
- * strength meter on PasswordSetting (kastlan), the language form field
- * (Kurvenschmiede) and the now-public TileRadioGroup. Every value is synthetic.
+ * 0.22.0 account fields: the verification-code field, the
+ * strength meter on PasswordSetting, the language form field
+ * and the now-public TileRadioGroup. Every value is synthetic.
  */
 
 /* ── OneTimeCodeInput — page: auth-account ──────────────────────────────── */
@@ -48,7 +48,7 @@ export function OneTimeCode022Demo() {
             error={error}
             readOnlyUntilFocus={guard}
           />
-          <Button type="submit" variant="brand" disabled={value.length !== 6}>
+          <Button type="submit" variant="accent" disabled={value.length !== 6}>
             Verify
           </Button>
         </form>
@@ -73,7 +73,7 @@ export function OneTimeCode022Demo() {
   );
 }
 
-/** Unlabelled, named by the prompt above it — kastlan's login shape. */
+/** Unlabelled, named by the prompt above it — a login shape. */
 export function OneTimeCodeUnlabelled022Demo() {
   const [value, setValue] = useState("");
   return (
@@ -217,7 +217,7 @@ export function TileRadioGroup022Demo() {
       </div>
       <div className="mt-3 space-y-2">
         <Note>
-          The machinery under SwatchPicker and IconPicker, public since 0.22: one tab stop, arrows to move and choose,
+          The machinery under SwatchPicker and IconPicker, public: one tab stop, arrows to move and choose,
           a bubble with each tile&apos;s name. It draws the tiles only — the {code('role="radiogroup"')} element and its
           name are the caller&apos;s. For an option that has to be read (a plan with a price and features), use{" "}
           {code('ChoiceCardGroup type="radio"')} instead.

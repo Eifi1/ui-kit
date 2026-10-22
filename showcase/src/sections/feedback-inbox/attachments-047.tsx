@@ -11,7 +11,7 @@ import type {
 import { Example, Note, code } from "../../lib/section";
 
 /**
- * Round 0.47 (docs/feedback-harmonization.md §12; keksdose run 82 R1, live #447): the
+ * Round 0.47 (docs/feedback-harmonization.md §12): the
  * admin's reply composer and the comment box take one file as the rework note does —
  * pasted from the clipboard, captured or picked — and every entry's and comment's
  * picture is drawn inline. The upload and the authenticated GET are faked in memory;
@@ -185,13 +185,12 @@ export function FeedbackAttachments047Demo() {
         note's one file: pasted from the clipboard into the box, captured ({code("onCaptureScreenshot")}) or picked,
         the contract's types and 10 MB. It is uploaded first through {code("onUpload")}; its URL is{" "}
         {code("onReply")}'s third argument and the reply body's {code("attachment_url")} (server-kit 0.18). Off by
-        default: {code("onUpload")} alone stays the rework's, so a bump never shows a file field an{" "}
+        default: {code("onUpload")} alone stays the rework's, so an app never shows a file field an{" "}
         {code("onReply(body, status)")} would drop. The comment box does the same with{" "}
         {code("onComment(body, attachmentUrl)")}. A picture — a reply's, a rework's, a comment's — is drawn inline
         through the app's {code("fetcher")} ({code("FeedbackEntryFile")}), a tap opens it full size; any other file is
         a download. The Attachment section keeps the report's own files.
       </Note>
-      <Note>Since 0.47.</Note>
     </Example>
   );
 }

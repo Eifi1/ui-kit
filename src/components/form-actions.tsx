@@ -204,7 +204,7 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * allows (the account's own settings, docs/billing-harmonization.md §12.36).
    */
   commit?: CommitScope;
-  /** The save button's variant. Default `brand`; `danger` for a save that destroys
+  /** The save button's variant. Default `accent`; `danger` for a save that destroys
    *  (kastlan's `destructive` flag on its own FormActions). */
   submitVariant?: ButtonVariant;
   /**
@@ -371,7 +371,7 @@ export function FormActions({
   submitDisabled = false,
   submitDisabledReason,
   commit = false,
-  submitVariant = "brand",
+  submitVariant = "accent",
   cancelVariant = "secondary",
   size = "md",
   destructive,

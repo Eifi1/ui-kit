@@ -66,7 +66,6 @@ function FeedbackNoteButtons025Demo() {
           field&apos;s {code("buttonVariant")} / {code("buttonSize")}. Left out, nothing changes.
         </Note>
       </div>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }
@@ -157,7 +156,6 @@ function FeedbackRecord027Demo() {
           app drops its {code("STATUS_LABEL")} map. {code("useFeedbackStatusUndo(update.mutate)")} wraps one status
           PATCH in the toast trio; the table, the row detail and the phone swipes all go through it.
         </Note>
-        <Note>Since 0.27.</Note>
       </Example>
       <Example label="The body's rework rounds" hint="appendRework writes them, reworkCount counts them, splitDescription keeps them out of the editor">
         <div className="grid gap-2 text-xs sm:grid-cols-2">
@@ -174,7 +172,6 @@ function FeedbackRecord027Demo() {
             </div>
           </div>
         </div>
-        <Note>Since 0.27.</Note>
       </Example>
     </>
   );

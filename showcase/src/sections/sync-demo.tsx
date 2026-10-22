@@ -86,7 +86,7 @@ function useDemoEngine(): { db: SyncDb; engine: SyncEngine; setServer: (s: Serve
 function EngineDemo() {
   const demo = useDemoEngine();
   const shared = isSharedComputer();
-  // kastlan's recipe: no engine on a computer marked shared (D15).
+  // The recipe: no engine on a computer marked shared (D15).
   useSyncWorker(demo && !shared ? demo.engine : null);
   const { status, onSync } = useSyncStatus(demo?.engine ?? null);
   const notes = useSyncQuery(demo?.db ?? null, (db) => db.rows.where("entity").equals("notes").count(), []);
@@ -159,7 +159,7 @@ const RECIPE = `import { isSharedComputer } from "@eifi1/ui-kit/offline";
 import { createSyncDb, createSyncEngine, useSyncStatus, useSyncWorker } from "@eifi1/ui-kit/sync";
 
 // One database and one engine per account and company (D15).
-const db = createSyncDb(\`kastlan-handover-\${user}-\${company}\`, {
+const db = createSyncDb(\`my-app-handover-\${user}-\${company}\`, {
   extraStores: { photos: "id, roomId, status" },
   upgrades: [{ version: 2, upgrade: (tx) => tx.table("outbox").toCollection().modify({ scope: "handover" }) }],
 });
@@ -182,7 +182,7 @@ export function SyncDemo() {
   return (
     <>
       <EngineDemo />
-      <Example label="The wiring — kastlan's handover copy" hint="dexie is an optional peer of @eifi1/ui-kit/sync only">
+      <Example label="The wiring — a handover copy" hint="dexie is an optional peer of @eifi1/ui-kit/sync only">
         <pre className={READOUT_PRE}>{RECIPE}</pre>
         <Note>
           The leaf utilities {code("stampAfter")}, {code("isOfflineError")}, {code("readLocalFirst")} and{" "}

@@ -5,6 +5,7 @@ import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale, type LabelOverride }
 import { toneTextClass } from "./signed-amount";
 import type { TextTone } from "./signed-amount";
 import { DEFAULT_PROGRESS_BAR_LABELS } from "./progress-bar-labels";
+import { formatWithMinus } from "../lib/minus";
 
 /** The words a progress bar adds of its own. */
 export interface ProgressBarLabels {
@@ -57,6 +58,7 @@ const TRACK_HEIGHT: Record<ProgressBarSize, string> = { sm: "h-1", slim: "h-1.5"
 
 // A segment with no tone of its own takes the next categorical chart colour, so a
 // stacked bar of unnamed parts is still a set of tellable parts rather than one fill.
+// Eight, cycled like `paletteFor` (0.49): `--chart-9` only repeats slot 1.
 const SERIES_FILL = [
   "bg-[var(--chart-1)]",
   "bg-[var(--chart-2)]",
@@ -66,7 +68,6 @@ const SERIES_FILL = [
   "bg-[var(--chart-6)]",
   "bg-[var(--chart-7)]",
   "bg-[var(--chart-8)]",
-  "bg-[var(--chart-9)]",
 ];
 
 /** Each segment's fill classes: its own classes, else its tone, else (with no `color`)
@@ -282,7 +283,7 @@ export function ProgressBar({
         ? undefined
         : formatValue
           ? formatValue(value, Infinity, min)
-          : new Intl.NumberFormat(kitLocale).format(value);
+          : formatWithMinus(new Intl.NumberFormat(kitLocale), value);
     return (
       <Tag {...rest} ref={tagRef} className={cn("min-w-0", inlineClass, className)} data-state="unlimited">
         <Tag className="flex items-baseline gap-2 text-sm">
@@ -325,7 +326,9 @@ export function ProgressBar({
   const formatPart = (v: number) => {
     if (!Number.isFinite(v)) return format(min);
     if (formatValue) return formatValue(v, max, min);
-    return new Intl.NumberFormat(kitLocale, { style: "percent", maximumFractionDigits: 0 }).format(
+    // A part can be negative (a refund): U+2212, as everywhere (0.49, KIT-1).
+    return formatWithMinus(
+      new Intl.NumberFormat(kitLocale, { style: "percent", maximumFractionDigits: 0 }),
       span <= 0 ? 0 : (v - min) / span,
     );
   };

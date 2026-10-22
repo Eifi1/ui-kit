@@ -20,6 +20,7 @@ import { DEFAULT_PIE_CHART_LABELS, type PieChartLabels } from "./pie-chart-label
 import { StaticLegend, ToggleLegend, toggleHidden, type LegendEntry } from "./toggle-legend";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
+import { formatWithMinus } from "../lib/minus";
 
 /** One slice. */
 export interface PieChartSlice {
@@ -186,7 +187,7 @@ export function PieChart({
   // Memoised, like everything the sectors are drawn from: they must not be rebuilt on
   // this component's own re-renders (see `pie` below).
   const formatValue = useCallback(
-    (v: number) => (formatValueProp ? formatValueProp(v) : numberFormat.format(v)),
+    (v: number) => (formatValueProp ? formatValueProp(v) : formatWithMinus(numberFormat, v)),
     [formatValueProp, numberFormat],
   );
   // One decimal under 10 %, where rounding to whole percents starts to lie — a slice

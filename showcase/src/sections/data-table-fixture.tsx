@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { cn } from "@eifi1/ui-kit";
-import type { ColumnFilter, DataTableColumn } from "@eifi1/ui-kit";
+import { Chip } from "@eifi1/ui-kit";
+import type { ColumnFilter, DataTableColumn, StatusKind } from "@eifi1/ui-kit";
 import { shiftIso } from "@eifi1/ui-kit/dates";
 import { OutTable } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * The fixture, the columns and the small helpers the three data-table pages share —
@@ -83,14 +84,14 @@ export const STATUS_LABEL: Record<Status, string> = {
   archived: "Archived",
 };
 
-/** Chart tokens rather than fixed colours, so the dots re-skin with the palette
- *  like everything else on the page. */
-export const STATUS_DOT: Record<Status, string> = {
-  open: "bg-[var(--chart-3)]",
-  review: "bg-[var(--chart-6)]",
-  blocked: "bg-[var(--chart-7)]",
-  done: "bg-[var(--chart-4)]",
-  archived: "bg-[var(--text-muted)]",
+/** What each status means (`statusTone`'s kinds, 0.49): the pill's colour follows the
+ *  meaning — blocked is a problem, review needs attention — not a chart slot. */
+export const STATUS_KIND: Record<Status, StatusKind> = {
+  open: "active",
+  review: "attention",
+  blocked: "problem",
+  done: "good",
+  archived: "inactive",
 };
 
 /** The `options` a select filter is given. The labels differ from the values on
@@ -102,17 +103,16 @@ export const STATUS_OPTIONS: { value: string; label: string }[] = STATUS_ORDER.m
   label: STATUS_LABEL[s],
 }));
 
-export const AMOUNT_FMT = new Intl.NumberFormat("en-GB", {
+export const AMOUNT_FMT = numberFormat("en-GB", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
 export function StatusPill({ status }: { status: Status }) {
   return (
-    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-subtle bg-surface-2 px-2 py-0.5 text-xs text-secondary">
-      <span aria-hidden className={cn("size-1.5 rounded-full", STATUS_DOT[status])} />
+    <Chip size="sm" variant="dot" status={STATUS_KIND[status]} className="whitespace-nowrap">
       {STATUS_LABEL[status]}
-    </span>
+    </Chip>
   );
 }
 
@@ -194,6 +194,8 @@ export const STATUS_COL: DataTableColumn<TableRow> = {
   cell: (r) => <StatusPill status={r.status} />,
   sortBy: (r) => STATUS_ORDER.indexOf(r.status),
   filter: STATUS_FILTER,
+  // On a phone the pill sits beside the name, not on a "Status" line of its own.
+  role: "status",
 };
 
 export const AMOUNT_COL: DataTableColumn<TableRow> = {

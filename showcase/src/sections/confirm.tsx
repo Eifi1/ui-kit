@@ -68,7 +68,7 @@ function DangerSpecimens() {
         A promise from <code>onConfirm</code> keeps the tile busy, collapses it when it resolves and
         leaves it armed (fields kept) when it rejects. <code>lockedReason</code> replaces an
         app&rsquo;s write-lock hook: the arm button stays focusable and says why it is off — in
-        the line under it and, since 0.7.0, in a tooltip on the button itself (hover or focus
+        the line under it and in a tooltip on the button itself (hover or focus
         &ldquo;Reset budget…&rdquo;), where the pointer that tried it is. The bubble is visual
         only: the button is already described by the line, so a screen reader hears the reason
         once.
@@ -76,7 +76,6 @@ function DangerSpecimens() {
         <code>labels.phrase</code> takes a function of the phrase or a finished string, and{" "}
         <code>labels.phrasePlaceholder</code> moves the label above the field.
       </Note>
-      <Note>Since 0.6.</Note>
     </Example>
   );
 }
@@ -152,7 +151,6 @@ function DangerStates() {
         third tile takes every word from <code>labels</code>; <code>armLabel</code> and{" "}
         <code>confirmLabel</code> would win over them.
       </Note>
-      <Note>Since 0.6.</Note>
     </Example>
   );
 }
@@ -160,7 +158,7 @@ function DangerStates() {
 /* ── since 0.18 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.18.0 — the two confirmations both Kurvenschmiede and keksdose had built beside the
+ * 0.18.0 — the two confirmations apps had built beside the
  * kit: typing the TARGET's address before an admin action (`requireTyped`, and
  * `phraseMatch="caseless"` for the inline tile), and the current-password step-up
  * before adding a passkey (`ReauthDialog`).
@@ -222,11 +220,10 @@ function TypedConfirm018Demo() {
           confirm a field that does not match), and Enter confirms once it does. <code>typedMatch</code>:{" "}
           <code>&quot;caseless&quot;</code> (default) · <code>&quot;trim&quot;</code> · <code>&quot;exact&quot;</code>.
         </Note>
-        <Note>Since 0.18.</Note>
       </Example>
       <Example
         label="DangerConfirm — caseless phrase, inline under a row"
-        hint="keksdose keeps the question under the row, so the row being acted on stays in view"
+        hint="the question under the row, so the row being acted on stays in view"
       >
         <div className="space-y-2 rounded-lg border border-subtle p-3">
           {/* Wraps: at Extra large the address and "Reset password…" ran past a 360 px phone. */}
@@ -254,7 +251,6 @@ function TypedConfirm018Demo() {
             />
           )}
         </div>
-        <Note>Since 0.18.</Note>
       </Example>
     </>
   );
@@ -309,7 +305,6 @@ function Reauth018Demo() {
           add(`closed → ${confirmed}`);
         }}
       />
-      <Note>Since 0.18.</Note>
     </Example>
   );
 }
@@ -321,7 +316,7 @@ function AcknowledgeAndConsequences() {
   return (
     <Example
       label="DangerConfirm — requireAcknowledge, consequences"
-      hint="keksdose's admin password reset: what will happen, then a tick or the typed address"
+      hint="an admin password reset: what will happen, then a tick or the typed address"
     >
       <Stage>
         <DangerConfirm
@@ -356,7 +351,6 @@ function AcknowledgeAndConsequences() {
         adds an &ldquo;I have read what this does&rdquo; tick ({code("true")} for the namespace&rsquo;s words, or a
         node of your own); with {code("phrase")} and {code("requirePassword")}, every guard given must be met.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -380,7 +374,6 @@ function LockedTile() {
         {code("lockedReason={lock.locked ? lock.reason : undefined}")} per tile. Arm it, then switch the lock on:
         the tile keeps what was ticked, and its confirm says why it is off instead of confirming.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -411,7 +404,6 @@ function TypedField() {
         worded from {code("target")} by {code("dangerConfirm.phrase")}, and a phone keyboard told to leave the text
         alone. What a match unlocks is yours — {code("onMatchedChange")}, or {code("data-matched")} to style.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -419,9 +411,9 @@ function TypedField() {
 /* ── since 0.23 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.23: FormActions' Cancel variant and button size (keksdose G3), and DangerConfirm's
- * held confirm — which says which guard is still open (G4a) — and the guards' answers
- * handed to `onConfirm` (G4b). Synthetic data only.
+ * 0.23: FormActions' Cancel variant and button size, and DangerConfirm's
+ * held confirm — which says which guard is still open — and the guards' answers
+ * handed to `onConfirm`. Synthetic data only.
  */
 
 /* ── Signature, password & confirmation page (slug "signature-password") ── */
@@ -456,7 +448,6 @@ function DangerConfirm023Demo() {
           {code("needsPhrase")}, {code("needsPassword")}). Pressing it, or Enter in a field, does nothing. A write
           lock&rsquo;s reason wins over a guard&rsquo;s; while the action runs it is plainly disabled.
         </Note>
-        <Note>Since 0.23.</Note>
       </Example>
       <Example
         label="DangerConfirm — onConfirm hears the typed text"
@@ -494,7 +485,6 @@ function DangerConfirm023Demo() {
           {code("caseless")}, the user&rsquo;s case kept — for a server that re-checks the address itself (try{" "}
           {code(" User@Example.com ")}).
         </Note>
-        <Note>Since 0.23.</Note>
       </Example>
     </>
   );
@@ -503,8 +493,7 @@ function DangerConfirm023Demo() {
 /* ── since 0.24 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.24 (keksdose, after moving `UserActionConfirm` and `UserPlanEditor` onto the tile in
- * 0.23): the confirm's variant apart from `tone`, a guard of the caller's own that holds
+ * 0.24: the confirm's variant apart from `tone`, a guard of the caller's own that holds
  * the confirm without the lock's printed line, fields of the caller's inside the tile,
  * and why Cancel waits while the action runs. Synthetic data only.
  */
@@ -520,7 +509,7 @@ function DangerConfirm024Demo() {
   );
 }
 
-/** keksdose's plan editor: the picker inside the tile, held until a different plan. */
+/** A plan editor: the picker inside the tile, held until a different plan. */
 function PlanEditorExample() {
   // The account's plan, and the one picked in the tile — seeded from it on every arm.
   const [current, setCurrent] = useState<string>("FREE");
@@ -601,12 +590,11 @@ function PlanEditorExample() {
         fails&rdquo; and confirm with the pointer or Space: the tile stays armed, the fields as they were, and the focus
         comes back to {code("Set plan")} for the retry.
       </Note>
-      <Note>Since 0.24.</Note>
     </Example>
   );
 }
 
-/** keksdose's admin password reset: the amber question, the red Go. */
+/** An admin password reset: the amber question, the red Go. */
 function ConfirmVariantExample() {
   const [variant, setVariant] = useState<"tone" | "danger">("danger");
   const [log, setLog] = useState("—");
@@ -654,9 +642,8 @@ function ConfirmVariantExample() {
         {code("tone")} says how bad the outcome is, {code("confirmVariant")} how loud the last press is. An admin
         resetting somebody else&rsquo;s password is guarded against picking the wrong row, not against losing data — an
         amber question — and still ends in a red button. Left out, the variant follows {code("tone")} as before:{" "}
-        {code("danger")} for {code('"danger"')}, {code("primary")} for {code('"warning"')}.
+        {code("danger")} for {code('"danger"')}, {code("default")} for {code('"warning"')}.
       </Note>
-      <Note>Since 0.24.</Note>
     </Example>
   );
 }

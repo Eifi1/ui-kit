@@ -4,6 +4,10 @@ import {
   ArrowLeftRight,
   Bell,
   BookOpen,
+  Landmark,
+  PiggyBank,
+  Store,
+  Tags,
   Building2,
   LayoutDashboard,
   LifeBuoy,
@@ -37,6 +41,7 @@ import {
 import type {
   AppShellNavItem,
   AppShellSidebarFooterItem,
+  LanguageMenuTrigger,
   LanguageOption,
   OptionSwitcherOption,
   TopBarMenuEntry,
@@ -76,6 +81,13 @@ const LANGUAGES: LanguageOption[] = [
   { code: "pt", label: "Português", country: "br" },
 ];
 
+/** Three languages under one flag: the code tells them apart. */
+const SWISS_LANGUAGES: LanguageOption[] = [
+  { code: "de-CH", label: "Deutsch", country: "ch" },
+  { code: "fr-CH", label: "Français", country: "ch" },
+  { code: "it-CH", label: "Italiano", country: "ch" },
+];
+
 type Env = "dev" | "staging" | "prod";
 
 const ENVIRONMENTS: OptionSwitcherOption<Env>[] = [
@@ -91,18 +103,18 @@ const ROLES = ["admin", "accountant", "viewer"] as const;
 /**
  * A real `AppShellNavItem[]`, typed against the exported interface so this block
  * cannot drift from the shape it documents: rename a field in the kit and this file
- * stops compiling. "Import & Export" is the entry from the source's own war story
- * (keksdose live #210) — the label that wrapped to two lines in the mobile bar and
+ * stops compiling. "Import & Export" is the entry whose label wrapped to two lines in the mobile bar and
  * pushed its cell taller than the rest, which is what `shortLabel` was added for.
  */
 const NAV_REFERENCE: AppShellNavItem[] = [
   { to: "/budget", label: "Budget", icon: Wallet, dataTour: "nav-budget" },
-  { to: "/transactions", label: "Transactions", shortLabel: "Txns", icon: ArrowLeftRight },
+  { to: "/transactions", label: "Transactions", shortLabel: "Trans.", icon: ArrowLeftRight },
   { to: "/reports", label: "Reports", icon: PieChart, end: false },
   {
     to: "/data",
     label: "Import & Export",
     shortLabel: "Data",
+    shortLabelIsAlias: true,
     icon: Upload,
     items: [
       { to: "/data/import", label: "Import a statement", icon: Upload },
@@ -142,7 +154,7 @@ export function ShellSection() {
 
       <Example
         label="LanguageMenu"
-        hint="The trigger is the active flag, not an icon; an unknown code falls back to a globe."
+        hint="The trigger is the active flag and its code, not an icon; an unknown code falls back to a globe."
       >
         <Languages />
       </Example>
@@ -167,7 +179,7 @@ export function ShellSection() {
 
       <Example
         label="TopBarActionMenu href — the icon is a link too"
-        hint="hover opens the list; a click goes where the menu's last row goes (keksdose dev #585)"
+        hint="hover opens the list; a click goes where the menu's last row goes"
       >
         <div className="space-y-3">
           <Row>
@@ -226,11 +238,14 @@ export function ShellSection() {
           rows={[
             ["to", <span className={PROSE}>Route path, the NavLink target — and the React key in both navs, so two items may not share one.</span>],
             ["label", <span className={PROSE}>Sidebar text, the tooltip when collapsed, and the flyout header.</span>],
-            ["shortLabel?", <span className={PROSE}>Mobile bottom bar only. The bar divides the viewport into nav.length equal cells, so every entry added shrinks the room a label has.</span>],
+            ["shortLabel?", <span className={PROSE}>Mobile bottom bar only. The bar divides the viewport into equal cells, so every entry added shrinks the room a label has. It shortens the label: a development build warns when it does not start with the label&apos;s first word (or an abbreviation of it).</span>],
+            ["shortLabelFrom?", <span className={PROSE}>The text size from which the bar uses shortLabel — &quot;large&quot; keeps the full label at Normal. Default &quot;normal&quot;.</span>],
+            ["shortLabelIsAlias?", <span className={PROSE}>shortLabel is another word for the page on purpose (&quot;Data&quot; for &quot;Import &amp; Export&quot;): no warning.</span>],
+            ["mobilePriority?", <span className={PROSE}>Which entries sit in the phone bar when they do not all fit: lower first, then the list&apos;s order. The bar still shows them in the list&apos;s order.</span>],
             ["icon", <span className={PROSE}>A LucideIcon — the component itself (Wallet), never an element (&lt;Wallet /&gt;). AppShell renders it as &lt;item.icon /&gt; at size-4 in the sidebar and size-5 in the bar.</span>],
             ["end?", <span className={PROSE}>NavLink exact match. Defaults to TRUE, which is the opposite of react-router's own default: pass end: false for a section whose children are routes.</span>],
             ["dataTour?", <span className={PROSE}>data-tour on this item's link in BOTH navs, so a tour can spotlight one entry instead of matching by href.</span>],
-            ["items?", <span className={PROSE}>AppShellSubItem[] (to/label/icon/end). Opens a portalled flyout beside the sidebar on hover or focus, collapsed or expanded. The mobile bar ignores sub-items and links to `to`.</span>],
+            ["items?", <span className={PROSE}>AppShellSubItem[] (to/label/icon/end). Opens a portalled flyout beside the sidebar on hover or focus, collapsed or expanded. On the phone the bar&apos;s cell opens a sheet of these pages (its own page first, as &quot;Overview&quot;) instead of linking to `to`.</span>],
           ]}
         />
       </Example>
@@ -240,6 +255,13 @@ export function ShellSection() {
         hint="A second shell, nested in this page's — so embedded — with its own router. Below 768px it shows the phone bar, docked on the box."
       >
         <AppShellPlayground />
+      </Example>
+
+      <Example
+        label="AppShell on the phone — eight entries"
+        hint="Below 768px: four entries and More in the bar; Books opens a sheet of its pages"
+      >
+        <PhoneNavExample />
       </Example>
 
       <Example
@@ -386,6 +408,7 @@ function Languages() {
   // menu itself can only ever produce a valid code.
   const [lang, setLang] = useState<string | undefined>("de");
   const [withHeading, setWithHeading] = useState(true);
+  const [trigger, setTrigger] = useState<LanguageMenuTrigger>("flag+code");
 
   return (
     <div className="space-y-3">
@@ -394,7 +417,7 @@ function Languages() {
           options={LANGUAGES}
           current={lang}
           onChange={setLang}
-          aria-label="Language"
+          trigger={trigger}
           heading={withHeading ? "Language" : undefined}
         />
         <Switch label="heading" checked={withHeading} onCheckedChange={setWithHeading} />
@@ -402,6 +425,25 @@ function Languages() {
           Clear the selection
         </button>
         <span className={READOUT_STRONG}>current: {lang ?? "undefined"}</span>
+      </Row>
+      <Row>
+        <ToggleGroup<LanguageMenuTrigger>
+          aria-label="trigger"
+          size="sm"
+          value={trigger}
+          onChange={setTrigger}
+          options={[
+            { value: "flag+code", label: "flag+code" },
+            { value: "code", label: "code" },
+            { value: "flag", label: "flag" },
+          ]}
+        />
+      </Row>
+      <Row>
+        {SWISS_LANGUAGES.map((o) => (
+          <LanguageMenu key={o.code} options={SWISS_LANGUAGES} current={o.code} onChange={() => {}} />
+        ))}
+        <span className={READOUT_STRONG}>de-CH · fr-CH · it-CH, closed</span>
       </Row>
       <Note>
         The flags are <code className="font-mono">flag-icons</code> spans (
@@ -413,7 +455,16 @@ function Languages() {
         never imports the stylesheet gets empty boxes and no error.
       </Note>
       <Note>
-        <code className="font-mono">heading</code> (new in 0.7.0) is the same small uppercase
+        The trigger shows the active flag and the language code in capitals (
+        <code className="font-mono">trigger=&quot;flag+code&quot;</code>, the default;{" "}
+        <code className="font-mono">&quot;code&quot;</code> or <code className="font-mono">&quot;flag&quot;</code>{" "}
+        alone): the three Swiss languages share one flag, and only the code tells them apart without opening the
+        menu. Its name is <code className="font-mono">topBar.languageCurrent</code>, &ldquo;Choose language,
+        current: Deutsch&rdquo; in seven languages; an <code className="font-mono">aria-label</code> of the
+        app&apos;s own names it as given.
+      </Note>
+      <Note>
+        <code className="font-mono">heading</code> is the same small uppercase
         row <code className="font-mono">PaletteMenu</code>,{" "}
         <code className="font-mono">OptionSwitcherMenu</code> and{" "}
         <code className="font-mono">TopBarActionMenu</code> draw, so a row of top-bar menus
@@ -657,6 +708,7 @@ const DEMO_NAV: AppShellNavItem[] = [
     to: "/data",
     label: "Import & Export",
     shortLabel: "Data",
+    shortLabelIsAlias: true,
     icon: Upload,
     items: [
       { to: "/data/import", label: "Import", icon: Upload },
@@ -664,6 +716,63 @@ const DEMO_NAV: AppShellNavItem[] = [
     ],
   },
 ];
+
+/** Eight entries — more than fit — for the phone bar's five cells. */
+const PHONE_NAV: AppShellNavItem[] = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  {
+    to: "/books",
+    label: "Books",
+    icon: BookOpen,
+    items: [
+      { to: "/books/ledger", label: "Ledger", icon: Wallet },
+      { to: "/books/receipts", label: "Receipts", icon: Receipt },
+      { to: "/books/invoices", label: "Invoices", icon: ArrowLeftRight },
+    ],
+  },
+  { to: "/reports", label: "Reports", icon: PieChart },
+  { to: "/banking", label: "Banking", icon: Landmark },
+  { to: "/budgets", label: "Budgets", icon: PiggyBank },
+  { to: "/payees", label: "Payees", icon: Store },
+  { to: "/rules", label: "Rules", icon: Tags },
+  { to: "/data", label: "Import & Export", shortLabel: "Import", icon: Upload },
+];
+
+function PhoneNavExample() {
+  const [rulesFirst, setRulesFirst] = useState(false);
+  const nav = rulesFirst ? PHONE_NAV.map((item) => (item.to === "/rules" ? { ...item, mobilePriority: 1 } : item)) : PHONE_NAV;
+  return (
+    <div className="space-y-3">
+      <Switch
+        label="mobilePriority: 1 on Rules"
+        description="Rules takes a cell in the bar; the bar keeps the list's order"
+        checked={rulesFirst}
+        onCheckedChange={setRulesFirst}
+      />
+      <div className="h-[24rem] max-w-sm overflow-hidden rounded-md border border-subtle bg-page">
+        <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
+          <MemoryRouter initialEntries={["/books/ledger"]}>
+            <AppShell
+              nav={nav}
+              embedded
+              topBar={<div className="flex h-12 items-center px-3 text-sm font-semibold text-primary">Acme Books</div>}
+            >
+              <DemoShellPage />
+            </AppShell>
+          </MemoryRouter>
+        </UNSAFE_LocationContext.Provider>
+      </div>
+      <Note>
+        {code("mobileMaxItems")} (default 5 cells, More included; 4 at Extra large): eight entries are four and
+        &ldquo;More&rdquo;, whose sheet lists the other four. {code("mobilePriority")} picks which entries keep a cell;
+        without it the list&apos;s order does. Books has pages, so on the phone its cell opens a sheet of them —
+        Overview, Ledger, Receipts, Invoices — instead of linking to /books, and while one of them is open the row
+        above the bar lists them too. The bar is the phone layout&apos;s: narrow the window (or open the device
+        preview) to see it.
+      </Note>
+    </div>
+  );
+}
 
 /** The sidebar's bottom area as data (0.12): a version link with a hint, a link that
  *  leaves the app, and the legal links as one group — one icon when collapsed. */
@@ -1023,12 +1132,12 @@ function PageContentsExample() {
 /* ── since 0.13 ─────────────────────────────────────────────────────────── */
 
 /**
- * The 0.13 follow-ups from keksdose: a header link that can close the account menu
- * (F7), and a support composer that canned-reply chips can write into, with a hint of
- * the caller's own (F9).
+ * A header link that can close the account menu,
+ * and a support composer that canned-reply chips can write into, with a hint of
+ * the caller's own.
  */
 
-/** keksdose F7: the admin role chip in the account header links to the admin area. */
+/** The admin role chip in the account header links to the admin area. */
 export function AccountHeaderLinkDemo() {
   const [log, setLog] = useState("—");
   return (
@@ -1076,7 +1185,6 @@ export function AccountHeaderLinkDemo() {
         leaves the panel open over the page it navigated to. The plain {code("ReactNode")}{" "}
         form still works for a chip that is only a label.
       </Note>
-      <Note>Since 0.13.</Note>
     </Example>
   );
 }

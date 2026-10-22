@@ -11,7 +11,7 @@ const OPTIONS = [
 describe("LanguageMenu", () => {
   it("renders a heading row above the options when given one", () => {
     render(<LanguageMenu options={OPTIONS} current="en" onChange={() => {}} heading="Language" />);
-    fireEvent.click(screen.getByRole("button", { name: "Language" }));
+    fireEvent.click(screen.getByRole("button", { name: "Choose language, current: English" }));
     const heading = screen.getByText("Language", { selector: "li" });
     expect(heading.className).toContain("uppercase");
     const english = screen.getByText("English").closest("button")!;
@@ -20,14 +20,14 @@ describe("LanguageMenu", () => {
 
   it("renders none without it", () => {
     render(<LanguageMenu options={OPTIONS} current="en" onChange={() => {}} />);
-    fireEvent.click(screen.getByRole("button", { name: "Language" }));
+    fireEvent.click(screen.getByRole("button", { name: "Choose language, current: English" }));
     expect(screen.getByText("Deutsch").closest("button")!).toBeInTheDocument();
     expect(screen.queryByText("Language", { selector: "li" })).toBeNull();
   });
 
   it("aligns its rows to the reading start", () => {
     render(<LanguageMenu options={OPTIONS} current="en" onChange={() => {}} />);
-    fireEvent.click(screen.getByRole("button", { name: "Language" }));
+    fireEvent.click(screen.getByRole("button", { name: "Choose language, current: English" }));
     const row = screen.getByText("Deutsch").closest("button")!;
     expect(row.className).toContain("text-start");
     expect(row.className).not.toContain("text-left");

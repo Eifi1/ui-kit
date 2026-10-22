@@ -154,6 +154,12 @@ export { useCloseTransition, OVERLAY_EXIT_MS } from "./hooks/use-close-transitio
 export { useRowSwipe } from "./hooks/use-row-swipe";
 // 0.28: keksdose's noindex marker, for the legal and auth pages of every app.
 export { useNoIndex } from "./hooks/use-noindex";
+// 0.49 KIT-9: the window's title from page, section and app, in the provider's format.
+export { useDocumentTitle } from "./hooks/use-document-title";
+// 0.49 KIT-1b: U+2212 before a number as "-", the copy handler's rule, for an app's text.
+export { asciiMinusInNumbers } from "./lib/clipboard-minus";
+export { DEFAULT_DOCUMENT_TITLE_FORMAT, formatDocumentTitle } from "./lib/document-title";
+export type { DocumentTitleParts } from "./lib/document-title";
 export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-row-swipe";
 // Any element as a file drop target, screened like FileButton (kastlan).
 export { useFileDrop, dragHasFiles } from "./hooks/use-file-drop";
@@ -381,10 +387,15 @@ export * from "./components/alert-banner";
 export * from "./components/toggle-group";
 // A wrapping set of links/buttons marked `aria-current` — Tabs-like looks, not tabs.
 export * from "./components/nav-pills";
+// 0.49.0 (KIT-6): a section's pages on the phone, one scrolling row of pills.
+export * from "./components/section-nav";
 // A pill carrying one VALUE — inert, a link, or a toggle, depending on which prop it is
 // given — and the list field built from it. Distinct from Button on purpose: a row of
 // buttons reads as "choose an action", a row of chips as "here are the things".
 export * from "./components/chip";
+// 0.49.0 (KIT-8): five domain-free status kinds and their tones — Chip/StatusDot `status`.
+export { statusTone, STATUS_KINDS } from "./lib/status-tone";
+export type { StatusKind, StatusTone } from "./lib/status-tone";
 // ChipInput's own module since MOD-9: it renders Chip, so chip.tsx re-exports only its types.
 export * from "./components/chip-input";
 export * from "./components/wizard-stepper";
@@ -589,6 +600,8 @@ export type {
   RowActionsColumnOptions,
   RowActionsHeadProps,
   RowActionTone,
+  // 0.49 KIT-12: a danger action's confirmation words.
+  RowActionConfirm,
 } from "./components/row-actions";
 // 0.22.0: the inputs round (kastlan's, keksdose's and Kurvenschmiede's audits).
 export * from "./components/checkbox-group";

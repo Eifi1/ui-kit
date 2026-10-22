@@ -142,7 +142,7 @@ export function Wizard() {
 
       <Example
         label="requiredFieldsValidator"
-        hint="folds the hand-written `const errors = {}` block every step used to repeat"
+        hint="folds the hand-written `const errors = {}` block a step would repeat"
       >
         <OutTable
           rows={[
@@ -261,7 +261,7 @@ export function Wizard() {
         <code className="font-mono">WizardStepConfig</code> and is driven by{" "}
         <code className="font-mono">stepStatus</code>. Nothing is shared between them — not a
         type, not a style. A `current` that matches no key is also not an error here: the index
-        resolves to -1 and every chip renders as a future step, so a typo reads as &quot;not
+        resolves to <code className="font-mono">-1</code> and every chip renders as a future step, so a typo reads as &quot;not
         started&quot;.
       </Note>
     </>
@@ -429,7 +429,7 @@ function ImportWizard({
     <StepperNav
       wizard={wizard}
       title="Import transactions"
-      finishVariant={wizard.data.replace ? "danger" : "brand"}
+      finishVariant={wizard.data.replace ? "danger" : "accent"}
       finishDisabled={locked}
       doneDisabled={converting}
       renderFinish={(button) =>
@@ -636,11 +636,9 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
       <Note>
         <strong>Double-click Next.</strong> Step 2&apos;s <code className="font-mono">validate</code>{" "}
         is async (a 600ms pretend server check). Pick a size and double-click Next: the counter
-        in the table below goes up by one, not two, and the wizard moves one step. Before 0.7.0
-        the second click validated the same step again and advanced twice — from step 1 that
-        walked straight past step 2&apos;s check. <code className="font-mono">goNext</code>,{" "}
-        <code className="font-mono">skip</code> and <code className="font-mono">finish</code> now
-        refuse to start while a move is in flight, and a move decided on a step that is no
+        in the table below goes up by one, not two, and the wizard moves one step.{" "}
+        <code className="font-mono">goNext</code>, <code className="font-mono">skip</code> and{" "}
+        <code className="font-mono">finish</code> refuse to start while a move is in flight, and a move decided on a step that is no
         longer current is dropped; a double-click on Finish calls{" "}
         <code className="font-mono">onComplete</code> once.
       </Note>
@@ -867,8 +865,7 @@ function show(result: ValidateResult): string {
 /* ── since 0.23 ─────────────────────────────────────────────────────────── */
 
 /**
- * 0.23 for the Combobox family and the wizard (keksdose G1, G2, G9 and the kit's later
- * list). Three parts, three pages:
+ * 0.23 for the Combobox family and the wizard. Three parts, three pages:
  *
  *   - {@link ComboboxFamilyLock023Demo} — Entity pickers: the write lock on all five
  *     pickers (Autocomplete included), and MultiEntityCombobox's `hint`;
@@ -884,7 +881,7 @@ const STEPS: WizardStepConfig[] = [
   { id: "done", label: "Done" },
 ];
 
-/** keksdose G1: Finish takes the write lock itself — no `renderFinish` clone. */
+/** Finish takes the write lock itself — no `renderFinish` clone. */
 export function StepperNavFinishLock023Demo() {
   const [locked, setLocked] = useState(true);
   // Done starts the demo wizard over: a fresh key is a fresh `useWizard`.
@@ -904,7 +901,6 @@ export function StepperNavFinishLock023Demo() {
           {code("renderFinish")} that clones {code("commit")} in keeps working.
         </Note>
       </div>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }

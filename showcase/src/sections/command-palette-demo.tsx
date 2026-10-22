@@ -144,7 +144,7 @@ function PaletteDemo() {
   return (
     <div className="space-y-3">
       <Row>
-        <Button variant="brand" onClick={openPalette}>
+        <Button variant="accent" onClick={openPalette}>
           Open palette
         </Button>
         <span className={READOUT}>last chosen: {chosen ?? "—"}</span>
@@ -176,7 +176,7 @@ function PaletteDemo() {
         in a row is the reason the prop exists.
       </Note>
       <Note>
-        A modal like the others since 0.7.0: Tab stays inside the panel, the page behind does
+        A modal like the others: Tab stays inside the panel, the page behind does
         not scroll, Escape closes from anywhere in it (not only the field), and focus goes back
         to whatever opened it — press <strong>Open palette</strong>, Escape, and focus is on the
         button again. Each group is a <code className="font-mono">role=&quot;group&quot;</code>{" "}
@@ -323,8 +323,8 @@ function FailingPaletteDemo() {
         }}
       />
       <Note>
-        Before 0.7.0 a rejected search was unhandled: the previous query&apos;s results stayed on
-        screen as if they answered the new one. Now the list is emptied and the{" "}
+        A rejected search never leaves the previous query&apos;s results on screen as if they
+        answered the new one: the list is emptied and the{" "}
         <code className="font-mono">error</code> line is announced (
         <code className="font-mono">role=&quot;alert&quot;</code>); the next successful search
         clears it. With <code className="font-mono">labels.error</code> off the line is the
@@ -461,7 +461,7 @@ function RedactPaletteDemo() {
 
 function ControlledQueryDemo() {
   const [open, setOpen] = useState(false);
-  // The query is the URL's `q`, as keksdose binds it: it survives a reload, can be sent
+  // The query is the URL's `q`, as an app binds it: it survives a reload, can be sent
   // as a link, and Back walks through the searches. `replace` so each keystroke does not
   // become a history entry of its own.
   const [params, setParams] = useSearchParams();

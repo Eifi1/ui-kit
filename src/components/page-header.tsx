@@ -2,6 +2,8 @@ import { useLayoutEffect, useRef, useState } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { SECTION_LABEL_CLASS } from "./text";
+import { useDocumentTitle } from "../hooks/use-document-title";
+import { PageHeaderTrailContext } from "./page-header-context";
 
 /**
  * `md` (default) is kastlan's `text-2xl` page title from `sm` up, a step smaller on a
@@ -71,8 +73,20 @@ export interface PageHeaderProps extends Omit<ComponentPropsWithRef<"div">, "tit
   /** Buttons for the page — "New", "Export". At the title's end from `sm` up; under it,
    *  wrapping, on a phone — unless {@link mobileLayout} is `inline`. */
   actions?: ReactNode;
-  /** A `Breadcrumbs` trail, drawn above everything else. */
+  /** A `Breadcrumbs` trail, drawn above everything else. Inside a header with a title
+   *  it hides its current entry (the title names it) and is drawn only when an entry
+   *  other than home is left — `Breadcrumbs.hideCurrent` (0.49 KIT-9). */
   breadcrumbs?: ReactNode;
+  /**
+   * The window's title (`document.title`) while the header is mounted (0.49 KIT-9),
+   * through `useDocumentTitle` and the provider's format ("{page} · {section} · {app}",
+   * `appName` as the app). A string is the page; an array is `[page, section]` (or
+   * `[page, section, app]`); `false` leaves the window's title alone.
+   *
+   * Default: the `title` when it is a string, and only for the page's own header
+   * (`as="h1"`) — a tab's `h2` header does not rename the window.
+   */
+  documentTitle?: string | ReadonlyArray<string | null | undefined> | false;
   /** A small uppercase line above the title — the section or the kind of record
    *  ("Building", "Settings"). The section-label type. */
   eyebrow?: ReactNode;
@@ -147,6 +161,9 @@ export interface PageHeaderProps extends Omit<ComponentPropsWithRef<"div">, "tit
   truncateTitle?: boolean;
 }
 
+const TITLED = { titled: true };
+const UNTITLED = { titled: false };
+
 /**
  * A page's head: optional breadcrumbs, an eyebrow, the title, a description, and the
  * page's actions.
@@ -170,10 +187,23 @@ export function PageHeader({
   secondaryActions,
   actionsAlign,
   truncateTitle = false,
+  documentTitle,
   className,
   ...rest
 }: PageHeaderProps) {
   const Heading = as as ElementType;
+  useDocumentTitle(
+    documentTitle === false
+      ? []
+      : documentTitle === undefined
+        ? as === "h1" && typeof title === "string"
+          ? [title]
+          : []
+        : typeof documentTitle === "string"
+          ? [documentTitle]
+          : documentTitle,
+  );
+  const titled = title != null && title !== false && title !== "";
   const hasSecondary = secondaryActions != null;
   const wrapsSecondary = hasSecondary && mobileLayout === "inline";
   const align = actionsAlign != null ? ROW_ALIGN[mobileLayout][actionsAlign] : undefined;
@@ -216,7 +246,9 @@ export function PageHeader({
   }, [measuresWrap]);
   return (
     <div {...rest} className={cn("flex min-w-0 flex-col gap-2", className)}>
-      {breadcrumbs}
+      {breadcrumbs != null && (
+        <PageHeaderTrailContext.Provider value={titled ? TITLED : UNTITLED}>{breadcrumbs}</PageHeaderTrailContext.Provider>
+      )}
       {/* With a second group, `inline` wraps so that group's full-width basis puts it
           on a row of its own on a phone (`stacked` is a column there already, and a
           basis would size a column item's HEIGHT); from `sm` up the row stops wrapping

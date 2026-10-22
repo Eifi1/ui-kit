@@ -6,7 +6,7 @@ import type { RoleVocabulary } from "../../../src/components/account-chips";
 import { Example, Note, code } from "../lib/section";
 
 /**
- * ACCOUNT 0.18 — Kurvenschmiede 5 and 6: `PasskeysSetting`'s `mode` and `beforeAdd`,
+ * ACCOUNT 0.18 — `PasskeysSetting`'s `mode` and `beforeAdd`,
  * and the chips and date column an admin roster repeats.
  */
 

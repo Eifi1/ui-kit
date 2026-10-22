@@ -14,9 +14,9 @@ import type { PageHeaderSize } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../lib/section";
 
 /**
- * The 0.13 layout props: PageHeader `size="compact"` and `mobileLayout="inline"`
- * (keksdose F4), SectionLabel `variant="band"` (keksdose F5) and `size="md"` over a
- * chart column (lenkbank P9), and ListItem `titleLines` (kastlan 44).
+ * The 0.13 layout props: PageHeader `size="compact"` and `mobileLayout="inline"`,
+ * SectionLabel `variant="band"` and `size="md"` over a
+ * chart column, and ListItem `titleLines`.
  */
 
 /* ── PageHeader ───────────────────────────────────────────────────────────── */
@@ -24,7 +24,7 @@ import { Example, Note, code } from "../lib/section";
 function PageHeaderSizes() {
   const [size, setSize] = useState<PageHeaderSize>("compact");
   return (
-    <Example label="PageHeader — size compact" hint="text-xl at every width: keksdose's page title">
+    <Example label="PageHeader — size compact" hint="text-xl at every width: a compact page title">
       <div className="space-y-4">
         <ToggleGroup<PageHeaderSize>
           aria-label="Title size"
@@ -90,7 +90,7 @@ function PageHeaderInline() {
           />
         </div>
         <Note>
-          {code("inline")} keeps a header tuned for the phone (keksdose live #263) a row: the actions stay beside
+          {code("inline")} keeps a header tuned for the phone a row: the actions stay beside
           the title and do not wrap, so use it for one or two small controls.
         </Note>
       </div>

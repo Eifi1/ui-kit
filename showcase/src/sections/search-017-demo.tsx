@@ -6,7 +6,7 @@ import { Example, Note, OutTable, Row, READOUT } from "../lib/section";
 
 /**
  * 0.17.0 — a `GlobalSearch` source that fills several groups from ONE request
- * (`groups`), as kastlan's record search does: one server call answers with properties,
+ * (`groups`), as a record search does: one server call answers with properties,
  * units, contacts and leases at once.
  */
 

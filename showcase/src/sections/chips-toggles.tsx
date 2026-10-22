@@ -125,7 +125,7 @@ function OverflowTabStrip() {
           on a tab&apos;s end and read as &quot;no more&quot;. With{" "}
           <code className="font-mono">overflowCue</code> a › follows the strip while tabs lie past
           its end and a ‹ precedes it while tabs lie before its start; each steps three quarters
-          of the width toward its own side and never turns round (0.47). Since 0.48 they are bare
+          of the width toward its own side and never turns round. They are bare
           glyphs in the row, centred on the labels, muted until hovered — no frame over the tabs.
         </Note>
       </div>
@@ -302,11 +302,12 @@ export function ChipsToggles() {
 
 /* ── 0.8.0: variant, shape, caps, renderLink, removeDisabled ──────────────── */
 
+// Statuses by what they mean (`status`, 0.49): never `brand`, which is the app's colour.
 const STATUS_BADGES = [
-  { text: "Paid", tone: "success" },
-  { text: "Draft", tone: "neutral" },
-  { text: "Overdue", tone: "danger" },
-  { text: "Admin", tone: "brand" },
+  { text: "Paid", status: "good" },
+  { text: "Unpaid", status: "attention" },
+  { text: "Overdue", status: "problem" },
+  { text: "Draft", status: "inactive" },
 ] as const;
 
 /** react-router's Link takes `to`, not `href` — so the chip hands its props over and the
@@ -315,7 +316,7 @@ const routerLink = ({ href, ...props }: ChipLinkProps) => <Link to={href} {...pr
 
 function ChipVariants() {
   const [unread, setUnread] = useState(7);
-  const [on, setOn] = useState(["Overdue"]);
+  const [on, setOn] = useState(["Rent"]);
   const toggle = (v: string) => setOn((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
   return (
     <Example
@@ -336,19 +337,19 @@ function ChipVariants() {
         <Row>
           <span className="w-16 font-mono text-caption text-muted">caps</span>
           {STATUS_BADGES.map((b) => (
-            <Chip key={b.text} tone={b.tone} size="sm" caps>
+            <Chip key={b.text} status={b.status} size="sm" caps>
               {b.text}
             </Chip>
           ))}
           {STATUS_BADGES.map((b) => (
-            <Chip key={`o-${b.text}`} tone={b.tone} size="sm" caps variant="outline" shape="square">
+            <Chip key={`o-${b.text}`} status={b.status} size="sm" caps variant="outline" shape="square">
               {b.text}
             </Chip>
           ))}
         </Row>
         <Row>
           <span className="w-16 font-mono text-caption text-muted">square</span>
-          {["Overdue", "EUR", "Q3"].map((v) => (
+          {["Rent", "EUR", "Q3"].map((v) => (
             <Chip key={v} shape="square" tone="brand" variant="outline" selected={on.includes(v)} onClick={() => toggle(v)}>
               {v}
             </Chip>
@@ -581,8 +582,8 @@ function Chips() {
           <Chip href="#/chips-toggles#chip-the-three-shapes" icon={Hash}>
             a link
           </Chip>
-          {["Unpaid", "Overdue"].map((v) => (
-            <Chip key={v} onClick={() => toggle(v)} selected={pressed.includes(v)} tone="brand">
+          {(["Unpaid", "Overdue"] as const).map((v) => (
+            <Chip key={v} onClick={() => toggle(v)} selected={pressed.includes(v)} status={v === "Unpaid" ? "attention" : "problem"}>
               {v}
             </Chip>
           ))}
@@ -595,10 +596,9 @@ function Chips() {
           A chip is deliberately <em>not</em> a Button: a row of buttons reads as
           &ldquo;choose an action&rdquo;, a row of chips as &ldquo;here are the things&rdquo;.{" "}
           <code className="font-mono">href</code> and <code className="font-mono">onClick</code>{" "}
-          no longer collide: a bare <code className="font-mono">onClick</code> is a toggle or an action
+          do not collide: a bare <code className="font-mono">onClick</code> is a toggle or an action
           button, and <code className="font-mono">{"<Chip href=\"…\" onClick={…}>"}</code> is a LINK that
-          runs code on its way (before 0.7.0 that <code className="font-mono">onClick</code> was dropped
-          silently) — see &ldquo;Chip — a link with onClick&rdquo; below.
+          runs code on its way — see &ldquo;Chip — a link with onClick&rdquo; below.
         </Note>
       </Example>
 
@@ -666,8 +666,8 @@ function Chips() {
 
 function ChipStates() {
   const [inflow, setInflow] = useState(false);
-  const [filters, setFilters] = useState(["Overdue", "EUR"]);
-  const [on, setOn] = useState<string[]>(["Overdue"]);
+  const [filters, setFilters] = useState(["Rent", "EUR"]);
+  const [on, setOn] = useState<string[]>(["Rent"]);
   const [log, setLog] = useState("—");
   const [locked, setLocked] = useState(true);
   return (
@@ -721,7 +721,7 @@ function ChipStates() {
             <em>not plain text</em>
           </Chip>
           {filters.length < 2 && (
-            <Button variant="ghost" onClick={() => setFilters(["Overdue", "EUR"])}>
+            <Button variant="ghost" onClick={() => setFilters(["Rent", "EUR"])}>
               Restore the filters
             </Button>
           )}
@@ -754,7 +754,7 @@ function ChipStates() {
         <code className="font-mono">aria-current</code>. A remove beside a link or a toggle is a
         sibling button, not a nested one, and removing never follows the link — but both sit in
         ONE pill: the wrapper carries the border, the tone and your{" "}
-        <code className="font-mono">className</code>, so &ldquo;Overdue ×&rdquo; reads as a single
+        <code className="font-mono">className</code>, so &ldquo;Rent ×&rdquo; reads as a single
         chip, and the link or toggle part gets its own focus ring and a hover wash inside it. A chip whose
         content is not plain text has no value to name its × after, so it falls back to{" "}
         <code className="font-mono">removeLabel</code> (here &ldquo;Unpin&rdquo;) — otherwise the
@@ -930,7 +930,6 @@ export function Chips016Demo() {
           sm for scale
         </Chip>
       </Row>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }
@@ -986,12 +985,10 @@ export function ToggleGroup022Demo() {
           />
         </div>
         <Note>
-          The active fill starts 21px down, 3.25px below the 11px label&apos;s line (it was 17px, touching it —
-          keksdose feedback #117). {code('size="sm"')} keeps its 12px type inside the chrome. The joined pair
+          The active fill starts 21px down, 3.25px below the 11px label&apos;s line, clear of it. {code('size="sm"')} keeps its 12px type inside the chrome. The joined pair
           squares the shared edge from {code("md")} up with {code('chromeClassName="md:rounded-s-none"')} and{" "}
           {code('className="md:-ms-px"')}; on a phone the two stack.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
       <Example label='ToggleGroup labelPlacement="strip"' hint="a group that is not a field, on its neighbours' label line">
         <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
@@ -1007,12 +1004,9 @@ export function ToggleGroup022Demo() {
           <Input label="Amount" defaultValue="1,250.00" />
         </div>
         <Note>
-          20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line
-          (keksdose&apos;s measured {code("ClearedStatusPicker")}, live #288 / #431), and the label and its
-          &ldquo;?&rdquo; clear of the group&apos;s border (dev#593: over the 16px strip it had, they crossed it by
-          2px).
+          20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line, and the label and its
+          &ldquo;?&rdquo; clear of the group&apos;s border.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
       <Example label="commit / disabledReason on a group and a chip" hint="under a WriteLockProvider: reachable, refusing, saying why">
         <div className="flex flex-col gap-3">
@@ -1033,7 +1027,6 @@ export function ToggleGroup022Demo() {
           nothing. Without the lock (or the {code("commit")} prop) both behave as before. {code("disabledReason")}{" "}
           is the same refusal with a reason of the control&apos;s own.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
     </>
   );

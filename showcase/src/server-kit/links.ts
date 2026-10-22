@@ -60,7 +60,7 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   sync: ["offline", "sync"],
   // server-kit 0.10: the layer-2 services' shared clock; no page of the kit has one.
   clock: [],
-  // The extra-origin CORS that lets this very site's Kit review page call keksdose.
+  // The extra-origin CORS that lets this very site's Kit review page call the configured app.
   cors: ["kit-review"],
   // The scheduler's token on an app's job routes (server-kit 0.8): no kit page speaks it.
   jobs: [],

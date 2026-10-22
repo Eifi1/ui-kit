@@ -64,7 +64,8 @@ function swipeTone(action: SwipeAction): RowActionTone {
  * `end` then `start` — the physical `right` / `left` only where the logical side is
  * missing, as the card reads them — each action once, told apart by its `id`, else by its
  * label (two stages with one label would be one button twice). Each button runs the
- * swipe's own `onCommit`; a swipe's `danger` / `warning` / `info` tone carries over, any
+ * swipe's own `onCommit` — with no confirmation of the kit's (`confirm: false`), as the
+ * swipe has none; a swipe's `danger` / `warning` / `info` tone carries over, any
  * other reads `muted`. `options.omit` leaves an action out, `options.commit` gives it a
  * `CommitScope` (see {@link DataTableDesktopSwipeActions}). A `null` plan is `[]`.
  *
@@ -94,6 +95,10 @@ export function swipePlanRowActions<T>(
           : undefined,
       tone: swipeTone(action),
       commit,
+      // A swipe commits without the kit asking (the plan's `onCommit` asks, as keksdose's
+      // does), so its button does not ask twice (0.49 KIT-12); a danger one still sits in
+      // the row's menu.
+      confirm: false,
       onSelect: action.onCommit,
     });
   }
@@ -142,6 +147,9 @@ function toRowAction<T>(a: ResolvedRowAction<T>, row: T): RowAction {
     icon: isValidElement(a.icon) ? a.icon : a.icon != null && a.icon !== false ? <>{a.icon}</> : undefined,
     tone: a.tone,
     disabledReason: a.action.disabledReason?.(row),
+    // The table's own `confirm` asks in `runRowAction`; RowActions' default question
+    // (0.49 KIT-12) is for a delete that brought none.
+    confirm: a.action.confirm ? false : undefined,
     onSelect: () => void runRowAction(a.action, row),
   };
 }

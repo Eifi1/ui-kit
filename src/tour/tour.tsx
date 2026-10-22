@@ -891,7 +891,7 @@ function TourCard({
                 for this user (a guest sees no "add account" button), leaving the
                 undocumented ArrowRight key as the sole escape. */}
             {!((step.awaitClick || step.awaitInput) && step.target && rect) && (
-              <Button variant="brand" onClick={onNext} className={cn("px-2.5 py-1 text-xs")}>
+              <Button variant="accent" onClick={onNext} className={cn("px-2.5 py-1 text-xs")}>
                 {isLast ? labels.done : labels.next}
               </Button>
             )}

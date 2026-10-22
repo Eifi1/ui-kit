@@ -640,8 +640,7 @@ export function Dates() {
           chevron and × sit at the field&apos;s logical end. The picker&apos;s calendar is portalled
           to <code className="font-mono">&lt;body&gt;</code>, outside this{" "}
           <code className="font-mono">dir</code>; it reads the direction off the field when it
-          opens and carries it, so the popover grid is right-to-left too (it opened left-to-right
-          before 0.7.0).
+          opens and carries it, so the popover grid is right-to-left too.
         </p>
       </Example>
 
@@ -658,7 +657,7 @@ export function Dates() {
 }
 
 /**
- * keksdose's report range: month-aligned presets with ids, drafted and committed on
+ * A report range: month-aligned presets with ids, drafted and committed on
  * Apply. A component of its own so its state sits beside it.
  */
 function ReportRangeExample() {
@@ -847,7 +846,7 @@ const GRANULARITY_OPTIONS: { value: Granularity; label: string }[] = [
   { value: "quarter", label: "Quarter" },
 ];
 
-/** keksdose's report range field: a trigger that NAMES the preset, joined flush to a
+/** A report range field: a trigger that NAMES the preset, joined flush to a
  *  granularity control. */
 function RangeTriggerExample() {
   const monthPresets = useMonthPresets();
@@ -1029,7 +1028,7 @@ export function DateHelpers() {
 
 /* ── since 0.22 ─────────────────────────────────────────────────────────── */
 
-/** keksdose's date-format preference, as the provider formatter it asked for: digits
+/** A date-format preference, as a provider formatter: digits
  *  in ISO order, the weekday in the UI language. */
 function useIsoWithWeekday(language: string) {
   return useCallback(
@@ -1043,7 +1042,7 @@ function useIsoWithWeekday(language: string) {
   );
 }
 
-/** DatePicker / DateRangePicker: hint and error (K4), the provider formatter (K12). */
+/** DatePicker / DateRangePicker: hint and error, the provider formatter. */
 export function Dates022Demo() {
   const [due, setDue] = useState("2026-09-07");
   const [range, setRange] = useState({ from: "2026-09-01", to: "2026-09-30" });
@@ -1075,7 +1074,6 @@ export function Dates022Demo() {
           {code("Select")}. {code("error")} goes under the whole row (steppers included) and implies{" "}
           {code("invalid")}; step past today to see it.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
       <Example label="<UiKitProvider formatDate>" hint="one date look for every picker trigger and DateMark">
         <div className="flex flex-col gap-3">
@@ -1100,13 +1098,12 @@ export function Dates022Demo() {
           </UiKitProvider>
         </div>
         <Note>
-          keksdose&apos;s preference — ISO digits, the weekday in the UI language — set once on the provider
+          An app&apos;s preference — ISO digits, the weekday in the UI language — set once on the provider
           instead of a {code("formatValue")} on every field. The formatter is told the {code("unit")}, the{" "}
           {code("source")} and a {code("weekday")} suggestion (a single date yes, a range&apos;s ends no); returning{" "}
           {code('""')} falls back to the kit&apos;s own. A field&apos;s own {code("formatValue")} or{" "}
           {code("formatOptions")} still wins.
         </Note>
-        <Note>Since 0.22.</Note>
       </Example>
     </>
   );

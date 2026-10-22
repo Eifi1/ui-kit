@@ -4,7 +4,7 @@ import type { AdminActionLogEntry, AdminGroupNoun, AdminGroupTarget } from "@eif
 import { Example, Note, beat } from "../lib/section";
 
 /**
- * GROUPS IN THE AUDIT (0.34, docs/user-admin-harmonization.md §11): Kurvenschmiede's team
+ * GROUPS IN THE AUDIT (0.34, docs/user-admin-harmonization.md §11): team
  * operations as log rows, a target that is a group or something else, the group a
  * membership row happened in, each app's noun, and deleting a group at `acknowledge`.
  * Belongs on the "User administration" page, after the roster.
@@ -18,7 +18,7 @@ const ago = (days: number) => new Date(Date.now() - days * day).toISOString();
 const ADA = { id: 1, first: "Ada", last: "Example", email: "ada@example.com" };
 const BEN = { id: 2, first: "Ben", last: "Sample", email: "ben@example.com" };
 
-/** Kurvenschmiede's, kastlan's, keksdose's, and the default. */
+/** Three apps' nouns, and the default. */
 const NOUNS: { value: AdminGroupNoun; label: string }[] = [
   { value: "team", label: "team" },
   { value: "company", label: "company" },
@@ -57,7 +57,7 @@ export function GroupActions034Demo() {
   ]);
 
   return (
-    <Example label="Groups in the audit — AdminActionLog groupNoun, AdminActionConfirm" hint="Kurvenschmiede's team operations">
+    <Example label="Groups in the audit — AdminActionLog groupNoun, AdminActionConfirm" hint="team operations">
       <div className="flex flex-col gap-3">
         <ToggleGroup label="groupNoun" overflow="wrap" value={noun} onChange={setNoun} options={NOUNS} />
         <div>
@@ -109,8 +109,8 @@ export function GroupActions034Demo() {
         it has the person as its target and the group as its `group`, drawn after the person by its name alone, muted,
         with no preposition for a language to inflect. The words say the app&apos;s noun (`groupNoun`): whole phrases per
         noun, since a noun dropped into one phrase breaks the participle&apos;s agreement in French and Italian and the
-        suffix in Hungarian. The `company` set&apos;s &ldquo;Removed from the company&rdquo; is the string the log said
-        before 0.34. A group with no name left reads as the noun&apos;s &ldquo;a deleted team&rdquo;; only a missing
+        suffix in Hungarian. The `company` set&apos;s &ldquo;Removed from the company&rdquo; is the log&apos;s plain
+        wording. A group with no name left reads as the noun&apos;s &ldquo;a deleted team&rdquo;; only a missing
         person is &ldquo;an erased account&rdquo;, and a `kind: &quot;other&quot;` target is said by its `label`.
         Deleting a group is `acknowledge`: a tick under the app&apos;s own sentence of what goes with it — a group has no
         address to type, so its types allow it only at `none` and `acknowledge`.

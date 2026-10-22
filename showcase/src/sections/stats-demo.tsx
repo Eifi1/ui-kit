@@ -9,6 +9,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { SparklineTone, StatTileLinkProps } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * Stat tiles and sparklines — the KPI card and the trend line that sits in it (or in a
@@ -163,8 +164,8 @@ export function StatsDemo() {
         </StatTileGrid>
         <Note>
           <code className="font-mono">projection</code> is drawn directly under the value, before the
-          delta and the history rows, with only a hair of space — keksdose&apos;s &ldquo;Projected
-          €1,850&rdquo; under a to-date €420, which it used to smuggle into{" "}
+          delta and the history rows, with only a hair of space — a &ldquo;Projected
+          €1,850&rdquo; under a to-date €420, not smuggled into{" "}
           <code className="font-mono">description</code>. A sub-value&apos;s{" "}
           <code className="font-mono">tone: &quot;none&quot;</code> leaves the figure in the row&apos;s own
           muted text even on a toned tile (the Net tile: August follows <code className="font-mono">signed</code>,
@@ -185,7 +186,7 @@ export function StatsDemo() {
           <StatTile size="sm" label="Kündigungen im laufenden Quartal (wraps)" value={12} tone="warning" />
         </StatTileGrid>
         <Note>
-          keksdose&apos;s admin wall: German labels wrapped onto two or three lines and put each
+          An admin wall: German labels wrapped onto two or three lines and put each
           tile&apos;s figure at a different height. With <code className="font-mono">truncateLabel</code>{" "}
           the first and third are cut and show the whole label on hover and focus; &ldquo;Neue
           Konten&rdquo; fits and gets no bubble repeating itself. The last tile is the default, which
@@ -289,7 +290,7 @@ function SparklineOptions() {
             [
               'labels (German) + locale="de-DE"',
               sparklineSummary(PRICE, { ...DEFAULT_SPARKLINE_LABELS, ...GERMAN_LABELS }, (v) =>
-                new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 }).format(v),
+                numberFormat("de-DE", { maximumFractionDigits: 2 }).format(v),
               ),
             ],
             ["[] → noData", sparklineSummary([], DEFAULT_SPARKLINE_LABELS, String)],

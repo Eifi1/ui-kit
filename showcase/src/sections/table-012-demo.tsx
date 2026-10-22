@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@eifi1/ui-kit";
 import { Example, Note, Row, code } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * 0.12 on the Description list & table page: Table `framed`, the statement row
@@ -22,7 +23,7 @@ import { Example, Note, Row, code } from "../lib/section";
  */
 
 const chf = (n: number) =>
-  new Intl.NumberFormat("en-GB", { style: "currency", currency: "CHF" }).format(n);
+  numberFormat("en-GB", { style: "currency", currency: "CHF" }).format(n);
 
 type Line = { label: string; amount: number };
 const GROUPS: Array<{ name: string; lines: Line[] }> = [
@@ -149,7 +150,7 @@ export function DescriptionPlaceholderDemo() {
           The placeholder is drawn in the muted ink, so an absent value does not read as a value of “—”.
           Precedence: the item&apos;s {code("placeholder")}, else the list&apos;s, else{" "}
           {code("descriptionList.empty")} from the provider — switch the language to see it translated —
-          else “—”. {code("placeholder={null}")} shows nothing, as before 0.12.
+          else “—”. {code("placeholder={null}")} shows nothing.
         </Note>
       </div>
     </Example>
@@ -162,7 +163,7 @@ const TERMS: Array<[term: string, raises: string, costs: string]> = [
   ["D — derivative", "Damping: it brakes before the target", "Noise amplified straight into the output"],
 ];
 
-/** lenkbank L5 (0.15.2): a table of sentences stacks into labelled blocks on a phone. */
+/** 0.15.2: a table of sentences stacks into labelled blocks on a phone. */
 export function TableStackDemo() {
   return (
     <Example label={'Table — stack="phone", a table of prose on a phone'} hint="narrow the window below 640px: each row becomes a labelled block">

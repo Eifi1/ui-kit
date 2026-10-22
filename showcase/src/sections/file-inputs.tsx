@@ -102,12 +102,11 @@ export function FileInputs() {
         </Stage>
         <Note>
           Drop a non-.zip on the second zone: the refusal reads{" "}
-          <em>&ldquo;Only .zip files&rdquo;</em> — the new{" "}
+          <em>&ldquo;Only .zip files&rdquo;</em> —{" "}
           <code className="font-mono">filePicker.rejectedTypeOnly(accept, name)</code>, handed{" "}
           <code className="font-mono">accept</code>&apos;s tokens lower-cased and joined with
-          &ldquo;, &rdquo;. Before 0.7.0 the default said only that the type was unsupported, so
-          apps kept an <code className="font-mono">isValid</code> +{" "}
-          <code className="font-mono">invalidMessage</code> per form just to say which type was
+          &ldquo;, &rdquo;. No <code className="font-mono">isValid</code> +{" "}
+          <code className="font-mono">invalidMessage</code> is needed just to say which type is
           wanted; <code className="font-mono">accept</code> already knows. Keep{" "}
           <code className="font-mono">isValid</code> for what <code className="font-mono">accept</code>{" "}
           cannot see — the empty statement in &ldquo;own check, own words&rdquo; above. A host that
@@ -435,9 +434,9 @@ function DropzoneMultiple() {
       />
       <Refusal rejections={rejections} />
       <Note>
-        <code className="font-mono">onReject</code> switches the legacy toast off, exactly as{" "}
-        <code className="font-mono">onInvalid</code> always did. A caller that passes neither still
-        gets the 0.5 toast; <code className="font-mono">rejectionFeedback</code> picks{" "}
+        <code className="font-mono">onReject</code> switches the toast off, as{" "}
+        <code className="font-mono">onInvalid</code> does. A caller that passes neither gets the
+        toast; <code className="font-mono">rejectionFeedback</code> picks{" "}
         <code className="font-mono">"inline"</code> or <code className="font-mono">"none"</code> explicitly.
       </Note>
     </div>
@@ -532,7 +531,7 @@ function DropzoneFeedback() {
         {FEEDBACK_MODES.map((m) => (
           <Button
             key={m}
-            variant={m === mode ? "brand" : "secondary"}
+            variant={m === mode ? "accent" : "secondary"}
             aria-pressed={m === mode}
             onClick={() => setMode(m)}
           >
@@ -588,7 +587,7 @@ function DropzoneFeedback() {
         toast through sonner&apos;s own). Drag a file over the zone to see the drag-over wash.
         The zone is a named <code className="font-mono">role=&quot;group&quot;</code>, not a
         button: Tab reaches Browse (and the remove button) directly, and a click anywhere on the
-        zone is a pointer shortcut for Browse — the zone used to be a{" "}
+        zone is a pointer shortcut for Browse — no{" "}
         <code className="font-mono">role=&quot;button&quot;</code> with real buttons nested in
         it, which ARIA forbids.
       </Note>
@@ -679,8 +678,8 @@ function DropzoneStates() {
         &ldquo;uploads&rdquo;. The second zone&apos;s <code className="font-mono">renderBody</code> is handed{" "}
         <code className="font-mono">{"{ dragOver, disabled, busy, files, error, open, labels }"}</code>{" "}
         and brings a second trigger; the Browse button, the inline error region and the live regions
-        stay, because Browse is the keyboard path. None of the four label props is passed: since 0.8
-        they default to the provider&apos;s strings.
+        stay, because Browse is the keyboard path. None of the four label props is passed: they
+        default to the provider&apos;s strings.
       </Note>
     </>
   );
@@ -758,7 +757,6 @@ export function Files016Demo() {
           <Paperclip aria-hidden className="size-4" /> Attach several
         </FileButton>
       </Row>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }
@@ -805,7 +803,6 @@ export function FileLock022Demo() {
         shows the reason where its hint was, and a chosen file stays readable. A picker that only fills a form saved
         later is not a commit — leave {code("commit")} off and let the form&rsquo;s Save carry the lock.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }

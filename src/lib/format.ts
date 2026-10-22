@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { useKitLocale, useKitTimeZone } from "../i18n/kit-labels";
 import { parseIsoDate } from "./dates";
+import { formatWithMinus, type MinusStyle } from "./minus";
 import { roundHalfAway } from "./round";
+
+export type { MinusStyle } from "./minus";
 
 /**
  * Number, money, percentage, date and relative-time formatting — `Intl`, in one place,
@@ -19,9 +22,18 @@ import { roundHalfAway } from "./round";
  * functions bound to the `<UiKitProvider locale>`, so a page formats exactly like the
  * kit components on it.
  *
- * A missing value — `null`, `undefined`, `NaN`, an unparseable date — formats as
- * `empty` (default "—", the dash `StatTile` shows for no value), never as "NaN" or
- * "Invalid Date".
+ * A missing value — `null`, `undefined`, an unparseable date — formats as `empty`
+ * (default "—", the dash `StatTile` shows for no value), never as "NaN" or "Invalid
+ * Date". A number may also arrive as a numeric STRING (0.49, KIT-2) — "1850.00", "-12.5",
+ * "0": a Decimal field off a Python API — and is formatted like the number. Anything
+ * else (a non-numeric string, an object, `NaN`, ±`Infinity`) prints `empty` too, but is
+ * a bug upstream rather than a gap in the data, so a development build says so on the
+ * console, once per call site. Zero is a figure: `0` and `"0"` print "CHF 0.00", never
+ * the dash.
+ *
+ * A negative figure carries the typographic minus, U+2212 (0.49, KIT-1), in every
+ * locale — `Intl` writes a hyphen in most. `minus: "ascii"` for text a machine reads
+ * back (a CSV, the clipboard).
  */
 
 /** What every formatter here prints for a missing value, unless told otherwise. */
@@ -47,6 +59,14 @@ export interface FormatNumberBaseOptions extends BaseOptions {
   signDisplay?: Intl.NumberFormatOptions["signDisplay"];
   /** Any further `Intl.NumberFormat` options, merged over the ones above. */
   options?: Intl.NumberFormatOptions;
+  /**
+   * The minus sign of a negative figure (0.49, KIT-1). `"typographic"` (default):
+   * U+2212, as wide as "+" and the digits, as `SignedAmount` prints it — in every
+   * locale, also where `Intl` writes a hyphen. `"ascii"`: U+002D, for an export a
+   * machine parses back (a CSV download, the clipboard) — there, also pass
+   * `options: { useGrouping: false }` or write the raw number.
+   */
+  minus?: MinusStyle;
 }
 
 /** The options {@link formatNumber} takes: the shared ones plus a free-text `unit`. */
@@ -115,44 +135,113 @@ function numberOptions(o: FormatNumberBaseOptions): Intl.NumberFormatOptions {
   };
 }
 
-function isMissing(value: number | null | undefined): value is null | undefined {
-  // ±Infinity too (lenkbank, adopting 0.13): a division by zero upstream is a missing
-  // figure, and "∞" printed in a money or measurement column reads like data.
-  return value === null || value === undefined || !Number.isFinite(value);
+/**
+ * What the number formatters take (0.49, KIT-2): a number, a numeric string ("1850.00",
+ * "-12.5", "1e3" — what a Decimal arrives as in JSON), or `null` / `undefined` for no
+ * value. A string is read with `Number()`, so a figure with more significant digits than
+ * a double holds (about 15–17) is printed as its nearest double.
+ */
+export type FormattableNumber = number | string | null | undefined;
+
+/** A plain decimal: optional sign, digits with an optional point, an optional exponent.
+ *  No grouping marks, no decimal comma, no currency — those are formatted text, and
+ *  reading them back is a locale's guess. */
+const NUMERIC_STRING = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
+
+/** The kit's dev switch, as `lib/logger.ts` reads it: a development build, never a
+ *  production one (the consumer's bundler makes `import.meta.env.DEV` false) and never
+ *  under vitest. Read per call so a test can switch it on with `vi.stubEnv`. */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
+const warnedSites = new Set<string>();
+/** This module's own frames, skipped to find the caller ("Object.formatMoney" is a
+ *  `useKitFormat` wrapper). */
+const OWN_FRAME = /\b(?:formatNumber|formatMoney|formatPercent|toFormattable|warnInvalid|callSite)\b/;
+
+/** The first stack frame outside the formatters: where the bad value was passed. */
+function callSite(): string {
+  const frames = (new Error().stack ?? "").split("\n").slice(1);
+  return frames.find((frame) => !OWN_FRAME.test(frame))?.trim() ?? "";
+}
+
+function describeValue(value: unknown): string {
+  if (typeof value === "number" || typeof value === "bigint" || typeof value === "boolean") return String(value);
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return Object.prototype.toString.call(value);
+  }
+}
+
+/** A development build's console note about an invalid value — once per call site. */
+function warnInvalid(fn: string, value: unknown): void {
+  if (!devWarnings()) return;
+  const site = callSite();
+  const key = `${fn}|${site || typeof value}`;
+  if (warnedSites.has(key)) return;
+  warnedSites.add(key);
+  const type = Array.isArray(value) ? "array" : typeof value;
+  console.warn(
+    `[ui-kit] ${fn} got ${describeValue(value)} (${type}), which is not a number: printed the empty value. ` +
+      "Pass a number, a numeric string, or null/undefined for a missing value." +
+      (site ? `\n  at ${site.replace(/^at /, "")}` : ""),
+  );
+}
+
+/**
+ * `value` as a finite number to format, or `undefined` to print `empty`. `null` and
+ * `undefined` are a missing value and pass quietly; anything that is neither a finite
+ * number nor a numeric string is an invalid one — ±Infinity included (lenkbank, adopting
+ * 0.13: a division by zero upstream; "∞" in a money column reads like data) — and a
+ * development build warns. `-0` is folded into `0`: zero carries no sign.
+ */
+function toFormattable(fn: string, value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  let n: number | undefined;
+  if (typeof value === "number") n = value;
+  else if (typeof value === "string" && NUMERIC_STRING.test(value.trim())) n = Number(value.trim());
+  if (n === undefined || !Number.isFinite(n)) {
+    warnInvalid(fn, value);
+    return undefined;
+  }
+  return n + 0;
 }
 
 /** A number in `locale`: "1,234.5", "1.234,5", "1’234.5" — with `unit`, "3.400 N". */
-export function formatNumber(value: number | null | undefined, options: FormatNumberOptions = {}): string {
-  if (isMissing(value)) return options.empty ?? EMPTY_FORMATTED_VALUE;
-  const figure = numberFormatter(options.locale, numberOptions(options)).format(value);
+export function formatNumber(value: FormattableNumber, options: FormatNumberOptions = {}): string {
+  const n = toFormattable("formatNumber", value);
+  if (n === undefined) return options.empty ?? EMPTY_FORMATTED_VALUE;
+  const figure = formatWithMinus(numberFormatter(options.locale, numberOptions(options)), n, options.minus);
   return options.unit ? `${figure}${UNIT_SEPARATOR}${options.unit}` : figure;
 }
 
 /** An amount of `currency` (ISO 4217) in `locale`: "CHF 1’234.50", "1.234,50 €". */
-export function formatMoney(
-  value: number | null | undefined,
-  currency: string,
-  options: FormatMoneyOptions = {},
-): string {
-  if (isMissing(value)) return options.empty ?? EMPTY_FORMATTED_VALUE;
-  return numberFormatter(options.locale, {
+export function formatMoney(value: FormattableNumber, currency: string, options: FormatMoneyOptions = {}): string {
+  const n = toFormattable("formatMoney", value);
+  if (n === undefined) return options.empty ?? EMPTY_FORMATTED_VALUE;
+  const formatter = numberFormatter(options.locale, {
     style: "currency",
     currency,
     ...(options.currencyDisplay ? { currencyDisplay: options.currencyDisplay } : null),
     ...numberOptions(options),
-  }).format(value);
+  });
+  return formatWithMinus(formatter, n, options.minus);
 }
 
 /** A percentage in `locale` ("12%", "12 %", "+1.25%"). See {@link FormatPercentOptions.ratio}
  *  for what `value` means. Default digits: at most one. */
-export function formatPercent(value: number | null | undefined, options: FormatPercentOptions = {}): string {
-  if (isMissing(value)) return options.empty ?? EMPTY_FORMATTED_VALUE;
-  const ratio = options.ratio === false ? value / 100 : value;
-  return numberFormatter(options.locale, {
+export function formatPercent(value: FormattableNumber, options: FormatPercentOptions = {}): string {
+  const n = toFormattable("formatPercent", value);
+  if (n === undefined) return options.empty ?? EMPTY_FORMATTED_VALUE;
+  const ratio = options.ratio === false ? n / 100 : n;
+  const formatter = numberFormatter(options.locale, {
     style: "percent",
     ...(options.digits === undefined ? { maximumFractionDigits: 1 } : null),
     ...numberOptions(options),
-  }).format(ratio);
+  });
+  return formatWithMinus(formatter, ratio, options.minus);
 }
 
 /* ── Dates ─────────────────────────────────────────────────────────────────── */
@@ -327,13 +416,9 @@ type WithoutLocale<T> = Omit<T, "locale"> & { locale?: string };
 export interface KitFormat {
   /** The locale they format in — the provider's, or `undefined` (runtime default). */
   locale: string | undefined;
-  formatNumber: (value: number | null | undefined, options?: WithoutLocale<FormatNumberOptions>) => string;
-  formatMoney: (
-    value: number | null | undefined,
-    currency: string,
-    options?: WithoutLocale<FormatMoneyOptions>,
-  ) => string;
-  formatPercent: (value: number | null | undefined, options?: WithoutLocale<FormatPercentOptions>) => string;
+  formatNumber: (value: FormattableNumber, options?: WithoutLocale<FormatNumberOptions>) => string;
+  formatMoney: (value: FormattableNumber, currency: string, options?: WithoutLocale<FormatMoneyOptions>) => string;
+  formatPercent: (value: FormattableNumber, options?: WithoutLocale<FormatPercentOptions>) => string;
   formatDate: (
     value: DateInput,
     style?: FormatDateStyle | Intl.DateTimeFormatOptions,

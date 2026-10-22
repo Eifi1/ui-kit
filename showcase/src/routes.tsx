@@ -158,6 +158,7 @@ const AccountMenuDemo = lazySection(() => import("./sections/account-menu-demo")
 const ToggleCaptionDemo = lazySection(() => import("./sections/toggle-caption-demo"), "ToggleCaptionDemo");
 const ActionCardDemo = lazySection(() => import("./sections/action-card-demo"), "ActionCardDemo");
 const NavPillsDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsDemo");
+const SectionNavDemo = lazySection(() => import("./sections/nav-pills-demo"), "SectionNavDemo");
 const ProgressSegmentsDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressSegmentsDemo");
 const ProgressLegendTone018Demo = lazySection(() => import("./sections/progress-018-demo"), "ProgressLegendTone018Demo");
 const FieldDemo = lazySection(() => import("./sections/field-demo"), "FieldDemo");
@@ -291,7 +292,7 @@ const ColumnMapperDemo = lazySection(() => import("./sections/column-mapper"), "
 // 0.24.0: the apps' 0.23 adoption round.
 const Textarea024Demo = lazySection(() => import("./sections/textarea-024-demo"), "Textarea024Demo");
 const RhfInlineEntity024Demo = lazySection(() => import("./sections/combobox"), "RhfInlineEntity024Demo");
-// 0.25.0: keksdose's feedback run 72 and the polish list.
+// 0.25.0: the feedback run and the polish list.
 const SearchParams025Demo = lazySection(() => import("./sections/search-params-025-demo"), "SearchParams025Demo");
 const TranslationReview025Demo = lazySection(() => import("./sections/translation-review-025-demo"), "TranslationReview025Demo");
 const TextareaEdge025Demo = lazySection(() => import("./sections/fields"), "TextareaEdge025Demo");
@@ -466,9 +467,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Colour roles",
         short: "Roles",
         blurb:
-          "The semantic layer over the palette: every fill with the foreground it names, each tone as text, wash and line, the strong lines, the well on a card, the hover rule, the role utilities that replace text-[var(--…)], and the test that catches a variable nothing declares.",
+          "The semantic layer over the palette: which tone a status takes, every fill with the foreground it names, each tone as text, wash and line, the strong lines, the well on a card, the hover rule, the role utilities that replace text-[var(--…)], and the test that catches a variable nothing declares.",
         icon: Contrast,
-        components: ["undeclaredCssVariables", "KIT_CSS_VARIABLES", "declaredCustomProperties", "Card", "contrast"],
+        components: ["statusTone", "STATUS_KINDS", "StatusKind", "undeclaredCssVariables", "KIT_CSS_VARIABLES", "declaredCustomProperties", "Card", "contrast"],
         Body: ColourRoles033Demo,
       },
       {
@@ -538,7 +539,7 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Kit review (live)",
         short: "Kit review",
         blurb:
-          "The kit's own words in every language keksdose ships, reviewed against keksdose's review database: the same kit. rows and verdicts as its Translations page, opened from there with a review token.",
+          "The kit's own words in every language the configured app ships, reviewed against that app's review database: the same kit. rows and verdicts as its Translations page, opened from there with a review token.",
         icon: ListChecks,
         components: ["TranslationReviewPanel", "TranslationLocaleTabs", "ServerWakeNotice", "createServerWake", "useServerWakeStage"],
         Body: KitReviewPage,
@@ -1272,11 +1273,12 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The parts of a page that are not its content: the header with its trail and actions, the breadcrumbs on their own, and the section label, caption and status dot.",
         icon: PanelTop,
-        components: ["PageHeader", "Breadcrumbs", "SectionLabel", "Caption", "StatusDot", "NavPills", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
+        components: ["PageHeader", "Breadcrumbs", "useDocumentTitle", "formatDocumentTitle", "SectionLabel", "Caption", "StatusDot", "NavPills", "SectionNav", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
         Body: () => (
           <>
             <PageStructure />
             <NavPillsDemo />
+            <SectionNavDemo />
             <SectionLabelMdDemo />
             <Layout013Demo />
             <PageHeader014Demo />

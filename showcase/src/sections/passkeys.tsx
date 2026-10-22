@@ -51,7 +51,6 @@ function Passkeys016Demo() {
         {code("data-*")} land on the card; {code("rowProps")} gives each row's {code("<li>")}{" "}
         an id (here {code("#passkey-101")}), and every row carries {code("data-passkey-id")}.
       </Note>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }
@@ -71,7 +70,7 @@ function Passkeys018Demo() {
   const [asking, setAsking] = useState(false);
   const [password, setPassword] = useState("");
   const [log, setLog] = useState("—");
-  // The step's answer, and what it produced for onAdd — Kurvenschmiede's server mints
+  // The step's answer, and what it produced for onAdd — a server mints
   // the registration options only once the password is right.
   const answer = useRef<(go: boolean) => void>(() => {});
   const options = useRef<string | null>(null);
@@ -116,7 +115,7 @@ function Passkeys018Demo() {
               <Button variant="secondary" onClick={dismiss}>
                 Cancel
               </Button>
-              <Button variant="brand" type="submit" form="demo-passkey-password" disabled={!password}>
+              <Button variant="accent" type="submit" form="demo-passkey-password" disabled={!password}>
                 Continue
               </Button>
             </>
@@ -147,7 +146,6 @@ function Passkeys018Demo() {
         {code("true")} to go on to {code("onAdd")}, {code("false")} to stop with the typed name kept.
         What the step produced reaches {code("onAdd")} through a ref.
       </Note>
-      <Note>Since 0.18.</Note>
     </Example>
   );
 }

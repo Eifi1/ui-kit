@@ -185,11 +185,12 @@ These follow from §2.3. They are kit behaviour; an app gets them by using the k
   row. The keyboard is the same either way.
 
 **Navigation:**
-- **AppShell's bottom bar** shows at most four entries at Large and three at Extra large,
-  and a "More" cell that opens a sheet with the rest; every entry at Normal
-  (`mobileBarMax`, a number or one per size; `DEFAULT_MOBILE_BAR_MAX` in
-  `src/shell/app-shell.tsx`). A fifth of a 360 px phone at 150 % holds what 48 px holds
-  at Normal.
+- **AppShell's bottom bar** holds at most five cells at Normal and Large and four at Extra
+  large, "More" included: four entries (three at Extra large) and a "More" cell that opens
+  a sheet with the rest (0.49 KIT-6, `mobileMaxItems`, a number or one per size;
+  `DEFAULT_MOBILE_MAX_ITEMS` in `src/shell/app-shell.tsx`; until 0.48 Normal showed every
+  entry). A fifth of a 360 px phone at 150 % holds what 48 px holds at Normal. An entry's
+  `mobilePriority` chooses which entries keep a cell.
   - The bar takes the app's array order: the app puts its most used first, or orders by
     role (kastlan: manager vs accountant). One hidden entry is no saving, so the bar then
     shows them all.

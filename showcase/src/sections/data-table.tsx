@@ -48,6 +48,7 @@ import {
   useCallbackLog,
 } from "./data-table-fixture";
 import type { Status } from "./data-table-fixture";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * DATA TABLE — the whole surface, a controlled table, a short one, one in a bounded
@@ -61,15 +62,14 @@ function DataTableSection() {
     <>
       <Note>
         <strong>
-          A Router is a hard requirement, with or without{" "}
-          <code className="font-mono">urlSync</code>.
+          A Router is needed only with <code className="font-mono">urlSync</code>.
         </strong>{" "}
-        <code className="font-mono">DataTable</code> calls{" "}
-        <code className="font-mono">useSearchParams()</code> unconditionally at the top of
-        the component — the flag only decides whether anything is ever written back. Mount
-        it outside a router and it throws on the first render, so a consumer that has no
-        routing at all still has to wrap the table in a{" "}
-        <code className="font-mono">MemoryRouter</code>.
+        Without it a <code className="font-mono">DataTable</code> keeps its sort, filters and
+        page in local state and mounts anywhere — no{" "}
+        <code className="font-mono">MemoryRouter</code> wrapper for an app with no routing.
+        With <code className="font-mono">urlSync</code> and no Router, a development build
+        throws &ldquo;DataTable urlSync requires a Router&rdquo;; a production build falls
+        back to local state rather than crash the page.
       </Note>
       <MainTable />
       <ControlledTable />
@@ -224,10 +224,10 @@ function MainTable() {
           reload. If you return to this page and a column is missing, that is the feature —
           re-tick it in the panel. The default prefix is{" "}
           <code className="font-mono">hbui-table:</code>; it is a prop so several apps can
-          share one localStorage origin without colliding. Since 0.34 an app sets its prefix
+          share one localStorage origin without colliding. An app sets its prefix
           once, on <code className="font-mono">{"<UiKitProvider tableStorageKeyPrefix>"}</code>,
           and every kit table below takes it — <code className="font-mono">TranslationReviewPanel</code>
-          too, which took none — while a table&apos;s own prop still wins. The stored key is the
+          too — while a table&apos;s own prop still wins. The stored key is the
           prefix plus <code className="font-mono">storageKey</code>, so an app that wrapped
           DataTable to pass its prefix keeps every reader&apos;s saved view when it moves the
           prefix to the provider.
@@ -292,7 +292,7 @@ function ControlledTable() {
         {STATUS_ORDER.map((s) => (
           <Button
             key={s}
-            variant={active.includes(s) ? "primary" : "secondary"}
+            variant={active.includes(s) ? "default" : "secondary"}
             className="px-2 py-1 text-xs"
             aria-pressed={active.includes(s)}
             onClick={() => toggleChip(s)}
@@ -504,7 +504,7 @@ function ShortTable() {
         <Note>
           <code className="font-mono">paginated=&#123;false&#125;</code> holds on a phone too:
           every line is a card, with no endless-scroll chunking and no “Loading…” sentinel for
-          rows that are already in memory. Qty and Line total still say the pre-0.7{" "}
+          rows that are already in memory. Qty and Line total say a physical{" "}
           <code className="font-mono">text-right</code>; the table rewrites a bare{" "}
           <code className="font-mono">text-right</code> / <code className="font-mono">text-left</code>{" "}
           to <code className="font-mono">text-end</code> / <code className="font-mono">text-start</code>,
@@ -571,7 +571,7 @@ function DensityTable() {
       </div>
       <div className="mt-3">
         <Note>
-          Lenkbank&apos;s in-card tables were hand-rolled <code className="font-mono">&lt;table&gt;</code>s
+          In-card tables were hand-rolled <code className="font-mono">&lt;table&gt;</code>s
           because at the default padding a table inside a card came out twice its height and pushed
           the card&apos;s own content below the fold. <code className="font-mono">density=&quot;compact&quot;</code>{" "}
           is <code className="font-mono">text-xs</code> with <code className="font-mono">px-2 py-1</code>{" "}
@@ -653,7 +653,7 @@ function ReportTable() {
   return (
     <Example
       label="A report table — firstSort, sortCycle, chrome, frame={false}, keyboard rows"
-      hint="the half-width summary keksdose's reports need: ranked by size, no power-user chrome, inside the app's own card"
+      hint="the half-width summary a report needs: ranked by size, no power-user chrome, inside the app's own card"
     >
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-secondary">
         <span className={CONTROL}>
@@ -881,11 +881,11 @@ function FillHeightTable() {
           flex parent (a viewport-locked app shell, a split pane) there is nothing to fill
           and the prop does nothing — which is why the main table above uses{" "}
           <code className="font-mono">maxBodyHeight</code> instead. From{" "}
-          <code className="font-mono">md</code> the body never shrinks below 12rem (0.40):
+          <code className="font-mono">md</code> the body never shrinks below 12rem:
           a pane shorter than the header, that floor and the pager lets the table run past it.
         </Note>
         <Note>
-          <strong>Two scrollbars</strong> (0.34, kastlan feedback 55): the default{" "}
+          <strong>Two scrollbars</strong>: the default{" "}
           <code className="font-mono">maxBodyHeight</code>,{" "}
           <code className="font-mono">calc(100dvh - 12rem)</code>, scrolls the body inside a
           page that scrolls itself, so a long table under a page header shows two scrollbars
@@ -947,7 +947,7 @@ function ListPageTable() {
       </div>
       <div className="mt-3">
         <Note>
-          docs/page-layout-harmonization.md §1 (0.40). The table marks itself under{" "}
+          docs/page-layout-harmonization.md §1. The table marks itself under{" "}
           <code className="font-mono">fillHeight</code> (<code className="font-mono">data-fill-height</code>);
           while one is inside, AppShell&apos;s <code className="font-mono">&lt;main&gt;</code> becomes a
           flex column from <code className="font-mono">md</code>, so the banner keeps its own row
@@ -969,7 +969,7 @@ function ListPageTable() {
   );
 }
 
-/* ── period groups and load more (0.48, keksdose dev #605) ─────────────────── */
+/* ── period groups and load more (0.48) ─────────────────── */
 
 interface LedgerRow {
   id: number;
@@ -1012,7 +1012,7 @@ const LEDGER: LedgerRow[] = (() => {
   return rows;
 })();
 
-const CHF = new Intl.NumberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" });
+const CHF = numberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" });
 const DAY_FMT = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
 /** "176 · +8’782.30 · −3’200.10": the count, what came in, what went out. */
@@ -1207,7 +1207,7 @@ function PeriodGroupsTable() {
       </p>
       <div className="mt-3">
         <Note>
-          keksdose dev #605 (its docs/transactions-by-period.md §6). Each band is a row header
+          Each band is a row header
           ({code("<th scope=\"rowgroup\">")}) opening its own {code("<tbody>")}, spanning the
           visible columns; the month band sticks under the header (and under a sticky leading
           row), the day band under the month, and a new month covers the day still pinned
@@ -1430,7 +1430,6 @@ function DataTableActionsDemo() {
           button: its tooltip leaves the scroller rather than being clipped by it.
         </Note>
       </div>
-      <Note>Since 0.12.</Note>
     </Example>
   );
 }
@@ -1439,7 +1438,7 @@ function DataTableActionsDemo() {
 
 /**
  * DATA TABLE 0.17 — the totals row: a column's `footer` and the table's `footerLabel`
- * (kastlan 54, the trial balance that hand-built its totals under the table).
+ * (a trial balance that would otherwise hand-build its totals under the table).
  */
 
 interface Account {
@@ -1464,7 +1463,7 @@ const ACCOUNTS_017: Account[] = [
   { no: "6500", name: "Office supplies", debit: 100, credit: 0 },
 ];
 
-const money = new Intl.NumberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = numberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const fmt = (n: number) => money.format(n);
 
@@ -1540,7 +1539,6 @@ function DataTableTotalsDemo() {
         table returns its totals with the page and ignores the {code("rows")} argument:{" "}
         {code("footer: () => fmt(page.totalDebit)")}.
       </Note>
-      <Note>Since 0.17.</Note>
     </Example>
   );
 }
@@ -1605,9 +1603,8 @@ function DataTableMobileSort022Demo() {
         them. They drive the table&apos;s own sort, so the header shows what the phone chose and the other way round,
         a picked column starts in its {code("firstSort")} like a header click, and under {code('sortCycle="toggle"')}
         &ldquo;Default order&rdquo; is offered only until the table is ranked. A column whose header is not text names
-        its option with {code("headerText")}. keksdose K10 (its aggregated report tables, #258). Off by default.
+        its option with {code("headerText")}. Off by default.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }

@@ -4,6 +4,7 @@ import { Globe } from "lucide-react";
 import { Disclosure } from "../components/disclosure";
 import { MenuItem } from "../components/menu-item";
 import { DEFAULT_TOP_BAR_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { languageCodeLabel } from "./language-code";
 
 /** One offered language in the account menu's sub-list. */
 export interface AccountMenuLanguageOption {
@@ -56,7 +57,7 @@ export interface AccountMenuLanguageProps {
 /**
  * The language choice INSIDE the account menu (docs/top-bar-harmonization.md §2.3),
  * keksdose's sub-list: a `Disclosure variant="menu"` row — the globe, "Language", the
- * active language's flag and the chevron — that opens in place onto one checked
+ * active language's flag and code ("DE") and the chevron — that opens in place onto one checked
  * `MenuItem` per language. Inline rather than a nested popover: a popover inside a
  * popover fights the outside click and has nowhere to go on a phone (keksdose #140).
  *
@@ -87,7 +88,18 @@ export function AccountMenuLanguage({
               <Globe aria-hidden className="size-4" />
               {label ?? words.language}
             </span>
-            {active && flagOf(active)}
+            {active && (
+              // The flag alone could not tell de-CH, fr-CH and it-CH apart (one Swiss
+              // flag each), so the code sits beside it (0.49 KIT-10); the row's name
+              // carries the language's own name.
+              <span className="flex items-center gap-1.5">
+                {flagOf(active)}
+                <span aria-hidden className="text-xs font-semibold tabular-nums tracking-wide text-secondary">
+                  {languageCodeLabel(active.code)}
+                </span>
+                <span className="sr-only">{active.label}</span>
+              </span>
+            )}
           </span>
         }
       >

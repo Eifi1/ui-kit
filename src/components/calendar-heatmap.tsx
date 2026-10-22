@@ -9,6 +9,7 @@ import { parseHex } from "../theme/color";
 import { Tooltip } from "./tooltip";
 import type { WeekDay } from "./mini-calendar";
 import { DEFAULT_CALENDAR_HEATMAP_LABELS } from "./calendar-heatmap-labels";
+import { formatWithMinus } from "../lib/minus";
 
 /**
  * Every string the heatmap speaks — the `calendarHeatmap` namespace of
@@ -248,7 +249,7 @@ export function CalendarHeatmap({
   const providerWeekStart = useKitWeekStart();
   const weekStart: WeekDay = weekStartsOn ?? providerWeekStart ?? localeWeekStart(locale);
   const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
-  const formatValue = formatValueProp ?? ((v: number) => numberFormat.format(v));
+  const formatValue = formatValueProp ?? ((v: number) => formatWithMinus(numberFormat, v));
 
   const values = useMemo(() => {
     const m = new Map<string, number>();

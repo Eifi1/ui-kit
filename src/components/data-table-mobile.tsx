@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Fragment, isValidElement, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { FOCUS_RING } from "./focus-ring";
@@ -13,6 +13,9 @@ import { FilterPopover } from "./data-table-filter-popover";
 import { SwipeableRow, type SwipeAction } from "./swipeable-row";
 import { DialogFrame } from "./dialog-frame";
 import { Checkbox } from "./checkbox";
+import { Chip } from "./chip";
+import { BooleanMark } from "./data-table-cells";
+import { EMPTY_FORMATTED_VALUE } from "../lib/format";
 import { useLongPress } from "../hooks/use-long-press";
 import type { DataTableLabels } from "./data-table-labels";
 import { RowLink, cleanAttrs, columnLabel, fromOutside, fromOwnControl } from "./data-table-shared";
@@ -70,24 +73,132 @@ const CARD_NO_TRUNCATE =
  * header's `sr-only` text (an actions column's), as every kit container must.
  */
 export function StackedFields<T>({ columns, row, compact }: { columns: DataTableColumn<T>[]; row: T; compact: boolean }) {
+  const fields = filledFields(columns, row);
+  if (fields.length === 0) return null;
   return (
     <dl
       data-card-fields="stacked"
       className={cn("relative flex min-w-0 flex-col", compact ? "gap-1.5 text-xs" : "gap-2.5 text-sm", CARD_NO_TRUNCATE)}
     >
-      {columns.map((col) => (
+      {fields.map(({ col, value }) => (
         <div key={col.key} className="min-w-0">
           <dt className="text-xs uppercase tracking-wide text-muted">{col.header}</dt>
           <dd
             {...dataAttrsOf(col.cellProps?.(row))}
             className="mt-0.5 min-w-0 break-words text-secondary"
           >
-            {col.cell(row)}
+            {value}
           </dd>
         </div>
       ))}
     </dl>
   );
+}
+
+/** The most fields the default phone card shows under its title (0.49 KIT-7). */
+export const MOBILE_CARD_FIELDS = 3;
+
+/**
+ * The default phone card's columns (0.49 KIT-7), out of the phone's columns (visible,
+ * not `mobileHidden`): the title — `mobile: "primary"` or `mobilePrimary`, else the
+ * first that is not a status — the `role: "status"` columns for beside it, at most
+ * {@link MOBILE_CARD_FIELDS} fields: those marked `mobile: "secondary"` when any is,
+ * else the first after the title, and the `role: "actions"` columns, drawn after the
+ * fields. An actions column is never the title and never one of the fields, so the
+ * fields and the marks leave it on the card; only `mobileHidden` / `mobile: "hidden"`
+ * (which keep it out of `columns`) remove it.
+ */
+export function mobileCardColumns<T>(columns: DataTableColumn<T>[]): {
+  primary: DataTableColumn<T> | null;
+  status: DataTableColumn<T>[];
+  fields: DataTableColumn<T>[];
+  actions: DataTableColumn<T>[];
+} {
+  const titles = columns.filter((c) => c.role !== "actions");
+  const primary =
+    titles.find((c) => c.mobile === "primary") ??
+    titles.find((c) => c.mobilePrimary) ??
+    titles.find((c) => c.role !== "status") ??
+    titles[0] ??
+    null;
+  const status = columns.filter((c) => c !== primary && c.role === "status");
+  const actions = columns.filter((c) => c.role === "actions");
+  const rest = titles.filter((c) => c !== primary && c.role !== "status");
+  const marked = rest.filter((c) => c.mobile === "secondary");
+  return { primary, status, fields: (marked.length > 0 ? marked : rest).slice(0, MOBILE_CARD_FIELDS), actions };
+}
+
+/** A column whose cell keeps its own clicks — `noRowLink`, or `role: "actions"`: no row
+ *  link may wrap it, and a card that draws it is not a link itself. */
+export function keepsOwnClicks<T>(col: DataTableColumn<T>): boolean {
+  return !!col.noRowLink || col.role === "actions";
+}
+
+/** The kit's dev switch, as `lib/logger.ts` reads it: a development build, never a
+ *  production one, never under vitest. Read per call so a test can switch it on. */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
+/**
+ * A development build's note on the default phone card (0.49 KIT-7): a `noRowLink`
+ * column past its three fields. Such a column holds the cell's own controls — a per-row
+ * delete, a link — and the card leaves it out with them, so on a phone the action is
+ * gone. Never for a `role: "actions"` column, which the card draws after its fields.
+ * Read off the declared `columns` (not the ones a person or the width hid), and only
+ * while the table lets the card choose: `enabled` is false with a `mobileCard` or
+ * `mobileDetailsInRow` (the column is then in the opened row), and a column marked
+ * `mobile: "secondary"` means the app chose. Once per table and column key; `name`
+ * (the table's `storageKey` or `urlSync` prefix) says which table, else its title
+ * column does.
+ */
+export function useCardColumnWarnings<T>(columns: DataTableColumn<T>[], enabled: boolean, name?: string): void {
+  const warned = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!enabled || !devWarnings()) return;
+    const phone = columns.filter((c) => !c.mobileHidden && c.mobile !== "hidden");
+    if (phone.some((c) => c.mobile === "secondary")) return;
+    const { primary, status, fields, actions } = mobileCardColumns(phone);
+    const onCard = new Set<DataTableColumn<T> | null>([primary, ...status, ...fields, ...actions]);
+    const table = name ? ` "${name}"` : primary ? ` (title column "${primary.key}")` : "";
+    warned.current ??= new Set();
+    for (const col of phone) {
+      if (onCard.has(col) || !col.noRowLink || warned.current.has(col.key)) continue;
+      warned.current.add(col.key);
+      console.warn(
+        `[ui-kit] DataTable${table}: column "${col.key}" (noRowLink) is past the phone card's three fields and ` +
+          'leaves the card — give it role: "actions" (drawn after the fields), or move its action to rowActions.',
+      );
+    }
+  }, [columns, enabled, name]);
+}
+
+/**
+ * Whether a rendered cell shows nothing worth a line (0.49 KIT-7): `null`, `undefined`,
+ * a boolean (React draws neither), `""` or blank text, and the formatters' empty value
+ * "—" ({@link EMPTY_FORMATTED_VALUE}), and `booleanColumn`'s mark for an unset value.
+ * Any other element is never empty here — its output is the component's — so a column
+ * whose empty value should drop off the card returns `null` (or "—") from `cell` for it.
+ */
+export function isEmptyCell(value: ReactNode): boolean {
+  if (value === null || value === undefined || typeof value === "boolean") return true;
+  if (isValidElement<{ value?: unknown }>(value) && value.type === BooleanMark) return value.props.value == null;
+  if (typeof value === "string") {
+    const text = value.trim();
+    return text === "" || text === EMPTY_FORMATTED_VALUE;
+  }
+  return false;
+}
+
+/** Each column's rendered cell, without the empty ones. */
+function filledFields<T>(columns: DataTableColumn<T>[], row: T): { col: DataTableColumn<T>; value: ReactNode }[] {
+  return columns.map((col) => ({ col, value: col.cell(row) })).filter(({ value }) => !isEmptyCell(value));
+}
+
+/** A status column's value beside the card's title: text in a neutral chip, an element
+ *  (the app's own Chip or StatusDot) as it is. */
+function StatusChip({ value }: { value: ReactNode }) {
+  return typeof value === "string" || typeof value === "number" ? <Chip size="sm">{value}</Chip> : <>{value}</>;
 }
 
 // ---------- Phone sort control (keksdose K10) ----------
@@ -199,7 +310,11 @@ export interface MobileRowProps<T> {
   mobileCardLinkable: boolean;
   mobileCard: DataTableProps<T>["mobileCard"];
   mobilePrimaryCol: DataTableColumn<T> | null;
+  /** The `role: "status"` columns, drawn as chips beside the title (0.49 KIT-7). */
+  mobileStatusColumns: DataTableColumn<T>[];
   mobileSecondaryColumns: DataTableColumn<T>[];
+  /** The `role: "actions"` columns, drawn after the fields at the card's end (0.49 KIT-7). */
+  mobileActionColumns: DataTableColumn<T>[];
   mobileExpandAsDialog: boolean;
   compact: boolean;
   /** The text size is Large or Extra large (§4). */
@@ -236,7 +351,9 @@ export function MobileRow<T>({
   mobileCardLinkable,
   mobileCard,
   mobilePrimaryCol,
+  mobileStatusColumns,
   mobileSecondaryColumns,
+  mobileActionColumns,
   mobileExpandAsDialog,
   compact,
   large,
@@ -305,6 +422,11 @@ export function MobileRow<T>({
   // itself is the anchor, and routing it through `linkColumn` too would nest an
   // <a> inside an <a>. Desktop and mobile are mutually exclusive (`isMdUp`), so
   // exactly one anchor exists per row.
+  // The default card's filled fields and status values (0.49 KIT-7): an empty one
+  // gets no line. Not computed for a `mobileCard`, which draws its own.
+  const fields = mobileCard ? [] : filledFields(mobileSecondaryColumns, row);
+  const statuses = mobileCard ? [] : filledFields(mobileStatusColumns, row);
+  const actionCells = mobileCard ? [] : filledFields(mobileActionColumns, row);
   const cardInner = (
     <>
       {/* The card's own content keeps the column it always had; the chevron sits
@@ -323,24 +445,42 @@ export function MobileRow<T>({
           mobileCard(row)
         ) : (
           <>
-            {/* Only the `data-*` half of `cellProps` — see its note. */}
-            {mobilePrimaryCol && (
-              <div {...dataAttrsOf(mobilePrimaryCol.cellProps?.(row))} className="min-w-0 break-words font-medium">
-                {mobilePrimaryCol.cell(row)}
+            {/* Only the `data-*` half of `cellProps` — see its note. The title row
+                carries the status chips at its end (0.49 KIT-7). */}
+            {(mobilePrimaryCol || statuses.length > 0) && (
+              <div data-card-head="" className="flex min-w-0 items-start justify-between gap-2">
+                {mobilePrimaryCol && (
+                  <div
+                    {...dataAttrsOf(mobilePrimaryCol.cellProps?.(row))}
+                    data-card-title=""
+                    className="min-w-0 flex-1 break-words font-medium"
+                  >
+                    {mobilePrimaryCol.cell(row)}
+                  </div>
+                )}
+                {statuses.length > 0 && (
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                    {statuses.map(({ col, value }) => (
+                      <span key={col.key} {...dataAttrsOf(col.cellProps?.(row))} data-card-status="" className="inline-flex">
+                        <StatusChip value={value} />
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-            {mobileSecondaryColumns.length > 0 && large ? (
+            {fields.length > 0 && large ? (
               // §4: each label ABOVE its value at Large. Side by side, a label column
               // sized to the widest label leaves a value a sliver of a 240 px card.
               <StackedFields columns={mobileSecondaryColumns} row={row} compact={compact} />
-            ) : mobileSecondaryColumns.length > 0 && (
+            ) : fields.length > 0 && (
               <dl
                 className={cn(
                   "grid grid-cols-[auto_1fr] gap-x-3",
                   compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm",
                 )}
               >
-                {mobileSecondaryColumns.map((col) => (
+                {fields.map(({ col, value }) => (
                   <Fragment key={col.key}>
                     <dt className="text-xs uppercase tracking-wide text-muted self-center">
                       {col.header}
@@ -349,11 +489,22 @@ export function MobileRow<T>({
                       {...dataAttrsOf(col.cellProps?.(row))}
                       className="min-w-0 text-secondary self-center"
                     >
-                      {col.cell(row)}
+                      {value}
                     </dd>
                   </Fragment>
                 ))}
               </dl>
+            )}
+            {/* The row's actions after the fields, at the card's end (0.49 KIT-7): its
+                buttons keep their own clicks, and RowActions folds into "⋯" at Large. */}
+            {actionCells.length > 0 && (
+              <div data-card-actions="" className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                {actionCells.map(({ col, value }) => (
+                  <div key={col.key} {...dataAttrsOf(col.cellProps?.(row))} className="flex min-w-0 justify-end">
+                    {value}
+                  </div>
+                ))}
+              </div>
             )}
           </>
         )}

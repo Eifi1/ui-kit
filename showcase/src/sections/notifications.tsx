@@ -31,8 +31,8 @@ import { Example, Note, code, beat } from "../lib/section";
  * THE NOTIFICATION CARDS (0.36, docs/notifications-harmonization.md §4.2): the types the
  * server answers with their switches, quiet hours in the account's zone, this device's
  * push, the device list, and the signed-out unsubscribe page. Every part takes the app's
- * request functions; here a pretend server answers. keksdose's nine types and its three
- * headings, kastlan's two and Kurvenschmiede's three are their words as the contract
+ * request functions; here a pretend server answers. A finance app's nine types and its three
+ * headings, an invoicing app's two and a course app's three are written as the contract
  * names them; the people and devices are synthetic. The "Notifications" page
  * (`notifications`) in App chrome.
  */
@@ -76,9 +76,9 @@ function applyTypes(value: NotificationTypesValue, patch: NotificationSettingsPa
   return next;
 }
 
-/* ── keksdose: nine types, three headings, the threshold and the digest ─── */
+/* ── A finance app: nine types, three headings, the threshold and the digest ─── */
 
-type KeksdoseType =
+type FinanceType =
   | "recurring_posted"
   | "scheduled_due"
   | "overspend"
@@ -90,7 +90,7 @@ type KeksdoseType =
   | "support_chat"
   | "feedback_received";
 
-const KEKSDOSE_TYPES: readonly NotificationTypeEntry<KeksdoseType>[] = [
+const FINANCE_TYPES: readonly NotificationTypeEntry<FinanceType>[] = [
   { id: "recurring_posted", label: "Recurring transactions", description: "A rule booked a transaction." },
   { id: "scheduled_due", label: "Scheduled transactions", description: "A transaction you dated forward is due." },
   { id: "overspend", label: "Overspent categories", description: "A category went over its budget." },
@@ -108,7 +108,7 @@ const KEKSDOSE_TYPES: readonly NotificationTypeEntry<KeksdoseType>[] = [
   },
 ];
 
-const KEKSDOSE_GROUPS: readonly NotificationTypeGroup<KeksdoseType>[] = [
+const FINANCE_GROUPS: readonly NotificationTypeGroup<FinanceType>[] = [
   { id: "budget", label: "Budget", types: ["recurring_posted", "scheduled_due", "overspend", "low_balance"] },
   { id: "activity", label: "Scans & sharing", types: ["scan_done", "share_events"] },
   { id: "updates", label: "Summaries & news", types: ["digest", "announcements", "support_chat"] },
@@ -117,7 +117,7 @@ const KEKSDOSE_GROUPS: readonly NotificationTypeGroup<KeksdoseType>[] = [
 ];
 
 // 0.46 (§10.2): in the app and push, each its own switch; `feedback_received` mails too.
-const KEKSDOSE_VALUE: NotificationTypesValue = {
+const FINANCE_VALUE: NotificationTypesValue = {
   recurring_posted: { app: true, push: true, email: null },
   overspend: { app: true, push: false, email: null },
   scan_done: { app: false, push: true, email: null },
@@ -130,21 +130,21 @@ const KEKSDOSE_VALUE: NotificationTypesValue = {
   feedback_received: { app: true, push: true, email: true },
 };
 
-export function NotificationTypesKeksdoseDemo() {
-  const [value, setValue] = useState(KEKSDOSE_VALUE);
+export function NotificationTypesFinanceDemo() {
+  const [value, setValue] = useState(FINANCE_VALUE);
   const [cadence, setCadence] = useState<DigestCadence>("weekly");
   const [threshold, setThreshold] = useState<number | null>(150);
   const { lines, log } = useLog();
   return (
     <Example
       label="NotificationTypesSetting — ten types under four headings, a column per channel"
-      hint="In the app · Push · E-mail (0.46); groups, digest, renderExtra; one PATCH per switch"
+      hint="In the app · Push · E-mail; groups, digest, renderExtra; one PATCH per switch"
     >
       <Column>
-        <NotificationTypesSetting<KeksdoseType>
+        <NotificationTypesSetting<FinanceType>
           id="settings-notifications-card"
-          types={KEKSDOSE_TYPES}
-          groups={KEKSDOSE_GROUPS}
+          types={FINANCE_TYPES}
+          groups={FINANCE_GROUPS}
           value={value}
           digest={{ type: "digest", cadence }}
           renderExtra={(id) =>
@@ -172,8 +172,8 @@ export function NotificationTypesKeksdoseDemo() {
       <Note>
         The server&apos;s {code("types")} is the only list: the card draws what it answered, in the order of the
         app&apos;s {code("groups")}, with the app&apos;s words and headings. A type the server answers that is in no
-        group throws in development — keksdose&apos;s compile-time guard, at run time. The cadence shows under
-        the digest while it is on, the threshold under Low balance ({code("renderExtra")}). Since 0.46 each
+        group throws in development — a compile-time guard, at run time. The cadence shows under
+        the digest while it is on, the threshold under Low balance ({code("renderExtra")}). Each
         channel is a column — &quot;In the app&quot;, &quot;Push&quot;, &quot;E-mail&quot; — stacked under the label on a
         phone; a channel the server answers {code("null")} is not drawn, so the e-mail column holds the admin&apos;s{" "}
         {code("feedback_received")} alone.
@@ -182,16 +182,16 @@ export function NotificationTypesKeksdoseDemo() {
   );
 }
 
-/* ── kastlan: in the app and by e-mail ─────────────────────────────────── */
+/* ── An invoicing app: in the app and by e-mail ─────────────────────────────────── */
 
-type KastlanType = "invoices_overdue" | "dunnings_pending";
+type InvoicingType = "invoices_overdue" | "dunnings_pending";
 
-const KASTLAN_TYPES: readonly NotificationTypeEntry<KastlanType>[] = [
+const INVOICING_TYPES: readonly NotificationTypeEntry<InvoicingType>[] = [
   { id: "invoices_overdue", label: "Overdue invoices", description: "Once a day, per company." },
   { id: "dunnings_pending", label: "Dunnings to send", description: "Reminders waiting for you to send them." },
 ];
 
-export function NotificationTypesKastlanDemo() {
+export function NotificationTypesInvoicingDemo() {
   const [value, setValue] = useState<NotificationTypesValue>({
     invoices_overdue: { app: true, email: false },
     dunnings_pending: { app: false, email: null },
@@ -204,8 +204,8 @@ export function NotificationTypesKastlanDemo() {
         <Switch checked={failing} onCheckedChange={setFailing} label="The server refuses" />
       </div>
       <Column>
-        <NotificationTypesSetting<KastlanType>
-          types={KASTLAN_TYPES}
+        <NotificationTypesSetting<InvoicingType>
+          types={INVOICING_TYPES}
           value={value}
           onChange={async (patch) => {
             log(`PATCH ${JSON.stringify(patch)}`);
@@ -217,7 +217,7 @@ export function NotificationTypesKastlanDemo() {
       </Column>
       <Readout lines={lines} />
       <Note>
-        kastlan has no push ({code("NotificationTypes(..., push_channel=False)")} answers {code("push: null")}), so
+        An app without push ({code("NotificationTypes(..., push_channel=False)")} answers {code("push: null")}), so
         two columns; {code("dunnings_pending")} offers no mail and keeps one switch named by its type. A flip shows
         at once and goes back if the PATCH fails, said under the card.
       </Note>
@@ -225,11 +225,11 @@ export function NotificationTypesKastlanDemo() {
   );
 }
 
-/* ── Kurvenschmiede: e-mail only, address unverified ──────────────────── */
+/* ── A course app: e-mail only, address unverified ──────────────────── */
 
-type KurvenschmiedeType = "feedback_answered" | "share_granted" | "team_added" | "work_transferred";
+type CourseType = "feedback_answered" | "share_granted" | "team_added" | "work_transferred";
 
-const KURVENSCHMIEDE_TYPES: readonly NotificationTypeEntry<KurvenschmiedeType>[] = [
+const COURSE_TYPES: readonly NotificationTypeEntry<CourseType>[] = [
   { id: "feedback_answered", label: "Answers to your reports", description: "Your report has an answer." },
   { id: "share_granted", label: "Work shared with you", description: "A project or a gear, or with your team." },
   { id: "team_added", label: "Added to a team", description: "Someone added you to a team." },
@@ -240,7 +240,7 @@ const KURVENSCHMIEDE_TYPES: readonly NotificationTypeEntry<KurvenschmiedeType>[]
   },
 ];
 
-export function NotificationTypesKurvenschmiedeDemo() {
+export function NotificationTypesCourseDemo() {
   const [value, setValue] = useState<NotificationTypesValue>({
     feedback_answered: { app: null, email: true },
     share_granted: { app: null, email: false },
@@ -254,8 +254,8 @@ export function NotificationTypesKurvenschmiedeDemo() {
         <Switch checked={unverified} onCheckedChange={setUnverified} label="Address unverified" />
       </div>
       <Column>
-        <NotificationTypesSetting<KurvenschmiedeType>
-          types={KURVENSCHMIEDE_TYPES}
+        <NotificationTypesSetting<CourseType>
+          types={COURSE_TYPES}
           value={value}
           emailUnverified={unverified}
           onChange={async (patch) => {
@@ -282,7 +282,7 @@ export function QuietHoursDemo() {
   const [reported, setReported] = useState(true);
   const { lines, log } = useLog();
   return (
-    <Example label="QuietHoursSetting — the account's zone, and a held push" hint="zone, held (0.46)">
+    <Example label="QuietHoursSetting — the account's zone, and a held push" hint="zone, held">
       <div className="mb-3">
         <Switch checked={reported} onCheckedChange={setReported} label="A device has reported its zone" />
       </div>
@@ -305,11 +305,11 @@ export function QuietHoursDemo() {
       </Column>
       <Readout lines={lines} />
       <Note>
-        Since 0.46 the zone is the account&apos;s, and automatic only (amended 2026-10-20): the zone of the device
+        The zone is the account&apos;s, and automatic only: the zone of the device
         last used ({code("/auth/me")}&apos;s {code("device_timezone")}, reported by {code("useDeviceZoneReport")} when
         it differs, never for a demo), else Zurich. The card names it read-only and a time sends no zone; screens
         keep showing device time. {code("held")} says a held push arrives when the window ends — an app that runs
-        the notifications tick (keksdose). Switch the report off for the fallback.
+        the notifications tick. Switch the report off for the fallback.
       </Note>
     </Example>
   );
@@ -375,7 +375,7 @@ function useInbox() {
 export function NotificationInboxDemo() {
   const { items, setItems, unread, markRead, lines, log } = useInbox();
   return (
-    <Example label="NotificationInbox — keksdose's list, lifted" hint="icon(type), company, mark read, clear behind a question">
+    <Example label="NotificationInbox — the full list" hint="icon(type), company, mark read, clear behind a question">
       <Column>
         <NotificationInbox<number>
           items={items}
@@ -398,8 +398,8 @@ export function NotificationInboxDemo() {
       <Readout lines={lines} />
       <Note>
         Props only: the app polls the count every {code("INBOX_BADGE_INTERVAL")} (60 s) and invalidates on its
-        worker&apos;s push message. Unread rows are bold with a dot; a row naming a company is kastlan&apos;s (its
-        inbox holds every company&apos;s rows). Without {code("onOpen")} a row with a {code("url")} is a real link
+        worker&apos;s push message. Unread rows are bold with a dot; a row may name a company (an app
+        with several companies keeps every company&apos;s rows in one inbox). Without {code("onOpen")} a row with a {code("url")} is a real link
         that marks itself read on a click or a middle click.
       </Note>
     </Example>
@@ -426,8 +426,8 @@ export function NotificationBellDemo() {
       <Readout lines={lines} />
       <Note>
         Optional per app, in {code("TopBarActions")}&apos; {code("notifications")} slot right before the account
-        menu. One badge per signal: an app shows the bell or an unread dot on the avatar, never both — keksdose
-        keeps its dot, kastlan&apos;s inbox lives here.
+        menu. One badge per signal: an app shows the bell or an unread dot on the avatar, never both — the
+        dot without an inbox, or the inbox here.
       </Note>
     </Example>
   );
@@ -530,7 +530,7 @@ const DEVICES: PushDeviceItem<number>[] = [
 export function PushDevicesDemo() {
   const [devices, setDevices] = useState(DEVICES);
   const { lines, log } = useLog();
-  const typeSwitches = KEKSDOSE_VALUE;
+  const typeSwitches = FINANCE_VALUE;
   return (
     <Example label="PushDevicesSetting — this device marked, failures, remove" hint="the confirm sits in the row">
       <Column>
@@ -543,7 +543,7 @@ export function PushDevicesDemo() {
             await beat(500);
             setDevices((current) => current.filter((device) => device.id !== id));
           }}
-          types={KEKSDOSE_TYPES}
+          types={FINANCE_TYPES}
           typeSwitches={typeSwitches}
           onMutedTypesChange={async (id, mutedTypes) => {
             log(`PATCH /notifications/devices/${id} ${JSON.stringify({ muted_types: mutedTypes })}`);
@@ -556,7 +556,7 @@ export function PushDevicesDemo() {
       <Note>
         Removing this device also unsubscribes the browser and fires {code("PUSH_SUBSCRIPTION_CHANGED")}, so the
         push card stops saying &quot;on&quot;. The browser and system come from the stored user agent
-        ({code("describeUserAgent")}). &quot;Types on this device&quot; (0.46) lists the types with push on; a device
+        ({code("describeUserAgent")}). &quot;Types on this device&quot; lists the types with push on; a device
         can mute one, never add one, and each flip saves its whole {code("muted_types")} list.
       </Note>
     </Example>
@@ -626,9 +626,9 @@ export function UnsubscribePanelDemo() {
 export function NotificationsPage() {
   return (
     <>
-      <NotificationTypesKeksdoseDemo />
-      <NotificationTypesKastlanDemo />
-      <NotificationTypesKurvenschmiedeDemo />
+      <NotificationTypesFinanceDemo />
+      <NotificationTypesInvoicingDemo />
+      <NotificationTypesCourseDemo />
       <QuietHoursDemo />
       <NotificationInboxDemo />
       <NotificationBellDemo />

@@ -59,7 +59,7 @@ function ModalOpen() {
           <Button variant="secondary" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button variant="brand" onClick={save} disabled={saving}>
+          <Button variant="accent" onClick={save} disabled={saving}>
             {saving ? "Saving…" : "Save"}
           </Button>
         </Row>
@@ -71,7 +71,7 @@ function ModalOpen() {
           </h4>
           <Input label="Name" defaultValue="Household" />
           <Row className="justify-end">
-            <Button variant="brand" onClick={save} disabled={saving}>
+            <Button variant="accent" onClick={save} disabled={saving}>
               {saving ? "Saving…" : "Save"}
             </Button>
           </Row>
@@ -123,7 +123,7 @@ function DialogFrameOpen() {
             <Button variant="secondary" onClick={close}>
               Cancel
             </Button>
-            <Button variant="brand" onClick={save} disabled={saving}>
+            <Button variant="accent" onClick={save} disabled={saving}>
               {saving ? "Creating…" : "Create"}
             </Button>
           </>
@@ -164,8 +164,8 @@ function FullBleedTitle() {
           <p className="text-sm text-secondary">
             The heading &ldquo;Edit budget line&rdquo; is an <code className="font-mono">{level}</code> and names this
             dialog; <code className="font-mono">header</code> is still the free slot beside it (the row&apos;s own
-            context, in grey). Before 0.10.0 this strip was a styled div, and a named full-screen editor had to
-            leave this component for <code className="font-mono">DialogFrame fullBleed</code>.
+            context, in grey). A named full-screen editor needs no{" "}
+            <code className="font-mono">DialogFrame fullBleed</code> of its own.
           </p>
           <Input label="Planned" defaultValue="450.00" inputMode="decimal" />
         </div>

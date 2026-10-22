@@ -116,7 +116,7 @@ export function DemoBanner({
         <>
           {!collapsed && (
             <>
-              <Button href={accessLink.href} variant="brand" size="sm">
+              <Button href={accessLink.href} variant="accent" size="sm">
                 {accessLink.label}
               </Button>
               <Button href={signInHref} variant="secondary" size="sm">

@@ -113,7 +113,7 @@ export function RowActions033Demo() {
         </div>
 
         <div className="rounded-md border border-subtle">
-          {/* A category group's header strip: smaller buttons, 14 px glyphs (keksdose). */}
+          {/* A category group's header strip: smaller buttons, 14 px glyphs. */}
           <div className="flex items-center gap-2 bg-surface-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-secondary">
             <span className="min-w-0 flex-1">Vegetables</span>
             <RowActions
@@ -132,7 +132,7 @@ export function RowActions033Demo() {
           </div>
         </div>
 
-        {/* A hand-built table's actions column (0.47, keksdose N17): RowActionsHead and
+        {/* A hand-built table's actions column (0.47): RowActionsHead and
             ROW_ACTIONS_CELL_CLASS give it rowActionsColumn's heading and cell. */}
         <Table aria-label="Beds" framed>
           <TableHead>
@@ -183,9 +183,11 @@ export function RowActions033Demo() {
         &ldquo;⋯&rdquo;&apos;s `data-slot="row-actions"` box, so the selector resolves to a box the size of the
         button and a tap still reaches it; never on the entry in the open menu, which is portalled after the row
         and would only make the selector match twice. `glyphSize` and `tooltipSide` (&ldquo;start&rdquo; in a
-        table&apos;s last column) are the row&apos;s; `rowActionsColumn` passes both through. A hand-built
+        table&apos;s last column) are the row&apos;s; `rowActionsColumn` passes both through. Its column is
+        `role: "actions"`: DataTable&apos;s phone card draws it after the card&apos;s three fields, at the
+        card&apos;s end, and never counts it as one of them. A hand-built
         table gets the column&apos;s visible, end-aligned &ldquo;Actions&rdquo; heading from `RowActionsHead` and
-        its cell from `ROW_ACTIONS_CELL_CLASS` (0.47).
+        its cell from `ROW_ACTIONS_CELL_CLASS`.
       </Note>
     </Example>
   );
@@ -225,7 +227,7 @@ export function LabelAbove033Demo() {
           <p className="w-48 max-w-full truncate-until-large rounded-md border border-subtle px-2 py-1 text-sm text-primary">
             Sow the second sweetcorn batch in the cold frame by the shed
           </p>
-          {/* 0.33.1 (keksdose): a figure in a narrow cell. The first breaks the amount
+          {/* 0.33.1: a figure in a narrow cell. The first breaks the amount
               mid-number at Large; the second wraps at the space only. */}
           <p className="pt-1 text-xs text-muted">
             The same amount with {code("truncate-until-large")} and {code("truncate-until-large-words")}, in 6rem
@@ -245,14 +247,13 @@ export function LabelAbove033Demo() {
         At Normal the label floats in the field&apos;s top strip, as it always has. At Large and Extra large it
         is a static label above the field — the phone card&apos;s &ldquo;label above value&rdquo; — so it wraps
         like any text and the field no longer reserves its height. Every floating-label field in every app shows
-        it at Large without a change (keksdose re-anchors one Skeleton that was placed from the strip).
+        it at Large without a change (a Skeleton placed from the strip needs re-anchoring).
         `truncate-until-large` is the one name for &ldquo;truncate at Normal, wrap at Large&rdquo; (`overflow-wrap:
-        anywhere`) — it replaced five copies in the kit, and it follows the attribute in CSS, so an app&apos;s{" "}
+        anywhere`), and it follows the attribute in CSS, so an app&apos;s{" "}
         {code('!large && "truncate"')} can go. For a FIGURE — an amount, a date, a count with its unit — use
-        `truncate-until-large-words` (0.33.1): it wraps at spaces only, so a number never splits; give its cell
-        the room for the widest one. The size sweep (`scripts/screenshot-sizes.mjs`) now reports a
-        one-line ellipsis that cuts at Large, and a pinned box taller than half the screen: report-only in 0.33,
-        gating from 0.34; `data-truncate-ok` marks a deliberate one, never on a name or an email.
+        `truncate-until-large-words`: it wraps at spaces only, so a number never splits; give its cell
+        the room for the widest one. The size sweep (`scripts/screenshot-sizes.mjs`) fails on a
+        one-line ellipsis that cuts at Large, and on a pinned box taller than half the screen; `data-truncate-ok` marks a deliberate one, never on a name or an email.
       </Note>
     </Example>
   );

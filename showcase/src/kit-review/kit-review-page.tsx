@@ -44,19 +44,21 @@ import {
 } from "./session";
 
 /**
- * /kit-review — the kit's own words, reviewed live against keksdose's review database.
+ * /kit-review — the kit's own words, reviewed live against the configured app's review
+ * database. The app is whichever API `VITE_REVIEW_API_BASE` names (./env.d.ts); the page
+ * speaks of it as "the app" and names no app of its own.
  *
- * keksdose's /translations lists the kit's labels beside its own strings as `kit.…` rows
+ * The app's /translations lists the kit's labels beside its own strings as `kit.…` rows
  * and stores a verdict per (locale, key). This page reads and writes THOSE rows, through
- * keksdose's API, so a reviewer can work through the kit's words where the kit lives:
- * the rows are built the way keksdose builds them (./rows.ts), the requests are keksdose's
- * own routes (./client.ts), and a verdict given here shows on keksdose's page and back.
+ * the app's API, so a reviewer can work through the kit's words where the kit lives:
+ * the rows are built the way the app builds them (./rows.ts), the requests are the app's
+ * own routes (./client.ts), and a verdict given here shows on the app's page and back.
  *
- * Who may do it is keksdose's to say: it mints a short-lived review token and opens
+ * Who may do it is the app's to say: it mints a short-lived review token and opens
  * `#/kit-review?token=…`. The token leaves the address at once (sessionStorage, this tab
  * only); without one the page explains itself and fetches nothing but `/health`.
  *
- * keksdose sleeps (Cloud Run, no minimum instance), so the first request after a break
+ * The app may sleep (Cloud Run, no minimum instance), so the first request after a break
  * starts it. `/health` is pinged on arrival so it is warming while the reviewer reads,
  * every call has a 60 s budget with retries (client.ts), and the wait is said in words —
  * inline while the review loads, by the kit's ServerWakeNotice after that.
@@ -66,7 +68,7 @@ import {
  *  reviewer is waiting on, none an upload or a download (the default counts GETs only). */
 const wake = createServerWake({ shouldWatch: () => true });
 
-/** keksdose's chunk: the server takes 2000 per request. */
+/** The app's chunk: the server takes 2000 per request. */
 const SAVE_CHUNK = 1000;
 
 const BUDGET_S = Math.round(REVIEW_BUDGET_MS / 1000);
@@ -200,7 +202,7 @@ export function KitReviewPage() {
   // ── Writes: through the panel's queue, one at a time; the lock holds them during a reload ──
   const [writing, setWriting] = useState(0);
   const send = async <T,>(work: (c: ReviewClient, signal: AbortSignal | undefined) => Promise<T>): Promise<T> => {
-    if (!client) throw new Error("Not connected to keksdose.");
+    if (!client) throw new Error("Not connected to the app.");
     setWriting((n) => n + 1);
     try {
       return await work(client, life.current?.signal);
@@ -263,7 +265,7 @@ export function KitReviewPage() {
         {expired && (
           <AlertBanner tone="warning" data-expired="">
             <Titled title="Your review token has expired or was revoked">
-              It has been dropped from this tab. Open the kit review again from keksdose&rsquo;s Translations page, or
+              It has been dropped from this tab. Open the kit review again from the app&rsquo;s Translations page, or
               paste a new token below.
             </Titled>
           </AlertBanner>
@@ -291,7 +293,7 @@ export function KitReviewPage() {
             )
           }
         >
-          <Titled title={forbidden ? "keksdose refused this token" : "The review could not be loaded"}>
+          <Titled title={forbidden ? "The app refused this token" : "The review could not be loaded"}>
             {messageOf(loadError)}
           </Titled>
         </AlertBanner>
@@ -313,7 +315,7 @@ export function KitReviewPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-secondary">
           {allRows.length.toLocaleString(tag)} kit strings in {allowed.length === 1 ? "one language" : `${allowed.length} languages`}
-          , as keksdose&rsquo;s Translations page lists them.
+          , as the app&rsquo;s Translations page lists them.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <TranslationExportButton
@@ -355,7 +357,7 @@ export function KitReviewPage() {
           hint={
             data.areas
               ? `Its grant is limited to ${data.areas.join(", ")}, and the kit's words lie outside it.`
-              : "keksdose granted no language this page can show."
+              : "The app granted no language this page can show."
           }
         />
       ) : (
@@ -382,7 +384,7 @@ export function KitReviewPage() {
       )}
       {/* Covers what happens after the first load — a save or a reload that meets a
           sleeping server. The first load says it inline (`Waiting`). */}
-      <ServerWakeNotice watcher={wake} appName="keksdose" />
+      <ServerWakeNotice watcher={wake} />
     </Shell>
   );
 }
@@ -432,12 +434,12 @@ function Intro() {
   return (
     <div className="max-w-3xl space-y-2 text-sm text-secondary">
       <p>
-        Every string the kit renders, in each language keksdose ships, as the rows keksdose&rsquo;s{" "}
+        Every string the kit renders, in each language the configured app ships, as the rows the app&rsquo;s{" "}
         <code className="font-mono">/translations</code> page lists under <code className="font-mono">kit.</code> —
-        and the same verdicts, stored in keksdose&rsquo;s database. Approving a string here approves it there.
+        and the same verdicts, stored in the app&rsquo;s database. Approving a string here approves it there.
       </p>
       <p>
-        To start, open keksdose&rsquo;s Translations page and follow its link to the kit review: keksdose opens this
+        To start, open the app&rsquo;s Translations page and follow its link to the kit review: the app opens this
         page with a short-lived review token, which leaves the address at once and is kept for this tab only. Or paste
         a token here.
       </p>
@@ -466,7 +468,7 @@ function TokenForm({ onToken, label = "Review token" }: { onToken: (token: strin
           onChange={(event) => setValue(event.target.value)}
         />
       </div>
-      <Button type="submit" variant="primary" disabled={!trimmed}>
+      <Button type="submit" variant="default" disabled={!trimmed}>
         Use this token
       </Button>
     </form>
@@ -476,10 +478,10 @@ function TokenForm({ onToken, label = "Review token" }: { onToken: (token: strin
 function ServerLine({ state }: { state: "waking" | "awake" | "unreachable" }) {
   const text =
     state === "awake"
-      ? "keksdose is awake."
+      ? "The app is awake."
       : state === "unreachable"
-        ? `keksdose did not answer within ${BUDGET_S} s — it may still be starting, or be down.`
-        : "Waking keksdose — it sleeps when nobody uses it, so it is started now, while you read.";
+        ? `The app did not answer within ${BUDGET_S} s — it may still be starting, or be down.`
+        : "Waking the app — it sleeps when nobody uses it, so it is started now, while you read.";
   return (
     <p className="flex items-center gap-2 text-xs text-muted" data-server={state}>
       {state === "waking" && <Spinner label={null} className="size-3" />}
@@ -494,7 +496,7 @@ function Waiting() {
   if (stage !== "waking") {
     return (
       <LoadingState
-        label={stage === "slow" ? "Still loading — keksdose is taking longer than usual." : "Loading the kit review…"}
+        label={stage === "slow" ? "Still loading — the app is taking longer than usual." : "Loading the kit review…"}
       />
     );
   }
@@ -502,7 +504,7 @@ function Waiting() {
     <div className="py-8" data-waking="">
       <AlertBanner tone="warning" icon={<Spinner label={null} className="size-4" />}>
         <Titled title="Waking the server…">
-          keksdose sleeps when nobody is using it, and the first request after a break has to start it again — that
+          The app sleeps when nobody is using it, and the first request after a break has to start it again — that
           can take up to a minute. This page keeps asking for {BUDGET_S} seconds; the review fills in by itself.
         </Titled>
       </AlertBanner>
@@ -527,7 +529,7 @@ function NotConfigured({
         title="The live review is not configured in this build"
         hint={
           <>
-            This page reads and writes keksdose&rsquo;s review database, and this build was made without its address (
+            This page reads and writes the configured app&rsquo;s review database, and this build was made without its address (
             <code className="font-mono">VITE_REVIEW_API_BASE</code>). The GitHub Pages build sets it from the repository
             variable <code className="font-mono">REVIEW_API_BASE</code>; a local dev server or a fork has none.
           </>
@@ -545,7 +547,7 @@ function NotConfigured({
             <Input
               label="API base (development only)"
               placeholder="http://localhost:8000/api/v1"
-              hint="Kept on this device. keksdose must allow this origin in its CORS settings."
+              hint="Kept on this device. The app must allow this origin in its CORS settings."
               inputMode="url"
               autoComplete="off"
               spellCheck={false}

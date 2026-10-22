@@ -105,7 +105,8 @@ describe("the phone card at Large (§4)", () => {
     renderTable({ onRowClick: () => {} });
     const body = card("Ada Example");
     expect(body.className).toContain("large:py-4");
-    const content = screen.getByText("Ada Example").parentElement!;
+    // The title sits in the card's head row (0.49 KIT-7), inside the content column.
+    const content = screen.getByText("Ada Example").closest("[data-card-head]")!.parentElement!;
     expect(content.className).toContain("large:[&_.truncate]:whitespace-normal");
     // The primary line wraps rather than overflowing.
     expect(screen.getByText("Ada Example").className).toContain("break-words");
@@ -183,10 +184,11 @@ describe("the rowActions column through RowActions (§10.8)", () => {
     { kind: "delete", onAction: vi.fn() },
   ];
 
-  it("is inline icons at Normal", () => {
+  it("is inline icons at Normal, the delete in each row's ⋯ menu (0.49 KIT-12)", () => {
     renderTable({ rowActions: twoActions });
     expect(screen.getAllByRole("button", { name: "Edit" })).toHaveLength(2);
-    expect(menuButtons()).toHaveLength(0);
+    expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
+    expect(menuButtons()).toHaveLength(2);
   });
 
   it("is one ⋯ menu per row at Large, named by rowName, and runs the action", async () => {
@@ -207,6 +209,9 @@ describe("the rowActions column through RowActions (§10.8)", () => {
     expect(onRowClick).not.toHaveBeenCalled();
     const menu = await screen.findByRole("dialog", { name: "Actions for Ben Sample" });
     await user.click(within(menu).getByRole("button", { name: "Delete" }));
+    // The kit asks first (0.49 KIT-12): a delete with no `confirm` of its own.
+    const dialog = await screen.findByRole("alertdialog", { name: "Delete “Ben Sample”?" });
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
     await vi.waitFor(() => expect(onDelete).toHaveBeenCalledWith(ROWS[1]));
   });
 

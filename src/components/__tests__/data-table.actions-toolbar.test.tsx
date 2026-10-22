@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DataTable } from "../data-table";
@@ -68,7 +68,21 @@ describe("DataTable rowActions", () => {
     expect(screen.getByRole("columnheader", { name: "Actions" })).toBeInTheDocument();
     const first = screen.getAllByRole("row")[1];
     expect(within(first).getByRole("button", { name: "Edit" })).toBeInTheDocument();
-    expect(within(first).getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    // Delete is in the row's "⋯" menu, never a bin in every row (0.49 KIT-12).
+    expect(within(first).queryByRole("button", { name: "Delete" })).toBeNull();
+    fireEvent.click(within(first).getByRole("button", { name: "Actions" }));
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+  });
+
+  it("a delete without its own `confirm` asks the kit's question first", async () => {
+    const onDelete = vi.fn();
+    renderTable({ rowActions: [{ kind: "delete", onAction: onDelete }] });
+    fireEvent.click(within(screen.getAllByRole("row")[1]).getByRole("button", { name: "Actions" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    const dialog = await screen.findByRole("alertdialog");
+    expect(onDelete).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith(ROWS[0]));
   });
 
   it("runs the action without opening the row", () => {
@@ -84,14 +98,19 @@ describe("DataTable rowActions", () => {
     const onDelete = vi.fn();
     const confirm = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
     renderTable({ rowActions: [{ kind: "delete", onAction: onDelete, confirm }] });
-    const del = within(screen.getAllByRole("row")[1]).getByRole("button", { name: "Delete" });
+    const del = () => {
+      fireEvent.click(within(screen.getAllByRole("row")[1]).getByRole("button", { name: "Actions" }));
+      fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    };
 
-    fireEvent.click(del);
+    del();
     await flush();
     expect(confirm).toHaveBeenCalledWith(ROWS[0]);
     expect(onDelete).not.toHaveBeenCalled();
+    // The table's own `confirm` is the one question: no kit dialog besides it.
+    expect(screen.queryByRole("alertdialog")).toBeNull();
 
-    fireEvent.click(del);
+    del();
     await flush();
     expect(onDelete).toHaveBeenCalledWith(ROWS[0]);
   });

@@ -139,7 +139,7 @@ export function DemoStart<T>({
       </div>
       {refusal !== null && (
         <div className="flex flex-wrap justify-center gap-3">
-          <Button href={accessLink.href} variant="brand">
+          <Button href={accessLink.href} variant="accent">
             {accessLink.label}
           </Button>
           <Button href={backHref} variant="secondary">

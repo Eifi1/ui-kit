@@ -77,12 +77,12 @@ export function LandingActions({
       className={cn("flex flex-col gap-3 sm:flex-row", align === "center" && "sm:justify-center", className)}
     >
       {session === "user" ? (
-        <Button href={openAppHref} variant="brand" size={buttonSize} className={extra}>
+        <Button href={openAppHref} variant="accent" size={buttonSize} className={extra}>
           {labels.openApp}
         </Button>
       ) : (
         <>
-          <Button href={accessLink.href} variant="brand" size={buttonSize} className={extra}>
+          <Button href={accessLink.href} variant="accent" size={buttonSize} className={extra}>
             {accessLink.label}
           </Button>
           {demoHref !== null && (

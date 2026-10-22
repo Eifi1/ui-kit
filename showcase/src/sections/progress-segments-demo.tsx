@@ -2,15 +2,16 @@ import { useState } from "react";
 import { ProgressBar } from "@eifi1/ui-kit";
 import type { ProgressBarSegment } from "@eifi1/ui-kit";
 import { Example, Note } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * ProgressBar `segments` + `legend` (0.11): a meter of parts — one bar, several fills
  * side by side, named in `aria-valuetext` and listed in a legend.
  */
 
-const eur = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const eur = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
-/** keksdose's discretionary-spending bar: the steps of ONE hue, from classes. */
+/** A discretionary-spending bar: the steps of ONE hue, from classes. */
 const STEP_CLASS = [
   "bg-[color-mix(in_oklab,var(--brand)_100%,var(--bg-surface))]",
   "bg-[color-mix(in_oklab,var(--brand)_70%,var(--bg-surface))]",

@@ -18,7 +18,7 @@ import { Example, Note, code } from "../../lib/section";
 
 /**
  * 0.27's row detail (docs/feedback-harmonization.md §4.4): the panel a feedback table
- * unfolds under a row, lifted from keksdose's `FeedbackRow`. The PATCH, the upload and
+ * unfolds under a row, lifted from an app's `FeedbackRow`. The PATCH, the upload and
  * the authenticated GET are faked in memory here; every row and key is synthetic.
  */
 
@@ -33,7 +33,7 @@ function picture(label: string, hue: number): Blob {
 
 const KEYS = {
   shot: `${ATT}/000000000001.png`,
-  // kastlan's key shape (§3.5): <uuid32>_<sha12>.<ext> — the kit matches [\w.-]+.
+  // A key shape (§3.5): <uuid32>_<sha12>.<ext> — the kit matches [\w.-]+.
   log: `${ATT}/00000000000000000000000000000000_000000000002.txt`,
   rework: `${ATT}/000000000003.png`,
 };
@@ -198,7 +198,7 @@ export function FeedbackDetail027Demo() {
   return (
     <Example
       label="The row detail"
-      hint="switch who is looking — the admin sets the status, the author sends it back for rework; the outcome is read-only since 0.38"
+      hint="switch who is looking — the admin sets the status, the author sends it back for rework; the outcome is read-only"
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-2">
@@ -235,7 +235,6 @@ export function FeedbackDetail027Demo() {
         (uploaded first) and PATCHes the body alone; the server reopens the row. Send a rework as the author: the row goes
         back to Open, and the Edit button appears.
       </Note>
-      <Note>Since 0.27.</Note>
     </Example>
   );
 }

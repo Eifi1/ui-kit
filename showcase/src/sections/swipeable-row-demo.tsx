@@ -168,11 +168,9 @@ function SwipeDemo() {
       <Note>
         Each action names its <code className="font-mono">tone</code> — here neutral, danger
         and success — and the kit paints both states from it, with a foreground measured
-        against every shipped preset in both modes. The panel used to be the caller&apos;s
-        class under a hard-coded <code className="font-mono">text-white</code>, dimmed to 60 %
-        until armed: 2.4–4.5:1 on the kit&apos;s own swipes, and white on near-white on every
-        dark pastel. That path (<code className="font-mono">className</code> /{" "}
-        <code className="font-mono">armedClassName</code>) was deprecated in 0.33 and removed in 0.35.
+        against every shipped preset in both modes. There is no class of the caller&apos;s under a
+        hard-coded <code className="font-mono">text-white</code>: that would read 2.4–4.5:1 on the
+        kit&apos;s own swipes, dimmed until armed, and white on near-white on every dark pastel.
       </Note>
     </div>
   );
@@ -261,8 +259,8 @@ function SwipeVariants() {
         Right-to-left: <code className="font-mono">left</code> and{" "}
         <code className="font-mono">right</code> stay physical drag directions on purpose — a
         swipe is a movement across the glass, and which way is destructive is the app&apos;s
-        call (swap the arrays for a mirrored RTL layout). What the row lays out does mirror
-        since 0.7.0: the revealed label hugs the edge being uncovered in either direction, and
+        call (swap the arrays for a mirrored RTL layout). What the row lays out does mirror:
+        the revealed label hugs the edge being uncovered in either direction, and
         the keyboard buttons (Tab into the Arabic row) surface at the row&apos;s logical END —
         the left here — instead of over its title.
       </Note>
@@ -355,7 +353,7 @@ function SwipeTones() {
   );
 }
 
-/** keksdose's three curtains (§12.6): UNCLEARED is exactly its status pill's fill, and
+/** An app's three curtains (§12.6): UNCLEARED is exactly its status pill's fill, and
  *  the two deletes keep their two strengths. Palette hex, the same in both themes. */
 const PAINTS: Array<{ label: string; paint: SwipePaint; icon: ReactNode }> = [
   { label: "Uncleared", paint: { fill: "#d97706", foreground: "#0f172a" }, icon: <CircleSlash className="size-4" /> },
@@ -384,13 +382,13 @@ function SwipePaints() {
         {`{ label: "Uncleared", paint: { fill: "#d97706", foreground: "#0f172a" }, onCommit }`}
       </pre>
       <Note>
-        `paint` is for the case a tone cannot say: keksdose&apos;s UNCLEARED curtain must be its pill&apos;s own
+        `paint` is for the case a tone cannot say: an UNCLEARED curtain must be its pill&apos;s own
         amber, and its two deletes are two strengths of one red on purpose. The kit lays the fill on the panel as
         a custom property: idle is `color-mix(in oklab, fill 14%, var(--bg-surface))` under the body ink — a
         mid-tone as text on its own wash would be 2.4:1 — armed is the fill under the foreground. Values are CSS
         colours or `var()`s, the same in both themes unless the app declares the variable per theme. The kit
         cannot measure an app&apos;s paint, so the app&apos;s tests pin the pair. It is the one way past the
-        tones since `className` / `armedClassName` went in 0.35.
+        tones.
       </Note>
     </div>
   );

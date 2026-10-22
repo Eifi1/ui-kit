@@ -1,4 +1,4 @@
-import { isValidElement } from "react";
+import { isValidElement, useContext } from "react";
 import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode } from "react";
 import { MoreHorizontal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -15,6 +15,8 @@ import type { TooltipSide } from "./tooltip";
 import type { DataTableColumn } from "./data-table";
 import { TableHeaderCell, type TableHeaderCellProps } from "./table";
 import { DEFAULT_ROW_ACTIONS_LABELS } from "./row-actions-labels";
+import { ConfirmContext } from "./confirm-context";
+import { ConfirmProvider } from "./confirm-dialog";
 
 /**
  * A row's actions — inline icons at Normal, one "⋯" menu at Large and above
@@ -29,6 +31,11 @@ import { DEFAULT_ROW_ACTIONS_LABELS } from "./row-actions-labels";
  *
  * The data is the roster's `UserRowActionList`, generalised: entries, and `false` /
  * `null` for the ones a condition left out (`row.locked || {…}`).
+ *
+ * Destructive actions belong in the menu (0.49 KIT-12): a `tone: "danger"` action goes
+ * into the "⋯" menu while the others stay inline (`dangerPlacement`), and choosing it
+ * opens a `ConfirmDialog` before `onSelect` runs (`confirm`; `false` to opt out). A
+ * delete is then never a bin icon in every row, one stray tap from gone.
  *
  * 0.33 (§10.16): an action carries its state at both sizes — a toggle (`pressed`), a
  * disclosure (`expanded`, `controls`), a tone, a tour anchor (`dataTour`) — so a row
@@ -47,11 +54,21 @@ export interface RowAction {
   /** The action's name: the inline icon's name and tooltip, the menu entry's words. */
   label: string;
   /**
-   * Runs it. The kit sends nothing — the app opens its confirmation or calls its API.
-   * Optional only beside `href`; an action has one or the other (or both: `onSelect`
-   * then runs as the link is followed).
+   * Runs it. The kit sends nothing — it calls this, after a `tone: "danger"` action's
+   * confirmation (see {@link confirm}). Optional only beside `href`; an action has one or
+   * the other (or both: `onSelect` then runs as the link is followed).
    */
   onSelect?: () => void;
+  /**
+   * 0.49 KIT-12: ask before `onSelect`. A `tone: "danger"` action asks by default — a
+   * `ConfirmDialog` (the provider's `useConfirm`, else one of its own) titled with the
+   * action and the row's name, "Delete “Ada Example”?", the consequence under it
+   * (`rowActions.confirmBody`), the action's label on the danger button and focus on
+   * Cancel. Pass the words to say more, or `false` when the app confirms in `onSelect`
+   * itself or offers an undo instead. Any other tone asks only when given one. Not for
+   * an `href` action: a link only navigates.
+   */
+  confirm?: boolean | RowActionConfirm;
   /**
    * The action NAVIGATES — an edit page, a mail to compose (0.32.1, kastlan's 0.32
    * report): a real link inline and in the menu, so open in a new tab, a middle click
@@ -133,6 +150,13 @@ export interface RowAction {
   dataTour?: string;
 }
 
+/** The words of a {@link RowAction.confirm}; each defaults as described there. */
+export interface RowActionConfirm {
+  title?: ReactNode;
+  body?: ReactNode;
+  confirmLabel?: ReactNode;
+}
+
 /** What a row's actions may be: entries, and `false` / `null` / `undefined` for the ones
  *  a condition left out. */
 export type RowActionList = readonly (RowAction | false | null | undefined)[];
@@ -143,6 +167,11 @@ export interface RowActionsLabels {
   actions: string;
   /** The menu button's name, given the row's: "Actions for Ada Example". */
   actionsFor: (name: string) => string;
+  /** 0.49 KIT-12: a danger action's confirmation title, given the action's label and the
+   *  row's name when it has one: "Delete “Ada Example”?", "Delete?". */
+  confirmTitle: (action: string, name?: string) => string;
+  /** 0.49 KIT-12: the line under it — "This cannot be undone." */
+  confirmBody: string;
 }
 
 // Defined in ./row-actions-labels, which holds no component code (0.34, KS U8).
@@ -166,6 +195,13 @@ export type RowActionsSize = Extract<IconButtonSize, "md" | "sm" | "xs" | "2xs">
 
 export interface RowActionsProps {
   actions: RowActionList;
+  /**
+   * 0.49 KIT-12: where `tone: "danger"` actions go while the others are inline. `"menu"`
+   * (default): into the row's "⋯" menu, so a delete is never one stray tap in every
+   * row — the other actions stay icons beside it. `"inline"`: an icon like the rest.
+   * `collapse="inline"` keeps every action inline, `collapse="menu"` every one in the menu.
+   */
+  dangerPlacement?: "menu" | "inline";
   /** The row's name, for the menu button's name — "Actions for Ada Example". Without it
    *  (or `null`, as API fields often are) the button is "Actions". */
   name?: string | null;
@@ -226,7 +262,7 @@ function toneAttr(tone: RowActionTone | undefined) {
  * A row's actions, inline or as a "⋯" menu — see {@link RowActionsCollapse}. Every
  * control stops its click (and the Enter/Space it stands for) from reaching the row, so
  * a clickable row or a DataTable `rowLink` does not open as well; in a DataTable column
- * also set `noRowLink: true`, as {@link rowActionsColumn} does.
+ * also set `noRowLink: true` and `role: "actions"`, as {@link rowActionsColumn} does.
  *
  * Inline, the icons sit in a {@link CompactControls} region at Normal: their labels
  * stay the names and the tooltips, and a locked one keeps its reason in the tooltip — a
@@ -238,10 +274,54 @@ function toneAttr(tone: RowActionTone | undefined) {
  * press close it, and focus goes back to the "⋯" button, which is where a confirmation
  * dialog then returns it.
  */
-export function RowActions({
+export function RowActions(props: RowActionsProps) {
+  const outer = useContext(ConfirmContext);
+  // A danger action asks first (0.49 KIT-12). Under the app's ConfirmProvider through
+  // it; without one, through a provider of this row's own — only when there is
+  // something to ask, so a plain row adds nothing.
+  if (outer === null && visibleActions(props.actions).some(asksFirst)) {
+    return (
+      <ConfirmProvider>
+        <RowActionsBody {...props} />
+      </ConfirmProvider>
+    );
+  }
+  return <RowActionsBody {...props} />;
+}
+
+/** Whether choosing `action` opens a confirmation first: a danger action unless it says
+ *  `confirm: false`, any other when it passes one; never a link. */
+function asksFirst(action: RowAction): boolean {
+  if (action.href !== undefined || action.confirm === false) return false;
+  return action.confirm !== undefined || action.tone === "danger";
+}
+
+/** `action.onSelect`, after its confirmation when it {@link asksFirst}. */
+function useRunAction(name: string | null | undefined, labels: RowActionsLabels) {
+  const confirm = useContext(ConfirmContext);
+  return (action: RowAction) => {
+    if (!asksFirst(action) || confirm === null) {
+      action.onSelect?.();
+      return;
+    }
+    const words = typeof action.confirm === "object" ? action.confirm : {};
+    void confirm({
+      title: words.title ?? labels.confirmTitle(action.label, name ?? undefined),
+      body: words.body ?? labels.confirmBody,
+      confirmLabel: words.confirmLabel ?? action.label,
+      tone: "danger",
+      commit: action.commit,
+    }).then((ok) => {
+      if (ok) action.onSelect?.();
+    });
+  };
+}
+
+function RowActionsBody({
   actions,
   name,
   collapse = "auto",
+  dangerPlacement = "menu",
   size = "xs",
   menuWidth = "15rem",
   className,
@@ -251,28 +331,64 @@ export function RowActions({
 }: RowActionsProps) {
   const labels = useKitLabels("rowActions", DEFAULT_ROW_ACTIONS_LABELS, labelsProp);
   const large = useLargeText();
+  const run = useRunAction(name, labels);
   const entries = visibleActions(actions);
   if (entries.length === 0) return null;
   const asMenu = collapse === "menu" || (collapse === "auto" && large && entries.length > 1);
-  if (!asMenu) {
-    const strip = (
-      <div data-slot="row-actions" className={cn("inline-flex items-center gap-0.5", className)}>
-        {entries.map((action) => (
-          <InlineAction
-            key={action.key ?? action.label}
-            action={action}
-            size={size}
-            glyphSize={glyphSize}
-            tooltipSide={tooltipSide}
-          />
-        ))}
-      </div>
-    );
-    // Compact at Normal (no room for a reason line in a row); at Large an inline action
-    // is the app's choice ("inline") or the row's only one, and shows its words.
-    return large ? strip : <CompactControls>{strip}</CompactControls>;
-  }
+  // Inline, a danger action still goes into the "⋯" menu (KIT-12) unless the app keeps it
+  // inline: the other actions stay icons, the menu holds the destructive ones.
+  const toMenu = (action: RowAction) =>
+    asMenu || (collapse === "auto" && dangerPlacement === "menu" && action.tone === "danger");
+  const inline = entries.filter((action) => !toMenu(action));
+  const menu = entries.filter(toMenu);
   const title = name ? labels.actionsFor(name) : labels.actions;
+  const menuButton = menu.length > 0 && (
+    <RowActionsMenu
+      entries={menu}
+      title={title}
+      size={size}
+      menuWidth={menuWidth}
+      run={run}
+      className={inline.length === 0 ? className : undefined}
+    />
+  );
+  if (inline.length === 0) return menuButton || null;
+  const strip = (
+    <div data-slot="row-actions" className={cn("inline-flex items-center gap-0.5", className)}>
+      {inline.map((action) => (
+        <InlineAction
+          key={action.key ?? action.label}
+          action={action}
+          size={size}
+          glyphSize={glyphSize}
+          tooltipSide={tooltipSide}
+          run={run}
+        />
+      ))}
+      {menuButton}
+    </div>
+  );
+  // Compact at Normal (no room for a reason line in a row); at Large an inline action
+  // is the app's choice ("inline") or the row's only one, and shows its words.
+  return large ? strip : <CompactControls>{strip}</CompactControls>;
+}
+
+/** The "⋯" button and its menu of `entries`. */
+function RowActionsMenu({
+  entries,
+  title,
+  size,
+  menuWidth,
+  run,
+  className,
+}: {
+  entries: RowAction[];
+  title: string;
+  size: RowActionsSize;
+  menuWidth: `${number}rem`;
+  run: (action: RowAction) => void;
+  className?: string;
+}) {
   // The menu closed when the action was chosen, so what is in flight shows on "⋯".
   const busy = entries.some((action) => action.pending);
   const anchored = entries.filter((action) => action.dataTour);
@@ -315,7 +431,7 @@ export function RowActions({
           <ul data-slot="row-actions-menu" className="space-y-0.5">
             {entries.map((action) => (
               <li key={action.key ?? action.label}>
-                <MenuAction action={action} close={close} />
+                <MenuAction action={action} close={close} run={run} />
               </li>
             ))}
           </ul>
@@ -355,7 +471,7 @@ function useActionHref(action: RowAction): string | undefined {
 }
 
 /** One entry of the "⋯" menu: the words, as a link for an `href`, else a button. */
-function MenuAction({ action, close }: { action: RowAction; close: () => void }) {
+function MenuAction({ action, close, run }: { action: RowAction; close: () => void; run: (action: RowAction) => void }) {
   const href = useActionHref(action);
   const glyph = glyphOf(action.icon);
   const glyphTone = action.tone === undefined ? undefined : MENU_GLYPH_TONE[action.tone];
@@ -376,7 +492,7 @@ function MenuAction({ action, close }: { action: RowAction; close: () => void })
   const tone = action.tone === "danger" ? "danger" : undefined;
   const select = () => {
     close();
-    action.onSelect?.();
+    run(action);
   };
   if (href !== undefined) {
     return (
@@ -424,11 +540,13 @@ function InlineAction({
   size,
   glyphSize,
   tooltipSide,
+  run,
 }: {
   action: RowAction;
   size: RowActionsSize;
   glyphSize?: IconButtonGlyphSize;
   tooltipSide?: TooltipSide;
+  run: (action: RowAction) => void;
 }) {
   const href = useActionHref(action);
   const glyph = glyphOf(action.icon);
@@ -471,7 +589,7 @@ function InlineAction({
         pending={action.pending}
         disabled={action.disabled}
         stopPropagation
-        onClick={() => action.onSelect?.()}
+        onClick={() => run(action)}
       >
         {glyph}
       </IconButton>
@@ -481,7 +599,7 @@ function InlineAction({
   const stop = {
     onClick: (e: MouseEvent) => {
       e.stopPropagation();
-      action.onSelect?.();
+      run(action);
     },
     onKeyDown: (e: KeyboardEvent) => {
       if (e.key === "Enter" || e.key === " ") e.stopPropagation();
@@ -606,7 +724,7 @@ export interface RowActionsColumnOptions<T> {
    */
   header?: ReactNode | false;
   labels?: LabelOverride<RowActionsLabels>;
-  /** Anything else for the column (`mobileHidden`, `cellProps`…), merged last. */
+  /** Anything else for the column (`mobileHidden`, `cellProps`, another `role`…), merged last. */
   column?: Partial<DataTableColumn<T>>;
 }
 
@@ -618,9 +736,10 @@ export interface RowActionsColumnOptions<T> {
  *
  * The heading says "Actions" on screen (0.46.1; `header` changes or hides it), the
  * column hugs its content at the row's end, and `noRowLink` keeps a `rowHref` anchor off it, so the
- * buttons keep their own clicks. On a phone it is a line of the card like any column;
- * set `column: { mobileHidden: true }` to drop it there (with `mobileDetailsInRow` it
- * then shows in the opened row instead).
+ * buttons keep their own clicks. It is `role: "actions"` (0.49 KIT-7): DataTable's default
+ * phone card draws it after its three fields, at the card's end, and never counts it as
+ * one of them. Set `column: { mobileHidden: true }` to drop it there (with
+ * `mobileDetailsInRow` it then shows in the opened row instead).
  */
 export function rowActionsColumn<T>({
   key = "actions",
@@ -660,6 +779,8 @@ export function rowActionsColumn<T>({
     // `RowActionsHead` (0.47).
     headClassName: ROW_ACTIONS_HEAD_CLASS,
     noRowLink: true,
+    // After the phone card's fields, never one of them (0.49 KIT-7).
+    role: "actions",
     ...column,
   };
 }

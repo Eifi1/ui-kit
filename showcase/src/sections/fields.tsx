@@ -563,9 +563,9 @@ export function Fields() {
       >
         <Stage>
           <div className="space-y-4">
-            {/* keksdose K3 (live #400): the status explanation, ~500 characters, was a
-                FieldHint, and since 0.32 a FieldHint prints its words under the field on a
-                touch screen and at Large — the longest thing in the form. Help the field
+            {/* The status explanation, ~500 characters, is no
+                FieldHint: a FieldHint prints its words under the field on a touch screen and
+                at Large — the longest thing in the form. Help the field
                 is usable without goes behind this "?" instead; a fact stays a FieldHint. */}
             <Select
               className="w-64 max-w-full"
@@ -630,7 +630,7 @@ export function Fields() {
       >
         <Stage>
           <div className="space-y-4">
-            {/* Round 0.36 (Kurvenschmiede's "How it was measured"): a field with a fact AND
+            {/* Round 0.36 (a "How it was measured" field): a field with a fact AND
                 help had one slot for both. Now the fact is `hint` and the help is `help`;
                 the help's "?" is the field's only one, so the FieldHint beside it is
                 printed as the caption at every size instead of drawing a second "?". */}
@@ -665,7 +665,7 @@ export function Fields() {
           </div>
         </Stage>
         <Note>
-          <strong>One &ldquo;?&rdquo; per field</strong> (text size §4, round 0.36): <code className="font-mono">hint</code>{" "}
+          <strong>One &ldquo;?&rdquo; per field</strong> (text size §4): <code className="font-mono">hint</code>{" "}
           is the fact, a caption under the field that its <code className="font-mono">aria-describedby</code> names;{" "}
           <code className="font-mono">help</code> is the help, a HelpPopover on the label line named &ldquo;About{" "}
           <em>label</em>&rdquo; in the reader&apos;s language (pass a HelpPopover to name it yourself). While{" "}
@@ -987,7 +987,7 @@ export function TextareaEdge025Demo() {
           />
         </div>
         <Note>
-          Kurvenschmiede, on 0.24: under the label strip, a line scrolled most of the way out
+          Under the label strip, a line scrolled most of the way out
           left a row of comma tails above the first whole line. The strip&apos;s edge now follows
           the scroll. Half a line or less left: covered, solid, to exactly where that line ends —
           the strip snaps to the line box, and the next line is untouched. More than half: a 3px
@@ -997,7 +997,6 @@ export function TextareaEdge025Demo() {
           disabled or read-only, both themes), its scrollbar inset and its RTL side.
         </Note>
       </div>
-      <Note>Since 0.25.</Note>
     </Example>
   );
 }
@@ -1011,7 +1010,7 @@ export function Fields022Demo() {
   return (
     <Example
       label="Placeholder, hint and counter on a labelled field"
-      hint="kastlan 8, keksdose K4 and K11"
+      hint="the field anatomy, one slot each"
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="Access note" placeholder="e.g. the key is with the caretaker" />
@@ -1047,7 +1046,6 @@ export function Fields022Demo() {
         field and is announced only on entering the last tenth and at the limit — type into Subject to see the colours
         turn.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }

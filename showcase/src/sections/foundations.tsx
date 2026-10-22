@@ -3,17 +3,20 @@ import {
   AlertBanner,
   Button,
   CHART_COLORS,
+  CHART_ROLES,
+  CVD_ORDER,
   DEFAULT_PRESET,
   DERIVED_PRESETS,
   HEATMAP_HEX,
-  IMPRINT_PRESET,
   Input,
   PALETTES,
   PALETTE_HEX,
+  PAUL_TOL_PRESET,
   Select,
   applyPersistedPalette,
   applyPersistedTheme,
   applyTokenSet,
+  chartEdge,
   lerpHex,
   paletteFor,
   presetById,
@@ -97,7 +100,7 @@ function TextOn({ fill }: { fill: string }) {
         className="rounded px-1.5 py-0.5 text-caption font-semibold"
         style={{ background: fill, color: out }}
       >
-        -12.50
+        −12.50
       </span>
       {out}
     </span>
@@ -135,19 +138,22 @@ export function Foundations() {
         <code className="font-mono">applyTokenSet</code> writes these fourteen onto{" "}
         <code className="font-mono">&lt;html&gt;</code> as inline custom properties
         (camelCase → kebab), plus <code className="font-mono">--chart-1…9</code> from the{" "}
-        <code className="font-mono">chart</code> array. The <code className="font-mono">heat</code>{" "}
+        <code className="font-mono">chart</code> array — Imprint&rsquo;s eight repeated, so{" "}
+        <code className="font-mono">--chart-9</code> is slot 1 again. The <code className="font-mono">heat</code>{" "}
         stops get no custom property at all — CSS variables cannot be interpolated, so the
         heatmaps read them from JS via <code className="font-mono">useHeatStops()</code>. The{" "}
         <code className="font-mono">:root</code> / <code className="font-mono">.dark</code> blocks in{" "}
         <code className="font-mono">tokens.css</code> mirror the default preset and are live CSS
-        (this note used to call them documentation that Tailwind strips; Tailwind 4 keeps them):
-        in an app with a palette layer the inline write beats them, and in one without
-        (Kurvenschmiede) they are what paints. A test holds the mirror to{" "}
+        (Tailwind 4 keeps them): in an app with a palette layer the inline write beats them, and in one without
+        they are what paints. A test holds the mirror to{" "}
         <code className="font-mono">DEFAULT_PRESET</code>. The semantic layer — every fill and its
         foreground, the lines, the well — is on the Colour roles page.
       </Note>
 
-      <Example label="chart — 9 categorical hues" hint="the array field of the same TokenSet">
+      <Example
+        label="chart — the categorical hues"
+        hint={`the array field of the same TokenSet — ${tokens.chart.length} here, the same hues in light and dark`}
+      >
         <div className="grid gap-3 sm:grid-cols-3">
           {tokens.chart.map((hex, i) => (
             <Swatch key={i} name={`chart[${i}] · --chart-${i + 1}`} value={hex} />
@@ -191,11 +197,14 @@ export function Foundations() {
         <code className="font-mono">--chart-N</code> currently resolves to in the browser. If the
         two ever disagree, <code className="font-mono">applyTokenSet</code> has not run.
         (In jsdom nothing applies them, so in the render test these chips are simply blank.) The
-        index wraps at nine — <code className="font-mono">paletteFor(9)</code> is{" "}
-        <code className="font-mono">var(--chart-1)</code> — so a tenth series silently reuses the
-        first one&rsquo;s colour. It wraps backwards too: <code className="font-mono">paletteFor(-1)</code>{" "}
-        is <code className="font-mono">var(--chart-9)</code>, and a <code className="font-mono">NaN</code>{" "}
-        index takes the first colour rather than naming a token that does not exist.
+        index wraps at eight (anyplot&rsquo;s pool) — <code className="font-mono">paletteFor(8)</code> is{" "}
+        <code className="font-mono">var(--chart-1)</code> — so a ninth series reuses the first
+        one&rsquo;s colour, and the first series is always the green. It wraps backwards too:{" "}
+        <code className="font-mono">paletteFor(-1)</code> is <code className="font-mono">var(--chart-8)</code>,
+        and a <code className="font-mono">NaN</code> index takes the first colour rather than naming a
+        token that does not exist. <code className="font-mono">{"paletteFor(i, { order: \"cvd\" })"}</code>{" "}
+        walks anyplot&rsquo;s colour-vision-optimal order instead,{" "}
+        <code className="font-mono">[{CVD_ORDER.join(", ")}]</code>.
       </Note>
 
       <Example label="CHART_COLORS" hint="semantic money roles, as theme-aware CSS vars">
@@ -211,8 +220,16 @@ export function Foundations() {
         are the same token (<code className="font-mono">--money-expense</code>), and{" "}
         <code className="font-mono">assigned</code> is the brand accent rather than a money
         colour — so a chart that plots activity against expense must separate them by something
-        other than colour.
+        other than colour. <code className="font-mono">total</code> is not money: a generic total
+        line takes the chart ink.
       </Note>
+
+      <Example
+        label="CHART_ROLES · chartEdge"
+        hint="what is not a series, and which hues get a 1px ink edge on this page's ground"
+      >
+        <ChartRoles />
+      </Example>
 
       <Example
         label="PALETTE_HEX"
@@ -239,13 +256,11 @@ export function Foundations() {
       <Note>
         Both of these are module constants in{" "}
         <code className="font-mono">theme/chart-palette.ts</code>, written before the palette layer
-        existed. Select <em>Imprint</em> in the top bar: the{" "}
+        existed. Select <em>Paul Tol muted</em> in the top bar: the{" "}
         <code className="font-mono">chart</code> grid moves and{" "}
-        <code className="font-mono">PALETTE_HEX</code> does not. They have also drifted from the
-        default preset they mirror — <code className="font-mono">HEATMAP_HEX.light.neutral</code> is
-        slate-100 (<code className="font-mono">#f1f5f9</code>), a cool grey, while the shipped
-        default&rsquo;s <code className="font-mono">heat.neutral</code> is the warm{" "}
-        <code className="font-mono">#f1e7d2</code>. Prefer{" "}
+        <code className="font-mono">PALETTE_HEX</code> does not. They mirror the default (Imprint) —
+        anyplot&rsquo;s eight hues, its green → blue sequential scale and its red ↔ paper ↔
+        blue diverging one — and a test keeps them equal to <code className="font-mono">DEFAULT_PRESET</code>. Prefer{" "}
         <code className="font-mono">useHeatStops()</code> / <code className="font-mono">useChartHex()</code>{" "}
         in app code and treat these two as the pre-palette fallback.
       </Note>
@@ -307,10 +322,10 @@ export function Foundations() {
         <div className="space-y-3">
           <Row className="gap-x-5 text-sm font-medium">
             <span className="text-money-pos">+1,240.00</span>
-            <span className="text-money-neg">-380.00</span>
+            <span className="text-money-neg">−380.00</span>
             <span className="text-money-net">860.00</span>
             <span className="text-money-pos-muted">+1,240.00</span>
-            <span className="text-money-neg-muted">-380.00</span>
+            <span className="text-money-neg-muted">−380.00</span>
             <span className="text-brand">Brand text</span>
           </Row>
           {/* 0.33: each fill under ITS foreground (docs/colour-roles-harmonization.md §5.1).
@@ -348,16 +363,15 @@ export function Foundations() {
         variant — and take none. They are also NOT generated by Tailwind: they exist because the
         stylesheet is imported, so an app that misses{" "}
         <code className="font-mono">@import &quot;@eifi1/ui-kit/tokens.css&quot;</code> gets unstyled
-        text with no error. Since 0.34 they are aliases: the money colours are theme utilities,{" "}
+        text with no error. They are aliases: the money colours are theme utilities,{" "}
         <code className="font-mono">text-money-income</code>, <code className="font-mono">-expense</code>,{" "}
         <code className="font-mono">-net</code> and <code className="font-mono">-neutral</code> and the
         same four as <code className="font-mono">bg-</code>, layered and with variants, so{" "}
         <code className="font-mono">hover:bg-money-expense</code> works where a site kept the{" "}
         <code className="font-mono">[var(--money-…)]</code> form for it.{" "}
-        <code className="font-mono">text-money-net</code> and <code className="font-mono">bg-money-neutral</code>{" "}
-        were plain classes too until then; <code className="font-mono">text-brand</code>,{" "}
-        <code className="font-mono">bg-brand</code> and <code className="font-mono">border-brand</code>{" "}
-        until 0.33 (the Colour roles page has the whole set). A label on a fill takes that
+        <code className="font-mono">text-brand</code>, <code className="font-mono">bg-brand</code> and{" "}
+        <code className="font-mono">border-brand</code> are theme utilities too (the Colour roles page has the
+        whole set). A label on a fill takes that
         fill&rsquo;s own <code className="font-mono">-contrast</code>.{" "}
         <code className="font-mono">bg-money-neutral</code> means &ldquo;no money has moved&rdquo; —
         scheduled or future-dated rows — and is deliberately neither brand nor money-pos, both of
@@ -458,9 +472,9 @@ export function Foundations() {
                 )}
               </div>
               <p className="text-xs text-secondary">{p.blurb}</p>
-              {/* The ramps side by side: Imprint is the default preset with ONLY the
-                  nine categorical hues swapped; the derived presets come out of
-                  `derivePalette` and keep the default's Paul Tol ramp. */}
+              {/* The ramps side by side: Paul Tol muted is the default preset (Imprint)
+                  with ONLY the categorical hues and heat stops swapped; the derived
+                  presets come out of `derivePalette` and keep the default's ramp. */}
               <Row className="gap-1.5">
                 {p[mode].chart.map((hex, i) => (
                   <span
@@ -493,10 +507,47 @@ export function Foundations() {
   );
 }
 
+/**
+ * The two inks and the edge rule, measured live: every hue of the active ramp against
+ * this page's card and page grounds, read off <html> as they resolve now.
+ */
+function ChartRoles() {
+  const tokens = useActiveTokenSet();
+  const grounds = [tokens.bgSurface, tokens.bgPage];
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {Object.entries(CHART_ROLES).map(([role, value]) => (
+          <Swatch key={role} name={`CHART_ROLES.${role}`} value={value} />
+        ))}
+      </div>
+      <OutTable
+        rows={tokens.chart.map((hex, i) => [
+          `chartEdge(chart[${i}], [bgSurface, bgPage])  // ${hex}`,
+          <span className="inline-flex items-center gap-2">
+            <svg width="28" height="16" aria-hidden="true">
+              <rect
+                x="0.5"
+                y="0.5"
+                width="27"
+                height="15"
+                rx="2"
+                fill={hex}
+                stroke={chartEdge(hex, grounds) ?? "none"}
+              />
+            </svg>
+            {chartEdge(hex, grounds) ?? "undefined — clears 3:1"}
+          </span>,
+        ])}
+      />
+    </div>
+  );
+}
+
 /** Where a preset comes from, for the table under the preview. */
 function sourceOf(p: PalettePreset): string {
   if (p === DEFAULT_PRESET) return "DEFAULT_PRESET";
-  if (p === IMPRINT_PRESET) return "IMPRINT_PRESET";
+  if (p === PAUL_TOL_PRESET) return "PAUL_TOL_PRESET";
   return "DERIVED_PRESETS";
 }
 
@@ -539,7 +590,7 @@ function PresetPreview() {
           <div className="w-56 max-w-full">
             <Input label="Amount" defaultValue="1,250.00" />
           </div>
-          <Button variant="brand">Save</Button>
+          <Button variant="accent">Save</Button>
           <Button variant="secondary">Cancel</Button>
         </div>
         <AlertBanner tone="warning">Semantic colours come from tokens.css, not the preset.</AlertBanner>
@@ -557,7 +608,8 @@ function PresetPreview() {
       <OutTable
         rows={[
           ["DEFAULT_PRESET.id", DEFAULT_PRESET.id],
-          ["IMPRINT_PRESET.id", IMPRINT_PRESET.id],
+          ["PAUL_TOL_PRESET.id", PAUL_TOL_PRESET.id],
+          ['presetById("imprint").id', presetById("imprint").id],
           ["DERIVED_PRESETS.map(p => p.id)", DERIVED_PRESETS.map((p) => p.id).join(", ")],
           ["PALETTES.map(p => p.id)", PALETTES.map((p) => p.id).join(", ")],
           ['presetById("ink").id', presetById("ink").id],

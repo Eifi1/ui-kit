@@ -131,7 +131,7 @@ export function Dialogs() {
         nowhere near the trigger — but stays non-modal otherwise: no backdrop, no scroll lock.
         Both <code className="font-mono">Tooltip</code> variants point the child's{" "}
         <code className="font-mono">aria-describedby</code> at the bubble and close on Escape.{" "}
-        <code className="font-mono">HoverMenu</code> is a real menu since 0.7.0: the caller&apos;s
+        <code className="font-mono">HoverMenu</code> is a real menu: the caller&apos;s
         plain buttons and links become <code className="font-mono">menuitem</code>s (list markup
         in between goes <code className="font-mono">role="none"</code>), the trigger gets{" "}
         <code className="font-mono">aria-haspopup</code>/<code className="font-mono">aria-expanded</code>,
@@ -180,10 +180,10 @@ export function PopoversMenusTooltips() {
         <code className="font-mono">align</code>: <code className="font-mono">start</code> and{" "}
         <code className="font-mono">end</code> (the default) follow the reading direction —{" "}
         <code className="font-mono">end</code> is the trigger&apos;s right edge here and its left
-        in RTL (see the right-to-left example below). The physical{" "}
-        <code className="font-mono">left</code>/<code className="font-mono">right</code> went in
-        0.35: <code className="font-mono">right</code> is <code className="font-mono">end</code> in
-        a left-to-right page.
+        in RTL (see the right-to-left example below). There is no physical{" "}
+        <code className="font-mono">left</code>/<code className="font-mono">right</code>:{" "}
+        <code className="font-mono">right</code> is <code className="font-mono">end</code> in a
+        left-to-right page.
         Keyboard: Tab to a trigger and press ↓ (or Enter/Space) — the menu opens with focus on
         its first item, ↑ opens onto the last; ↑/↓ wrap, Home/End jump, Tab moves on and
         closes, Escape closes and puts focus back on the trigger. A hover-opened menu does not
@@ -200,7 +200,7 @@ export function PopoversMenusTooltips() {
         <strong>Only one HoverMenu in the whole document may be open at a time.</strong> The
         “currently open menu” is a module-level variable, so opening one of these closes the
         other — and closes the palette and language menus in the top bar too, which are the same
-        component. That is feedback #251 (adjacent top-bar menus overlapping) and it is correct
+        component. That keeps adjacent top-bar menus from overlapping, and it is correct
         for a top bar; it is worth knowing before you file it as a bug here.
       </Note>
 
@@ -230,7 +230,7 @@ function ModalSizes() {
           </Button>
         ))}
       </Row>
-      {/* Conditional mount, the idiom every caller before 0.10.0 used: the caller owning
+      {/* Conditional mount, the plain idiom: the caller owning
           the mount is what lets `useCloseTransition` hold the panel on screen for a
           dismissal's exit. A close decided from outside skips it — which is what the
           `open` prop fixes (see "Modal — open" further down this page). */}
@@ -243,7 +243,7 @@ function ModalSizes() {
           <p className="text-xs text-secondary">
             The panel is <code className="font-mono">w-full</code> under every cap, so on a phone
             all four are the same full-width bottom sheet and only the desktop widths differ.{" "}
-            <code className="font-mono">2xl</code> (0.34) is for a dialog whose content is a table
+            <code className="font-mono">2xl</code> is for a dialog whose content is a table
             to be read — a pasted measurement table, a report drilldown.
           </p>
           <input
@@ -464,8 +464,8 @@ function BackdropClose() {
         </p>
         <p className="text-xs text-muted">
           A plain <code className="font-mono">onClick</code> fires on mouseup and targets the
-          common ancestor of the down and up elements, so both directions of that drag used to
-          close a dialog mid-edit (feedback #254).
+          common ancestor of the down and up elements, so both directions of that drag would
+          close a dialog mid-edit; the backdrop closes only when a press starts and ends on it.
         </p>
       </div>
     </div>
@@ -645,7 +645,7 @@ function FullBleedFooter() {
               Cancel
             </Button>
             <Button
-              variant="brand"
+              variant="accent"
               onClick={() => {
                 setApplied(pick);
                 setOpen(false);
@@ -1184,7 +1184,7 @@ function OverlaysRtl() {
         <code className="font-mono">HoverMenu</code>&apos;s <code className="font-mono">align</code>{" "}
         takes <code className="font-mono">start</code>/<code className="font-mono">end</code>{" "}
         (default <code className="font-mono">end</code>), which mirror here, and nothing
-        physical since 0.35. <code className="font-mono">Popover</code> reads the
+        physical. <code className="font-mono">Popover</code> reads the
         trigger&apos;s direction when it opens: the portalled panel carries that{" "}
         <code className="font-mono">dir</code> (so its text runs right to left although it lives
         under <code className="font-mono">&lt;body&gt;</code>) and aligns to the trigger&apos;s END

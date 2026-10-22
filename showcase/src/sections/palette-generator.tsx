@@ -373,7 +373,7 @@ function ThemePreview({ p }: { p: DerivedPalette }) {
             2 failed
           </span>
           <span className="text-xs font-medium" style={{ color: t.moneyIncome }}>+1,240.00</span>
-          <span className="text-xs font-medium" style={{ color: t.moneyExpense }}>-380.00</span>
+          <span className="text-xs font-medium" style={{ color: t.moneyExpense }}>−380.00</span>
         </div>
       </div>
     </div>
@@ -764,7 +764,7 @@ export function PaletteGenerator() {
       <Example label="Apply to this page" hint="a preview, not a setting">
         <div className="space-y-3">
           <Row>
-            <Button variant="brand" onClick={applyPreview}>
+            <Button variant="accent" onClick={applyPreview}>
               Apply the {mode} set to this page
             </Button>
             <Button variant="secondary" onClick={resetPreview}>
@@ -931,9 +931,10 @@ export function PaletteGenerator() {
         what an exhaustive search over starting hue and lightness can reach;{" "}
         <code className="font-mono">deriveChartRamp</code> does no such search — it spaces
         hues evenly starting from YOUR brand&rsquo;s hue, so most brands do not land on it
-        even at four series. The shipped Paul Tol &ldquo;Muted&rdquo; set stays the default
-        for the same reason: it was optimised against real confusion lines rather than
-        spaced by formula, and <code className="font-mono">MIN_SEPARATION</code> was
+        even at four series. The shipped ramps (anyplot&rsquo;s &ldquo;Imprint&rdquo;, the
+        default, and Paul Tol&rsquo;s &ldquo;Muted&rdquo;) are curated for the same
+        reason: they were optimised against real confusion lines rather than spaced by
+        formula, and <code className="font-mono">MIN_SEPARATION</code> was
         calibrated just under what it achieves, so an audit that failed it would be an
         audit nobody would leave switched on.
       </Note>

@@ -102,7 +102,7 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
                   email: "ada@example.com",
                   notices: (
                     <AlertBanner tone="warning" size="sm">
-                      The app&apos;s notice before the password is typed (keksdose: an encrypted account).
+                      The app&apos;s notice before the password is typed (here: an encrypted account).
                     </AlertBanner>
                   ),
                 }))
@@ -343,7 +343,7 @@ function TopBarStrip({ children }: { children: ReactNode }) {
 export function CompanySwitcher029Demo() {
   const [current, setCurrent] = useState(1);
   return (
-    <Example label="CompanySwitcher — several companies, one session" hint="kastlan §5.3; on OptionSwitcherMenu">
+    <Example label="CompanySwitcher — several companies, one session" hint="§5.3; on OptionSwitcherMenu">
       <div className="flex flex-col gap-3">
         <TopBarStrip>
           <CompanySwitcher
@@ -363,7 +363,7 @@ export function CompanySwitcher029Demo() {
         <Note>
           {code("onSwitch(id)")} is the app&apos;s {code("POST /auth/switch-company")}: while its promise runs the
           trigger is disabled with a spinner and &ldquo;Switching company…&rdquo; is said. The labels rename it for
-          another context (keksdose&apos;s budgets), and {code("icon")} replaces the building.
+          another context (budgets, say), and {code("icon")} replaces the building.
         </Note>
       </div>
     </Example>

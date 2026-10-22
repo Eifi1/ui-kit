@@ -106,6 +106,8 @@ function useTranslatedNav(): AppShellNavItem[] {
           shortLabel: item.shortLabel
             ? (t.groupShort[group.label] ?? en.groupShort[group.label] ?? item.shortLabel)
             : undefined,
+          // Chosen names for the bar ("Tokens" for "Foundations"), not shortenings.
+          shortLabelIsAlias: item.shortLabel ? true : undefined,
           items: item.items?.map((sub) => {
             const slug = sub.to.replace(/^\//, "");
             return { ...sub, label: phone ? short(slug) : title(slug) };
@@ -372,7 +374,7 @@ export function Showcase() {
                   a bare icon — readers who never resize a window are who this is for. */}
               {!embedded && (
                 <Tooltip label={t.chrome.devicePreview} side="bottom" portal className="hidden md:block">
-                  <Button variant={preview ? "primary" : "ghost"} size="sm" aria-pressed={preview} onClick={() => setPreview((v) => !v)}>
+                  <Button variant={preview ? "default" : "ghost"} size="sm" aria-pressed={preview} onClick={() => setPreview((v) => !v)}>
                     <MonitorSmartphone aria-hidden className="size-4" />
                     <span className="max-lg:sr-only">{t.chrome.previewShort}</span>
                   </Button>

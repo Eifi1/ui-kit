@@ -168,13 +168,13 @@ describe("Button tone='danger' on the boxed variants", () => {
     expect(cls).not.toContain("bg-surface-2");
   });
 
-  it("leaves the solid danger and brand variants alone", () => {
+  it("leaves the solid danger and accent variants alone", () => {
     render(
       <>
         <Button variant="danger" tone="danger">
           A
         </Button>
-        <Button variant="brand" tone="danger">
+        <Button variant="accent" tone="danger">
           B
         </Button>
       </>,

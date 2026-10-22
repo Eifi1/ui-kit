@@ -543,6 +543,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       theme: "Cambiar de tema",
       palette: "Ajuste de apariencia",
       language: "Idioma",
+      languageCurrent: (name) => `Elegir idioma, actual: ${name}`,
       switchRole: "Cambiar de rol",
       role: (value) => `Rol: ${value}`,
     },
@@ -1869,10 +1870,13 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     rowActions: {
       actions: "Acciones",
       actionsFor: (name) => `Acciones de ${name}`,
+      confirmTitle: (action, name) => (name ? `¿${action} «${name}»?` : `¿${action}?`),
+      confirmBody: "Esta acción no se puede deshacer.",
     },
     appShellMore: {
       more: "Más",
       moreTitle: "Más páginas",
+      overview: "Resumen",
     },
     // 0.42.0 — docs/admin-harmonization.md §3.1: the admin area's shared words. "Usted",
     // as the rest of the catalogue.

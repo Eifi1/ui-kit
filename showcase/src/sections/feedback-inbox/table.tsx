@@ -32,7 +32,7 @@ import { Example, Note, code } from "../../lib/section";
 /**
  * 0.27's feedback TABLE (docs/feedback-harmonization.md §4.3): the nine columns, the
  * phone card with its chips, day headers, swipes, the awaiting toggle and the empty
- * state — keksdose's page, as kit parts. Synthetic data only.
+ * state — an app's page, as kit parts. Synthetic data only.
  */
 
 /** The demo's viewer: an admin, so both pages make sense. */
@@ -83,7 +83,7 @@ const ROWS: FeedbackRecord[] = [
     id: 45,
     user_id: 2,
     user_email: "user@example.test",
-    // Long, as a real crash title is (0.48, keksdose live #451): the Subject column grows
+    // Long, as a real crash title is (0.48): the Subject column grows
     // into the rest of the row and ellipsises it rather than widening the table.
     title:
       "[crash] TypeError: Cannot read properties of undefined (reading 'map') in ImportReviewTable while rendering the statement review after an upload",
@@ -101,7 +101,7 @@ const ROWS: FeedbackRecord[] = [
     title: "Where do I change the currency?",
     category: "QUESTION",
     status: "NEEDS_LIVE_TEST",
-    // A path-only URL, as Kurvenschmiede backfills its old rows.
+    // A path-only URL, as an app backfills its old rows.
     context: { ...me, environment: "prod", url: "/settings?tab=currency" },
     created_at: "2026-10-03T08:20:00Z",
     updated_at: "2026-10-03T08:20:00Z",
@@ -202,7 +202,7 @@ export function FeedbackTable027Demo() {
           rows={visible}
           columns={columns}
           rowKey={(r) => r.id}
-          // §7.13: keksdose's one word, on both pages — also when a filter leaves nothing.
+          // §7.13: one word, on both pages — also when a filter leaves nothing.
           empty={<FeedbackEmptyState />}
           mobileGroupBy={feedbackMobileGroupBy(renderDate)}
           mobileCard={(row) => <FeedbackMobileCard row={row} showSubmitter={canEdit} renderDate={renderDate} />}
@@ -212,7 +212,7 @@ export function FeedbackTable027Demo() {
               ? (row) => feedbackSwipePlan(DEFAULT_FEEDBACK_SWIPE, row, { change: changeStatus, labels: statusLabels })
               : undefined
           }
-          // The same swipes as the desktop's last column (0.46, dev#598), minus what the
+          // The same swipes as the desktop's last column (0.46), minus what the
           // status cell already offers as its own icons.
           desktopSwipeActions={{ omit: feedbackSwipeOmitShown, name: (row) => row.title }}
         />
@@ -223,19 +223,17 @@ export function FeedbackTable027Demo() {
           environment chip (non-prod {code("context.environment")}) and {code("Rework ×n")} from{" "}
           {code("reworkCount(body)")}. {code("onStatus")} is {code("useFeedbackStatusUndo(update.mutate)")} — the
           same change the row detail and the swipes use, so every one of them offers Undo. On a wide screen the
-          swipes are also the row&apos;s last column ({code("desktopSwipeActions")}, 0.46), and{" "}
+          swipes are also the row&apos;s last column ({code("desktopSwipeActions")}), and{" "}
           {code("feedbackSwipeOmitShown")} leaves out the steps the status cell already shows — “Done” stays where
           DONE is more than one step away. On a phone,{" "}
           {code("FeedbackMobileCard")} draws both chips itself: {code("DataTable")} never renders the{" "}
-          {code("mobilePrimary")} cell when {code("mobileCard")} is set, which is how keksdose&apos;s cards lost
-          them. The eye at the bottom corner (phone, inbox only) narrows to In evaluation + Test when live. An app
-          adds {code('urlSync storageKey="feedback"')}, its {code("?row=")} deep link and the row detail. Since
-          0.48 the table fits its own width: Subject {code("grow")}s and ellipsises, and a narrow table leaves out
+          {code("mobilePrimary")} cell when {code("mobileCard")} is set. The eye at the bottom corner (phone, inbox only) narrows to In evaluation + Test when live. An app
+          adds {code('urlSync storageKey="feedback"')}, its {code("?row=")} deep link and the row detail. The table
+          fits its own width: Subject {code("grow")}s and ellipsises, and a narrow table leaves out
           URL, then Email, then Resolved ({code("fitPriority")}) — the Columns rail counts what is drawn and marks
           those “hidden for width”.
         </Note>
       </div>
-      <Note>Since 0.27.</Note>
     </Example>
   );
 }

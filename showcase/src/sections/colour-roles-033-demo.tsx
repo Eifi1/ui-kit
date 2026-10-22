@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { Button, Card, Checkbox, cn, contrast } from "@eifi1/ui-kit";
-import type { Rgb } from "@eifi1/ui-kit";
+import { Button, Card, Checkbox, Chip, STATUS_KINDS, StatusDot, cn, contrast, statusTone } from "@eifi1/ui-kit";
+import type { Rgb, StatusKind } from "@eifi1/ui-kit";
 // `@eifi1/ui-kit/testing` in an app. The showcase maps only the main entry and its
 // sub-paths `rhf`, `dates` and `table-text` (alias.ts and tsconfig.json's `paths`), so
 // the entry is reached by its file here — the code shown beside the specimen uses the
@@ -216,8 +216,7 @@ function FillsDemo() {
       <Note>
         Every fill names its foreground, {code("--<fill>-contrast")}, so a label on a fill is never `text-white`: in
         dark the fills are pastel and the foreground is the tone&apos;s 950 ink, or for money the page colour (the
-        brand&apos;s contrast, which the money swatches borrowed until 0.33, fell to 3.3:1 on the derived dark
-        presets). `--neutral` is `--text-muted` as a fill under `--text-inverse` — the translation review&apos;s
+        brand&apos;s contrast would fall to 3.3:1 on the derived dark presets). `--neutral` is `--text-muted` as a fill under `--text-inverse` — the translation review&apos;s
         reset swipe made official; it steps with More contrast. Chip `solid` and the FloatingAction badge read
         these pairs. `bg-money-net` does not exist: the money fills stay the three plain classes tokens.css always
         had, so the net tile is painted by its variable.
@@ -296,9 +295,8 @@ function TonesDemo() {
         </table>
       </div>
       <Note>
-        The light `--warning`, `--success`, `--hue-orange` and `--hue-teal` are darker since 0.33 (#a34800,
-        #007152, #b43800, #006f68: the same hue and chroma, the lightness solved): as text they sat at 3.86–4.22:1.
-        Dark is unchanged, at 8–13:1. A tone&apos;s wash is {code("bg-<tone>-soft")} (Chip&apos;s word), its line{" "}
+        The light `--warning`, `--success`, `--hue-orange` and `--hue-teal` (#a34800, #007152, #b43800, #006f68)
+        keep their hue and chroma with the lightness solved for text at 4.5:1. Dark sits at 8–13:1. A tone&apos;s wash is {code("bg-<tone>-soft")} (Chip&apos;s word), its line{" "}
         {code("border-<tone>")}; brand&apos;s text is `text-brand-muted`, which the deriver now holds at 4.5:1 too.
       </Note>
     </Example>
@@ -316,7 +314,7 @@ const LINES = [
 
 function LinesDemo() {
   return (
-    <Example label="The strong lines" hint="`border-warning-strong` is new; the light `border-danger-strong` went from 2.07 to 3.6:1">
+    <Example label="The strong lines" hint="`border-warning-strong` and `border-danger-strong` (3.6:1 in light)">
       <div className="space-y-4">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[30rem] border-separate border-spacing-1 text-start text-xs">
@@ -364,7 +362,7 @@ function LinesDemo() {
         The two status lines clear 3:1 on every surface. `--warning-border-strong` is the warning text colour in
         light (amber-600 would be 2.5:1) and amber-600 in dark, where `--warning` stood 13:1 off the card and
         shouted; IconButton&apos;s warning focus ring and Card&apos;s strong warning frame use it. The light danger
-        line went from rose-400 (2.07:1, where its comment claimed 3) to rose-600. `border-strong` is the neutral
+        line is rose-600. `border-strong` is the neutral
         strong line — the selected row&apos;s outline — and `border-subtle` the hairline, decorative at standard
         contrast; More contrast steps both. Every ratio is the line against the ground it is drawn on.
       </Note>
@@ -429,7 +427,7 @@ function WellDemo() {
   const mode = useTheme((s) => s.mode);
   const ratio = (a: string, b: string) => `${contrast(a, b).toFixed(2)}:1`;
   return (
-    <Example label="The well on a card" hint="light `--bg-surface-2` is the page colour since 0.33 — a well reads on a card">
+    <Example label="The well on a card" hint="light `--bg-surface-2` is the page colour — a well reads on a card">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <p className="text-xs text-muted">On a card — zebra rows and {code('Card variant="inset"')}</p>
@@ -474,14 +472,13 @@ function WellDemo() {
         </Card>
       </div>
       <Note>
-        Before 0.33 the light well stood 1.02–1.05:1 off the card — invisible, and with it the kit&apos;s zebra
-        rows, DataTable&apos;s header bands and Kurvenschmiede&apos;s selected rows. Now a well stands out from the
-        card exactly as much as the card does from the page; dark keeps its 1.11–1.13. Nothing re-solved: every
-        text role was already audited against the page. The price is on the right — a well straight on the page
+        The light well is the page colour, so the kit&apos;s zebra rows, DataTable&apos;s header bands and an
+        app&apos;s selected rows stand out from the card exactly as much as the card does from the page; dark keeps its 1.11–1.13. Every
+        text role is audited against the page. The price is on the right — a well straight on the page
         vanishes in light, so `Card variant="inset"` and a {code("DataTable frame={false}")} belong inside a card.
       </Note>
       <Note>
-        Under More contrast (0.36), in light, the well darkens to 10 % ink into the card, 1.19–1.24:1 from it, and
+        Under More contrast, in light, the well darkens to 10 % ink into the card, 1.19–1.24:1 from it, and
         what reads on it steps with it: money is solved onto the well per preset, the status colours, teal, orange
         and {code("--status-edited")} deepen, and {code("--bg-active")} mixes at 16 %. A link button reads{" "}
         {code("--brand-muted")} there, in both modes. Dark keeps its well. Flip More contrast in the top bar.
@@ -555,7 +552,7 @@ function HoverDemo() {
         The rule: a hover differs from its rest by at least 1.08:1, and every text role on it keeps 4.5:1. On a
         well that left one fill, the card — every fill darker than the light well fails the text half, because the
         page is already the darkest surface the text roles are solved against. A row whose well marks a STATE
-        (Kurvenschmiede&apos;s selected rows) keeps its fill and draws a 1px inside outline in `--border-strong`
+        (selected rows, say) keeps its fill and draws a 1px inside outline in `--border-strong`
         ({code("hover:outline-strong")}), an outline because a shadow on a {code("<tr>")} is not painted by every
         engine. Button `secondary` and `ghost` and IconButton&apos;s muted tone hover with a translucent ink,{" "}
         {code("color-mix(in srgb, var(--text-primary) 7%, transparent)")} ({code("bg-inverse/7")} here), which
@@ -604,9 +601,9 @@ function UtilitiesDemo() {
         so a local override still works, and an unused name costs nothing. `hover:`, `md:`, `dark:` and `/60` work
         on every one — `hover:bg-brand` generated nothing while `.bg-brand` was a plain class. The money classes
         stay plain (`.text-money-pos`, `.bg-money-neg` …): a site that needs a variant keeps the `[var()]` form.
-        Since 0.34 the kit&apos;s own markup uses the names too: every `[var(--role)]` class with a name of the same
-        role and property moved, and a ratchet keeps the count at zero (`npm run check:tokens`). In kastlan,
-        `text-primary` is now the ink, not its shadcn brand.
+        The kit&apos;s own markup uses the names too: no `[var(--role)]` class where a name of the same role and
+        property exists, and a ratchet keeps the count at zero (`npm run check:tokens`). In an app that came from shadcn,
+        `text-primary` is the ink, not shadcn&apos;s brand.
       </Note>
     </Example>
   );
@@ -616,8 +613,8 @@ function UtilitiesDemo() {
 
 /**
  * A pretend app's source — ten files, the fewest the guard accepts. One reads the
- * token Kurvenschmiede's control diagram painted with, `--surface`, which has never
- * existed (the kit's is `--bg-surface`): black boxes on a public page (F79).
+ * token a diagram painted with, `--surface`, which has never
+ * existed (the kit's is `--bg-surface`): black boxes on a public page.
  */
 const APP_SOURCES: Record<string, string> = {
   "/src/app.css": [
@@ -720,7 +717,7 @@ function GuardDemo() {
       </div>
       <Note>
         A `var(--x)` that nothing declares, read without a fallback, invalidates its whole declaration: `fill`
-        inherits, and Kurvenschmiede&apos;s diagram drew black boxes. The class compiled, the build passed, the
+        inherits, and a diagram draws black boxes. The class compiled, the build passed, the
         type checker had no opinion. Declared means: the kit&apos;s tokens (`KIT_CSS_VARIABLES`, generated from
         the installed tokens.css — without the `@theme inline` names, which Tailwind never emits, and without
         AppShell&apos;s `--app-nav-h`, set only while a shell is mounted), the app&apos;s own stylesheets and
@@ -734,9 +731,65 @@ function GuardDemo() {
 }
 
 /** The "Colour roles" page. */
+/** One sentence per kind: when a status is that kind, with an example. */
+const STATUS_WHEN: Record<StatusKind, { example: string; when: string }> = {
+  good: { example: "Paid", when: "Done, settled or healthy: the reader has nothing to do." },
+  attention: { example: "Unpaid", when: "Needs a look or an action soon, but nothing is wrong yet." },
+  problem: { example: "Overdue", when: "Something is wrong or late and needs action now." },
+  active: { example: "Sent", when: "In progress or current: neither good nor bad, just moving." },
+  inactive: { example: "Draft", when: "Over, paused or not started: out of the reader's way." },
+};
+
+/** KIT-8 (0.49): which tone a status takes, decided by what it means. */
+function StatusTonesDemo() {
+  return (
+    <Example
+      label="Which tone for which status"
+      hint="statusTone(kind), or status= on Chip and StatusDot — never brand, never the money pair"
+    >
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[18rem] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-subtle text-start text-xs text-muted">
+              <th scope="col" className="py-2 pe-3 text-start font-medium">Status</th>
+              <th scope="col" className="py-2 pe-3 text-start font-medium">Kind → tone</th>
+              <th scope="col" className="py-2 text-start font-medium">When</th>
+            </tr>
+          </thead>
+          <tbody>
+            {STATUS_KINDS.map((kind) => (
+              <tr key={kind} className="border-b border-subtle align-top last:border-b-0">
+                <td className="py-2 pe-3">
+                  <span className="flex flex-col items-start gap-1.5">
+                    <Chip size="sm" status={kind}>
+                      {STATUS_WHEN[kind].example}
+                    </Chip>
+                    <StatusDot status={kind} label={STATUS_WHEN[kind].example} />
+                  </span>
+                </td>
+                <td className="whitespace-nowrap py-2 pe-3 font-mono text-xs text-secondary">
+                  {kind} → {statusTone(kind)}
+                </td>
+                <td className="py-2 text-secondary">{STATUS_WHEN[kind].when}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Note>
+        Map each of your statuses to one of the five kinds once — {code('<Chip status="problem">Overdue</Chip>')},
+        or {code("statusTone(kind)")} where a tone is wanted — and the same meaning has the same colour in every
+        table. {code("brand")} is the app&apos;s own colour, not a state; {code("income")} and {code("expense")} say
+        which way money flows, not how a record stands. An explicit {code("tone")} still wins over {code("status")}.
+      </Note>
+    </Example>
+  );
+}
+
 export function ColourRoles033Demo() {
   return (
     <>
+      <StatusTonesDemo />
       <FillsDemo />
       <TonesDemo />
       <LinesDemo />

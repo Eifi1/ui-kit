@@ -44,6 +44,7 @@ import {
   j,
 } from "./data-table-fixture";
 import type { TableRow } from "./data-table-fixture";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * DATA TABLE: PARTS & HELPERS — what DataTable is assembled from, usable on its own:
@@ -163,7 +164,7 @@ function PaginationSpecimen() {
   );
 }
 
-const AR_NUM = new Intl.NumberFormat("ar-EG");
+const AR_NUM = numberFormat("ar-EG");
 
 // Partial: the pager merges it over the provider's labels and the English defaults.
 const PAGER_LABELS = {
@@ -173,7 +174,7 @@ const PAGER_LABELS = {
   rowCount: (total) => `all ${AR_NUM.format(total)} rows`,
 } satisfies Partial<DataTableLabels>;
 
-const DE_NUM = new Intl.NumberFormat("de-DE");
+const DE_NUM = numberFormat("de-DE");
 const PROVIDER_PAGER_LABELS = {
   pageRange: (from, to, total) =>
     `${DE_NUM.format(from)}–${DE_NUM.format(to)} von ${DE_NUM.format(total)}`,
@@ -376,7 +377,7 @@ function LabelsSpecimen() {
           <code className="font-mono">missingKitLabels</code> is the other half of that
           lenient merge: it lists every key that would fall back to English (presets one by
           one), so a translated app can assert <code className="font-mono">toEqual([])</code>{" "}
-          in its own test. It replaced the table&apos;s own pair of helpers, removed in 0.35.
+          in its own test.
         </Note>
       </div>
     </Example>

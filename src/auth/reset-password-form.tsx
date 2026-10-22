@@ -232,7 +232,7 @@ export function ResetPasswordForm({
           title={token === "" ? labels.noToken : labels.invalid}
           hint={labels.invalidHint}
           action={
-            <Button href={forgotHref} variant="brand">
+            <Button href={forgotHref} variant="accent">
               {labels.requestNew}
             </Button>
           }
@@ -253,11 +253,11 @@ export function ResetPasswordForm({
         {notices}
         <p className="text-xs text-muted">{labels.sessionsEnded}</p>
         {onSignIn ? (
-          <Button type="button" variant="brand" className="w-full" onClick={() => onSignIn(email)}>
+          <Button type="button" variant="accent" className="w-full" onClick={() => onSignIn(email)}>
             {labels.signIn}
           </Button>
         ) : (
-          <Button href={email ? withQuery(signInHref, "email", email) : signInHref} variant="brand" className="w-full">
+          <Button href={email ? withQuery(signInHref, "email", email) : signInHref} variant="accent" className="w-full">
             {labels.signIn}
           </Button>
         )}

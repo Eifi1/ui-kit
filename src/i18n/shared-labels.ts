@@ -106,6 +106,7 @@ export const DEFAULT_TOP_BAR_LABELS: TopBarLabels = {
   theme: "Toggle theme",
   palette: "Appearance preset",
   language: "Language",
+  languageCurrent: (name) => `Choose language, current: ${name}`,
   switchRole: "Switch role",
   role: (value) => `Role: ${value}`,
 };

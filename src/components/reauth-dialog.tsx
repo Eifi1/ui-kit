@@ -257,7 +257,7 @@ function ReauthActions({
       <Button
         type="submit"
         form={formId}
-        variant={danger ? "danger" : "primary"}
+        variant={danger ? "danger" : "default"}
         disabled={!canSubmit || busy}
         aria-busy={busy || undefined}
       >

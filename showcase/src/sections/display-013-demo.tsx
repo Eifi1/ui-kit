@@ -4,9 +4,9 @@ import type { LegendEntry } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
- * 0.13 display fixes: ToggleGroup `semantics="pressed"` (kastlan #47), Delta's figure
- * at zero (kastlan #48), a legend entry `align: "end"` (kastlan #49), and links as
- * BulkActionBar arrow-key stops (keksdose F8).
+ * 0.13 display fixes: ToggleGroup `semantics="pressed"`, Delta's figure
+ * at zero, a legend entry `align: "end"`, and links as
+ * BulkActionBar arrow-key stops.
  */
 
 function PressedToggleGroup() {
@@ -70,7 +70,7 @@ const GANTT_KEY: LegendEntry[] = [
 
 function LegendEnd() {
   return (
-    <Example label={'StaticLegend — entry align: "end"'} hint="kastlan's gantt key: the bars at the start, today at the end">
+    <Example label={'StaticLegend — entry align: "end"'} hint="a gantt key: the bars at the start, today at the end">
       <StaticLegend entries={GANTT_KEY} className="w-full" />
     </Example>
   );
@@ -108,7 +108,7 @@ function BarWithLink() {
 
 const SIGNALS = ["Sprung", "Rampe", "Sinus", "Sweep", "Bewegung"].map((v) => ({ value: v, label: v }));
 
-/** lenkbank L4 (0.15.2): five signal types on a phone — truncated, or wrapped whole. */
+/** 0.15.2: five signal types on a phone — truncated, or wrapped whole. */
 function ToggleGroupOverflow() {
   const [signal, setSignal] = useState("Bewegung");
   return (

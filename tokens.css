@@ -264,15 +264,23 @@ html[data-text-size="xlarge"] {
   --status-pending: #1d4ed8;   /* blue-700   — in flight */
   --status-edited: #bf6800;    /* solved     — dirty, not yet saved */
   --status-error: #b91c1c;     /* red-700    — the save failed */
-  --chart-1: #332288;
-  --chart-2: #88ccee;
-  --chart-3: #44aa99;
-  --chart-4: #117733;
-  --chart-5: #999933;
-  --chart-6: #ddcc77;
-  --chart-7: #cc6677;
-  --chart-8: #882255;
-  --chart-9: #aa4499;
+  /* Chart ramp: anyplot's eight "Imprint" hues (0.49, https://anyplot.ai/palette), the
+     SAME in both themes — a hue under 3:1 on the ground gets a 1px ink edge
+     (`chartEdge`) rather than a different colour. `--chart-9` repeats slot 1, where
+     `paletteFor(8)` lands. Only the two inks below change with the theme:
+     `--chart-ink` for totals, baselines and edges; `--chart-muted` for an "other" /
+     rest / disabled slice and confidence bands (`CHART_ROLES`). */
+  --chart-1: #009e73;
+  --chart-2: #c475fd;
+  --chart-3: #4467a3;
+  --chart-4: #bd8233;
+  --chart-5: #ae3030;
+  --chart-6: #2abccd;
+  --chart-7: #954477;
+  --chart-8: #99b314;
+  --chart-9: #009e73;
+  --chart-ink: #1a1a17;
+  --chart-muted: #6b6a63;
 }
 
 .dark {
@@ -306,15 +314,17 @@ html[data-text-size="xlarge"] {
   --status-pending: #7dd3fc;   /* sky-300 */
   --status-edited: #fbbf24;    /* amber-400 */
   --status-error: #fca5a5;     /* red-300 */
-  --chart-1: #7e72d6;
-  --chart-2: #9fd8f2;
-  --chart-3: #5fc4b0;
-  --chart-4: #3fa45f;
-  --chart-5: #bfbf5e;
-  --chart-6: #e8dda0;
-  --chart-7: #e08c9a;
-  --chart-8: #c25a78;
-  --chart-9: #cc78be;
+  --chart-1: #009e73;
+  --chart-2: #c475fd;
+  --chart-3: #4467a3;
+  --chart-4: #bd8233;
+  --chart-5: #ae3030;
+  --chart-6: #2abccd;
+  --chart-7: #954477;
+  --chart-8: #99b314;
+  --chart-9: #009e73;
+  --chart-ink: #f0efe8;
+  --chart-muted: #a8a79f;
 }
 
 /* ── Derived surface / text roles ───────────────────────────────────────────

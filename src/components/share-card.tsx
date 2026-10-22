@@ -448,7 +448,7 @@ export function SharePanel({
               {captionNode && <Caption as="div">{captionNode}</Caption>}
             </div>
             <Button
-              variant="brand"
+              variant="accent"
               commit
               pending={busy === "add"}
               disabled={busy !== null || (empty && !addWithoutEmail)}

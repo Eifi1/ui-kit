@@ -8,11 +8,11 @@ import { Example, Note, code, READOUT_PRE } from "../lib/section";
 /**
  * 0.23 fields. Three demos, one per page:
  *
- *  - `Rhf023Demo` (Forms): kastlan's address country and budget fiscal year, bound in a
+ *  - `Rhf023Demo` (Forms): an address country and budget fiscal year, bound in a
  *    line each — and a failed Save lands focus on the first of them.
  *  - `CountryClear023Demo` (Entity pickers): CountrySelect's `clearable` and its `ref`.
  *  - `AmountClass023Demo` (Numbers): `inputClassName` on AmountInput and MoneyField
- *    (keksdose G7, a right-aligned VAT cell).
+ *    (a right-aligned VAT cell).
  *
  * Synthetic values only.
  */
@@ -153,8 +153,8 @@ export function AmountClass023Demo() {
         <MoneyField aria-label="VAT" value={vat} onCommit={setVat} calculator={false} inputClassName="text-end tabular-nums" />
       </div>
       <Note>
-        A money column right-aligns its figures so the decimal points line up (keksdose G7, the VAT cell). It used to
-        take {code("className=\"[&_input]:text-end\"")}; {code("inputClassName")} is the element&apos;s own, merged
+        A money column right-aligns its figures so the decimal points line up (a VAT cell, say), with no{" "}
+        {code("className=\"[&_input]:text-end\"")}: {code("inputClassName")} is the element&apos;s own, merged
         after the field&apos;s base and before the room the calculator and the currency chip reserve and the invalid
         border — as on {code("NumberInput")} and {code("Input")}. {code("RhfMoneyField")} takes it too.
       </Note>
