@@ -122,6 +122,41 @@ export function mobileCardColumns<T>(columns: DataTableColumn<T>[]): {
   return { primary, status, fields: (marked.length > 0 ? marked : rest).slice(0, MOBILE_CARD_FIELDS) };
 }
 
+/** The kit's dev switch, as `lib/logger.ts` reads it: a development build, never a
+ *  production one, never under vitest. Read per call so a test can switch it on. */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
+const warnedCardColumns = new Set<string>();
+
+/**
+ * A development build's note on the default phone card (0.49 KIT-7): a `noRowLink`
+ * column past its three fields. Such a column holds the cell's own controls — a per-row
+ * delete, a link — and the card leaves it out with them, so on a phone the action is
+ * gone. Read off the declared `columns` (not the ones a person or the width hid), and
+ * only while the table lets the card choose: `enabled` is false with a `mobileCard` or
+ * `mobileDetailsInRow` (the column is then in the opened row), and a column marked
+ * `mobile: "secondary"` means the app chose. Once per column key.
+ */
+export function useCardColumnWarnings<T>(columns: DataTableColumn<T>[], enabled: boolean): void {
+  useEffect(() => {
+    if (!enabled || !devWarnings()) return;
+    const phone = columns.filter((c) => !c.mobileHidden && c.mobile !== "hidden");
+    if (phone.some((c) => c.mobile === "secondary")) return;
+    const { primary, status, fields } = mobileCardColumns(phone);
+    const onCard = new Set<DataTableColumn<T> | null>([primary, ...status, ...fields]);
+    for (const col of phone) {
+      if (onCard.has(col) || !col.noRowLink || warnedCardColumns.has(col.key)) continue;
+      warnedCardColumns.add(col.key);
+      console.warn(
+        `[ui-kit] DataTable: column "${col.key}" (noRowLink) is past the phone card's three fields and ` +
+          'leaves the card — mark it mobile: "secondary", or move its action to rowActions.',
+      );
+    }
+  }, [columns, enabled]);
+}
+
 /**
  * Whether a rendered cell shows nothing worth a line (0.49 KIT-7): `null`, `undefined`,
  * a boolean (React draws neither), `""` or blank text, and the formatters' empty value

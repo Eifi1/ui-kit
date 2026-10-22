@@ -6,7 +6,14 @@ import { isTableOwnColumn, useRowActionColumn } from "./data-table-row-actions";
 import { useColumnResize } from "./data-table-resize";
 import { useRangeSelection } from "./data-table-selection";
 import { columnLabel, logicalAlign, resolveDataTableLabels } from "./data-table-shared";
-import { MobileFilters, MobileSelectBar, MobileSort, StackedFields, mobileCardColumns } from "./data-table-mobile";
+import {
+  MobileFilters,
+  MobileSelectBar,
+  MobileSort,
+  StackedFields,
+  mobileCardColumns,
+  useCardColumnWarnings,
+} from "./data-table-mobile";
 import { DataTableMobileRow, DataTableRow, type DataTableRowCtx } from "./data-table-row";
 import { DataTableHead } from "./data-table-head";
 import { DataTableLeadingRow } from "./data-table-leading-row";
@@ -69,7 +76,9 @@ export interface DataTableColumn<T> {
    * is, else the first three visible columns after the title. A field whose value is
    * empty — the cell returns `null`, `undefined`, `""` or the formatters' empty "—" —
    * is left out of that card. The columns the card does not show go into the opened
-   * row with `mobileDetailsInRow`.
+   * row with `mobileDetailsInRow`. A `noRowLink` column (the cell's own buttons or link)
+   * counts as a field: past the third it leaves the card with its action, and a
+   * development build says so once per column key.
    */
   mobile?: "primary" | "secondary" | "hidden";
   /**
@@ -1419,6 +1428,8 @@ export function DataTable<T>({
     () => mobileCardColumns(mobileColumns),
     [mobileColumns],
   );
+  // A development build names a `noRowLink` column (a per-row delete) the card drops.
+  useCardColumnWarnings(columns, !mobileCard && !mobileDetailsInRow);
   // The columns the card leaves out, for the opened row (`mobileDetailsInRow`): the
   // hidden ones and, without a `mobileCard`, the ones past the card's three fields.
   const onCard = new Set<DataTableColumn<T>>([

@@ -161,3 +161,61 @@ describe("the default phone card (KIT-7)", () => {
     expect(cardOf("custom INV-1").querySelector("[data-card-head]")).toBeNull();
   });
 });
+
+describe("the dev warning for a noRowLink column the card drops (KIT-7)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  function devBuild() {
+    vi.stubEnv("VITEST", "");
+    vi.stubEnv("DEV", true);
+    return vi.spyOn(console, "warn").mockImplementation(() => {});
+  }
+
+  /** The invoice columns with a per-row button column after the first `at` of them. */
+  function withButtons(key: string, at = COLUMNS.length): DataTableColumn<Invoice>[] {
+    const bin: DataTableColumn<Invoice> = {
+      key,
+      header: "",
+      noRowLink: true,
+      cell: (r) => <button type="button">Delete {r.number}</button>,
+    };
+    return [...COLUMNS.slice(0, at), bin, ...COLUMNS.slice(at)];
+  }
+
+  it("a development build names it once per column key", () => {
+    const warn = devBuild();
+    renderTable({}, withButtons("bin"));
+    renderTable({}, withButtons("bin"));
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]![0]).toBe(
+      '[ui-kit] DataTable: column "bin" (noRowLink) is past the phone card\'s three fields and leaves the card — ' +
+        'mark it mobile: "secondary", or move its action to rowActions.',
+    );
+  });
+
+  it("stays silent when the column is a field, or the app chose the card", () => {
+    const warn = devBuild();
+    // The title and two fields before it: the bin is the third field.
+    renderTable({}, withButtons("bin-third", 3));
+    // Columns marked mobile: "secondary" are the app's choice.
+    renderTable({}, withButtons("bin-marked").map((c) => (c.key === "tenant" ? { ...c, mobile: "secondary" as const } : c)));
+    renderTable({ mobileCard: (r) => <p>{r.number}</p> }, withButtons("bin-card"));
+    // In the opened row the button is still a tap away.
+    renderTable({ mobileDetailsInRow: true }, withButtons("bin-details"));
+    renderTable({}, withButtons("bin-hidden").map((c) => (c.key === "bin-hidden" ? { ...c, mobileHidden: true } : c)));
+    renderTable({ rowActions: [{ kind: "delete", onAction: () => {} }] });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("a production build and vitest stay silent", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderTable({}, withButtons("bin-vitest"));
+    vi.stubEnv("VITEST", "");
+    vi.stubEnv("DEV", false);
+    renderTable({}, withButtons("bin-production"));
+    expect(warn).not.toHaveBeenCalled();
+  });
+});
