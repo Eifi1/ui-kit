@@ -121,7 +121,6 @@ function FormActionsPlacements() {
         </div>
       </div>
       <p className={`mt-3 ${READOUT_PRE}`}>last: {log}</p>
-      <Note>Since 0.12.</Note>
     </Example>
   );
 }
@@ -169,7 +168,6 @@ function FormActions016Demo() {
           while {code("pending")} the spinner replaces it, so no {code("pendingLabel")} copy is needed just to drop the
           glyph. {code("submitProps")} reaches the save button: {code("id")}, {code("data-*")}, {code("aria-*")}.
         </Note>
-        <Note>Since 0.16.</Note>
       </Example>
       <Example label="FormActions — sticky inside a scroll container" hint='stickyWithin="container"'>
         <div className="h-56 max-w-xl overflow-y-auto rounded-md border border-subtle">
@@ -192,7 +190,6 @@ function FormActions016Demo() {
           lifts itself by the document's {code("--app-nav-h")}, which on a phone left it a nav's height above a dialog
           body's bottom. {code('stickyWithin="container"')} sits at {code("bottom: 0")} of the container instead.
         </Note>
-        <Note>Since 0.16.</Note>
       </Example>
     </>
   );
@@ -226,7 +223,6 @@ function FormActions017Demo() {
         {code("px-3")} to both edges, the buttons still on the fields&apos; line. From md up it is the inline row under
         the last field, and {code("bleed")} does nothing. The breakpoints are BulkActionBar&apos;s.
       </Note>
-      <Note>Since 0.17.</Note>
     </Example>
   );
 }
@@ -261,7 +257,6 @@ function FormActionsShortcut022Demo() {
         handler, so a field that takes the chord for itself ({code("preventDefault")} / {code("stopPropagation")}) keeps
         it. {code("submitShortcutHint")} shows the dimmed hint; {code("aria-keyshortcuts")} is always set.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
@@ -317,7 +312,6 @@ function FormActions023Demo() {
         always had; {code("ghost")} steps Cancel back in a row that should read as one quiet line. Both default to
         what they were, so no row changes on the bump.
       </Note>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }

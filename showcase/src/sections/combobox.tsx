@@ -839,10 +839,8 @@ export function RhfInlineEntity024Demo() {
         the message under it; the hint is the form&apos;s description, so the picker&apos;s box never changes. The
         form&apos;s label names the input and titles the phone sheet. {code("commit")}, {code("disabledReason")} and
         the create row ({code("onCreate")}, {code("createEmptyLabel")}, {code("createCommit")}) pass through — type
-        a name nothing matches to see it. Every Combobox-family member takes a {code("ref")} to its focusable control
-        since 0.24.
+        a name nothing matches to see it. Every Combobox-family member takes a {code("ref")} to its focusable control.
       </Note>
-      <Note>Since 0.24.</Note>
     </Example>
   );
 }

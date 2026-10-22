@@ -142,7 +142,6 @@ function LineItemsTotals() {
           danger tone. Raise a quantity until the total passes €2,000 to see the list-level {code("error")}.
         </Note>
       </div>
-      <Note>Since 0.12.</Note>
     </Example>
   );
 }
@@ -270,7 +269,6 @@ function LineItems016Demo() {
           phone; Category's {code("narrowSpan={2}")} keeps a row to itself.
         </Note>
       </div>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }
@@ -353,7 +351,6 @@ function LineItemsJournal017Demo() {
           never the only signal. Change an amount to see it flip.
         </Note>
       </div>
-      <Note>Since 0.17.</Note>
     </Example>
   );
 }
@@ -500,7 +497,6 @@ function LineItemsSplit017Demo() {
           it centres on floating fields (level with their control) and keeps to the top otherwise.
         </Note>
       </div>
-      <Note>Since 0.17.</Note>
     </Example>
   );
 }
@@ -575,7 +571,6 @@ function LineItemsRowProps022Demo() {
         the row&apos;s Ctrl/⌘+Enter &ldquo;add a row&rdquo; ({code("preventDefault()")} keeps it from adding). A tour step can
         anchor on the row itself rather than on a span around one field.
       </Note>
-      <Note>Since 0.22.</Note>
     </Example>
   );
 }
