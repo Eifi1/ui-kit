@@ -271,7 +271,7 @@ function useNavDevWarnings(nav: AppShellNavItem[], deprecatedBarMax: boolean): v
       warnNavOnce(
         "mobileBarMax",
         "[ui-kit] AppShell mobileBarMax is deprecated: use mobileMaxItems, which counts the bar's cells with " +
-          '"More" (mobileBarMax={4} is mobileMaxItems={5}). Removed no earlier than 0.51.',
+          '"More" (mobileBarMax={4} is mobileMaxItems={5}). Removed in 0.51.',
       );
     }
     for (const item of nav) {

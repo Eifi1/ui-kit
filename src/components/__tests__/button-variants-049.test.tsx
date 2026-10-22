@@ -59,7 +59,7 @@ describe("Button variants default and accent (KIT-5)", () => {
     expect(warn).toHaveBeenCalledTimes(2);
     expect(warn.mock.calls[0]![0]).toContain('Button variant="primary" is deprecated: use "default"');
     expect(warn.mock.calls[1]![0]).toContain('Button variant="brand" is deprecated: use "accent"');
-    expect(warn.mock.calls[1]![0]).toContain("no earlier than 0.51");
+    expect(warn.mock.calls[1]![0]).toContain("removed in 0.51");
   });
 
   it("the new names, the defaults and a FormActions row never warn", () => {

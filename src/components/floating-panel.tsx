@@ -143,7 +143,7 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
    * status rather than a call to action, as kastlan's offline pill is (a brand pill would
    * shout "press me" at a user who is merely offline). Ignored while `pressed` is set; a
    * toggle has its own two looks. `primary` is a deprecated alias of `accent` (0.49; a
-   * development build warns once), removed no earlier than 0.51.
+   * development build warns once), removed in 0.51.
    */
   variant?:
     | "accent"

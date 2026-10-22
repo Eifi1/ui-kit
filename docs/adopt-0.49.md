@@ -10,6 +10,12 @@ changelogs, tested together: this release's Server kit pages and
 server-kit 0.19.0's API export. Pin `@eifi1/ui-kit` `^0.49` beside the `eifi1-server-kit`
 0.19.0 wheel.
 
+**Switch the deprecated names in the 0.49 bump commit.** `primary` / `brand` (KIT-5),
+`mobileBarMax` and `DEFAULT_MOBILE_BAR_MAX` (KIT-6) and `IMPRINT_PRESET` are removed in
+**0.51** — the kit's deprecation test fails a release two minors past a deprecation, so 0.51
+cannot ship with them, and at the current pace 0.51 is days away, not months. The codemod
+below takes 10–20 minutes per app; doing it in the bump keeps 0.51 a non-event.
+
 ## KIT-1: one minus sign, U+2212 (`minus: "ascii"` for exports)
 
 BREAKING (on a bump, no code): `formatNumber`, `formatMoney`, `formatPercent` (compact notation
@@ -74,7 +80,7 @@ ink), sequential green→blue and diverging red↔paper↔blue heat scales, and 
 bars, areas and treemap tiles whose hue is under 3:1 on the surface (`chartEdge`; the fill keeps
 its hue). Chart money keeps the money tokens. Paul Tol's "Muted" stays as `PAUL_TOL_PRESET` (id
 `"paul-tol"`, now in `PALETTES` after the default); `IMPRINT_PRESET` is a deprecated alias of
-`DEFAULT_PRESET`.
+`DEFAULT_PRESET`, removed in 0.51.
 
 | App | What changes on a bump | Steps |
 |---|---|---|
@@ -107,8 +113,9 @@ DEPRECATED: `variant="primary"` and `variant="brand"` on every prop typed `Butto
 `buttonVariant`, `attachmentButtonVariant`, `buttonClasses(…)`) and `variant="primary"` on
 `FloatingActionButton` / `FloatingAction`. A development build warns once per component and
 name (`[ui-kit] Button variant="brand" is deprecated: use "accent" (same look)`); production
-and vitest stay silent. They are removed no earlier than 0.51, and `primary` will not come back
-with another meaning: a forgotten site then becomes a type error, never a silent change of look.
+and vitest stay silent. They are removed in 0.51 (switch them in the 0.49 bump), and `primary`
+will not come back with another meaning: a forgotten site then becomes a type error, never a
+silent change of look.
 
 ### The codemod (component-aware)
 
@@ -197,8 +204,8 @@ New, opt-in:
 
 DEPRECATED: `AppShell.mobileBarMax` (entries before "More") → `mobileMaxItems` (cells, "More"
 included; `mobileBarMax={4}` is `mobileMaxItems={5}`), and `DEFAULT_MOBILE_BAR_MAX` →
-`DEFAULT_MOBILE_MAX_ITEMS`. Both still work, the prop with a development warning; removed no
-earlier than 0.51.
+`DEFAULT_MOBILE_MAX_ITEMS`. Both still work, the prop with a development warning; removed in
+0.51 (switch them in the 0.49 bump).
 
 | App | What changes on a bump | Steps |
 |---|---|---|

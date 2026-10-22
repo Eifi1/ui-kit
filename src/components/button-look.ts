@@ -25,8 +25,8 @@ import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
  * - `secondary`: an outline. `ghost`: text or glyph only. `danger`: solid `--danger`,
  *   for an action that destroys something. `link`: a text link that acts (a `<button>`).
  * - `primary` and `brand` are **deprecated** aliases of `default` and `accent` (0.49,
- *   same look; a development build warns once per name). They are removed no earlier
- *   than 0.51, and `primary` will not come back with another meaning.
+ *   same look; a development build warns once per name). They are removed in 0.51, and
+ *   `primary` will not come back with another meaning.
  */
 export type ButtonVariant =
   | "default"
@@ -70,7 +70,7 @@ export function warnDeprecatedVariant(component: string, name: string, replaceme
   warnedVariants.add(key);
   console.warn(
     `[ui-kit] ${component}="${name}" is deprecated: use "${replacement}" (same look). ` +
-      `"${name}" is removed no earlier than 0.51.`,
+      `"${name}" is removed in 0.51.`,
   );
 }
 
