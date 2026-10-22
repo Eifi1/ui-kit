@@ -164,8 +164,8 @@ function FullBleedTitle() {
           <p className="text-sm text-secondary">
             The heading &ldquo;Edit budget line&rdquo; is an <code className="font-mono">{level}</code> and names this
             dialog; <code className="font-mono">header</code> is still the free slot beside it (the row&apos;s own
-            context, in grey). Before 0.10.0 this strip was a styled div, and a named full-screen editor had to
-            leave this component for <code className="font-mono">DialogFrame fullBleed</code>.
+            context, in grey). A named full-screen editor needs no{" "}
+            <code className="font-mono">DialogFrame fullBleed</code> of its own.
           </p>
           <Input label="Planned" defaultValue="450.00" inputMode="decimal" />
         </div>

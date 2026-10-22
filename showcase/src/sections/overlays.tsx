@@ -131,7 +131,7 @@ export function Dialogs() {
         nowhere near the trigger — but stays non-modal otherwise: no backdrop, no scroll lock.
         Both <code className="font-mono">Tooltip</code> variants point the child's{" "}
         <code className="font-mono">aria-describedby</code> at the bubble and close on Escape.{" "}
-        <code className="font-mono">HoverMenu</code> is a real menu since 0.7.0: the caller&apos;s
+        <code className="font-mono">HoverMenu</code> is a real menu: the caller&apos;s
         plain buttons and links become <code className="font-mono">menuitem</code>s (list markup
         in between goes <code className="font-mono">role="none"</code>), the trigger gets{" "}
         <code className="font-mono">aria-haspopup</code>/<code className="font-mono">aria-expanded</code>,
@@ -230,7 +230,7 @@ function ModalSizes() {
           </Button>
         ))}
       </Row>
-      {/* Conditional mount, the idiom every caller before 0.10.0 used: the caller owning
+      {/* Conditional mount, the plain idiom: the caller owning
           the mount is what lets `useCloseTransition` hold the panel on screen for a
           dismissal's exit. A close decided from outside skips it — which is what the
           `open` prop fixes (see "Modal — open" further down this page). */}
@@ -243,7 +243,7 @@ function ModalSizes() {
           <p className="text-xs text-secondary">
             The panel is <code className="font-mono">w-full</code> under every cap, so on a phone
             all four are the same full-width bottom sheet and only the desktop widths differ.{" "}
-            <code className="font-mono">2xl</code> (0.34) is for a dialog whose content is a table
+            <code className="font-mono">2xl</code> is for a dialog whose content is a table
             to be read — a pasted measurement table, a report drilldown.
           </p>
           <input
