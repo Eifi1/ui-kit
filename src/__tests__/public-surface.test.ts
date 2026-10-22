@@ -298,7 +298,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.49.0 (+4, KIT-9, 2026-10-22): `useDocumentTitle`, `formatDocumentTitle`,
   // `DEFAULT_DOCUMENT_TITLE_FORMAT`, and the provider's `useKitDocumentTitle`.
   // 0.49.0 (+1, KIT-1b, 2026-10-22): `asciiMinusInNumbers`, the copy handler's rule.
-  ["@eifi1/ui-kit", barrel, 1009],
+  // 0.50.0 (+1, KIT-1 follow-up): `formatWithMinus`, the kit's minus for an app's own
+  // `Intl.NumberFormat` (keksdose's formatCurrency).
+  ["@eifi1/ui-kit", barrel, 1010],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

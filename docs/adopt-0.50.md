@@ -37,3 +37,25 @@ fireEvent.click(await screen.findByRole("button", { name: "Confirm" })); // the 
 | keksdose | Its own helper `test/row-menu.ts:9`, used by 8 test files (`features/rules/__tests__/rules-page.test.tsx:445`, `features/budgets/__tests__/budgets-page.test.tsx:406`, `:451`, `features/accounts/__tests__/loan-payment-panel.test.tsx:283`, `asset-loan-panel.test.tsx:265`, `:272`, `:297`, and `holdings-panel`, `accounts-page`, `admin/admin-page`, `admin/support-panel-canned` tests). | Optional: import `rowMenuAction` from `@eifi1/ui-kit/testing/react` instead and delete `test/row-menu.ts`. Same signature and result; drop-in. |
 | kastlan | No test opens a row's "⋯" by name today. | Nothing required; use the helper for the next one. |
 | Kurvenschmiede | Its own `openActions(name)` in `features/admin/admin-page.test.tsx:196`; inline "Actions for …" clicks in `features/setpoint/segment-cards.test.tsx:99`, `features/setpoint/pages.test.tsx:505`, `features/teams/teams-page.test.tsx:95`, `:136`, `features/projects/projects-page.test.tsx:39`, `:62`, `:80`. | Optional: `rowMenuAction(name, action)` replaces the open-then-find pair. `pages.test.tsx:505` scopes the button `within(chip)`; keep that one as it is. |
+
+## KIT-1 follow-up: an app's own number wrappers, and `formatWithMinus`
+
+Found on the 0.49 adoption (keksdose): the kit's formatters print "−" (U+2212), but an app's
+OWN `Intl.NumberFormat` wrapper still writes `Intl`'s hyphen, so one cell read
+"-€150.00 (−13.0%)". **Check every number wrapper your app keeps**, and either
+
+- route it through `formatMoney` / `formatNumber` / `formatPercent` (the usual case: the
+  wrapper only picks a locale and digits, which those take as options), or
+- where it needs its own `Intl.NumberFormat` (options the kit's formatters do not take),
+  call `formatWithMinus(formatter, value, minus?)` instead of `formatter.format(value)`.
+  **New export** (main barrel, 0.50): the kit's own helper, the one every kit formatter and
+  chart uses; `"ascii"` as the third argument for text a machine reads back.
+
+A wrapper that pulls the sign out and formats the magnitude (`Math.abs`) needs nothing, and a
+string that goes into a parser (KaTeX, a CSV) keeps the hyphen (`minus: "ascii"`).
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | Done in the 0.49 bump (f9e8f387): `formatCurrency` (`shared/components/ui.tsx:313`), `formatBareAmount` (`:306`) and `formatQuantity` (`:288`) call the kit. Left: the `catch` fallback `${n.toFixed(2)} ${currency}` at `ui.tsx:337` (only for an unknown currency code). `features/transactions/transaction-cells.tsx:298` formats the magnitude through `shared/lib/intl-cache.ts:40` `numberFormat` — no sign, nothing to do. | Optional: the fallback at `ui.tsx:337` as `formatNumber(n, { digits: 2 })` + the code. |
+| kastlan | The wrappers `shared/utils/formatters.ts:26` (`formatNumber`) and `:50` (`formatCurrency`) call the kit already. `features/dashboard/components/revenue-chart.tsx:56–59` (`abbreviateTick`) builds "-1.2M" / "-5k" with `toFixed`, a hyphen on a negative tick. | Optional: `abbreviateTick` through `formatNumber(value, { options: { notation: "compact" } })` (the kit's compact notation already carries "−"). |
+| Kurvenschmiede | `features/dynamics/exercise.tsx:32` `formatSig` (its own `Intl.NumberFormat`, significant digits) prints the exercises' inputs and answers into `t()` text (`:74`, `:75`, `:140`, `:174`); answers can be negative. `features/landing/landing-visuals.tsx:190–191` formats positive constants only. | `formatSig`: `return formatWithMinus(new Intl.NumberFormat(…), value)` — plain text, not TeX (`tex.tsx` keeps its own sign handling from 0.49). |

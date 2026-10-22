@@ -37,6 +37,11 @@ MeasuredGrid drafts) keep the typable "-".
 | kastlan | Every negative from its wrappers `shared/utils/formatters.ts:26` (`formatNumber`) and `:50` (`formatCurrency`), which call the kit. No test pins a formatted hyphen. | Nothing required. No export or copy of formatted figures found. |
 | Kurvenschmiede | Negatives from kit formatters. Tests pinning a hyphen from them: `features/corner/corner-page.test.tsx:444` (`"-75.0 mm"`), `features/gear/gear-page.test.tsx:604` (`"… · -30.0 mm"`) — 2 clear cases, not 4. Not kit output: `gear-page.test.tsx:504` (an input's value), `features/control/control-page.test.tsx:221` (server text), `features/steering/plan-view.test.tsx:90` (an SVG attribute). `shared/ui/checks-list.test.tsx:69` already expects U+2212. One place hands the kit's minus to a parser: `features/dynamics/tex.tsx:38–40` (`texNumber`) puts the formatted figure in KaTeX's `\text{…}`, which renders U+2212 there but warns on every render, in production too (`Unrecognized Unicode character "−" (8722) [unknownSymbol]`). Most call sites pull the sign out already (`lesson-laplace.tsx:127`, `:132`); `y₀`, `K·u₀` and the exercises' answers (`solutions.ts:51–53`) can be negative. | Change the two asserted hyphens to "−". In `texNumber`, write the sign in math mode and format the absolute value. No export or copy of formatted figures found. |
 
+**Found on adoption (0.50):** an app's OWN `Intl.NumberFormat` wrapper still writes the hyphen
+(keksdose's `formatCurrency`: "-€150.00 (−13.0%)" in one cell). Route such wrappers through
+`formatMoney` / `formatNumber`, or call `formatWithMinus(formatter, value)` — exported from 0.50
+(docs/adopt-0.50.md).
+
 ## KIT-2: numeric strings format; invalid values warn in development
 
 `formatNumber`, `formatMoney`, `formatPercent` and their `useKitFormat` bindings take a

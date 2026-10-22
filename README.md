@@ -568,14 +568,14 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2175 names from 359 modules** — 1009 values and 1166 types. _Italic_ is a type-only export.
+**2176 names from 359 modules** — 1010 values and 1166 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2175 |
+| `@eifi1/ui-kit` | 2176 |
 | `@eifi1/ui-kit/chart` | 100 |
 | `@eifi1/ui-kit/shell` | 117 |
 | `@eifi1/ui-kit/data-table` | 56 |
@@ -624,7 +624,7 @@ re-slicing of it, never a second API.
 | `lib/status-tone` | `STATUS_KINDS`, `statusTone`, _`StatusKind`_, _`StatusTone`_ |
 | `lib/date-format` | `DATE_FORMAT_PREFERENCES`, `dateFormatSample`, `dateFormatterFor`, `formatDateWithPreference`, `isDateFormatPreference`, `resolveDateFormat`, _`DateFormatOptions`_, _`DateFormatPreference`_, _`ResolvedDateFormat`_ |
 | `lib/device-settings` | `deviceSettings`, `registerDeviceSetting`, `resetDeviceSettings`, _`DeviceSetting`_, _`DeviceSettingKind`_ |
-| `lib/minus` | _`MinusStyle`_ |
+| `lib/minus` | `formatWithMinus`, _`MinusStyle`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
 | `lib/chip-edge-snap` | `refreshChipEdges` |
 

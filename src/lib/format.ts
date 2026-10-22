@@ -5,6 +5,8 @@ import { formatWithMinus, type MinusStyle } from "./minus";
 import { roundHalfAway } from "./round";
 
 export type { MinusStyle } from "./minus";
+// 0.50 (KIT-1 follow-up): the kit's minus for an app's OWN `Intl.NumberFormat` wrapper.
+export { formatWithMinus } from "./minus";
 
 /**
  * Number, money, percentage, date and relative-time formatting — `Intl`, in one place,
