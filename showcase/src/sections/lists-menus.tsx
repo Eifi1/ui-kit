@@ -825,7 +825,6 @@ export function MenuItemBadgeDemo() {
           with the Lindqvist family Shared&rdquo;, so keep a badge text.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
@@ -931,7 +930,6 @@ export function BulkActionBarPanelDemo() {
           60% of the viewport&apos;s height.
         </Note>
       </div>
-      <Note>Since 0.11.</Note>
     </Example>
   );
 }
