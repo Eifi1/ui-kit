@@ -334,7 +334,6 @@ export function FeedbackPublicCompose038Demo() {
           writes &quot;Other users will see the title and text (never your screenshots or files)&quot; under the
           body. Leave both out where the app has no public parts or the viewer may not read them.
         </Note>
-        <Note>Since 0.38.</Note>
       </div>
     </Example>
   );
