@@ -694,11 +694,10 @@ function ComboboxFamilyLock023Demo() {
           lock&apos;s sentence in the kit Tooltip and on {code("aria-describedby")}; no list opens, the clear
           &quot;×&quot; is gone and nothing reaches {code("onChange")}. The three typed fields are{" "}
           {code("readOnly")} and swallow Enter. A picker inside a form with its own Save leaves {code("commit")}{" "}
-          off and stays live: the Save is the commit. {code("MultiEntityCombobox")} also takes {code("hint")} now,
-          like the rest of the family since 0.22.
+          off and stays live: the Save is the commit. {code("MultiEntityCombobox")} also takes {code("hint")},
+          like the rest of the family.
         </Note>
       </div>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }
@@ -744,7 +743,6 @@ function InlineCreateRow023Demo() {
           and stays live, minting a record is the write.
         </Note>
       </div>
-      <Note>Since 0.23.</Note>
     </Example>
   );
 }
