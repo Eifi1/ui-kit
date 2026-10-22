@@ -103,3 +103,43 @@ column joins with a `fitPriority` of its own; one `grow` per table (the first on
 | keksdose | `features/admin/users-panel.tsx:804` (`useUserRosterColumns`), the `name` cell replaced at `:818–826` with `className="md:max-w-[14rem]"` (`:826`) on `UserIdentityCell`. | Keep `...column` in the replacement (it does): Name then grows. The `md:max-w-[14rem]` cap leaves Name at 14rem inside a growing cell — drop it so the name and address use the room, or keep it on purpose. Check the admin page at 1280px. |
 | kastlan | `features/settings/components/users-panel.tsx:81–85` `ROSTER_FIT` (the same values), applied at `:382`. | Delete `ROSTER_FIT` and the `map` at `:381–384` (the kit's columns carry it). The extra columns (`companies`, `reviews`, `:350–375`) stay without a priority unless you want them to leave too. |
 | Kurvenschmiede | `features/admin/users-panel.tsx:418`; the admin page widened its area to `7xl` for the roster (`features/admin/admin-page.tsx:87`, the comment above it). | On the bump the roster fits; check whether the `7xl` widening is still needed (1280px and 1100px). The extra columns (`planColumn`, `owned`) can take a `fitPriority` (e.g. 3) if the roster should give them up before Name reaches 10rem. |
+
+## kastlan K4: a tel: / mailto: field on a card that opens the row — options, not built
+
+**Not in 0.50: it needs a design choice (below).** What the card does today:
+
+- With `rowHref`, the phone card IS the row's `<a>` (`src/components/data-table-mobile.tsx:595–616`,
+  `RowLink`), and its accessible name is all the card's text. If any column the card draws keeps
+  its own clicks (`noRowLink` or `role: "actions"`, `keepsOwnClicks`), the card cannot be an
+  anchor — an `<a>` may not contain another — and falls back to a `div role="button"`
+  (`src/components/data-table.tsx:1478–1485`, `data-table-mobile.tsx:617–660`). The 0.49 test
+  `data-table-phone-card-049.test.tsx:287` pins that ("the card is no link").
+- Without `rowHref` (only `onRowClick`), the card is always that `div role="button"`. A control
+  in a cell keeps its own tap (`fromOwnControl`, `src/components/data-table-shared.tsx:155–163`,
+  `a[href]` included), and the rest of the card still opens the row.
+- Either way a control in a card sits INSIDE the card's own control (a link in a link, a button
+  in a button) — the nesting the screen reader cannot express. The row actions do this already.
+
+**For kastlan today:** its lists open rows with `onRowClick` (`shared/components/data-table/resource-list-page.tsx:239`),
+not `rowHref`, so a contact's phone and email (`features/contacts/components/contact-columns.tsx:50–62`, text
+today) can render `<a href="tel:…">` / `<a href="mailto:…">` now: the link takes its own tap and the
+rest of the card still opens the contact. Do not mark the column `noRowLink` (it changes nothing
+without `rowHref`). The nesting is the same as the card's row actions have.
+
+**Options for the kit** (the choice is Marcel's):
+
+| | What | For | Against |
+|---|---|---|---|
+| A. Stretched control | The card becomes a plain container (`relative`). The title is the control: an `<a href>` with `rowHref`, a `<button>` with only `onRowClick`, whose `::after` covers the whole card (`after:absolute after:inset-0`). Cells that keep their own clicks get `relative z-10`, so they sit above the overlay and take their own taps. The focus ring moves to the card with `has-[[data-card-link]:focus-visible]:ring-*`; `aria-expanded`, Space, long press and swipe move with it. | No nested controls at all, keyboard order title → field links → actions, long-press "open in new tab" kept on the whole card. No new API: every `noRowLink` / actions column just works on a linked card. | The card's accessible name becomes the title only (the fields read as text after it), which changes how apps' tests find a card (`getByRole("button", { name: /…whole text…/ })`). A second card structure if limited to cards with own-click cells; every card changes if applied to all. A `mobileCard` renderer is opaque: its controls cannot be lifted, so it keeps today's fallback. Needs a Chromium check (focus ring, iOS callout, swipe). |
+| B. Opt-in field outside the anchor | A column flag (kastlan's `role: "contact"` / `linkOnCard`) draws that field in a strip UNDER the card, outside its `<a>`; the card stays the anchor. | Small, additive, no change for any existing card. | The field leaves the card's label/value list (a second visual block); solves contacts only, not row actions; one more column option. |
+| C. Document only | The pattern above (a plain link in an `onRowClick` card), or the link in the opened row / detail page. | No kit change. | Keeps the nesting; with `rowHref` a linked card still turns into a button. |
+
+Recommendation: **A, for cards with own-click cells only** (no other card changes), with the 0.49
+test flipped to "the card stays a link". One round's work with tests; it would also clear the
+nesting the row actions have on every linked card.
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | `rowHref` only on the feedback inbox (`features/feedback/feedback-page.tsx`). | Nothing until the kit decides. |
+| kastlan | `features/contacts/components/contact-columns.tsx:50–62` (email, phone), lists through `resource-list-page.tsx:239` (`onRowClick`). | Optional now: render the tel: / mailto: link in the cell (see above). |
+| Kurvenschmiede | `rowHref` on `features/setpoint/sessions-page.tsx` and the feedback inbox. | Nothing. |
