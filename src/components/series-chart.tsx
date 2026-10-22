@@ -117,6 +117,7 @@ import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
 import { cn } from "../lib/cn";
+import { formatWithMinus } from "../lib/minus";
 
 export interface SeriesChartSeries {
   /** The row key this line reads — and the `--color-<key>` it is painted with, so it
@@ -764,7 +765,8 @@ function useDefaultFormat(localeProp: string | undefined): (value: number) => st
   const locale = useKitLocale(localeProp);
   return useMemo(() => {
     const format = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
-    return (value: number) => format.format(value);
+    // U+2212 on a negative tick and in the tooltip (0.49, KIT-1).
+    return (value: number) => formatWithMinus(format, value);
   }, [locale]);
 }
 

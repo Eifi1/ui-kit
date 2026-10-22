@@ -16,6 +16,7 @@ import {
 import type { ChartConfig, TreemapNode } from "@eifi1/ui-kit";
 import { Example, Note, Stage } from "../lib/section";
 import { useChartHex } from "../stores";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * Chart drilldowns — the pattern keksdose's reports use, on fixture data.
@@ -37,13 +38,13 @@ import { useChartHex } from "../stores";
 
 // ── Formatters ───────────────────────────────────────────────────────────────
 
-const MONEY = new Intl.NumberFormat("en-GB", {
+const MONEY = numberFormat("en-GB", {
   style: "currency",
   currency: "GBP",
   maximumFractionDigits: 0,
 });
-const COMPACT = new Intl.NumberFormat("en-GB", { notation: "compact" });
-const PERCENT = new Intl.NumberFormat("en-GB", {
+const COMPACT = numberFormat("en-GB", { notation: "compact" });
+const PERCENT = numberFormat("en-GB", {
   style: "percent",
   maximumFractionDigits: 1,
 });

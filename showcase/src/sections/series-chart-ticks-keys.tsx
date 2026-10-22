@@ -2,6 +2,7 @@ import { useState } from "react";
 import { SeriesChart, ToggleGroup } from "@eifi1/ui-kit";
 import type { SeriesChartHit } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * SERIES CHART — two 0.10.0 behaviours: whole-number y ticks (automatic for counts,
@@ -16,7 +17,7 @@ const USERS = DAYS.map((day, i) => ({ day, users: [1, 2, 1, 0, 2, 1, 2][i] }));
 /** Days of runway, computed — fractional, but read in whole days. */
 const RUNWAY = DAYS.map((day, i) => ({ day, runway: [2.7, 2.4, 2.1, 1.8, 1.4, 1.1, 0.6][i] }));
 
-const ONE = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 });
+const ONE = numberFormat("en-GB", { maximumFractionDigits: 1 });
 
 type Forced = "auto" | "true" | "false";
 
@@ -96,7 +97,7 @@ const WEEKDAY_SPEND = DAYS.map((day, i) => ({
   card: [42, 18, 65, 30, 88, 120, 24][i],
   cash: [5, 0, 12, 8, 20, 35, 0][i],
 }));
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 export function KeyboardPointsDemo() {
   const [mark, setMark] = useState<"bar" | "line">("bar");

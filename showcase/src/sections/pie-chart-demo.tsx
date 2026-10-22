@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PieChart, StaticLegend, ToggleGroup, paletteFor } from "@eifi1/ui-kit";
 import type { PieChartSlice } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * PIE CHART — the part-to-whole chart lifted out of kastlan's dashboard and reports: a
@@ -12,7 +13,7 @@ import { Example, Note, Row, code, READOUT } from "../lib/section";
  * Fixed data, so the picture is the same on every load and in every test.
  */
 
-const eur = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const eur = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 const formatEur = (v: number) => eur.format(v);
 
 const SPENDING: PieChartSlice[] = [

@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@eifi1/ui-kit";
 import { Example, Note, Row, code } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * 0.12 on the Description list & table page: Table `framed`, the statement row
@@ -22,7 +23,7 @@ import { Example, Note, Row, code } from "../lib/section";
  */
 
 const chf = (n: number) =>
-  new Intl.NumberFormat("en-GB", { style: "currency", currency: "CHF" }).format(n);
+  numberFormat("en-GB", { style: "currency", currency: "CHF" }).format(n);
 
 type Line = { label: string; amount: number };
 const GROUPS: Array<{ name: string; lines: Line[] }> = [

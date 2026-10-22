@@ -16,6 +16,7 @@ import { Tooltip } from "./tooltip";
 // tile's private copy of the string did not.
 import { SKELETON_CLASS } from "./skeleton";
 import { DEFAULT_STAT_TILE_LABELS } from "./stat-tile-labels";
+import { formatWithMinus } from "../lib/minus";
 
 /**
  * The words a stat tile speaks. The delta's arrow is an icon, and an icon is not a
@@ -352,11 +353,15 @@ export function StatTile({
   const fmt =
     format ??
     ((n: number) =>
-      numberFormatter(kitLocale, {
-        ...(currency ? { style: "currency", currency } : null),
-        ...(compact ? { notation: "compact" } : null),
-        ...numberFormat,
-      }).format(n));
+      // U+2212 for a negative headline (0.49, KIT-1).
+      formatWithMinus(
+        numberFormatter(kitLocale, {
+          ...(currency ? { style: "currency", currency } : null),
+          ...(compact ? { notation: "compact" } : null),
+          ...numberFormat,
+        }),
+        n,
+      ));
   const show = (v: ReactNode) => (typeof v === "number" ? fmt(v) : v);
 
   const d = typeof delta === "number" ? { value: delta } : delta;

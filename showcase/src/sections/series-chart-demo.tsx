@@ -34,6 +34,7 @@ import type {
 import { Example, Note, OutTable } from "../lib/section";
 // 0.32: from the source until the barrel names it (the coordinator wires src/index.ts).
 import { useTextSize } from "../../../src/theme/text-size";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * SeriesChart — the measurement plot, with drag-to-zoom and a legend of switches.
@@ -45,9 +46,9 @@ import { useTextSize } from "../../../src/theme/text-size";
  */
 
 // Module scope: an Intl formatter is expensive to construct, and these are stateless.
-const ONE = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 });
-const TWO = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 2 });
-const WHOLE = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
+const ONE = numberFormat("en-GB", { maximumFractionDigits: 1 });
+const TWO = numberFormat("en-GB", { maximumFractionDigits: 2 });
+const WHOLE = numberFormat("en-GB", { maximumFractionDigits: 0 });
 
 /** A steering sweep: travel out to one lock and back, with a load that lags it. */
 const SWEEP = Array.from({ length: 121 }, (_, i) => {
@@ -219,7 +220,7 @@ export function SeriesChartDemo() {
           <Note>
             The ticks are round numbers — every multiple of a 1, 2 or 5 × 10<sup>n</sup> step that
             falls inside the fitted domain — not the equal fractions of it recharts would print
-            (-11, 189, 389 …). The domain keeps its air, so the frame edge simply has no number of its
+            (−11, 189, 389 …). The domain keeps its air, so the frame edge simply has no number of its
             own; drag to zoom and the ticks stay round, just finer. Switch every channel off while
             zoomed and <em>Reset zoom</em> goes away with the plot (the zoom is kept for when a line
             comes back). A switched-off stroke in the legend dims with its button, once — it no

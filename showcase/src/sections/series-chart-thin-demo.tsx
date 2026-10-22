@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SeriesChart, ToggleGroup } from "@eifi1/ui-kit";
 import { Example, Note } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * SERIES CHART — the row budget (0.34, Kurvenschmiede's U2): `maxRows` thins a long table
@@ -28,7 +29,7 @@ const STRIDED = ROWS.filter((_, i) => i % 6 === 0);
 
 type Mode = "envelope" | "stride" | "all";
 
-const TWO = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 2 });
+const TWO = numberFormat("en-GB", { maximumFractionDigits: 2 });
 
 export function RowBudgetDemo() {
   const [mode, setMode] = useState<Mode>("envelope");

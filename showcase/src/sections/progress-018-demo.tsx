@@ -3,6 +3,7 @@ import { ProgressBar } from "../../../src/components/progress-bar";
 import type { ProgressBarSegment } from "../../../src/components/progress-bar";
 import type { TextTone } from "../../../src/components/signed-amount";
 import { Example, Note } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * ProgressBar `legendTone` (0.18): the legend's figures in a text tone of their own —
@@ -10,7 +11,7 @@ import { Example, Note } from "../lib/section";
  * while the figures carry the bucket's money direction.
  */
 
-const chf = new Intl.NumberFormat("en-CH", { style: "currency", currency: "CHF", maximumFractionDigits: 0 });
+const chf = numberFormat("en-CH", { style: "currency", currency: "CHF", maximumFractionDigits: 0 });
 
 /** One hue at three strengths: the same money, less and less certain. */
 const CERTAINTY: ProgressBarSegment[] = [

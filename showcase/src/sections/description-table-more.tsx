@@ -21,6 +21,7 @@ import type {
   TableVAlign,
 } from "@eifi1/ui-kit";
 import { Example, Note, Row, READOUT, code } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * DESCRIPTION LIST & TABLE — the 0.10.0 layouts: the stacked grid with columns and
@@ -28,7 +29,7 @@ import { Example, Note, Row, READOUT, code } from "../lib/section";
  * table's empty row, its padding-free density and its `table-layout`.
  */
 
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" });
+const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR" });
 
 function StackedList() {
   const [columns, setColumns] = useState<"1" | "2" | "3" | "4">("3");

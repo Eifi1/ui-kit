@@ -3,6 +3,7 @@ import { Treemap as RechartsTreemap } from "recharts";
 import { ChartContainer, Treemap, TreemapCell, fitLabel, paletteFor } from "@eifi1/ui-kit";
 import type { TreemapNode } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * Treemap — the tile chart.
@@ -17,12 +18,12 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  */
 
 // Module scope: an Intl formatter is expensive to construct, and these are stateless.
-const MONEY = new Intl.NumberFormat("en-GB", {
+const MONEY = numberFormat("en-GB", {
   style: "currency",
   currency: "GBP",
   maximumFractionDigits: 0,
 });
-const PERCENT = new Intl.NumberFormat("en-GB", { style: "percent", maximumFractionDigits: 1 });
+const PERCENT = numberFormat("en-GB", { style: "percent", maximumFractionDigits: 1 });
 
 /** Amount and share of the map, the way a spending breakdown wants it read. */
 function moneyAndShare(value: number, share: number | undefined): string {
@@ -104,7 +105,7 @@ const SPEND_AR: TreemapNode[] = [
   { id: "a4", name: "الترفيه والمطاعم", value: 280 },
   { id: "a5", name: "الاشتراكات الشهرية", value: 160 },
 ];
-const AR_MONEY = new Intl.NumberFormat("ar-EG", { style: "currency", currency: "EGP", maximumFractionDigits: 0 });
+const AR_MONEY = numberFormat("ar-EG", { style: "currency", currency: "EGP", maximumFractionDigits: 0 });
 // The hand-built map below: recharts' own Treemap with the kit's cell as `content`.
 const HAND_BUILT = SPEND_AR.map((n, i) => ({ name: n.name, size: n.value, fill: paletteFor(i) }));
 
@@ -245,7 +246,7 @@ export function TreemapDemo() {
         <p className="mt-2 font-mono text-xs text-muted">
           {allZero
             ? "Treemap rendered nothing: this sentence is the caller's."
-            : `not drawn: ${DROPPED.map((n) => `${n.name} (${n.value})`).join(", ")}`}
+            : `not drawn: ${DROPPED.map((n) => `${n.name} (${String(n.value).replace("-", "\u2212")})`).join(", ")}`}
         </p>
         <div className="mt-3">
           <OutTable

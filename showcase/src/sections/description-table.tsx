@@ -18,6 +18,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { DescriptionListDensity, DescriptionListLayout, TableDensity } from "@eifi1/ui-kit";
 import { Example, Note, Row } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * DESCRIPTION LIST & TABLE — the static, read-only ways to lay out facts: a `<dl>` of
@@ -28,7 +29,7 @@ import { Example, Note, Row } from "../lib/section";
  * not move when the language changes — the components' own words (none, here) would.
  */
 
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" });
+const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR" });
 
 function DescriptionRows() {
   const [layout, setLayout] = useState<DescriptionListLayout>("rows");

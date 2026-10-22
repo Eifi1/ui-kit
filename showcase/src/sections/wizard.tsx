@@ -261,7 +261,7 @@ export function Wizard() {
         <code className="font-mono">WizardStepConfig</code> and is driven by{" "}
         <code className="font-mono">stepStatus</code>. Nothing is shared between them — not a
         type, not a style. A `current` that matches no key is also not an error here: the index
-        resolves to -1 and every chip renders as a future step, so a typo reads as &quot;not
+        resolves to <code className="font-mono">-1</code> and every chip renders as a future step, so a typo reads as &quot;not
         started&quot;.
       </Note>
     </>

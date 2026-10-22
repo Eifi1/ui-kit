@@ -81,9 +81,9 @@ describe("StatTile", () => {
         ]}
       />,
     );
-    expect(screen.getByText("-50")).toHaveClass("text-money-expense");
+    expect(screen.getByText("\u221250")).toHaveClass("text-money-expense");
     expect(screen.getByText("120")).toHaveClass("text-money-income");
-    expect(screen.getByText("-30")).toHaveClass("text-money-expense");
+    expect(screen.getByText("\u221230")).toHaveClass("text-money-expense");
     expect(screen.getByText("AUG").tagName).toBe("DT");
   });
 

@@ -4,6 +4,7 @@ import { cn } from "@eifi1/ui-kit";
 import type { ColumnFilter, DataTableColumn } from "@eifi1/ui-kit";
 import { shiftIso } from "@eifi1/ui-kit/dates";
 import { OutTable } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * The fixture, the columns and the small helpers the three data-table pages share —
@@ -102,7 +103,7 @@ export const STATUS_OPTIONS: { value: string; label: string }[] = STATUS_ORDER.m
   label: STATUS_LABEL[s],
 }));
 
-export const AMOUNT_FMT = new Intl.NumberFormat("en-GB", {
+export const AMOUNT_FMT = numberFormat("en-GB", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });

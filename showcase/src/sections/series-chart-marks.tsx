@@ -15,6 +15,7 @@ import type {
   ZoomAxesSetting,
 } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, code } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * SERIES CHART — BARS, AREAS & TIME. The 0.8.0 half of the series chart: per-series
@@ -28,9 +29,9 @@ import { Example, Note, OutTable, Row, code } from "../lib/section";
  * except where a series must be a meaning (income, expense) rather than a position.
  */
 
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-const EUR2 = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const WHOLE = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
+const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const EUR2 = numberFormat("en-GB", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const WHOLE = numberFormat("en-GB", { maximumFractionDigits: 0 });
 const MONTH = new Intl.DateTimeFormat("en-GB", { month: "short" });
 
 /** A year of a household's months, keyed by the ISO period — the caller's own value. */

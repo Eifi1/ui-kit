@@ -14,6 +14,7 @@ import {
 import { Example, Note, Stage, code } from "../lib/section";
 import { CheckboxGroup } from "../../../src/components/checkbox-group";
 import { Coffee, Home, ShoppingCart, Star } from "lucide-react";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * CHOICES — checkbox, switch and slider.
@@ -29,8 +30,8 @@ const ROWS = ["Groceries", "Rent", "Transport"] as const;
 /** The measured speeds a gear set was swept at — the stops SpeedSlider marks. */
 const MEASURED = [20, 50, 80, 110];
 
-const oneDecimal = new Intl.NumberFormat("en", { maximumFractionDigits: 1 });
-const twoDecimals = new Intl.NumberFormat("en", { maximumFractionDigits: 2 });
+const oneDecimal = numberFormat("en", { maximumFractionDigits: 1 });
+const twoDecimals = numberFormat("en", { maximumFractionDigits: 2 });
 
 export function Choices() {
   const [stop, setStop] = useState(true);

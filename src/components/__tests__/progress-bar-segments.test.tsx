@@ -99,9 +99,9 @@ describe("ProgressBar legend: a part's own signed value", () => {
     );
     const rows = document.querySelectorAll('[data-part="legend"] li');
     expect(rows[0]).toHaveTextContent("Food50%");
-    expect(rows[1]).toHaveTextContent("Refund-10%");
+    expect(rows[1]).toHaveTextContent("Refund\u221210%");
     expect(rows[2]).toHaveTextContent("Over120%");
-    expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "Food: 50%, Refund: -10%");
+    expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "Food: 50%, Refund: \u221210%");
     // The bar still draws nothing for it.
     expect(screen.getByRole("meter").querySelectorAll<HTMLElement>('[data-part="segment"]')[1]).toHaveStyle({
       width: "0%",

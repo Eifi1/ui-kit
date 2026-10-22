@@ -49,6 +49,11 @@ const SPECIMENS: Specimen[] = [
     run: (locale, v) => formatNumber(-v, { locale, signDisplay: "exceptZero" }),
   },
   { expr: 'formatMoney(v, "CHF")', run: (locale, v) => formatMoney(v, "CHF", { locale }) },
+  { expr: 'formatMoney(-v, "CHF")', run: (locale, v) => formatMoney(-v, "CHF", { locale }) },
+  {
+    expr: 'formatNumber(-v, { minus: "ascii", options: { useGrouping: false } }) — for a CSV',
+    run: (locale, v) => formatNumber(-v, { locale, minus: "ascii", options: { useGrouping: false } }),
+  },
   {
     expr: 'formatMoney(v, "EUR", { currencyDisplay: "code" })',
     run: (locale, v) => formatMoney(v, "EUR", { locale, currencyDisplay: "code" }),
@@ -149,6 +154,13 @@ function FormatterTable() {
           Date&rdquo;: clear the field above and every number column turns into the dash. A bare{" "}
           {code('"YYYY-MM-DD"')} is a calendar day read on the local calendar; relative times here are measured
           from a fixed {code("now")} ({NOW.toISOString()}) so the rows do not drift.
+        </Note>
+        <Note>
+          A negative figure carries the typographic minus, U+2212 (&ldquo;−&rdquo;), in every locale and every
+          kit component (0.49) — {code("Intl")} writes a hyphen in most. It is as wide as &ldquo;+&rdquo; and the
+          digits, so a column of signed figures lines up. For text a machine reads back — a CSV download, the
+          clipboard — pass {code('minus: "ascii"')}: the hyphen-minus that {code("Number()")} and a spreadsheet
+          parse.
         </Note>
       </div>
     </Example>

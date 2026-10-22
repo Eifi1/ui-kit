@@ -9,6 +9,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { SparklineTone, StatTileLinkProps } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * Stat tiles and sparklines — the KPI card and the trend line that sits in it (or in a
@@ -289,7 +290,7 @@ function SparklineOptions() {
             [
               'labels (German) + locale="de-DE"',
               sparklineSummary(PRICE, { ...DEFAULT_SPARKLINE_LABELS, ...GERMAN_LABELS }, (v) =>
-                new Intl.NumberFormat("de-DE", { maximumFractionDigits: 2 }).format(v),
+                numberFormat("de-DE", { maximumFractionDigits: 2 }).format(v),
               ),
             ],
             ["[] → noData", sparklineSummary([], DEFAULT_SPARKLINE_LABELS, String)],

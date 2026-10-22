@@ -43,6 +43,7 @@ import {
   useCallbackLog,
 } from "./data-table-fixture";
 import type { Status, TableRow } from "./data-table-fixture";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * DATA TABLE: SERVER, URL & PHONE — the three shapes in which the table does not own
@@ -527,7 +528,7 @@ const UNITS: Unit[] = Array.from({ length: 23 }, (_, i) => {
   };
 });
 
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 const UNIT_COLUMNS: DataTableColumn<Unit>[] = [
   {

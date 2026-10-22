@@ -18,6 +18,7 @@ import { dirOf, type Direction } from "../lib/direction";
 import { cn } from "../lib/cn";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
+import { formatWithMinus } from "../lib/minus";
 
 /**
  * One tile.
@@ -437,7 +438,7 @@ export function Treemap({
   const total = nodes.reduce((acc, n) => acc + n.size, 0);
   const format = (v: number): ReactNode => {
     const share = total > 0 ? v / total : undefined;
-    return valueFormatter ? valueFormatter(v, share) : DEFAULT_NUMBER.format(v);
+    return valueFormatter ? valueFormatter(v, share) : formatWithMinus(DEFAULT_NUMBER, v);
   };
   const Content = redactNames ? RedactedTooltipContent : ChartTooltipContent;
   return (

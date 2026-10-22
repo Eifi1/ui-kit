@@ -5,6 +5,7 @@ import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale, type LabelOverride }
 import { toneTextClass } from "./signed-amount";
 import type { TextTone } from "./signed-amount";
 import { DEFAULT_PROGRESS_BAR_LABELS } from "./progress-bar-labels";
+import { formatWithMinus } from "../lib/minus";
 
 /** The words a progress bar adds of its own. */
 export interface ProgressBarLabels {
@@ -282,7 +283,7 @@ export function ProgressBar({
         ? undefined
         : formatValue
           ? formatValue(value, Infinity, min)
-          : new Intl.NumberFormat(kitLocale).format(value);
+          : formatWithMinus(new Intl.NumberFormat(kitLocale), value);
     return (
       <Tag {...rest} ref={tagRef} className={cn("min-w-0", inlineClass, className)} data-state="unlimited">
         <Tag className="flex items-baseline gap-2 text-sm">
@@ -325,7 +326,9 @@ export function ProgressBar({
   const formatPart = (v: number) => {
     if (!Number.isFinite(v)) return format(min);
     if (formatValue) return formatValue(v, max, min);
-    return new Intl.NumberFormat(kitLocale, { style: "percent", maximumFractionDigits: 0 }).format(
+    // A part can be negative (a refund): U+2212, as everywhere (0.49, KIT-1).
+    return formatWithMinus(
+      new Intl.NumberFormat(kitLocale, { style: "percent", maximumFractionDigits: 0 }),
       span <= 0 ? 0 : (v - min) / span,
     );
   };

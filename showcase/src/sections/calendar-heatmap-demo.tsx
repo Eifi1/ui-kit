@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Button, CalendarHeatmap, ToggleGroup } from "@eifi1/ui-kit";
 import type { CalendarHeatmapDatum, WeekDay } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * CALENDAR HEATMAP — days as shaded squares: the contribution graph (`layout="weeks"`)
@@ -51,7 +52,7 @@ function spending(from: string, to: string, seed = 7): CalendarHeatmapDatum[] {
 const DATA = spending(FROM, TO);
 const valueOn = (day: string) => DATA.filter((p) => p.date === day).reduce((s, p) => s + p.value, 0);
 
-const eur = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const eur = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 function YearOfWeeks() {
   const [selected, setSelected] = useState<string | undefined>(undefined);

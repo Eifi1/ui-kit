@@ -373,7 +373,7 @@ function ThemePreview({ p }: { p: DerivedPalette }) {
             2 failed
           </span>
           <span className="text-xs font-medium" style={{ color: t.moneyIncome }}>+1,240.00</span>
-          <span className="text-xs font-medium" style={{ color: t.moneyExpense }}>-380.00</span>
+          <span className="text-xs font-medium" style={{ color: t.moneyExpense }}>−380.00</span>
         </div>
       </div>
     </div>

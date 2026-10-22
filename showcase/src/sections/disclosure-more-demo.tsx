@@ -1,13 +1,14 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Disclosure, cn } from "@eifi1/ui-kit";
 import { Example, Note, Stage } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * DISCLOSURE — the 0.10.0 header shapes: the figure INSIDE the trigger, the chevron
  * right after the title, and trigger-only mode with nothing to point at yet.
  */
 
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" });
+const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR" });
 
 const RESULTS = [
   { label: "Revenue", value: 48210.5, parts: [["Rent", 45100], ["Parking", 3110.5]] },

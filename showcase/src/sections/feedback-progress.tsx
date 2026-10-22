@@ -13,6 +13,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { AlertTone, ProgressBarSize, ProgressBarTone, SkeletonShape } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, Row, Stage } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * FEEDBACK & PROGRESS — what a page says about itself rather than about its data: how
@@ -148,7 +149,7 @@ function ProgressMeter() {
           size="lg"
           locale="en-GB"
           formatValue={(v, max) =>
-            `${new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v)} of ${new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(max)}`
+            `${numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v)} of ${numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(max)}`
           }
         />
         <ProgressBar variant="meter" value={71} label="Disk used" showValue tone="neutral" locale="de-DE" />

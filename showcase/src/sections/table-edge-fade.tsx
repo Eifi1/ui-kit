@@ -15,6 +15,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { DataTableColumn } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /* ── since 0.25 ─────────────────────────────────────────────────────────── */
 
@@ -26,7 +27,7 @@ import { Example, Note, code } from "../lib/section";
  */
 
 const gbp = (n: number) =>
-  new Intl.NumberFormat("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+  numberFormat("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 interface Payment {
   id: string;

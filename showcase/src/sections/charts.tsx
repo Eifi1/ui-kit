@@ -24,6 +24,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { ChartConfig, ChartSeriesConfig } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, Swatch } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * Charts.
@@ -47,13 +48,13 @@ import { Example, Note, OutTable, Row, Swatch } from "../lib/section";
 // Module scope on purpose: an Intl formatter is expensive to construct and these are
 // stateless. Nothing here touches `window`, so the render test can mount the section.
 
-const MONEY = new Intl.NumberFormat("en-GB", {
+const MONEY = numberFormat("en-GB", {
   style: "currency",
   currency: "GBP",
   maximumFractionDigits: 0,
 });
 
-const COMPACT = new Intl.NumberFormat("en-GB", { notation: "compact" });
+const COMPACT = numberFormat("en-GB", { notation: "compact" });
 
 // Both halves must agree on UTC. `"2025-03-01T00:00:00Z"` is UTC midnight, and a
 // formatter left on the viewer's zone would render it as 28 February for anyone west

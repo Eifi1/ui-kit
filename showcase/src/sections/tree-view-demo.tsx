@@ -3,6 +3,7 @@ import { Building2, FileText, Folder, FolderOpen, Landmark, Wallet } from "lucid
 import { Button, TreeRow, TreeView } from "@eifi1/ui-kit";
 import type { TreeNode } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * TREE VIEW — the WAI-ARIA tree: one Tab stop, ↑/↓ through the visible rows, →/← to
@@ -11,7 +12,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  * for a hierarchy that cannot be a tree widget (a gantt's label column).
  */
 
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 interface Account {
   number: string;

@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { useKitLocale, useKitTimeZone } from "../i18n/kit-labels";
 import { parseIsoDate } from "./dates";
+import { formatWithMinus, type MinusStyle } from "./minus";
 import { roundHalfAway } from "./round";
+
+export type { MinusStyle } from "./minus";
 
 /**
  * Number, money, percentage, date and relative-time formatting — `Intl`, in one place,
@@ -22,6 +25,10 @@ import { roundHalfAway } from "./round";
  * A missing value — `null`, `undefined`, `NaN`, an unparseable date — formats as
  * `empty` (default "—", the dash `StatTile` shows for no value), never as "NaN" or
  * "Invalid Date".
+ *
+ * A negative figure carries the typographic minus, U+2212 (0.49, KIT-1), in every
+ * locale — `Intl` writes a hyphen in most. `minus: "ascii"` for text a machine reads
+ * back (a CSV, the clipboard).
  */
 
 /** What every formatter here prints for a missing value, unless told otherwise. */
@@ -47,6 +54,14 @@ export interface FormatNumberBaseOptions extends BaseOptions {
   signDisplay?: Intl.NumberFormatOptions["signDisplay"];
   /** Any further `Intl.NumberFormat` options, merged over the ones above. */
   options?: Intl.NumberFormatOptions;
+  /**
+   * The minus sign of a negative figure (0.49, KIT-1). `"typographic"` (default):
+   * U+2212, as wide as "+" and the digits, as `SignedAmount` prints it — in every
+   * locale, also where `Intl` writes a hyphen. `"ascii"`: U+002D, for an export a
+   * machine parses back (a CSV download, the clipboard) — there, also pass
+   * `options: { useGrouping: false }` or write the raw number.
+   */
+  minus?: MinusStyle;
 }
 
 /** The options {@link formatNumber} takes: the shared ones plus a free-text `unit`. */
@@ -124,7 +139,7 @@ function isMissing(value: number | null | undefined): value is null | undefined 
 /** A number in `locale`: "1,234.5", "1.234,5", "1’234.5" — with `unit`, "3.400 N". */
 export function formatNumber(value: number | null | undefined, options: FormatNumberOptions = {}): string {
   if (isMissing(value)) return options.empty ?? EMPTY_FORMATTED_VALUE;
-  const figure = numberFormatter(options.locale, numberOptions(options)).format(value);
+  const figure = formatWithMinus(numberFormatter(options.locale, numberOptions(options)), value, options.minus);
   return options.unit ? `${figure}${UNIT_SEPARATOR}${options.unit}` : figure;
 }
 
@@ -135,12 +150,13 @@ export function formatMoney(
   options: FormatMoneyOptions = {},
 ): string {
   if (isMissing(value)) return options.empty ?? EMPTY_FORMATTED_VALUE;
-  return numberFormatter(options.locale, {
+  const formatter = numberFormatter(options.locale, {
     style: "currency",
     currency,
     ...(options.currencyDisplay ? { currencyDisplay: options.currencyDisplay } : null),
     ...numberOptions(options),
-  }).format(value);
+  });
+  return formatWithMinus(formatter, value, options.minus);
 }
 
 /** A percentage in `locale` ("12%", "12 %", "+1.25%"). See {@link FormatPercentOptions.ratio}
@@ -148,11 +164,12 @@ export function formatMoney(
 export function formatPercent(value: number | null | undefined, options: FormatPercentOptions = {}): string {
   if (isMissing(value)) return options.empty ?? EMPTY_FORMATTED_VALUE;
   const ratio = options.ratio === false ? value / 100 : value;
-  return numberFormatter(options.locale, {
+  const formatter = numberFormatter(options.locale, {
     style: "percent",
     ...(options.digits === undefined ? { maximumFractionDigits: 1 } : null),
     ...numberOptions(options),
-  }).format(ratio);
+  });
+  return formatWithMinus(formatter, ratio, options.minus);
 }
 
 /* ── Dates ─────────────────────────────────────────────────────────────────── */

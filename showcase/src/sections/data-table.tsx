@@ -48,6 +48,7 @@ import {
   useCallbackLog,
 } from "./data-table-fixture";
 import type { Status } from "./data-table-fixture";
+import { numberFormat } from "../lib/number-format";
 
 /**
  * DATA TABLE — the whole surface, a controlled table, a short one, one in a bounded
@@ -1012,7 +1013,7 @@ const LEDGER: LedgerRow[] = (() => {
   return rows;
 })();
 
-const CHF = new Intl.NumberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" });
+const CHF = numberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: "always" });
 const DAY_FMT = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
 /** "176 · +8’782.30 · −3’200.10": the count, what came in, what went out. */
@@ -1369,7 +1370,7 @@ const ACCOUNTS_017: Account[] = [
   { no: "6500", name: "Office supplies", debit: 100, credit: 0 },
 ];
 
-const money = new Intl.NumberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = numberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const fmt = (n: number) => money.format(n);
 
