@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from "react";
 import { isComposing } from "../lib/ime";
 
@@ -60,6 +60,9 @@ import { isComposing } from "../lib/ime";
 /** A layer's handler, read through a ref so the stack holds one stable entry per open. */
 interface Layer {
   escape: (e: KeyboardEvent) => void;
+  /** Whether it covers the page — a dialog, a sheet, a popover, a list — rather than
+   *  annotating it (a tooltip). Counted by {@link useOverlayOpen}. */
+  overlay: boolean;
 }
 
 /** What {@link useDismissLayer} hands back: its layer while open, for
@@ -114,11 +117,13 @@ function push(layer: Layer): void {
     document.addEventListener("keydown", onBubble);
   }
   layers.push(layer);
+  if (layer.overlay) notifyOverlays();
 }
 
 function pop(layer: Layer): void {
   const at = layers.indexOf(layer);
   if (at >= 0) layers.splice(at, 1);
+  if (at >= 0 && layer.overlay) notifyOverlays();
   if (layers.length > 0) return;
   document.removeEventListener("keydown", onCapture, true);
   document.removeEventListener("keydown", onBubble);
@@ -135,7 +140,11 @@ function pop(layer: Layer): void {
  * read live, so it need not be memoised; the layer is pushed and popped only when
  * `open` flips. The layer it returns is for the owner's {@link runOwnKeyDown}.
  */
-export function useDismissLayer(open: boolean, onEscape: (e: KeyboardEvent) => void): DismissLayer {
+export function useDismissLayer(
+  open: boolean,
+  onEscape: (e: KeyboardEvent) => void,
+  { overlay = true }: { overlay?: boolean } = {},
+): DismissLayer {
   const handlerRef = useRef(onEscape);
   const layerRef = useRef<Layer | null>(null);
   // Written in an effect, not during render, so it satisfies react-hooks/refs: a
@@ -148,15 +157,45 @@ export function useDismissLayer(open: boolean, onEscape: (e: KeyboardEvent) => v
   });
   useEffect(() => {
     if (!open || typeof document === "undefined") return;
-    const layer: Layer = { escape: (e) => handlerRef.current(e) };
+    const layer: Layer = { escape: (e) => handlerRef.current(e), overlay };
     layerRef.current = layer;
     push(layer);
     return () => {
       pop(layer);
       layerRef.current = null;
     };
-  }, [open]);
+  }, [open, overlay]);
   return layerRef;
+}
+
+/*
+ * Whether an overlay is open (0.49 KIT-11): every layer on the stack but a tooltip's is a
+ * dialog, a sheet, a popover, a hover menu or a list covering part of the page, so the
+ * stack is also the one place that knows. The floating launchers (`hideWhenOverlay`) step
+ * aside while one is open instead of floating over it or beside it.
+ */
+const overlayListeners = new Set<() => void>();
+
+function notifyOverlays(): void {
+  for (const listener of overlayListeners) listener();
+}
+
+function subscribeOverlays(listener: () => void): () => void {
+  overlayListeners.add(listener);
+  return () => {
+    overlayListeners.delete(listener);
+  };
+}
+
+function anyOverlayOpen(): boolean {
+  return layers.some((layer) => layer.overlay);
+}
+
+/** True while a kit dialog, sheet, popover, hover menu or list is open (any layer of the
+ *  Escape stack but a tooltip's). Internal. */
+export function useOverlayOpen(enabled = true): boolean {
+  const open = useSyncExternalStore(subscribeOverlays, anyOverlayOpen, () => false);
+  return enabled && open;
 }
 
 /**

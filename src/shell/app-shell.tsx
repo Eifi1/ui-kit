@@ -692,10 +692,12 @@ export function AppShell({
             {/* Below `md` the bottom room is the nav plus the larger of 1.5rem and what the
                 floating launchers take above it (`--app-float-clearance`, published by
                 every kit FAB, FloatingPanel and FloatingActionGroup while mounted — keksdose
-                dev#612: the last row ended under the help launcher). */}
+                dev#612: the last row ended under the help launcher). From `md` up, where
+                there is no nav, the launchers' room alone (0.49 KIT-11): the last row
+                scrolls clear of a corner button there too. */}
             <main
               className={cn(
-                "relative flex-1 max-w-full overflow-x-clip pb-[calc(var(--app-nav-h,4rem)+max(1.5rem,var(--app-float-clearance,0px)))] md:pb-0 md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable_both-edges]",
+                "relative flex-1 max-w-full overflow-x-clip pb-[calc(var(--app-nav-h,4rem)+max(1.5rem,var(--app-float-clearance,0px)))] md:pb-[var(--app-float-clearance,0px)] md:min-h-0 md:overflow-y-auto md:[scrollbar-gutter:stable_both-edges]",
                 // The list page's fill (0.40, docs/page-layout-harmonization.md §1.3): while
                 // a `fillHeight` DataTable is inside, a flex column — a banner above the
                 // page keeps its own height and the page (a `FillHeight`) takes the rest,

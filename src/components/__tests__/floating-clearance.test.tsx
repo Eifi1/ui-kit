@@ -96,6 +96,7 @@ describe("--app-float-clearance", () => {
     );
     const main = document.querySelector("main")!;
     expect(main.className).toContain("pb-[calc(var(--app-nav-h,4rem)+max(1.5rem,var(--app-float-clearance,0px)))]");
-    expect(main.className).toContain("md:pb-0");
+    // From md up, no nav: the launchers' room alone (0.49 KIT-11).
+    expect(main.className).toContain("md:pb-[var(--app-float-clearance,0px)]");
   });
 });

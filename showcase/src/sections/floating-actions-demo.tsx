@@ -373,7 +373,7 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
           />
         </FloatingActionGroup>
       )}
-      <div className="mt-3">
+      <div className="mt-3 space-y-2">
         <Note>
           <code className="font-mono">role=&quot;group&quot;</code> named by its <code className="font-mono">aria-label</code>,
           every member its own tab stop. The first two are toggles (<code className="font-mono">pressed</code>: brand
@@ -387,6 +387,16 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
           <code className="font-mono">tooltip=&#123;false&#125;</code>: hover it, no bubble — the others show their label
           in the kit tooltip. <code className="font-mono">corner</code> is logical and{" "}
           <code className="font-mono">offset</code> lifts the pill above the nav by that much more.
+        </Note>
+        <Note>
+          While it floats, the page scrolls clear of it: every launcher publishes its room as{" "}
+          <code className="font-mono">--app-float-clearance</code> (above the nav) and{" "}
+          <code className="font-mono">--kit-floating-inset</code> (from the screen&apos;s bottom edge, the phone&apos;s
+          nav included), and <code className="font-mono">AppShell</code> pads its <code className="font-mono">main</code>{" "}
+          by it at every width — scroll to the end of this page: its last row stays above the pill and can be
+          pressed. Open a dialog, a sheet, a popover or a menu and the pill steps aside until it closes (
+          <code className="font-mono">hideWhenOverlay</code>, default <code className="font-mono">true</code>); a
+          tooltip does not count.
         </Note>
       </div>
     </Example>

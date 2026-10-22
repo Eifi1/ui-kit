@@ -20,7 +20,7 @@ import { dirOf, type Direction } from "../lib/direction";
 import { registerFloating } from "../lib/floating-stack";
 import { useFloatClearance } from "../lib/float-clearance";
 import { isComposing } from "../lib/ime";
-import { takeEscape } from "../hooks/use-dismiss";
+import { takeEscape, useOverlayOpen } from "../hooks/use-dismiss";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { assignRef } from "./field-parts";
 import { pickLinkRenderer } from "./text-link";
@@ -164,6 +164,12 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
   /** Where the {@link tooltip} opens. Default `top`; the bubble is portalled and kept on
    *  screen, so a corner button's label is not pushed off the edge. */
   tooltipSide?: TooltipSide;
+  /**
+   * 0.49 KIT-11: step aside (as `hidden` does: off screen, the room kept) while a dialog,
+   * a sheet, a popover, a hover menu or a list is open, instead of floating over it or
+   * beside it. Default `true`; `false` keeps it on screen. A tooltip does not count.
+   */
+  hideWhenOverlay?: boolean;
   ref?: Ref<HTMLButtonElement>;
 }
 
@@ -212,13 +218,17 @@ export function FloatingActionButton({
   variant: givenVariant = "accent",
   tooltip,
   tooltipSide = "top",
+  hideWhenOverlay = true,
   className,
   style,
   type = "button",
   title,
+  hidden: hiddenProp,
   ref,
   ...rest
 }: FloatingActionButtonProps) {
+  const overlay = useOverlayOpen(hideWhenOverlay);
+  const hidden = hiddenProp || overlay || undefined;
   const [marker, dir] = usePortalDir();
   const variant = givenVariant === "primary" ? deprecatedPrimary("FloatingActionButton variant") : givenVariant;
   const toggle = pressed !== undefined;
@@ -244,6 +254,7 @@ export function FloatingActionButton({
   const button = (
           <button
             {...rest}
+            hidden={wrapped ? undefined : hidden}
             ref={buttonRef}
             type={type}
             dir={dir}
@@ -295,7 +306,7 @@ export function FloatingActionButton({
               <div
                 ref={setFixed}
                 dir={dir}
-                hidden={rest.hidden}
+                hidden={hidden}
                 style={cornerStyle(corner, offset)}
                 className="fixed z-40 inline-flex"
               >
@@ -365,6 +376,13 @@ export interface FloatingPanelProps {
    * back and shorten the page under the reader's thumb.
    */
   hidden?: boolean;
+  /**
+   * 0.49 KIT-11: the FAB steps aside while a dialog, a sheet, a popover, a hover menu or
+   * a list is open elsewhere (see {@link FloatingActionButtonProps.hideWhenOverlay}).
+   * Default `true`. An OPEN panel stays: what opens from inside it (a select, a date
+   * picker) is its own content.
+   */
+  hideWhenOverlay?: boolean;
   children: ReactNode;
 }
 
@@ -415,7 +433,8 @@ export function FloatingPanel({
   initialFocus,
   className,
   bodyClassName,
-  hidden = false,
+  hidden: hiddenProp = false,
+  hideWhenOverlay = true,
   children,
 }: FloatingPanelProps) {
   const labels = useKitLabels(
@@ -425,6 +444,8 @@ export function FloatingPanel({
   );
   const [ownOpen, setOwnOpen] = useState(defaultOpen);
   const open = openProp ?? ownOpen;
+  const overlay = useOverlayOpen(hideWhenOverlay && !open);
+  const hidden = hiddenProp || overlay;
   const setOpen = (next: boolean) => {
     if (openProp === undefined) setOwnOpen(next);
     onOpenChange?.(next);
@@ -492,6 +513,7 @@ export function FloatingPanel({
         nativeTitle={fabNativeTitle}
         tooltip={fabTooltip}
         hidden={hidden || undefined}
+        hideWhenOverlay={false}
         aria-expanded={open}
         aria-controls={open && !hidden ? panelId : undefined}
         onClick={() => {
@@ -579,6 +601,9 @@ export interface FloatingActionGroupProps extends Omit<HTMLAttributes<HTMLDivEle
   offset?: string;
   /** {@link FloatingAction}s, in reading order. */
   children: ReactNode;
+  /** 0.49 KIT-11: step aside while a dialog, a sheet, a popover, a hover menu or a list
+   *  is open — see {@link FloatingActionButtonProps.hideWhenOverlay}. Default `true`. */
+  hideWhenOverlay?: boolean;
   ref?: Ref<HTMLDivElement>;
 }
 
@@ -602,12 +627,15 @@ export interface FloatingActionGroupProps extends Omit<HTMLAttributes<HTMLDivEle
 export function FloatingActionGroup({
   corner = "bottom-end",
   offset = "1rem",
+  hideWhenOverlay = true,
+  hidden,
   className,
   style,
   children,
   ...rest
 }: FloatingActionGroupProps) {
   const [marker, dir] = usePortalDir();
+  const overlay = useOverlayOpen(hideWhenOverlay);
   // As the FAB's (keksdose dev#612): its 3rem members plus the frame's 1px borders.
   useFloatClearance(offset, "2px");
   return (
@@ -617,6 +645,7 @@ export function FloatingActionGroup({
         createPortal(
           <div
             {...rest}
+            hidden={hidden || overlay || undefined}
             role="group"
             dir={dir}
             data-corner={corner}

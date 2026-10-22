@@ -215,3 +215,29 @@ code beside the flag too, and its name carries the language's own name.
 | keksdose | `features/landing/landing-header.tsx:51` (`LanguageMenu`, `aria-label={t("topbar.language")}`); `app/account-menu.tsx:172` (`AccountMenuLanguage`). Languages `shared/i18n/languages.ts:33–36`: de-CH (ch) shows "DE". | Drop the `aria-label` so the trigger says which language is on (or keep it: then it stays "Language"). |
 | kastlan | `shared/components/language-switcher.tsx:11` (auth pages, `aria-label={t("nav.language")}`); `app/top-bar.tsx:226` (`AccountMenuLanguage`). | As keksdose: drop the `aria-label`, keep `heading`. |
 | Kurvenschmiede | `app/chrome-controls.tsx:32` (`LanguageMenu`, no `aria-label`) and `:26` (`AccountMenuLanguage`). | Nothing; the name is the kit's. |
+
+## KIT-11: the floating inset and `hideWhenOverlay`
+
+0.48 already publishes `--app-float-clearance` (the room the launchers take **above the nav**,
+on `<html>`, while any `FloatingActionButton`, `FloatingPanel` or `FloatingActionGroup` is
+mounted) and `FloatingPanel.hidden`. 0.49 adds:
+
+- `--kit-floating-inset`: the same room measured from the screen's bottom edge — the phone's
+  bottom nav (`--app-nav-h`, 0px from `md` up) or the home indicator, plus
+  `--app-float-clearance`. For a page's own fixed footer or last row:
+  `padding-bottom: var(--kit-floating-inset, var(--app-nav-h, 0px))`. Unset while no launcher
+  is mounted. `--app-float-clearance` stays as it is.
+- On a bump: from `md` up `AppShell` pads `<main>` by `--app-float-clearance` too (was 0), so
+  the last row scrolls clear of a corner button on a desktop as well. Only while a launcher is
+  mounted.
+- `hideWhenOverlay` (default `true`) on all three: while a kit dialog, sheet, popover, hover
+  menu or list is open, the launcher steps aside (as `hidden`: off screen, room and open state
+  kept) and comes back when it closes. A tooltip does not count; an OPEN `FloatingPanel` stays
+  (what opens inside it is its own content). `false` keeps it on screen. Only the kit's
+  overlays are seen (they share its Escape stack); an app's own hand-built dialog is not.
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | `features/assistant/assistant-launcher.tsx:175` `<FloatingPanel hidden={covered}>`, with a MutationObserver over a `COVERING` selector (`:36–53`) for an open editor, modal or bulk bar; `features/transactions/transactions-page.tsx:846` `FloatingActionGroup`, unmounted while the form or the phone selection is open (`:843`). | On a bump the kit modals and sheets already hide both. Keep `covered` for what is not a kit overlay (the inline editor, the bulk bar), or shrink the `COVERING` selector to those. No app CSS reads `--app-float-clearance`. |
+| kastlan | No floating launchers. | Nothing. |
+| Kurvenschmiede | No floating launchers. | Nothing. |
