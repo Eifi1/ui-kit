@@ -464,8 +464,8 @@ function BackdropClose() {
         </p>
         <p className="text-xs text-muted">
           A plain <code className="font-mono">onClick</code> fires on mouseup and targets the
-          common ancestor of the down and up elements, so both directions of that drag used to
-          close a dialog mid-edit.
+          common ancestor of the down and up elements, so both directions of that drag would
+          close a dialog mid-edit; the backdrop closes only when a press starts and ends on it.
         </p>
       </div>
     </div>
