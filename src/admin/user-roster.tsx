@@ -38,8 +38,9 @@ import { DEFAULT_USER_ROSTER_LABELS } from "./user-roster-labels";
  *
  * The column keys ARE the server's sort keys (§3.1): `name`, `email`, `role`, `created`,
  * `last_login` — so {@link userRosterSort} turns the table's sort state into the query
- * as it is. Phone cards come from the same columns: the identity is the card's headline,
- * the role, states, last login and the actions are its fields, created is left off.
+ * as it is. Phone cards come from the same columns: the identity is the card's headline
+ * with the account's states as chips beside it, the role, last login and the actions are
+ * its three fields, created is left off.
  */
 
 /* ── Rows and states ────────────────────────────────────────────────────────── */
@@ -332,11 +333,15 @@ function StateChips({ states }: { states: readonly RosterState[] }) {
  * | `name` | {@link UserIdentityCell} | last, first | the card's headline |
  * | `email` | the address (`emailColumn` only) | address | hidden |
  * | `role` | `RoleChip`(s), or {@link RoleSelect} where `editableRole` | role | field |
- * | `state` | `AccountStateChip`s from `stateOf` | — | field |
+ * | `state` | `AccountStateChip`s from `stateOf` | — | chips beside the headline |
  * | `created` | `dateColumn` | instant | hidden |
  * | `last_login` | `dateColumn`, relative, "Never" | instant | field |
- * | …`extra` | the app's | the app's | the app's |
+ * | …`extra` | the app's | the app's | off the card unless marked `mobile: "secondary"` |
  * | `actions` | {@link UserRowActions} | — | field |
+ *
+ * The card holds three fields, so an `extra` column marked `mobile: "secondary"` takes the
+ * place of a later one (the actions come last): mark it only with `role`, `last_login` or
+ * `actions` dropped from the card (`mobile: "hidden"`), or draw a `mobileCard`.
  *
  * Pure: hand it resolved words, or use {@link useUserRosterColumns}. The keys are stable,
  * so an app may drop or move a column (`columns.filter((c) => c.key !== "created")`).
@@ -437,11 +442,19 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
         getValue: (row) => rolesOf(row, roleOf)[0] ?? "",
         options: (Object.keys(roles) as R[]).map((value) => ({ value, label: roles[value].label })),
       },
+      mobile: "secondary",
     },
     {
       key: "state",
       header: labels.state,
-      cell: (row) => <StateChips states={stateOf(row)} />,
+      // No states, no cell: the phone card then shows no chip beside the name.
+      cell: (row) => {
+        const states = stateOf(row);
+        return states.length === 0 ? null : <StateChips states={states} />;
+      },
+      // Beside the name on the phone card, so the role, last login and the actions keep
+      // the card's three fields.
+      role: "status",
     },
     dateColumn<T>({
       key: "created",
@@ -458,6 +471,7 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
       value: (row) => row.last_login_at ?? null,
       display: "relative",
       empty: labels.never,
+      column: { mobile: "secondary" },
     }),
     ...extra,
   );
@@ -479,6 +493,8 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
       headClassName: "w-px text-end",
       // The menu button keeps its own click: a row link must not wrap it.
       noRowLink: true,
+      // Always on the phone card: the actions must stay reachable there.
+      mobile: "secondary",
     });
   }
   return columns;

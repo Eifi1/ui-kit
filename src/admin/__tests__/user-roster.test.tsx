@@ -237,12 +237,15 @@ describe("userRosterColumns", () => {
     expect(within(other).getAllByRole("button").map((b) => b.textContent)).toEqual(["Resend verification"]);
   });
 
-  it("makes phone cards from the same columns: the identity heads the card, created is left off", () => {
+  it("makes phone cards from the same columns: the identity heads the card, the actions stay on it, created is left off", () => {
     stubViewport(false);
     render(<Roster rows={[BEN]} locale="en-GB" actions={() => [{ label: "Resend", onSelect: () => undefined }]} />);
     const card = screen.getByRole("listitem");
     expect(within(card).getByText("Ben Sample")).toBeInTheDocument();
+    expect(within(card).getByText("Role")).toBeInTheDocument();
     expect(within(card).getByText("Last login")).toBeInTheDocument();
+    // The states are chips beside the name, not one of the card's three fields.
+    expect(within(card).queryByText("State")).not.toBeInTheDocument();
     expect(within(card).queryByText("Created")).not.toBeInTheDocument();
     expect(within(card).getByRole("button", { name: "Actions for Ben Sample" })).toBeInTheDocument();
   });
