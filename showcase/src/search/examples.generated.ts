@@ -76,7 +76,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ReviewStatusChip — the vocabulary",
     "TranslationProgress — one locale's bar and legend",
     "TranslationReviewEditor — one string, opened",
-    "Swipe and group — 0.25",
+    "Swipe and group",
   ],
   "links": [
     "UiKitProvider linkComponent — the router link, set once",

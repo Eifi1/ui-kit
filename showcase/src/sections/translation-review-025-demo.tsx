@@ -171,7 +171,7 @@ export function TranslationReview025Demo() {
 
   return (
     <Example
-      label="Swipe and group — 0.25"
+      label="Swipe and group"
       hint="on a phone: swipe a card — by default toward the end to approve, toward the start for “Needs a change”"
     >
       <div className="min-w-0 space-y-4">
@@ -258,9 +258,9 @@ export function TranslationReview025Demo() {
           “Approve unreviewed (n)” — one write, one Undo; larger than a page, it asks first. Filters narrow before
           grouping; each area pages on its own; a column sort orders every area alike. On a phone the areas start
           folded. {code("onSave(writes, { origin, toasted })")} tells the app when the kit has toasted, so its own
-          “Saved” is skipped. Since 0.25.1 a folded area renders its header only, and on a wide screen the areas
+          “Saved” is skipped. A folded area renders its header only, and on a wide screen the areas
           start folded once opening them all would render more than 100 rows — “Many areas” is a large app&apos;s
-          catalogue, which 0.25.0 opened as 122 tables. {code("defaultGroupsOpen")} ({code("\"auto\"")},{" "}
+          catalogue, 122 areas. {code("defaultGroupsOpen")} ({code("\"auto\"")},{" "}
           {code("true")}, {code("false")}) overrides it; an area the reviewer opens or folds keeps that.
         </Note>
         <Note>
@@ -272,7 +272,7 @@ export function TranslationReview025Demo() {
           {code("onClear")} and answers with Undo, which stores the verdict again. {code("true")} is{" "}
           {code('{ end: ["approve"], start: ["edit"] }')}; there is no separate “needs a change”, because{" "}
           {code('"edit"')} already is one — it opens the editor with the cursor in the wording. On a wide screen
-          the binding is the row&apos;s actions column too (0.46): Approve where the string can take it, then the
+          the binding is the row&apos;s actions column too: Approve where the string can take it, then the
           bound actions — so {code('"clear"')} is a button there, not a swipe only; under the write lock they stay
           and say why.
         </Note>
