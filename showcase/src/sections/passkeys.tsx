@@ -51,7 +51,6 @@ function Passkeys016Demo() {
         {code("data-*")} land on the card; {code("rowProps")} gives each row's {code("<li>")}{" "}
         an id (here {code("#passkey-101")}), and every row carries {code("data-passkey-id")}.
       </Note>
-      <Note>Since 0.16.</Note>
     </Example>
   );
 }
@@ -147,7 +146,6 @@ function Passkeys018Demo() {
         {code("true")} to go on to {code("onAdd")}, {code("false")} to stop with the typed name kept.
         What the step produced reaches {code("onAdd")} through a ref.
       </Note>
-      <Note>Since 0.18.</Note>
     </Example>
   );
 }

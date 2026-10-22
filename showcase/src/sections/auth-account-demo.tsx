@@ -416,7 +416,7 @@ function AccountLabelsSpecimen() {
   return (
     <Example
       label="Account-settings labels — accountSettings in the provider"
-      hint="every labels prop is optional since 0.12: prop > provider > English"
+      hint="every labels prop is optional: prop > provider > English"
     >
       <ToggleGroup<"page" | "house" | "de">
         aria-label="label source"

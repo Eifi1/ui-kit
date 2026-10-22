@@ -84,7 +84,6 @@ function Legal019Demo() {
           {code("legal")} area of the translation review.
         </Note>
       </div>
-      <Note>Since 0.19.</Note>
     </Example>
   );
 }
@@ -303,7 +302,6 @@ function Legal028Demo() {
           {code("noIndex={false}")}.
         </Note>
       </div>
-      <Note>Since 0.28.</Note>
     </Example>
   );
 }
@@ -340,7 +338,6 @@ function LegalAccept028Demo() {
         {code("links")} any more: the three routes with the kit&apos;s labels and {code("·")} separators;{" "}
         {code("nav={false}")} inside a menu that is a named nav already.
       </Note>
-      <Note>Since 0.28.</Note>
     </Example>
   );
 }
