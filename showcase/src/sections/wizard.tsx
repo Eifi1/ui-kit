@@ -142,7 +142,7 @@ export function Wizard() {
 
       <Example
         label="requiredFieldsValidator"
-        hint="folds the hand-written `const errors = {}` block every step used to repeat"
+        hint="folds the hand-written `const errors = {}` block a step would repeat"
       >
         <OutTable
           rows={[
