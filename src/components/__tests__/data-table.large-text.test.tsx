@@ -105,7 +105,8 @@ describe("the phone card at Large (§4)", () => {
     renderTable({ onRowClick: () => {} });
     const body = card("Ada Example");
     expect(body.className).toContain("large:py-4");
-    const content = screen.getByText("Ada Example").parentElement!;
+    // The title sits in the card's head row (0.49 KIT-7), inside the content column.
+    const content = screen.getByText("Ada Example").closest("[data-card-head]")!.parentElement!;
     expect(content.className).toContain("large:[&_.truncate]:whitespace-normal");
     // The primary line wraps rather than overflowing.
     expect(screen.getByText("Ada Example").className).toContain("break-words");

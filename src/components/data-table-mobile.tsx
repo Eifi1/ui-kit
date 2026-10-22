@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Fragment, isValidElement, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { FOCUS_RING } from "./focus-ring";
@@ -13,6 +13,9 @@ import { FilterPopover } from "./data-table-filter-popover";
 import { SwipeableRow, type SwipeAction } from "./swipeable-row";
 import { DialogFrame } from "./dialog-frame";
 import { Checkbox } from "./checkbox";
+import { Chip } from "./chip";
+import { BooleanMark } from "./data-table-cells";
+import { EMPTY_FORMATTED_VALUE } from "../lib/format";
 import { useLongPress } from "../hooks/use-long-press";
 import type { DataTableLabels } from "./data-table-labels";
 import { RowLink, cleanAttrs, columnLabel, fromOutside, fromOwnControl } from "./data-table-shared";
@@ -70,24 +73,81 @@ const CARD_NO_TRUNCATE =
  * header's `sr-only` text (an actions column's), as every kit container must.
  */
 export function StackedFields<T>({ columns, row, compact }: { columns: DataTableColumn<T>[]; row: T; compact: boolean }) {
+  const fields = filledFields(columns, row);
+  if (fields.length === 0) return null;
   return (
     <dl
       data-card-fields="stacked"
       className={cn("relative flex min-w-0 flex-col", compact ? "gap-1.5 text-xs" : "gap-2.5 text-sm", CARD_NO_TRUNCATE)}
     >
-      {columns.map((col) => (
+      {fields.map(({ col, value }) => (
         <div key={col.key} className="min-w-0">
           <dt className="text-xs uppercase tracking-wide text-muted">{col.header}</dt>
           <dd
             {...dataAttrsOf(col.cellProps?.(row))}
             className="mt-0.5 min-w-0 break-words text-secondary"
           >
-            {col.cell(row)}
+            {value}
           </dd>
         </div>
       ))}
     </dl>
   );
+}
+
+/** The most fields the default phone card shows under its title (0.49 KIT-7). */
+export const MOBILE_CARD_FIELDS = 3;
+
+/**
+ * The default phone card's columns (0.49 KIT-7), out of the phone's columns (visible,
+ * not `mobileHidden`): the title — `mobile: "primary"` or `mobilePrimary`, else the
+ * first that is not a status — the `role: "status"` columns for beside it, and at most
+ * {@link MOBILE_CARD_FIELDS} fields: those marked `mobile: "secondary"` when any is,
+ * else the first after the title.
+ */
+export function mobileCardColumns<T>(columns: DataTableColumn<T>[]): {
+  primary: DataTableColumn<T> | null;
+  status: DataTableColumn<T>[];
+  fields: DataTableColumn<T>[];
+} {
+  const primary =
+    columns.find((c) => c.mobile === "primary") ??
+    columns.find((c) => c.mobilePrimary) ??
+    columns.find((c) => c.role !== "status") ??
+    columns[0] ??
+    null;
+  const status = columns.filter((c) => c !== primary && c.role === "status");
+  const rest = columns.filter((c) => c !== primary && c.role !== "status");
+  const marked = rest.filter((c) => c.mobile === "secondary");
+  return { primary, status, fields: (marked.length > 0 ? marked : rest).slice(0, MOBILE_CARD_FIELDS) };
+}
+
+/**
+ * Whether a rendered cell shows nothing worth a line (0.49 KIT-7): `null`, `undefined`,
+ * a boolean (React draws neither), `""` or blank text, and the formatters' empty value
+ * "—" ({@link EMPTY_FORMATTED_VALUE}), and `booleanColumn`'s mark for an unset value.
+ * Any other element is never empty here — its output is the component's — so a column
+ * whose empty value should drop off the card returns `null` (or "—") from `cell` for it.
+ */
+export function isEmptyCell(value: ReactNode): boolean {
+  if (value === null || value === undefined || typeof value === "boolean") return true;
+  if (isValidElement<{ value?: unknown }>(value) && value.type === BooleanMark) return value.props.value == null;
+  if (typeof value === "string") {
+    const text = value.trim();
+    return text === "" || text === EMPTY_FORMATTED_VALUE;
+  }
+  return false;
+}
+
+/** Each column's rendered cell, without the empty ones. */
+function filledFields<T>(columns: DataTableColumn<T>[], row: T): { col: DataTableColumn<T>; value: ReactNode }[] {
+  return columns.map((col) => ({ col, value: col.cell(row) })).filter(({ value }) => !isEmptyCell(value));
+}
+
+/** A status column's value beside the card's title: text in a neutral chip, an element
+ *  (the app's own Chip or StatusDot) as it is. */
+function StatusChip({ value }: { value: ReactNode }) {
+  return typeof value === "string" || typeof value === "number" ? <Chip size="sm">{value}</Chip> : <>{value}</>;
 }
 
 // ---------- Phone sort control (keksdose K10) ----------
@@ -199,6 +259,8 @@ export interface MobileRowProps<T> {
   mobileCardLinkable: boolean;
   mobileCard: DataTableProps<T>["mobileCard"];
   mobilePrimaryCol: DataTableColumn<T> | null;
+  /** The `role: "status"` columns, drawn as chips beside the title (0.49 KIT-7). */
+  mobileStatusColumns: DataTableColumn<T>[];
   mobileSecondaryColumns: DataTableColumn<T>[];
   mobileExpandAsDialog: boolean;
   compact: boolean;
@@ -236,6 +298,7 @@ export function MobileRow<T>({
   mobileCardLinkable,
   mobileCard,
   mobilePrimaryCol,
+  mobileStatusColumns,
   mobileSecondaryColumns,
   mobileExpandAsDialog,
   compact,
@@ -305,6 +368,10 @@ export function MobileRow<T>({
   // itself is the anchor, and routing it through `linkColumn` too would nest an
   // <a> inside an <a>. Desktop and mobile are mutually exclusive (`isMdUp`), so
   // exactly one anchor exists per row.
+  // The default card's filled fields and status values (0.49 KIT-7): an empty one
+  // gets no line. Not computed for a `mobileCard`, which draws its own.
+  const fields = mobileCard ? [] : filledFields(mobileSecondaryColumns, row);
+  const statuses = mobileCard ? [] : filledFields(mobileStatusColumns, row);
   const cardInner = (
     <>
       {/* The card's own content keeps the column it always had; the chevron sits
@@ -323,24 +390,42 @@ export function MobileRow<T>({
           mobileCard(row)
         ) : (
           <>
-            {/* Only the `data-*` half of `cellProps` — see its note. */}
-            {mobilePrimaryCol && (
-              <div {...dataAttrsOf(mobilePrimaryCol.cellProps?.(row))} className="min-w-0 break-words font-medium">
-                {mobilePrimaryCol.cell(row)}
+            {/* Only the `data-*` half of `cellProps` — see its note. The title row
+                carries the status chips at its end (0.49 KIT-7). */}
+            {(mobilePrimaryCol || statuses.length > 0) && (
+              <div data-card-head="" className="flex min-w-0 items-start justify-between gap-2">
+                {mobilePrimaryCol && (
+                  <div
+                    {...dataAttrsOf(mobilePrimaryCol.cellProps?.(row))}
+                    data-card-title=""
+                    className="min-w-0 flex-1 break-words font-medium"
+                  >
+                    {mobilePrimaryCol.cell(row)}
+                  </div>
+                )}
+                {statuses.length > 0 && (
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                    {statuses.map(({ col, value }) => (
+                      <span key={col.key} {...dataAttrsOf(col.cellProps?.(row))} data-card-status="" className="inline-flex">
+                        <StatusChip value={value} />
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-            {mobileSecondaryColumns.length > 0 && large ? (
+            {fields.length > 0 && large ? (
               // §4: each label ABOVE its value at Large. Side by side, a label column
               // sized to the widest label leaves a value a sliver of a 240 px card.
               <StackedFields columns={mobileSecondaryColumns} row={row} compact={compact} />
-            ) : mobileSecondaryColumns.length > 0 && (
+            ) : fields.length > 0 && (
               <dl
                 className={cn(
                   "grid grid-cols-[auto_1fr] gap-x-3",
                   compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm",
                 )}
               >
-                {mobileSecondaryColumns.map((col) => (
+                {fields.map(({ col, value }) => (
                   <Fragment key={col.key}>
                     <dt className="text-xs uppercase tracking-wide text-muted self-center">
                       {col.header}
@@ -349,7 +434,7 @@ export function MobileRow<T>({
                       {...dataAttrsOf(col.cellProps?.(row))}
                       className="min-w-0 text-secondary self-center"
                     >
-                      {col.cell(row)}
+                      {value}
                     </dd>
                   </Fragment>
                 ))}

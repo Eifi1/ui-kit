@@ -15,7 +15,7 @@ import {
   resolveDataTableLabels,
   splitCellProps,
 } from "./data-table-shared";
-import { MobileFilters, MobileRow, MobileSelectBar, MobileSort, StackedFields } from "./data-table-mobile";
+import { MobileFilters, MobileRow, MobileSelectBar, MobileSort, StackedFields, mobileCardColumns } from "./data-table-mobile";
 import { DataTableHead } from "./data-table-head";
 import { DataTableLeadingRow } from "./data-table-leading-row";
 import {
@@ -66,6 +66,25 @@ export interface DataTableColumn<T> {
   // bookkeeping) that would crowd a card without aiding scanning.
   mobilePrimary?: boolean;
   mobileHidden?: boolean;
+  /**
+   * This column on the phone's default card (0.49 KIT-7; ignored with `mobileCard`):
+   * `"primary"` — the card's title, as `mobilePrimary`; `"secondary"` — one of its
+   * fields; `"hidden"` — not on the card, as `mobileHidden`. The card shows at most
+   * three fields: the columns marked `"secondary"` when any
+   * is, else the first three visible columns after the title. A field whose value is
+   * empty — the cell returns `null`, `undefined`, `""` or the formatters' empty "—" —
+   * is left out of that card. The columns the card does not show go into the opened
+   * row with `mobileDetailsInRow`.
+   */
+  mobile?: "primary" | "secondary" | "hidden";
+  /**
+   * What the column is (0.49 KIT-7). `"status"`: on the phone's default card its value
+   * sits as a chip beside the title instead of as a label/value line, and takes none of
+   * the card's three fields. A cell that returns text is drawn in a neutral `Chip`; one
+   * that returns an element (a `Chip` with its own tone, a `StatusDot`) is drawn as it
+   * is. The desktop table is unchanged.
+   */
+  role?: "status";
   /**
    * Set on a column whose cell renders its own `<a>` (or anything else that must
    * keep its own click): the row anchor of `rowHref` then skips it and lands on
@@ -1373,12 +1392,21 @@ export function DataTable<T>({
   // of a horizontally-scrolling table. Column settings stay desktop-only; the
   // filters come through a bottom sheet (feedback #299) and the sort through the
   // opt-in `mobileSort` row (keksdose K10), both on the table's own state.
-  const mobileColumns = visibleColumns.filter((c) => !c.mobileHidden);
-  const mobilePrimaryCol =
-    mobileColumns.find((c) => c.mobilePrimary) ?? mobileColumns[0] ?? null;
-  const mobileSecondaryColumns = mobileColumns.filter((c) => c !== mobilePrimaryCol);
-  // The columns the card leaves out, for the opened row (`mobileDetailsInRow`).
-  const mobileDetailColumns = mobileDetailsInRow ? visibleColumns.filter((c) => c.mobileHidden) : [];
+  const mobileColumns = visibleColumns.filter((c) => !c.mobileHidden && c.mobile !== "hidden");
+  // The default card (0.49 KIT-7): the title, the status chips beside it, at most three
+  // fields — the ones marked `mobile: "secondary"`, else the first after the title.
+  const { primary: mobilePrimaryCol, status: mobileStatusColumns, fields: mobileSecondaryColumns } =
+    mobileCardColumns(mobileColumns);
+  const onCard = new Set<DataTableColumn<T>>([
+    ...(mobilePrimaryCol ? [mobilePrimaryCol] : []),
+    ...mobileStatusColumns,
+    ...mobileSecondaryColumns,
+  ]);
+  // The columns the card leaves out, for the opened row (`mobileDetailsInRow`): the
+  // hidden ones and, without a `mobileCard`, the ones past the card's three fields.
+  const mobileDetailColumns = mobileDetailsInRow
+    ? visibleColumns.filter((c) => (mobileCard ? c.mobileHidden || c.mobile === "hidden" : !onCard.has(c)))
+    : [];
   // Large and Extra large (§4 "DataTable phone card"): the card's labels go ABOVE their
   // values, nothing in it truncates, and the rows get more room. Most of it is a
   // `large:` class; the label/value grid needs a different STRUCTURE (each pair in a
@@ -1404,7 +1432,7 @@ export function DataTable<T>({
   // opens the row and leaves the cell's own link working. A caller's `mobileCard`
   // renderer is opaque to us; a link inside one is the caller's to declare by
   // marking the column it comes from.
-  const mobileCardLinkable = mobileColumns.every((c) => !c.noRowLink);
+  const mobileCardLinkable = (mobileCard ? mobileColumns : [...onCard]).every((c) => !c.noRowLink);
   // The card list's reading direction, for the one thing on it CSS cannot flip: which
   // physical drag a logical `start`/`end` swipe action means. Read off the DOM through
   // a ref callback (it runs at commit, like a layout effect) because `dir` is an
@@ -1533,6 +1561,7 @@ export function DataTable<T>({
       mobileCardLinkable={mobileCardLinkable}
       mobileCard={mobileCard}
       mobilePrimaryCol={mobilePrimaryCol}
+      mobileStatusColumns={mobileStatusColumns}
       mobileSecondaryColumns={mobileSecondaryColumns}
       mobileExpandAsDialog={mobileExpandAsDialog}
       compact={compact}

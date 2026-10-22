@@ -195,6 +195,8 @@ export const STATUS_COL: DataTableColumn<TableRow> = {
   cell: (r) => <StatusPill status={r.status} />,
   sortBy: (r) => STATUS_ORDER.indexOf(r.status),
   filter: STATUS_FILTER,
+  // On a phone the pill sits beside the name, not on a "Status" line of its own.
+  role: "status",
 };
 
 export const AMOUNT_COL: DataTableColumn<TableRow> = {

@@ -564,7 +564,8 @@ const UNIT_COLUMNS: DataTableColumn<Unit>[] = [
   {
     key: "free",
     header: "Free from",
-    cell: (r) => <span className="tabular-nums">{r.free ?? "—"}</span>,
+    // "—" for no date: the table shows it, the phone card leaves the field out.
+    cell: (r) => (r.free ? <span className="tabular-nums">{r.free}</span> : "—"),
     sortBy: (r) => r.free,
     filter: dateFilter((r) => r.free),
     className: "whitespace-nowrap",

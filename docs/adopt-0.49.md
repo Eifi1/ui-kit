@@ -127,3 +127,29 @@ earlier than 0.51.
 | keksdose | Nothing visible: its 7 entries (`shared/lib/nav-items.ts:50`) already ran at `MOBILE_BAR_MAX = { normal: 4, large: 4, xlarge: 3 }` (`nav-items.ts:101`), which is the new default. No entry has `items`. The dev console warns once for `shortLabel` "Activity" on "Transactions" (`nav-items.ts:65`, passed with `shortLabelFrom: "large"` in `app/layout.tsx:58–59`). | Delete `MOBILE_BAR_MAX` and `mobileBarMax={MOBILE_BAR_MAX}` (`app/layout.tsx:126`), or rename it to `mobileMaxItems={{ normal: 5, large: 5, xlarge: 4 }}`. Pass `shortLabelIsAlias: true` for Transactions (or a shortening such as "Trans."; the budget's "Activity" column is the other "Activity", `nav-items.ts:53–60`). Optional: `mobilePriority` 1–4 on Budget, Accounts, Transactions, Reports instead of relying on the order, so Imports/Rules/Payees can move in the list without reaching the bar. |
 | kastlan | Normal: its 6 entries (Dashboard + 5 groups, `app/nav.ts:78–145`) become 4 and "More" (was 6 cells). On the phone each group cell (`app/nav.ts:209`) opens a sheet of its pages, with "Overview" leading to `/overview/<group>`, instead of linking to the overview page. | Nothing required. `FIRST_GROUPS` (`app/nav.ts:156`) can become `mobilePriority` on the four leading groups if the sidebar order should differ from the bar's. No hand-rolled section pill row was found (`frontend/src`, 2026-10-22): a group's pages show in the shell's row above the bar (`mobileSubNav`, on by default, `app/app-layout.tsx:161`). For SectionNav under a page title instead — e.g. the finance pages `/invoices` … `/accounting/reports` (`app/nav.ts:114–125`) — render `<SectionNav label={t("nav.group.finance")} items=… current=…>` under the PageHeader and pass `mobileSubNav={false}`. |
 | Kurvenschmiede | Nothing visible: 5 entries (`shared/lib/nav-items.ts:14–20`) fit five cells; Extra large stays 3 + More. The dev console warns once for `shortLabel` "Equations" on "Differential equations" (`nav-items.ts:17`, `nav.dynamics_short`). | `shortLabelIsAlias: true` for Dynamics (or a shortening). The steering area's strip (`features/steering/steering-layout.tsx:56`, `NavPills size="sm"`) is a SectionNav candidate on the phone: `<SectionNav label={t("steering.area")} items={items} current={areaOf(pathname)} />` keeps it one line instead of wrapping. |
+
+## KIT-7: the default phone card — a title, three fields, no empty ones, a status chip
+
+BREAKING (on a bump, no code): a DataTable **without `mobileCard`** draws its phone card as its
+`mobilePrimary` column (the title), then **at most three fields** — the first three visible
+columns after the title — and **leaves out a field whose value is empty** (the cell returns
+`null`, `undefined`, `""`, the formatters' "—", or `booleanColumn`'s unset mark). Until 0.48 every
+visible column that was not `mobileHidden` was a line. With `mobileDetailsInRow` the columns the
+card leaves out go into the opened row. `mobileCard` still replaces the card completely.
+
+New column options:
+- `mobile: "primary" | "secondary" | "hidden"`: the title (as `mobilePrimary`), one of the
+  fields (the columns marked `"secondary"` are the fields when any is), or not on the card (as
+  `mobileHidden`).
+- `role: "status"`: on the card the value sits as a chip beside the title instead of a
+  "Status" line, and takes none of the three fields. Text is drawn in a neutral `Chip`; a cell
+  that already returns a `Chip`/`StatusDot` is drawn as it is. Desktop unchanged.
+
+A cell that renders an element for "no value" (`<Amount value={null} />`) cannot be seen as
+empty: return `null` or "—" for it (the table shows "—"; the card drops the field).
+
+| App | What changes on a bump | Steps |
+|---|---|---|
+| keksdose | 4 tables keep their `mobileCard` (`features/invoices/invoice-lines-table.tsx:1789`, `features/reports/tables/aggregated-table.tsx:224`, `features/feedback/feedback-page.tsx:296`, `features/accounts/accounts-page.tsx:729`): unchanged. Other tables lose fields past the third. | `role: "status"` on the status columns `features/transactions/use-transaction-columns.tsx:297` and `features/admin/jobs-panel.tsx:98`; `mobile: "secondary"` on the three that matter where the first three are not them. Check the accounts columns marked `mobileHidden` (`accounts-page.tsx:973–1031`) — `mobile: "hidden"` is the same. |
+| kastlan | Its list pages have no `mobileCard` except feedback (`features/feedback/pages/feedback-page.tsx:193`), so every phone card now stops at three fields and drops empty ones. 12 status columns become chips beside the title once marked. | `role: "status"` on the 12 `key: "status"` columns: `finance/components/invoice-columns.tsx:112`, `accounting/components/journal-entry-columns.tsx:122`, `budgets/components/budget-columns.tsx:64`, `handover/components/protocol-columns.tsx:61`, `finance/pages/dunning-list-page.tsx:105`, `owner-meetings/pages/meeting-list-page.tsx:72`, `communication/components/sent-emails-section.tsx:56`, `deposits/components/deposit-columns.tsx:59`, `tenancy/components/lease-columns.tsx:158`, `service-charges/components/period-columns.tsx:53`, `maintenance/components/request-columns.tsx:97`, `property/pages/unit-list-page.tsx:105` (its `StatusBadge` is a Chip and is kept as it is). Then `mobile: "secondary"` where the three fields should not be the first three (e.g. invoices: tenant, due date, amount). Cells that print `formatCurrency(…)` of a missing value as "—" drop off by themselves. |
+| Kurvenschmiede | One `mobileCard` (`features/feedback/feedback-page.tsx:221`): unchanged. Other tables stop at three fields. | Check the gear tabs' cards (`features/gear/{assemblies,transmissions,hystereses}-tab.tsx`) on a phone; add `mobile: "secondary"` where needed. |
