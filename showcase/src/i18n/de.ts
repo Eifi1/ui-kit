@@ -188,7 +188,7 @@ export const de: Dictionary = {
       title: "Farbrollen",
       short: "Rollen",
       blurb:
-        "Die semantische Schicht über der Palette: jede Füllfarbe mit der Vordergrundfarbe, die sie nennt, jeder Farbton als Text, Fläche und Linie, die kräftigen Linien, die eingelassene Fläche auf einer Karte, die Hover-Regel, die Rollen-Utilities, die text-[var(--…)] ersetzen, und der Test, der eine Variable findet, die nichts deklariert.",
+        "Die semantische Schicht über der Palette: welchen Farbton ein Status bekommt, jede Füllfarbe mit der Vordergrundfarbe, die sie nennt, jeder Farbton als Text, Fläche und Linie, die kräftigen Linien, die eingelassene Fläche auf einer Karte, die Hover-Regel, die Rollen-Utilities, die text-[var(--…)] ersetzen, und der Test, der eine Variable findet, die nichts deklariert.",
     },
     "text-size": {
       title: "Textgrösse & Kontrast",

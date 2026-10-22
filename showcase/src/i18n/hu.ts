@@ -186,7 +186,7 @@ export const hu: Dictionary = {
       title: "Színszerepek",
       short: "Szerepek",
       blurb:
-        "A paletta fölötti szemantikus réteg: minden kitöltés az általa megnevezett előtérszínnel, minden tónus szövegként, halvány háttérként és vonalként, az erős vonalak, a süllyesztett felület egy kártyán, a hover szabálya, a text-[var(--…)] helyett használható szerepalapú segédosztályok, és a teszt, amely megtalálja a sehol sem deklarált változót.",
+        "A paletta fölötti szemantikus réteg: milyen tónust kap egy állapot, minden kitöltés az általa megnevezett előtérszínnel, minden tónus szövegként, halvány háttérként és vonalként, az erős vonalak, a süllyesztett felület egy kártyán, a hover szabálya, a text-[var(--…)] helyett használható szerepalapú segédosztályok, és a teszt, amely megtalálja a sehol sem deklarált változót.",
     },
     "text-size": {
       title: "Szövegméret és kontraszt",

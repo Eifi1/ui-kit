@@ -180,7 +180,7 @@ export const es: Dictionary = {
       title: "Roles de color",
       short: "Roles",
       blurb:
-        "La capa semántica sobre la paleta: cada relleno con el color de primer plano que nombra, cada tono como texto, fondo suave y línea, las líneas fuertes, el panel hundido sobre una tarjeta, la regla del hover, las utilidades de rol que sustituyen a text-[var(--…)] y la prueba que detecta una variable que nada declara.",
+        "La capa semántica sobre la paleta: qué tono toma un estado, cada relleno con el color de primer plano que nombra, cada tono como texto, fondo suave y línea, las líneas fuertes, el panel hundido sobre una tarjeta, la regla del hover, las utilidades de rol que sustituyen a text-[var(--…)] y la prueba que detecta una variable que nada declara.",
     },
     "text-size": {
       title: "Tamaño del texto y contraste",

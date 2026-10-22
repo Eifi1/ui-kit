@@ -177,7 +177,7 @@ export const it: Dictionary = {
       title: "Ruoli dei colori",
       short: "Ruoli",
       blurb:
-        "Lo strato semantico sopra la tavolozza: ogni riempimento con il colore di primo piano che indica, ogni tono come testo, sfondo tenue e linea, le linee forti, il pannello incassato su una scheda, la regola dell’hover, le utility di ruolo che sostituiscono text-[var(--…)] e il test che trova una variabile che nulla dichiara.",
+        "Lo strato semantico sopra la tavolozza: quale tono prende uno stato, ogni riempimento con il colore di primo piano che indica, ogni tono come testo, sfondo tenue e linea, le linee forti, il pannello incassato su una scheda, la regola dell’hover, le utility di ruolo che sostituiscono text-[var(--…)] e il test che trova una variabile che nulla dichiara.",
     },
     "text-size": {
       title: "Dimensione del testo e contrasto",

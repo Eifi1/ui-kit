@@ -191,7 +191,7 @@ export const en: Dictionary = {
       title: "Colour roles",
       short: "Roles",
       blurb:
-        "The semantic layer over the palette: every fill with the foreground it names, each tone as text, wash and line, the strong lines, the well on a card, the hover rule, the role utilities that replace text-[var(--…)], and the test that catches a variable nothing declares.",
+        "The semantic layer over the palette: which tone a status takes, every fill with the foreground it names, each tone as text, wash and line, the strong lines, the well on a card, the hover rule, the role utilities that replace text-[var(--…)], and the test that catches a variable nothing declares.",
     },
     "text-size": {
       title: "Text size & contrast",
