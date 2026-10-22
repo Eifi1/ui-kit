@@ -132,7 +132,7 @@ export function PlanSwitch039Demo() {
         ]}
       />
       <Note>
-        Since 0.39. While a provider subscription runs, the app sends a PlanPicker pick to {code("POST /billing/plan/preview")}{" "}
+        While a provider subscription runs, the app sends a PlanPicker pick to {code("POST /billing/plan/preview")}{" "}
         and opens the confirm with the answer; Confirm is {code("POST /billing/plan")}. The switch is immediate and
         prorated: an upgrade charges the difference now, a downgrade credits the unused part towards the next
         charges, and the dimensions over the new limit are said before the payer agrees (a limit gates creation
@@ -168,7 +168,7 @@ export function PayPageApps039Demo() {
         ]}
       />
       <Note>
-        Since 0.39. Paddle has one default payment link per account ({code("pay.my-app.example")}), and its e-mails send every
+        Paddle has one default payment link per account ({code("pay.my-app.example")}), and its e-mails send every
         app&apos;s payment-method update there. So each pay page reads {code("custom_data.app")} on{" "}
         {code("checkout.loaded")}, frames that app from the map in its {code("pay-config.json")}, and on{" "}
         {code("checkout.completed")} goes to that app&apos;s {code("checkoutReturnUrl(returnUrl)")}. A tag the map
@@ -252,7 +252,7 @@ export function BuyerOnly042Demo() {
         />
       </div>
       <Note>
-        Since 0.42. Where the company stores a buyer ({code("provider_payer_user_id")}), the provider&apos;s portal
+        Where the company stores a buyer ({code("provider_payer_user_id")}), the provider&apos;s portal
         opens for that admin only: for any other admin {code("portal")} is {code('"buyer_only"')}, &ldquo;Payment
         and invoices&rdquo; becomes a caption that names the buyer, and &ldquo;Cancel subscription&rdquo; opens the
         in-app confirm, whose button is {code("POST /billing/cancel")}. The subscription ends at its period&apos;s
@@ -335,7 +335,7 @@ export function GrantWarning042Demo() {
         )}
       </div>
       <Note>
-        Since 0.42. Under an operator&apos;s grant without an end ({code("status: comped")},{" "}
+        Under an operator&apos;s grant without an end ({code("status: comped")},{" "}
         {code("source: manual")}, {code("comped_until: null")}) a purchase leaves the plan on the grant&apos;s: the
         payer would pay for a plan that never applies. The kit warns, it doesn&apos;t refuse. On the way to the
         checkout PlanPicker asks first (&ldquo;Buy anyway&rdquo;, &ldquo;Back&rdquo;); told {code("switching")}, it
@@ -435,7 +435,7 @@ export function Portal043Demo() {
         </p>
       </div>
       <Note>
-        Since 0.43 (§17). The app&apos;s portal handler calls {code("openProviderPage(fetchUrl)")}: it opens{" "}
+        §17: the app&apos;s portal handler calls {code("openProviderPage(fetchUrl)")}: it opens{" "}
         {code("about:blank")} inside the click with {code("opener = null")}, awaits {code("POST /billing/portal")},
         and points the tab at the answer; a refusal closes the tab and rethrows, a blocked pop-up sends this page
         instead. The portal&apos;s actions carry the external-link mark and the note names the provider and the

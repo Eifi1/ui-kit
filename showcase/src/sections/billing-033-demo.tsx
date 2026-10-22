@@ -377,7 +377,7 @@ export function PayPage033Demo() {
             ["billing.payNothing — no _ptxn, or billing off", labels.payNothing],
             ["billing.payFailed — Paddle.js did not load", labels.payFailed],
             ["billing.payBack — the buyer closed the checkout", labels.payBack],
-            ["billing.payDone — paid, for a transaction that names no app (0.39)", labels.payDone],
+            ["billing.payDone — paid, for a transaction that names no app", labels.payDone],
           ]}
         />
       </div>
@@ -391,8 +391,8 @@ export function PayPage033Demo() {
         `pay-config.json` at the web build; it refuses a token whose prefix disagrees with the environment
         (`test_` sandbox, `live_` live) and a URL that is not https, so a wrong pairing fails the build,
         not a buyer. Without a token it writes `null` and the page says there is nothing to pay. The language is
-        the one thing per visit (`?lang=`, mapped to Paddle&apos;s locale; Hungarian gets English). Since
-        0.39 the page names the app from the transaction, not from its host, and once paid goes to that
+        the one thing per visit (`?lang=`, mapped to Paddle&apos;s locale; Hungarian gets English). The
+        page names the app from the transaction, not from its host, and once paid goes to that
         app&apos;s {code("checkoutReturnUrl(returnUrl)")}, which brings the buyer back to the way-back specimen
         above. This showcase loads no Paddle.js.
       </Note>
