@@ -170,7 +170,7 @@ function TourLauncher() {
     <div className="space-y-3">
       <Row>
         <Button
-          variant="brand"
+          variant="accent"
           data-tour="showcase-tour-start"
           disabled={active}
           onClick={() => {
@@ -388,7 +388,7 @@ function PlacementTour() {
           </select>
         </label>
         <Button
-          variant="brand"
+          variant="accent"
           disabled={active}
           onClick={() => {
             setRevealed(false);
@@ -651,7 +651,7 @@ function TourAccountBody() {
           <Button
             key={tour.id}
             size="sm"
-            variant={progress.completed[tour.id] !== undefined ? "primary" : "secondary"}
+            variant={progress.completed[tour.id] !== undefined ? "default" : "secondary"}
             onClick={() => {
               if (progress.completed[tour.id] !== undefined) progress.reset(tour.id);
               else progress.complete(tour);

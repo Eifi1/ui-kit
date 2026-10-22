@@ -592,7 +592,7 @@ function PresetPreview() {
           <div className="w-56 max-w-full">
             <Input label="Amount" defaultValue="1,250.00" />
           </div>
-          <Button variant="brand">Save</Button>
+          <Button variant="accent">Save</Button>
           <Button variant="secondary">Cancel</Button>
         </div>
         <AlertBanner tone="warning">Semantic colours come from tokens.css, not the preset.</AlertBanner>

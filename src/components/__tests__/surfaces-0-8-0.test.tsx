@@ -310,7 +310,7 @@ describe("Button variant=link", () => {
   });
 
   it("buttonClasses covers every variant, and matches <Button> for each", () => {
-    const variants: ButtonVariant[] = ["primary", "secondary", "ghost", "danger", "brand", "link"];
+    const variants: ButtonVariant[] = ["default", "accent", "secondary", "ghost", "danger", "link"];
     for (const variant of variants) {
       const { unmount } = render(<Button variant={variant}>x</Button>);
       expect(screen.getByRole("button").className).toBe(buttonClasses(variant));

@@ -103,7 +103,7 @@ function OnReportDemo() {
           <Button
             key={value}
             size="sm"
-            variant={outcome === value ? "primary" : "ghost"}
+            variant={outcome === value ? "default" : "ghost"}
             aria-pressed={outcome === value}
             onClick={() => setOutcome(value)}
           >

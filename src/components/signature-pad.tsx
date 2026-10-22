@@ -616,7 +616,7 @@ export function SignaturePad({
           </Button>
         )}
         {onSave && (
-          <Button type="button" variant="brand" onClick={save} disabled={disabled || isEmpty} className="ms-auto">
+          <Button type="button" variant="accent" onClick={save} disabled={disabled || isEmpty} className="ms-auto">
             {labels.save}
           </Button>
         )}

@@ -144,7 +144,7 @@ function Toolbar({ pending = 0, onAdd = () => {} }: { pending?: number; onAdd?: 
         onClick={() => setPendingOnly((on) => !on)}
       />
       <FloatingAction label="Invoices" icon="▤" href="/invoices" badge={pending} />
-      <FloatingAction label="Add" icon="+" variant="primary" onClick={onAdd} />
+      <FloatingAction label="Add" icon="+" variant="accent" onClick={onAdd} />
     </FloatingActionGroup>
   );
 }

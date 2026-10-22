@@ -82,7 +82,7 @@ const SYNC_ICON: Record<Sync, ReactNode> = {
 function StatusFab({ active, setActive }: { active: Which; setActive: (w: Which) => void }) {
   const [status, setStatus] = useState<Sync>("idle");
   const [queued, setQueued] = useState(0);
-  const [variant, setVariant] = useState<"surface" | "primary">("surface");
+  const [variant, setVariant] = useState<"surface" | "accent">("surface");
   const [extended, setExtended] = useState(true);
   const label = SYNC_TEXT(status, queued);
   const hidden = status === "idle";
@@ -128,14 +128,14 @@ function StatusFab({ active, setActive }: { active: Which; setActive: (w: Which)
       </Row>
       <Row className="mt-3">
         <span className="text-xs text-muted">variant</span>
-        <ToggleGroup<"surface" | "primary">
+        <ToggleGroup<"surface" | "accent">
           aria-label="Variant"
           size="sm"
           value={variant}
           onChange={setVariant}
           options={[
             { value: "surface", label: "surface" },
-            { value: "primary", label: "primary" },
+            { value: "accent", label: "accent" },
           ]}
         />
         <label className="flex items-center gap-2 text-sm text-secondary">
@@ -168,7 +168,7 @@ function StatusFab({ active, setActive }: { active: Which; setActive: (w: Which)
           <code className="font-mono">extended</code> shows the <code className="font-mono">label</code> beside the icon
           (a 3rem pill, the disc&apos;s height); untick it and the same button is the round disc.{" "}
           <code className="font-mono">variant=&quot;surface&quot;</code> is the page surface with a hairline — a status,
-          not a call to action; switch to <code className="font-mono">primary</code> to see why a brand pill is wrong
+          not a call to action; switch to <code className="font-mono">accent</code> to see why a brand pill is wrong
           for &ldquo;you are offline&rdquo;. <code className="font-mono">live</code> mirrors the label into a polite{" "}
           <code className="font-mono">role=&quot;status&quot;</code> region, so each change — offline, queued, syncing,
           synced — is announced. The button is mounted from the start and passed{" "}
@@ -367,7 +367,7 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
           <FloatingAction
             label="New transaction"
             icon={<Plus />}
-            variant="primary"
+            variant="accent"
             tooltip={false}
             onClick={() => setAdds((n) => n + 1)}
           />
@@ -383,7 +383,7 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
           draws nothing at 0, the count at 3 and <code className="font-mono">99+</code> at 120, and the count joins the
           name — <code className="font-mono">floatingPanel.badge</code> (&ldquo;3 new&rdquo;, translated by the
           language menu) or <code className="font-mono">badgeLabel</code>. The brand &ldquo;+&rdquo; is{" "}
-          <code className="font-mono">variant=&quot;primary&quot;</code> with{" "}
+          <code className="font-mono">variant=&quot;accent&quot;</code> with{" "}
           <code className="font-mono">tooltip=&#123;false&#125;</code>: hover it, no bubble — the others show their label
           in the kit tooltip. <code className="font-mono">corner</code> is logical and{" "}
           <code className="font-mono">offset</code> lifts the pill above the nav by that much more.

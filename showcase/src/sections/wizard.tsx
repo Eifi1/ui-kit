@@ -429,7 +429,7 @@ function ImportWizard({
     <StepperNav
       wizard={wizard}
       title="Import transactions"
-      finishVariant={wizard.data.replace ? "danger" : "brand"}
+      finishVariant={wizard.data.replace ? "danger" : "accent"}
       finishDisabled={locked}
       doneDisabled={converting}
       renderFinish={(button) =>

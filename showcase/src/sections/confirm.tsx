@@ -654,7 +654,7 @@ function ConfirmVariantExample() {
         {code("tone")} says how bad the outcome is, {code("confirmVariant")} how loud the last press is. An admin
         resetting somebody else&rsquo;s password is guarded against picking the wrong row, not against losing data — an
         amber question — and still ends in a red button. Left out, the variant follows {code("tone")} as before:{" "}
-        {code("danger")} for {code('"danger"')}, {code("primary")} for {code('"warning"')}.
+        {code("danger")} for {code('"danger"')}, {code("default")} for {code('"warning"')}.
       </Note>
       <Note>Since 0.24.</Note>
     </Example>

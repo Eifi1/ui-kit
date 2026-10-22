@@ -48,7 +48,7 @@ export function OneTimeCode022Demo() {
             error={error}
             readOnlyUntilFocus={guard}
           />
-          <Button type="submit" variant="brand" disabled={value.length !== 6}>
+          <Button type="submit" variant="accent" disabled={value.length !== 6}>
             Verify
           </Button>
         </form>

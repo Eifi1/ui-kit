@@ -59,7 +59,7 @@ function ModalOpen() {
           <Button variant="secondary" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button variant="brand" onClick={save} disabled={saving}>
+          <Button variant="accent" onClick={save} disabled={saving}>
             {saving ? "Saving…" : "Save"}
           </Button>
         </Row>
@@ -71,7 +71,7 @@ function ModalOpen() {
           </h4>
           <Input label="Name" defaultValue="Household" />
           <Row className="justify-end">
-            <Button variant="brand" onClick={save} disabled={saving}>
+            <Button variant="accent" onClick={save} disabled={saving}>
               {saving ? "Saving…" : "Save"}
             </Button>
           </Row>
@@ -123,7 +123,7 @@ function DialogFrameOpen() {
             <Button variant="secondary" onClick={close}>
               Cancel
             </Button>
-            <Button variant="brand" onClick={save} disabled={saving}>
+            <Button variant="accent" onClick={save} disabled={saving}>
               {saving ? "Creating…" : "Create"}
             </Button>
           </>

@@ -144,7 +144,7 @@ function PaletteDemo() {
   return (
     <div className="space-y-3">
       <Row>
-        <Button variant="brand" onClick={openPalette}>
+        <Button variant="accent" onClick={openPalette}>
           Open palette
         </Button>
         <span className={READOUT}>last chosen: {chosen ?? "—"}</span>

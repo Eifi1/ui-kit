@@ -99,7 +99,7 @@ function SignatureSpecimens() {
         <Row className="mt-3">
           <Button
             type="button"
-            variant="brand"
+            variant="accent"
             onClick={() => {
               setSubmitted(true);
               setRefValue(pad.current?.toDataURL() ?? null);
@@ -315,7 +315,7 @@ function SignIn() {
             busy={busy}
             error={error}
           />
-          <Button type="submit" variant="brand" pending={busy}>
+          <Button type="submit" variant="accent" pending={busy}>
             Sign in
           </Button>
         </form>

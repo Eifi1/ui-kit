@@ -24,7 +24,7 @@ function AmountLocaleDemo() {
       <div className="space-y-3">
         <Row>
           {LOCALES.map((l) => (
-            <Button key={l} size="sm" variant={l === locale ? "primary" : "secondary"} onClick={() => setLocale(l)}>
+            <Button key={l} size="sm" variant={l === locale ? "default" : "secondary"} onClick={() => setLocale(l)}>
               {l}
             </Button>
           ))}

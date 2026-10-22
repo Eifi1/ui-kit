@@ -449,14 +449,14 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithRef<"div">, "
   tone?: "danger" | "warning";
   /**
    * The confirm button's variant, apart from `tone` (0.24, keksdose). Default: what
-   * `tone` picks, as before — `"danger"` for `"danger"`, `"primary"` for `"warning"`.
+   * `tone` picks, as before — `"danger"` for `"danger"`, `"default"` for `"warning"`.
    *
    * `tone` says how bad the outcome is; this says how loud the last press is, and the two
    * need not agree. keksdose's `UserActionConfirm` (an admin resets somebody else's
    * password) asks an AMBER question — what it guards against is mis-targeting, not data
    * loss, so the danger colour stays its one `severe` consequence's — and ends in a RED
    * Go, as its hand-built panel did before it moved onto this tile in 0.23; with only
-   * `tone`, the amber question made Go the neutral primary fill. `tone="warning"
+   * `tone`, the amber question made Go the neutral `default` fill. `tone="warning"
    * confirmVariant="danger"` is that panel again.
    */
   confirmVariant?: ButtonVariant;
@@ -914,7 +914,7 @@ export function DangerConfirm({
           <Button
             id={confirmId}
             type="submit"
-            variant={confirmVariant ?? (tone === "warning" ? "primary" : "danger")}
+            variant={confirmVariant ?? (tone === "warning" ? "default" : "danger")}
             disabled={!canConfirm}
             // Held by a guard (the caller's or a built-in one), or armed and then locked
             // (or rendered armed under a lock): the confirm says why the way Button

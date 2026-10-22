@@ -372,7 +372,7 @@ export function Showcase() {
                   a bare icon — readers who never resize a window are who this is for. */}
               {!embedded && (
                 <Tooltip label={t.chrome.devicePreview} side="bottom" portal className="hidden md:block">
-                  <Button variant={preview ? "primary" : "ghost"} size="sm" aria-pressed={preview} onClick={() => setPreview((v) => !v)}>
+                  <Button variant={preview ? "default" : "ghost"} size="sm" aria-pressed={preview} onClick={() => setPreview((v) => !v)}>
                     <MonitorSmartphone aria-hidden className="size-4" />
                     <span className="max-lg:sr-only">{t.chrome.previewShort}</span>
                   </Button>

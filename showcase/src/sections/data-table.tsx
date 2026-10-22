@@ -292,7 +292,7 @@ function ControlledTable() {
         {STATUS_ORDER.map((s) => (
           <Button
             key={s}
-            variant={active.includes(s) ? "primary" : "secondary"}
+            variant={active.includes(s) ? "default" : "secondary"}
             className="px-2 py-1 text-xs"
             aria-pressed={active.includes(s)}
             onClick={() => toggleChip(s)}

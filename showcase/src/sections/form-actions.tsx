@@ -302,7 +302,7 @@ function FormActions023Demo() {
               }}
               onSubmit={() => setLog("plan set to PRO")}
               submitLabel="Set plan"
-              submitVariant="primary"
+              submitVariant="default"
               submitDisabled={!ticked}
               submitDisabledReason={ticked ? undefined : "Tick the box first"}
             />

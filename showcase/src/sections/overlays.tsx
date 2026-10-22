@@ -645,7 +645,7 @@ function FullBleedFooter() {
               Cancel
             </Button>
             <Button
-              variant="brand"
+              variant="accent"
               onClick={() => {
                 setApplied(pick);
                 setOpen(false);

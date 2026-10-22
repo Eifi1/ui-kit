@@ -75,7 +75,7 @@ export function DemoEnded({
       </p>
       {children}
       <div className="mt-4 flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-center">
-        <Button href={restartHref} variant="brand">
+        <Button href={restartHref} variant="accent">
           {labels.restart}
         </Button>
         <Button href={accessLink.href} variant="secondary">

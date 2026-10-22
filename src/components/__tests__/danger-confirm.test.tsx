@@ -535,7 +535,7 @@ describe("DangerConfirm — confirmVariant, confirmDisabledReason and fields of 
     rerender(<DangerConfirm armed tone="warning" confirmVariant="danger" prompt="Reset?" onConfirm={() => {}} />);
     expect(confirmButton()).toHaveClass("bg-danger");
     expect(screen.getByText("Reset?")).toHaveClass("text-warning");
-    rerender(<DangerConfirm armed confirmVariant="brand" onConfirm={() => {}} />);
+    rerender(<DangerConfirm armed confirmVariant="accent" onConfirm={() => {}} />);
     expect(confirmButton()).toHaveClass("bg-brand");
   });
 

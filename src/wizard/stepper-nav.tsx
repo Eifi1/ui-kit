@@ -42,7 +42,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
   description,
   className,
   labels,
-  finishVariant = "brand",
+  finishVariant = "accent",
   finishDisabled = false,
   finishCommit,
   finishDisabledReason,
@@ -56,7 +56,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
   className?: string;
   labels?: LabelOverride<WizardLabels>;
   /** The Finish button's variant — `"danger"` for a destructive commit (an import
-   *  that replaces what is there). Default `"brand"`. Next keeps `"brand"`. */
+   *  that replaces what is there). Default `"accent"`. Next keeps `"accent"`. */
   finishVariant?: ButtonVariant;
   /** Disable Finish for a reason of the app's own, on top of the kit's gates
    *  (`canFinish`, submitting, validating). */
@@ -183,14 +183,14 @@ export function StepperNav<TData extends Record<string, unknown>>({
     // The last step after a commit. Nothing to finish; Done only when the app gave
     // an `onDone` — otherwise the step carries its own way out.
     forwardButton = wizard.canDone ? (
-      <Button variant="brand" data-tour="wizard-done" onClick={wizard.done} disabled={doneDisabled}>
+      <Button variant="accent" data-tour="wizard-done" onClick={wizard.done} disabled={doneDisabled}>
         {stepNextLabel ?? l.done ?? DEFAULT_WIZARD_LABELS.done}
       </Button>
     ) : null;
   } else {
     forwardButton = (
       <Button
-        variant="brand"
+        variant="accent"
         data-tour="wizard-next"
         onClick={wizard.goNext}
         disabled={wizard.nextBlocked || pending}

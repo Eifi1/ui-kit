@@ -646,7 +646,7 @@ export function Numbers() {
               and you have to be able to scroll to the figure it is covering.
             </Note>
             <Row>
-              <Button type="button" variant="primary" onClick={() => setPadOpen(true)}>
+              <Button type="button" variant="default" onClick={() => setPadOpen(true)}>
                 Open the number pad
               </Button>
               <Button type="button" variant="secondary" onClick={() => setDePadOpen(true)}>

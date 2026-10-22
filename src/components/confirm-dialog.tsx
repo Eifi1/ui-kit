@@ -298,7 +298,7 @@ function ConfirmDialogView({
           <Button
             ref={confirmRef}
             type="button"
-            variant={tone === "danger" ? "danger" : "primary"}
+            variant={tone === "danger" ? "danger" : "default"}
             disabled={!matches}
             disabledReason={request.lockReason}
             onClick={() => {

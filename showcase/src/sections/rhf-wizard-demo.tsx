@@ -218,7 +218,7 @@ function OwnNav() {
       </div>
       <Row className="mt-3">
         <Button
-          variant="brand"
+          variant="accent"
           onClick={async () => {
             const ok = await validate();
             setResult(String(ok));

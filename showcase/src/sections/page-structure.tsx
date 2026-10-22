@@ -98,7 +98,7 @@ function PageHeaders() {
             <Button variant="secondary" size="sm">
               Edit
             </Button>
-            <Button variant="brand" size="sm" onClick={() => setCreated((n) => n + 1)}>
+            <Button variant="accent" size="sm" onClick={() => setCreated((n) => n + 1)}>
               <Plus className="size-4" /> New meter reading
             </Button>
           </>

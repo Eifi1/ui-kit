@@ -241,7 +241,7 @@ export function TranslationReviewEditor({
           <div className="flex flex-wrap gap-2">
             {!missing && (
               <Button
-                variant="primary"
+                variant="default"
                 commit={COMMIT_EXCEPT_BILLING}
                 pending={busy === "approve"}
                 disabled={busy !== null}
@@ -251,7 +251,7 @@ export function TranslationReviewEditor({
               </Button>
             )}
             <Button
-              variant={missing ? "primary" : "danger"}
+              variant={missing ? "default" : "danger"}
               commit={COMMIT_EXCEPT_BILLING}
               pending={busy === "flag"}
               disabled={busy !== null || !canFlag}

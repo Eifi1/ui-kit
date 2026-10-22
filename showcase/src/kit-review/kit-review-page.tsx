@@ -466,7 +466,7 @@ function TokenForm({ onToken, label = "Review token" }: { onToken: (token: strin
           onChange={(event) => setValue(event.target.value)}
         />
       </div>
-      <Button type="submit" variant="primary" disabled={!trimmed}>
+      <Button type="submit" variant="default" disabled={!trimmed}>
         Use this token
       </Button>
     </form>

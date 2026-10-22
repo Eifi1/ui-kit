@@ -141,7 +141,7 @@ function RhfExample() {
             rules={{ validate: (v) => v === true || "Confirm the receipt is attached." }}
           />
           <div className="flex gap-2 sm:col-span-2">
-            <Button type="submit" variant="brand">
+            <Button type="submit" variant="accent">
               Submit
             </Button>
             <Button

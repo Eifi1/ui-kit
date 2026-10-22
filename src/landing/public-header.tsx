@@ -82,7 +82,7 @@ export function PublicHeader({
 
   const actions =
     session === "user" ? (
-      <Button href={openAppHref} variant="brand" size={size}>
+      <Button href={openAppHref} variant="accent" size={size}>
         {labels.openApp}
       </Button>
     ) : (
@@ -96,7 +96,7 @@ export function PublicHeader({
             {labels.signIn}
           </Button>
         )}
-        <Button href={accessLink.href} variant="brand" size={size}>
+        <Button href={accessLink.href} variant="accent" size={size}>
           {accessLink.label}
         </Button>
       </>

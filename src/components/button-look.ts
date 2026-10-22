@@ -13,7 +13,75 @@ import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
  * The other exports are the two buttons' shared parts (`@internal`).
  */
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "brand" | "link";
+/**
+ * A button's look.
+ *
+ * - `default`: the quiet action — a warm filled chip with a hairline border. What a
+ *   Button with no `variant` draws.
+ * - `accent`: the strong one, solid `--brand` with `--brand-contrast` text — the one
+ *   call to action a view leads with. "Accent" is the button's role here, painted in
+ *   `--brand`; it is not the palette's second anchor colour, also called `accent`
+ *   (theme/palette-derive.ts), which no button paints.
+ * - `secondary`: an outline. `ghost`: text or glyph only. `danger`: solid `--danger`,
+ *   for an action that destroys something. `link`: a text link that acts (a `<button>`).
+ * - `primary` and `brand` are **deprecated** aliases of `default` and `accent` (0.49,
+ *   same look; a development build warns once per name). They are removed no earlier
+ *   than 0.51, and `primary` will not come back with another meaning.
+ */
+export type ButtonVariant =
+  | "default"
+  | "accent"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "link"
+  /** @deprecated 0.49: use `default` (same look). Removed no earlier than 0.51. */
+  | "primary"
+  /** @deprecated 0.49: use `accent` (same look). Removed no earlier than 0.51. */
+  | "brand";
+
+/** @internal A {@link ButtonVariant} without the deprecated aliases. */
+export type CanonicalButtonVariant = Exclude<ButtonVariant, "primary" | "brand">;
+
+/** The deprecated names and what they stand for — see {@link ButtonVariant}. */
+const DEPRECATED_BUTTON_VARIANTS: Readonly<Record<string, CanonicalButtonVariant>> = {
+  primary: "default",
+  brand: "accent",
+};
+
+/** The kit's dev switch, as `lib/logger.ts` reads it: a development build, never a
+ *  production one (the consumer's bundler makes `import.meta.env.DEV` false) and never
+ *  under vitest. Read per call so a test can switch it on with `vi.stubEnv`. */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
+const warnedVariants = new Set<string>();
+
+/**
+ * @internal A deprecated variant name warns once (per `component` and name) in a
+ * development build, then reads as the name it stands for. `component` is the prop's
+ * owner in the message ("Button variant", "FormActions submitVariant", …).
+ */
+export function warnDeprecatedVariant(component: string, name: string, replacement: string): void {
+  if (!devWarnings()) return;
+  const key = `${component}|${name}`;
+  if (warnedVariants.has(key)) return;
+  warnedVariants.add(key);
+  console.warn(
+    `[ui-kit] ${component}="${name}" is deprecated: use "${replacement}" (same look). ` +
+      `"${name}" is removed no earlier than 0.51.`,
+  );
+}
+
+/** @internal `primary` → `default`, `brand` → `accent` (warning once in development);
+ *  every other variant as it is. Runs before every lookup keyed by the variant. */
+export function resolveButtonVariant(variant: ButtonVariant, component = "Button variant"): CanonicalButtonVariant {
+  const replacement = DEPRECATED_BUTTON_VARIANTS[variant];
+  if (replacement === undefined) return variant as CanonicalButtonVariant;
+  warnDeprecatedVariant(component, variant, replacement);
+  return replacement;
+}
 
 // Shared base ring for every button-styled element. Kept as a named const so the
 // <Button> component and the {@link buttonClasses} helper draw from one source and
@@ -83,13 +151,14 @@ const BUTTON_SIZES_LARGE: Record<ButtonSize, string> = {
 export const HOVER_INK = "hover:bg-[color-mix(in_srgb,var(--text-primary)_7%,transparent)]";
 
 // Warm, palette-token-driven so buttons blend with the fields + cards in every theme.
-// Actions default to a warm bordered look (primary = filled warm chip, secondary =
-// outline); `brand` stays the solid accent for the rare strong CTA; `danger` takes the
+// Actions default to a warm bordered look (`default` = filled warm chip, secondary =
+// outline); `accent` is the solid brand fill for the rare strong CTA; `danger` takes the
 // semantic `--danger` family (destructive semantics), so a consumer can re-point the
 // destructive hue instead of inheriting a hard-coded red. Focus rings follow each
-// variant's own accent: brand for the four neutral ones, danger for `danger`.
-export const buttonVariantClasses: Record<ButtonVariant, string> = {
-  primary:
+// variant's own accent: brand for the four neutral ones, danger for `danger`. Keyed by
+// the canonical names: {@link resolveButtonVariant} maps the deprecated ones first.
+export const buttonVariantClasses: Record<CanonicalButtonVariant, string> = {
+  default:
     // Hovers onto `--bg-active`, not `--border` (0.33, §12.9): More contrast steps the
     // border until it is a 3:1 LINE, and as a fill under the label that left 2.7:1.
     "border border-subtle bg-surface-2 text-primary hover:bg-active focus-visible:ring-brand",
@@ -97,7 +166,7 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
   ghost: `bg-transparent text-primary ${HOVER_INK} focus-visible:ring-brand`,
   danger:
     "bg-danger text-danger-contrast hover:bg-danger-hover focus-visible:ring-danger-strong",
-  brand:
+  accent:
     "bg-brand text-brand-contrast hover:bg-brand-hover focus-visible:ring-brand",
   // A text link that is still a `<button>` — keksdose's six hand-rolled
   // `<button className="text-brand underline">` sites ("Resend code", "Show all",
@@ -132,14 +201,14 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
  *
  * `danger` also reaches the two NEUTRAL boxed variants, where the box carries it:
  * `secondary` becomes an outlined destructive button (`--danger` text and a
- * `--danger-border` outline, the quiet danger fill on hover) and `primary` a soft one
+ * `--danger-border` outline, the quiet danger fill on hover) and `default` a soft one
  * (the quiet fill at rest, solid `--danger` on hover). kastlan's meeting-invitations-
  * tab.tsx "Remove all" is `variant="secondary" className="text-destructive"` — a
  * destructive action that must sit in a row of secondary buttons without shouting
  * like the solid `variant="danger"` would, and whose red text alone left the border
  * and hover saying "neutral". `muted` stays a text look and does nothing on a box, and
- * `danger`, `brand` and `link`'s own colours are left alone: a tone that recoloured a
- * solid danger or brand button would be a second variant under another name.
+ * `danger`, `accent` and `link`'s own colours are left alone: a tone that recoloured a
+ * solid danger or accent button would be a second variant under another name.
  */
 export type ButtonTone = "default" | "muted" | "danger";
 
@@ -154,19 +223,19 @@ const BUTTON_TONES: Record<Exclude<ButtonTone, "default">, string> = {
 };
 
 /** Only the two transparent variants take every tone; see {@link ButtonTone}. */
-const TONED_VARIANTS = new Set<ButtonVariant>(["link", "ghost"]);
+const TONED_VARIANTS = new Set<CanonicalButtonVariant>(["link", "ghost"]);
 
 // `tone="danger"` on the neutral boxed variants — see {@link ButtonTone}. Each string
 // restates every colour the variant sets (border, fill, text, hover, ring) so none of
 // the neutral ones survives the merge.
-const BUTTON_BOXED_DANGER: Partial<Record<ButtonVariant, string>> = {
+const BUTTON_BOXED_DANGER: Partial<Record<CanonicalButtonVariant, string>> = {
   // Not boxed, but its hover is a fill: the danger wash under the danger text, as
   // IconButton's danger tone (0.33). On B′'s translucent ink `--danger` fell to 4.2:1
   // over a light page.
   ghost: "hover:bg-danger-soft",
   secondary:
     "border-danger bg-transparent text-danger hover:bg-danger-soft focus-visible:ring-danger-strong",
-  primary:
+  default:
     "border-danger bg-danger-soft text-danger hover:border-[var(--danger)] hover:bg-danger hover:text-danger-contrast focus-visible:ring-danger-strong disabled:hover:border-danger disabled:hover:bg-danger-soft disabled:hover:text-danger",
 };
 
@@ -197,11 +266,12 @@ export interface ButtonClassesOptions {
  * compact toolbar links.
  */
 export function buttonClasses(
-  variant: ButtonVariant = "primary",
+  given: ButtonVariant = "default",
   classNameOrOptions?: string | ButtonClassesOptions,
 ): string {
   const { size = "md", className } =
     typeof classNameOrOptions === "object" ? classNameOrOptions : { className: classNameOrOptions };
+  const variant = resolveButtonVariant(given, "buttonClasses variant");
   return cn(
     BUTTON_BASE,
     BUTTON_SIZES[size],
@@ -221,7 +291,8 @@ export const ICON_BUTTON_PRESSED =
   "bg-brand-soft text-brand hover:bg-brand-soft-hover hover:text-brand-muted disabled:hover:bg-brand-soft disabled:hover:text-brand";
 
 /** @internal The button look shared by the `<button>` and the `<a>` form. */
-export function buttonLook(variant: ButtonVariant, size: ButtonSize, stretch: boolean | undefined, tone: ButtonTone) {
+export function buttonLook(given: ButtonVariant, size: ButtonSize, stretch: boolean | undefined, tone: ButtonTone) {
+  const variant = resolveButtonVariant(given);
   return cn(
     BUTTON_BASE,
     BUTTON_SIZES[size],

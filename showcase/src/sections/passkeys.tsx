@@ -116,7 +116,7 @@ function Passkeys018Demo() {
               <Button variant="secondary" onClick={dismiss}>
                 Cancel
               </Button>
-              <Button variant="brand" type="submit" form="demo-passkey-password" disabled={!password}>
+              <Button variant="accent" type="submit" form="demo-passkey-password" disabled={!password}>
                 Continue
               </Button>
             </>

@@ -24,6 +24,9 @@ import type { ButtonSize, ButtonTone, ButtonVariant } from "./button-look";
  * link buttons submitting their form).
  */
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** `default` (the quiet action, what a Button without `variant` draws), `accent` (the
+   *  strong call to action, solid brand), `secondary`, `ghost`, `danger` or `link`.
+   *  `primary` / `brand` are deprecated aliases of `default` / `accent`. See {@link ButtonVariant}. */
   variant?: ButtonVariant;
   /** `md` (default) is the page's action button. `sm` is the compact one — 12px text
    *  and `px-2 py-1` — for the secondary actions in a toolbar, a card header or a
@@ -39,7 +42,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   ref?: Ref<HTMLButtonElement>;
   /** Text colour for `link` and `ghost`: `muted` (quiet, body colour on hover) or
    *  `danger` (quiet, `--danger` on hover). `danger` also makes `secondary` an
-   *  outlined destructive button and `primary` a soft one; ignored by the other
+   *  outlined destructive button and `default` a soft one; ignored by the other
    *  variants. See {@link ButtonTone}. */
   tone?: ButtonTone;
   /**
@@ -181,7 +184,7 @@ function ButtonLink({
   replace,
   reloadDocument,
   disabled,
-  variant = "primary",
+  variant = "default",
   size = "md",
   stretch,
   tone = "default",
@@ -257,7 +260,7 @@ function ButtonLink({
 }
 
 function ButtonElement({
-  variant = "primary",
+  variant = "default",
   size = "md",
   stretch,
   tone = "default",

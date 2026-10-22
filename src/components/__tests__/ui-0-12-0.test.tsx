@@ -24,14 +24,14 @@ function RouterLink({ href, ...props }: KitLinkProps) {
 describe("Button href", () => {
   it("renders a plain <a> with the button look when there is no router link", () => {
     render(
-      <Button href="/invoices/new" variant="brand">
+      <Button href="/invoices/new" variant="accent">
         New invoice
       </Button>,
     );
     const link = screen.getByRole("link", { name: "New invoice" });
     expect(link.tagName).toBe("A");
     expect(link).toHaveAttribute("href", "/invoices/new");
-    expect(link.className).toBe(buttonClasses("brand"));
+    expect(link.className).toBe(buttonClasses("accent"));
   });
 
   it("uses the provider's router link, and renderLink over it", () => {

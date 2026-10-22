@@ -380,7 +380,7 @@ export function InvitationsPanel<R extends string = string>({
           <div className="flex justify-end">
             <Button
               type="submit"
-              variant="brand"
+              variant="accent"
               commit
               pending={busy === "invite"}
               disabled={busy !== null || address === "" || (scopeRequired && scopes !== undefined && scope === "")}

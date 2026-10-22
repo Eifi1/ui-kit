@@ -363,10 +363,10 @@ function StableLegend() {
       hint="resolve the colours on the FULL list, then filter; switch Housing off and compare"
     >
       <Row className="mb-3">
-        <Button variant={naive ? "secondary" : "brand"} onClick={() => setNaive(false)}>
+        <Button variant={naive ? "secondary" : "accent"} onClick={() => setNaive(false)}>
           visibleSeries(series, hidden)
         </Button>
-        <Button variant={naive ? "brand" : "secondary"} onClick={() => setNaive(true)}>
+        <Button variant={naive ? "accent" : "secondary"} onClick={() => setNaive(true)}>
           series.filter(…) — the bug
         </Button>
       </Row>

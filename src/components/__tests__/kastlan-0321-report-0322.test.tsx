@@ -24,7 +24,7 @@ describe("PageHeader stacks its actions on a phone at Large", () => {
   const actions = (
     <>
       <Button>Export</Button>
-      <Button variant="primary">New invoice</Button>
+      <Button variant="default">New invoice</Button>
     </>
   );
 

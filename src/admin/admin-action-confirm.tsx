@@ -439,7 +439,7 @@ export function AdminActionConfirm({
           <Button
             type="submit"
             form={formId}
-            variant={tone === "danger" ? "danger" : "primary"}
+            variant={tone === "danger" ? "danger" : "default"}
             pending={busy}
             commit={commit}
             disabledReason={busy ? undefined : guardReason}

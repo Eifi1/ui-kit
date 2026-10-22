@@ -196,7 +196,7 @@ function AnchoredPanelSpecimen() {
         <button
           type="button"
           ref={triggerRef}
-          className={buttonClasses(open ? "brand" : "secondary")}
+          className={buttonClasses(open ? "accent" : "secondary")}
           onClick={() => setOpen((v) => !v)}
         >
           {open ? "Close the panel" : "Open a panel under this trigger"}
@@ -377,7 +377,7 @@ function DismissSpecimen() {
         <button
           type="button"
           ref={triggerRef}
-          className={buttonClasses(open ? "brand" : "secondary")}
+          className={buttonClasses(open ? "accent" : "secondary")}
           onClick={() => (open ? closeBy("the trigger") : setOpen(true))}
         >
           {open ? "Close" : "Open a dismissible panel"}
@@ -467,7 +467,7 @@ function CloseTransitionSpecimen() {
   return (
     <div className="space-y-3">
       <Row>
-        <Button variant={open ? "brand" : "secondary"} onClick={() => setOpen(true)} disabled={open}>
+        <Button variant={open ? "accent" : "secondary"} onClick={() => setOpen(true)} disabled={open}>
           Open
         </Button>
         {/* `requestClose`, never the raw setter — that is the whole contract. Calling
@@ -567,7 +567,7 @@ function FocusTrapSpecimen() {
           />
           <Row>
             {/* The kit's Button takes a ref (0.7.0), which the thunk needs. */}
-            <Button ref={save} variant="brand" onClick={() => setOpen(false)}>
+            <Button ref={save} variant="accent" onClick={() => setOpen(false)}>
               Save
             </Button>
             <Button variant="secondary" onClick={() => setNested(true)} disabled={nested}>
@@ -720,10 +720,10 @@ function ScrollLockSpecimen() {
   return (
     <div className="space-y-3">
       <Row>
-        <Button variant={dialog ? "brand" : "secondary"} onClick={() => setDialog((v) => !v)}>
+        <Button variant={dialog ? "accent" : "secondary"} onClick={() => setDialog((v) => !v)}>
           {dialog ? "Release lock A" : "Lock A (a dialog)"}
         </Button>
-        <Button variant={sheet ? "brand" : "secondary"} onClick={() => setSheet((v) => !v)}>
+        <Button variant={sheet ? "accent" : "secondary"} onClick={() => setSheet((v) => !v)}>
           {sheet ? "Release lock B" : "Lock B (a sheet on top of it)"}
         </Button>
       </Row>

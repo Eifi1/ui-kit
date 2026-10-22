@@ -119,7 +119,7 @@ function ResendButton({
 }: {
   state: ReturnType<typeof useResend>;
   labels: VerifyEmailLabels;
-  variant: "secondary" | "brand";
+  variant: "secondary" | "accent";
 }) {
   return (
     <Button
@@ -269,7 +269,7 @@ export function VerifyEmailStatus({
   const href = continueHref ?? (signedIn ? "/" : "/login");
   // `replace`: the token is spent, so Back must not land on this page again (keksdose F1).
   const continueButton = (
-    <Button href={href} replace variant={outcome === "verified" ? "brand" : "secondary"}>
+    <Button href={href} replace variant={outcome === "verified" ? "accent" : "secondary"}>
       {labels.continue}
     </Button>
   );
@@ -304,7 +304,7 @@ export function VerifyEmailStatus({
         hint={hint}
         action={
           <>
-            {canResend && <ResendButton state={resend} labels={labels} variant="brand" />}
+            {canResend && <ResendButton state={resend} labels={labels} variant="accent" />}
             {continueButton}
           </>
         }

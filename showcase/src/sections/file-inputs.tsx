@@ -532,7 +532,7 @@ function DropzoneFeedback() {
         {FEEDBACK_MODES.map((m) => (
           <Button
             key={m}
-            variant={m === mode ? "brand" : "secondary"}
+            variant={m === mode ? "accent" : "secondary"}
             aria-pressed={m === mode}
             onClick={() => setMode(m)}
           >

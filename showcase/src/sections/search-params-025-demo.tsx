@@ -154,7 +154,7 @@ function ChainedSettersDemo() {
           {PRESETS.map((p) => (
             <Button
               key={p.label}
-              variant={from === p.from && to === p.to ? "brand" : "secondary"}
+              variant={from === p.from && to === p.to ? "accent" : "secondary"}
               size="sm"
               onClick={() => {
                 setFrom(p.from);

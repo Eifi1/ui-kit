@@ -624,7 +624,7 @@ function DialogSpecimens() {
               <Button variant="secondary" onClick={animatedClose}>
                 Cancel
               </Button>
-              <Button variant="brand" onClick={close}>
+              <Button variant="accent" onClick={close}>
                 Sync now
               </Button>
             </>
@@ -645,7 +645,7 @@ function DialogSpecimens() {
               <Button variant="secondary" onClick={animatedClose}>
                 Cancel
               </Button>
-              <Button variant="brand" disabled={!name.trim()} onClick={close}>
+              <Button variant="accent" disabled={!name.trim()} onClick={close}>
                 Save
               </Button>
             </>
@@ -696,7 +696,7 @@ function DialogSpecimens() {
               <Button variant="secondary" onClick={animatedClose}>
                 Cancel
               </Button>
-              <Button variant="brand" onClick={close}>
+              <Button variant="accent" onClick={close}>
                 Apply
               </Button>
             </>

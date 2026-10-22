@@ -764,7 +764,7 @@ export function PaletteGenerator() {
       <Example label="Apply to this page" hint="a preview, not a setting">
         <div className="space-y-3">
           <Row>
-            <Button variant="brand" onClick={applyPreview}>
+            <Button variant="accent" onClick={applyPreview}>
               Apply the {mode} set to this page
             </Button>
             <Button variant="secondary" onClick={resetPreview}>

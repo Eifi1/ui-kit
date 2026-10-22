@@ -169,7 +169,7 @@ function DebouncedValue() {
       </Stage>
       <Row>
         {[150, 400, 1000].map((n) => (
-          <Button key={n} variant={ms === n ? "brand" : "secondary"} onClick={() => setMs(n)}>
+          <Button key={n} variant={ms === n ? "accent" : "secondary"} onClick={() => setMs(n)}>
             {n} ms
           </Button>
         ))}
