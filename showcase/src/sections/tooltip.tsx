@@ -524,8 +524,8 @@ function TooltipTapDemo() {
 
       <div className="mt-3 space-y-2">
         <Note>
-          On a phone, tap the three icons: each does its job and leaves no label behind (it used to stay up
-          over whatever the tap opened). With a keyboard, Tab onto them: the label shows, as it does on a
+          On a phone, tap the three icons: each does its job and leaves no label behind over whatever the tap
+          opened. With a keyboard, Tab onto them: the label shows, as it does on a
           desktop hover. A desktop click lets the label go once the pointer leaves.
         </Note>
         <Note>
