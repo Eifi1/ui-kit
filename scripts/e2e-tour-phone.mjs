@@ -36,10 +36,10 @@
  * playwright-core with its headless shell, as scripts/screenshot-sizes.mjs.
  */
 /* global document, getComputedStyle, window, Node -- the measures run in the page, not in Node. */
-import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { startDev } from "./e2e-showcase-server.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(join(ROOT, "package.json"));
@@ -52,37 +52,6 @@ const arg = (name) => {
 };
 const ALL = ["ltr-normal", "rtl-normal", "ltr-large", "rtl-large"];
 const variants = (arg("--variants") ?? ALL.join(",")).split(",");
-
-async function startDev(port) {
-  const child = spawn("npx", ["vite", "--config", "showcase/vite.config.ts"], {
-    cwd: ROOT,
-    env: { ...process.env, SHOWCASE_PORT: String(port) },
-    stdio: ["ignore", "pipe", "pipe"],
-    detached: true,
-  });
-  const stop = () => {
-    try {
-      process.kill(-child.pid, "SIGTERM");
-    } catch {
-      /* already gone */
-    }
-  };
-  let log = "";
-  child.stdout.on("data", (c) => (log += c));
-  child.stderr.on("data", (c) => (log += c));
-  const url = `http://localhost:${port}/`;
-  for (let i = 0; i < 300; i++) {
-    if (child.exitCode !== null) throw new Error(`vite exited:\n${log}`);
-    try {
-      if ((await fetch(url)).ok) return { stop, url };
-    } catch {
-      /* not up yet */
-    }
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  stop();
-  throw new Error(`vite did not answer on ${url}:\n${log}`);
-}
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

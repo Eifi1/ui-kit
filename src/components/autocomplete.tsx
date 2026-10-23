@@ -7,6 +7,7 @@ import { Spinner } from "./spinner";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
 import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
+import { isQuietFocus } from "../lib/quiet-focus";
 import { useAnchorDir } from "./use-anchor-dir";
 import {
   ComboboxFieldLabel,
@@ -268,6 +269,8 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
   // either way, so a caller that controls only SOMETIMES (`open={confirming ? false :
   // undefined}`) hands back a field that is exactly as open as focus says it is.
   const open = openProp ?? ownOpen;
+  // The field took the tour's quiet focus (§11.8) and has not opened since.
+  const quietRef = useRef(false);
   const setOpen = (next: boolean) => {
     setOwnOpen(next);
     if (next !== open) onOpenChange?.(next);
@@ -410,11 +413,26 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
                 onFocus?.(e);
                 // A locked field takes focus to say why, and opens nothing.
                 if (locked) return;
+                // The tour's focus on arrival (§11.8) looks nothing up: the list would
+                // cover its card (0.50.1). A click, ArrowDown or typing opens it.
+                if (isQuietFocus(e.currentTarget)) {
+                  quietRef.current = true;
+                  return;
+                }
                 // A seeded field (keksdose's `initialQuery`) is looked up as it is
                 // focused; an empty one asks nothing, because of `minChars`.
                 setOpen(true);
               }}
+              // After a quiet focus, the person's click on the already-focused field
+              // fires no `focus`: the click is their "open" instead.
+              onClick={(e) => {
+                rest.onClick?.(e);
+                if (!quietRef.current || locked) return;
+                quietRef.current = false;
+                setOpen(true);
+              }}
               onBlur={(e) => {
+                quietRef.current = false;
                 onBlur?.(e);
                 close();
               }}

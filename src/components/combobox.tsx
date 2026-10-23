@@ -6,6 +6,7 @@ import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
 import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
+import { isQuietFocus } from "../lib/quiet-focus";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import { ComboboxFieldLabel, endHintRowProps, GROUP_HEADING_STICKY, useActiveOptionScroll } from "./combobox-core";
@@ -421,11 +422,14 @@ export function Combobox(props: ComboboxProps) {
               autoFocus={autoFocus}
               onBlur={onBlur}
               onMouseDown={primaryOnly.onMouseDown}
-              onFocus={() => {
+              onFocus={(e) => {
                 // A back/forward mouse button focuses this field on its way to
                 // navigating; it is not a request to open anything (live #309 rework).
                 // A locked field takes focus to say why, and opens nothing.
                 if (primaryOnly.fromAuxButton() || locked) return;
+                // The tour's focus on arrival (§11.8) opens nothing: the list would cover
+                // its card (0.50.1). The click handler below still opens on a click.
+                if (isQuietFocus(e.currentTarget)) return;
                 setOpen(true);
                 setTyping(false);
                 // The sheet carries its own input, so the field behind it must not also

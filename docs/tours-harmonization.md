@@ -878,7 +878,10 @@ dockOnPhones={false}` makes docking strictly opt-in.
 On a `gate`/`awaitInput`/`awaitGate` step the field's first control takes focus on a fine
 pointer (the card on a coarse one, so no keyboard or pad opens before the step is read),
 and is `aria-describedby` the card's body while the step lasts. Tab runs one ring over field
-and card (captured ahead of a sheet's own trap). A polite live region announces `gateReady`
+and card (captured ahead of a sheet's own trap). The arrival's focus is **quiet** (0.50.1,
+keksdose B1): a picker that opens on focus (Combobox, Autocomplete, InlineEntityCombobox)
+takes it without opening its list, which would cover the card; ArrowDown, typing or a click
+opens it, and a person's own focus opens as before. A polite live region announces `gateReady`
 once and the hint on a locked press; `refuse` uses an assertive one. The kit never moves
 focus out of the field while the person types.
 
@@ -907,6 +910,10 @@ time; their declared types stay `Promise<void>`.
   skips the tour with the sheet open; Save advances only on `release`; the note low in the
   sheet is scrolled in by the sheet body, `window.scrollY` unchanged. It is run by hand, not
   by `npm run check` (no Chromium on the shared machine), like `check:sweep`.
+- The desktop e2e, `node scripts/e2e-tour-desktop.mjs` (1280×800, mouse, LTR and RTL;
+  0.50.1): arriving on the category Combobox step leaves its list closed with the field
+  focused, and card and Next are seen; ArrowDown and a click open the list, Escape closes
+  only it, a pick unlocks Next. `tour-quiet-focus` is its jsdom side.
 
 ### 11.11 Marcel's answers (2026-10-23)
 

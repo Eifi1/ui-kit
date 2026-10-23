@@ -20,6 +20,7 @@ import { useDismissLayer } from "../hooks/use-dismiss";
 import { sameRect } from "../hooks/use-anchored-rect";
 import { dirOf, horizontalStep } from "../lib/direction";
 import { isComposing } from "../lib/ime";
+import { focusQuietly } from "../lib/quiet-focus";
 import type { Direction } from "../lib/direction";
 import { DEFAULT_TOUR_LABELS } from "./tour-labels";
 import type { TourInfo } from "./tour-info";
@@ -1104,11 +1105,14 @@ function TourOverlay({
     if (!ready || !guided || !step.target) return;
     const el = queryVisibleTarget(step.target);
     const control = el ? firstFocusable(el) : null;
+    // Described BEFORE it is focused, so a screen reader reads the step with the field's
+    // name. Focused quietly (0.50.1, keksdose B1): a picker that opens on focus stays
+    // closed, or its list would cover the card; ArrowDown, typing or a click opens it.
+    const previous = control ? control.getAttribute("aria-describedby") : null;
+    if (control) control.setAttribute("aria-describedby", previous ? `${previous} ${bodyId}` : bodyId);
     if (coarsePointer() || !control) cardRef.current?.focus();
-    else if (!el!.contains(document.activeElement)) control.focus();
+    else if (!el!.contains(document.activeElement)) focusQuietly(control);
     if (!control) return;
-    const previous = control.getAttribute("aria-describedby");
-    control.setAttribute("aria-describedby", previous ? `${previous} ${bodyId}` : bodyId);
     return () => {
       if (previous === null) control.removeAttribute("aria-describedby");
       else control.setAttribute("aria-describedby", previous);
@@ -1238,7 +1242,8 @@ function TourOverlay({
   const lockedNext = useCallback(() => {
     const el = step.target ? queryVisibleTarget(step.target) : null;
     const control = el ? firstFocusable(el) : null;
-    control?.focus();
+    // Quietly, as on arrival: the hint is read with the card in view, not under a list.
+    if (control) focusQuietly(control);
     announce(gateHint);
   }, [step.target, announce, gateHint]);
   const tryNext = awaitsRelease ? NOOP : locked ? lockedNext : onNext;
