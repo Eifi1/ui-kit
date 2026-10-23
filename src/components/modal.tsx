@@ -394,6 +394,9 @@ function ModalPanel({
       // that page from a screen reader for 220ms. Not `inert` — that would let a tap
       // fall through the fading backdrop to the row underneath.
       aria-hidden={exiting || undefined}
+      // A kit layer, for the tour's layer order (0.50, docs/tours-harmonization.md §11.6):
+      // a backdrop, so the tour measures the panel inside it to tell a full-screen sheet.
+      data-kit-layer="backdrop"
       className={cn(
         // Live #320. The panel below rises only where it is bottom-anchored: from md up
         // it is centred, and a centred box sliding up from off-screen reads as a

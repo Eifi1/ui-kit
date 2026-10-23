@@ -12,4 +12,12 @@ export const DEFAULT_TOUR_LABELS: TourLabels = {
   awaitClickHint: "Click the highlighted element to continue",
   awaitInputHint: "Enter a value in the highlighted field to continue",
   step: (c, t) => `${c} / ${t}`,
+  // 0.50: guided form tours (docs/tours-harmonization.md §11).
+  leaveEmpty: "Leave empty",
+  optional: "Optional",
+  gateHint: "Fill in the highlighted field to continue",
+  gateReady: "Ready. Press Next or Enter to continue.",
+  awaitGateHint: "Save to continue",
+  awaitGateRefused: "That wasn’t saved yet. Check the form and try again.",
+  backToStep: (title) => `Back to “${title}”`,
 };

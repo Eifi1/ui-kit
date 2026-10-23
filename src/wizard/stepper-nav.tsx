@@ -10,8 +10,9 @@ import { alertFrameClass } from "../components/alert-banner";
 import { WizardContextProvider } from "./wizard-context";
 import { DEFAULT_WIZARD_LABELS } from "./types";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
-import type { UseWizardReturn, WizardLabels } from "./types";
+import type { UseWizardReturn, WizardFinishResult, WizardLabels } from "./types";
 import type { CommitScope } from "../components/write-lock";
+import { useTourGateRelease } from "../tour/tour-gates";
 
 /**
  * The chrome around a wizard: the step indicator, the step content, and the
@@ -152,6 +153,25 @@ export function StepperNav<TData extends Record<string, unknown>>({
   // (empty data after a reload) from firing an empty submit.
   const canFinish = wizard.canFinish;
 
+  // A running tour's `awaitGate` steps (0.50, docs/tours-harmonization.md §11.9): Next
+  // releases "wizard-next" when the wizard moved and refuses it when a validator kept it
+  // in place; Finish releases "wizard-finish" once `onComplete` resolved and refuses it,
+  // with the error's message, when it threw. No-ops without a TourProvider or a tour.
+  const tourGates = useTourGateRelease();
+  // `useWizard`'s goNext/finish resolve their outcome at run time (see their types); a
+  // wizard object built some other way resolves nothing, and nothing is signalled.
+  const goNext = async () => {
+    const moved = (await wizard.goNext()) as unknown as boolean | undefined;
+    if (moved === true) tourGates.release("wizard-next");
+    else if (moved === false) tourGates.refuse("wizard-next");
+  };
+  const finish = async () => {
+    const result = (await wizard.finish()) as unknown as WizardFinishResult | undefined;
+    if (!result) return;
+    if (result.ok) tourGates.release("wizard-finish");
+    else tourGates.refuse("wizard-finish", result.error);
+  };
+
   // Pending while the step's validators run (an async server check): a spinner and
   // `aria-busy`, and disabled — the hook's own re-entry guard still refuses a second
   // press, this just stops it looking like the first one did nothing.
@@ -165,7 +185,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
       <Button
         variant={finishVariant}
         data-tour="wizard-finish"
-        onClick={wizard.finish}
+        onClick={() => void finish()}
         // The kit Button's lock: a reason (its own or, with `commit`, the provider's)
         // wins over `disabled` and keeps the button reachable, saying why.
         commit={finishCommit}
@@ -192,7 +212,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
       <Button
         variant="accent"
         data-tour="wizard-next"
-        onClick={wizard.goNext}
+        onClick={() => void goNext()}
         disabled={wizard.nextBlocked || pending}
         aria-busy={pending || undefined}
       >

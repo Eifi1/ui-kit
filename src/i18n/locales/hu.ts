@@ -619,6 +619,19 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       awaitClickHint: "A folytatáshoz kattintson a kiemelt elemre",
       awaitInputHint: "A folytatáshoz adjon meg egy értéket a kiemelt mezőben", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
+      // 0.50: guided form tours (docs/tours-harmonization.md §11).
+      leaveEmpty: "Hagyja üresen",
+      optional: "Nem kötelező",
+      gateHint: "A folytatáshoz töltse ki a kiemelt mezőt",
+      gateReady: "Kész. A folytatáshoz nyomja meg a Tovább gombot vagy az Entert.",
+      awaitGateHint: "A folytatáshoz mentsen",
+      awaitGateRefused: "Ez még nincs mentve. Ellenőrizze az űrlapot, és próbálja újra.",
+      backToStep: (title) => `Vissza ide: „${title}”`,
+    },
+    // 0.50: the form's "Guide me" (TourGuideButton, docs/tours-harmonization.md §11).
+    tourGuide: {
+      label: "Vezessen végig",
+      description: "Mezőről mezőre végigvezeti az űrlapon",
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page.
     tourCatalogue: {

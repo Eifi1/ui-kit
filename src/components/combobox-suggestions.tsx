@@ -92,6 +92,8 @@ export function SuggestionList({
   return createPortal(
     <div
       ref={panelRef}
+      // A kit layer, for the tour's layer order (0.50, docs/tours-harmonization.md §11.6).
+      data-kit-layer=""
       // z-50, not the old z-30: the list is a child of <body> now, so it is
       // competing with the app's own overlays rather than with its own siblings.
       className="fixed z-50"

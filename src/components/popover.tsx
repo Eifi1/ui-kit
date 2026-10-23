@@ -206,6 +206,8 @@ export function Popover({
             // to remove one of them by accident.
             {...rest}
             ref={setPanel}
+            // A kit layer, for the tour's layer order (0.50, docs/tours-harmonization.md §11.6).
+            data-kit-layer=""
             role="dialog"
             id={panelId}
             // The caller's own `aria-label` wins over {@link PopoverLabels.panel}, which

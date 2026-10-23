@@ -14,6 +14,7 @@ import {
 import { DEFAULT_WIZARD_LABELS } from "../wizard/wizard-labels";
 import { DEFAULT_TOUR_LABELS } from "../tour/tour-labels";
 import { DEFAULT_TOUR_CATALOGUE_LABELS } from "../tour/tour-catalogue-labels";
+import { DEFAULT_TOUR_GUIDE_LABELS } from "../tour/tour-guide-labels";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette-labels";
 import { DEFAULT_GLOBAL_SEARCH_LABELS } from "../search/global-search-labels";
 import { DEFAULT_SERIES_CHART_LABELS } from "../components/series-chart-labels";
@@ -173,6 +174,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   wizard: DEFAULT_WIZARD_LABELS,
   tour: DEFAULT_TOUR_LABELS,
   tourCatalogue: DEFAULT_TOUR_CATALOGUE_LABELS,
+  tourGuide: DEFAULT_TOUR_GUIDE_LABELS,
   commandPalette: DEFAULT_COMMAND_PALETTE_LABELS,
   globalSearch: DEFAULT_GLOBAL_SEARCH_LABELS,
   seriesChart: DEFAULT_SERIES_CHART_LABELS,

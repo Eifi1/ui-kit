@@ -26,6 +26,7 @@ import type { TabsLabels } from "../components/tabs";
 import type { WizardLabels } from "../wizard/types";
 import type { TourLabels } from "../tour/tour";
 import type { TourCatalogueLabels } from "../tour/tour-catalogue-labels";
+import type { TourGuideLabels } from "../tour/tour-guide-labels";
 import type { CommandPaletteLabels } from "../search/command-palette";
 import type { GlobalSearchLabels } from "../search/global-search";
 import type { MonthPickerLabels } from "../components/month-picker";
@@ -335,6 +336,8 @@ export interface UiKitLabels {
   tour: TourLabels;
   /** 0.43.0: the tours page — `TourCatalogue` and its card (docs/tours-harmonization.md §3). */
   tourCatalogue: TourCatalogueLabels;
+  /** 0.50: the form's "Guide me" — `TourGuideButton` (docs/tours-harmonization.md §11). */
+  tourGuide: TourGuideLabels;
   commandPalette: CommandPaletteLabels;
   globalSearch: GlobalSearchLabels;
   seriesChart: SeriesChartLabels;
