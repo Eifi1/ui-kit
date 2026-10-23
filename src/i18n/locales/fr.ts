@@ -632,6 +632,19 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       awaitClickHint: "Cliquez sur l’élément mis en évidence pour continuer",
       awaitInputHint: "Saisissez une valeur dans le champ mis en évidence pour continuer", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
+      // 0.50: guided form tours (docs/tours-harmonization.md §11).
+      leaveEmpty: "Laisser vide",
+      optional: "Facultatif",
+      gateHint: "Remplissez le champ mis en évidence pour continuer",
+      gateReady: "Prêt. Appuyez sur Suivant ou sur Entrée pour continuer.",
+      awaitGateHint: "Enregistrez pour continuer",
+      awaitGateRefused: "Ce n’est pas encore enregistré. Vérifiez le formulaire et réessayez.",
+      backToStep: (title) => `Retour à «\u202f${title}\u202f»`,
+    },
+    // 0.50: the form's "Guide me" (TourGuideButton, docs/tours-harmonization.md §11).
+    tourGuide: {
+      label: "Me guider",
+      description: "Vous guide dans ce formulaire, champ par champ",
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page. keksdose's reviewed words.
     tourCatalogue: {

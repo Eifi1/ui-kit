@@ -90,8 +90,22 @@ export interface TourLabels {
   awaitClickHint: string;
   /** Shown in place of the Next button on an `awaitInput` step (0.46). */
   awaitInputHint: string;
-  /** Step counter, e.g. (2, 7) => "2 / 7". */
+  /** Step counter, e.g. (2, 7) => "2 / 7". Counts the steps the run shows (0.50). */
   step: (current: number, total: number) => string;
+  /** 0.50: an `optional` gate step's button while the field is empty. */
+  leaveEmpty: string;
+  /** 0.50: the chip beside an `optional` step's title. */
+  optional: string;
+  /** 0.50: under a `gate` step's locked Next (`TourStep.gateHint` overrides it). */
+  gateHint: string;
+  /** 0.50: announced (screen readers only) when a gate step's field is filled. */
+  gateReady: string;
+  /** 0.50: in place of Next on an `awaitGate` step (`TourStep.awaitGateHint` overrides it). */
+  awaitGateHint: string;
+  /** 0.50: the warning when the app `refuse`s an `awaitGate` step without a reason. */
+  awaitGateRefused: string;
+  /** 0.50: the link to an earlier step whose field was emptied, after a refused save. */
+  backToStep: (title: string) => string;
 }
 
 // Defined in ./tour-labels, which holds no component code (0.34, KS U8).
