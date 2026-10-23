@@ -157,3 +157,56 @@ nesting the row actions have on every linked card.
 | keksdose | `rowHref` only on the feedback inbox (`features/feedback/feedback-page.tsx`). | Nothing until the kit decides. |
 | kastlan | `features/contacts/components/contact-columns.tsx:50–62` (email, phone), lists through `resource-list-page.tsx:239` (`onRowClick`). | Optional now: render the tel: / mailto: link in the cell (see above). |
 | Kurvenschmiede | `rowHref` on `features/setpoint/sessions-page.tsx` and the feedback inbox. | Nothing. |
+
+## Guided form tours (keksdose round 054)
+
+A tour can now walk a person through a real form and end in a saved record
+(docs/tours-harmonization.md §11; the contract is `audits/round-054/tour-contract.md`). All
+additive; a 0.49 tour runs unchanged except for two visible fixes, below.
+
+**The form's side, one line per field:**
+
+```tsx
+import { TourGuideButton, useTourGate, useTourGateRelease } from "@eifi1/ui-kit";
+
+useTourGate(mode === "create" ? "txn.amount" : null, amount !== "");   // beside each field
+useTourGate("txn.transfer", entryMode === "transfer");                 // a fact for `when`
+const gates = useTourGateRelease();
+create.mutate(data, {
+  onSuccess: () => gates.release("txn.saved"),
+  onError: (e) => gates.refuse("txn.saved", errorText(e)),
+});
+<TourGuideButton tour="create-transaction" at="txn-entry-mode" />     // the form's "Guide me"
+```
+
+**The tour's side:** `gate: "txn.amount"` (Next locked until filled), `optional: true` ("Leave
+empty"), `when: (c) => c.gate("txn.transfer") === true`, `awaitGate: "txn.saved"` on Save
+(advances only on `release`; `refuse` shows the reason and offers "Back to …"). `beforeStep`
+gets `ctx.via`: an in-form step that opens the form leaves it alone when `via === "at"`. Give
+`TourProvider` the app's launcher as `launch` (the function `useTourUrlSync` already takes,
+plus `at`), so `start(id, { at })` and `TourGuideButton` work; it calls `start` of that same
+provider, so keep the launcher below the provider in a ref. A "Guide me" run counts and
+awards points like a full run.
+
+**What changes for 0.49 tours (on the bump, no code):**
+
+- **Field steps over a sheet are visible now.** An `interactive`, `awaitInput`, `gate` or
+  `awaitGate` step inside a kit layer (a phone's `FullBleedDialog`) shows its card and ring
+  above that layer; inside a full-screen one with no scrim, only the ring. 0.49 painted them
+  under the sheet (`z-[45]`). The overlay is `z-50` in its own container now; a test that
+  asserted `z-[45]` asserts `z-50` (the kit's own did).
+- **On a phone, field steps dock** (Marcel's Q1): a field step with no `placement` pins its
+  card to the top or bottom edge, clear of the field, keyboard and number pad.
+  `TourProvider dockOnPhones={false}` keeps 0.49's placement; `placement: "dock"` opts any
+  step in.
+- On an `awaitInput` step the field takes focus on arrival with a mouse (the card on touch),
+  and Tab cycles field and card.
+- Escape from the card skips the tour without also closing the sheet under it.
+- An app's own body-level overlay that holds tour targets adds `data-kit-layer`; its own
+  bottom layers (a custom pad) add `data-tour-obstruction`.
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | `features/tour/tours.tsx:91-92` (`guidedFields = !usePhoneLayout()`) and `tour-types.ts:179`; the nine create tours that read it — `create-account` and `create-transaction` (tours.tsx), `transfers-splits`, `budget-goals`, `sharing-a-budget`, `loans-assets`, `rules-automation`, `recurring-money`, `depot-investing` (feature-tours.tsx). | **Drop `guidedFields`** (the layer rule makes field steps work in the phone sheet). Per field step: `gate: g("…")` instead of `interactive`/`awaitInput`, `optional` where the field may stay empty (the account: an empty account books to cash), `when` on the branch facts; `useTourGate` beside each field, create mode only (`transaction-fields.tsx`, `transaction-transfer-form.tsx`, …). The Create steps (`txn-create`, feature-tours.tsx:548, :851; tours.tsx's) become `awaitGate: g("txn.saved")` with `release`/`refuse` in the mutations' onSuccess/onError (`transaction-create-card.tsx:353`, `:380`), `keepOpen` included. Pass the launcher as `TourProvider launch` (`app-tour-provider.tsx`) and add `<TourGuideButton tour="create-transaction" at="txn-entry-mode" />` to the create card's header. Contract §9 is the worked example. |
+| kastlan | The 13 wizard tours whose steps use `awaitClick: true` on `[data-tour="wizard-next"]` (`features/tours/tours/*.ts`: yearly-budget, manual-journal-entry, handover-protocol, new-lease, owner-meeting, rent-deposit, …); the adapter `tours-root.tsx:76-90` (`buildSteps`) and `types.ts:28`. | Add `awaitGate?: string` to the app's step type and pass it through in `buildSteps`. On every `wizard-next` step replace `awaitClick: true` with `awaitGate: "wizard-next"` (StepperNav releases it when Next moved and refuses it when a validator held the wizard; `awaitClick` advanced on a refused Next). Optionally `awaitGate: "wizard-finish"` on the review step's Finish. Fields on a wizard step may publish `useTourGate` like a form. Check that a validator's refusal keeps the tour on its step. |
+| Kurvenschmiede | `features/tours/app-tours.ts` | Nothing. Its tours have no `interactive`, `awaitInput` or `awaitClick` steps, so neither the layer rule nor the phone dock touches them. |
