@@ -568,19 +568,19 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2176 names from 359 modules** — 1010 values and 1166 types. _Italic_ is a type-only export.
+**2187 names from 361 modules** — 1014 values and 1173 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2176 |
+| `@eifi1/ui-kit` | 2187 |
 | `@eifi1/ui-kit/chart` | 100 |
 | `@eifi1/ui-kit/shell` | 117 |
 | `@eifi1/ui-kit/data-table` | 56 |
-| `@eifi1/ui-kit/wizard` | 24 |
-| `@eifi1/ui-kit/tour` | 37 |
+| `@eifi1/ui-kit/wizard` | 25 |
+| `@eifi1/ui-kit/tour` | 47 |
 | `@eifi1/ui-kit/feedback` | 212 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
@@ -918,7 +918,7 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `wizard/types` | `DEFAULT_WIZARD_LABELS`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardLabels`_, _`WizardStepConfig`_, _`WizardUrlSync`_ |
+| `wizard/types` | `DEFAULT_WIZARD_LABELS`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardFinishResult`_, _`WizardLabels`_, _`WizardStepConfig`_, _`WizardUrlSync`_ |
 | `wizard/use-wizard` | `useWizard` |
 | `wizard/wizard-context` | `useOptionalWizardContext`, `useWizardContext`, `useWizardNextGate`, `useWizardStepValidate`, `WizardContextProvider`, _`WizardContextValue`_ |
 | `wizard/validation` | `requiredFieldsValidator`, _`RequiredFieldSpec`_ |
@@ -930,11 +930,13 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourCompletion`_, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
+| `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourAt`_, _`TourCompletion`_, _`TourLabels`_, _`TourLauncher`_, _`TourPlacement`_, _`TourStep`_, _`TourStepContext`_ |
 | `tour/tour-catalogue` | `DEFAULT_TOUR_CATALOGUE_LABELS`, `TourCatalogue`, `TourCatalogueCard`, _`TourCatalogueCardProps`_, _`TourCatalogueLabels`_, _`TourCatalogueProps`_ |
 | `tour/tour-info` | `doneCount`, `earnedPoints`, `isTourDone`, `isTourNew`, `isTourReset`, _`TourCompletions`_, _`TourGroup`_, _`TourInfo`_, _`TourUpdate`_ |
 | `tour/use-tour-progress` | `completeTour`, `resetTourProgress`, `signOutTourProgress`, `useTourProgress`, _`TourProgress`_, _`TourProgressAccount`_, _`TourProgressAdopt`_, _`TourProgressBody`_, _`UseTourProgressOptions`_ |
 | `tour/use-tour-url-sync` | `useTourCatalogueUrlState`, `useTourUrlSync`, _`TourCatalogueFilter`_, _`TourStateFilter`_, _`UseTourUrlSyncOptions`_ |
+| `tour/tour-guide-button` | `DEFAULT_TOUR_GUIDE_LABELS`, `TourGuideButton`, _`TourGuideButtonProps`_, _`TourGuideLabels`_ |
+| `tour/tour-gates` | `useTourGate`, `useTourGateRelease`, _`TourGateRelease`_ |
 
 ### search
 
