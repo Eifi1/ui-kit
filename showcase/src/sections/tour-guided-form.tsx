@@ -1,0 +1,266 @@
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
+import {
+  AmountInput,
+  Button,
+  Checkbox,
+  Combobox,
+  FullBleedDialog,
+  Input,
+  TourGuideButton,
+  TourProvider,
+  useTour,
+  useTourGate,
+  useTourGateRelease,
+} from "@eifi1/ui-kit";
+import type { TourInfo, TourLauncher, TourStep, TourStepContext } from "@eifi1/ui-kit";
+import { Example, Note, OutTable } from "../lib/section";
+
+/**
+ * GUIDED FORM TOUR (0.50, docs/tours-harmonization.md §11) — a tour that walks a person
+ * through a REAL form: value gates (`useTourGate` + `gate`), an optional field, a branch
+ * (`when`), the save as `awaitGate` with `release`/`refuse`, "Guide me" (`TourGuideButton`,
+ * `start(id, { at })`), the layer order over a full-screen sheet and the docked card on a
+ * phone. It is also the page the phone e2e (scripts/e2e-tour-phone.mjs) drives, so its
+ * anchors are kept stable: `gt-*`.
+ */
+
+const CATEGORIES = ["Groceries", "Rent", "Transport", "Eating out", "Health"];
+const INFO: TourInfo = { id: "showcase-book", title: "Book a transaction", group: "start", points: 10 };
+
+type Row = { amount: string; category: string; memo: string; transfer: boolean };
+
+function steps(): TourStep[] {
+  const transfer = (c: TourStepContext) => c.gate("gt.transfer") === true;
+  return [
+    { title: "Book a transaction", body: "A guided walk through the real form below: each field unlocks Next once it holds a value." },
+    {
+      target: '[data-tour="gt-new"]',
+      title: "Open the form",
+      body: "Press New transaction.",
+      awaitClick: true,
+    },
+    {
+      target: '[data-tour="gt-amount"]',
+      gate: "gt.amount",
+      title: "The amount",
+      body: "Type an amount. On a phone the number pad opens above this card, and its Done moves on.",
+    },
+    {
+      target: '[data-tour="gt-category"]',
+      gate: "gt.category",
+      when: (c) => !transfer(c),
+      title: "The category",
+      body: "Pick one from the list: its list opens above this card, and a pick unlocks Next.",
+    },
+    {
+      target: '[data-tour="gt-transfer"]',
+      title: "A transfer instead",
+      body: "Shown only because Transfer is ticked: a `when` on a published fact.",
+      when: transfer,
+    },
+    {
+      target: '[data-tour="gt-memo"]',
+      gate: "gt.memo",
+      optional: true,
+      title: "A note",
+      body: "Optional: Leave empty moves on without one. The field sits low in the sheet, so the sheet's body scrolls it into view.",
+    },
+    {
+      target: '[data-tour="gt-save"]',
+      awaitGate: "gt.saved",
+      title: "Save it",
+      body: "Press Save. The tour moves on only once the (simulated) server says yes.",
+    },
+    { title: "Booked", body: "Saved for real: the row is in the list, and the completion is recorded." },
+  ];
+}
+
+export function GuidedFormTourDemo() {
+  // The provider's `launch` calls `start` of that same provider, so it reaches a function
+  // the component below the provider keeps in a ref.
+  const startRef = useRef<Starter | null>(null);
+  const launch = useCallback<TourLauncher>((id, opts) => {
+    if (id === INFO.id) startRef.current?.(opts);
+  }, []);
+  return (
+    <>
+      <Example
+        label="Guided form tour — gates, awaitGate and Guide me"
+        hint="A TourProvider of its own with `launch`; the form is a FullBleedDialog, as on a phone."
+      >
+        <TourProvider launch={launch}>
+          <BookingDemo startRef={startRef} />
+        </TourProvider>
+      </Example>
+      <Example label="The form's side — one line per field" hint="useTourGate beside each field, release/refuse from the save">
+        <OutTable
+          rows={[
+            ['useTourGate("gt.amount", amount !== "")', "Publishes whether the field holds what the tour waits for. A no-op without a provider."],
+            ['useTourGate("gt.transfer", transfer)', "A fact no step names as `gate`: a step's `when` asks it."],
+            ['release("gt.saved")', "From the save's onSuccess: the awaitGate step moves on (the form may stay open)."],
+            ['refuse("gt.saved", reason)', "From onError: the step stays, shows the reason and offers Back to an emptied field."],
+            ['<TourGuideButton tour="…" at="gt-amount" />', "Starts the tour inside the open form: no intro, no Back past the amount."],
+          ]}
+        />
+        <Note>
+          The step&apos;s side is `gate`, `optional`, `when` and `awaitGate`. On a phone the field steps dock
+          their card at the edge away from the field; inside the full-screen sheet there is no scrim, only the
+          ring.
+        </Note>
+      </Example>
+    </>
+  );
+}
+
+type Starter = (opts: { at?: number | string; startIndex?: number }) => void;
+
+function BookingDemo({ startRef }: { startRef: RefObject<Starter | null> }) {
+  const tour = useTour();
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [refuseNext, setRefuseNext] = useState(false);
+  const [outcome, setOutcome] = useState<string | null>(null);
+  const { start } = tour;
+  const begin = useCallback<Starter>(
+    (opts) => {
+      setOutcome(null);
+      start(steps(), {
+        id: INFO.id,
+        tour: INFO,
+        at: opts.at,
+        startIndex: opts.startIndex,
+        onFinish: () => setOutcome("finished"),
+        onSkip: () => setOutcome("skipped"),
+      });
+    },
+    [start],
+  );
+  useLayoutEffect(() => {
+    startRef.current = begin;
+  }, [startRef, begin]);
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="accent"
+          disabled={tour.active}
+          onClick={() => begin({})}
+        >
+          Take the guided tour
+        </Button>
+        <Button variant="secondary" data-tour="gt-new" onClick={() => setOpen(true)}>
+          New transaction
+        </Button>
+        <Checkbox
+          label="The server refuses the next save"
+          checked={refuseNext}
+          onCheckedChange={setRefuseNext}
+        />
+      </div>
+      <p className="text-sm text-muted" data-testid="gt-status">
+        {tour.active && tour.activeId === INFO.id
+          ? `Step ${tour.position} of ${tour.count} (index ${tour.index})`
+          : outcome
+            ? `Tour ${outcome}`
+            : "No tour running"}
+        {" · "}
+        {rows.length} booked
+      </p>
+      {open && (
+        <BookingForm
+          onClose={() => setOpen(false)}
+          refuse={refuseNext}
+          onRefused={() => setRefuseNext(false)}
+          onSaved={(row) => {
+            setRows((r) => [...r, row]);
+            setOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function BookingForm({
+  onClose,
+  onSaved,
+  refuse,
+  onRefused,
+}: {
+  onClose: () => void;
+  onSaved: (row: Row) => void;
+  refuse: boolean;
+  onRefused: () => void;
+}) {
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [memo, setMemo] = useState("");
+  const [transfer, setTransfer] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const gates = useTourGateRelease();
+  useTourGate("gt.amount", amount !== "");
+  useTourGate("gt.category", CATEGORIES.includes(category));
+  useTourGate("gt.memo", memo.trim() !== "");
+  useTourGate("gt.transfer", transfer);
+  const save = () => {
+    setSaving(true);
+    // A pretend server round trip.
+    window.setTimeout(() => {
+      setSaving(false);
+      if (refuse || amount === "") {
+        onRefused();
+        setAmount("");
+        gates.refuse("gt.saved", amount === "" ? "Enter an amount first." : "The server said no (simulated). Try again.");
+        return;
+      }
+      gates.release("gt.saved");
+      onSaved({ amount, category, memo, transfer });
+    }, 300);
+  };
+  return (
+    <FullBleedDialog
+      open
+      onClose={onClose}
+      title="New transaction"
+      closeLabel="Close"
+      header={<TourGuideButton tour={INFO.id} at="gt-amount" />}
+      footer={
+        <Button variant="accent" data-tour="gt-save" onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Save"}
+        </Button>
+      }
+    >
+      <div className="mx-auto max-w-lg space-y-4">
+        <div data-tour="gt-amount">
+          <AmountInput label="Amount" value={amount} onChange={setAmount} currency="CHF" />
+        </div>
+        <div data-tour="gt-transfer">
+          <Checkbox label="Transfer" checked={transfer} onCheckedChange={setTransfer} />
+        </div>
+        {!transfer && (
+          <div data-tour="gt-category">
+            <Combobox
+              label="Category"
+              value={category}
+              onChange={setCategory}
+              options={CATEGORIES}
+              placeholder="Pick a category"
+              searchPlaceholder="Search categories"
+              closeLabel="Close"
+              sheetTitle="Category"
+            />
+          </div>
+        )}
+        {/* Room, so the note sits below the first screen on a phone and the sheet's body
+            has to scroll it into view (the e2e's step 7). */}
+        <div className="h-[70vh] rounded-md border border-dashed border-subtle p-3 text-sm text-muted">
+          More fields would go here.
+        </div>
+        <div data-tour="gt-memo">
+          <Input label="Note" value={memo} onChange={(e) => setMemo(e.target.value)} />
+        </div>
+      </div>
+    </FullBleedDialog>
+  );
+}
