@@ -300,7 +300,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.49.0 (+1, KIT-1b, 2026-10-22): `asciiMinusInNumbers`, the copy handler's rule.
   // 0.50.0 (+1, KIT-1 follow-up): `formatWithMinus`, the kit's minus for an app's own
   // `Intl.NumberFormat` (keksdose's formatCurrency).
-  ["@eifi1/ui-kit", barrel, 1010],
+  // 0.50.0 (+2, guided form tours, docs/tours-harmonization.md §11, here and in /tour):
+  // `useTourGate`, `useTourGateRelease`.
+  ["@eifi1/ui-kit", barrel, 1012],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -334,7 +336,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).
-  ["@eifi1/ui-kit/tour", tour, 18],
+  // 0.50.0 (+2): `useTourGate`, `useTourGateRelease` (§11, see the barrel).
+  ["@eifi1/ui-kit/tour", tour, 20],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.
   // kastlan 51/52: `IntegerField` and `MoneyField` (+2). Showcase audit: `splitFileName` (+1).

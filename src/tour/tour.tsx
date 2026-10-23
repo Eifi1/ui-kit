@@ -3,11 +3,14 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
@@ -15,10 +18,15 @@ import { Button } from "../components/button";
 import { useFocusTrap } from "../hooks/use-focus-trap";
 import { sameRect } from "../hooks/use-anchored-rect";
 import { dirOf, horizontalStep } from "../lib/direction";
+import { isComposing } from "../lib/ime";
 import type { Direction } from "../lib/direction";
 import { DEFAULT_TOUR_LABELS } from "./tour-labels";
 import type { TourInfo } from "./tour-info";
 import { completeStored, rememberAccount, rememberMigrate, type UseTourProgressOptions } from "./use-tour-progress";
+import { createGateRegistry, devWarnings, TourInternalContext, type GateRegistry } from "./tour-gates";
+
+export { useTourGate, useTourGateRelease } from "./tour-gates";
+export type { TourGateRelease } from "./tour-gates";
 
 /**
  * `start`/`end` follow the reading direction (`end` is the right side in LTR and the
@@ -76,6 +84,18 @@ export interface TourStep {
    * button) has nothing to compare: call `useTour().next()` from its `onChange`.
    */
   awaitInput?: boolean;
+  /**
+   * 0.50 (docs/tours-harmonization.md §11.1): Next stays locked until the gate `key` is
+   * satisfied — the form publishes it with `useTourGate(key, satisfied)` beside the field.
+   * Implies `interactive`. The locked Next is `aria-disabled` with {@link gateHint} under
+   * it; pressing it focuses the field. Once satisfied the tour does NOT advance by itself:
+   * Next, Enter in the field, or focus leaving the field to nowhere or to the card (the
+   * number pad's Done) moves on. A key nobody publishes is not enforced (the form closed
+   * under the tour): Next opens. A step may have a `gate` and no `target`.
+   */
+  gate?: string;
+  /** Overrides `labels.gateHint` for this step. */
+  gateHint?: string;
   /** Runs before the step is shown — e.g. navigate to a route, open a panel.
    *  May be async; the step waits for it, then locates the target. */
   beforeStep?: () => void | Promise<void>;
@@ -193,11 +213,6 @@ export function useTourOptional(): TourContextValue | null {
   return useContext(TourContext);
 }
 
-/** The kit's dev switch (as number-input's): a development build, never under vitest. */
-function devWarnings(): boolean {
-  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
-}
-
 /**
  * Provides the guided-tour engine: a dimmed spotlight overlay + step card driven
  * by a list of {@link TourStep}s. Domain-free — the app supplies the steps (copy,
@@ -269,6 +284,12 @@ export function TourProvider({
   }, [steps, index]);
   const active = !!steps && steps.length > 0;
   const total = steps?.length ?? 0;
+  // The gate registry (§11.1): one per provider, read by the overlay while a tour runs.
+  const [gates] = useState(createGateRegistry);
+  useLayoutEffect(() => {
+    gates.setActive(active);
+  }, [gates, active]);
+  const internals = useMemo(() => ({ gates, canLaunch: false }), [gates]);
 
   const start = useCallback((s: TourStep[], opts?: StartOptions) => {
     optsRef.current = opts ?? {};
@@ -331,19 +352,22 @@ export function TourProvider({
   }, []);
 
   return (
-    <TourContext.Provider value={{ active, activeId, start, stop, next, prev, goToStep, index, total }}>
-      {children}
-      {active && (
-        <TourOverlay
-          steps={steps!}
-          index={index}
-          labels={merged}
-          onNext={next}
-          onPrev={prev}
-          onSkip={skip}
-        />
-      )}
-    </TourContext.Provider>
+    <TourInternalContext.Provider value={internals}>
+      <TourContext.Provider value={{ active, activeId, start, stop, next, prev, goToStep, index, total }}>
+        {children}
+        {active && (
+          <TourOverlay
+            steps={steps!}
+            index={index}
+            labels={merged}
+            gates={gates}
+            onNext={next}
+            onPrev={prev}
+            onSkip={skip}
+          />
+        )}
+      </TourContext.Provider>
+    </TourInternalContext.Provider>
   );
 }
 
@@ -416,10 +440,37 @@ interface Located {
   dir: Direction;
 }
 
+/** The first control in `el` (or `el` itself) a person would type into or press. */
+function firstFocusable(el: Element): HTMLElement | null {
+  if (el instanceof HTMLElement && el.matches(FOCUSABLE_CONTROL)) return el;
+  return el.querySelector<HTMLElement>(FOCUSABLE_CONTROL);
+}
+
+/** The tab stops inside `el`, in DOM order (the focus trap's selector). */
+function tabStops(el: Element): HTMLElement[] {
+  const all = el.matches(FOCUSABLE_CONTROL) ? [el as HTMLElement] : [];
+  return all.concat(
+    Array.from(el.querySelectorAll<HTMLElement>(FOCUSABLE_CONTROL)).filter(
+      (x) => x.tabIndex >= 0 && !x.closest("[hidden],[inert]"),
+    ),
+  );
+}
+
+const FOCUSABLE_CONTROL =
+  'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+/** A touch screen: the card takes focus, so no keyboard or pad opens before the step is read (§11.8). */
+function coarsePointer(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(pointer: coarse)").matches
+    : false;
+}
+
 function TourOverlay({
   steps,
   index,
   labels,
+  gates,
   onNext,
   onPrev,
   onSkip,
@@ -427,6 +478,7 @@ function TourOverlay({
   steps: TourStep[];
   index: number;
   labels: TourLabels;
+  gates: GateRegistry;
   onNext: () => void;
   onPrev: () => void;
   onSkip: () => void;
@@ -446,6 +498,22 @@ function TourOverlay({
   // step). Arrow keys and start/end placement read it.
   const dir: Direction = current?.dir ?? "ltr";
   const rootRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const bodyId = useId();
+  const hintId = useId();
+
+  // The gate (§11.1). Re-rendered on every registry change while the tour runs.
+  useSyncExternalStore(gates.subscribe, gates.version, gates.version);
+  const gateKey = step.gate;
+  const enforced = !!gateKey && gates.has(gateKey);
+  const locked = enforced && gates.get(gateKey) !== true;
+
+  // The polite live region (§11.8): `gateReady` once a gate opens, the hint on a locked
+  // Next. A repeat of the same words gets a trailing zero-width space so it is read again.
+  const [polite, setPolite] = useState("");
+  const announce = useCallback((text: string) => {
+    setPolite((prev) => (prev === text ? `${text}\u200b` : text));
+  }, []);
 
   // Run beforeStep, then locate the target (retrying across route/render lag).
   useEffect(() => {
@@ -523,9 +591,128 @@ function TourOverlay({
     return () => el.removeEventListener("click", onClick);
   }, [ready, spotted, index, step, onNext]);
 
-  // An interactive step (see `TourStep.interactive`): only while the target is lit — a
-  // step whose target is missing centres its card over a full scrim, modal as ever.
-  const interactive = spotted && !!step.target && !!(step.interactive || step.awaitInput);
+  // A field step (see `TourStep.interactive`): only while the target is lit — a step
+  // whose target is missing centres its card over a full scrim, modal as ever.
+  const interactive = spotted && !!step.target && !!(step.interactive || step.awaitInput || step.gate);
+  // A GUIDED field step (§11.8): focus goes to the field on a fine pointer, and Tab
+  // cycles field + card. A plain `interactive` step keeps the card's own trap.
+  const guided = interactive && !!(step.gate || step.awaitInput);
+
+  // A gate nobody publishes is not enforced: Next opens, and a development build says why.
+  useEffect(() => {
+    if (!ready || !gateKey || gates.has(gateKey) || !devWarnings()) return;
+    console.warn(
+      `[ui-kit] Tour step "${step.title}" waits for the gate "${gateKey}", which nothing publishes: its Next is open. ` +
+        "Publish it with useTourGate beside the field, or the form has closed under the tour.",
+    );
+  }, [ready, gateKey, gates, step.title]);
+
+  // "Ready" once, when this step's gate turns satisfied (not when it arrives satisfied).
+  const wasLockedRef = useRef<{ step: TourStep; locked: boolean } | null>(null);
+  useEffect(() => {
+    if (!ready || !gateKey) return;
+    const before = wasLockedRef.current;
+    if (before && before.step === step && before.locked && !locked && enforced) announce(labels.gateReady);
+    wasLockedRef.current = { step, locked };
+  }, [ready, gateKey, step, locked, enforced, announce, labels.gateReady]);
+
+  // Arrival on a guided step: the field takes focus on a fine pointer, the card on a
+  // coarse one; the field is described by the card's body while the step lasts.
+  // Declared BEFORE the advance listeners below, so the focus it moves is not mistaken
+  // for the person leaving the field.
+  useEffect(() => {
+    if (!ready || !guided || !step.target) return;
+    const el = queryVisibleTarget(step.target);
+    const control = el ? firstFocusable(el) : null;
+    if (coarsePointer() || !control) cardRef.current?.focus();
+    else if (!el!.contains(document.activeElement)) control.focus();
+    if (!control) return;
+    const previous = control.getAttribute("aria-describedby");
+    control.setAttribute("aria-describedby", previous ? `${previous} ${bodyId}` : bodyId);
+    return () => {
+      if (previous === null) control.removeAttribute("aria-describedby");
+      else control.setAttribute("aria-describedby", previous);
+    };
+  }, [ready, guided, index, step, bodyId]);
+
+  // Tab on a guided step cycles field + card as one ring (§11.8): from the field's last
+  // stop to the card's first, from the card's last back to the field. Captured on the
+  // document, ahead of a sheet's own trap, which would wrap inside the sheet.
+  useEffect(() => {
+    if (!ready || !guided || !step.target) return;
+    const onTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const el = queryVisibleTarget(step.target!);
+      const card = cardRef.current;
+      if (!el || !card) return;
+      const active = document.activeElement;
+      const fieldStops = tabStops(el);
+      const cardStops = tabStops(card);
+      if (fieldStops.length === 0 || cardStops.length === 0) return;
+      let to: HTMLElement | null = null;
+      if (active instanceof Node && el.contains(active)) {
+        if (!e.shiftKey && active === fieldStops[fieldStops.length - 1]) to = cardStops[0];
+        else if (e.shiftKey && active === fieldStops[0]) to = cardStops[cardStops.length - 1];
+      } else if (active instanceof Node && card.contains(active)) {
+        if (!e.shiftKey && active === cardStops[cardStops.length - 1]) to = fieldStops[0];
+        else if (e.shiftKey && (active === cardStops[0] || active === card)) to = fieldStops[fieldStops.length - 1];
+      }
+      if (!to) return;
+      e.preventDefault();
+      e.stopPropagation();
+      to.focus();
+    };
+    document.addEventListener("keydown", onTab, true);
+    return () => document.removeEventListener("keydown", onTab, true);
+  }, [ready, guided, index, step]);
+
+  // gate: once satisfied, advance on Enter in the field (unless the control took it, or
+  // a textarea without Ctrl/Cmd) or on focus leaving the field to nowhere or to the card.
+  // Checked on the next macrotask, after the field's own blur/Enter commit has rendered.
+  useEffect(() => {
+    if (!ready || !spotted || !gateKey || !step.target) return;
+    const el = queryVisibleTarget(step.target) as HTMLElement | null;
+    if (!el) return;
+    const satisfied = () => !gates.has(gateKey) || gates.get(gateKey) === true;
+    let timer = 0;
+    // Focus that was in the field when the step settled, or went there since. A focus
+    // move the tour made itself (the card taking it on a phone) is not a leave.
+    let armed = el.contains(document.activeElement);
+    const check = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (satisfied()) onNext();
+      }, 0);
+    };
+    const onFocusIn = () => {
+      armed = true;
+    };
+    const onFocusOut = (e: FocusEvent) => {
+      const to = e.relatedTarget;
+      if (to instanceof Node && el.contains(to)) return;
+      const wasArmed = armed;
+      armed = false;
+      if (!wasArmed) return;
+      if (to === null || (to instanceof Node && rootRef.current?.contains(to))) check();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Enter" || !(e.target instanceof Node) || !el.contains(e.target)) return;
+      // Heard at the document, after React's handlers: a combobox picking an option has
+      // called preventDefault by now.
+      if (e.defaultPrevented || isComposing(e)) return;
+      if (e.target instanceof HTMLTextAreaElement && !(e.ctrlKey || e.metaKey)) return;
+      check();
+    };
+    el.addEventListener("focusin", onFocusIn);
+    el.addEventListener("focusout", onFocusOut);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.clearTimeout(timer);
+      el.removeEventListener("focusin", onFocusIn);
+      el.removeEventListener("focusout", onFocusOut);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [ready, spotted, gateKey, gates, index, step, onNext]);
 
   // awaitInput: advance once the target's fields hold another value than when the step
   // was armed, checked when focus leaves the target or Enter is pressed in it — on the
@@ -565,10 +752,21 @@ function TourOverlay({
     };
   }, [ready, spotted, index, step, onNext]);
 
+  /** A press on the locked Next (or Enter / → from the card): no move; the field takes
+   *  focus and the hint is read again. */
+  const gateHint = step.gateHint ?? labels.gateHint;
+  const lockedNext = useCallback(() => {
+    const el = step.target ? queryVisibleTarget(step.target) : null;
+    const control = el ? firstFocusable(el) : null;
+    control?.focus();
+    announce(gateHint);
+  }, [step.target, announce, gateHint]);
+  const tryNext = locked ? lockedNext : onNext;
+
   // Keyboard: Esc skips, Enter and the reading-direction arrow advance (→ in LTR,
   // ← in RTL), the other arrow goes back. On awaitClick steps Enter is ignored (it
   // would fire the target's click AND advance) — the forward arrow stays as an escape
-  // hatch.
+  // hatch. On a locked gate step both are the locked Next.
   //
   // Enter on a focused control belongs to that control. This used to advance from
   // anywhere, so Enter on a focused Skip or Back ran the button's own click AND stepped
@@ -589,7 +787,7 @@ function TourOverlay({
       if (e.key === "Enter") {
         if (step.awaitClick || step.awaitInput || ownsKey(e.target, "Enter")) return;
         e.preventDefault();
-        onNext();
+        tryNext();
         return;
       }
       if (ownsKey(e.target, e.key)) return;
@@ -597,14 +795,14 @@ function TourOverlay({
       const delta = horizontalStep(e.key, rootRef.current);
       if (delta === 1) {
         e.preventDefault();
-        onNext();
+        tryNext();
       } else if (delta === -1) {
         if (!isFirst) onPrev();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [isFirst, step, interactive, onNext, onPrev, onSkip]);
+  }, [isFirst, step, interactive, tryNext, onPrev, onSkip]);
 
   if (!ready) return null;
 
@@ -673,6 +871,7 @@ function TourOverlay({
         <div className="pointer-events-auto fixed inset-0 bg-black/70" />
       )}
       <TourCard
+        cardRef={cardRef}
         step={step}
         index={index}
         total={steps.length}
@@ -681,10 +880,18 @@ function TourOverlay({
         isLast={isLast}
         rect={spot}
         dir={dir}
+        trap={!guided}
+        bodyId={bodyId}
+        hintId={hintId}
+        locked={locked}
+        gateHint={gateHint}
         onBack={onPrev}
-        onNext={onNext}
+        onNext={tryNext}
         onSkip={onSkip}
       />
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {polite}
+      </div>
     </div>,
     document.body,
   );
@@ -802,6 +1009,7 @@ function placeCard(
 }
 
 function TourCard({
+  cardRef: ref,
   step,
   index,
   total,
@@ -810,10 +1018,16 @@ function TourCard({
   isLast,
   rect,
   dir,
+  trap,
+  bodyId,
+  hintId,
+  locked,
+  gateHint,
   onBack,
   onNext,
   onSkip,
 }: {
+  cardRef: RefObject<HTMLDivElement | null>;
   step: TourStep;
   index: number;
   total: number;
@@ -822,11 +1036,17 @@ function TourCard({
   isLast: boolean;
   rect: Rect | null;
   dir: Direction;
+  /** The card's own focus trap; off on a guided step, where field + card are one ring. */
+  trap: boolean;
+  bodyId: string;
+  hintId: string;
+  /** A gate step whose field is not filled yet (§11.1). */
+  locked: boolean;
+  gateHint: string;
   onBack: () => void;
   onNext: () => void;
   onSkip: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<CSSProperties>({ opacity: 0 });
 
   /**
@@ -853,8 +1073,12 @@ function TourCard({
    * is), which is the escape hatch that step already documents for the case where the
    * target cannot be found. Containment is worth that: an `awaitClick` step is a
    * minority of steps, while focus stranded behind `aria-modal` is every step.
+   *
+   * A guided field step (`gate`, `awaitInput`, 0.50) is the exception: the field is
+   * what the step is about, so the overlay focuses it (or the card, on a touch screen)
+   * and runs one Tab ring over field + card itself.
    */
-  useFocusTrap(ref, { active: true });
+  useFocusTrap(ref, { active: trap });
 
   useLayoutEffect(() => {
     const card = ref.current;
@@ -862,7 +1086,9 @@ function TourCard({
     setStyle(
       placeCard(rect, card.offsetWidth, card.offsetHeight, window.innerWidth, window.innerHeight, 12, step.placement, dir),
     );
-  }, [rect, index, step.placement, dir]);
+  }, [ref, rect, index, step.placement, dir]);
+
+  const awaitsTarget = (step.awaitClick || step.awaitInput) && step.target && rect;
 
   return (
     <div
@@ -873,10 +1099,13 @@ function TourCard({
       // trap silently does nothing.
       tabIndex={-1}
       style={style}
+      data-tour-card=""
       className="pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-subtle bg-surface p-4 shadow-xl outline-none transition-all duration-200 ease-out"
     >
       <div className="text-sm font-semibold text-primary">{step.title}</div>
-      <div className="mt-1 text-sm leading-relaxed text-secondary">{step.body}</div>
+      <div id={bodyId} className="mt-1 text-sm leading-relaxed text-secondary">
+        {step.body}
+      </div>
       {step.action && <div className="mt-3">{step.action}</div>}
       <div className="mt-4 space-y-2">
         <div className="flex items-center justify-between gap-2">
@@ -904,16 +1133,29 @@ function TourCard({
                 way forward on any step whose anchor happens not to be rendered
                 for this user (a guest sees no "add account" button), leaving the
                 undocumented ArrowRight key as the sole escape. */}
-            {!((step.awaitClick || step.awaitInput) && step.target && rect) && (
-              <Button variant="accent" onClick={onNext} className={cn("px-2.5 py-1 text-xs")}>
+            {!awaitsTarget && (
+              <Button
+                variant="accent"
+                onClick={onNext}
+                // Locked, not disabled (§11.1): it stays focusable, and a press focuses the
+                // field and reads the hint again.
+                aria-disabled={locked || undefined}
+                aria-describedby={locked ? hintId : undefined}
+                className={cn("px-2.5 py-1 text-xs", locked && "opacity-60")}
+              >
                 {isLast ? labels.done : labels.next}
               </Button>
             )}
           </div>
         </div>
-        {(step.awaitClick || step.awaitInput) && step.target && rect && (
+        {awaitsTarget && (
           <div className="text-center text-xs italic text-placeholder">
             {step.awaitInput && !step.awaitClick ? labels.awaitInputHint : labels.awaitClickHint}
+          </div>
+        )}
+        {locked && !awaitsTarget && (
+          <div id={hintId} className="text-center text-xs italic text-placeholder">
+            {gateHint}
           </div>
         )}
       </div>
