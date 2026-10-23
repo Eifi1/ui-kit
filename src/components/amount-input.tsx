@@ -428,8 +428,8 @@ export function AmountInput(props: AmountInputProps) {
   const { lock, locked, off, isMobile, asDisplay, showCalc, showNumpad, setFocused, mark, draft, setDraft, derived } =
     numeric;
   const invalid = numeric.isInvalid;
-  // A locked chip is a read-out: picking a currency is a change too.
-  const editable = !!onCurrencyChange && !locked;
+  // A locked or disabled chip is a read-out: picking a currency is a change too.
+  const editable = !!onCurrencyChange && !locked && !off;
   // Room for the trailing controls — the calculator and the currency chip — once
   // measured, as NumberInput reserves its own (keksdose live #367, DUP-10): their
   // width, the track's `end-1` inset in the boxed shape, and NumberInput's 4px gap.
