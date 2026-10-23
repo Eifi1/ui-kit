@@ -169,6 +169,17 @@ export interface TourLabels {
 // Defined in ./tour-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_TOUR_LABELS };
 
+/** 0.50 (§11.5): a step index, or the `data-tour` value of the step's anchor. */
+export type TourAt = number | string;
+
+/**
+ * 0.50 (§11.5): the app's launcher — the shape `useTourUrlSync` already takes, plus `at`.
+ * It builds the steps (`prepare()`, `build()`, `tour: tourInfo(def)`) and passes `at` on to
+ * `start(steps, { …, at })`. Give the same function to `TourProvider launch` and to
+ * `useTourUrlSync`.
+ */
+export type TourLauncher = (id: string, opts: { startIndex?: number; at?: TourAt }) => void | Promise<unknown>;
+
 interface StartOptions {
   /** Stable id of the tour, surfaced as `activeId` so the app can mirror it to
    *  the URL (deep-link / evaluation tracking) and record completion. Defaults to
@@ -180,6 +191,15 @@ interface StartOptions {
   tour?: TourInfo;
   /** Start at this step index instead of 0 (clamped) — for URL/deep-link resume. */
   startIndex?: number;
+  /**
+   * 0.50 (§11.5): start here AND make it the floor — earlier steps never run (nor their
+   * `beforeStep`), Back stops here, `position`/`count` count from here, and the finish
+   * records the completion as a full run does (Marcel, Q2). A number is a step index
+   * (clamped); a string is the first step whose `target` contains `data-tour="<at>"`
+   * verbatim (unknown: 0, with a development warning). The `at` step is entered with
+   * `via: "at"`. With `startIndex` too, `startIndex` picks the step and `at` the floor.
+   */
+  at?: TourAt;
   /** Fires synchronously when the tour starts (e.g. enable a mock interceptor). */
   onStart?: () => void;
   /** After the last step: runs after the provider's progress write and `onComplete`. */
@@ -203,8 +223,17 @@ interface TourContextValue {
   active: boolean;
   /** Id of the running tour (from {@link StartOptions.id}), else null. */
   activeId: string | null;
-  /** Start a tour with the given steps. */
-  start: (steps: TourStep[], opts?: StartOptions) => void;
+  /**
+   * Start a tour with the given steps — or, by id (0.50), through the provider's `launch`:
+   * `start("create-transaction", { at: "txn-entry-mode" })`. Without a `launch` the id form
+   * does nothing (a development build warns).
+   */
+  start: {
+    // The id form first: `Parameters<typeof start>` reads the LAST overload, which stays
+    // the 0.49 one.
+    (id: string, opts?: { at?: TourAt }): void;
+    (steps: TourStep[], opts?: StartOptions): void;
+  };
   /** End the current tour (no callbacks fire). */
   stop: () => void;
   /** Advance one step; past the last step it finishes the tour (fires onFinish). */
@@ -281,9 +310,15 @@ export function TourProvider({
   labels,
   progress,
   onComplete,
+  launch,
 }: {
   children: ReactNode;
   labels?: LabelOverride<TourLabels>;
+  /**
+   * 0.50 (§11.5): lets `start(id)` and `<TourGuideButton>` start a tour by id. Usually the
+   * same function the app gives `useTourUrlSync`.
+   */
+  launch?: TourLauncher;
   /** The app's tour progress: the same options its `useTourProgress` readers use. */
   progress?: UseTourProgressOptions;
   /** A tour's last step was finished; see {@link TourCompletion}. */
@@ -305,9 +340,11 @@ export function TourProvider({
   // The latest props, read at the finish: a new `storageKey` or callback needs no remount.
   const progressRef = useRef(progress);
   const onCompleteRef = useRef(onComplete);
+  const launchRef = useRef(launch);
   useLayoutEffect(() => {
     progressRef.current = progress;
     onCompleteRef.current = onComplete;
+    launchRef.current = launch;
   });
   // The provider's migrate becomes the key's, for readers that pass none (keksdose B-2).
   const storageKey = progress?.storageKey;
@@ -338,7 +375,8 @@ export function TourProvider({
   useLayoutEffect(() => {
     gates.setActive(active);
   }, [gates, active]);
-  const internals = useMemo(() => ({ gates, canLaunch: false }), [gates]);
+  const canLaunch = !!launch;
+  const internals = useMemo(() => ({ gates, canLaunch }), [gates, canLaunch]);
 
   /** Is step `i` shown, asked now (§11.3)? */
   const shown = useCallback(
@@ -379,22 +417,39 @@ export function TourProvider({
     [shown],
   );
 
-  const start = useCallback(
+  const startSteps = useCallback(
     (s: TourStep[], opts?: StartOptions) => {
       optsRef.current = opts ?? {};
       optsRef.current.onStart?.();
-      floorRef.current = 0;
-      const wanted = Math.min(Math.max(0, opts?.startIndex ?? 0), Math.max(0, s.length - 1));
-      let at = forward(s, wanted, "start");
-      if (at < 0) at = backward(s, wanted, "start");
+      const last = Math.max(0, s.length - 1);
+      floorRef.current = opts?.at === undefined ? 0 : resolveAt(s, opts.at);
+      const via: TourStepContext["via"] = opts?.at === undefined ? "start" : "at";
+      const wanted = Math.min(Math.max(floorRef.current, opts?.startIndex ?? floorRef.current), last);
+      let to = forward(s, wanted, via);
+      if (to < 0) to = backward(s, wanted, via);
       // Not one step of the run is shown: there is nothing to tour.
-      if (at < 0) return;
-      arrive(s, at, "start");
+      if (to < 0) return;
+      arrive(s, to, via);
       setActiveId(opts?.id ?? opts?.tour?.id ?? null);
       setSteps(s);
     },
     [arrive, forward, backward],
   );
+  const start = useCallback(
+    (what: TourStep[] | string, opts?: StartOptions | { at?: TourAt }) => {
+      if (typeof what !== "string") {
+        startSteps(what, opts as StartOptions | undefined);
+        return;
+      }
+      const run = launchRef.current;
+      if (!run) {
+        if (devWarnings()) console.warn(`[ui-kit] start("${what}") needs TourProvider's \`launch\` prop.`);
+        return;
+      }
+      void Promise.resolve(run(what, { at: opts?.at })).catch((error: unknown) => console.error(error));
+    },
+    [startSteps],
+  ) as TourContextValue["start"];
   const stop = useCallback(() => {
     setSteps(null);
     setActiveId(null);
@@ -546,6 +601,16 @@ const NOOP = () => {};
 
 function stepContext(gates: GateRegistry, via: TourStepContext["via"]): TourStepContext {
   return { gate: (key) => gates.get(key), via };
+}
+
+/** `StartOptions.at` as a step index: a number clamped, an anchor's first step, else 0. */
+function resolveAt(steps: TourStep[], at: TourAt): number {
+  if (typeof at === "number") return Math.min(Math.max(0, Math.floor(at)), Math.max(0, steps.length - 1));
+  const anchor = `data-tour="${at}"`;
+  const found = steps.findIndex((step) => step.target?.includes(anchor));
+  if (found >= 0) return found;
+  if (devWarnings()) console.warn(`[ui-kit] A tour was started at "${at}", but no step targets [${anchor}]: it starts at 0.`);
+  return 0;
 }
 
 /** The first step in [floor, index) shown now whose gate is published and unsatisfied, or -1. */
