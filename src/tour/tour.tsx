@@ -25,6 +25,7 @@ import { DEFAULT_TOUR_LABELS } from "./tour-labels";
 import type { TourInfo } from "./tour-info";
 import { completeStored, rememberAccount, rememberMigrate, type UseTourProgressOptions } from "./use-tour-progress";
 import { createGateRegistry, devWarnings, TourInternalContext, type GateRegistry } from "./tour-gates";
+import { DOCK_MAX_WIDTH, dockEdge, dockStyle, readBand, scrollIntoFreeHalf, type DockEdge } from "./tour-dock";
 
 export { useTourGate, useTourGateRelease } from "./tour-gates";
 export type { TourGateRelease } from "./tour-gates";
@@ -34,7 +35,7 @@ export type { TourGateRelease } from "./tour-gates";
  * left side in RTL) and are what a translated app wants. `left`/`right` stay physical
  * for the steps that genuinely mean a screen side.
  */
-export type TourPlacement = "top" | "right" | "bottom" | "left" | "start" | "end" | "center";
+export type TourPlacement = "top" | "right" | "bottom" | "left" | "start" | "end" | "center" | "dock";
 
 export interface TourStep {
   /** CSS selector for the element to spotlight. Omit for a centered step
@@ -50,7 +51,14 @@ export interface TourStep {
    *  (below → above → centered). "center" ignores the target and centers on
    *  screen. "start"/"end" are the logical sides and flip in RTL; "left"/"right"
    *  are physical. An explicit side flips to the opposite side if it would
-   *  overflow, then clamps into the viewport. */
+   *  overflow, then clamps into the viewport.
+   *
+   *  `"dock"` (0.50, §11.7): below `sm` (640 px) the card is pinned full-width to the top
+   *  or bottom edge of the usable band — the visual viewport less the keyboard and any
+   *  `[data-tour-obstruction]` (the number pad) — on the edge away from the field, and the
+   *  field's scroll container brings it into the other half. From `sm` up it is auto
+   *  placement. On a phone a field step (`interactive`, `awaitInput`, `gate`, `awaitGate`)
+   *  with a target and no `placement` docks by default (`TourProvider dockOnPhones`). */
   placement?: TourPlacement;
   /** Advance only when the user clicks the spotlighted target itself (not the
    *  card's Next button). Requires `target`: the real control's own handler runs
@@ -312,6 +320,7 @@ export function TourProvider({
   progress,
   onComplete,
   launch,
+  dockOnPhones = true,
 }: {
   children: ReactNode;
   labels?: LabelOverride<TourLabels>;
@@ -324,6 +333,11 @@ export function TourProvider({
   progress?: UseTourProgressOptions;
   /** A tour's last step was finished; see {@link TourCompletion}. */
   onComplete?: (tour: TourInfo | undefined, completion: TourCompletion) => void;
+  /**
+   * 0.50 (§11.7, Marcel's Q1): below `sm`, a field step with a target and no `placement`
+   * docks. Default `true`; `false` makes docking strictly opt-in (`placement: "dock"`).
+   */
+  dockOnPhones?: boolean;
 }) {
   // `labels` over the provider's `tour` over English. Resolved once here and handed
   // down: the step card is portalled, but context crosses portals anyway — this is
@@ -569,6 +583,7 @@ export function TourProvider({
             onGoTo={goToStep}
             labels={merged}
             gates={gates}
+            dockOnPhones={dockOnPhones}
             onNext={next}
             onPrev={prev}
             onSkip={skip}
@@ -739,6 +754,13 @@ function coversViewport(host: HTMLElement, el: Element): boolean {
   return r.width > 0 && r.left <= 1 && r.top <= top + 1 && r.right >= width - 1 && r.bottom >= bottom - 1;
 }
 
+/** Does this step's card dock now (§11.7)? A phone-width viewport, and `"dock"` or a field
+ *  step with no placement while the provider docks on phones. */
+function docks(step: TourStep, dockOnPhones: boolean): boolean {
+  if (typeof window === "undefined" || window.innerWidth >= DOCK_MAX_WIDTH || !step.target) return false;
+  return step.placement === "dock" || (step.placement === undefined && dockOnPhones && isFieldStep(step));
+}
+
 /** A step whose control is for using: its card joins the layer stack above the field (§11.6). */
 function isFieldStep(step: TourStep): boolean {
   return !!(step.interactive || step.awaitInput || step.gate || step.awaitGate);
@@ -781,6 +803,7 @@ function TourOverlay({
   onGoTo,
   labels,
   gates,
+  dockOnPhones,
   onNext,
   onPrev,
   onSkip,
@@ -797,6 +820,7 @@ function TourOverlay({
   count: number;
   labels: TourLabels;
   gates: GateRegistry;
+  dockOnPhones: boolean;
   onNext: () => void;
   onPrev: () => void;
   onSkip: () => void;
@@ -866,7 +890,10 @@ function TourOverlay({
         if (cancelled) return;
         const el = queryVisibleTarget(step.target!);
         if (el) {
-          el.scrollIntoView({ block: "center", behavior: "smooth" });
+          // A docked step scrolls the field into the half the card leaves free, through
+          // the field's own scroll container (§11.7); any other centres it, as ever.
+          if (docks(step, dockOnPhones)) scrollIntoFreeHalf(el, null, null);
+          else el.scrollIntoView({ block: "center", behavior: "smooth" });
           settle(el);
           return;
         }
@@ -1281,6 +1308,7 @@ function TourOverlay({
         onLeaveEmpty={onNext}
         onSkip={onSkip}
         awaitsRelease={awaitsRelease}
+        docked={spot !== null && docks(step, dockOnPhones)}
         refusal={refusal}
         backTo={backTo >= 0 ? { title: steps[backTo].title, go: () => onGoTo(backTo) } : null}
       />
@@ -1424,6 +1452,7 @@ function TourCard({
   onLeaveEmpty,
   onSkip,
   awaitsRelease,
+  docked,
   refusal,
   backTo,
 }: {
@@ -1453,6 +1482,8 @@ function TourCard({
   onSkip: () => void;
   /** An awaitGate step with its target lit: the hint in place of Next. */
   awaitsRelease: boolean;
+  /** Pinned to the band's edge away from the field (§11.7). */
+  docked: boolean;
   refusal: Refusal | null;
   /** The "Back to …" link after a refused save. */
   backTo: { title: string; go: () => void } | null;
@@ -1490,13 +1521,60 @@ function TourCard({
    */
   useFocusTrap(ref, { active: trap });
 
+  // Docked (§11.7): the edge it last took, for the hysteresis, and a tick bumped when the
+  // band moves under an unmoved field (a pad or keyboard opening).
+  const edgeRef = useRef<DockEdge | null>(null);
+  const [bandTick, setBandTick] = useState(0);
+  const [edge, setEdge] = useState<DockEdge | null>(null);
+  useEffect(() => {
+    if (!docked) return;
+    let last = "";
+    const look = () => {
+      const target = step.target ? queryVisibleTarget(step.target) : null;
+      const band = readBand(target, ref.current);
+      const key = `${band.top}:${band.bottom}`;
+      if (key === last) return;
+      last = key;
+      // A field the pad or keyboard now covers is brought back into the free half.
+      if (target) {
+        const r = target.getBoundingClientRect();
+        if (r.top < band.top || r.bottom > band.bottom) {
+          edgeRef.current = scrollIntoFreeHalf(target, ref.current, edgeRef.current);
+        }
+      }
+      setBandTick((t) => t + 1);
+    };
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", look);
+    vv?.addEventListener("scroll", look);
+    window.addEventListener("resize", look);
+    // The follow tick's cadence: it catches a pad opening, which moves nothing.
+    const id = window.setInterval(look, 250);
+    return () => {
+      vv?.removeEventListener("resize", look);
+      vv?.removeEventListener("scroll", look);
+      window.removeEventListener("resize", look);
+      clearInterval(id);
+    };
+  }, [docked, step.target, ref]);
+
   useLayoutEffect(() => {
     const card = ref.current;
     if (!card) return;
+    if (docked) {
+      const target = step.target ? queryVisibleTarget(step.target) : null;
+      const band = readBand(target, card);
+      const next = rect ? dockEdge(rect, band, edgeRef.current, card.offsetHeight) : "bottom";
+      edgeRef.current = next;
+      setEdge(next);
+      setStyle(dockStyle(next, rect, band));
+      return;
+    }
+    setEdge(null);
     setStyle(
       placeCard(rect, card.offsetWidth, card.offsetHeight, window.innerWidth, window.innerHeight, 12, step.placement, dir),
     );
-  }, [ref, rect, index, step.placement, dir]);
+  }, [ref, rect, index, step.placement, step.target, dir, docked, bandTick]);
 
   const awaitsTarget = ((step.awaitClick || step.awaitInput) && step.target && rect) || awaitsRelease;
 
@@ -1510,7 +1588,12 @@ function TourCard({
       tabIndex={-1}
       style={style}
       data-tour-card=""
-      className="pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-subtle bg-surface p-4 shadow-xl outline-none transition-all duration-200 ease-out"
+      data-tour-docked={edge ?? undefined}
+      className={cn(
+        "pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-subtle bg-surface p-4 shadow-xl outline-none transition-all duration-200 ease-out",
+        // Docked, the height is capped: the body scrolls, the title and buttons stay.
+        docked && "flex flex-col",
+      )}
     >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-primary">
         <span>{step.title}</span>
@@ -1520,7 +1603,10 @@ function TourCard({
           </span>
         )}
       </div>
-      <div id={bodyId} className="mt-1 text-sm leading-relaxed text-secondary">
+      <div
+        id={bodyId}
+        className={cn("mt-1 text-sm leading-relaxed text-secondary", docked && "min-h-0 shrink overflow-y-auto")}
+      >
         {step.body}
       </div>
       {step.action && <div className="mt-3">{step.action}</div>}
