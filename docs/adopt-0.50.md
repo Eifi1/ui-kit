@@ -252,7 +252,8 @@ awards points like a full run.
 
 ## 0.50.1
 
-A plain bump for all three apps: no code to change.
+A plain bump for all three apps: nothing has to change. The fix below applies on the bump;
+the two additions after it let keksdose drop two workarounds when it likes.
 
 - **The tour's focus on a picker field no longer opens its list** (keksdose B1). On a fine
   pointer a field step focuses the field's first control on arrival (§11.8); a Combobox
