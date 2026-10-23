@@ -45,7 +45,9 @@ export interface TourStep {
   body: ReactNode;
   /** Extra footer content, e.g. a "load sample data" shortcut. */
   action?: ReactNode;
-  /** Spotlight padding around the target, px (default 8). */
+  /** Spotlight padding around the target, px (default 8). On a field step the spot also
+   *  takes in the lines the field's `aria-describedby` names when they sit within the
+   *  ring's reach of it (a hint or warning line under the field, keksdose S1, §11.6). */
   padding?: number;
   /** Where the card sits relative to the target. Omit for auto placement
    *  (below → above → centered). "center" ignores the target and centers on
@@ -705,6 +707,59 @@ function rectOf(el: Element): Rect {
   return { top: r.top, left: r.left, width: r.width, height: r.height };
 }
 
+/** The two-tone frame's width outside the spot (3px white, 2px keyline), plus a pixel. */
+const RING_BAND = 6;
+
+/**
+ * What a step's ring frames (keksdose S1, §11.6): the target, and on a FIELD step also the
+ * lines that describe the field from outside it — the elements its `aria-describedby`
+ * (on the target or a control inside) names that lie within the ring's reach of it (a
+ * caption, a hint or warning line, an error drawn under or above the field). Without
+ * them the ring's frame ran through such a line; with them it frames field and line, and
+ * the line is lit, not under the scrim. A kit field's own caption and error are inside
+ * its root already. A line far away (a tooltip, another part of the page) is not taken.
+ */
+function spotRectOf(el: Element, step: TourStep): Rect {
+  const own = rectOf(el);
+  if (!isFieldStep(step)) return own;
+  const ids = new Set<string>();
+  const holders = [el, ...Array.from(el.querySelectorAll("[aria-describedby]"))];
+  for (const holder of holders) {
+    for (const id of (holder.getAttribute("aria-describedby") ?? "").split(/\s+/)) if (id) ids.add(id);
+  }
+  if (ids.size === 0) return own;
+  const lines: DOMRect[] = [];
+  for (const id of ids) {
+    const line = document.getElementById(id);
+    if (!line || el.contains(line) || line.closest('[role="tooltip"]') || !isVisible(line)) continue;
+    const r = line.getBoundingClientRect();
+    // An `sr-only` description measures 1×1: nothing to frame.
+    if (r.width > 1 && r.height > 1) lines.push(r);
+  }
+  let top = own.top;
+  let left = own.left;
+  let right = own.left + own.width;
+  let bottom = own.top + own.height;
+  const reach = (step.padding ?? 8) + RING_BAND;
+  // Grow until nothing more is in reach: a hint under the field, then an error under it.
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const r = lines[i];
+      const across = r.left < right && r.right > left;
+      const gap = Math.max(r.top - bottom, top - r.bottom);
+      if (!across || gap > reach) continue;
+      top = Math.min(top, r.top);
+      left = Math.min(left, r.left);
+      right = Math.max(right, r.right);
+      bottom = Math.max(bottom, r.bottom);
+      lines.splice(i, 1);
+      grew = true;
+    }
+  }
+  return { top, left, width: right - left, height: bottom - top };
+}
+
 /**
  * What the finder established for ONE step: where its target is (`null` = no target,
  * or not on the page), and the reading direction the card takes from it.
@@ -894,7 +949,7 @@ function TourOverlay({
         else document.body.appendChild(layer);
         fullScreen = !!host && coversViewport(host, el);
       }
-      setLocated({ index, step, rect: el ? rectOf(el) : null, dir: dirOf(el), layer, fullScreen });
+      setLocated({ index, step, rect: el ? spotRectOf(el, step) : null, dir: dirOf(el), layer, fullScreen });
     };
     void (async () => {
       await step.beforeStep?.(stepContext(gates, via));
@@ -935,7 +990,7 @@ function TourOverlay({
     const update = () => {
       const el = queryVisibleTarget(step.target!);
       if (el) {
-        const next = rectOf(el);
+        const next = spotRectOf(el, step);
         // A sheet that grows to full screen (or shrinks from it) takes or drops the scrim.
         const host = layerHost(el);
         const full = !!host && coversViewport(host, el);

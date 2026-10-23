@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import {
   AmountInput,
   Button,
@@ -183,6 +183,7 @@ function BookingForm({
 }) {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
+  const noteId = useId();
   const [memo, setMemo] = useState("");
   const [transfer, setTransfer] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -227,17 +228,28 @@ function BookingForm({
           <Checkbox label="Transfer" checked={transfer} onCheckedChange={setTransfer} />
         </div>
         {!transfer && (
-          <div data-tour="gt-category">
-            <Combobox
-              label="Category"
-              value={category}
-              onChange={setCategory}
-              options={CATEGORIES}
-              placeholder="Pick a category"
-              searchPlaceholder="Search categories"
-              closeLabel="Close"
-              sheetTitle="Category"
-            />
+          <div>
+            <div data-tour="gt-category">
+              <Combobox
+                label="Category"
+                value={category}
+                onChange={setCategory}
+                options={CATEGORIES}
+                placeholder="Pick a category"
+                searchPlaceholder="Search categories"
+                closeLabel="Close"
+                sheetTitle="Category"
+                aria-describedby={category === "" ? noteId : undefined}
+              />
+            </div>
+            {/* The app's own line under the field, outside its `data-tour` box, named by
+                the field's aria-describedby: the step's ring frames field and line
+                (keksdose S1, §11.6). */}
+            {category === "" && (
+              <p id={noteId} data-testid="gt-category-note" className="mt-1 text-xs text-warning">
+                No category chosen — booked as Uncategorised
+              </p>
+            )}
           </div>
         )}
         {/* Room, so the note sits below the first screen on a phone and the sheet's body

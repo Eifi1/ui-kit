@@ -847,6 +847,16 @@ target):
    takes Escape first. An Escape pressed in the field itself is left to the field: the tour
    does nothing with it (and the sheet stays).
 5. Plain steps keep `z-[60]` at the end of `<body>`.
+6. **The ring frames the field's own lines** (keksdose S1): on a field step the spot takes
+   in the elements the field's `aria-describedby` names (on the target or a control in it)
+   that lie within the ring's reach of it (`padding` + the frame's width, chained: a hint,
+   then an error under it), so a caption, hint or warning line drawn under the field is
+   framed with it and lit, never crossed by the frame or left under the scrim. A kit
+   field's own caption and error are inside its root already; an app's line outside the
+   `data-tour` box (keksdose's "No account chosen — saved to …") is taken once the field
+   names it in `aria-describedby`, which it should for a screen reader anyway. A
+   tooltip, an `sr-only` text and a line beside or far from the field are left out. Plain
+   steps frame the target alone, as before.
 
 ### 11.7 The docked card on phones
 

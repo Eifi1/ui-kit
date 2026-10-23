@@ -21,6 +21,8 @@
  *      in the open picker only the picker; from the card it skips the tour and the sheet
  *      stays open;
  *   6. the `awaitGate` step on Save advances only on `release` (not on the click);
+ *   4b. the ring frames the category field together with its own warning line underneath
+ *      (the line its `aria-describedby` names, keksdose S1);
  *   7. the note, low in the sheet, is scrolled into view by the sheet body, and
  *      `window.scrollY` is unchanged.
  *
@@ -146,6 +148,9 @@ async function runVariant(browser, base, variant) {
             !!(document.querySelector("[data-tour-layer]").compareDocumentPosition(pad) & Node.DOCUMENT_POSITION_FOLLOWING),
           field: r(document.querySelector('[data-tour="gt-amount"]')),
           memo: r(document.querySelector('[data-tour="gt-memo"]')),
+          ring: r(ring),
+          category: r(document.querySelector('[data-tour="gt-category"]')),
+          categoryNote: r(document.querySelector('[data-testid="gt-category-note"]')),
           dir: document.querySelector("[data-tour-overlay]")?.getAttribute("dir"),
           next: document.querySelector("[data-tour-card] button[aria-disabled]")?.getAttribute("aria-disabled") ?? null,
           scrollY: window.scrollY,
@@ -201,6 +206,18 @@ async function runVariant(browser, base, variant) {
       await page.locator("[data-tour-card]").getByRole("button", { name: "Next" }).tap();
       await sleep(400);
     }
+
+    // 4. The ring frames the field AND its own line under it (the line its aria-describedby
+    // names, keksdose S1): the frame does not run through the line.
+    await sleep(400);
+    g = await geometry();
+    const inside = (outer, inner) =>
+      !!outer && !!inner && outer.top <= inner.top && outer.bottom >= inner.bottom && outer.left <= inner.left && outer.right >= inner.right;
+    check(
+      "4 the ring frames the category field and its own line",
+      inside(g.ring, g.category) && inside(g.ring, g.categoryNote),
+      JSON.stringify({ ring: g.ring, field: g.category, note: g.categoryNote }),
+    );
 
     // 4. The picker opens above the card; Escape closes only it; a pick unlocks Next.
     await page.locator('[data-tour="gt-category"] input').first().tap();
