@@ -268,3 +268,11 @@ A plain bump for all three apps: no code to change.
 - A list the person opens while a field step is up still paints above the card (§11.6: a
   layer the field opens comes after the card), and on desktop it may cover it until a pick
   or Escape closes it. That is unchanged.
+- **`launch` gets the whole engine as its fourth argument** (keksdose N1, additive).
+  `TourProvider launch` and `useTourUrlSync` call `launch(id, opts, start, engine)`;
+  `engine` (`TourEngine`) is what `useTour()` returns — `stop`, `next`, `prev`, `goToStep`,
+  `active`, `activeId`, `index`, … — as one object whose fields read the latest render, so
+  a launcher above the provider can stop its run mid-way. keksdose: the callback that
+  registers `useTours()` from below the provider can go; take `engine` in `tours.tsx`'s
+  `launch` and call `engine.stop()` where the tours stop today. Launchers taking two or
+  three arguments are unchanged (§11.5).

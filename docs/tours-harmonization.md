@@ -823,6 +823,22 @@ const launch: TourLauncher = async (id, { at, startIndex }, start) => {
 Additive: a two-argument launcher that reaches `start` its own way (a ref to a component
 below the provider) keeps working.
 
+0.50.1 (keksdose N1): a **fourth argument**, `engine` (`TourEngine`), is the whole engine
+`useTour()` returns — `stop`, `next`, `prev`, `goToStep`, `active`, `activeId`, `index`, … —
+so a launcher above the provider can stop or steer its run with no `useTour()` registered
+from below. It is one object per provider whose fields read the latest render (after an
+`await`, `engine.active` is current) and whose methods are the provider's own; `start` is
+`engine.start`. `useTourUrlSync` passes it too (without a provider: idle, methods that do
+nothing). A launcher taking two or three arguments is unchanged.
+
+```tsx
+const launch: TourLauncher = async (id, opts, start, engine) => {
+  const def = TOURS[id];
+  if (!def) return;
+  start(def.build({ abort: () => engine.stop() }), { id, ...opts });
+};
+```
+
 ### 11.6 Layer order
 
 0.49 dropped an interactive step's overlay to `z-[45]`, under every `z-50` kit layer: in a

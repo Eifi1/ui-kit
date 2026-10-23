@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import * as ReactRouter from "react-router";
 import { useLocation, useNavigate, type Navigator } from "react-router";
 import { useSearchParamsState } from "../hooks/use-search-param-state";
-import { useTourOptional, type TourStart } from "./tour";
+import { useTourOptional, type TourEngine, type TourStart } from "./tour";
+import { liveEngine } from "./tour-engine";
 import { devWarnings } from "./tour-gates";
 
 /* ── useTourUrlSync ─────────────────────────────────────────────────────────── */
@@ -14,9 +15,16 @@ export interface UseTourUrlSyncOptions {
    * toast) to `useTour().start`. An unknown id should do nothing. May return a promise:
    * the parameters are kept until it settles. Under a `TourProvider` the third argument is
    * that provider's `start` (0.50, as `TourProvider launch` gets it), so one launcher serves
-   * both. Without a provider it is a `start` that does nothing (a development build warns).
+   * both; the fourth is its whole engine, read live (0.50.1, `TourEngine`: `stop`, `next`,
+   * `active`, …). Without a provider `start` and the engine's methods do nothing (a
+   * development build warns) and the engine reads as idle.
    */
-  launch: (id: string, options: { startIndex: number }, start: TourStart) => void | Promise<unknown>;
+  launch: (
+    id: string,
+    options: { startIndex: number },
+    start: TourStart,
+    engine: TourEngine,
+  ) => void | Promise<unknown>;
   /**
    * Are the facts a tour's steps are built from loaded yet (keksdose's `ready`: the
    * caches a branching tour reads)? A deep link waits for it, keeping its parameters, so
@@ -124,10 +132,12 @@ export function useTourUrlSync({ launch, ready = true, stepAliases = [] }: UseTo
 
   const launchRef = useRef(launch);
   const startRef = useRef<TourStart>(engine?.start ?? noProviderStart);
+  const [live] = useState(() => liveEngine<TourEngine>(ENGINE_KEYS, NO_PROVIDER_ENGINE));
   const activeIdRef = useRef(activeId);
   useLayoutEffect(() => {
     launchRef.current = launch;
     startRef.current = engine?.start ?? noProviderStart;
+    live.set(engine ?? NO_PROVIDER_ENGINE);
     activeIdRef.current = active ? activeId : null;
   });
   /** The `tour` value last seen in the URL: a tour starts when it CHANGES to an id. */
@@ -153,7 +163,7 @@ export function useTourUrlSync({ launch, ready = true, stepAliases = [] }: UseTo
     pendingRef.current = null;
     launchingRef.current = true;
     void Promise.resolve()
-      .then(() => launchRef.current(pending.id, { startIndex: pending.startIndex }, startRef.current))
+      .then(() => launchRef.current(pending.id, { startIndex: pending.startIndex }, startRef.current, live.engine))
       .catch(() => undefined)
       .finally(() => {
         launchingRef.current = false;
@@ -192,6 +202,25 @@ export function useTourUrlSync({ launch, ready = true, stepAliases = [] }: UseTo
 const noProviderStart: TourStart = () => {
   if (devWarnings()) console.warn("[ui-kit] useTourUrlSync: the launcher's start needs a TourProvider above it.");
 };
+
+const noProviderCall = () => {
+  if (devWarnings()) console.warn("[ui-kit] useTourUrlSync: the launcher's engine needs a TourProvider above it.");
+};
+/** The engine for a launcher run with no `TourProvider` above `useTourUrlSync`: idle. */
+const NO_PROVIDER_ENGINE: TourEngine = {
+  active: false,
+  activeId: null,
+  start: noProviderStart,
+  stop: noProviderCall,
+  next: noProviderCall,
+  prev: noProviderCall,
+  goToStep: noProviderCall,
+  index: 0,
+  total: 0,
+  position: 0,
+  count: 0,
+};
+const ENGINE_KEYS = Object.keys(NO_PROVIDER_ENGINE) as (keyof TourEngine)[];
 
 /* ── useTourCatalogueUrlState ───────────────────────────────────────────────── */
 

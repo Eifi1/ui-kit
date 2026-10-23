@@ -26,6 +26,7 @@ import { DEFAULT_TOUR_LABELS } from "./tour-labels";
 import type { TourInfo } from "./tour-info";
 import { completeStored, rememberAccount, rememberMigrate, type UseTourProgressOptions } from "./use-tour-progress";
 import { createGateRegistry, devWarnings, TourInternalContext, type GateRegistry } from "./tour-gates";
+import { liveEngine } from "./tour-engine";
 import { DOCK_MAX_WIDTH, dockEdge, dockStyle, readBand, scrollIntoFreeHalf, type DockEdge } from "./tour-dock";
 
 export { useTourGate, useTourGateRelease } from "./tour-gates";
@@ -194,14 +195,41 @@ export type TourStart = TourContextValue["start"];
  * `useTourUrlSync`.
  *
  * `start` is the provider's own `start` (keksdose N4), so the launcher needs no ref to a
- * component below the provider and may be defined above it. `useTourUrlSync` passes it too
- * (under a provider). A two-argument launcher that reaches `start` its own way still works.
+ * component below the provider and may be defined above it. `engine` (0.50.1, keksdose N1)
+ * is the rest of the engine — `stop`, `next`, `active`, … — read live, see {@link TourEngine}.
+ * `useTourUrlSync` passes both (under a provider). A launcher taking fewer arguments still
+ * works.
  */
 export type TourLauncher = (
   id: string,
   opts: { startIndex?: number; at?: TourAt },
   start: TourStart,
+  engine: TourEngine,
 ) => void | Promise<unknown>;
+
+/**
+ * 0.50.1 (keksdose N1): the whole engine `useTour()` returns, handed to a launcher as its
+ * FOURTH argument by `TourProvider` and `useTourUrlSync`, so a tour built above the provider
+ * can also `stop`, `next` or read `active` with no `useTour()` registered from below. One
+ * object per provider whose fields read the latest render (`engine.active` after an
+ * `await` is current); its methods are the provider's own. `start` (the third argument) is
+ * `engine.start`.
+ */
+export type TourEngine = TourContextValue;
+
+const ENGINE_KEYS = [
+  "active",
+  "activeId",
+  "start",
+  "stop",
+  "next",
+  "prev",
+  "goToStep",
+  "index",
+  "total",
+  "position",
+  "count",
+] as const satisfies readonly (keyof TourContextValue)[];
 
 interface StartOptions {
   /** Stable id of the tour, surfaced as `activeId` so the app can mirror it to
@@ -464,8 +492,11 @@ export function TourProvider({
     },
     [arrive, forward, backward],
   );
-  // The provider's own `start`, handed to `launch` as its third argument (keksdose N4).
+  // The provider's own `start` and the live engine, handed to `launch` as its third and
+  // fourth arguments (keksdose N4, N1).
   const ownStartRef = useRef<TourContextValue["start"] | null>(null);
+  const [live] = useState(() => liveEngine<TourEngine>(ENGINE_KEYS));
+  const engine = live.engine;
   const start = useCallback(
     (what: TourStep[] | string, opts?: StartOptions | { at?: TourAt }) => {
       if (typeof what !== "string") {
@@ -477,11 +508,11 @@ export function TourProvider({
         if (devWarnings()) console.warn(`[ui-kit] start("${what}") needs TourProvider's \`launch\` prop.`);
         return;
       }
-      void Promise.resolve(run(what, { at: opts?.at }, ownStartRef.current!)).catch((error: unknown) =>
+      void Promise.resolve(run(what, { at: opts?.at }, ownStartRef.current!, engine)).catch((error: unknown) =>
         console.error(error),
       );
     },
-    [startSteps],
+    [startSteps, engine],
   ) as TourContextValue["start"];
   useLayoutEffect(() => {
     ownStartRef.current = start;
@@ -574,23 +605,27 @@ export function TourProvider({
     });
   }, [active, gates, arrive, forward, finish]);
 
+  const value: TourContextValue = {
+    active,
+    activeId,
+    start,
+    stop,
+    next,
+    prev,
+    goToStep,
+    index,
+    total,
+    position: active ? nav.position : 0,
+    count: active ? nav.count : 0,
+  };
+  // Read by the live engine (`launch`'s fourth argument) after this render commits.
+  useLayoutEffect(() => {
+    live.set(value);
+  });
+
   return (
     <TourInternalContext.Provider value={internals}>
-      <TourContext.Provider
-        value={{
-          active,
-          activeId,
-          start,
-          stop,
-          next,
-          prev,
-          goToStep,
-          index,
-          total,
-          position: active ? nav.position : 0,
-          count: active ? nav.count : 0,
-        }}
-      >
+      <TourContext.Provider value={value}>
         {children}
         {active && (
           <TourOverlay
