@@ -538,6 +538,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "urlSync — the view lives in the address",
     "serverPagination — the server owns the rows",
     "Phone layout — mobileCard, mobileGroupBy, mobileSwipeActions",
+    "A contact card: own links, and tap to open",
     "useTableUrlState, filterHref and the filter builders",
   ],
   "data-table-parts": [
