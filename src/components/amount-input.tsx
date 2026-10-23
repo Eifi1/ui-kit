@@ -41,10 +41,11 @@ import {
 } from "./field-parts";
 import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
+import { dataAttributes, type DataAttributes } from "../lib/data-attributes";
 
 /** {@link AmountInput}'s props — exported since 0.34 (refactor audit 2026-10, API-9): a
  *  wrapper typed itself off `ComponentProps<typeof AmountInput>` until then. */
-export interface AmountInputProps extends FieldHelpProps {
+export interface AmountInputProps extends FieldHelpProps, DataAttributes {
   value: string;
   onChange: (value: string) => void;
   currency?: string;
@@ -427,8 +428,8 @@ export function AmountInput(props: AmountInputProps) {
   const { lock, locked, off, isMobile, asDisplay, showCalc, showNumpad, setFocused, mark, draft, setDraft, derived } =
     numeric;
   const invalid = numeric.isInvalid;
-  // A locked chip is a read-out: picking a currency is a change too.
-  const editable = !!onCurrencyChange && !locked;
+  // A locked or disabled chip is a read-out: picking a currency is a change too.
+  const editable = !!onCurrencyChange && !locked && !off;
   // Room for the trailing controls — the calculator and the currency chip — once
   // measured, as NumberInput reserves its own (keksdose live #367, DUP-10): their
   // width, the track's `end-1` inset in the boxed shape, and NumberInput's 4px gap.
@@ -533,7 +534,7 @@ export function AmountInput(props: AmountInputProps) {
   const selected = getCurrency(currency);
 
   return (
-    <div className={cn("w-full", className)}>
+    <div {...dataAttributes(props)} className={cn("w-full", className)}>
       {/* Inner relative box holds the input + its absolutely-positioned
           trailing controls (calculator / currency), so those stay anchored to
           the INPUT even when the mobile math bar is rendered below (#334). It is

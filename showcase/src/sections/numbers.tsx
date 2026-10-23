@@ -465,7 +465,7 @@ export function Numbers() {
 
       <Example
         label="CurrencySelect"
-        hint="controlled by ISO code; the trigger stays flag + code so it cannot clip in a narrow field"
+        hint="controlled by ISO code; the trigger stays flag + code so it cannot clip in a narrow field; disabledReason locks it as Select does"
       >
         <Stage>
           <div className="space-y-3">
@@ -493,6 +493,16 @@ export function Numbers() {
                 onChange={setRequiredCode}
                 placeholder="Pick one"
                 invalid={requiredCode === ""}
+              />
+              {/* Locked as Select locks: focusable, flag and code kept, nothing opens,
+                  and the reason is the trigger's description — a line at Large and on
+                  touch, else the Tooltip. `commit` locks it under a WriteLockProvider. */}
+              <CurrencySelect
+                className="w-48 max-w-full"
+                label="Budget currency"
+                value="CHF"
+                onChange={() => {}}
+                disabledReason="Only the budget's owner can change its currency."
               />
             </Row>
             <div className="flex items-center gap-2 text-xs text-secondary">

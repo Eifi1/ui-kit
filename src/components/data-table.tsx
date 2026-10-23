@@ -1483,6 +1483,13 @@ export function DataTable<T>({
   // renderer is opaque to us; a link inside one is the caller's to declare by
   // marking the column it comes from.
   const mobileCardLinkable = (mobileCard ? mobileColumns : [...onCard]).every((c) => !keepsOwnClicks(c));
+  // ...except on the default card (0.50 K4, kastlan): its title becomes the row's link
+  // (or, with only `onRowClick`, a button), stretched over the card, and the own-click
+  // cells — a tel: link, the actions row — sit above it, so "tap to open" stays and no
+  // control nests in another. A `mobileCard` stays the fallback above (its controls
+  // cannot be lifted), and so does a card whose title keeps its own clicks.
+  const mobileCardStretched =
+    !mobileCard && !mobileCardLinkable && !!mobilePrimaryCol && !keepsOwnClicks(mobilePrimaryCol);
   // The card list's reading direction, for the one thing on it CSS cannot flip: which
   // physical drag a logical `start`/`end` swipe action means. Read off the DOM through
   // a ref callback (it runs at commit, like a layout effect) because `dir` is an
@@ -1646,10 +1653,11 @@ export function DataTable<T>({
         className={rowClassName?.(row)}
         attrs={rowAttributes?.(row)}
         interactive={!!onRowClick}
-        href={mobileCardLinkable ? rowHref?.(row) : undefined}
+        href={mobileCardLinkable || mobileCardStretched ? rowHref?.(row) : undefined}
         swipeActionsFor={swipeActionsFor}
         mobileDir={mobileDir}
         mobileCardLinkable={mobileCardLinkable}
+        mobileCardStretched={mobileCardStretched}
         mobileCard={mobileCard}
         mobilePrimaryCol={mobilePrimaryCol}
         mobileStatusColumns={mobileStatusColumns}

@@ -157,6 +157,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "file.size": [[2_500_000]],
   "wizard.step": [[2, 4]],
   "tour.step": [[2, 4]],
+  "tour.backToStep": [["{{title}}"]],
   "globalSearch.shortcut": [["{{keys}}"]],
   "pieChart.slice": [["{{label}}", "{{value}}", "{{percent}}"]],
   "sparkline.rising": [["{{first}}", "{{last}}"]],

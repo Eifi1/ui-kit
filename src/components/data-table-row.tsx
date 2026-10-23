@@ -404,6 +404,7 @@ export interface DataTableMobileRowProps<T>
     | "opensRow"
     | "mobileDir"
     | "mobileCardLinkable"
+    | "mobileCardStretched"
     | "mobileCard"
     | "mobilePrimaryCol"
     | "mobileStatusColumns"

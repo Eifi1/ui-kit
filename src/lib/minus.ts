@@ -24,6 +24,16 @@ const MINUS_PARTS: ReadonlySet<string> = new Set(["minusSign", "exponentMinusSig
  * `Intl` marks as a minus are touched — a hyphen inside a currency's name
  * ("Bosnia-Herzegovina convertible marks") stays — and only when the text holds the
  * other sign at all, so a positive figure costs no `formatToParts`.
+ *
+ * Public since 0.50 (the KIT-1 follow-up): an app that keeps its OWN `Intl.NumberFormat`
+ * wrapper (a currency with app-specific digits, a quantity) calls it in place of
+ * `formatter.format(value)`, so its negatives match the kit's "−". Where the wrapper only
+ * re-states `formatMoney` / `formatNumber`, route it through those instead.
+ *
+ * @example
+ *   const eur = new Intl.NumberFormat("en", { style: "currency", currency: "EUR" });
+ *   formatWithMinus(eur, -150);          // "−€150.00"
+ *   formatWithMinus(eur, -150, "ascii"); // "-€150.00", for a CSV
  */
 export function formatWithMinus(
   formatter: Intl.NumberFormat,

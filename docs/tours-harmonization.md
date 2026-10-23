@@ -1,7 +1,7 @@
 # Guided tours — harmonisation plan
 
 **Settled 2026-10-17** (Marcel, in the ui-kit session, after the three app reviews in
-audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. §9 (round 0.44) settled 2026-10-17 with §9.6. §10 (round 0.45) settled 2026-10-19 with §10.6.
+audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. §9 (round 0.44) settled 2026-10-17 with §9.6. §10 (round 0.45) settled 2026-10-19 with §10.6. §11 (round 0.50, guided form tours) settled 2026-10-23.
 
 Marcel, in kastlan's session, 2026-10-17, relayed by kastlan-d1: "Massively increase the
 number of tours and also have them grouped and similar filtering as in keksdose. Is that
@@ -196,8 +196,8 @@ need react-router, which is a required peer already.
   device reset (optional per app; keksdose keeps usage out of it). `doneCount` and
   `earnedPoints` count by `isTourDone`, for the header's x-of-y and points tile.
 - **`useTourUrlSync({launch, ready?, stepAliases?})`** (§2.7, §6.4): keksdose's
-  `TourUrlSync` on `useTourOptional()`. `launch(id, {startIndex})` is the app's launcher
-  (its steps, its `prepare()`, its `onFinish`). A tour starts whenever `?tour=` changes to
+  `TourUrlSync` on `useTourOptional()`. `launch(id, {startIndex}, start)` is the app's launcher
+  (its steps, its `prepare()`, its `onFinish`); `start` is the provider's (0.50, §11.5). A tour starts whenever `?tour=` changes to
   an id, on in-app navigation too, after `ready`; `&tourStep=` is 1-based. While a tour
   runs, the URL mirrors it (never during a navigation in flight — read off the history of a
   declarative router, off the data router's state under `createBrowserRouter` — never touching other
@@ -708,3 +708,229 @@ each point went:
   §10.1, decision 6 (the 401 loss it pointed out is gone with the pending record kept);
   "the apps' tests run SQLite" wrong for KS → decision 3; the demo declaration, the coded
   refusals, the privacy line at storage-keys.ts:114 → decision 2, §10.4.
+
+## 11. Guided form tours (ui-kit 0.50)
+
+A tour that walks a person through a REAL form, field by field, and ends in a saved record:
+keksdose's request (round 054), built to the contract `audits/round-054/tour-contract.md`
+(names and semantics), reviewed by keksdose and kastlan. Marcel answered its three questions
+on 2026-10-23 (§11.11). Everything is additive: a 0.49 tour runs unchanged except for the
+layer fix (§11.6) and the phone dock (§11.7). server-kit's `tours` module is not touched:
+nothing step-level is recorded. The showcase's tour page has a specimen ("Guided form
+tour"), which the phone e2e drives (§11.10).
+
+### 11.1 Value gates
+
+`useTourGate(key, satisfied)` beside a field publishes whether it holds what a tour waits
+for; `TourStep.gate: key` keeps that step's Next locked until it is satisfied
+(`gateHint` overrides `labels.gateHint`). The DOM plays no part, so a gate works for any
+value (the kit's pickers, derived state); a step with `gate` may have no `target`.
+
+- **Locked:** Next is `aria-disabled` (focusable), `aria-describedby` the hint under it. A
+  press does not advance: it focuses the field's first control and reads the hint again.
+  Enter and the forward arrow from the card are the same press.
+- **Satisfied:** Next opens and "Ready…" is announced once; the tour does **not** advance by
+  itself. It advances on Next, on Enter in the field (not an Enter the control took with
+  `preventDefault`, a combobox picking; a textarea takes Ctrl/Cmd+Enter), or on focus
+  leaving the field to nowhere or to the card (the number pad's Done blurs the input).
+  Focus moving into another control does not advance.
+- **Already satisfied on arrival** (a prefilled date, a field filled before "Guide me"):
+  Next is open at once. Publish the value's state; never a "touched" gate.
+- **Keys:** qualify by form (`txn.amount`). `null`/`undefined` publishes nothing (a field
+  shared by create and edit: `mode === "create" ? "txn.memo" : null`). Each key is a stack
+  in mount order, the last mounted wins; a development build warns once when two disagree
+  during a tour. A key nobody publishes (the form closed under the step) is not enforced:
+  Next opens, with a development warning.
+- Without a `TourProvider` the hook does nothing and never throws; it writes in a layout
+  effect only when `key` or `satisfied` changes, and only the overlay subscribes.
+  `useTour().next()` always advances.
+
+### 11.2 Optional fields
+
+`optional: true` puts an "Optional" chip on the title and, while the step's gate is
+unsatisfied, a **Leave empty** button beside the locked Next, which moves on without
+touching the field. It is not a skip: the run continues and can complete. Without a gate
+it is the chip and a plain Next (development warning).
+
+### 11.3 Conditional steps and the counter
+
+`when(ctx)` shows a step only if it returns `true` on arrival, before its `beforeStep` (a
+skipped step never navigates; a throw counts as skipped, logged). `TourStepContext` is
+`{ gate(key), via }`, `via` one of `start | at | next | back | goto`; `beforeStep` receives
+it too (zero-argument functions still type-check). Branch facts are gates
+(`useTourGate("txn.transfer", …)`, `when: (c) => c.gate("txn.transfer") === true`).
+
+- Next walks to the next step shown (none left: finish); Back to the nearest earlier step
+  shown NOW, never below the floor (§11.5); `goToStep(i)` to the next shown at or after
+  `i`, failing that the previous one. A step already showing is not re-evaluated.
+- `useTour()` gains `position` (1-based among the steps shown) and `count` (steps shown
+  from the floor), recomputed on each arrival; the card's counter reads them, Back hides
+  on the first shown step, Done names the last. `index`/`total` keep their raw meaning, so
+  `?tourStep=` and every deep link are unchanged.
+
+### 11.4 Finish on save: `awaitGate`
+
+`awaitGate: key` (usually on Save; `awaitGateHint` overrides "Save to continue") is
+interactive, replaces Next with the hint, and advances only on
+`useTourGateRelease().release(key)` from the save's `onSuccess` — not on the click, Enter or
+the arrow. A release is an event, not buffered:
+
+- on the awaiting step it advances (on the last step it finishes and records as Done does);
+- on an earlier step (Enter in the memo submitted) it jumps past the first later step
+  awaiting the key;
+- with nobody awaiting it, nothing happens. It does not need the form to close ("Create &
+  another").
+
+`refuse(key, reason?)` on the awaiting step keeps it and shows `reason` (or
+`labels.awaitGateRefused`) in an assertive region, plus **Back to "{title}"** for the first
+earlier shown step whose gate is now unsatisfied. The kit never jumps there itself (Q3).
+On any other step `refuse` is ignored. Skip and Back stay available. A viewer who cannot
+save gets `awaitGate: undefined`, a plain Next; a step whose Save is not on the page keeps
+Next, as `awaitClick` does.
+
+### 11.5 Start inside an open form: `at`, `start(id)`, "Guide me"
+
+`StartOptions.at` (`TourAt`: a step index, or the `data-tour` value of a step's anchor)
+starts the run there and makes it the **floor**: earlier steps and their `beforeStep` never
+run, Back and `goToStep` stop there, `position`/`count` count from there, and the finish
+records and awards the completion as a full run does (Q2). The `at` step is entered with
+`via: "at"`, so an in-form step whose `beforeStep` opens the form can leave an open form
+alone. With `startIndex` too, `startIndex` picks the step and `at` the floor. An unknown
+anchor starts at 0 (development warning).
+
+`TourProvider launch` (`TourLauncher`, `useTourUrlSync`'s shape plus `at`) lets
+`useTour().start(id, { at })` start a tour by id; without `launch` it does nothing
+(development warning). `TourGuideButton` (`tour`, `at`, `variant`, `size`, `labels`) is the
+form's "Guide me" — a compass and the `tourGuide` words (`label`, `description`, 7
+languages); it renders nothing without a provider, without `launch`, or while a tour runs.
+Place it in the form's header or `FormActions`' `start` slot.
+
+The provider calls `launch(id, opts, start)` with **its own `start`** as the third argument
+(keksdose N4), so the launcher needs no ref and may be defined above the provider (the
+showcase specimen does exactly that):
+
+```tsx
+const launch: TourLauncher = async (id, { at, startIndex }, start) => {
+  const def = TOURS[id];
+  if (!def) return;
+  await def.prepare?.();
+  start(def.build(), { id, tour: tourInfo(def, t), at, startIndex, onFinish });
+};
+<TourProvider launch={launch}>…</TourProvider>   // and useTourUrlSync({ launch })
+```
+
+`useTourUrlSync` passes the same `start` (under a provider), so one function serves both.
+Additive: a two-argument launcher that reaches `start` its own way (a ref to a component
+below the provider) keeps working.
+
+### 11.6 Layer order
+
+0.49 dropped an interactive step's overlay to `z-[45]`, under every `z-50` kit layer: in a
+phone's `FullBleedDialog` the card, scrim and ring painted under the sheet (keksdose B1).
+Now, on a **field step** (`interactive`, `awaitInput`, `gate`, `awaitGate` with a found
+target):
+
+1. The overlay goes into a container (`data-tour-layer`) inserted as the next sibling of
+   the kit layer holding the target (`target.closest("[data-kit-layer]")`), or at the end of
+   `<body>` on the page, at `z-50`. DOM order decides between the kit's `z-50` body
+   children: the card is above its host and what opened before it, and a list or the pad
+   the field opens afterwards is above the card.
+2. Kit layers carry `data-kit-layer`: Modal and FullBleedDialog (`"backdrop"`: judged by
+   their panel), PickerSheet, Popover, Dropdown, the combobox lists, Autocomplete and
+   NumberPadSheet. An app's own body-level overlay opts in with the same attribute.
+3. Inside a host whose panel fills the visual viewport: **no scrim and no shields**, only
+   the two-tone ring (`data-tour-bare` on the overlay). In a desktop Modal and on the page,
+   scrim and shields stay.
+4. **Escape:** the tour is a layer on the Escape stack, pushed on each arrival (while a step
+   is still being located, it takes Escape as in 0.49). Escape from the card skips the tour
+   and no longer also closes the sheet; a layer the field opened is above the tour and
+   takes Escape first. An Escape pressed in the field itself is left to the field: the tour
+   does nothing with it (and the sheet stays).
+5. Plain steps keep `z-[60]` at the end of `<body>`.
+6. **The ring frames the field's own lines** (keksdose S1): on a field step the spot takes
+   in the elements the field's `aria-describedby` names (on the target or a control in it)
+   that lie within the ring's reach of it (`padding` + the frame's width, chained: a hint,
+   then an error under it), so a caption, hint or warning line drawn under the field is
+   framed with it and lit, never crossed by the frame or left under the scrim. A kit
+   field's own caption and error are inside its root already; an app's line outside the
+   `data-tour` box (keksdose's "No account chosen — saved to …") is taken once the field
+   names it in `aria-describedby`, which it should for a screen reader anyway. A
+   tooltip, an `sr-only` text and a line beside or far from the field are left out. Plain
+   steps frame the target alone, as before.
+
+### 11.7 The docked card on phones
+
+`placement: "dock"`, and by default (Q1) every field step with a target and no `placement`,
+docks below `sm` (640 px): the card is full-width (8 px safe-area gutters) at the top or
+bottom edge of the **usable band** — the visual viewport less the keyboard
+(`readKeyboardInset`'s rules), raised above the highest `[data-tour-obstruction]`
+(NumberPadSheet and PickerSheet carry it; an app marks its own bottom layers) — on the edge
+away from the field. It keeps that edge until it would have to cover the field (no flip per
+keyboard frame), its height is capped to the free space (the body scrolls, title and buttons
+stay), and it re-docks on `visualViewport` resize/scroll and on a 250 ms tick (a pad
+opening moves nothing). On arrival the field's nearest scrollable ancestor (the sheet body;
+the window only outside a kit layer) brings it into the half away from the card, instead of
+`scrollIntoView`. From `sm` up `"dock"` is auto placement. `TourProvider
+dockOnPhones={false}` makes docking strictly opt-in.
+
+### 11.8 Focus, announcements, keys
+
+On a `gate`/`awaitInput`/`awaitGate` step the field's first control takes focus on a fine
+pointer (the card on a coarse one, so no keyboard or pad opens before the step is read),
+and is `aria-describedby` the card's body while the step lasts. Tab runs one ring over field
+and card (captured ahead of a sheet's own trap). A polite live region announces `gateReady`
+once and the hint on a locked press; `refuse` uses an assertive one. The kit never moves
+focus out of the field while the person types.
+
+### 11.9 Wizards
+
+Fields on a wizard step publish gates as in a form; steps the wizard skips are toured with
+`when` on a fact. **StepperNav** releases `"wizard-next"` when Next moved and refuses it when
+a validator kept the wizard in place, and releases `"wizard-finish"` once `onComplete`
+resolved, refusing it with the error's message when it threw. `{ target:
+'[data-tour="wizard-next"]', awaitGate: "wizard-next" }` replaces `awaitClick` on Next, which
+advanced on a refused Next. `useWizard`'s `goNext`/`finish` resolve their outcome at run
+time; their declared types stay `Promise<void>`.
+
+### 11.10 Tests
+
+- jsdom, one file per part (src/tour/__tests__): `tour-gates` (§11.1, §11.8),
+  `tour-when` (§11.2–§11.3), `tour-await-gate` (§11.4), `tour-start-at` (§11.5 and the
+  button), `tour-layers` (§11.6: insertion order, a later layer after the card, no shields
+  in a full-screen host, the Escape order), `tour-dock` (§11.7), and
+  src/wizard/__tests__/stepper-nav-tour-signals (§11.9).
+- The phone e2e, `node scripts/e2e-tour-phone.mjs` (Chromium, 390×844, touch), drives the
+  showcase specimen in LTR and RTL at Normal and Large text: the card is seen over the sheet
+  (an `elementFromPoint` hit), ring and no scrim; Next locked; the pad paints above the card,
+  which docks clear of pad and field; the pad's Done advances; the picker opens above the
+  card and a pick unlocks Next; Escape closes the pad, then the picker, and from the card
+  skips the tour with the sheet open; Save advances only on `release`; the note low in the
+  sheet is scrolled in by the sheet body, `window.scrollY` unchanged. It is run by hand, not
+  by `npm run check` (no Chromium on the shared machine), like `check:sweep`.
+
+### 11.11 Marcel's answers (2026-10-23)
+
+- **Q1** — dock by default on phones for field steps, together with the layer rule (§11.6,
+  §11.7).
+- **Q2** — a "Guide me" run (started with `at`) counts as completing the tour and awards its
+  points (§11.5).
+- **Q3** — after a refused save the card only OFFERS "Back to {field}" and never jumps by
+  itself (§11.4).
+
+Settled with the reviews: keksdose keeps two tours (`create-transaction` with both branches,
+`transfers-splits` reusing its gates); no `useTourFact` (gates carry the facts).
+
+### 11.12 Where the build differs from the contract
+
+- **Escape in the field** (§11.6.4): the contract's "the pad closes, then the tour on the next
+  press" holds from the card. With focus still in the field, an Escape with no layer of the
+  field's own open does nothing — §8's "Escape inside the target belongs to the field", and
+  0.46's pinned behaviour — rather than skipping the tour.
+- **The kit's number pad commits on Escape** as its Done does (numpad-sheet.tsx), so Escape
+  in an open pad over a filled gate field also moves the tour on.
+- **`data-tour-obstruction`** is on NumberPadSheet and PickerSheet; a Modal on a phone is a
+  bottom sheet but holds the field (or is opened over everything by a save), so it is not
+  marked.
+- **Two `data-kit-layer` values:** `""` and `"backdrop"` (Modal, FullBleedDialog), so the
+  full-screen test measures the panel, not the backdrop that always covers the viewport.
+

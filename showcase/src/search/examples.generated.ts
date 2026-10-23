@@ -538,6 +538,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "urlSync — the view lives in the address",
     "serverPagination — the server owns the rows",
     "Phone layout — mobileCard, mobileGroupBy, mobileSwipeActions",
+    "A contact card: own links, and tap to open",
     "useTableUrlState, filterHref and the filter builders",
   ],
   "data-table-parts": [
@@ -687,6 +688,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Guided tour — useTour + TourProvider",
     "Tour — labels, placements, beforeStep and a missing target",
     "TourStep — the shape a step actually takes",
+    "Guided form tour — gates, awaitGate and Guide me",
+    "The form's side — one line per field",
     "Tour — the step after a spotlighted one",
     "TourCatalogue — the tours page body",
     "useTourProgress with an account",
@@ -1340,6 +1343,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "tour": [
     "GuidedTour",
+    "GuidedFormTourDemo",
     "TourStaleSpotlight022Demo",
     "TourCatalogueDemo",
   ],

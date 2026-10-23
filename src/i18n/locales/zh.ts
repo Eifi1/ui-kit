@@ -600,6 +600,19 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       awaitClickHint: "点击高亮的元素以继续",
       awaitInputHint: "在高亮的字段中输入一个值以继续", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
+      // 0.50: guided form tours (docs/tours-harmonization.md §11).
+      leaveEmpty: "留空",
+      optional: "可选",
+      gateHint: "填写高亮的字段以继续",
+      gateReady: "已就绪。按“下一步”或回车键继续。",
+      awaitGateHint: "保存以继续",
+      awaitGateRefused: "尚未保存。请检查表单后重试。",
+      backToStep: (title) => `返回“${title}”`,
+    },
+    // 0.50: the form's "Guide me" (TourGuideButton, docs/tours-harmonization.md §11).
+    tourGuide: {
+      label: "引导我",
+      description: "逐个字段引导您填写此表单",
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page.
     tourCatalogue: {

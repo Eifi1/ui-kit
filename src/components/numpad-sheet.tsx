@@ -209,6 +209,10 @@ export function NumberPadSheet({
     <div
       role="group"
       aria-label={text.panel}
+      // A kit layer, and the bottom layer a docked tour card stays clear of (0.50,
+      // docs/tours-harmonization.md §11.6).
+      data-kit-layer=""
+      data-tour-obstruction=""
       // Keep the host input focused when tapping the pad: preventDefault on
       // pointerdown blocks the focus/blur, while the buttons' click still fires.
       onPointerDown={(e) => e.preventDefault()}

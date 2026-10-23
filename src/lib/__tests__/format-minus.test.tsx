@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMoney, formatNumber, formatPercent } from "../format";
+import { formatMoney, formatNumber, formatPercent, formatWithMinus as publicFormatWithMinus } from "../format";
 import { formatWithMinus, TYPOGRAPHIC_MINUS } from "../minus";
 import { cellNumber, parseTable } from "../table-text";
 
@@ -81,5 +81,17 @@ describe("one minus sign (KIT-1)", () => {
     expect(de.map(cellNumber)).toEqual(values);
     // The typographic default is what Number() would NOT read: the reason for the option.
     expect(Number(formatNumber(-1.5, { locale: "en" }))).toBeNaN();
+  });
+});
+
+describe("formatWithMinus, public since 0.50 (KIT-1 follow-up)", () => {
+  it("is exported beside formatMoney, for an app's own Intl wrapper", () => {
+    expect(publicFormatWithMinus).toBe(formatWithMinus);
+    // keksdose's formatCurrency shape: its own Intl.NumberFormat, now the kit's minus.
+    const eur = new Intl.NumberFormat("en", { style: "currency", currency: "EUR" });
+    expect(publicFormatWithMinus(eur, -150)).toBe(`${M}€150.00`);
+    expect(publicFormatWithMinus(eur, -150)).toBe(formatMoney(-150, "EUR", { locale: "en" }));
+    expect(publicFormatWithMinus(eur, -150, "ascii")).toBe("-€150.00");
+    expect(publicFormatWithMinus(eur, 150)).toBe("€150.00");
   });
 });

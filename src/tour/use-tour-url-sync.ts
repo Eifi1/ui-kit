@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import * as ReactRouter from "react-router";
 import { useLocation, useNavigate, type Navigator } from "react-router";
 import { useSearchParamsState } from "../hooks/use-search-param-state";
-import { useTourOptional } from "./tour";
+import { useTourOptional, type TourStart } from "./tour";
+import { devWarnings } from "./tour-gates";
 
 /* ── useTourUrlSync ─────────────────────────────────────────────────────────── */
 
@@ -11,9 +12,11 @@ export interface UseTourUrlSyncOptions {
    * Start the tour `id` at `startIndex` (0-based) — the app's launcher, which builds the
    * steps, awaits its own `prepare()` and passes `onFinish` (the completion, the points
    * toast) to `useTour().start`. An unknown id should do nothing. May return a promise:
-   * the parameters are kept until it settles.
+   * the parameters are kept until it settles. Under a `TourProvider` the third argument is
+   * that provider's `start` (0.50, as `TourProvider launch` gets it), so one launcher serves
+   * both. Without a provider it is a `start` that does nothing (a development build warns).
    */
-  launch: (id: string, options: { startIndex: number }) => void | Promise<unknown>;
+  launch: (id: string, options: { startIndex: number }, start: TourStart) => void | Promise<unknown>;
   /**
    * Are the facts a tour's steps are built from loaded yet (keksdose's `ready`: the
    * caches a branching tour reads)? A deep link waits for it, keeping its parameters, so
@@ -120,9 +123,11 @@ export function useTourUrlSync({ launch, ready = true, stepAliases = [] }: UseTo
   const aliases = stepAliases.join("\n");
 
   const launchRef = useRef(launch);
+  const startRef = useRef<TourStart>(engine?.start ?? noProviderStart);
   const activeIdRef = useRef(activeId);
   useLayoutEffect(() => {
     launchRef.current = launch;
+    startRef.current = engine?.start ?? noProviderStart;
     activeIdRef.current = active ? activeId : null;
   });
   /** The `tour` value last seen in the URL: a tour starts when it CHANGES to an id. */
@@ -148,7 +153,7 @@ export function useTourUrlSync({ launch, ready = true, stepAliases = [] }: UseTo
     pendingRef.current = null;
     launchingRef.current = true;
     void Promise.resolve()
-      .then(() => launchRef.current(pending.id, { startIndex: pending.startIndex }))
+      .then(() => launchRef.current(pending.id, { startIndex: pending.startIndex }, startRef.current))
       .catch(() => undefined)
       .finally(() => {
         launchingRef.current = false;
@@ -182,6 +187,11 @@ export function useTourUrlSync({ launch, ready = true, stepAliases = [] }: UseTo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, activeId, index, pathname, search, hash, settled, aliases]);
 }
+
+/** `start` for a launcher run with no `TourProvider` above `useTourUrlSync`. */
+const noProviderStart: TourStart = () => {
+  if (devWarnings()) console.warn("[ui-kit] useTourUrlSync: the launcher's start needs a TourProvider above it.");
+};
 
 /* ── useTourCatalogueUrlState ───────────────────────────────────────────────── */
 

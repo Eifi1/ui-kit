@@ -162,6 +162,8 @@ try {
     ],
     // 0.46: `/sync` alone imports Dexie (§2.3); `/offline` loads without it.
     "./sync": ["dexie"],
+    // 0.50: `/testing/react` drives components through Testing Library; `/testing` stays pure.
+    "./testing/react": ["@testing-library/react"],
   };
   for (const [entry, peers] of Object.entries(optionalEntries)) {
     if (!subpaths.includes(entry)) fail(`${entry} is not in the exports map`);
@@ -340,12 +342,19 @@ try {
   // browser-safe, no package imports, and its token list baked from this tarball's
   // tokens.css — `@theme inline` names and AppShell's `--app-nav-h` left out.
   const testingDir = join(scratch, "node_modules", pkg.name, "dist", "testing");
+  // `react.js` is the sibling entry `@eifi1/ui-kit/testing/react` (0.50), which needs Testing
+  // Library by design; checked on its own below.
   const testingImports = readdirSync(testingDir)
-    .filter((f) => f.endsWith(".js"))
+    .filter((f) => f.endsWith(".js") && f !== "react.js")
     .flatMap((f) => [...readFileSync(join(testingDir, f), "utf8").matchAll(/\bfrom\s*["']([^."'][^"']*)["']/g)])
     .map((m) => m[1]);
   if (testingImports.length === 0) ok("dist/testing imports no package");
   else fail(`dist/testing imports ${testingImports.join(", ")}`);
+  const testingReactImports = [
+    ...readFileSync(join(testingDir, "react.js"), "utf8").matchAll(/\bfrom\s*["']([^."'][^"']*)["']/g),
+  ].map((m) => m[1]);
+  if (testingReactImports.join() === "@testing-library/react") ok("dist/testing/react.js imports Testing Library only");
+  else fail(`dist/testing/react.js imports ${testingReactImports.join(", ") || "nothing"}`);
   const [guard] = runProbe(
     `import { KIT_CSS_VARIABLES, undeclaredCssVariables } from ${JSON.stringify(specifierOf("./testing"))};\n` +
       `const files = Object.fromEntries(Array.from({ length: 10 }, (_, i) => ["f" + i + ".tsx", i ? "" : 'const a = "fill-[var(--surface)] bg-[var(--bg-surface)]";']));\n` +

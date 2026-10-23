@@ -94,10 +94,14 @@ describe("Tour interactive step", () => {
     expect(overlay()).not.toHaveAttribute("data-tour-interactive");
   });
 
-  it("drops under the kit's z-50 layers, still above the top bar (z-40), and is not modal", async () => {
+  // 0.50 (docs/tours-harmonization.md §11.6): the fixed z-[45] became z-50 in a container
+  // of its own at the end of <body> (on the page) or right after the layer holding the
+  // field — above the page and the top bar, under the layers the field opens later.
+  it("joins the layer stack at z-50 above the top bar (z-40), and is not modal", async () => {
     renderTour([{ ...STEP, interactive: true }, END]);
     await start();
-    expect(overlay()).toHaveClass("z-[45]");
+    expect(overlay()).toHaveClass("z-50");
+    expect(overlay().parentElement).toHaveAttribute("data-tour-layer");
     expect(overlay()).not.toHaveClass("z-[60]");
     expect(overlay()).toHaveAttribute("data-tour-interactive", "");
     expect(overlay()).not.toHaveAttribute("aria-modal");
@@ -128,7 +132,7 @@ describe("Tour awaitInput step", () => {
     await start();
     expect(screen.queryByRole("button", { name: "Next" })).toBeNull();
     expect(screen.getByText("Enter a value in the highlighted field to continue")).toBeInTheDocument();
-    expect(overlay()).toHaveClass("z-[45]");
+    expect(overlay()).toHaveClass("z-50");
   });
 
   it("advances once focus leaves the field with a new value — the number pad's Done", async () => {

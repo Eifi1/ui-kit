@@ -1064,6 +1064,8 @@ export function ComboboxPanel<V extends string | number>({
       // `aria-describedby` has nothing to collide with.
       {...rest}
       ref={panelRef}
+      // A kit layer, for the tour's layer order (0.50, docs/tours-harmonization.md §11.6).
+      data-kit-layer=""
       dir={dir}
       onKeyDown={onKeyDown}
       // A press in a panel opened from a row is inside this list for the core's outside

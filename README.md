@@ -75,6 +75,7 @@ when it chooses. To work on the design system and an app together, use
 | `@tanstack/react-query`, `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` | peer, `^5`, **optional** | Only `@eifi1/ui-kit/offline` imports them (0.45, the persisted query cache, `createQueryPersistence`); the main barrel does not. |
 | `idb-keyval` | peer, `^6`, **optional** | The persisted cache's default IndexedDB store, in `@eifi1/ui-kit/offline` only. |
 | `dexie` | peer, `^4`, **optional** | The sync engine's device copy, in `@eifi1/ui-kit/sync` only (0.46); `/offline` loads without it. |
+| `@testing-library/react` | peer, `>=16`, **optional** | `rowMenuAction` in `@eifi1/ui-kit/testing/react` only (0.50), for an app's own tests; `@eifi1/ui-kit/testing` stays pure. |
 | `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the appearance stores are singletons. |
 | `flag-icons` | **nothing — you supply the stylesheet** | See below. |
 
@@ -567,19 +568,19 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2175 names from 359 modules** — 1009 values and 1166 types. _Italic_ is a type-only export.
+**2188 names from 361 modules** — 1014 values and 1174 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2175 |
+| `@eifi1/ui-kit` | 2188 |
 | `@eifi1/ui-kit/chart` | 100 |
 | `@eifi1/ui-kit/shell` | 117 |
 | `@eifi1/ui-kit/data-table` | 56 |
-| `@eifi1/ui-kit/wizard` | 24 |
-| `@eifi1/ui-kit/tour` | 37 |
+| `@eifi1/ui-kit/wizard` | 25 |
+| `@eifi1/ui-kit/tour` | 48 |
 | `@eifi1/ui-kit/feedback` | 212 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
@@ -587,6 +588,7 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/currencies` | 3 |
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 11 |
+| `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 48 |
 | `@eifi1/ui-kit/offline` | 33 |
 | `@eifi1/ui-kit/sync` | 38 |
@@ -622,7 +624,7 @@ re-slicing of it, never a second API.
 | `lib/status-tone` | `STATUS_KINDS`, `statusTone`, _`StatusKind`_, _`StatusTone`_ |
 | `lib/date-format` | `DATE_FORMAT_PREFERENCES`, `dateFormatSample`, `dateFormatterFor`, `formatDateWithPreference`, `isDateFormatPreference`, `resolveDateFormat`, _`DateFormatOptions`_, _`DateFormatPreference`_, _`ResolvedDateFormat`_ |
 | `lib/device-settings` | `deviceSettings`, `registerDeviceSetting`, `resetDeviceSettings`, _`DeviceSetting`_, _`DeviceSettingKind`_ |
-| `lib/minus` | _`MinusStyle`_ |
+| `lib/minus` | `formatWithMinus`, _`MinusStyle`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
 | `lib/chip-edge-snap` | `refreshChipEdges` |
 
@@ -916,7 +918,7 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `wizard/types` | `DEFAULT_WIZARD_LABELS`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardLabels`_, _`WizardStepConfig`_, _`WizardUrlSync`_ |
+| `wizard/types` | `DEFAULT_WIZARD_LABELS`, _`FieldErrors`_, _`StepStatus`_, _`SummaryItem`_, _`SummarySection`_, _`UseWizardOptions`_, _`UseWizardReturn`_, _`ValidateResult`_, _`WizardFinishResult`_, _`WizardLabels`_, _`WizardStepConfig`_, _`WizardUrlSync`_ |
 | `wizard/use-wizard` | `useWizard` |
 | `wizard/wizard-context` | `useOptionalWizardContext`, `useWizardContext`, `useWizardNextGate`, `useWizardStepValidate`, `WizardContextProvider`, _`WizardContextValue`_ |
 | `wizard/validation` | `requiredFieldsValidator`, _`RequiredFieldSpec`_ |
@@ -928,11 +930,13 @@ re-slicing of it, never a second API.
 
 | Module | Exports |
 |---|---|
-| `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourCompletion`_, _`TourLabels`_, _`TourPlacement`_, _`TourStep`_ |
+| `tour/tour` | `DEFAULT_TOUR_LABELS`, `TourProvider`, `useTour`, `useTourOptional`, _`TourAt`_, _`TourCompletion`_, _`TourLabels`_, _`TourLauncher`_, _`TourPlacement`_, _`TourStart`_, _`TourStep`_, _`TourStepContext`_ |
 | `tour/tour-catalogue` | `DEFAULT_TOUR_CATALOGUE_LABELS`, `TourCatalogue`, `TourCatalogueCard`, _`TourCatalogueCardProps`_, _`TourCatalogueLabels`_, _`TourCatalogueProps`_ |
 | `tour/tour-info` | `doneCount`, `earnedPoints`, `isTourDone`, `isTourNew`, `isTourReset`, _`TourCompletions`_, _`TourGroup`_, _`TourInfo`_, _`TourUpdate`_ |
 | `tour/use-tour-progress` | `completeTour`, `resetTourProgress`, `signOutTourProgress`, `useTourProgress`, _`TourProgress`_, _`TourProgressAccount`_, _`TourProgressAdopt`_, _`TourProgressBody`_, _`UseTourProgressOptions`_ |
 | `tour/use-tour-url-sync` | `useTourCatalogueUrlState`, `useTourUrlSync`, _`TourCatalogueFilter`_, _`TourStateFilter`_, _`UseTourUrlSyncOptions`_ |
+| `tour/tour-guide-button` | `DEFAULT_TOUR_GUIDE_LABELS`, `TourGuideButton`, _`TourGuideButtonProps`_, _`TourGuideLabels`_ |
+| `tour/tour-gates` | `useTourGate`, `useTourGateRelease`, _`TourGateRelease`_ |
 
 ### search
 

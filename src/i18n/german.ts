@@ -634,6 +634,19 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       awaitClickHint: "Klicken Sie auf das hervorgehobene Element, um fortzufahren",
       awaitInputHint: "Geben Sie im hervorgehobenen Feld einen Wert ein, um fortzufahren", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
+      // 0.50: guided form tours (docs/tours-harmonization.md §11).
+      leaveEmpty: "Leer lassen",
+      optional: "Optional",
+      gateHint: "Füllen Sie das hervorgehobene Feld aus, um fortzufahren",
+      gateReady: "Bereit. Drücken Sie Weiter oder die Eingabetaste, um fortzufahren.",
+      awaitGateHint: "Speichern Sie, um fortzufahren",
+      awaitGateRefused: "Das ist noch nicht gespeichert. Prüfen Sie das Formular und versuchen Sie es erneut.",
+      backToStep: (title) => `Zurück zu „${title}“`,
+    },
+    // 0.50: the form's "Guide me" (TourGuideButton, docs/tours-harmonization.md §11).
+    tourGuide: {
+      label: "Schritt für Schritt",
+      description: "Führt Sie Feld für Feld durch dieses Formular",
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page. keksdose's reviewed words.
     tourCatalogue: {

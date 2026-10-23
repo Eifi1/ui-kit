@@ -18,6 +18,7 @@ import * as tableText from "../table-text";
 import * as dates from "../lib/dates";
 import * as currencies from "../currencies";
 import * as testing from "../testing";
+import * as testingReact from "../testing/react";
 import * as eslintPlugin from "../eslint";
 import * as i18nDeCh from "../i18n/locales/de-CH";
 import * as i18nEn from "../i18n/locales/en";
@@ -297,7 +298,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.49.0 (+4, KIT-9, 2026-10-22): `useDocumentTitle`, `formatDocumentTitle`,
   // `DEFAULT_DOCUMENT_TITLE_FORMAT`, and the provider's `useKitDocumentTitle`.
   // 0.49.0 (+1, KIT-1b, 2026-10-22): `asciiMinusInNumbers`, the copy handler's rule.
-  ["@eifi1/ui-kit", barrel, 1009],
+  // 0.50.0 (+1, KIT-1 follow-up): `formatWithMinus`, the kit's minus for an app's own
+  // `Intl.NumberFormat` (keksdose's formatCurrency).
+  // 0.50.0 (guided form tours, docs/tours-harmonization.md §11, here and in /tour):
+  // `useTourGate`, `useTourGateRelease`, `TourGuideButton`, `DEFAULT_TOUR_GUIDE_LABELS` (+4).
+  ["@eifi1/ui-kit", barrel, 1014],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -331,7 +336,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).
-  ["@eifi1/ui-kit/tour", tour, 18],
+  // 0.50.0 (+4): `useTourGate`, `useTourGateRelease`, `TourGuideButton`,
+  // `DEFAULT_TOUR_GUIDE_LABELS` (§11, see the barrel).
+  ["@eifi1/ui-kit/tour", tour, 22],
   // 0.11.0: `useOptionalWizardContext` (+1 here and in the barrel), the non-throwing
   // read `useRhfWizardStep` registers through.
   // kastlan 51/52: `IntegerField` and `MoneyField` (+2). Showcase audit: `splitFileName` (+1).
@@ -394,6 +401,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `stubViewportWidth`, `viewportMatchMedia`, `stubResizeObserver`.
   // 0.35 (+1): `setViewportWidth`, a live resize of the active stub (keksdose's 0.34 report).
   ["@eifi1/ui-kit/testing", testing, 7],
+  // 0.50: `rowMenuAction`, the row "⋯" opener (keksdose's test/row-menu.ts). Its own entry:
+  // it needs Testing Library, and `/testing` reaches no package.
+  ["@eifi1/ui-kit/testing/react", testingReact, 1],
   // 0.35: the ESLint plugin, its `default` export only (`role-utilities`, KS Q6): an app's
   // lint config imports it in Node, so it imports nothing else of the kit.
   ["@eifi1/ui-kit/eslint", eslintPlugin, 1],
@@ -425,6 +435,7 @@ const STANDALONE = new Set([
   "@eifi1/ui-kit/dates",
   // Test helpers, never part of an app's bundle.
   "@eifi1/ui-kit/testing",
+  "@eifi1/ui-kit/testing/react",
   // Lint tooling, the same.
   "@eifi1/ui-kit/eslint",
   ...ENTRIES.map(([name]) => name).filter((name) => name.startsWith("@eifi1/ui-kit/i18n/")),

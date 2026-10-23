@@ -16,3 +16,6 @@ export { signOutTourProgress } from "./tour/use-tour-progress";
 export type { TourProgressAccount, TourProgressAdopt, TourProgressBody } from "./tour/use-tour-progress";
 export { useTourUrlSync, useTourCatalogueUrlState } from "./tour/use-tour-url-sync";
 export type { UseTourUrlSyncOptions, TourCatalogueFilter, TourStateFilter } from "./tour/use-tour-url-sync";
+// 0.50.0: guided form tours (docs/tours-harmonization.md §11) — "Guide me" inside a form.
+export { TourGuideButton, DEFAULT_TOUR_GUIDE_LABELS } from "./tour/tour-guide-button";
+export type { TourGuideButtonProps, TourGuideLabels } from "./tour/tour-guide-button";

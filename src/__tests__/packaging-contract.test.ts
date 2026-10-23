@@ -363,6 +363,32 @@ describe("@eifi1/ui-kit/testing is pure (0.33)", () => {
   });
 });
 
+/**
+ * 0.50: `@eifi1/ui-kit/testing/react` drives the kit's components through Testing Library
+ * (`rowMenuAction`). It is the pure entry's sibling, never part of it: the one package it
+ * reaches is `@testing-library/react`, an optional peer only an app's test suite installs.
+ */
+describe("@eifi1/ui-kit/testing/react reaches Testing Library only", () => {
+  it("reaches @testing-library/react and nothing else, and the pure entry does not reach it", () => {
+    expect([...packagesReachedFrom("src/testing/react.ts")]).toEqual(["@testing-library/react"]);
+    expect(packagesReachedFrom("src/index.ts")).not.toContain("@testing-library/react");
+  });
+
+  it("is an optional peer, and a devDependency for this repo's own tests", () => {
+    expect(pkg.peerDependencies["@testing-library/react"]).toBeDefined();
+    expect(pkg.peerDependenciesMeta?.["@testing-library/react"]?.optional).toBe(true);
+    expect(pkg.devDependencies["@testing-library/react"]).toBeDefined();
+    expect(pkg.dependencies["@testing-library/react"]).toBeUndefined();
+  });
+
+  it("is an exports entry", () => {
+    expect(pkg.exports["./testing/react"]).toEqual({
+      types: "./dist/testing/react.d.ts",
+      import: "./dist/testing/react.js",
+    });
+  });
+});
+
 describe("@eifi1/ui-kit/table-text is pure", () => {
   it("reaches no package at all — no React, nothing for a script or a worker to install", () => {
     expect([...packagesReachedFrom("src/table-text.ts")]).toEqual([]);

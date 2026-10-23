@@ -233,6 +233,27 @@ describe("EmailVerificationBanner — clampMobile (0.48, kastlan S2)", () => {
   });
 });
 
+describe("EmailVerificationBanner — actionPlacement (0.50, kastlan K1)", () => {
+  const flowOf = () => screen.getByRole("button", { name: /send again/i }).closest("[data-action-flow]");
+
+  it("passes flow through to the box: Send again stays on the message's line", () => {
+    render(<EmailVerificationBanner onResend={() => {}} variant="box" actionPlacement="flow" onDismiss={() => {}} />);
+    expect(flowOf()).not.toBeNull();
+  });
+
+  it("flow with clampMobile: the outcome still sits after the button, in the flowing row", () => {
+    render(<EmailVerificationBanner onResend={() => {}} variant="box" actionPlacement="flow" clampMobile />);
+    const flow = flowOf()!;
+    expect(flow).not.toBeNull();
+    expect(flow.querySelector('[role="status"]')).not.toBeNull();
+  });
+
+  it("default: a line of its own, as before", () => {
+    render(<EmailVerificationBanner onResend={() => {}} variant="box" />);
+    expect(flowOf()).toBeNull();
+  });
+});
+
 describe("EmailVerificationBanner — describeError (0.30.0)", () => {
   it("shows the server's own sentence for a refused resend, else the kit's", async () => {
     const throttled = Object.assign(new Error("429"), { detail: "Try again in 5 minutes." });

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DataTable } from "../../components/data-table";
 import type { DataTableColumn } from "../../components/data-table";
-import { GROW_PEER_CELL_CLASS } from "../../components/data-table-fit";
+import { GROW_PEER_CELL_CLASS, fitHideOrder } from "../../components/data-table-fit";
 import { mobileCardColumns } from "../../components/data-table-mobile";
 import type { RoleVocabulary } from "../../components/account-chips";
 import { UiKitProvider } from "../../i18n/kit-labels";
@@ -167,6 +167,49 @@ describe("userRosterColumns", () => {
     expect(within(ben).getAllByRole("cell").find((c) => c.dataset.col === "last_login")).toHaveClass(
       GROW_PEER_CELL_CLASS,
     );
+  });
+
+  it("fits by default: Name grows, Created then Last login leave a narrow table (0.50, kastlan K2)", () => {
+    const columns = userRosterColumns<Row, Role>({ roles: ROLES, extra: [OWNED], actions: () => [], emailColumn: true });
+    const fit = Object.fromEntries(columns.map((c) => [c.key, [c.grow ?? null, c.fitPriority ?? null]]));
+    expect(fit).toEqual({
+      name: [true, null],
+      email: [null, null],
+      role: [null, null],
+      state: [null, null],
+      created: [null, 1],
+      last_login: [null, 2],
+      owned: [null, null],
+      actions: [null, null],
+    });
+    // The one grow column, and the order the table leaves columns out in.
+    expect(columns.filter((c) => c.grow)).toHaveLength(1);
+    expect(fitHideOrder(columns).map((c) => c.key)).toEqual(["created", "last_login"]);
+    // The phone card is unchanged by it: created stays off, last login stays a field.
+    const { fields } = mobileCardColumns(columns.filter((c) => !c.mobileHidden && c.mobile !== "hidden"));
+    expect(fields.map((c) => c.key)).toEqual(["role", "last_login"]);
+  });
+
+  it("with the default fit, the chips still stack and the text cells keep one line (0.48 rules hold)", () => {
+    stubViewport(true);
+    render(<Roster />);
+    const table = screen.getByRole("table");
+    expect(table).toHaveAttribute("data-fit-grow");
+    const ben = screen.getByRole("row", { name: /Ben Sample/ });
+    const cells = within(ben).getAllByRole("cell");
+    const cell = (key: string) => cells.find((c) => c.dataset.col === key)!;
+    expect(cell("name")).toHaveClass("w-full", "max-w-0", "truncate-until-large");
+    for (const key of ["role", "state", "created", "last_login", "owned"]) {
+      expect(cell(key)).toHaveClass(GROW_PEER_CELL_CLASS);
+    }
+    for (const chip of [within(ben).getByText("Unverified"), within(ben).getByText("Member")]) {
+      const row = chip.closest("[data-state], [data-role]")!.parentElement!;
+      expect(row).toHaveClass("flex-wrap");
+      expect(row.className).not.toMatch(/flex-nowrap/);
+    }
+    // The 0.49 layout, for an app that wants it back: no grow, nothing classed.
+    const plain = userRosterColumns<Row, Role>({ roles: ROLES }).map((c) => ({ ...c, grow: undefined, fitPriority: undefined }));
+    expect(plain.some((c) => c.grow || c.fitPriority != null)).toBe(false);
   });
 
   it("writes the name in the reader's order", () => {

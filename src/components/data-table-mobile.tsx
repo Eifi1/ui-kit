@@ -72,7 +72,18 @@ const CARD_NO_TRUNCATE =
  * BETWEEN facts rather than between a label and its own value. `relative` holds a
  * header's `sr-only` text (an actions column's), as every kit container must.
  */
-export function StackedFields<T>({ columns, row, compact }: { columns: DataTableColumn<T>[]; row: T; compact: boolean }) {
+export function StackedFields<T>({
+  columns,
+  row,
+  compact,
+  liftOwnClicks = false,
+}: {
+  columns: DataTableColumn<T>[];
+  row: T;
+  compact: boolean;
+  /** On a stretched card (0.50 K4): lift the own-click fields above its title link. */
+  liftOwnClicks?: boolean;
+}) {
   const fields = filledFields(columns, row);
   if (fields.length === 0) return null;
   return (
@@ -85,7 +96,7 @@ export function StackedFields<T>({ columns, row, compact }: { columns: DataTable
           <dt className="text-xs uppercase tracking-wide text-muted">{col.header}</dt>
           <dd
             {...dataAttrsOf(col.cellProps?.(row))}
-            className="mt-0.5 min-w-0 break-words text-secondary"
+            className={cn("mt-0.5 min-w-0 break-words text-secondary", liftOwnClicks && keepsOwnClicks(col) && LIFTED_FIELD)}
           >
             {value}
           </dd>
@@ -94,6 +105,21 @@ export function StackedFields<T>({ columns, row, compact }: { columns: DataTable
     </dl>
   );
 }
+
+/**
+ * A stretched card's own-click cell (0.50 K4): above the title control's overlay
+ * (`after:z-[1]`), so its link or buttons take their own taps. `w-fit` keeps the lifted
+ * box to the cell's content, so the field's empty rest still opens the row.
+ */
+const LIFTED_CELL = "relative z-[2]";
+const LIFTED_FIELD = cn(LIFTED_CELL, "w-fit max-w-full justify-self-start");
+
+/**
+ * The keyboard frame of a stretched card (0.50 K4): FOCUS_RING's, inside the card,
+ * while its title control (`data-card-link`) has the focus.
+ */
+const STRETCHED_RING =
+  "has-[[data-card-link]:focus-visible]:ring-inset has-[[data-card-link]:focus-visible]:ring-focus has-[[data-card-link]:focus-visible]:ring-brand";
 
 /** The most fields the default phone card shows under its title (0.49 KIT-7). */
 export const MOBILE_CARD_FIELDS = 3;
@@ -308,6 +334,13 @@ export interface MobileRowProps<T> {
   mobileDir: Direction;
   /** No column the card renders owns a link, so the card itself may be one. */
   mobileCardLinkable: boolean;
+  /**
+   * The card draws cells that keep their own clicks, so it cannot be one control (0.50
+   * K4): its TITLE is the row's link (`rowHref`) or button (`onRowClick`), stretched over
+   * the card, and those cells sit above it. Only for the default card, never a
+   * `mobileCard`, and never when the title itself keeps its own clicks.
+   */
+  mobileCardStretched: boolean;
   mobileCard: DataTableProps<T>["mobileCard"];
   mobilePrimaryCol: DataTableColumn<T> | null;
   /** The `role: "status"` columns, drawn as chips beside the title (0.49 KIT-7). */
@@ -349,6 +382,7 @@ export function MobileRow<T>({
   swipeActionsFor,
   mobileDir,
   mobileCardLinkable,
+  mobileCardStretched,
   mobileCard,
   mobilePrimaryCol,
   mobileStatusColumns,
@@ -389,7 +423,10 @@ export function MobileRow<T>({
   // scrolling never meet the gesture. Until 0.40 an open card silently lost it.
   // In selection mode a sideways drag would be a second meaning for a selecting touch.
   const swipeEnabled = !!swipe && !selecting;
-  const href = mobileCardLinkable ? rowHref?.(row) : undefined;
+  // The stretched card (0.50 K4): the title is the control, the card a plain box.
+  // Selection mode keeps its own card (the whole card is the toggle there).
+  const stretched = mobileCardStretched && interactive && !selecting && !mobileCard && !!mobilePrimaryCol;
+  const href = mobileCardLinkable || stretched ? rowHref?.(row) : undefined;
   const cardClass = cn(
     "w-full text-start flex items-center",
     // §4: more room per row at Large — a taller row is a bigger tap target too.
@@ -409,7 +446,13 @@ export function MobileRow<T>({
     // AppShell main's `overflow-x-clip` — so the frame went missing on one side. A press
     // keeps the fill and the squeeze above; an outline on every tap of a long list would
     // be louder than the acknowledgement it replaces.
-    (interactive || selecting) && cn("[-webkit-tap-highlight-color:transparent] focus-visible:ring-inset", FOCUS_RING),
+    (interactive || selecting) &&
+      !stretched &&
+      cn("[-webkit-tap-highlight-color:transparent] focus-visible:ring-inset", FOCUS_RING),
+    // A stretched card (0.50 K4) draws the same frame, inside the card, while its TITLE
+    // control has the keyboard: the ring outlines the whole tap target, as on every other
+    // card, not the title's line alone. The own-click cells draw their own.
+    stretched && cn("relative [-webkit-tap-highlight-color:transparent]", STRETCHED_RING),
     selecting && "cursor-pointer",
     select?.selected && selecting && "bg-brand-soft",
     // A 500 ms hold would otherwise start a text selection, and iOS's link callout —
@@ -424,6 +467,45 @@ export function MobileRow<T>({
   // exactly one anchor exists per row.
   // The default card's filled fields and status values (0.49 KIT-7): an empty one
   // gets no line. Not computed for a `mobileCard`, which draws its own.
+  // The stretched card's title control (0.50 K4): the row's link, or a real <button>
+  // when the table only has `onRowClick` — a plain control, since nothing interactive
+  // sits inside it any more. Its `::after` covers the whole card, so a tap anywhere
+  // but on an own-click cell (lifted above it) lands on it, and a long press on the
+  // card is a long press on the link ("open in new tab"). Its accessible name is the
+  // title alone; the fields read as text after it. `data-row-link` marks it as the
+  // row itself for `fromOwnControl`, so the long press still arms on it.
+  const stretchedClass =
+    "block w-full text-start focus-visible:outline-none after:absolute after:inset-0 after:z-[1] after:content-['']";
+  const titleControl = (title: ReactNode) =>
+    href ? (
+      <RowLink
+        href={href}
+        data-card-link=""
+        data-row-link=""
+        onActivate={() => onRowClick!(row)}
+        aria-expanded={opensRow ? expanded : undefined}
+        className={stretchedClass}
+        // Enter follows RowLink's own onClick; Space opens the row too, not the list's scroll.
+        onKeyDown={(e) => {
+          if (e.key !== " ") return;
+          e.preventDefault();
+          onRowClick!(row);
+        }}
+      >
+        {title}
+      </RowLink>
+    ) : (
+      <button
+        type="button"
+        data-card-link=""
+        data-row-link=""
+        aria-expanded={opensRow ? expanded : undefined}
+        onClick={() => onRowClick!(row)}
+        className={cn(stretchedClass, "font-[inherit]")}
+      >
+        {title}
+      </button>
+    );
   const fields = mobileCard ? [] : filledFields(mobileSecondaryColumns, row);
   const statuses = mobileCard ? [] : filledFields(mobileStatusColumns, row);
   const actionCells = mobileCard ? [] : filledFields(mobileActionColumns, row);
@@ -455,7 +537,7 @@ export function MobileRow<T>({
                     data-card-title=""
                     className="min-w-0 flex-1 break-words font-medium"
                   >
-                    {mobilePrimaryCol.cell(row)}
+                    {stretched ? titleControl(mobilePrimaryCol.cell(row)) : mobilePrimaryCol.cell(row)}
                   </div>
                 )}
                 {statuses.length > 0 && (
@@ -472,7 +554,7 @@ export function MobileRow<T>({
             {fields.length > 0 && large ? (
               // §4: each label ABOVE its value at Large. Side by side, a label column
               // sized to the widest label leaves a value a sliver of a 240 px card.
-              <StackedFields columns={mobileSecondaryColumns} row={row} compact={compact} />
+              <StackedFields columns={mobileSecondaryColumns} row={row} compact={compact} liftOwnClicks={stretched} />
             ) : fields.length > 0 && (
               <dl
                 className={cn(
@@ -487,7 +569,7 @@ export function MobileRow<T>({
                     </dt>
                     <dd
                       {...dataAttrsOf(col.cellProps?.(row))}
-                      className="min-w-0 text-secondary self-center"
+                      className={cn("min-w-0 text-secondary self-center", stretched && keepsOwnClicks(col) && LIFTED_FIELD)}
                     >
                       {value}
                     </dd>
@@ -500,7 +582,11 @@ export function MobileRow<T>({
             {actionCells.length > 0 && (
               <div data-card-actions="" className="flex min-w-0 flex-wrap items-center justify-end gap-2">
                 {actionCells.map(({ col, value }) => (
-                  <div key={col.key} {...dataAttrsOf(col.cellProps?.(row))} className="flex min-w-0 justify-end">
+                  <div
+                    key={col.key}
+                    {...dataAttrsOf(col.cellProps?.(row))}
+                    className={cn("flex min-w-0 justify-end", stretched && LIFTED_CELL)}
+                  >
                     {value}
                   </div>
                 ))}
@@ -590,6 +676,11 @@ export function MobileRow<T>({
         className="pointer-events-none shrink-0 self-center"
         inputClassName="pointer-events-none"
       />
+      {cardInner}
+    </div>
+  ) : stretched ? (
+    // The stretched card (0.50 K4): a plain box; its title is the control (above).
+    <div {...press} data-card-stretched="" className={cardClass}>
       {cardInner}
     </div>
   ) : interactive && href ? (

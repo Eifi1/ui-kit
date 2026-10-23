@@ -621,6 +621,19 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       awaitClickHint: "Faccia clic sull’elemento evidenziato per continuare",
       awaitInputHint: "Inserisca un valore nel campo evidenziato per continuare", // 0.46: TourStep.awaitInput (keksdose live #436).
       step: (current, total) => `${n(current)} / ${n(total)}`,
+      // 0.50: guided form tours (docs/tours-harmonization.md §11).
+      leaveEmpty: "Lascia vuoto",
+      optional: "Facoltativo",
+      gateHint: "Compili il campo evidenziato per continuare",
+      gateReady: "Pronto. Prema Avanti o Invio per continuare.",
+      awaitGateHint: "Salvi per continuare",
+      awaitGateRefused: "Non è ancora stato salvato. Controlli il modulo e riprovi.",
+      backToStep: (title) => `Torna a «${title}»`,
+    },
+    // 0.50: the form's "Guide me" (TourGuideButton, docs/tours-harmonization.md §11).
+    tourGuide: {
+      label: "Guidami",
+      description: "La guida in questo modulo, campo per campo",
     },
     // 0.43.0 — docs/tours-harmonization.md §3, §8: the tours page. keksdose's reviewed words.
     tourCatalogue: {

@@ -20,6 +20,7 @@ import { useKitLabels } from "../i18n/kit-labels";
 import { DEFAULT_WIZARD_LABELS } from "./types";
 import { toast } from "../components/toast";
 import type {
+  WizardFinishResult,
   FieldErrors,
   StepStatus,
   UseWizardOptions,
@@ -341,8 +342,8 @@ export function useWizard<TData extends Record<string, unknown>>(
    */
   const advancingRef = useRef(false);
 
-  const goNext = useCallback(async () => {
-    if (advancingRef.current) return;
+  const goNext = useCallback(async (): Promise<boolean | undefined> => {
+    if (advancingRef.current) return undefined;
     advancingRef.current = true;
     const from = state.currentStepIndex;
     // Pending state for the chrome (spinner, aria-busy). The ref above is still what
@@ -351,7 +352,9 @@ export function useWizard<TData extends Record<string, unknown>>(
     try {
       if (await runStepValidators()) {
         dispatch({ type: "GO_NEXT", from });
+        return true;
       }
+      return false;
     } finally {
       dispatch({ type: "SET_VALIDATING", value: false });
       advancingRef.current = false;
@@ -431,16 +434,16 @@ export function useWizard<TData extends Record<string, unknown>>(
     dispatch({ type: "SET_FIELD_ERRORS", errors: {} });
   }, []);
 
-  const finish = useCallback(async () => {
-    if (!onComplete || !canFinish) return;
+  const finish = useCallback(async (): Promise<WizardFinishResult | undefined> => {
+    if (!onComplete || !canFinish) return undefined;
     // A commit with steps after it happens once: those steps exist because the
     // data has been written. (A last-step commit keeps its old behaviour — the app
     // may retry Finish after `onComplete` resolved, as it always could.)
-    if (commitStepIndex < steps.length - 1 && state.committedStepIndex !== null) return;
+    if (commitStepIndex < steps.length - 1 && state.committedStepIndex !== null) return undefined;
     // The same re-entry guard as `goNext`: a double-click on Finish would otherwise
     // validate twice and call `onComplete` twice — `isSubmitting` is only set once
     // validation has passed, too late to stop the second click.
-    if (advancingRef.current) return;
+    if (advancingRef.current) return undefined;
     advancingRef.current = true;
     const from = state.currentStepIndex;
     try {
@@ -454,16 +457,18 @@ export function useWizard<TData extends Record<string, unknown>>(
       } finally {
         dispatch({ type: "SET_VALIDATING", value: false });
       }
-      if (!valid) return;
+      if (!valid) return { ok: false };
       submittingRef.current = true;
       dispatch({ type: "SET_SUBMITTING", value: true });
       dispatch({ type: "SET_ERROR", error: null });
       try {
         await onComplete(state.data);
         dispatch({ type: "COMMITTED", from });
+        return { ok: true };
       } catch (err) {
         const message = err instanceof Error && err.message ? err.message : genericError;
         dispatch({ type: "SET_ERROR", error: message });
+        return { ok: false, error: err instanceof Error && err.message ? err.message : undefined };
       } finally {
         submittingRef.current = false;
         dispatch({ type: "SET_SUBMITTING", value: false });
@@ -507,12 +512,14 @@ export function useWizard<TData extends Record<string, unknown>>(
     canCancel,
     canDone,
     canGoToStep,
-    goNext,
+    // Their outcomes are what StepperNav tells a running tour (0.50); the declared types stay
+    // `Promise<void>`, so an app's `let p: Promise<void> = wizard.goNext()` still compiles.
+    goNext: goNext as () => Promise<void>,
     goBack,
     goToStep,
     skip,
     cancel,
-    finish,
+    finish: finish as () => Promise<void>,
     done,
     registerStepValidate,
     nextBlocked,

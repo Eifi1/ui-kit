@@ -272,6 +272,7 @@ const Numbers022Demo = lazySection(() => import("./sections/numbers-022-demo"), 
 const FeedbackAttachmentRefs022Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackAttachmentRefs022Demo");
 const TourStaleSpotlight022Demo = lazySection(() => import("./sections/tour"), "TourStaleSpotlight022Demo");
 const TourCatalogueDemo = lazySection(() => import("./sections/tour"), "TourCatalogueDemo");
+const GuidedFormTourDemo = lazySection(() => import("./sections/tour-guided-form"), "GuidedFormTourDemo");
 const Fields022Demo = lazySection(() => import("./sections/fields"), "Fields022Demo");
 const CheckboxGroup022Demo = lazySection(() => import("./sections/choices"), "CheckboxGroup022Demo");
 const CommitControls022Demo = lazySection(() => import("./sections/forms-rhf"), "CommitControls022Demo");
@@ -1203,10 +1204,15 @@ export const GROUPS: ShowcaseGroup[] = [
           "completeTour",
           "useTourUrlSync",
           "useTourCatalogueUrlState",
+          "useTourGate",
+          "useTourGateRelease",
+          "TourGuideButton",
+          "DEFAULT_TOUR_GUIDE_LABELS",
         ],
         Body: () => (
           <>
             <GuidedTour />
+            <GuidedFormTourDemo />
             <TourStaleSpotlight022Demo />
             <TourCatalogueDemo />
           </>

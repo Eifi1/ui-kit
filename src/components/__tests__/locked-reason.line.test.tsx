@@ -12,6 +12,7 @@ import { EntityCombobox } from "../entity-combobox";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
 import { Autocomplete } from "../autocomplete";
 import { CountrySelect } from "../country-select";
+import { CurrencySelect } from "../currency-select";
 import { List, ListItem } from "../list";
 import { WriteLockProvider } from "../write-lock";
 import type { DisabledReasonDisplay } from "../field-parts";
@@ -81,6 +82,7 @@ const FIELDS: Array<[string, (lock: Lock) => ReactElement, string, string]> = [
     "Address",
   ],
   ["CountrySelect", (l) => <CountrySelect label="Country" value="CH" onChange={noop} {...l} />, "combobox", "Country"],
+  ["CurrencySelect", (l) => <CurrencySelect label="Currency" value="CHF" onChange={noop} {...l} />, "combobox", "Currency"],
   [
     "ListItem",
     (l) => (

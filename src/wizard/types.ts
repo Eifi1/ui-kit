@@ -119,6 +119,13 @@ export interface UseWizardOptions<TData extends Record<string, unknown>> {
 
 export type StepStatus = "upcoming" | "active" | "completed" | "skipped";
 
+
+/** What `finish` resolves to at run time (0.50): whether the commit went through, and the
+ *  error's message when `onComplete` threw. `undefined` when there was nothing to run. */
+export interface WizardFinishResult {
+  ok: boolean;
+  error?: string;
+}
 export interface UseWizardReturn<TData extends Record<string, unknown>> {
   // Navigation
   currentStepIndex: number;
@@ -146,12 +153,17 @@ export interface UseWizardReturn<TData extends Record<string, unknown>> {
   /** Whether the indicator may jump to `index` — a completed/skipped/active step on
    *  the right side of any commit. `goToStep` refuses anything this rejects. */
   canGoToStep: (index: number) => boolean;
+  /** Validates the step and moves on. (0.50: at run time it resolves `true` when it
+   *  moved, `false` when a validator kept it in place — what StepperNav tells a running
+   *  tour, docs/tours-harmonization.md §11.9. The declared type stays `Promise<void>`.) */
   goNext: () => Promise<void>;
   /** One step back — or, on the first step, `onExit`. Refused while submitting. */
   goBack: () => void;
   goToStep: (index: number) => void;
   skip: () => void;
   cancel: () => void;
+  /** Validates and commits (`onComplete`). (0.50: at run time it resolves `{ ok, error? }`
+   *  — see {@link WizardFinishResult}; the declared type stays `Promise<void>`.) */
   finish: () => Promise<void>;
   /** Leave after the post-commit steps: drops the URL param, then calls `onDone`. */
   done: () => void;

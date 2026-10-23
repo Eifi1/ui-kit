@@ -78,11 +78,15 @@ export function GuidedTour() {
               ["body: ReactNode", "Card copy — a node, not a string."],
               ["action?: ReactNode", "Extra footer row, e.g. a shortcut button."],
               ["padding?: number", "Spotlight padding around the target, px (default 8)."],
-              ["placement?", '"top" | "bottom" | "start" | "end" | "left" | "right" | "center"; omit for auto. start/end follow the target\'s reading direction, left/right are physical'],
+              ["placement?", '"top" | "bottom" | "start" | "end" | "left" | "right" | "center" | "dock"; omit for auto. start/end follow the target\'s reading direction, left/right are physical; "dock" pins the card to the band\'s edge on a phone (the default for field steps)'],
               ["awaitClick?: boolean", "Advance only when the TARGET is clicked. Needs `target`."],
               ["interactive?: boolean", "The target is for using — the layers it opens (number pad, menus, popovers at z-50) sit above the scrim."],
               ["awaitInput?: boolean", "Advance once a value was entered in the target's field (blur or Enter). Implies interactive."],
-              ["beforeStep?", "Sync or async; awaited before the target is located."],
+              ["gate?: string", "0.50: Next stays locked until the form's useTourGate(key, true). Implies interactive."],
+              ["optional?: boolean", "0.50: an Optional chip, and Leave empty while the gate is unsatisfied."],
+              ["when?: (ctx) => boolean", "0.50: shown only if true on arrival; ctx.gate(key) reads a published fact."],
+              ["awaitGate?: string", "0.50: advances only on useTourGateRelease().release(key), e.g. a save's onSuccess."],
+              ["beforeStep?", "Sync or async; awaited before the target is located. Receives { gate, via } (0.50)."],
             ]}
           />
         </div>
