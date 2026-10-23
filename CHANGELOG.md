@@ -21,6 +21,39 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.50.0](https://github.com/Eifi1/ui-kit/compare/v0.49.0...v0.50.0) (2026-10-23)
+
+### ⚠ BREAKING CHANGES
+
+* **user-roster:** layout only — a roster becomes a fitting table on a
+  bump; `{ ...c, grow: undefined, fitPriority: undefined }` restores 0.49.
+
+### Added
+
+* **auth:** EmailVerificationBanner passes actionPlacement through ([b346e4d](https://github.com/Eifi1/ui-kit/commit/b346e4d603eda9c44c5cca0de54819fe4911421b))
+* **currency-select:** lock like Select — disabled, disabledReason, commit (keksdose) ([f7950ce](https://github.com/Eifi1/ui-kit/commit/f7950ce45133cf2cf9c2643097255fcff5ba8f14))
+* **data-table:** a phone card with own-click cells keeps opening the row (kastlan K4) ([b92069c](https://github.com/Eifi1/ui-kit/commit/b92069c27c97c3f37396703f83b9d4809291f341))
+* **format:** export formatWithMinus for an app's own Intl wrapper ([d1deef6](https://github.com/Eifi1/ui-kit/commit/d1deef6860458458d5734c94e128a1b1dc958d94))
+* **testing:** rowMenuAction in @eifi1/ui-kit/testing/react ([1b9fbd5](https://github.com/Eifi1/ui-kit/commit/1b9fbd58aec410454393bc3ea2ba3b5bda87fdee))
+* **tour:** awaitGate steps with useTourGateRelease's release and refuse ([96dee98](https://github.com/Eifi1/ui-kit/commit/96dee985323c36404ee3cd13d0ce570c33e3df71))
+* **tour:** launch gets the provider's own start as a third argument ([b4837d9](https://github.com/Eifi1/ui-kit/commit/b4837d9ddf00f2ac5840210cb279b100fb88d1d4))
+* **tour:** optional fields, conditional steps and the run's own counter ([3530a0c](https://github.com/Eifi1/ui-kit/commit/3530a0ca101d32c5b312601a51df4b29036fa826))
+* **tour:** start inside an open form — `at`, start(id) and TourGuideButton ([12957e6](https://github.com/Eifi1/ui-kit/commit/12957e6f16b817383adf0e1c729fced54c9564a2))
+* **tour:** the docked card on phones (placement "dock", the default for field steps) ([75dfb93](https://github.com/Eifi1/ui-kit/commit/75dfb938f808fd7af53052b78fd42b0ab69d9f09))
+* **tour:** the guided form tours' words in seven languages ([dfb328d](https://github.com/Eifi1/ui-kit/commit/dfb328d6508c4d80e2568ba55077350111cbd8a8))
+* **tour:** value gates — useTourGate and a step's locked Next ([0fef15e](https://github.com/Eifi1/ui-kit/commit/0fef15ece9e10b9aa93013a1f59bbf4d0d7f7b2a))
+* **user-roster:** fit by default, Name grows, Created and Last login leave ([a8230a7](https://github.com/Eifi1/ui-kit/commit/a8230a7bee39bb3cd26bf3c3c6ff6e291ab992e1))
+* **wizard:** StepperNav releases and refuses "wizard-next" and "wizard-finish" ([bf0156b](https://github.com/Eifi1/ui-kit/commit/bf0156b7fe379580df8482018cbefecce242edfa))
+
+### Fixed
+
+* **amount-input:** a disabled field's currency chip is a read-out too ([310fe07](https://github.com/Eifi1/ui-kit/commit/310fe077ec8b005b74adb72a74b6762eaba3070c))
+* **fields:** AmountInput and NumberInput pass data-* to their root (keksdose) ([f05fc35](https://github.com/Eifi1/ui-kit/commit/f05fc35280c67c37b9b15968352f99bda44d704d))
+* **tour:** a field step's card shows above the sheet holding the field (keksdose B1) ([239aaac](https://github.com/Eifi1/ui-kit/commit/239aaacdea98872e635baf3905bd02794fa98bc1))
+* **tour:** a field step's ring frames the field's own lines ([aaf6ffd](https://github.com/Eifi1/ui-kit/commit/aaf6ffd72324188e582159d556cce2a5403483fb))
+* **tour:** a number pad taller than half the phone still bounds the docked card ([329f56a](https://github.com/Eifi1/ui-kit/commit/329f56ac4ad66980767c9a54957cfbffe55e2344))
+* **tour:** warn when a gate's publisher leaves under the step ([bfb68d7](https://github.com/Eifi1/ui-kit/commit/bfb68d70d35f0b39080bc9612b35235e33e1c967))
+
 ## [0.49.0](https://github.com/Eifi1/ui-kit/compare/v0.48.2...v0.49.0) (2026-10-22)
 
 ### ⚠ BREAKING CHANGES
