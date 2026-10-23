@@ -29,6 +29,8 @@ export interface Band {
 export const DOCK_MAX_WIDTH = 640;
 /** The gutter between the card and the band's edge, and between the card and the field. */
 const GUTTER = 8;
+/** An obstruction whose top is within this of the band's top covers the screen. */
+const FULL_SCREEN_SLACK = 64;
 /** Under this much free space on its edge the card flips (the hysteresis floor). */
 const MIN_DOCK = 140;
 
@@ -36,8 +38,9 @@ const MIN_DOCK = 140;
  * The usable band now: the visual viewport while a keyboard is up (`readKeyboardInset`'s
  * rules — pinch zoom is not a keyboard, 100 px minimum), else the layout viewport; its
  * bottom raised to the top of the highest visible obstruction that holds neither the field
- * nor the card. An obstruction that reaches the band's top half (a full-screen picker,
- * opened over everything) is not a bottom layer and is ignored.
+ * nor the card. An obstruction that starts at the band's top (a full-screen picker, opened
+ * over everything) is not a bottom layer and is ignored; a tall one (the number pad at
+ * Large text is over half a phone) still counts.
  */
 export function readBand(target: Element | null, card: Element | null): Band {
   const vh = window.innerHeight;
@@ -48,11 +51,10 @@ export function readBand(target: Element | null, card: Element | null): Band {
     top = vv.offsetTop;
     bottom = vv.offsetTop + vv.height;
   }
-  const mid = top + (bottom - top) / 2;
   for (const el of Array.from(document.querySelectorAll("[data-tour-obstruction]"))) {
     if ((target && el.contains(target)) || (card && el.contains(card))) continue;
     const r = el.getBoundingClientRect();
-    if (r.width <= 0 || r.height <= 0 || r.top <= mid) continue;
+    if (r.width <= 0 || r.height <= 0 || r.top <= top + FULL_SCREEN_SLACK) continue;
     if (r.top < bottom) bottom = r.top;
   }
   return { top, bottom };

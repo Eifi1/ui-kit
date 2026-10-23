@@ -68,6 +68,14 @@ describe("the band", () => {
     expect(readBand(field, null)).toEqual({ top: 0, bottom: 844 });
   });
 
+  it("counts a tall pad (Large text: over half the phone)", () => {
+    const pad = document.createElement("div");
+    pad.setAttribute("data-tour-obstruction", "");
+    document.body.appendChild(pad);
+    boxes.set(pad, { top: 385, left: 0, width: 390, height: 459 });
+    expect(readBand(null, null)).toEqual({ top: 0, bottom: 385 });
+  });
+
   it("ignores a full-screen obstruction (a picker opened over everything)", () => {
     const sheet = document.createElement("div");
     sheet.setAttribute("data-tour-obstruction", "");
