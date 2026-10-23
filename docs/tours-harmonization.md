@@ -196,8 +196,8 @@ need react-router, which is a required peer already.
   device reset (optional per app; keksdose keeps usage out of it). `doneCount` and
   `earnedPoints` count by `isTourDone`, for the header's x-of-y and points tile.
 - **`useTourUrlSync({launch, ready?, stepAliases?})`** (§2.7, §6.4): keksdose's
-  `TourUrlSync` on `useTourOptional()`. `launch(id, {startIndex})` is the app's launcher
-  (its steps, its `prepare()`, its `onFinish`). A tour starts whenever `?tour=` changes to
+  `TourUrlSync` on `useTourOptional()`. `launch(id, {startIndex}, start)` is the app's launcher
+  (its steps, its `prepare()`, its `onFinish`); `start` is the provider's (0.50, §11.5). A tour starts whenever `?tour=` changes to
   an id, on in-app navigation too, after `ready`; `&tourStep=` is 1-based. While a tour
   runs, the URL mirrors it (never during a navigation in flight — read off the history of a
   declarative router, off the data router's state under `createBrowserRouter` — never touching other
@@ -805,9 +805,23 @@ form's "Guide me" — a compass and the `tourGuide` words (`label`, `description
 languages); it renders nothing without a provider, without `launch`, or while a tour runs.
 Place it in the form's header or `FormActions`' `start` slot.
 
-The provider's `launch` calls `start` of that same provider, so the app keeps its launcher
-below the provider in a ref (the showcase specimen does exactly that):
-`launch={(id, o) => launcherRef.current?.(id, o)}`.
+The provider calls `launch(id, opts, start)` with **its own `start`** as the third argument
+(keksdose N4), so the launcher needs no ref and may be defined above the provider (the
+showcase specimen does exactly that):
+
+```tsx
+const launch: TourLauncher = async (id, { at, startIndex }, start) => {
+  const def = TOURS[id];
+  if (!def) return;
+  await def.prepare?.();
+  start(def.build(), { id, tour: tourInfo(def, t), at, startIndex, onFinish });
+};
+<TourProvider launch={launch}>…</TourProvider>   // and useTourUrlSync({ launch })
+```
+
+`useTourUrlSync` passes the same `start` (under a provider), so one function serves both.
+Additive: a two-argument launcher that reaches `start` its own way (a ref to a component
+below the provider) keeps working.
 
 ### 11.6 Layer order
 

@@ -156,7 +156,26 @@ describe("start by id", () => {
     const engine = setup({ launch });
     act(() => engine().start("create-transaction", { at: "txn-entry-mode" }));
     await flush();
-    expect(launch).toHaveBeenCalledWith("create-transaction", { at: "txn-entry-mode" });
+    expect(launch).toHaveBeenCalledWith("create-transaction", { at: "txn-entry-mode" }, engine().start);
+  });
+
+  it("hands launch the provider's own start, so a launcher defined above the provider needs no ref (keksdose N4)", async () => {
+    // Defined outside the tree, as an app's launcher above its provider is.
+    const launch: TourLauncher = (id, opts, start) => start(STEPS, { id, at: opts.at });
+    const engine = setup({ launch });
+    act(() => engine().start("create-transaction", { at: "txn-entry-mode" }));
+    await flush();
+    expect(engine().activeId).toBe("create-transaction");
+    expect(state()).toBe("step 2 (1 of 3)");
+  });
+
+  it("a two-argument launcher (0.50 before N4) still works", async () => {
+    const holder: { engine: () => Engine } = { engine: () => null as unknown as Engine };
+    const launch = (id: string, opts: { at?: string | number }) => holder.engine().start(STEPS, { id, at: opts.at });
+    holder.engine = setup({ launch });
+    act(() => holder.engine().start("create-transaction", { at: "txn-entry-mode" }));
+    await flush();
+    expect(state()).toBe("step 2 (1 of 3)");
   });
 
   it("does nothing without a launch", async () => {
@@ -176,14 +195,13 @@ describe("TourGuideButton", () => {
   });
 
   it("starts the tour by id at the anchor, with its description, and hides while the tour runs", async () => {
-    const holder: { engine: () => Engine } = { engine: () => null as unknown as Engine };
-    const launch = vi.fn<TourLauncher>((id, opts) => holder.engine().start(STEPS, { id, at: opts.at }));
-    holder.engine = setup({ launch }, <TourGuideButton tour="create-transaction" at="txn-entry-mode" />);
+    const launch = vi.fn<TourLauncher>((id, opts, start) => start(STEPS, { id, at: opts.at }));
+    setup({ launch }, <TourGuideButton tour="create-transaction" at="txn-entry-mode" />);
     const button = screen.getByRole("button", { name: "Guide me" });
     expect(button).toHaveAccessibleDescription("Walks you through this form, field by field");
     fireEvent.click(button);
     await flush();
-    expect(launch).toHaveBeenCalledWith("create-transaction", { at: "txn-entry-mode" });
+    expect(launch).toHaveBeenCalledWith("create-transaction", { at: "txn-entry-mode" }, expect.any(Function));
     expect(state()).toBe("step 2 (1 of 3)");
     expect(screen.queryByRole("button", { name: "Guide me" })).toBeNull();
   });

@@ -181,13 +181,24 @@ export { DEFAULT_TOUR_LABELS };
 /** 0.50 (§11.5): a step index, or the `data-tour` value of the step's anchor. */
 export type TourAt = number | string;
 
+/** `useTour().start`, both forms: what `TourProvider` hands its `launch` as the third argument. */
+export type TourStart = TourContextValue["start"];
+
 /**
  * 0.50 (§11.5): the app's launcher — the shape `useTourUrlSync` already takes, plus `at`.
  * It builds the steps (`prepare()`, `build()`, `tour: tourInfo(def)`) and passes `at` on to
  * `start(steps, { …, at })`. Give the same function to `TourProvider launch` and to
  * `useTourUrlSync`.
+ *
+ * `start` is the provider's own `start` (keksdose N4), so the launcher needs no ref to a
+ * component below the provider and may be defined above it. `useTourUrlSync` passes it too
+ * (under a provider). A two-argument launcher that reaches `start` its own way still works.
  */
-export type TourLauncher = (id: string, opts: { startIndex?: number; at?: TourAt }) => void | Promise<unknown>;
+export type TourLauncher = (
+  id: string,
+  opts: { startIndex?: number; at?: TourAt },
+  start: TourStart,
+) => void | Promise<unknown>;
 
 interface StartOptions {
   /** Stable id of the tour, surfaced as `activeId` so the app can mirror it to
@@ -450,6 +461,8 @@ export function TourProvider({
     },
     [arrive, forward, backward],
   );
+  // The provider's own `start`, handed to `launch` as its third argument (keksdose N4).
+  const ownStartRef = useRef<TourContextValue["start"] | null>(null);
   const start = useCallback(
     (what: TourStep[] | string, opts?: StartOptions | { at?: TourAt }) => {
       if (typeof what !== "string") {
@@ -461,10 +474,15 @@ export function TourProvider({
         if (devWarnings()) console.warn(`[ui-kit] start("${what}") needs TourProvider's \`launch\` prop.`);
         return;
       }
-      void Promise.resolve(run(what, { at: opts?.at })).catch((error: unknown) => console.error(error));
+      void Promise.resolve(run(what, { at: opts?.at }, ownStartRef.current!)).catch((error: unknown) =>
+        console.error(error),
+      );
     },
     [startSteps],
   ) as TourContextValue["start"];
+  useLayoutEffect(() => {
+    ownStartRef.current = start;
+  }, [start]);
   const stop = useCallback(() => {
     setSteps(null);
     setActiveId(null);

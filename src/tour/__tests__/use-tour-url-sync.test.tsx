@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter, RouterProvider, createMemoryRouter, useLocation, useNavigate } from "react-router";
 import { describe, expect, it, vi } from "vitest";
-import { TourProvider, useTour, type TourStep } from "../tour";
+import { TourProvider, useTour, type TourLauncher, type TourStep } from "../tour";
 import { useTourCatalogueUrlState, useTourUrlSync, type UseTourUrlSyncOptions } from "../use-tour-url-sync";
 
 /** docs/tours-harmonization.md §2.7, §2.8, §6.4: keksdose's tour-url-sync on the kit's engine. */
@@ -151,6 +151,25 @@ describe("useTourUrlSync", () => {
     act(() => screen.getByText("go-other").click());
     await flush();
     expect(url()).toBe("/other?q=x");
+  });
+
+  it("one launcher for TourProvider and useTourUrlSync: both hand it the provider's start (keksdose N4)", async () => {
+    // At module scope in an app, above its provider: no ref, no useTour().
+    const launch = vi.fn<TourLauncher>((id, opts, start) => start(STEPS, { id, startIndex: opts.startIndex, at: opts.at }));
+    function Shared() {
+      useTourUrlSync({ launch });
+      return <Probe />;
+    }
+    render(
+      <MemoryRouter initialEntries={["/budget?tour=budget&tourStep=2"]}>
+        <TourProvider launch={launch}>
+          <Shared />
+        </TourProvider>
+      </MemoryRouter>,
+    );
+    await flush();
+    expect(launch).toHaveBeenCalledWith("budget", { startIndex: 1 }, expect.any(Function));
+    expect(screen.getByRole("dialog")).toHaveTextContent("Step 2");
   });
 });
 

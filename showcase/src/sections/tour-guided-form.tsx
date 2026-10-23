@@ -1,5 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import { useCallback, useState } from "react";
 import {
   AmountInput,
   Button,
@@ -77,11 +76,20 @@ function steps(): TourStep[] {
 }
 
 export function GuidedFormTourDemo() {
-  // The provider's `launch` calls `start` of that same provider, so it reaches a function
-  // the component below the provider keeps in a ref.
-  const startRef = useRef<Starter | null>(null);
-  const launch = useCallback<TourLauncher>((id, opts) => {
-    if (id === INFO.id) startRef.current?.(opts);
+  const [outcome, setOutcome] = useState<string | null>(null);
+  // The launcher gets the provider's own `start` as its third argument, so it lives here,
+  // above the provider, with no ref to a component below it.
+  const launch = useCallback<TourLauncher>((id, opts, start) => {
+    if (id !== INFO.id) return;
+    setOutcome(null);
+    start(steps(), {
+      id: INFO.id,
+      tour: INFO,
+      at: opts.at,
+      startIndex: opts.startIndex,
+      onFinish: () => setOutcome("finished"),
+      onSkip: () => setOutcome("skipped"),
+    });
   }, []);
   return (
     <>
@@ -90,7 +98,7 @@ export function GuidedFormTourDemo() {
         hint="A TourProvider of its own with `launch`; the form is a FullBleedDialog, as on a phone."
       >
         <TourProvider launch={launch}>
-          <BookingDemo startRef={startRef} />
+          <BookingDemo outcome={outcome} />
         </TourProvider>
       </Example>
       <Example label="The form's side — one line per field" hint="useTourGate beside each field, release/refuse from the save">
@@ -101,6 +109,7 @@ export function GuidedFormTourDemo() {
             ['release("gt.saved")', "From the save's onSuccess: the awaitGate step moves on (the form may stay open)."],
             ['refuse("gt.saved", reason)', "From onError: the step stays, shows the reason and offers Back to an emptied field."],
             ['<TourGuideButton tour="…" at="gt-amount" />', "Starts the tour inside the open form: no intro, no Back past the amount."],
+            ["<TourProvider launch={(id, opts, start) => …}>", "The app's launcher builds the steps and calls start, the provider's own (third argument): no ref."],
           ]}
         />
         <Note>
@@ -113,39 +122,18 @@ export function GuidedFormTourDemo() {
   );
 }
 
-type Starter = (opts: { at?: number | string; startIndex?: number }) => void;
-
-function BookingDemo({ startRef }: { startRef: RefObject<Starter | null> }) {
+function BookingDemo({ outcome }: { outcome: string | null }) {
   const tour = useTour();
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [refuseNext, setRefuseNext] = useState(false);
-  const [outcome, setOutcome] = useState<string | null>(null);
-  const { start } = tour;
-  const begin = useCallback<Starter>(
-    (opts) => {
-      setOutcome(null);
-      start(steps(), {
-        id: INFO.id,
-        tour: INFO,
-        at: opts.at,
-        startIndex: opts.startIndex,
-        onFinish: () => setOutcome("finished"),
-        onSkip: () => setOutcome("skipped"),
-      });
-    },
-    [start],
-  );
-  useLayoutEffect(() => {
-    startRef.current = begin;
-  }, [startRef, begin]);
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Button
           variant="accent"
           disabled={tour.active}
-          onClick={() => begin({})}
+          onClick={() => tour.start(INFO.id)}
         >
           Take the guided tour
         </Button>
