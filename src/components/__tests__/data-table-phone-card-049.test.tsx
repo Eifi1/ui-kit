@@ -284,15 +284,23 @@ describe("a role: \"actions\" column on the default phone card (KIT-7)", () => {
     expect(cardOf("INV-1").querySelector("[data-card-actions]")).toBeNull();
   });
 
-  it("keeps its own clicks: the card is no link, and a press does not open the row", () => {
+  it("keeps its own clicks: the card is no single link, and a press does not open the row", () => {
     viewport(390);
     onDelete.mockClear();
     const onRowClick = vi.fn();
-    // Without noRowLink: the role alone keeps the card from being a link.
+    // Without noRowLink: the role alone keeps the card from being ONE link.
     const own = { ...actions, noRowLink: undefined };
     renderTable({ onRowClick, rowHref: (r) => `/invoices/${r.id}` }, [...COLUMNS, own]);
     const card = cardOf("INV-1");
-    expect(card.querySelector("a[href]")).toBeNull();
+    // Changed on purpose in 0.50 (K4, kastlan): until then the card fell back to a
+    // div role="button" and had NO link. Now its title is the row's link, stretched over
+    // the card, and the actions sit above it — one link, the title's, and never around
+    // the actions (data-table-phone-card-stretched-050.test.tsx has the rest).
+    const links = card.querySelectorAll("a[href]");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/invoices/1");
+    expect(links[0]).toHaveTextContent(/^INV-1$/);
+    expect(links[0].contains(within(card).getByRole("button", { name: "Delete INV-1" }))).toBe(false);
     fireEvent.click(within(card).getByRole("button", { name: "Delete INV-1" }));
     expect(onDelete).toHaveBeenCalledWith(1);
     expect(onRowClick).not.toHaveBeenCalled();

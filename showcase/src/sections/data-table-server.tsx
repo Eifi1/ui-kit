@@ -14,6 +14,7 @@ import {
   dateFilter,
   filterHref,
   numberFilter,
+  rowActionsColumn,
   selectFilter,
   textFilter,
   useTableUrlState,
@@ -57,6 +58,7 @@ export function DataTableServerSection() {
       <UrlSyncTable />
       <ServerTable />
       <PhoneTable />
+      <ContactCardsTable />
     </>
   );
 }
@@ -711,6 +713,102 @@ export function DataTableUrlFiltersDemo() {
           {code("units.q")}, and the two tables no longer share a sort or a page.
         </Note>
       </div>
+    </Example>
+  );
+}
+
+/* ── a contact card: own links on a card that opens the row (0.50 K4) ───────── */
+
+interface Contact {
+  id: string;
+  name: string;
+  company: string;
+  phone: string;
+  email: string;
+  notes: string;
+}
+
+const CONTACTS: Contact[] = [
+  { id: "c1", name: "Ada Example", company: "Example AG", phone: "+41 44 000 00 01", email: "ada@example.com", notes: "Calls back after 5" },
+  { id: "c2", name: "Ben Sample", company: "Sample GmbH", phone: "+41 44 000 00 02", email: "ben@example.com", notes: "Prefers email" },
+  { id: "c3", name: "Chiara Muster", company: "Muster & Co.", phone: "+41 44 000 00 03", email: "chiara@example.com", notes: "—" },
+];
+
+function ContactCardsTable() {
+  const { log, record } = useCallbackLog(3);
+  const [linked, setLinked] = useState(false);
+  const [rtl, setRtl] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const columns: DataTableColumn<Contact>[] = [
+      { key: "name", header: "Name", cell: (c) => c.name, mobilePrimary: true },
+      { key: "company", header: "Company", cell: (c) => c.company },
+      {
+        key: "phone",
+        header: "Phone",
+        noRowLink: true,
+        cell: (c) => (
+          <a href={`tel:${c.phone.replace(/ /g, "")}`} dir="ltr" className="text-brand underline" onClick={(e) => { e.preventDefault(); record(`tel: ${c.name}`); }}>
+            {c.phone}
+          </a>
+        ),
+      },
+      {
+        key: "email",
+        header: "Email",
+        noRowLink: true,
+        cell: (c) => (
+          <a href={`mailto:${c.email}`} className="text-brand underline" onClick={(e) => { e.preventDefault(); record(`mailto: ${c.name}`); }}>
+            {c.email}
+          </a>
+        ),
+      },
+      { key: "notes", header: "Notes", cell: (c) => c.notes },
+      rowActionsColumn<Contact>({
+        name: (c) => c.name,
+        actions: (c) => [
+          { key: "edit", label: "Edit", onSelect: () => record(`edit ${c.name}`) },
+          { key: "delete", label: "Delete", onSelect: () => record(`delete ${c.name}`) },
+        ],
+      }),
+  ];
+  return (
+    <Example
+      label="A contact card: own links, and tap to open"
+      hint={<>{code("noRowLink")} tel: / mailto: fields · {code("rowActionsColumn")} · {code("onRowClick")} or {code("rowHref")}</>}
+    >
+      <Row>
+        <Button size="sm" variant="secondary" data-demo="contact-linked" onClick={() => setLinked((v) => !v)}>
+          {linked ? "rowHref: on" : "rowHref: off"}
+        </Button>
+        <Button size="sm" variant="secondary" data-demo="contact-rtl" onClick={() => setRtl((v) => !v)}>
+          {rtl ? "RTL" : "LTR"}
+        </Button>
+      </Row>
+      <div dir={rtl ? "rtl" : "ltr"} data-demo="contact-cards" className="mt-3">
+        <DataTable
+          rows={CONTACTS}
+          columns={columns}
+          rowKey={(c) => c.id}
+          chrome="minimal"
+          paginated={false}
+          labels={{ table: "Contacts" }}
+          mobileDetailsInRow
+          isExpanded={(c) => c.id === openId}
+          onRowClick={(c) => {
+            record(`open ${c.name}`);
+            setOpenId((id) => (id === c.id ? null : c.id));
+          }}
+          rowHref={linked ? (c) => `#contact-${c.id}` : undefined}
+        />
+      </div>
+      <CallbackLog log={log} />
+      <Note>
+        Narrow the window below 768px. The phone and email are links of their own ({code("noRowLink")}), and the
+        row&apos;s actions keep their buttons; the rest of the card still opens the contact. The card&apos;s title is
+        the row&apos;s link ({code("rowHref")}) or button ({code("onRowClick")} only), stretched over the card, with
+        the own-click cells drawn above it: no control inside another, and Tab goes title, phone, email, actions.
+        The title alone names the card for a screen reader.
+      </Note>
     </Example>
   );
 }
