@@ -168,8 +168,61 @@ describe("useTourUrlSync", () => {
       </MemoryRouter>,
     );
     await flush();
-    expect(launch).toHaveBeenCalledWith("budget", { startIndex: 1 }, expect.any(Function));
+    expect(launch).toHaveBeenCalledWith(
+      "budget",
+      { startIndex: 1 },
+      expect.any(Function),
+      expect.objectContaining({ stop: expect.any(Function) }),
+    );
     expect(screen.getByRole("dialog")).toHaveTextContent("Step 2");
+  });
+
+  it("hands the launcher the provider's whole engine, read live (keksdose N1)", async () => {
+    let kept: Parameters<TourLauncher>[3] | null = null;
+    const launch: TourLauncher = (id, opts, start, engine) => {
+      kept = engine;
+      start(STEPS, { id, startIndex: opts.startIndex });
+    };
+    function Shared() {
+      useTourUrlSync({ launch });
+      return <Probe />;
+    }
+    render(
+      <MemoryRouter initialEntries={["/budget?tour=budget&tourStep=2"]}>
+        <TourProvider>
+          <Shared />
+        </TourProvider>
+      </MemoryRouter>,
+    );
+    await flush();
+    expect(kept!.active).toBe(true);
+    expect(kept!.activeId).toBe("budget");
+    expect(kept!.index).toBe(1);
+    act(() => kept!.stop());
+    expect(kept!.active).toBe(false);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("without a provider the engine reads idle and its methods do nothing", async () => {
+    let kept: Parameters<TourLauncher>[3] | null = null;
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    function Bare() {
+      useTourUrlSync({
+        launch: (_id, _opts, _start, engine) => {
+          kept = engine;
+        },
+      });
+      return null;
+    }
+    render(
+      <MemoryRouter initialEntries={["/budget?tour=budget"]}>
+        <Bare />
+      </MemoryRouter>,
+    );
+    await flush();
+    expect(kept!.active).toBe(false);
+    expect(() => kept!.stop()).not.toThrow();
+    warn.mockRestore();
   });
 });
 

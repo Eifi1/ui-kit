@@ -8,6 +8,7 @@ import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
 import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
+import { isQuietFocus } from "../lib/quiet-focus";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import {
@@ -255,6 +256,8 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   // Escape layer is this field's own.
   const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone, escapeLayer: false });
   const primaryOnly = usePrimaryPressOnly();
+  // The field took the tour's quiet focus (§11.8) and has not opened since.
+  const quietRef = useRef(false);
   const [active, setActive] = useState(-1);
   // null = not editing → the input shows the selected option's label.
   const [text, setText] = useState<string | null>(null);
@@ -508,13 +511,27 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                 // say why, and opens nothing.
                 if (primaryOnly.fromAuxButton() || locked) return;
                 setText(shown);
+                // The tour's focus on arrival (§11.8) opens nothing: the list would cover
+                // its card (0.50.1). A click, ArrowDown or typing opens it.
+                if (isQuietFocus(e.currentTarget)) {
+                  quietRef.current = true;
+                  return;
+                }
                 e.currentTarget.select();
                 setOpen(true);
                 // The sheet has its own input; the field behind it must not also pull up
                 // the keyboard and scroll the page under the dialog.
                 if (isPhone) sheetInputRef.current?.focus();
               }}
+              // After a quiet focus, the person's click on the already-focused field
+              // fires no `focus`: the click is their "open" instead.
+              onClick={() => {
+                if (!quietRef.current || locked) return;
+                quietRef.current = false;
+                setOpen(true);
+              }}
               onBlur={() => {
+                quietRef.current = false;
                 // On a phone the blur is the SHEET taking focus, not the user leaving the
                 // field — reconciling there would close the sheet the instant it opened.
                 if (!isPhone) reconcile();

@@ -156,7 +156,37 @@ describe("start by id", () => {
     const engine = setup({ launch });
     act(() => engine().start("create-transaction", { at: "txn-entry-mode" }));
     await flush();
-    expect(launch).toHaveBeenCalledWith("create-transaction", { at: "txn-entry-mode" }, engine().start);
+    expect(launch).toHaveBeenCalledWith(
+      "create-transaction",
+      { at: "txn-entry-mode" },
+      engine().start,
+      expect.objectContaining({ start: expect.any(Function), stop: expect.any(Function) }),
+    );
+  });
+
+  it("hands launch the whole engine, read live: a launcher above the provider can stop the run (keksdose N1)", async () => {
+    let kept: Parameters<TourLauncher>[3] | null = null;
+    let activeAtCall: boolean | null = null;
+    const launch: TourLauncher = async (id, opts, _start, engine) => {
+      kept = engine;
+      activeAtCall = engine.active;
+      engine.start(STEPS, { id, at: opts.at });
+      await Promise.resolve();
+    };
+    const engine = setup({ launch });
+    act(() => engine().start("create-transaction", { at: "txn-entry-mode" }));
+    await flush();
+    // The same object, idle when called, now reading the run that is up.
+    expect(activeAtCall).toBe(false);
+    expect(kept!.active).toBe(true);
+    expect(kept!.activeId).toBe("create-transaction");
+    expect(kept!.index).toBe(2);
+    expect(kept!.position).toBe(1);
+    act(() => kept!.next());
+    expect(state()).toBe("step 3 (2 of 3)");
+    act(() => kept!.stop());
+    expect(state()).toBe("idle");
+    expect(kept!.active).toBe(false);
   });
 
   it("hands launch the provider's own start, so a launcher defined above the provider needs no ref (keksdose N4)", async () => {
@@ -201,7 +231,12 @@ describe("TourGuideButton", () => {
     expect(button).toHaveAccessibleDescription("Walks you through this form, field by field");
     fireEvent.click(button);
     await flush();
-    expect(launch).toHaveBeenCalledWith("create-transaction", { at: "txn-entry-mode" }, expect.any(Function));
+    expect(launch).toHaveBeenCalledWith(
+      "create-transaction",
+      { at: "txn-entry-mode" },
+      expect.any(Function),
+      expect.objectContaining({ stop: expect.any(Function) }),
+    );
     expect(state()).toBe("step 2 (1 of 3)");
     expect(screen.queryByRole("button", { name: "Guide me" })).toBeNull();
   });

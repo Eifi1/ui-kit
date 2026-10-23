@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import {
   AmountInput,
   Button,
@@ -77,11 +77,17 @@ function steps(): TourStep[] {
 
 export function GuidedFormTourDemo() {
   const [outcome, setOutcome] = useState<string | null>(null);
-  // The launcher gets the provider's own `start` as its third argument, so it lives here,
-  // above the provider, with no ref to a component below it.
-  const launch = useCallback<TourLauncher>((id, opts, start) => {
+  // What the form's Close calls: the launcher's engine, kept from the last launch.
+  const stopRef = useRef<() => void>(() => {});
+  // The launcher gets the provider's own `start` as its third argument and the whole engine
+  // as its fourth (0.50.1), so it lives here, above the provider, with no ref to a component
+  // below it. The engine is read live: the form's Close stops the run through it.
+  const launch = useCallback<TourLauncher>((id, opts, start, engine) => {
     if (id !== INFO.id) return;
     setOutcome(null);
+    stopRef.current = () => {
+      if (engine.active) engine.stop();
+    };
     start(steps(), {
       id: INFO.id,
       tour: INFO,
@@ -98,7 +104,7 @@ export function GuidedFormTourDemo() {
         hint="A TourProvider of its own with `launch`; the form is a FullBleedDialog, as on a phone."
       >
         <TourProvider launch={launch}>
-          <BookingDemo outcome={outcome} />
+          <BookingDemo outcome={outcome} onClose={() => stopRef.current()} />
         </TourProvider>
       </Example>
       <Example label="The form's side — one line per field" hint="useTourGate beside each field, release/refuse from the save">
@@ -109,7 +115,7 @@ export function GuidedFormTourDemo() {
             ['release("gt.saved")', "From the save's onSuccess: the awaitGate step moves on (the form may stay open)."],
             ['refuse("gt.saved", reason)', "From onError: the step stays, shows the reason and offers Back to an emptied field."],
             ['<TourGuideButton tour="…" at="gt-amount" />', "Starts the tour inside the open form: no intro, no Back past the amount."],
-            ["<TourProvider launch={(id, opts, start) => …}>", "The app's launcher builds the steps and calls start, the provider's own (third argument): no ref."],
+            ["<TourProvider launch={(id, opts, start, engine) => …}>", "The app's launcher builds the steps and calls start, the provider's own (third argument): no ref. The fourth is the whole engine, read live: engine.stop() ends the run (0.50.1)."],
           ]}
         />
         <Note>
@@ -122,7 +128,7 @@ export function GuidedFormTourDemo() {
   );
 }
 
-function BookingDemo({ outcome }: { outcome: string | null }) {
+function BookingDemo({ outcome, onClose }: { outcome: string | null; onClose: () => void }) {
   const tour = useTour();
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
@@ -157,7 +163,11 @@ function BookingDemo({ outcome }: { outcome: string | null }) {
       </p>
       {open && (
         <BookingForm
-          onClose={() => setOpen(false)}
+          onClose={() => {
+            // Closing the form mid-tour ends the run, through the launcher's engine.
+            onClose();
+            setOpen(false);
+          }}
           refuse={refuseNext}
           onRefused={() => setRefuseNext(false)}
           onSaved={(row) => {

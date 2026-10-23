@@ -823,6 +823,22 @@ const launch: TourLauncher = async (id, { at, startIndex }, start) => {
 Additive: a two-argument launcher that reaches `start` its own way (a ref to a component
 below the provider) keeps working.
 
+0.50.1 (keksdose N1): a **fourth argument**, `engine` (`TourEngine`), is the whole engine
+`useTour()` returns — `stop`, `next`, `prev`, `goToStep`, `active`, `activeId`, `index`, … —
+so a launcher above the provider can stop or steer its run with no `useTour()` registered
+from below. It is one object per provider whose fields read the latest render (after an
+`await`, `engine.active` is current) and whose methods are the provider's own; `start` is
+`engine.start`. `useTourUrlSync` passes it too (without a provider: idle, methods that do
+nothing). A launcher taking two or three arguments is unchanged.
+
+```tsx
+const launch: TourLauncher = async (id, opts, start, engine) => {
+  const def = TOURS[id];
+  if (!def) return;
+  start(def.build({ abort: () => engine.stop() }), { id, ...opts });
+};
+```
+
 ### 11.6 Layer order
 
 0.49 dropped an interactive step's overlay to `z-[45]`, under every `z-50` kit layer: in a
@@ -878,7 +894,10 @@ dockOnPhones={false}` makes docking strictly opt-in.
 On a `gate`/`awaitInput`/`awaitGate` step the field's first control takes focus on a fine
 pointer (the card on a coarse one, so no keyboard or pad opens before the step is read),
 and is `aria-describedby` the card's body while the step lasts. Tab runs one ring over field
-and card (captured ahead of a sheet's own trap). A polite live region announces `gateReady`
+and card (captured ahead of a sheet's own trap). The arrival's focus is **quiet** (0.50.1,
+keksdose B1): a picker that opens on focus (Combobox, Autocomplete, InlineEntityCombobox)
+takes it without opening its list, which would cover the card; ArrowDown, typing or a click
+opens it, and a person's own focus opens as before. A polite live region announces `gateReady`
 once and the hint on a locked press; `refuse` uses an assertive one. The kit never moves
 focus out of the field while the person types.
 
@@ -907,6 +926,10 @@ time; their declared types stay `Promise<void>`.
   skips the tour with the sheet open; Save advances only on `release`; the note low in the
   sheet is scrolled in by the sheet body, `window.scrollY` unchanged. It is run by hand, not
   by `npm run check` (no Chromium on the shared machine), like `check:sweep`.
+- The desktop e2e, `node scripts/e2e-tour-desktop.mjs` (1280×800, mouse, LTR and RTL;
+  0.50.1): arriving on the category Combobox step leaves its list closed with the field
+  focused, and card and Next are seen; ArrowDown and a click open the list, Escape closes
+  only it, a pick unlocks Next. `tour-quiet-focus` is its jsdom side.
 
 ### 11.11 Marcel's answers (2026-10-23)
 

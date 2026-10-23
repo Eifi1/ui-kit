@@ -400,7 +400,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.34.0 (+3): the environment stubs (refactor audit 2026-10, TST-10) —
   // `stubViewportWidth`, `viewportMatchMedia`, `stubResizeObserver`.
   // 0.35 (+1): `setViewportWidth`, a live resize of the active stub (keksdose's 0.34 report).
-  ["@eifi1/ui-kit/testing", testing, 7],
+  // 0.50.1 (+1): `tourStepContext`, a step context for a test (keksdose N4).
+  ["@eifi1/ui-kit/testing", testing, 8],
   // 0.50: `rowMenuAction`, the row "⋯" opener (keksdose's test/row-menu.ts). Its own entry:
   // it needs Testing Library, and `/testing` reaches no package.
   ["@eifi1/ui-kit/testing/react", testingReact, 1],

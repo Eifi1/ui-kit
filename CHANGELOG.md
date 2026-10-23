@@ -21,6 +21,17 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.50.1](https://github.com/Eifi1/ui-kit/compare/v0.50.0...v0.50.1) (2026-10-23)
+
+### Added
+
+* **testing:** tourStepContext(), a valid step context for a test ([0dbc7ce](https://github.com/Eifi1/ui-kit/commit/0dbc7ce002365f382cb69893e7fd5c86c3d01e03))
+* **tour:** launch gets the whole engine as its fourth argument ([a652513](https://github.com/Eifi1/ui-kit/commit/a6525131b0fa99afdc3ce68c14e17b6586e5aea5))
+
+### Fixed
+
+* **tour:** the arrival's focus on a picker field leaves its list closed ([2d05d9e](https://github.com/Eifi1/ui-kit/commit/2d05d9e09509a5f2b2f6317ea66754308324672d))
+
 ## [0.50.0](https://github.com/Eifi1/ui-kit/compare/v0.49.0...v0.50.0) (2026-10-23)
 
 ### ⚠ BREAKING CHANGES
