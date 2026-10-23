@@ -845,7 +845,7 @@ function TourOverlay({
   const hintId = useId();
 
   // The gate (§11.1). Re-rendered on every registry change while the tour runs.
-  useSyncExternalStore(gates.subscribe, gates.version, gates.version);
+  const gateVersion = useSyncExternalStore(gates.subscribe, gates.version, gates.version);
   const gateKey = step.gate;
   const enforced = !!gateKey && gates.has(gateKey);
   const locked = enforced && gates.get(gateKey) !== true;
@@ -993,14 +993,17 @@ function TourOverlay({
   // button would otherwise be a dead end, as for awaitClick).
   const awaitsRelease = spotted && !!step.target && !!step.awaitGate;
 
-  // A gate nobody publishes is not enforced: Next opens, and a development build says why.
+  // A gate nobody publishes is not enforced: Next opens, and a development build says why
+  // (on arrival, or when its publisher unmounts under the step), once per step.
+  const warnedGateRef = useRef<TourStep | null>(null);
   useEffect(() => {
-    if (!ready || !gateKey || gates.has(gateKey) || !devWarnings()) return;
+    if (!ready || !gateKey || gates.has(gateKey) || !devWarnings() || warnedGateRef.current === step) return;
+    warnedGateRef.current = step;
     console.warn(
       `[ui-kit] Tour step "${step.title}" waits for the gate "${gateKey}", which nothing publishes: its Next is open. ` +
         "Publish it with useTourGate beside the field, or the form has closed under the tour.",
     );
-  }, [ready, gateKey, gates, step.title]);
+  }, [ready, gateKey, gates, step, gateVersion]);
 
   // `optional` means "may stay EMPTY": without a gate there is no value to compare.
   useEffect(() => {
