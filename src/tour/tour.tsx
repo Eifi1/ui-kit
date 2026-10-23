@@ -97,6 +97,19 @@ export interface TourStep {
   /** Overrides `labels.gateHint` for this step. */
   gateHint?: string;
   /**
+   * 0.50 (§11.4): wait for the app to RELEASE this key — `useTourGateRelease().release(key)`
+   * from the save's `onSuccess`. Implies `interactive`; usually it targets the Save button,
+   * whose hole stays click-through. Next is replaced by {@link awaitGateHint}, and a click
+   * does not advance: only `release` does. A release that arrives on an earlier step (Enter
+   * in the last field submitted the form) jumps past the first later step awaiting the key.
+   * `refuse(key, reason)` keeps the step and shows the reason, with a "Back to …" link to the
+   * first earlier field whose gate is now unsatisfied; the kit never jumps there itself.
+   * A viewer who cannot save gets `awaitGate: undefined`, so a plain Next.
+   */
+  awaitGate?: string;
+  /** Overrides `labels.awaitGateHint` for this step. */
+  awaitGateHint?: string;
+  /**
    * 0.50 (§11.2): the field may stay empty. While the `gate` is unsatisfied the card
    * offers "Leave empty" beside the locked Next, which moves on without touching the field
    * (the kit never writes app values); the title carries an "Optional" chip. Not a skip:
@@ -285,6 +298,8 @@ export function TourProvider({
   // its place among the steps shown (§11.3), computed once on arrival.
   const [nav, setNav] = useState<Nav>(NO_NAV);
   const index = nav.index;
+  // The app's last `refuse` on the step awaiting its key; any arrival clears it.
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const optsRef = useRef<StartOptions>({});
   // The latest props, read at the finish: a new `storageKey` or callback needs no remount.
@@ -342,7 +357,8 @@ export function TourProvider({
         if (j <= i) position++;
       }
       indexRef.current = i;
-      setNav({ index: i, via, position, count });
+      setRefusal(null);
+      setNav({ index: i, floor: floorRef.current, via, position, count });
     },
     [gates],
   );
@@ -444,6 +460,29 @@ export function TourProvider({
     if (to >= 0) arrive(s, to, "back");
   }, [arrive, backward]);
 
+  // awaitGate (§11.4): `release` and `refuse` are events, heard only while a tour runs.
+  useEffect(() => {
+    if (!active) return;
+    let seq = 0;
+    return gates.listen((signal) => {
+      const s = stepsRef.current;
+      if (!s) return;
+      const i = indexRef.current;
+      if (signal.kind === "refuse") {
+        // On any other step the form's own errors speak.
+        if (s[i]?.awaitGate === signal.key) setRefusal({ step: s[i], reason: signal.reason, seq: ++seq });
+        return;
+      }
+      // The step awaiting it, or the first later one: the record is saved, so the fields
+      // between are passed over.
+      const awaiting = s[i]?.awaitGate === signal.key ? i : s.findIndex((st, k) => k > i && st.awaitGate === signal.key);
+      if (awaiting < 0) return;
+      const to = forward(s, awaiting + 1, "next");
+      if (to < 0) finish();
+      else arrive(s, to, "next");
+    });
+  }, [active, gates, arrive, forward, finish]);
+
   return (
     <TourInternalContext.Provider value={internals}>
       <TourContext.Provider
@@ -467,8 +506,11 @@ export function TourProvider({
             steps={steps!}
             index={index}
             via={nav.via}
+            floor={nav.floor}
             position={nav.position}
             count={nav.count}
+            refusal={refusal?.step === steps![index] ? refusal : null}
+            onGoTo={goToStep}
             labels={merged}
             gates={gates}
             onNext={next}
@@ -483,15 +525,37 @@ export function TourProvider({
 
 interface Nav {
   index: number;
+  /** The run's first step (the `at` floor). */
+  floor: number;
   via: TourStepContext["via"];
   position: number;
   count: number;
 }
 
-const NO_NAV: Nav = { index: 0, via: "start", position: 0, count: 0 };
+const NO_NAV: Nav = { index: 0, floor: 0, via: "start", position: 0, count: 0 };
+
+/** The app's `refuse` on the step that awaits its key (§11.4). */
+interface Refusal {
+  step: TourStep;
+  reason?: string;
+  /** Bumped per refusal, so the same words are announced again. */
+  seq: number;
+}
+
+const NOOP = () => {};
 
 function stepContext(gates: GateRegistry, via: TourStepContext["via"]): TourStepContext {
   return { gate: (key) => gates.get(key), via };
+}
+
+/** The first step in [floor, index) shown now whose gate is published and unsatisfied, or -1. */
+function firstEmptied(steps: TourStep[], floor: number, index: number, gates: GateRegistry): number {
+  const ctx = stepContext(gates, "goto");
+  for (let j = floor; j < index; j++) {
+    const key = steps[j].gate;
+    if (key && gates.get(key) === false && isShown(steps[j], ctx)) return j;
+  }
+  return -1;
 }
 
 /** A step's `when`, asked now; a throw is a skip, and the error goes to the console. */
@@ -604,8 +668,11 @@ function TourOverlay({
   steps,
   index,
   via,
+  floor,
   position,
   count,
+  refusal,
+  onGoTo,
   labels,
   gates,
   onNext,
@@ -615,6 +682,10 @@ function TourOverlay({
   steps: TourStep[];
   index: number;
   via: TourStepContext["via"];
+  floor: number;
+  /** The app refused this step's save (§11.4). */
+  refusal: Refusal | null;
+  onGoTo: (index: number) => void;
   /** 1-based among the steps shown; Back is hidden on the first, Done on the last. */
   position: number;
   count: number;
@@ -736,10 +807,14 @@ function TourOverlay({
 
   // A field step (see `TourStep.interactive`): only while the target is lit — a step
   // whose target is missing centres its card over a full scrim, modal as ever.
-  const interactive = spotted && !!step.target && !!(step.interactive || step.awaitInput || step.gate);
+  const interactive =
+    spotted && !!step.target && !!(step.interactive || step.awaitInput || step.gate || step.awaitGate);
   // A GUIDED field step (§11.8): focus goes to the field on a fine pointer, and Tab
   // cycles field + card. A plain `interactive` step keeps the card's own trap.
-  const guided = interactive && !!(step.gate || step.awaitInput);
+  const guided = interactive && !!(step.gate || step.awaitInput || step.awaitGate);
+  // An awaitGate step whose target is lit: only `release` moves it (a missing Save
+  // button would otherwise be a dead end, as for awaitClick).
+  const awaitsRelease = spotted && !!step.target && !!step.awaitGate;
 
   // A gate nobody publishes is not enforced: Next opens, and a development build says why.
   useEffect(() => {
@@ -913,7 +988,12 @@ function TourOverlay({
     control?.focus();
     announce(gateHint);
   }, [step.target, announce, gateHint]);
-  const tryNext = locked ? lockedNext : onNext;
+  const tryNext = awaitsRelease ? NOOP : locked ? lockedNext : onNext;
+
+  // After a refused save: the first earlier step shown whose field is now empty (§11.4).
+  // Computed each render, which the gate subscription above triggers: a field filled
+  // again drops the link.
+  const backTo = refusal ? firstEmptied(steps, floor, index, gates) : -1;
 
   // Keyboard: Esc skips, Enter and the reading-direction arrow advance (→ in LTR,
   // ← in RTL), the other arrow goes back. On awaitClick steps Enter is ignored (it
@@ -1042,6 +1122,9 @@ function TourOverlay({
         onNext={tryNext}
         onLeaveEmpty={onNext}
         onSkip={onSkip}
+        awaitsRelease={awaitsRelease}
+        refusal={refusal}
+        backTo={backTo >= 0 ? { title: steps[backTo].title, go: () => onGoTo(backTo) } : null}
       />
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {polite}
@@ -1182,6 +1265,9 @@ function TourCard({
   onNext,
   onLeaveEmpty,
   onSkip,
+  awaitsRelease,
+  refusal,
+  backTo,
 }: {
   cardRef: RefObject<HTMLDivElement | null>;
   step: TourStep;
@@ -1207,6 +1293,11 @@ function TourCard({
   /** Moves on past an `optional` field left empty. */
   onLeaveEmpty: () => void;
   onSkip: () => void;
+  /** An awaitGate step with its target lit: the hint in place of Next. */
+  awaitsRelease: boolean;
+  refusal: Refusal | null;
+  /** The "Back to …" link after a refused save. */
+  backTo: { title: string; go: () => void } | null;
 }) {
   const [style, setStyle] = useState<CSSProperties>({ opacity: 0 });
 
@@ -1249,7 +1340,7 @@ function TourCard({
     );
   }, [ref, rect, index, step.placement, dir]);
 
-  const awaitsTarget = (step.awaitClick || step.awaitInput) && step.target && rect;
+  const awaitsTarget = ((step.awaitClick || step.awaitInput) && step.target && rect) || awaitsRelease;
 
   return (
     <div
@@ -1325,7 +1416,28 @@ function TourCard({
         </div>
         {awaitsTarget && (
           <div className="text-center text-xs italic text-placeholder">
-            {step.awaitInput && !step.awaitClick ? labels.awaitInputHint : labels.awaitClickHint}
+            {awaitsRelease
+              ? (step.awaitGateHint ?? labels.awaitGateHint)
+              : step.awaitInput && !step.awaitClick
+                ? labels.awaitInputHint
+                : labels.awaitClickHint}
+          </div>
+        )}
+        {/* Always mounted on an awaitGate step, so a refusal is read out (assertively)
+            the moment it lands. */}
+        {awaitsRelease && (
+          <div aria-live="assertive" aria-atomic="true" className="space-y-1">
+            {refusal && (
+              <p data-tour-refused="" className="text-xs text-danger">
+                {refusal.reason ?? labels.awaitGateRefused}
+                {refusal.seq % 2 === 0 ? "\u200b" : ""}
+              </p>
+            )}
+            {refusal && backTo && (
+              <Button variant="link" onClick={backTo.go} className="text-xs">
+                {labels.backToStep(backTo.title)}
+              </Button>
+            )}
           </div>
         )}
         {locked && !awaitsTarget && (
