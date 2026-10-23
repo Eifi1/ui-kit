@@ -16,6 +16,7 @@ import { cn } from "../lib/cn";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { Button } from "../components/button";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { useDismissLayer } from "../hooks/use-dismiss";
 import { sameRect } from "../hooks/use-anchored-rect";
 import { dirOf, horizontalStep } from "../lib/direction";
 import { isComposing } from "../lib/ime";
@@ -701,6 +702,46 @@ interface Located {
   step: TourStep;
   rect: Rect | null;
   dir: Direction;
+  /**
+   * A field step's own container (§11.6): inserted right after the kit layer holding the
+   * target (`host.after`), or at the end of <body> on the page. `null` on a plain step,
+   * which is portalled to <body> at z-[60] as ever.
+   */
+  layer: HTMLElement | null;
+  /** The host fills the visual viewport (a phone's FullBleedDialog): no scrim, no shields. */
+  fullScreen: boolean;
+}
+
+/** The kit layer (`data-kit-layer`) holding `el`, if any. */
+function layerHost(el: Element): HTMLElement | null {
+  return el.closest<HTMLElement>("[data-kit-layer]");
+}
+
+/**
+ * Does the host fill the visual viewport? A backdrop host (`data-kit-layer="backdrop"`:
+ * Modal, FullBleedDialog) is judged by its panel, the child holding the target.
+ */
+function coversViewport(host: HTMLElement, el: Element): boolean {
+  let surface: Element = host;
+  if (host.getAttribute("data-kit-layer") === "backdrop") {
+    for (const child of Array.from(host.children)) {
+      if (child.contains(el)) {
+        surface = child;
+        break;
+      }
+    }
+  }
+  const r = surface.getBoundingClientRect();
+  const vv = window.visualViewport;
+  const top = vv?.offsetTop ?? 0;
+  const bottom = top + (vv?.height ?? window.innerHeight);
+  const width = vv?.width ?? window.innerWidth;
+  return r.width > 0 && r.left <= 1 && r.top <= top + 1 && r.right >= width - 1 && r.bottom >= bottom - 1;
+}
+
+/** A step whose control is for using: its card joins the layer stack above the field (§11.6). */
+function isFieldStep(step: TourStep): boolean {
+  return !!(step.interactive || step.awaitInput || step.gate || step.awaitGate);
 }
 
 /** The first control in `el` (or `el` itself) a person would type into or press. */
@@ -797,8 +838,22 @@ function TourOverlay({
     let cancelled = false;
     let raf = 0;
     // `null` = untargeted, or the finder gave up → the card centres, with no hole.
-    const settle = (el: Element | null) =>
-      setLocated({ index, step, rect: el ? rectOf(el) : null, dir: dirOf(el) });
+    const settle = (el: Element | null) => {
+      let layer: HTMLElement | null = null;
+      let fullScreen = false;
+      if (el && isFieldStep(step)) {
+        // §11.6: directly above the layer holding the field — DOM order decides between
+        // the kit's z-50 body children, so this paints over the host and everything opened
+        // before it, and under whatever the field opens next (a list, the number pad).
+        const host = layerHost(el);
+        layer = document.createElement("div");
+        layer.setAttribute("data-tour-layer", "");
+        if (host) host.after(layer);
+        else document.body.appendChild(layer);
+        fullScreen = !!host && coversViewport(host, el);
+      }
+      setLocated({ index, step, rect: el ? rectOf(el) : null, dir: dirOf(el), layer, fullScreen });
+    };
     void (async () => {
       await step.beforeStep?.(stepContext(gates, via));
       if (cancelled) return;
@@ -836,11 +891,15 @@ function TourOverlay({
       const el = queryVisibleTarget(step.target!);
       if (el) {
         const next = rectOf(el);
-        setLocated((prev) =>
-          prev && prev.index === index && prev.step === step && !sameRect(prev.rect, next)
-            ? { ...prev, rect: next }
-            : prev,
-        );
+        // A sheet that grows to full screen (or shrinks from it) takes or drops the scrim.
+        const host = layerHost(el);
+        const full = !!host && coversViewport(host, el);
+        setLocated((prev) => {
+          if (!prev || prev.index !== index || prev.step !== step) return prev;
+          const fullScreen = prev.layer ? full : prev.fullScreen;
+          if (sameRect(prev.rect, next) && fullScreen === prev.fullScreen) return prev;
+          return { ...prev, rect: next, fullScreen };
+        });
       }
     };
     window.addEventListener("scroll", update, true);
@@ -852,6 +911,31 @@ function TourOverlay({
       clearInterval(id);
     };
   }, [index, step]);
+
+  // A field step's container goes with the step (and with the tour).
+  const layer = located?.layer ?? null;
+  useEffect(() => {
+    if (!layer) return;
+    return () => layer.remove();
+  }, [layer]);
+
+  // Escape (§11.6.4): the tour is a layer on the kit's Escape stack, pushed on each
+  // arrival, so it sits above the sheet holding the form. Escape from the card skips the
+  // tour and no longer also closes that sheet; a layer the field opens afterwards (a
+  // list, the pad) is above the tour and takes Escape first. An Escape pressed in the
+  // field itself belongs to the field: the tour lets it pass by doing nothing.
+  useDismissLayer(
+    ready,
+    (e) => {
+      if (fieldStepNow && step.target && e.target instanceof Node) {
+        const el = queryVisibleTarget(step.target);
+        if (el?.contains(e.target)) return;
+      }
+      onSkip();
+    },
+    // Not an overlay to `useOverlayOpen`: a floating launcher a tour spotlights stays.
+    { overlay: false },
+  );
 
   // awaitClick: advance when the *real* target is clicked. The spotlight hole is
   // click-through (see the shields in the render below) so the element's own
@@ -877,6 +961,7 @@ function TourOverlay({
   // A GUIDED field step (§11.8): focus goes to the field on a fine pointer, and Tab
   // cycles field + card. A plain `interactive` step keeps the card's own trap.
   const guided = interactive && !!(step.gate || step.awaitInput || step.awaitGate);
+  const fieldStepNow = interactive;
   // An awaitGate step whose target is lit: only `release` moves it (a missing Save
   // button would otherwise be a dead end, as for awaitClick).
   const awaitsRelease = spotted && !!step.target && !!step.awaitGate;
@@ -1077,8 +1162,10 @@ function TourOverlay({
       if (interactive && e.target instanceof Node && e.target !== document.body && !rootRef.current?.contains(e.target)) {
         return;
       }
+      // Escape is the tour's Escape layer's (above) once the step is shown; while it is
+      // still being located there is no layer yet, and the tour takes it here as in 0.49.
       if (e.key === "Escape") {
-        onSkip();
+        if (!ready) onSkip();
         return;
       }
       if (e.key === "Enter") {
@@ -1099,10 +1186,12 @@ function TourOverlay({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [isFirst, step, interactive, tryNext, onPrev, onSkip]);
+  }, [isFirst, step, interactive, tryNext, onPrev, onSkip, ready]);
 
   if (!ready) return null;
 
+  // No scrim, no shields: a field step inside a layer that fills the screen (§11.6.3).
+  const bare = interactive && !!current?.fullScreen;
   const pad = step.padding ?? 8;
   const spot: Rect | null = rect
     ? { top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 }
@@ -1119,9 +1208,10 @@ function TourOverlay({
   return createPortal(
     <div
       ref={rootRef}
-      // z-[45] on an interactive step: over the top bar (z-40), under the z-50 layers the
-      // target opens. See `TourStep.interactive`.
-      className={cn("pointer-events-none fixed inset-0", interactive ? "z-[45]" : "z-[60]")}
+      // z-50 on a field step, in its own container right after the layer holding the field
+      // (or at the end of <body>): over that layer and the page, under the z-50 layers the
+      // field opens next (§11.6). z-[60] on a plain step, over everything.
+      className={cn("pointer-events-none fixed inset-0", interactive ? "z-50" : "z-[60]")}
       role="dialog"
       aria-modal={interactive ? undefined : "true"}
       // A stable marker for the overlay, on every step (0.48, keksdose dev#611–613): an
@@ -1130,10 +1220,13 @@ function TourOverlay({
       // keksdose matched the `pointer-events-none` class until now, which is the kit's to change.
       data-tour-overlay=""
       data-tour-interactive={interactive ? "" : undefined}
+      data-tour-bare={bare ? "" : undefined}
       aria-label={step.title}
       dir={dir}
     >
-      {spot && <SpotlightShields spot={spot} />}
+      {/* In a full-screen layer (a phone's form sheet) no scrim and no shields: the rest of
+          the form stays usable and scrollable, and the ring alone marks the field. */}
+      {spot && !bare && <SpotlightShields spot={spot} />}
       {spot ? (
         <div
           className="pointer-events-none fixed rounded-lg transition-all duration-200 ease-out"
@@ -1160,7 +1253,7 @@ function TourOverlay({
               "0 0 0 3px rgba(255,255,255,0.98)",
               "0 0 0 5px rgba(15,23,42,0.92)",
               "0 0 18px 6px rgba(15,23,42,0.45)",
-              "0 0 0 9999px rgba(15,23,42,0.70)",
+              ...(bare ? [] : ["0 0 0 9999px rgba(15,23,42,0.70)"]),
             ].join(", "),
           }}
         />
@@ -1195,7 +1288,7 @@ function TourOverlay({
         {polite}
       </div>
     </div>,
-    document.body,
+    (interactive && current?.layer) || document.body,
   );
 }
 

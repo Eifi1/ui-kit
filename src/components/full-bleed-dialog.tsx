@@ -208,6 +208,9 @@ export function FullBleedDialog({
       // `tabIndex` below by passing one of them too — this is the element the focus
       // trap holds, and each of those failures is invisible on screen.
       {...rest}
+      // A kit layer, for the tour's layer order (0.50, docs/tours-harmonization.md §11.6):
+      // a backdrop, so the tour measures the panel inside it to tell a full-screen sheet.
+      data-kit-layer="backdrop"
       className={cn(
         "fixed inset-0 z-50 flex items-stretch justify-center bg-black/40 outline-none",
         closing ? "animate-overlay-out" : "animate-overlay",

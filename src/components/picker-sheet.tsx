@@ -211,6 +211,10 @@ export function PickerSheet({
       // caller has something to add.
       {...rest}
       ref={setSheet}
+      // A kit layer and a bottom layer a docked tour card stays clear of (0.50,
+      // docs/tours-harmonization.md §11.6).
+      data-kit-layer=""
+      data-tour-obstruction=""
       role="dialog"
       aria-modal="true"
       // Without it the container cannot take focus, and `useFocusTrap` has nothing to
