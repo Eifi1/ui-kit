@@ -2,7 +2,16 @@ import { useCallback, useId } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { FieldChevron, FIELD_TRIGGER, FIELD_INVALID, FIELD_FLOATING_PAD } from "./field-base";
 import { FieldLabel } from "./field-parts";
-import { assignRef, EndHintRow, useFieldMessages, type FieldHelpProps } from "./field-parts";
+import {
+  assignRef,
+  EndHintRow,
+  LockedReason,
+  useFieldMessages,
+  useLockReason,
+  type DisabledReasonDisplay,
+  type FieldHelpProps,
+} from "./field-parts";
+import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
 import { useComboboxCore } from "./combobox-core";
 import {
@@ -90,6 +99,31 @@ export interface CurrencySelectProps extends Omit<ComponentPropsWithoutRef<"div"
    * filter that only matches the hidden English name is worse than no filter.
    */
   currencyNames?: Record<string, string>;
+  /** As {@link Select}'s: no focus, no list, the settled look, no chevron. */
+  disabled?: boolean;
+  /**
+   * Why the currency cannot be changed — {@link Select}'s `disabledReason` (keksdose,
+   * 2026-10-23: a budget's currency for a guest or a viewer, and while offline, which
+   * keksdose drew as a one-option `Select` to keep the reason and lost the flag). The
+   * trigger stays focusable and `aria-disabled` (never the `disabled` attribute), keeps
+   * its flag and code, opens nothing, and `onChange` is never called; the reason is a
+   * line under the field at Large and on a touch screen, else in the kit
+   * {@link Tooltip} (`disabledReasonDisplay`), and on the trigger's `aria-describedby`
+   * (after a caption, before an error). It wears the settled look of a disabled field
+   * and drops its chevron, as a locked Select does. It wins over `disabled`.
+   */
+  disabledReason?: ReactNode;
+  /** Where the reason shows — {@link Select}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise. */
+  disabledReasonDisplay?: DisabledReasonDisplay;
+  /**
+   * This picker COMMITS — choosing saves. Under a locked {@link WriteLockProvider} it is
+   * locked the `disabledReason` way with the lock's reason (which wins over its own).
+   * No provider, or an unlocked one: no effect. {@link Select}'s `commit`. A currency
+   * field inside a form with its own Save stays editable under the lock — leave this off
+   * there, and put `commit` on the Save.
+   */
+  commit?: CommitScope;
   /** The TRIGGER — the focusable `<button>` — as a React 19 ref prop, as on
    *  {@link MultiSelect} and {@link CountrySelect}: react-hook-form's focus-on-error
    *  calls `focus()` on it (0.34, API-3, refactor audit 2026-10). Not the wrapper. */
@@ -109,6 +143,10 @@ export function CurrencySelect({
   help,
   labels,
   currencyNames,
+  disabled,
+  disabledReason,
+  disabledReasonDisplay,
+  commit,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
@@ -137,6 +175,15 @@ export function CurrencySelect({
 
   const selected = getCurrency(value);
 
+  // The lock — Select's (`useLockReason`): the WriteLock's reason under `commit`, else
+  // the caller's own. Locked or `disabled`, nothing opens the list or picks a value.
+  const lock = useLockReason(commit, disabledReason);
+  const locked = lock.locked;
+  const inert = locked || Boolean(disabled);
+  // A lock (or `disabled`) arriving while the list is up closes it — adjusted while
+  // rendering, as CountrySelect does, so no frame shows a list that cannot be used.
+  if (inert && open) setOpen(false);
+
   const listboxId = `${useId()}-listbox`;
   // Text is a caption under the field; anything else (a FieldHint) rides the label
   // line — and a FieldHint is that caption at Large and on touch (§4). See `hint`. On
@@ -152,6 +199,8 @@ export function CurrencySelect({
     invalid,
     describedBy: ariaDescribedBy,
     ariaInvalid,
+    // A lock's reason sits between the caption and the error, as on Select.
+    reasonId: locked && lock.reasonId,
   });
   const { labelHint, describedBy, isInvalid } = field;
 
@@ -169,10 +218,21 @@ export function CurrencySelect({
       ref={setTrigger}
       type="button"
       aria-label={name}
-      onClick={() => setOpen((v) => !v)}
+      // The focusable kind of disabled while locked (Select's rule): native `disabled`
+      // would take the field out of the tab order, and the reason with it.
+      disabled={locked ? undefined : disabled}
+      aria-disabled={locked || undefined}
+      onClick={(e) => {
+        if (inert) {
+          e.preventDefault();
+          return;
+        }
+        setOpen((v) => !v);
+      }}
       // Down/Up opens the list from the closed trigger, per the APG; Enter and Space
       // already do through the button's own click.
       onKeyDown={(e) => {
+        if (inert) return;
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
           setOpen(true);
@@ -191,12 +251,27 @@ export function CurrencySelect({
       aria-expanded={open}
       aria-invalid={isInvalid || undefined}
       aria-describedby={describedBy}
-      className={cn(FIELD_TRIGGER, "pe-9", label !== undefined && FIELD_FLOATING_PAD, isInvalid && FIELD_INVALID)}
+      className={cn(
+        FIELD_TRIGGER,
+        "pe-9",
+        label !== undefined && FIELD_FLOATING_PAD,
+        // FIELD_BASE's `disabled:` look, for a trigger locked without being `disabled`
+        // (the `:disabled` variants cannot match it) — Select's FIELD_LOCKED. No hover:
+        // nothing here answers a press.
+        locked && "cursor-not-allowed bg-surface-2 text-muted hover:bg-surface-2",
+        isInvalid && FIELD_INVALID,
+      )}
     >
       {/* The trigger stays COMPACT — flag + code only — so it never clips in a
           narrow field; the full names live in the (wider) popup (feedback
           #308). */}
-      <span className={cn("flex items-center gap-2 min-w-0", selected ? "text-primary" : "text-placeholder")}>
+      <span
+        className={cn(
+          "flex items-center gap-2 min-w-0",
+          // The settled look reaches the code too: `text-primary` here would outweigh it.
+          !selected ? "text-placeholder" : inert ? "text-muted" : "text-primary",
+        )}
+      >
         {selected ? (
           <>
             <CurrencyFlag country={selected.country} />
@@ -206,8 +281,21 @@ export function CurrencySelect({
           placeholder ?? text.currency
         )}
       </span>
-      <FieldChevron />
+      {/* No menu to drop while disabled or locked, so no chevron — the arrow is the one
+          thing on the control that promises a choice (dev#474, as on Select). */}
+      {!inert && <FieldChevron />}
     </button>
+  );
+
+  // Select's frame: the line under the trigger, or the Tooltip with a hidden copy for
+  // `aria-describedby`. The wrapper `<div>` keeps `className`, so the layout holds.
+  // `flex w-full items-stretch`: the trigger keeps the field's full width in it.
+  const control = locked ? (
+    <LockedReason lock={lock} display={disabledReasonDisplay} className="flex w-full items-stretch">
+      {trigger}
+    </LockedReason>
+  ) : (
+    trigger
   );
 
   return (
@@ -230,7 +318,7 @@ export function CurrencySelect({
         ))}
       {/* No label line to ride: at the field's end edge, outside the box, as an
           unlabelled Select places its FieldHint. */}
-      <EndHintRow hint={label === undefined ? labelHint : undefined}>{trigger}</EndHintRow>
+      <EndHintRow hint={label === undefined ? labelHint : undefined}>{control}</EndHintRow>
       {field.below}
       {/* Portalled to <body> and anchored to the trigger (dev#548), so where it stands
           in the flow no longer moves it. */}
@@ -246,6 +334,7 @@ export function CurrencySelect({
         // to say what it asks for (live #200).
         sheetTitle={label ?? text.currency}
         onChoose={(code) => {
+          if (inert) return;
           onChange(code);
           // Back to the trigger: the panel holding focus is about to unmount, and a
           // keyboard user who has answered the field should stand on it, ready to Tab on.

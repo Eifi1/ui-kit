@@ -81,6 +81,27 @@ on one silently fell back to the centre. `AmountInput`'s root is its `w-full` bo
 | kastlan | Nothing. | — |
 | Kurvenschmiede | Nothing. | — |
 
+## `CurrencySelect` locks like `Select` (keksdose)
+
+Additive. `CurrencySelect` takes `Select`'s lock props: `disabled`, `disabledReason`,
+`disabledReasonDisplay` and `commit` (so a locked `WriteLockProvider` locks it too, with the
+lock's reason winning over its own). It behaves as `Select` does:
+
+- With a reason the trigger is `aria-disabled`, never the `disabled` attribute, so it stays
+  in the tab order. It keeps its flag and code, wears the settled look of a disabled field,
+  drops its chevron, and does not open. `onChange` is not called.
+- The reason is the trigger's accessible description (after a text `hint`, before an
+  `error`). It shows as a line under the field at Large and on a touch screen, and in the kit
+  Tooltip otherwise (`disabledReasonDisplay` overrides this).
+- `disabled` with no reason is the native kind (out of the tab order), as on `Select`. A
+  reason wins over `disabled`.
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | `features/reports/budget-currency-field.tsx`: while locked (viewer, guest, offline), loading or converting, it renders a one-option `Select` with `disabledReason` instead of the `CurrencySelect`. | Drop the swap. Render the one `CurrencySelect` with `disabled={!active \|\| change.isPending}` and `disabledReason={lockedReason ?? undefined}` (keep `data-tour`, `label`, `className`), and update the doc comment's "no disabled state" note. In `__tests__/budget-currency-field.test.tsx`, `lockedSelect()` expects a `SELECT`: it now finds the `BUTTON` trigger (the one `picker()` finds) with `aria-disabled="true"`, and `toHaveValue("EUR")` becomes `toHaveAccessibleName(/EUR/)` (the trigger's name is "label: code"). |
+| kastlan | No `CurrencySelect`. | Nothing. |
+| Kurvenschmiede | No `CurrencySelect`. | Nothing. |
+
 ## kastlan K1: `EmailVerificationBanner` takes `actionPlacement`
 
 `actionPlacement?: "own-line" | "flow"` is passed through to the banner's `AlertBanner` (0.48):
