@@ -96,9 +96,34 @@ export interface TourStep {
   gate?: string;
   /** Overrides `labels.gateHint` for this step. */
   gateHint?: string;
+  /**
+   * 0.50 (§11.2): the field may stay empty. While the `gate` is unsatisfied the card
+   * offers "Leave empty" beside the locked Next, which moves on without touching the field
+   * (the kit never writes app values); the title carries an "Optional" chip. Not a skip:
+   * the run continues and can complete. Without a `gate`, only the chip.
+   */
+  optional?: boolean;
+  /**
+   * 0.50 (§11.3): shown only if this returns true on ARRIVAL (evaluated before
+   * `beforeStep`, so a skipped step never navigates). Next walks forward to the first step
+   * shown, Back to the nearest earlier one shown now. Branch facts are gates:
+   * `when: (c) => c.gate("txn.transfer") === true`. Keep it pure and cheap: the counter
+   * evaluates every step's `when` on each arrival. A throw counts as skipped.
+   */
+  when?: (ctx: TourStepContext) => boolean;
   /** Runs before the step is shown — e.g. navigate to a route, open a panel.
-   *  May be async; the step waits for it, then locates the target. */
-  beforeStep?: () => void | Promise<void>;
+   *  May be async; the step waits for it, then locates the target. Receives the
+   *  {@link TourStepContext} (0.50); a step entered by "Guide me" sees `via: "at"` and
+   *  should leave an open form alone. */
+  beforeStep?: (ctx: TourStepContext) => void | Promise<void>;
+}
+
+/** What a step's `when` and `beforeStep` may ask on arrival (0.50, §11.3). */
+export interface TourStepContext {
+  /** The gate's current value: true/false, or undefined while nobody publishes it. */
+  gate(key: string): boolean | undefined;
+  /** How this step is being entered. */
+  via: "start" | "at" | "next" | "back" | "goto";
 }
 
 export interface TourLabels {
@@ -179,6 +204,10 @@ interface TourContextValue {
   index: number;
   /** Total steps (0 while inactive). */
   total: number;
+  /** 0.50: 1-based position among the steps this run shows, for "3 of 9"; 0 while inactive. */
+  position: number;
+  /** 0.50: how many steps this run shows, from its first (the `at` floor) to the end; 0 while inactive. */
+  count: number;
 }
 
 const TourContext = createContext<TourContextValue | null>(null);
@@ -252,7 +281,10 @@ export function TourProvider({
   // simply the one place that already owned the merge.
   const merged = useKitLabels("tour", DEFAULT_TOUR_LABELS, labels);
   const [steps, setSteps] = useState<TourStep[] | null>(null);
-  const [index, setIndex] = useState(0);
+  // Where the run is: the raw index (what `?tourStep=` mirrors), how it got there, and
+  // its place among the steps shown (§11.3), computed once on arrival.
+  const [nav, setNav] = useState<Nav>(NO_NAV);
+  const index = nav.index;
   const [activeId, setActiveId] = useState<string | null>(null);
   const optsRef = useRef<StartOptions>({});
   // The latest props, read at the finish: a new `storageKey` or callback needs no remount.
@@ -282,6 +314,8 @@ export function TourProvider({
     stepsRef.current = steps;
     indexRef.current = index;
   }, [steps, index]);
+  /** The run's first step: earlier steps never run, Back stops here (the `at` floor). */
+  const floorRef = useRef(0);
   const active = !!steps && steps.length > 0;
   const total = steps?.length ?? 0;
   // The gate registry (§11.1): one per provider, read by the overlay while a tour runs.
@@ -291,13 +325,60 @@ export function TourProvider({
   }, [gates, active]);
   const internals = useMemo(() => ({ gates, canLaunch: false }), [gates]);
 
-  const start = useCallback((s: TourStep[], opts?: StartOptions) => {
-    optsRef.current = opts ?? {};
-    optsRef.current.onStart?.();
-    setIndex(Math.min(Math.max(0, opts?.startIndex ?? 0), Math.max(0, s.length - 1)));
-    setActiveId(opts?.id ?? opts?.tour?.id ?? null);
-    setSteps(s);
-  }, []);
+  /** Is step `i` shown, asked now (§11.3)? */
+  const shown = useCallback(
+    (s: TourStep[], i: number, via: TourStepContext["via"]) => isShown(s[i], stepContext(gates, via)),
+    [gates],
+  );
+  /** Arrive at `i`: the counter is recomputed from every step's `when`, against the gates now. */
+  const arrive = useCallback(
+    (s: TourStep[], i: number, via: TourStepContext["via"]) => {
+      const ctx = stepContext(gates, via);
+      let position = 0;
+      let count = 0;
+      for (let j = floorRef.current; j < s.length; j++) {
+        if (j !== i && !isShown(s[j], ctx)) continue;
+        count++;
+        if (j <= i) position++;
+      }
+      indexRef.current = i;
+      setNav({ index: i, via, position, count });
+    },
+    [gates],
+  );
+  /** The first step shown at or after `from`, or -1. */
+  const forward = useCallback(
+    (s: TourStep[], from: number, via: TourStepContext["via"]) => {
+      for (let j = Math.max(from, floorRef.current); j < s.length; j++) if (shown(s, j, via)) return j;
+      return -1;
+    },
+    [shown],
+  );
+  /** The nearest step shown at or before `from`, not below the floor, or -1. */
+  const backward = useCallback(
+    (s: TourStep[], from: number, via: TourStepContext["via"]) => {
+      for (let j = Math.min(from, s.length - 1); j >= floorRef.current; j--) if (shown(s, j, via)) return j;
+      return -1;
+    },
+    [shown],
+  );
+
+  const start = useCallback(
+    (s: TourStep[], opts?: StartOptions) => {
+      optsRef.current = opts ?? {};
+      optsRef.current.onStart?.();
+      floorRef.current = 0;
+      const wanted = Math.min(Math.max(0, opts?.startIndex ?? 0), Math.max(0, s.length - 1));
+      let at = forward(s, wanted, "start");
+      if (at < 0) at = backward(s, wanted, "start");
+      // Not one step of the run is shown: there is nothing to tour.
+      if (at < 0) return;
+      arrive(s, at, "start");
+      setActiveId(opts?.id ?? opts?.tour?.id ?? null);
+      setSteps(s);
+    },
+    [arrive, forward, backward],
+  );
   const stop = useCallback(() => {
     setSteps(null);
     setActiveId(null);
@@ -336,29 +417,58 @@ export function TourProvider({
     setActiveId(null);
   }, []);
 
-  const goToStep = useCallback((i: number) => {
-    const len = stepsRef.current?.length ?? 0;
-    if (len === 0) return;
-    setIndex(Math.min(Math.max(0, i), len - 1));
-  }, []);
+  // A step whose `when` is false is passed over: `goToStep` lands on the next step shown
+  // after it, failing that the previous one; Next past the last shown step finishes.
+  const goToStep = useCallback(
+    (i: number) => {
+      const s = stepsRef.current;
+      if (!s || s.length === 0) return;
+      const wanted = Math.min(Math.max(floorRef.current, i), s.length - 1);
+      let to = forward(s, wanted, "goto");
+      if (to < 0) to = backward(s, wanted, "goto");
+      if (to >= 0) arrive(s, to, "goto");
+    },
+    [arrive, forward, backward],
+  );
   const next = useCallback(() => {
-    const len = stepsRef.current?.length ?? 0;
-    if (len === 0) return;
-    if (indexRef.current >= len - 1) finish();
-    else setIndex(indexRef.current + 1);
-  }, [finish]);
+    const s = stepsRef.current;
+    if (!s || s.length === 0) return;
+    const to = forward(s, indexRef.current + 1, "next");
+    if (to < 0) finish();
+    else arrive(s, to, "next");
+  }, [arrive, forward, finish]);
   const prev = useCallback(() => {
-    if (indexRef.current > 0) setIndex(indexRef.current - 1);
-  }, []);
+    const s = stepsRef.current;
+    if (!s) return;
+    const to = backward(s, indexRef.current - 1, "back");
+    if (to >= 0) arrive(s, to, "back");
+  }, [arrive, backward]);
 
   return (
     <TourInternalContext.Provider value={internals}>
-      <TourContext.Provider value={{ active, activeId, start, stop, next, prev, goToStep, index, total }}>
+      <TourContext.Provider
+        value={{
+          active,
+          activeId,
+          start,
+          stop,
+          next,
+          prev,
+          goToStep,
+          index,
+          total,
+          position: active ? nav.position : 0,
+          count: active ? nav.count : 0,
+        }}
+      >
         {children}
         {active && (
           <TourOverlay
             steps={steps!}
             index={index}
+            via={nav.via}
+            position={nav.position}
+            count={nav.count}
             labels={merged}
             gates={gates}
             onNext={next}
@@ -369,6 +479,30 @@ export function TourProvider({
       </TourContext.Provider>
     </TourInternalContext.Provider>
   );
+}
+
+interface Nav {
+  index: number;
+  via: TourStepContext["via"];
+  position: number;
+  count: number;
+}
+
+const NO_NAV: Nav = { index: 0, via: "start", position: 0, count: 0 };
+
+function stepContext(gates: GateRegistry, via: TourStepContext["via"]): TourStepContext {
+  return { gate: (key) => gates.get(key), via };
+}
+
+/** A step's `when`, asked now; a throw is a skip, and the error goes to the console. */
+function isShown(step: TourStep, ctx: TourStepContext): boolean {
+  if (!step.when) return true;
+  try {
+    return step.when(ctx) === true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 }
 
 interface Rect {
@@ -469,6 +603,9 @@ function coarsePointer(): boolean {
 function TourOverlay({
   steps,
   index,
+  via,
+  position,
+  count,
   labels,
   gates,
   onNext,
@@ -477,6 +614,10 @@ function TourOverlay({
 }: {
   steps: TourStep[];
   index: number;
+  via: TourStepContext["via"];
+  /** 1-based among the steps shown; Back is hidden on the first, Done on the last. */
+  position: number;
+  count: number;
   labels: TourLabels;
   gates: GateRegistry;
   onNext: () => void;
@@ -484,8 +625,8 @@ function TourOverlay({
   onSkip: () => void;
 }) {
   const step = steps[index];
-  const isFirst = index === 0;
-  const isLast = index === steps.length - 1;
+  const isFirst = position <= 1;
+  const isLast = position >= count;
   // A new step starts unlocated: whatever was found for another step (see `Located`)
   // is ignored, so the overlay renders nothing until the effect below has located THIS
   // step, and never the previous step's spotlight.
@@ -523,7 +664,7 @@ function TourOverlay({
     const settle = (el: Element | null) =>
       setLocated({ index, step, rect: el ? rectOf(el) : null, dir: dirOf(el) });
     void (async () => {
-      await step.beforeStep?.();
+      await step.beforeStep?.(stepContext(gates, via));
       if (cancelled) return;
       if (!step.target) {
         settle(null);
@@ -547,6 +688,8 @@ function TourOverlay({
       cancelled = true;
       cancelAnimationFrame(raf);
     };
+    // `via` and the gates are read at arrival, not followed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, step]);
 
   // Follow the target as the page scrolls / reflows — only once THIS step is located,
@@ -606,6 +749,15 @@ function TourOverlay({
         "Publish it with useTourGate beside the field, or the form has closed under the tour.",
     );
   }, [ready, gateKey, gates, step.title]);
+
+  // `optional` means "may stay EMPTY": without a gate there is no value to compare.
+  useEffect(() => {
+    if (!ready || !step.optional || step.gate || !devWarnings()) return;
+    console.warn(
+      `[ui-kit] Tour step "${step.title}" is \`optional\` without a \`gate\`: it shows the Optional chip ` +
+        "and a plain Next. \"Leave empty\" needs a gate to compare.",
+    );
+  }, [ready, step]);
 
   // "Ready" once, when this step's gate turns satisfied (not when it arrives satisfied).
   const wasLockedRef = useRef<{ step: TourStep; locked: boolean } | null>(null);
@@ -874,7 +1026,8 @@ function TourOverlay({
         cardRef={cardRef}
         step={step}
         index={index}
-        total={steps.length}
+        position={position}
+        total={count}
         labels={labels}
         isFirst={isFirst}
         isLast={isLast}
@@ -887,6 +1040,7 @@ function TourOverlay({
         gateHint={gateHint}
         onBack={onPrev}
         onNext={tryNext}
+        onLeaveEmpty={onNext}
         onSkip={onSkip}
       />
       <div className="sr-only" aria-live="polite" aria-atomic="true">
@@ -1012,6 +1166,7 @@ function TourCard({
   cardRef: ref,
   step,
   index,
+  position,
   total,
   labels,
   isFirst,
@@ -1025,11 +1180,15 @@ function TourCard({
   gateHint,
   onBack,
   onNext,
+  onLeaveEmpty,
   onSkip,
 }: {
   cardRef: RefObject<HTMLDivElement | null>;
   step: TourStep;
   index: number;
+  /** 1-based among the steps shown (§11.3). */
+  position: number;
+  /** How many steps the run shows. */
   total: number;
   labels: TourLabels;
   isFirst: boolean;
@@ -1045,6 +1204,8 @@ function TourCard({
   gateHint: string;
   onBack: () => void;
   onNext: () => void;
+  /** Moves on past an `optional` field left empty. */
+  onLeaveEmpty: () => void;
   onSkip: () => void;
 }) {
   const [style, setStyle] = useState<CSSProperties>({ opacity: 0 });
@@ -1102,7 +1263,14 @@ function TourCard({
       data-tour-card=""
       className="pointer-events-auto fixed z-[61] w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-subtle bg-surface p-4 shadow-xl outline-none transition-all duration-200 ease-out"
     >
-      <div className="text-sm font-semibold text-primary">{step.title}</div>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-primary">
+        <span>{step.title}</span>
+        {step.optional && (
+          <span className="rounded-full border border-subtle px-1.5 py-px text-xs font-normal text-muted">
+            {labels.optional}
+          </span>
+        )}
+      </div>
       <div id={bodyId} className="mt-1 text-sm leading-relaxed text-secondary">
         {step.body}
       </div>
@@ -1118,7 +1286,7 @@ function TourCard({
           </button>
           <div className="flex items-center gap-2">
             <span className="whitespace-nowrap text-xs tabular-nums text-placeholder">
-              {labels.step(index + 1, total)}
+              {labels.step(position, total)}
             </span>
             {!isFirst && (
               <Button variant="secondary" onClick={onBack} className="px-2.5 py-1 text-xs">
@@ -1133,6 +1301,13 @@ function TourCard({
                 way forward on any step whose anchor happens not to be rendered
                 for this user (a guest sees no "add account" button), leaving the
                 undocumented ArrowRight key as the sole escape. */}
+            {/* "Leave empty" (§11.2): an optional field may stay empty, so the step can
+                move on without it. Gone once the field is filled. */}
+            {step.optional && locked && !awaitsTarget && (
+              <Button variant="secondary" onClick={onLeaveEmpty} className="px-2.5 py-1 text-xs">
+                {labels.leaveEmpty}
+              </Button>
+            )}
             {!awaitsTarget && (
               <Button
                 variant="accent"
