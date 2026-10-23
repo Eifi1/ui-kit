@@ -276,3 +276,9 @@ A plain bump for all three apps: no code to change.
   registers `useTours()` from below the provider can go; take `engine` in `tours.tsx`'s
   `launch` and call `engine.stop()` where the tours stop today. Launchers taking two or
   three arguments are unchanged (§11.5).
+- **`tourStepContext()` in `@eifi1/ui-kit/testing`** (keksdose N4, additive). 0.50 hands a
+  step's `beforeStep` and `when` a `TourStepContext`, so a test's `beforeStep!()` is a type
+  error. `tourStepContext(options?)` is a valid one: `via: "start"` and no gates published by
+  default; `{ via: "at" }` for a "Guide me" entry, `{ gates: { "txn.transfer": true } }` for
+  the facts a `when` asks. keksdose's 25 places become `beforeStep!(tourStepContext())`
+  (import it from `@eifi1/ui-kit/testing`, which stays pure: no package import).
