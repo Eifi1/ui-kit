@@ -21,6 +21,37 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.51.0](https://github.com/Eifi1/ui-kit/compare/v0.50.1...v0.51.0) (2026-10-26)
+
+### ⚠ BREAKING CHANGES
+
+* `variant="primary"` / `"brand"` (Button, buttonClasses,
+  IconButton), `variant="primary"` (FloatingActionButton, FloatingAction),
+  `IMPRINT_PRESET`, `AppShellProps.mobileBarMax` and `DEFAULT_MOBILE_BAR_MAX`
+  are removed. Use `default` / `accent`, `DEFAULT_PRESET`, `mobileMaxItems`
+  (cells, "More" included) and `DEFAULT_MOBILE_MAX_ITEMS`.
+* **shell:** DevSwitchers is a DevMenu with no sections, so it draws
+  ONE flask where it drew two, named "Dev tools · Role: … · Plan: …"
+  instead of "Switch role · Role: …" and "Switch plan · Plan: …". Props,
+  rows and "Back to" are unchanged. A test that finds a trigger by
+  "Switch role" or "Switch plan" (keksdose top-bar.test.tsx, Kurvenschmiede
+  top-bar.test.tsx:192) looks up /^Dev tools/ instead; docs/adopt-0.51.md.
+
+### Added
+
+* **landing:** PublicPage, the frame of a public page beside the landing ([2d44970](https://github.com/Eifi1/ui-kit/commit/2d44970fe5cde708c2b093980919ea478fcdb0bc))
+* remove the 0.49 deprecations (primary/brand, mobileBarMax, IMPRINT_PRESET) ([d26c576](https://github.com/Eifi1/ui-kit/commit/d26c576a10db6da9b43adca5b09487c336a889f8))
+* **shell:** DevMenu, one dev flask with the app's own sections after role and plan ([542ce3e](https://github.com/Eifi1/ui-kit/commit/542ce3eaff0b4795470f62ea6f638920f79428ff))
+* **stat-tile:** projection takes several rows (Committed and Projected) ([9f8cc7a](https://github.com/Eifi1/ui-kit/commit/9f8cc7aae794eed7555c346835315d7be767b782))
+
+### Fixed
+
+* **alert-banner:** a clamped strip keeps its action on the line on a phone ([bcbba8e](https://github.com/Eifi1/ui-kit/commit/bcbba8e838d20538aec4b6b3504bed36028f7b5f))
+* **alert-banner:** the message's box is a div, so a banner can hold a list ([feb4301](https://github.com/Eifi1/ui-kit/commit/feb4301c5ea2df1e58ab06c8c28f900d34de7214))
+* **data-table:** a column the fit brings back is drawn at the widths it measured ([c53c692](https://github.com/Eifi1/ui-kit/commit/c53c692698a9efd67fe97dae7c2f96fd6a9cc422))
+* **server-wake:** time the stage from the oldest request still out ([f689855](https://github.com/Eifi1/ui-kit/commit/f6898558a88596023a909deb8852842c898ca795))
+* **user-roster:** the role select keeps room for its longest role word ([22a0f31](https://github.com/Eifi1/ui-kit/commit/22a0f315bb6686e38d2e7a6368d960a44ed373ab))
+
 ## [0.50.1](https://github.com/Eifi1/ui-kit/compare/v0.50.0...v0.50.1) (2026-10-23)
 
 ### Added
