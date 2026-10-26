@@ -136,6 +136,16 @@ const SECTION_CONTROLS = "a[href]:not([role]),button:not([role])";
 const TABBABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]';
 
 /**
+ * `scrollable`'s cap (0.51, DevMenu): the glass under the bar. Under `TopBar` the panel
+ * starts about 50px down — the `size-9` trigger centred in the `h-12` bar ends at 42px,
+ * and `HoverMenu` hangs the panel `pt-2` below it — so 4rem (64px) leaves some 14px clear
+ * under the last row. `dvh`, not `vh`: on a phone `100vh` is the viewport with the
+ * browser's toolbars put away, taller than the glass while they show.
+ * `overscroll-contain`, so a fling past the last row does not scroll the page behind.
+ */
+const SCROLLABLE_PANEL = "max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain";
+
+/**
  * A header or footer inside the menu panel.
  *
  * `HoverMenu` promotes EVERY role-less button and link in its panel to a `menuitem` out
@@ -195,7 +205,8 @@ function keepTabInsidePanel(e: ReactKeyboardEvent<HTMLUListElement>) {
  * A long menu is grouped by topic with `{ kind: "heading" }` entries (0.23) — see
  * {@link TopBarMenuEntry}. There is no separate phone layout: the panel is the same
  * hover panel at 390px, kept inside the viewport by `HoverMenu`, and a heading wraps
- * rather than widening it.
+ * rather than widening it. A menu that can grow taller than a phone's glass passes
+ * `scrollable` (0.51), since that clamp is sideways only.
  */
 export function TopBarActionMenu({
   icon,
@@ -213,6 +224,7 @@ export function TopBarActionMenu({
   footerLabel,
   align,
   panelClassName,
+  scrollable = false,
   triggerAttributes,
 }: {
   /** The trigger's face for the usual icon button. Ignored when `trigger` is given. */
@@ -282,6 +294,20 @@ export function TopBarActionMenu({
    *  direction (see `HoverMenu`, whose type this is). Default `end`. */
   align?: HoverMenuProps["align"];
   panelClassName?: string;
+  /**
+   * Cap the panel at the glass under the top bar and scroll the rows inside it (0.51,
+   * `DevMenu`). `HoverMenu` keeps a panel inside the viewport sideways only, so a tall
+   * one ran off the bottom of the screen: DevMenu's ~25 rows on a 390×844 phone, with
+   * the last ones out of reach — the page cannot scroll them up, the panel hangs from
+   * the sticky bar.
+   *
+   * Off by default: a menu that fits keeps its natural height and has no scroll
+   * container (`TourMenu` keeps its own `max-h-[70vh]`). The keyboard needs nothing
+   * extra: `HoverMenu`'s roving focus is a plain `focus()`, which the browser follows by
+   * scrolling the panel to the row, so ↓, ↑, Home and End reach a row below the cap. The
+   * header and the footer are inside the list and scroll with the rows.
+   */
+  scrollable?: boolean;
   /** `data-*` attributes for the trigger itself — a tour's anchor (`data-tour`), a test
    *  hook. The parts built on this menu (`TourMenu`) pass theirs through here. */
   triggerAttributes?: { [key: `data-${string}`]: string | number | boolean | undefined };
@@ -389,7 +415,7 @@ export function TopBarActionMenu({
         );
         return (
           // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a Tab bubbling up from a row or footer link, see keepTabInsidePanel
-          <ul className={cn("py-1", panelClassName)} onKeyDown={keepTabInsidePanel}>
+          <ul className={cn("py-1", scrollable && SCROLLABLE_PANEL, panelClassName)} onKeyDown={keepTabInsidePanel}>
             {header && (
               <MenuSection className="mb-1 border-b border-subtle px-3 py-2">
                 <div className="truncate text-sm font-medium text-primary">{header.title}</div>

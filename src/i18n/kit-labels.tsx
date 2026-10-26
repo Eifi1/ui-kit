@@ -498,8 +498,8 @@ export interface UiKitLabels {
    *  403 page, the shared sections, the overview's tiles and the Tools list
    *  (docs/admin-harmonization.md §3.1). */
   adminArea: AdminAreaLabels;
-  /** 0.42.0: the top bar's shared parts — `TourMenu`, `SyncStatusIndicator`, `DevSwitchers`
-   *  (docs/top-bar-harmonization.md §3.1). */
+  /** 0.42.0: the top bar's shared parts — `TourMenu`, `SyncStatusIndicator`, `DevMenu`
+   *  (0.42's `DevSwitchers`; docs/top-bar-harmonization.md §3.1, §2.7.1). */
   topBarParts: TopBarPartsLabels;
   /** 0.45.0: "Send a test mail to me" (docs/admin-harmonization.md §9.2.4). */
   mailTestCard: MailTestCardLabels;

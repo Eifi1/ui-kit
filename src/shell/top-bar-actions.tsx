@@ -20,7 +20,10 @@ export interface TopBarActionsProps {
   assistant?: ReactNode;
   /** `SyncStatusIndicator`. */
   sync?: ReactNode;
-  /** `DevSwitchers` (role, then plan). */
+  /** `DevMenu` (0.51, docs/top-bar-harmonization.md §2.7.1): the one flask — the role,
+   *  the plan, then the app's own dev sections. Fill it only behind
+   *  `import.meta.env.DEV`, so a production build drops the branch. (0.42's
+   *  `DevSwitchers`, deprecated, is a DevMenu with no sections.) */
   dev?: ReactNode;
   /** kastlan's platform button. */
   platform?: ReactNode;

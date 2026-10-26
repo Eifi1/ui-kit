@@ -1972,6 +1972,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         saving: "Guardando…",
       },
       dev: {
+        menu: "Herramientas de desarrollo",
+        overridesOn: "Anulaciones activas",
         roleHeading: "Dev · rol",
         switchPlan: "Cambiar de plan",
         plan: (value) => `Plan: ${value}`,

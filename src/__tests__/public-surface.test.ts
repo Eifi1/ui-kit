@@ -304,7 +304,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `useTourGate`, `useTourGateRelease`, `TourGuideButton`, `DEFAULT_TOUR_GUIDE_LABELS` (+4).
   // 0.51.0 (−2): the 0.49 deprecations `IMPRINT_PRESET` and `DEFAULT_MOBILE_BAR_MAX` removed.
   // 0.51.0 (+1): `PublicPage`, the general public page frame.
-  ["@eifi1/ui-kit", barrel, 1013],
+  // 0.51.0 (+1, docs/top-bar-harmonization.md §2.7.1, here and in /shell): `DevMenu`, the
+  // one dev flask (`DevSwitchers` stays, deprecated, until 0.52).
+  ["@eifi1/ui-kit", barrel, 1014],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -335,7 +337,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.43.0 (+1): `useAdminMenuEntry` (the 0.42 adoptions, kastlan 2).
   // 0.49.0 (+2, KIT-6, 2026-10-22): `pickMobileBar`, `DEFAULT_MOBILE_MAX_ITEMS`.
   // 0.51.0 (−1): `DEFAULT_MOBILE_BAR_MAX` removed (deprecated in 0.49).
-  ["@eifi1/ui-kit/shell", shell, 59],
+  // 0.51.0 (+1): `DevMenu` (§2.7.1, see the barrel).
+  ["@eifi1/ui-kit/shell", shell, 60],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).

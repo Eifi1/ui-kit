@@ -89,7 +89,11 @@ export { TourMenu } from "./shell/tour-menu";
 export type { TourMenuProps, TourMenuTour } from "./shell/tour-menu";
 export { SyncStatusIndicator, syncState } from "./shell/sync-status-indicator";
 export type { SyncStatus, SyncState, SyncStatusScope, SyncStatusIndicatorProps } from "./shell/sync-status-indicator";
-export { DevSwitchers, DEV_ORIGINAL_ROLE_KEY } from "./shell/dev-switchers";
+// 0.51 (§2.7.1, keksdose): one flask, the kit's Account section and the app's own dev
+// sections; `DevSwitchers` is a deprecated wrapper over it until 0.52.
+export { DevMenu, DEV_ORIGINAL_ROLE_KEY } from "./shell/dev-menu";
+export type { DevMenuProps, DevMenuSection } from "./shell/dev-menu";
+export { DevSwitchers } from "./shell/dev-switchers";
 export type { DevSwitchersProps } from "./shell/dev-switchers";
 export { DEFAULT_TOP_BAR_PARTS_LABELS, useTopBarPartsLabels } from "./shell/top-bar-parts-labels";
 export type {

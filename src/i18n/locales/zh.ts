@@ -1894,6 +1894,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         saving: "正在保存…",
       },
       dev: {
+        menu: "开发工具",
+        overridesOn: "覆盖已开启",
         roleHeading: "开发 · 角色",
         switchPlan: "切换套餐",
         plan: (value) => `套餐：${value}`,
