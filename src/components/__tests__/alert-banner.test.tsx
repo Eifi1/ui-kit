@@ -149,7 +149,8 @@ describe("AlertBanner 0.11.0 inline (keksdose)", () => {
     expect(el.className).toContain("items-start");
     expect(el.className).not.toContain("items-center");
     expect(el.querySelector("svg")!.getAttribute("class")).toContain("mt-px");
-    expect(el.querySelector("span")!.className).toContain("flex-1");
+    // The message's box (a `<div>` since 0.51) takes the rest of the row.
+    expect(el.querySelector("div")!.className).toContain("flex-1");
     // Still frameless and still live.
     expect(el.className).not.toContain("border");
     expect(el).toHaveAttribute("role", "status");
@@ -218,5 +219,44 @@ describe("AlertBanner data-tone (0.34, refactor audit 2026-10, TST-9)", () => {
     expect(screen.getByTestId("split")).toHaveAttribute("data-tone", "success");
     expect(screen.getByRole("button", { name: "Saved" })).not.toHaveAttribute("data-tone");
     expect(screen.getByText("Danger by default").closest("[data-tone]")).toHaveAttribute("data-tone", "danger");
+  });
+});
+
+describe("AlertBanner: the message's box holds block content (0.51)", () => {
+  // keksdose's agree-again notice: an intro line, a list and a Disclosure. Inside the
+  // `<span>` the message box used to be, they were block elements in phrasing content.
+  const spanBetween = (from: Element, root: Element) => {
+    for (let el = from.parentElement; el && el !== root; el = el.parentElement) {
+      if (el.tagName === "SPAN") return true;
+    }
+    return false;
+  };
+
+  it.each([
+    ["box", {}],
+    ["strip", { variant: "strip" as const }],
+    ["clamped box", { clampMobile: true }],
+    ["box with a flowing action", { action: <button type="button">Agree</button>, actionPlacement: "flow" as const }],
+  ])("a list in a %s has no <span> above it", (_name, props) => {
+    const { container } = render(
+      <AlertBanner tone="info" {...props}>
+        <p>What changed:</p>
+        <ul>
+          <li>Exact quantities</li>
+        </ul>
+      </AlertBanner>,
+    );
+    const root = container.firstElementChild!;
+    expect(spanBetween(container.querySelector("ul")!, root)).toBe(false);
+  });
+
+  it("a whole-row banner keeps a <span>: its link takes phrasing content only", () => {
+    render(
+      <AlertBanner tone="info" href="/budget">
+        3 categories need money
+      </AlertBanner>,
+    );
+    const link = screen.getByRole("link");
+    expect(link.querySelector("div")).toBeNull();
   });
 });

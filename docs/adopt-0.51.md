@@ -265,3 +265,19 @@ are wider than its header.
 | keksdose | `features/transactions/transactions-page.tsx:1114` (`virtualize`), the columns' `fitPriority` in `use-transaction-columns.tsx` (Memo 1, Account 2, Status 3, Category 4). | Nothing. Status no longer stays out at a width where it fits. |
 | kastlan | No `virtualize`. | Nothing. |
 | Kurvenschmiede | No `virtualize`. | Nothing. |
+
+## `AlertBanner`: the message's box is a `<div>`; `clampMobile` is for a one-line message
+
+The box around a banner's `children` was a `<span>`, so a list or a `Disclosure` inside a
+banner (keksdose's agree-again notice, price pool v2) put block elements in phrasing content.
+It is a `<div>` now in every mode but the whole-row one (`href` / `onClick`), whose `<a>` /
+`<button>` takes phrasing content only and keeps the `<span>`. The look does not change: the
+box was a flex item either way.
+
+`clampMobile`'s doc now says what it is for: a one-line MESSAGE. On a body with a list or a
+control in it, the clamp clips a trigger past the first line out of sight while it still takes
+the keyboard's focus. For such a banner, shorten it instead: one sentence, its action, and the
+rest behind a `Disclosure variant="bare"` in the banner.
+
+**Apps:** nothing to do. A test that finds the message's box by `span` (none found in the three
+apps' `frontend/src`) finds a `div` now.
