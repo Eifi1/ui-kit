@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.19.0";
+export const SERVER_KIT_VERSION = "0.20.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -267,6 +267,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["DevSwitchUnsafeError", "class"],
       ["assert_dev_switch_safe", "function"],
       ["dev_switch_enabled", "function"],
+      ["effective_today", "function"],
       ["require_dev_switch", "function"],
       ["validate_dev_switch", "function"],
     ],
