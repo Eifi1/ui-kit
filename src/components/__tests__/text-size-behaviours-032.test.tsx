@@ -434,6 +434,24 @@ describe("StatTile at Large: the one big number (§4)", () => {
     expect(within(figures as HTMLElement).getByText("August").parentElement!.className).toContain("flex-col");
   });
 
+  it("at Large: several projections lead the stacked figures, in order (0.51)", () => {
+    media();
+    size("large");
+    const { container } = render(
+      <StatTile
+        {...props}
+        projection={[
+          { label: "Committed", value: 1100 },
+          { label: "Projected", value: 1300 },
+        ]}
+      />,
+    );
+    const figures = container.querySelector("[data-slot=stat-tile-figures]") as HTMLElement;
+    const terms = within(figures).getAllByRole("term").map((t) => t.textContent);
+    expect(terms).toEqual(["Committed", "Projected", "August"]);
+    expect(within(figures).getByText("Committed").parentElement!.className).toContain("flex-col");
+  });
+
   it("on a touch screen at Normal the hint is words too", () => {
     media({ coarse: true });
     const { container } = render(<StatTile label="Users" value={3} hint="Active this week" />);

@@ -624,6 +624,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Delta and trend",
     "Dense metrics wall",
     "projection, sub-value tone none, name",
+    "projection as a list: Committed and Projected",
     "truncateLabel",
     "Interactive and loading",
     "Sparkline — tones, scale and stroke",

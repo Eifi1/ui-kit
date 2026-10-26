@@ -43,3 +43,24 @@ const launch = useCallback<TourLauncher>((id, opts, start, engine) => launcher.c
 
 **Apps:** nothing to do. keksdose forwards the engine (app-tour-provider.tsx:27); kastlan and
 Kurvenschmiede never call a launcher themselves.
+
+## `StatTile` `projection` takes several rows (keksdose #633)
+
+`projection` accepts a list as well as one row: `projection={[committed, projected]}`. The rows
+are drawn in order, tight under the headline like the single one (at Large: at the top of the
+stacked figures), and each keeps its own `tone`. One row as before still works.
+
+```tsx
+<StatTile label="Net worth" value={today} projection={[
+  { label: `Committed ${date}`, value: committed },
+  { label: `Projected ${date}`, value: projected },
+]} subValues={history} />
+```
+
+The tile draws the rows it is given. Which to leave out is the app's rule; keksdose's (feedback
+#51 for two rows): a row only when its PRINTED figure differs from the row above it. The
+showcase's Stats page shows it.
+
+**keksdose:** your shared tile's interim (`projection` = Committed, `subValues` = [Projected,
+…history]) becomes `projection={[committed, projected]}` at the marked switch point.
+**kastlan, Kurvenschmiede:** nothing to do.
