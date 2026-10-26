@@ -5,9 +5,10 @@ import type { ServerWakeAxiosConfig } from "../server-wake";
 
 /**
  * keksdose's cold-start watchdog (feedback #199), now the kit's. What has to hold: it
- * escalates idle → slow (2 s) → waking (7 s) from the FIRST outstanding request, goes
- * back to idle only when the LAST one settles, never counts below zero, and never
- * arms while offline — a stuck notice is worse than none.
+ * escalates idle → slow (2 s) → waking (7 s) by the age of the OLDEST outstanding request
+ * (0.51; before, of the first since the count was last zero), goes back to idle when the
+ * last one settles or the rest are recent, never counts below zero, and never arms while
+ * offline — a stuck notice is worse than none.
  */
 
 function setOnline(online: boolean) {
@@ -64,7 +65,7 @@ describe("createServerWake", () => {
     expect(listener).not.toHaveBeenCalled();
   });
 
-  it("times overlapping requests from the first, and waits for the last", () => {
+  it("times overlapping requests from the oldest still out; a newcomer does not restart the clock", () => {
     const w = createServerWake();
     w.start("get", "/a");
     vi.advanceTimersByTime(1500);
@@ -72,13 +73,48 @@ describe("createServerWake", () => {
     vi.advanceTimersByTime(500);
     expect(w.getStage()).toBe("slow");
     expect(w.getInFlight()).toBe(2);
-    w.end();
-    expect(w.getStage()).toBe("slow");
     vi.advanceTimersByTime(5000);
     expect(w.getStage()).toBe("waking");
+    // /a is answered at 7 s: the server is up. /b has been out 5.5 s — slow, not asleep.
+    w.end();
+    expect(w.getStage()).toBe("slow");
     w.end();
     expect(w.getStage()).toBe("idle");
     expect(w.getInFlight()).toBe(0);
+  });
+
+  it("overlapping fast reads never chain into slow (keksdose live #454)", () => {
+    const w = createServerWake();
+    const listener = vi.fn();
+    w.subscribe(listener);
+    // A read goes out every second and each takes 1.5 s, so one is always out: /r(i) at
+    // i s, answered at i + 1.5 s. Timed from the first, this showed "slow" at 2 s.
+    w.start("get", "/r0");
+    vi.advanceTimersByTime(1000);
+    for (let i = 1; i <= 10; i += 1) {
+      w.start("get", `/r${i}`); // at i s
+      vi.advanceTimersByTime(500);
+      w.end(); // /r(i-1), 1.5 s after it went out
+      vi.advanceTimersByTime(500);
+    }
+    expect(w.getInFlight()).toBe(1);
+    expect(listener).not.toHaveBeenCalled();
+    expect(w.getStage()).toBe("idle");
+  });
+
+  it("the next oldest's age decides when the oldest settles: recent ones put the notice away", () => {
+    const w = createServerWake();
+    w.start("get", "/slow");
+    vi.advanceTimersByTime(2500);
+    expect(w.getStage()).toBe("slow");
+    w.start("get", "/fresh");
+    vi.advanceTimersByTime(500);
+    w.end(); // the oldest settles at 3 s; /fresh is 0.5 s old
+    expect(w.getStage()).toBe("idle");
+    vi.advanceTimersByTime(1500);
+    expect(w.getStage()).toBe("slow"); // /fresh is 2 s old now
+    vi.advanceTimersByTime(5000);
+    expect(w.getStage()).toBe("waking");
   });
 
   it("never counts below zero — a stray end() does not eat the next request", () => {

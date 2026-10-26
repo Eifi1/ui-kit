@@ -64,3 +64,20 @@ showcase's Stats page shows it.
 **keksdose:** your shared tile's interim (`projection` = Committed, `subValues` = [Projected,
 …history]) becomes `projection={[committed, projected]}` at the marked switch point.
 **kastlan, Kurvenschmiede:** nothing to do.
+
+## Server wake: "slow" is timed from the oldest request still out (keksdose live #454)
+
+The watchdog behind `ServerWakeNotice` used to time the stage from the FIRST request since its
+count was last zero. On a busy page whose reads overlap — one going out before the last came
+back — the count never reached zero, so reads that were each fast chained past 2 s and showed
+"Still loading — this is taking longer than usual". Now the stage is the age of the OLDEST
+request still out: when it settles, the next oldest's age decides, which can put the notice
+away again (the server answered, so it is not asleep). A request joining others still does not
+restart the clock.
+
+`end()` names no request, so it retires the oldest start; when a newer request comes back
+first, the notice can come a little LATE for the older one, never falsely.
+
+**Apps:** nothing to do (`createServerWake`, `attachServerWake`, `wrapFetch` and keksdose's own
+`start`/`end` calls work as they are). A legitimately heavy read longer than 2 s on a warm
+server still shows "slow"; a per-request opt-out (`slowOk`) is a question for the 0.51 review.
