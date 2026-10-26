@@ -18,6 +18,8 @@ import {
   FieldChevron,
   FieldGroup,
   FloatingField,
+  SELECT_MENU_DRESS,
+  SELECT_SM,
   fieldBelow,
 } from "./field-base";
 
@@ -87,11 +89,6 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
   /** The `<select>`. A React 19 ref prop since 0.34 — see {@link InputProps.ref}. */
   ref?: Ref<HTMLSelectElement>;
 }
-
-// The compact select: the field's colours, a toolbar button's height. `py-0` and a
-// fixed height rather than a smaller padding, so the box is 28px whatever line
-// height the caller's type brings with it.
-const SELECT_SM = "h-7 py-0 ps-2 pe-7 text-xs";
 
 /** Keys a locked select still answers: leaving it, and dismissing its tooltip. Every
  *  other key would open the list or step the value. */
@@ -171,7 +168,7 @@ export function Select(props: SelectProps) {
   // moves onto the rows instead (option padding counts toward the row height the
   // browser sizes the box by), and the box keeps no bottom padding: exactly `size`
   // whole rows, at any width.
-  const dress = listBox ? "overflow-y-auto [&_option]:py-1" : "appearance-none pe-9";
+  const dress = listBox ? "overflow-y-auto [&_option]:py-1" : SELECT_MENU_DRESS;
   // Locked: focusable, but nothing opens the list or moves the value, and nothing is
   // reported. The no-op `onChange` keeps a controlled select's value where React put
   // it (and keeps React from warning about a `value` with no handler).

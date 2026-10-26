@@ -27,3 +27,30 @@ line sooner, as before.
 | keksdose | `features/auth/verify-email-banner.tsx:28`, the strip, without `clampMobile`. | Nothing. |
 | kastlan | `features/auth/components/verify-email-banner.tsx:20`, the strip with `clampMobile` (KX-5). | Nothing: the banner is 43px on a 390px phone after the bump. Check it once at 390 × 844. |
 | Kurvenschmiede | `app/layout.tsx:79`, the strip, without `clampMobile`. | Nothing. |
+
+## Kurvenschmiede N5: the roster's role select shows its value whole
+
+The user roster's role **select** (`useUserRosterColumns` / `userRosterColumns` with
+`editableRole` + `onRoleChange`) no longer clips its value. Beside the `grow` Name every other
+column is squeezed to its min-content, and a `w-full` `<select>` has none (a select with a
+percentage width counts as zero there), so the Role column was its header's width and the
+select read "Meml…" / "Admi…" on 0.49 and 0.50. The cell now carries an invisible,
+zero-height floor of the vocabulary's role words in the select's own type, padding and
+chevron room, so the column keeps room for the longest **role word** in the app's language
+(every role of `roles`, offered or not, plus a held key it does not know). An option's reason
+("Customer (owns work)") is not counted: it is never the selected value, and the open list
+is as wide as it needs. The words are generated content (`::before`), not text: a test's
+`getByText("Member")` still finds only the option.
+
+Measured in Chromium at 1280px, the kit's preset in a 900px pane with Kurvenschmiede's four
+roles: on 0.50 the Role column was 92px and the select 68px (30px for the value: every role
+but Hungarian's "Tag" clipped); now the column is 109px (de-CH, "Prüfer/in") to 114px (en,
+"Customer"), 138px (es, "Administrador") and 141px (hu, "Adminisztrátor"), every value whole,
+and Name gives the room back (the table stays 851px, nothing leaves for width). The phone
+card is unchanged (the select fills its 240px field).
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | `features/admin/users-panel.tsx:807`, `editableRole` (`:752`): the role select. | Nothing. The Role column widens to its longest role word; check the admin page at 1280px once. |
+| kastlan | `features/settings/components/users-panel.tsx:341`: no `editableRole` (its roles are a "Manage roles" action), so chips. | Nothing. |
+| Kurvenschmiede | `features/admin/users-panel.tsx:418`, `editableRole` with `offered` and `optionDisabledReason` (`:421–426`). | Nothing. The Role column widens by ~20px (en) to ~50px (es, hu); the 0.50 adoption's `fitPriority` 3/4/5 on the extras still decides what leaves, so check `/admin/users` at 1100 and 1280px once. |
