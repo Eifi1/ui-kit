@@ -267,7 +267,10 @@ before (see the KS row).
 | kastlan | `features/settings/components/users-panel.tsx:341`: no `editableRole` (its roles are a "Manage roles" action), so chips. | Nothing. |
 | Kurvenschmiede | `features/admin/users-panel.tsx:418`, `editableRole` with `offered` and `optionDisabledReason` (`:421–426`). | Nothing to change in code, but one column more can leave. KS's review measured the role whole in all seven languages at 1100–1536px (cut everywhere on 0.50.1), with the Role column at 1280 going 92 → 114 (en) … 145 (it). KS's pane, with the sidebar and the admin nav open, is 466px at 1100, 646 at 1280, 732 at 1366, 902 at 1536, and there one `fitPriority` column now leaves at some widths: Plan (fp 4) at en 1280, Reviews (fp 3) at en/es/fr 1366, Last login (fp 2) at de-CH/es/fr/it 1536 (no change at 1100, nor in zh and hu). What leaves is in the Columns menu; re-measure the order at `users-panel.tsx:440–445` at the bump. |
 
-## keksdose N2: under `virtualize`, a column the fit brings back stays when it fits
+## keksdose N2: under `virtualize`, a column the fit brings back stays when it fits (reverted in 0.51.1)
+
+**0.51.1 takes this change back** (see "0.51.1" at the end): on keksdose's register it left the
+table overflowing in 3 of 5 loads. The text below is what 0.51.0 shipped.
 
 From keksdose's 0.49 review 3 (B2's guard held). With `virtualize`, a `fitPriority` column
 the table left out and brought back was estimated at 606 + 93 = 699 ≤ 757 but drawn needed
@@ -306,3 +309,21 @@ rest behind a `Disclosure variant="bare"` in the banner.
 
 **Apps:** nothing to do. A test that finds the message's box by `span` (none found in the three
 apps' `frontend/src`) finds a `div` now.
+
+## 0.51.1
+
+**The N2 change is reverted** (keksdose's 0.51.0 adoption, B1 and S1). Under `virtualize`,
+0.51.0 dropped a column-width lock as soon as the columns changed. On keksdose's register at
+1124×1162 (a 757px box) the fit then brought Accounts AND Status back, the table was drawn
+at 893px, it scrolled sideways with Amount cut at the right edge, and it never re-fitted, in
+3 of 5 production loads. At 1280 and 1440 the column set also changed from load to load. With
+0.50.1's behaviour back, the register fits 5 of 5 loads at 757 and the column set is the same
+on every load. The cost is the old limitation that 0.51.0 meant to lift: a `fitPriority`
+column the fit brings back can still be judged too wide against the old lock's widths and
+stay out where it would have fitted. That goes back to the candidates, to be fixed with
+keksdose's repro harness rather than jsdom's width model.
+
+**Apps:** a plain bump to `^0.51.1` (npm treats `^0.51` as minor-locked, so `npm update`
+takes it). keksdose's register is back to its 0.50.1 columns. kastlan and Kurvenschmiede have
+no `virtualize`: nothing changes.
+
