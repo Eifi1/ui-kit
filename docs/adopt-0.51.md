@@ -6,8 +6,15 @@ things. This guide lists, per change, what each app does, with the places found 
 kastlan and Kurvenschmiede on 2026-10-26 (`frontend/src`).
 
 **server-kit 0.20.0:** the dev switch learns a "today" override, the dev clock (see the
-DevMenu section); nothing else changes. Pin `@eifi1/ui-kit` `^0.51` beside the
-`eifi1-server-kit` 0.20.0 wheel.
+DevMenu section). Pin `@eifi1/ui-kit` `^0.51` beside the `eifi1-server-kit` 0.20.0 wheel. Two
+things move on the wheel bump even for an app that does not use the clock:
+- **`DevSwitchAnswer` carries `today`**, so the dev switch's answer is
+  `{"role": …, "plan": …, "today": null}`. A test that compares it WHOLE breaks: kastlan
+  `tests/api/test_dev_switch.py:56` and `:68`, keksdose `backend/tests/api/test_dev_switch.py:127`
+  (add `"today": None`). Kurvenschmiede's reads single fields and is unaffected.
+- **A body naming `today` is refused, 422 `dev_switch_no_clock`,** unless the route passes
+  `validate_dev_switch(…, clock=True)`. An app that has not wired the clock refuses the field
+  as 0.19's `extra="forbid"` did, instead of answering 200 to a switch it ignores.
 
 **Restart the Vite dev server after the bump** (`vite --force` if a change still does not show):
 it keeps serving the old kit from `node_modules/.vite/deps` until it restarts.
@@ -73,9 +80,13 @@ contract is docs/top-bar-harmonization.md §2.7.1.
 - **server-kit 0.20: the dev clock.** The menu's Account section is server-kit 0.14's
   `POST /dev/switch`, as before. For a "Time" section the switch now also takes
   `{today: "2026-10-31"}` (and `{today: null}` to take it back; `sets_today` tells that from a
-  body that leaves it out), answers it in `DevSwitchAnswer.today`, and every server path that
-  asks for today reads `effective_today(override, gate=…, today=…)`, which gives the real date
-  whenever the gate is shut. While one is set, the client takes today from the answer, not
+  body that leaves it out) once the route says `validate_dev_switch(…, clock=True)`, answers it
+  in `DevSwitchAnswer.today`, and every server path that asks for today reads
+  `effective_today(override, gate=…, today=…)`, which gives the real date whenever the gate is
+  shut. `today=` is required: your real "today" in your time zone (kastlan's
+  `clock.local_today()`, Europe/Zurich), since the server's own date is UTC on Cloud Run and
+  in a deployment that is all it would read. Only the date moves: timestamps (tokens,
+  `expires_at`, a trial's end) stay on real time. While one is set, the client takes today from the answer, not
   from its own clock, so the dates it works out itself agree with the server's — and it reads
   the answer BEFORE the first render, in a dev-only hook at boot outside the lazy menu chunk
   (rule 2): otherwise a reload starts on the device clock until the menu loads and its probe
@@ -87,7 +98,9 @@ contract is docs/top-bar-harmonization.md §2.7.1.
    (`GET /dev/switch`), as all three apps already do.
 2. Put the section DEFINITIONS in a module imported only behind `import.meta.env.DEV`.
    `enabled={false}` hides the menu but leaves the sections' code in the production bundle.
-   The constant in front of the `import()` is what drops the chunk:
+   The constant is what drops it: a static import used only in an `import.meta.env.DEV && …`
+   slot is enough (kastlan's `top-bar.tsx:201`, whose production build carries no dev-switch
+   code), as long as the sections are defined in that module; or a lazy one:
    ```tsx
    const AppDevMenu = import.meta.env.DEV ? lazy(() => import("./dev-menu")) : null;
    // …
@@ -212,7 +225,7 @@ clampMobile` gets it; from `md` up, and without `clampMobile`, nothing changes. 
 variant keeps `actionPlacement` (0.50).
 
 Measured in Chromium at 390 × 844, kastlan's banner (`mx-4`, `clampMobile`, with the ×),
-Normal text: **43px, one line** (glyph, message, More, "Send again", ×) in all seven catalogues,
+Normal text: **43px, one line before a resend** (glyph, message, More, "Send again", ×) in all seven catalogues,
 with Roboto (Android) and with the wider DejaVu Sans; **71px** on 0.50 (the button on a line
 of its own). French ("Envoyer à nouveau", the longest) keeps 8px. At 360px French, and
 Spanish in DejaVu Sans, still drop the button to a second line. At Large the button drops a
@@ -221,7 +234,7 @@ line sooner, as before.
 | App | Where | Steps |
 |---|---|---|
 | keksdose | `features/auth/verify-email-banner.tsx:28`, the strip, without `clampMobile`. | Nothing. |
-| kastlan | `features/auth/components/verify-email-banner.tsx:20`, the strip with `clampMobile` (KX-5). | Nothing: the banner is 43px on a 390px phone after the bump. Check it once at 390 × 844. |
+| kastlan | `features/auth/components/verify-email-banner.tsx:20`, the strip with `clampMobile` (KX-5). | Nothing: the banner is 43px on a 390px phone after the bump, until a resend. After one, "Send again in 60 s" and "Confirmation email sent" can't sit beside the message, so it is two lines for the rest of the visit, as it should be: the answer to the press must show. Check it once at 390 × 844. |
 | Kurvenschmiede | `app/layout.tsx:79`, the strip, without `clampMobile`. | Nothing. |
 
 ## Kurvenschmiede N5: the roster's role select shows its value whole

@@ -170,8 +170,10 @@ kit cannot enforce them.
 2. **The app's section DEFINITIONS live in a module imported only behind
    `import.meta.env.DEV`.** `enabled={false}` hides the menu, but it does not remove the
    sections' code (their handlers, their endpoints' paths) from the production bundle.
-   The constant in front of the `import()` does that, because the minifier drops the
-   dead branch and its chunk with it:
+   The constant does that, because the minifier drops the dead branch and what only it
+   uses: a static import used only in an `import.meta.env.DEV && …` slot is enough
+   (kastlan's, whose production build carries no dev-switch code), as long as the sections
+   are defined in that module. A lazy import makes it a chunk of its own:
 
    ```tsx
    // top-bar.tsx
