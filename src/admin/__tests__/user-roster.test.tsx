@@ -251,6 +251,51 @@ describe("userRosterColumns", () => {
     expect(within(cy).getByText("Customer").closest("[data-role]")).toHaveAttribute("data-role", "CUSTOMER");
   });
 
+  // Kurvenschmiede N5 (KS review, 0.49 and 0.50): beside the `grow` Name every column is
+  // squeezed to its min-content, and a `w-full` select has none, so the role column was its
+  // header's 92px and the select read "Meml…", "Admi…" (Chromium: a 68px select, 30px for
+  // the value). The cell now holds an invisible floor of the role words in the select's own
+  // box: 109–150px across en/de-CH/es/hu, every value whole (docs/adopt-0.51.md).
+  it("keeps room in the role column for the longest role word, in the app's words (Kurvenschmiede N5)", () => {
+    stubViewport(true);
+    const AUDITOR = { ...CY, id: 4, email: "dee@example.com", role: "AUDITOR" as Role };
+    render(
+      <Roster
+        rows={[ADA, BEN, CY, AUDITOR]}
+        onRoleChange={() => {}}
+        editableRole={(row) =>
+          row.id === 2
+            ? { offered: ["ADMIN", "MEMBER"], optionDisabledReason: (role) => (role === "ADMIN" ? "owns work" : undefined) }
+            : row.id !== 3
+        }
+      />,
+    );
+    const floorOf = (name: string) =>
+      screen.getByRole("combobox", { name: `Role of ${name}` }).closest("td")!.querySelector("[data-select-floor]");
+    const words = (floor: Element | null) => [...(floor?.children ?? [])].map((c) => c.getAttribute("data-value"));
+
+    // Every word of the vocabulary, whatever the row offers, and never an option's reason.
+    const ben = floorOf("Ben Sample");
+    expect(words(ben)).toEqual(["Admin", "Member", "Customer"]);
+    // A held key the vocabulary does not know is a value the select shows, so it counts.
+    expect(words(floorOf("dee@example.com"))).toEqual(["Admin", "Member", "Customer", "AUDITOR"]);
+    // A chip row has no select and no floor.
+    const cy = screen.getByRole("row", { name: /cy@example\.com/ });
+    expect(cy.querySelector("[data-select-floor]")).toBeNull();
+
+    // The select's own horizontal box (padding, chevron room, type, border), with no height,
+    // not painted and hidden from a screen reader.
+    const select = screen.getByRole("combobox", { name: "Role of Ben Sample" });
+    for (const cls of ["ps-2", "pe-7", "text-xs", "border"]) {
+      expect(select).toHaveClass(cls);
+      expect(ben).toHaveClass(cls);
+    }
+    expect(ben).toHaveClass("invisible", "h-0", "py-0", "border-y-0", "whitespace-nowrap");
+    expect(ben).toHaveAttribute("aria-hidden", "true");
+    // Generated content, not text: Ben's row shows no "Customer" (not offered, not held).
+    expect(within(screen.getByRole("row", { name: /ben@example\.com/ })).queryByText("Customer")).toBeNull();
+  });
+
   it("opens the row's action menu; an entry runs, a locked one says why", async () => {
     stubViewport(true);
     const user = userEvent.setup();
