@@ -734,6 +734,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TopBarActionMenu — a link in the header that closes the menu",
     "TopBarActionMenu — group headings",
     "TopBarActions — the one order",
+    "DevMenu — one flask: the Account section, then the app's",
     "SyncStatusIndicator — the seven states",
     "TourMenu — with and without a tours page",
     "CompanySwitcher — several companies, one session",

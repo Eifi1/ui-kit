@@ -2011,6 +2011,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         saving: "Enregistrement…",
       },
       dev: {
+        menu: "Outils de dev",
+        overridesOn: "Forçages actifs",
         roleHeading: "Dev · rôle",
         switchPlan: "Changer de formule",
         plan: (value) => `Formule\u00a0: ${value}`,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import { LogOut, MessageSquare, Search, Settings, Sprout } from "lucide-react";
@@ -6,9 +6,11 @@ import {
   AccountMenuLanguage,
   AccountMenuTextSize,
   Button,
-  DevSwitchers,
+  DevMenu,
+  Input,
   LanguageMenu,
   MenuItem,
+  Modal,
   SyncStatusIndicator,
   ThemeToggle,
   ToggleGroup,
@@ -19,13 +21,20 @@ import {
   UserAvatar,
   TOPBAR_TRIGGER_CLASS,
 } from "@eifi1/ui-kit";
-import type { AccountMenuLanguageOption, SyncStatus, TextSize, ThemeMode, TourMenuTour } from "@eifi1/ui-kit";
-import { Example, Note, NO_ROUTER, READOUT, code } from "../lib/section";
+import type {
+  AccountMenuLanguageOption,
+  DevMenuSection,
+  SyncStatus,
+  TextSize,
+  ThemeMode,
+  TourMenuTour,
+} from "@eifi1/ui-kit";
+import { Example, Note, NO_ROUTER, READOUT, Row, code } from "../lib/section";
 
 /**
  * THE TOP BAR'S SHARED PARTS (0.42, docs/top-bar-harmonization.md §3.1), for a made-up
  * app, "Ada's Garden Planner": the slots in the one order, the language inside the account
- * menu, the tours compass, the sync status and the local-dev switchers. Nothing is sent.
+ * menu, the tours compass, the sync status and the local-dev menu. Nothing is sent.
  * Each bar has its own router, so its links move the frame and not this page.
  */
 
@@ -113,7 +122,7 @@ function Bar({ signedIn }: { signedIn: boolean }) {
             sync={signedIn ? <SyncStatusIndicator status={SYNC_STATES.pending} onSync={() => setLog("sync now")} /> : null}
             dev={
               signedIn ? (
-                <DevSwitchers
+                <DevMenu
                   enabled
                   roles={ROLES}
                   currentRole={role}
@@ -211,9 +220,121 @@ export function TopBar042Demo() {
           </Note>
         </div>
       </Example>
+      <DevTools />
       <SyncStates />
       <Tours />
     </>
+  );
+}
+
+/* ── The dev menu ──────────────────────────────────────────────────────── */
+
+const GARDEN_ROLES = ["Owner", "Editor", "Guest", "Viewer"] as const;
+const TODAY_PRESETS: readonly string[] = ["Real today", "Last day of this month", "First of next month", "+1 month"];
+
+function DevTools() {
+  const [role, setRole] = useState<(typeof ROLES)[number]>("ADMIN");
+  const [plan, setPlan] = useState<(typeof PLANS)[number]>("pro");
+  const [gardenRole, setGardenRole] = useState<string>("Owner");
+  // A preset's name, or the custom day the dialog picked.
+  const [today, setToday] = useState("Real today");
+  const [picking, setPicking] = useState(false);
+  const [draft, setDraft] = useState("2026-12-24");
+  const [log, setLog] = useState("—");
+  const titleId = useId();
+  const custom = !TODAY_PRESETS.includes(today);
+  // In an app these definitions live in a module only a dev build imports.
+  const sections: DevMenuSection[] = [
+    {
+      key: "garden",
+      title: "Garden",
+      entries: GARDEN_ROLES.map((r) => ({
+        key: r,
+        label: r,
+        checked: r === gardenRole,
+        onSelect: () => setGardenRole(r),
+      })),
+    },
+    {
+      key: "time",
+      title: "Time",
+      entries: [
+        ...TODAY_PRESETS.map((t) => ({ key: t, label: t, checked: t === today, onSelect: () => setToday(t) })),
+        // A free day is a row that opens the app's own dialog: a menu holds no fields.
+        { key: "custom", label: custom ? `Custom… (${today})` : "Custom…", checked: custom, onSelect: () => setPicking(true) },
+      ],
+    },
+    {
+      key: "resets",
+      title: "Resets",
+      entries: [
+        { key: "tours", label: "Reset guided tours", onSelect: () => setLog("reset → tours") },
+        { key: "hints", label: "Show dismissed hints again", onSelect: () => setLog("reset → hints") },
+        { key: "beds", label: "Seed sample beds", onSelect: () => setLog("reset → sample beds") },
+      ],
+    },
+  ];
+  return (
+    <Example
+      label="DevMenu — one flask: the Account section, then the app's"
+      hint="role · plan · Garden · Time · Resets; a dot while the day is not today"
+    >
+      <div className="flex flex-col gap-3">
+        <Frame>
+          <div className="flex items-center justify-end gap-2 p-2">
+            <DevMenu
+              enabled
+              roles={ROLES}
+              currentRole={role}
+              onRole={setRole}
+              plans={PLANS}
+              currentPlan={plan}
+              onPlan={setPlan}
+              billingOff
+              storageKey="showcase:dev-menu-original-role"
+              sections={sections}
+              active={today !== "Real today"}
+            />
+          </div>
+        </Frame>
+        <p className={READOUT}>
+          role {role} · plan {plan} · garden {gardenRole} · today {today} · last: {log}
+        </p>
+        <Modal open={picking} labelledBy={titleId} className="space-y-3" onClose={() => setPicking(false)}>
+          <h4 id={titleId} className="text-sm font-semibold text-primary">
+            Pretend today is
+          </h4>
+          <Input label="Day" type="date" value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <Row className="justify-end">
+            <Button variant="secondary" onClick={() => setPicking(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="accent"
+              disabled={!draft}
+              onClick={() => {
+                setToday(draft);
+                setPicking(false);
+              }}
+            >
+              Use this day
+            </Button>
+          </Row>
+        </Modal>
+        <Note>
+          One flask. First the kit's Account section: the role, with "Back to …" once it
+          differs from the session's first, and the plan, which says so while billing is off
+          ({code("billingOff")}). Then the app's {code("sections")}, each a group under its
+          title, in the order given. Their rows are the menu's own: a choice is radio rows, a
+          toggle a {code('checkable: "checkbox"')} row, an action a plain row. A free day is
+          the "Custom…" row, which opens the app's dialog — a menu holds no fields. Pick a day
+          other than "Real today" and {code("active")} puts a dot on the flask; its words,
+          "Overrides on", join the trigger's name. The panel scrolls when its rows outgrow
+          the screen. In an app it renders only in a dev build whose server answers the dev
+          route, and the sections are defined in a module only a dev build imports.
+        </Note>
+      </div>
+    </Example>
   );
 }
 

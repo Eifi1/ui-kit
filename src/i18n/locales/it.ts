@@ -1991,6 +1991,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         saving: "Salvataggio…",
       },
       dev: {
+        menu: "Strumenti di sviluppo",
+        overridesOn: "Override attivi",
         roleHeading: "Dev · ruolo",
         switchPlan: "Cambia piano",
         plan: (value) => `Piano: ${value}`,

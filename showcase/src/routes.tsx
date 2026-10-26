@@ -1259,7 +1259,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
-        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher", "TopBarActions", "TOP_BAR_ACTION_ORDER", "AccountMenuLanguage", "AccountMenuTextSize", "TourMenu", "SyncStatusIndicator", "syncState", "SyncStatus", "DevSwitchers", "DEV_ORIGINAL_ROLE_KEY"],
+        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher", "TopBarActions", "TOP_BAR_ACTION_ORDER", "AccountMenuLanguage", "AccountMenuTextSize", "TourMenu", "SyncStatusIndicator", "syncState", "SyncStatus", "DevMenu", "DevMenuSection", "DevSwitchers", "DEV_ORIGINAL_ROLE_KEY"],
         Body: () => (
           <>
             <ShellSection />

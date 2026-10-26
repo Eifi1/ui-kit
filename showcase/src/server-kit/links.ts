@@ -24,7 +24,8 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   settings: ["settings", "localisation"],
   // The demo's start, banner and end, and the routing that lets a demo through.
   demo: ["landing-demo"],
-  // The dev-only role and plan switch behind the Shell page's `DevSwitchers` (0.14).
+  // The dev-only role and plan switch (0.14) behind the Account section of the Shell
+  // page's `DevMenu`.
   dev_switch: ["shell"],
   // The plans, the standing and the read-only lock the Subscription page's parts render.
   billing: ["subscription"],
