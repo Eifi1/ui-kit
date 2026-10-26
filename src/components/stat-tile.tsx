@@ -213,8 +213,9 @@ export interface StatTileProps
    * 0.51: or several, in order (keksdose #633). Its figure tiles carry two forward rows,
    * "Committed <date>" (today plus what is scheduled) and "Projected <date>" (that plus the
    * usual variable money), both of which belong with the headline and neither with the
-   * history below. The tile draws what it is given; which rows to show — keksdose leaves
-   * out a row that prints the same figure as the one above it — is the app's rule.
+   * history below. The tile draws what it is given; which rows to give is the app's rule
+   * (keksdose shows both on every tile, live #455, even where Committed equals the figure
+   * so far).
    */
   projection?: StatTileSubValue | readonly StatTileSubValue[];
   /**

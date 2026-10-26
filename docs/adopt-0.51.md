@@ -76,8 +76,11 @@ contract is docs/top-bar-harmonization.md §2.7.1.
   body that leaves it out), answers it in `DevSwitchAnswer.today`, and every server path that
   asks for today reads `effective_today(override, gate=…, today=…)`, which gives the real date
   whenever the gate is shut. While one is set, the client takes today from the answer, not
-  from its own clock, so the dates it works out itself agree with the server's. Each app keeps
-  the override its own way, as it keeps the role.
+  from its own clock, so the dates it works out itself agree with the server's — and it reads
+  the answer BEFORE the first render, in a dev-only hook at boot outside the lazy menu chunk
+  (rule 2): otherwise a reload starts on the device clock until the menu loads and its probe
+  answers, and a month end or a "Committed <date>" worked out in that window disagrees with
+  the server's (keksdose N2). Each app keeps the override its own way, as it keeps the role.
 
 **The dev-only rules (§2.7.1).** They are the app's to keep; the kit cannot check them.
 1. Render the menu only with `enabled = import.meta.env.DEV` AND the probe of the dev route
@@ -105,7 +108,7 @@ A test that finds a trigger by "Switch role" or "Switch plan" now finds nothing.
 
 | App | Where | Steps |
 |---|---|---|
-| keksdose | `app/dev-switchers.tsx:67`: `TopBarDevSwitchers` renders `DevSwitchers<UserRole, DevPlan>`; its slot is `app/top-bar.tsx:166` (`import.meta.env.DEV && user ? … : undefined`), imported statically at `:13`. Its tests `app/__tests__/top-bar.test.tsx:66–67`, `:74–75`, `:85` and `:93` find the triggers by "Switch role · Role: ADMIN" and "Switch plan · Plan: standard" / "Plan: pro". | **In the bump:** those four tests look up the one flask: `/^Dev tools/`, or "Dev tools · Role: ADMIN · Plan: standard" (`:74–75` become one lookup, `:93` is "… · Plan: pro"); `:66–67` become one `queryByRole("button", { name: /^Dev tools/ })`. Then `DevSwitchers` → `DevMenu` (same props). For the budget role, the "today" override and the resets: move `TopBarDevSwitchers` with their definitions into a module loaded by `import.meta.env.DEV ? lazy(…) : null` in `top-bar.tsx` (rule 2), set `active` while "today" is overridden, and route each server-backed row behind `KEKSDOSE_DEV_SWITCH_ENABLED` and the local-run check (rule 3). |
+| keksdose | `app/dev-switchers.tsx:67`: `TopBarDevSwitchers` renders `DevSwitchers<UserRole, DevPlan>`; its slot is `app/top-bar.tsx:166` (`import.meta.env.DEV && user ? … : undefined`), imported statically at `:13`. Its tests `app/__tests__/top-bar.test.tsx:66–67`, `:74–75`, `:85` and `:93` find the triggers by "Switch role · Role: ADMIN" and "Switch plan · Plan: standard" / "Plan: pro". | **In the bump:** those four tests look up the one flask: `/^Dev tools/`, or "Dev tools · Role: ADMIN · Plan: standard" (`:74–75` become one lookup, `:93` is "… · Plan: pro"); `:66–67` become one `queryByRole("button", { name: /^Dev tools/ })`. Then `DevSwitchers` → `DevMenu` (same props). For the budget role, the "today" override and the resets: move `TopBarDevSwitchers` with their definitions into a module loaded by `import.meta.env.DEV ? lazy(…) : null` in `top-bar.tsx` (rule 2), set `active` while "today" is overridden, and route each server-backed row behind `KEKSDOSE_DEV_SWITCH_ENABLED` and the local-run check (rule 3). **The dev clock is the bigger half of the bump** (keksdose N1): the server has no "today" seam yet — 61 `date.today()` calls in 28 files under `backend/keksdose`, plus `datetime.now()` reads that mean today (no database-side clock reads in queries) — so one `app_today()` over `effective_today` replaces them; a process-wide override fits a one-user local server, reaching background paths without the user in every signature. The client's seam is `todayIso()` (`shared/ledger/dates.ts:30`), reading the answer at boot (above). |
 | kastlan | `shared/components/dev/dev-role-switcher.tsx:56`: `DevRoleSwitcher` renders `DevSwitchers<UserRole, Plan>` with a per-company `storageKey`; its slot is `app/top-bar.tsx:201` (`import.meta.env.DEV && <DevRoleSwitcher />`). No test names the triggers. | `DevSwitchers` → `DevMenu`, same props; it draws one flask on the bump either way. No sections needed. Optional: the lazy import of rule 2. |
 | Kurvenschmiede | `app/top-bar-parts.tsx:157`: `AppDevSwitchers` renders `DevSwitchers<UserRole, …>`; its slot is `app/top-bar.tsx:75` (`user ? <AppDevSwitchers user={user} /> : undefined`, **not** behind `import.meta.env.DEV`: only `enabled` is). Its test `app/top-bar.test.tsx:192` finds the trigger by `/Switch role/` (`:183`'s `/Dev/` still matches nothing while the gate is shut). | **In the bump:** `:192` looks up `/^Dev tools/`. Then `DevSwitchers` → `DevMenu`, same props. Optional: fill the slot only behind `import.meta.env.DEV` (`import.meta.env.DEV && user ? … : undefined`), as the other two do, so a production build drops the branch. |
 
@@ -137,12 +140,13 @@ stacked figures), and each keeps its own `tone`. One row as before still works.
 ]} subValues={history} />
 ```
 
-The tile draws the rows it is given. Which to leave out is the app's rule; keksdose's (feedback
-#51 for two rows): a row only when its PRINTED figure differs from the row above it. The
-showcase's Stats page shows it.
+The tile draws the rows it is given; which rows to give is the app's rule. keksdose shows both
+on every tile (live #455, Marcel: "Always show both, on every tile"), also where Committed
+equals the figure so far. The showcase's Stats page shows both cases.
 
-**keksdose:** your shared tile's interim (`projection` = Committed, `subValues` = [Projected,
-…history]) becomes `projection={[committed, projected]}` at the marked switch point.
+**keksdose:** your shared tile's interim (`kpi-card.tsx:163` `projection` = Committed,
+`:144–147` the estimate leading `subValues`) becomes `projection={[committed, projected]}` at
+those lines.
 **kastlan, Kurvenschmiede:** nothing to do.
 
 ## Server wake: "slow" is timed from the oldest request still out (keksdose live #454)
@@ -188,8 +192,13 @@ and `PublicFooter` (the three legal links) by default, as `LegalPage` draws its 
   `landmark={false}` for a preview.
 - New type `PageSeo`, the argument `usePageSeo` always took (named now; the hook is unchanged).
 
-**keksdose:** draw `/prices` (price pool v2) in it instead of composing the header, column,
-footer and `usePageSeo` by hand. **Kurvenschmiede:** for the next public page outside the
+**keksdose:** draw `/prices` (price pool v2, `prices-page.tsx:172–250`) in it instead of
+composing the header, column, footer and `usePageSeo` (`:107`) by hand: `header={<LandingHeader />}`,
+`footer={<SiteFooter />}` (yours), the canonical `/prices` as `seo`. The region and month
+pickers stay inside the snapshot section (they belong to a snapshot), not in `actions`. It
+changes the look a little — the column `max-w-5xl` → `max-w-6xl`, `py-8` on a phone → `py-12`,
+the h1 `text-2xl sm:text-3xl font-semibold` → `text-3xl font-bold`, the lede `max-w-3xl` →
+`text-lg max-w-2xl` — so check the de-CH and French titles at 390px. **Kurvenschmiede:** for the next public page outside the
 shell; `/control`, `/steering` and the 404 stay as they are (in the shell, for signed-in readers
 too). **kastlan:** nothing to do.
 
@@ -262,7 +271,7 @@ are wider than its header.
 
 | App | Where | Steps |
 |---|---|---|
-| keksdose | `features/transactions/transactions-page.tsx:1114` (`virtualize`), the columns' `fitPriority` in `use-transaction-columns.tsx` (Memo 1, Account 2, Status 3, Category 4). | Nothing. Status no longer stays out at a width where it fits. |
+| keksdose | `features/transactions/transactions-page.tsx:1114` (`virtualize`, on since 0.4.69), the columns' `fitPriority` in `use-transaction-columns.tsx` (Memo 1, Account 2, Status 3, Category 4). | Nothing. Status no longer stays out at a width where it fits; re-check it once in the bump's production build at 1124×1162 (the run 637 harness). |
 | kastlan | No `virtualize`. | Nothing. |
 | Kurvenschmiede | No `virtualize`. | Nothing. |
 

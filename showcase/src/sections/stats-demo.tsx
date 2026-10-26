@@ -25,23 +25,12 @@ const VISITS = [120, 132, 101, 134, 90, 230, 210, 250, 245, 280];
 const GAPPY = [4, 6, 5, null, null, 7, 9, 8];
 const NET = [320, -140, 80, -60, 210, 150];
 
-const EUR = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" });
-
-/**
- * keksdose's rule for its forward rows (feedback #51, extended to two rows for #633): a row
- * is drawn only when its PRINTED figure differs from the row above it — Committed from
- * today's figure, Projected from Committed, or from today's when Committed is left out. The
- * tile draws what it is given; the rule is the app's.
- */
-function forwardRows(today: number, committed: number, projected: number, date: string): StatTileSubValue[] {
-  const rows: StatTileSubValue[] = [];
-  let above = EUR.format(today);
-  if (EUR.format(committed) !== above) {
-    rows.push({ label: `Committed ${date}`, value: committed });
-    above = EUR.format(committed);
-  }
-  if (EUR.format(projected) !== above) rows.push({ label: `Projected ${date}`, value: projected });
-  return rows;
+/** keksdose's two forward rows (#633), on every tile (live #455: "Always show both"). */
+function forwardRows(committed: number, projected: number, date: string): StatTileSubValue[] {
+  return [
+    { label: `Committed ${date}`, value: committed },
+    { label: `Projected ${date}`, value: projected },
+  ];
 }
 
 export function StatsDemo() {
@@ -196,7 +185,7 @@ export function StatsDemo() {
 
       <Example
         label="projection as a list: Committed and Projected"
-        hint="0.51, keksdose #633: two forward rows with the headline, the history below; a row that prints the same as the one above it is left out"
+        hint="0.51, keksdose #633: two forward rows with the headline, the history below"
       >
         <StatTileGrid>
           <StatTile
@@ -204,7 +193,7 @@ export function StatsDemo() {
             value={12_480}
             currency="EUR"
             valueLabel="TODAY"
-            projection={forwardRows(12_480, 11_930, 12_610, "31 Oct")}
+            projection={forwardRows(11_930, 12_610, "31 Oct")}
             subValues={[
               { label: "SEP", value: 12_020, tone: "none" },
               { label: "AUG", value: 11_640, tone: "none" },
@@ -215,25 +204,17 @@ export function StatsDemo() {
             value={12_480}
             currency="EUR"
             valueLabel="TODAY"
-            projection={forwardRows(12_480, 12_480, 12_610, "31 Oct")}
-            subValues={[{ label: "SEP", value: 12_020, tone: "none" }]}
-          />
-          <StatTile
-            label="Net worth"
-            value={12_480}
-            currency="EUR"
-            valueLabel="TODAY"
-            projection={forwardRows(12_480, 11_930, 11_930, "31 Oct")}
+            projection={forwardRows(12_480, 12_610, "31 Oct")}
             subValues={[{ label: "SEP", value: 12_020, tone: "none" }]}
           />
         </StatTileGrid>
         <Note>
           <code className="font-mono">projection</code> takes one row or several, drawn in order under the
           headline. keksdose&apos;s tiles show &ldquo;Committed&rdquo; (today plus what is scheduled) and
-          &ldquo;Projected&rdquo; (that plus the usual variable money). The second tile has nothing
-          scheduled, so Committed would repeat today&apos;s figure and is left out; in the third the
-          estimate adds nothing, so Projected would repeat Committed. That choice is the app&apos;s: the
-          tile draws the rows it is given.
+          &ldquo;Projected&rdquo; (that plus the usual variable money), on every tile: the second has
+          nothing scheduled, so Committed equals today&apos;s figure, and it is shown all the same
+          (keksdose live #455). Which rows to give is the app&apos;s choice; the tile draws the rows it
+          is given.
         </Note>
       </Example>
 

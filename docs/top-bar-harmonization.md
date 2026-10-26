@@ -192,6 +192,12 @@ kit cannot enforce them.
    belong to the roving focus and Tab closes it, so a field inside one loses its own
    keys, and a screen reader in a menu does not expect one. A free value, such as a date,
    is a "Custom…" row that opens the app's own dialog.
+5. **A "today" override is read at boot, before the first render** (server-kit 0.20's dev
+   clock, `DevSwitchAnswer.today`; keksdose's 0.51 review). The menu's own probe sits in
+   the lazy chunk of rule 2, so a reload waiting for it works out dates — a month end, a
+   "Committed <date>" — on the device clock until it answers. A dev-only hook outside the
+   chunk reads the answer first, and the app's own "today" (keksdose's `todayIso()`) takes
+   it from there.
 
 ## 3. What the kits add
 
