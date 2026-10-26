@@ -21,6 +21,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.51.1](https://github.com/Eifi1/ui-kit/compare/v0.51.0...v0.51.1) (2026-10-26)
+
+### Fixed
+
+* **data-table:** revert "a column the fit brings back is drawn at the widths it measured" ([5d1f961](https://github.com/Eifi1/ui-kit/commit/5d1f961ebaad707892482710c88b6ab859692dcb))
+
 ## [0.51.0](https://github.com/Eifi1/ui-kit/compare/v0.50.1...v0.51.0) (2026-10-26)
 
 ### ⚠ BREAKING CHANGES
