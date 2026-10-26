@@ -28,3 +28,18 @@ commits. The development warnings for these names are gone with them.
 
 A JavaScript caller that still passes `variant="primary"` gets no class for the variant (no
 error at run time); TypeScript reports it.
+
+## `TourLauncher`'s `engine` stays required (keksdose's 0.50.1 note)
+
+0.50.1 gave `TourLauncher` a required fourth parameter, `engine`, and code that CALLS a
+launcher with `(id, opts, start)` stopped compiling (TS2554) in a patch release. That was the
+kit's mistake. 0.51 keeps the parameter required anyway: the kit always passes it, and an
+optional `engine` would make every launcher that uses it check for `undefined`. Code that
+forwards a launcher passes the engine on, as keksdose's AppTourProvider already does:
+
+```ts
+const launch = useCallback<TourLauncher>((id, opts, start, engine) => launcher.current?.(id, opts, start, engine), []);
+```
+
+**Apps:** nothing to do. keksdose forwards the engine (app-tour-provider.tsx:27); kastlan and
+Kurvenschmiede never call a launcher themselves.
