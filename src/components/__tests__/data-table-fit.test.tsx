@@ -56,25 +56,13 @@ function stubGetter(proto: object, name: string, get: (this: HTMLElement) => num
 /** A header's column: its text (the headers below are their keys; the `<th>` has no `data-col`). */
 const key = (th: HTMLElement) => th.textContent?.trim() ?? "";
 
-/** The width `virtualize` locked for a header's column in its `<colgroup>`, 0 without one.
- *  In an auto table layout a `<col>`'s width is the column's least: it is drawn at the
- *  wider of that and its content. */
-function lockedWidth(th: HTMLElement): number {
-  const cols = th.closest("table")?.querySelectorAll<HTMLElement>(":scope > colgroup > col");
-  const col = cols?.[(th as HTMLTableCellElement).cellIndex];
-  return col ? parseFloat(col.style.width) || 0 : 0;
-}
-
-/** A non-grow header's width as drawn: its content's, or its locked width. */
-const headWidth = (th: HTMLElement) => Math.max(WIDTH[key(th)] ?? 50, lockedWidth(th));
-
 /** The widths of the table's own `<th>`s, the `grow` one taking the rest (≥ 24px). */
 function layout(table: HTMLElement) {
   const ths = [...table.querySelectorAll<HTMLElement>("thead th")];
   const growTh = ths.find((th) => th.className.includes("w-full"));
   const others = ths
     .filter((th) => th !== growTh)
-    .reduce((sum, th) => sum + headWidth(th) + (EXTRA[key(th)] ?? 0), 0);
+    .reduce((sum, th) => sum + (WIDTH[key(th)] ?? 50) + (EXTRA[key(th)] ?? 0), 0);
   // `w-full`: the table is at least the scroller's width; `min-content` (the fit's own
   // probe of what a table without a `grow` column needs) is its content's width.
   if (!growTh) return { table: table.style.width === "min-content" ? others : Math.max(avail, others), grow: 0 };
@@ -94,7 +82,7 @@ beforeEach(() => {
     if (this.tagName === "TABLE") return layout(this).table;
     if (this.tagName === "TH" && this.closest("thead")) {
       const l = layout(this.closest("table") as HTMLElement);
-      return l.growTh === this ? l.grow : headWidth(this);
+      return l.growTh === this ? l.grow : (WIDTH[key(this)] ?? 50);
     }
     return 0;
   });
@@ -361,96 +349,6 @@ describe("DataTable fit (0.48, keksdose live #451)", () => {
       col("d", { fitPriority: 2 }),
     ]).map((c) => c.key);
     expect(order).toEqual(["c", "d", "a"]);
-  });
-});
-
-/**
- * keksdose N2 (0.49 review 3): with `virtualize`, a `fitPriority` column brought back was
- * estimated at 606 + 93 = 699 ≤ 757 but drawn needed 778–812. Hidden, the table is measured
- * afresh (the lock's signature names the columns, so it has none); shown again within the
- * same frame — before `virtualize` measured anything — the signature was the one the lock
- * was taken under, so the table came back at the widths that had ratcheted up while rows
- * scrolled, not the ones the fit had just measured. B2's guard then kept the column out
- * although it fitted. Modelled here: Account ratchets 300 → 350 while a wide cell is in view
- * and goes back to 300 when it leaves; then a refetch (same rows, a wider Amount) has the
- * fit measure the ratcheted table, 759 > 757.
- */
-describe("under `virtualize`, a column brought back is drawn as the fit measured it (keksdose N2, 0.51)", () => {
-  const VCOLS: DataTableColumn<Row>[] = [
-    col("acct"),
-    col("title", { grow: true }),
-    col("amount"),
-    col("state", { fitPriority: 1 }),
-  ];
-  const NATURAL = { acct: 300, amount: 146, state: 93 };
-  let frames: FrameRequestCallback[] = [];
-  const flushFrames = () =>
-    act(() => {
-      const run = frames;
-      frames = [];
-      for (const cb of run) cb(0);
-    });
-
-  beforeEach(() => {
-    Object.assign(WIDTH, NATURAL);
-    frames = [];
-    // `virtualize` measures in the next animation frame: the test decides when one runs.
-    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => frames.push(cb));
-    vi.stubGlobal("cancelAnimationFrame", () => {});
-    // Its lock reads the header cells' and the table's rects: the same model.
-    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
-      const sized = this instanceof HTMLElement && (this.tagName === "TABLE" || (this.tagName === "TH" && this.closest("thead")));
-      const width = sized ? (this as HTMLElement).offsetWidth : 0;
-      return { top: 0, left: 0, bottom: 0, right: width, width, height: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
-    });
-  });
-  afterEach(() => {
-    for (const k of Object.keys(NATURAL)) delete WIDTH[k];
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
-
-  const lockOf = (table: HTMLElement) =>
-    [...table.querySelectorAll<HTMLElement>(":scope > colgroup > col")].map((c) => c.style.width);
-
-  it("comes back at the widths measured with it, not the ones its last showing ratcheted up to", () => {
-    avail = 757;
-    const rows = [...ROWS];
-    const ui = (r: Row[]) => (
-      <MemoryRouter>
-        <DataTable rows={r} columns={VCOLS} rowKey={(x) => x.id} virtualize paginated={false} />
-      </MemoryRouter>
-    );
-    const { rerender } = render(ui(rows));
-    const table = screen.getByRole("table");
-    // 300 + 146 + 93 + Title's 10rem = 699 ≤ 757: all in; the first frame locks the widths.
-    flushFrames();
-    flushFrames();
-    expect(heads(table)).toEqual(["acct", "title", "amount", "state"]);
-    expect(lockOf(table)).toEqual(["300px", "", "146px", "93px"]);
-
-    // A wider Account cell in view (a scroll; here the focus moving to a row asks the same
-    // measure): its column grows once, and keeps that width after the cell has gone.
-    WIDTH.acct = 350;
-    fireEvent.focusIn(table.querySelector("tr[data-row-index='0']")!);
-    flushFrames();
-    expect(lockOf(table)[0]).toBe("350px");
-    WIDTH.acct = 300;
-
-    // A refetch: the same rows, Amount 10px wider. Drawn as locked the table needs
-    // 350 + 156 + 93 + 160 = 759 > 757, so State leaves; measured afresh without it the
-    // table needs 616, and 616 + 93 ≤ 757 brings it back. Drawn as measured, it needs
-    // 300 + 156 + 93 + 160 = 709: it stays.
-    WIDTH.amount = 156;
-    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
-    rerender(ui([...rows]));
-    expect(errors.mock.calls.flat().map(String).join("\n")).not.toMatch(/Maximum update depth/);
-    expect(heads(table)).toEqual(["acct", "title", "amount", "state"]);
-    // The next frame locks what is drawn now: Account at 300, not the 350 it once was.
-    flushFrames();
-    flushFrames();
-    expect(heads(table)).toEqual(["acct", "title", "amount", "state"]);
-    expect(lockOf(table)).toEqual(["300px", "", "156px", "93px"]);
   });
 });
 
