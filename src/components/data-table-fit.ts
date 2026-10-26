@@ -183,7 +183,10 @@ export function useColumnFit<T>({
     // update limit (#185). So a column whose return the next measure undid, at the same
     // scroller width, waits for more room than it had then: a wider scroller or narrower
     // content. Whatever the error in its width, that is one invisible flip per room it is
-    // tried at.
+    // tried at. (0.51, keksdose N2: under `virtualize` that excess was the table coming
+    // back at an OLD lock's ratcheted widths, not the ones measured here; the lock now goes
+    // when the columns change, data-table-virtual.ts. The guard stays for the rest: a
+    // column whose drawn cells are wider than its header.)
     let n = current.length;
     const rooms = new Map<string, number>();
     while (n > 0) {

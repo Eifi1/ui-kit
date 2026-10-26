@@ -54,3 +54,27 @@ card is unchanged (the select fills its 240px field).
 | keksdose | `features/admin/users-panel.tsx:807`, `editableRole` (`:752`): the role select. | Nothing. The Role column widens to its longest role word; check the admin page at 1280px once. |
 | kastlan | `features/settings/components/users-panel.tsx:341`: no `editableRole` (its roles are a "Manage roles" action), so chips. | Nothing. |
 | Kurvenschmiede | `features/admin/users-panel.tsx:418`, `editableRole` with `offered` and `optionDisabledReason` (`:421–426`). | Nothing. The Role column widens by ~20px (en) to ~50px (es, hu); the 0.50 adoption's `fitPriority` 3/4/5 on the extras still decides what leaves, so check `/admin/users` at 1100 and 1280px once. |
+
+## keksdose N2: under `virtualize`, a column the fit brings back stays when it fits
+
+From keksdose's 0.49 review 3 (B2's guard held). With `virtualize`, a `fitPriority` column
+the table left out and brought back was estimated at 606 + 93 = 699 ≤ 757 but drawn needed
+778–812, so it went again and B2's guard kept it out although it fitted. The cause:
+`virtualize` locks the columns' widths in a `<colgroup>` under a signature that names the
+columns, and only ever grows them while rows scroll. Leaving the column out changes the
+signature, so the fit measures that table afresh (606); bringing it back in the same frame,
+before `virtualize` measures anything, restored the old signature, and with it the OLD lock,
+whose widths had ratcheted up while rows scrolled. The lock now goes as soon as the signature
+changes, so the table the column comes back to is drawn as the fit measured it (the next
+frame locks that).
+
+Visible effect: such a column comes back (and stays) once there is room by the fresh
+measure; the columns' ratcheted widths reset to the rows in view when it does, as they
+already did on any other column change. B2's guard is unchanged for a column whose cells
+are wider than its header.
+
+| App | Where | Steps |
+|---|---|---|
+| keksdose | `features/transactions/transactions-page.tsx:1114` (`virtualize`), the columns' `fitPriority` in `use-transaction-columns.tsx` (Memo 1, Account 2, Status 3, Category 4). | Nothing. Status no longer stays out at a width where it fits. |
+| kastlan | No `virtualize`. | Nothing. |
+| Kurvenschmiede | No `virtualize`. | Nothing. |
