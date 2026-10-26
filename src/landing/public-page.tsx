@@ -51,8 +51,10 @@ const WIDTH = { wide: "max-w-6xl", prose: "max-w-3xl" } as const;
  * "Back to home" of its own, and indexed unless it says otherwise.
  *
  * keksdose was about to compose it by hand (`PublicHeader` + a column + `PublicFooter` +
- * `usePageSeo`), and Kurvenschmiede had drawn its visitor pages inside the app shell with
- * a footer bolted on (visitor-legal-footer.tsx); the next app would have drawn a third.
+ * `usePageSeo`) for /prices, and Kurvenschmiede will have its next public page outside the
+ * shell; each app would have drawn the frame its own way. (KS's visitor pages — /dashboard,
+ * /control, /dynamics, /steering — are working screens and stay in the app shell, with
+ * `VisitorLegalFooter`; this frame is not for them.)
  * The width is the landing's (`max-w-6xl`), so a link from a feature row lands on a page
  * whose edges line up with the one it came from.
  *

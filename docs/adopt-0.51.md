@@ -212,8 +212,9 @@ pickers stay inside the snapshot section (they belong to a snapshot), not in `ac
 changes the look a little — the column `max-w-5xl` → `max-w-6xl`, `py-8` on a phone → `py-12`,
 the h1 `text-2xl sm:text-3xl font-semibold` → `text-3xl font-bold`, the lede `max-w-3xl` →
 `text-lg max-w-2xl` — so check the de-CH and French titles at 390px. **Kurvenschmiede:** for the next public page outside the
-shell; `/control`, `/steering` and the 404 stay as they are (in the shell, for signed-in readers
-too). **kastlan:** nothing to do.
+shell. Nothing moves: `/dashboard`, `/control`, `/dynamics` with its lessons, `/steering` and the
+404 are working screens in the shell (signed-in readers use them too, and the course needs the
+shell's nav), with `VisitorLegalFooter` for a visitor's three links. **kastlan:** nothing to do.
 
 ## kastlan K1: a clamped strip keeps "Send again" on its line (`clampMobile`)
 
@@ -256,13 +257,15 @@ roles: on 0.50 the Role column was 92px and the select 68px (30px for the value:
 but Hungarian's "Tag" clipped); now the column is 109px (de-CH, "Prüfer/in") to 114px (en,
 "Customer"), 138px (es, "Administrador") and 141px (hu, "Adminisztrátor"), every value whole,
 and Name gives the room back (the table stays 851px, nothing leaves for width). The phone
-card is unchanged (the select fills its 240px field).
+card is unchanged (the select fills its 240px field). That 900px pane is Kurvenschmiede at
+about 1536px; in its narrower panes a `fitPriority` column can now leave where it stayed
+before (see the KS row).
 
 | App | Where | Steps |
 |---|---|---|
 | keksdose | `features/admin/users-panel.tsx:807`, `editableRole` (`:752`): the role select. | Nothing. The Role column widens to its longest role word; check the admin page at 1280px once. |
 | kastlan | `features/settings/components/users-panel.tsx:341`: no `editableRole` (its roles are a "Manage roles" action), so chips. | Nothing. |
-| Kurvenschmiede | `features/admin/users-panel.tsx:418`, `editableRole` with `offered` and `optionDisabledReason` (`:421–426`). | Nothing. The Role column widens by ~20px (en) to ~50px (es, hu); the 0.50 adoption's `fitPriority` 3/4/5 on the extras still decides what leaves, so check `/admin/users` at 1100 and 1280px once. |
+| Kurvenschmiede | `features/admin/users-panel.tsx:418`, `editableRole` with `offered` and `optionDisabledReason` (`:421–426`). | Nothing to change in code, but one column more can leave. KS's review measured the role whole in all seven languages at 1100–1536px (cut everywhere on 0.50.1), with the Role column at 1280 going 92 → 114 (en) … 145 (it). KS's pane, with the sidebar and the admin nav open, is 466px at 1100, 646 at 1280, 732 at 1366, 902 at 1536, and there one `fitPriority` column now leaves at some widths: Plan (fp 4) at en 1280, Reviews (fp 3) at en/es/fr 1366, Last login (fp 2) at de-CH/es/fr/it 1536 (no change at 1100, nor in zh and hu). What leaves is in the Columns menu; re-measure the order at `users-panel.tsx:440–445` at the bump. |
 
 ## keksdose N2: under `virtualize`, a column the fit brings back stays when it fits
 
