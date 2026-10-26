@@ -364,6 +364,10 @@ export interface EmailVerificationBannerProps {
    * of a 390px phone). The resend's outcome ("Sent", the error) then moves out of the
    * message to sit after "Send again", at every width, so the line that answers the press
    * is never hidden behind "More". Default `false`: the outcome stays in the message.
+   *
+   * 0.51 (kastlan K1, KX-5): in the `strip` variant "Send again" then stays on the clamped
+   * message's line on a phone — one line, 43px, on a 390px phone in all seven catalogues —
+   * where it took a line of its own (71px). The box's equivalent is `actionPlacement`.
    */
   clampMobile?: boolean;
   /**

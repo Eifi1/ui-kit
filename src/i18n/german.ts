@@ -2036,6 +2036,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         saving: "Wird gespeichert…",
       },
       dev: {
+        menu: "Dev-Werkzeuge",
+        overridesOn: "Überschreibungen aktiv",
         roleHeading: "Dev · Rolle",
         switchPlan: "Tarif wechseln",
         plan: (value) => `Tarif: ${value}`,

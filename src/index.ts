@@ -1075,7 +1075,10 @@ export type {
   PublicFooterProps,
 } from "./landing/landing-sections";
 export { usePageSeo, seoCopyProblems, metaContent } from "./landing/page-seo";
-export type { SeoCopy, SeoCopyLimits, SeoCopyProblem, SeoCopyProblemCode } from "./landing/page-seo";
+export type { PageSeo, SeoCopy, SeoCopyLimits, SeoCopyProblem, SeoCopyProblemCode } from "./landing/page-seo";
+// 0.51.0 (Marcel 2026-10-26): the frame of a public page that is not the landing or a legal page.
+export { PublicPage } from "./landing/public-page";
+export type { PublicPageProps } from "./landing/public-page";
 
 // ── demo ─────────────────────────────────────────────────────────────────────
 // 0.31.0 (docs/landing-demo-harmonization.md): the demo's start, banner, countdown and end.

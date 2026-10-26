@@ -28,8 +28,8 @@ with its own Tailwind config.
 ## Compatibility with server-kit
 
 The backend half, [`eifi1-server-kit`](https://github.com/Eifi1/server-kit), is a separate
-package with its own version and changelog. **ui-kit 0.49 ↔ server-kit 0.19**: this release
-is tested against server-kit 0.19.0's API export (the showcase's Server kit pages and the
+package with its own version and changelog. **ui-kit 0.51 ↔ server-kit 0.20**: this release
+is tested against server-kit 0.20.0's API export (the showcase's Server kit pages and the
 vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
 
 ## Documentation
@@ -568,16 +568,16 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2189 names from 361 modules** — 1014 values and 1175 types. _Italic_ is a type-only export.
+**2193 names from 363 modules** — 1014 values and 1179 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2189 |
+| `@eifi1/ui-kit` | 2193 |
 | `@eifi1/ui-kit/chart` | 100 |
-| `@eifi1/ui-kit/shell` | 117 |
+| `@eifi1/ui-kit/shell` | 119 |
 | `@eifi1/ui-kit/data-table` | 56 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
@@ -661,7 +661,7 @@ re-slicing of it, never a second API.
 |---|---|
 | `theme/color` | `contrast`, `deltaE`, `hexToOklch`, `luminance`, `oklchToHex`, `oklchToRgb`, `parseHex`, `rgbToOklch`, `simulateCvd`, `solveLightness`, `toHex`, _`CvdType`_, _`Oklch`_, _`Rgb`_ |
 | `theme/palette-derive` | `auditChartRamp`, `auditPalette`, `deriveChartRamp`, `derivePalette`, `describe`, _`AnchorRole`_, _`ChartRampReport`_, _`ContrastCheck`_, _`ContrastReport`_, _`DerivedPalette`_, _`DeriveOptions`_, _`PaletteAnchors`_, _`SemanticTokens`_ |
-| `theme/palette-presets` | `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `IMPRINT_PRESET`, `PALETTES`, `PAUL_TOL_PRESET`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
+| `theme/palette-presets` | `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `PALETTES`, `PAUL_TOL_PRESET`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
 | `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
 | `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
 | `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
@@ -841,7 +841,7 @@ re-slicing of it, never a second API.
 |---|---|
 | `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageMenuTrigger`_, _`LanguageOption`_ |
 | `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
-| `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_BAR_MAX`, `DEFAULT_MOBILE_MAX_ITEMS`, `pickMobileBar`, `splitMobileBar`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
+| `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_MAX_ITEMS`, `pickMobileBar`, `splitMobileBar`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
 | `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
 | `shell/role-switcher` | `RoleSwitcher`, _`RoleSwitcherProps`_ |
 | `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
@@ -854,7 +854,8 @@ re-slicing of it, never a second API.
 | `shell/account-menu-text-size` | `AccountMenuTextSize`, _`AccountMenuTextSizeProps`_ |
 | `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
 | `shell/sync-status-indicator` | `syncState`, `SyncStatusIndicator`, _`SyncState`_, _`SyncStatus`_, _`SyncStatusIndicatorProps`_, _`SyncStatusScope`_ |
-| `shell/dev-switchers` | `DEV_ORIGINAL_ROLE_KEY`, `DevSwitchers`, _`DevSwitchersProps`_ |
+| `shell/dev-menu` | `DEV_ORIGINAL_ROLE_KEY`, `DevMenu`, _`DevMenuProps`_, _`DevMenuSection`_ |
+| `shell/dev-switchers` | `DevSwitchers`, _`DevSwitchersProps`_ |
 | `shell/top-bar-parts-labels` | `DEFAULT_TOP_BAR_PARTS_LABELS`, `useTopBarPartsLabels`, _`DevSwitchersLabels`_, _`SyncStatusLabels`_, _`TopBarPartsLabels`_, _`TourMenuLabels`_ |
 | `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
 
@@ -884,7 +885,8 @@ re-slicing of it, never a second API.
 | `landing/access` | `accessAction`, `useAccessAction`, _`AccessChoice`_, _`AccessLabels`_, _`AccessLink`_ |
 | `landing/landing-actions` | `LandingActions`, _`LandingActionsProps`_, _`LandingSession`_ |
 | `landing/landing-sections` | `CtaBand`, `FeatureRow`, `FeatureRows`, `Hero`, `PublicFooter`, `TrustStrip`, _`CtaBandProps`_, _`FeatureRowProps`_, _`FeatureRowsProps`_, _`HeroProps`_, _`PublicFooterProps`_, _`TrustItem`_, _`TrustStripProps`_ |
-| `landing/page-seo` | `metaContent`, `seoCopyProblems`, `usePageSeo`, _`SeoCopy`_, _`SeoCopyLimits`_, _`SeoCopyProblem`_, _`SeoCopyProblemCode`_ |
+| `landing/page-seo` | `metaContent`, `seoCopyProblems`, `usePageSeo`, _`PageSeo`_, _`SeoCopy`_, _`SeoCopyLimits`_, _`SeoCopyProblem`_, _`SeoCopyProblemCode`_ |
+| `landing/public-page` | `PublicPage`, _`PublicPageProps`_ |
 
 ### feedback
 

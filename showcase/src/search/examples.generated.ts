@@ -624,6 +624,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Delta and trend",
     "Dense metrics wall",
     "projection, sub-value tone none, name",
+    "projection as a list: Committed and Projected",
     "truncateLabel",
     "Interactive and loading",
     "Sparkline — tones, scale and stroke",
@@ -734,6 +735,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TopBarActionMenu — a link in the header that closes the menu",
     "TopBarActionMenu — group headings",
     "TopBarActions — the one order",
+    "DevMenu — one flask: the Account section, then the app's",
     "SyncStatusIndicator — the seven states",
     "TourMenu — with and without a tours page",
     "CompanySwitcher — several companies, one session",
@@ -791,6 +793,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   ],
   "landing-demo": [
     "A sample landing — Ada's Garden Planner",
+    "PublicPage — a public page beside the landing",
     "PublicHeader — no session, a demo, signed in",
     "DemoStart — starting, and each refusal",
     "DemoBanner — at 23 h, 50 min and 4 min",
@@ -1388,6 +1391,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "landing-demo": [
     "SampleLanding031Demo",
+    "PublicPage051Demo",
     "PublicHeaderStates031Demo",
     "DemoStart031Demo",
     "DemoBanner031Demo",

@@ -223,6 +223,42 @@ describe("StatTile 0.8.0 (keksdose B22)", () => {
     expect(projected.closest("dl")?.className).toContain("mt-0.5");
   });
 
+  it("takes several projections, in order, all tight under the headline (0.51, keksdose #633)", () => {
+    render(
+      <StatTile
+        label="Net worth"
+        value={10_000}
+        format={(n) => `€${n}`}
+        delta={5}
+        projection={[
+          { label: "Committed 31 Oct", value: 9_400, tone: "expense" },
+          { label: "Projected 31 Oct", value: 9_900 },
+        ]}
+        subValues={[{ label: "SEP", value: 8_800 }]}
+      />,
+    );
+    const committed = screen.getByText("€9400");
+    const projected = screen.getByText("€9900");
+    const after = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(after(screen.getByText("€10000"), committed)).toBe(true);
+    expect(after(committed, projected)).toBe(true);
+    expect(after(projected, screen.getByText("Up €5"))).toBe(true);
+    expect(after(projected, screen.getByText("€8800"))).toBe(true);
+    // One list under the headline, the history in a list of its own further down.
+    const list = committed.closest("dl")!;
+    expect(projected.closest("dl")).toBe(list);
+    expect(list.className).toContain("mt-0.5");
+    expect(screen.getByText("€8800").closest("dl")).not.toBe(list);
+    // Each row keeps its own tone.
+    expect(committed).toHaveClass("text-money-expense");
+    expect(projected).not.toHaveClass("text-money-expense");
+  });
+
+  it("an empty projection list draws nothing", () => {
+    const { container } = render(<StatTile label="Spend" value={1} projection={[]} />);
+    expect(container.querySelector("dl")).toBeNull();
+  });
+
   it("withholds the projection while loading", () => {
     render(<StatTile label="Spend" value={1} loading projection={{ label: "Projected", value: 9 }} />);
     expect(screen.queryByText("Projected")).toBeNull();

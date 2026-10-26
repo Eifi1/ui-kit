@@ -2,9 +2,10 @@ import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import { CalendarDays, Droplets, Leaf, Server, ShieldCheck, Sprout, Users } from "lucide-react";
-import { AuthLayout, Button, ProgressBar, ToggleGroup } from "@eifi1/ui-kit";
+import { AuthLayout, Button, ProgressBar, StatTile, StatTileGrid, ToggleGroup } from "@eifi1/ui-kit";
 import { PublicHeader } from "../../../src/landing/public-header";
 import { CtaBand, FeatureRow, FeatureRows, Hero, PublicFooter, TrustStrip } from "../../../src/landing/landing-sections";
+import { PublicPage } from "../../../src/landing/public-page";
 import type { LandingSession } from "../../../src/landing/landing-actions";
 import type { AccessChoice } from "../../../src/landing/access";
 import { DemoStart } from "../../../src/demo/demo-start";
@@ -219,6 +220,54 @@ export function SampleLanding031Demo() {
 }
 
 /* ── The header's three states ───────────────────────────────────────────── */
+
+const REGIONS = [
+  { value: "north", label: "North plots" },
+  { value: "south", label: "South plots" },
+] as const;
+
+/** 0.51: a public page that is neither the landing nor a legal page, in the same frame. */
+export function PublicPage051Demo() {
+  const [region, setRegion] = useState<(typeof REGIONS)[number]["value"]>("north");
+  const north = region === "north";
+  return (
+    <Example
+      label="PublicPage — a public page beside the landing"
+      hint="0.51: PublicHeader · a column at the landing's width · PublicFooter; seo is required"
+    >
+      <Sandbox start="/harvests">
+        <div className="overflow-hidden rounded-md border border-subtle bg-page">
+          <PublicPage
+            header={<PublicHeader brand={BRAND} session="none" access={ACCESS_REQUEST} className="static" />}
+            footer={<PublicFooter tagline="Garden planning for small plots." landmark={false} />}
+            title="What the gardens harvest"
+            description="Monthly figures from the gardens that share theirs, per region. Counts are bucketed; no garden is shown on its own."
+            actions={<ToggleGroup aria-label="Region" value={region} onChange={setRegion} options={[...REGIONS]} />}
+            // A preview inside the showcase is not the page: it declares nothing. The app's
+            // page passes { canonicalPath: "/harvests", title, description }.
+            seo={null}
+            headingAs="h4"
+            landmark={false}
+          >
+            <StatTileGrid>
+              <StatTile label="Tomatoes per bed" value={north ? 6.2 : 8.9} unit="kg" description="from 10+ gardens" subValues={[{ label: "AUG", value: north ? 7.1 : 9.4 }]} />
+              <StatTile label="Beds in rotation" value={north ? "64 %" : "71 %"} description="from 10+ gardens" />
+              <StatTile label="Gardens sharing" value="10+" description="this month" />
+            </StatTileGrid>
+          </PublicPage>
+        </div>
+      </Sandbox>
+      <Note>
+        {code("PublicPage")} is the frame {code("LegalPage")} draws, without the legal parts: the app&apos;s public
+        header, a column as wide as the landing&apos;s sections ({code('width="prose"')} for the legal pages&apos;
+        reading column), the title with an optional description, back link and actions, and the public footer
+        (the three legal links by default). {code("seo")} has no default: a page to be found names its canonical
+        path ({code("usePageSeo")}), a page to keep out says {code('"noindex"')}, and only a preview passes{" "}
+        {code("null")}.
+      </Note>
+    </Example>
+  );
+}
 
 export function PublicHeaderStates031Demo() {
   return (

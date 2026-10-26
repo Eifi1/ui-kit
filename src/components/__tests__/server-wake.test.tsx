@@ -52,6 +52,29 @@ describe("ServerWakeNotice", () => {
     expect(region).toBeEmptyDOMElement();
   });
 
+  it("steps back from waking to slow when the oldest is answered and a younger read is still out (0.51)", () => {
+    // kastlan's 0.51 review: the stage follows the oldest request still out, so it can step
+    // down. The server answered, so it is not asleep; the younger read is merely slow.
+    const w = createServerWake();
+    render(<ServerWakeNotice watcher={w} appName="Keksdose" />);
+    act(() => {
+      w.start("get", "/budgets");
+    });
+    advance(4000);
+    act(() => {
+      w.start("get", "/accounts");
+    });
+    advance(3000);
+    const region = screen.getByRole("status");
+    expect(region).toHaveAttribute("data-stage", "waking");
+    act(() => w.end()); // /budgets, at 7 s; /accounts is 3 s old
+    expect(region).toHaveAttribute("data-stage", "slow");
+    expect(region).toHaveTextContent(DEFAULT_SERVER_WAKE_LABELS.slow);
+    expect(region).not.toHaveTextContent("when nobody is using Keksdose");
+    act(() => w.end());
+    expect(region).toBeEmptyDOMElement();
+  });
+
   it("says 'the app' when no name is given", () => {
     const w = createServerWake();
     render(<ServerWakeNotice watcher={w} />);

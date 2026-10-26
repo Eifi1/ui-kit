@@ -24,14 +24,15 @@ describe("DevSwitchers reads the kept role when it turns on (keksdose 1)", () =>
         <DevSwitchers enabled={false} {...props} />
       </MemoryRouter>,
     );
-    expect(screen.queryByRole("button", { name: /Switch role/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Dev tools/ })).toBeNull();
     // The GET probe answered: the switchers turn on.
     rerender(
       <MemoryRouter>
         <DevSwitchers enabled {...props} />
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole("button", { name: /Switch role/ }));
+    // One flask since 0.51 (DevMenu), named "Dev tools · Role: …".
+    fireEvent.click(screen.getByRole("button", { name: /^Dev tools/ }));
     expect(screen.getByRole("menuitem", { name: /Back to ADMIN/ })).toBeInTheDocument();
   });
 });

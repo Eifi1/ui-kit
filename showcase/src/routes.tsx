@@ -247,6 +247,7 @@ const SettingsSearchEntries031Demo = lazySection(
   "SettingsSearchEntries031Demo",
 );
 const SampleLanding031Demo = lazySection(() => import("./sections/landing-031-demo"), "SampleLanding031Demo");
+const PublicPage051Demo = lazySection(() => import("./sections/landing-031-demo"), "PublicPage051Demo");
 const PublicHeaderStates031Demo = lazySection(() => import("./sections/landing-031-demo"), "PublicHeaderStates031Demo");
 const DemoStart031Demo = lazySection(() => import("./sections/landing-031-demo"), "DemoStart031Demo");
 const DemoBanner031Demo = lazySection(() => import("./sections/landing-031-demo"), "DemoBanner031Demo");
@@ -1259,7 +1260,7 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
-        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher", "TopBarActions", "TOP_BAR_ACTION_ORDER", "AccountMenuLanguage", "AccountMenuTextSize", "TourMenu", "SyncStatusIndicator", "syncState", "SyncStatus", "DevSwitchers", "DEV_ORIGINAL_ROLE_KEY"],
+        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher", "TopBarActions", "TOP_BAR_ACTION_ORDER", "AccountMenuLanguage", "AccountMenuTextSize", "TourMenu", "SyncStatusIndicator", "syncState", "SyncStatus", "DevMenu", "DevMenuSection", "DevSwitchers", "DEV_ORIGINAL_ROLE_KEY"],
         Body: () => (
           <>
             <ShellSection />
@@ -1339,10 +1340,11 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The public start page and the try-it demo: the header in its three states, the landing's sections, the SEO checks, the resume, and the demo's start, countdown and end.",
         icon: LayoutTemplate,
-        components: ["PublicHeader", "Hero", "FeatureRows", "FeatureRow", "TrustStrip", "CtaBand", "PublicFooter", "LandingActions", "accessAction", "usePageSeo", "seoCopyProblems", "metaContent", "RootEntry", "RedirectIfAuthed", "useLastVisitedPage", "readLastVisitedPage", "safeNextPath", "DemoStart", "DemoBanner", "useDemoCountdown", "DemoEnded", "isDemoSession"],
+        components: ["PublicHeader", "Hero", "FeatureRows", "FeatureRow", "TrustStrip", "CtaBand", "PublicFooter", "PublicPage", "LandingActions", "accessAction", "usePageSeo", "seoCopyProblems", "metaContent", "RootEntry", "RedirectIfAuthed", "useLastVisitedPage", "readLastVisitedPage", "safeNextPath", "DemoStart", "DemoBanner", "useDemoCountdown", "DemoEnded", "isDemoSession"],
         Body: () => (
           <>
             <SampleLanding031Demo />
+            <PublicPage051Demo />
             <PublicHeaderStates031Demo />
             <DemoStart031Demo />
             <DemoBanner031Demo />

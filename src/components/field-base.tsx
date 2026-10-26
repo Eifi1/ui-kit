@@ -21,7 +21,8 @@ import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "
  * `useFieldError`, every field's.
  *
  * Public through ./ui by name. `FieldGroup`, the counter and the placeholder helpers are
- * the three fields' shared parts (`@internal`).
+ * the three fields' shared parts (`@internal`), as are the Select's own classes and its
+ * `SelectWidthFloor` (0.51).
  */
 
 /**
@@ -194,6 +195,57 @@ export function FieldChevron({ className, ...rest }: FieldChevronProps) {
         className,
       )}
     />
+  );
+}
+
+/** A native dropdown Select's dress: no native arrow, and `pe-9`, the room the
+ *  {@link FieldChevron} takes. Shared with {@link SelectWidthFloor}. `@internal` */
+export const SELECT_MENU_DRESS = "appearance-none pe-9";
+
+/** The compact Select (`size="sm"`): the field's colours, a toolbar button's height.
+ *  `py-0` and a fixed height rather than a smaller padding, so the box is 28px whatever
+ *  line height the caller's type brings with it. Shared with {@link SelectWidthFloor}.
+ *  `@internal` */
+export const SELECT_SM = "h-7 py-0 ps-2 pe-7 text-xs";
+
+/**
+ * The width an UNLABELLED Select needs to show the widest of `values` whole: an invisible,
+ * zero-height line under it, in the select's own type, padding, chevron room and border
+ * (the same classes), one value per line. Placed beside the Select in the box that sizes
+ * it, it holds that box to the widest value, and the `w-full` select fills it. `@internal`
+ *
+ * Why it takes a sizer (0.51, Kurvenschmiede N5). A `<select>` with a percentage width
+ * is a "compressible" element: its min-content contribution is ZERO (CSS Sizing 3
+ * §5.2.2), so the auto table layout squeezes its column to the header, and beside a
+ * `grow` column every other column IS squeezed to its min-content (data-table-fit.ts).
+ * The user roster's role select stood 92px and read "Meml…" and "Admi…" (KS review,
+ * 0.49 and 0.50). `min-width: max-content` on the select would hold it instead — but to
+ * its widest OPTION, and an unavailable role's option carries its reason ("Customer (owns
+ * work)", RoleSelect's `optionDisabledReason`): the column would widen for a text that is
+ * never the selected value. So the caller says which values can be selected, in the
+ * current language.
+ */
+export function SelectWidthFloor({ values, size = "md" }: { values: readonly string[]; size?: "sm" | "md" }) {
+  if (values.length === 0) return null;
+  return (
+    <span
+      aria-hidden
+      data-select-floor=""
+      className={cn(
+        FIELD_BASE,
+        SELECT_MENU_DRESS,
+        size === "sm" && SELECT_SM,
+        // The horizontal box only: no height, no vertical padding or border, not painted.
+        "invisible h-0 overflow-hidden border-y-0 py-0 whitespace-nowrap shadow-none",
+      )}
+    >
+      {values.map((value, i) => (
+        // The value as generated content, not as text: it is laid out (and so measured)
+        // the same, but a test's `getByText("Member")` still finds the one option, and a
+        // find-in-page or a copied row does not meet a word nobody sees.
+        <span key={i} data-value={value} className="block before:content-[attr(data-value)]" />
+      ))}
+    </span>
   );
 }
 

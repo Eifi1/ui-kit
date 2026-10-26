@@ -4,7 +4,12 @@ import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DevSwitchers, DEV_ORIGINAL_ROLE_KEY } from "../dev-switchers";
 
-/** docs/top-bar-harmonization.md §2.7, §6.2, §6.3. */
+/**
+ * docs/top-bar-harmonization.md §2.7, §6.2, §6.3. Deprecated since 0.51 and a wrapper
+ * over `DevMenu` (§2.7.1), so ONE flask holds both switchers now: the two trigger
+ * lookups below are the same button, named "Dev tools · Role: … · Plan: …". Everything
+ * else here is 0.42's behaviour, unchanged.
+ */
 
 const ROLES = ["ADMIN", "MEMBER", "REVIEWER"] as const;
 const PLANS = ["free", "pro"] as const;
@@ -30,8 +35,8 @@ function App({ billingOff = false, originalRole, enabled = true }: { billingOff?
   );
 }
 
-const roleTrigger = () => screen.getByRole("button", { name: /Switch role/ });
-const planTrigger = () => screen.getByRole("button", { name: /Switch plan/ });
+const roleTrigger = () => screen.getByRole("button", { name: /^Dev tools/ });
+const planTrigger = roleTrigger;
 const openRole = () => {
   fireEvent.click(roleTrigger());
   return screen.getByRole("menu");
@@ -45,12 +50,17 @@ describe("DevSwitchers", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("role then plan, both behind the amber flask", () => {
+  it("role then plan, in one menu behind one amber flask (0.51)", () => {
     const { container } = render(<App />);
     const buttons = screen.getAllByRole("button");
-    expect(buttons[0]).toHaveAccessibleName(/Switch role · Role: ADMIN/);
-    expect(buttons[1]).toHaveAccessibleName(/Switch plan · Plan: free/);
-    expect(container.querySelectorAll("svg.text-warning")).toHaveLength(2);
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toHaveAccessibleName("Dev tools · Role: ADMIN · Plan: free");
+    expect(container.querySelectorAll("svg.text-warning")).toHaveLength(1);
+    fireEvent.click(buttons[0]);
+    const headings = screen
+      .getAllByRole("group")
+      .map((g) => document.getElementById(g.getAttribute("aria-labelledby") ?? "")?.textContent);
+    expect(headings).toEqual(["Dev · role", "Dev · plan"]);
   });
 
   it("checks the active role and switches through onRole", () => {
@@ -124,6 +134,8 @@ describe("DevSwitchers", () => {
       </MemoryRouter>,
     );
     expect(screen.getAllByRole("button")).toHaveLength(1);
+    fireEvent.click(roleTrigger());
+    expect(screen.queryByRole("group", { name: "Dev · plan" })).toBeNull();
   });
 
   it("draws the plan menu before the current plan is known, with no row checked (kastlan B4)", () => {
@@ -133,7 +145,7 @@ describe("DevSwitchers", () => {
         <DevSwitchers enabled plans={PLANS} onPlan={onPlan} billingOff />
       </MemoryRouter>,
     );
-    expect(planTrigger()).toHaveAccessibleName("Switch plan");
+    expect(planTrigger()).toHaveAccessibleName("Dev tools");
     fireEvent.click(planTrigger());
     const rows = screen.getAllByRole("menuitemradio");
     expect(rows.every((r) => r.getAttribute("aria-checked") === "false")).toBe(true);

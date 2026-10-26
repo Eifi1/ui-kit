@@ -2,10 +2,11 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 
 /**
  * The `topBarParts` namespace (0.42, docs/top-bar-harmonization.md §3.1): the words of the
- * top bar's shared parts — `TourMenu`, `SyncStatusIndicator` and `DevSwitchers`. A module
+ * top bar's shared parts — `TourMenu`, `SyncStatusIndicator` and `DevMenu` (0.42's
+ * `DevSwitchers`, whose words these still are, §2.7.1). A module
  * of words with no component code, like every `*-labels.ts` (0.34, KS U8). The language
- * sub-list (`AccountMenuLanguage`) names itself with `topBar.language`, and the dev role
- * switcher's name and tooltip are `topBar.switchRole` / `topBar.role`, as `RoleSwitcher`'s.
+ * sub-list (`AccountMenuLanguage`) names itself with `topBar.language`, and the role in the
+ * dev flask's name is `topBar.role`, as `RoleSwitcher`'s tooltip.
  */
 
 /** `TourMenu`'s words (§2.4). */
@@ -69,19 +70,27 @@ export interface SyncStatusLabels {
   saving: string;
 }
 
-/** `DevSwitchers`' words (§2.7, §6.2, §6.3). */
+/**
+ * `DevMenu`'s words (§2.7, §2.7.1, §6.2, §6.3). Still named for 0.42's `DevSwitchers`: the
+ * namespace is the same `topBarParts.dev`, and an app's label tree keeps compiling.
+ */
 export interface DevSwitchersLabels {
-  /** The heading of the role menu. */
+  /** 0.51: the flask's name, and the menu's — the role and the plan follow it. */
+  menu: string;
+  /** 0.51: what the dot on the flask means while `active`, joined to its name — an
+   *  override the developer could forget is on (a "today", a slow server). */
+  overridesOn: string;
+  /** The heading of the role group. */
   roleHeading: string;
-  /** The plan switcher's name. */
+  /** @deprecated 0.51 — DevMenu's one flask is named by `menu`; removed in 0.52. */
   switchPlan: string;
-  /** The plan switcher's tooltip, given the active plan. */
+  /** The plan in the flask's name, given the active plan. */
   plan: (value: string) => string;
-  /** The heading of the plan menu. */
+  /** The heading of the plan group. */
   planHeading: string;
   /** The row back to the role the session started with. */
   backTo: (role: string) => string;
-  /** The plan menu's note while billing is off locally. */
+  /** The plan group's note while billing is off locally. */
   billingOff: string;
 }
 
@@ -127,6 +136,8 @@ export const DEFAULT_TOP_BAR_PARTS_LABELS: TopBarPartsLabels = {
     saving: "Saving…",
   },
   dev: {
+    menu: "Dev tools",
+    overridesOn: "Overrides on",
     roleHeading: "Dev · role",
     switchPlan: "Switch plan",
     plan: (value) => `Plan: ${value}`,

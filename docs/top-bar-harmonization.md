@@ -113,6 +113,93 @@ and plan.
   the overview.
 - keksdose's screen-only switchers become server-backed. kastlan's real
   `/auth/switch-role` (a held role, a feature) stays as it is.
+- **Since ui-kit 0.51 the two switchers are one menu, `DevMenu`** (§2.7.1).
+
+#### 2.7.1 Addendum (ui-kit 0.51): one flask, `DevMenu`, and the app's own dev sections
+
+Agreed with keksdose and put in round 0.51 by Marcel. An app has more dev controls than a
+role and a plan (keksdose: its budget role, a "today" override, resets), and 0.42's two
+flasks had no place for them. So the kit's part is now the MENU, and the app's dev rows go
+in it.
+
+**The shape.** `DevMenu` (`@eifi1/ui-kit/shell` and the barrel) is one `TopBarActionMenu`
+behind `RoleSwitcher`'s amber flask.
+- **Props:** every one `DevSwitchers` takes (`enabled`, `roles`, `currentRole`, `onRole`,
+  `plans`, `currentPlan`, `onPlan`, `originalRole`, `storageKey`, `billingOff`,
+  `roleLabel`, `planLabel`, `labels`), plus two:
+  - `sections?: readonly DevMenuSection[]`, where `DevMenuSection` is `{ key: string;
+    title: ReactNode; entries: readonly TopBarMenuEntry[] }`. These are the app's groups,
+    in the order given, each a `kind: "heading"` group named by its `title`. **There is
+    no dev item type.** A select is radio rows (`checked`), a toggle is a
+    `checkable: "checkbox"` row, an action is a plain row. A row's key need be unique
+    only within its section.
+  - `active?: boolean`: an override is on that the developer could forget, such as a
+    "today" that is not today or a simulated slow server. The flask then wears a dot
+    (`iconBadge`), and its words join the trigger's name ("Dev tools · Role: ADMIN ·
+    Plan: free Overrides on"). The app decides what counts.
+- **The Account section** is the kit's, and it comes first. It has two groups:
+  - The role group ("Dev · role"). Once the role differs from the session's first, it
+    ends in "Back to {role}" behind a rule. That role is kept in `sessionStorage` as
+    §6.2 says, and read again when `enabled` turns true (0.43).
+  - The plan group ("Dev · plan"). With `billingOff` the group's name carries the note
+    that plans change nothing (§6.3), so a screen reader hears it on the way into the
+    plans. 0.42's trailing note was a row the arrow keys passed over.
+
+  Each group is drawn only with its list and handler. With no role, no plan and no
+  section row there is nothing to draw, and nothing renders.
+- **The name** says the menu, then the role and the plan: "Dev tools · Role: ADMIN ·
+  Plan: free" (`topBarParts.dev.menu`, then `topBar.role` and `dev.plan`). The tooltip
+  shows it too. The new words are `dev.menu` and `dev.overridesOn`, in all seven
+  catalogues. `dev.switchPlan`, the old plan trigger's name, is deprecated (removed in
+  0.52).
+- **The panel scrolls.** Some 25 dev rows ran off a 390×844 phone: `HoverMenu` clamps a
+  panel sideways only, and the panel hangs from the sticky bar, so the page cannot
+  scroll it into view. `TopBarActionMenu` has a new opt-in, `scrollable`, which caps the
+  panel at `100dvh − 4rem` with `overflow-y-auto`. Every other menu keeps its natural
+  height. The arrow keys, Home and End still bring the focused row into view (the roving
+  focus is a plain `focus()`).
+- **`DevSwitchers` is deprecated** (removed in 0.52). It is now a `DevMenu` with no
+  sections, with the same props and rows, but one flask where it drew two.
+
+**Dev-only, in the bundle as well as on the screen.** These are rules for the app; the
+kit cannot enforce them.
+1. **The client renders the menu only with `enabled = import.meta.env.DEV` AND the app's
+   probe of the dev route** (`GET /dev/switch`, a 404 while the server's gate is shut).
+   The constant keeps the menu off a production build's screen. The probe keeps a dev
+   build whose server has the route shut from drawing a flask with nothing behind it.
+2. **The app's section DEFINITIONS live in a module imported only behind
+   `import.meta.env.DEV`.** `enabled={false}` hides the menu, but it does not remove the
+   sections' code (their handlers, their endpoints' paths) from the production bundle.
+   The constant does that, because the minifier drops the dead branch and what only it
+   uses: a static import used only in an `import.meta.env.DEV && …` slot is enough
+   (kastlan's, whose production build carries no dev-switch code), as long as the sections
+   are defined in that module. A lazy import makes it a chunk of its own:
+
+   ```tsx
+   // top-bar.tsx
+   const AppDevMenu = import.meta.env.DEV ? lazy(() => import("./dev-menu")) : null;
+   // …
+   dev={AppDevMenu && user ? <Suspense fallback={null}><AppDevMenu /></Suspense> : undefined}
+
+   // dev-menu.tsx: only a dev build has this chunk
+   export default function AppDevMenu() {
+     const probe = useDevSwitchProbe(); // GET /dev/switch
+     return <DevMenu enabled={import.meta.env.DEV && probe.isSuccess} /* role, plan… */
+       sections={[budgetSection, timeSection, resetsSection]} active={timeOverridden} />;
+   }
+   ```
+3. **Every server-backed dev item goes through a route behind the same gate (§6.1):** an
+   explicit local flag AND the app's proof of a local run, otherwise absent (404).
+4. **No form fields inside a `role="menu"`.** In a menu the arrow keys, Home and End
+   belong to the roving focus and Tab closes it, so a field inside one loses its own
+   keys, and a screen reader in a menu does not expect one. A free value, such as a date,
+   is a "Custom…" row that opens the app's own dialog.
+5. **A "today" override is read at boot, before the first render** (server-kit 0.20's dev
+   clock, `DevSwitchAnswer.today`; keksdose's 0.51 review). The menu's own probe sits in
+   the lazy chunk of rule 2, so a reload waiting for it works out dates — a month end, a
+   "Committed <date>" — on the device clock until it answers. A dev-only hook outside the
+   chunk reads the answer first, and the app's own "today" (keksdose's `todayIso()`) takes
+   it from there.
 
 ## 3. What the kits add
 
@@ -125,7 +212,8 @@ and plan.
   `MenuItem`, with flags. `LanguageMenu` stays the signed-out bar button.
 - `TourMenu` (§2.4), with lucide `Compass`.
 - `SyncStatusIndicator` and the `SyncStatus` type (§2.6), labels in seven languages.
-- `DevSwitchers` (§2.7).
+- `DevSwitchers` (§2.7). Since 0.51 `DevMenu`, one flask with the app's own sections
+  (§2.7.1); `DevSwitchers` is deprecated.
 
 ### 3.2 server-kit 0.14
 
@@ -303,6 +391,9 @@ All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
     `originalRole` from the app wins over it.
   - With `billingOff`, the plan menu shows "Billing is off locally: plans change nothing"
     and stays usable.
+  - **Since 0.51 one menu, `DevMenu`** (§2.7.1): the role and the plan are groups of one
+    flask, with the app's own sections after them. `DevSwitchers` is deprecated, a
+    `DevMenu` with no sections, and removed in 0.52.
 - **`ThemeToggle`** (§6.4): it now has `onChange(next)`, and `next` is always the
   opposite of `mode`, the resolved theme shown. So from "system" a tap goes to the other
   theme. The toggle never had a storage key, and it still has none. `onToggle` is now

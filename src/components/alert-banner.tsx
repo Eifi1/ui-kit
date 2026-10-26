@@ -206,6 +206,15 @@ interface AlertBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "on
    * every phone screen, and the app built the clamp and the button around the banner's
    * children by hand. Ignored on a whole-row banner (`href` / `onClick`): a toggle cannot
    * sit inside the row's own link or button.
+   *
+   * 0.51 (kastlan K1): on a `strip` the clamped message claims 7rem instead of 12rem below
+   * `md`, so the {@link action} stays on its line rather than taking one of its own.
+   *
+   * For a one-line MESSAGE (a sentence or two). Not for a body with a list or a control in
+   * it: the clamp cuts the box to its first line, so a Disclosure's or a link's trigger
+   * past it is clipped out of sight and still takes the keyboard's focus, and "More" gives
+   * back the whole body at once. Shorten such a banner instead — one sentence, its action,
+   * and the rest behind a Disclosure of its own (keksdose's agree-again notice, 0.51).
    */
   clampMobile?: boolean;
   /**
@@ -300,7 +309,7 @@ export function AlertBanner({
   // server) the box is 0 tall, which reads as "may not fit": the toggle stays.
   const clamp = clampMobile && !interactive;
   const bodyId = useId();
-  const bodyRef = useRef<HTMLSpanElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [fits, setFits] = useState(false);
   useLayoutEffect(() => {
@@ -357,6 +366,17 @@ export function AlertBanner({
   // into a three-word column on a phone instead. With a real basis the action drops to
   // a second line once message + action no longer fit, and the message keeps the width.
   const grow = strip ? "flex-[1_1_12rem]" : "flex-1";
+  // …except a CLAMPED strip on a phone (0.51, kastlan K1 / prod #22, KX-5). There the
+  // message is one line whatever its width (the rest is behind "More"), so the 12rem only
+  // pushed the action under it: "Erneut senden" took a line of its own on a 390px phone,
+  // and kastlan's banner stood 71px where one line is 43. The clamp needs its "More" and
+  // the first words beside it, so below `md` the basis is 7rem (~4rem of text). Measured
+  // in Chromium at 390 × 844, kastlan's `mx-4` strip (326px inside): one line, 43px, in
+  // all seven catalogues, with Roboto and with the wider DejaVu Sans; French, the longest
+  // "Send again", keeps 8px. At 360px French (and Spanish in DejaVu) still drop a line.
+  // A rem basis like the 12rem, so at Large the action drops a line sooner, by itself.
+  // From `md` up the clamp is off and the 12rem holds; without `clampMobile` nothing moves.
+  const clampBasis = strip && clamp ? "max-md:basis-28" : undefined;
   // Inside a whole-row banner's button or link, which then carries `grow` itself.
   const nested = interactive && (onDismiss !== undefined || (action !== undefined && action !== null));
   const frame = inline
@@ -367,25 +387,32 @@ export function AlertBanner({
       );
   const focusRing = cn(FOCUS_RING, "focus-visible:ring-offset-1 focus-visible:ring-offset-surface");
 
+  // The message's box: a `<div>` (0.51), so a banner may hold block content — keksdose's
+  // agree-again notice has a list and a Disclosure in it, which inside the `<span>` this was
+  // were block elements in phrasing content. A `<span>` still in a whole-row banner, whose
+  // `<a>` / `<button>` takes phrasing content only.
+  const Body = interactive ? "span" : "div";
   const contentBody = clamp ? (
     // Below `md` a row: the message, clamped, then the toggle on its baseline. From
-    // `md` up a plain span with the message in it, as without the prop.
-    <span
+    // `md` up a plain box with the message in it, as without the prop. (Never a whole-row
+    // banner, so always a `<div>`.)
+    <div
       className={cn(
         !inlineRow && grow,
+        clampBasis,
         "min-w-0 text-start max-md:flex max-md:items-baseline max-md:gap-2",
       )}
     >
       {/* The clamp is deliberate: the rest is one tap away behind More, so the size sweep's
           truncation gate (scripts/screenshot-sizes.mjs) leaves it alone. */}
-      <span
+      <div
         id={bodyId}
         ref={bodyRef}
         data-truncate-ok=""
         className={cn("max-md:min-w-0", !expanded && "max-md:line-clamp-1")}
       >
         {children}
-      </span>
+      </div>
       {(expanded || !fits) && (
         <button
           type="button"
@@ -400,11 +427,11 @@ export function AlertBanner({
           {expanded ? common.showLess : common.showMore}
         </button>
       )}
-    </span>
+    </div>
   ) : (
-    <span className={cn(!inlineRow && (nested ? "flex-1" : grow), "min-w-0 text-start")}>
+    <Body className={cn(!inlineRow && (nested ? "flex-1" : grow), "min-w-0 text-start")}>
       {children}
-    </span>
+    </Body>
   );
   const content = (
     <>
@@ -480,10 +507,10 @@ export function AlertBanner({
             <div className={flowRow} data-action-flow="">
               {/* The glyph rides with the message, on its first line; the two are
                   centred against the action as one, as the whole-row button is. */}
-              <span className={cn("flex min-w-0 flex-1 items-start", flowBasis, sm ? "gap-1.5" : "gap-2")}>
+              <div className={cn("flex min-w-0 flex-1 items-start", flowBasis, sm ? "gap-1.5" : "gap-2")}>
                 {glyph}
                 {contentBody}
-              </span>
+              </div>
               {trailing}
             </div>
           </>

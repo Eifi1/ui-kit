@@ -8,6 +8,7 @@ import { AccountStateChip, RoleChip, dateColumn } from "../components/account-ch
 import type { AccountState, RoleVocabulary } from "../components/account-chips";
 import type { ChipTone } from "../components/chip";
 import type { DataTableColumn } from "../components/data-table";
+import { SelectWidthFloor } from "../components/field-base";
 import { encodeSorts } from "../components/data-table-sort";
 import type { SortState } from "../components/data-table-sort";
 import { RowActions } from "../components/row-actions";
@@ -298,6 +299,13 @@ function rolesOf<T extends UserRosterRow, R extends string>(
   return typeof raw === "string" ? [raw as R] : [...(raw as readonly R[])];
 }
 
+/** What a row's role select can show as its value: every role's word, and a held key
+ *  the vocabulary does not know (RoleSelect shows it as the key). */
+function roleWordsOf<R extends string>(roles: RoleVocabulary<R>, held: R | undefined): string[] {
+  const words = (Object.keys(roles) as R[]).map((role) => roles[role].label);
+  return held !== undefined && !(held in roles) ? [...words, held] : words;
+}
+
 /** The row's name in the reader's order — a component, because the order is the
  *  READER's and the locale comes from the provider. */
 function RowName<T extends UserRosterRow>({ row, children }: { row: T; children: (name: string) => ReactNode }) {
@@ -423,16 +431,28 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
           return (
             <RowName row={row}>
               {(name) => (
-                <RoleSelect<R>
-                  size="sm"
-                  name={name}
-                  value={held[0] ?? null}
-                  roles={roles}
-                  offered={rules.offered}
-                  disabledReason={rules.disabledReason}
-                  optionDisabledReason={rules.optionDisabledReason}
-                  onChange={(role) => onRoleChange(row, role)}
-                />
+                // The column keeps room for the select's longest ROLE word in the app's
+                // language (0.51, Kurvenschmiede N5): beside the `grow` Name every other
+                // column is squeezed to its min-content, which a `w-full` select does not
+                // have, so the role select was the header's ~92px and read "Meml…",
+                // "Admi…". Every word of the vocabulary, not only the row's offered
+                // ones: the column is as wide as its widest row, so the rows line up, and
+                // a role held but not offered (KS's Reviewer) is still a selected value.
+                // Not the options' reasons ("Customer (owns work)"): they are never the
+                // selected value, and the open list is as wide as it needs anyway.
+                <div>
+                  <RoleSelect<R>
+                    size="sm"
+                    name={name}
+                    value={held[0] ?? null}
+                    roles={roles}
+                    offered={rules.offered}
+                    disabledReason={rules.disabledReason}
+                    optionDisabledReason={rules.optionDisabledReason}
+                    onChange={(role) => onRoleChange(row, role)}
+                  />
+                  <SelectWidthFloor size="sm" values={roleWordsOf(roles, held[0])} />
+                </div>
               )}
             </RowName>
           );

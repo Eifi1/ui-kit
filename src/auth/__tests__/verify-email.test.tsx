@@ -225,6 +225,19 @@ describe("EmailVerificationBanner — clampMobile (0.48, kastlan S2)", () => {
     expect(failed.parentElement).toContainElement(screen.getByRole("button", { name: "Send again" }));
   });
 
+  // kastlan K1 (KX-5, 0.51): kastlan's banner is the default strip with clampMobile, and on
+  // a 390px phone "Send again" took a line of its own under the clamped message (71px).
+  it("as kastlan renders it (the strip, clamped): the message gives the action its line below md", () => {
+    render(<EmailVerificationBanner onResend={() => {}} onDismiss={() => {}} clampMobile />);
+    const more = screen.getByRole("button", { name: "More" });
+    const message = more.parentElement!;
+    expect(message).toHaveClass("max-md:basis-28");
+    // Same row: the glyph, the message, "Send again" with its outcome, the ×.
+    const row = message.parentElement!;
+    expect(row).toContainElement(screen.getByRole("button", { name: "Send again" }));
+    expect(row).toContainElement(screen.getByRole("button", { name: "Not now" }));
+  });
+
   it("leaves the status in the message without clampMobile, as before", () => {
     render(<EmailVerificationBanner onResend={() => {}} />);
     expect(screen.queryByRole("button", { name: "More" })).toBeNull();

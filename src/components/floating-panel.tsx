@@ -15,7 +15,6 @@ import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
-import { warnDeprecatedVariant } from "./button-look";
 import { dirOf, type Direction } from "../lib/direction";
 import { registerFloating } from "../lib/floating-stack";
 import { useFloatClearance } from "../lib/float-clearance";
@@ -142,14 +141,9 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
    * `accent`. `surface`: the page's surface with a hairline border — for a FAB that is a
    * status rather than a call to action, as kastlan's offline pill is (a brand pill would
    * shout "press me" at a user who is merely offline). Ignored while `pressed` is set; a
-   * toggle has its own two looks. `primary` is a deprecated alias of `accent` (0.49; a
-   * development build warns once), removed in 0.51.
+   * toggle has its own two looks.
    */
-  variant?:
-    | "accent"
-    | "surface"
-    /** @deprecated 0.49 — use `accent` (same look); removed in 0.51. */
-    | "primary";
+  variant?: "accent" | "surface";
   /**
    * Hover and focus label in the kit {@link Tooltip}, instead of the native `title` —
    * keksdose has ONE tooltip (dev#523) and wrapped its assistant launcher by hand,
@@ -171,14 +165,6 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
    */
   hideWhenOverlay?: boolean;
   ref?: Ref<HTMLButtonElement>;
-}
-
-/** FloatingActionButton's and FloatingAction's `primary` was always the solid brand
- *  fill: it reads as `accent` (warning once in development), never as Button's
- *  `default`. */
-function deprecatedPrimary(component: string): "accent" {
-  warnDeprecatedVariant(component, "primary", "accent");
-  return "accent";
 }
 
 /**
@@ -215,7 +201,7 @@ export function FloatingActionButton({
   pressed,
   extended = false,
   live = false,
-  variant: givenVariant = "accent",
+  variant = "accent",
   tooltip,
   tooltipSide = "top",
   hideWhenOverlay = true,
@@ -230,7 +216,6 @@ export function FloatingActionButton({
   const overlay = useOverlayOpen(hideWhenOverlay);
   const hidden = hiddenProp || overlay || undefined;
   const [marker, dir] = usePortalDir();
-  const variant = givenVariant === "primary" ? deprecatedPrimary("FloatingActionButton variant") : givenVariant;
   const toggle = pressed !== undefined;
   const tip = tooltip === true ? label : tooltip === false || tooltip === "" ? undefined : tooltip;
   const wrapped = tip !== undefined && tip !== null;
@@ -700,15 +685,9 @@ export interface FloatingActionProps extends Omit<ButtonHTMLAttributes<HTMLButto
   pressedStyle?: "tint" | "plain";
   /**
    * `accent`: the brand-filled member, for the group's main action (the /transactions
-   * "+"), as Button's `accent`. `default` (default): the quiet one. `primary` is a
-   * deprecated alias of `accent` (0.49; a development build warns once), removed no
-   * earlier than 0.51.
+   * "+"), as Button's `accent`. `default` (default): the quiet one.
    */
-  variant?:
-    | "default"
-    | "accent"
-    /** @deprecated 0.49 — use `accent` (same look); removed in 0.51. */
-    | "primary";
+  variant?: "default" | "accent";
   /**
    * A count in a dot at the member's top end corner — the /transactions invoices link's
    * pending count. Nothing is drawn for `0` or less; above 99 it reads `99+`. The count
@@ -754,7 +733,7 @@ export function FloatingAction({
   icon,
   pressed,
   pressedStyle = "tint",
-  variant: givenVariant = "default",
+  variant = "default",
   badge,
   badgeLabel,
   badgeTone = "warning",
@@ -773,7 +752,6 @@ export function FloatingAction({
   const counted = badge !== undefined && badge > 0;
   const name = counted ? `${label}, ${badgeLabel ?? labels.badge(badge)}` : label;
   const isLink = href !== undefined;
-  const variant = givenVariant === "primary" ? deprecatedPrimary("FloatingAction variant") : givenVariant;
   const look = cn(
     "relative flex size-12 items-center justify-center transition-colors",
     "outline-none focus-visible:ring-inset",

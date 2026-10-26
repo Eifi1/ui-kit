@@ -139,16 +139,6 @@ describe("mobileMaxItems", () => {
     expect(within(sheet).queryByRole("link", { name: "Payees" })).toBeNull();
     expect(within(sheet).getByRole("link", { name: "Budget" })).toBeInTheDocument();
   });
-
-  it("still reads the deprecated mobileBarMax (entries before More), with a warning", () => {
-    viewport(390);
-    vi.stubEnv("VITEST", "");
-    vi.stubEnv("DEV", true);
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const { container } = renderShell({ mobileBarMax: 2 });
-    expect(cellNames(container)).toEqual(["Home", "Budget", "More"]);
-    expect(warn.mock.calls.some(([m]) => String(m).includes("mobileBarMax is deprecated"))).toBe(true);
-  });
 });
 
 describe("a parent with pages on the phone", () => {

@@ -28,9 +28,8 @@ import {
   HIT_AREA_LARGE,
   TOUCH_TARGET_LARGE,
   buttonVariantClasses,
-  resolveButtonVariant,
 } from "./button-look";
-import type { ButtonVariant, CanonicalButtonVariant } from "./button-look";
+import type { ButtonVariant } from "./button-look";
 
 // Canonical square icon-only button. <Button> carries TEXT geometry — px-3 py-2
 // gap-2 — so rendering a bare glyph through it gives a small icon in a wide,
@@ -200,7 +199,7 @@ function iconButtonToneClass(tone: IconButtonTone, quiet: boolean | undefined): 
 // and would out-rank a caller's plain `hover:` override), each variant pins its
 // RESTING look under `disabled:hover:`, which out-ranks any `hover:` by specificity
 // and only ever matches a disabled button.
-const ICON_BUTTON_DISABLED_REST: Record<CanonicalButtonVariant | "overlay" | "shutter", string> = {
+const ICON_BUTTON_DISABLED_REST: Record<ButtonVariant | "overlay" | "shutter", string> = {
   default: "disabled:hover:bg-surface-2",
   secondary: "disabled:hover:bg-transparent",
   ghost: "disabled:hover:bg-transparent",
@@ -634,7 +633,6 @@ function iconButtonLook({
   /** The label is drawn beside the glyph (see `labelVisible`). */
   withText?: boolean;
 }) {
-  const look = variant === "overlay" || variant === "shutter" ? variant : resolveButtonVariant(variant, "IconButton variant");
   return cn(
     ICON_BUTTON_BASE,
     withText
@@ -646,13 +644,13 @@ function iconButtonLook({
     withText ? TOUCH_TARGET_LARGE : ICON_BUTTON_TOUCH_LARGE[size],
     glyphSize !== undefined && ICON_BUTTON_GLYPH_SIZES[glyphSize],
     // After the size, so the overlay's `rounded-full` beats the small sizes' `rounded`.
-    look === "overlay"
+    variant === "overlay"
       ? ICON_BUTTON_OVERLAY
-      : look === "shutter"
+      : variant === "shutter"
         ? ICON_BUTTON_SHUTTER
-        : buttonVariantClasses[look],
+        : buttonVariantClasses[variant],
     shape === "round" && "rounded-full",
-    ICON_BUTTON_DISABLED_REST[look],
+    ICON_BUTTON_DISABLED_REST[variant],
     iconButtonToneClass(tone, quiet),
     toneColor !== undefined && typeof toneColor !== "string" && ICON_BUTTON_TONE_PAIR,
   );

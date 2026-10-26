@@ -77,8 +77,9 @@ export interface ServerWakeWatcher {
    */
   start(method?: string, url?: string, request?: ServerWakeRequest): boolean;
   /** A counted request settled — either way: an error still proves the server
-   *  answered or gave up. When the last one does, the notice goes away. Never takes
-   *  the counter below zero. */
+   *  answered or gave up. The stage then follows the oldest request still out (0.51), so
+   *  the notice goes away when the last one does, or sooner when the rest are recent.
+   *  Never takes the counter below zero. */
   end(): void;
   /** `start` + `end` around a promise (or a function returning one), for a request
    *  that does not go through an adapter. Resolves and rejects as the work does. */
@@ -116,7 +117,19 @@ export function createServerWake({
   wakingMs = 7000,
   shouldWatch = watchReadsAnd(),
 }: ServerWakeOptions = {}): ServerWakeWatcher {
-  let inFlight = 0;
+  // When each counted request went out, oldest first; its length is the count.
+  //
+  // The stage is the age of the OLDEST outstanding request (0.51). It used to be the age of
+  // the first request since the count was last zero, so overlapping reads that were each
+  // fast — one going out before the last came back, on a busy page — chained past 2 s and
+  // showed "taking longer than usual" with nothing slow at all (keksdose live #454, found
+  // there while chasing a read that really was slow).
+  //
+  // `end()` names no request, so it retires the OLDEST start. When a newer request comes
+  // back first, the start left standing for the older one is later than its own, so the
+  // age read is never MORE than the oldest request's real age: a notice can come late,
+  // never falsely.
+  const starts: number[] = [];
   let stage: ServerWakeStage = "idle";
   let slowTimer: ReturnType<typeof setTimeout> | null = null;
   let wakingTimer: ReturnType<typeof setTimeout> | null = null;
@@ -135,25 +148,36 @@ export function createServerWake({
     wakingTimer = null;
   };
 
+  // The stage for the oldest outstanding request's age, and timers for what is still to
+  // come. With none outstanding: idle.
+  const arm = () => {
+    clearTimers();
+    if (starts.length === 0) {
+      setStage("idle");
+      return;
+    }
+    const age = Date.now() - starts[0];
+    setStage(age >= wakingMs ? "waking" : age >= slowMs ? "slow" : "idle");
+    if (age < slowMs) slowTimer = setTimeout(() => setStage("slow"), slowMs - age);
+    if (age < wakingMs) wakingTimer = setTimeout(() => setStage("waking"), wakingMs - age);
+  };
+
   const start = (method?: string, url?: string, request: ServerWakeRequest = { method, url }): boolean => {
     if (isOffline()) return false;
     if (!shouldWatch((method ?? "get").toLowerCase(), url ?? "", request)) return false;
-    inFlight += 1;
-    // The clock runs from the FIRST outstanding request: a page firing a second read
-    // at 1.9 s is still waiting on the same sleeping server, not starting afresh.
-    if (inFlight === 1) {
-      clearTimers();
-      slowTimer = setTimeout(() => setStage("slow"), slowMs);
-      wakingTimer = setTimeout(() => setStage("waking"), wakingMs);
-    }
+    starts.push(Date.now());
+    // A request joining others does not move the clock: a page firing a second read at
+    // 1.9 s is still waiting on the same sleeping server, not starting afresh.
+    if (starts.length === 1) arm();
     return true;
   };
 
   const end = () => {
-    inFlight = Math.max(0, inFlight - 1);
-    if (inFlight > 0) return;
-    clearTimers();
-    setStage("idle");
+    if (starts.length === 0) return;
+    // The server answered (or gave up on) one of them, so the oldest's clock is over; the
+    // next oldest's age decides, which may well put the notice away again.
+    starts.shift();
+    arm();
   };
 
   return {
@@ -171,7 +195,7 @@ export function createServerWake({
       return counted ? promise.finally(end) : promise;
     },
     reset() {
-      inFlight = 0;
+      starts.length = 0;
       clearTimers();
       setStage("idle");
     },
@@ -182,7 +206,7 @@ export function createServerWake({
       };
     },
     getStage: () => stage,
-    getInFlight: () => inFlight,
+    getInFlight: () => starts.length,
   };
 }
 

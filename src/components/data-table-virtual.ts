@@ -30,7 +30,9 @@ import type { RefObject } from "react";
 // nothing). Re-measured from scratch when the data, the columns, a user width, the text
 // size or the scroller's width change — and when a grown column would push the table
 // past its scroller, which it fit before. A `grow` column and a user-resized one are not
-// locked (the first takes the rest, the second is pinned already).
+// locked (the first takes the rest, the second is pinned already). A lock replaced is
+// gone: changing back (a column the fit leaves out and brings back) measures again
+// (0.51, keksdose N2).
 
 /** {@link DataTableProps.virtualize}'s options. */
 export interface DataTableVirtualize {
@@ -302,6 +304,17 @@ export function useRowWindow<T>({
   );
 
   const lockSig = `${resetKey}|${scrollerWidth}|${colKeys.join(",")}`;
+  // A lock is the table it was measured on, so it goes as soon as the signature moves on
+  // — not merely set aside until the signature comes BACK (0.51, keksdose N2). The fit
+  // leaves a column out and, measuring the table afresh without it, brings it back in the
+  // same frame, before this hook measures anything: the signature was then the old one
+  // again, and the column came back at the widths that had ratcheted up while rows
+  // scrolled (a wider cell widens its column once), 80–110px more than the fit had just
+  // measured (606 + 93 estimated, 778–812 drawn, at 757), and B2's guard kept it out
+  // although it fitted. Dropped here, the table it comes back to is drawn as measured,
+  // and the next frame locks that. Adjusted during render, as React's "storing
+  // information from previous renders": an effect would draw the stale widths first.
+  if (lock !== null && lock.sig !== lockSig) setLock(null);
   const colWidths = lock && lock.sig === lockSig ? lock.widths : null;
 
   // What the scroll handler and the frame's measure read: this render's model and lock.

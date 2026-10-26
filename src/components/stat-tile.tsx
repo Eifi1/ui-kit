@@ -209,8 +209,15 @@ export interface StatTileProps
    * the whole list up to bring one row with it would put them between the headline
    * and its delta. Same shape as a sub-value, so the `tone` rules are the same.
    * Withheld while `loading`, like the sub-values.
+   *
+   * 0.51: or several, in order (keksdose #633). Its figure tiles carry two forward rows,
+   * "Committed <date>" (today plus what is scheduled) and "Projected <date>" (that plus the
+   * usual variable money), both of which belong with the headline and neither with the
+   * history below. The tile draws what it is given; which rows to give is the app's rule
+   * (keksdose shows both on every tile, live #455, even where Committed equals the figure
+   * so far).
    */
-  projection?: StatTileSubValue;
+  projection?: StatTileSubValue | readonly StatTileSubValue[];
   /**
    * Smaller figures under the headline, label left and figure right.
    *
@@ -349,6 +356,9 @@ export function StatTile({
   const valueId = `${id}-value`;
   const deltaId = `${id}-delta`;
   const priv = sensitive ? "" : undefined;
+  // One projection or several (0.51), as a list either way.
+  const projections: readonly StatTileSubValue[] =
+    projection === undefined ? [] : isFigureList(projection) ? projection : [projection];
 
   const fmt =
     format ??
@@ -543,9 +553,11 @@ export function StatTile({
 
       {/* At Large the delta and description follow the figure at once, and the
           projection moves down with the other figures (see `subValues`). */}
-      {!large && !loading && projection && (
-        <dl className="mt-0.5">
-          <FigureRow figure={projection} tileTone={tone} show={show} priv={priv} />
+      {!large && !loading && projections.length > 0 && (
+        <dl className="mt-0.5 space-y-0.5">
+          {projections.map((p, i) => (
+            <FigureRow key={i} figure={p} tileTone={tone} show={show} priv={priv} />
+          ))}
         </dl>
       )}
 
@@ -553,11 +565,12 @@ export function StatTile({
       {description != null && <div className="mt-1 text-xs text-muted">{description}</div>}
       {!large && graphic && <div className="mt-2">{graphic}</div>}
 
-      {!loading && ((large && projection) || (subValues && subValues.length > 0)) && (
+      {!loading && ((large && projections.length > 0) || (subValues && subValues.length > 0)) && (
         <dl data-slot="stat-tile-figures" className={cn("mt-1.5", large ? "space-y-1.5" : "space-y-0.5")}>
-          {large && projection && (
-            <FigureRow figure={projection} tileTone={tone} show={show} priv={priv} stacked />
-          )}
+          {large &&
+            projections.map((p, i) => (
+              <FigureRow key={`projection-${i}`} figure={p} tileTone={tone} show={show} priv={priv} stacked />
+            ))}
           {subValues?.map((sv, i) => (
             <FigureRow key={i} figure={sv} tileTone={tone} show={show} priv={priv} stacked={large} />
           ))}
@@ -575,7 +588,12 @@ export function StatTile({
   );
 }
 
-/** One label/value row of a `<dl>`: a sub-value, or the projection. */
+/** `Array.isArray` narrows a readonly array to `any[]`; this keeps the element type. */
+function isFigureList(p: StatTileSubValue | readonly StatTileSubValue[]): p is readonly StatTileSubValue[] {
+  return Array.isArray(p);
+}
+
+/** One label/value row of a `<dl>`: a sub-value, or a projection. */
 function FigureRow({
   figure,
   tileTone,

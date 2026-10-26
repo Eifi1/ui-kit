@@ -191,6 +191,26 @@ One page, top to bottom (keksdose's):
     (legal §3.2);
   - Kurvenschmiede `/`, `/control`, `/steering`.
 
+### 4.4 Other public pages: `PublicPage` (ui-kit 0.51)
+
+(Marcel, 2026-10-26.) A public page that is neither the landing nor a legal page — keksdose's
+regional price snapshot at `/prices`, the next public page in Kurvenschmiede — is drawn in
+the kit's `PublicPage`: the same frame `LegalPage` has (the app's public header, a column,
+the public footer), without the legal parts.
+- **Header:** the app's `PublicHeader`, the one the landing shows. **Footer:** `PublicFooter`
+  by default, so the three legal links are on the page (legal §3.3).
+- **Column:** `max-w-6xl`, the landing's sections' width, so a link from a feature row lands
+  on a page whose edges line up; `width="prose"` is the legal pages' reading column.
+- **Above the content:** an optional back link, the `h1`, a description and the page's own
+  controls (`actions`, beside the title from `sm` up).
+- **`seo` is required**, with no default: `{ canonicalPath, title?, description?, jsonLd? }`
+  (`usePageSeo`, §4.3) for a page to be found, `"noindex"` for one to keep out (a 404, a link
+  sent to someone), `null` only for a preview inside another page. A page to be found also
+  goes into the sitemap and its copy into the SEO test (§4.3).
+- **A link to it** from the landing goes into a feature row's `description` (keksdose: the
+  "understand" row), not into the trust strip or the footer, whose links are announced as
+  the legal ones.
+
 ## 5. The demo
 
 ### 5.1 Starting it

@@ -7,7 +7,7 @@ import {
   StatTileGrid,
   sparklineSummary,
 } from "@eifi1/ui-kit";
-import type { SparklineTone, StatTileLinkProps } from "@eifi1/ui-kit";
+import type { SparklineTone, StatTileLinkProps, StatTileSubValue } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 import { numberFormat } from "../lib/number-format";
 
@@ -24,6 +24,14 @@ const PRICE = [9.75, 9.9, 10.2, 10.1, 11.3, 12.4];
 const VISITS = [120, 132, 101, 134, 90, 230, 210, 250, 245, 280];
 const GAPPY = [4, 6, 5, null, null, 7, 9, 8];
 const NET = [320, -140, 80, -60, 210, 150];
+
+/** keksdose's two forward rows (#633), on every tile (live #455: "Always show both"). */
+function forwardRows(committed: number, projected: number, date: string): StatTileSubValue[] {
+  return [
+    { label: `Committed ${date}`, value: committed },
+    { label: `Projected ${date}`, value: projected },
+  ];
+}
 
 export function StatsDemo() {
   return (
@@ -172,6 +180,41 @@ export function StatsDemo() {
           July does not). The third tile&apos;s label is an icon plus a word; <code className="font-mono">name</code>{" "}
           gives the sparkline its accessible name, &ldquo;Active users&rdquo;, where the label&apos;s text
           would only say &ldquo;Active&rdquo;.
+        </Note>
+      </Example>
+
+      <Example
+        label="projection as a list: Committed and Projected"
+        hint="0.51, keksdose #633: two forward rows with the headline, the history below"
+      >
+        <StatTileGrid>
+          <StatTile
+            label="Net worth"
+            value={12_480}
+            currency="EUR"
+            valueLabel="TODAY"
+            projection={forwardRows(11_930, 12_610, "31 Oct")}
+            subValues={[
+              { label: "SEP", value: 12_020, tone: "none" },
+              { label: "AUG", value: 11_640, tone: "none" },
+            ]}
+          />
+          <StatTile
+            label="Net worth"
+            value={12_480}
+            currency="EUR"
+            valueLabel="TODAY"
+            projection={forwardRows(12_480, 12_610, "31 Oct")}
+            subValues={[{ label: "SEP", value: 12_020, tone: "none" }]}
+          />
+        </StatTileGrid>
+        <Note>
+          <code className="font-mono">projection</code> takes one row or several, drawn in order under the
+          headline. keksdose&apos;s tiles show &ldquo;Committed&rdquo; (today plus what is scheduled) and
+          &ldquo;Projected&rdquo; (that plus the usual variable money), on every tile: the second has
+          nothing scheduled, so Committed equals today&apos;s figure, and it is shown all the same
+          (keksdose live #455). Which rows to give is the app&apos;s choice; the tile draws the rows it
+          is given.
         </Note>
       </Example>
 
