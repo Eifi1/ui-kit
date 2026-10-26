@@ -792,6 +792,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   ],
   "landing-demo": [
     "A sample landing — Ada's Garden Planner",
+    "PublicPage — a public page beside the landing",
     "PublicHeader — no session, a demo, signed in",
     "DemoStart — starting, and each refusal",
     "DemoBanner — at 23 h, 50 min and 4 min",
@@ -1389,6 +1390,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "landing-demo": [
     "SampleLanding031Demo",
+    "PublicPage051Demo",
     "PublicHeaderStates031Demo",
     "DemoStart031Demo",
     "DemoBanner031Demo",

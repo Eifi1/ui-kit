@@ -6,6 +6,19 @@ import { useEffect } from "react";
  * and the two pure helpers each app's SEO test is built from.
  */
 
+/** What {@link usePageSeo} declares for a page. */
+export interface PageSeo {
+  canonicalPath: string;
+  title?: string;
+  description?: string;
+  /** Structured data for this page, as the object (not a string). Injected as an
+   *  `application/ld+json` DATA BLOCK — a script element the browser never executes,
+   *  which is also why it can be added here rather than in `index.html`: the CSP
+   *  carries a HASH of the one inline script that file is allowed to have, and
+   *  `csp-inline-script.test.ts` fails the build on a second one (live #250). */
+  jsonLd?: Record<string, unknown>;
+}
+
 /**
  * Declares the current page's canonical URL — and optionally its title and meta
  * description — while the calling component is mounted (feedback #129).
@@ -28,23 +41,22 @@ import { useEffect } from "react";
  * landing calls it with `canonicalPath: "/"` on both `/` and `/welcome`, so the two URLs
  * of one page are one result; there are no per-language URLs and no hreflang.
  */
-export function usePageSeo({
-  canonicalPath,
-  title,
-  description,
-  jsonLd,
-}: {
-  canonicalPath: string;
-  title?: string;
-  description?: string;
-  /** Structured data for this page, as the object (not a string). Injected as an
-   *  `application/ld+json` DATA BLOCK — a script element the browser never executes,
-   *  which is also why it can be added here rather than in `index.html`: the CSP
-   *  carries a HASH of the one inline script that file is allowed to have, and
-   *  `csp-inline-script.test.ts` fails the build on a second one (live #250). */
-  jsonLd?: Record<string, unknown>;
-}): void {
+export function usePageSeo(seo: PageSeo): void {
+  usePageSeoIf(seo);
+}
+
+/**
+ * @internal {@link usePageSeo}, or nothing for `null` — for a component that declares a
+ * page only sometimes (`PublicPage`'s `seo`): hooks cannot be called conditionally, so the
+ * switch is the argument, as `useNoIndex(active)` has it.
+ */
+export function usePageSeoIf(seo: PageSeo | null): void {
+  const canonicalPath = seo?.canonicalPath;
+  const title = seo?.title;
+  const description = seo?.description;
+  const jsonLd = seo?.jsonLd;
   useEffect(() => {
+    if (canonicalPath === undefined) return;
     const link = document.createElement("link");
     link.rel = "canonical";
     link.href = new URL(canonicalPath, window.location.origin).toString();

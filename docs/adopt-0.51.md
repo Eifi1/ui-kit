@@ -81,3 +81,34 @@ first, the notice can come a little LATE for the older one, never falsely.
 **Apps:** nothing to do (`createServerWake`, `attachServerWake`, `wrapFetch` and keksdose's own
 `start`/`end` calls work as they are). A legitimately heavy read longer than 2 s on a warm
 server still shows "slow"; a per-request opt-out (`slowOk`) is a question for the 0.51 review.
+
+## New: `PublicPage`, the frame of a public page (Marcel 2026-10-26)
+
+For a public page that is neither the landing nor a legal page
+(docs/landing-demo-harmonization.md §4.4): your `PublicHeader`, a column at the landing's width,
+and `PublicFooter` (the three legal links) by default, as `LegalPage` draws its frame.
+
+```tsx
+<PublicPage
+  header={<LandingHeader session={session} />}
+  title={t("prices.title")}
+  description={t("prices.lead")}
+  actions={<RegionPicker />}
+  seo={{ canonicalPath: "/prices", title: t("prices.seo.title"), description: t("prices.seo.description") }}
+>
+  <StatTileGrid>…</StatTileGrid>
+</PublicPage>
+```
+
+- `seo` has no default: an object for a page to be found (it calls `usePageSeo`), `"noindex"`
+  for a page to keep out (it calls `useNoIndex`), `null` only for a preview inside another
+  page. A page to be found also goes into `sitemap.xml` and its copy into your SEO test.
+- `width="prose"` for a reading column (the legal pages' `max-w-3xl`); `footer` takes your own
+  `PublicFooter` (a tagline) or `null`; `back` is your "← Back" link; `headingAs` and
+  `landmark={false}` for a preview.
+- New type `PageSeo`, the argument `usePageSeo` always took (named now; the hook is unchanged).
+
+**keksdose:** draw `/prices` (price pool v2) in it instead of composing the header, column,
+footer and `usePageSeo` by hand. **Kurvenschmiede:** for the next public page outside the
+shell; `/control`, `/steering` and the 404 stay as they are (in the shell, for signed-in readers
+too). **kastlan:** nothing to do.

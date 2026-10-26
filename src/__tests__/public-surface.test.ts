@@ -303,7 +303,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.50.0 (guided form tours, docs/tours-harmonization.md §11, here and in /tour):
   // `useTourGate`, `useTourGateRelease`, `TourGuideButton`, `DEFAULT_TOUR_GUIDE_LABELS` (+4).
   // 0.51.0 (−2): the 0.49 deprecations `IMPRINT_PRESET` and `DEFAULT_MOBILE_BAR_MAX` removed.
-  ["@eifi1/ui-kit", barrel, 1012],
+  // 0.51.0 (+1): `PublicPage`, the general public page frame.
+  ["@eifi1/ui-kit", barrel, 1013],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
