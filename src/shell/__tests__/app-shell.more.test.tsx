@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BarChart3, Banknote, Cog, Home, Layers, ListChecks, Tags, Wallet } from "lucide-react";
-import { AppShell, DEFAULT_MOBILE_BAR_MAX, splitMobileBar } from "../app-shell";
+import { AppShell, splitMobileBar } from "../app-shell";
 import type { AppShellNavItem } from "../app-shell";
 import { IconButton } from "../../components/icon-button";
 import { applyTextSize } from "../../theme/text-size";
@@ -91,14 +91,9 @@ describe("splitMobileBar", () => {
   it("never shows fewer than one entry", () => {
     expect(splitMobileBar([1, 2, 3], 0)).toEqual({ shown: [1], hidden: [2, 3] });
   });
-
-  it("is the default counted as entries before More: four at Normal and Large, three at Extra large", () => {
-    // Deprecated in 0.49 for DEFAULT_MOBILE_MAX_ITEMS, which counts cells (KIT-6).
-    expect(DEFAULT_MOBILE_BAR_MAX).toEqual({ normal: 4, large: 4, xlarge: 3 });
-  });
 });
 
-describe("mobileBarMax (§10.7)", () => {
+describe("mobileMaxItems (§10.7)", () => {
   it("shows four entries and More at Normal too (0.49 KIT-6: five cells)", () => {
     viewport(390);
     const { container } = renderShell();
@@ -140,11 +135,11 @@ describe("mobileBarMax (§10.7)", () => {
 
   it("takes a number for every size, and a per-size override", () => {
     viewport(390);
-    const { container, unmount } = renderShell({ mobileBarMax: 2 });
+    const { container, unmount } = renderShell({ mobileMaxItems: 3 });
     expect(cellNames(container)).toEqual(["Home", "Budget", "More"]);
     unmount();
     applyTextSize("large");
-    const second = renderShell({ mobileBarMax: { large: 5 } });
+    const second = renderShell({ mobileMaxItems: { large: 6 } });
     // Five plus More at Large; Extra large keeps its own default.
     expect(cellNames(second.container)).toEqual(["Home", "Budget", "Transactions", "Accounts", "Reports", "More"]);
   });

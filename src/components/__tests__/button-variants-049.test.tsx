@@ -6,10 +6,9 @@ import { buttonClasses } from "../button-look";
 import { FormActions } from "../form-actions";
 import { FloatingAction, FloatingActionButton, FloatingActionGroup } from "../floating-panel";
 
-// 0.49 KIT-5, stage 1: `default` (the quiet chip) and `accent` (the solid brand fill) are
-// the names; `primary` and `brand` are deprecated aliases with the same look, and a
-// development build warns once per name. FloatingAction(Button)'s own `primary` was the
-// solid fill all along, so it reads as `accent`, never as Button's `default`.
+// 0.49 KIT-5: `default` (the quiet chip) and `accent` (the solid brand fill) are the
+// names. `primary` and `brand` were deprecated aliases with the same look, removed in 0.51
+// (FloatingAction(Button)'s own `primary` was `accent`).
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -36,33 +35,18 @@ describe("Button variants default and accent (KIT-5)", () => {
     expect(screen.getByRole("button")).toHaveClass("bg-brand", "text-brand-contrast", "hover:bg-brand-hover");
   });
 
-  it("the deprecated names draw exactly the new ones", () => {
-    expect(buttonClasses("primary")).toBe(buttonClasses("default"));
-    expect(buttonClasses("brand")).toBe(buttonClasses("accent"));
-    const { rerender } = render(<Button variant="primary" tone="danger">x</Button>);
-    const primary = screen.getByRole("button").className;
-    rerender(<Button variant="default" tone="danger">x</Button>);
-    expect(screen.getByRole("button").className).toBe(primary);
-    rerender(<IconButton variant="brand" disabled aria-label="x">x</IconButton>);
-    const brand = screen.getByRole("button").className;
-    rerender(<IconButton variant="accent" disabled aria-label="x">x</IconButton>);
-    expect(screen.getByRole("button").className).toBe(brand);
-    expect(brand).toContain("disabled:hover:bg-brand");
+  it("the 0.49 aliases are gone in 0.51: primary and brand no longer type-check", () => {
+    // @ts-expect-error — `primary` was `default` (0.49 KIT-5), removed in 0.51.
+    void buttonClasses("primary");
+    // @ts-expect-error — `brand` was `accent`, removed in 0.51.
+    void (<Button variant="brand">x</Button>);
+    // @ts-expect-error — FloatingActionButton's `primary` was `accent`, removed in 0.51.
+    void (<FloatingActionButton label="New" icon="+" variant="primary" />);
+    // @ts-expect-error — FloatingAction's `primary` was `accent`, removed in 0.51.
+    void (<FloatingAction label="Old" icon="+" variant="primary" />);
   });
 
-  it("a development build warns once per deprecated name", () => {
-    const warn = devBuild();
-    const { rerender } = render(<Button variant="primary">a</Button>);
-    rerender(<Button variant="primary">b</Button>);
-    render(<Button variant="brand">c</Button>);
-    render(<Button variant="brand">d</Button>);
-    expect(warn).toHaveBeenCalledTimes(2);
-    expect(warn.mock.calls[0]![0]).toContain('Button variant="primary" is deprecated: use "default"');
-    expect(warn.mock.calls[1]![0]).toContain('Button variant="brand" is deprecated: use "accent"');
-    expect(warn.mock.calls[1]![0]).toContain("removed in 0.51");
-  });
-
-  it("the new names, the defaults and a FormActions row never warn", () => {
+  it("the names, the defaults and a FormActions row never warn", () => {
     const warn = devBuild();
     render(
       <>
@@ -77,44 +61,22 @@ describe("Button variants default and accent (KIT-5)", () => {
     // FormActions' save button is the accent one by default.
     expect(screen.getByRole("button", { name: "Save" })).toHaveClass("bg-brand");
   });
-
-  it("a production build stays silent", () => {
-    vi.stubEnv("DEV", false);
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    render(<IconButton variant="primary" aria-label="x">x</IconButton>);
-    expect(warn).not.toHaveBeenCalled();
-  });
 });
 
 describe("FloatingAction(Button) accent (KIT-5)", () => {
-  it("FloatingActionButton is accent by default; primary reads as accent and warns", () => {
-    const warn = devBuild();
-    const { unmount } = render(<FloatingActionButton label="New" icon="+" />);
-    const accent = screen.getByRole("button", { name: "New" }).className;
-    expect(accent).toContain("bg-brand");
-    unmount();
-    expect(warn).not.toHaveBeenCalled();
-    render(<FloatingActionButton label="New" icon="+" variant="primary" />);
-    expect(screen.getByRole("button", { name: "New" }).className).toBe(accent);
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]![0]).toContain('FloatingActionButton variant="primary" is deprecated: use "accent"');
+  it("FloatingActionButton is accent by default", () => {
+    render(<FloatingActionButton label="New" icon="+" />);
+    expect(screen.getByRole("button", { name: "New" }).className).toContain("bg-brand");
   });
 
-  it("FloatingAction: default is quiet, accent the brand fill, primary = accent", () => {
-    const warn = devBuild();
+  it("FloatingAction: default is quiet, accent the brand fill", () => {
     render(
       <FloatingActionGroup aria-label="Tools">
         <FloatingAction label="Quiet" icon="·" tooltip={false} />
         <FloatingAction label="Add" icon="+" variant="accent" tooltip={false} />
-        <FloatingAction label="Old" icon="+" variant="primary" tooltip={false} />
       </FloatingActionGroup>,
     );
     expect(screen.getByRole("button", { name: "Quiet" })).not.toHaveClass("bg-brand");
     expect(screen.getByRole("button", { name: "Add" })).toHaveClass("bg-brand");
-    expect(screen.getByRole("button", { name: "Old" }).className).toBe(
-      screen.getByRole("button", { name: "Add" }).className,
-    );
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]![0]).toContain('FloatingAction variant="primary" is deprecated: use "accent"');
   });
 });

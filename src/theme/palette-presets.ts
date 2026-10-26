@@ -211,10 +211,6 @@ export const PAUL_TOL_PRESET: PalettePreset = {
   },
 };
 
-/** @deprecated 0.49 — use `DEFAULT_PRESET` (Imprint IS the default now); removed in 0.51.
- *  A persisted `"imprint"` id resolves to it through `presetById`'s fallback. */
-export const IMPRINT_PRESET: PalettePreset = DEFAULT_PRESET;
-
 // The full-theme switcher from #307 stayed retired (feedback #328) — the default
 // is still the single source of truth for surfaces, brand and money (its five
 // alternatives are gone, see the header). What IS selectable is

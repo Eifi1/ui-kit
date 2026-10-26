@@ -165,17 +165,6 @@ export const DEFAULT_MOBILE_MAX_ITEMS: Readonly<Record<TextSize, number>> = {
 };
 
 /**
- * @deprecated 0.49 — use {@link DEFAULT_MOBILE_MAX_ITEMS} and `AppShell`'s
- * `mobileMaxItems`: the bar is sized in cells, "More" included; removed in 0.51. This is
- * the same default counted as entries before "More" (one fewer).
- */
-export const DEFAULT_MOBILE_BAR_MAX: Readonly<Record<TextSize, number>> = {
-  normal: DEFAULT_MOBILE_MAX_ITEMS.normal - 1,
-  large: DEFAULT_MOBILE_MAX_ITEMS.large - 1,
-  xlarge: DEFAULT_MOBILE_MAX_ITEMS.xlarge - 1,
-};
-
-/**
  * The phone bar's cells (0.49 KIT-6): every entry when there are at most `maxItems`,
  * else `maxItems − 1` entries and a "More" cell for the rest. Which entries stay is
  * `priority`'s call — lower first, entries without one after them in the list's order —
@@ -215,21 +204,10 @@ export function splitMobileBar<T>(entries: readonly T[], max: number): { shown: 
   return { shown: entries.slice(0, limit), hidden: entries.slice(limit) };
 }
 
-/** The bar's cell count at `size`: `mobileMaxItems`, else the deprecated `mobileBarMax`
- *  read as cells (one more), else the default. */
-function mobileCells(
-  maxItems: AppShellProps["mobileMaxItems"],
-  barMax: AppShellProps["mobileBarMax"],
-  size: TextSize,
-): number {
-  if (maxItems !== undefined) {
-    return typeof maxItems === "number" ? maxItems : (maxItems[size] ?? DEFAULT_MOBILE_MAX_ITEMS[size]);
-  }
-  if (barMax !== undefined) {
-    const entries = typeof barMax === "number" ? barMax : barMax[size];
-    if (entries !== undefined) return entries + 1;
-  }
-  return DEFAULT_MOBILE_MAX_ITEMS[size];
+/** The bar's cell count at `size`: `mobileMaxItems`, else the default. */
+function mobileCells(maxItems: AppShellProps["mobileMaxItems"], size: TextSize): number {
+  if (maxItems === undefined) return DEFAULT_MOBILE_MAX_ITEMS[size];
+  return typeof maxItems === "number" ? maxItems : (maxItems[size] ?? DEFAULT_MOBILE_MAX_ITEMS[size]);
 }
 
 /** The kit's dev switch, as `lib/logger.ts` reads it: a development build, never a
@@ -263,17 +241,10 @@ function shortLabelNamesLabel(short: string, label: string): boolean {
 const TEXT_SIZE_WORDS: Record<TextSize, string> = { normal: "Normal", large: "Large", xlarge: "Extra large" };
 
 /** A development build's notes on `nav` (0.49 KIT-6): a `shortLabel` that is another word
- *  than its `label` without `shortLabelIsAlias`, and the deprecated `mobileBarMax`. */
-function useNavDevWarnings(nav: AppShellNavItem[], deprecatedBarMax: boolean): void {
+ *  than its `label` without `shortLabelIsAlias`. */
+function useNavDevWarnings(nav: AppShellNavItem[]): void {
   useEffect(() => {
     if (!devWarnings()) return;
-    if (deprecatedBarMax) {
-      warnNavOnce(
-        "mobileBarMax",
-        "[ui-kit] AppShell mobileBarMax is deprecated: use mobileMaxItems, which counts the bar's cells with " +
-          '"More" (mobileBarMax={4} is mobileMaxItems={5}). Removed in 0.51.',
-      );
-    }
     for (const item of nav) {
       if (item.shortLabel === undefined || item.shortLabelIsAlias) continue;
       if (shortLabelNamesLabel(item.shortLabel, item.label)) continue;
@@ -287,7 +258,7 @@ function useNavDevWarnings(nav: AppShellNavItem[], deprecatedBarMax: boolean): v
           "Shorten the label instead, or pass shortLabelIsAlias: true if the other word is meant.",
       );
     }
-  }, [nav, deprecatedBarMax]);
+  }, [nav]);
 }
 
 /**
@@ -352,7 +323,7 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    *
    * Unset (0.32.2, kastlan's 0.32.1 report): `"wrap"` at Normal and `"scroll"` at Large
    * and Extra large, where a wrapped group of eight pages took six or seven rows and
-   * covered the page — the other half of what `mobileBarMax` does for the bar.
+   * covered the page — the other half of what `mobileMaxItems` does for the bar.
    */
   mobileSubNavLayout?: "wrap" | "scroll";
   /**
@@ -368,13 +339,6 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    * `{ xlarge: 5 }` replaces it at one size only. Never fewer than one entry beside More.
    */
   mobileMaxItems?: number | Partial<Record<TextSize, number>>;
-  /**
-   * @deprecated 0.49 — use `mobileMaxItems`, which counts the bar's cells, "More"
-   * included: `mobileBarMax={4}` is `mobileMaxItems={5}`; removed in 0.51. Read as that
-   * (one more, per size), with a development warning; ignored when `mobileMaxItems` is
-   * given.
-   */
-  mobileBarMax?: number | Partial<Record<TextSize, number>>;
   /** The More cell's words over the provider's `appShellMore`. */
   moreLabels?: Partial<AppShellMoreLabels>;
   /**
@@ -498,7 +462,6 @@ export function AppShell({
   mobileSubNav = true,
   mobileSubNavLayout: mobileSubNavLayoutProp,
   mobileMaxItems,
-  mobileBarMax,
   moreLabels,
   toggleGroupLabel,
   embedded: embeddedProp,
@@ -512,13 +475,13 @@ export function AppShell({
   const mobileSubNavLayout = mobileSubNavLayoutProp ?? (large ? "scroll" : "wrap");
   // The bottom bar's cells: every entry the phone does not reach another way, up to the
   // text size's limit, More included; the rest go under More (§10.7, KIT-6).
-  const maxItems = mobileCells(mobileMaxItems, mobileBarMax, textSize);
+  const maxItems = mobileCells(mobileMaxItems, textSize);
   const { shown: barNav, hidden: moreNav } = pickMobileBar(
     nav.filter((item) => !item.mobileHidden),
     maxItems,
     (item) => item.mobilePriority,
   );
-  useNavDevWarnings(nav, mobileBarMax !== undefined && mobileMaxItems === undefined);
+  useNavDevWarnings(nav);
   // An embedded shell sharing the default key would overwrite the outer app's sidebar
   // preference with its own — so it persists only when given a key of its own.
   const collapseStorageKey =
@@ -1079,7 +1042,7 @@ function TourAnchor({ to, dataTour }: { to: string; dataTour?: string }) {
 
 /**
  * The bar's "More" cell (0.32, docs/text-size-harmonization.md §4, §10.7): the entries
- * past `mobileBarMax`, in a sheet — each entry as a link, and under a group its pages,
+ * past `mobileMaxItems`, in a sheet — each entry as a link, and under a group its pages,
  * since a group the bar no longer shows has no sub-row to reach them by either. Marked
  * active while the current page is one of them, as the cell it replaced would be.
  *
