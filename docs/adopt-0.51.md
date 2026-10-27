@@ -327,3 +327,28 @@ keksdose's repro harness rather than jsdom's width model.
 takes it). keksdose's register is back to its 0.50.1 columns. kastlan and Kurvenschmiede have
 no `virtualize`: nothing changes.
 
+
+## 0.51.2
+
+**A `fitPriority` table under `virtualize` re-fits when it widens on its own** (keksdose's
+register; the bug predates 0.51). The fit measured after a render that changed its rows,
+columns or widths, and when its scroller resized. Under `virtualize`, though, the rows actually
+drawn are the window's, set a frame later, and the column-width lock lands later still. A load
+whose fit ran before those rows were drawn kept every `fitPriority` column and overflowed for
+good: 1–2 loads in 10 at 1124, 6 in 10 at 1280, on 0.50.1 as on 0.51. The fit's observer now
+watches the table's own width as well, and measures again when it changes.
+
+Measured by keksdose in production builds of its register (ten loads per build and width,
+1124 / 1280 / 1440, every frame logged for 8 s): **0 of 30 loads end overflowing** (0.51.1:
+2 of 10 at 1124 in the same run), and no column comes and goes more than once. Two things
+remain:
+- A table can show too wide for a moment (31–215 ms) before it re-fits, as it did before
+  (0.51.1: up to 409 ms).
+- Which columns a load ends with can still differ from load to load (at 1124: 8 of 10 without
+  Accounts and Status, 2 with Status), though every set now fits.
+
+Both go to the next round's candidates.
+
+**Apps:** a plain bump to `^0.51.2`. keksdose's register stops overflowing. kastlan and
+Kurvenschmiede have no `virtualize`, but any `fitPriority` table now also re-fits when it
+widens after a render; their tables already fitted, so nothing visible changes.

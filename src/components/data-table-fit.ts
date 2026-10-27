@@ -17,7 +17,10 @@ import type { DataTableColumn } from "./data-table";
 //   wider scroller. The scroller's own width, through a ResizeObserver: a sidebar, a
 //   narrower window, the Columns drawer and Large text all count the same. A column
 //   whose return the very next measure undoes stays out until the table has more room
-//   for it than it had then (0.48.3, keksdose B2: see the bring-back in `measure`).
+//   for it than it had then (0.48.3, keksdose B2: see the bring-back in `measure`). And
+//   the TABLE's own width, through the same observer (0.51.2): anything that widens it
+//   after a measure — rows drawn a frame later, `virtualize` locking its column widths —
+//   is measured again, so the table never stays wider than its scroller.
 
 /** The least a `grow` column keeps before the table starts leaving columns out: about
  *  a sentence of a title. In rem, so Large text asks for more. */
@@ -201,12 +204,29 @@ export function useColumnFit<T>({
     setHidden(current.slice(0, n));
   }, [headRefs]);
 
+  // The table the observer below watches, kept to this render's.
+  const observer = useRef<ResizeObserver | null>(null);
+  const watched = useRef<{ table: Element; width: number } | null>(null);
+  const watchTable = useCallback(() => {
+    const ro = observer.current;
+    const table = latest.current.scroller()?.querySelector("table") ?? null;
+    if (!ro || table === (watched.current?.table ?? null)) return;
+    if (watched.current) ro.unobserve(watched.current.table);
+    // Its width now, as the measure that just ran saw it: a report of the same width is
+    // not news, one that differs is (it may come a frame later, rows drawn by then).
+    watched.current = table ? { table, width: (table as HTMLElement).offsetWidth } : null;
+    if (table) ro.observe(table);
+  }, []);
+
   // After a render that changed what is drawn: rows, a filter or a page can widen a
   // column as much as a resize. Before paint, so a column the table cannot hold is never
   // drawn first. A render that changed none of it (a ticked box, a focused row) skips the
   // measure, which forces a layout of the whole table (0.48.2, keksdose dev #632).
   const lastContent = useRef<readonly unknown[] | null>(null);
   useLayoutEffect(() => {
+    // The table the observer watches is this render's (a table drawn after a loading
+    // state, or remounted, is a new element).
+    watchTable();
     const now = content ? [...content, order, current, growKey, active] : null;
     const prev = lastContent.current;
     lastContent.current = now;
@@ -214,13 +234,43 @@ export function useColumnFit<T>({
     measure();
   });
 
+  // The scroller, and the table in it (0.51.2, keksdose's register). The fit measured
+  // after a render that changed `content` and when the SCROLLER changed size, but the table
+  // also widens on its own after that: under `virtualize` the rows actually drawn are the
+  // window's, set a frame later, and its column-width lock lands a frame later still —
+  // neither is `content`, and the scroller keeps its size. A load whose first measure saw
+  // the table before its rows were in kept every `fitPriority` column and then overflowed
+  // for good (893px in 757 at 1124, 1058 in 913 at 1280, on 0.50.1 as on 0.51). Watched,
+  // a table that grows past what was measured is measured again. Only a WIDTH change of
+  // the table counts: its height moves with every row the window draws, and each measure
+  // lays the whole table out.
   useEffect(() => {
     const el = latest.current.scroller();
     if (!active || !el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => measure());
+    const ro = new ResizeObserver((entries) => {
+      let changed = false;
+      for (const entry of entries) {
+        if (entry.target === el) changed = true;
+        else if (watched.current && entry.target === watched.current.table) {
+          // The border box, as `offsetWidth` reads it (the content rect leaves the border out).
+          const width = entry.borderBoxSize?.[0]?.inlineSize ?? entry.contentRect.width;
+          if (Math.abs(width - watched.current.width) > 0.5) {
+            watched.current.width = width;
+            changed = true;
+          }
+        }
+      }
+      if (changed) measure();
+    });
     ro.observe(el);
-    return () => ro.disconnect();
-  }, [active, measure]);
+    observer.current = ro;
+    watchTable();
+    return () => {
+      ro.disconnect();
+      observer.current = null;
+      watched.current = null;
+    };
+  }, [active, measure, watchTable]);
 
   const keep = useCallback((key: string, on: boolean) => {
     setKept((s) => {

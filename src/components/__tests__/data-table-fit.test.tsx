@@ -209,6 +209,32 @@ describe("DataTable fit (0.48, keksdose live #451)", () => {
     }
   });
 
+  describe("a table that widens after it was measured (0.51.2, keksdose's register)", () => {
+    // Under `virtualize` the rows actually drawn are the window's, set a frame after the
+    // render that measured, and the column-width lock lands later still; neither changes
+    // the rows the fit watches, and the scroller keeps its size. A load measured before its
+    // rows were in kept every `fitPriority` column and overflowed for good. Modelled here:
+    // the status cells widen after the first measure, with nothing else changing.
+    const widen = (table: HTMLElement) => {
+      EXTRA.status = 1500;
+      act(() => ro.resize(table, { width: layout(table).table, height: 400 }));
+    };
+
+    it("is measured again and leaves columns out until it fits", () => {
+      const { table, scroller } = renderTable();
+      expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
+      widen(table);
+      expect(heads(table)).toEqual(["id", "title", "status"]);
+      expect(table.offsetWidth).toBeLessThanOrEqual(scroller.clientWidth);
+    });
+
+    it("a report of the width it already had changes nothing (its height moves with every row)", () => {
+      const { table } = renderTable();
+      act(() => ro.resize(table, { width: table.offsetWidth, height: 9000 }));
+      expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
+    });
+  });
+
   describe("a column that costs more drawn than its header measured (keksdose B2, 0.48.3)", () => {
     // Drawn, Resolved costs its header (120) + 5, as a 40px header cost ≈ 45 under
     // `virtualize`'s locked widths. At 562, with URL and Email out, the table needs 440
