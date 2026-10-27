@@ -21,6 +21,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.51.2](https://github.com/Eifi1/ui-kit/compare/v0.51.1...v0.51.2) (2026-10-27)
+
+### Fixed
+
+* **data-table:** the fit measures again when the table itself widens ([6ac1640](https://github.com/Eifi1/ui-kit/commit/6ac164015aa2ba125e59cb2e46289b762145c789))
+
 ## [0.51.1](https://github.com/Eifi1/ui-kit/compare/v0.51.0...v0.51.1) (2026-10-26)
 
 ### Fixed
